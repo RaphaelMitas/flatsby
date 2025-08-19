@@ -3,8 +3,8 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Flatsby",
-  slug: "flatsby",
-  scheme: "flatsby",
+  slug: "flatcove",
+  scheme: "flatcove",
   owner: "frenchrapho",
   version: "0.4.0",
   orientation: "portrait",
@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: { ITSAppUsesNonExemptEncryption: false },
   },
   android: {
-    package: "com.flatsby.app",
+    package: "com.flatcove.app",
     blockedPermissions: ["android.permission.READ_PHONE_STATE"],
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
