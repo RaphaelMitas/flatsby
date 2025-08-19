@@ -10,14 +10,14 @@ import { env } from "~/env";
 
 const baseUrl =
   env.VERCEL_ENV === "production"
-    ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
+    ? `${env.BETTER_AUTH_URL}`
     : env.VERCEL_ENV === "preview"
       ? `https://${env.VERCEL_URL}`
       : "http://localhost:3000";
 
 export const auth = initAuth({
   baseUrl,
-  productionUrl: `https://${env.VERCEL_PROJECT_PRODUCTION_URL ?? "flatsby.com"}`,
+  productionUrl: `${env.BETTER_AUTH_URL ?? "https://www.flatsby.com"}`,
   secret: env.BETTER_AUTH_SECRET,
   googleClientId: env.GOOGLE_CLIENT_ID,
   googleClientSecret: env.GOOGLE_CLIENT_SECRET,
