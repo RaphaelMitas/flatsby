@@ -16,8 +16,6 @@ export const getBaseUrl = () => {
   const debuggerHost = Constants.expoConfig?.hostUri;
   const localhost = debuggerHost?.split(":")[0];
 
-  return "https://flatsby.com";
-
   if (!localhost) {
     return "https://flatsby.com";
   }
