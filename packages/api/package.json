@@ -1,0 +1,41 @@
+{
+  "name": "@flatsby/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "tsc",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "catalog:",
+    "@flatsby/auth": "workspace:*",
+    "@flatsby/db": "workspace:*",
+    "@flatsby/ui": "workspace:*",
+    "@flatsby/validators": "workspace:*",
+    "@trpc/server": "catalog:",
+    "effect": "^3.17.0",
+    "superjson": "2.2.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@flatsby/eslint-config": "workspace:*",
+    "@flatsby/prettier-config": "workspace:*",
+    "@flatsby/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
+  },
+  "prettier": "@flatsby/prettier-config"
+}
