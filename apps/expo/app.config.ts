@@ -6,14 +6,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: "flatcove",
   scheme: "flatcove",
   owner: "frenchrapho",
-  version: "0.4.0",
+  version: "0.4.1",
   orientation: "portrait",
   icon: "./assets/ios-light.png",
   userInterfaceStyle: "automatic",
   updates: { fallbackToCacheTimeout: 0 },
   assetBundlePatterns: ["**/*"],
   ios: {
-    bundleIdentifier: "com.flatsby.app.v2",
+    bundleIdentifier: "com.flatcove.app.v2",
     supportsTablet: true,
     icon: {
       light: "./assets/ios-light.png",

@@ -9,7 +9,7 @@ export const authClient = createAuthClient({
   plugins: [
     expoClient({
       scheme: "flatsby",
-      storagePrefix: "flatsby",
+      storagePrefix: "flatcove",
       storage: SecureStore,
     }),
   ],

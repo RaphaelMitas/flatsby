@@ -1,9 +1,9 @@
+import type { CategoryId } from "@flatsby/ui/categories";
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import type { CategoryId } from "@flatsby/ui/categories";
 import { alias, and, count, eq, inArray, ne } from "@flatsby/db";
 import {
   accounts,
@@ -1657,7 +1657,6 @@ export const shoppingList = createTRPCRouter({
 });
 
 const getItemCategory = async (itemName: string): Promise<CategoryId> => {
-  let category: CategoryId = "other";
   try {
     const response = await generateObject({
       model: google("gemini-2.0-flash-exp"),
@@ -1667,9 +1666,9 @@ const getItemCategory = async (itemName: string): Promise<CategoryId> => {
       prompt: `Tell me the most appropriate category for this item: ${itemName}`,
     });
 
-    category = response.object.category;
+    return response.object.category;
   } catch (error) {
     console.error("Error categorizing item:", error);
   }
-  return category;
+  return "other";
 };
