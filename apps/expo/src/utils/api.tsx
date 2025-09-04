@@ -1,10 +1,9 @@
+import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
-
-import type { AppRouter } from "@flatsby/api";
 
 import { authClient } from "./auth/auth-client";
 import { getBaseUrl } from "./base-url";

@@ -1,7 +1,7 @@
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import { useEffect, useState } from "react";
 import { z } from "zod/v4";
 
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import { Button } from "@flatsby/ui/button";
 import { categorysIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import {

@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
-
 import type { ApiErrorResult } from "@flatsby/api";
+import { redirect } from "next/navigation";
 
 import { signOut } from "./auth/client";
 

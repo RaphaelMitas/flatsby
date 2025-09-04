@@ -1,5 +1,6 @@
 "use client";
 
+import type { groupMembers } from "@flatsby/db/schema";
 import React from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +13,6 @@ import { AlertCircle, ChevronDown, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 
-import type { groupMembers } from "@flatsby/db/schema";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";

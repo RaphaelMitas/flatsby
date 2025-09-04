@@ -1,3 +1,4 @@
+import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 import React, { useCallback, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -7,8 +8,6 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-
-import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 
 import type { RouterOutputs } from "~/utils/api";
 import { TimedAlert } from "~/components/TimedAlert";

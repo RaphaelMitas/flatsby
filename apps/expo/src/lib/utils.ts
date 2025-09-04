@@ -1,10 +1,9 @@
+import type { ApiErrorResult } from "@flatsby/api";
 import type { ClassValue } from "clsx";
 import type { useRouter } from "expo-router";
 import { clsx } from "clsx";
 import { useColorScheme } from "nativewind";
 import { twMerge } from "tailwind-merge";
-
-import type { ApiErrorResult } from "@flatsby/api";
 
 import { signOut } from "~/utils/auth/auth-client";
 

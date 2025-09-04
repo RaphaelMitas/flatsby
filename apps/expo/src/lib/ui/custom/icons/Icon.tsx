@@ -32,9 +32,7 @@ const Icon = ({ name, color, size, className }: IconProps) => {
   }
 
   if (name === "flatsby") {
-    return (
-      <FlatsbyIcon size={size} color={colorValue} className={className} />
-    );
+    return <FlatsbyIcon size={size} color={colorValue} className={className} />;
   }
 
   return (
