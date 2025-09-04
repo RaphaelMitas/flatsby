@@ -17,7 +17,7 @@ const baseUrl =
 
 export const auth = initAuth({
   baseUrl,
-  productionUrl: `${env.BETTER_AUTH_URL ?? "https://www.flatsby.com"}`,
+  productionUrl: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   googleClientId: env.GOOGLE_CLIENT_ID,
   googleClientSecret: env.GOOGLE_CLIENT_SECRET,

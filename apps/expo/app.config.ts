@@ -13,7 +13,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   updates: { fallbackToCacheTimeout: 0 },
   assetBundlePatterns: ["**/*"],
   ios: {
-    bundleIdentifier: "com.flatsby.app.v2",
+    bundleIdentifier: "com.flatcove.app.v2",
     supportsTablet: true,
     icon: {
       light: "./assets/ios-light.png",
