@@ -1,3 +1,4 @@
+import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
 import React, { useState } from "react";
 import { ScrollView } from "react-native";
 import { useRouter } from "expo-router";
@@ -6,8 +7,6 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-
-import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
 
 import DeleteConfirmationModal from "~/components/DeleteConfirmationModal";
 import {

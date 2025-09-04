@@ -1,3 +1,4 @@
+import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
 import React, { useCallback, useRef, useState } from "react";
@@ -7,8 +8,6 @@ import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod/v4";
-
-import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 
 import type { RouterOutputs } from "~/utils/api";
 import { Button } from "~/lib/ui/button";

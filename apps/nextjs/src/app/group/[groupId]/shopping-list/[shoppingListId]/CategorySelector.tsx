@@ -1,6 +1,6 @@
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import { ChevronDown } from "lucide-react";
 
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import { categories, getCategoryColorClasses } from "@flatsby/ui/categories";

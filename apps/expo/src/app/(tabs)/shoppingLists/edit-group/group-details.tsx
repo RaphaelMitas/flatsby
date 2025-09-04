@@ -1,3 +1,4 @@
+import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -7,8 +8,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { z } from "zod/v4";
-
-import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 
 import { ProfileSection } from "~/components/ProfileSection";
 import { TimedAlert } from "~/components/TimedAlert";

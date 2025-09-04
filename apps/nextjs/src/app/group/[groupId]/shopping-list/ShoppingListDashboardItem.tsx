@@ -1,5 +1,6 @@
 "use client";
 
+import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +9,6 @@ import { Pencil, Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 
-import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import {
   AlertDialog,
   AlertDialogAction,

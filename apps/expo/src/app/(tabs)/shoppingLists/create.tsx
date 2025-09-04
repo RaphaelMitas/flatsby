@@ -1,11 +1,10 @@
+import type { ShoppingListSummary } from "@flatsby/api";
 import type { ApiResult } from "node_modules/@flatsby/api/dist/errors";
 import React from "react";
 import { Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod/v4";
-
-import type { ShoppingListSummary } from "@flatsby/api";
 
 import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";

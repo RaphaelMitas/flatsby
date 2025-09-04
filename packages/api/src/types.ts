@@ -4,8 +4,6 @@
  * to replace `any` types throughout the codebase
  */
 
-import type { InfiniteData } from "@tanstack/react-query";
-
 import type { db } from "@flatsby/db/client";
 import type {
   groupMembers,
@@ -15,6 +13,7 @@ import type {
   users,
 } from "@flatsby/db/schema";
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
+import type { InfiniteData } from "@tanstack/react-query";
 
 import type { ApiResult } from "./errors";
 
