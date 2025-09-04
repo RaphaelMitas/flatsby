@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: "flatcove",
   scheme: "flatcove",
   owner: "frenchrapho",
-  version: "0.4.0",
+  version: "0.4.1",
   orientation: "portrait",
   icon: "./assets/ios-light.png",
   userInterfaceStyle: "automatic",
