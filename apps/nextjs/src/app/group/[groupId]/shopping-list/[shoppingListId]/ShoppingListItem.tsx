@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import "react-swipeable-list/dist/styles.css";
 
+import type { ShoppingListInfiniteData } from "@flatsby/api";
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash } from "lucide-react";
@@ -17,8 +19,6 @@ import {
 } from "react-swipeable-list";
 import { z } from "zod/v4";
 
-import type { ShoppingListInfiniteData } from "@flatsby/api";
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import { cn } from "@flatsby/ui";
 import { categoryIds, getCategoryData } from "@flatsby/ui/categories";
 import { Checkbox } from "@flatsby/ui/checkbox";

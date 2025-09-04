@@ -1,5 +1,7 @@
 "use client";
 
+import type { ShoppingListInfiniteData } from "@flatsby/api";
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import {
   useInfiniteQuery,
   useMutation,
@@ -8,8 +10,6 @@ import {
 } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 
-import type { ShoppingListInfiniteData } from "@flatsby/api";
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
 import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";

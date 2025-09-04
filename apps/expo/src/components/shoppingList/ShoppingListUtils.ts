@@ -1,6 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import type { ShoppingListInfiniteData } from "@flatsby/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { CategoryIdWithAiAutoSelect } from "./ShoppingListCategory";
 import { trpc } from "~/utils/api";

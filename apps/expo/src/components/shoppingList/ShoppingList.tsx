@@ -1,3 +1,4 @@
+import type { ShoppingListInfiniteData } from "@flatsby/api";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Keyboard,
@@ -14,8 +15,6 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-
-import type { ShoppingListInfiniteData } from "@flatsby/api";
 
 import type { CategoryIdWithAiAutoSelect } from "./ShoppingListCategory";
 import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";

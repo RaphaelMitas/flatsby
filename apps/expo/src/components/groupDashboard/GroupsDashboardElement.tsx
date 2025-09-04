@@ -1,11 +1,10 @@
+import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import React, { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
 
 import type { RouterOutputs } from "~/utils/api";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
