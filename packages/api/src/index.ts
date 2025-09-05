@@ -31,7 +31,6 @@ export {
   toTRPCError,
   fromUnknownError,
   // Main utilities
-  withErrorHandling,
   runEffectWithTRPCError,
   safeDbOperation,
 } from "./errors";
@@ -54,16 +53,6 @@ export type {
   Database,
   DatabaseOperation,
   DbTransaction,
-  Group,
-  GroupMember,
-  GroupMemberDetails,
-  GroupMemberWithGroup,
-  GroupMemberWithGroupMinimal,
-  GroupMemberWithUser,
-  GroupWithAccess,
-  GroupWithMemberCount,
-  GroupWithMembers,
-  Role,
   ShoppingList,
   ShoppingListItem,
   ShoppingListInfiniteData,
@@ -72,5 +61,6 @@ export type {
   ShoppingListWithItems,
   TransactionOperation,
   User,
-  UserGroupMembership,
 } from "./types";
+
+export { calculateOwedAmounts } from "./split/calculations";

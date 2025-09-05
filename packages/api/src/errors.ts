@@ -391,16 +391,6 @@ export const runEffectWithTRPCError = async <T>(
 };
 
 /**
- * Middleware helper for tRPC procedures using Effect
- * @deprecated Use withErrorHandlingAsResult instead
- */
-export const withErrorHandling = <T>(
-  effect: Effect.Effect<T, ApiError>,
-): Promise<T> => {
-  return runEffectWithTRPCError(effect);
-};
-
-/**
  * Convert Effect to a Result-like object with more detailed error info
  */
 export const withErrorHandlingAsResult = async <T>(

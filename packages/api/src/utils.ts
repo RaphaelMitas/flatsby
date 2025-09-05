@@ -1,16 +1,31 @@
-import { Effect } from "effect";
-
-import type { ApiError, NotFoundError } from "./errors";
 import type {
-  Database,
   GroupMember,
+  GroupMemberWithUser,
   GroupWithAccess,
   Role,
+} from "@flatsby/validators";
+import { Effect } from "effect";
+import z from "zod/v4";
+
+import {
+  groupMemberSchema,
+  groupMemberWithUserSchema,
+  groupWithAccessSchema,
+} from "@flatsby/validators";
+
+import type { ApiError } from "./errors";
+import type {
+  Database,
   ShoppingListWithGroup,
   TransactionOperation,
-  User,
 } from "./types";
-import { fail, safeDbOperation, withErrorHandling } from "./errors";
+import { fail, safeDbOperation } from "./errors";
+
+export const simplifySchema = (schema: z.ZodTypeAny) => {
+  if (schema instanceof z.ZodEnum) return z.string();
+  if (schema instanceof z.ZodLiteral) return z.string();
+  return schema;
+};
 
 /**
  * Database operation utilities
@@ -117,6 +132,20 @@ export const DbUtils = {
  * Validation utilities
  */
 export const ValidationUtils = {
+  validateZod: <T>(
+    value: unknown,
+    schema: z.ZodSchema<T>,
+  ): Effect.Effect<T, ApiError> => {
+    const parsed = schema.safeParse(value);
+    if (!parsed.success) {
+      return fail.validation(
+        schema.description ?? "Invalid data",
+        parsed.error.message,
+      );
+    }
+    return Effect.succeed(parsed.data);
+  },
+
   /**
    * Validate that a string is not empty
    */
@@ -165,7 +194,7 @@ export const OperationUtils = {
     db: Database,
     groupId: number,
     userId: string,
-  ): Effect.Effect<GroupWithAccess, ApiError | NotFoundError> => {
+  ): Effect.Effect<GroupWithAccess, ApiError> => {
     return Effect.flatMap(
       DbUtils.findOneOrFail(
         () =>
@@ -193,13 +222,23 @@ export const OperationUtils = {
             );
 
             if (!thisGroupMember) {
-              return fail.notFound("group member", userId);
+              return fail.validation("User not found in group", userId);
             }
 
-            return Effect.succeed({
+            const parsed = groupWithAccessSchema.safeParse({
               ...group,
               thisGroupMember,
             });
+
+            if (!parsed.success) {
+              return fail.validation(
+                "getGroupWithAccess",
+                `${parsed.error.issues[0]?.message} on path: ${parsed.error.issues[0]?.path.join(".")}`,
+              );
+            }
+
+            // Return original object to preserve precise types
+            return Effect.succeed(parsed.data);
           },
         ),
     );
@@ -275,28 +314,27 @@ export const GroupUtils = {
     db: Database,
     groupId: number,
     userId: string,
-  ): Effect.Effect<
-    GroupMember & {
-      user: Pick<User, "email" | "name" | "image">;
-    },
-    ApiError
-  > => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(eq(members.userId, userId), eq(members.groupId, groupId)),
-          with: {
-            user: {
-              columns: {
-                email: true,
-                name: true,
-                image: true,
+  ): Effect.Effect<GroupMemberWithUser, ApiError> => {
+    return Effect.flatMap(
+      DbUtils.findOneOrFail(
+        () =>
+          db.query.groupMembers.findFirst({
+            where: (members, { and, eq }) =>
+              and(eq(members.userId, userId), eq(members.groupId, groupId)),
+            with: {
+              user: {
+                columns: {
+                  email: true,
+                  name: true,
+                  image: true,
+                },
               },
             },
-          },
-        }),
-      "group membership",
+          }),
+        "group membership",
+      ),
+      (groupMember) =>
+        ValidationUtils.validateZod(groupMember, groupMemberWithUserSchema),
     );
   },
 
@@ -308,13 +346,17 @@ export const GroupUtils = {
     groupId: number,
     userId: string,
   ): Effect.Effect<GroupMember, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(eq(members.userId, userId), eq(members.groupId, groupId)),
-        }),
-      "group membership",
+    return Effect.flatMap(
+      DbUtils.findOneOrFail(
+        () =>
+          db.query.groupMembers.findFirst({
+            where: (members, { and, eq }) =>
+              and(eq(members.userId, userId), eq(members.groupId, groupId)),
+          }),
+        "group membership",
+      ),
+      (groupMember) =>
+        ValidationUtils.validateZod(groupMember, groupMemberSchema),
     );
   },
 
@@ -326,16 +368,23 @@ export const GroupUtils = {
     groupId: number,
     userId: string,
   ): Effect.Effect<Pick<GroupMember, "role">, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          columns: {
-            role: true,
-          },
-          where: (members, { and, eq }) =>
-            and(eq(members.groupId, groupId), eq(members.userId, userId)),
-        }),
-      "group membership",
+    return Effect.flatMap(
+      DbUtils.findOneOrFail(
+        () =>
+          db.query.groupMembers.findFirst({
+            columns: {
+              role: true,
+            },
+            where: (members, { and, eq }) =>
+              and(eq(members.groupId, groupId), eq(members.userId, userId)),
+          }),
+        "group membership",
+      ),
+      (groupMember) =>
+        ValidationUtils.validateZod(
+          groupMember,
+          groupMemberSchema.pick({ role: true }),
+        ),
     );
   },
 
@@ -347,17 +396,21 @@ export const GroupUtils = {
     groupId: number,
     userId: string,
   ): Effect.Effect<GroupMember, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(
-              eq(members.userId, userId),
-              eq(members.groupId, groupId),
-              eq(members.role, "admin"),
-            ),
-        }),
-      "admin membership",
+    return Effect.flatMap(
+      DbUtils.findOneOrFail(
+        () =>
+          db.query.groupMembers.findFirst({
+            where: (members, { and, eq }) =>
+              and(
+                eq(members.userId, userId),
+                eq(members.groupId, groupId),
+                eq(members.role, "admin"),
+              ),
+          }),
+        "admin membership",
+      ),
+      (groupMember) =>
+        ValidationUtils.validateZod(groupMember, groupMemberSchema),
     );
   },
 
@@ -369,13 +422,17 @@ export const GroupUtils = {
     groupId: number,
     userId: string,
   ): Effect.Effect<GroupMember, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(eq(members.userId, userId), eq(members.groupId, groupId)),
-        }),
-      "group membership",
+    return Effect.flatMap(
+      DbUtils.findOneOrFail(
+        () =>
+          db.query.groupMembers.findFirst({
+            where: (members, { and, eq }) =>
+              and(eq(members.userId, userId), eq(members.groupId, groupId)),
+          }),
+        "group membership",
+      ),
+      (groupMember) =>
+        ValidationUtils.validateZod(groupMember, groupMemberSchema),
     );
   },
 };
@@ -384,7 +441,7 @@ export const GroupUtils = {
  * Helper to migrate existing tRPC procedures
  * Usage: return withErrorHandling(yourEffectChain)
  */
-export { withErrorHandling, safeDbOperation };
+export { safeDbOperation };
 
 /**
  * Helper to convert a simple async function to Effect with error handling

@@ -1,4 +1,5 @@
 import type { CategoryId } from "@flatsby/ui/categories";
+import type { Group, GroupMemberWithGroupMinimal } from "@flatsby/validators";
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { Effect } from "effect";
@@ -20,14 +21,12 @@ import {
   categorysIdWithAiAutoSelect,
   isCategoryIdWithAiAutoSelect,
 } from "@flatsby/ui/categories";
+import {
+  groupMemberSchema,
+  groupMemberWithGroupMinimalSchema,
+  groupMemberWithUserSchema,
+} from "@flatsby/validators";
 
-import type {
-  Group,
-  GroupMember,
-  GroupMemberWithGroupMinimal,
-  GroupMemberWithUser,
-  Role,
-} from "../types";
 import {
   Errors,
   fail,
@@ -373,42 +372,57 @@ export const shoppingList = createTRPCRouter({
 
   getGroupMemberById: protectedProcedure
     .input(z.number())
+    .output(
+      getApiResultZod(
+        groupMemberWithUserSchema.extend({
+          currentUserGroupMember: groupMemberSchema,
+        }),
+      ),
+    )
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // First, find the target group member
-          DbUtils.findOneOrFail(
-            () =>
-              ctx.db.query.groupMembers.findFirst({
-                with: {
-                  user: {
-                    columns: {
-                      email: true,
-                      name: true,
-                      image: true,
+          Effect.flatMap(
+            // First, find the target group member
+            DbUtils.findOneOrFail(
+              () =>
+                ctx.db.query.groupMembers.findFirst({
+                  with: {
+                    user: {
+                      columns: {
+                        email: true,
+                        name: true,
+                        image: true,
+                      },
                     },
                   },
-                },
-                where: eq(groupMembers.id, input),
-              }),
-            "group member",
-          ),
-          (groupMember: GroupMemberWithUser) =>
-            Effect.flatMap(
-              // Then find the current user's membership in the same group
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.groupMembers.findFirst({
-                    where: and(
-                      eq(groupMembers.groupId, groupMember.groupId),
-                      eq(groupMembers.userId, ctx.session.user.id),
-                    ),
-                  }),
-                "group membership",
-              ),
-              (currentUserGroupMember: GroupMember) =>
-                Effect.succeed({ ...groupMember, currentUserGroupMember }),
+                  where: eq(groupMembers.id, input),
+                }),
+              "group member",
             ),
+            (groupMember) =>
+              Effect.flatMap(
+                // Then find the current user's membership in the same group
+                DbUtils.findOneOrFail(
+                  () =>
+                    ctx.db.query.groupMembers.findFirst({
+                      where: and(
+                        eq(groupMembers.groupId, groupMember.groupId),
+                        eq(groupMembers.userId, ctx.session.user.id),
+                      ),
+                    }),
+                  "group membership",
+                ),
+                (currentUserGroupMember) =>
+                  ValidationUtils.validateZod(
+                    { ...groupMember, currentUserGroupMember },
+                    groupMemberWithUserSchema.extend({
+                      currentUserGroupMember: groupMemberSchema,
+                    }),
+                  ),
+              ),
+          ),
+          (result) => Effect.succeed(result),
         ),
       );
     }),
@@ -423,23 +437,30 @@ export const shoppingList = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Fetch the target member with group data
-          DbUtils.findOneOrFail(
-            () =>
-              ctx.db.query.groupMembers.findFirst({
-                where: eq(groupMembers.id, input.memberId),
-                with: {
-                  group: {
-                    columns: {
-                      id: true,
-                    },
-                    with: {
-                      groupMembers: true,
+          Effect.flatMap(
+            // Fetch the target member with group data
+            DbUtils.findOneOrFail(
+              () =>
+                ctx.db.query.groupMembers.findFirst({
+                  where: eq(groupMembers.id, input.memberId),
+                  with: {
+                    group: {
+                      columns: {
+                        id: true,
+                      },
+                      with: {
+                        groupMembers: true,
+                      },
                     },
                   },
-                },
-              }),
-            "group member",
+                }),
+              "group member",
+            ),
+            (targetMember) =>
+              ValidationUtils.validateZod(
+                targetMember,
+                groupMemberWithGroupMinimalSchema,
+              ),
           ),
           (targetMember: GroupMemberWithGroupMinimal) =>
             Effect.flatMap(
@@ -454,7 +475,7 @@ export const shoppingList = createTRPCRouter({
                   // Ensure we're not removing the last admin
                   DbUtils.ensureNotLastAdmin(
                     input.memberId,
-                    targetMember.role as Role,
+                    targetMember.role,
                     input.newRole,
                     targetMember.group.groupMembers,
                   ),
@@ -498,7 +519,7 @@ export const shoppingList = createTRPCRouter({
               }),
             "group member",
           ),
-          (targetGroupMember: GroupMember) =>
+          (targetGroupMember) =>
             Effect.flatMap(
               // Find current user's membership in the same group
               DbUtils.findOneOrFail(
@@ -511,7 +532,7 @@ export const shoppingList = createTRPCRouter({
                   }),
                 "group membership",
               ),
-              (currentUserGroupMember: GroupMember) =>
+              (currentUserGroupMember) =>
                 Effect.flatMap(
                   // Check authorization: admin can remove anyone, members can only remove themselves
                   DbUtils.checkAccess(

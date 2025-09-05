@@ -68,6 +68,7 @@
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tailwind-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
+    "@flatsby/validators": "workspace:*",
     "@types/babel__core": "^7.20.5",
     "@types/react": "catalog:react19",
     "eslint": "catalog:",

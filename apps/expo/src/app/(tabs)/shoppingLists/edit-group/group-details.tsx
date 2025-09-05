@@ -1,4 +1,5 @@
-import type { ApiResult, GroupWithAccess } from "@flatsby/api";
+import type { ApiResult } from "@flatsby/api";
+import type { GroupWithAccess } from "@flatsby/validators";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";

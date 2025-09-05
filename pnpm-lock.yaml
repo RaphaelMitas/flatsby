@@ -232,6 +232,9 @@ importers:
       '@flatsby/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@flatsby/validators':
+        specifier: workspace:*
+        version: link:../../packages/validators
       '@types/babel__core':
         specifier: ^7.20.5
         version: 7.20.5

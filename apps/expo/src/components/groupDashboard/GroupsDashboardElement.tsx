@@ -1,4 +1,5 @@
-import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
+import type { ApiResult } from "@flatsby/api";
+import type { GroupWithMemberCount } from "@flatsby/validators";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import React, { useRef, useState } from "react";
 import { Text, View } from "react-native";

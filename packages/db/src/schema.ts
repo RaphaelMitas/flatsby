@@ -195,3 +195,71 @@ export const shoppingListItemsRelations = relations(
     }),
   }),
 );
+
+// New tables (proposed)
+
+export const expenses = createTable("expenses", {
+  id: serial("id").primaryKey(),
+  groupId: integer("groupId")
+    .notNull()
+    .references(() => groups.id),
+  createdByGroupMemberId: integer("createdByGroupMemberId")
+    .notNull()
+    .references(() => groupMembers.id),
+  lastUpdatedByGroupMemberId: integer("lastUpdatedByGroupMemberId").references(
+    () => groupMembers.id,
+  ),
+  title: varchar("title", { length: 256 }).notNull(),
+  description: text("description"),
+  totalAmountCents: integer("totalAmountCents").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull(), // e.g. "EUR"
+  splitMethod: varchar("splitMethod", { length: 16 }).notNull(), // "equal" | "exact" | "percent" | "shares"
+  occurredAt: timestamp("occurredAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const expensePayers = createTable("expense_payers", {
+  id: serial("id").primaryKey(),
+  expenseId: integer("expenseId")
+    .notNull()
+    .references(() => expenses.id),
+  groupMemberId: integer("groupMemberId")
+    .notNull()
+    .references(() => groupMembers.id),
+  amountCents: integer("amountCents").notNull(),
+});
+
+export const expenseSplits = createTable("expense_splits", {
+  id: serial("id").primaryKey(),
+  expenseId: integer("expenseId")
+    .notNull()
+    .references(() => expenses.id),
+  groupMemberId: integer("groupMemberId")
+    .notNull()
+    .references(() => groupMembers.id),
+
+  // For "exact": rawValue = amountCents
+  // For "percent": rawValue = basis points (0..10000)
+  // For "shares": rawValue = positive shares count
+  // For "equal": rawValue = null
+  rawValue: integer("rawValue"),
+  owedAmountCents: integer("owedAmountCents").notNull(),
+});
+
+export const expensePayments = createTable("expense_payments", {
+  id: serial("id").primaryKey(),
+  groupId: integer("groupId")
+    .notNull()
+    .references(() => groups.id),
+  fromGroupMemberId: integer("fromGroupMemberId")
+    .notNull()
+    .references(() => groupMembers.id),
+  toGroupMemberId: integer("toGroupMemberId")
+    .notNull()
+    .references(() => groupMembers.id),
+  amountCents: integer("amountCents").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull(),
+  note: text("note"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
