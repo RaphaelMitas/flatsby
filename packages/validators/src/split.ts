@@ -14,7 +14,7 @@ export const SplitMethodSchema = z.enum([
   "shares",
 ]);
 
-export const currencySchema = z.enum(["EUR", "USD", "GBP"]);
+export const currencySchema = z.enum(["EUR"]);
 
 export const createExpenseSchema = z
   .object({

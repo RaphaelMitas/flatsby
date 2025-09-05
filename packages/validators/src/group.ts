@@ -71,6 +71,9 @@ export const groupMemberWithGroupMinimalSchema = groupMemberSchema.extend({
 
 export type GroupWithAccess = z.infer<typeof groupWithAccessSchema>;
 export type GroupMemberWithUser = z.infer<typeof groupMemberWithUserSchema>;
+export type GroupMemberWithUserWithoutGroupId = z.infer<
+  typeof groupMemberWithUserSchemaWithoutGroupId
+>;
 export type GroupMember = z.infer<typeof groupMemberSchema>;
 export type GroupWithGroupMembers = z.infer<typeof groupMemberWithGroupSchema>;
 export type GroupMemberWithGroupMinimal = z.infer<
