@@ -71,15 +71,3 @@ export type ShoppingListSummary = Pick<
 // Utility types for database operations
 export type DatabaseOperation<T> = () => Promise<T>;
 export type TransactionOperation<T> = (trx: DbTransaction) => Promise<T>;
-
-// Common query options
-export interface FindGroupOptions {
-  groupId: number;
-  userId: string;
-  includeMembers?: boolean;
-}
-
-export interface FindGroupMemberOptions {
-  memberId: number;
-  userId: string;
-}
