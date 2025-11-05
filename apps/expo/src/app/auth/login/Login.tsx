@@ -11,9 +11,18 @@ import { authClient, signIn } from "~/utils/auth/auth-client";
 
 const Login = () => {
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
 
   const callbackURL = Linking.createURL("/");
+
+  // Wait for session check to complete before redirecting
+  if (isPending) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <Icon name="loader" size={32} className="text-primary" />
+      </View>
+    );
+  }
 
   if (session) {
     return <Redirect href="/(tabs)" />;

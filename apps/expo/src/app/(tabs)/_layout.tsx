@@ -23,6 +23,11 @@ export default function TabLayout() {
   } = useShoppingStore();
   const { getColor } = useThemeColors();
 
+  // Wait for session check to complete before redirecting
+  if (session.isPending) {
+    return null; // Don't render tabs while checking session
+  }
+
   useEffect(() => {
     if (!session.data?.user) {
       return;
@@ -55,7 +60,8 @@ export default function TabLayout() {
     void prefetch(trpc.shoppingList.getUserGroups.queryOptions());
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
 
-  if (!session.data?.user) {
+  // Only redirect if session check is complete and no user exists
+  if (!session.isPending && !session.data?.user) {
     return <Redirect href="/auth/login" />;
   }
 

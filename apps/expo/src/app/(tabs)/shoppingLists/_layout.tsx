@@ -7,6 +7,21 @@ export default function ShoppingListsLayout() {
   const session = useSession();
   const themedScreenOptions = useThemedScreenOptions();
 
+  // Wait for session check to complete before redirecting
+  if (session.isPending) {
+    return (
+      <Stack initialRouteName="index" screenOptions={themedScreenOptions}>
+        <Stack.Screen
+          name="index"
+          options={{
+            title: "Loading...",
+            headerShown: false,
+          }}
+        />
+      </Stack>
+    );
+  }
+
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;
   }
