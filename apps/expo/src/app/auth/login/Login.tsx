@@ -1,19 +1,41 @@
 "use client";
 
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import * as Linking from "expo-linking";
 import { Redirect, Stack } from "expo-router";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { useThemeColors } from "~/lib/utils";
 import { authClient, signIn } from "~/utils/auth/auth-client";
 
 const Login = () => {
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
-  const { data: session } = authClient.useSession();
+  const {
+    data: session,
+    status,
+    isLoading,
+    isFetching,
+    fetchStatus,
+  } = authClient.useSession();
+  const { getColor } = useThemeColors();
 
   const callbackURL = Linking.createURL("/");
+
+  const isSessionLoading =
+    status === "pending" || isLoading || isFetching || fetchStatus === "fetching";
+
+  if (isSessionLoading) {
+    return (
+      <View className="flex-1 bg-background px-6 py-8">
+        <Stack.Screen name="/auth/login" options={{ headerShown: false }} />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={getColor("primary")} />
+        </View>
+      </View>
+    );
+  }
 
   if (session) {
     return <Redirect href="/(tabs)" />;

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { Redirect } from "expo-router";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
@@ -22,6 +23,12 @@ export default function TabLayout() {
     selectedShoppingListName,
   } = useShoppingStore();
   const { getColor } = useThemeColors();
+
+  const isSessionLoading =
+    session.status === "pending" ||
+    session.isLoading ||
+    session.isFetching ||
+    session.fetchStatus === "fetching";
 
   useEffect(() => {
     if (!session.data?.user) {
@@ -54,6 +61,21 @@ export default function TabLayout() {
 
     void prefetch(trpc.shoppingList.getUserGroups.queryOptions());
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
+
+  if (isSessionLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: getColor("background"),
+        }}
+      >
+        <ActivityIndicator color={getColor("primary")} />
+      </View>
+    );
+  }
 
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;

@@ -1,11 +1,34 @@
+import { ActivityIndicator, View } from "react-native";
 import { Redirect, Stack } from "expo-router";
 
-import { useThemedScreenOptions } from "~/lib/utils";
+import { useThemeColors, useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 
 export default function ShoppingListsLayout() {
   const session = useSession();
   const themedScreenOptions = useThemedScreenOptions();
+  const { getColor } = useThemeColors();
+
+  const isSessionLoading =
+    session.status === "pending" ||
+    session.isLoading ||
+    session.isFetching ||
+    session.fetchStatus === "fetching";
+
+  if (isSessionLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: getColor("background"),
+        }}
+      >
+        <ActivityIndicator color={getColor("primary")} />
+      </View>
+    );
+  }
 
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;
