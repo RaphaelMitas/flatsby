@@ -47,7 +47,8 @@ const skeletonVariants = tv({
 });
 
 interface SkeletonProps
-  extends React.ComponentProps<typeof View>,
+  extends
+    React.ComponentProps<typeof View>,
     VariantProps<typeof skeletonVariants> {
   animated?: boolean;
   children?: React.ReactNode;
