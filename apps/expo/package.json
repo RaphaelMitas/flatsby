@@ -56,7 +56,7 @@
     "react-native-safe-area-context": "~5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
-    "superjson": "2.2.2",
+    "superjson": "catalog:",
     "tailwind-variants": "^1.0.0"
   },
   "devDependencies": {
