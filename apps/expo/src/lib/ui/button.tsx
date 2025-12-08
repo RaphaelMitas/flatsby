@@ -66,8 +66,7 @@ const iconVariants = {
 } as const;
 
 interface ButtonProps
-  extends PressableProps,
-    VariantProps<typeof buttonVariants> {
+  extends PressableProps, VariantProps<typeof buttonVariants> {
   title: string;
   icon?: IconProps["name"];
 }
