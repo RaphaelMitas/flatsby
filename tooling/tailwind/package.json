@@ -23,7 +23,7 @@
     "@flatsby/eslint-config": "workspace:*",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
-    "@types/node": "^22.14.1",
+    "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
