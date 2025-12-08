@@ -186,8 +186,10 @@ export const getCategoryData = (categoryId: CategoryIdWithAiAutoSelect) => {
   return categoryMap[categoryId];
 };
 
-export interface CategoryPickerProps
-  extends Omit<BottomSheetPickerTriggerProps, "items" | "title"> {
+export interface CategoryPickerProps extends Omit<
+  BottomSheetPickerTriggerProps,
+  "items" | "title"
+> {
   value?: CategoryIdWithAiAutoSelect;
   onChange?: (value: CategoryIdWithAiAutoSelect) => void;
   excludeCategories?: CategoryIdWithAiAutoSelect[];
