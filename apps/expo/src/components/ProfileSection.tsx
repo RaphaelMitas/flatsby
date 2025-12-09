@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Text, View } from "react-native";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";

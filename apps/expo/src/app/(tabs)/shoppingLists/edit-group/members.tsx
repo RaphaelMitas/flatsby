@@ -1,5 +1,6 @@
 import type { ApiResult, GroupWithAccess } from "@flatsby/api";
-import React, { useCallback, useState } from "react";
+import type React from "react";
+import { useCallback, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
