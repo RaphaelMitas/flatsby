@@ -1,5 +1,5 @@
-import type { SharedValue } from "react-native-reanimated";
 import type React from "react";
+import type { SharedValue } from "react-native-reanimated";
 import { useCallback } from "react";
 import { Text, View } from "react-native";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";

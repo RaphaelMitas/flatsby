@@ -13,5 +13,3 @@ export const nextjsConfig = defineConfig({
     "@next/next/no-duplicate-head": "off",
   },
 });
-
-
