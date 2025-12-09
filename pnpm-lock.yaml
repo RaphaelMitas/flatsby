@@ -116,8 +116,8 @@ importers:
         specifier: ^0.9.2
         version: 0.9.2(@react-navigation/native@7.1.25(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native-bottom-tabs@0.9.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2)
       '@gorhom/bottom-sheet':
-        specifier: ^5
-        version: 5.1.6(@types/react@19.1.17)(react-native-gesture-handler@2.28.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native-reanimated@4.1.6(@babel/core@7.28.5)(react-native-worklets@0.5.2(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2)
+        specifier: ^5.2.8
+        version: 5.2.8(@types/react@19.1.17)(react-native-gesture-handler@2.28.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native-reanimated@4.1.6(@babel/core@7.28.5)(react-native-worklets@0.5.2(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2)
       '@hookform/resolvers':
         specifier: ^5.0.1
         version: 5.2.1(react-hook-form@7.62.0(react@19.1.2))
@@ -1860,15 +1860,15 @@ packages:
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
-  '@gorhom/bottom-sheet@5.1.6':
-    resolution: {integrity: sha512-0b5tQj4fTaZAjST1PnkCp0p7d8iRqMezibTcqc8Kkn3N23Vn6upORNTD1fH0bLfwRt6e0WnZ7DjAmq315lrcKQ==}
+  '@gorhom/bottom-sheet@5.2.8':
+    resolution: {integrity: sha512-+N27SMpbBxXZQ/IA2nlEV6RGxL/qSFHKfdFKcygvW+HqPG5jVNb1OqehLQsGfBP+Up42i0gW5ppI+DhpB7UCzA==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-native': '*'
       react: '*'
       react-native: '*'
       react-native-gesture-handler: '>=2.16.1'
-      react-native-reanimated: '>=3.16.0'
+      react-native-reanimated: '>=3.16.0 || >=4.0.0-'
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -9127,7 +9127,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.9': {}
 
-  '@gorhom/bottom-sheet@5.1.6(@types/react@19.1.17)(react-native-gesture-handler@2.28.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native-reanimated@4.1.6(@babel/core@7.28.5)(react-native-worklets@0.5.2(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2)':
+  '@gorhom/bottom-sheet@5.2.8(@types/react@19.1.17)(react-native-gesture-handler@2.28.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native-reanimated@4.1.6(@babel/core@7.28.5)(react-native-worklets@0.5.2(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2)':
     dependencies:
       '@gorhom/portal': 1.0.14(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(bufferutil@4.0.8)(react@19.1.2))(react@19.1.2)
       invariant: 2.2.4

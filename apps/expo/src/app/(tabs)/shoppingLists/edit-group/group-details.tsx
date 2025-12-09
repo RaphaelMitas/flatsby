@@ -134,7 +134,7 @@ export default function GroupDetailsScreen() {
 
   return (
     <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="flex-1 p-4">
+      <ScrollView className="p-4">
         {/* Group Profile Section */}
         <ProfileSection
           name={group.data.name}

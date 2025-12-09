@@ -89,7 +89,7 @@ export default function SettingsIndex() {
   return (
     <SafeAreaView className="bg-background flex-1">
       <Stack.Screen options={{ title: "Settings" }} />
-      <ScrollView className="flex-1">
+      <ScrollView>
         <SettingsHeader title={user.name} />
 
         <SettingsSection title="Appearance">

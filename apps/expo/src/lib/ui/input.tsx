@@ -6,7 +6,7 @@ import { tv } from "tailwind-variants";
 import { useThemeColors } from "../utils";
 
 const inputVariants = tv({
-  base: "h-12 w-full rounded-lg border border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground text-justify",
+  base: "h-12 w-full rounded-lg border border-input bg-background px-4 py-2 text-foreground",
   variants: {
     focused: {
       true: "border-primary",

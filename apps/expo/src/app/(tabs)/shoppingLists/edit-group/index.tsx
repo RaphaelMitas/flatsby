@@ -97,7 +97,7 @@ export default function GroupSettingsIndex() {
 
   return (
     <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="flex-1">
+      <ScrollView>
         <SettingsHeader title={group.data.name} />
 
         <SettingsSection title={group.data.name}>
