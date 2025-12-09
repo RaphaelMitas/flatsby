@@ -1,11 +1,5 @@
 import type { ReactNode } from "react";
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { trpc } from "~/utils/api";
@@ -27,18 +21,18 @@ interface ShoppingStoreState {
 const ShoppingStoreContext = createContext<ShoppingStoreState | null>(null);
 
 export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
-  const [selectedGroupId, setSelectedGroupIdState] = useState<number | null>(
+  // User-selected overrides (null = use persisted value from server)
+  const [groupIdOverride, setGroupIdOverride] = useState<number | null>(null);
+  const [groupNameOverride, setGroupNameOverride] = useState<string | null>(
     null,
   );
-  const [selectedGroupName, setSelectedGroupNameState] = useState<
-    string | null
-  >(null);
-  const [selectedShoppingListId, setSelectedShoppingListIdState] = useState<
+  const [shoppingListIdOverride, setShoppingListIdOverride] = useState<
     number | null
   >(null);
-  const [selectedShoppingListName, setSelectedShoppingListNameState] = useState<
+  const [shoppingListNameOverride, setShoppingListNameOverride] = useState<
     string | null
   >(null);
+
   const { data: res } = useQuery(
     trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),
   );
@@ -46,10 +40,23 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
     trpc.shoppingList.updateLastUsed.mutationOptions(),
   );
 
+  // Derive effective values: user override → persisted server data → null
+  const persistedGroup = res?.success ? res.data.user?.lastGroupUsed : null;
+  const persistedShoppingList = res?.success
+    ? res.data.user?.lastShoppingListUsed
+    : null;
+
+  const selectedGroupId = groupIdOverride ?? persistedGroup?.id ?? null;
+  const selectedGroupName = groupNameOverride ?? persistedGroup?.name ?? null;
+  const selectedShoppingListId =
+    shoppingListIdOverride ?? persistedShoppingList?.id ?? null;
+  const selectedShoppingListName =
+    shoppingListNameOverride ?? persistedShoppingList?.name ?? null;
+
   const setSelectedShoppingList = useCallback(
     (shoppingListId: number, shoppingListName: string) => {
-      setSelectedShoppingListIdState(shoppingListId);
-      setSelectedShoppingListNameState(shoppingListName);
+      setShoppingListIdOverride(shoppingListId);
+      setShoppingListNameOverride(shoppingListName);
       updateLastUsed.mutate({
         groupId: selectedGroupId,
         shoppingListId,
@@ -59,19 +66,19 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
   );
 
   const clearSelectedShoppingList = useCallback(() => {
-    setSelectedShoppingListIdState(null);
-    setSelectedShoppingListNameState(null);
+    setShoppingListIdOverride(null);
+    setShoppingListNameOverride(null);
   }, []);
 
   const setSelectedGroup = useCallback(
     (groupId: number, groupName: string) => {
-      setSelectedGroupIdState((prevGroupId) => {
+      setGroupIdOverride((prevGroupId) => {
         if (prevGroupId !== groupId) {
           clearSelectedShoppingList();
         }
         return groupId;
       });
-      setSelectedGroupNameState(groupName);
+      setGroupNameOverride(groupName);
       updateLastUsed.mutate({
         groupId,
         shoppingListId: null,
@@ -84,35 +91,9 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
     if (selectedShoppingListId || selectedShoppingListName) {
       clearSelectedShoppingList();
     }
-    setSelectedGroupIdState(null);
-    setSelectedGroupNameState(null);
+    setGroupIdOverride(null);
+    setGroupNameOverride(null);
   };
-
-  useEffect(() => {
-    if (res?.success) {
-      if (selectedGroupId === null && res.data.user?.lastGroupUsed) {
-        setSelectedGroup(
-          res.data.user.lastGroupUsed.id,
-          res.data.user.lastGroupUsed.name,
-        );
-      }
-      if (
-        selectedShoppingListId === null &&
-        res.data.user?.lastShoppingListUsed
-      ) {
-        setSelectedShoppingList(
-          res.data.user.lastShoppingListUsed.id,
-          res.data.user.lastShoppingListUsed.name,
-        );
-      }
-    }
-  }, [
-    res,
-    selectedGroupId,
-    selectedShoppingListId,
-    setSelectedGroup,
-    setSelectedShoppingList,
-  ]);
 
   return (
     <ShoppingStoreContext.Provider
