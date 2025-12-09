@@ -1,5 +1,5 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,

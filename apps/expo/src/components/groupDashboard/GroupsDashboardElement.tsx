@@ -1,6 +1,6 @@
 import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
-import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type React from "react";
+import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -57,7 +57,6 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const deleteGroupMutation = useMutation(
     trpc.shoppingList.deleteGroup.mutationOptions({
       onMutate: () => {
-        swipeableRef.current?.close();
         void queryClient.cancelQueries(
           trpc.shoppingList.getUserGroups.queryOptions(),
         );
@@ -101,6 +100,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
 
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
+    swipeableRef.current?.close();
     deleteGroupMutation.mutate({ groupId: group.id });
   };
 

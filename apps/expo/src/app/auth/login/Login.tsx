@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Text, View } from "react-native";
 import * as Linking from "expo-linking";
 import { Redirect, Stack } from "expo-router";

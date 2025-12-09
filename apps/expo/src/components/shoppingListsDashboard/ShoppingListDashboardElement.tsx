@@ -1,7 +1,6 @@
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import type React from "react";
 import { useCallback, useRef, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -38,10 +37,7 @@ const formSchema = z.object({
     }),
 });
 
-const ShoppingListDashboardElement: React.FC<Props> = ({
-  shoppingList,
-  groupId,
-}) => {
+const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const { setSelectedShoppingList } = useShoppingStore();
@@ -84,7 +80,6 @@ const ShoppingListDashboardElement: React.FC<Props> = ({
   const deleteShoppingListMutation = useMutation(
     trpc.shoppingList.deleteShoppingList.mutationOptions({
       onMutate: () => {
-        swipeableRef.current?.close();
         void queryClient.cancelQueries(
           trpc.shoppingList.getShoppingLists.queryOptions({
             groupId,
@@ -208,6 +203,7 @@ const ShoppingListDashboardElement: React.FC<Props> = ({
 
   const handleDeleteList = () => {
     setShowDeleteModal(false);
+    swipeableRef.current?.close();
     deleteShoppingListMutation.mutate({
       groupId,
       shoppingListId: shoppingList.id,

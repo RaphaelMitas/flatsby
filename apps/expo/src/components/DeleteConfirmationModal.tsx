@@ -1,7 +1,7 @@
 import type React from "react";
 import { useCallback } from "react";
 import { Modal, Text, View } from "react-native";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -38,7 +38,10 @@ const DeleteConfirmationModal: React.FC<Props> = ({
     },
   });
 
-  const confirmationInput = form.watch("confirmationInput");
+  const confirmationInput = useWatch({
+    control: form.control,
+    name: "confirmationInput",
+  });
   const isConfirmationValid = confirmationInput === itemName;
 
   const handleConfirm = useCallback(() => {

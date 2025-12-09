@@ -1,6 +1,6 @@
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import React, { useCallback, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { ScrollView, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Stack, useRouter } from "expo-router";

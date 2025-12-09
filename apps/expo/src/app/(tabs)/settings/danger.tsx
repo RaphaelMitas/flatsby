@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import {
   useMutation,
