@@ -65,24 +65,24 @@ const DeleteConfirmationModal: React.FC<Props> = ({
       onRequestClose={handleClose}
     >
       <View className="flex-1 items-center justify-center bg-black/50">
-        <View className="mx-4 w-full max-w-sm rounded-lg bg-background p-6 shadow-lg">
+        <View className="bg-background mx-4 w-full max-w-sm rounded-lg p-6 shadow-lg">
           <View className="mb-4 flex-row items-center gap-3">
             <Icon name="triangle-alert" size={24} color="destructive" />
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-foreground text-lg font-semibold">
               {title}
             </Text>
           </View>
 
-          <Text className="mb-6 text-sm text-muted-foreground">
+          <Text className="text-muted-foreground mb-6 text-sm">
             {description ?? defaultDescription}
           </Text>
 
           <Form {...form}>
             <View className="mb-6 gap-2">
-              <Text className="text-sm font-medium text-foreground">
+              <Text className="text-foreground text-sm font-medium">
                 Confirmation Required
               </Text>
-              <Label className="mb-2 text-sm text-muted-foreground">
+              <Label className="text-muted-foreground mb-2 text-sm">
                 {confirmationLabel ?? defaultConfirmationLabel}
               </Label>
               <FormField

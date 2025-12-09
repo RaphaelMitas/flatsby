@@ -98,7 +98,7 @@ export default function CreateGroup() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background flex-1">
       <View className="flex-1 p-4">
         <Form {...form}>
           <View className="flex gap-2">

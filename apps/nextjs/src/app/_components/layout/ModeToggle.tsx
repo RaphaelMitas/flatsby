@@ -20,9 +20,9 @@ export function ModeToggle() {
           {theme === "dark" ? (
             <Moon className="mr-2 h-4 w-4" />
           ) : theme === "light" ? (
-            <Sun className="mr-2 h-4 w-4 text-primary" />
+            <Sun className="text-primary mr-2 h-4 w-4" />
           ) : (
-            <SunMoon className="mr-2 h-4 w-4 text-primary" />
+            <SunMoon className="text-primary mr-2 h-4 w-4" />
           )}
           {theme === "dark" ? "Dark" : theme === "light" ? "Light" : "System"}
           <span className="sr-only">Toggle theme</span>

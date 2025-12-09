@@ -142,7 +142,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
       >
         <View
           className={cn(
-            "flex flex-row rounded-md bg-muted p-4",
+            "bg-muted flex flex-row rounded-md p-4",
             isSelected && "bg-primary",
             isOptimistic && "animate-pulse",
           )}
@@ -158,7 +158,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
               <View className="flex-1">
                 <Text
                   className={cn(
-                    "text-lg font-semibold text-primary",
+                    "text-primary text-lg font-semibold",
                     isSelected && "text-primary-foreground",
                   )}
                 >
@@ -166,7 +166,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
                 </Text>
                 <Text
                   className={cn(
-                    "mt-1 text-sm text-muted-foreground",
+                    "text-muted-foreground mt-1 text-sm",
                     isSelected && "text-muted",
                   )}
                 >

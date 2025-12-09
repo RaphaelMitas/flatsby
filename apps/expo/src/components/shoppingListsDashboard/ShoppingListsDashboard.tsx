@@ -14,8 +14,8 @@ export function ShoppingListsDashboard() {
 
   if (!selectedGroupId) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-background p-4">
-        <Text className="text-center text-lg font-semibold text-muted-foreground">
+      <View className="bg-background flex-1 items-center justify-center gap-4 p-4">
+        <Text className="text-muted-foreground text-center text-lg font-semibold">
           Select a group to view its shopping lists
         </Text>
         <Button
@@ -54,9 +54,9 @@ function ShoppingListsDashboardInner() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background flex-1">
       <ScrollView
-        className="flex-1 bg-background"
+        className="bg-background flex-1"
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
@@ -65,7 +65,7 @@ function ShoppingListsDashboardInner() {
           <View className="flex-1 p-4">
             {/* Header */}
             <View className="mb-6 flex-row items-center justify-between">
-              <Text className="text-2xl font-bold text-foreground">
+              <Text className="text-foreground text-2xl font-bold">
                 {selectedGroupName}
               </Text>
               <Button
@@ -96,10 +96,10 @@ function ShoppingListsDashboardInner() {
             <View className="gap-4">
               {shoppingLists.data.length === 0 ? (
                 <View className="flex items-center justify-center py-8">
-                  <Text className="text-center text-lg font-semibold text-foreground">
+                  <Text className="text-foreground text-center text-lg font-semibold">
                     No shopping lists yet
                   </Text>
-                  <Text className="mt-2 text-center text-sm text-muted-foreground">
+                  <Text className="text-muted-foreground mt-2 text-center text-sm">
                     Create your first shopping list to get started
                   </Text>
                 </View>

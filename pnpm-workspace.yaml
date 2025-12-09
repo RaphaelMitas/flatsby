@@ -32,7 +32,7 @@ catalog:
   "@trpc/server": ^11.7.2
 
   # Next.js
-  next: ^15.4.8
+  next: ^16.0.7
 
   # AI SDK
   "ai": ^5.0.52

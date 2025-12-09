@@ -259,11 +259,11 @@ const MemberCard = ({
               <div className="inline truncate font-medium">
                 {groupMember.user.name}
               </div>
-              <div className="inline-block text-sm text-muted-foreground">
+              <div className="text-muted-foreground inline-block text-sm">
                 {isUserAdmin && "(admin)"}
               </div>
             </div>
-            <div className="truncate text-sm text-muted-foreground">
+            <div className="text-muted-foreground truncate text-sm">
               {groupMember.user.email}
             </div>
           </div>
@@ -276,7 +276,7 @@ const MemberCard = ({
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end">
-              <div className="flex w-full max-w-md flex-col gap-4 rounded-lg bg-card p-6">
+              <div className="bg-card flex w-full max-w-md flex-col gap-4 rounded-lg p-6">
                 {isCurrentUserAdmin && (
                   <>
                     <div className="text-sm font-semibold">

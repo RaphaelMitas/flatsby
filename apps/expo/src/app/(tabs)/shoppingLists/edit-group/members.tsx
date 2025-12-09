@@ -46,7 +46,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
   return (
     <Pressable
       onPress={canManage ? onPress : undefined}
-      className={`flex-row items-center justify-between bg-background px-4 py-3 ${
+      className={`bg-background flex-row items-center justify-between px-4 py-3 ${
         canManage ? "active:bg-muted" : ""
       }`}
     >
@@ -62,18 +62,18 @@ const MemberCard: React.FC<MemberCardProps> = ({
         <View className="flex-1">
           <View className="flex-row items-center">
             <Text
-              className="flex-shrink font-medium text-foreground"
+              className="text-foreground flex-shrink font-medium"
               numberOfLines={1}
             >
               {groupMember.user.name}
             </Text>
             {isUserAdmin && (
-              <Text className="ml-1 text-sm font-medium text-muted-foreground">
+              <Text className="text-muted-foreground ml-1 text-sm font-medium">
                 (Admin)
               </Text>
             )}
           </View>
-          <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+          <Text className="text-muted-foreground text-sm" numberOfLines={1}>
             {groupMember.user.email}
           </Text>
         </View>
@@ -239,21 +239,21 @@ export default function MembersScreen() {
   const isAdmin = group.data.thisGroupMember.role === "admin";
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background flex-1">
       <ScrollView className="flex-1">
         {/* Header */}
         <View className="bg-background px-4 py-6">
-          <Text className="text-2xl font-bold text-foreground">
+          <Text className="text-foreground text-2xl font-bold">
             Manage Members
           </Text>
-          <Text className="text-sm text-muted-foreground">
+          <Text className="text-muted-foreground text-sm">
             Add new members and update their roles.
           </Text>
         </View>
 
         {/* Add Member Section */}
         <View className="bg-card px-4 py-4">
-          <Text className="mb-3 text-base font-medium text-foreground">
+          <Text className="text-foreground mb-3 text-base font-medium">
             Add Member
           </Text>
           <View className="gap-3">
@@ -311,9 +311,9 @@ export default function MembersScreen() {
           )}
 
         {/* Members List */}
-        <View className="flex-1 bg-background">
+        <View className="bg-background flex-1">
           <View className="flex-row items-center justify-between px-4 py-3">
-            <Text className="text-base font-medium text-foreground">
+            <Text className="text-foreground text-base font-medium">
               Members ({group.data.groupMembers.length})
             </Text>
           </View>
@@ -322,7 +322,7 @@ export default function MembersScreen() {
               data={group.data.groupMembers}
               renderItem={renderMemberItem}
               estimatedItemSize={80}
-              ItemSeparatorComponent={() => <View className="h-px bg-border" />}
+              ItemSeparatorComponent={() => <View className="bg-border h-px" />}
               showsVerticalScrollIndicator={false}
             />
           </View>

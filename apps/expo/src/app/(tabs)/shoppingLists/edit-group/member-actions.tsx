@@ -65,7 +65,7 @@ export default function MemberActionsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background flex-1">
       <View className="flex-1 p-6">
         <View className="mb-6 flex-row items-center gap-3">
           <Avatar>
@@ -77,10 +77,10 @@ export default function MemberActionsScreen() {
             </AvatarFallback>
           </Avatar>
           <View className="flex-1">
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-foreground text-lg font-semibold">
               {groupMember.user.name}
             </Text>
-            <Text className="text-sm text-muted-foreground">
+            <Text className="text-muted-foreground text-sm">
               {groupMember.user.email}
             </Text>
           </View>
@@ -88,7 +88,7 @@ export default function MemberActionsScreen() {
 
         {isCurrentUserAdmin && (
           <View className="mb-6 gap-3">
-            <Text className="text-sm font-medium text-foreground">
+            <Text className="text-foreground text-sm font-medium">
               Change Role
             </Text>
             <View className="flex-row gap-2">
@@ -108,7 +108,7 @@ export default function MemberActionsScreen() {
           </View>
         )}
 
-        <Text className="mb-6 text-sm font-medium text-foreground">
+        <Text className="text-foreground mb-6 text-sm font-medium">
           Manage Member
         </Text>
         <View className="flex-row gap-3">

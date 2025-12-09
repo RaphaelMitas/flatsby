@@ -15,6 +15,7 @@ import { tv } from "tailwind-variants";
 
 import { useThemeColors } from "../utils";
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const BottomSheet = styled(BottomSheetRaw, {
   className: {
     target: "backgroundStyle",

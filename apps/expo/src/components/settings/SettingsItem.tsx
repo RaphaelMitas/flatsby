@@ -23,7 +23,7 @@ export const SettingsItem = ({
   return (
     <Pressable
       onPress={onPress}
-      className={`flex-row items-center justify-between border-b border-border bg-card px-4 py-3 active:bg-muted ${
+      className={`border-border bg-card active:bg-muted flex-row items-center justify-between border-b px-4 py-3 ${
         isDestructive ? "bg-destructive/10" : ""
       }`}
     >
@@ -48,7 +48,7 @@ export const SettingsItem = ({
             {title}
           </Text>
           {subtitle && (
-            <Text className="text-sm text-muted-foreground">{subtitle}</Text>
+            <Text className="text-muted-foreground text-sm">{subtitle}</Text>
           )}
         </View>
       </View>

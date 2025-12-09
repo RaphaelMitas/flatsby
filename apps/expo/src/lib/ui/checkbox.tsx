@@ -36,7 +36,7 @@ const Checkbox = React.forwardRef<
       >
         <View
           className={cn(
-            "h-6 w-6 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+            "border-primary focus-visible:ring-ring h-6 w-6 shrink-0 rounded-sm border shadow focus-visible:ring-1 focus-visible:outline-none",
             checked && "bg-primary",
             disabled && "cursor-not-allowed opacity-50",
             className,
@@ -44,7 +44,7 @@ const Checkbox = React.forwardRef<
         >
           <View className="flex-1 items-center justify-center">
             {checked && (
-              <Text className="text-xs font-bold text-primary-foreground">
+              <Text className="text-primary-foreground text-xs font-bold">
                 ✓
               </Text>
             )}

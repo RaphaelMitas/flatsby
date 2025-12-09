@@ -223,8 +223,8 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
     (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
       return (
         <Reanimated.View style={rightActionStyle}>
-          <View className="h-full w-full items-end justify-center rounded-md bg-destructive p-4">
-            <Text className="text-sm font-medium text-destructive-foreground">
+          <View className="bg-destructive h-full w-full items-end justify-center rounded-md p-4">
+            <Text className="text-destructive-foreground text-sm font-medium">
               Delete
             </Text>
           </View>
@@ -238,7 +238,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
     (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
       return (
         <Reanimated.View style={leftActionStyle}>
-          <View className="h-full w-full items-start justify-center rounded-md bg-primary p-4">
+          <View className="bg-primary h-full w-full items-start justify-center rounded-md p-4">
             {isRenaming ? (
               <View className="flex-row items-center gap-2">
                 <Form {...form}>
@@ -271,7 +271,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
                 </Form>
               </View>
             ) : (
-              <Text className="text-sm font-medium text-primary-foreground">
+              <Text className="text-primary-foreground text-sm font-medium">
                 Rename
               </Text>
             )}
@@ -315,7 +315,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
       >
         <TouchableOpacity
           className={cn(
-            "flex-row items-center justify-between rounded-lg bg-muted p-4",
+            "bg-muted flex-row items-center justify-between rounded-lg p-4",
             isOptimistic && "animate-pulse",
           )}
           disabled={isOptimistic}
@@ -323,16 +323,16 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
           activeOpacity={0.7}
         >
           <View className="flex-1">
-            <Text className="text-lg font-semibold text-primary">
+            <Text className="text-primary text-lg font-semibold">
               {shoppingList.name}
             </Text>
             {shoppingList.description && (
-              <Text className="mt-1 text-sm text-muted-foreground">
+              <Text className="text-muted-foreground mt-1 text-sm">
                 {shoppingList.description}
               </Text>
             )}
           </View>
-          <Text className="text-sm text-muted-foreground">
+          <Text className="text-muted-foreground text-sm">
             {shoppingList.uncheckedItemLength === 1
               ? "1 item left"
               : `${shoppingList.uncheckedItemLength} items left`}

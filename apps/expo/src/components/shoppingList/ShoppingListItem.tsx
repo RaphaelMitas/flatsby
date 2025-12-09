@@ -206,7 +206,7 @@ const ShoppingListItem = ({
         <TouchableOpacity
           disabled={item.isPending}
           onPress={() => setShowDetails(true)}
-          className={"flex-row items-center rounded-lg bg-muted"}
+          className={"bg-muted flex-row items-center rounded-lg"}
           style={{
             opacity: item.isPending ? 0.7 : 1,
           }}
@@ -249,13 +249,13 @@ const ShoppingListItem = ({
           className="flex-1 items-center justify-center bg-black/50"
           onPress={() => setShowDetails(false)}
         >
-          <View className="mx-4 w-full max-w-sm rounded-lg bg-background p-6 shadow-lg">
+          <View className="bg-background mx-4 w-full max-w-sm rounded-lg p-6 shadow-lg">
             <View className="flex-row justify-between gap-4">
               <View className="flex-1">
-                <Text className="text-sm font-medium text-foreground">
+                <Text className="text-foreground text-sm font-medium">
                   {item.name}
                 </Text>
-                <Text className="text-xs text-muted-foreground">
+                <Text className="text-muted-foreground text-xs">
                   {item.completed
                     ? `Done by ${completedByMember?.user.name ?? "unknown"} · ${
                         item.completedAt?.toLocaleDateString() ?? ""
@@ -272,10 +272,10 @@ const ShoppingListItem = ({
             </View>
 
             <TouchableOpacity
-              className="mt-4 rounded bg-muted p-3"
+              className="bg-muted mt-4 rounded p-3"
               onPress={() => setShowDetails(false)}
             >
-              <Text className="text-center text-sm text-muted-foreground">
+              <Text className="text-muted-foreground text-center text-sm">
                 Close
               </Text>
             </TouchableOpacity>

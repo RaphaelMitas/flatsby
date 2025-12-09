@@ -133,7 +133,7 @@ export default function GroupDetailsScreen() {
   const memberCount = group.data.groupMembers.length;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background flex-1">
       <ScrollView className="flex-1 p-4">
         {/* Group Profile Section */}
         <ProfileSection
@@ -145,14 +145,14 @@ export default function GroupDetailsScreen() {
         />
 
         {/* Group Name Edit Section */}
-        <View className="gap-4 rounded-lg bg-card p-4">
-          <Text className="mb-4 text-lg font-semibold text-foreground">
+        <View className="bg-card gap-4 rounded-lg p-4">
+          <Text className="text-foreground mb-4 text-lg font-semibold">
             Group Details
           </Text>
 
           {!isAdmin && (
-            <View className="mb-4 rounded-lg bg-muted p-3">
-              <Text className="text-sm text-muted-foreground">
+            <View className="bg-muted mb-4 rounded-lg p-3">
+              <Text className="text-muted-foreground text-sm">
                 Only group administrators can edit group details.
               </Text>
             </View>
