@@ -1,4 +1,3 @@
-import React from "react";
 import { RefreshControl, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import {
   useMutation,
@@ -29,6 +29,7 @@ const formSchema = z.object({
 
 export default function ProfileScreen() {
   const queryClient = useQueryClient();
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const { data: user } = useSuspenseQuery(
     trpc.shoppingList.getCurrentUser.queryOptions(),
@@ -51,6 +52,11 @@ export default function ProfileScreen() {
         void queryClient.invalidateQueries(
           trpc.shoppingList.getCurrentUser.queryOptions(),
         );
+
+        setShowSuccessMessage(true);
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000);
       },
       onError: (err) => {
         onUpdateUserNameError(err.message);
@@ -68,25 +74,8 @@ export default function ProfileScreen() {
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     const newName = values.name;
     if (!newName) return;
-    updateUserNameMutation.mutate({
-      name: newName,
-    });
+    updateUserNameMutation.mutate({ name: newName });
   };
-
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-
-  useEffect(() => {
-    if (
-      updateUserNameMutation.isSuccess &&
-      updateUserNameMutation.data.success
-    ) {
-      setShowSuccessMessage(true);
-      const timer = setTimeout(() => {
-        setShowSuccessMessage(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [updateUserNameMutation.isSuccess, updateUserNameMutation.data]);
 
   return (
     <SafeAreaView className="flex-1 bg-background">

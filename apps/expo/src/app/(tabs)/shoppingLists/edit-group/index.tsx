@@ -1,5 +1,5 @@
 import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
-import React, { useState } from "react";
+import { useState } from "react";
 import { ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import {

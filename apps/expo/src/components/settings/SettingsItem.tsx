@@ -1,4 +1,3 @@
-import React from "react";
 import { Pressable, Text, View } from "react-native";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";

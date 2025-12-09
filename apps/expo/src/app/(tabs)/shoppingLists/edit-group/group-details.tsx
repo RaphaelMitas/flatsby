@@ -1,5 +1,5 @@
 import type { ApiResult, GroupWithAccess } from "@flatsby/api";
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -97,6 +97,11 @@ export default function GroupDetailsScreen() {
         void queryClient.invalidateQueries(
           trpc.shoppingList.getUserGroups.queryOptions(),
         );
+
+        setShowSuccessMessage(true);
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000);
       },
       onError: (err, variables, context) => {
         onUpdateGroupNameError(err.message, context?.previousGroup);
@@ -119,22 +124,6 @@ export default function GroupDetailsScreen() {
       name: newName,
     });
   };
-
-  useEffect(() => {
-    if (
-      updateGroupNameMutation.isSuccess &&
-      updateGroupNameMutation.data.success
-    ) {
-      setShowSuccessMessage(true);
-      const timer = setTimeout(() => {
-        setShowSuccessMessage(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [
-    updateGroupNameMutation.isSuccess,
-    updateGroupNameMutation.data?.success,
-  ]);
 
   if (!group.success) {
     return handleApiError({ router, error: group.error });

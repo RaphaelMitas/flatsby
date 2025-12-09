@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import { Text, View } from "react-native";
 
 import ShoppingList from "~/components/shoppingList/ShoppingList";

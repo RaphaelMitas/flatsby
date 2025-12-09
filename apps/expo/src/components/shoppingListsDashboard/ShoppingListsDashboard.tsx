@@ -1,4 +1,3 @@
-import React from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { router, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";

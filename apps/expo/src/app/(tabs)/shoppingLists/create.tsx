@@ -1,6 +1,5 @@
 import type { ShoppingListSummary } from "@flatsby/api";
 import type { ApiResult } from "node_modules/@flatsby/api/dist/errors";
-import React from "react";
 import { Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

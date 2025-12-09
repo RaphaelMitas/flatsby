@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { GroupsDashboard } from "./GroupsDashboard";
