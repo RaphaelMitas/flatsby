@@ -45,7 +45,7 @@ export const ShoppingListItemAddForm = ({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleSubmit)}
+        onSubmit={(e) => form.handleSubmit(handleSubmit)(e)}
         className="sticky bottom-0 bg-background p-4"
       >
         <div className="flex flex-col gap-2">
