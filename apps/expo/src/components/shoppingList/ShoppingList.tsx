@@ -357,7 +357,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
             keyboardDismissMode="on-drag"
-            estimatedItemSize={60}
           />
           <ShoppingListItemAddForm onSubmit={handleSubmit} />
         </View>

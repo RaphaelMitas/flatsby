@@ -142,7 +142,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
       >
         <View
           className={cn(
-            "bg-muted flex flex-row rounded-md p-4",
+            "bg-muted flex flex-row rounded-lg p-4",
             isSelected && "bg-primary",
             isOptimistic && "animate-pulse",
           )}

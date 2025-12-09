@@ -321,7 +321,6 @@ export default function MembersScreen() {
             <FlashList
               data={group.data.groupMembers}
               renderItem={renderMemberItem}
-              estimatedItemSize={80}
               ItemSeparatorComponent={() => <View className="bg-border h-px" />}
               showsVerticalScrollIndicator={false}
             />

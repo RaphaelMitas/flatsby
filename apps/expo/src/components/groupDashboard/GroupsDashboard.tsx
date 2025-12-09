@@ -56,7 +56,6 @@ export function GroupsDashboard() {
         )}
         <FlashList
           data={groups.data}
-          estimatedItemSize={80}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }

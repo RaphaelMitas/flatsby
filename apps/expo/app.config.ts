@@ -32,8 +32,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     edgeToEdgeEnabled: true,
   },
+  newArchEnabled: true,
   extra: { eas: { projectId: "7b82dd84-3fdf-4f1d-953a-7dd9bfa39314" } },
-  experiments: { tsconfigPaths: true, typedRoutes: true },
+  experiments: {
+    tsconfigPaths: true,
+    typedRoutes: true,
+    reactCanary: true,
+    reactCompiler: true,
+  },
   plugins: [
     "expo-router",
     "expo-secure-store",

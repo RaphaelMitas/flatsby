@@ -44,7 +44,7 @@ const itemDescriptionVariants = tv({
 });
 
 const triggerVariants = tv({
-  base: "flex-row gap-2 items-center rounded-md border border-input h-12 justify-center px-4 py-2",
+  base: "flex-row gap-2 items-center rounded-lg border border-input h-12 justify-center px-4 py-2",
   variants: {
     iconButton: {
       true: "justify-center h-12 w-12 p-0",
@@ -207,7 +207,7 @@ export const BottomSheetPickerProvider: React.FC<
             platform: Platform.OS === "ios" ? "ios" : "default",
           })}
           data={pickerConfig?.items ?? []}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: BottomSheetPickerItem) => item.id}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
           estimatedItemSize={90}

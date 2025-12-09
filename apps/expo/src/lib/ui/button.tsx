@@ -8,7 +8,7 @@ import type { IconProps } from "./custom/icons/Icon";
 import Icon from "./custom/icons/Icon";
 
 const buttonVariants = tv({
-  base: "flex-row items-center justify-center rounded-md transition-colors gap-2",
+  base: "flex-row items-center justify-center rounded-lg transition-colors gap-2",
   variants: {
     variant: {
       primary: "bg-primary",

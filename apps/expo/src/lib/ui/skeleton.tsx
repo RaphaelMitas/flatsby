@@ -11,7 +11,7 @@ import Animated, {
 import { tv } from "tailwind-variants";
 
 const skeletonVariants = tv({
-  base: "bg-muted rounded-md overflow-hidden",
+  base: "bg-muted rounded-lg overflow-hidden",
   variants: {
     variant: {
       default: "bg-muted",

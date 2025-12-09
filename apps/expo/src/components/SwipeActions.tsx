@@ -55,7 +55,7 @@ export const useSwipeActions = ({
       return (
         <Reanimated.View style={rightActionStyle}>
           <View
-            className="h-full w-full items-end justify-center rounded-md p-4"
+            className="h-full w-full items-end justify-center rounded-lg p-4"
             style={{ backgroundColor: getColor(rightAction.backgroundColor) }}
           >
             <Text
@@ -78,7 +78,7 @@ export const useSwipeActions = ({
       return (
         <Reanimated.View style={leftActionStyle}>
           <View
-            className="h-full w-full items-start justify-center rounded-md p-4"
+            className="h-full w-full items-start justify-center rounded-lg p-4"
             style={{ backgroundColor: getColor(leftAction.backgroundColor) }}
           >
             <Text

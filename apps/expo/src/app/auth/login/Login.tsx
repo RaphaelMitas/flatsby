@@ -21,7 +21,7 @@ const Login = () => {
 
   return (
     <View className="bg-background flex-1 px-6 py-8">
-      <Stack.Screen name="/auth/login" options={{ headerShown: false }} />
+      <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 justify-center">
         {/* Header Section */}
         <View className="mb-12 items-center">
