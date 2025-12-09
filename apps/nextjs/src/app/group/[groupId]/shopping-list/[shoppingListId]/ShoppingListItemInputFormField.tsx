@@ -57,7 +57,7 @@ export const ShoppingListItemInputFormField = forwardRef<
         <Button
           type="button"
           variant="ghost"
-          className="absolute -top-2 right-0 h-10 text-xs text-info hover:bg-[unset] hover:text-info md:hover:underline"
+          className="text-info hover:text-info absolute top-0 right-0 h-10 text-xs hover:bg-[unset] md:hover:underline"
           disabled={categorizeItem.isPending}
           onClick={() => categorizeItem.mutateAsync({ itemName: field.value })}
         >

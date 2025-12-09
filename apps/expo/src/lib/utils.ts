@@ -1,8 +1,8 @@
 import type { ApiErrorResult } from "@flatsby/api";
 import type { ClassValue } from "clsx";
 import type { useRouter } from "expo-router";
+import { useColorScheme } from "react-native";
 import { clsx } from "clsx";
-import { useColorScheme } from "nativewind";
 import { twMerge } from "tailwind-merge";
 
 import { signOut } from "~/utils/auth/auth-client";
@@ -83,7 +83,7 @@ export const getColor = (
 
 // Hook to get colors based on current theme
 export const useThemeColors = () => {
-  const { colorScheme } = useColorScheme();
+  const colorScheme = useColorScheme();
   const themeColorScheme = colorScheme === "dark" ? "dark" : "light";
 
   return {

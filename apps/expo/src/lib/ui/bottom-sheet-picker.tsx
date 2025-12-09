@@ -10,12 +10,12 @@ import {
 } from "react";
 import { Keyboard, Platform, Pressable, Text, View } from "react-native";
 import BottomSheetRaw, { BottomSheetFlashList } from "@gorhom/bottom-sheet";
-import { cssInterop } from "nativewind";
+import { styled } from "nativewind";
 import { tv } from "tailwind-variants";
 
 import { useThemeColors } from "../utils";
 
-const BottomSheet = cssInterop(BottomSheetRaw, {
+const BottomSheet = styled(BottomSheetRaw, {
   className: {
     target: "backgroundStyle",
   },
