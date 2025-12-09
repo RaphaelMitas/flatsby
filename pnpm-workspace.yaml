@@ -20,8 +20,8 @@ catalog:
   "@turbo/gen": ^2.6.3
 
   # Misc
-  zod: ^3.25.49
-  "@t3-oss/env-nextjs": ^0.13.6
+  zod: ^4.1.12
+  "@t3-oss/env-nextjs": ^0.13.8
   superjson: ^2.2.6
   "@types/node": ^22.15.0
 

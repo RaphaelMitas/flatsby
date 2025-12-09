@@ -19,7 +19,7 @@ catalogs:
       specifier: ^9.38.0
       version: 9.39.1
     '@t3-oss/env-nextjs':
-      specifier: ^0.13.6
+      specifier: ^0.13.8
       version: 0.13.8
     '@tailwindcss/postcss':
       specifier: ^4.1.16
@@ -67,8 +67,8 @@ catalogs:
       specifier: ^5.8.3
       version: 5.9.3
     zod:
-      specifier: ^3.25.49
-      version: 3.25.76
+      specifier: ^4.1.12
+      version: 4.1.13
   react19:
     '@types/react':
       specifier: ~19.2.1
@@ -270,7 +270,7 @@ importers:
     dependencies:
       '@better-auth/expo':
         specifier: 'catalog:'
-        version: 1.4.5(ua6pcpt5aijjs3ysjl4okyruq4)
+        version: 1.4.5(37cmf4oq2tdd4dnl25bvizhrd4)
       '@flatsby/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -288,7 +288,7 @@ importers:
         version: link:../../packages/validators
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
-        version: 0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@3.25.76)
+        version: 0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@4.1.13)
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.12(react@19.2.1)
@@ -330,7 +330,7 @@ importers:
         version: 2.2.6
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: 4.1.13
     devDependencies:
       '@flatsby/eslint-config':
         specifier: workspace:*
@@ -379,7 +379,7 @@ importers:
     dependencies:
       '@ai-sdk/google':
         specifier: 'catalog:'
-        version: 2.0.3(zod@3.25.76)
+        version: 2.0.3(zod@4.1.13)
       '@flatsby/auth':
         specifier: workspace:*
         version: link:../auth
@@ -403,7 +403,7 @@ importers:
         version: 2.2.6
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: 4.1.13
     devDependencies:
       '@flatsby/eslint-config':
         specifier: workspace:*
@@ -428,16 +428,16 @@ importers:
     dependencies:
       '@better-auth/expo':
         specifier: 'catalog:'
-        version: 1.4.5(ua6pcpt5aijjs3ysjl4okyruq4)
+        version: 1.4.5(37cmf4oq2tdd4dnl25bvizhrd4)
       '@flatsby/db':
         specifier: workspace:*
         version: link:../db
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
-        version: 0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@3.25.76)
+        version: 0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@4.1.13)
       ai:
         specifier: 'catalog:'
-        version: 5.0.108(zod@3.25.76)
+        version: 5.0.108(zod@4.1.13)
       better-auth:
         specifier: 'catalog:'
         version: 1.4.5(next@15.5.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -452,11 +452,11 @@ importers:
         version: 19.2.1(react@19.2.1)
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: 4.1.13
     devDependencies:
       '@better-auth/cli':
         specifier: 'catalog:'
-        version: 1.4.5(@better-fetch/fetch@1.1.18)(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/better-sqlite3@7.6.13)(@types/react@19.2.7)(@vercel/postgres@0.10.0)(better-call@1.1.4(zod@3.25.76))(jose@6.1.3)(kysely@0.28.8)(mysql2@3.11.3)(nanostores@1.1.0)(next@15.5.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(postgres@3.4.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 1.4.5(@better-fetch/fetch@1.1.18)(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/better-sqlite3@7.6.13)(@types/react@19.2.7)(@vercel/postgres@0.10.0)(better-call@1.1.4(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(mysql2@3.11.3)(nanostores@1.1.0)(next@15.5.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(postgres@3.4.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@flatsby/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
@@ -486,19 +486,19 @@ importers:
         version: 0.10.4
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
-        version: 0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@3.25.76)
+        version: 0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@4.1.13)
       drizzle-orm:
         specifier: ^0.45.0
         version: 0.45.0(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.5.0)(gel@2.0.0)(kysely@0.28.8)(mysql2@3.11.3)(pg@8.16.3)(postgres@3.4.4)(prisma@5.22.0)
       drizzle-zod:
         specifier: ^0.8.3
-        version: 0.8.3(drizzle-orm@0.45.0(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.5.0)(gel@2.0.0)(kysely@0.28.8)(mysql2@3.11.3)(pg@8.16.3)(postgres@3.4.4)(prisma@5.22.0))(zod@3.25.76)
+        version: 0.8.3(drizzle-orm@0.45.0(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.5.0)(gel@2.0.0)(kysely@0.28.8)(mysql2@3.11.3)(pg@8.16.3)(postgres@3.4.4)(prisma@5.22.0))(zod@4.1.13)
       ws:
         specifier: ^8.18.1
         version: 8.18.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: 4.1.13
     devDependencies:
       '@flatsby/eslint-config':
         specifier: workspace:*
@@ -532,7 +532,7 @@ importers:
     dependencies:
       '@ai-sdk/google':
         specifier: 'catalog:'
-        version: 2.0.3(zod@3.25.76)
+        version: 2.0.3(zod@4.1.13)
       '@hookform/resolvers':
         specifier: ^5.0.1
         version: 5.2.1(react-hook-form@7.62.0(react@19.2.1))
@@ -571,7 +571,7 @@ importers:
         version: 1.2.3(@types/react@19.2.7)(react@19.2.1)
       ai:
         specifier: 'catalog:'
-        version: 5.0.108(zod@3.25.76)
+        version: 5.0.108(zod@4.1.13)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -623,13 +623,13 @@ importers:
         version: 5.9.3
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: 4.1.13
 
   packages/validators:
     dependencies:
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: 4.1.13
     devDependencies:
       '@flatsby/eslint-config':
         specifier: workspace:*
@@ -7795,9 +7795,6 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.1.13:
     resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
 
@@ -7807,33 +7804,33 @@ snapshots:
     optionalDependencies:
       graphql: 15.8.0
 
-  '@ai-sdk/gateway@2.0.18(zod@3.25.76)':
+  '@ai-sdk/gateway@2.0.18(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.18(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.18(zod@4.1.13)
       '@vercel/oidc': 3.0.5
-      zod: 3.25.76
+      zod: 4.1.13
 
-  '@ai-sdk/google@2.0.3(zod@3.25.76)':
+  '@ai-sdk/google@2.0.3(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.1(zod@3.25.76)
-      zod: 3.25.76
+      '@ai-sdk/provider-utils': 3.0.1(zod@4.1.13)
+      zod: 4.1.13
 
-  '@ai-sdk/provider-utils@3.0.1(zod@3.25.76)':
+  '@ai-sdk/provider-utils@3.0.1(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.3
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.5(zod@3.25.76)
+      zod: 4.1.13
+      zod-to-json-schema: 3.24.5(zod@4.1.13)
 
-  '@ai-sdk/provider-utils@3.0.18(zod@3.25.76)':
+  '@ai-sdk/provider-utils@3.0.18(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.6
-      zod: 3.25.76
+      zod: 4.1.13
 
   '@ai-sdk/provider@2.0.0':
     dependencies:
@@ -9466,12 +9463,12 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@better-auth/cli@1.4.5(@better-fetch/fetch@1.1.18)(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/better-sqlite3@7.6.13)(@types/react@19.2.7)(@vercel/postgres@0.10.0)(better-call@1.1.4(zod@3.25.76))(jose@6.1.3)(kysely@0.28.8)(mysql2@3.11.3)(nanostores@1.1.0)(next@15.5.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(postgres@3.4.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
+  '@better-auth/cli@1.4.5(@better-fetch/fetch@1.1.18)(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/better-sqlite3@7.6.13)(@types/react@19.2.7)(@vercel/postgres@0.10.0)(better-call@1.1.4(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(mysql2@3.11.3)(nanostores@1.1.0)(next@15.5.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(postgres@3.4.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
       '@babel/core': 7.28.5
       '@babel/preset-react': 7.28.5(@babel/core@7.28.5)
       '@babel/preset-typescript': 7.28.5(@babel/core@7.28.5)
-      '@better-auth/core': 1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@3.25.76))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
+      '@better-auth/core': 1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
       '@better-auth/utils': 0.3.0
       '@clack/prompts': 0.11.0
       '@mrleebo/prisma-ast': 0.13.1
@@ -9532,17 +9529,6 @@ snapshots:
       - svelte
       - vue
 
-  '@better-auth/core@1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@3.25.76))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)':
-    dependencies:
-      '@better-auth/utils': 0.3.0
-      '@better-fetch/fetch': 1.1.18
-      '@standard-schema/spec': 1.0.0
-      better-call: 1.1.4(zod@3.25.76)
-      jose: 6.1.3
-      kysely: 0.28.8
-      nanostores: 1.1.0
-      zod: 4.1.13
-
   '@better-auth/core@1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)':
     dependencies:
       '@better-auth/utils': 0.3.0
@@ -9553,6 +9539,18 @@ snapshots:
       kysely: 0.28.8
       nanostores: 1.1.0
       zod: 4.1.13
+
+  '@better-auth/expo@1.4.5(37cmf4oq2tdd4dnl25bvizhrd4)':
+    dependencies:
+      '@better-auth/core': 1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
+      '@better-fetch/fetch': 1.1.18
+      better-auth: 1.4.5(next@15.5.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      better-call: 1.1.4(zod@4.1.13)
+      zod: 4.1.13
+    optionalDependencies:
+      expo-constants: 17.1.7(expo@53.0.20(@babel/core@7.28.5)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1)))(bufferutil@4.0.8)(graphql@15.8.0)(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1))(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))
+      expo-linking: 7.1.7(expo@53.0.20(@babel/core@7.28.5)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1)))(bufferutil@4.0.8)(graphql@15.8.0)(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1))(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1)
+      expo-web-browser: 14.2.0(expo@53.0.20(@babel/core@7.28.5)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1)))(bufferutil@4.0.8)(graphql@15.8.0)(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1))(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))
 
   '@better-auth/expo@1.4.5(l3zx5ej7clf2dorexyybmtbija)':
     dependencies:
@@ -9565,24 +9563,6 @@ snapshots:
       expo-constants: 17.1.7(expo@53.0.20(@babel/core@7.26.10)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.26.10)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1)))(bufferutil@4.0.8)(graphql@15.8.0)(react-native@0.79.5(@babel/core@7.26.10)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1))(react-native@0.79.5(@babel/core@7.26.10)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))
       expo-linking: 7.1.7(expo@53.0.20(@babel/core@7.26.10)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.26.10)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1)))(bufferutil@4.0.8)(graphql@15.8.0)(react-native@0.79.5(@babel/core@7.26.10)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1))(react-native@0.79.5(@babel/core@7.26.10)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1)
       expo-web-browser: 14.2.0(expo@53.0.20(@babel/core@7.26.10)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.26.10)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1)))(bufferutil@4.0.8)(graphql@15.8.0)(react-native@0.79.5(@babel/core@7.26.10)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1))(react-native@0.79.5(@babel/core@7.26.10)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))
-
-  '@better-auth/expo@1.4.5(ua6pcpt5aijjs3ysjl4okyruq4)':
-    dependencies:
-      '@better-auth/core': 1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@3.25.76))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
-      '@better-fetch/fetch': 1.1.18
-      better-auth: 1.4.5(next@15.5.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      better-call: 1.1.4(zod@4.1.13)
-      zod: 4.1.13
-    optionalDependencies:
-      expo-constants: 17.1.7(expo@53.0.20(@babel/core@7.28.5)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1)))(bufferutil@4.0.8)(graphql@15.8.0)(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1))(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))
-      expo-linking: 7.1.7(expo@53.0.20(@babel/core@7.28.5)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1)))(bufferutil@4.0.8)(graphql@15.8.0)(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1))(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1)
-      expo-web-browser: 14.2.0(expo@53.0.20(@babel/core@7.28.5)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1)))(bufferutil@4.0.8)(graphql@15.8.0)(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))(react@19.2.1))(react-native@0.79.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.0.8)(react@19.2.1))
-
-  '@better-auth/telemetry@1.4.5(@better-auth/core@1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@3.25.76))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))':
-    dependencies:
-      '@better-auth/core': 1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@3.25.76))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
-      '@better-auth/utils': 0.3.0
-      '@better-fetch/fetch': 1.1.18
 
   '@better-auth/telemetry@1.4.5(@better-auth/core@1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))':
     dependencies:
@@ -11606,19 +11586,19 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@t3-oss/env-core@0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@3.25.76)':
+  '@t3-oss/env-core@0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@4.1.13)':
     optionalDependencies:
       typescript: 5.9.3
       valibot: 1.0.0-beta.15(typescript@5.9.3)
-      zod: 3.25.76
+      zod: 4.1.13
 
-  '@t3-oss/env-nextjs@0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@3.25.76)':
+  '@t3-oss/env-nextjs@0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@4.1.13)':
     dependencies:
-      '@t3-oss/env-core': 0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@3.25.76)
+      '@t3-oss/env-core': 0.13.8(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@4.1.13)
     optionalDependencies:
       typescript: 5.9.3
       valibot: 1.0.0-beta.15(typescript@5.9.3)
-      zod: 3.25.76
+      zod: 4.1.13
 
   '@tailwindcss/node@4.1.17':
     dependencies:
@@ -11953,13 +11933,13 @@ snapshots:
 
   acorn@8.15.0: {}
 
-  ai@5.0.108(zod@3.25.76):
+  ai@5.0.108(zod@4.1.13):
     dependencies:
-      '@ai-sdk/gateway': 2.0.18(zod@3.25.76)
+      '@ai-sdk/gateway': 2.0.18(zod@4.1.13)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.18(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.18(zod@4.1.13)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.76
+      zod: 4.1.13
 
   ajv-formats@2.1.1(ajv@8.17.1):
     optionalDependencies:
@@ -12386,8 +12366,8 @@ snapshots:
 
   better-auth@1.4.5(next@15.5.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
-      '@better-auth/core': 1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@3.25.76))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
-      '@better-auth/telemetry': 1.4.5(@better-auth/core@1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@3.25.76))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))
+      '@better-auth/core': 1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0)
+      '@better-auth/telemetry': 1.4.5(@better-auth/core@1.4.5(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.1.4(zod@4.1.13))(jose@6.1.3)(kysely@0.28.8)(nanostores@1.1.0))
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.18
       '@noble/ciphers': 2.1.1
@@ -12403,15 +12383,6 @@ snapshots:
       next: 15.5.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react: 19.2.1
       react-dom: 19.2.1(react@19.2.1)
-
-  better-call@1.1.4(zod@3.25.76):
-    dependencies:
-      '@better-auth/utils': 0.3.0
-      '@better-fetch/fetch': 1.1.18
-      rou3: 0.7.10
-      set-cookie-parser: 2.7.1
-    optionalDependencies:
-      zod: 3.25.76
 
   better-call@1.1.4(zod@4.1.13):
     dependencies:
@@ -12935,10 +12906,10 @@ snapshots:
       postgres: 3.4.4
       prisma: 5.22.0
 
-  drizzle-zod@0.8.3(drizzle-orm@0.45.0(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.5.0)(gel@2.0.0)(kysely@0.28.8)(mysql2@3.11.3)(pg@8.16.3)(postgres@3.4.4)(prisma@5.22.0))(zod@3.25.76):
+  drizzle-zod@0.8.3(drizzle-orm@0.45.0(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.5.0)(gel@2.0.0)(kysely@0.28.8)(mysql2@3.11.3)(pg@8.16.3)(postgres@3.4.4)(prisma@5.22.0))(zod@4.1.13):
     dependencies:
       drizzle-orm: 0.45.0(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.5.0)(gel@2.0.0)(kysely@0.28.8)(mysql2@3.11.3)(pg@8.16.3)(postgres@3.4.4)(prisma@5.22.0)
-      zod: 3.25.76
+      zod: 4.1.13
 
   dunder-proto@1.0.1:
     dependencies:
@@ -16638,14 +16609,12 @@ snapshots:
 
   yoctocolors@2.1.1: {}
 
-  zod-to-json-schema@3.24.5(zod@3.25.76):
+  zod-to-json-schema@3.24.5(zod@4.1.13):
     dependencies:
-      zod: 3.25.76
+      zod: 4.1.13
 
   zod-validation-error@4.0.2(zod@4.1.13):
     dependencies:
       zod: 4.1.13
-
-  zod@3.25.76: {}
 
   zod@4.1.13: {}
