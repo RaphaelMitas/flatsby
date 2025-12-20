@@ -331,7 +331,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1"
+      className="h-full"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{
         marginBottom: Platform.OS === "ios" ? undefined : keyboardHeight,
@@ -345,7 +345,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         </View>
       )}
       <BottomSheetPickerProvider>
-        <View className="bg-background flex-1">
+        <View className="flex-1">
           <FlashList
             data={flashListData}
             renderItem={renderItem}

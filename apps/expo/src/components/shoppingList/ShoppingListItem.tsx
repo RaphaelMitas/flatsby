@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
 import { Checkbox } from "~/lib/ui/checkbox";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useSwipeActions } from "../SwipeActions";
 import { getCategoryData } from "./ShoppingListCategory";
@@ -206,10 +207,10 @@ const ShoppingListItem = ({
         <TouchableOpacity
           disabled={item.isPending}
           onPress={() => setShowDetails(true)}
-          className={"bg-muted flex-row items-center rounded-lg"}
-          style={{
-            opacity: item.isPending ? 0.7 : 1,
-          }}
+          className={cn(
+            "bg-muted flex-row items-center rounded-lg",
+            item.isPending && "opacity-70",
+          )}
         >
           <Checkbox
             checked={item.completed}
