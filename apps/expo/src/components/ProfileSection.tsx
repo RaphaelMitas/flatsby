@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Text, View } from "react-native";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
@@ -25,13 +25,13 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
     <View className="items-center rounded-lg p-6">
       <Avatar>
         <AvatarImage alt={`${name} Avatar`} />
-        <AvatarFallback className="text-xl text-muted-foreground">
+        <AvatarFallback className="text-muted-foreground text-xl">
           {fallbackText}
         </AvatarFallback>
       </Avatar>
-      <Text className="mb-2 text-lg font-semibold text-foreground">{name}</Text>
+      <Text className="text-foreground mb-2 text-lg font-semibold">{name}</Text>
       {subtitle && (
-        <Text className="mb-4 text-sm text-muted-foreground">{subtitle}</Text>
+        <Text className="text-muted-foreground mb-4 text-sm">{subtitle}</Text>
       )}
       {showChangePhoto && (
         <>
@@ -43,7 +43,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
             className="w-full"
             onPress={onChangePhoto}
           />
-          <Text className="mt-2 text-xs text-muted-foreground">
+          <Text className="text-muted-foreground mt-2 text-xs">
             Photo upload coming soon!
           </Text>
         </>

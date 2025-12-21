@@ -1,8 +1,8 @@
 //Theme Provider nativewind
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { Appearance, useColorScheme as useRNColorScheme } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useColorScheme } from "nativewind";
 
 interface ThemeContextType {
   theme: "light" | "dark";
@@ -26,12 +26,20 @@ export function ThemeProvider({
   children,
   defaultTheme = "system",
 }: ThemeProviderProps) {
-  // eslint-disable-next-line @typescript-eslint/unbound-method
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const systemColorScheme = useRNColorScheme();
   const [storedTheme, setStoredTheme] = useState<
     "light" | "dark" | "system" | null
   >(null);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Helper to apply color scheme to appearance
+  const applyColorScheme = (theme: "light" | "dark" | "system") => {
+    if (theme === "system") {
+      Appearance.setColorScheme(null); // Reset to system default
+    } else {
+      Appearance.setColorScheme(theme);
+    }
+  };
 
   // Restore theme preference from storage on mount
   useEffect(() => {
@@ -45,25 +53,25 @@ export function ThemeProvider({
             savedTheme === "system")
         ) {
           setStoredTheme(savedTheme);
-          setColorScheme(savedTheme);
+          applyColorScheme(savedTheme);
         } else {
           setStoredTheme(defaultTheme);
-          setColorScheme(defaultTheme);
+          applyColorScheme(defaultTheme);
         }
       } catch (error) {
         console.error("Error restoring theme from storage:", error);
         setStoredTheme(defaultTheme);
-        setColorScheme(defaultTheme);
+        applyColorScheme(defaultTheme);
       } finally {
         setIsInitialized(true);
       }
     };
 
     void restoreThemeFromStorage();
-  }, [defaultTheme, setColorScheme]);
+  }, [defaultTheme]);
 
   // Determine the actual theme being used
-  const theme = colorScheme === "dark" ? "dark" : "light";
+  const theme = systemColorScheme === "dark" ? "dark" : "light";
   const isDark = theme === "dark";
 
   const saveThemeToStorage = async (newTheme: "light" | "dark" | "system") => {
@@ -76,13 +84,13 @@ export function ThemeProvider({
 
   const toggleTheme = () => {
     const newTheme = isDark ? "light" : "dark";
-    setColorScheme(newTheme);
+    applyColorScheme(newTheme);
     setStoredTheme(newTheme);
     void saveThemeToStorage(newTheme);
   };
 
   const setTheme = (newTheme: "light" | "dark" | "system") => {
-    setColorScheme(newTheme);
+    applyColorScheme(newTheme);
     setStoredTheme(newTheme);
     void saveThemeToStorage(newTheme);
   };

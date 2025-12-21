@@ -1,5 +1,4 @@
 import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
-import React from "react";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -99,7 +98,7 @@ export default function CreateGroup() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background flex-1">
       <View className="flex-1 p-4">
         <Form {...form}>
           <View className="flex gap-2">

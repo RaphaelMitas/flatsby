@@ -1,6 +1,4 @@
-import type { ShoppingListSummary } from "@flatsby/api";
-import type { ApiResult } from "node_modules/@flatsby/api/dist/errors";
-import React from "react";
+import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import { Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -118,7 +116,7 @@ export default function CreateShoppingList() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background flex-1">
       <View className="flex-1 p-4">
         <Form {...form}>
           <View className="flex gap-2">

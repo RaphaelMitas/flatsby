@@ -1,4 +1,3 @@
-import React from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 
@@ -15,7 +14,7 @@ export default function Index() {
 
   return (
     <SafeAreaView className="bg-background">
-      <View className="h-full w-full bg-background p-4">
+      <View className="bg-background h-full w-full p-4">
         <GroupsDashboard />
       </View>
     </SafeAreaView>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import {
   useMutation,
@@ -44,12 +44,12 @@ export default function DangerScreen() {
   const isConfirmationValid = confirmationInput === user.email;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="flex-1 p-4">
-        <Text className="mb-2 text-2xl font-bold text-destructive">
+    <SafeAreaView className="bg-background flex-1">
+      <ScrollView className="p-4">
+        <Text className="text-destructive mb-2 text-2xl font-bold">
           Danger Zone
         </Text>
-        <Text className="mb-8 text-sm text-muted-foreground">
+        <Text className="text-muted-foreground mb-8 text-sm">
           Actions in this section are irreversible. Please proceed with caution.
         </Text>
 
@@ -57,7 +57,7 @@ export default function DangerScreen() {
           <AlertTitle>
             <View className="flex-row items-center gap-2">
               <Icon name="triangle-alert" size={16} color="destructive" />
-              <Text className="text-lg font-semibold text-destructive">
+              <Text className="text-destructive text-lg font-semibold">
                 Delete Account
               </Text>
             </View>

@@ -1,5 +1,5 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -273,8 +273,8 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     switch (item.type) {
       case "header":
         return (
-          <View className="mb-3 mt-6 px-4">
-            <Text className="text-center text-sm text-muted-foreground">
+          <View className="mt-6 mb-3 px-4">
+            <Text className="text-muted-foreground text-center text-sm">
               {item.title}
             </Text>
           </View>
@@ -296,7 +296,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       case "loading":
         return (
           <View className="py-4">
-            <Text className="text-center text-muted-foreground">
+            <Text className="text-muted-foreground text-center">
               Loading more items...
             </Text>
           </View>
@@ -305,7 +305,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       case "empty":
         return (
           <View className="px-4 py-8">
-            <Text className="text-center text-muted-foreground">
+            <Text className="text-muted-foreground text-center">
               No items in this shopping list yet. Add your first item below!
             </Text>
           </View>
@@ -314,7 +314,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       case "end":
         return (
           <View className="py-4">
-            <Text className="text-center text-sm text-muted-foreground">
+            <Text className="text-muted-foreground text-center text-sm">
               No more items to load
             </Text>
           </View>
@@ -331,7 +331,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1"
+      className="h-full"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{
         marginBottom: Platform.OS === "ios" ? undefined : keyboardHeight,
@@ -339,13 +339,13 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     >
       {shoppingList && (
         <View className="p-4">
-          <Text className="text-center text-xl font-semibold text-foreground">
+          <Text className="text-foreground text-center text-xl font-semibold">
             {shoppingList.name}
           </Text>
         </View>
       )}
       <BottomSheetPickerProvider>
-        <View className="flex-1 bg-background">
+        <View className="flex-1">
           <FlashList
             data={flashListData}
             renderItem={renderItem}
@@ -357,7 +357,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
             keyboardDismissMode="on-drag"
-            estimatedItemSize={60}
           />
           <ShoppingListItemAddForm onSubmit={handleSubmit} />
         </View>

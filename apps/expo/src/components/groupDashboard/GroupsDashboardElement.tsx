@@ -1,6 +1,7 @@
 import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
+import type React from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
@@ -34,13 +35,13 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const { renderLeftActions, renderRightActions } = useSwipeActions({
     leftAction: {
       text: "Edit",
-      backgroundColor: "info",
-      textColor: "info-foreground",
+      className: "bg-info",
+      textClassName: "text-info-foreground",
     },
     rightAction: {
       text: "Delete",
-      backgroundColor: "destructive",
-      textColor: "destructive-foreground",
+      className: "bg-destructive",
+      textClassName: "text-destructive-foreground",
     },
   });
 
@@ -56,7 +57,6 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const deleteGroupMutation = useMutation(
     trpc.shoppingList.deleteGroup.mutationOptions({
       onMutate: () => {
-        swipeableRef.current?.close();
         void queryClient.cancelQueries(
           trpc.shoppingList.getUserGroups.queryOptions(),
         );
@@ -100,6 +100,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
 
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
+    swipeableRef.current?.close();
     deleteGroupMutation.mutate({ groupId: group.id });
   };
 
@@ -141,7 +142,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
       >
         <View
           className={cn(
-            "flex flex-row rounded-md bg-muted p-4",
+            "bg-muted flex flex-row rounded-lg p-4",
             isSelected && "bg-primary",
             isOptimistic && "animate-pulse",
           )}
@@ -157,7 +158,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
               <View className="flex-1">
                 <Text
                   className={cn(
-                    "text-lg font-semibold text-primary",
+                    "text-primary text-lg font-semibold",
                     isSelected && "text-primary-foreground",
                   )}
                 >
@@ -165,7 +166,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
                 </Text>
                 <Text
                   className={cn(
-                    "mt-1 text-sm text-muted-foreground",
+                    "text-muted-foreground mt-1 text-sm",
                     isSelected && "text-muted",
                   )}
                 >

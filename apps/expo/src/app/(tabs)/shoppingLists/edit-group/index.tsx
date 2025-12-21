@@ -1,5 +1,5 @@
 import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
-import React, { useState } from "react";
+import { useState } from "react";
 import { ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -96,8 +96,8 @@ export default function GroupSettingsIndex() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="flex-1">
+    <SafeAreaView className="bg-background flex-1">
+      <ScrollView>
         <SettingsHeader title={group.data.name} />
 
         <SettingsSection title={group.data.name}>

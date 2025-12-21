@@ -1,4 +1,3 @@
-import React from "react";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { z } from "zod/v4";
@@ -62,7 +61,7 @@ export function ShoppingListItemEditForm() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background flex-1">
       <BottomSheetPickerProvider>
         <View className="flex-1 gap-4 p-4">
           <Form {...form}>

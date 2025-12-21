@@ -1,5 +1,3 @@
-import React from "react";
-
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import DangerZone from "./DangerZone";
 import GroupDetails from "./GroupDetails";

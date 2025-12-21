@@ -143,7 +143,7 @@ const AvatarFallback = React.forwardRef<View, AvatarFallbackProps>(
         className={avatarFallbackVariants({ className })}
         {...props}
       >
-        <Text className={cn("text-sm font-medium text-muted", textClassName)}>
+        <Text className={cn("text-muted text-sm font-medium", textClassName)}>
           {children}
         </Text>
       </View>

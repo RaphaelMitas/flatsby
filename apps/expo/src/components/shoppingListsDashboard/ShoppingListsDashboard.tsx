@@ -1,6 +1,7 @@
-import React from "react";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
+import { Suspense } from "react";
+import { ActivityIndicator, RefreshControl, Text, View } from "react-native";
 import { router, useRouter } from "expo-router";
+import { FlashList } from "@shopify/flash-list";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { Button } from "~/lib/ui/button";
@@ -15,8 +16,8 @@ export function ShoppingListsDashboard() {
 
   if (!selectedGroupId) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-background p-4">
-        <Text className="text-center text-lg font-semibold text-muted-foreground">
+      <View className="bg-background flex-1 items-center justify-center gap-4 p-4">
+        <Text className="text-muted-foreground text-center text-lg font-semibold">
           Select a group to view its shopping lists
         </Text>
         <Button
@@ -30,7 +31,20 @@ export function ShoppingListsDashboard() {
     );
   }
 
-  return <ShoppingListsDashboardInner />;
+  return (
+    <Suspense
+      fallback={
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" />
+          <Text className="text-muted-foreground mt-4">
+            Loading shopping lists...
+          </Text>
+        </View>
+      }
+    >
+      <ShoppingListsDashboardInner />
+    </Suspense>
+  );
 }
 
 function ShoppingListsDashboardInner() {
@@ -55,68 +69,59 @@ function ShoppingListsDashboardInner() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView
-        className="flex-1 bg-background"
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-      >
-        <SafeAreaView>
-          <View className="flex-1 p-4">
-            {/* Header */}
-            <View className="mb-6 flex-row items-center justify-between">
-              <Text className="text-2xl font-bold text-foreground">
-                {selectedGroupName}
-              </Text>
-              <Button
-                title="Group Settings"
-                variant="outline"
-                size="md"
-                icon="settings"
-                onPress={() => router.push(`/shoppingLists/edit-group`)}
-              />
-            </View>
+    <SafeAreaView>
+      <View className="flex h-full w-full flex-col gap-6 p-4">
+        {/* Header */}
+        <View className="flex flex-row items-center justify-between">
+          <Text className="text-foreground text-3xl font-bold">
+            {selectedGroupName}
+          </Text>
+          <Button
+            title="Group Settings"
+            variant="outline"
+            size="md"
+            icon="settings"
+            onPress={() => router.push(`/shoppingLists/edit-group`)}
+          />
+        </View>
 
-            {/* Create New List Button */}
-            <View className="mb-6">
-              <Button
-                title="Create Shopping List"
-                variant="primary"
-                size="lg"
-                icon="plus"
-                onPress={() =>
-                  router.push(
-                    `/shoppingLists/create?groupId=${selectedGroupId}`,
-                  )
-                }
-              />
-            </View>
+        {/* Create New List Button */}
+        <Button
+          title="Create Shopping List"
+          variant="primary"
+          size="lg"
+          icon="plus"
+          onPress={() =>
+            router.push(`/shoppingLists/create?groupId=${selectedGroupId}`)
+          }
+        />
 
-            {/* Shopping Lists */}
-            <View className="gap-4">
-              {shoppingLists.data.length === 0 ? (
-                <View className="flex items-center justify-center py-8">
-                  <Text className="text-center text-lg font-semibold text-foreground">
-                    No shopping lists yet
-                  </Text>
-                  <Text className="mt-2 text-center text-sm text-muted-foreground">
-                    Create your first shopping list to get started
-                  </Text>
-                </View>
-              ) : (
-                shoppingLists.data.map((list) => (
-                  <ShoppingListDashboardElement
-                    key={list.id}
-                    shoppingList={list}
-                    groupId={selectedGroupId ?? -1}
-                  />
-                ))
-              )}
-            </View>
+        {/* Shopping Lists */}
+        {shoppingLists.data.length === 0 ? (
+          <View className="flex flex-col items-center justify-center gap-4">
+            <Text className="text-foreground text-center text-lg font-semibold">
+              No shopping lists yet
+            </Text>
+            <Text className="text-muted-foreground text-center text-sm">
+              Create your first shopping list to get started
+            </Text>
           </View>
-        </SafeAreaView>
-      </ScrollView>
+        ) : (
+          <FlashList
+            data={shoppingLists.data}
+            refreshControl={
+              <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+            }
+            ItemSeparatorComponent={() => <View className="h-4" />}
+            renderItem={({ item }) => (
+              <ShoppingListDashboardElement
+                shoppingList={item}
+                groupId={selectedGroupId ?? -1}
+              />
+            )}
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 }

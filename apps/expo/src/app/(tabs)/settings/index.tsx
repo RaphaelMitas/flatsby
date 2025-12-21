@@ -1,6 +1,6 @@
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import React, { useCallback, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { ScrollView, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Stack, useRouter } from "expo-router";
@@ -87,9 +87,9 @@ export default function SettingsIndex() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background flex-1">
       <Stack.Screen options={{ title: "Settings" }} />
-      <ScrollView className="flex-1">
+      <ScrollView>
         <SettingsHeader title={user.name} />
 
         <SettingsSection title="Appearance">

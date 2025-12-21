@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Text, View } from "react-native";
 
 import { cn } from "~/lib/utils";
@@ -16,7 +16,7 @@ export const SettingsSection = ({
 }: SettingsSectionProps) => {
   return (
     <View className={cn("mt-6", className)}>
-      <Text className="px-4 py-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+      <Text className="text-muted-foreground px-4 py-2 text-sm font-medium tracking-wide uppercase">
         {title}
       </Text>
       <View className="bg-card">{children}</View>

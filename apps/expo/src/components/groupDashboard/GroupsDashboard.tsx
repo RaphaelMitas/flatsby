@@ -1,4 +1,3 @@
-import React from "react";
 import { RefreshControl, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
@@ -26,7 +25,7 @@ export function GroupsDashboard() {
     <View className="h-full w-full">
       <View className="flex h-full w-full flex-col gap-6 p-4">
         <View className="flex flex-row items-center justify-between">
-          <Text className="text-3xl font-bold text-foreground">
+          <Text className="text-foreground text-3xl font-bold">
             Your Groups
           </Text>
 
@@ -41,7 +40,7 @@ export function GroupsDashboard() {
 
         {groups.data.length === 0 && (
           <View className="flex flex-col items-center justify-center gap-4">
-            <Text className="text-center text-lg font-semibold text-foreground">
+            <Text className="text-foreground text-center text-lg font-semibold">
               No groups yet
             </Text>
             <Button
@@ -50,14 +49,13 @@ export function GroupsDashboard() {
               size="lg"
               onPress={() => router.push("/groups/create")}
             />
-            <Text className="text-center text-sm text-muted-foreground">
+            <Text className="text-muted-foreground text-center text-sm">
               Pull down to refresh if you've been invited
             </Text>
           </View>
         )}
         <FlashList
           data={groups.data}
-          estimatedItemSize={80}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }

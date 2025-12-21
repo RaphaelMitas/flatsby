@@ -1,6 +1,6 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Alert, Modal, Text, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
 import { Checkbox } from "~/lib/ui/checkbox";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useSwipeActions } from "../SwipeActions";
 import { getCategoryData } from "./ShoppingListCategory";
@@ -170,13 +171,13 @@ const ShoppingListItem = ({
   const { renderLeftActions, renderRightActions } = useSwipeActions({
     leftAction: {
       text: "Edit",
-      backgroundColor: "info",
-      textColor: "info-foreground",
+      className: "bg-info",
+      textClassName: "text-info-foreground",
     },
     rightAction: {
       text: "Delete",
-      backgroundColor: "destructive",
-      textColor: "destructive-foreground",
+      className: "bg-destructive",
+      textClassName: "text-destructive-foreground",
     },
   });
 
@@ -206,10 +207,10 @@ const ShoppingListItem = ({
         <TouchableOpacity
           disabled={item.isPending}
           onPress={() => setShowDetails(true)}
-          className={"flex-row items-center rounded-lg bg-muted"}
-          style={{
-            opacity: item.isPending ? 0.7 : 1,
-          }}
+          className={cn(
+            "bg-muted flex-row items-center rounded-lg",
+            item.isPending && "opacity-70",
+          )}
         >
           <Checkbox
             checked={item.completed}
@@ -220,18 +221,19 @@ const ShoppingListItem = ({
           <View className="flex-1 flex-row justify-between gap-2">
             <View className="flex-1">
               <Text
-                className={`text-sm font-medium ${
+                className={cn(
+                  "text-sm font-medium",
                   item.completed
                     ? "text-muted-foreground line-through"
-                    : "text-foreground"
-                }`}
+                    : "text-foreground",
+                )}
               >
                 {item.name}
               </Text>
             </View>
             <View className="flex-row items-center justify-center gap-2 px-4">
               {categoryData.icon}
-              <Text className={`text-xs font-medium ${categoryData.color}`}>
+              <Text className={cn("text-xs font-medium", categoryData.color)}>
                 {categoryData.name}
               </Text>
             </View>
@@ -249,13 +251,13 @@ const ShoppingListItem = ({
           className="flex-1 items-center justify-center bg-black/50"
           onPress={() => setShowDetails(false)}
         >
-          <View className="mx-4 w-full max-w-sm rounded-lg bg-background p-6 shadow-lg">
+          <View className="bg-background mx-4 w-full max-w-sm rounded-lg p-6 shadow-lg">
             <View className="flex-row justify-between gap-4">
               <View className="flex-1">
-                <Text className="text-sm font-medium text-foreground">
+                <Text className="text-foreground text-sm font-medium">
                   {item.name}
                 </Text>
-                <Text className="text-xs text-muted-foreground">
+                <Text className="text-muted-foreground text-xs">
                   {item.completed
                     ? `Done by ${completedByMember?.user.name ?? "unknown"} · ${
                         item.completedAt?.toLocaleDateString() ?? ""
@@ -265,17 +267,17 @@ const ShoppingListItem = ({
               </View>
 
               <View className="items-center justify-center">
-                <Text className={`text-xs font-medium ${categoryData.color}`}>
+                <Text className={cn("text-xs font-medium", categoryData.color)}>
                   {categoryData.name}
                 </Text>
               </View>
             </View>
 
             <TouchableOpacity
-              className="mt-4 rounded bg-muted p-3"
+              className="bg-muted mt-4 rounded p-3"
               onPress={() => setShowDetails(false)}
             >
-              <Text className="text-center text-sm text-muted-foreground">
+              <Text className="text-muted-foreground text-center text-sm">
                 Close
               </Text>
             </TouchableOpacity>

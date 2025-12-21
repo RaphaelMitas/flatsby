@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Text, View } from "react-native";
 import * as Linking from "expo-linking";
 import { Redirect, Stack } from "expo-router";
@@ -20,20 +20,20 @@ const Login = () => {
   }
 
   return (
-    <View className="flex-1 bg-background px-6 py-8">
-      <Stack.Screen name="/auth/login" options={{ headerShown: false }} />
+    <View className="bg-background flex-1 px-6 py-8">
+      <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 justify-center">
         {/* Header Section */}
         <View className="mb-12 items-center">
           <Icon
             name="flatsby"
-            className="mb-6 h-40 w-full text-primary"
+            className="text-primary mb-6 h-40 w-full"
             size={160}
           />
-          <Text className="mb-2 text-3xl font-bold text-foreground">
+          <Text className="text-foreground mb-2 text-3xl font-bold">
             Flatsby
           </Text>
-          <Text className="text-center text-base leading-relaxed text-muted-foreground">
+          <Text className="text-muted-foreground text-center text-base leading-relaxed">
             Manage your daily life with your flatmates.
           </Text>
         </View>

@@ -1,5 +1,3 @@
-import React from "react";
-
 import { prefetch, trpc } from "~/trpc/server";
 import DeleteUser from "./DeleteUser";
 import ManageUser from "./ManageUser";

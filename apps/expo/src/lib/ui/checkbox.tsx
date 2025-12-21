@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { cn } from "../utils";
+import Icon from "./custom/icons/Icon";
 
 interface CheckboxProps {
   checked?: boolean;
@@ -36,18 +37,14 @@ const Checkbox = React.forwardRef<
       >
         <View
           className={cn(
-            "h-6 w-6 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+            "border-primary focus-visible:ring-ring h-6 w-6 shrink-0 rounded-full border shadow focus-visible:ring-1 focus-visible:outline-none",
             checked && "bg-primary",
             disabled && "cursor-not-allowed opacity-50",
             className,
           )}
         >
           <View className="flex-1 items-center justify-center">
-            {checked && (
-              <Text className="text-xs font-bold text-primary-foreground">
-                ✓
-              </Text>
-            )}
+            {checked && <Icon name="check" size={16} />}
           </View>
         </View>
       </Pressable>

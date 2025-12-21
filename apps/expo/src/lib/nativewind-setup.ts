@@ -1,24 +1,17 @@
 import { Svg } from "react-native-svg";
 import Icon from "@react-native-vector-icons/lucide";
-import { cssInterop } from "nativewind";
+import { styled } from "nativewind";
 
-// Configure cssInterop for SVG components to work with NativeWind
-cssInterop(Svg, {
-  className: {
-    target: "style",
-    nativeStyleToProp: {
-      width: true,
-      height: true,
-      color: "fill",
-    },
-  },
+// Configure styled for SVG components to work with NativeWind
+// In NativeWind v5, cssInterop is replaced with styled
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+export const StyledSvg = styled(Svg, {
+  className: "style",
 });
 
-cssInterop(Icon, {
-  className: {
-    target: "style",
-    nativeStyleToProp: { height: "size", width: "size", color: "color" },
-  },
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+export const StyledIcon = styled(Icon, {
+  className: "style",
 });
 
 // Note: Path, Circle, Rect etc. inherit styling from parent Svg component

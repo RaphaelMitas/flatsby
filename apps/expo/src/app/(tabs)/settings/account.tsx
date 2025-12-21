@@ -1,4 +1,3 @@
-import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
@@ -15,13 +14,13 @@ const InfoRow = ({
   value: string;
   icon: "mail" | "calendar" | "user";
 }) => (
-  <View className="flex-row items-center gap-3 rounded-lg bg-card p-4">
-    <View className="h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+  <View className="bg-card flex-row items-center gap-3 rounded-lg p-4">
+    <View className="bg-primary/10 h-8 w-8 items-center justify-center rounded-full">
       <Icon name={icon} size={16} className="text-primary" />
     </View>
     <View className="flex-1">
-      <Text className="text-sm text-muted-foreground">{label}</Text>
-      <Text className="text-base font-medium text-foreground">{value}</Text>
+      <Text className="text-muted-foreground text-sm">{label}</Text>
+      <Text className="text-foreground text-base font-medium">{value}</Text>
     </View>
   </View>
 );
@@ -41,9 +40,9 @@ export default function AccountScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="flex-1 p-4">
-        <Text className="mb-6 text-2xl font-bold text-foreground">
+    <SafeAreaView className="bg-background flex-1">
+      <ScrollView className="p-4">
+        <Text className="text-foreground mb-6 text-2xl font-bold">
           Account Information
         </Text>
 
@@ -59,11 +58,11 @@ export default function AccountScreen() {
           />
         </View>
 
-        <View className="mt-8 rounded-lg bg-card p-4">
-          <Text className="mb-3 text-lg font-semibold text-foreground">
+        <View className="bg-card mt-8 rounded-lg p-4">
+          <Text className="text-foreground mb-3 text-lg font-semibold">
             Account Settings
           </Text>
-          <Text className="text-sm leading-6 text-muted-foreground">
+          <Text className="text-muted-foreground text-sm leading-6">
             Your account information is managed through your authentication
             provider. You can't change your email address or other core account
             details.

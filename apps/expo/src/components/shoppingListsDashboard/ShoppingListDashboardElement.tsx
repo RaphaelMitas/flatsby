@@ -1,7 +1,7 @@
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import React, { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
@@ -37,10 +37,7 @@ const formSchema = z.object({
     }),
 });
 
-const ShoppingListDashboardElement: React.FC<Props> = ({
-  shoppingList,
-  groupId,
-}) => {
+const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const { setSelectedShoppingList } = useShoppingStore();
@@ -83,7 +80,6 @@ const ShoppingListDashboardElement: React.FC<Props> = ({
   const deleteShoppingListMutation = useMutation(
     trpc.shoppingList.deleteShoppingList.mutationOptions({
       onMutate: () => {
-        swipeableRef.current?.close();
         void queryClient.cancelQueries(
           trpc.shoppingList.getShoppingLists.queryOptions({
             groupId,
@@ -207,6 +203,7 @@ const ShoppingListDashboardElement: React.FC<Props> = ({
 
   const handleDeleteList = () => {
     setShowDeleteModal(false);
+    swipeableRef.current?.close();
     deleteShoppingListMutation.mutate({
       groupId,
       shoppingListId: shoppingList.id,
@@ -226,8 +223,8 @@ const ShoppingListDashboardElement: React.FC<Props> = ({
     (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
       return (
         <Reanimated.View style={rightActionStyle}>
-          <View className="h-full w-full items-end justify-center rounded-md bg-destructive p-4">
-            <Text className="text-sm font-medium text-destructive-foreground">
+          <View className="bg-destructive h-full w-full items-end justify-center rounded-lg p-4">
+            <Text className="text-destructive-foreground text-sm font-medium">
               Delete
             </Text>
           </View>
@@ -241,7 +238,7 @@ const ShoppingListDashboardElement: React.FC<Props> = ({
     (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
       return (
         <Reanimated.View style={leftActionStyle}>
-          <View className="h-full w-full items-start justify-center rounded-md bg-primary p-4">
+          <View className="bg-primary h-full w-full items-start justify-center rounded-lg p-4">
             {isRenaming ? (
               <View className="flex-row items-center gap-2">
                 <Form {...form}>
@@ -274,7 +271,7 @@ const ShoppingListDashboardElement: React.FC<Props> = ({
                 </Form>
               </View>
             ) : (
-              <Text className="text-sm font-medium text-primary-foreground">
+              <Text className="text-primary-foreground text-sm font-medium">
                 Rename
               </Text>
             )}
@@ -318,7 +315,7 @@ const ShoppingListDashboardElement: React.FC<Props> = ({
       >
         <TouchableOpacity
           className={cn(
-            "flex-row items-center justify-between rounded-lg bg-muted p-4",
+            "bg-muted flex-row items-center justify-between rounded-lg p-4",
             isOptimistic && "animate-pulse",
           )}
           disabled={isOptimistic}
@@ -326,16 +323,16 @@ const ShoppingListDashboardElement: React.FC<Props> = ({
           activeOpacity={0.7}
         >
           <View className="flex-1">
-            <Text className="text-lg font-semibold text-primary">
+            <Text className="text-primary text-lg font-semibold">
               {shoppingList.name}
             </Text>
             {shoppingList.description && (
-              <Text className="mt-1 text-sm text-muted-foreground">
+              <Text className="text-muted-foreground mt-1 text-sm">
                 {shoppingList.description}
               </Text>
             )}
           </View>
-          <Text className="text-sm text-muted-foreground">
+          <Text className="text-muted-foreground text-sm">
             {shoppingList.uncheckedItemLength === 1
               ? "1 item left"
               : `${shoppingList.uncheckedItemLength} items left`}

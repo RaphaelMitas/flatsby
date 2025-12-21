@@ -194,7 +194,7 @@ export function ShoppingListDashboardItem({
 
   if (isRenaming) {
     return (
-      <div className="group relative rounded-lg bg-muted p-4 shadow">
+      <div className="group bg-muted relative rounded-lg p-4 shadow">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleRename)}
@@ -241,33 +241,33 @@ export function ShoppingListDashboardItem({
 
   return (
     <div className="group relative">
-      <div className="flex cursor-pointer items-center justify-between gap-4 rounded-lg bg-muted p-4 shadow md:group-hover:bg-primary">
+      <div className="bg-muted md:group-hover:bg-primary flex cursor-pointer items-center justify-between gap-4 rounded-lg p-4 shadow">
         <div className="flex flex-col sm:flex-1 sm:flex-row sm:justify-between">
           <Link
             href={`/group/${groupId}/shopping-list/${list.id}`}
-            className="flex flex-1 flex-col gap-2 md:group-hover:text-primary-foreground"
+            className="md:group-hover:text-primary-foreground flex flex-1 flex-col gap-2"
           >
             <h3 className="line-clamp-2 text-lg font-semibold">{list.name}</h3>
             {list.description && (
-              <p className="line-clamp-3 text-sm text-muted-foreground">
+              <p className="text-muted-foreground line-clamp-3 text-sm">
                 {list.description}
               </p>
             )}
           </Link>
-          <div className="self-start text-sm text-muted-foreground sm:self-center">
+          <div className="text-muted-foreground self-start text-sm sm:self-center">
             {list.uncheckedItemLength} items left
           </div>
         </div>
         <div className="flex items-center gap-1">
           <div
-            className="cursor-pointer rounded p-2 transition-colors md:group-hover:text-primary-foreground md:group-hover:hover:text-info"
+            className="md:group-hover:text-primary-foreground md:group-hover:hover:text-info cursor-pointer rounded p-2 transition-colors"
             onClick={handleEditClick}
             title="Rename shopping list"
           >
             <Pencil size={24} />
           </div>
           <div
-            className="cursor-pointer rounded p-2 transition-colors md:group-hover:text-primary-foreground md:group-hover:hover:text-destructive"
+            className="md:group-hover:text-primary-foreground md:group-hover:hover:text-destructive cursor-pointer rounded p-2 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setShowDeleteDialog(true);

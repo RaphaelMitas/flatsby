@@ -11,9 +11,14 @@ import { CategorySelector } from "./CategorySelector";
 import { ShoppingListItemInputFormField } from "./ShoppingListItemInputFormField";
 
 const formSchema = z.object({
-  name: z.string().max(256, {
-    message: "name is too long",
-  }),
+  name: z
+    .string()
+    .min(1, {
+      message: "name is required",
+    })
+    .max(256, {
+      message: "name is too long",
+    }),
   categoryId: z.enum(categorysIdWithAiAutoSelect).default("ai-auto-select"),
 });
 
@@ -45,8 +50,8 @@ export const ShoppingListItemAddForm = ({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleSubmit)}
-        className="sticky bottom-0 bg-background p-4"
+        onSubmit={(e) => form.handleSubmit(handleSubmit)(e)}
+        className="bg-background sticky bottom-0 p-4"
       >
         <div className="flex flex-col gap-2">
           <div className="flex flex-row gap-2">

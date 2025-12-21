@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -18,7 +18,7 @@ const GroupsDashboardElement: React.FC<Props> = ({
 }) => {
   return (
     <Link
-      className="group h-auto w-full items-center gap-4 rounded-lg bg-muted p-4 shadow-sm md:hover:bg-primary"
+      className="group bg-muted md:hover:bg-primary h-auto w-full items-center gap-4 rounded-lg p-4 shadow-sm"
       href={link}
     >
       <div className="flex items-center gap-3">
@@ -27,10 +27,10 @@ const GroupsDashboardElement: React.FC<Props> = ({
           <AvatarFallback>{groupName.slice(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold tracking-tight md:group-hover:text-primary-foreground">
+          <h3 className="md:group-hover:text-primary-foreground text-sm font-semibold tracking-tight">
             {groupName}
           </h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {memberCount === 1
               ? `${memberCount} member`
               : `${memberCount} members`}

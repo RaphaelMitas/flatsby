@@ -4,13 +4,7 @@ import { z } from "zod/v4";
 
 import { Button } from "@flatsby/ui/button";
 import { categorysIdWithAiAutoSelect } from "@flatsby/ui/categories";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormMessage,
-  useForm,
-} from "@flatsby/ui/form";
+import { Form, FormControl, FormField, useForm } from "@flatsby/ui/form";
 
 import { CategorySelector } from "./CategorySelector";
 import { ShoppingListItemInputFormField } from "./ShoppingListItemInputFormField";
@@ -72,7 +66,6 @@ export const ShoppingListItemEditForm = ({
                         form.setValue("categoryId", categoryId);
                       }}
                     />
-                    <FormMessage />
                   </>
                 )}
               />
@@ -92,7 +85,7 @@ export const ShoppingListItemEditForm = ({
           </div>
           <div className="mt-auto flex gap-2">
             <Button
-              className="flex-1 md:group-hover:text-primary-foreground md:group-hover:hover:text-primary"
+              className="md:group-hover:text-primary-foreground md:group-hover:hover:text-primary flex-1"
               variant="ghost"
               type="reset"
               disabled={isSubmitting}
@@ -104,7 +97,7 @@ export const ShoppingListItemEditForm = ({
               cancel
             </Button>
             <Button
-              className="flex-1 md:group-hover:bg-primary-foreground md:group-hover:text-primary"
+              className="md:group-hover:bg-primary-foreground md:group-hover:text-primary flex-1"
               type="submit"
               disabled={isSubmitting}
             >
