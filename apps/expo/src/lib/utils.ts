@@ -101,7 +101,7 @@ export const useThemedScreenOptions = () => {
     },
     headerTintColor: getColor("foreground"),
     contentStyle: {
-      backgroundColor: getColor("background"),
+      backgroundColor: "transparent",
     },
   };
 };

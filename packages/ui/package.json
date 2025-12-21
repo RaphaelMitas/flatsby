@@ -26,7 +26,10 @@
     "./custom/icons/AppleIcon": "./src/custom/icons/AppleIcon.tsx",
     "./custom/icons/GoogleIcon": "./src/custom/icons/GoogleIcon.tsx",
     "./custom/icons/HomeIcon": "./src/custom/icons/HomeIcon.tsx",
-    "./custom/icons/PasskeyIcon": "./src/custom/icons/PasskeyIcon.tsx"
+    "./custom/icons/PasskeyIcon": "./src/custom/icons/PasskeyIcon.tsx",
+    "./winter/snow-effect": "./src/winter/snow-effect.tsx",
+    "./winter/snow-effect-native": "./src/winter/snow-effect-native.tsx",
+    "./seasonal-theme": "./src/seasonal-theme.ts"
   },
   "license": "MIT",
   "scripts": {

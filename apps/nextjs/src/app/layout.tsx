@@ -6,7 +6,9 @@ import { ThemeProvider } from "next-themes";
 import { cn } from "@flatsby/ui";
 import { Toaster } from "@flatsby/ui/toast";
 
+import { WinterEffectsProvider } from "~/app/_components/layout/winterTheme/use-winter-effects";
 import { TRPCReactProvider } from "~/trpc/react";
+import { WinterSnowWrapper } from "./_components/layout/winterTheme/winter-snow-wrapper";
 
 import "~/app/globals.css";
 
@@ -52,14 +54,17 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <html className="h-full" lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          "h-full min-h-full overflow-hidden bg-background font-sans antialiased",
+          "bg-background h-full min-h-full overflow-hidden font-sans antialiased",
           GeistSans.variable,
           GeistMono.variable,
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <TRPCReactProvider>{props.children}</TRPCReactProvider>
-          <Toaster />
+          <WinterEffectsProvider>
+            <WinterSnowWrapper />
+            <TRPCReactProvider>{props.children}</TRPCReactProvider>
+            <Toaster />
+          </WinterEffectsProvider>
         </ThemeProvider>
       </body>
     </html>
