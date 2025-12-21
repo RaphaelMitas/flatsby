@@ -12,8 +12,10 @@ import {
   SettingsSection,
 } from "~/components/settings";
 import { Button } from "~/lib/ui/button";
+import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useTheme } from "~/lib/ui/theme";
+import { useWinterEffects } from "~/lib/ui/winter-effects";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -21,6 +23,10 @@ import { useShoppingStore } from "~/utils/shopping-store";
 export default function SettingsIndex() {
   const router = useRouter();
   const { storedTheme, setTheme } = useTheme();
+  const {
+    isEnabled: isWinterEffectsEnabled,
+    setEnabled: setWinterEffectsEnabled,
+  } = useWinterEffects();
   const swipeableRef = useRef<SwipeableMethods>(null);
   const { clearSelectedGroup } = useShoppingStore();
 
@@ -107,6 +113,18 @@ export default function SettingsIndex() {
               onPress={() => swipeableRef.current?.openRight()}
             />
           </ReanimatedSwipeable>
+          <SettingsItem
+            title="Winter Effects"
+            subtitle={isWinterEffectsEnabled ? "Enabled" : "Disabled"}
+            iconName="snowflake"
+            onPress={() => setWinterEffectsEnabled(!isWinterEffectsEnabled)}
+            rightContent={
+              <Checkbox
+                checked={isWinterEffectsEnabled}
+                onCheckedChange={setWinterEffectsEnabled}
+              />
+            }
+          />
         </SettingsSection>
         <SettingsSection title="Groups">
           <SettingsItem

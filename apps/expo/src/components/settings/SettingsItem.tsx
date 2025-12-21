@@ -9,6 +9,7 @@ interface SettingsItemProps {
   iconName: IconProps["name"];
   onPress: () => void;
   variant?: "default" | "destructive";
+  rightContent?: React.ReactNode;
 }
 
 export const SettingsItem = ({
@@ -17,6 +18,7 @@ export const SettingsItem = ({
   iconName,
   onPress,
   variant = "default",
+  rightContent,
 }: SettingsItemProps) => {
   const isDestructive = variant === "destructive";
 
@@ -52,7 +54,15 @@ export const SettingsItem = ({
           )}
         </View>
       </View>
-      <Icon name="chevron-right" size={16} className="text-muted-foreground" />
+      {!rightContent ? (
+        <Icon
+          name="chevron-right"
+          size={16}
+          className="text-muted-foreground"
+        />
+      ) : (
+        <>{rightContent}</>
+      )}
     </Pressable>
   );
 };

@@ -3,6 +3,7 @@ import { Redirect } from "expo-router";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
 import { Tabs } from "~/lib/components/bottom-tabs";
+import { useWinterEffects } from "~/lib/ui/winter-effects";
 import { useThemeColors } from "~/lib/utils";
 import { prefetch, trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
@@ -13,6 +14,10 @@ const usersIcon = LucideIcon.getImageSourceSync("users", 20);
 const cartIcon = LucideIcon.getImageSourceSync("shopping-cart", 20);
 const settingsIcon = LucideIcon.getImageSourceSync("settings", 20);
 
+//winter themed icons
+const winterUsersIcon = LucideIcon.getImageSourceSync("snowflake", 20);
+const winterCartIcon = LucideIcon.getImageSourceSync("gift", 20);
+
 export default function TabLayout() {
   const session = useSession();
   const {
@@ -22,6 +27,7 @@ export default function TabLayout() {
     selectedShoppingListName,
   } = useShoppingStore();
   const { getColor } = useThemeColors();
+  const { isEnabled: isWinterEffectsEnabled } = useWinterEffects();
 
   useEffect(() => {
     if (!session.data?.user) {
@@ -92,7 +98,12 @@ export default function TabLayout() {
         name="shoppingLists"
         options={{
           title: selectedGroupName ?? "Shopping Lists",
-          tabBarIcon: usersIcon ? () => usersIcon : undefined,
+          tabBarIcon:
+            isWinterEffectsEnabled && winterUsersIcon
+              ? () => winterUsersIcon
+              : usersIcon
+                ? () => usersIcon
+                : undefined,
           tabBarItemHidden: !selectedGroupId,
         }}
       />
@@ -100,7 +111,12 @@ export default function TabLayout() {
         name="shoppingList"
         options={{
           title: selectedShoppingListName ?? "Shopping List",
-          tabBarIcon: cartIcon ? () => cartIcon : undefined,
+          tabBarIcon:
+            isWinterEffectsEnabled && winterCartIcon
+              ? () => winterCartIcon
+              : cartIcon
+                ? () => cartIcon
+                : undefined,
           tabBarItemHidden: !selectedShoppingListId,
         }}
       />

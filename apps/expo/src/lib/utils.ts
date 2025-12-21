@@ -73,7 +73,7 @@ const darkColors = {
 
 export type ColorName = keyof typeof lightColors;
 
-export const getColor = (
+const getColor = (
   colorName: ColorName,
   colorScheme?: "light" | "dark",
 ): string => {
@@ -101,7 +101,7 @@ export const useThemedScreenOptions = () => {
     },
     headerTintColor: getColor("foreground"),
     contentStyle: {
-      backgroundColor: getColor("background"),
+      backgroundColor: "transparent",
     },
   };
 };
