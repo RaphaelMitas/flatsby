@@ -114,6 +114,7 @@ export const groupMembers = createTable("group_members", {
 export const groupsRelations = relations(groups, ({ many }) => ({
   groupMembers: many(groupMembers),
   shoppingLists: many(shoppingLists),
+  expenses: many(expenses),
 }));
 
 export const groupMembersRelations = relations(
@@ -133,6 +134,13 @@ export const groupMembersRelations = relations(
     completedByGroupMember: many(shoppingListItems, {
       relationName: "completedByGroupMember",
     }),
+    paidByExpenses: many(expenses, {
+      relationName: "paidByGroupMember",
+    }),
+    createdExpenses: many(expenses, {
+      relationName: "createdByGroupMember",
+    }),
+    expenseSplits: many(expenseSplits),
   }),
 );
 
@@ -195,3 +203,65 @@ export const shoppingListItemsRelations = relations(
     }),
   }),
 );
+
+export const expenses = createTable("expenses", {
+  id: serial("id").primaryKey(),
+  groupId: integer("groupId")
+    .notNull()
+    .references(() => groups.id),
+  paidByGroupMemberId: integer("paidByGroupMemberId")
+    .notNull()
+    .references(() => groupMembers.id),
+  amountInCents: integer("amount_in_cents").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull(),
+  description: varchar("description", { length: 512 }),
+  category: varchar("category", { length: 100 }),
+  expenseDate: timestamp("expenseDate").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdByGroupMemberId: integer("createdByGroupMemberId")
+    .notNull()
+    .references(() => groupMembers.id),
+  isSettlement: boolean("is_settlement").default(false).notNull(),
+});
+
+export const expenseSplits = createTable("expense_splits", {
+  id: serial("id").primaryKey(),
+  expenseId: integer("expenseId")
+    .notNull()
+    .references(() => expenses.id),
+  groupMemberId: integer("groupMemberId")
+    .notNull()
+    .references(() => groupMembers.id),
+  amountInCents: integer("amount_in_cents").notNull(),
+  percentage: integer("percentage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const expensesRelations = relations(expenses, ({ many, one }) => ({
+  group: one(groups, {
+    fields: [expenses.groupId],
+    references: [groups.id],
+  }),
+  paidByGroupMember: one(groupMembers, {
+    fields: [expenses.paidByGroupMemberId],
+    references: [groupMembers.id],
+    relationName: "paidByGroupMember",
+  }),
+  createdByGroupMember: one(groupMembers, {
+    fields: [expenses.createdByGroupMemberId],
+    references: [groupMembers.id],
+    relationName: "createdByGroupMember",
+  }),
+  expenseSplits: many(expenseSplits),
+}));
+
+export const expenseSplitsRelations = relations(expenseSplits, ({ one }) => ({
+  expense: one(expenses, {
+    fields: [expenseSplits.expenseId],
+    references: [expenses.id],
+  }),
+  groupMember: one(groupMembers, {
+    fields: [expenseSplits.groupMemberId],
+    references: [groupMembers.id],
+  }),
+}));

@@ -6,6 +6,8 @@
 
 import type { db } from "@flatsby/db/client";
 import type {
+  expenses,
+  expenseSplits,
   groupMembers,
   groups,
   shoppingListItems,
@@ -122,6 +124,46 @@ export type ShoppingListSummary = Pick<
 > & {
   uncheckedItemLength: number;
 };
+
+// Expense types
+export type Expense = typeof expenses.$inferSelect;
+export type NewExpense = typeof expenses.$inferInsert;
+
+export type ExpenseSplit = typeof expenseSplits.$inferSelect;
+export type NewExpenseSplit = typeof expenseSplits.$inferInsert;
+
+export type ExpenseWithSplits = Expense & {
+  expenseSplits: ExpenseSplit[];
+};
+
+export type ExpenseSplitWithMember = ExpenseSplit & {
+  groupMember: Pick<GroupMember, "id" | "userId"> & {
+    user: Pick<User, "email" | "name" | "image">;
+  };
+};
+
+export type ExpenseWithSplitsAndMembers = Expense & {
+  paidByGroupMember: GroupMemberWithUser;
+  createdByGroupMember: GroupMemberWithUser;
+  expenseSplits: ExpenseSplitWithMember[];
+};
+
+export interface DebtEntry {
+  fromGroupMemberId: number;
+  toGroupMemberId: number;
+  amountInCents: number;
+  currency: string;
+}
+
+export interface DebtSummary {
+  debts: DebtEntry[];
+  currency: string;
+}
+
+export interface GroupDebtSummary {
+  currencies: Record<string, DebtSummary>;
+  memberBalances: Record<number, Record<string, number>>; // groupMemberId -> currency -> balance in cents
+}
 
 // Utility types for database operations
 export type DatabaseOperation<T> = () => Promise<T>;

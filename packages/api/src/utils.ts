@@ -3,6 +3,9 @@ import { Effect } from "effect";
 import type { ApiError, NotFoundError } from "./errors";
 import type {
   Database,
+  DebtEntry,
+  DebtSummary,
+  GroupDebtSummary,
   GroupMember,
   GroupWithAccess,
   Role,
@@ -394,4 +397,186 @@ export const effectify = <T>(
   operationName: string,
 ): Effect.Effect<T, ApiError> => {
   return safeDbOperation(asyncFn, operationName);
+};
+
+/**
+ * Expense utilities for validation, calculation, and debt management
+ */
+export const ExpenseUtils = {
+  /**
+   * Convert cents to decimal for display
+   */
+  centsToDecimal: (cents: number): number => {
+    return cents / 100;
+  },
+
+  /**
+   * Convert decimal to cents for storage
+   */
+  decimalToCents: (decimal: number): number => {
+    return Math.round(decimal * 100);
+  },
+
+  /**
+   * Validate that expense splits sum to the expense amount
+   */
+  validateExpenseSplits: (
+    expenseAmountInCents: number,
+    splits: { amountInCents: number }[],
+    isSettlement: boolean,
+  ): Effect.Effect<void, ApiError> => {
+    if (isSettlement) {
+      if (splits.length !== 1) {
+        return fail.validation("splits", "settlement splits must be exactly 1");
+      }
+    }
+
+    const totalSplitAmount = splits.reduce(
+      (sum, split) => sum + split.amountInCents,
+      0,
+    );
+
+    if (totalSplitAmount !== expenseAmountInCents) {
+      return fail.validation(
+        "splits",
+        `split amounts (${totalSplitAmount} cents) must sum to expense amount (${expenseAmountInCents} cents)`,
+        "The split amounts don't match the total expense amount",
+      );
+    }
+
+    return Effect.succeed(undefined);
+  },
+
+  /**
+   * Calculate debts from expenses and splits
+   * Returns a map of currency -> member balances
+   */
+  calculateDebts: (
+    expenses: {
+      paidByGroupMemberId: number;
+      amountInCents: number;
+      currency: string;
+      expenseSplits: {
+        groupMemberId: number;
+        amountInCents: number;
+      }[];
+    }[],
+  ): GroupDebtSummary => {
+    const memberBalances: Record<number, Record<string, number>> = {};
+    const currencies = new Set<string>();
+
+    // Initialize balances for all members and currencies
+    for (const expense of expenses) {
+      currencies.add(expense.currency);
+      const payerBalances = (memberBalances[expense.paidByGroupMemberId] ??=
+        {});
+      payerBalances[expense.currency] ??= 0;
+
+      for (const split of expense.expenseSplits) {
+        const splitterBalances = (memberBalances[split.groupMemberId] ??= {});
+        splitterBalances[expense.currency] ??= 0;
+      }
+    }
+
+    // Calculate net balances
+    for (const expense of expenses) {
+      const { paidByGroupMemberId, amountInCents, currency } = expense;
+      const payerBalances = memberBalances[paidByGroupMemberId];
+      if (payerBalances) {
+        // Payer gets credited (positive balance)
+        const currentBalance = payerBalances[currency];
+        if (currentBalance !== undefined) {
+          payerBalances[currency] = currentBalance + amountInCents;
+        } else {
+          payerBalances[currency] = amountInCents;
+        }
+      }
+
+      // Splitters get debited (negative balance)
+      for (const split of expense.expenseSplits) {
+        const splitterBalances = memberBalances[split.groupMemberId];
+        if (splitterBalances) {
+          const currentBalance = splitterBalances[currency];
+          if (currentBalance !== undefined) {
+            splitterBalances[currency] = currentBalance - split.amountInCents;
+          } else {
+            splitterBalances[currency] = -split.amountInCents;
+          }
+        }
+      }
+    }
+
+    // Simplify debts for each currency
+    const currencyDebts: Record<string, DebtSummary> = {};
+    for (const currency of currencies) {
+      const debts = ExpenseUtils.simplifyDebts(memberBalances, currency);
+      currencyDebts[currency] = {
+        debts,
+        currency,
+      };
+    }
+
+    return {
+      currencies: currencyDebts,
+      memberBalances,
+    };
+  },
+
+  /**
+   * Simplify debts using a graph-based approach to minimize transactions
+   * Uses a greedy algorithm to find minimum number of transactions
+   */
+  simplifyDebts: (
+    memberBalances: Record<number, Record<string, number>>,
+    currency: string,
+  ): DebtEntry[] => {
+    // Get all members with non-zero balances for this currency
+    const balances: { memberId: number; balance: number }[] = [];
+    for (const [memberId, currencies] of Object.entries(memberBalances)) {
+      const balance = currencies[currency] ?? 0;
+      if (balance !== 0) {
+        balances.push({ memberId: Number(memberId), balance });
+      }
+    }
+
+    // Separate creditors (positive) and debtors (negative)
+    const creditors = balances
+      .filter((b) => b.balance > 0)
+      .sort((a, b) => b.balance - a.balance);
+    const debtors = balances
+      .filter((b) => b.balance < 0)
+      .sort((a, b) => a.balance - b.balance);
+
+    const debts: DebtEntry[] = [];
+    let creditorIndex = 0;
+    let debtorIndex = 0;
+
+    while (creditorIndex < creditors.length && debtorIndex < debtors.length) {
+      const creditor = creditors[creditorIndex];
+      const debtor = debtors[debtorIndex];
+
+      if (!creditor || !debtor) break;
+
+      const amount = Math.min(creditor.balance, Math.abs(debtor.balance));
+
+      debts.push({
+        fromGroupMemberId: debtor.memberId,
+        toGroupMemberId: creditor.memberId,
+        amountInCents: amount,
+        currency,
+      });
+
+      creditor.balance -= amount;
+      debtor.balance += amount;
+
+      if (creditor.balance === 0) {
+        creditorIndex++;
+      }
+      if (debtor.balance === 0) {
+        debtorIndex++;
+      }
+    }
+
+    return debts;
+  },
 };
