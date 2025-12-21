@@ -35,13 +35,13 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const { renderLeftActions, renderRightActions } = useSwipeActions({
     leftAction: {
       text: "Edit",
-      backgroundColor: "info",
-      textColor: "info-foreground",
+      className: "bg-info",
+      textClassName: "text-info-foreground",
     },
     rightAction: {
       text: "Delete",
-      backgroundColor: "destructive",
-      textColor: "destructive-foreground",
+      className: "bg-destructive",
+      textClassName: "text-destructive-foreground",
     },
   });
 
