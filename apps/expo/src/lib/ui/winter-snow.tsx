@@ -9,17 +9,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { getColor } from "../utils";
-
-/**
- * Checks if the current date is in winter season (December, January, or February)
- */
-function isWinterSeason(): boolean {
-  const now = new Date();
-  const month = now.getMonth(); // 0-11
-  // December (11), January (0), February (1)
-  return month === 11 || month === 0 || month === 1;
-}
+import { useThemeColors } from "../utils";
+import { useWinterEffects } from "./winter-effects";
 
 interface Snowflake {
   id: number;
@@ -56,14 +47,13 @@ function generateSnowflakes(): Snowflake[] {
 }
 
 export function WinterSnow() {
-  const isWinter = isWinterSeason();
+  const { isEnabled } = useWinterEffects();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const [snowflakes] = useState<Snowflake[]>(() =>
-    isWinter ? generateSnowflakes() : [],
-  );
+  const [snowflakes] = useState<Snowflake[]>(() => generateSnowflakes());
+  const { getColor } = useThemeColors();
 
-  // Don't render if not winter season or dimensions not ready
-  if (!isWinter || snowflakes.length === 0 || screenHeight === 0) {
+  // Don't render if dimensions not ready
+  if (!isEnabled || snowflakes.length === 0 || screenHeight === 0) {
     return null;
   }
 

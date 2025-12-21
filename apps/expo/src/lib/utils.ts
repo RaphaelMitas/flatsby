@@ -73,7 +73,7 @@ const darkColors = {
 
 export type ColorName = keyof typeof lightColors;
 
-export const getColor = (
+const getColor = (
   colorName: ColorName,
   colorScheme?: "light" | "dark",
 ): string => {
