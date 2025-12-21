@@ -44,7 +44,9 @@ const Checkbox = React.forwardRef<
           )}
         >
           <View className="flex-1 items-center justify-center">
-            {checked && <Icon name="check" size={16} />}
+            {checked && (
+              <Icon name="check" size={16} color="primary-foreground" />
+            )}
           </View>
         </View>
       </Pressable>

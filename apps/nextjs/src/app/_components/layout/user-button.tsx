@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Snowflake } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
@@ -11,8 +12,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@flatsby/ui/dropdown-menu";
+import { Label } from "@flatsby/ui/label";
 import { Separator } from "@flatsby/ui/separator";
 
+import { useWinterEffects } from "~/app/_components/layout/winterTheme/use-winter-effects";
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
 import { ModeToggle } from "./ModeToggle";
@@ -20,6 +23,7 @@ import UserLogoutButton from "./user-logout-button";
 
 export function UserButton() {
   const trpc = useTRPC();
+  const { isEnabled, setEnabled } = useWinterEffects();
   const { data: userWithGroups } = useSuspenseQuery(
     trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),
   );
@@ -52,12 +56,24 @@ export function UserButton() {
           </Avatar>
           <div className="grid gap-1">
             <div className="text-lg font-medium">{user?.name}</div>
-            <div className="text-sm text-muted-foreground">{user?.email}</div>
+            <div className="text-muted-foreground text-sm">{user?.email}</div>
           </div>
         </div>
         <div className="p-4">
           <div className="grid gap-2">
             <ModeToggle />
+            <Button
+              variant={isEnabled ? "primary" : "outline"}
+              className="w-full"
+              onClick={() => setEnabled((prev) => !prev)}
+            >
+              <div className="flex items-center gap-2">
+                <Snowflake className="h-4 w-4" />
+                <Label htmlFor="winter-effects" className="cursor-pointer">
+                  Winter Effects
+                </Label>
+              </div>
+            </Button>
             <Link href="/user-settings">
               <Button variant="outline" className="w-full">
                 <DropdownMenuItem className="cursor-pointer">
