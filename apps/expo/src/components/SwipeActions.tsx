@@ -1,16 +1,16 @@
 import type React from "react";
 import type { SharedValue } from "react-native-reanimated";
+import type { ClassNameValue } from "tailwind-merge";
 import { useCallback } from "react";
 import { Text, View } from "react-native";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 
-import type { ColorName } from "~/lib/utils";
-import { useThemeColors } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 
 interface SwipeAction {
   text: string;
-  backgroundColor: ColorName;
-  textColor: ColorName;
+  className?: ClassNameValue;
+  textClassName?: ClassNameValue;
 }
 
 interface SwipeActionsProps {
@@ -33,7 +33,6 @@ export const useSwipeActions = ({
   leftAction,
   rightAction,
 }: SwipeActionsProps): SwipeActionsReturn => {
-  const { getColor } = useThemeColors();
   const rightActionStyle = useAnimatedStyle(() => {
     return {
       flex: 1,
@@ -55,12 +54,13 @@ export const useSwipeActions = ({
       return (
         <Reanimated.View style={rightActionStyle}>
           <View
-            className="h-full w-full items-end justify-center rounded-md p-4"
-            style={{ backgroundColor: getColor(rightAction.backgroundColor) }}
+            className={cn(
+              "h-full w-full items-end justify-center rounded-lg p-4",
+              rightAction.className,
+            )}
           >
             <Text
-              className="text-sm font-medium"
-              style={{ color: getColor(rightAction.textColor) }}
+              className={cn("text-sm font-medium", rightAction.textClassName)}
             >
               {rightAction.text}
             </Text>
@@ -68,7 +68,7 @@ export const useSwipeActions = ({
         </Reanimated.View>
       );
     },
-    [rightActionStyle, rightAction, getColor],
+    [rightActionStyle, rightAction],
   );
 
   const renderLeftActions = useCallback(
@@ -78,12 +78,13 @@ export const useSwipeActions = ({
       return (
         <Reanimated.View style={leftActionStyle}>
           <View
-            className="h-full w-full items-start justify-center rounded-md p-4"
-            style={{ backgroundColor: getColor(leftAction.backgroundColor) }}
+            className={cn(
+              "h-full w-full items-start justify-center rounded-lg p-4",
+              leftAction.className,
+            )}
           >
             <Text
-              className="text-sm font-medium"
-              style={{ color: getColor(leftAction.textColor) }}
+              className={cn("text-sm font-medium", leftAction.textClassName)}
             >
               {leftAction.text}
             </Text>
@@ -91,7 +92,7 @@ export const useSwipeActions = ({
         </Reanimated.View>
       );
     },
-    [leftActionStyle, leftAction, getColor],
+    [leftActionStyle, leftAction],
   );
 
   return {

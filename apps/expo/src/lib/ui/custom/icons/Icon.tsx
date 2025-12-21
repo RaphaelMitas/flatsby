@@ -1,7 +1,8 @@
+import type LucideIcon from "@react-native-vector-icons/lucide";
 import type { ComponentProps } from "react";
-import LucideIcon from "@react-native-vector-icons/lucide";
 
 import type { ColorName } from "~/lib/utils";
+import { StyledIcon } from "~/lib/nativewind-setup";
 import { cn, useThemeColors } from "~/lib/utils";
 import AppleIcon from "./AppleIcon";
 import FlatsbyIcon from "./FlatsbyIcon";
@@ -26,17 +27,14 @@ const Icon = ({ name, color, size, className }: IconProps) => {
   if (name === "google") {
     return <GoogleIcon size={size} color={colorValue} className={className} />;
   }
-
   if (name === "apple") {
     return <AppleIcon size={size} color={colorValue} className={className} />;
   }
-
   if (name === "flatsby") {
     return <FlatsbyIcon size={size} color={colorValue} className={className} />;
   }
-
   return (
-    <LucideIcon
+    <StyledIcon
       name={name === "loader" ? "loader-circle" : name}
       size={size}
       color={colorValue}

@@ -45,7 +45,7 @@ export default function DangerScreen() {
 
   return (
     <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="flex-1 p-4">
+      <ScrollView className="p-4">
         <Text className="text-destructive mb-2 text-2xl font-bold">
           Danger Zone
         </Text>

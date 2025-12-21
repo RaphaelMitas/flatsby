@@ -9,7 +9,10 @@ import {
   useState,
 } from "react";
 import { Keyboard, Platform, Pressable, Text, View } from "react-native";
-import BottomSheetRaw, { BottomSheetFlashList } from "@gorhom/bottom-sheet";
+import BottomSheetRaw, {
+  useBottomSheetScrollableCreator,
+} from "@gorhom/bottom-sheet";
+import { FlashList } from "@shopify/flash-list";
 import { styled } from "nativewind";
 import { tv } from "tailwind-variants";
 
@@ -44,7 +47,7 @@ const itemDescriptionVariants = tv({
 });
 
 const triggerVariants = tv({
-  base: "flex-row gap-2 items-center rounded-md border border-input h-12 justify-center px-4 py-2",
+  base: "flex-row gap-2 items-center rounded-lg border border-input h-12 justify-center px-4 py-2",
   variants: {
     iconButton: {
       true: "justify-center h-12 w-12 p-0",
@@ -112,6 +115,32 @@ export const useBottomSheetPicker = () => {
 interface BottomSheetPickerProviderProps {
   children: ReactNode;
 }
+
+// Component that uses the hook inside BottomSheet context
+interface BottomSheetPickerContentProps {
+  items: BottomSheetPickerItem[];
+  renderItem: ({ item }: { item: BottomSheetPickerItem }) => React.ReactElement;
+}
+
+const BottomSheetPickerContent: React.FC<BottomSheetPickerContentProps> = ({
+  items,
+  renderItem,
+}) => {
+  const BottomSheetScrollable = useBottomSheetScrollableCreator();
+
+  return (
+    <FlashList
+      className={bottomSheetContentVariants({
+        platform: Platform.OS === "ios" ? "ios" : "default",
+      })}
+      data={items}
+      keyExtractor={(item: BottomSheetPickerItem) => item.id}
+      renderItem={renderItem}
+      showsVerticalScrollIndicator={false}
+      renderScrollComponent={BottomSheetScrollable}
+    />
+  );
+};
 
 export const BottomSheetPickerProvider: React.FC<
   BottomSheetPickerProviderProps
@@ -202,16 +231,12 @@ export const BottomSheetPickerProvider: React.FC<
           backgroundColor: getColor("primary"),
         }}
       >
-        <BottomSheetFlashList
-          className={bottomSheetContentVariants({
-            platform: Platform.OS === "ios" ? "ios" : "default",
-          })}
-          data={pickerConfig?.items ?? []}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          estimatedItemSize={90}
-        />
+        {pickerConfig && (
+          <BottomSheetPickerContent
+            items={pickerConfig.items}
+            renderItem={renderItem}
+          />
+        )}
       </BottomSheet>
     </BottomSheetPickerContext.Provider>
   );

@@ -79,7 +79,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="flex-1 p-4">
+      <ScrollView className="p-4">
         {/* Profile Picture Section */}
         <ProfileSection
           name={user.name}

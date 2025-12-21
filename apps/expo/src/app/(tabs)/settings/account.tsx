@@ -41,7 +41,7 @@ export default function AccountScreen() {
 
   return (
     <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="flex-1 p-4">
+      <ScrollView className="p-4">
         <Text className="text-foreground mb-6 text-2xl font-bold">
           Account Information
         </Text>

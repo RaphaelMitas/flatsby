@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
 import { Checkbox } from "~/lib/ui/checkbox";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useSwipeActions } from "../SwipeActions";
 import { getCategoryData } from "./ShoppingListCategory";
@@ -170,13 +171,13 @@ const ShoppingListItem = ({
   const { renderLeftActions, renderRightActions } = useSwipeActions({
     leftAction: {
       text: "Edit",
-      backgroundColor: "info",
-      textColor: "info-foreground",
+      className: "bg-info",
+      textClassName: "text-info-foreground",
     },
     rightAction: {
       text: "Delete",
-      backgroundColor: "destructive",
-      textColor: "destructive-foreground",
+      className: "bg-destructive",
+      textClassName: "text-destructive-foreground",
     },
   });
 
@@ -206,10 +207,10 @@ const ShoppingListItem = ({
         <TouchableOpacity
           disabled={item.isPending}
           onPress={() => setShowDetails(true)}
-          className={"bg-muted flex-row items-center rounded-lg"}
-          style={{
-            opacity: item.isPending ? 0.7 : 1,
-          }}
+          className={cn(
+            "bg-muted flex-row items-center rounded-lg",
+            item.isPending && "opacity-70",
+          )}
         >
           <Checkbox
             checked={item.completed}
@@ -220,18 +221,19 @@ const ShoppingListItem = ({
           <View className="flex-1 flex-row justify-between gap-2">
             <View className="flex-1">
               <Text
-                className={`text-sm font-medium ${
+                className={cn(
+                  "text-sm font-medium",
                   item.completed
                     ? "text-muted-foreground line-through"
-                    : "text-foreground"
-                }`}
+                    : "text-foreground",
+                )}
               >
                 {item.name}
               </Text>
             </View>
             <View className="flex-row items-center justify-center gap-2 px-4">
               {categoryData.icon}
-              <Text className={`text-xs font-medium ${categoryData.color}`}>
+              <Text className={cn("text-xs font-medium", categoryData.color)}>
                 {categoryData.name}
               </Text>
             </View>
@@ -265,7 +267,7 @@ const ShoppingListItem = ({
               </View>
 
               <View className="items-center justify-center">
-                <Text className={`text-xs font-medium ${categoryData.color}`}>
+                <Text className={cn("text-xs font-medium", categoryData.color)}>
                   {categoryData.name}
                 </Text>
               </View>

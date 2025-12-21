@@ -223,7 +223,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
     (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
       return (
         <Reanimated.View style={rightActionStyle}>
-          <View className="bg-destructive h-full w-full items-end justify-center rounded-md p-4">
+          <View className="bg-destructive h-full w-full items-end justify-center rounded-lg p-4">
             <Text className="text-destructive-foreground text-sm font-medium">
               Delete
             </Text>
@@ -238,7 +238,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
     (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
       return (
         <Reanimated.View style={leftActionStyle}>
-          <View className="bg-primary h-full w-full items-start justify-center rounded-md p-4">
+          <View className="bg-primary h-full w-full items-start justify-center rounded-lg p-4">
             {isRenaming ? (
               <View className="flex-row items-center gap-2">
                 <Form {...form}>

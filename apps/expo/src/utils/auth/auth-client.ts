@@ -8,7 +8,7 @@ export const authClient = createAuthClient({
   baseURL: getBaseUrl(),
   plugins: [
     expoClient({
-      scheme: "flatsby",
+      scheme: "flatcove",
       storagePrefix: "flatcove",
       storage: SecureStore,
     }),

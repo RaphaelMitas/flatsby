@@ -240,7 +240,7 @@ export default function MembersScreen() {
 
   return (
     <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="flex-1">
+      <ScrollView>
         {/* Header */}
         <View className="bg-background px-4 py-6">
           <Text className="text-foreground text-2xl font-bold">
@@ -321,7 +321,6 @@ export default function MembersScreen() {
             <FlashList
               data={group.data.groupMembers}
               renderItem={renderMemberItem}
-              estimatedItemSize={80}
               ItemSeparatorComponent={() => <View className="bg-border h-px" />}
               showsVerticalScrollIndicator={false}
             />
