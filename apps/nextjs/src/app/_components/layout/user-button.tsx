@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Snowflake } from "lucide-react";
+import { Snowflake, Sparkles } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
@@ -34,58 +34,66 @@ export function UserButton() {
 
   const user = userWithGroups.data.user;
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.image ?? undefined} alt="user image" />
-            <AvatarFallback>
-              {user?.name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span className="sr-only">Toggle user menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <div className="flex items-center gap-4 border-b p-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={user?.image ?? undefined} alt="user image" />
-            <AvatarFallback>
-              {user?.name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="grid gap-1">
-            <div className="text-lg font-medium">{user?.name}</div>
-            <div className="text-muted-foreground text-sm">{user?.email}</div>
+    <div className="flex items-center gap-2">
+      <Button variant="outline" asChild>
+        <Link href="/wrapped">
+          <Sparkles className="mr-2 h-5 w-5" />
+          <span>Flatsby Wrapped</span>
+        </Link>
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user?.image ?? undefined} alt="user image" />
+              <AvatarFallback>
+                {user?.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="sr-only">Toggle user menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-80">
+          <div className="flex items-center gap-4 border-b p-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={user?.image ?? undefined} alt="user image" />
+              <AvatarFallback>
+                {user?.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="grid gap-1">
+              <div className="text-lg font-medium">{user?.name}</div>
+              <div className="text-muted-foreground text-sm">{user?.email}</div>
+            </div>
           </div>
-        </div>
-        <div className="p-4">
-          <div className="grid gap-2">
-            <ModeToggle />
-            <Button
-              variant={isEnabled ? "primary" : "outline"}
-              className="w-full"
-              onClick={() => setEnabled((prev) => !prev)}
-            >
-              <div className="flex items-center gap-2">
-                <Snowflake className="h-4 w-4" />
-                <Label htmlFor="winter-effects" className="cursor-pointer">
-                  Winter Effects
-                </Label>
-              </div>
-            </Button>
-            <Link href="/user-settings">
-              <Button variant="outline" className="w-full">
-                <DropdownMenuItem className="cursor-pointer">
-                  Profile Settings
-                </DropdownMenuItem>
+          <div className="p-4">
+            <div className="grid gap-2">
+              <ModeToggle />
+              <Button
+                variant={isEnabled ? "primary" : "outline"}
+                className="w-full"
+                onClick={() => setEnabled((prev) => !prev)}
+              >
+                <div className="flex items-center gap-2">
+                  <Snowflake className="h-4 w-4" />
+                  <Label htmlFor="winter-effects" className="cursor-pointer">
+                    Winter Effects
+                  </Label>
+                </div>
               </Button>
-            </Link>
-            <Separator className="my-4" />
-            <UserLogoutButton />
+              <Link href="/user-settings">
+                <Button variant="outline" className="w-full">
+                  <DropdownMenuItem className="cursor-pointer">
+                    Profile Settings
+                  </DropdownMenuItem>
+                </Button>
+              </Link>
+              <Separator className="my-4" />
+              <UserLogoutButton />
+            </div>
           </div>
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

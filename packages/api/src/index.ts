@@ -73,4 +73,5 @@ export type {
   TransactionOperation,
   User,
   UserGroupMembership,
+  UserWrappedSummary,
 } from "./types";

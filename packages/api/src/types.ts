@@ -141,3 +141,47 @@ export interface FindGroupMemberOptions {
   memberId: number;
   userId: string;
 }
+
+export interface WrappedSummaryCategory {
+  categoryId: string;
+  count: number;
+}
+
+export interface WrappedSummaryTopGroup {
+  groupId: number;
+  name: string;
+  profilePicture: string | null;
+  actions: number;
+}
+
+export interface WrappedSummaryTopList {
+  shoppingListId: number;
+  name: string;
+  actions: number;
+}
+
+export interface UserWrappedSummary {
+  year: number;
+  from: string;
+  to: string;
+
+  userName: string | null;
+
+  totalSessions: number;
+  activeDays: number;
+  longestStreak: number;
+
+  groupsJoined: number;
+  topGroupByActivity: WrappedSummaryTopGroup | null;
+
+  listsTouched: number;
+  mostUsedList: WrappedSummaryTopList | null;
+
+  itemsCreated: number;
+  itemsCompleted: number;
+  completionRate: number | null;
+  fastestCompletionMs: number | null;
+  mostProductiveDay: string | null;
+
+  topCategories: WrappedSummaryCategory[];
+}
