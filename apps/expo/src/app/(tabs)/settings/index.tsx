@@ -126,6 +126,14 @@ export default function SettingsIndex() {
             }
           />
         </SettingsSection>
+        <SettingsSection title="Year in Review">
+          <SettingsItem
+            title={`${new Date().getFullYear()} Wrapped`}
+            subtitle="See your year in shared shopping"
+            iconName="sparkles"
+            onPress={() => router.push("/wrapped")}
+          />
+        </SettingsSection>
         <SettingsSection title="Groups">
           <SettingsItem
             title="Your Groups"
