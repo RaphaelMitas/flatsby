@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Settings as SettingsIcon } from "lucide-react";
+import { Plus, Receipt, Settings as SettingsIcon } from "lucide-react";
 
 import { Button } from "@flatsby/ui/button";
 
@@ -10,6 +10,7 @@ const GroupPage = async (props: { params: Promise<{ groupId: string }> }) => {
   const params = await props.params;
   const groupId = parseInt(params.groupId);
   prefetch(trpc.shoppingList.getShoppingLists.queryOptions({ groupId }));
+  prefetch(trpc.expense.getGroupExpenses.queryOptions({ groupId, limit: 5 }));
 
   return (
     <HydrateClient>
@@ -28,6 +29,17 @@ const GroupPage = async (props: { params: Promise<{ groupId: string }> }) => {
           <Button variant="outline" asChild size="icon">
             <Link href={`/group/${groupId}/settings`}>
               <SettingsIcon />
+            </Link>
+          </Button>
+        </div>
+        <div className="mb-6">
+          <Button variant="outline" asChild className="w-full sm:w-auto">
+            <Link
+              href={`/group/${groupId}/expenses`}
+              className="flex items-center gap-2"
+            >
+              <Receipt className="h-4 w-4" />
+              View Expenses
             </Link>
           </Button>
         </div>

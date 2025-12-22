@@ -16,28 +16,7 @@ import {
 } from "../utils";
 
 // ISO 4217 currency codes (common ones)
-const CURRENCY_CODES = [
-  "USD",
-  "EUR",
-  "GBP",
-  "JPY",
-  "AUD",
-  "CAD",
-  "CHF",
-  "CNY",
-  "INR",
-  "NZD",
-  "SGD",
-  "HKD",
-  "SEK",
-  "NOK",
-  "DKK",
-  "PLN",
-  "MXN",
-  "BRL",
-  "ZAR",
-  "KRW",
-] as const;
+const CURRENCY_CODES = ["EUR", "USD", "GBP"] as const;
 
 const expenseSplitSchema = z.object({
   groupMemberId: z.number(),
@@ -387,7 +366,7 @@ export const expenseRouter = createTRPCRouter({
               ),
               () =>
                 // Get full expense with splits and member info
-                safeDbOperation(
+                DbUtils.findOneOrFail(
                   () =>
                     ctx.db.query.expenses.findFirst({
                       where: eq(expenses.id, input.expenseId),
@@ -423,7 +402,7 @@ export const expenseRouter = createTRPCRouter({
                         },
                       },
                     }),
-                  "fetch expense",
+                  "get expense",
                 ),
             ),
         ),

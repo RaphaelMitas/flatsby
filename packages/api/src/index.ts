@@ -73,4 +73,7 @@ export type {
   TransactionOperation,
   User,
   UserGroupMembership,
+  ExpenseWithSplitsAndMembers,
+  GroupDebtSummary,
+  GroupMemberWithUserInfo,
 } from "./types";
