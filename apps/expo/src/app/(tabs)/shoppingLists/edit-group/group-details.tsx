@@ -17,7 +17,6 @@ import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -124,92 +123,90 @@ export default function GroupDetailsScreen() {
   const memberCount = group.data.groupMembers.length;
 
   return (
-    <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="p-4">
-        {/* Group Profile Section */}
-        <ProfileSection
-          name={group.data.name}
-          subtitle={`${memberCount} member${memberCount !== 1 ? "s" : ""}`}
-          fallbackText={group.data.name.substring(0, 2).toUpperCase()}
-          showChangePhoto={isAdmin}
-          disabled={true}
-        />
+    <ScrollView className="p-4">
+      {/* Group Profile Section */}
+      <ProfileSection
+        name={group.data.name}
+        subtitle={`${memberCount} member${memberCount !== 1 ? "s" : ""}`}
+        fallbackText={group.data.name.substring(0, 2).toUpperCase()}
+        showChangePhoto={isAdmin}
+        disabled={true}
+      />
 
-        {/* Group Name Edit Section */}
-        <View className="bg-card gap-4 rounded-lg p-4">
-          <Text className="text-foreground mb-4 text-lg font-semibold">
-            Group Details
-          </Text>
+      {/* Group Name Edit Section */}
+      <View className="bg-card gap-4 rounded-lg p-4">
+        <Text className="text-foreground mb-4 text-lg font-semibold">
+          Group Details
+        </Text>
 
-          {!isAdmin && (
-            <View className="bg-muted mb-4 rounded-lg p-3">
-              <Text className="text-muted-foreground text-sm">
-                Only group administrators can edit group details.
-              </Text>
-            </View>
-          )}
+        {!isAdmin && (
+          <View className="bg-muted mb-4 rounded-lg p-3">
+            <Text className="text-muted-foreground text-sm">
+              Only group administrators can edit group details.
+            </Text>
+          </View>
+        )}
 
-          <Form {...form}>
-            <View className="gap-4">
-              <View>
-                <Label htmlFor="name" className="mb-2">
-                  Group Name
-                </Label>
-                <FormField
-                  name="name"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormControl>
-                      <Input
-                        value={field.value}
-                        onChangeText={field.onChange}
-                        onBlur={field.onBlur}
-                        placeholder="Enter group name"
-                        className="w-full"
-                        error={!!form.formState.errors.name}
-                        maxLength={256}
-                        editable={isAdmin && !form.formState.isSubmitting}
-                      />
-                    </FormControl>
-                  )}
-                />
-              </View>
-
-              <Button
-                icon={form.formState.isSubmitting ? "loader" : "save"}
-                disabled={form.formState.isSubmitting || !isAdmin}
-                title={
-                  form.formState.isSubmitting
-                    ? "Saving..."
-                    : !isAdmin
-                      ? "Not an admin"
-                      : "Save Changes"
-                }
-                onPress={form.handleSubmit(handleSubmit)}
-                className="w-full"
+        <Form {...form}>
+          <View className="gap-4">
+            <View>
+              <Label htmlFor="name" className="mb-2">
+                Group Name
+              </Label>
+              <FormField
+                name="name"
+                control={form.control}
+                render={({ field }) => (
+                  <FormControl>
+                    <Input
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder="Enter group name"
+                      className="w-full"
+                      error={!!form.formState.errors.name}
+                      maxLength={256}
+                      editable={isAdmin && !form.formState.isSubmitting}
+                    />
+                  </FormControl>
+                )}
               />
             </View>
-          </Form>
 
-          {/* Error Alert */}
-          {form.formState.errors.name && (
-            <TimedAlert
-              variant="destructive"
-              title="Error"
-              description={form.formState.errors.name.message}
+            <Button
+              icon={form.formState.isSubmitting ? "loader" : "save"}
+              disabled={form.formState.isSubmitting || !isAdmin}
+              title={
+                form.formState.isSubmitting
+                  ? "Saving..."
+                  : !isAdmin
+                    ? "Not an admin"
+                    : "Save Changes"
+              }
+              onPress={form.handleSubmit(handleSubmit)}
+              className="w-full"
             />
-          )}
+          </View>
+        </Form>
 
-          {/* Success Alert */}
-          {showSuccessMessage && (
-            <TimedAlert
-              variant="success"
-              title="Success!"
-              description="Group name has been updated successfully."
-            />
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        {/* Error Alert */}
+        {form.formState.errors.name && (
+          <TimedAlert
+            variant="destructive"
+            title="Error"
+            description={form.formState.errors.name.message}
+          />
+        )}
+
+        {/* Success Alert */}
+        {showSuccessMessage && (
+          <TimedAlert
+            variant="success"
+            title="Success!"
+            description="Group name has been updated successfully."
+          />
+        )}
+      </View>
+    </ScrollView>
   );
 }

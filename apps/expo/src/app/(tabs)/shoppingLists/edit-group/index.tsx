@@ -14,7 +14,6 @@ import {
   SettingsItem,
   SettingsSection,
 } from "~/components/settings";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -91,7 +90,7 @@ export default function GroupSettingsIndex() {
   }
 
   return (
-    <SafeAreaView className="bg-background flex-1">
+    <>
       <ScrollView>
         <SettingsHeader title={group.data.name} />
 
@@ -143,6 +142,6 @@ export default function GroupSettingsIndex() {
         description={`Are you sure you want to delete "${group.data.name}"? This action cannot be undone and will permanently remove all data associated with this group.`}
         confirmationLabel={`To confirm deletion, please type the group name: ${group.data.name}`}
       />
-    </SafeAreaView>
+    </>
   );
 }
