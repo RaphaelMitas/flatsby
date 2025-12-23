@@ -1,4 +1,4 @@
-import type { BetterAuthOptions } from "better-auth";
+import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -6,7 +6,9 @@ import { oAuthProxy } from "better-auth/plugins";
 
 import { db } from "@flatsby/db/client";
 
-export function initAuth(options: {
+export function initAuth<
+  TExtraPlugins extends BetterAuthPlugin[] = [],
+>(options: {
   baseUrl: string;
   productionUrl: string;
   secret: string | undefined;
@@ -18,6 +20,7 @@ export function initAuth(options: {
   appleTeamId: string;
   appleKeyId: string;
   appleClientSecret: string;
+  extraPlugins?: TExtraPlugins;
 }) {
   const config = {
     database: drizzleAdapter(db, { provider: "pg" }),
@@ -25,13 +28,10 @@ export function initAuth(options: {
     secret: options.secret,
     plugins: [
       oAuthProxy({
-        /**
-         * Auto-inference blocked by https://github.com/better-auth/better-auth/pull/2891
-         */
-        currentURL: options.baseUrl,
         productionURL: options.productionUrl,
       }),
       expo(),
+      ...(options.extraPlugins ?? []),
     ],
     socialProviders: {
       google: {
