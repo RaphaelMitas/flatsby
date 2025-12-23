@@ -7,7 +7,6 @@ import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { allCategories, CategoryPicker } from "./ShoppingListCategory";
 import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
@@ -61,47 +60,45 @@ export function ShoppingListItemEditForm() {
   };
 
   return (
-    <SafeAreaView className="bg-background flex-1">
-      <BottomSheetPickerProvider>
-        <View className="flex-1 gap-4 p-4">
-          <Form {...form}>
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormControl>
-                  <Input {...field} onChangeText={field.onChange} />
-                </FormControl>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="categoryId"
-              render={({ field }) => (
-                <FormControl>
-                  <CategoryPicker {...field} triggerTitle="Select Category" />
-                </FormControl>
-              )}
-            />
+    <BottomSheetPickerProvider>
+      <View className="flex-1 gap-4 p-4">
+        <Form {...form}>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormControl>
+                <Input {...field} onChangeText={field.onChange} />
+              </FormControl>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="categoryId"
+            render={({ field }) => (
+              <FormControl>
+                <CategoryPicker {...field} triggerTitle="Select Category" />
+              </FormControl>
+            )}
+          />
 
-            <View className="flex flex-row gap-2">
-              <Button
-                title="Cancel"
-                variant="secondary"
-                onPress={() => router.back()}
-                className="flex-1"
-              />
-              <Button
-                title={form.formState.isSubmitting ? "Updating..." : "Update"}
-                className="flex-1"
-                disabled={form.formState.isSubmitting}
-                icon={form.formState.isSubmitting ? "loader" : undefined}
-                onPress={form.handleSubmit(handleUpdateShoppingListItem)}
-              />
-            </View>
-          </Form>
-        </View>
-      </BottomSheetPickerProvider>
-    </SafeAreaView>
+          <View className="flex flex-row gap-2">
+            <Button
+              title="Cancel"
+              variant="secondary"
+              onPress={() => router.back()}
+              className="flex-1"
+            />
+            <Button
+              title={form.formState.isSubmitting ? "Updating..." : "Update"}
+              className="flex-1"
+              disabled={form.formState.isSubmitting}
+              icon={form.formState.isSubmitting ? "loader" : undefined}
+              onPress={form.handleSubmit(handleUpdateShoppingListItem)}
+            />
+          </View>
+        </Form>
+      </View>
+    </BottomSheetPickerProvider>
   );
 }
