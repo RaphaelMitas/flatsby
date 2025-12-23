@@ -1,43 +1,35 @@
 "use client";
 
+import type { z } from "zod/v4";
 import { useRef } from "react";
-import { z } from "zod/v4";
 
 import { Button } from "@flatsby/ui/button";
-import { categorysIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import { Form, FormField, useForm } from "@flatsby/ui/form";
+import { createShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
 
 import { CategorySelector } from "./CategorySelector";
 import { ShoppingListItemInputFormField } from "./ShoppingListItemInputFormField";
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "name is required",
-    })
-    .max(256, {
-      message: "name is too long",
-    }),
-  categoryId: z.enum(categorysIdWithAiAutoSelect).default("ai-auto-select"),
-});
-
 interface ShoppingListItemAddFormProps {
-  onSubmit: (values: z.infer<typeof formSchema>) => void;
+  onSubmit: (values: z.infer<typeof createShoppingListItemFormSchema>) => void;
 }
+
+type FormValues = z.infer<typeof createShoppingListItemFormSchema>;
 
 export const ShoppingListItemAddForm = ({
   onSubmit,
 }: ShoppingListItemAddFormProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const form = useForm({
-    schema: formSchema,
+  const form = useForm<FormValues, FormValues>({
+    schema: createShoppingListItemFormSchema,
     defaultValues: {
       name: "",
       categoryId: "ai-auto-select",
     },
   });
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (
+    values: z.infer<typeof createShoppingListItemFormSchema>,
+  ) => {
     form.reset({
       name: "",
       categoryId: "ai-auto-select",

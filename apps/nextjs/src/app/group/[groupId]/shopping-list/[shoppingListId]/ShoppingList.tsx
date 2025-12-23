@@ -1,7 +1,7 @@
 "use client";
 
 import type { ShoppingListInfiniteData } from "@flatsby/api";
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import {
   useInfiniteQuery,
   useMutation,
@@ -20,12 +20,13 @@ import ShoppingListItem, {
 import { ShoppingListItemAddForm } from "./ShoppingListItemAddForm";
 import { groupShoppingList } from "./ShoppingListUtils";
 
-interface ShoppingListProps {
+const ShoppingList = ({
+  groupId,
+  shoppingListId,
+}: {
   groupId: number;
   shoppingListId: number;
-}
-
-const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
+}) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -205,7 +206,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               className="space-y-2"
               key={`unchecked-section-${section.title}`}
             >
-              <div className="text-center text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-center text-sm">
                 {section.title}
               </div>
               {getShoppingList(section.items)}
@@ -213,14 +214,14 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
           ))}
 
           {checkedSections.length > 0 && (
-            <div className="mt-4 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground mt-4 text-center text-sm">
               Purchased Items
             </div>
           )}
 
           {checkedSections.map((section, index) => (
             <div className="space-y-2" key={`checked-section-${index}`}>
-              <div className="text-center text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-center text-sm">
                 {section.title}
               </div>
               {getShoppingList(section.items)}
@@ -244,7 +245,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             </div>
           )}
           {!hasNextPage && allItems.length > 0 && (
-            <div className="py-4 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground py-4 text-center text-sm">
               No more items to load
             </div>
           )}

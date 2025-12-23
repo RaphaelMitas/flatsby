@@ -1,19 +1,16 @@
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import { useState } from "react";
 import { View } from "react-native";
-import { z } from "zod/v4";
 
-import type { CategoryIdWithAiAutoSelect } from "./ShoppingListCategory";
+import { createShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
+
 import { Button } from "~/lib/ui/button";
 import { Input } from "~/lib/ui/input";
-import { allCategories, CategoryPicker } from "./ShoppingListCategory";
-
-const formSchema = z.object({
-  name: z.string().min(1, "Item name is required").max(256, "Name is too long"),
-  categoryId: z.enum(allCategories).default("ai-auto-select"),
-});
+import { CategoryPicker } from "./ShoppingListCategory";
 
 interface ShoppingListItemAddFormProps {
-  onSubmit: (values: z.infer<typeof formSchema>) => void;
+  onSubmit: (values: CreateShoppingListItemFormValues) => void;
 }
 
 export const ShoppingListItemAddForm = ({
@@ -29,7 +26,10 @@ export const ShoppingListItemAddForm = ({
 
     setIsSubmitting(true);
     try {
-      const values = formSchema.parse({ name: name.trim(), categoryId });
+      const values = createShoppingListItemFormSchema.parse({
+        name: name.trim(),
+        categoryId,
+      });
       onSubmit(values);
       setName("");
       setCategoryId("ai-auto-select");

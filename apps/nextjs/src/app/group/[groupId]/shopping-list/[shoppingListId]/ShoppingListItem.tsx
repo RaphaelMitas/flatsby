@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import "react-swipeable-list/dist/styles.css";
 
 import type { ShoppingListInfiniteData } from "@flatsby/api";
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash } from "lucide-react";
@@ -20,7 +20,7 @@ import {
 import { z } from "zod/v4";
 
 import { cn } from "@flatsby/ui";
-import { categoryIds, getCategoryData } from "@flatsby/ui/categories";
+import { getCategoryData } from "@flatsby/ui/categories";
 import { Checkbox } from "@flatsby/ui/checkbox";
 import {
   Popover,
@@ -28,6 +28,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@flatsby/ui/popover";
+import { categoryIds } from "@flatsby/validators/categories";
 
 import { useTRPC } from "~/trpc/react";
 import { ShoppingListItemEditForm } from "./ShoppingListItemEditForm";
@@ -378,6 +379,7 @@ const ShoppingListItem = ({
               initialValues={{
                 name: item.name,
                 categoryId: item.categoryId,
+                completed: item.completed,
               }}
               onSubmit={handleEditItem}
               onCancel={() => setShowEditForm(false)}

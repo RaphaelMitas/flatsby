@@ -1,4 +1,5 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import { useEffect, useMemo, useState } from "react";
 import {
   Keyboard,
@@ -16,7 +17,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 
-import type { CategoryIdWithAiAutoSelect } from "./ShoppingListCategory";
 import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { trpc } from "~/utils/api";

@@ -1,4 +1,4 @@
-import type { CategoryId } from "@flatsby/ui/categories";
+import type { CategoryId } from "@flatsby/validators/categories";
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { Effect } from "effect";
@@ -17,10 +17,14 @@ import {
 } from "@flatsby/db/schema";
 import {
   categoryIds,
-  categorysIdWithAiAutoSelect,
   isCategoryIdWithAiAutoSelect,
-} from "@flatsby/ui/categories";
-import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
+} from "@flatsby/validators/categories";
+import {
+  createShoppingListItemFormSchema,
+  editShoppingListItemFormSchema,
+  shoppingListFormSchema,
+  shoppingListItemSchema,
+} from "@flatsby/validators/shopping-list";
 
 import type {
   Group,
@@ -1214,21 +1218,7 @@ export const shoppingList = createTRPCRouter({
     .output(
       getApiResultZod(
         z.object({
-          items: z.array(
-            z.object({
-              id: z.number(),
-              name: z
-                .string()
-                .min(1, "Shopping list item name cannot be empty"),
-              categoryId: z.enum(categorysIdWithAiAutoSelect),
-              createdAt: z.date(),
-              completed: z.boolean(),
-              createdByGroupMemberId: z.number().nullable(),
-              completedByGroupMemberId: z.number().nullable(),
-              completedAt: z.date().nullable(),
-              isPending: z.boolean().optional(),
-            }),
-          ),
+          items: z.array(shoppingListItemSchema),
           nextCursor: z.number().optional(),
         }),
       ),
@@ -1317,11 +1307,9 @@ export const shoppingList = createTRPCRouter({
 
   createShoppingListItem: protectedProcedure
     .input(
-      z.object({
+      createShoppingListItemFormSchema.extend({
         groupId: z.number(),
         shoppingListId: z.number(),
-        name: z.string().min(1, "Shopping list item name cannot be empty"),
-        categoryId: z.enum(categorysIdWithAiAutoSelect),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1398,11 +1386,8 @@ export const shoppingList = createTRPCRouter({
 
   updateShoppingListItem: protectedProcedure
     .input(
-      z.object({
+      editShoppingListItemFormSchema.extend({
         id: z.number(),
-        name: z.string().min(1, "Shopping list item name cannot be empty"),
-        categoryId: z.enum(categorysIdWithAiAutoSelect),
-        completed: z.boolean(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

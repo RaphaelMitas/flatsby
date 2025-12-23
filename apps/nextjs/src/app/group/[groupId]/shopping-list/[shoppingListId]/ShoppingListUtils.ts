@@ -1,5 +1,5 @@
 import type { shoppingListItems } from "@flatsby/db/schema";
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 
 export type ShoppingListItem = Pick<
   typeof shoppingListItems.$inferSelect,

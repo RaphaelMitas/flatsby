@@ -537,6 +537,9 @@ importers:
       '@ai-sdk/google':
         specifier: 'catalog:'
         version: 2.0.51(zod@4.2.1)
+      '@flatsby/validators':
+        specifier: workspace:*
+        version: link:../validators
       '@hookform/resolvers':
         specifier: ^5.0.1
         version: 5.2.2(react-hook-form@7.69.0(react@19.1.2))

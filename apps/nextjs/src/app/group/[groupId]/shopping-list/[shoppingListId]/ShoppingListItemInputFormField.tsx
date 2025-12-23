@@ -1,7 +1,4 @@
-import type {
-  CategoryId,
-  CategoryIdWithAiAutoSelect,
-} from "@flatsby/ui/categories";
+import type { CategoryId } from "@flatsby/validators/categories";
 import type { ControllerRenderProps } from "react-hook-form";
 import { forwardRef } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -12,14 +9,13 @@ import { Input } from "@flatsby/ui/input";
 
 import { useTRPC } from "~/trpc/react";
 
+type NameFieldProps = Pick<
+  ControllerRenderProps<{ name: string }, "name">,
+  "onChange" | "onBlur" | "value" | "name" | "ref"
+>;
+
 interface ShoppingListItemInputFormFieldProps {
-  field: ControllerRenderProps<
-    {
-      name: string;
-      categoryId?: CategoryIdWithAiAutoSelect;
-    },
-    "name"
-  >;
+  field: NameFieldProps;
   onCategoryDetected: (categoryId: CategoryId) => void;
 }
 

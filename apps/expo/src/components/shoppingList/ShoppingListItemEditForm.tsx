@@ -1,28 +1,24 @@
+import type { z } from "zod/v4";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { z } from "zod/v4";
+
+import { editShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
 
 import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
-import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormMessage,
+  useForm,
+} from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { useShoppingStore } from "~/utils/shopping-store";
-import { allCategories, CategoryPicker } from "./ShoppingListCategory";
+import { CategoryPicker } from "./ShoppingListCategory";
 import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "name is required",
-    })
-    .max(256, {
-      message: "name is too long",
-    }),
-  categoryId: z.enum(allCategories).default("ai-auto-select"),
-  completed: z.boolean(),
-});
 export function ShoppingListItemEditForm() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -34,7 +30,7 @@ export function ShoppingListItemEditForm() {
   const { selectedGroupId: groupId, selectedShoppingListId: shoppingListId } =
     useShoppingStore();
   const form = useForm({
-    schema: formSchema,
+    schema: editShoppingListItemFormSchema,
     defaultValues: {
       name: params.name || "",
       categoryId: params.categoryId,
@@ -47,7 +43,9 @@ export function ShoppingListItemEditForm() {
     shoppingListId: shoppingListId ?? -1,
   });
 
-  const handleUpdateShoppingListItem = (data: z.infer<typeof formSchema>) => {
+  const handleUpdateShoppingListItem = (
+    data: z.infer<typeof editShoppingListItemFormSchema>,
+  ) => {
     if (!groupId || !shoppingListId || !params.itemId) return;
 
     router.back();
@@ -67,18 +65,24 @@ export function ShoppingListItemEditForm() {
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormControl>
-                <Input {...field} onChangeText={field.onChange} />
-              </FormControl>
+              <>
+                <FormControl>
+                  <Input {...field} onChangeText={field.onChange} />
+                </FormControl>
+                <FormMessage />
+              </>
             )}
           />
           <FormField
             control={form.control}
             name="categoryId"
             render={({ field }) => (
-              <FormControl>
-                <CategoryPicker {...field} triggerTitle="Select Category" />
-              </FormControl>
+              <>
+                <FormControl>
+                  <CategoryPicker {...field} triggerTitle="Select Category" />
+                </FormControl>
+                <FormMessage />
+              </>
             )}
           />
 
