@@ -101,7 +101,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
     swipeableRef.current?.close();
-    deleteGroupMutation.mutate({ groupId: group.id });
+    deleteGroupMutation.mutate({ id: group.id });
   };
 
   const handleCloseModal = () => {

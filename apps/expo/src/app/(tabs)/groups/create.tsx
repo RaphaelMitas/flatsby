@@ -1,25 +1,16 @@
 import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
+import type { GroupFormValues } from "@flatsby/validators/group";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod/v4";
+
+import { groupFormSchema } from "@flatsby/validators/group";
 
 import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "name is required",
-    })
-    .max(256, {
-      message: "name is too long",
-    }),
-});
 
 export default function CreateGroup() {
   const handleGoBack = () => {
@@ -86,13 +77,13 @@ export default function CreateGroup() {
   );
 
   const form = useForm({
-    schema: formSchema,
+    schema: groupFormSchema,
     defaultValues: {
       name: "",
     },
   });
 
-  const handleCreateGroup = (values: z.infer<typeof formSchema>) => {
+  const handleCreateGroup = (values: GroupFormValues) => {
     createGroupMutation.mutate(values);
   };
 

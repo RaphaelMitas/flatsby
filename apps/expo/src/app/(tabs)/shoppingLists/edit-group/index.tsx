@@ -27,7 +27,7 @@ export default function GroupSettingsIndex() {
 
   const { data: group } = useSuspenseQuery(
     trpc.shoppingList.getGroup.queryOptions({
-      groupId: Number(selectedGroupId) || 0,
+      id: Number(selectedGroupId) || 0,
     }),
   );
 
@@ -83,7 +83,7 @@ export default function GroupSettingsIndex() {
 
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
-    deleteGroupMutation.mutate({ groupId: Number(selectedGroupId) });
+    deleteGroupMutation.mutate({ id: Number(selectedGroupId) });
     router.replace("/groups");
   };
 

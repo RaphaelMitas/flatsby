@@ -60,7 +60,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
   const queryClient = useQueryClient();
 
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ groupId }),
+    trpc.shoppingList.getGroup.queryOptions({ id: groupId }),
   );
 
   const form = useForm<z.infer<typeof addMemberFormSchema>>({
@@ -85,7 +85,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({ groupId }),
+          trpc.shoppingList.getGroup.queryOptions({ id: groupId }),
         );
         form.reset();
       },
@@ -212,7 +212,7 @@ const MemberCard = ({
 
         void queryClient.invalidateQueries(
           trpc.shoppingList.getGroup.queryOptions({
-            groupId: groupMember.groupId,
+            id: groupMember.groupId,
           }),
         );
       },
@@ -228,7 +228,7 @@ const MemberCard = ({
 
         void queryClient.invalidateQueries(
           trpc.shoppingList.getGroup.queryOptions({
-            groupId: groupMember.groupId,
+            id: groupMember.groupId,
           }),
         );
         if (groupMember.id === currentUserGroupMember.id) {

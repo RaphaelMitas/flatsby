@@ -2,11 +2,6 @@ import { z } from "zod/v4";
 
 import { categorysIdWithAiAutoSelectSchema } from "./categories";
 
-/**
- * Schema for validating shopping list name
- * - Minimum length: 1 character
- * - Maximum length: 256 characters
- */
 export const shoppingListNameSchema = z
   .string()
   .min(1, {
@@ -15,15 +10,17 @@ export const shoppingListNameSchema = z
   .max(32, {
     message: "Shopping list name cannot be longer than 32 characters",
   });
+
 export const shoppingListIconSchema = z
   .string()
   .min(1, {
     message: "Shopping list icon cannot be empty",
   })
   .max(32, {
-    message: "Shopping list icon cannot be longer than 32 characters",
+    message: "Shopping list icon is invalid",
   })
   .optional();
+
 export const shoppingListDescriptionSchema = z
   .string()
   .min(1, {

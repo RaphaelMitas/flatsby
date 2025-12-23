@@ -28,7 +28,7 @@ export default function MemberActionsScreen() {
 
   const { data: group } = useSuspenseQuery(
     trpc.shoppingList.getGroup.queryOptions({
-      groupId: Number(selectedGroupId) || 0,
+      id: Number(selectedGroupId) || 0,
     }),
   );
 

@@ -1,10 +1,10 @@
+import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { z } from "zod/v4";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { editShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
 
-import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import {

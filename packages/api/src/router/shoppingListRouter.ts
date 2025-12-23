@@ -19,6 +19,7 @@ import {
   categoryIds,
   isCategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
+import { groupFormSchema, groupSchema } from "@flatsby/validators/group";
 import {
   createShoppingListItemFormSchema,
   editShoppingListItemFormSchema,
@@ -365,12 +366,12 @@ export const shoppingList = createTRPCRouter({
     }),
 
   getGroup: protectedProcedure
-    .input(z.object({ groupId: z.number() }))
+    .input(groupSchema.pick({ id: true }))
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         OperationUtils.getGroupWithAccess(
           ctx.db,
-          input.groupId,
+          input.id,
           ctx.session.user.id,
         ),
       );
@@ -613,7 +614,7 @@ export const shoppingList = createTRPCRouter({
     }),
 
   createGroup: protectedProcedure
-    .input(z.object({ name: z.string().min(1, "Group name cannot be empty") }))
+    .input(groupFormSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -650,7 +651,7 @@ export const shoppingList = createTRPCRouter({
     .input(
       z.object({
         groupId: z.number(),
-        memberEmail: z.string().email(),
+        memberEmail: z.email(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -745,12 +746,7 @@ export const shoppingList = createTRPCRouter({
     }),
 
   changeGroupName: protectedProcedure
-    .input(
-      z.object({
-        groupId: z.number(),
-        name: z.string().min(1, "Group name cannot be empty"),
-      }),
-    )
+    .input(groupSchema.pick({ name: true, id: true }))
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -761,7 +757,7 @@ export const shoppingList = createTRPCRouter({
               // Check if user is admin of the group
               GroupUtils.requireAdminAccess(
                 ctx.db,
-                input.groupId,
+                input.id,
                 ctx.session.user.id,
               ),
               () =>
@@ -772,7 +768,7 @@ export const shoppingList = createTRPCRouter({
                       ctx.db
                         .update(groups)
                         .set({ name: validName })
-                        .where(eq(groups.id, input.groupId))
+                        .where(eq(groups.id, input.id))
                         .returning({ id: groups.id }),
                     "update group name",
                   ),
@@ -789,16 +785,12 @@ export const shoppingList = createTRPCRouter({
     }),
 
   deleteGroup: protectedProcedure
-    .input(z.object({ groupId: z.number() }))
+    .input(groupSchema.pick({ id: true }))
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
           // Check if user is admin of the group
-          GroupUtils.requireAdminAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
+          GroupUtils.requireAdminAccess(ctx.db, input.id, ctx.session.user.id),
           () =>
             // Delete group and all related data in transaction
             Effect.map(
@@ -812,32 +804,32 @@ export const shoppingList = createTRPCRouter({
                       trx
                         .select({ id: shoppingLists.id })
                         .from(shoppingLists)
-                        .where(eq(shoppingLists.groupId, input.groupId)),
+                        .where(eq(shoppingLists.groupId, input.id)),
                     ),
                   );
 
                 // Step 2: Delete group members
                 await trx
                   .delete(groupMembers)
-                  .where(eq(groupMembers.groupId, input.groupId));
+                  .where(eq(groupMembers.groupId, input.id));
 
                 // Step 3: Remove lastGroupUsed references
                 await trx
                   .update(users)
                   .set({ lastGroupUsed: null, lastShoppingListUsed: null })
-                  .where(eq(users.lastGroupUsed, input.groupId));
+                  .where(eq(users.lastGroupUsed, input.id));
 
                 // Step 4: Delete shopping lists
                 await trx
                   .delete(shoppingLists)
-                  .where(eq(shoppingLists.groupId, input.groupId));
+                  .where(eq(shoppingLists.groupId, input.id));
 
                 // Step 5: Delete the group
-                await trx.delete(groups).where(eq(groups.id, input.groupId));
+                await trx.delete(groups).where(eq(groups.id, input.id));
 
-                return input.groupId;
+                return input.id;
               }, "delete group and all related data")(ctx.db),
-              (groupId) => groupId,
+              (id) => id,
             ),
         ),
       );

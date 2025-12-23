@@ -91,7 +91,7 @@ export default function MembersScreen() {
 
   const { data: group } = useSuspenseQuery(
     trpc.shoppingList.getGroup.queryOptions({
-      groupId: Number(selectedGroupId) || 0,
+      id: Number(selectedGroupId) || 0,
     }),
   );
 
@@ -104,7 +104,7 @@ export default function MembersScreen() {
 
         void queryClient.invalidateQueries(
           trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId) || 0,
+            id: Number(selectedGroupId) || 0,
           }),
         );
         setNewMemberEmail("");
@@ -117,7 +117,7 @@ export default function MembersScreen() {
   ) => {
     queryClient.setQueryData(
       trpc.shoppingList.getGroup.queryKey({
-        groupId: Number(selectedGroupId) || 0,
+        id: Number(selectedGroupId) || 0,
       }),
       previousGroup,
     );
@@ -128,19 +128,19 @@ export default function MembersScreen() {
       onMutate: (data) => {
         void queryClient.cancelQueries(
           trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId) || 0,
+            id: Number(selectedGroupId) || 0,
           }),
         );
 
         const previousGroup = queryClient.getQueryData(
           trpc.shoppingList.getGroup.queryKey({
-            groupId: Number(selectedGroupId) || 0,
+            id: Number(selectedGroupId) || 0,
           }),
         );
 
         queryClient.setQueryData(
           trpc.shoppingList.getGroup.queryKey({
-            groupId: Number(selectedGroupId) || 0,
+            id: Number(selectedGroupId) || 0,
           }),
           (old) => {
             if (!old?.success) return old;
@@ -171,7 +171,7 @@ export default function MembersScreen() {
 
         void queryClient.invalidateQueries(
           trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId) || 0,
+            id: Number(selectedGroupId) || 0,
           }),
         );
       },
@@ -187,7 +187,7 @@ export default function MembersScreen() {
 
         void queryClient.invalidateQueries(
           trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId) || 0,
+            id: Number(selectedGroupId) || 0,
           }),
         );
       },

@@ -1,4 +1,5 @@
 import type { ApiResult, GroupWithAccess } from "@flatsby/api";
+import type { GroupFormValues } from "@flatsby/validators/group";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -7,7 +8,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { z } from "zod/v4";
+
+import { groupFormSchema } from "@flatsby/validators/group";
 
 import { ProfileSection } from "~/components/ProfileSection";
 import { TimedAlert } from "~/components/TimedAlert";
@@ -20,17 +22,6 @@ import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "Group name is required",
-    })
-    .max(256, {
-      message: "Group name is too long",
-    }),
-});
-
 export default function GroupDetailsScreen() {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -39,7 +30,7 @@ export default function GroupDetailsScreen() {
 
   const { data: group } = useSuspenseQuery(
     trpc.shoppingList.getGroup.queryOptions({
-      groupId: Number(selectedGroupId) || 0,
+      id: Number(selectedGroupId) || 0,
     }),
   );
 
@@ -49,7 +40,7 @@ export default function GroupDetailsScreen() {
   ) => {
     queryClient.setQueryData(
       trpc.shoppingList.getGroup.queryKey({
-        groupId: Number(selectedGroupId),
+        id: Number(selectedGroupId),
       }),
       previousGroup,
     );
@@ -63,18 +54,18 @@ export default function GroupDetailsScreen() {
       onMutate: (data) => {
         void queryClient.cancelQueries(
           trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId),
+            id: Number(selectedGroupId),
           }),
         );
         const previousGroup = queryClient.getQueryData(
           trpc.shoppingList.getGroup.queryKey({
-            groupId: Number(selectedGroupId),
+            id: Number(selectedGroupId),
           }),
         );
 
         queryClient.setQueryData(
           trpc.shoppingList.getGroup.queryKey({
-            groupId: Number(selectedGroupId),
+            id: Number(selectedGroupId),
           }),
           (old) => {
             if (!old) return old;
@@ -91,7 +82,7 @@ export default function GroupDetailsScreen() {
 
         void queryClient.invalidateQueries(
           trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId),
+            id: Number(selectedGroupId),
           }),
         );
         void queryClient.invalidateQueries(
@@ -110,17 +101,17 @@ export default function GroupDetailsScreen() {
   );
 
   const form = useForm({
-    schema: formSchema,
+    schema: groupFormSchema,
     defaultValues: {
       name: group.success ? group.data.name : "",
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: GroupFormValues) => {
     const newName = values.name;
     if (!newName) return;
     updateGroupNameMutation.mutate({
-      groupId: Number(selectedGroupId),
+      id: Number(selectedGroupId),
       name: newName,
     });
   };

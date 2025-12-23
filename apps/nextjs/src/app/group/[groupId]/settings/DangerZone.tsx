@@ -20,16 +20,12 @@ import { Label } from "@flatsby/ui/label";
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
 
-interface DangerZoneProps {
-  groupId: number;
-}
-
-export default function DangerZone({ groupId }: DangerZoneProps) {
+export default function DangerZone({ groupId }: { groupId: number }) {
   const [groupNameInput, setGroupNameInput] = useState("");
   const router = useRouter();
   const trpc = useTRPC();
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ groupId }),
+    trpc.shoppingList.getGroup.queryOptions({ id: groupId }),
   );
   const deleteGroupMutation = useMutation(
     trpc.shoppingList.deleteGroup.mutationOptions({
@@ -79,8 +75,8 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
                   deleteGroupMutation.isPending ||
                   !isAdmin
                 }
-                className="w-full min-w-[150px] md:w-fit"
-                onClick={() => deleteGroupMutation.mutate({ groupId })}
+                className="w-full min-w-37.5 md:w-fit"
+                onClick={() => deleteGroupMutation.mutate({ id: groupId })}
               >
                 {!isAdmin ? (
                   "not an admin"
