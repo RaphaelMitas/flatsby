@@ -12,14 +12,13 @@ import {
 import { groupFormSchema, groupSchema } from "@flatsby/validators/group";
 
 import type {
-  Group,
   GroupMember,
   GroupMemberWithGroupMinimal,
   GroupMemberWithUser,
   Role,
 } from "../types";
 import { Errors, fail, withErrorHandlingAsResult } from "../errors";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   DbUtils,
   GroupUtils,
@@ -52,26 +51,6 @@ export const groupRouter = createTRPCRouter({
       }, "fetch user groups with member counts"),
     );
   }),
-
-  getGroupName: publicProcedure
-    .input(z.object({ groupId: z.number() }))
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        Effect.map(
-          DbUtils.findOneOrFail(
-            () =>
-              ctx.db.query.groups.findFirst({
-                where: eq(groups.id, input.groupId),
-                columns: {
-                  name: true,
-                },
-              }),
-            "group",
-          ),
-          (group: Pick<Group, "name">) => group.name,
-        ),
-      );
-    }),
 
   getGroup: protectedProcedure
     .input(groupSchema.pick({ id: true }))
