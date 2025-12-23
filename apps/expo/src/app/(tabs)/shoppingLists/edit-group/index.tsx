@@ -26,7 +26,7 @@ export default function GroupSettingsIndex() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({
+    trpc.group.getGroup.queryOptions({
       id: Number(selectedGroupId) || 0,
     }),
   );
@@ -35,32 +35,27 @@ export default function GroupSettingsIndex() {
     previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getUserGroups.queryKey(),
+      trpc.group.getUserGroups.queryKey(),
       previousGroups,
     );
   };
 
   const deleteGroupMutation = useMutation(
-    trpc.shoppingList.deleteGroup.mutationOptions({
+    trpc.group.deleteGroup.mutationOptions({
       onMutate: () => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
-        );
+        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
 
         const previousGroups = queryClient.getQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
+          trpc.group.getUserGroups.queryKey(),
         );
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              ...old,
-              data: old.data.filter((g) => g.id !== Number(selectedGroupId)),
-            };
-          },
-        );
+        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: old.data.filter((g) => g.id !== Number(selectedGroupId)),
+          };
+        });
         router.back();
 
         return { previousGroups };
@@ -72,7 +67,7 @@ export default function GroupSettingsIndex() {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
+          trpc.group.getUserGroups.queryOptions(),
         );
       },
       onError: (error, variables, context) => {

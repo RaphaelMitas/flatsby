@@ -29,7 +29,7 @@ export default function GroupDetailsScreen() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({
+    trpc.group.getGroup.queryOptions({
       id: Number(selectedGroupId) || 0,
     }),
   );
@@ -39,7 +39,7 @@ export default function GroupDetailsScreen() {
     previousGroup: ApiResult<GroupWithAccess> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getGroup.queryKey({
+      trpc.group.getGroup.queryKey({
         id: Number(selectedGroupId),
       }),
       previousGroup,
@@ -50,21 +50,21 @@ export default function GroupDetailsScreen() {
   };
 
   const updateGroupNameMutation = useMutation(
-    trpc.shoppingList.changeGroupName.mutationOptions({
+    trpc.group.changeGroupName.mutationOptions({
       onMutate: (data) => {
         void queryClient.cancelQueries(
-          trpc.shoppingList.getGroup.queryOptions({
+          trpc.group.getGroup.queryOptions({
             id: Number(selectedGroupId),
           }),
         );
         const previousGroup = queryClient.getQueryData(
-          trpc.shoppingList.getGroup.queryKey({
+          trpc.group.getGroup.queryKey({
             id: Number(selectedGroupId),
           }),
         );
 
         queryClient.setQueryData(
-          trpc.shoppingList.getGroup.queryKey({
+          trpc.group.getGroup.queryKey({
             id: Number(selectedGroupId),
           }),
           (old) => {
@@ -81,12 +81,12 @@ export default function GroupDetailsScreen() {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
+          trpc.group.getGroup.queryOptions({
             id: Number(selectedGroupId),
           }),
         );
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
+          trpc.group.getUserGroups.queryOptions(),
         );
 
         setShowSuccessMessage(true);

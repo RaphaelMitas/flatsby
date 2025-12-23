@@ -25,10 +25,10 @@ export default function DangerZone({ groupId }: { groupId: number }) {
   const router = useRouter();
   const trpc = useTRPC();
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ id: groupId }),
+    trpc.group.getGroup.queryOptions({ id: groupId }),
   );
   const deleteGroupMutation = useMutation(
-    trpc.shoppingList.deleteGroup.mutationOptions({
+    trpc.group.deleteGroup.mutationOptions({
       onSuccess: () => {
         router.push("/group");
       },

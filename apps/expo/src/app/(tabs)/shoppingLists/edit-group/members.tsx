@@ -23,7 +23,7 @@ import { useShoppingStore } from "~/utils/shopping-store";
 import { setMemberActionCallbacks } from "./member-actions";
 
 type GroupMemberWithUser = Extract<
-  RouterOutputs["shoppingList"]["getGroup"],
+  RouterOutputs["group"]["getGroup"],
   { success: true }
 >["data"]["groupMembers"][number];
 
@@ -90,20 +90,20 @@ export default function MembersScreen() {
   const queryClient = useQueryClient();
 
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({
+    trpc.group.getGroup.queryOptions({
       id: Number(selectedGroupId) || 0,
     }),
   );
 
   const addGroupMemberMutation = useMutation(
-    trpc.shoppingList.addGroupMember.mutationOptions({
+    trpc.group.addGroupMember.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
+          trpc.group.getGroup.queryOptions({
             id: Number(selectedGroupId) || 0,
           }),
         );
@@ -116,7 +116,7 @@ export default function MembersScreen() {
     previousGroup: ApiResult<GroupWithAccess> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getGroup.queryKey({
+      trpc.group.getGroup.queryKey({
         id: Number(selectedGroupId) || 0,
       }),
       previousGroup,
@@ -124,22 +124,22 @@ export default function MembersScreen() {
   };
 
   const updateMemberRoleMutation = useMutation(
-    trpc.shoppingList.updateMemberRole.mutationOptions({
+    trpc.group.updateMemberRole.mutationOptions({
       onMutate: (data) => {
         void queryClient.cancelQueries(
-          trpc.shoppingList.getGroup.queryOptions({
+          trpc.group.getGroup.queryOptions({
             id: Number(selectedGroupId) || 0,
           }),
         );
 
         const previousGroup = queryClient.getQueryData(
-          trpc.shoppingList.getGroup.queryKey({
+          trpc.group.getGroup.queryKey({
             id: Number(selectedGroupId) || 0,
           }),
         );
 
         queryClient.setQueryData(
-          trpc.shoppingList.getGroup.queryKey({
+          trpc.group.getGroup.queryKey({
             id: Number(selectedGroupId) || 0,
           }),
           (old) => {
@@ -170,7 +170,7 @@ export default function MembersScreen() {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
+          trpc.group.getGroup.queryOptions({
             id: Number(selectedGroupId) || 0,
           }),
         );
@@ -179,14 +179,14 @@ export default function MembersScreen() {
   );
 
   const removeGroupMemberMutation = useMutation(
-    trpc.shoppingList.removeGroupMember.mutationOptions({
+    trpc.group.removeGroupMember.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
+          trpc.group.getGroup.queryOptions({
             id: Number(selectedGroupId) || 0,
           }),
         );

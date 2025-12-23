@@ -33,18 +33,18 @@ const GroupDetails = ({ id }: { id: number }) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ id }),
+    trpc.group.getGroup.queryOptions({ id }),
   );
   const [name, setName] = useState(group.success ? group.data.name : "");
   const groupNameMutation = useMutation(
-    trpc.shoppingList.changeGroupName.mutationOptions({
+    trpc.group.changeGroupName.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({ id }),
+          trpc.group.getGroup.queryOptions({ id }),
         );
         void queryClient.invalidateQueries(
           trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),

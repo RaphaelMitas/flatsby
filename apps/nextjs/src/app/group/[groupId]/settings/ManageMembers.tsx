@@ -60,7 +60,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
   const queryClient = useQueryClient();
 
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ id: groupId }),
+    trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
   const form = useForm<z.infer<typeof addMemberFormSchema>>({
@@ -77,7 +77,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
   };
 
   const addGroupMemberMutation = useMutation(
-    trpc.shoppingList.addGroupMember.mutationOptions({
+    trpc.group.addGroupMember.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           onAddGroupMemberError(data.error.message);
@@ -85,7 +85,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({ id: groupId }),
+          trpc.group.getGroup.queryOptions({ id: groupId }),
         );
         form.reset();
       },
@@ -204,14 +204,14 @@ const MemberCard = ({
   const isCurrentUser = groupMember.id === currentUserGroupMember.id;
   const isCurrentUserAdmin = currentUserGroupMember.role === "admin";
   const updateMemberRoleMutation = useMutation(
-    trpc.shoppingList.updateMemberRole.mutationOptions({
+    trpc.group.updateMemberRole.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
+          trpc.group.getGroup.queryOptions({
             id: groupMember.groupId,
           }),
         );
@@ -220,20 +220,20 @@ const MemberCard = ({
   );
   const router = useRouter();
   const removeGroupMemberMutation = useMutation(
-    trpc.shoppingList.removeGroupMember.mutationOptions({
+    trpc.group.removeGroupMember.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
+          trpc.group.getGroup.queryOptions({
             id: groupMember.groupId,
           }),
         );
         if (groupMember.id === currentUserGroupMember.id) {
           void queryClient.invalidateQueries(
-            trpc.shoppingList.getUserGroups.queryOptions(),
+            trpc.group.getUserGroups.queryOptions(),
           );
           router.push(`/group`);
         }

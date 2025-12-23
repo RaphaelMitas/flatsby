@@ -26,7 +26,7 @@ export function CreateGroup() {
   const queryClient = useQueryClient();
 
   const groupMutation = useMutation(
-    trpc.shoppingList.createGroup.mutationOptions({
+    trpc.group.createGroup.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
@@ -42,7 +42,7 @@ export function CreateGroup() {
 
   return (
     <div className="p-8">
-      <div className="mx-auto max-w-md rounded-lg bg-muted p-8 shadow-lg">
+      <div className="bg-muted mx-auto max-w-md rounded-lg p-8 shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold">Create a Group</h1>
           <p className="mt-2">Enter a name for your new group.</p>
@@ -56,7 +56,7 @@ export function CreateGroup() {
         >
           <div>
             <label
-              className="mb-2 block text-sm font-medium text-muted-foreground"
+              className="text-muted-foreground mb-2 block text-sm font-medium"
               htmlFor="groupName"
             >
               Group Name

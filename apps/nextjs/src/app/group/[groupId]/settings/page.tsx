@@ -8,7 +8,7 @@ export default async function Page(props: {
 }) {
   const params = await props.params;
   prefetch(
-    trpc.shoppingList.getGroup.queryOptions({
+    trpc.group.getGroup.queryOptions({
       id: parseInt(params.groupId),
     }),
   );

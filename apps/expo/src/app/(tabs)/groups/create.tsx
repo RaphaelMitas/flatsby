@@ -22,20 +22,18 @@ export default function CreateGroup() {
     previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getUserGroups.queryKey(),
+      trpc.group.getUserGroups.queryKey(),
       previousGroups,
     );
   };
 
   const createGroupMutation = useMutation(
-    trpc.shoppingList.createGroup.mutationOptions({
+    trpc.group.createGroup.mutationOptions({
       onMutate: ({ name }) => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
-        );
+        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
 
         const previousGroups = queryClient.getQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
+          trpc.group.getUserGroups.queryKey(),
         );
 
         const newGroup = {
@@ -46,16 +44,13 @@ export default function CreateGroup() {
           memberCount: 1,
         };
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              ...old,
-              data: [...old.data, newGroup],
-            };
-          },
-        );
+        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: [...old.data, newGroup],
+          };
+        });
         router.back();
 
         return { previousGroups };
@@ -70,7 +65,7 @@ export default function CreateGroup() {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
+          trpc.group.getUserGroups.queryOptions(),
         );
       },
     }),

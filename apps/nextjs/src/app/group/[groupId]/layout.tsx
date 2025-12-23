@@ -13,7 +13,7 @@ export default async function GroupLayout(props: {
   const { children } = props;
 
   try {
-    await caller.shoppingList.getGroup({
+    await caller.group.getGroup({
       id: parseInt(params.groupId),
     });
     await caller.shoppingList.updateLastUsed({
