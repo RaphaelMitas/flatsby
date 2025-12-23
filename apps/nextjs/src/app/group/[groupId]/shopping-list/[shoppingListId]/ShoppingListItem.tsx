@@ -73,7 +73,7 @@ export const OptimisticShoppingListItem = ({
     <div
       id={`list-item-${id}`}
       key={id}
-      className="flex w-full items-center rounded-lg bg-muted pr-4"
+      className="bg-muted flex w-full items-center rounded-lg pr-4"
     >
       <div className="-m-2 flex cursor-pointer items-center justify-center p-6">
         <Checkbox checked={completed} disabled={true} />
@@ -333,7 +333,7 @@ const ShoppingListItem = ({
           setTimeout(() => setShowEditForm(true), 100);
         }}
       >
-        <div className="flex items-center rounded-lg bg-info p-4 text-white">
+        <div className="bg-info flex items-center rounded-lg p-4 text-white">
           Edit
         </div>
       </SwipeAction>
@@ -349,7 +349,7 @@ const ShoppingListItem = ({
   const deleteActions = () => (
     <TrailingActions>
       <SwipeAction destructive={true} onClick={handleDeleteItem}>
-        <div className="flex items-center rounded-lg bg-error p-4 text-white">
+        <div className="bg-error flex items-center rounded-lg p-4 text-white">
           Delete
         </div>
       </SwipeAction>
@@ -371,7 +371,7 @@ const ShoppingListItem = ({
         <div
           id={`list-item-${item.id}`}
           key={item.id}
-          className="group flex w-full items-center rounded-lg bg-muted pr-4 md:hover:bg-primary"
+          className="group bg-muted md:hover:bg-primary flex w-full items-center rounded-lg pr-4"
         >
           {showEditForm ? (
             <ShoppingListItemEditForm
@@ -397,7 +397,7 @@ const ShoppingListItem = ({
                 <PopoverTrigger className="flex flex-1 justify-between gap-2 truncate p-3 pl-0">
                   <div
                     className={cn(
-                      "flex-1 truncate text-left text-sm font-medium md:group-hover:text-primary-foreground",
+                      "md:group-hover:text-primary-foreground flex-1 truncate text-left text-sm font-medium",
                       item.completed && "text-muted-foreground line-through",
                     )}
                   >
@@ -426,7 +426,7 @@ const ShoppingListItem = ({
                         <div className="text-left text-sm font-medium">
                           {item.name}
                         </div>
-                        <div className="line-clamp-2 flex gap-2 text-xs text-muted-foreground">
+                        <div className="text-muted-foreground line-clamp-2 flex gap-2 text-xs">
                           {item.completed
                             ? `Done by ${completedByMember?.user.name ?? "unknown"} · ${item.completedAt?.toLocaleDateString() ?? ""}`
                             : `Added by ${createdByMember?.user.name ?? "unknown"} · ${item.createdAt.toLocaleDateString()}`}
@@ -436,7 +436,7 @@ const ShoppingListItem = ({
                       {categoryData && (
                         <div
                           className={cn(
-                            "flex flex-col items-center justify-center gap-2 text-nowrap text-xs",
+                            "flex flex-col items-center justify-center gap-2 text-xs text-nowrap",
                             categoryData.colorClasses.base,
                             categoryData.colorClasses.hover,
                           )}
@@ -452,12 +452,12 @@ const ShoppingListItem = ({
               <div className="ml-2 hidden gap-2 md:flex">
                 <Pencil
                   size={24}
-                  className="min-w-max cursor-pointer md:group-hover:text-primary-foreground md:group-hover:hover:text-info"
+                  className="md:group-hover:text-primary-foreground md:group-hover:hover:text-info min-w-max cursor-pointer"
                   onClick={() => setShowEditForm(true)}
                 />
                 <Trash
                   size={24}
-                  className="min-w-max cursor-pointer md:group-hover:text-primary-foreground md:group-hover:hover:text-error"
+                  className="md:group-hover:text-primary-foreground md:group-hover:hover:text-error min-w-max cursor-pointer"
                   onClick={handleDeleteItem}
                 />
               </div>

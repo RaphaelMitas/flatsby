@@ -1,13 +1,15 @@
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
+import type { z } from "zod/v4";
 import { useCallback, useRef, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod/v4";
+
+import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import type { RouterOutputs } from "~/utils/api";
 import { Button } from "~/lib/ui/button";
@@ -26,17 +28,6 @@ interface Props {
   groupId: number;
 }
 
-const formSchema = z.object({
-  shoppingListName: z
-    .string()
-    .min(1, {
-      message: "Shopping list name is required",
-    })
-    .max(256, {
-      message: "Shopping list name is too long",
-    }),
-});
-
 const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -46,9 +37,9 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   const router = useRouter();
 
   const form = useForm({
-    schema: formSchema,
+    schema: shoppingListFormSchema,
     defaultValues: {
-      shoppingListName: shoppingList.name,
+      name: shoppingList.name,
     },
   });
 
@@ -184,10 +175,10 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   );
 
   const handleRename = useCallback(
-    (data: z.infer<typeof formSchema>) => {
+    (data: z.infer<typeof shoppingListFormSchema>) => {
       renameShoppingListMutation.mutate({
         shoppingListId: shoppingList.id,
-        name: data.shoppingListName,
+        name: data.name,
       });
       setIsRenaming(false);
       swipeableRef.current?.close();
@@ -197,7 +188,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
 
   const handleCancelRename = useCallback(() => {
     setIsRenaming(false);
-    form.reset({ shoppingListName: shoppingList.name });
+    form.reset({ name: shoppingList.name });
     swipeableRef.current?.close();
   }, [form, shoppingList.name]);
 
@@ -244,7 +235,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
                 <Form {...form}>
                   <FormField
                     control={form.control}
-                    name="shoppingListName"
+                    name="name"
                     render={({ field }) => (
                       <Input
                         value={field.value}

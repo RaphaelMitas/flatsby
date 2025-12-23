@@ -20,6 +20,7 @@ import {
   categorysIdWithAiAutoSelect,
   isCategoryIdWithAiAutoSelect,
 } from "@flatsby/ui/categories";
+import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import type {
   Group,
@@ -943,14 +944,7 @@ export const shoppingList = createTRPCRouter({
     }),
 
   createShoppingList: protectedProcedure
-    .input(
-      z.object({
-        groupId: z.number(),
-        name: z.string().min(1, "Shopping list name cannot be empty"),
-        icon: z.string().optional(),
-        description: z.string().optional(),
-      }),
-    )
+    .input(shoppingListFormSchema.extend({ groupId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -1149,9 +1143,8 @@ export const shoppingList = createTRPCRouter({
 
   changeShoppingListName: protectedProcedure
     .input(
-      z.object({
+      shoppingListFormSchema.pick({ name: true }).extend({
         shoppingListId: z.number(),
-        name: z.string().min(1, "Shopping list name cannot be empty"),
       }),
     )
     .mutation(async ({ ctx, input }) => {

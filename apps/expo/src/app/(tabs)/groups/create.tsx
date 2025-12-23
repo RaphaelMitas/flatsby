@@ -8,7 +8,6 @@ import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 
 const formSchema = z.object({
@@ -98,51 +97,49 @@ export default function CreateGroup() {
   };
 
   return (
-    <SafeAreaView className="bg-background flex-1">
-      <View className="flex-1 p-4">
-        <Form {...form}>
-          <View className="flex gap-2">
-            <Label htmlFor="name">Group Name</Label>
-            <FormField
-              name="name"
-              control={form.control}
-              render={({ field }) => (
-                <FormControl>
-                  <Input
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    placeholder="Enter your group name"
-                    className="w-full"
-                    error={!!form.formState.errors.name}
-                  />
-                </FormControl>
-              )}
-            />
-            {form.formState.errors.name && (
-              <Text className="text-destructive">
-                {form.formState.errors.name.message}
-              </Text>
+    <View className="flex-1 p-4">
+      <Form {...form}>
+        <View className="flex gap-2">
+          <Label htmlFor="name">Group Name</Label>
+          <FormField
+            name="name"
+            control={form.control}
+            render={({ field }) => (
+              <FormControl>
+                <Input
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="Enter your group name"
+                  className="w-full"
+                  error={!!form.formState.errors.name}
+                />
+              </FormControl>
             )}
+          />
+          {form.formState.errors.name && (
+            <Text className="text-destructive">
+              {form.formState.errors.name.message}
+            </Text>
+          )}
 
-            <View className="flex flex-row gap-2">
-              <Button
-                title="Cancel"
-                variant="secondary"
-                onPress={handleGoBack}
-                className="flex-1"
-              />
-              <Button
-                title={form.formState.isSubmitting ? "Creating..." : "Create"}
-                className="flex-1"
-                disabled={form.formState.isSubmitting}
-                icon={form.formState.isSubmitting ? "loader" : undefined}
-                onPress={form.handleSubmit(handleCreateGroup)}
-              />
-            </View>
+          <View className="flex flex-row gap-2">
+            <Button
+              title="Cancel"
+              variant="secondary"
+              onPress={handleGoBack}
+              className="flex-1"
+            />
+            <Button
+              title={form.formState.isSubmitting ? "Creating..." : "Create"}
+              className="flex-1"
+              disabled={form.formState.isSubmitting}
+              icon={form.formState.isSubmitting ? "loader" : undefined}
+              onPress={form.handleSubmit(handleCreateGroup)}
+            />
           </View>
-        </Form>
-      </View>
-    </SafeAreaView>
+        </View>
+      </Form>
+    </View>
   );
 }
