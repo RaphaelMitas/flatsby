@@ -47,7 +47,7 @@ const GroupDetails = ({ id }: { id: number }) => {
           trpc.group.getGroup.queryOptions({ id }),
         );
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),
+          trpc.user.getCurrentUserWithGroups.queryOptions(),
         );
       },
     }),

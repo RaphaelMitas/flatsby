@@ -1,7 +1,7 @@
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
+import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import type { z } from "zod/v4";
 import { useCallback, useRef, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -175,7 +175,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   );
 
   const handleRename = useCallback(
-    (data: z.infer<typeof shoppingListFormSchema>) => {
+    (data: ShoppingListFormValues) => {
       renameShoppingListMutation.mutate({
         shoppingListId: shoppingList.id,
         name: data.name,

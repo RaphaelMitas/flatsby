@@ -34,7 +34,7 @@ export function CreateGroup() {
 
         router.push(`/group/${data.data.groupId}`);
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),
+          trpc.user.getCurrentUserWithGroups.queryOptions(),
         );
       },
     }),

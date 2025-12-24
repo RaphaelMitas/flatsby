@@ -13,7 +13,7 @@ export const groupSchema = z.object({
   id: z.number(),
   name: groupNameSchema,
   createdAt: z.date(),
-  profilePicture: z.string().optional(),
+  profilePicture: z.string().optional().nullable(),
 });
 
 export const groupFormSchema = groupSchema.pick({ name: true });

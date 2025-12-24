@@ -1,6 +1,6 @@
 "use client";
 
-import type { z } from "zod/v4";
+import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import { useRef } from "react";
 
 import { Button } from "@flatsby/ui/button";
@@ -11,25 +11,24 @@ import { CategorySelector } from "./CategorySelector";
 import { ShoppingListItemInputFormField } from "./ShoppingListItemInputFormField";
 
 interface ShoppingListItemAddFormProps {
-  onSubmit: (values: z.infer<typeof createShoppingListItemFormSchema>) => void;
+  onSubmit: (values: CreateShoppingListItemFormValues) => void;
 }
-
-type FormValues = z.infer<typeof createShoppingListItemFormSchema>;
 
 export const ShoppingListItemAddForm = ({
   onSubmit,
 }: ShoppingListItemAddFormProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const form = useForm<FormValues, FormValues>({
+  const form = useForm<
+    CreateShoppingListItemFormValues,
+    CreateShoppingListItemFormValues
+  >({
     schema: createShoppingListItemFormSchema,
     defaultValues: {
       name: "",
       categoryId: "ai-auto-select",
     },
   });
-  const handleSubmit = (
-    values: z.infer<typeof createShoppingListItemFormSchema>,
-  ) => {
+  const handleSubmit = (values: CreateShoppingListItemFormValues) => {
     form.reset({
       name: "",
       categoryId: "ai-auto-select",

@@ -137,7 +137,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
               />
               <Button
                 type="submit"
-                className="w-full min-w-[150px] md:w-fit"
+                className="w-full min-w-37.5 md:w-fit"
                 disabled={!isAdmin || addGroupMemberMutation.isPending}
               >
                 <Plus className="mr-2 h-4 w-4" />

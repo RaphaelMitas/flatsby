@@ -1,5 +1,7 @@
-import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
-import type { z } from "zod/v4";
+import type {
+  EditShoppingListItemFormValues,
+  ShoppingListItem as ShoppingListItemType,
+} from "@flatsby/validators/shopping-list";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -44,7 +46,7 @@ export function ShoppingListItemEditForm() {
   });
 
   const handleUpdateShoppingListItem = (
-    data: z.infer<typeof editShoppingListItemFormSchema>,
+    data: EditShoppingListItemFormValues,
   ) => {
     if (!groupId || !shoppingListId || !params.itemId) return;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
-import type { z } from "zod/v4";
+import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,7 +53,7 @@ export function ShoppingListDashboardItem({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof shoppingListFormSchema>>({
+  const form = useForm<ShoppingListFormValues>({
     resolver: zodResolver(shoppingListFormSchema),
     defaultValues: {
       name: list.name,
@@ -164,7 +164,7 @@ export function ShoppingListDashboardItem({
     setShowDeleteDialog(false);
   };
 
-  const handleRename = (data: z.infer<typeof shoppingListFormSchema>) => {
+  const handleRename = (data: ShoppingListFormValues) => {
     if (data.name.trim() === list.name.trim()) {
       setIsRenaming(false);
       return;

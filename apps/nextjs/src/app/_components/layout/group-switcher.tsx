@@ -32,7 +32,7 @@ export function GroupSwitcher() {
 
   const trpc = useTRPC();
   const { data: userWithGroups } = useSuspenseQuery(
-    trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),
+    trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
   const updateLastUsed = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions(),

@@ -1,6 +1,6 @@
 "use client";
 
-import type { z } from "zod/v4";
+import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { useRouter } from "next/navigation";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
@@ -56,7 +56,7 @@ export const ShoppingListDashboard = ({
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof shoppingListFormSchema>) => {
+  const handleSubmit = (values: ShoppingListFormValues) => {
     createNewListMutation.mutate({
       groupId,
       name: values.name,

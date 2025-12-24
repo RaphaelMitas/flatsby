@@ -1,5 +1,5 @@
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
-import type { z } from "zod/v4";
+import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -98,9 +98,7 @@ export default function CreateShoppingList() {
     },
   });
 
-  const handleCreateShoppingList = (
-    values: z.infer<typeof shoppingListFormSchema>,
-  ) => {
+  const handleCreateShoppingList = (values: ShoppingListFormValues) => {
     createShoppingListMutation.mutate({
       groupId: groupIdNumber,
       name: values.name,

@@ -19,7 +19,8 @@ export const shoppingListIconSchema = z
   .max(32, {
     message: "Shopping list icon is invalid",
   })
-  .optional();
+  .optional()
+  .nullable();
 
 export const shoppingListDescriptionSchema = z
   .string()
@@ -29,17 +30,28 @@ export const shoppingListDescriptionSchema = z
   .max(256, {
     message: "Shopping list description cannot be longer than 256 characters",
   })
-  .optional();
+  .optional()
+  .nullable();
+
+export const shoppingListSchema = z.object({
+  id: z.number(),
+  name: shoppingListNameSchema,
+  icon: shoppingListIconSchema,
+  description: shoppingListDescriptionSchema,
+  createdAt: z.date(),
+});
+export type ShoppingList = z.infer<typeof shoppingListSchema>;
 
 /**
  * Schema for shopping list name form validation
  * Used for creating and renaming shopping lists
  */
-export const shoppingListFormSchema = z.object({
-  name: shoppingListNameSchema,
-  icon: shoppingListIconSchema,
-  description: shoppingListDescriptionSchema,
+export const shoppingListFormSchema = shoppingListSchema.pick({
+  name: true,
+  icon: true,
+  description: true,
 });
+export type ShoppingListFormValues = z.infer<typeof shoppingListFormSchema>;
 
 /**
  * Schema for validating shopping list item name
