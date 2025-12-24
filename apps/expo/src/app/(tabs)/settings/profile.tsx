@@ -1,3 +1,4 @@
+import type { UpdateUserNameFormValues } from "@flatsby/validators/user";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import {
@@ -5,7 +6,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { z } from "zod/v4";
+
+import { updateUserNameFormSchema } from "@flatsby/validators/user";
 
 import { ProfileSection } from "~/components/ProfileSection";
 import { TimedAlert } from "~/components/TimedAlert";
@@ -16,23 +18,12 @@ import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "name is required",
-    })
-    .max(256, {
-      message: "name is too long",
-    }),
-});
-
 export default function ProfileScreen() {
   const queryClient = useQueryClient();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const { data: user } = useSuspenseQuery(
-    trpc.shoppingList.getCurrentUser.queryOptions(),
+    trpc.user.getCurrentUser.queryOptions(),
   );
 
   const onUpdateUserNameError = (errorMessage: string) => {
@@ -42,7 +33,7 @@ export default function ProfileScreen() {
   };
 
   const updateUserNameMutation = useMutation(
-    trpc.shoppingList.updateUserName.mutationOptions({
+    trpc.user.updateUserName.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           onUpdateUserNameError(data.error.message);
@@ -50,7 +41,7 @@ export default function ProfileScreen() {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getCurrentUser.queryOptions(),
+          trpc.user.getCurrentUser.queryOptions(),
         );
 
         setShowSuccessMessage(true);
@@ -65,13 +56,13 @@ export default function ProfileScreen() {
   );
 
   const form = useForm({
-    schema: formSchema,
+    schema: updateUserNameFormSchema,
     defaultValues: {
       name: user.name,
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: UpdateUserNameFormValues) => {
     const newName = values.name;
     if (!newName) return;
     updateUserNameMutation.mutate({ name: newName });

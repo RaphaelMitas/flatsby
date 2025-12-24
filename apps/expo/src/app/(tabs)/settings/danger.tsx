@@ -21,11 +21,11 @@ export default function DangerScreen() {
   const queryClient = useQueryClient();
 
   const { data: user } = useSuspenseQuery(
-    trpc.shoppingList.getCurrentUser.queryOptions(),
+    trpc.user.getCurrentUser.queryOptions(),
   );
 
   const deleteUserMutation = useMutation(
-    trpc.shoppingList.deleteUser.mutationOptions({
+    trpc.user.deleteUser.mutationOptions({
       onSuccess: async (data) => {
         if (!data.success) {
           return;

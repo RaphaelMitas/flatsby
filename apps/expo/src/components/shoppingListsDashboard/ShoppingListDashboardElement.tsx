@@ -1,4 +1,5 @@
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
+import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
 import { useCallback, useRef, useState } from "react";
@@ -7,11 +8,12 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod/v4";
+
+import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import type { RouterOutputs } from "~/utils/api";
 import { Button } from "~/lib/ui/button";
-import { Form, FormField, useForm } from "~/lib/ui/form";
+import { Form, FormField, FormMessage, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
@@ -26,17 +28,6 @@ interface Props {
   groupId: number;
 }
 
-const formSchema = z.object({
-  shoppingListName: z
-    .string()
-    .min(1, {
-      message: "Shopping list name is required",
-    })
-    .max(256, {
-      message: "Shopping list name is too long",
-    }),
-});
-
 const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -46,9 +37,9 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   const router = useRouter();
 
   const form = useForm({
-    schema: formSchema,
+    schema: shoppingListFormSchema,
     defaultValues: {
-      shoppingListName: shoppingList.name,
+      name: shoppingList.name,
     },
   });
 
@@ -184,10 +175,10 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   );
 
   const handleRename = useCallback(
-    (data: z.infer<typeof formSchema>) => {
+    (data: ShoppingListFormValues) => {
       renameShoppingListMutation.mutate({
         shoppingListId: shoppingList.id,
-        name: data.shoppingListName,
+        name: data.name,
       });
       setIsRenaming(false);
       swipeableRef.current?.close();
@@ -197,7 +188,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
 
   const handleCancelRename = useCallback(() => {
     setIsRenaming(false);
-    form.reset({ shoppingListName: shoppingList.name });
+    form.reset({ name: shoppingList.name });
     swipeableRef.current?.close();
   }, [form, shoppingList.name]);
 
@@ -239,47 +230,14 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
       return (
         <Reanimated.View style={leftActionStyle}>
           <View className="bg-primary h-full w-full items-start justify-center rounded-lg p-4">
-            {isRenaming ? (
-              <View className="flex-row items-center gap-2">
-                <Form {...form}>
-                  <FormField
-                    control={form.control}
-                    name="shoppingListName"
-                    render={({ field }) => (
-                      <Input
-                        value={field.value}
-                        onChangeText={field.onChange}
-                        placeholder="Enter new name"
-                        className="flex-1"
-                        autoFocus
-                      />
-                    )}
-                  />
-
-                  <Button
-                    title="Cancel"
-                    variant="primary"
-                    size="md"
-                    onPress={handleCancelRename}
-                  />
-                  <Button
-                    title="Save"
-                    variant="secondary"
-                    size="md"
-                    onPress={form.handleSubmit(handleRename)}
-                  />
-                </Form>
-              </View>
-            ) : (
-              <Text className="text-primary-foreground text-sm font-medium">
-                Rename
-              </Text>
-            )}
+            <Text className="text-primary-foreground text-sm font-medium">
+              Rename
+            </Text>
           </View>
         </Reanimated.View>
       );
     },
-    [leftActionStyle, isRenaming, form, handleCancelRename, handleRename],
+    [leftActionStyle],
   );
 
   const isOptimistic = shoppingList.id === -1;
@@ -303,41 +261,83 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
               setShowDeleteModal(true);
             }, 300);
           } else {
+            // Close swipeable immediately and show rename form
+            swipeableRef.current?.close();
             setIsRenaming(true);
           }
         }}
-        onSwipeableClose={(direction) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-          if (direction === "left") {
-            handleCancelRename();
-          }
+        onSwipeableClose={() => {
+          // No action needed - rename is handled by Cancel/Save buttons
         }}
       >
-        <TouchableOpacity
-          className={cn(
-            "bg-muted flex-row items-center justify-between rounded-lg p-4",
-            isOptimistic && "animate-pulse",
-          )}
-          disabled={isOptimistic}
-          onPress={handleListPress}
-          activeOpacity={0.7}
-        >
-          <View className="flex-1">
-            <Text className="text-primary text-lg font-semibold">
-              {shoppingList.name}
-            </Text>
-            {shoppingList.description && (
-              <Text className="text-muted-foreground mt-1 text-sm">
-                {shoppingList.description}
-              </Text>
-            )}
+        {isRenaming ? (
+          <View className="bg-muted rounded-lg p-4">
+            <Form {...form}>
+              <View className="flex flex-col gap-2">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <>
+                      <Input
+                        value={field.value}
+                        onChangeText={field.onChange}
+                        placeholder="Enter new name"
+                        className="flex-1"
+                        autoFocus
+                      />
+                      <FormMessage />
+                    </>
+                  )}
+                />
+                <View className="flex flex-row gap-2">
+                  <Button
+                    title="Cancel"
+                    variant="ghost"
+                    size="md"
+                    className="flex-1"
+                    onPress={handleCancelRename}
+                  />
+                  <Button
+                    title="Save"
+                    variant="primary"
+                    size="md"
+                    className="flex-1"
+                    onPress={() => {
+                      void form.handleSubmit(handleRename)();
+                    }}
+                  />
+                </View>
+              </View>
+            </Form>
           </View>
-          <Text className="text-muted-foreground text-sm">
-            {shoppingList.uncheckedItemLength === 1
-              ? "1 item left"
-              : `${shoppingList.uncheckedItemLength} items left`}
-          </Text>
-        </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            className={cn(
+              "bg-muted flex-row items-center justify-between rounded-lg p-4",
+              isOptimistic && "animate-pulse",
+            )}
+            disabled={isOptimistic}
+            onPress={handleListPress}
+            activeOpacity={0.7}
+          >
+            <View className="flex-1">
+              <Text className="text-primary text-lg font-semibold">
+                {shoppingList.name}
+              </Text>
+              {shoppingList.description && (
+                <Text className="text-muted-foreground mt-1 text-sm">
+                  {shoppingList.description}
+                </Text>
+              )}
+            </View>
+            <Text className="text-muted-foreground text-sm">
+              {shoppingList.uncheckedItemLength === 1
+                ? "1 item left"
+                : `${shoppingList.uncheckedItemLength} items left`}
+            </Text>
+          </TouchableOpacity>
+        )}
       </ReanimatedSwipeable>
 
       <DeleteConfirmationModal
