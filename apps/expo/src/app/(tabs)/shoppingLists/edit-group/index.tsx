@@ -14,7 +14,6 @@ import {
   SettingsItem,
   SettingsSection,
 } from "~/components/settings";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -26,8 +25,8 @@ export default function GroupSettingsIndex() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({
-      groupId: Number(selectedGroupId) || 0,
+    trpc.group.getGroup.queryOptions({
+      id: Number(selectedGroupId) || 0,
     }),
   );
 
@@ -35,32 +34,27 @@ export default function GroupSettingsIndex() {
     previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getUserGroups.queryKey(),
+      trpc.group.getUserGroups.queryKey(),
       previousGroups,
     );
   };
 
   const deleteGroupMutation = useMutation(
-    trpc.shoppingList.deleteGroup.mutationOptions({
+    trpc.group.deleteGroup.mutationOptions({
       onMutate: () => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
-        );
+        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
 
         const previousGroups = queryClient.getQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
+          trpc.group.getUserGroups.queryKey(),
         );
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              ...old,
-              data: old.data.filter((g) => g.id !== Number(selectedGroupId)),
-            };
-          },
-        );
+        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: old.data.filter((g) => g.id !== Number(selectedGroupId)),
+          };
+        });
         router.back();
 
         return { previousGroups };
@@ -72,7 +66,7 @@ export default function GroupSettingsIndex() {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
+          trpc.group.getUserGroups.queryOptions(),
         );
       },
       onError: (error, variables, context) => {
@@ -83,7 +77,7 @@ export default function GroupSettingsIndex() {
 
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
-    deleteGroupMutation.mutate({ groupId: Number(selectedGroupId) });
+    deleteGroupMutation.mutate({ id: Number(selectedGroupId) });
     router.replace("/groups");
   };
 
@@ -96,7 +90,7 @@ export default function GroupSettingsIndex() {
   }
 
   return (
-    <SafeAreaView className="bg-background flex-1">
+    <>
       <ScrollView>
         <SettingsHeader title={group.data.name} />
 
@@ -148,6 +142,6 @@ export default function GroupSettingsIndex() {
         description={`Are you sure you want to delete "${group.data.name}"? This action cannot be undone and will permanently remove all data associated with this group.`}
         confirmationLabel={`To confirm deletion, please type the group name: ${group.data.name}`}
       />
-    </SafeAreaView>
+    </>
   );
 }

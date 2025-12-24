@@ -1,29 +1,26 @@
+import type {
+  EditShoppingListItemFormValues,
+  ShoppingListItem as ShoppingListItemType,
+} from "@flatsby/validators/shopping-list";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { z } from "zod/v4";
 
-import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
+import { editShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
+
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
-import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormMessage,
+  useForm,
+} from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useShoppingStore } from "~/utils/shopping-store";
-import { allCategories, CategoryPicker } from "./ShoppingListCategory";
+import { CategoryPicker } from "./ShoppingListCategory";
 import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "name is required",
-    })
-    .max(256, {
-      message: "name is too long",
-    }),
-  categoryId: z.enum(allCategories).default("ai-auto-select"),
-  completed: z.boolean(),
-});
 export function ShoppingListItemEditForm() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -35,7 +32,7 @@ export function ShoppingListItemEditForm() {
   const { selectedGroupId: groupId, selectedShoppingListId: shoppingListId } =
     useShoppingStore();
   const form = useForm({
-    schema: formSchema,
+    schema: editShoppingListItemFormSchema,
     defaultValues: {
       name: params.name || "",
       categoryId: params.categoryId,
@@ -48,7 +45,9 @@ export function ShoppingListItemEditForm() {
     shoppingListId: shoppingListId ?? -1,
   });
 
-  const handleUpdateShoppingListItem = (data: z.infer<typeof formSchema>) => {
+  const handleUpdateShoppingListItem = (
+    data: EditShoppingListItemFormValues,
+  ) => {
     if (!groupId || !shoppingListId || !params.itemId) return;
 
     router.back();
@@ -61,47 +60,58 @@ export function ShoppingListItemEditForm() {
   };
 
   return (
-    <SafeAreaView className="bg-background flex-1">
-      <BottomSheetPickerProvider>
-        <View className="flex-1 gap-4 p-4">
-          <Form {...form}>
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
+    <BottomSheetPickerProvider>
+      <View className="flex-1 gap-4 p-4">
+        <Form {...form}>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <>
                 <FormControl>
-                  <Input {...field} onChangeText={field.onChange} />
+                  <Input
+                    {...field}
+                    onChangeText={field.onChange}
+                    maxLength={
+                      editShoppingListItemFormSchema.shape.name.maxLength ??
+                      undefined
+                    }
+                  />
                 </FormControl>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="categoryId"
-              render={({ field }) => (
+                <FormMessage />
+              </>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="categoryId"
+            render={({ field }) => (
+              <>
                 <FormControl>
                   <CategoryPicker {...field} triggerTitle="Select Category" />
                 </FormControl>
-              )}
-            />
+                <FormMessage />
+              </>
+            )}
+          />
 
-            <View className="flex flex-row gap-2">
-              <Button
-                title="Cancel"
-                variant="secondary"
-                onPress={() => router.back()}
-                className="flex-1"
-              />
-              <Button
-                title={form.formState.isSubmitting ? "Updating..." : "Update"}
-                className="flex-1"
-                disabled={form.formState.isSubmitting}
-                icon={form.formState.isSubmitting ? "loader" : undefined}
-                onPress={form.handleSubmit(handleUpdateShoppingListItem)}
-              />
-            </View>
-          </Form>
-        </View>
-      </BottomSheetPickerProvider>
-    </SafeAreaView>
+          <View className="flex flex-row gap-2">
+            <Button
+              title="Cancel"
+              variant="secondary"
+              onPress={() => router.back()}
+              className="flex-1"
+            />
+            <Button
+              title={form.formState.isSubmitting ? "Updating..." : "Update"}
+              className="flex-1"
+              disabled={form.formState.isSubmitting}
+              icon={form.formState.isSubmitting ? "loader" : undefined}
+              onPress={form.handleSubmit(handleUpdateShoppingListItem)}
+            />
+          </View>
+        </Form>
+      </View>
+    </BottomSheetPickerProvider>
   );
 }

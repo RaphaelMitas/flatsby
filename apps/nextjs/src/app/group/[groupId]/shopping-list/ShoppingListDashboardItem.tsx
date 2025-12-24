@@ -1,13 +1,13 @@
 "use client";
 
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
+import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod/v4";
 
 import {
   AlertDialog,
@@ -29,6 +29,7 @@ import {
 } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
 import { toast } from "@flatsby/ui/toast";
+import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -42,17 +43,6 @@ interface ShoppingListDashboardItemProps {
   groupId: number;
 }
 
-const formSchema = z.object({
-  shoppingListName: z
-    .string()
-    .min(1, {
-      message: "Shopping list name is required",
-    })
-    .max(256, {
-      message: "Shopping list name is too long",
-    }),
-});
-
 export function ShoppingListDashboardItem({
   list,
   groupId,
@@ -63,10 +53,10 @@ export function ShoppingListDashboardItem({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ShoppingListFormValues>({
+    resolver: zodResolver(shoppingListFormSchema),
     defaultValues: {
-      shoppingListName: list.name,
+      name: list.name,
     },
   });
 
@@ -134,8 +124,14 @@ export function ShoppingListDashboardItem({
         );
       },
       onError: (error, _variables, context) => {
+        const errorMessage = Object.entries(
+          error.data?.zodError?.fieldErrors ?? {},
+        )
+          .map(([_, errors]) => errors?.map((error) => error).join(", "))
+          .join(", ");
+
         toast.error("Error renaming shopping list", {
-          description: error.message,
+          description: errorMessage.length > 0 ? errorMessage : "Unknown error",
         });
         // Revert optimistic update
         onMutateShoppingListError(context?.previousLists);
@@ -168,22 +164,22 @@ export function ShoppingListDashboardItem({
     setShowDeleteDialog(false);
   };
 
-  const handleRename = (data: z.infer<typeof formSchema>) => {
-    if (data.shoppingListName.trim() === list.name.trim()) {
+  const handleRename = (data: ShoppingListFormValues) => {
+    if (data.name.trim() === list.name.trim()) {
       setIsRenaming(false);
       return;
     }
 
     renameMutation.mutate({
       shoppingListId: list.id,
-      name: data.shoppingListName.trim(),
+      name: data.name.trim(),
     });
     setIsRenaming(false);
   };
 
   const handleCancelRename = () => {
     setIsRenaming(false);
-    form.reset({ shoppingListName: list.name });
+    form.reset({ name: list.name });
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
@@ -202,7 +198,7 @@ export function ShoppingListDashboardItem({
           >
             <FormField
               control={form.control}
-              name="shoppingListName"
+              name="name"
               render={({ field }) => (
                 <FormItem className="flex-1">
                   <FormControl>
@@ -221,7 +217,7 @@ export function ShoppingListDashboardItem({
                 </FormItem>
               )}
             />
-            <div className="flex gap-2">
+            <div className="flex gap-2 self-start">
               <Button
                 type="button"
                 variant="ghost"
@@ -242,14 +238,14 @@ export function ShoppingListDashboardItem({
   return (
     <div className="group relative">
       <div className="bg-muted md:group-hover:bg-primary flex cursor-pointer items-center justify-between gap-4 rounded-lg p-4 shadow">
-        <div className="flex flex-col sm:flex-1 sm:flex-row sm:justify-between">
+        <div className="flex flex-col gap-2 truncate sm:flex-1 sm:flex-row sm:justify-between">
           <Link
             href={`/group/${groupId}/shopping-list/${list.id}`}
-            className="md:group-hover:text-primary-foreground flex flex-1 flex-col gap-2"
+            className="md:group-hover:text-primary-foreground flex flex-1 flex-col gap-2 truncate"
           >
-            <h3 className="line-clamp-2 text-lg font-semibold">{list.name}</h3>
+            <h3 className="truncate text-lg font-semibold">{list.name}</h3>
             {list.description && (
-              <p className="text-muted-foreground line-clamp-3 text-sm">
+              <p className="text-muted-foreground truncate text-sm">
                 {list.description}
               </p>
             )}
@@ -282,7 +278,7 @@ export function ShoppingListDashboardItem({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Shopping List</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="wrap-break-word break-all">
               Are you sure you want to delete &quot;{list.name}&quot;? This
               action cannot be undone.
             </AlertDialogDescription>

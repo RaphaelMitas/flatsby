@@ -1,26 +1,16 @@
 import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
+import type { GroupFormValues } from "@flatsby/validators/group";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod/v4";
+
+import { groupFormSchema } from "@flatsby/validators/group";
 
 import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "name is required",
-    })
-    .max(256, {
-      message: "name is too long",
-    }),
-});
 
 export default function CreateGroup() {
   const handleGoBack = () => {
@@ -32,20 +22,18 @@ export default function CreateGroup() {
     previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getUserGroups.queryKey(),
+      trpc.group.getUserGroups.queryKey(),
       previousGroups,
     );
   };
 
   const createGroupMutation = useMutation(
-    trpc.shoppingList.createGroup.mutationOptions({
+    trpc.group.createGroup.mutationOptions({
       onMutate: ({ name }) => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
-        );
+        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
 
         const previousGroups = queryClient.getQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
+          trpc.group.getUserGroups.queryKey(),
         );
 
         const newGroup = {
@@ -56,16 +44,13 @@ export default function CreateGroup() {
           memberCount: 1,
         };
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              ...old,
-              data: [...old.data, newGroup],
-            };
-          },
-        );
+        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: [...old.data, newGroup],
+          };
+        });
         router.back();
 
         return { previousGroups };
@@ -80,69 +65,67 @@ export default function CreateGroup() {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
+          trpc.group.getUserGroups.queryOptions(),
         );
       },
     }),
   );
 
   const form = useForm({
-    schema: formSchema,
+    schema: groupFormSchema,
     defaultValues: {
       name: "",
     },
   });
 
-  const handleCreateGroup = (values: z.infer<typeof formSchema>) => {
+  const handleCreateGroup = (values: GroupFormValues) => {
     createGroupMutation.mutate(values);
   };
 
   return (
-    <SafeAreaView className="bg-background flex-1">
-      <View className="flex-1 p-4">
-        <Form {...form}>
-          <View className="flex gap-2">
-            <Label htmlFor="name">Group Name</Label>
-            <FormField
-              name="name"
-              control={form.control}
-              render={({ field }) => (
-                <FormControl>
-                  <Input
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    placeholder="Enter your group name"
-                    className="w-full"
-                    error={!!form.formState.errors.name}
-                  />
-                </FormControl>
-              )}
-            />
-            {form.formState.errors.name && (
-              <Text className="text-destructive">
-                {form.formState.errors.name.message}
-              </Text>
+    <View className="flex-1 p-4">
+      <Form {...form}>
+        <View className="flex gap-2">
+          <Label htmlFor="name">Group Name</Label>
+          <FormField
+            name="name"
+            control={form.control}
+            render={({ field }) => (
+              <FormControl>
+                <Input
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="Enter your group name"
+                  className="w-full"
+                  error={!!form.formState.errors.name}
+                />
+              </FormControl>
             )}
+          />
+          {form.formState.errors.name && (
+            <Text className="text-destructive">
+              {form.formState.errors.name.message}
+            </Text>
+          )}
 
-            <View className="flex flex-row gap-2">
-              <Button
-                title="Cancel"
-                variant="secondary"
-                onPress={handleGoBack}
-                className="flex-1"
-              />
-              <Button
-                title={form.formState.isSubmitting ? "Creating..." : "Create"}
-                className="flex-1"
-                disabled={form.formState.isSubmitting}
-                icon={form.formState.isSubmitting ? "loader" : undefined}
-                onPress={form.handleSubmit(handleCreateGroup)}
-              />
-            </View>
+          <View className="flex flex-row gap-2">
+            <Button
+              title="Cancel"
+              variant="secondary"
+              onPress={handleGoBack}
+              className="flex-1"
+            />
+            <Button
+              title={form.formState.isSubmitting ? "Creating..." : "Create"}
+              className="flex-1"
+              disabled={form.formState.isSubmitting}
+              icon={form.formState.isSubmitting ? "loader" : undefined}
+              onPress={form.handleSubmit(handleCreateGroup)}
+            />
           </View>
-        </Form>
-      </View>
-    </SafeAreaView>
+        </View>
+      </Form>
+    </View>
   );
 }

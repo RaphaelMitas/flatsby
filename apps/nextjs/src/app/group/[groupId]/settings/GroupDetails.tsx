@@ -29,25 +29,25 @@ import { Label } from "@flatsby/ui/label";
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
 
-const GroupDetails = ({ groupId }: { groupId: number }) => {
+const GroupDetails = ({ id }: { id: number }) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ groupId }),
+    trpc.group.getGroup.queryOptions({ id }),
   );
   const [name, setName] = useState(group.success ? group.data.name : "");
   const groupNameMutation = useMutation(
-    trpc.shoppingList.changeGroupName.mutationOptions({
+    trpc.group.changeGroupName.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({ groupId }),
+          trpc.group.getGroup.queryOptions({ id }),
         );
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),
+          trpc.user.getCurrentUserWithGroups.queryOptions(),
         );
       },
     }),
@@ -85,7 +85,7 @@ const GroupDetails = ({ groupId }: { groupId: number }) => {
                   className="w-full min-w-[150px] md:w-fit"
                   disabled={groupNameMutation.isPending || !isAdmin}
                   onClick={() =>
-                    groupNameMutation.mutate({ groupId, name: name || "" })
+                    groupNameMutation.mutate({ id, name: name || "" })
                   }
                 >
                   {groupNameMutation.isPending ? (

@@ -29,12 +29,12 @@ export default function DeleteUser() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { data: user } = useSuspenseQuery(
-    trpc.shoppingList.getCurrentUser.queryOptions(),
+    trpc.user.getCurrentUser.queryOptions(),
   );
   const router = useRouter();
 
   const deleteUserMutation = useMutation(
-    trpc.shoppingList.deleteUser.mutationOptions({
+    trpc.user.deleteUser.mutationOptions({
       onSuccess: async (data) => {
         if (!data.success) {
           return;
