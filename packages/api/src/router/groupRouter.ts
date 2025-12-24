@@ -9,7 +9,13 @@ import {
   shoppingLists,
   users,
 } from "@flatsby/db/schema";
-import { groupFormSchema, groupSchema } from "@flatsby/validators/group";
+import {
+  addGroupMemberInputSchema,
+  groupFormSchema,
+  groupSchema,
+  removeGroupMemberInputSchema,
+  updateMemberRoleInputSchema,
+} from "@flatsby/validators/group";
 
 import type {
   GroupMember,
@@ -107,12 +113,7 @@ export const groupRouter = createTRPCRouter({
     }),
 
   updateMemberRole: protectedProcedure
-    .input(
-      z.object({
-        memberId: z.number(),
-        newRole: z.enum(["admin", "member"]),
-      }),
-    )
+    .input(updateMemberRoleInputSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -175,11 +176,7 @@ export const groupRouter = createTRPCRouter({
     }),
 
   removeGroupMember: protectedProcedure
-    .input(
-      z.object({
-        memberId: z.number(),
-      }),
-    )
+    .input(removeGroupMemberInputSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -335,12 +332,7 @@ export const groupRouter = createTRPCRouter({
     }),
 
   addGroupMember: protectedProcedure
-    .input(
-      z.object({
-        groupId: z.number(),
-        memberEmail: z.email(),
-      }),
-    )
+    .input(addGroupMemberInputSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(

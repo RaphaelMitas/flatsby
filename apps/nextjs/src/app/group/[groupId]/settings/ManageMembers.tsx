@@ -1,6 +1,7 @@
 "use client";
 
 import type { groupMembers } from "@flatsby/db/schema";
+import type { AddMemberFormValues } from "@flatsby/validators/group";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -10,7 +11,6 @@ import {
 } from "@tanstack/react-query";
 import { AlertCircle, ChevronDown, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod/v4";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
+import { addMemberFormSchema } from "@flatsby/validators/group";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
@@ -44,17 +45,6 @@ type groupMemberWithUser = typeof groupMembers.$inferSelect & {
   };
 };
 
-const addMemberFormSchema = z.object({
-  email: z
-    .string()
-    .min(1, {
-      message: "Email is required",
-    })
-    .email({
-      message: "Please enter a valid email address",
-    }),
-});
-
 const ManageMembers = ({ groupId }: { groupId: number }) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -63,7 +53,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  const form = useForm<z.infer<typeof addMemberFormSchema>>({
+  const form = useForm<AddMemberFormValues>({
     resolver: zodResolver(addMemberFormSchema),
     defaultValues: {
       email: "",
@@ -95,7 +85,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
     }),
   );
 
-  const handleSubmit = (values: z.infer<typeof addMemberFormSchema>) => {
+  const handleSubmit = (values: AddMemberFormValues) => {
     addGroupMemberMutation.mutate({
       groupId,
       memberEmail: values.email,

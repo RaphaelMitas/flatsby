@@ -1,5 +1,4 @@
 import type { ApiResult, GroupWithAccess } from "@flatsby/api";
-import type React from "react";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -26,16 +25,14 @@ type GroupMemberWithUser = Extract<
   { success: true }
 >["data"]["groupMembers"][number];
 
-interface MemberCardProps {
-  groupMember: GroupMemberWithUser;
-  currentUserGroupMember: GroupMemberWithUser;
-  onPress: () => void;
-}
-
-const MemberCard: React.FC<MemberCardProps> = ({
+const MemberCard = ({
   groupMember,
   currentUserGroupMember,
   onPress,
+}: {
+  groupMember: GroupMemberWithUser;
+  currentUserGroupMember: GroupMemberWithUser;
+  onPress: () => void;
 }) => {
   const isUserAdmin = groupMember.role === "admin";
   const isCurrentUser = groupMember.id === currentUserGroupMember.id;
@@ -61,7 +58,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
         <View className="flex-1">
           <View className="flex-row items-center">
             <Text
-              className="text-foreground flex-shrink font-medium"
+              className="text-foreground shrink font-medium"
               numberOfLines={1}
             >
               {groupMember.user.name}
@@ -197,10 +194,10 @@ export default function MembersScreen() {
   useFocusEffect(
     useCallback(() => {
       setMemberActionCallbacks({
-        onUpdateRole: (memberId: number, newRole: "admin" | "member") => {
+        onUpdateRole: ({ memberId, newRole }) => {
           updateMemberRoleMutation.mutate({ memberId, newRole });
         },
-        onRemoveMember: (memberId: number) => {
+        onRemoveMember: ({ memberId }) => {
           removeGroupMemberMutation.mutate({ memberId });
         },
       });

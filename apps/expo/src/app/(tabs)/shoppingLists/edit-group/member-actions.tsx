@@ -1,3 +1,7 @@
+import type {
+  RemoveGroupMemberInput,
+  UpdateMemberRoleInput,
+} from "@flatsby/validators/group";
 import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -10,8 +14,8 @@ import { useShoppingStore } from "~/utils/shopping-store";
 
 // Global state for communication between screens
 let memberActionCallback: {
-  onUpdateRole?: (memberId: number, newRole: "admin" | "member") => void;
-  onRemoveMember?: (memberId: number) => void;
+  onUpdateRole?: ({ memberId, newRole }: UpdateMemberRoleInput) => void;
+  onRemoveMember?: ({ memberId }: RemoveGroupMemberInput) => void;
 } = {};
 
 export const setMemberActionCallbacks = (
@@ -51,14 +55,14 @@ export default function MemberActionsScreen() {
 
   const handleUpdateRole = (newRole: "admin" | "member") => {
     if (memberActionCallback.onUpdateRole) {
-      memberActionCallback.onUpdateRole(groupMember.id, newRole);
+      memberActionCallback.onUpdateRole({ memberId: groupMember.id, newRole });
     }
     router.back();
   };
 
   const handleRemoveMember = () => {
     if (memberActionCallback.onRemoveMember) {
-      memberActionCallback.onRemoveMember(groupMember.id);
+      memberActionCallback.onRemoveMember({ memberId: groupMember.id });
     }
     router.back();
   };
