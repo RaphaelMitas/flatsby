@@ -69,7 +69,14 @@ export function ShoppingListItemEditForm() {
             render={({ field }) => (
               <>
                 <FormControl>
-                  <Input {...field} onChangeText={field.onChange} />
+                  <Input
+                    {...field}
+                    onChangeText={field.onChange}
+                    maxLength={
+                      editShoppingListItemFormSchema.shape.name.maxLength ??
+                      undefined
+                    }
+                  />
                 </FormControl>
                 <FormMessage />
               </>

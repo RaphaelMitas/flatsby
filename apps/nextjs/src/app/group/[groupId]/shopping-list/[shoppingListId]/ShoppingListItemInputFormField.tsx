@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Button } from "@flatsby/ui/button";
 import { FormControl, FormItem, FormMessage } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
+import { shoppingListItemNameSchema } from "@flatsby/validators/shopping-list";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -45,7 +46,7 @@ export const ShoppingListItemInputFormField = forwardRef<
         <Input
           {...field}
           placeholder="add new item"
-          maxLength={256}
+          maxLength={shoppingListItemNameSchema.maxLength ?? undefined}
           ref={ref}
         />
       </FormControl>

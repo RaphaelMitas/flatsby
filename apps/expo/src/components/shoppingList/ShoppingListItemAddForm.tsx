@@ -51,6 +51,9 @@ export const ShoppingListItemAddForm = ({
         onSubmitEditing={handleSubmit}
         submitBehavior="submit"
         editable={!isSubmitting}
+        maxLength={
+          createShoppingListItemFormSchema.shape.name.maxLength ?? undefined
+        }
       />
 
       <CategoryPicker value={categoryId} onChange={setCategoryId} iconButton />
