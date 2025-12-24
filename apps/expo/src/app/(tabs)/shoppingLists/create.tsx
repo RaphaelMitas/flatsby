@@ -122,6 +122,9 @@ export default function CreateShoppingList() {
                   placeholder="Enter your shopping list name"
                   className="w-full"
                   error={!!form.formState.errors.name}
+                  maxLength={
+                    shoppingListFormSchema.shape.name.maxLength ?? undefined
+                  }
                 />
               </FormControl>
             )}

@@ -91,7 +91,9 @@ export const ShoppingListDashboard = ({
                     disabled={createNewListMutation.isPending}
                     placeholder="add new list"
                     {...field}
-                    maxLength={256}
+                    maxLength={
+                      shoppingListFormSchema.shape.name.maxLength ?? undefined
+                    }
                   />
                 </FormControl>
                 <FormMessage />
