@@ -1,5 +1,4 @@
 import { Effect } from "effect";
-import { z } from "zod/v4";
 
 import { alias, and, count, eq, inArray } from "@flatsby/db";
 import {
@@ -17,12 +16,7 @@ import {
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
 
-import type {
-  GroupMember,
-  GroupMemberWithGroupMinimal,
-  GroupMemberWithUser,
-  Role,
-} from "../types";
+import type { GroupMember, GroupMemberWithGroupMinimal, Role } from "../types";
 import { Errors, fail, withErrorHandlingAsResult } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
@@ -66,48 +60,6 @@ export const groupRouter = createTRPCRouter({
           ctx.db,
           input.id,
           ctx.session.user.id,
-        ),
-      );
-    }),
-
-  getGroupMemberById: protectedProcedure
-    .input(z.number())
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        Effect.flatMap(
-          // First, find the target group member
-          DbUtils.findOneOrFail(
-            () =>
-              ctx.db.query.groupMembers.findFirst({
-                with: {
-                  user: {
-                    columns: {
-                      email: true,
-                      name: true,
-                      image: true,
-                    },
-                  },
-                },
-                where: eq(groupMembers.id, input),
-              }),
-            "group member",
-          ),
-          (groupMember: GroupMemberWithUser) =>
-            Effect.flatMap(
-              // Then find the current user's membership in the same group
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.groupMembers.findFirst({
-                    where: and(
-                      eq(groupMembers.groupId, groupMember.groupId),
-                      eq(groupMembers.userId, ctx.session.user.id),
-                    ),
-                  }),
-                "group membership",
-              ),
-              (currentUserGroupMember: GroupMember) =>
-                Effect.succeed({ ...groupMember, currentUserGroupMember }),
-            ),
         ),
       );
     }),
