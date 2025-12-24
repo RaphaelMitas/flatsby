@@ -2,6 +2,7 @@
 
 import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import {
   useInfiniteQuery,
   useMutation,
@@ -12,7 +13,6 @@ import { InView } from "react-intersection-observer";
 
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
-import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
 import { useTRPC } from "~/trpc/react";
 import ShoppingListItem, {
   OptimisticShoppingListItem,

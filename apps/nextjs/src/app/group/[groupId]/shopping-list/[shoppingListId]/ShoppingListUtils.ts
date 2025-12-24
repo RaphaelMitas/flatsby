@@ -1,19 +1,4 @@
-import type { shoppingListItems } from "@flatsby/db/schema";
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
-
-export type ShoppingListItem = Pick<
-  typeof shoppingListItems.$inferSelect,
-  | "id"
-  | "name"
-  | "createdAt"
-  | "createdByGroupMemberId"
-  | "completed"
-  | "completedByGroupMemberId"
-  | "completedAt"
-> & {
-  categoryId: CategoryIdWithAiAutoSelect;
-  isPending?: boolean;
-};
+import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 
 interface GroupedSection {
   title: string;

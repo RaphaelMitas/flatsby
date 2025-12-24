@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import "react-swipeable-list/dist/styles.css";
 
 import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
-import { zodResolver } from "@hookform/resolvers/zod";
+import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash } from "lucide-react";
-import { useForm } from "react-hook-form";
 import {
   LeadingActions,
   SwipeableList,
@@ -17,7 +16,6 @@ import {
   SwipeAction,
   TrailingActions,
 } from "react-swipeable-list";
-import { z } from "zod/v4";
 
 import { cn } from "@flatsby/ui";
 import { getCategoryData } from "@flatsby/ui/categories";
@@ -28,7 +26,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@flatsby/ui/popover";
-import { categoryIds } from "@flatsby/validators/categories";
 
 import { useTRPC } from "~/trpc/react";
 import { ShoppingListItemEditForm } from "./ShoppingListItemEditForm";
@@ -36,18 +33,7 @@ import { ShoppingListItemEditForm } from "./ShoppingListItemEditForm";
 export interface ShoppingListItemProps {
   groupId: number;
   shoppingListId: number;
-
-  item: {
-    id: number;
-    name: string;
-    categoryId: CategoryIdWithAiAutoSelect;
-    createdAt: Date;
-    completed: boolean;
-    completedAt: Date | null;
-    createdByGroupMemberId: number | null;
-    completedByGroupMemberId: number | null;
-    isPending?: boolean;
-  };
+  item: ShoppingListItem;
   groupMembers: {
     id: number;
     user: {
@@ -109,13 +95,6 @@ export const OptimisticShoppingListItem = ({
   );
 };
 
-const formSchema = z.object({
-  name: z.string().min(1, {
-    message: "name is required",
-  }),
-  categoryId: z.enum([...categoryIds, "ai-auto-select"]),
-});
-
 const ShoppingListItem = ({
   groupId,
   shoppingListId,
@@ -124,13 +103,6 @@ const ShoppingListItem = ({
 }: ShoppingListItemProps) => {
   const [showEditForm, setShowEditForm] = useState<boolean>(false);
   const categoryData = getCategoryData(item.categoryId);
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: item.name,
-      categoryId: item.categoryId,
-    },
-  });
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -329,12 +301,8 @@ const ShoppingListItem = ({
 
   const editActions = () => (
     <LeadingActions>
-      <SwipeAction
-        onClick={() => {
-          setTimeout(() => setShowEditForm(true), 100);
-        }}
-      >
-        <div className="bg-info flex items-center rounded-lg p-4 text-white">
+      <SwipeAction onClick={() => setShowEditForm(true)}>
+        <div className="bg-info text-info-foreground flex items-center rounded-lg p-4">
           Edit
         </div>
       </SwipeAction>
@@ -350,18 +318,12 @@ const ShoppingListItem = ({
   const deleteActions = () => (
     <TrailingActions>
       <SwipeAction destructive={true} onClick={handleDeleteItem}>
-        <div className="bg-error flex items-center rounded-lg p-4 text-white">
+        <div className="bg-error text-error-foreground flex items-center rounded-lg p-4">
           Delete
         </div>
       </SwipeAction>
     </TrailingActions>
   );
-
-  useEffect(() => {
-    if (showEditForm) {
-      form.setFocus("name");
-    }
-  }, [form, showEditForm]);
 
   return (
     <SwipeableList>
