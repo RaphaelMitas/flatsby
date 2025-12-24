@@ -1,7 +1,4 @@
-import type {
-  CategoryId,
-  CategoryIdWithAiAutoSelect,
-} from "@flatsby/ui/categories";
+import type { CategoryId } from "@flatsby/validators/categories";
 import type { ControllerRenderProps } from "react-hook-form";
 import { forwardRef } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -9,17 +6,17 @@ import { useMutation } from "@tanstack/react-query";
 import { Button } from "@flatsby/ui/button";
 import { FormControl, FormItem, FormMessage } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
+import { shoppingListItemNameSchema } from "@flatsby/validators/shopping-list";
 
 import { useTRPC } from "~/trpc/react";
 
+type NameFieldProps = Pick<
+  ControllerRenderProps<{ name: string }, "name">,
+  "onChange" | "onBlur" | "value" | "name" | "ref"
+>;
+
 interface ShoppingListItemInputFormFieldProps {
-  field: ControllerRenderProps<
-    {
-      name: string;
-      categoryId?: CategoryIdWithAiAutoSelect;
-    },
-    "name"
-  >;
+  field: NameFieldProps;
   onCategoryDetected: (categoryId: CategoryId) => void;
 }
 
@@ -49,7 +46,7 @@ export const ShoppingListItemInputFormField = forwardRef<
         <Input
           {...field}
           placeholder="add new item"
-          maxLength={256}
+          maxLength={shoppingListItemNameSchema.maxLength ?? undefined}
           ref={ref}
         />
       </FormControl>

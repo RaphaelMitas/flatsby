@@ -18,7 +18,7 @@ import { useSwipeActions } from "../SwipeActions";
 
 interface Props {
   group: Extract<
-    RouterOutputs["shoppingList"]["getUserGroups"],
+    RouterOutputs["group"]["getUserGroups"],
     { success: true }
   >["data"][number];
 }
@@ -49,32 +49,27 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
     previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getUserGroups.queryKey(),
+      trpc.group.getUserGroups.queryKey(),
       previousGroups,
     );
   };
 
   const deleteGroupMutation = useMutation(
-    trpc.shoppingList.deleteGroup.mutationOptions({
+    trpc.group.deleteGroup.mutationOptions({
       onMutate: () => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
-        );
+        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
 
         const previousGroups = queryClient.getQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
+          trpc.group.getUserGroups.queryKey(),
         );
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              ...old,
-              data: old.data.filter((g) => g.id !== group.id),
-            };
-          },
-        );
+        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: old.data.filter((g) => g.id !== group.id),
+          };
+        });
 
         if (selectedGroupId === group.id) {
           clearSelectedGroup();
@@ -89,7 +84,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
+          trpc.group.getUserGroups.queryOptions(),
         );
       },
       onError: (error, variables, context) => {
@@ -101,7 +96,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
     swipeableRef.current?.close();
-    deleteGroupMutation.mutate({ groupId: group.id });
+    deleteGroupMutation.mutate({ id: group.id });
   };
 
   const handleCloseModal = () => {

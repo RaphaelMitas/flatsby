@@ -34,7 +34,7 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
   >(null);
 
   const { data: res } = useQuery(
-    trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),
+    trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
   const updateLastUsed = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions(),

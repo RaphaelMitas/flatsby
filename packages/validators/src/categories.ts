@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import { z } from "zod/v4";
 
 export const categoryIds = [
   "produce",
@@ -37,9 +37,6 @@ export const categorysIdWithAiAutoSelect = [
 export type CategoryIdWithAiAutoSelect =
   (typeof categorysIdWithAiAutoSelect)[number];
 
-export interface Category {
-  id: CategoryIdWithAiAutoSelect;
-  name: string;
-  icon: LucideIcon;
-  description: string;
-}
+export const categorysIdWithAiAutoSelectSchema = z.enum(
+  categorysIdWithAiAutoSelect,
+);

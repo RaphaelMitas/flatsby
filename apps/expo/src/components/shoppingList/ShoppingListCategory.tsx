@@ -1,6 +1,9 @@
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import type React from "react";
 import { useMemo } from "react";
 import { View } from "react-native";
+
+import { categorysIdWithAiAutoSelect } from "@flatsby/validators/categories";
 
 import type {
   BottomSheetPickerItem,
@@ -9,38 +12,9 @@ import type {
 import { BottomSheetPickerTrigger } from "~/lib/ui/bottom-sheet-picker";
 import Icon from "~/lib/ui/custom/icons/Icon";
 
-export type CategoryIdWithAiAutoSelect =
-  | "ai-auto-select"
-  | "other"
-  | "produce"
-  | "meat-seafood"
-  | "dairy"
-  | "bakery"
-  | "frozen-foods"
-  | "beverages"
-  | "snacks"
-  | "pantry"
-  | "personal-care"
-  | "household";
-
-// All available categories - centralized list to avoid duplication
-export const allCategories = [
-  "ai-auto-select",
-  "produce",
-  "meat-seafood",
-  "dairy",
-  "bakery",
-  "frozen-foods",
-  "beverages",
-  "snacks",
-  "pantry",
-  "personal-care",
-  "household",
-  "other",
-] as const;
+const iconSize = 20 as const;
 
 export const getCategoryData = (categoryId: CategoryIdWithAiAutoSelect) => {
-  const iconSize = 20;
   const categoryMap = {
     "ai-auto-select": {
       name: "AI Auto Select",
@@ -205,7 +179,7 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
   ...props
 }) => {
   const categoryItems = useMemo<BottomSheetPickerItem[]>(() => {
-    return allCategories
+    return categorysIdWithAiAutoSelect
       .filter((categoryId) => !excludeCategories.includes(categoryId))
       .map((categoryId) => {
         const categoryData = getCategoryData(categoryId);

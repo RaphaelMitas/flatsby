@@ -1,4 +1,5 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
+import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
 import { Alert, Modal, Text, TouchableOpacity, View } from "react-native";
@@ -6,7 +7,6 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";

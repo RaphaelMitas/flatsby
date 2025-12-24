@@ -1,5 +1,6 @@
 "use client";
 
+import type { UpdateUserNameFormValues } from "@flatsby/validators/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -13,7 +14,6 @@ import {
   Upload,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod/v4";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -28,26 +28,16 @@ import {
 import { Form, FormControl, FormField } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
+import { updateUserNameFormSchema } from "@flatsby/validators/user";
 
 import { useTRPC } from "~/trpc/react";
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "name is required",
-    })
-    .max(256, {
-      message: "name is too long",
-    }),
-});
 
 const UserDetails = () => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const { data: user } = useSuspenseQuery(
-    trpc.shoppingList.getCurrentUser.queryOptions(),
+    trpc.user.getCurrentUser.queryOptions(),
   );
 
   const onUpdateUserNameError = (errorMessage: string) => {
@@ -57,7 +47,7 @@ const UserDetails = () => {
   };
 
   const updateUserNameMutation = useMutation(
-    trpc.shoppingList.updateUserName.mutationOptions({
+    trpc.user.updateUserName.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           onUpdateUserNameError(data.error.message);
@@ -65,10 +55,10 @@ const UserDetails = () => {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getCurrentUser.queryOptions(),
+          trpc.user.getCurrentUser.queryOptions(),
         );
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),
+          trpc.user.getCurrentUserWithGroups.queryOptions(),
         );
       },
       onError: (err) => {
@@ -77,14 +67,14 @@ const UserDetails = () => {
     }),
   );
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<UpdateUserNameFormValues>({
+    resolver: zodResolver(updateUserNameFormSchema),
     defaultValues: {
       name: user.name,
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: UpdateUserNameFormValues) => {
     const newName = values.name;
     if (!newName) return;
     updateUserNameMutation.mutate({
@@ -127,7 +117,7 @@ const UserDetails = () => {
                 />
                 <Button
                   disabled={form.formState.isSubmitting}
-                  className="w-full min-w-[150px] md:w-fit"
+                  className="w-full min-w-37.5 md:w-fit"
                   type="submit"
                 >
                   {form.formState.isSubmitting ? (

@@ -1,5 +1,4 @@
 import type { ApiResult, GroupWithAccess } from "@flatsby/api";
-import type React from "react";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -16,27 +15,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Input } from "~/lib/ui/input";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { setMemberActionCallbacks } from "./member-actions";
 
 type GroupMemberWithUser = Extract<
-  RouterOutputs["shoppingList"]["getGroup"],
+  RouterOutputs["group"]["getGroup"],
   { success: true }
 >["data"]["groupMembers"][number];
 
-interface MemberCardProps {
-  groupMember: GroupMemberWithUser;
-  currentUserGroupMember: GroupMemberWithUser;
-  onPress: () => void;
-}
-
-const MemberCard: React.FC<MemberCardProps> = ({
+const MemberCard = ({
   groupMember,
   currentUserGroupMember,
   onPress,
+}: {
+  groupMember: GroupMemberWithUser;
+  currentUserGroupMember: GroupMemberWithUser;
+  onPress: () => void;
 }) => {
   const isUserAdmin = groupMember.role === "admin";
   const isCurrentUser = groupMember.id === currentUserGroupMember.id;
@@ -62,7 +58,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
         <View className="flex-1">
           <View className="flex-row items-center">
             <Text
-              className="text-foreground flex-shrink font-medium"
+              className="text-foreground shrink font-medium"
               numberOfLines={1}
             >
               {groupMember.user.name}
@@ -90,21 +86,21 @@ export default function MembersScreen() {
   const queryClient = useQueryClient();
 
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({
-      groupId: Number(selectedGroupId) || 0,
+    trpc.group.getGroup.queryOptions({
+      id: Number(selectedGroupId) || 0,
     }),
   );
 
   const addGroupMemberMutation = useMutation(
-    trpc.shoppingList.addGroupMember.mutationOptions({
+    trpc.group.addGroupMember.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId) || 0,
+          trpc.group.getGroup.queryOptions({
+            id: Number(selectedGroupId) || 0,
           }),
         );
         setNewMemberEmail("");
@@ -116,31 +112,31 @@ export default function MembersScreen() {
     previousGroup: ApiResult<GroupWithAccess> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getGroup.queryKey({
-        groupId: Number(selectedGroupId) || 0,
+      trpc.group.getGroup.queryKey({
+        id: Number(selectedGroupId) || 0,
       }),
       previousGroup,
     );
   };
 
   const updateMemberRoleMutation = useMutation(
-    trpc.shoppingList.updateMemberRole.mutationOptions({
+    trpc.group.updateMemberRole.mutationOptions({
       onMutate: (data) => {
         void queryClient.cancelQueries(
-          trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId) || 0,
+          trpc.group.getGroup.queryOptions({
+            id: Number(selectedGroupId) || 0,
           }),
         );
 
         const previousGroup = queryClient.getQueryData(
-          trpc.shoppingList.getGroup.queryKey({
-            groupId: Number(selectedGroupId) || 0,
+          trpc.group.getGroup.queryKey({
+            id: Number(selectedGroupId) || 0,
           }),
         );
 
         queryClient.setQueryData(
-          trpc.shoppingList.getGroup.queryKey({
-            groupId: Number(selectedGroupId) || 0,
+          trpc.group.getGroup.queryKey({
+            id: Number(selectedGroupId) || 0,
           }),
           (old) => {
             if (!old?.success) return old;
@@ -170,8 +166,8 @@ export default function MembersScreen() {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId) || 0,
+          trpc.group.getGroup.queryOptions({
+            id: Number(selectedGroupId) || 0,
           }),
         );
       },
@@ -179,15 +175,15 @@ export default function MembersScreen() {
   );
 
   const removeGroupMemberMutation = useMutation(
-    trpc.shoppingList.removeGroupMember.mutationOptions({
+    trpc.group.removeGroupMember.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
-            groupId: Number(selectedGroupId) || 0,
+          trpc.group.getGroup.queryOptions({
+            id: Number(selectedGroupId) || 0,
           }),
         );
       },
@@ -198,10 +194,10 @@ export default function MembersScreen() {
   useFocusEffect(
     useCallback(() => {
       setMemberActionCallbacks({
-        onUpdateRole: (memberId: number, newRole: "admin" | "member") => {
+        onUpdateRole: ({ memberId, newRole }) => {
           updateMemberRoleMutation.mutate({ memberId, newRole });
         },
-        onRemoveMember: (memberId: number) => {
+        onRemoveMember: ({ memberId }) => {
           removeGroupMemberMutation.mutate({ memberId });
         },
       });
@@ -239,160 +235,158 @@ export default function MembersScreen() {
   const isAdmin = group.data.thisGroupMember.role === "admin";
 
   return (
-    <SafeAreaView className="bg-background flex-1">
-      <ScrollView>
-        {/* Header */}
-        <View className="bg-background px-4 py-6">
-          <Text className="text-foreground text-2xl font-bold">
-            Manage Members
-          </Text>
-          <Text className="text-muted-foreground text-sm">
-            Add new members and update their roles.
-          </Text>
-        </View>
+    <ScrollView>
+      {/* Header */}
+      <View className="bg-background px-4 py-6">
+        <Text className="text-foreground text-2xl font-bold">
+          Manage Members
+        </Text>
+        <Text className="text-muted-foreground text-sm">
+          Add new members and update their roles.
+        </Text>
+      </View>
 
-        {/* Add Member Section */}
-        <View className="bg-card px-4 py-4">
-          <Text className="text-foreground mb-3 text-base font-medium">
-            Add Member
-          </Text>
-          <View className="gap-3">
-            <Input
-              placeholder={
-                isAdmin ? "Enter email address" : "Only admins can add members"
-              }
-              value={newMemberEmail}
-              onChangeText={setNewMemberEmail}
-              editable={isAdmin}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <Button
-              title="Add Member"
-              icon="plus"
-              disabled={!isAdmin || !newMemberEmail.trim()}
-              onPress={handleAddMember}
-            />
-          </View>
+      {/* Add Member Section */}
+      <View className="bg-card px-4 py-4">
+        <Text className="text-foreground mb-3 text-base font-medium">
+          Add Member
+        </Text>
+        <View className="gap-3">
+          <Input
+            placeholder={
+              isAdmin ? "Enter email address" : "Only admins can add members"
+            }
+            value={newMemberEmail}
+            onChangeText={setNewMemberEmail}
+            editable={isAdmin}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <Button
+            title="Add Member"
+            icon="plus"
+            disabled={!isAdmin || !newMemberEmail.trim()}
+            onPress={handleAddMember}
+          />
         </View>
+      </View>
 
-        {/* Error Alert for Add Member */}
-        {(addGroupMemberMutation.isError ||
-          addGroupMemberMutation.data?.success === false) && (
+      {/* Error Alert for Add Member */}
+      {(addGroupMemberMutation.isError ||
+        addGroupMemberMutation.data?.success === false) && (
+        <View className="px-4 py-2">
+          <TimedAlert
+            variant="destructive"
+            title={
+              addGroupMemberMutation.data?.success === false
+                ? addGroupMemberMutation.data.error.type
+                : (addGroupMemberMutation.error?.data?.code ?? "Error")
+            }
+            description={
+              addGroupMemberMutation.data?.success === false
+                ? addGroupMemberMutation.data.error.message
+                : (addGroupMemberMutation.error?.message ??
+                  "Unknown error during member addition")
+            }
+            onDismiss={() => addGroupMemberMutation.reset()}
+          />
+        </View>
+      )}
+
+      {/* Success Alert for Add Member */}
+      {addGroupMemberMutation.isSuccess &&
+        addGroupMemberMutation.data.success === true && (
           <View className="px-4 py-2">
             <TimedAlert
-              variant="destructive"
-              title={
-                addGroupMemberMutation.data?.success === false
-                  ? addGroupMemberMutation.data.error.type
-                  : (addGroupMemberMutation.error?.data?.code ?? "Error")
-              }
-              description={
-                addGroupMemberMutation.data?.success === false
-                  ? addGroupMemberMutation.data.error.message
-                  : (addGroupMemberMutation.error?.message ??
-                    "Unknown error during member addition")
-              }
+              variant="success"
+              title="Member added successfully!"
               onDismiss={() => addGroupMemberMutation.reset()}
             />
           </View>
         )}
 
-        {/* Success Alert for Add Member */}
-        {addGroupMemberMutation.isSuccess &&
-          addGroupMemberMutation.data.success === true && (
-            <View className="px-4 py-2">
-              <TimedAlert
-                variant="success"
-                title="Member added successfully!"
-                onDismiss={() => addGroupMemberMutation.reset()}
-              />
-            </View>
-          )}
-
-        {/* Members List */}
-        <View className="bg-background flex-1">
-          <View className="flex-row items-center justify-between px-4 py-3">
-            <Text className="text-foreground text-base font-medium">
-              Members ({group.data.groupMembers.length})
-            </Text>
-          </View>
-          <View className="flex-1">
-            <FlashList
-              data={group.data.groupMembers}
-              renderItem={renderMemberItem}
-              ItemSeparatorComponent={() => <View className="bg-border h-px" />}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
+      {/* Members List */}
+      <View className="bg-background flex-1">
+        <View className="flex-row items-center justify-between px-4 py-3">
+          <Text className="text-foreground text-base font-medium">
+            Members ({group.data.groupMembers.length})
+          </Text>
         </View>
+        <View className="flex-1">
+          <FlashList
+            data={group.data.groupMembers}
+            renderItem={renderMemberItem}
+            ItemSeparatorComponent={() => <View className="bg-border h-px" />}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </View>
 
-        {/* Error Alerts for Member Actions */}
-        {(updateMemberRoleMutation.isError ||
-          updateMemberRoleMutation.data?.success === false) && (
+      {/* Error Alerts for Member Actions */}
+      {(updateMemberRoleMutation.isError ||
+        updateMemberRoleMutation.data?.success === false) && (
+        <View className="px-4 py-2">
+          <TimedAlert
+            variant="destructive"
+            title={
+              updateMemberRoleMutation.data?.success === false
+                ? updateMemberRoleMutation.data.error.type
+                : (updateMemberRoleMutation.error?.data?.code ?? "Error")
+            }
+            description={
+              updateMemberRoleMutation.data?.success === false
+                ? updateMemberRoleMutation.data.error.message
+                : (updateMemberRoleMutation.error?.message ??
+                  "Unknown error during role update")
+            }
+            onDismiss={() => updateMemberRoleMutation.reset()}
+          />
+        </View>
+      )}
+
+      {(removeGroupMemberMutation.isError ||
+        removeGroupMemberMutation.data?.success === false) && (
+        <View className="px-4 py-2">
+          <TimedAlert
+            variant="destructive"
+            title={
+              removeGroupMemberMutation.data?.success === false
+                ? removeGroupMemberMutation.data.error.type
+                : (removeGroupMemberMutation.error?.data?.code ?? "Error")
+            }
+            description={
+              removeGroupMemberMutation.data?.success === false
+                ? removeGroupMemberMutation.data.error.message
+                : (removeGroupMemberMutation.error?.message ??
+                  "Unknown error during member removal")
+            }
+            onDismiss={() => removeGroupMemberMutation.reset()}
+          />
+        </View>
+      )}
+
+      {/* Success Alerts for Member Actions */}
+      {updateMemberRoleMutation.isSuccess &&
+        updateMemberRoleMutation.data.success === true && (
           <View className="px-4 py-2">
             <TimedAlert
-              variant="destructive"
-              title={
-                updateMemberRoleMutation.data?.success === false
-                  ? updateMemberRoleMutation.data.error.type
-                  : (updateMemberRoleMutation.error?.data?.code ?? "Error")
-              }
-              description={
-                updateMemberRoleMutation.data?.success === false
-                  ? updateMemberRoleMutation.data.error.message
-                  : (updateMemberRoleMutation.error?.message ??
-                    "Unknown error during role update")
-              }
+              variant="success"
+              title="Role updated successfully!"
               onDismiss={() => updateMemberRoleMutation.reset()}
             />
           </View>
         )}
 
-        {(removeGroupMemberMutation.isError ||
-          removeGroupMemberMutation.data?.success === false) && (
+      {removeGroupMemberMutation.isSuccess &&
+        removeGroupMemberMutation.data.success === true && (
           <View className="px-4 py-2">
             <TimedAlert
-              variant="destructive"
-              title={
-                removeGroupMemberMutation.data?.success === false
-                  ? removeGroupMemberMutation.data.error.type
-                  : (removeGroupMemberMutation.error?.data?.code ?? "Error")
-              }
-              description={
-                removeGroupMemberMutation.data?.success === false
-                  ? removeGroupMemberMutation.data.error.message
-                  : (removeGroupMemberMutation.error?.message ??
-                    "Unknown error during member removal")
-              }
+              variant="success"
+              title="Member removed successfully!"
               onDismiss={() => removeGroupMemberMutation.reset()}
             />
           </View>
         )}
-
-        {/* Success Alerts for Member Actions */}
-        {updateMemberRoleMutation.isSuccess &&
-          updateMemberRoleMutation.data.success === true && (
-            <View className="px-4 py-2">
-              <TimedAlert
-                variant="success"
-                title="Role updated successfully!"
-                onDismiss={() => updateMemberRoleMutation.reset()}
-              />
-            </View>
-          )}
-
-        {removeGroupMemberMutation.isSuccess &&
-          removeGroupMemberMutation.data.success === true && (
-            <View className="px-4 py-2">
-              <TimedAlert
-                variant="success"
-                title="Member removed successfully!"
-                onDismiss={() => removeGroupMemberMutation.reset()}
-              />
-            </View>
-          )}
-      </ScrollView>
-    </SafeAreaView>
+    </ScrollView>
   );
 }

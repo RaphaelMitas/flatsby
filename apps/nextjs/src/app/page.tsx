@@ -11,7 +11,7 @@ export default async function HomePage() {
     redirect("/auth/login");
   }
 
-  const userWithGroups = await caller.shoppingList.getCurrentUserWithGroups();
+  const userWithGroups = await caller.user.getCurrentUserWithGroups();
   if (!userWithGroups.success) {
     await auth.api.signOut({
       headers: await headers(),

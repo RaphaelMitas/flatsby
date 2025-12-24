@@ -1,20 +1,8 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
+import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { CategoryIdWithAiAutoSelect } from "./ShoppingListCategory";
 import { trpc } from "~/utils/api";
-
-export interface ShoppingListItem {
-  id: number;
-  name: string;
-  createdAt: Date;
-  createdByGroupMemberId: number | null;
-  completed: boolean;
-  completedByGroupMemberId: number | null;
-  completedAt: Date | null;
-  categoryId: CategoryIdWithAiAutoSelect;
-  isPending?: boolean;
-}
 
 interface GroupedSection {
   title: string;

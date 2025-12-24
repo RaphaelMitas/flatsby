@@ -1,9 +1,9 @@
 "use client";
 
+import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { useRouter } from "next/navigation";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
-import { z } from "zod/v4";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -17,6 +17,7 @@ import {
   useForm,
 } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
+import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
@@ -25,17 +26,6 @@ import { ShoppingListDashboardItem } from "./ShoppingListDashboardItem";
 interface ShoppingListDashboardProps {
   groupId: number;
 }
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "name is required",
-    })
-    .max(256, {
-      message: "name is too long",
-    }),
-});
 
 export const ShoppingListDashboard = ({
   groupId,
@@ -60,13 +50,13 @@ export const ShoppingListDashboard = ({
   );
 
   const form = useForm({
-    schema: formSchema,
+    schema: shoppingListFormSchema,
     defaultValues: {
       name: "",
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: ShoppingListFormValues) => {
     createNewListMutation.mutate({
       groupId,
       name: values.name,
@@ -101,7 +91,9 @@ export const ShoppingListDashboard = ({
                     disabled={createNewListMutation.isPending}
                     placeholder="add new list"
                     {...field}
-                    maxLength={256}
+                    maxLength={
+                      shoppingListFormSchema.shape.name.maxLength ?? undefined
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -109,7 +101,7 @@ export const ShoppingListDashboard = ({
             )}
           />
           <Button
-            className="w-full md:w-fit md:min-w-[150px]"
+            className="w-full self-start md:w-fit md:min-w-37.5"
             disabled={
               !form.formState.isDirty || createNewListMutation.isPending
             }

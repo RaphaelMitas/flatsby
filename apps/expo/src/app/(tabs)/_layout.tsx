@@ -58,7 +58,7 @@ export default function TabLayout() {
       );
     }
 
-    void prefetch(trpc.shoppingList.getUserGroups.queryOptions());
+    void prefetch(trpc.group.getUserGroups.queryOptions());
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
 
   if (!session.data?.user) {

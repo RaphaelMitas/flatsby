@@ -1,6 +1,7 @@
 "use client";
 
 import type { groupMembers } from "@flatsby/db/schema";
+import type { AddMemberFormValues } from "@flatsby/validators/group";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -10,7 +11,6 @@ import {
 } from "@tanstack/react-query";
 import { AlertCircle, ChevronDown, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod/v4";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
+import { addMemberFormSchema } from "@flatsby/validators/group";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
@@ -44,26 +45,15 @@ type groupMemberWithUser = typeof groupMembers.$inferSelect & {
   };
 };
 
-const addMemberFormSchema = z.object({
-  email: z
-    .string()
-    .min(1, {
-      message: "Email is required",
-    })
-    .email({
-      message: "Please enter a valid email address",
-    }),
-});
-
 const ManageMembers = ({ groupId }: { groupId: number }) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ groupId }),
+    trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  const form = useForm<z.infer<typeof addMemberFormSchema>>({
+  const form = useForm<AddMemberFormValues>({
     resolver: zodResolver(addMemberFormSchema),
     defaultValues: {
       email: "",
@@ -77,7 +67,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
   };
 
   const addGroupMemberMutation = useMutation(
-    trpc.shoppingList.addGroupMember.mutationOptions({
+    trpc.group.addGroupMember.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           onAddGroupMemberError(data.error.message);
@@ -85,7 +75,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({ groupId }),
+          trpc.group.getGroup.queryOptions({ id: groupId }),
         );
         form.reset();
       },
@@ -95,7 +85,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
     }),
   );
 
-  const handleSubmit = (values: z.infer<typeof addMemberFormSchema>) => {
+  const handleSubmit = (values: AddMemberFormValues) => {
     addGroupMemberMutation.mutate({
       groupId,
       memberEmail: values.email,
@@ -147,7 +137,7 @@ const ManageMembers = ({ groupId }: { groupId: number }) => {
               />
               <Button
                 type="submit"
-                className="w-full min-w-[150px] md:w-fit"
+                className="w-full min-w-37.5 md:w-fit"
                 disabled={!isAdmin || addGroupMemberMutation.isPending}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -204,15 +194,15 @@ const MemberCard = ({
   const isCurrentUser = groupMember.id === currentUserGroupMember.id;
   const isCurrentUserAdmin = currentUserGroupMember.role === "admin";
   const updateMemberRoleMutation = useMutation(
-    trpc.shoppingList.updateMemberRole.mutationOptions({
+    trpc.group.updateMemberRole.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
-            groupId: groupMember.groupId,
+          trpc.group.getGroup.queryOptions({
+            id: groupMember.groupId,
           }),
         );
       },
@@ -220,20 +210,20 @@ const MemberCard = ({
   );
   const router = useRouter();
   const removeGroupMemberMutation = useMutation(
-    trpc.shoppingList.removeGroupMember.mutationOptions({
+    trpc.group.removeGroupMember.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getGroup.queryOptions({
-            groupId: groupMember.groupId,
+          trpc.group.getGroup.queryOptions({
+            id: groupMember.groupId,
           }),
         );
         if (groupMember.id === currentUserGroupMember.id) {
           void queryClient.invalidateQueries(
-            trpc.shoppingList.getUserGroups.queryOptions(),
+            trpc.group.getUserGroups.queryOptions(),
           );
           router.push(`/group`);
         }

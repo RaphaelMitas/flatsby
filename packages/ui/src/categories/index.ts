@@ -1,2 +1,6 @@
-export * from "./types";
-export * from "./categories";
+export {
+  categories,
+  categoryMapping,
+  getCategoryColorClasses,
+  getCategoryData,
+} from "./categories";

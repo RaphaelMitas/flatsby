@@ -1,3 +1,5 @@
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import type { LucideIcon } from "lucide-react";
 import {
   Bath,
   Beef,
@@ -13,8 +15,14 @@ import {
   WandSparkles,
 } from "lucide-react";
 
-import type { Category } from "./types";
 import { cn } from "..";
+
+interface Category {
+  id: CategoryIdWithAiAutoSelect;
+  name: string;
+  icon: LucideIcon;
+  description: string;
+}
 
 export const getCategoryColorClasses = (categoryId: string) => ({
   base: cn(

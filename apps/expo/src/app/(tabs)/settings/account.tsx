@@ -27,7 +27,7 @@ const InfoRow = ({
 
 export default function AccountScreen() {
   const { data: user } = useSuspenseQuery(
-    trpc.shoppingList.getCurrentUser.queryOptions(),
+    trpc.user.getCurrentUser.queryOptions(),
   );
 
   // Format date

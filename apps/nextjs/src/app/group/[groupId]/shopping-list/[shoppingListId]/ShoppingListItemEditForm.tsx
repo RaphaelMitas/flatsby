@@ -1,27 +1,16 @@
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
+import type { EditShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import { useEffect, useState } from "react";
-import { z } from "zod/v4";
 
 import { Button } from "@flatsby/ui/button";
-import { categorysIdWithAiAutoSelect } from "@flatsby/ui/categories";
 import { Form, FormControl, FormField, useForm } from "@flatsby/ui/form";
+import { editShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
 
 import { CategorySelector } from "./CategorySelector";
 import { ShoppingListItemInputFormField } from "./ShoppingListItemInputFormField";
 
-const formSchema = z.object({
-  name: z.string().min(1, {
-    message: "name is required",
-  }),
-  categoryId: z.enum(categorysIdWithAiAutoSelect),
-});
-
 interface ShoppingListItemEditFormProps {
-  initialValues: {
-    name: string;
-    categoryId?: CategoryIdWithAiAutoSelect;
-  };
-  onSubmit: (values: z.infer<typeof formSchema>) => void;
+  initialValues: EditShoppingListItemFormValues;
+  onSubmit: (values: EditShoppingListItemFormValues) => void;
   onCancel: () => void;
 }
 
@@ -32,7 +21,7 @@ export const ShoppingListItemEditForm = ({
 }: ShoppingListItemEditFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
-    schema: formSchema,
+    schema: editShoppingListItemFormSchema,
     defaultValues: initialValues,
   });
 
@@ -40,7 +29,7 @@ export const ShoppingListItemEditForm = ({
     form.setFocus("name");
   }, [form]);
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: EditShoppingListItemFormValues) => {
     setIsSubmitting(true);
     void onSubmit(values);
     setIsSubmitting(false);

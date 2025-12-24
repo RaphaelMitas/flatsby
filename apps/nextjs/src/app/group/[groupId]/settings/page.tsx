@@ -8,8 +8,8 @@ export default async function Page(props: {
 }) {
   const params = await props.params;
   prefetch(
-    trpc.shoppingList.getGroup.queryOptions({
-      groupId: parseInt(params.groupId),
+    trpc.group.getGroup.queryOptions({
+      id: parseInt(params.groupId),
     }),
   );
   return (
@@ -22,7 +22,7 @@ export default async function Page(props: {
             </h1>
           </div>
           <div className="grid gap-6"></div>
-          <GroupDetails groupId={parseInt(params.groupId)} />
+          <GroupDetails id={parseInt(params.groupId)} />
           <ManageMembers groupId={parseInt(params.groupId)} />
           <DangerZone groupId={parseInt(params.groupId)} />
         </div>

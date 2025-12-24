@@ -7,7 +7,7 @@ import { GroupSwitcher } from "./group-switcher";
 import { UserButton } from "./user-button";
 
 export function AppBar() {
-  prefetch(trpc.shoppingList.getCurrentUserWithGroups.queryOptions());
+  prefetch(trpc.user.getCurrentUserWithGroups.queryOptions());
 
   return (
     <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6">

@@ -25,7 +25,7 @@ export function UserButton() {
   const trpc = useTRPC();
   const { isEnabled, setEnabled } = useWinterEffects();
   const { data: userWithGroups } = useSuspenseQuery(
-    trpc.shoppingList.getCurrentUserWithGroups.queryOptions(),
+    trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
 
   if (!userWithGroups.success) {

@@ -65,13 +65,10 @@ export type {
   GroupWithMembers,
   Role,
   ShoppingList,
-  ShoppingListItem,
   ShoppingListInfiniteData,
   ShoppingListSummary,
   ShoppingListWithGroup,
-  ShoppingListWithItems,
   TransactionOperation,
   User,
-  UserGroupMembership,
   UserWrappedSummary,
 } from "./types";

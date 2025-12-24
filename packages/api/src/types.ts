@@ -12,7 +12,7 @@ import type {
   shoppingLists,
   users,
 } from "@flatsby/db/schema";
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
+import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import type { InfiniteData } from "@tanstack/react-query";
 
 import type { ApiResult } from "./errors";
@@ -34,17 +34,6 @@ export type NewGroupMember = typeof groupMembers.$inferInsert;
 export type ShoppingList = typeof shoppingLists.$inferSelect;
 export type NewShoppingList = typeof shoppingLists.$inferInsert;
 
-export interface ShoppingListItem {
-  id: number;
-  name: string;
-  createdAt: Date;
-  createdByGroupMemberId: number | null;
-  completed: boolean;
-  completedByGroupMemberId: number | null;
-  completedAt: Date | null;
-  categoryId: CategoryIdWithAiAutoSelect;
-  isPending?: boolean;
-}
 export type NewShoppingListItem = typeof shoppingListItems.$inferInsert;
 
 // Query result types for common operations
@@ -94,20 +83,11 @@ export type ShoppingListInfiniteData = InfiniteData<
   number | null
 >;
 
-export type ShoppingListWithItems = ShoppingList & {
-  shoppingListItems: ShoppingListItem[];
-};
-
 export type ShoppingListWithGroup = ShoppingList & {
   group: {
     groupMembers: Pick<GroupMember, "userId">[];
   };
 };
-
-export interface UserGroupMembership {
-  user?: User;
-  groups: Pick<Group, "id" | "name" | "profilePicture">[];
-}
 
 export type GroupWithMemberCount = Pick<
   Group,

@@ -31,7 +31,7 @@ export default function SettingsIndex() {
   const { clearSelectedGroup } = useShoppingStore();
 
   const { data: user } = useSuspenseQuery(
-    trpc.shoppingList.getCurrentUser.queryOptions(),
+    trpc.user.getCurrentUser.queryOptions(),
   );
 
   const handleLogout = async () => {

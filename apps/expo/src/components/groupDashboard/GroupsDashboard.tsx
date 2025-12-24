@@ -15,7 +15,7 @@ export function GroupsDashboard() {
     data: groups,
     refetch,
     isRefetching,
-  } = useSuspenseQuery(trpc.shoppingList.getUserGroups.queryOptions());
+  } = useSuspenseQuery(trpc.group.getUserGroups.queryOptions());
 
   if (!groups.success) {
     return handleApiError({ router, error: groups.error });

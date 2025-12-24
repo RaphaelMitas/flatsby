@@ -12,7 +12,7 @@ import GroupsDashboardElement from "./GroupsDashboardElement";
 export function GroupsDashboard() {
   const trpc = useTRPC();
   const { data: groups, status } = useSuspenseQuery(
-    trpc.shoppingList.getUserGroups.queryOptions(),
+    trpc.group.getUserGroups.queryOptions(),
   );
 
   if (!groups.success) {

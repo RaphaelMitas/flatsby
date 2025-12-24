@@ -1,4 +1,4 @@
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/ui/categories";
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
@@ -55,7 +55,7 @@ export function CategorySelector({
             )}
           </span>
           {!iconButton && (
-            <ChevronDown className="ml-2 h-5 w-5 text-muted-foreground" />
+            <ChevronDown className="text-muted-foreground ml-2 h-5 w-5" />
           )}
         </Button>
       </SheetTrigger>
@@ -82,7 +82,7 @@ export function CategorySelector({
                 />
                 <div className="flex flex-col text-left">
                   <div className="font-medium">{category.name}</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-muted-foreground text-sm">
                     {category.description}
                   </div>
                 </div>

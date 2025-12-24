@@ -6,6 +6,7 @@ import type {
 } from "react-hook-form";
 import type { ZodType } from "zod/v4";
 import * as React from "react";
+import { Text } from "react-native";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import {
   useForm as __useForm,
@@ -13,6 +14,8 @@ import {
   FormProvider,
   useFormContext,
 } from "react-hook-form";
+
+import { cn } from "../utils";
 
 const Form = FormProvider;
 
@@ -79,4 +82,27 @@ const FormControl: React.FC<FormControlProps> = ({ children }) => {
 };
 FormControl.displayName = "FormControl";
 
-export { Form, FormField, FormControl, useFormField, useForm };
+interface FormMessageProps {
+  className?: string;
+  children?: React.ReactNode;
+}
+
+const FormMessage: React.FC<FormMessageProps> = ({ className, children }) => {
+  const { error } = useFormField();
+  const body = error ? String(error.message) : children;
+
+  if (!body) {
+    return null;
+  }
+
+  return (
+    <Text
+      className={cn("text-destructive text-[0.8rem] font-medium", className)}
+    >
+      {body}
+    </Text>
+  );
+};
+FormMessage.displayName = "FormMessage";
+
+export { Form, FormField, FormControl, FormMessage, useFormField, useForm };

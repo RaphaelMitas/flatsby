@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { headers } from "next/headers";
+import { nextCookies } from "better-auth/next-js";
 import { importPKCS8, SignJWT } from "jose";
 
 import { initAuth } from "@flatsby/auth";
@@ -27,6 +28,7 @@ export const auth = initAuth({
   appleTeamId: env.APPLE_TEAM_ID,
   appleKeyId: env.APPLE_KEY_ID,
   appleClientSecret: await makeAppleClientSecret(),
+  extraPlugins: [nextCookies()],
 });
 
 export const getSession = cache(async () =>
