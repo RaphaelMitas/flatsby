@@ -59,28 +59,80 @@ export function ExpenseDetailView({
     trpc.expense.getExpense.queryOptions({ expenseId }),
   );
 
+  // Query key for expense list
+  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
+    groupId,
+    limit: 20,
+  });
+
+  const { data: debtData } = useSuspenseQuery(
+    trpc.expense.getDebtSummary.queryOptions({ groupId }),
+  );
+
   const deleteExpenseMutation = useMutation(
     trpc.expense.deleteExpense.mutationOptions({
-      onSuccess: (data) => {
-        if (data.success) {
-          toast.success("Expense deleted successfully");
-          void queryClient.invalidateQueries(
-            trpc.expense.getGroupExpenses.queryOptions({ groupId }),
-          );
-          void queryClient.invalidateQueries(
-            trpc.expense.getDebtSummary.queryOptions({ groupId }),
-          );
-          router.push(`/group/${groupId}/expenses`);
-        } else {
-          toast.error("Failed to delete expense", {
-            description: data.error.message,
+      onMutate: async (input) => {
+        // Cancel any outgoing queries
+        await queryClient.cancelQueries(
+          trpc.expense.getGroupExpenses.queryOptions({
+            groupId,
+            limit: 20,
+          }),
+        );
+
+        // Snapshot the previous value
+        const previousData = queryClient.getQueryData(expenseListQueryKey);
+
+        // Optimistically remove the expense from the list
+        queryClient.setQueryData(expenseListQueryKey, (old) => {
+          if (!old) return old;
+
+          const updatedPages = old.pages.map((page) => {
+            if (page.success === false) return page;
+
+            return {
+              ...page,
+              data: {
+                ...page.data,
+                items: page.data.items.filter(
+                  (item) => item.id !== input.expenseId,
+                ),
+              },
+            };
           });
-        }
+
+          return { ...old, pages: updatedPages };
+        });
+
+        return { previousData };
       },
-      onError: (error) => {
+      onError: (error, _variables, context) => {
+        if (context?.previousData) {
+          queryClient.setQueryData(expenseListQueryKey, context.previousData);
+        }
         toast.error("Failed to delete expense", {
           description: error.message,
         });
+      },
+      onSuccess: (data, _variables, context) => {
+        if (data.success === false) {
+          if (context.previousData) {
+            queryClient.setQueryData(expenseListQueryKey, context.previousData);
+          }
+          toast.error("Failed to delete expense", {
+            description: data.error.message,
+          });
+          return;
+        }
+
+        toast.success("Expense deleted successfully");
+        void queryClient.invalidateQueries({
+          queryKey: expenseListQueryKey,
+        });
+        void queryClient.invalidateQueries(
+          trpc.expense.getDebtSummary.queryOptions({ groupId }),
+        );
+        router.push(`/group/${groupId}/expenses`);
       },
     }),
   );
@@ -156,6 +208,33 @@ export function ExpenseDetailView({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {expense.isSettlement && expense.expenseSplits[0] && (
+            <>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage
+                    alt={expense.expenseSplits[0].groupMember.user.name}
+                    src={
+                      expense.expenseSplits[0].groupMember.user.image ??
+                      undefined
+                    }
+                  />
+                  <AvatarFallback>
+                    {expense.expenseSplits[0].groupMember.user.name
+                      .substring(0, 2)
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-muted-foreground text-sm">From</p>
+                  <p className="font-semibold">
+                    {expense.expenseSplits[0].groupMember.user.name}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
               <AvatarImage
@@ -169,7 +248,9 @@ export function ExpenseDetailView({
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-muted-foreground text-sm">Paid by</p>
+              <p className="text-muted-foreground text-sm">
+                {expense.isSettlement ? "To" : "Paid by"}
+              </p>
               <p className="font-semibold">
                 {expense.paidByGroupMember.user.name}
               </p>
@@ -195,71 +276,63 @@ export function ExpenseDetailView({
               </div>
             </>
           )}
-
-          <Separator />
-          <div>
-            <p className="text-muted-foreground text-sm">Currency</p>
-            <p className="font-semibold">{expense.currency}</p>
-          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            {expense.isSettlement ? "Settlement Details" : "Split Details"}
-          </CardTitle>
-          <CardDescription>
-            {expense.isSettlement
-              ? "This is a settlement payment"
-              : `Split between ${expense.expenseSplits.length} ${expense.expenseSplits.length === 1 ? "person" : "people"}`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {expense.expenseSplits.map((split, index) => {
-              const member = split.groupMember;
-              const splitAmount = formatCurrencyFromCents({
-                cents: split.amountInCents,
-                currency: expense.currency,
-              });
-              const percentage =
-                (split.amountInCents / expense.amountInCents) * 100;
+      {!expense.isSettlement && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Split Details
+            </CardTitle>
+            <CardDescription>
+              {`Split between ${expense.expenseSplits.length} ${expense.expenseSplits.length === 1 ? "person" : "people"}`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {expense.expenseSplits.map((split, index) => {
+                const member = split.groupMember;
+                const splitAmount = formatCurrencyFromCents({
+                  cents: split.amountInCents,
+                  currency: expense.currency,
+                });
+                const percentage =
+                  (split.amountInCents / expense.amountInCents) * 100;
 
-              return (
-                <div key={split.id}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage
-                          alt={member.user.name}
-                          src={member.user.image ?? undefined}
-                        />
-                        <AvatarFallback className="text-xs">
-                          {member.user.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{member.user.name}</p>
-                        {!expense.isSettlement && (
+                return (
+                  <div key={split.id}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage
+                            alt={member.user.name}
+                            src={member.user.image ?? undefined}
+                          />
+                          <AvatarFallback className="text-xs">
+                            {member.user.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{member.user.name}</p>
                           <p className="text-muted-foreground text-xs">
                             {percentage.toFixed(1)}%
                           </p>
-                        )}
+                        </div>
                       </div>
+                      <p className="font-semibold">{splitAmount}</p>
                     </div>
-                    <p className="font-semibold">{splitAmount}</p>
+                    {index < expense.expenseSplits.length - 1 && (
+                      <Separator className="mt-3" />
+                    )}
                   </div>
-                  {index < expense.expenseSplits.length - 1 && (
-                    <Separator className="mt-3" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="pt-6">
@@ -312,9 +385,30 @@ export function ExpenseDetailView({
           <SettlementForm
             groupId={groupId}
             fromGroupMemberId={expense.paidByGroupMemberId}
-            toGroupMemberId={expense.createdByGroupMemberId}
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            toGroupMemberId={expense.expenseSplits[0]!.groupMemberId}
             currency={expense.currency}
-            amountInCents={expense.amountInCents}
+            outstandingDebtInCents={
+              debtData.success
+                ? (() => {
+                    const currencyData =
+                      debtData.data.currencies[expense.currency];
+
+                    if (!currencyData) return undefined;
+
+                    const debt = currencyData.debts.find(
+                      (debt) =>
+                        debt.fromGroupMemberId === expense.paidByGroupMemberId,
+                    );
+
+                    if (!debt || typeof debt.amountInCents !== "number")
+                      return undefined;
+
+                    return debt.amountInCents + expense.amountInCents;
+                  })()
+                : undefined
+            }
+            expense={expense}
             onClose={() => setShowEditForm(false)}
             open={showEditForm}
           />

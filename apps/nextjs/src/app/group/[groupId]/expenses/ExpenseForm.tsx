@@ -85,6 +85,18 @@ export function ExpenseForm({
   const isEditMode = !!expense;
   const totalSteps = 3;
 
+  // Get the query key for expense list
+  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
+    groupId: group.id,
+    limit: 20,
+  });
+
+  const expenseQueryKey = expense
+    ? trpc.expense.getExpense.queryKey({
+        expenseId: expense.id,
+      })
+    : undefined;
+
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
@@ -110,59 +122,249 @@ export function ExpenseForm({
 
   const createExpenseMutation = useMutation(
     trpc.expense.createExpense.mutationOptions({
-      onSuccess: (data) => {
-        if (data.success) {
-          toast.success("Expense created successfully");
-          void queryClient.invalidateQueries(
-            trpc.expense.getGroupExpenses.queryOptions({ groupId: group.id }),
-          );
-          void queryClient.invalidateQueries(
-            trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
-          );
-          onClose();
-          form.reset();
-          setCurrentStep(1);
-        } else {
-          toast.error("Failed to create expense", {
-            description: data.error.message,
-          });
-        }
+      onMutate: async (input) => {
+        // Cancel any outgoing queries
+        await queryClient.cancelQueries(
+          trpc.expense.getGroupExpenses.queryOptions({
+            groupId: group.id,
+            limit: 20,
+          }),
+        );
+
+        // Snapshot the previous value
+        const previousData = queryClient.getQueryData(
+          trpc.expense.getGroupExpenses.infiniteQueryKey({
+            groupId: group.id,
+            limit: 20,
+          }),
+        );
+
+        // Get the paidBy and createdBy members for the optimistic expense
+        const paidByMember = group.groupMembers.find(
+          (m) => m.id === input.paidByGroupMemberId,
+        );
+        const currentMember = group.thisGroupMember;
+
+        // Optimistically add the new expense
+        queryClient.setQueryData(
+          trpc.expense.getGroupExpenses.infiniteQueryKey({
+            groupId: group.id,
+            limit: 20,
+          }),
+          (old) => {
+            if (!old) return old;
+
+            const optimisticExpense = {
+              id: Date.now(),
+              groupId: group.id,
+              paidByGroupMemberId: input.paidByGroupMemberId,
+              amountInCents: input.amountInCents,
+              currency: input.currency,
+              description: input.description ?? null,
+              category: input.category ?? null,
+              expenseDate: input.expenseDate,
+              createdByGroupMemberId: currentMember.id,
+              isSettlement: input.isSettlement,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              paidByGroupMember: paidByMember
+                ? {
+                    id: paidByMember.id,
+                    groupId: group.id,
+                    userId: paidByMember.userId,
+                    role: paidByMember.role,
+                    joinedOn: paidByMember.joinedOn,
+                    user: paidByMember.user,
+                  }
+                : {
+                    id: input.paidByGroupMemberId,
+                    groupId: group.id,
+                    userId: "",
+                    role: "member",
+                    joinedOn: new Date(),
+                    user: { email: "", name: "Unknown", image: null },
+                  },
+              createdByGroupMember: {
+                id: currentMember.id,
+                groupId: group.id,
+                userId: currentMember.userId,
+                role: currentMember.role,
+                joinedOn: currentMember.joinedOn,
+                user: currentMember.user,
+              },
+              expenseSplits: input.splits.map((split, index) => {
+                const member = group.groupMembers.find(
+                  (m) => m.id === split.groupMemberId,
+                );
+                return {
+                  id: Date.now() + index,
+                  createdAt: new Date(),
+                  expenseId: Date.now(),
+                  groupMemberId: split.groupMemberId,
+                  amountInCents: split.amountInCents,
+                  percentage: split.percentage,
+                  groupMember: member
+                    ? {
+                        id: member.id,
+                        groupId: group.id,
+                        userId: member.userId,
+                        role: member.role,
+                        joinedOn: member.joinedOn,
+                        user: member.user,
+                      }
+                    : {
+                        id: split.groupMemberId,
+                        groupId: group.id,
+                        userId: "",
+                        role: "member",
+                        joinedOn: new Date(),
+                        user: { email: "", name: "Unknown", image: null },
+                      },
+                };
+              }),
+              isPending: true,
+            };
+
+            const updatedPages = old.pages.map((page, pageIndex) => {
+              if (page.success === false) return page;
+              if (pageIndex !== 0) return page;
+
+              return {
+                ...page,
+                data: {
+                  ...page.data,
+                  items: [optimisticExpense, ...page.data.items],
+                },
+              };
+            });
+
+            return { ...old, pages: updatedPages };
+          },
+        );
+
+        return { previousData };
       },
-      onError: (error) => {
+      onError: (error, _variables, context) => {
+        if (context?.previousData) {
+          queryClient.setQueryData(expenseListQueryKey, context.previousData);
+        }
         toast.error("Failed to create expense", {
           description: error.message,
         });
+      },
+      onSuccess: (data, _variables, context) => {
+        if (data.success === false) {
+          if (context.previousData) {
+            queryClient.setQueryData(expenseListQueryKey, context.previousData);
+          }
+          toast.error("Failed to create expense", {
+            description: data.error.message,
+          });
+          return;
+        }
+
+        toast.success("Expense created successfully");
+        void queryClient.invalidateQueries({
+          queryKey: trpc.expense.getGroupExpenses.infiniteQueryKey({
+            groupId: group.id,
+            limit: 20,
+          }),
+        });
+        void queryClient.invalidateQueries(
+          trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
+        );
+        onClose();
+        form.reset();
+        setCurrentStep(1);
       },
     }),
   );
 
   const updateExpenseMutation = useMutation(
     trpc.expense.updateExpense.mutationOptions({
-      onSuccess: (data) => {
-        if (data.success) {
-          toast.success("Expense updated successfully");
-          void queryClient.invalidateQueries(
-            trpc.expense.getGroupExpenses.queryOptions({ groupId: group.id }),
-          );
-          if (expense?.id) {
-            void queryClient.invalidateQueries(
-              trpc.expense.getExpense.queryOptions({ expenseId: expense.id }),
-            );
-          }
-          void queryClient.invalidateQueries(
-            trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
-          );
-          onClose();
-        } else {
-          toast.error("Failed to update expense", {
-            description: data.error.message,
-          });
-        }
+      onMutate: async (input) => {
+        if (!expense || !expenseQueryKey) return;
+        // Cancel any outgoing queries
+        await queryClient.cancelQueries(
+          trpc.expense.getExpense.queryOptions({
+            expenseId: expense.id,
+          }),
+        );
+
+        // Snapshot the previous value
+        const previousData = queryClient.getQueryData(expenseQueryKey);
+
+        // Optimistically update the expense in the list
+        queryClient.setQueryData(expenseQueryKey, (old) => {
+          if (!old || old.success === false) return old;
+
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              ...input,
+              expenseSplits: input.splits
+                ? input.splits.map((split, index) => {
+                    const member = group.groupMembers.find(
+                      (m) => m.id === split.groupMemberId,
+                    );
+                    const splits = {
+                      ...split,
+                      id: Date.now() + index,
+                      createdAt: new Date(),
+                      expenseId: expense.id,
+                      groupMember: member
+                        ? { ...member, groupId: group.id }
+                        : {
+                            id: split.groupMemberId,
+                            groupId: group.id,
+                            userId: "",
+                            role: "member",
+                            joinedOn: new Date(),
+                            user: { email: "", name: "Unknown", image: null },
+                          },
+                    };
+                    return splits;
+                  })
+                : old.data.expenseSplits,
+            },
+          };
+        });
+
+        return { previousData };
       },
-      onError: (error) => {
+      onError: (error, _variables, context) => {
+        if (context?.previousData && expenseQueryKey) {
+          queryClient.setQueryData(expenseQueryKey, context.previousData);
+        }
         toast.error("Failed to update expense", {
           description: error.message,
         });
+      },
+      onSuccess: (data, _variables, context) => {
+        if (data.success === false) {
+          if (context?.previousData && expenseQueryKey) {
+            queryClient.setQueryData(expenseQueryKey, context.previousData);
+          }
+          toast.error("Failed to update expense", {
+            description: data.error.message,
+          });
+          return;
+        }
+
+        toast.success("Expense updated successfully");
+        void queryClient.invalidateQueries({
+          queryKey: expenseListQueryKey,
+        });
+        if (expense?.id) {
+          void queryClient.invalidateQueries(
+            trpc.expense.getExpense.queryOptions({ expenseId: expense.id }),
+          );
+        }
+        void queryClient.invalidateQueries(
+          trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
+        );
+        onClose();
       },
     }),
   );

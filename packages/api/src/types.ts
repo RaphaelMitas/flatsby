@@ -117,7 +117,7 @@ export type ExpenseWithSplits = Expense & {
 };
 
 export type ExpenseSplitWithMember = ExpenseSplit & {
-  groupMember: Pick<GroupMember, "id" | "userId"> & {
+  groupMember: Pick<GroupMember, "id"> & {
     user: Pick<User, "email" | "name" | "image">;
   };
 };
@@ -127,6 +127,17 @@ export type ExpenseWithSplitsAndMembers = Expense & {
   createdByGroupMember: GroupMemberWithUser;
   expenseSplits: ExpenseSplitWithMember[];
 };
+
+// Type for expense infinite query data
+interface ExpensePage {
+  items: ExpenseWithSplitsAndMembers[];
+  nextCursor?: number;
+}
+
+export type ExpenseInfiniteData = InfiniteData<
+  ApiResult<ExpensePage>,
+  number | null
+>;
 
 // Re-export expense-related types from validators
 export type {

@@ -378,6 +378,7 @@ export const expenseRouter = createTRPCRouter({
                         expenseSplits: {
                           with: {
                             groupMember: {
+                              columns: { id: true },
                               with: {
                                 user: {
                                   columns: {

@@ -131,7 +131,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
                                 <div className="truncate text-sm font-medium">
                                   {getMemberName(debt.fromGroupMemberId)}
                                 </div>
-                                <ArrowRight className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+                                <ArrowRight className="text-muted-foreground h-4 w-4 shrink-0" />
                                 <div className="truncate text-sm font-medium">
                                   {getMemberName(debt.toGroupMemberId)}
                                 </div>
@@ -241,7 +241,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
           fromGroupMemberId={selectedDebt.fromGroupMemberId}
           toGroupMemberId={selectedDebt.toGroupMemberId}
           currency={selectedDebt.currency}
-          amountInCents={selectedDebt.amountInCents}
+          outstandingDebtInCents={selectedDebt.amountInCents}
           onClose={() => setSelectedDebt(null)}
           open={!!selectedDebt}
         />
