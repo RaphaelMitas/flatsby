@@ -1,6 +1,7 @@
 "use client";
 
-import type { GroupDebtSummary, GroupMemberWithUserInfo } from "@flatsby/api";
+import type { GroupMemberWithUserInfo } from "@flatsby/api";
+import type { GroupDebtSummary } from "@flatsby/validators/expense";
 import { useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
@@ -13,10 +14,10 @@ import {
   CardTitle,
 } from "@flatsby/ui/card";
 import { Separator } from "@flatsby/ui/separator";
+import { formatCurrencyFromCents } from "@flatsby/validators/expense";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
-import { formatCurrencyFromCents } from "../ExpenseUtils";
 import { SettlementForm } from "./SettlementForm";
 
 interface DebtSummaryViewProps {
@@ -39,7 +40,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
 
   // Get group members for display
   const { data: groupData } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ groupId }),
+    trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
   if (!debtData.success) {

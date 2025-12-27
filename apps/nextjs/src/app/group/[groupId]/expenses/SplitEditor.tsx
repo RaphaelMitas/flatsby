@@ -1,8 +1,11 @@
 "use client";
 
 import type { GroupWithAccess } from "@flatsby/api";
+import type {
+  ExpenseFormValues,
+  ExpenseSplit,
+} from "@flatsby/validators/expense";
 import type { UseFormReturn } from "react-hook-form";
-import type z from "zod/v4";
 import { DollarSign, Equal, Percent } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -22,21 +25,19 @@ import {
 } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
-
-import type { expenseFormSchema } from "./ExpenseForm";
 import {
-  calculateEvenPercentageAmount,
-  formatCurrency,
-  percentageToAmount,
+  calculateEvenSplitAmounts,
+  centsToDecimal,
+  decimalToCents,
+  formatCurrencyFromCents,
+  percentageToAmountCents,
   validateSplits,
-} from "./ExpenseUtils";
-
-type Split = z.infer<typeof expenseFormSchema>["splits"][number];
+} from "@flatsby/validators/expense";
 
 interface SplitEditorProps {
-  form: UseFormReturn<z.infer<typeof expenseFormSchema>>;
+  form: UseFormReturn<ExpenseFormValues>;
   groupMembers: GroupWithAccess["groupMembers"];
-  totalAmount: number;
+  totalAmountCents: number;
   currency: string;
   splitMethod: "equal" | "percentage" | "custom";
   onSplitMethodChange: (method: "equal" | "percentage" | "custom") => void;
@@ -45,7 +46,7 @@ interface SplitEditorProps {
 export function SplitEditor({
   form,
   groupMembers,
-  totalAmount,
+  totalAmountCents,
   currency,
   splitMethod,
   onSplitMethodChange,
@@ -63,14 +64,15 @@ export function SplitEditor({
 
     if (memberIndex >= 0) {
       // Remove member
-      const newSplits: Split[] = currentSplits.filter(
+      const newSplits: ExpenseSplit[] = currentSplits.filter(
         (_: unknown, index: number) => index !== memberIndex,
       );
       // Recalculate equal percentages if in percentage mode
       if (splitMethod === "percentage" && newSplits.length > 0) {
-        const updatedSplits: Split[] = calculateEvenPercentageAmount(
-          groupMembers,
-          totalAmount,
+        const remainingMemberIds = newSplits.map((s) => s.groupMemberId);
+        const updatedSplits = calculateEvenSplitAmounts(
+          remainingMemberIds,
+          totalAmountCents,
         );
         form.setValue("splits", updatedSplits, { shouldValidate: true });
       } else {
@@ -79,34 +81,32 @@ export function SplitEditor({
     } else {
       // Add member
       const newSplitCount = currentSplits.length + 1;
-      let newSplit: Split;
+      let newSplit: ExpenseSplit;
 
       if (splitMethod === "equal") {
-        const equalAmount = totalAmount / newSplitCount;
+        const equalAmountCents = Math.round(totalAmountCents / newSplitCount);
         newSplit = {
           groupMemberId: memberId,
           percentage: null,
-          amount: equalAmount,
+          amountInCents: equalAmountCents,
         };
       } else if (splitMethod === "percentage") {
-        const updatedSplits: Split[] = calculateEvenPercentageAmount(
-          groupMembers,
-          totalAmount,
+        // Recalculate for all members including the new one
+        const allMemberIds = [
+          ...currentSplits.map((s) => s.groupMemberId),
+          memberId,
+        ];
+        const updatedSplits = calculateEvenSplitAmounts(
+          allMemberIds,
+          totalAmountCents,
         );
-        newSplit = {
-          groupMemberId: memberId,
-          amount: 0,
-          percentage: null,
-        };
-        form.setValue("splits", [...updatedSplits, newSplit], {
-          shouldValidate: true,
-        });
+        form.setValue("splits", updatedSplits, { shouldValidate: true });
         return; // Early return since we already set the value
       } else {
         // Custom mode
         newSplit = {
           groupMemberId: memberId,
-          amount: 0,
+          amountInCents: 0,
           percentage: null,
         };
       }
@@ -118,32 +118,43 @@ export function SplitEditor({
   };
 
   const updateSplitAmount = (index: number, value: string) => {
-    const currentSplits: Split[] = form.getValues("splits");
-    const numValue = parseFloat(value) || 0;
-    const updatedSplits: Split[] = [...currentSplits];
+    const currentSplits: ExpenseSplit[] = form.getValues("splits");
+    const updatedSplits: ExpenseSplit[] = [...currentSplits];
 
     if (splitMethod === "custom") {
+      // User enters decimal value, convert to cents
+      const decimalValue = parseFloat(value) || 0;
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      updatedSplits[index]!.amount = numValue;
+      updatedSplits[index]!.amountInCents = decimalToCents(decimalValue);
     } else if (splitMethod === "percentage") {
+      // User enters percentage as decimal (e.g., 25.5 for 25.5%)
+      // Convert to basis points (25.5% = 2550 basis points)
+      const percentValue = parseFloat(value) || 0;
+      const basisPoints = Math.round(percentValue * 100);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      updatedSplits[index]!.amount = percentageToAmount(totalAmount, numValue);
+      updatedSplits[index]!.percentage = basisPoints;
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      updatedSplits[index]!.percentage = numValue;
+      updatedSplits[index]!.amountInCents = percentageToAmountCents(
+        totalAmountCents,
+        basisPoints,
+      );
     }
 
     form.setValue("splits", updatedSplits, { shouldValidate: true });
   };
 
-  const validation = validateSplits(splits, totalAmount, splitMethod);
-  const totalSplitAmount = splits.reduce((sum: number, split: Split) => {
+  const validation = validateSplits(splits, totalAmountCents, splitMethod);
+  const totalSplitCents = splits.reduce((sum: number, split: ExpenseSplit) => {
     if (splitMethod === "custom") {
-      return sum + split.amount;
+      return sum + split.amountInCents;
     }
     if (splitMethod === "percentage") {
-      return sum + ((split.percentage ?? 0) / 100) * totalAmount;
+      return (
+        sum + percentageToAmountCents(totalAmountCents, split.percentage ?? 0)
+      );
     }
-    return sum;
+    // Equal split
+    return sum + Math.round(totalAmountCents / splits.length);
   }, 0);
 
   return (
@@ -231,21 +242,24 @@ export function SplitEditor({
               {splitMethod === "percentage" &&
                 "Enter percentage for each person (must sum to 100%)"}
               {splitMethod === "custom" &&
-                `Enter amounts (must sum to ${formatCurrency(totalAmount, currency)})`}
+                `Enter amounts (must sum to ${formatCurrencyFromCents(totalAmountCents, currency)})`}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {splits.map((split: Split, index: number) => {
+            {splits.map((split: ExpenseSplit, index: number) => {
               const member = groupMembers.find(
                 (m) => m.id === split.groupMemberId,
               );
               const memberName = member?.user.name ?? "Unknown";
-              const splitAmount =
+              const splitAmountCents =
                 splitMethod === "equal"
-                  ? totalAmount / splits.length
+                  ? Math.round(totalAmountCents / splits.length)
                   : splitMethod === "percentage"
-                    ? ((split.percentage ?? 0) / 100) * totalAmount
-                    : split.amount;
+                    ? percentageToAmountCents(
+                        totalAmountCents,
+                        split.percentage ?? 0,
+                      )
+                    : split.amountInCents;
 
               return (
                 <div key={split.groupMemberId} className="space-y-2">
@@ -263,7 +277,7 @@ export function SplitEditor({
                       {memberName}
                     </span>
                     <span className="text-sm font-semibold">
-                      {formatCurrency(splitAmount, currency)}
+                      {formatCurrencyFromCents(splitAmountCents, currency)}
                     </span>
                   </div>
 
@@ -281,10 +295,17 @@ export function SplitEditor({
                                 max="100"
                                 step="0.01"
                                 placeholder="0"
-                                {...field}
-                                value={field.value ?? ""}
+                                value={
+                                  field.value
+                                    ? (field.value / 100).toFixed(2)
+                                    : ""
+                                }
                                 onChange={(e) => {
-                                  field.onChange(e);
+                                  const percentValue =
+                                    parseFloat(e.target.value) || 0;
+                                  field.onChange(
+                                    Math.round(percentValue * 100),
+                                  );
                                   updateSplitAmount(index, e.target.value);
                                 }}
                                 className="flex-1"
@@ -303,7 +324,7 @@ export function SplitEditor({
                   {splitMethod === "custom" && (
                     <FormField
                       control={form.control}
-                      name={`splits.${index}.amount`}
+                      name={`splits.${index}.amountInCents`}
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
@@ -316,10 +337,15 @@ export function SplitEditor({
                                 min="0"
                                 step="0.01"
                                 placeholder="0.00"
-                                {...field}
-                                value={field.value}
+                                value={
+                                  field.value
+                                    ? centsToDecimal(field.value).toFixed(2)
+                                    : ""
+                                }
                                 onChange={(e) => {
-                                  field.onChange(e);
+                                  const decimalValue =
+                                    parseFloat(e.target.value) || 0;
+                                  field.onChange(decimalToCents(decimalValue));
                                   updateSplitAmount(index, e.target.value);
                                 }}
                                 className="flex-1"
@@ -348,7 +374,7 @@ export function SplitEditor({
             <span
               className={`font-semibold ${validation.isValid ? "" : "text-destructive"}`}
             >
-              {formatCurrency(totalSplitAmount, currency)}
+              {formatCurrencyFromCents(totalSplitCents, currency)}
             </span>
           </div>
           {!validation.isValid && validation.error && (

@@ -24,7 +24,7 @@ export function ExpenseDashboard({ groupId }: ExpenseDashboardProps) {
 
   // Get group members for the form
   const { data: groupData } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ groupId }),
+    trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
   // Get expenses with infinite scroll

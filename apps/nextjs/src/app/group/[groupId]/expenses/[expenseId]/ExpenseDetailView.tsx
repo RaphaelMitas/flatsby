@@ -31,11 +31,11 @@ import {
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Separator } from "@flatsby/ui/separator";
 import { toast } from "@flatsby/ui/toast";
+import { formatCurrencyFromCents } from "@flatsby/validators/expense";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
 import { ExpenseForm } from "../ExpenseForm";
-import { formatCurrencyFromCents } from "../ExpenseUtils";
 
 interface ExpenseDetailViewProps {
   expenseId: number;
@@ -52,7 +52,7 @@ export function ExpenseDetailView({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const { data: groupData } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ groupId }),
+    trpc.group.getGroup.queryOptions({ id: groupId }),
   );
   const { data: expenseData } = useSuspenseQuery(
     trpc.expense.getExpense.queryOptions({ expenseId }),

@@ -1,5 +1,6 @@
 "use client";
 
+import type { SettlementFormValues } from "@flatsby/validators/expense";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -8,7 +9,6 @@ import {
 } from "@tanstack/react-query";
 import { AlertCircle, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod/v4";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -29,21 +29,16 @@ import {
   SheetTitle,
 } from "@flatsby/ui/sheet";
 import { toast } from "@flatsby/ui/toast";
-
-import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
-import { isCurrencyCode } from "../ExpenseForm";
 import {
   centsToDecimal,
   decimalToCents,
   formatCurrencyFromCents,
-} from "../ExpenseUtils";
+  isCurrencyCode,
+  settlementFormSchema,
+} from "@flatsby/validators/expense";
 
-const settlementFormSchema = z.object({
-  amount: z.number().min(0.01, "Amount must be greater than 0"),
-});
-
-type SettlementFormValues = z.infer<typeof settlementFormSchema>;
+import { useTRPC } from "~/trpc/react";
+import { handleApiError } from "~/utils";
 
 interface SettlementFormProps {
   groupId: number;
@@ -69,13 +64,13 @@ export function SettlementForm({
 
   // Get group members for display
   const { data: groupData } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({ groupId }),
+    trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
   const form = useForm<SettlementFormValues>({
     resolver: zodResolver(settlementFormSchema),
     defaultValues: {
-      amount: centsToDecimal(amountInCents),
+      amountInCents: amountInCents,
     },
   });
 
@@ -108,18 +103,19 @@ export function SettlementForm({
 
   const onSubmit = (values: SettlementFormValues) => {
     // Settlement: payer (fromGroupMemberId) pays recipient (toGroupMemberId)
-    // Create expense with single split
+    // Data is already in cents
     createSettlementMutation.mutate({
       groupId,
       paidByGroupMemberId: fromGroupMemberId,
-      amountInCents: decimalToCents(values.amount),
+      amountInCents: values.amountInCents,
       currency: isCurrencyCode(currency) ? currency : "EUR",
       description: `Settlement payment`,
       expenseDate: new Date(),
       splits: [
         {
           groupMemberId: toGroupMemberId,
-          amountInCents: decimalToCents(values.amount),
+          amountInCents: values.amountInCents,
+          percentage: null,
         },
       ],
       isSettlement: true,
@@ -135,7 +131,7 @@ export function SettlementForm({
   const toMember = groupMembers.find((m) => m.id === toGroupMemberId);
   const fromName = fromMember?.user.name ?? "Unknown";
   const toName = toMember?.user.name ?? "Unknown";
-  const maxAmount = centsToDecimal(amountInCents);
+  const maxAmountDecimal = centsToDecimal(amountInCents);
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
@@ -186,7 +182,7 @@ export function SettlementForm({
             {/* Amount Input */}
             <FormField
               control={form.control}
-              name="amount"
+              name="amountInCents"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Settlement Amount</FormLabel>
@@ -197,13 +193,17 @@ export function SettlementForm({
                         type="number"
                         step="0.01"
                         min="0.01"
-                        max={maxAmount}
+                        max={maxAmountDecimal}
                         placeholder="0.00"
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || 0)
+                        value={
+                          field.value
+                            ? centsToDecimal(field.value).toFixed(2)
+                            : ""
                         }
+                        onChange={(e) => {
+                          const decimalValue = parseFloat(e.target.value) || 0;
+                          field.onChange(decimalToCents(decimalValue));
+                        }}
                         className="flex-1"
                       />
                     </div>

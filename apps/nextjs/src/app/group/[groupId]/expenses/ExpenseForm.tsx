@@ -4,12 +4,12 @@ import type {
   ExpenseWithSplitsAndMembers,
   GroupWithAccess,
 } from "@flatsby/api";
+import type { ExpenseFormValues } from "@flatsby/validators/expense";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, ArrowRight, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod/v4";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -43,59 +43,21 @@ import {
   SheetTitle,
 } from "@flatsby/ui/sheet";
 import { toast } from "@flatsby/ui/toast";
+import {
+  calculateEvenSplitAmounts,
+  centsToDecimal,
+  CURRENCY_CODES,
+  decimalToCents,
+  expenseFormSchema,
+  formatCurrencyFromCents,
+  isCurrencyCode,
+} from "@flatsby/validators/expense";
 
 import { useTRPC } from "~/trpc/react";
-import {
-  calculateEvenPercentageAmount,
-  decimalToCents,
-  validateSplits,
-} from "./ExpenseUtils";
 import { SplitEditor } from "./SplitEditor";
 
-// ISO 4217 currency codes (matching API)
-const CURRENCY_CODES = ["EUR", "USD", "GBP"] as const;
-
-export const expenseFormSchema = z
-  .object({
-    paidByGroupMemberId: z.number().min(1, "Please select who paid"),
-    amount: z.number().min(0.01, "Amount must be greater than 0"),
-    currency: z.enum(CURRENCY_CODES),
-    description: z.string().max(512).optional(),
-    category: z.string().max(100).optional(),
-    expenseDate: z.date(),
-    splitMethod: z.enum(["equal", "percentage", "custom"]),
-    splits: z
-      .array(
-        z.object({
-          groupMemberId: z.number(),
-          amount: z.number(),
-          percentage: z.number().nullable(),
-        }),
-      )
-      .min(1, "At least one person must be included"),
-  })
-  .refine(
-    (data) => {
-      const validation = validateSplits(
-        data.splits,
-        data.amount,
-        data.splitMethod,
-      );
-      return validation.isValid;
-    },
-    {
-      message: "Split amounts are invalid",
-      path: ["splits"],
-    },
-  );
-
-export const isCurrencyCode = (
-  code: string,
-): code is (typeof CURRENCY_CODES)[number] => {
-  return CURRENCY_CODES.includes(code as (typeof CURRENCY_CODES)[number]);
-};
-
-type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
+// Re-export for use by other components
+export { isCurrencyCode };
 
 interface ExpenseFormProps {
   group: GroupWithAccess;
@@ -120,12 +82,12 @@ export function ExpenseForm({
   const isEditMode = !!expense;
   const totalSteps = 3; // Amount & Basic Info → Splits → Review
 
-  const form = useForm({
+  const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       paidByGroupMemberId:
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,
-      amount: expense ? expense.amountInCents / 100 : 0,
+      amountInCents: expense?.amountInCents ?? 0,
       currency:
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
@@ -137,7 +99,7 @@ export function ExpenseForm({
       splits:
         expense?.expenseSplits.map((split) => ({
           groupMemberId: split.groupMemberId,
-          amount: split.amountInCents / 100,
+          amountInCents: split.amountInCents,
           percentage: split.percentage,
         })) ?? [],
     },
@@ -203,26 +165,35 @@ export function ExpenseForm({
   );
 
   const onSubmit = (values: ExpenseFormValues) => {
+    // Data is already in cents, prepare splits for API
     const splits = values.splits.map((split) => {
       if (values.splitMethod === "equal") {
-        const equalAmount = values.amount / values.splits.length;
+        // Calculate equal split amounts
+        const equalAmountCents = Math.round(
+          values.amountInCents / values.splits.length,
+        );
         return {
           groupMemberId: split.groupMemberId,
-          amountInCents: decimalToCents(equalAmount),
+          amountInCents: equalAmountCents,
+          percentage: null,
         };
       }
       if (values.splitMethod === "percentage") {
-        const percentageAmount =
-          ((split.percentage ?? 0) / 100) * values.amount;
+        // Convert basis points to amount
+        const amountCents = Math.round(
+          ((split.percentage ?? 0) / 10000) * values.amountInCents,
+        );
         return {
           groupMemberId: split.groupMemberId,
-          amountInCents: decimalToCents(percentageAmount),
-          percentage: Math.round((split.percentage ?? 0) * 100), // Convert to basis points
+          amountInCents: amountCents,
+          percentage: split.percentage,
         };
       }
+      // Custom - use the amount directly
       return {
         groupMemberId: split.groupMemberId,
-        amountInCents: decimalToCents(split.amount),
+        amountInCents: split.amountInCents,
+        percentage: null,
       };
     });
 
@@ -230,7 +201,7 @@ export function ExpenseForm({
       updateExpenseMutation.mutate({
         expenseId: expense.id,
         paidByGroupMemberId: values.paidByGroupMemberId,
-        amountInCents: decimalToCents(values.amount),
+        amountInCents: values.amountInCents,
         currency: values.currency,
         description: values.description,
         category: values.category,
@@ -241,7 +212,7 @@ export function ExpenseForm({
       createExpenseMutation.mutate({
         groupId: group.id,
         paidByGroupMemberId: values.paidByGroupMemberId,
-        amountInCents: decimalToCents(values.amount),
+        amountInCents: values.amountInCents,
         currency: values.currency,
         description: values.description,
         category: values.category,
@@ -258,7 +229,7 @@ export function ExpenseForm({
     if (currentStep === 1) {
       fieldsToValidate = [
         "paidByGroupMemberId",
-        "amount",
+        "amountInCents",
         "currency",
         "expenseDate",
       ];
@@ -268,9 +239,10 @@ export function ExpenseForm({
 
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
-      const splits = calculateEvenPercentageAmount(
-        group.groupMembers,
-        form.getValues("amount"),
+      const memberIds = group.groupMembers.map((m) => m.id);
+      const splits = calculateEvenSplitAmounts(
+        memberIds,
+        form.getValues("amountInCents"),
       );
       form.setValue("splits", splits);
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
@@ -281,7 +253,7 @@ export function ExpenseForm({
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const amount = form.watch("amount");
+  const amountInCents = form.watch("amountInCents");
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
 
@@ -328,7 +300,7 @@ export function ExpenseForm({
                   <CardContent className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="amount"
+                      name="amountInCents"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Amount</FormLabel>
@@ -360,13 +332,16 @@ export function ExpenseForm({
                                 step="0.01"
                                 min="0.01"
                                 placeholder="0.00"
-                                {...field}
-                                value={field.value || ""}
-                                onChange={(e) =>
-                                  field.onChange(
-                                    parseFloat(e.target.value) || 0,
-                                  )
+                                value={
+                                  field.value
+                                    ? centsToDecimal(field.value).toFixed(2)
+                                    : ""
                                 }
+                                onChange={(e) => {
+                                  const decimalValue =
+                                    parseFloat(e.target.value) || 0;
+                                  field.onChange(decimalToCents(decimalValue));
+                                }}
                                 className="flex-1"
                               />
                             </div>
@@ -471,7 +446,7 @@ export function ExpenseForm({
             )}
 
             {/* Step 2: Splits */}
-            {currentStep === 2 && amount > 0 && (
+            {currentStep === 2 && amountInCents > 0 && (
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -487,7 +462,7 @@ export function ExpenseForm({
                 <SplitEditor
                   form={form}
                   groupMembers={group.groupMembers}
-                  totalAmount={amount}
+                  totalAmountCents={amountInCents}
                   currency={form.watch("currency")}
                   splitMethod={splitMethod}
                   onSplitMethodChange={(method) => {
@@ -512,7 +487,10 @@ export function ExpenseForm({
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Amount:</span>
                       <span className="font-semibold">
-                        {form.watch("currency")} {amount.toFixed(2)}
+                        {formatCurrencyFromCents(
+                          amountInCents,
+                          form.watch("currency"),
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -586,7 +564,7 @@ export function ExpenseForm({
                 <Button
                   type="button"
                   onClick={handleNext}
-                  disabled={isPending || amount <= 0}
+                  disabled={isPending || amountInCents <= 0}
                   className="flex-1"
                 >
                   Next

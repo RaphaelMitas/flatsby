@@ -4,10 +4,9 @@ import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
 import { Calendar, Users } from "lucide-react";
 
+import { formatCurrencyFromCents } from "@flatsby/validators/expense";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Card } from "@flatsby/ui/card";
-
-import { formatCurrencyFromCents } from "./ExpenseUtils";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;

@@ -1,44 +1,48 @@
+import type {
+  ExpenseSplit,
+  GroupDebtSummary,
+} from "@flatsby/validators/expense";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
 import { and, eq } from "@flatsby/db";
 import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
-
-import type { GroupDebtSummary } from "../types";
-import { withErrorHandlingAsResult } from "../errors";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
-  DbUtils,
-  ExpenseUtils,
-  GroupUtils,
-  OperationUtils,
-  safeDbOperation,
-} from "../utils";
+  calculateDebts,
+  createExpenseSchema,
+  updateExpenseSchema,
+  validateExpenseSplitsStrict,
+} from "@flatsby/validators/expense";
 
-// ISO 4217 currency codes (common ones)
-const CURRENCY_CODES = ["EUR", "USD", "GBP"] as const;
+import type { ApiError } from "../errors";
+import { fail, withErrorHandlingAsResult } from "../errors";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { DbUtils, GroupUtils, OperationUtils, safeDbOperation } from "../utils";
 
-const expenseSplitSchema = z.object({
-  groupMemberId: z.number(),
-  amountInCents: z.number().int().min(1),
-  percentage: z.number().int().min(0).max(10000).optional(), // basis points (0-10000 = 0-100%)
-});
+/**
+ * Wrapper to convert validateExpenseSplitsStrict result to Effect
+ */
+function validateExpenseSplitsEffect(
+  expenseAmountInCents: number,
+  splits: { amountInCents: number }[],
+  isSettlement: boolean,
+): Effect.Effect<void, ApiError> {
+  const result = validateExpenseSplitsStrict(
+    expenseAmountInCents,
+    splits,
+    isSettlement,
+  );
+
+  if (result.valid) {
+    return Effect.succeed(undefined);
+  }
+
+  return fail.validation("splits", result.error, result.userMessage);
+}
 
 export const expenseRouter = createTRPCRouter({
   createExpense: protectedProcedure
-    .input(
-      z.object({
-        groupId: z.number(),
-        paidByGroupMemberId: z.number(),
-        amountInCents: z.number().int().min(1),
-        currency: z.enum(CURRENCY_CODES),
-        description: z.string().max(512).optional(),
-        category: z.string().max(100).optional(),
-        expenseDate: z.date().optional(),
-        splits: z.array(expenseSplitSchema).min(1),
-        isSettlement: z.boolean(),
-      }),
-    )
+    .input(createExpenseSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -51,7 +55,7 @@ export const expenseRouter = createTRPCRouter({
           () =>
             Effect.flatMap(
               // Validate splits sum to expense amount
-              ExpenseUtils.validateExpenseSplits(
+              validateExpenseSplitsEffect(
                 input.amountInCents,
                 input.splits,
                 input.isSettlement,
@@ -140,18 +144,7 @@ export const expenseRouter = createTRPCRouter({
     }),
 
   updateExpense: protectedProcedure
-    .input(
-      z.object({
-        expenseId: z.number(),
-        paidByGroupMemberId: z.number().optional(),
-        amountInCents: z.number().int().min(1).optional(),
-        currency: z.enum(CURRENCY_CODES).optional(),
-        description: z.string().max(512).optional().nullable(),
-        category: z.string().max(100).optional().nullable(),
-        expenseDate: z.date().optional(),
-        splits: z.array(expenseSplitSchema).min(1).optional(),
-      }),
-    )
+    .input(updateExpenseSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -183,13 +176,13 @@ export const expenseRouter = createTRPCRouter({
                 Effect.flatMap(
                   // If updating splits, validate they sum correctly
                   input.splits && input.amountInCents
-                    ? ExpenseUtils.validateExpenseSplits(
+                    ? validateExpenseSplitsEffect(
                         input.amountInCents,
                         input.splits,
                         expense.isSettlement,
                       )
                     : input.splits && !input.amountInCents
-                      ? ExpenseUtils.validateExpenseSplits(
+                      ? validateExpenseSplitsEffect(
                           expense.amountInCents,
                           input.splits,
                           expense.isSettlement,
@@ -522,8 +515,8 @@ export const expenseRouter = createTRPCRouter({
           return result;
         }
 
-        // Calculate debts
-        const debtSummary = ExpenseUtils.calculateDebts(result.data);
+        // Calculate debts using imported function
+        const debtSummary = calculateDebts(result.data);
         return { success: true as const, data: debtSummary };
       });
     }),
@@ -587,7 +580,7 @@ export const expenseRouter = createTRPCRouter({
         }
 
         // Calculate debts and filter for this member
-        const debtSummary = ExpenseUtils.calculateDebts(result.data);
+        const debtSummary = calculateDebts(result.data);
         const memberBalances =
           debtSummary.memberBalances[input.groupMemberId] ?? {};
         const memberDebts: GroupDebtSummary["currencies"] = {};
@@ -657,8 +650,8 @@ export const expenseRouter = createTRPCRouter({
           return result;
         }
 
-        // Calculate debts
-        const debtSummary = ExpenseUtils.calculateDebts(result.data);
+        // Calculate debts using imported function
+        const debtSummary = calculateDebts(result.data);
         return { success: true as const, data: debtSummary };
       });
     }),

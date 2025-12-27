@@ -9,7 +9,7 @@ export default async function DebtsPage(props: {
 
   // Prefetch debt summary and group data
   prefetch(trpc.expense.getDebtSummary.queryOptions({ groupId }));
-  prefetch(trpc.shoppingList.getGroup.queryOptions({ groupId }));
+  prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
 
   return (
     <HydrateClient>

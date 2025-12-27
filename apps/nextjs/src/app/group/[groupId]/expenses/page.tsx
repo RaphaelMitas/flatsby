@@ -10,7 +10,7 @@ export default async function ExpensesPage(props: {
 
   // Prefetch initial expenses and group data
   prefetch(trpc.expense.getGroupExpenses.queryOptions({ groupId, limit: 20 }));
-  prefetch(trpc.shoppingList.getGroup.queryOptions({ groupId }));
+  prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
 
   return (
     <HydrateClient>

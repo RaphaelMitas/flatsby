@@ -128,22 +128,12 @@ export type ExpenseWithSplitsAndMembers = Expense & {
   expenseSplits: ExpenseSplitWithMember[];
 };
 
-export interface DebtEntry {
-  fromGroupMemberId: number;
-  toGroupMemberId: number;
-  amountInCents: number;
-  currency: string;
-}
-
-export interface DebtSummary {
-  debts: DebtEntry[];
-  currency: string;
-}
-
-export interface GroupDebtSummary {
-  currencies: Record<string, DebtSummary>;
-  memberBalances: Record<number, Record<string, number>>; // groupMemberId -> currency -> balance in cents
-}
+// Re-export expense-related types from validators
+export type {
+  DebtEntry,
+  DebtSummary,
+  GroupDebtSummary,
+} from "@flatsby/validators/expense";
 
 // Utility types for database operations
 export type DatabaseOperation<T> = () => Promise<T>;
