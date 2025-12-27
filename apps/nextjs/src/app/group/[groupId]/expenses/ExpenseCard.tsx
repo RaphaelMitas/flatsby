@@ -4,9 +4,9 @@ import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
 import { Calendar, Users } from "lucide-react";
 
-import { formatCurrencyFromCents } from "@flatsby/validators/expense";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Card } from "@flatsby/ui/card";
+import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -16,10 +16,10 @@ interface ExpenseCardProps {
 export function ExpenseCard({ expense, groupId }: ExpenseCardProps) {
   const splitCount = expense.expenseSplits.length;
   const paidByName = expense.paidByGroupMember.user.name;
-  const formattedAmount = formatCurrencyFromCents(
-    expense.amountInCents,
-    expense.currency,
-  );
+  const formattedAmount = formatCurrencyFromCents({
+    cents: expense.amountInCents,
+    currency: expense.currency,
+  });
   const expenseDate = new Date(expense.expenseDate);
   const formattedDate = expenseDate.toLocaleDateString("en-US", {
     month: "short",

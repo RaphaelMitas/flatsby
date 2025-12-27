@@ -1,18 +1,15 @@
-import type {
-  ExpenseSplit,
-  GroupDebtSummary,
-} from "@flatsby/validators/expense";
+import type { GroupDebtSummary } from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
 import { and, eq } from "@flatsby/db";
 import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
+import { calculateDebts } from "@flatsby/validators/expenses/debt";
 import {
-  calculateDebts,
   createExpenseSchema,
   updateExpenseSchema,
-  validateExpenseSplitsStrict,
-} from "@flatsby/validators/expense";
+} from "@flatsby/validators/expenses/schemas";
+import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
 
 import type { ApiError } from "../errors";
 import { fail, withErrorHandlingAsResult } from "../errors";
@@ -112,7 +109,7 @@ export const expenseRouter = createTRPCRouter({
                                   currency: input.currency,
                                   description: input.description,
                                   category: input.category,
-                                  expenseDate: input.expenseDate ?? new Date(),
+                                  expenseDate: input.expenseDate,
                                   createdByGroupMemberId:
                                     currentUserGroupMember.id,
                                   isSettlement: input.isSettlement,

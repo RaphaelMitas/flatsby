@@ -116,10 +116,10 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
                 <CardContent>
                   <div className="space-y-3">
                     {currencyDebts.debts.map((debt, index) => {
-                      const formattedAmount = formatCurrencyFromCents(
-                        debt.amountInCents,
+                      const formattedAmount = formatCurrencyFromCents({
+                        cents: debt.amountInCents,
                         currency,
-                      );
+                      });
 
                       return (
                         <div
@@ -191,10 +191,10 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
                       </div>
                       <div className="ml-4 space-y-1">
                         {Object.entries(balances).map(([currency, balance]) => {
-                          const formattedBalance = formatCurrencyFromCents(
-                            balance,
+                          const formattedBalance = formatCurrencyFromCents({
+                            cents: balance,
                             currency,
-                          );
+                          });
                           const isPositive = balance > 0;
                           const isZero = balance === 0;
 

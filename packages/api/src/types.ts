@@ -133,7 +133,7 @@ export type {
   DebtEntry,
   DebtSummary,
   GroupDebtSummary,
-} from "@flatsby/validators/expense";
+} from "@flatsby/validators/expenses/types";
 
 // Utility types for database operations
 export type DatabaseOperation<T> = () => Promise<T>;

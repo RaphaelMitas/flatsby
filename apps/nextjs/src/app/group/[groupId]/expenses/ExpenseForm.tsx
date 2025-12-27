@@ -4,7 +4,7 @@ import type {
   ExpenseWithSplitsAndMembers,
   GroupWithAccess,
 } from "@flatsby/api";
-import type { ExpenseFormValues } from "@flatsby/validators/expense";
+import type { ExpenseFormValues } from "@flatsby/validators/expenses/schemas";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -44,20 +44,23 @@ import {
 } from "@flatsby/ui/sheet";
 import { toast } from "@flatsby/ui/toast";
 import {
-  calculateEvenSplitAmounts,
   centsToDecimal,
-  CURRENCY_CODES,
   decimalToCents,
-  expenseFormSchema,
-  formatCurrencyFromCents,
+} from "@flatsby/validators/expenses/conversion";
+import {
+  calculateEvenPercentageBasisPoints,
+  distributeEqualAmounts,
+  distributePercentageAmounts,
+} from "@flatsby/validators/expenses/distribution";
+import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import { expenseFormSchema } from "@flatsby/validators/expenses/schemas";
+import {
+  CURRENCY_CODES,
   isCurrencyCode,
-} from "@flatsby/validators/expense";
+} from "@flatsby/validators/expenses/types";
 
 import { useTRPC } from "~/trpc/react";
 import { SplitEditor } from "./SplitEditor";
-
-// Re-export for use by other components
-export { isCurrencyCode };
 
 interface ExpenseFormProps {
   group: GroupWithAccess;
@@ -80,7 +83,7 @@ export function ExpenseForm({
   >("equal");
 
   const isEditMode = !!expense;
-  const totalSteps = 3; // Amount & Basic Info → Splits → Review
+  const totalSteps = 3;
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -165,37 +168,27 @@ export function ExpenseForm({
   );
 
   const onSubmit = (values: ExpenseFormValues) => {
-    // Data is already in cents, prepare splits for API
-    const splits = values.splits.map((split) => {
-      if (values.splitMethod === "equal") {
-        // Calculate equal split amounts
-        const equalAmountCents = Math.round(
-          values.amountInCents / values.splits.length,
-        );
-        return {
-          groupMemberId: split.groupMemberId,
-          amountInCents: equalAmountCents,
-          percentage: null,
-        };
-      }
-      if (values.splitMethod === "percentage") {
-        // Convert basis points to amount
-        const amountCents = Math.round(
-          ((split.percentage ?? 0) / 10000) * values.amountInCents,
-        );
-        return {
-          groupMemberId: split.groupMemberId,
-          amountInCents: amountCents,
-          percentage: split.percentage,
-        };
-      }
-      // Custom - use the amount directly
-      return {
+    let splits;
+
+    if (values.splitMethod === "equal") {
+      const memberIds = values.splits.map((s) => s.groupMemberId);
+      splits = distributeEqualAmounts(memberIds, values.amountInCents);
+    } else if (values.splitMethod === "percentage") {
+      const splitsWithPercentages = values.splits.map((s) => ({
+        groupMemberId: s.groupMemberId,
+        percentage: s.percentage ?? 0,
+      }));
+      splits = distributePercentageAmounts(
+        splitsWithPercentages,
+        values.amountInCents,
+      );
+    } else {
+      splits = values.splits.map((split) => ({
         groupMemberId: split.groupMemberId,
         amountInCents: split.amountInCents,
         percentage: null,
-      };
-    });
+      }));
+    }
 
     if (isEditMode) {
       updateExpenseMutation.mutate({
@@ -239,12 +232,52 @@ export function ExpenseForm({
 
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
-      const memberIds = group.groupMembers.map((m) => m.id);
-      const splits = calculateEvenSplitAmounts(
-        memberIds,
-        form.getValues("amountInCents"),
-      );
-      form.setValue("splits", splits);
+      if (currentStep === 1) {
+        const currentSplits = form.getValues("splits");
+        const amountCents = form.getValues("amountInCents");
+
+        if (currentSplits.length === 0) {
+          const memberIds = group.groupMembers.map((m) => m.id);
+          const initialSplits = distributeEqualAmounts(memberIds, amountCents);
+          form.setValue("splits", initialSplits);
+        } else if (splitMethod === "equal") {
+          const memberIds = currentSplits.map((s) => s.groupMemberId);
+          const updatedSplits = distributeEqualAmounts(memberIds, amountCents);
+          form.setValue("splits", updatedSplits);
+        } else if (splitMethod === "percentage") {
+          const hasPercentages = currentSplits.some(
+            (s) => s.percentage && s.percentage > 0,
+          );
+
+          if (hasPercentages) {
+            const splitsWithPercentages = currentSplits.map((s) => ({
+              groupMemberId: s.groupMemberId,
+              percentage: s.percentage ?? 0,
+            }));
+            const updatedSplits = distributePercentageAmounts(
+              splitsWithPercentages,
+              amountCents,
+            );
+            form.setValue("splits", updatedSplits);
+          } else {
+            const memberIds = currentSplits.map((s) => s.groupMemberId);
+            const percentages = calculateEvenPercentageBasisPoints(
+              memberIds.length,
+            );
+            const splitsWithPercentages = memberIds.map(
+              (groupMemberId, index) => ({
+                groupMemberId,
+                percentage: percentages[index] ?? 0,
+              }),
+            );
+            const updatedSplits = distributePercentageAmounts(
+              splitsWithPercentages,
+              amountCents,
+            );
+            form.setValue("splits", updatedSplits);
+          }
+        }
+      }
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     }
   };
@@ -271,7 +304,6 @@ export function ExpenseForm({
             onSubmit={form.handleSubmit((values) => onSubmit(values))}
             className="mt-6 space-y-6"
           >
-            {/* Step Indicator */}
             <div className="text-muted-foreground flex items-center justify-between text-sm">
               <span>
                 Step {currentStep} of {totalSteps}
@@ -288,7 +320,6 @@ export function ExpenseForm({
               </div>
             </div>
 
-            {/* Step 1: Amount & Basic Info */}
             {currentStep === 1 && (
               <div className="space-y-4">
                 <Card>
@@ -445,7 +476,6 @@ export function ExpenseForm({
               </div>
             )}
 
-            {/* Step 2: Splits */}
             {currentStep === 2 && amountInCents > 0 && (
               <div className="space-y-4">
                 <FormField
@@ -473,7 +503,6 @@ export function ExpenseForm({
               </div>
             )}
 
-            {/* Step 3: Review */}
             {currentStep === 3 && (
               <div className="space-y-4">
                 <Card>
@@ -487,10 +516,10 @@ export function ExpenseForm({
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Amount:</span>
                       <span className="font-semibold">
-                        {formatCurrencyFromCents(
-                          amountInCents,
-                          form.watch("currency"),
-                        )}
+                        {formatCurrencyFromCents({
+                          cents: amountInCents,
+                          currency: form.watch("currency"),
+                        })}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -526,7 +555,6 @@ export function ExpenseForm({
               </div>
             )}
 
-            {/* Error Display */}
             {(createExpenseMutation.isError ||
               updateExpenseMutation.isError ||
               createExpenseMutation.data?.success === false ||
@@ -546,7 +574,6 @@ export function ExpenseForm({
               </Alert>
             )}
 
-            {/* Navigation Buttons */}
             <div className="flex gap-2 border-t pt-4">
               {currentStep > 1 && (
                 <Button

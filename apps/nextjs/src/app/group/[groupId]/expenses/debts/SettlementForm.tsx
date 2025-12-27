@@ -174,7 +174,7 @@ export function SettlementForm({
                   Outstanding debt
                 </p>
                 <p className="text-2xl font-bold">
-                  {formatCurrencyFromCents(amountInCents, currency)}
+                  {formatCurrencyFromCents({ cents: amountInCents, currency })}
                 </p>
               </div>
             </div>
@@ -209,7 +209,11 @@ export function SettlementForm({
                     </div>
                   </FormControl>
                   <p className="text-muted-foreground text-xs">
-                    Maximum: {formatCurrencyFromCents(amountInCents, currency)}
+                    Maximum:{" "}
+                    {formatCurrencyFromCents({
+                      cents: amountInCents,
+                      currency,
+                    })}
                   </p>
                   <FormMessage />
                 </FormItem>

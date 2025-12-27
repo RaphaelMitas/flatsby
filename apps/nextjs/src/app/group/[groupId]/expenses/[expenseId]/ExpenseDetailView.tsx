@@ -94,10 +94,10 @@ export function ExpenseDetailView({
   }
 
   const expense = expenseData.data;
-  const formattedAmount = formatCurrencyFromCents(
-    expense.amountInCents,
-    expense.currency,
-  );
+  const formattedAmount = formatCurrencyFromCents({
+    cents: expense.amountInCents,
+    currency: expense.currency,
+  });
   const expenseDate = new Date(expense.expenseDate);
   const formattedDate = expenseDate.toLocaleDateString("en-US", {
     weekday: "long",
@@ -226,10 +226,10 @@ export function ExpenseDetailView({
           <div className="space-y-3">
             {expense.expenseSplits.map((split, index) => {
               const member = split.groupMember;
-              const splitAmount = formatCurrencyFromCents(
-                split.amountInCents,
-                expense.currency,
-              );
+              const splitAmount = formatCurrencyFromCents({
+                cents: split.amountInCents,
+                currency: expense.currency,
+              });
               const percentage =
                 (split.amountInCents / expense.amountInCents) * 100;
 
