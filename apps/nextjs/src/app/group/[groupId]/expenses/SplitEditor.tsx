@@ -24,12 +24,8 @@ import {
   FormItem,
   FormMessage,
 } from "@flatsby/ui/form";
-import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
-import {
-  centsToDecimal,
-  decimalToCents,
-} from "@flatsby/validators/expenses/conversion";
+import { decimalToCents } from "@flatsby/validators/expenses/conversion";
 import {
   derivePercentagesFromAmounts,
   distributeEqualAmounts,
@@ -37,6 +33,8 @@ import {
 } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { validateSplits } from "@flatsby/validators/expenses/validation";
+
+import { CurrencyInput } from "~/components/CurrencyInput";
 
 interface SplitEditorProps {
   form: UseFormReturn<ExpenseValues>;
@@ -153,27 +151,25 @@ export function SplitEditor({
     }
   };
 
-  const updateSplitAmount = (index: number, value: string) => {
+  const updateSplitAmount = (index: number, value: number) => {
     const currentSplits: ExpenseSplit[] = form.getValues("splits");
     const splitAtIndex = currentSplits[index];
     if (!splitAtIndex) return;
 
     if (splitMethod === "custom") {
-      // User enters decimal value, convert to cents
-      const decimalValue = parseFloat(value) || 0;
+      // Value is already in cents when coming from CurrencyInput
+      const cents =
+        typeof value === "number"
+          ? value
+          : decimalToCents(parseFloat(value) || 0);
       const updatedSplits = currentSplits.map((s, i) =>
-        i === index ? { ...s, amountInCents: decimalToCents(decimalValue) } : s,
+        i === index ? { ...s, amountInCents: cents } : s,
       );
       form.setValue("splits", updatedSplits, { shouldValidate: true });
     } else if (splitMethod === "percentage") {
-      // User enters percentage as decimal (e.g., 25.5 for 25.5%)
-      // Convert to basis points (25.5% = 2550 basis points)
-      const percentValue = parseFloat(value) || 0;
-      const basisPoints = Math.round(percentValue * 100);
-
       // Update the percentage for this split
       const updatedSplits = currentSplits.map((s, i) =>
-        i === index ? { ...s, percentage: basisPoints } : s,
+        i === index ? { ...s, percentage: value } : s,
       );
 
       // Use distributePercentageAmounts to ensure amounts sum correctly
@@ -323,25 +319,15 @@ export function SplitEditor({
                         <FormItem>
                           <FormControl>
                             <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                placeholder="0"
-                                value={
-                                  field.value
-                                    ? (field.value / 100).toFixed(2)
-                                    : ""
-                                }
-                                onChange={(e) => {
-                                  const percentValue =
-                                    parseFloat(e.target.value) || 0;
-                                  field.onChange(
-                                    Math.round(percentValue * 100),
-                                  );
-                                  updateSplitAmount(index, e.target.value);
+                              <CurrencyInput
+                                value={field.value ?? 0}
+                                onChange={(cents) => {
+                                  field.onChange(cents);
+                                  updateSplitAmount(index, cents);
                                 }}
+                                placeholder="0.00"
+                                min={0}
+                                max={10000}
                                 className="flex-1"
                               />
                               <span className="text-muted-foreground text-sm">
@@ -366,22 +352,15 @@ export function SplitEditor({
                               <span className="text-muted-foreground text-sm">
                                 {currency}
                               </span>
-                              <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                                value={
-                                  field.value
-                                    ? centsToDecimal(field.value).toFixed(2)
-                                    : ""
-                                }
-                                onChange={(e) => {
-                                  const decimalValue =
-                                    parseFloat(e.target.value) || 0;
-                                  field.onChange(decimalToCents(decimalValue));
-                                  updateSplitAmount(index, e.target.value);
+                              <CurrencyInput
+                                value={field.value}
+                                onChange={(cents) => {
+                                  field.onChange(cents);
+                                  updateSplitAmount(index, cents);
                                 }}
+                                placeholder="0.00"
+                                min={0}
+                                max={totalAmountCents}
                                 className="flex-1"
                               />
                             </div>

@@ -45,10 +45,6 @@ import {
 } from "@flatsby/ui/sheet";
 import { toast } from "@flatsby/ui/toast";
 import {
-  centsToDecimal,
-  decimalToCents,
-} from "@flatsby/validators/expenses/conversion";
-import {
   calculateEvenPercentageBasisPoints,
   distributeEqualAmounts,
   distributePercentageAmounts,
@@ -60,6 +56,7 @@ import {
   isCurrencyCode,
 } from "@flatsby/validators/expenses/types";
 
+import { CurrencyInput } from "~/components/CurrencyInput";
 import { useTRPC } from "~/trpc/react";
 import { SplitEditor } from "./SplitEditor";
 
@@ -578,21 +575,11 @@ export function ExpenseForm({
                                   </Select>
                                 )}
                               />
-                              <Input
-                                type="number"
-                                step="0.01"
-                                min="0.01"
+                              <CurrencyInput
+                                value={field.value}
+                                onChange={field.onChange}
                                 placeholder="0.00"
-                                value={
-                                  field.value
-                                    ? centsToDecimal(field.value).toFixed(2)
-                                    : ""
-                                }
-                                onChange={(e) => {
-                                  const decimalValue =
-                                    parseFloat(e.target.value) || 0;
-                                  field.onChange(decimalToCents(decimalValue));
-                                }}
+                                min={1}
                                 className="flex-1"
                               />
                             </div>

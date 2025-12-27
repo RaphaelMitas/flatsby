@@ -22,7 +22,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@flatsby/ui/form";
-import { Input } from "@flatsby/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -30,14 +29,11 @@ import {
   SheetTitle,
 } from "@flatsby/ui/sheet";
 import { toast } from "@flatsby/ui/toast";
-import {
-  centsToDecimal,
-  decimalToCents,
-} from "@flatsby/validators/expenses/conversion";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 
+import { CurrencyInput } from "~/components/CurrencyInput";
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
 
@@ -426,20 +422,12 @@ export function SettlementForm({
                   <FormControl>
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground">{currency}</span>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
+                      <CurrencyInput
+                        value={field.value}
+                        onChange={field.onChange}
                         placeholder="0.00"
-                        value={
-                          field.value
-                            ? centsToDecimal(field.value).toFixed(2)
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const decimalValue = parseFloat(e.target.value) || 0;
-                          field.onChange(decimalToCents(decimalValue));
-                        }}
+                        min={1}
+                        max={outstandingDebtInCents}
                         className="flex-1"
                       />
                     </div>
