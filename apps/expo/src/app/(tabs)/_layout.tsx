@@ -12,6 +12,7 @@ import { useShoppingStore } from "~/utils/shopping-store";
 const houseIcon = LucideIcon.getImageSourceSync("house", 20);
 const usersIcon = LucideIcon.getImageSourceSync("users", 20);
 const cartIcon = LucideIcon.getImageSourceSync("shopping-cart", 20);
+const receiptIcon = LucideIcon.getImageSourceSync("receipt", 20);
 const settingsIcon = LucideIcon.getImageSourceSync("settings", 20);
 
 //winter themed icons
@@ -54,6 +55,12 @@ export default function TabLayout() {
       void prefetch(
         trpc.shoppingList.getShoppingLists.queryOptions({
           groupId: selectedGroupId,
+        }),
+      );
+      void prefetch(
+        trpc.expense.getGroupExpenses.infiniteQueryOptions({
+          groupId: selectedGroupId,
+          limit: 20,
         }),
       );
     }
@@ -118,6 +125,14 @@ export default function TabLayout() {
                 ? () => cartIcon
                 : undefined,
           tabBarItemHidden: !selectedShoppingListId,
+        }}
+      />
+      <Tabs.Screen
+        name="expenses"
+        options={{
+          title: "Expenses",
+          tabBarIcon: receiptIcon ? () => receiptIcon : undefined,
+          tabBarItemHidden: !selectedGroupId,
         }}
       />
       <Tabs.Screen
