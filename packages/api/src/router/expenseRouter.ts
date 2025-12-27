@@ -1,7 +1,4 @@
-import type {
-  GroupDebtSummary,
-  SplitMethod,
-} from "@flatsby/validators/expenses/types";
+import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
@@ -525,96 +522,6 @@ export const expenseRouter = createTRPCRouter({
         // Calculate debts using imported function
         const debtSummary = calculateDebts(result.data);
         return { success: true as const, data: debtSummary };
-      });
-    }),
-
-  getMemberDebts: protectedProcedure
-    .input(
-      z.object({
-        groupId: z.number(),
-        groupMemberId: z.number(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        Effect.flatMap(
-          // Get group with access check
-          OperationUtils.getGroupWithAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            // Verify groupMemberId is in the group
-            Effect.flatMap(
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.groupMembers.findFirst({
-                    where: and(
-                      eq(groupMembers.id, input.groupMemberId),
-                      eq(groupMembers.groupId, input.groupId),
-                    ),
-                  }),
-                "group member",
-              ),
-              () =>
-                // Get all expenses and calculate debts
-                safeDbOperation(
-                  () =>
-                    ctx.db.query.expenses.findMany({
-                      where: eq(expenses.groupId, input.groupId),
-                      with: {
-                        expenseSplits: {
-                          columns: {
-                            groupMemberId: true,
-                            amountInCents: true,
-                          },
-                        },
-                      },
-                      columns: {
-                        paidByGroupMemberId: true,
-                        amountInCents: true,
-                        currency: true,
-                      },
-                    }),
-                  "fetch expenses for member debt calculation",
-                ),
-            ),
-        ),
-      ).then((result) => {
-        if (!result.success) {
-          return result;
-        }
-
-        // Calculate debts and filter for this member
-        const debtSummary = calculateDebts(result.data);
-        const memberBalances =
-          debtSummary.memberBalances[input.groupMemberId] ?? {};
-        const memberDebts: GroupDebtSummary["currencies"] = {};
-
-        for (const [currency, summary] of Object.entries(
-          debtSummary.currencies,
-        )) {
-          const memberDebtsForCurrency = summary.debts.filter(
-            (debt) =>
-              debt.fromGroupMemberId === input.groupMemberId ||
-              debt.toGroupMemberId === input.groupMemberId,
-          );
-          if (memberDebtsForCurrency.length > 0) {
-            memberDebts[currency] = {
-              debts: memberDebtsForCurrency,
-              currency,
-            };
-          }
-        }
-
-        return {
-          success: true as const,
-          data: {
-            currencies: memberDebts,
-            memberBalances: { [input.groupMemberId]: memberBalances },
-          },
-        };
       });
     }),
 
