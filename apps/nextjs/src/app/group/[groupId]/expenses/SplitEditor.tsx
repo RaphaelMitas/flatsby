@@ -1,8 +1,11 @@
 "use client";
 
 import type { GroupWithAccess } from "@flatsby/api";
-import type { ExpenseFormValues } from "@flatsby/validators/expenses/schemas";
-import type { ExpenseSplit } from "@flatsby/validators/expenses/types";
+import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
+import type {
+  ExpenseSplit,
+  SplitMethod,
+} from "@flatsby/validators/expenses/types";
 import type { UseFormReturn } from "react-hook-form";
 import { DollarSign, Equal, Percent } from "lucide-react";
 
@@ -36,12 +39,12 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 import { validateSplits } from "@flatsby/validators/expenses/validation";
 
 interface SplitEditorProps {
-  form: UseFormReturn<ExpenseFormValues>;
+  form: UseFormReturn<ExpenseValues>;
   groupMembers: GroupWithAccess["groupMembers"];
   totalAmountCents: number;
   currency: string;
-  splitMethod: "equal" | "percentage" | "custom";
-  onSplitMethodChange: (method: "equal" | "percentage" | "custom") => void;
+  splitMethod: Exclude<SplitMethod, "settlement">;
+  onSplitMethodChange: (method: Exclude<SplitMethod, "settlement">) => void;
 }
 
 export function SplitEditor({
@@ -58,7 +61,7 @@ export function SplitEditor({
   );
 
   const handleSplitMethodChange = (
-    newMethod: "equal" | "percentage" | "custom",
+    newMethod: Exclude<SplitMethod, "settlement">,
   ) => {
     const currentSplits = form.getValues("splits");
     const memberIds = currentSplits.map((s) => s.groupMemberId);

@@ -200,7 +200,7 @@ export function ExpenseDetailView({
                 </CardDescription>
               )}
             </div>
-            {expense.isSettlement && (
+            {expense.splitMethod === "settlement" && (
               <span className="bg-muted-foreground/20 text-muted-foreground rounded px-3 py-1 text-xs">
                 Settlement
               </span>
@@ -208,7 +208,7 @@ export function ExpenseDetailView({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {expense.isSettlement && expense.expenseSplits[0] && (
+          {expense.splitMethod === "settlement" && expense.expenseSplits[0] && (
             <>
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
@@ -249,7 +249,7 @@ export function ExpenseDetailView({
             </Avatar>
             <div>
               <p className="text-muted-foreground text-sm">
-                {expense.isSettlement ? "To" : "Paid by"}
+                {expense.splitMethod === "settlement" ? "To" : "Paid by"}
               </p>
               <p className="font-semibold">
                 {expense.paidByGroupMember.user.name}
@@ -279,7 +279,7 @@ export function ExpenseDetailView({
         </CardContent>
       </Card>
 
-      {!expense.isSettlement && (
+      {expense.splitMethod !== "settlement" && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -381,7 +381,7 @@ export function ExpenseDetailView({
       </AlertDialog>
 
       {showEditForm && groupData.success ? (
-        expense.isSettlement ? (
+        expense.splitMethod === "settlement" ? (
           <SettlementForm
             groupId={groupId}
             fromGroupMemberId={expense.paidByGroupMemberId}

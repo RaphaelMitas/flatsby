@@ -221,7 +221,9 @@ export const expenses = createTable("expenses", {
   createdByGroupMemberId: integer("createdByGroupMemberId")
     .notNull()
     .references(() => groupMembers.id),
-  isSettlement: boolean("is_settlement").default(false).notNull(),
+  splitMethod: varchar("split_method", { length: 20 })
+    .default("equal")
+    .notNull(),
 });
 
 export const expenseSplits = createTable("expense_splits", {

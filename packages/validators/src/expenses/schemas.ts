@@ -4,7 +4,7 @@
 
 import { z } from "zod/v4";
 
-import { CURRENCY_CODES } from "./types";
+import { CURRENCY_CODES, SPLIT_METHODS } from "./types";
 import { validateSplits } from "./validation";
 
 /**
@@ -18,58 +18,24 @@ export const expenseSplitSchema = z.object({
 });
 
 /**
- * Shared expense base fields - common between create and update
- */
-const expenseBaseFields = {
-  paidByGroupMemberId: z.number().min(1, "Please select who paid"),
-  amountInCents: z.number().int().min(1, "Amount must be greater than 0"),
-  currency: z.enum(CURRENCY_CODES),
-  description: z.string().max(512).optional(),
-  category: z.string().max(100).optional(),
-  expenseDate: z.date(),
-  splits: z
-    .array(expenseSplitSchema)
-    .min(1, "At least one person must be included"),
-};
-
-/**
- * Schema for creating a new expense - used by both client and API
- */
-export const createExpenseSchema = z.object({
-  ...expenseBaseFields,
-  groupId: z.number(),
-  isSettlement: z.boolean(),
-});
-
-export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
-
-/**
- * Schema for updating an expense - used by both client and API
- */
-export const updateExpenseSchema = z.object({
-  expenseId: z.number(),
-  paidByGroupMemberId: z.number().optional(),
-  amountInCents: z.number().int().min(1).optional(),
-  currency: z.enum(CURRENCY_CODES).optional(),
-  description: z.string().max(512).optional().nullable(),
-  category: z.string().max(100).optional().nullable(),
-  expenseDate: z.date().optional(),
-  splits: z.array(expenseSplitSchema).min(1).optional(),
-});
-
-export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
-
-/**
  * Split method enum
  */
-export const splitMethodSchema = z.enum(["equal", "percentage", "custom"]);
+export const splitMethodSchema = z.enum(SPLIT_METHODS);
 
 /**
- * Schema for expense form - extends base with splitMethod for UI
+ * Shared expense base fields - common between create and update
  */
-export const expenseFormSchema = z
+export const expenseSchema = z
   .object({
-    ...expenseBaseFields,
+    paidByGroupMemberId: z.number().min(1, "Please select who paid"),
+    amountInCents: z.number().int().min(1, "Amount must be greater than 0"),
+    currency: z.enum(CURRENCY_CODES),
+    description: z.string().max(512).optional(),
+    category: z.string().max(100).optional(),
+    expenseDate: z.date(),
+    splits: z
+      .array(expenseSplitSchema)
+      .min(1, "At least one person must be included"),
     splitMethod: splitMethodSchema,
   })
   .refine(
@@ -87,7 +53,25 @@ export const expenseFormSchema = z
     },
   );
 
-export type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
+export type ExpenseValues = z.infer<typeof expenseSchema>;
+
+/**
+ * Schema for creating a new expense - used by both client and API
+ */
+export const createExpenseSchema = expenseSchema.safeExtend({
+  groupId: z.number(),
+});
+
+export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
+
+/**
+ * Schema for updating an expense - used by both client and API
+ */
+export const updateExpenseSchema = expenseSchema.partial().safeExtend({
+  expenseId: z.number(),
+});
+
+export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
 
 /**
  * Schema for settlement form

@@ -4,7 +4,8 @@ import type {
   ExpenseWithSplitsAndMembers,
   GroupWithAccess,
 } from "@flatsby/api";
-import type { ExpenseFormValues } from "@flatsby/validators/expenses/schemas";
+import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
+import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -53,7 +54,7 @@ import {
   distributePercentageAmounts,
 } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import { expenseFormSchema } from "@flatsby/validators/expenses/schemas";
+import { expenseSchema } from "@flatsby/validators/expenses/schemas";
 import {
   CURRENCY_CODES,
   isCurrencyCode,
@@ -78,9 +79,6 @@ export function ExpenseForm({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
-  const [splitMethod, setSplitMethod] = useState<
-    "equal" | "percentage" | "custom"
-  >("equal");
 
   const isEditMode = !!expense;
   const totalSteps = 3;
@@ -97,8 +95,16 @@ export function ExpenseForm({
       })
     : undefined;
 
-  const form = useForm<ExpenseFormValues>({
-    resolver: zodResolver(expenseFormSchema),
+  // Determine the initial split method from the expense or default to "equal"
+  const initialSplitMethod: SplitMethod =
+    expense?.splitMethod === "equal" ||
+    expense?.splitMethod === "percentage" ||
+    expense?.splitMethod === "custom"
+      ? expense.splitMethod
+      : "equal";
+
+  const form = useForm<ExpenseValues>({
+    resolver: zodResolver(expenseSchema),
     defaultValues: {
       paidByGroupMemberId:
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,
@@ -110,7 +116,7 @@ export function ExpenseForm({
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),
-      splitMethod: "equal",
+      splitMethod: initialSplitMethod,
       splits:
         expense?.expenseSplits.map((split) => ({
           groupMemberId: split.groupMemberId,
@@ -119,6 +125,7 @@ export function ExpenseForm({
         })) ?? [],
     },
   });
+  const splitMethod = useWatch({ control: form.control, name: "splitMethod" });
 
   const createExpenseMutation = useMutation(
     trpc.expense.createExpense.mutationOptions({
@@ -164,7 +171,7 @@ export function ExpenseForm({
               category: input.category ?? null,
               expenseDate: input.expenseDate,
               createdByGroupMemberId: currentMember.id,
-              isSettlement: input.isSettlement,
+              splitMethod: input.splitMethod,
               createdAt: new Date(),
               updatedAt: new Date(),
               paidByGroupMember: paidByMember
@@ -369,7 +376,7 @@ export function ExpenseForm({
     }),
   );
 
-  const onSubmit = (values: ExpenseFormValues) => {
+  const onSubmit = (values: ExpenseValues) => {
     let splits;
 
     if (values.splitMethod === "equal") {
@@ -402,6 +409,7 @@ export function ExpenseForm({
         category: values.category,
         expenseDate: values.expenseDate,
         splits,
+        splitMethod: values.splitMethod,
       });
     } else {
       createExpenseMutation.mutate({
@@ -413,13 +421,13 @@ export function ExpenseForm({
         category: values.category,
         expenseDate: values.expenseDate,
         splits,
-        isSettlement: false,
+        splitMethod: values.splitMethod,
       });
     }
   };
 
   const handleNext = async () => {
-    let fieldsToValidate: (keyof ExpenseFormValues)[] = [];
+    let fieldsToValidate: (keyof ExpenseValues)[] = [];
 
     if (currentStep === 1) {
       fieldsToValidate = [
@@ -706,9 +714,10 @@ export function ExpenseForm({
                   groupMembers={group.groupMembers}
                   totalAmountCents={amountInCents}
                   currency={currency}
-                  splitMethod={splitMethod}
+                  splitMethod={
+                    splitMethod !== "settlement" ? splitMethod : "equal"
+                  }
                   onSplitMethodChange={(method) => {
-                    setSplitMethod(method);
                     form.setValue("splitMethod", method);
                   }}
                 />

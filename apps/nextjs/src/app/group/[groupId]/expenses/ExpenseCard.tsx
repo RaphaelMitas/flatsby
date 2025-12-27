@@ -2,7 +2,7 @@
 
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
-import { Calendar, Users } from "lucide-react";
+import { ArrowRight, Calendar, Users } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Card } from "@flatsby/ui/card";
@@ -32,14 +32,14 @@ export function ExpenseCard({ expense, groupId }: ExpenseCardProps) {
 
   return (
     <Link href={`/group/${groupId}/expenses/${expense.id}`}>
-      <Card className="bg-muted md:hover:bg-primary cursor-pointer p-4 transition-colors">
+      <Card className="bg-muted md:hover:bg-muted/80 cursor-pointer p-4 transition-colors">
         <div className="flex flex-col gap-3">
           {/* Header: Amount and Currency */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">{formattedAmount}</span>
-                {expense.isSettlement && (
+                {expense.splitMethod === "settlement" && (
                   <span className="bg-muted-foreground/20 text-muted-foreground rounded px-2 py-1 text-xs">
                     Settlement
                   </span>
@@ -56,6 +56,26 @@ export function ExpenseCard({ expense, groupId }: ExpenseCardProps) {
           {/* Details: Paid by, Split info, Date */}
           <div className="text-muted-foreground flex flex-col gap-2 text-sm">
             <div className="flex items-center gap-2">
+              {expense.splitMethod === "settlement" &&
+                expense.expenseSplits[0] &&
+                (() => {
+                  const groupMember = expense.expenseSplits[0].groupMember;
+                  return (
+                    <>
+                      <Avatar className="h-5 w-5">
+                        <AvatarImage
+                          alt={groupMember.user.name}
+                          src={groupMember.user.image ?? undefined}
+                        />
+                        <AvatarFallback className="text-xs">
+                          {groupMember.user.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{groupMember.user.name}</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  );
+                })()}
               <Avatar className="h-5 w-5">
                 <AvatarImage
                   alt={paidByName}
@@ -65,24 +85,17 @@ export function ExpenseCard({ expense, groupId }: ExpenseCardProps) {
                   {paidByName.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="truncate">Paid by {paidByName}</span>
+              <span className="truncate">
+                {`${expense.splitMethod === "settlement" ? "" : "Paid by "}${paidByName}`}
+              </span>
             </div>
 
-            {!expense.isSettlement && (
+            {expense.splitMethod !== "settlement" && (
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 <span>
                   Split between {splitCount}{" "}
                   {splitCount === 1 ? "person" : "people"}
-                </span>
-              </div>
-            )}
-
-            {expense.isSettlement && expense.expenseSplits[0] && (
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>
-                  Paid to {expense.expenseSplits[0].groupMember.user.name}
                 </span>
               </div>
             )}

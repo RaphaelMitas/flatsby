@@ -8,13 +8,13 @@ import { centsToDecimal } from "./conversion";
  * Format currency amount with currency symbol
  * @param params.amountDecimal - Amount in decimal (not cents)
  * @param params.currency - ISO 4217 currency code (e.g., "USD", "EUR")
- * @param params.locale - Locale to use for formatting (default: "de-DE")
+ * @param params.locale - Locale to use for formatting (default: "en-US")
  * @returns Formatted string (e.g., "$10.50" or "€10.50")
  */
 export function formatCurrency({
   amountDecimal,
   currency,
-  locale = "de-DE",
+  locale = "en-US",
 }: {
   amountDecimal: number;
   currency: string;
@@ -32,7 +32,7 @@ export function formatCurrency({
  * Format currency amount from cents
  * @param params.cents - Amount in cents
  * @param params.currency - ISO 4217 currency code
- * @param params.locale - Locale to use for formatting (default: "de-DE")
+ * @param params.locale - Locale to use for formatting (default: "en-US")
  * @returns Formatted string
  */
 export function formatCurrencyFromCents({

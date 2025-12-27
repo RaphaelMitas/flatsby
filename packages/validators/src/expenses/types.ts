@@ -1,11 +1,14 @@
 // ============================================================================
 // Types for Expense Distribution and Validation
 // ============================================================================
+export const SPLIT_METHODS = [
+  "equal",
+  "percentage",
+  "custom",
+  "settlement",
+] as const;
 
-/**
- * Split method types
- */
-export type SplitMethod = "equal" | "percentage" | "custom";
+export type SplitMethod = (typeof SPLIT_METHODS)[number];
 
 /**
  * Expense split with amount and optional percentage

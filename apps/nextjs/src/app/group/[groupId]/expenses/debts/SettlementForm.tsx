@@ -135,7 +135,7 @@ export function SettlementForm({
             category: null,
             expenseDate: input.expenseDate,
             createdByGroupMemberId: currentMember?.id ?? 0,
-            isSettlement: true,
+            splitMethod: "settlement",
             createdAt: new Date(),
             updatedAt: new Date(),
             paidByGroupMember: paidByMember
@@ -328,6 +328,7 @@ export function SettlementForm({
             percentage: null,
           },
         ],
+        splitMethod: "settlement",
       });
     } else {
       createSettlementMutation.mutate({
@@ -344,7 +345,7 @@ export function SettlementForm({
             percentage: null,
           },
         ],
-        isSettlement: true,
+        splitMethod: "settlement",
       });
     }
   };

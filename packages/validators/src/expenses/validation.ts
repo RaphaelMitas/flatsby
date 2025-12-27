@@ -16,7 +16,7 @@ import { formatCurrencyFromCents } from "./formatting";
  *
  * @param params.splits - Array of split objects with groupMemberId and amounts in cents
  * @param params.totalAmountCents - Total expense amount in cents
- * @param params.method - Split method: "equal", "percentage", or "custom"
+ * @param params.method - Split method: "equal", "percentage", "custom", or "settlement"
  * @returns Object with isValid boolean and error message if invalid
  */
 export function validateSplits({
@@ -47,6 +47,30 @@ export function validateSplits({
   // Check for negative amounts
   if (splits.some((s) => (s.amountInCents ?? 0) < 0)) {
     return { isValid: false, error: "Negative amounts are not allowed" };
+  }
+
+  // Settlement validation - must have exactly one recipient
+  if (method === "settlement") {
+    if (splits.length !== 1) {
+      return {
+        isValid: false,
+        error: "Settlement must have exactly one recipient",
+      };
+    }
+
+    const totalSplitCents = splits.reduce(
+      (sum, split) => sum + (split.amountInCents ?? 0),
+      0,
+    );
+
+    if (totalSplitCents !== totalAmountCents) {
+      return {
+        isValid: false,
+        error: `Split amount must equal ${formatCurrencyFromCents({ cents: totalAmountCents, currency: "EUR" })}`,
+      };
+    }
+
+    return { isValid: true };
   }
 
   if (method === "equal") {
@@ -124,16 +148,16 @@ export function validateSplits({
  *
  * @param expenseAmountInCents - Total expense amount in cents
  * @param splits - Array of splits with amountInCents
- * @param isSettlement - Whether this is a settlement (requires exactly 1 split)
+ * @param splitMethod - The split method used (settlement requires exactly 1 split)
  * @returns Validation result with error details if invalid
  */
 export function validateExpenseSplitsStrict(
   expenseAmountInCents: number,
   splits: { amountInCents: number }[],
-  isSettlement: boolean,
+  splitMethod: SplitMethod,
 ): StrictValidationResult {
   // Settlement validation
-  if (isSettlement) {
+  if (splitMethod === "settlement") {
     if (splits.length !== 1) {
       return {
         valid: false,
@@ -204,17 +228,8 @@ export function validateExpenseSplitsFull(params: {
   splits: ExpenseSplit[];
   totalAmountCents: number;
   method: SplitMethod;
-  isSettlement?: boolean;
 }): SplitValidationResult {
-  const { splits, totalAmountCents, method, isSettlement = false } = params;
-
-  // Settlement check
-  if (isSettlement && splits.length !== 1) {
-    return {
-      isValid: false,
-      error: "Settlement must have exactly one recipient",
-    };
-  }
+  const { splits, totalAmountCents, method } = params;
 
   // Unique member check
   const uniqueCheck = validateUniqueMemberIds(splits);
@@ -222,6 +237,6 @@ export function validateExpenseSplitsFull(params: {
     return uniqueCheck;
   }
 
-  // Method-specific validation
+  // Method-specific validation (includes settlement check)
   return validateSplits({ splits, totalAmountCents, method });
 }

@@ -1,4 +1,7 @@
-import type { GroupDebtSummary } from "@flatsby/validators/expenses/types";
+import type {
+  GroupDebtSummary,
+  SplitMethod,
+} from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
@@ -7,6 +10,7 @@ import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 import {
   createExpenseSchema,
+  splitMethodSchema,
   updateExpenseSchema,
 } from "@flatsby/validators/expenses/schemas";
 import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
@@ -22,12 +26,12 @@ import { DbUtils, GroupUtils, OperationUtils, safeDbOperation } from "../utils";
 function validateExpenseSplitsEffect(
   expenseAmountInCents: number,
   splits: { amountInCents: number }[],
-  isSettlement: boolean,
+  splitMethod: SplitMethod,
 ): Effect.Effect<void, ApiError> {
   const result = validateExpenseSplitsStrict(
     expenseAmountInCents,
     splits,
-    isSettlement,
+    splitMethod,
   );
 
   if (result.valid) {
@@ -55,7 +59,7 @@ export const expenseRouter = createTRPCRouter({
               validateExpenseSplitsEffect(
                 input.amountInCents,
                 input.splits,
-                input.isSettlement,
+                input.splitMethod,
               ),
               () =>
                 Effect.flatMap(
@@ -112,7 +116,7 @@ export const expenseRouter = createTRPCRouter({
                                   expenseDate: input.expenseDate,
                                   createdByGroupMemberId:
                                     currentUserGroupMember.id,
-                                  isSettlement: input.isSettlement,
+                                  splitMethod: input.splitMethod,
                                 })
                                 .returning();
 
@@ -176,13 +180,15 @@ export const expenseRouter = createTRPCRouter({
                     ? validateExpenseSplitsEffect(
                         input.amountInCents,
                         input.splits,
-                        expense.isSettlement,
+                        input.splitMethod ??
+                          splitMethodSchema.parse(expense.splitMethod),
                       )
                     : input.splits && !input.amountInCents
                       ? validateExpenseSplitsEffect(
                           expense.amountInCents,
                           input.splits,
-                          expense.isSettlement,
+                          input.splitMethod ??
+                            splitMethodSchema.parse(expense.splitMethod),
                         )
                       : Effect.succeed(undefined),
                   () =>
@@ -238,6 +244,9 @@ export const expenseRouter = createTRPCRouter({
                           }
                           if (input.expenseDate !== undefined) {
                             updateData.expenseDate = input.expenseDate;
+                          }
+                          if (input.splitMethod !== undefined) {
+                            updateData.splitMethod = input.splitMethod;
                           }
 
                           if (Object.keys(updateData).length > 0) {
