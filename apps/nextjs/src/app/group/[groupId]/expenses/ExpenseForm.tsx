@@ -9,7 +9,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, ArrowRight, LoaderCircle } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -286,7 +286,17 @@ export function ExpenseForm({
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const amountInCents = form.watch("amountInCents");
+  const amountInCents = useWatch({
+    control: form.control,
+    name: "amountInCents",
+  });
+  const currency = useWatch({ control: form.control, name: "currency" });
+  const paidByGroupMemberId = useWatch({
+    control: form.control,
+    name: "paidByGroupMemberId",
+  });
+  const description = useWatch({ control: form.control, name: "description" });
+  const splits = useWatch({ control: form.control, name: "splits" });
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
 
@@ -493,7 +503,7 @@ export function ExpenseForm({
                   form={form}
                   groupMembers={group.groupMembers}
                   totalAmountCents={amountInCents}
-                  currency={form.watch("currency")}
+                  currency={currency}
                   splitMethod={splitMethod}
                   onSplitMethodChange={(method) => {
                     setSplitMethod(method);
@@ -518,7 +528,7 @@ export function ExpenseForm({
                       <span className="font-semibold">
                         {formatCurrencyFromCents({
                           cents: amountInCents,
-                          currency: form.watch("currency"),
+                          currency: currency,
                         })}
                       </span>
                     </div>
@@ -526,28 +536,26 @@ export function ExpenseForm({
                       <span className="text-muted-foreground">Paid By:</span>
                       <span className="font-semibold">
                         {group.groupMembers.find(
-                          (m) => m.id === form.watch("paidByGroupMemberId"),
+                          (m) => m.id === paidByGroupMemberId,
                         )?.user.name ?? "Unknown"}
                       </span>
                     </div>
-                    {form.watch("description") && (
+                    {description && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">
                           Description:
                         </span>
                         <span className="text-right font-semibold">
-                          {form.watch("description")}
+                          {description}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Split:</span>
                       <span className="font-semibold">
-                        {form.watch("splits").length}{" "}
-                        {form.watch("splits").length === 1
-                          ? "person"
-                          : "people"}{" "}
-                        ({splitMethod})
+                        {splits.length}{" "}
+                        {splits.length === 1 ? "person" : "people"} (
+                        {splitMethod})
                       </span>
                     </div>
                   </CardContent>

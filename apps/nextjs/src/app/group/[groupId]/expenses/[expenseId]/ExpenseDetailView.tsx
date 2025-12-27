@@ -31,10 +31,11 @@ import {
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Separator } from "@flatsby/ui/separator";
 import { toast } from "@flatsby/ui/toast";
-import { formatCurrencyFromCents } from "@flatsby/validators/expense";
+import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
+import { SettlementForm } from "../debts/SettlementForm";
 import { ExpenseForm } from "../ExpenseForm";
 
 interface ExpenseDetailViewProps {
@@ -108,7 +109,6 @@ export function ExpenseDetailView({
 
   return (
     <div className="flex w-full max-w-prose flex-col gap-4">
-      {/* Header Actions */}
       <div className="flex items-center justify-between">
         <Button
           variant="ghost"
@@ -137,7 +137,6 @@ export function ExpenseDetailView({
         </div>
       </div>
 
-      {/* Expense Details */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
@@ -157,7 +156,6 @@ export function ExpenseDetailView({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Paid By */}
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
               <AvatarImage
@@ -180,7 +178,6 @@ export function ExpenseDetailView({
 
           <Separator />
 
-          {/* Date */}
           <div className="flex items-center gap-3">
             <Calendar className="text-muted-foreground h-5 w-5" />
             <div>
@@ -189,7 +186,6 @@ export function ExpenseDetailView({
             </div>
           </div>
 
-          {/* Category */}
           {expense.category && (
             <>
               <Separator />
@@ -200,7 +196,6 @@ export function ExpenseDetailView({
             </>
           )}
 
-          {/* Currency */}
           <Separator />
           <div>
             <p className="text-muted-foreground text-sm">Currency</p>
@@ -209,7 +204,6 @@ export function ExpenseDetailView({
         </CardContent>
       </Card>
 
-      {/* Splits */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -267,7 +261,6 @@ export function ExpenseDetailView({
         </CardContent>
       </Card>
 
-      {/* Created By */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
@@ -292,7 +285,6 @@ export function ExpenseDetailView({
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -315,15 +307,26 @@ export function ExpenseDetailView({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Form */}
-      {showEditForm && groupData.success && (
-        <ExpenseForm
-          group={groupData.data}
-          expense={expense}
-          onClose={() => setShowEditForm(false)}
-          open={showEditForm}
-        />
-      )}
+      {showEditForm && groupData.success ? (
+        expense.isSettlement ? (
+          <SettlementForm
+            groupId={groupId}
+            fromGroupMemberId={expense.paidByGroupMemberId}
+            toGroupMemberId={expense.createdByGroupMemberId}
+            currency={expense.currency}
+            amountInCents={expense.amountInCents}
+            onClose={() => setShowEditForm(false)}
+            open={showEditForm}
+          />
+        ) : (
+          <ExpenseForm
+            group={groupData.data}
+            expense={expense}
+            onClose={() => setShowEditForm(false)}
+            open={showEditForm}
+          />
+        )
+      ) : null}
     </div>
   );
 }

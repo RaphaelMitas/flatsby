@@ -1,7 +1,7 @@
 "use client";
 
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
-import type { GroupDebtSummary } from "@flatsby/validators/expense";
+import type { GroupDebtSummary } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@flatsby/ui/card";
 import { Separator } from "@flatsby/ui/separator";
-import { formatCurrencyFromCents } from "@flatsby/validators/expense";
+import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";

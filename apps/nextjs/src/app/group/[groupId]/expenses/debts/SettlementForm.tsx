@@ -1,6 +1,6 @@
 "use client";
 
-import type { SettlementFormValues } from "@flatsby/validators/expense";
+import type { SettlementFormValues } from "@flatsby/validators/expenses/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -32,10 +32,10 @@ import { toast } from "@flatsby/ui/toast";
 import {
   centsToDecimal,
   decimalToCents,
-  formatCurrencyFromCents,
-  isCurrencyCode,
-  settlementFormSchema,
-} from "@flatsby/validators/expense";
+} from "@flatsby/validators/expenses/conversion";
+import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
+import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
