@@ -31,6 +31,7 @@ build
 .DS_Store
 *.pem
 .vscode
+.cursor
 
 # debug
 npm-debug.log*

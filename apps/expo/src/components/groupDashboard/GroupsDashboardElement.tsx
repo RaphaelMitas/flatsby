@@ -3,7 +3,9 @@ import type React from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
 import { Text, View } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import ReanimatedSwipeable, {
+  SwipeDirection,
+} from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -18,7 +20,7 @@ import { useSwipeActions } from "../SwipeActions";
 
 interface Props {
   group: Extract<
-    RouterOutputs["shoppingList"]["getUserGroups"],
+    RouterOutputs["group"]["getUserGroups"],
     { success: true }
   >["data"][number];
 }
@@ -49,32 +51,27 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
     previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getUserGroups.queryKey(),
+      trpc.group.getUserGroups.queryKey(),
       previousGroups,
     );
   };
 
   const deleteGroupMutation = useMutation(
-    trpc.shoppingList.deleteGroup.mutationOptions({
+    trpc.group.deleteGroup.mutationOptions({
       onMutate: () => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
-        );
+        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
 
         const previousGroups = queryClient.getQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
+          trpc.group.getUserGroups.queryKey(),
         );
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              ...old,
-              data: old.data.filter((g) => g.id !== group.id),
-            };
-          },
-        );
+        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: old.data.filter((g) => g.id !== group.id),
+          };
+        });
 
         if (selectedGroupId === group.id) {
           clearSelectedGroup();
@@ -89,7 +86,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
+          trpc.group.getUserGroups.queryOptions(),
         );
       },
       onError: (error, variables, context) => {
@@ -101,7 +98,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
     swipeableRef.current?.close();
-    deleteGroupMutation.mutate({ groupId: group.id });
+    deleteGroupMutation.mutate({ id: group.id });
   };
 
   const handleCloseModal = () => {
@@ -126,17 +123,13 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         renderLeftActions={renderLeftActions}
         renderRightActions={renderRightActions}
         onSwipeableOpen={(direction) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-          if (direction === "right") {
+          if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
             setSelectedGroup(group.id, group.name);
-            router.push("/shoppingLists/edit-group");
+            router.push("/groups/edit-group");
           } else {
-            // Show delete action briefly, then close and open modal
-            setTimeout(() => {
-              swipeableRef.current?.close();
-              setShowDeleteModal(true);
-            }, 300); // Brief delay to show the red delete action
+            swipeableRef.current?.close();
+            setShowDeleteModal(true);
           }
         }}
       >

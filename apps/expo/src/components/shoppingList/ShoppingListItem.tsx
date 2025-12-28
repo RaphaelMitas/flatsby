@@ -1,15 +1,18 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
+import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
-import { Alert, Modal, Text, TouchableOpacity, View } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import { Modal, Text, TouchableOpacity, View } from "react-native";
+import ReanimatedSwipeable, {
+  SwipeDirection,
+} from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { ShoppingListItem as ShoppingListItemType } from "./ShoppingListUtils";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { getCategoryData } from "./ShoppingListCategory";
 import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
@@ -35,6 +38,7 @@ const ShoppingListItem = ({
   groupMembers,
 }: ShoppingListItemProps) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -154,18 +158,9 @@ const ShoppingListItem = ({
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      "Delete Item",
-      `Are you sure you want to delete "${item.name}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => deleteShoppingListItemMutation.mutate({ id: item.id }),
-        },
-      ],
-    );
+    setShowDeleteModal(false);
+    swipeableRef.current?.close();
+    deleteShoppingListItemMutation.mutate({ id: item.id });
   };
 
   const { renderLeftActions, renderRightActions } = useSwipeActions({
@@ -191,16 +186,12 @@ const ShoppingListItem = ({
         renderRightActions={renderRightActions}
         renderLeftActions={renderLeftActions}
         onSwipeableOpen={(direction) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-          if (direction === "right") {
+          if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
             handleEdit();
           } else {
-            // Show delete action briefly, then close and open modal
-            setTimeout(() => {
-              swipeableRef.current?.close();
-              handleDelete();
-            }, 300); // Brief delay to show the red delete action
+            swipeableRef.current?.close();
+            setShowDeleteModal(true);
           }
         }}
       >
@@ -284,6 +275,16 @@ const ShoppingListItem = ({
           </View>
         </TouchableOpacity>
       </Modal>
+
+      <DeleteConfirmationModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        itemName={item.name}
+        title="Delete Item"
+        description={`Are you sure you want to delete "${item.name}"?`}
+        needsConfirmationInput={false}
+      />
     </>
   );
 };

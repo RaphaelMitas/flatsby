@@ -23,6 +23,7 @@ const buttonVariants = tv({
       sm: "px-3 py-2",
       md: "px-4 py-3",
       lg: "px-4 py-3",
+      icon: "p-4",
     },
   },
   defaultVariants: {
@@ -67,7 +68,7 @@ const iconVariants = {
 
 interface ButtonProps
   extends PressableProps, VariantProps<typeof buttonVariants> {
-  title: string;
+  title?: string;
   icon?: IconProps["name"];
 }
 
@@ -99,15 +100,17 @@ const Button = React.forwardRef<
           }
         />
       )}
-      <Text
-        disabled={disabled ?? false}
-        className={buttonTextVariants({
-          variant: disabled ? "disabled" : variant,
-          size,
-        })}
-      >
-        {title}
-      </Text>
+      {title && size !== "icon" && (
+        <Text
+          disabled={disabled ?? false}
+          className={buttonTextVariants({
+            variant: disabled ? "disabled" : variant,
+            size,
+          })}
+        >
+          {title}
+        </Text>
+      )}
     </Pressable>
   );
 });

@@ -26,8 +26,8 @@ export default function GroupSettingsIndex() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: group } = useSuspenseQuery(
-    trpc.shoppingList.getGroup.queryOptions({
-      groupId: Number(selectedGroupId) || 0,
+    trpc.group.getGroup.queryOptions({
+      id: Number(selectedGroupId) || 0,
     }),
   );
 
@@ -35,32 +35,27 @@ export default function GroupSettingsIndex() {
     previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
   ) => {
     queryClient.setQueryData(
-      trpc.shoppingList.getUserGroups.queryKey(),
+      trpc.group.getUserGroups.queryKey(),
       previousGroups,
     );
   };
 
   const deleteGroupMutation = useMutation(
-    trpc.shoppingList.deleteGroup.mutationOptions({
+    trpc.group.deleteGroup.mutationOptions({
       onMutate: () => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
-        );
+        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
 
         const previousGroups = queryClient.getQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
+          trpc.group.getUserGroups.queryKey(),
         );
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getUserGroups.queryKey(),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              ...old,
-              data: old.data.filter((g) => g.id !== Number(selectedGroupId)),
-            };
-          },
-        );
+        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: old.data.filter((g) => g.id !== Number(selectedGroupId)),
+          };
+        });
         router.back();
 
         return { previousGroups };
@@ -72,7 +67,7 @@ export default function GroupSettingsIndex() {
         }
 
         void queryClient.invalidateQueries(
-          trpc.shoppingList.getUserGroups.queryOptions(),
+          trpc.group.getUserGroups.queryOptions(),
         );
       },
       onError: (error, variables, context) => {
@@ -83,8 +78,8 @@ export default function GroupSettingsIndex() {
 
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
-    deleteGroupMutation.mutate({ groupId: Number(selectedGroupId) });
-    router.replace("/groups");
+    deleteGroupMutation.mutate({ id: Number(selectedGroupId) });
+    router.replace("/(tabs)/groups");
   };
 
   const handleCloseModal = () => {
@@ -96,7 +91,7 @@ export default function GroupSettingsIndex() {
   }
 
   return (
-    <SafeAreaView className="bg-background flex-1">
+    <SafeAreaView>
       <ScrollView>
         <SettingsHeader title={group.data.name} />
 
@@ -106,14 +101,14 @@ export default function GroupSettingsIndex() {
             subtitle="Edit your group details"
             iconName="settings"
             onPress={() =>
-              router.push("/shoppingLists/edit-group/group-details")
+              router.push("/(tabs)/groups/edit-group/group-details")
             }
           />
           <SettingsItem
             title="Members"
             subtitle="Manage your group members"
             iconName="users"
-            onPress={() => router.push("/shoppingLists/edit-group/members")}
+            onPress={() => router.push("/(tabs)/groups/edit-group/members")}
           />
         </SettingsSection>
 
@@ -124,7 +119,7 @@ export default function GroupSettingsIndex() {
             iconName="arrow-left-right"
             onPress={() => {
               router.back();
-              router.push("/groups");
+              router.push("/(tabs)/groups");
             }}
           />
         </SettingsSection>

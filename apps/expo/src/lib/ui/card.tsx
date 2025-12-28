@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { tv } from "tailwind-variants";
 
 const cardVariants = tv({
-  base: "rounded-xl border bg-card shadow-sm",
+  base: "rounded-lg border border-border bg-card shadow-sm",
 });
 
 const cardHeaderVariants = tv({
@@ -11,7 +11,7 @@ const cardHeaderVariants = tv({
 });
 
 const cardTitleVariants = tv({
-  base: "font-semibold leading-none tracking-tight",
+  base: "text-foreground font-semibold leading-none tracking-tight",
 });
 
 const cardDescriptionVariants = tv({
