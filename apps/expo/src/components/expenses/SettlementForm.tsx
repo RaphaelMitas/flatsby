@@ -491,7 +491,7 @@ export function SettlementForm({
 
               {currentOutstandingDebts.length > 0 &&
                 currentOutstandingDebts.map((debt) => (
-                  <View className="bg-muted rounded-lg p-4">
+                  <View key={debt.currency} className="bg-muted rounded-lg p-4">
                     <Text className="text-muted-foreground mb-1 text-center text-sm">
                       Outstanding debt
                     </Text>

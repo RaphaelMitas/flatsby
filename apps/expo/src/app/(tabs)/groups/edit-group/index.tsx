@@ -79,7 +79,7 @@ export default function GroupSettingsIndex() {
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
     deleteGroupMutation.mutate({ id: Number(selectedGroupId) });
-    router.replace("/groups");
+    router.replace("/(tabs)/groups");
   };
 
   const handleCloseModal = () => {
@@ -100,13 +100,15 @@ export default function GroupSettingsIndex() {
             title="Group Details"
             subtitle="Edit your group details"
             iconName="settings"
-            onPress={() => router.push("/groups/edit-group/group-details")}
+            onPress={() =>
+              router.push("/(tabs)/groups/edit-group/group-details")
+            }
           />
           <SettingsItem
             title="Members"
             subtitle="Manage your group members"
             iconName="users"
-            onPress={() => router.push("/groups/edit-group/members")}
+            onPress={() => router.push("/(tabs)/groups/edit-group/members")}
           />
         </SettingsSection>
 
@@ -117,7 +119,7 @@ export default function GroupSettingsIndex() {
             iconName="arrow-left-right"
             onPress={() => {
               router.back();
-              router.push("/groups");
+              router.push("/(tabs)/groups");
             }}
           />
         </SettingsSection>
