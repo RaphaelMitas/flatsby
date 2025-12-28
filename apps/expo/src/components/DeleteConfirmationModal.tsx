@@ -21,6 +21,7 @@ interface Props {
   title?: string;
   description?: string;
   confirmationLabel?: string;
+  needsConfirmationInput?: boolean;
 }
 
 const DeleteConfirmationModal: React.FC<Props> = ({
@@ -31,6 +32,7 @@ const DeleteConfirmationModal: React.FC<Props> = ({
   title = "Delete Item",
   description,
   confirmationLabel,
+  needsConfirmationInput = true,
 }) => {
   const form = useForm<DeleteFormValues>({
     defaultValues: {
@@ -42,7 +44,9 @@ const DeleteConfirmationModal: React.FC<Props> = ({
     control: form.control,
     name: "confirmationInput",
   });
-  const isConfirmationValid = confirmationInput === itemName;
+  const isConfirmationValid = needsConfirmationInput
+    ? confirmationInput === itemName
+    : true;
 
   const handleConfirm = useCallback(() => {
     onConfirm();
@@ -78,29 +82,31 @@ const DeleteConfirmationModal: React.FC<Props> = ({
           </Text>
 
           <Form {...form}>
-            <View className="mb-6 gap-2">
-              <Text className="text-foreground text-sm font-medium">
-                Confirmation Required
-              </Text>
-              <Label className="text-muted-foreground mb-2 text-sm">
-                {confirmationLabel ?? defaultConfirmationLabel}
-              </Label>
-              <FormField
-                control={form.control}
-                name="confirmationInput"
-                render={({ field }) => (
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="Enter item name"
-                      className="w-full"
-                      value={field.value}
-                      onChangeText={field.onChange}
-                    />
-                  </FormControl>
-                )}
-              />
-            </View>
+            {needsConfirmationInput && (
+              <View className="mb-6 gap-2">
+                <Text className="text-foreground text-sm font-medium">
+                  Confirmation Required
+                </Text>
+                <Label className="text-muted-foreground mb-2 text-sm">
+                  {confirmationLabel ?? defaultConfirmationLabel}
+                </Label>
+                <FormField
+                  control={form.control}
+                  name="confirmationInput"
+                  render={({ field }) => (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Enter item name"
+                        className="w-full"
+                        value={field.value}
+                        onChangeText={field.onChange}
+                      />
+                    </FormControl>
+                  )}
+                />
+              </View>
+            )}
 
             <View className="flex-row gap-3">
               <Button

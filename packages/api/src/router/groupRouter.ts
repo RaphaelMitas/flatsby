@@ -1,7 +1,9 @@
 import { Effect } from "effect";
+import z from "zod/v4";
 
 import { alias, and, count, eq, inArray } from "@flatsby/db";
 import {
+  expenses,
   groupMembers,
   groups,
   shoppingListItems,
@@ -9,7 +11,9 @@ import {
   users,
 } from "@flatsby/db/schema";
 import {
+  activityItemSchema,
   addGroupMemberInputSchema,
+  getRecentActivityInputSchema,
   groupFormSchema,
   groupSchema,
   removeGroupMemberInputSchema,
@@ -17,7 +21,12 @@ import {
 } from "@flatsby/validators/group";
 
 import type { GroupMember, GroupMemberWithGroupMinimal, Role } from "../types";
-import { Errors, fail, withErrorHandlingAsResult } from "../errors";
+import {
+  Errors,
+  fail,
+  getApiResultZod,
+  withErrorHandlingAsResult,
+} from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   DbUtils,
@@ -461,6 +470,189 @@ export const groupRouter = createTRPCRouter({
                 return input.id;
               }, "delete group and all related data")(ctx.db),
               (id) => id,
+            ),
+        ),
+      );
+    }),
+
+  getRecentActivity: protectedProcedure
+    .input(getRecentActivityInputSchema)
+    .output(getApiResultZod(z.array(activityItemSchema)))
+    .query(async ({ ctx, input }) => {
+      return withErrorHandlingAsResult(
+        Effect.flatMap(
+          // Get group with access check
+          OperationUtils.getGroupWithAccess(
+            ctx.db,
+            input.groupId,
+            ctx.session.user.id,
+          ),
+          () =>
+            // Fetch recent activities
+            Effect.map(
+              safeDbOperation(async () => {
+                // Fetch recent expenses
+                const recentExpenses = await ctx.db.query.expenses.findMany({
+                  where: eq(expenses.groupId, input.groupId),
+                  limit: input.limit,
+                  orderBy: (expenses, { desc }) => [desc(expenses.createdAt)],
+                  with: {
+                    createdByGroupMember: {
+                      with: {
+                        user: {
+                          columns: { email: true, name: true, image: true },
+                        },
+                      },
+                    },
+                  },
+                  columns: {
+                    id: true,
+                    amountInCents: true,
+                    currency: true,
+                    description: true,
+                    createdAt: true,
+                  },
+                });
+
+                // Fetch shopping lists for this group
+                const groupShoppingLists =
+                  await ctx.db.query.shoppingLists.findMany({
+                    where: eq(shoppingLists.groupId, input.groupId),
+                    columns: { id: true },
+                  });
+
+                const shoppingListIds = groupShoppingLists.map(
+                  (list) => list.id,
+                );
+
+                // Fetch recent shopping list items (created or completed)
+                const recentShoppingItems =
+                  shoppingListIds.length > 0
+                    ? await ctx.db.query.shoppingListItems.findMany({
+                        where: inArray(
+                          shoppingListItems.shoppingListId,
+                          shoppingListIds,
+                        ),
+                        limit: input.limit * 2, // Get more to account for both created and completed
+                        orderBy: (items, { desc }) => [
+                          desc(items.completedAt),
+                          desc(items.createdAt),
+                        ],
+                        with: {
+                          createdByGroupMember: {
+                            with: {
+                              user: {
+                                columns: {
+                                  email: true,
+                                  name: true,
+                                  image: true,
+                                },
+                              },
+                            },
+                          },
+                          completedByGroupMember: {
+                            with: {
+                              user: {
+                                columns: {
+                                  email: true,
+                                  name: true,
+                                  image: true,
+                                },
+                              },
+                            },
+                          },
+                          shoppingList: {
+                            columns: {
+                              name: true,
+                            },
+                          },
+                        },
+                        columns: {
+                          id: true,
+                          name: true,
+                          createdAt: true,
+                          completedAt: true,
+                          completed: true,
+                        },
+                      })
+                    : [];
+
+                // Transform expenses to activity items
+                const expenseActivities = recentExpenses.map((expense) => ({
+                  type: "expense" as const,
+                  id: `expense-${expense.id}`,
+                  timestamp: expense.createdAt,
+                  user: expense.createdByGroupMember.user,
+                  data: {
+                    expenseId: expense.id,
+                    amountInCents: expense.amountInCents,
+                    currency: expense.currency,
+                    description: expense.description,
+                  },
+                }));
+
+                // Transform shopping list items to activity items
+                const shoppingActivities: {
+                  type: "shopping_item_created" | "shopping_item_completed";
+                  id: string;
+                  timestamp: Date;
+                  user: { email: string; name: string; image: string | null };
+                  data: {
+                    itemId: number;
+                    itemName: string;
+                    shoppingListName: string;
+                  };
+                }[] = [];
+
+                for (const item of recentShoppingItems) {
+                  // Add created activity
+                  if (item.createdByGroupMember) {
+                    shoppingActivities.push({
+                      type: "shopping_item_created",
+                      id: `shopping-item-created-${item.id}`,
+                      timestamp: item.createdAt,
+                      user: item.createdByGroupMember.user,
+                      data: {
+                        itemId: item.id,
+                        itemName: item.name,
+                        shoppingListName: item.shoppingList.name,
+                      },
+                    });
+                  }
+
+                  // Add completed activity if completed
+                  if (
+                    item.completed &&
+                    item.completedAt &&
+                    item.completedByGroupMember
+                  ) {
+                    shoppingActivities.push({
+                      type: "shopping_item_completed",
+                      id: `shopping-item-completed-${item.id}`,
+                      timestamp: item.completedAt,
+                      user: item.completedByGroupMember.user,
+                      data: {
+                        itemId: item.id,
+                        itemName: item.name,
+                        shoppingListName: item.shoppingList.name,
+                      },
+                    });
+                  }
+                }
+
+                // Combine and sort all activities by timestamp
+                const allActivities = z
+                  .array(activityItemSchema)
+                  .parse(
+                    [...expenseActivities, ...shoppingActivities].sort(
+                      (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
+                    ),
+                  );
+
+                // Return top N activities
+                return allActivities.slice(0, input.limit);
+              }, "fetch recent activity"),
+              (activities) => activities,
             ),
         ),
       );

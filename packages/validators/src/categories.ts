@@ -37,6 +37,8 @@ export const categorysIdWithAiAutoSelect = [
 export type CategoryIdWithAiAutoSelect =
   (typeof categorysIdWithAiAutoSelect)[number];
 
+export const categoryIdSchema = z.enum(categoryIds);
+
 export const categorysIdWithAiAutoSelectSchema = z.enum(
   categorysIdWithAiAutoSelect,
 );

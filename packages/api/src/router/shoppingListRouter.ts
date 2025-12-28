@@ -13,7 +13,7 @@ import {
   users,
 } from "@flatsby/db/schema";
 import {
-  categoryIds,
+  categoryIdSchema,
   isCategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 import {
@@ -811,7 +811,7 @@ export const shoppingList = createTRPCRouter({
         itemName: z.string(),
       }),
     )
-    .output(getApiResultZod(z.enum(categoryIds)))
+    .output(getApiResultZod(categoryIdSchema))
     .mutation(async ({ input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -830,7 +830,7 @@ const getItemCategory = async (itemName: string): Promise<CategoryId> => {
     const response = await generateObject({
       model: google("gemini-2.0-flash-exp"),
       schema: z.object({
-        category: z.enum(categoryIds),
+        category: categoryIdSchema,
       }),
       prompt: `Tell me the most appropriate category for this item: ${itemName}`,
     });

@@ -11,11 +11,13 @@ import { useShoppingStore } from "~/utils/shopping-store";
 
 const houseIcon = LucideIcon.getImageSourceSync("house", 20);
 const usersIcon = LucideIcon.getImageSourceSync("users", 20);
-const cartIcon = LucideIcon.getImageSourceSync("shopping-cart", 20);
+const shoppingBasketIcon = LucideIcon.getImageSourceSync("shopping-basket", 20);
+const shoppingCartIcon = LucideIcon.getImageSourceSync("shopping-cart", 20);
+const walletIcon = LucideIcon.getImageSourceSync("wallet", 20);
 const settingsIcon = LucideIcon.getImageSourceSync("settings", 20);
 
 //winter themed icons
-const winterUsersIcon = LucideIcon.getImageSourceSync("snowflake", 20);
+const winterHomeIcon = LucideIcon.getImageSourceSync("snowflake", 20);
 const winterCartIcon = LucideIcon.getImageSourceSync("gift", 20);
 
 export default function TabLayout() {
@@ -56,6 +58,12 @@ export default function TabLayout() {
           groupId: selectedGroupId,
         }),
       );
+      void prefetch(
+        trpc.expense.getGroupExpenses.infiniteQueryOptions({
+          groupId: selectedGroupId,
+          limit: 20,
+        }),
+      );
     }
 
     void prefetch(trpc.group.getUserGroups.queryOptions());
@@ -81,15 +89,19 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: houseIcon ? () => houseIcon : undefined,
-          tabBarItemHidden: true,
+          tabBarIcon:
+            isWinterEffectsEnabled && winterHomeIcon
+              ? () => winterHomeIcon
+              : houseIcon
+                ? () => houseIcon
+                : undefined,
         }}
       />
       <Tabs.Screen
         name="groups"
         options={{
           title: "Your Groups",
-          tabBarIcon: houseIcon ? () => houseIcon : undefined,
+          tabBarIcon: usersIcon ? () => usersIcon : undefined,
           tabBarItemHidden: !!selectedGroupId,
         }}
       />
@@ -98,12 +110,7 @@ export default function TabLayout() {
         name="shoppingLists"
         options={{
           title: selectedGroupName ?? "Shopping Lists",
-          tabBarIcon:
-            isWinterEffectsEnabled && winterUsersIcon
-              ? () => winterUsersIcon
-              : usersIcon
-                ? () => usersIcon
-                : undefined,
+          tabBarIcon: shoppingCartIcon ? () => shoppingCartIcon : undefined,
           tabBarItemHidden: !selectedGroupId,
         }}
       />
@@ -114,10 +121,18 @@ export default function TabLayout() {
           tabBarIcon:
             isWinterEffectsEnabled && winterCartIcon
               ? () => winterCartIcon
-              : cartIcon
-                ? () => cartIcon
+              : shoppingBasketIcon
+                ? () => shoppingBasketIcon
                 : undefined,
           tabBarItemHidden: !selectedShoppingListId,
+        }}
+      />
+      <Tabs.Screen
+        name="expenses"
+        options={{
+          title: "Expenses",
+          tabBarIcon: walletIcon ? () => walletIcon : undefined,
+          tabBarItemHidden: !selectedGroupId,
         }}
       />
       <Tabs.Screen

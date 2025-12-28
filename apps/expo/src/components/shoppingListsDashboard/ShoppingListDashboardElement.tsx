@@ -4,7 +4,9 @@ import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSw
 import type { SharedValue } from "react-native-reanimated";
 import { useCallback, useRef, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import ReanimatedSwipeable, {
+  SwipeDirection,
+} from "react-native-gesture-handler/ReanimatedSwipeable";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -253,15 +255,10 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
         renderLeftActions={renderLeftActions}
         renderRightActions={renderRightActions}
         onSwipeableOpen={(direction) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-          if (direction === "left") {
-            // Show delete action briefly, then close and open modal
-            setTimeout(() => {
-              swipeableRef.current?.close();
-              setShowDeleteModal(true);
-            }, 300);
+          if (direction === SwipeDirection.LEFT) {
+            swipeableRef.current?.close();
+            setShowDeleteModal(true);
           } else {
-            // Close swipeable immediately and show rename form
             swipeableRef.current?.close();
             setIsRenaming(true);
           }

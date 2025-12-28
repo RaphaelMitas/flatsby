@@ -68,20 +68,21 @@ function ShoppingListsDashboardInner() {
   }
 
   return (
-    <View className="flex h-full w-full flex-col gap-6 p-4">
-      {/* Header */}
-      <View className="flex flex-row items-center justify-between">
-        <Text className="text-foreground text-3xl font-bold">
-          {selectedGroupName}
-        </Text>
-        <Button
-          title="Group Settings"
-          variant="outline"
-          size="md"
-          icon="settings"
-          onPress={() => router.push(`/shoppingLists/edit-group`)}
-        />
-      </View>
+    <SafeAreaView>
+      <View className="flex h-full w-full flex-col gap-6 p-4">
+        {/* Header */}
+        <View className="flex flex-row items-center justify-between">
+          <Text className="text-foreground text-3xl font-bold">
+            {selectedGroupName}
+          </Text>
+          <Button
+            title="Group Settings"
+            variant="outline"
+            size="md"
+            icon="settings"
+            onPress={() => router.push(`/groups/edit-group`)}
+          />
+        </View>
 
       {/* Create New List Button */}
       <Button

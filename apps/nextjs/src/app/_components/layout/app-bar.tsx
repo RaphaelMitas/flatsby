@@ -1,9 +1,7 @@
-import Link from "next/link";
-
-import HomeIcon from "@flatsby/ui/custom/icons/HomeIcon";
-
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
+import { DesktopNavigation } from "./desktop-navigation";
 import { GroupSwitcher } from "./group-switcher";
+import { HomeLink } from "./home-link";
 import { UserButton } from "./user-button";
 
 export function AppBar() {
@@ -11,11 +9,11 @@ export function AppBar() {
 
   return (
     <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6">
-      <Link className="flex items-center gap-2" href="/">
-        <HomeIcon className="text-primary h-6 w-10" />
-        <span className="hidden text-lg font-bold md:block">Flatsby</span>
-      </Link>
       <HydrateClient>
+        <div className="flex items-center gap-6">
+          <HomeLink />
+          <DesktopNavigation />
+        </div>
         <GroupSwitcher />
         <UserButton />
       </HydrateClient>
