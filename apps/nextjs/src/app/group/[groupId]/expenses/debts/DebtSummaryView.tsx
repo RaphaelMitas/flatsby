@@ -241,7 +241,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
           fromGroupMemberId={selectedDebt.fromGroupMemberId}
           toGroupMemberId={selectedDebt.toGroupMemberId}
           currency={selectedDebt.currency}
-          outstandingDebtInCents={selectedDebt.amountInCents}
+          amount={selectedDebt.amountInCents}
           onClose={() => setSelectedDebt(null)}
           open={!!selectedDebt}
         />

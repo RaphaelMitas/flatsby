@@ -2,7 +2,9 @@ import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import ReanimatedSwipeable, {
+  SwipeDirection,
+} from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -133,7 +135,6 @@ export function ExpenseCard({
   });
 
   const handleCardPress = () => {
-    // @ts-expect-error - Expo Router dynamic route typing
     router.push(`/(tabs)/expenses/${expense.id}`);
   };
 
@@ -163,17 +164,12 @@ export function ExpenseCard({
         renderLeftActions={renderLeftActions}
         renderRightActions={renderRightActions}
         onSwipeableOpen={(direction) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-          if (direction === "left") {
-            // Edit: Close swipeable, open edit form
+          if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
             onEdit();
           } else {
-            // Delete: Show briefly, then close and open modal
-            setTimeout(() => {
-              swipeableRef.current?.close();
-              setShowDeleteModal(true);
-            }, 300);
+            swipeableRef.current?.close();
+            setShowDeleteModal(true);
           }
         }}
       >
@@ -286,7 +282,8 @@ export function ExpenseCard({
         onConfirm={handleDelete}
         itemName={expense.description ?? formattedAmount}
         title="Delete Expense"
-        description={`Are you sure you want to delete this expense? This action cannot be undone.`}
+        description={`Are you sure you want to delete this ${expense.splitMethod === "settlement" ? "settlement" : "expense"}? This action cannot be undone.`}
+        needsConfirmationInput={false}
       />
     </>
   );

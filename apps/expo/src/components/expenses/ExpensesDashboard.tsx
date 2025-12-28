@@ -1,3 +1,4 @@
+import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import { Suspense } from "react";
 import { ActivityIndicator, RefreshControl, Text, View } from "react-native";
 import { router, useRouter } from "expo-router";
@@ -16,7 +17,7 @@ export function ExpensesDashboard() {
 
   if (!selectedGroupId) {
     return (
-      <View className="bg-background flex-1 items-center justify-center gap-4 p-4">
+      <View className="flex-1 items-center justify-center gap-4 p-4">
         <Icon name="receipt" size={48} color="muted-foreground" />
         <Text className="text-muted-foreground text-center text-lg font-semibold">
           Select a group to view its expenses
@@ -92,32 +93,38 @@ function ExpensesDashboardInner() {
 
   const hasExpenses = allExpenses.length > 0;
 
-  const handleEdit = (expenseId: number) => {
-    router.push({
-      pathname: "/(tabs)/expenses/[expenseId]/edit",
-      params: { expenseId: expenseId.toString() },
-    });
+  const handleEdit = (expense: ExpenseWithSplitsAndMembers) => {
+    if (expense.splitMethod === "settlement") {
+      router.push({
+        pathname: "/(tabs)/expenses/settle",
+        params: { expenseId: expense.id.toString() },
+      });
+    } else {
+      router.push({
+        pathname: "/(tabs)/expenses/[expenseId]/edit",
+        params: { expenseId: expense.id.toString() },
+      });
+    }
   };
 
   return (
     <>
-      <View className="flex h-full w-full flex-col p-4">
+      <View className="flex-1 px-4">
         {/* Header */}
         <View className="mb-6 flex-row items-center justify-between">
           <Text className="text-foreground text-3xl font-bold">Expenses</Text>
           <Button
-            title="Settings"
-            variant="outline"
+            title="Debt Overview"
             size="md"
-            icon="settings"
-            onPress={() => router.push(`/(tabs)/shoppingLists/edit-group`)}
+            icon="arrow-right"
+            onPress={() => router.push(`/(tabs)/expenses/debts`)}
           />
         </View>
 
         {/* Expenses List */}
         {!hasExpenses ? (
           <View className="flex flex-1 flex-col items-center justify-center gap-4">
-            <Icon name="receipt" size={64} color="muted-foreground" />
+            <Icon name="wallet" size={64} color="muted-foreground" />
             <Text className="text-foreground text-lg font-semibold">
               No expenses yet
             </Text>
@@ -133,49 +140,50 @@ function ExpensesDashboardInner() {
             />
           </View>
         ) : (
-          <View className="flex-1">
-            <FlashList
-              data={allExpenses}
-              refreshControl={
-                <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          <FlashList
+            data={allExpenses}
+            refreshControl={
+              <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+            }
+            ItemSeparatorComponent={() => <View className="h-3" />}
+            renderItem={({ item }) => (
+              <ExpenseCard
+                expense={item}
+                groupId={selectedGroupId ?? -1}
+                onEdit={() => handleEdit(item)}
+              />
+            )}
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) {
+                void fetchNextPage();
               }
-              ItemSeparatorComponent={() => <View className="h-3" />}
-              renderItem={({ item }) => (
-                <ExpenseCard
-                  expense={item}
-                  groupId={selectedGroupId ?? -1}
-                  onEdit={() => handleEdit(item.id)}
-                />
-              )}
-              onEndReached={() => {
-                if (hasNextPage && !isFetchingNextPage) {
-                  void fetchNextPage();
-                }
-              }}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={
-                isFetchingNextPage ? (
-                  <View className="py-4">
-                    <ActivityIndicator size="small" />
-                  </View>
-                ) : null
-              }
-            />
-          </View>
-        )}
-
-        {/* FAB Button */}
-        {hasExpenses && (
-          <Button
-            title="Create Expense"
-            variant="primary"
-            size="lg"
-            icon="plus"
-            onPress={() => router.push("/(tabs)/expenses/create")}
-            className="h-14 w-14"
+            }}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View className="py-4">
+                  <ActivityIndicator size="small" />
+                </View>
+              ) : null
+            }
           />
         )}
       </View>
+      {hasExpenses && (
+        <View
+          style={{
+            position: "absolute",
+            bottom: 8,
+            right: 16,
+          }}
+        >
+          <Button
+            size="icon"
+            icon="plus"
+            onPress={() => router.push("/(tabs)/expenses/create")}
+          />
+        </View>
+      )}
     </>
   );
 }

@@ -12,7 +12,14 @@ export default function ExpenseDetailLayout() {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen options={{ presentation: "modal" }} name="edit" />
+      <Stack.Screen
+        options={{
+          presentation: "modal",
+          headerShown: true,
+          headerTitle: "Edit Expense",
+        }}
+        name="edit"
+      />
     </Stack>
   );
 }

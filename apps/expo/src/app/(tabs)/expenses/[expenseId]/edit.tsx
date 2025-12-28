@@ -59,31 +59,23 @@ function EditExpensePageInner({
 
   if (!groupData.success) {
     return (
-      <SafeAreaView>
-        <View className="flex-1 items-center justify-center p-4">
-          <Text className="text-destructive text-center">
-            Failed to load group data
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View className="flex-1 items-center justify-center p-4">
+        <Text className="text-destructive text-center">
+          Failed to load group data
+        </Text>
+      </View>
     );
   }
 
   if (!expenseData.success) {
     return (
-      <SafeAreaView>
-        <View className="flex-1 items-center justify-center p-4">
-          <Text className="text-destructive text-center">
-            Failed to load expense data
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View className="flex-1 items-center justify-center p-4">
+        <Text className="text-destructive text-center">
+          Failed to load expense data
+        </Text>
+      </View>
     );
   }
 
-  return (
-    <SafeAreaView>
-      <ExpenseForm group={groupData.data} expense={expenseData.data} />
-    </SafeAreaView>
-  );
+  return <ExpenseForm group={groupData.data} expense={expenseData.data} />;
 }

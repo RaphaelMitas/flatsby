@@ -6,6 +6,7 @@ import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
+import { RecentActivity } from "./RecentActivity";
 import { ShoppingListDashboard } from "./shopping-list/ShoppingListDashboard";
 import { UserDebtSummary } from "./UserDebtSummary";
 
@@ -15,11 +16,11 @@ const GroupPage = async (props: { params: Promise<{ groupId: string }> }) => {
   prefetch(trpc.shoppingList.getShoppingLists.queryOptions({ groupId }));
   prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
   prefetch(trpc.expense.getDebtSummary.queryOptions({ groupId }));
+  prefetch(trpc.group.getRecentActivity.queryOptions({ groupId, limit: 10 }));
 
   return (
     <HydrateClient>
       <div className="flex w-svw max-w-prose flex-col gap-6 p-4">
-        {/* Header with actions */}
         <div className="flex w-full items-center justify-between">
           <Button className="w-fit" asChild>
             <Link
@@ -36,7 +37,6 @@ const GroupPage = async (props: { params: Promise<{ groupId: string }> }) => {
           </Button>
         </div>
 
-        {/* User Debt Summary */}
         <Suspense
           fallback={
             <div className="flex items-center justify-center py-8">
@@ -47,7 +47,6 @@ const GroupPage = async (props: { params: Promise<{ groupId: string }> }) => {
           <UserDebtSummary groupId={groupId} />
         </Suspense>
 
-        {/* Shopping Lists Section */}
         <div>
           <div className="mb-2 flex items-center gap-2">
             <ShoppingCart className="text-muted-foreground h-5 w-5" />
@@ -63,6 +62,8 @@ const GroupPage = async (props: { params: Promise<{ groupId: string }> }) => {
             <ShoppingListDashboard groupId={groupId} limit={5} />
           </Suspense>
         </div>
+
+        <RecentActivity groupId={groupId} />
       </div>
     </HydrateClient>
   );

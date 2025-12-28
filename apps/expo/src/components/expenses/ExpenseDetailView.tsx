@@ -144,39 +144,32 @@ export function ExpenseDetailView({
 
   return (
     <>
-      <View className="h-full">
-        {/* Header */}
-        <View className="border-border flex-row items-center justify-between border-b p-4">
+      <View className="h-full gap-4">
+        <View className="flex-row gap-2">
           <Button
-            title="Back"
-            variant="ghost"
-            onPress={() => router.back()}
-            icon="arrow-left"
+            title="Edit"
+            variant="outline"
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/expenses/[expenseId]/edit",
+                params: { expenseId: expenseId.toString() },
+              })
+            }
+            className="flex-1"
+            disabled={deleteExpenseMutation.isPending}
+            icon="pencil"
           />
-          <View className="flex-row gap-2">
-            <Button
-              title="Edit"
-              variant="outline"
-              onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/expenses/[expenseId]/edit",
-                  params: { expenseId: expenseId.toString() },
-                })
-              }
-              disabled={deleteExpenseMutation.isPending}
-              icon="pencil"
-            />
-            <Button
-              title="Delete"
-              variant="destructive"
-              onPress={() => setShowDeleteDialog(true)}
-              disabled={deleteExpenseMutation.isPending}
-              icon="trash-2"
-            />
-          </View>
+          <Button
+            title="Delete"
+            variant="destructive"
+            onPress={() => setShowDeleteDialog(true)}
+            disabled={deleteExpenseMutation.isPending}
+            icon="trash-2"
+            className="flex-1"
+          />
         </View>
 
-        <ScrollView className="flex-1" contentContainerClassName="p-4 gap-4">
+        <ScrollView className="flex-1" contentContainerClassName=" gap-4">
           {/* Expense Details Card */}
           <Card>
             <CardHeader>

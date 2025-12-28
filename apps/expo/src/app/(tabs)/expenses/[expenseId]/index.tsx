@@ -2,7 +2,6 @@ import { Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
 import { ExpenseDetailView } from "~/components/expenses/ExpenseDetailView";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function ExpenseDetailPage() {
@@ -26,9 +25,5 @@ export default function ExpenseDetailPage() {
     );
   }
 
-  return (
-    <SafeAreaView>
-      <ExpenseDetailView expenseId={expenseId} groupId={selectedGroupId} />
-    </SafeAreaView>
-  );
+  return <ExpenseDetailView expenseId={expenseId} groupId={selectedGroupId} />;
 }

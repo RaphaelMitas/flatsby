@@ -42,7 +42,7 @@ interface SettlementFormProps {
   fromGroupMemberId: number;
   toGroupMemberId: number;
   currency: string;
-  outstandingDebtInCents: number | undefined;
+  amount: number | undefined;
   expense?: ExpenseWithSplitsAndMembers;
   onClose: () => void;
   open: boolean;
@@ -53,7 +53,7 @@ export function SettlementForm({
   fromGroupMemberId,
   toGroupMemberId,
   currency,
-  outstandingDebtInCents,
+  amount,
   expense,
   onClose,
   open,
@@ -71,7 +71,7 @@ export function SettlementForm({
   const form = useForm<SettlementFormValues>({
     resolver: zodResolver(settlementFormSchema),
     defaultValues: {
-      amountInCents: expense?.amountInCents ?? outstandingDebtInCents,
+      amountInCents: expense?.amountInCents ?? amount,
     },
   });
 
@@ -397,14 +397,14 @@ export function SettlementForm({
                 </div>
               </div>
 
-              {outstandingDebtInCents && (
+              {amount && (
                 <div className="bg-muted rounded-lg p-4 text-center">
                   <p className="text-muted-foreground mb-1 text-sm">
                     Outstanding debt
                   </p>
                   <p className="text-2xl font-bold">
                     {formatCurrencyFromCents({
-                      cents: outstandingDebtInCents,
+                      cents: amount,
                       currency,
                     })}
                   </p>
@@ -427,7 +427,7 @@ export function SettlementForm({
                         onChange={field.onChange}
                         placeholder="0.00"
                         min={1}
-                        max={outstandingDebtInCents}
+                        max={amount}
                         className="flex-1"
                       />
                     </div>

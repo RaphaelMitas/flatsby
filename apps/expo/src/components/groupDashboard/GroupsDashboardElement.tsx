@@ -3,7 +3,9 @@ import type React from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
 import { Text, View } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import ReanimatedSwipeable, {
+  SwipeDirection,
+} from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -121,17 +123,13 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         renderLeftActions={renderLeftActions}
         renderRightActions={renderRightActions}
         onSwipeableOpen={(direction) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-          if (direction === "right") {
+          if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
             setSelectedGroup(group.id, group.name);
             router.push("/shoppingLists/edit-group");
           } else {
-            // Show delete action briefly, then close and open modal
-            setTimeout(() => {
-              swipeableRef.current?.close();
-              setShowDeleteModal(true);
-            }, 300); // Brief delay to show the red delete action
+            swipeableRef.current?.close();
+            setShowDeleteModal(true);
           }
         }}
       >

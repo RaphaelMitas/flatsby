@@ -22,6 +22,8 @@ export const expenseSplitSchema = z.object({
  */
 export const splitMethodSchema = z.enum(SPLIT_METHODS);
 
+export const currencyCodeSchema = z.enum(CURRENCY_CODES);
+
 /**
  * Shared expense base fields - common between create and update
  */
@@ -29,7 +31,7 @@ export const expenseSchema = z
   .object({
     paidByGroupMemberId: z.number().min(1, "Please select who paid"),
     amountInCents: z.number().int().min(1, "Amount must be greater than 0"),
-    currency: z.enum(CURRENCY_CODES),
+    currency: currencyCodeSchema,
     description: z.string().max(512).optional(),
     category: z.string().max(100).optional(),
     expenseDate: z.date(),
@@ -78,6 +80,9 @@ export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
  */
 export const settlementFormSchema = z.object({
   amountInCents: z.number().min(1, "Amount must be greater than 0"),
+  fromGroupMemberId: z.number().min(1, "Please select who is paying"),
+  toGroupMemberId: z.number().min(1, "Please select who is receiving"),
+  currency: currencyCodeSchema,
 });
 
 export type SettlementFormValues = z.infer<typeof settlementFormSchema>;

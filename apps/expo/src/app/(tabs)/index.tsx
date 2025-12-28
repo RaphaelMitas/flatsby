@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 
-import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
+import { Dashboard } from "~/components/dashboard/Dashboard";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { authClient } from "~/utils/auth/auth-client";
 
@@ -13,9 +13,9 @@ export default function Index() {
   }
 
   return (
-    <SafeAreaView className="bg-background">
-      <View className="bg-background h-full w-full p-4">
-        <GroupsDashboard />
+    <SafeAreaView>
+      <View className="h-full w-full">
+        <Dashboard />
       </View>
     </SafeAreaView>
   );

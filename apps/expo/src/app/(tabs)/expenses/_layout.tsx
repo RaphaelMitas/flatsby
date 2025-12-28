@@ -13,8 +13,31 @@ export default function ExpensesLayout() {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen name="create" />
-      <Stack.Screen name="[expenseId]" />
+      <Stack.Screen
+        name="create"
+        options={{
+          presentation: "modal",
+          headerShown: true,
+          headerTitle: "Add Expense",
+        }}
+      />
+      <Stack.Screen name="debts" />
+      <Stack.Screen
+        name="settle"
+        options={{
+          presentation: "modal",
+          headerShown: true,
+          headerTitle: "Settle Up",
+        }}
+      />
+      <Stack.Screen
+        name="[expenseId]"
+        options={{
+          presentation: "modal",
+          headerShown: true,
+          headerTitle: "Expense Details",
+        }}
+      />
     </Stack>
   );
 }

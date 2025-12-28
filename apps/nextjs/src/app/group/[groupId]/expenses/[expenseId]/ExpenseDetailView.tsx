@@ -388,7 +388,7 @@ export function ExpenseDetailView({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             toGroupMemberId={expense.expenseSplits[0]!.groupMemberId}
             currency={expense.currency}
-            outstandingDebtInCents={
+            amount={
               debtData.success
                 ? (() => {
                     const currencyData =

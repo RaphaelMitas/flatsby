@@ -491,21 +491,6 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
   return (
     <BottomSheetPickerProvider>
       <View className="h-full">
-        {/* Header */}
-        <View className="border-border flex-row items-center justify-between border-b p-4">
-          <Text className="text-foreground text-xl font-semibold">
-            {isEditMode ? "Edit Expense" : "Add Expense"}
-          </Text>
-          <Button
-            title=""
-            variant="ghost"
-            icon="x"
-            onPress={() => router.back()}
-            className="h-10 w-10"
-          />
-        </View>
-
-        {/* Step Indicator */}
         <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
           <Text className="text-muted-foreground text-sm">
             Step {currentStep} of {totalSteps}
