@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
-import { Receipt, ShoppingCartIcon } from "lucide-react";
+import { ShoppingCartIcon, Wallet } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 
@@ -47,7 +47,7 @@ export function DesktopNavigation() {
             : "text-muted-foreground",
         )}
       >
-        <Receipt className="h-4 w-4" />
+        <Wallet className="h-4 w-4" />
         <span>Expenses</span>
       </Link>
     </nav>
