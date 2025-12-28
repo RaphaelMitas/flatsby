@@ -1,4 +1,5 @@
 import type { UserWrappedSummary } from "@flatsby/api";
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -9,7 +10,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import type { CategoryIdWithAiAutoSelect } from "~/components/shoppingList/ShoppingListCategory";
 import { getCategoryData } from "~/components/shoppingList/ShoppingListCategory";
 
 // Map Tailwind color classes to hex values for StyleSheet

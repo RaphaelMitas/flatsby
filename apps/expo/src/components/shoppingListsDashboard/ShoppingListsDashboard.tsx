@@ -68,23 +68,20 @@ function ShoppingListsDashboardInner() {
   }
 
   return (
-    <SafeAreaView>
-      <View className="flex h-full w-full flex-col gap-6 p-4">
-        {/* Header */}
-        <View className="flex flex-row items-center justify-between">
-          <Text className="text-foreground text-3xl font-bold">
-            {selectedGroupName}
-          </Text>
-          <Button
-            title="Group Settings"
-            variant="outline"
-            size="md"
-            icon="settings"
-            onPress={() => router.push(`/groups/edit-group`)}
-          />
-        </View>
+    <View className="flex h-full w-full flex-col gap-6 p-4">
+      <View className="flex flex-row items-center justify-between">
+        <Text className="text-foreground text-3xl font-bold">
+          {selectedGroupName}
+        </Text>
+        <Button
+          title="Group Settings"
+          variant="outline"
+          size="md"
+          icon="settings"
+          onPress={() => router.push(`/groups/edit-group`)}
+        />
+      </View>
 
-      {/* Create New List Button */}
       <Button
         title="Create Shopping List"
         variant="primary"
@@ -95,7 +92,6 @@ function ShoppingListsDashboardInner() {
         }
       />
 
-      {/* Shopping Lists */}
       {shoppingLists.data.length === 0 ? (
         <View className="flex flex-col items-center justify-center gap-4">
           <Text className="text-foreground text-center text-lg font-semibold">
