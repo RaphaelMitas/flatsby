@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
-import { HomeIcon, ShoppingCartIcon } from "lucide-react";
+import { HomeIcon, Receipt, ShoppingCartIcon } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 
@@ -20,14 +20,19 @@ export function BottomNavigation() {
     ? parseInt(segments[shoppingListIndex])
     : null;
 
+  const expensesIndex = segments.indexOf("expenses");
+  const isExpensesPage = expensesIndex >= 0;
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background md:hidden">
+    <div className="bg-background fixed right-0 bottom-0 left-0 z-50 h-16 border-t md:hidden">
       <nav className="flex justify-around py-2">
         <Link
           href={`/group/${currentGroupId ?? ""}`}
           className={cn(
-            "flex flex-col items-center gap-1 text-foreground hover:text-foreground",
-            currentShoppingListId && "text-muted-foreground",
+            "hover:text-foreground flex flex-col items-center gap-1",
+            currentShoppingListId || isExpensesPage
+              ? "text-muted-foreground"
+              : "text-foreground",
           )}
           prefetch={false}
         >
@@ -39,13 +44,26 @@ export function BottomNavigation() {
             currentGroupId ? `/group/${currentGroupId}/shopping-list` : "/group"
           }
           className={cn(
-            "flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground",
-            currentShoppingListId && "text-foreground",
+            "hover:text-foreground flex flex-col items-center gap-1",
+            currentShoppingListId ? "text-foreground" : "text-muted-foreground",
           )}
           prefetch={false}
         >
           <ShoppingCartIcon className="h-6 w-6" />
           <span className="text-xs">Shopping</span>
+        </Link>
+        <Link
+          href={currentGroupId ? `/group/${currentGroupId}/expenses` : "/group"}
+          className={cn(
+            "hover:text-foreground flex flex-col items-center gap-1",
+            isExpensesPage && !currentShoppingListId
+              ? "text-foreground"
+              : "text-muted-foreground",
+          )}
+          prefetch={false}
+        >
+          <Receipt className="h-6 w-6" />
+          <span className="text-xs">Expenses</span>
         </Link>
       </nav>
     </div>

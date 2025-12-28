@@ -6,6 +6,8 @@
 
 import type { db } from "@flatsby/db/client";
 import type {
+  expenses,
+  expenseSplits,
   groupMembers,
   groups,
   shoppingListItems,
@@ -102,6 +104,47 @@ export type ShoppingListSummary = Pick<
 > & {
   uncheckedItemLength: number;
 };
+
+// Expense types
+export type Expense = typeof expenses.$inferSelect;
+export type NewExpense = typeof expenses.$inferInsert;
+
+export type ExpenseSplit = typeof expenseSplits.$inferSelect;
+export type NewExpenseSplit = typeof expenseSplits.$inferInsert;
+
+export type ExpenseWithSplits = Expense & {
+  expenseSplits: ExpenseSplit[];
+};
+
+export type ExpenseSplitWithMember = ExpenseSplit & {
+  groupMember: Pick<GroupMember, "id"> & {
+    user: Pick<User, "email" | "name" | "image">;
+  };
+};
+
+export type ExpenseWithSplitsAndMembers = Expense & {
+  paidByGroupMember: GroupMemberWithUser;
+  createdByGroupMember: GroupMemberWithUser;
+  expenseSplits: ExpenseSplitWithMember[];
+};
+
+// Type for expense infinite query data
+interface ExpensePage {
+  items: ExpenseWithSplitsAndMembers[];
+  nextCursor?: number;
+}
+
+export type ExpenseInfiniteData = InfiniteData<
+  ApiResult<ExpensePage>,
+  number | null
+>;
+
+// Re-export expense-related types from validators
+export type {
+  DebtEntry,
+  DebtSummary,
+  GroupDebtSummary,
+} from "@flatsby/validators/expenses/types";
 
 // Utility types for database operations
 export type DatabaseOperation<T> = () => Promise<T>;

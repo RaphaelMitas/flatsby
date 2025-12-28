@@ -101,7 +101,7 @@ export function GroupSwitcher() {
       value={currentGroupId?.toString() ?? ""}
       onValueChange={handleGroupChange}
     >
-      <SelectTrigger className="w-[400px]">
+      <SelectTrigger className="w-100 xl:absolute xl:left-1/2 xl:-translate-x-1/2">
         <SelectValue placeholder="Select group" />
       </SelectTrigger>
       <SelectContent>
