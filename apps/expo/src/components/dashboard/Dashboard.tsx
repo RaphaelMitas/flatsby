@@ -67,11 +67,11 @@ function DashboardWithGroup() {
             {selectedGroupName}
           </Text>
           <Button
-            title="Change Group"
+            title="Group Settings"
             variant="outline"
             size="md"
-            icon="arrow-left-right"
-            onPress={() => router.push("/(tabs)/groups")}
+            icon="settings"
+            onPress={() => router.push("/(tabs)/groups/edit-group")}
           />
         </View>
 

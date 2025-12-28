@@ -361,7 +361,6 @@ export function SettlementForm({
         paidByGroupMemberId: values.fromGroupMemberId,
         amountInCents: values.amountInCents,
         currency: values.currency,
-        description: `Settlement payment`,
         expenseDate: expense.expenseDate,
         splits: [
           {
@@ -378,7 +377,6 @@ export function SettlementForm({
         paidByGroupMemberId: values.fromGroupMemberId,
         amountInCents: values.amountInCents,
         currency: values.currency,
-        description: `Settlement payment`,
         expenseDate: new Date(),
         splits: [
           {

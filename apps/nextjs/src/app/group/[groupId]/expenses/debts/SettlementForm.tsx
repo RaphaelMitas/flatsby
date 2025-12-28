@@ -71,7 +71,10 @@ export function SettlementForm({
   const form = useForm<SettlementFormValues>({
     resolver: zodResolver(settlementFormSchema),
     defaultValues: {
-      amountInCents: expense?.amountInCents ?? amount,
+      amountInCents: expense?.amountInCents ?? amount ?? 0,
+      fromGroupMemberId: fromGroupMemberId,
+      toGroupMemberId: toGroupMemberId,
+      currency: isCurrencyCode(currency) ? currency : "EUR",
     },
   });
 
@@ -315,7 +318,6 @@ export function SettlementForm({
         paidByGroupMemberId: fromGroupMemberId,
         amountInCents: values.amountInCents,
         currency: isCurrencyCode(currency) ? currency : "EUR",
-        description: `Settlement payment`,
         expenseDate: expense.expenseDate,
         splits: [
           {
@@ -332,7 +334,6 @@ export function SettlementForm({
         paidByGroupMemberId: fromGroupMemberId,
         amountInCents: values.amountInCents,
         currency: isCurrencyCode(currency) ? currency : "EUR",
-        description: `Settlement payment`,
         expenseDate: new Date(),
         splits: [
           {

@@ -14,6 +14,7 @@ import {
   SettingsItem,
   SettingsSection,
 } from "~/components/settings";
+import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -90,7 +91,7 @@ export default function GroupSettingsIndex() {
   }
 
   return (
-    <>
+    <SafeAreaView>
       <ScrollView>
         <SettingsHeader title={group.data.name} />
 
@@ -99,15 +100,13 @@ export default function GroupSettingsIndex() {
             title="Group Details"
             subtitle="Edit your group details"
             iconName="settings"
-            onPress={() =>
-              router.push("/shoppingLists/edit-group/group-details")
-            }
+            onPress={() => router.push("/groups/edit-group/group-details")}
           />
           <SettingsItem
             title="Members"
             subtitle="Manage your group members"
             iconName="users"
-            onPress={() => router.push("/shoppingLists/edit-group/members")}
+            onPress={() => router.push("/groups/edit-group/members")}
           />
         </SettingsSection>
 
@@ -142,6 +141,6 @@ export default function GroupSettingsIndex() {
         description={`Are you sure you want to delete "${group.data.name}"? This action cannot be undone and will permanently remove all data associated with this group.`}
         confirmationLabel={`To confirm deletion, please type the group name: ${group.data.name}`}
       />
-    </>
+    </SafeAreaView>
   );
 }

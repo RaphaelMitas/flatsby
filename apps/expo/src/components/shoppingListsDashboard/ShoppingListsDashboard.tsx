@@ -81,7 +81,7 @@ function ShoppingListsDashboardInner() {
             variant="outline"
             size="md"
             icon="settings"
-            onPress={() => router.push(`/shoppingLists/edit-group`)}
+            onPress={() => router.push(`/groups/edit-group`)}
           />
         </View>
 
