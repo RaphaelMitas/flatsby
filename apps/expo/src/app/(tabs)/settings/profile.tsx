@@ -1,6 +1,6 @@
 import type { UpdateUserNameFormValues } from "@flatsby/validators/user";
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { View } from "react-native";
 import {
   useMutation,
   useQueryClient,
@@ -12,6 +12,13 @@ import { updateUserNameFormSchema } from "@flatsby/validators/user";
 import { ProfileSection } from "~/components/ProfileSection";
 import { TimedAlert } from "~/components/TimedAlert";
 import { Button } from "~/lib/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/lib/ui/card";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
@@ -69,8 +76,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="p-4">
+    <SafeAreaView>
+      <View className="flex flex-col gap-4 p-4">
         {/* Profile Picture Section */}
         <ProfileSection
           name={user.name}
@@ -81,66 +88,68 @@ export default function ProfileScreen() {
         />
 
         {/* Name Edit Section */}
-        <View className="bg-card gap-4 rounded-lg p-4">
-          <Text className="text-foreground mb-4 text-lg font-semibold">
-            Display Name
-          </Text>
+        <Card className="gap-4">
+          <CardHeader>
+            <CardTitle>Display Name</CardTitle>
+            <CardDescription>Update your display name.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <View className="gap-4">
+                <View>
+                  <Label htmlFor="name" className="mb-2">
+                    User Name
+                  </Label>
+                  <FormField
+                    name="name"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormControl>
+                        <Input
+                          value={field.value}
+                          onChangeText={field.onChange}
+                          onBlur={field.onBlur}
+                          placeholder="Enter your name"
+                          className="w-full"
+                          error={!!form.formState.errors.name}
+                        />
+                      </FormControl>
+                    )}
+                  />
+                </View>
 
-          <Form {...form}>
-            <View className="gap-4">
-              <View>
-                <Label htmlFor="name" className="mb-2">
-                  User Name
-                </Label>
-                <FormField
-                  name="name"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormControl>
-                      <Input
-                        value={field.value}
-                        onChangeText={field.onChange}
-                        onBlur={field.onBlur}
-                        placeholder="Enter your name"
-                        className="w-full"
-                        error={!!form.formState.errors.name}
-                      />
-                    </FormControl>
-                  )}
+                <Button
+                  icon={form.formState.isSubmitting ? "loader" : "save"}
+                  disabled={form.formState.isSubmitting}
+                  title={
+                    form.formState.isSubmitting ? "Saving..." : "Save Changes"
+                  }
+                  onPress={form.handleSubmit(handleSubmit)}
+                  className="w-full"
                 />
               </View>
+            </Form>
 
-              <Button
-                icon={form.formState.isSubmitting ? "loader" : "save"}
-                disabled={form.formState.isSubmitting}
-                title={
-                  form.formState.isSubmitting ? "Saving..." : "Save Changes"
-                }
-                onPress={form.handleSubmit(handleSubmit)}
-                className="w-full"
+            {/* Error Alert */}
+            {form.formState.errors.name && (
+              <TimedAlert
+                variant="destructive"
+                title="Error"
+                description={form.formState.errors.name.message}
               />
-            </View>
-          </Form>
+            )}
 
-          {/* Error Alert */}
-          {form.formState.errors.name && (
-            <TimedAlert
-              variant="destructive"
-              title="Error"
-              description={form.formState.errors.name.message}
-            />
-          )}
-
-          {/* Success Alert */}
-          {showSuccessMessage && (
-            <TimedAlert
-              variant="success"
-              title="Success!"
-              description="Your name has been updated successfully."
-            />
-          )}
-        </View>
-      </ScrollView>
+            {/* Success Alert */}
+            {showSuccessMessage && (
+              <TimedAlert
+                variant="success"
+                title="Success!"
+                description="Your name has been updated successfully."
+              />
+            )}
+          </CardContent>
+        </Card>
+      </View>
     </SafeAreaView>
   );
 }

@@ -41,7 +41,7 @@ export const ShoppingListItemAddForm = ({
   };
 
   return (
-    <View className="flex-row items-center gap-3 p-4">
+    <View className="bg-background flex-row items-center gap-3 p-4">
       <Input
         className="flex-1"
         placeholder="Add new item..."

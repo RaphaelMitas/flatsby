@@ -5,7 +5,8 @@ import type {
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
@@ -23,6 +24,7 @@ import {
 } from "@flatsby/validators/expenses/types";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import {
   BottomSheetPickerProvider,
@@ -59,6 +61,9 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
   const trpcClient = trpc;
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
+  const { height, progress } = useReanimatedKeyboardAnimation();
+
+  console.log(height, progress);
 
   const isEditMode = !!expense;
   const totalSteps = 3;
@@ -489,8 +494,8 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
   );
 
   return (
-    <BottomSheetPickerProvider>
-      <View className="h-full">
+    <View className="h-full">
+      <BottomSheetPickerProvider>
         <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
           <Text className="text-muted-foreground text-sm">
             Step {currentStep} of {totalSteps}
@@ -508,7 +513,7 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
         </View>
 
         <Form {...form}>
-          <ScrollView className="flex-1" contentContainerClassName="p-4">
+          <AppScrollView className="flex-1" contentContainerClassName="p-4">
             {currentStep === 1 && (
               <View className="gap-4">
                 <Card>
@@ -709,9 +714,8 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
                 </Card>
               </View>
             )}
-          </ScrollView>
+          </AppScrollView>
 
-          {/* Navigation Buttons */}
           <View className="border-border flex-row gap-2 border-t p-4">
             {currentStep > 1 && (
               <Button
@@ -750,7 +754,7 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
             )}
           </View>
         </Form>
-      </View>
-    </BottomSheetPickerProvider>
+      </BottomSheetPickerProvider>
+    </View>
   );
 }

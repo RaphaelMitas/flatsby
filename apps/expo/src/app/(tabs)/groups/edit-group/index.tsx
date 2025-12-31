@@ -1,6 +1,5 @@
 import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
 import { useState } from "react";
-import { ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import {
   useMutation,
@@ -14,6 +13,7 @@ import {
   SettingsItem,
   SettingsSection,
 } from "~/components/settings";
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
@@ -92,7 +92,7 @@ export default function GroupSettingsIndex() {
 
   return (
     <SafeAreaView>
-      <ScrollView>
+      <AppScrollView>
         <SettingsHeader title={group.data.name} />
 
         <SettingsSection title={group.data.name}>
@@ -132,7 +132,7 @@ export default function GroupSettingsIndex() {
             variant="destructive"
           />
         </SettingsSection>
-      </ScrollView>
+      </AppScrollView>
 
       <DeleteConfirmationModal
         visible={showDeleteModal}

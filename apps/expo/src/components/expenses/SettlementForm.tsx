@@ -2,7 +2,7 @@ import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import type { SettlementFormValues } from "@flatsby/validators/expenses/schemas";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useCallback } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -19,6 +19,7 @@ import {
 } from "@flatsby/validators/expenses/types";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import {
@@ -436,7 +437,7 @@ export function SettlementForm({
 
   return (
     <BottomSheetPickerProvider>
-      <ScrollView className="flex-1" contentContainerClassName="p-4">
+      <AppScrollView className="flex-1" contentContainerClassName="p-4">
         <Form {...form}>
           <View className="gap-6">
             {/* Settlement Info */}
@@ -584,7 +585,7 @@ export function SettlementForm({
             </View>
           </View>
         </Form>
-      </ScrollView>
+      </AppScrollView>
     </BottomSheetPickerProvider>
   );
 }

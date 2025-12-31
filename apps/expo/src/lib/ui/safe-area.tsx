@@ -1,19 +1,13 @@
 import type { ComponentProps } from "react";
-import {
-  Platform,
-  SafeAreaView as RNCSafeAreaView,
-  StatusBar,
-} from "react-native";
+import { SafeAreaView as RNCSafeAreaView, StatusBar } from "react-native";
 
 export const SafeAreaView = ({
   children,
   ...props
-}: ComponentProps<typeof RNCSafeAreaView>) => {
+}: Omit<ComponentProps<typeof RNCSafeAreaView>, "className">) => {
   return (
     <RNCSafeAreaView
-      style={{
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-      }}
+      style={{ flex: 1, paddingTop: StatusBar.currentHeight ?? 0 }}
       {...props}
     >
       {children}

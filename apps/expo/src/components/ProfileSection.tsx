@@ -3,6 +3,13 @@ import { Text, View } from "react-native";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/lib/ui/card";
 
 interface ProfileSectionProps {
   name: string;
@@ -22,32 +29,36 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   disabled = true,
 }) => {
   return (
-    <View className="items-center rounded-lg p-6">
-      <Avatar>
-        <AvatarImage alt={`${name} Avatar`} />
-        <AvatarFallback className="text-muted-foreground text-xl">
-          {fallbackText}
-        </AvatarFallback>
-      </Avatar>
-      <Text className="text-foreground mb-2 text-lg font-semibold">{name}</Text>
-      {subtitle && (
-        <Text className="text-muted-foreground mb-4 text-sm">{subtitle}</Text>
-      )}
-      {showChangePhoto && (
-        <>
-          <Button
-            disabled={disabled}
-            variant="outline"
-            icon="upload"
-            title="Change Photo"
-            className="w-full"
-            onPress={onChangePhoto}
-          />
-          <Text className="text-muted-foreground mt-2 text-xs">
-            Photo upload coming soon!
-          </Text>
-        </>
-      )}
-    </View>
+    <Card>
+      <CardHeader>
+        <View className="items-center">
+          <Avatar>
+            <AvatarImage alt={`${name} Avatar`} />
+            <AvatarFallback className="text-muted-foreground text-xl">
+              {fallbackText}
+            </AvatarFallback>
+          </Avatar>
+          <CardTitle>{name}</CardTitle>
+          <CardDescription>{subtitle}</CardDescription>
+        </View>
+      </CardHeader>
+      <CardContent>
+        {showChangePhoto && (
+          <>
+            <Button
+              disabled={disabled}
+              variant="outline"
+              icon="upload"
+              title="Change Photo"
+              className="w-full"
+              onPress={onChangePhoto}
+            />
+            <Text className="text-muted-foreground mt-2 text-xs">
+              Photo upload coming soon!
+            </Text>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 };

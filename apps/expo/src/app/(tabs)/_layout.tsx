@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useKeyboardState } from "react-native-keyboard-controller";
 import { Redirect } from "expo-router";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
@@ -30,6 +31,7 @@ export default function TabLayout() {
   } = useShoppingStore();
   const { getColor } = useThemeColors();
   const { isEnabled: isWinterEffectsEnabled } = useWinterEffects();
+  const { isVisible: isKeyboardVisible } = useKeyboardState();
 
   useEffect(() => {
     if (!session.data?.user) {
@@ -84,6 +86,7 @@ export default function TabLayout() {
       }}
       activeIndicatorColor={getColor("muted")}
       rippleColor={getColor("primary")}
+      tabBar={isKeyboardVisible ? () => null : undefined}
     >
       <Tabs.Screen
         name="index"

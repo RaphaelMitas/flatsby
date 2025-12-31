@@ -1,6 +1,8 @@
 import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { useFocusEffect, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import {
@@ -235,7 +237,7 @@ export default function MembersScreen() {
   const isAdmin = group.data.thisGroupMember.role === "admin";
 
   return (
-    <ScrollView>
+    <AppScrollView>
       {/* Header */}
       <View className="bg-background px-4 py-6">
         <Text className="text-foreground text-2xl font-bold">
@@ -387,6 +389,6 @@ export default function MembersScreen() {
             />
           </View>
         )}
-    </ScrollView>
+    </AppScrollView>
   );
 }

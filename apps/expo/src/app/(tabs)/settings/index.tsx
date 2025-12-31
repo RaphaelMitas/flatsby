@@ -1,7 +1,9 @@
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
 import { useCallback, useRef } from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
+
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Stack, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -93,9 +95,9 @@ export default function SettingsIndex() {
   );
 
   return (
-    <SafeAreaView className="bg-background flex-1">
+    <SafeAreaView>
       <Stack.Screen options={{ title: "Settings" }} />
-      <ScrollView>
+      <AppScrollView>
         <SettingsHeader title={user.name} />
 
         <SettingsSection title="Appearance">
@@ -165,7 +167,7 @@ export default function SettingsIndex() {
             variant="destructive"
           />
         </SettingsSection>
-      </ScrollView>
+      </AppScrollView>
     </SafeAreaView>
   );
 }
