@@ -14,7 +14,7 @@
     "eas:build:prod": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile production",
     "eas:build:local": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile development --local",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
-    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "lint": "eslint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

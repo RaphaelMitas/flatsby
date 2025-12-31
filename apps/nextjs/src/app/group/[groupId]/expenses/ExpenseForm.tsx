@@ -50,7 +50,7 @@ import {
   distributePercentageAmounts,
 } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import { expenseSchema } from "@flatsby/validators/expenses/schemas";
+import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
   CURRENCY_CODES,
   isCurrencyCode,
@@ -101,7 +101,7 @@ export function ExpenseForm({
       : "equal";
 
   const form = useForm<ExpenseValues>({
-    resolver: zodResolver(expenseSchema),
+    resolver: zodResolver(expenseSchemaWithValidateSplits),
     defaultValues: {
       paidByGroupMemberId:
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,

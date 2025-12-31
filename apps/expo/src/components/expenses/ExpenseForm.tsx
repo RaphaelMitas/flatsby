@@ -16,7 +16,7 @@ import {
   distributePercentageAmounts,
 } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import { expenseSchema } from "@flatsby/validators/expenses/schemas";
+import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
   CURRENCY_CODES,
   isCurrencyCode,
@@ -85,7 +85,7 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
       : "equal";
 
   const form = useFormHook<ExpenseValues, ExpenseValues>({
-    schema: expenseSchema,
+    schema: expenseSchemaWithValidateSplits,
     defaultValues: {
       paidByGroupMemberId:
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,
