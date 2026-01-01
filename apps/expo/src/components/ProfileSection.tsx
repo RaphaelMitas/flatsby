@@ -39,7 +39,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
             </AvatarFallback>
           </Avatar>
           <CardTitle>{name}</CardTitle>
-          <CardDescription>{subtitle}</CardDescription>
+          {subtitle && <CardDescription>{subtitle}</CardDescription>}
         </View>
       </CardHeader>
       <CardContent>
