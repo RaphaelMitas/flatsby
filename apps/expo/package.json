@@ -38,6 +38,7 @@
     "expo-dev-client": "~6.0.16",
     "expo-font": "~14.0.0",
     "expo-linking": "~8.0.8",
+    "expo-network": "~8.0.8",
     "expo-router": "~6.0.13",
     "expo-secure-store": "~15.0.7",
     "expo-splash-screen": "~31.0.10",

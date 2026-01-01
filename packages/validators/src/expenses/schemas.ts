@@ -56,9 +56,31 @@ export const createExpenseSchema = expenseSchemaWithValidateSplits.safeExtend({
 
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
 
-export const updateExpenseSchema = expenseSchema.partial().safeExtend({
-  expenseId: z.number(),
-});
+export const updateExpenseSchema = expenseSchema
+  .partial()
+  .refine(
+    (data) => {
+      if (!data.splits) {
+        return true;
+      }
+      if (data.amountInCents === undefined || data.splitMethod === undefined) {
+        return true;
+      }
+      const validation = validateSplits({
+        splits: data.splits,
+        totalAmountCents: data.amountInCents,
+        method: data.splitMethod,
+      });
+      return validation.isValid;
+    },
+    {
+      message: "Split amounts are invalid",
+      path: ["splits"],
+    },
+  )
+  .safeExtend({
+    expenseId: z.number(),
+  });
 
 export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
 
