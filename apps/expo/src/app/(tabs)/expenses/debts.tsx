@@ -14,7 +14,7 @@ export default function DebtsPage() {
   if (!selectedGroupId) {
     return (
       <SafeAreaView>
-        <View className="h-full w-full flex-col items-center justify-center gap-4 p-4">
+        <View className="flex-1 flex-col items-center justify-center gap-4 p-4">
           <Text className="text-muted-foreground text-center">
             No group selected. Please select a group first.
           </Text>
@@ -31,7 +31,7 @@ export default function DebtsPage() {
     <Suspense
       fallback={
         <SafeAreaView>
-          <View className="h-full w-full items-center justify-center">
+          <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" />
             <Text className="text-muted-foreground mt-4">
               Loading debt summary...
@@ -41,9 +41,7 @@ export default function DebtsPage() {
       }
     >
       <SafeAreaView>
-        <View className="h-full w-full">
-          <DebtSummaryView groupId={selectedGroupId} />
-        </View>
+        <DebtSummaryView groupId={selectedGroupId} />
       </SafeAreaView>
     </Suspense>
   );

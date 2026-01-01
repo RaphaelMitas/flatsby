@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import {
   useMutation,
@@ -9,6 +9,7 @@ import {
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
 import {
@@ -169,7 +170,7 @@ export function ExpenseDetailView({
           />
         </View>
 
-        <ScrollView className="flex-1" contentContainerClassName=" gap-4">
+        <AppScrollView className="flex-1" contentContainerClassName=" gap-4">
           {/* Expense Details Card */}
           <Card>
             <CardHeader>
@@ -352,7 +353,7 @@ export function ExpenseDetailView({
               </View>
             </CardContent>
           </Card>
-        </ScrollView>
+        </AppScrollView>
       </View>
 
       {/* Delete Confirmation Modal */}

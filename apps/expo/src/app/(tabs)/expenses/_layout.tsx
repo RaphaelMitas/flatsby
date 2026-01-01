@@ -16,9 +16,10 @@ export default function ExpensesLayout() {
       <Stack.Screen
         name="create"
         options={{
-          presentation: "modal",
+          // presentation: "modal",
           headerShown: true,
           headerTitle: "Add Expense",
+          headerBackTitle: "Back to Expenses",
         }}
       />
       <Stack.Screen name="debts" />

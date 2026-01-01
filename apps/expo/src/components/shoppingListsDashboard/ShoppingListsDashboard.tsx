@@ -70,7 +70,7 @@ function ShoppingListsDashboardInner() {
 
   return (
     <SafeAreaView>
-      <View className="flex h-full w-full flex-col gap-6 p-4">
+      <View className="flex-1 flex-col gap-6 p-4">
         {/* Header */}
         <View className="flex flex-row items-center justify-between">
           <Text className="text-foreground text-3xl font-bold">

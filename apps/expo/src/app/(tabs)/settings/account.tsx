@@ -1,6 +1,9 @@
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
+
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
@@ -14,7 +17,7 @@ const InfoRow = ({
   value: string;
   icon: "mail" | "calendar" | "user";
 }) => (
-  <View className="bg-card flex-row items-center gap-3 rounded-lg p-4">
+  <Card className="flex-row items-center gap-3 p-4">
     <View className="bg-primary/10 h-8 w-8 items-center justify-center rounded-full">
       <Icon name={icon} size={16} className="text-primary" />
     </View>
@@ -22,7 +25,7 @@ const InfoRow = ({
       <Text className="text-muted-foreground text-sm">{label}</Text>
       <Text className="text-foreground text-base font-medium">{value}</Text>
     </View>
-  </View>
+  </Card>
 );
 
 export default function AccountScreen() {
@@ -40,8 +43,8 @@ export default function AccountScreen() {
   };
 
   return (
-    <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="p-4">
+    <SafeAreaView>
+      <AppScrollView className="p-4">
         <Text className="text-foreground mb-6 text-2xl font-bold">
           Account Information
         </Text>
@@ -58,7 +61,7 @@ export default function AccountScreen() {
           />
         </View>
 
-        <View className="bg-card mt-8 rounded-lg p-4">
+        <Card className="mt-8 rounded-lg p-4">
           <Text className="text-foreground mb-3 text-lg font-semibold">
             Account Settings
           </Text>
@@ -67,8 +70,8 @@ export default function AccountScreen() {
             provider. You can't change your email address or other core account
             details.
           </Text>
-        </View>
-      </ScrollView>
+        </Card>
+      </AppScrollView>
     </SafeAreaView>
   );
 }

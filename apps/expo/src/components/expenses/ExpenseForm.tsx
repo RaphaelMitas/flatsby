@@ -5,7 +5,7 @@ import type {
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
@@ -16,13 +16,14 @@ import {
   distributePercentageAmounts,
 } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import { expenseSchema } from "@flatsby/validators/expenses/schemas";
+import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
   CURRENCY_CODES,
   isCurrencyCode,
 } from "@flatsby/validators/expenses/types";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import {
   BottomSheetPickerProvider,
@@ -45,6 +46,7 @@ import {
 } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
+import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
 import { SplitEditor } from "./SplitEditor";
@@ -85,7 +87,7 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
       : "equal";
 
   const form = useFormHook<ExpenseValues, ExpenseValues>({
-    schema: expenseSchema,
+    schema: expenseSchemaWithValidateSplits,
     defaultValues: {
       paidByGroupMemberId:
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,
@@ -489,8 +491,8 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
   );
 
   return (
-    <BottomSheetPickerProvider>
-      <View className="h-full">
+    <SafeAreaView>
+      <BottomSheetPickerProvider>
         <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
           <Text className="text-muted-foreground text-sm">
             Step {currentStep} of {totalSteps}
@@ -508,7 +510,7 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
         </View>
 
         <Form {...form}>
-          <ScrollView className="flex-1" contentContainerClassName="p-4">
+          <AppScrollView className="flex-1" contentContainerClassName="p-4">
             {currentStep === 1 && (
               <View className="gap-4">
                 <Card>
@@ -709,9 +711,7 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
                 </Card>
               </View>
             )}
-          </ScrollView>
-
-          {/* Navigation Buttons */}
+          </AppScrollView>
           <View className="border-border flex-row gap-2 border-t p-4">
             {currentStep > 1 && (
               <Button
@@ -750,7 +750,7 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
             )}
           </View>
         </Form>
-      </View>
-    </BottomSheetPickerProvider>
+      </BottomSheetPickerProvider>
+    </SafeAreaView>
   );
 }

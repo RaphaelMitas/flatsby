@@ -4,7 +4,6 @@ import { useLocalSearchParams } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { ExpenseForm } from "~/components/expenses/ExpenseForm";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
@@ -25,14 +24,12 @@ export default function EditExpensePage() {
   return (
     <Suspense
       fallback={
-        <SafeAreaView>
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" />
-            <Text className="text-muted-foreground mt-4">
-              Loading expense data...
-            </Text>
-          </View>
-        </SafeAreaView>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" />
+          <Text className="text-muted-foreground mt-4">
+            Loading expense data...
+          </Text>
+        </View>
       }
     >
       <EditExpensePageInner

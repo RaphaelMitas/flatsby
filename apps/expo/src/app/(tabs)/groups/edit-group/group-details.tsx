@@ -1,7 +1,9 @@
 import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 import type { GroupFormValues } from "@flatsby/validators/group";
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
+
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { useRouter } from "expo-router";
 import {
   useMutation,
@@ -123,7 +125,7 @@ export default function GroupDetailsScreen() {
   const memberCount = group.data.groupMembers.length;
 
   return (
-    <ScrollView className="p-4">
+    <AppScrollView className="p-4">
       {/* Group Profile Section */}
       <ProfileSection
         name={group.data.name}
@@ -207,6 +209,6 @@ export default function GroupDetailsScreen() {
           />
         )}
       </View>
-    </ScrollView>
+    </AppScrollView>
   );
 }

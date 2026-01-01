@@ -1,13 +1,16 @@
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import { queryClient } from "~/utils/api";
 
 import "../styles.css";
 import "~/lib/nativewind-setup";
 
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import { ThemeProvider } from "~/lib/ui/theme";
@@ -21,22 +24,28 @@ import { ShoppingStoreProvider } from "~/utils/shopping-store";
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <WinterEffectsProvider>
-          <QueryClientProvider client={queryClient}>
-            <ShoppingStoreProvider>
-              {/*
-                The Stack component displays the current page.
-                It also allows you to configure your screens 
-              */}
+      <KeyboardProvider>
+        <SafeAreaProvider>
+          <BottomSheetModalProvider>
+            <ThemeProvider>
+              <WinterEffectsProvider>
+                <QueryClientProvider client={queryClient}>
+                  <ShoppingStoreProvider>
+                    {/*
+                    The Stack component displays the current page.
+                    It also allows you to configure your screens 
+                  */}
 
-              <StackLayout />
+                    <StackLayout />
 
-              <StatusBar />
-            </ShoppingStoreProvider>
-          </QueryClientProvider>
-        </WinterEffectsProvider>
-      </ThemeProvider>
+                    <StatusBar />
+                  </ShoppingStoreProvider>
+                </QueryClientProvider>
+              </WinterEffectsProvider>
+            </ThemeProvider>
+          </BottomSheetModalProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

@@ -1,5 +1,7 @@
 import { Suspense } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
+
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
@@ -60,7 +62,7 @@ function DashboardWithGroup() {
   }
 
   return (
-    <ScrollView className="flex-1">
+    <AppScrollView className="flex-1">
       <View className="flex flex-col gap-6 p-2">
         <View className="flex flex-row items-center justify-between">
           <Text className="text-foreground text-3xl font-bold">
@@ -105,6 +107,6 @@ function DashboardWithGroup() {
 
         <RecentActivity />
       </View>
-    </ScrollView>
+    </AppScrollView>
   );
 }
