@@ -4,7 +4,9 @@
   "main": "index.ts",
   "scripts": {
     "clean": "git clean -xdf .cache .expo .turbo android ios node_modules",
+    "clean:cache": "rm -rf node_modules/.cache",
     "dev": "expo start",
+    "dev:clean": "pnpm clean:cache && expo start --clear",
     "dev:android": "expo start --android",
     "dev:ios": "expo start --ios",
     "android": "expo run:android",

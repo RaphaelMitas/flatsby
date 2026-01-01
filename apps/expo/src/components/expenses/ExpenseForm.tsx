@@ -6,7 +6,6 @@ import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { Text, View } from "react-native";
-import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
@@ -47,6 +46,7 @@ import {
 } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
+import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
 import { SplitEditor } from "./SplitEditor";
@@ -61,9 +61,6 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
   const trpcClient = trpc;
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
-  const { height, progress } = useReanimatedKeyboardAnimation();
-
-  console.log(height, progress);
 
   const isEditMode = !!expense;
   const totalSteps = 3;
@@ -494,7 +491,7 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
   );
 
   return (
-    <View className="h-full">
+    <SafeAreaView>
       <BottomSheetPickerProvider>
         <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
           <Text className="text-muted-foreground text-sm">
@@ -715,7 +712,6 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
               </View>
             )}
           </AppScrollView>
-
           <View className="border-border flex-row gap-2 border-t p-4">
             {currentStep > 1 && (
               <Button
@@ -755,6 +751,6 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
           </View>
         </Form>
       </BottomSheetPickerProvider>
-    </View>
+    </SafeAreaView>
   );
 }
