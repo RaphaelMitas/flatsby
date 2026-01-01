@@ -68,7 +68,7 @@ export default function MemberActionsScreen() {
   };
 
   return (
-    <View className="flex-1 p-6">
+    <View className="bg-background flex-1 p-6">
       <View className="mb-6 flex-row items-center gap-3">
         <Avatar>
           <AvatarImage src={groupMember.user.image ?? undefined} />

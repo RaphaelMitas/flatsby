@@ -61,7 +61,7 @@ export function ShoppingListItemEditForm() {
 
   return (
     <BottomSheetPickerProvider>
-      <View className="flex-1 gap-4 p-4">
+      <View className="bg-background flex-1 gap-4 p-4">
         <Form {...form}>
           <FormField
             control={form.control}

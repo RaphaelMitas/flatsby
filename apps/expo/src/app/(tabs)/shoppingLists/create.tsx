@@ -106,7 +106,7 @@ export default function CreateShoppingList() {
   };
 
   return (
-    <View className="flex-1 p-4">
+    <View className="bg-background flex-1 p-4">
       <Form {...form}>
         <View className="flex gap-2">
           <Label htmlFor="name">List Name</Label>

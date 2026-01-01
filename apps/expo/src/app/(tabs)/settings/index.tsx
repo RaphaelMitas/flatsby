@@ -2,10 +2,8 @@ import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSw
 import type { SharedValue } from "react-native-reanimated";
 import { useCallback, useRef } from "react";
 import { View } from "react-native";
-
-import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import { Stack, useRouter } from "expo-router";
+import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import {
@@ -13,6 +11,7 @@ import {
   SettingsItem,
   SettingsSection,
 } from "~/components/settings";
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
@@ -23,7 +22,6 @@ import { signOut } from "~/utils/auth/auth-client";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function SettingsIndex() {
-  const router = useRouter();
   const { storedTheme, setTheme } = useTheme();
   const {
     isEnabled: isWinterEffectsEnabled,
@@ -129,28 +127,29 @@ export default function SettingsIndex() {
           />
         </SettingsSection>
         <SettingsSection title="Groups">
-          <SettingsItem
-            title="Your Groups"
-            subtitle="Manage your groups"
-            iconName="arrow-left-right"
-            onPress={() => {
-              router.push("/groups");
-            }}
-          />
+          <Link href="/groups" asChild>
+            <SettingsItem
+              title="Your Groups"
+              subtitle="Manage your groups"
+              iconName="arrow-left-right"
+            />
+          </Link>
         </SettingsSection>
         <SettingsSection title="Account">
-          <SettingsItem
-            title="Profile"
-            subtitle="Edit your name and profile picture"
-            iconName="user"
-            onPress={() => router.push("/settings/profile")}
-          />
-          <SettingsItem
-            title="Account"
-            subtitle="Manage your account settings"
-            iconName="settings"
-            onPress={() => router.push("/settings/account")}
-          />
+          <Link href="/settings/profile" asChild>
+            <SettingsItem
+              title="Profile"
+              subtitle="Edit your name and profile picture"
+              iconName="user"
+            />
+          </Link>
+          <Link href="/settings/account" asChild>
+            <SettingsItem
+              title="Account"
+              subtitle="Manage your account settings"
+              iconName="settings"
+            />
+          </Link>
           <SettingsItem
             title="Logout"
             subtitle="Sign out of your account"
@@ -159,13 +158,14 @@ export default function SettingsIndex() {
           />
         </SettingsSection>
         <SettingsSection title="Danger Zone" className="pb-4">
-          <SettingsItem
-            title="Delete Account"
-            subtitle="Permanently delete your account"
-            iconName="trash-2"
-            onPress={() => router.push("/settings/danger")}
-            variant="destructive"
-          />
+          <Link href="/settings/danger" asChild>
+            <SettingsItem
+              title="Delete Account"
+              subtitle="Permanently delete your account"
+              iconName="trash-2"
+              variant="destructive"
+            />
+          </Link>
         </SettingsSection>
       </AppScrollView>
     </SafeAreaView>

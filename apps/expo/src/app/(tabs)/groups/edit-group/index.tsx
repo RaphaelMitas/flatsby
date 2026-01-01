@@ -1,6 +1,6 @@
 import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
 import { useState } from "react";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import {
   useMutation,
   useQueryClient,
@@ -96,32 +96,30 @@ export default function GroupSettingsIndex() {
         <SettingsHeader title={group.data.name} />
 
         <SettingsSection title={group.data.name}>
-          <SettingsItem
-            title="Group Details"
-            subtitle="Edit your group details"
-            iconName="settings"
-            onPress={() =>
-              router.push("/(tabs)/groups/edit-group/group-details")
-            }
-          />
-          <SettingsItem
-            title="Members"
-            subtitle="Manage your group members"
-            iconName="users"
-            onPress={() => router.push("/(tabs)/groups/edit-group/members")}
-          />
+          <Link href="/(tabs)/groups/edit-group/group-details" asChild>
+            <SettingsItem
+              title="Group Details"
+              subtitle="Edit your group details"
+              iconName="settings"
+            />
+          </Link>
+          <Link href="/(tabs)/groups/edit-group/members" asChild>
+            <SettingsItem
+              title="Members"
+              subtitle="Manage your group members"
+              iconName="users"
+            />
+          </Link>
         </SettingsSection>
 
         <SettingsSection title="Change Group">
-          <SettingsItem
-            title="Change Group"
-            subtitle="Change selected group or create a new one"
-            iconName="arrow-left-right"
-            onPress={() => {
-              router.back();
-              router.push("/(tabs)/groups");
-            }}
-          />
+          <Link href="/(tabs)/groups" asChild>
+            <SettingsItem
+              title="Change Group"
+              subtitle="Change selected group or create a new one"
+              iconName="arrow-left-right"
+            />
+          </Link>
         </SettingsSection>
         <SettingsSection title="Danger Zone">
           <SettingsItem

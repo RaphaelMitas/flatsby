@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-
-import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import {
   Card,
