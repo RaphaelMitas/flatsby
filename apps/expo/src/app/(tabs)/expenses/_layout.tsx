@@ -16,7 +16,6 @@ export default function ExpensesLayout() {
       <Stack.Screen
         name="create"
         options={{
-          // presentation: "modal",
           headerShown: true,
           headerTitle: "Add Expense",
           headerBackTitle: "Back to Expenses",
@@ -26,17 +25,17 @@ export default function ExpensesLayout() {
       <Stack.Screen
         name="settle"
         options={{
-          presentation: "modal",
           headerShown: true,
           headerTitle: "Settle Up",
+          headerBackTitle: "Back",
         }}
       />
       <Stack.Screen
         name="[expenseId]"
         options={{
-          presentation: "modal",
           headerShown: true,
           headerTitle: "Expense Details",
+          headerBackTitle: "Back",
         }}
       />
     </Stack>
