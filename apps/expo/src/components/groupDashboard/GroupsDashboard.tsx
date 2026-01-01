@@ -22,47 +22,43 @@ export function GroupsDashboard() {
   }
 
   return (
-    <View className="h-full w-full">
-      <View className="flex h-full w-full flex-col gap-6 p-4">
-        <View className="flex flex-row items-center justify-between">
-          <Text className="text-foreground text-3xl font-bold">
-            Your Groups
-          </Text>
+    <View className="flex-1 flex-col gap-6 p-4">
+      <View className="flex flex-row items-center justify-between">
+        <Text className="text-foreground text-3xl font-bold">Your Groups</Text>
 
-          <Button
-            title="Create Group"
-            variant="primary"
-            size="lg"
-            icon="plus"
-            onPress={() => router.push("/groups/create")}
-          />
-        </View>
-
-        {groups.data.length === 0 && (
-          <View className="flex flex-col items-center justify-center gap-4">
-            <Text className="text-foreground text-center text-lg font-semibold">
-              No groups yet
-            </Text>
-            <Button
-              title="Create a Group"
-              variant="primary"
-              size="lg"
-              onPress={() => router.push("/groups/create")}
-            />
-            <Text className="text-muted-foreground text-center text-sm">
-              Pull down to refresh if you've been invited
-            </Text>
-          </View>
-        )}
-        <FlashList
-          data={groups.data}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-          }
-          ItemSeparatorComponent={() => <View className="h-4" />}
-          renderItem={(item) => <GroupsDashboardElement group={item.item} />}
+        <Button
+          title="Create Group"
+          variant="primary"
+          size="lg"
+          icon="plus"
+          onPress={() => router.push("/groups/create")}
         />
       </View>
+
+      {groups.data.length === 0 && (
+        <View className="flex flex-col items-center justify-center gap-4">
+          <Text className="text-foreground text-center text-lg font-semibold">
+            No groups yet
+          </Text>
+          <Button
+            title="Create a Group"
+            variant="primary"
+            size="lg"
+            onPress={() => router.push("/groups/create")}
+          />
+          <Text className="text-muted-foreground text-center text-sm">
+            Pull down to refresh if you've been invited
+          </Text>
+        </View>
+      )}
+      <FlashList
+        data={groups.data}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        }
+        ItemSeparatorComponent={() => <View className="h-4" />}
+        renderItem={(item) => <GroupsDashboardElement group={item.item} />}
+      />
     </View>
   );
 }

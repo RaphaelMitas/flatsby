@@ -5,7 +5,6 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { SettlementForm } from "~/components/expenses/SettlementForm";
 import { Button } from "~/lib/ui/button";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
@@ -54,14 +53,12 @@ export default function SettlePage() {
       />
       <Suspense
         fallback={
-          <SafeAreaView>
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" />
-              <Text className="text-muted-foreground mt-4">
-                Loading settlement form...
-              </Text>
-            </View>
-          </SafeAreaView>
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" />
+            <Text className="text-muted-foreground mt-4">
+              Loading settlement form...
+            </Text>
+          </View>
         }
       >
         {expenseId ? (

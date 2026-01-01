@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
+
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import {
   useMutation,
   useQueryClient,
@@ -44,8 +46,8 @@ export default function DangerScreen() {
   const isConfirmationValid = confirmationInput === user.email;
 
   return (
-    <SafeAreaView className="bg-background flex-1">
-      <ScrollView className="p-4">
+    <SafeAreaView>
+      <AppScrollView className="p-4">
         <Text className="text-destructive mb-2 text-2xl font-bold">
           Danger Zone
         </Text>
@@ -140,7 +142,7 @@ export default function DangerScreen() {
             </Alert>
           )}
         </Alert>
-      </ScrollView>
+      </AppScrollView>
     </SafeAreaView>
   );
 }

@@ -23,7 +23,7 @@ const ShoppingListPage = () => {
   }
 
   return (
-    <SafeAreaView className="bg-background">
+    <SafeAreaView>
       <Suspense
         fallback={
           <View className="flex-1 p-8">

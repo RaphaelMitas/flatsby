@@ -1,4 +1,3 @@
-import { View } from "react-native";
 import { Redirect } from "expo-router";
 
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
@@ -13,10 +12,8 @@ export default function Index() {
   }
 
   return (
-    <SafeAreaView className="bg-background">
-      <View className="bg-background h-full w-full p-4">
-        <GroupsDashboard />
-      </View>
+    <SafeAreaView>
+      <GroupsDashboard />
     </SafeAreaView>
   );
 }

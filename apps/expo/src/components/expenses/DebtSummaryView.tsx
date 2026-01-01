@@ -1,11 +1,12 @@
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import type { GroupDebtSummary } from "@flatsby/validators/expenses/types";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
 import {
@@ -70,7 +71,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   );
 
   return (
-    <ScrollView className="flex-1">
+    <AppScrollView className="flex-1">
       <View className="flex w-full flex-col gap-4 p-4">
         <View className="flex flex-row items-center justify-between">
           <View>
@@ -297,6 +298,6 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
           </View>
         )}
       </View>
-    </ScrollView>
+    </AppScrollView>
   );
 }

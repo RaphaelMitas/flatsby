@@ -108,67 +108,65 @@ function ExpensesDashboardInner() {
   };
 
   return (
-    <>
-      <View className="flex-1 px-4">
-        {/* Header */}
-        <View className="mb-6 flex-row items-center justify-between">
-          <Text className="text-foreground text-3xl font-bold">Expenses</Text>
+    <View className="flex-1 px-4">
+      {/* Header */}
+      <View className="mb-6 flex-row items-center justify-between">
+        <Text className="text-foreground text-3xl font-bold">Expenses</Text>
+        <Button
+          title="Debt Overview"
+          size="md"
+          icon="arrow-right"
+          onPress={() => router.push(`/(tabs)/expenses/debts`)}
+        />
+      </View>
+
+      {/* Expenses List */}
+      {!hasExpenses ? (
+        <View className="flex flex-1 flex-col items-center justify-center gap-4">
+          <Icon name="wallet" size={64} color="muted-foreground" />
+          <Text className="text-foreground text-lg font-semibold">
+            No expenses yet
+          </Text>
+          <Text className="text-muted-foreground text-center text-sm">
+            Start tracking expenses by adding your first one
+          </Text>
           <Button
-            title="Debt Overview"
-            size="md"
-            icon="arrow-right"
-            onPress={() => router.push(`/(tabs)/expenses/debts`)}
+            title="Add Expense"
+            variant="primary"
+            size="lg"
+            icon="plus"
+            onPress={() => router.push("/(tabs)/expenses/create")}
           />
         </View>
-
-        {/* Expenses List */}
-        {!hasExpenses ? (
-          <View className="flex flex-1 flex-col items-center justify-center gap-4">
-            <Icon name="wallet" size={64} color="muted-foreground" />
-            <Text className="text-foreground text-lg font-semibold">
-              No expenses yet
-            </Text>
-            <Text className="text-muted-foreground text-center text-sm">
-              Start tracking expenses by adding your first one
-            </Text>
-            <Button
-              title="Add Expense"
-              variant="primary"
-              size="lg"
-              icon="plus"
-              onPress={() => router.push("/(tabs)/expenses/create")}
+      ) : (
+        <FlashList
+          data={allExpenses}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+          ItemSeparatorComponent={() => <View className="h-3" />}
+          renderItem={({ item }) => (
+            <ExpenseCard
+              expense={item}
+              groupId={selectedGroupId ?? -1}
+              onEdit={() => handleEdit(item)}
             />
-          </View>
-        ) : (
-          <FlashList
-            data={allExpenses}
-            refreshControl={
-              <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          )}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              void fetchNextPage();
             }
-            ItemSeparatorComponent={() => <View className="h-3" />}
-            renderItem={({ item }) => (
-              <ExpenseCard
-                expense={item}
-                groupId={selectedGroupId ?? -1}
-                onEdit={() => handleEdit(item)}
-              />
-            )}
-            onEndReached={() => {
-              if (hasNextPage && !isFetchingNextPage) {
-                void fetchNextPage();
-              }
-            }}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={
-              isFetchingNextPage ? (
-                <View className="py-4">
-                  <ActivityIndicator size="small" />
-                </View>
-              ) : null
-            }
-          />
-        )}
-      </View>
+          }}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View className="py-4">
+                <ActivityIndicator size="small" />
+              </View>
+            ) : null
+          }
+        />
+      )}
       {hasExpenses && (
         <View
           style={{
@@ -184,6 +182,6 @@ function ExpensesDashboardInner() {
           />
         </View>
       )}
-    </>
+    </View>
   );
 }

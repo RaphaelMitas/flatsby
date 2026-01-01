@@ -1,15 +1,8 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
-import { useEffect, useMemo, useState } from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  RefreshControl,
-  Text,
-  View,
-} from "react-native";
+import { useMemo } from "react";
+import { RefreshControl, Text, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import {
   useInfiniteQuery,
@@ -18,6 +11,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 
+import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { trpc } from "~/utils/api";
 import ShoppingListItem from "./ShoppingListItem";
@@ -38,31 +32,6 @@ type ListItem =
 
 const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   const queryClient = useQueryClient();
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    if (Platform.OS === "ios") {
-      return;
-    }
-
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-      },
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => {
-        setKeyboardHeight(0);
-      },
-    );
-
-    return () => {
-      keyboardDidHideListener.remove();
-      keyboardDidShowListener.remove();
-    };
-  }, []);
 
   const { data: shoppingListData } = useSuspenseQuery(
     trpc.shoppingList.getShoppingList.queryOptions({ groupId, shoppingListId }),
@@ -330,13 +299,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      className="h-full"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{
-        marginBottom: Platform.OS === "ios" ? undefined : keyboardHeight,
-      }}
-    >
+    <>
       {shoppingList && (
         <View className="p-4">
           <Text className="text-foreground text-center text-xl font-semibold">
@@ -358,10 +321,12 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             onEndReachedThreshold={0.5}
             keyboardDismissMode="on-drag"
           />
-          <ShoppingListItemAddForm onSubmit={handleSubmit} />
+          <AppKeyboardStickyView>
+            <ShoppingListItemAddForm onSubmit={handleSubmit} />
+          </AppKeyboardStickyView>
         </View>
       </BottomSheetPickerProvider>
-    </KeyboardAvoidingView>
+    </>
   );
 };
 

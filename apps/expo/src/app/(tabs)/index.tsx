@@ -1,4 +1,3 @@
-import { View } from "react-native";
 import { Redirect } from "expo-router";
 
 import { Dashboard } from "~/components/dashboard/Dashboard";
@@ -14,9 +13,7 @@ export default function Index() {
 
   return (
     <SafeAreaView>
-      <View className="h-full w-full">
-        <Dashboard />
-      </View>
+      <Dashboard />
     </SafeAreaView>
   );
 }
