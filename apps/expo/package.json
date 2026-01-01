@@ -16,7 +16,7 @@
     "eas:build:prod": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile production",
     "eas:build:local": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile development --local",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
-    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "lint": "eslint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -40,6 +40,7 @@
     "expo-dev-client": "~6.0.16",
     "expo-font": "~14.0.0",
     "expo-linking": "~8.0.8",
+    "expo-network": "~8.0.8",
     "expo-router": "~6.0.13",
     "expo-secure-store": "~15.0.7",
     "expo-splash-screen": "~31.0.10",
