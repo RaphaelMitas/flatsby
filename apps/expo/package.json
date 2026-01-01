@@ -15,6 +15,8 @@
     "eas:build": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile development",
     "eas:build:prod": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile production",
     "eas:build:local": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile development --local",
+    "eas:update": "eas update --channel development",
+    "eas:update:prod": "eas update --channel production",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"
