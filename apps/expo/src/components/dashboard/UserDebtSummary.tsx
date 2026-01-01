@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import { useRouter } from "expo-router";
+import { ActivityIndicator, Text, View } from "react-native";
+import { Link, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
@@ -56,13 +56,9 @@ function UserDebtSummaryInner({ groupId }: UserDebtSummaryProps) {
             <CardTitle className="text-lg font-semibold">
               Your Balance
             </CardTitle>
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/expenses/debts")}
-              className="flex flex-row items-center"
-            >
+            <Link href="/(tabs)/expenses/debts">
               <Text className="text-primary text-sm">View details</Text>
-              <Icon name="arrow-right" size={16} color="primary" />
-            </TouchableOpacity>
+            </Link>
           </View>
         </CardHeader>
         <CardContent>
