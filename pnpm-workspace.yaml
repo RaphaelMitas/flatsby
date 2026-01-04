@@ -4,58 +4,46 @@ packages:
   - tooling/*
 
 catalog:
-  # Better Auth
-  "@better-auth/expo": 1.5.0-beta.2
-  "@better-auth/cli": 1.5.0-beta.2
-  "better-auth": 1.5.0-beta.2
-
-  # Dev tooling
-  "@eslint/js": ^9.38.0
+  '@ai-sdk/google': ^2.0.3
+  '@better-auth/cli': 1.5.0-beta.2
+  '@better-auth/expo': 1.5.0-beta.2
+  '@eslint/js': ^9.38.0
+  '@t3-oss/env-nextjs': ^0.13.8
+  '@tailwindcss/postcss': ^4.1.16
+  '@tanstack/react-query': ^5.90.12
+  '@trpc/client': ^11.7.2
+  '@trpc/server': ^11.7.2
+  '@trpc/tanstack-react-query': ^11.7.2
+  '@turbo/gen': ^2.6.3
+  '@types/node': ^22.18.12
+  ai: 5.0.117
+  better-auth: 1.5.0-beta.2
   eslint: ^9.38.0
-  prettier: ^3.7.4
-  tailwindcss: ^4.1.16
-  "@tailwindcss/postcss": ^4.1.16
-  typescript: ^5.9.3
-
-  # Misc
-  zod: ^4.1.12
-  "@t3-oss/env-nextjs": ^0.13.8
-  superjson: ^2.2.6
-  "@types/node": ^22.18.12
-
-  # Tanstack & tRPC
-  "@tanstack/react-query": ^5.90.12
-  "@trpc/client": ^11.7.2
-  "@trpc/tanstack-react-query": ^11.7.2
-  "@trpc/server": ^11.7.2
-
-  # Next.js
   next: ^16.0.7
-
-  # AI SDK
-  "ai": ^5.0.52
-  "@ai-sdk/google": ^2.0.3
-
+  prettier: ^3.7.4
+  superjson: ^2.2.6
+  tailwindcss: ^4.1.16
   turbo: ^2.6.3
-  "@turbo/gen": ^2.6.3
+  typescript: ^5.9.3
+  zod: ^4.1.12
 
 catalogs:
   react19:
-    "@types/react": ~19.1.0
-    "@types/react-dom": ~19.1.0
+    '@types/react': ~19.1.0
+    '@types/react-dom': ~19.1.0
     react: 19.1.2
     react-dom: 19.1.2
 
 linkWorkspacePackages: true
 
 onlyBuiltDependencies:
-  - "@tailwindcss/oxide"
+  - '@tailwindcss/oxide'
   - esbuild
 
 overrides:
-  "@types/minimatch": 5.1.2
+  '@types/minimatch': 5.1.2
   lightningcss: 1.30.1
 
 publicHoistPattern:
-  - "@ianvs/prettier-plugin-sort-imports"
+  - '@ianvs/prettier-plugin-sort-imports'
   - prettier-plugin-tailwindcss
