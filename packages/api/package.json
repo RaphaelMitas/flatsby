@@ -25,6 +25,7 @@
     "@flatsby/ui": "workspace:*",
     "@flatsby/validators": "workspace:*",
     "@trpc/server": "catalog:",
+    "ai": "catalog:",
     "effect": "^3.17.0",
     "superjson": "catalog:",
     "zod": "catalog:"

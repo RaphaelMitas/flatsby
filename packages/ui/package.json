@@ -29,7 +29,8 @@
     "./custom/icons/PasskeyIcon": "./src/custom/icons/PasskeyIcon.tsx",
     "./winter/snow-effect": "./src/winter/snow-effect.tsx",
     "./winter/snow-effect-native": "./src/winter/snow-effect-native.tsx",
-    "./seasonal-theme": "./src/seasonal-theme.ts"
+    "./seasonal-theme": "./src/seasonal-theme.ts",
+    "./chat-transport": "./src/chat-transport.ts"
   },
   "license": "MIT",
   "scripts": {

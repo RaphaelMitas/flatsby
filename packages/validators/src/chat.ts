@@ -1,0 +1,102 @@
+import { z } from "zod/v4";
+
+// Role enum for messages
+export const messageRoleSchema = z.enum(["user", "assistant", "system"]);
+export type MessageRole = z.infer<typeof messageRoleSchema>;
+
+// Status enum for messages
+export const messageStatusSchema = z.enum([
+  "pending",
+  "streaming",
+  "complete",
+  "error",
+]);
+export type MessageStatus = z.infer<typeof messageStatusSchema>;
+
+// Trigger enum for send mutations
+export const sendTriggerSchema = z.enum([
+  "submit-message",
+  "regenerate-message",
+]);
+export type SendTrigger = z.infer<typeof sendTriggerSchema>;
+
+// Base message schema (from DB)
+export const chatMessageSchema = z.object({
+  id: z.uuid(),
+  conversationId: z.uuid(),
+  role: messageRoleSchema,
+  content: z.string(),
+  status: messageStatusSchema,
+  tokenCount: z.number().nullable(),
+  createdAt: z.date(),
+});
+export type ChatMessage = z.infer<typeof chatMessageSchema>;
+
+// Conversation schema (from DB)
+export const conversationSchema = z.object({
+  id: z.uuid(),
+  userId: z.string(),
+  title: z.string().nullable(),
+  model: z.string().nullable(),
+  systemPrompt: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+export type Conversation = z.infer<typeof conversationSchema>;
+
+// Conversation with messages
+export const conversationWithMessagesSchema = conversationSchema.extend({
+  messages: z.array(chatMessageSchema),
+});
+export type ConversationWithMessages = z.infer<
+  typeof conversationWithMessagesSchema
+>;
+
+// UI Message schema (compatible with AI SDK)
+export const uiMessageSchema = z.object({
+  id: z.string(),
+  role: messageRoleSchema,
+  content: z.string(),
+  createdAt: z.date().optional(),
+});
+export type UIMessage = z.infer<typeof uiMessageSchema>;
+
+// Input schemas
+export const createConversationInputSchema = z.object({
+  title: z.string().max(256).optional(),
+  model: z.string().optional(),
+  systemPrompt: z.string().max(4000).optional(),
+});
+export type CreateConversationInput = z.infer<
+  typeof createConversationInputSchema
+>;
+
+export const getConversationInputSchema = z.object({
+  conversationId: z.uuid(),
+});
+export type GetConversationInput = z.infer<typeof getConversationInputSchema>;
+
+export const getUserConversationsInputSchema = z.object({
+  limit: z.number().min(1).max(100).default(50),
+  cursor: z.uuid().optional(),
+});
+export type GetUserConversationsInput = z.infer<
+  typeof getUserConversationsInputSchema
+>;
+
+export const sendInputSchema = z.object({
+  conversationId: z.uuid(),
+  message: uiMessageSchema,
+  trigger: sendTriggerSchema,
+  messageId: z.uuid().optional(), // For regeneration
+});
+export type SendInput = z.infer<typeof sendInputSchema>;
+
+// Streaming chunk schema (yielded by the send mutation)
+export const streamChunkSchema = z.object({
+  type: z.enum(["text-delta", "finish"]),
+  textDelta: z.string().optional(),
+  content: z.string().optional(),
+  status: messageStatusSchema.optional(),
+});
+export type StreamChunk = z.infer<typeof streamChunkSchema>;

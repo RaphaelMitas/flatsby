@@ -1,11 +1,13 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  index,
   integer,
   pgTableCreator,
   serial,
   text,
   timestamp,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -34,6 +36,7 @@ export const users = createTable("user", {
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
   groupMembers: many(groupMembers),
+  conversations: many(conversations),
   lastGroupUsed: one(groups, {
     fields: [users.lastGroupUsed],
     references: [groups.id],
@@ -265,5 +268,54 @@ export const expenseSplitsRelations = relations(expenseSplits, ({ one }) => ({
   groupMember: one(groupMembers, {
     fields: [expenseSplits.groupMemberId],
     references: [groupMembers.id],
+  }),
+}));
+
+// Chat tables
+export const conversations = createTable("conversations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title"),
+  model: text("model").default("gemini-2.0-flash"),
+  systemPrompt: text("system_prompt"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const conversationsRelations = relations(
+  conversations,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [conversations.userId],
+      references: [users.id],
+    }),
+    messages: many(chatMessages),
+  }),
+);
+
+export const chatMessages = createTable(
+  "chat_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 20 }).notNull(), // "user" | "assistant" | "system"
+    content: text("content").notNull().default(""),
+    status: varchar("status", { length: 20 }).default("pending").notNull(), // "pending" | "streaming" | "complete" | "error"
+    tokenCount: integer("token_count"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("chat_messages_conv_idx").on(table.conversationId, table.createdAt),
+  ],
+);
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [chatMessages.conversationId],
+    references: [conversations.id],
   }),
 }));
