@@ -169,13 +169,26 @@ export const chatRouter = createTRPCRouter({
       }
 
       // Reset the message content and status
-      await ctx.db
+      const updateResult = await ctx.db
         .update(chatMessages)
         .set({
           content: "",
           status: "pending",
         })
-        .where(eq(chatMessages.id, input.messageId));
+        .where(
+          and(
+            eq(chatMessages.id, input.messageId),
+            eq(chatMessages.conversationId, input.conversationId),
+          ),
+        )
+        .returning({ id: chatMessages.id });
+
+      if (updateResult.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Message not found in this conversation",
+        });
+      }
 
       assistantMessageId = input.messageId;
     }
