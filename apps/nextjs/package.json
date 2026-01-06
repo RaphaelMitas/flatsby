@@ -14,6 +14,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@ai-sdk/react": "catalog:",
     "@better-auth/expo": "catalog:",
     "@flatsby/api": "workspace:*",
     "@flatsby/auth": "workspace:*",
@@ -25,6 +26,7 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
+    "ai": "catalog:",
     "better-auth": "catalog:",
     "geist": "^1.5.1",
     "jose": "^6.1.3",

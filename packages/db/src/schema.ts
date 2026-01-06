@@ -278,7 +278,7 @@ export const conversations = createTable("conversations", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   title: text("title"),
-  model: text("model").default("gemini-2.0-flash"),
+  model: text("model").default("google/gemini-2.0-flash"),
   systemPrompt: text("system_prompt"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -298,7 +298,8 @@ export const conversationsRelations = relations(
 export const chatMessages = createTable(
   "chat_messages",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    // Use text instead of uuid to accept AI SDK's nanoid-style IDs
+    id: text("id").primaryKey(),
     conversationId: uuid("conversation_id")
       .notNull()
       .references(() => conversations.id, { onDelete: "cascade" }),

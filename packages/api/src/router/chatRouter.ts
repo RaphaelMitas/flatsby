@@ -1,5 +1,5 @@
+import crypto from "node:crypto";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod/v4";
 
 import { and, desc, eq, lt } from "@flatsby/db";
 import { chatMessages, conversations } from "@flatsby/db/schema";
@@ -139,10 +139,11 @@ export const chatRouter = createTRPCRouter({
         status: "complete",
       });
 
-      // Create assistant placeholder
+      // Create assistant placeholder with generated ID
       const [assistantMessage] = await ctx.db
         .insert(chatMessages)
         .values({
+          id: crypto.randomUUID(),
           conversationId: input.conversationId,
           role: "assistant",
           content: "",
@@ -196,6 +197,7 @@ export const chatRouter = createTRPCRouter({
     // Stream the AI response
     let buffer = "";
     let lastFlush = Date.now();
+    let streamCompleted = false;
 
     try {
       // Update status to streaming
@@ -205,7 +207,7 @@ export const chatRouter = createTRPCRouter({
         .where(eq(chatMessages.id, assistantMessageId));
 
       const stream = streamChatCompletion(contextMessages, {
-        model: conversation.model,
+        model: conversation.model ?? undefined,
       });
 
       for await (const chunk of stream) {
@@ -226,6 +228,8 @@ export const chatRouter = createTRPCRouter({
           textDelta: chunk,
         };
       }
+
+      streamCompleted = true;
 
       // Final write with complete status
       await ctx.db
@@ -258,6 +262,14 @@ export const chatRouter = createTRPCRouter({
           error instanceof Error ? error.message : "Failed to stream response",
         cause: error,
       });
+    } finally {
+      // Ensure we save content even if client disconnects mid-stream
+      if (!streamCompleted && buffer.length > 0) {
+        await ctx.db
+          .update(chatMessages)
+          .set({ content: buffer, status: "complete" })
+          .where(eq(chatMessages.id, assistantMessageId));
+      }
     }
   }),
 });

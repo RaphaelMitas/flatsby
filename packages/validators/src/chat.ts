@@ -21,8 +21,9 @@ export const sendTriggerSchema = z.enum([
 export type SendTrigger = z.infer<typeof sendTriggerSchema>;
 
 // Base message schema (from DB)
+// Note: message IDs are strings (nanoid from AI SDK or UUID we generate)
 export const chatMessageSchema = z.object({
-  id: z.uuid(),
+  id: z.string(),
   conversationId: z.uuid(),
   role: messageRoleSchema,
   content: z.string(),
@@ -52,7 +53,8 @@ export type ConversationWithMessages = z.infer<
   typeof conversationWithMessagesSchema
 >;
 
-// UI Message schema (compatible with AI SDK)
+// UI Message schema (compatible with AI SDK v5)
+// AI SDK generates nanoid-style IDs, content is extracted from parts
 export const uiMessageSchema = z.object({
   id: z.string(),
   role: messageRoleSchema,
@@ -88,7 +90,8 @@ export const sendInputSchema = z.object({
   conversationId: z.uuid(),
   message: uiMessageSchema,
   trigger: sendTriggerSchema,
-  messageId: z.uuid().optional(), // For regeneration
+  // Message ID for regeneration - string to accept both nanoid and UUID
+  messageId: z.string().optional(),
 });
 export type SendInput = z.infer<typeof sendInputSchema>;
 

@@ -1,5 +1,4 @@
 import type { CategoryId } from "@flatsby/validators/categories";
-import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
@@ -828,7 +827,7 @@ export const shoppingList = createTRPCRouter({
 const getItemCategory = async (itemName: string): Promise<CategoryId> => {
   try {
     const response = await generateObject({
-      model: google("gemini-2.0-flash-exp"),
+      model: "google/gemini-2.0-flash",
       schema: z.object({
         category: categoryIdSchema,
       }),

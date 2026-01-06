@@ -2,40 +2,35 @@ import { streamText } from "ai";
 
 import type { ContextMessage } from "./context-builder";
 
-// Environment variable to select provider: "google" | "openai"
-const MODEL_PROVIDER = process.env.MODEL_PROVIDER ?? "google";
-
-// Default models per provider
-const DEFAULT_MODELS = {
-  google: "gemini-2.0-flash",
-  openai: "gpt-4o",
-} as const;
+// Default model using Vercel AI Gateway format: provider/model
+const DEFAULT_MODEL = "google/gemini-2.0-flash";
 
 /**
- * Get the default model name for the current provider
+ * Get the default model name
  */
 export function getDefaultModel() {
-  if (MODEL_PROVIDER === "openai") {
-    return DEFAULT_MODELS.openai;
-  }
-  return DEFAULT_MODELS.google;
+  return DEFAULT_MODEL;
 }
 
 export interface StreamChatOptions {
-  model?: (typeof DEFAULT_MODELS)[keyof typeof DEFAULT_MODELS];
+  model?: string;
+  systemPrompt?: string;
 }
 
 /**
- * Stream a chat completion from the configured AI provider
+ * Stream a chat completion via Vercel AI Gateway
+ * Uses the AI_GATEWAY_API_KEY environment variable for authentication
+ * Model format: provider/model (e.g., "google/gemini-2.0-flash", "openai/gpt-4o")
  * Returns an async iterable of text chunks
  */
 export function streamChatCompletion(
   messages: ContextMessage[],
   options: StreamChatOptions = {},
 ): AsyncIterable<string> {
-  const modelName = options.model ?? getDefaultModel();
+  const modelName = options.model ?? DEFAULT_MODEL;
 
   const result = streamText({
+    // AI SDK v5: string model ID uses Vercel AI Gateway by default
     model: modelName,
     messages: messages.map((m) => ({
       role: m.role,
@@ -45,11 +40,4 @@ export function streamChatCompletion(
 
   // Return the text stream as an async iterable
   return result.textStream;
-}
-
-/**
- * Get the current model provider name
- */
-export function getModelProviderName(): string {
-  return MODEL_PROVIDER;
 }

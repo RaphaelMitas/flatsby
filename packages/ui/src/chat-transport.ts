@@ -1,18 +1,8 @@
 import type { SendTrigger } from "@flatsby/validators/chat";
-import type { UIMessage } from "ai";
+import type { ChatTransport, UIMessage, UIMessageChunk } from "ai";
 
 /**
- * Input for the send mutation
- */
-export interface SendInput {
-  conversationId: string;
-  message: UIMessage;
-  trigger: SendTrigger;
-  messageId?: string;
-}
-
-/**
- * Chunk yielded by the streaming mutation
+ * Chunk yielded by the streaming tRPC mutation
  */
 export interface StreamChunk {
   type: "text-delta" | "finish";
@@ -22,106 +12,120 @@ export interface StreamChunk {
 }
 
 /**
- * UI Message chunk format expected by AI SDK useChat
+ * Valid message roles for tRPC
  */
-export interface UIMessageChunk {
-  type: "text-delta" | "finish";
-  textDelta?: string;
-}
-
-/**
- * Options passed to sendMessages by useChat
- */
-export interface SendMessagesOptions {
-  chatId: string;
-  messages: UIMessage[];
-  trigger: SendTrigger;
-  messageId?: string;
-  abortSignal?: AbortSignal;
-}
+type MessageRole = "user" | "assistant" | "system";
 
 /**
  * Type for the tRPC send mutation function
  */
 export type SendMutationFn = (
-  input: SendInput,
+  input: {
+    conversationId: string;
+    message: {
+      id: string;
+      role: MessageRole;
+      content: string;
+      createdAt: Date;
+    };
+    trigger: SendTrigger;
+    messageId?: string;
+  },
   opts?: { signal?: AbortSignal },
 ) => Promise<AsyncIterable<StreamChunk>>;
 
 /**
- * Chat transport interface compatible with AI SDK
+ * Validates and narrows a role string to MessageRole
  */
-export interface ChatTransport {
-  sendMessages(
-    opts: SendMessagesOptions,
-  ): Promise<ReadableStream<UIMessageChunk>>;
-  reconnectToStream(opts: { chatId: string }): ReadableStream<UIMessageChunk>;
+function validateRole(role: string): MessageRole {
+  if (role === "user" || role === "assistant" || role === "system") {
+    return role;
+  }
+  return "user";
+}
+
+/**
+ * Extracts text content from message parts
+ */
+function getMessageContent(message: UIMessage): string {
+  return message.parts
+    .filter((part) => part.type === "text")
+    .map((part) => part.text)
+    .join("");
 }
 
 /**
  * Creates a tRPC chat transport compatible with @ai-sdk/react's useChat hook.
- *
- * This transport:
- * - Calls the single `chat.send` mutation which handles message insertion and streaming
- * - Converts AsyncIterable from tRPC to ReadableStream for AI SDK
- * - Works on both Next.js and Expo
- *
- * @example
- * ```typescript
- * import { useChat } from "@ai-sdk/react";
- * import { createTRPCChatTransport } from "@flatsby/ui/chat-transport";
- *
- * const transport = createTRPCChatTransport(trpc.chat.send.mutate);
- * const chat = useChat({
- *   transport,
- *   id: conversationId,
- *   onFinish: () => utils.chat.getConversation.invalidate({ conversationId }),
- * });
- * ```
+ * Implements the UI Message Stream Protocol.
  */
 export function createTRPCChatTransport(
   sendMutation: SendMutationFn,
-): ChatTransport {
+): ChatTransport<UIMessage> {
   return {
-    async sendMessages(opts: SendMessagesOptions) {
-      const message = opts.messages.at(-1);
+    sendMessages: async (options) => {
+      const message = options.messages.at(-1);
       if (!message) {
         throw new Error("No message to send");
       }
 
       const result = await sendMutation(
         {
-          conversationId: opts.chatId,
-          message,
-          trigger: opts.trigger,
+          conversationId: options.chatId,
+          message: {
+            id: message.id,
+            role: validateRole(message.role),
+            content: getMessageContent(message),
+            createdAt: new Date(),
+          },
+          trigger: options.trigger,
           messageId:
-            opts.trigger === "regenerate-message" ? opts.messageId : undefined,
+            options.trigger === "regenerate-message"
+              ? options.messageId
+              : undefined,
         },
-        { signal: opts.abortSignal },
+        { signal: options.abortSignal },
       );
 
-      // Convert AsyncIterable → ReadableStream
+      const textBlockId = `text-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const iterator = result[Symbol.asyncIterator]();
+      let sentStart = false;
+      let sentTextStart = false;
 
       return new ReadableStream<UIMessageChunk>({
         async pull(controller) {
           try {
-            const { done, value } = await iterator.next();
-            if (done) {
+            if (!sentStart) {
+              controller.enqueue({ type: "start" });
+              sentStart = true;
+              return;
+            }
+
+            if (!sentTextStart) {
+              controller.enqueue({ type: "text-start", id: textBlockId });
+              sentTextStart = true;
+              return;
+            }
+
+            const iterResult = await iterator.next();
+
+            if (iterResult.done) {
+              controller.enqueue({ type: "text-end", id: textBlockId });
+              controller.enqueue({ type: "finish", finishReason: "stop" });
               controller.close();
               return;
             }
 
-            // Map StreamChunk to UIMessageChunk
-            if (value.type === "text-delta" && value.textDelta) {
+            const chunk: StreamChunk = iterResult.value;
+            if (chunk.type === "text-delta" && chunk.textDelta) {
               controller.enqueue({
                 type: "text-delta",
-                textDelta: value.textDelta,
+                id: textBlockId,
+                delta: chunk.textDelta,
               });
-            } else if (value.type === "finish") {
-              controller.enqueue({
-                type: "finish",
-              });
+            } else if (chunk.type === "finish") {
+              controller.enqueue({ type: "text-end", id: textBlockId });
+              controller.enqueue({ type: "finish", finishReason: "stop" });
+              controller.close();
             }
           } catch (error) {
             controller.error(error);
@@ -133,17 +137,8 @@ export function createTRPCChatTransport(
       });
     },
 
-    /**
-     * Reconnect to stream is not needed since recovery is handled by
-     * fetching the conversation from the database via getConversation.
-     * Returns an empty stream that closes immediately.
-     */
-    reconnectToStream() {
-      return new ReadableStream<UIMessageChunk>({
-        start(controller) {
-          controller.close();
-        },
-      });
+    reconnectToStream: () => {
+      return Promise.resolve(null);
     },
   };
 }

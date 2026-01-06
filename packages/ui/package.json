@@ -30,7 +30,8 @@
     "./winter/snow-effect": "./src/winter/snow-effect.tsx",
     "./winter/snow-effect-native": "./src/winter/snow-effect-native.tsx",
     "./seasonal-theme": "./src/seasonal-theme.ts",
-    "./chat-transport": "./src/chat-transport.ts"
+    "./chat-transport": "./src/chat-transport.ts",
+    "./ai-elements": "./src/components/ai-elements/index.ts"
   },
   "license": "MIT",
   "scripts": {
@@ -41,7 +42,7 @@
     "ui-add": "pnpm dlx shadcn@latest add && prettier src --write --list-different"
   },
   "dependencies": {
-    "@ai-sdk/google": "catalog:",
+    "@ai-sdk/react": "catalog:",
     "@flatsby/validators": "workspace:*",
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-alert-dialog": "^1.1.14",

@@ -19,7 +19,6 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/google": "catalog:",
     "@flatsby/auth": "workspace:*",
     "@flatsby/db": "workspace:*",
     "@flatsby/ui": "workspace:*",
