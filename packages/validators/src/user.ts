@@ -25,6 +25,7 @@ export const userSchema = z.object({
   updatedAt: z.date(),
   lastGroupUsed: z.number().optional().nullable(),
   lastShoppingListUsed: z.number().optional().nullable(),
+  lastChatModelUsed: z.string().optional().nullable(),
 });
 export type User = z.infer<typeof userSchema>;
 

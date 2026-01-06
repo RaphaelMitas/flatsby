@@ -4,6 +4,7 @@ import {
   index,
   integer,
   pgTableCreator,
+  real,
   serial,
   text,
   timestamp,
@@ -31,6 +32,7 @@ export const users = createTable("user", {
   lastShoppingListUsed: integer("last_shopping_list_used").references(
     () => shoppingLists.id,
   ),
+  lastChatModelUsed: text("last_chat_model_used"),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -308,6 +310,10 @@ export const chatMessages = createTable(
     status: varchar("status", { length: 20 }).default("pending").notNull(), // "pending" | "streaming" | "complete" | "error"
     tokenCount: integer("token_count"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    // AI generation tracking
+    generationId: text("generation_id"), // gen_<ulid> from providerMetadata.gateway
+    cost: real("cost"), // Cost in USD from providerMetadata.gateway.cost
+    model: text("model"), // Model ID used for this generation
   },
   (table) => [
     index("chat_messages_conv_idx").on(table.conversationId, table.createdAt),

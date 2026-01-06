@@ -1,7 +1,10 @@
 "use client";
 
-import type { UIMessage } from "ai";
-import { useCallback, useMemo, useState } from "react";
+import type {
+  ChatModel,
+  UIMessageWithMetadata,
+} from "@flatsby/validators/chat";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -9,9 +12,10 @@ import { createTRPCChatTransport } from "@flatsby/ui/chat-transport";
 
 import { useTRPC } from "~/trpc/react";
 
-interface UseTRPCChatOptions {
+export interface UseTRPCChatOptions {
   conversationId: string;
-  initialMessages?: UIMessage[];
+  initialMessages?: UIMessageWithMetadata[];
+  initialModel?: ChatModel;
   onFinish?: () => void;
 }
 
@@ -25,6 +29,7 @@ interface UseTRPCChatOptions {
 export function useTRPCChat({
   conversationId,
   initialMessages = [],
+  initialModel,
   onFinish,
 }: UseTRPCChatOptions) {
   const trpc = useTRPC();
@@ -33,13 +38,27 @@ export function useTRPCChat({
   // AI SDK v5: Input state must be managed externally
   const [input, setInput] = useState("");
 
-  // Use tanstack-query mutation for the streaming call
+  // Model state - tracks the currently selected model
+  const [selectedModel, setSelectedModel] = useState<ChatModel | undefined>(
+    initialModel,
+  );
+  const modelRef = useRef<ChatModel | undefined>(selectedModel);
+
+  const handleModelChange = useCallback((model: ChatModel) => {
+    modelRef.current = model;
+    setSelectedModel(model);
+  }, []);
+
   const sendMutation = useMutation(trpc.chat.send.mutationOptions());
 
-  // Create the tRPC transport that converts mutations to ReadableStreams
+  // Uses ref so transport doesn't need to be recreated when model changes
   const transport = useMemo(() => {
-    return createTRPCChatTransport(async (mutationInput) => {
-      return await sendMutation.mutateAsync(mutationInput);
+    // eslint-disable-next-line react-hooks/refs
+    return createTRPCChatTransport({
+      sendMutation: async (mutationInput) => {
+        return await sendMutation.mutateAsync(mutationInput);
+      },
+      getModel: () => modelRef.current,
     });
   }, [sendMutation]);
 
@@ -54,7 +73,13 @@ export function useTRPCChat({
       queryKey: trpc.chat.getUserConversations.queryKey(),
     });
     onFinish?.();
-  }, [queryClient, trpc.chat.getConversation, trpc.chat.getUserConversations, conversationId, onFinish]);
+  }, [
+    queryClient,
+    trpc.chat.getConversation,
+    trpc.chat.getUserConversations,
+    conversationId,
+    onFinish,
+  ]);
 
   // Use the AI SDK's useChat hook with our custom transport
   const chat = useChat({
@@ -90,12 +115,12 @@ export function useTRPCChat({
 
   return {
     ...chat,
-    // Expose input management since AI SDK v5 doesn't manage it
     input,
     setInput,
     handleSubmit,
     regenerateMessage,
-    // Expose for manual invalidation if needed
+    selectedModel,
+    handleModelChange,
     invalidateConversation: () =>
       queryClient.invalidateQueries(
         trpc.chat.getConversation.queryOptions({ conversationId }),

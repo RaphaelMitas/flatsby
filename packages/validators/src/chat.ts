@@ -1,4 +1,31 @@
+import type { UIMessage as AIUIMessage } from "ai";
 import { z } from "zod/v4";
+
+interface MessageMetadata {
+  model?: ChatModel;
+  cost?: number;
+}
+
+export type UIMessageWithMetadata = AIUIMessage<MessageMetadata>;
+// Available AI models
+export const chatModelSchema = z.enum([
+  "google/gemini-2.0-flash",
+  "openai/gpt-4o",
+]);
+export type ChatModel = z.infer<typeof chatModelSchema>;
+
+export const CHAT_MODELS = [
+  {
+    id: "google/gemini-2.0-flash",
+    name: "Gemini 2.0 Flash",
+    provider: "google",
+  },
+  { id: "openai/gpt-4o", name: "GPT-4o", provider: "openai" },
+] as const satisfies readonly {
+  id: ChatModel;
+  name: string;
+  provider: string;
+}[];
 
 // Role enum for messages
 export const messageRoleSchema = z.enum(["user", "assistant", "system"]);
@@ -30,6 +57,10 @@ export const chatMessageSchema = z.object({
   status: messageStatusSchema,
   tokenCount: z.number().nullable(),
   createdAt: z.date(),
+  // AI generation tracking
+  generationId: z.string().nullable(),
+  cost: z.number().nullable(),
+  model: z.string().nullable(),
 });
 export type ChatMessage = z.infer<typeof chatMessageSchema>;
 
@@ -66,7 +97,7 @@ export type UIMessage = z.infer<typeof uiMessageSchema>;
 // Input schemas
 export const createConversationInputSchema = z.object({
   title: z.string().max(256).optional(),
-  model: z.string().optional(),
+  model: chatModelSchema.optional(),
   systemPrompt: z.string().max(4000).optional(),
 });
 export type CreateConversationInput = z.infer<
@@ -92,6 +123,8 @@ export const sendInputSchema = z.object({
   trigger: sendTriggerSchema,
   // Message ID for regeneration - string to accept both nanoid and UUID
   messageId: z.string().optional(),
+  // Model to use for this message (updates conversation model if different)
+  model: chatModelSchema.optional(),
 });
 export type SendInput = z.infer<typeof sendInputSchema>;
 
@@ -101,5 +134,9 @@ export const streamChunkSchema = z.object({
   textDelta: z.string().optional(),
   content: z.string().optional(),
   status: messageStatusSchema.optional(),
+  // Included in finish chunk for immediate UI update
+  messageId: z.string().optional(),
+  model: z.string().optional(),
+  cost: z.number().nullable().optional(),
 });
 export type StreamChunk = z.infer<typeof streamChunkSchema>;

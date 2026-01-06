@@ -76,3 +76,20 @@ export type {
   ConversationProps,
   ConversationContentProps,
 } from "./conversation";
+
+export {
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorTrigger,
+  ModelSelectorDialog,
+  ModelSelectorInput,
+  ModelSelectorList,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorItem,
+  ModelSelectorShortcut,
+  ModelSelectorSeparator,
+  ModelSelectorLogo,
+  ModelSelectorLogoGroup,
+  ModelSelectorName,
+} from "./model-selector";

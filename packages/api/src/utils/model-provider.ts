@@ -19,16 +19,22 @@ export interface StreamChatOptions {
   systemPrompt?: string;
 }
 
+export interface StreamChatResult {
+  textStream: AsyncIterable<string>;
+  providerMetadata: PromiseLike<Record<string, Record<string, unknown>> | undefined>;
+  model: string;
+}
+
 /**
  * Stream a chat completion via Vercel AI Gateway
  * Uses the AI_GATEWAY_API_KEY environment variable for authentication
  * Model format: provider/model (e.g., "google/gemini-2.0-flash", "openai/gpt-4o")
- * Returns an async iterable of text chunks
+ * Returns the streaming result with text stream and metadata
  */
 export function streamChatCompletion(
   messages: ContextMessage[],
   options: StreamChatOptions = {},
-): AsyncIterable<string> {
+): StreamChatResult {
   const modelName = options.model ?? DEFAULT_MODEL;
 
   const result = streamText({
@@ -40,8 +46,11 @@ export function streamChatCompletion(
     })),
   });
 
-  // Return the text stream as an async iterable
-  return result.textStream;
+  return {
+    textStream: result.textStream,
+    providerMetadata: result.providerMetadata,
+    model: modelName,
+  };
 }
 
 /**

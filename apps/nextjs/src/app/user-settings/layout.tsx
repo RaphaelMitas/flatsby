@@ -10,5 +10,5 @@ export default async function UserSettingsLayout({
   if (!session?.user) {
     redirect("/auth/login");
   }
-  return <AppLayout section="user-settings">{children}</AppLayout>;
+  return <AppLayout>{children}</AppLayout>;
 }

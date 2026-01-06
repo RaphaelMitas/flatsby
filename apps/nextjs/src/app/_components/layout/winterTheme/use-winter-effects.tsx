@@ -1,18 +1,39 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useSyncExternalStore,
+} from "react";
 
 const WINTER_EFFECTS_STORAGE_KEY = "winter_effects_enabled";
 
 interface WinterEffectsContextValue {
   isEnabled: boolean;
   setEnabled: (updater: boolean | ((prev: boolean) => boolean)) => void;
-  isLoading: boolean;
 }
 
 const WinterEffectsContext = createContext<WinterEffectsContextValue | null>(
   null,
 );
+
+// Subscribe to storage changes
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
+// Get current value from localStorage
+function getSnapshot() {
+  const stored = localStorage.getItem(WINTER_EFFECTS_STORAGE_KEY);
+  return stored === null ? true : stored === "true";
+}
+
+// Server snapshot - always return false to match initial client render
+function getServerSnapshot() {
+  return false;
+}
 
 /**
  * Provider component for winter effects state
@@ -23,24 +44,22 @@ export function WinterEffectsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const stored =
-    typeof window !== "undefined"
-      ? localStorage.getItem(WINTER_EFFECTS_STORAGE_KEY)
-      : "true";
-  const [isEnabled, setIsEnabled] = useState<boolean | null>(
-    stored === null ? true : stored === "true",
+  const isEnabled = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
   );
 
   const setEnabled = useCallback(
     (updater: boolean | ((prev: boolean) => boolean)) => {
-      setIsEnabled((prev) => {
-        const next =
-          typeof updater === "function"
-            ? (updater as (prev: boolean) => boolean)(prev ?? true)
-            : updater;
-        localStorage.setItem(WINTER_EFFECTS_STORAGE_KEY, String(next));
-        return next;
-      });
+      const current = getSnapshot();
+      const next =
+        typeof updater === "function"
+          ? (updater as (prev: boolean) => boolean)(current)
+          : updater;
+      localStorage.setItem(WINTER_EFFECTS_STORAGE_KEY, String(next));
+      // Dispatch storage event to trigger re-render
+      window.dispatchEvent(new Event("storage"));
     },
     [],
   );
@@ -48,9 +67,8 @@ export function WinterEffectsProvider({
   return (
     <WinterEffectsContext.Provider
       value={{
-        isEnabled: isEnabled ?? true,
+        isEnabled,
         setEnabled,
-        isLoading: isEnabled === null,
       }}
     >
       {children}

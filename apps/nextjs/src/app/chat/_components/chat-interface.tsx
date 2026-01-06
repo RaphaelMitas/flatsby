@@ -1,10 +1,13 @@
 "use client";
 
-import type { UIMessage } from "ai";
+import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
+import type {
+  ChatModel,
+  UIMessageWithMetadata,
+} from "@flatsby/validators/chat";
 import type { FormEvent } from "react";
 import { MessageSquareIcon, RefreshCwIcon } from "lucide-react";
 
-import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
 import {
   Conversation,
   ConversationContent,
@@ -16,22 +19,26 @@ import {
   MessageActions,
   MessageContent,
   MessageResponse,
+  MessageToolbar,
   PromptInput,
   PromptInputFooter,
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@flatsby/ui/ai-elements";
 
+import { ChatModelSelector, getModelDisplayName } from "./chat-model-selector";
 import { useTRPCChat } from "./use-trpc-chat";
 
 interface ChatInterfaceProps {
   conversationId: string;
-  initialMessages?: UIMessage[];
+  initialMessages?: UIMessageWithMetadata[];
+  initialModel?: ChatModel;
 }
 
 export function ChatInterface({
   conversationId,
   initialMessages = [],
+  initialModel,
 }: ChatInterfaceProps) {
   const {
     messages,
@@ -41,9 +48,12 @@ export function ChatInterface({
     status,
     error,
     regenerateMessage,
+    selectedModel,
+    handleModelChange,
   } = useTRPCChat({
     conversationId,
     initialMessages,
+    initialModel,
   });
 
   const isStreaming = status === "streaming";
@@ -61,7 +71,7 @@ export function ChatInterface({
   };
 
   // Helper to get text content from a message
-  const getMessageContent = (msg: UIMessage): string => {
+  const getMessageContent = (msg: UIMessageWithMetadata): string => {
     return msg.parts
       .filter(
         (part): part is { type: "text"; text: string } =>
@@ -85,6 +95,8 @@ export function ChatInterface({
           ) : (
             messages.map((message, index) => {
               const content = getMessageContent(message);
+              const messageModel = message.metadata?.model;
+              const messageCost = message.metadata?.cost;
               return (
                 <Message key={message.id} from={message.role}>
                   <MessageContent>
@@ -100,17 +112,26 @@ export function ChatInterface({
                       <p className="whitespace-pre-wrap">{content}</p>
                     )}
                   </MessageContent>
-                  {/* Actions for assistant messages */}
-                  {message.role === "assistant" && content && !isLoading && (
-                    <MessageActions className="opacity-0 transition-opacity group-hover:opacity-100">
-                      <MessageAction
-                        tooltip="Regenerate"
-                        onClick={() => regenerateMessage(message.id)}
-                      >
-                        <RefreshCwIcon className="size-4" />
-                      </MessageAction>
-                    </MessageActions>
-                  )}
+                  <MessageToolbar>
+                    {message.role === "assistant" && content && (
+                      <span className="text-muted-foreground text-xs">
+                        {messageModel && getModelDisplayName(messageModel)}
+                        {messageModel && messageCost != null && " · "}
+                        {messageCost != null && `$${messageCost.toFixed(6)}`}
+                      </span>
+                    )}
+                    {/* Actions for assistant messages */}
+                    {message.role === "assistant" && content && !isLoading && (
+                      <MessageActions className="opacity-0 transition-opacity group-hover:opacity-100">
+                        <MessageAction
+                          tooltip="Regenerate"
+                          onClick={() => regenerateMessage(message.id)}
+                        >
+                          <RefreshCwIcon className="size-4" />
+                        </MessageAction>
+                      </MessageActions>
+                    )}
+                  </MessageToolbar>
                 </Message>
               );
             })
@@ -136,7 +157,11 @@ export function ChatInterface({
             disabled={isLoading}
           />
           <PromptInputFooter>
-            <div /> {/* Spacer for left side */}
+            <ChatModelSelector
+              currentModel={selectedModel ?? null}
+              onModelChange={handleModelChange}
+              disabled={isLoading}
+            />
             <PromptInputSubmit
               status={status}
               disabled={!input.trim() || isLoading}

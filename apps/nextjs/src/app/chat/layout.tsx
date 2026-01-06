@@ -14,5 +14,5 @@ export default async function ChatLayout({ children }: ChatLayoutProps) {
     redirect("/auth/login");
   }
 
-  return <AppLayout section="chat">{children}</AppLayout>;
+  return <AppLayout>{children}</AppLayout>;
 }

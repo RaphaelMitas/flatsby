@@ -1,5 +1,9 @@
-import type { SendTrigger } from "@flatsby/validators/chat";
-import type { ChatTransport, UIMessage, UIMessageChunk } from "ai";
+import type {
+  ChatModel,
+  SendTrigger,
+  UIMessageWithMetadata,
+} from "@flatsby/validators/chat";
+import type { ChatTransport, UIMessageChunk } from "ai";
 
 /**
  * Chunk yielded by the streaming tRPC mutation
@@ -9,6 +13,10 @@ export interface StreamChunk {
   textDelta?: string;
   content?: string;
   status?: "pending" | "streaming" | "complete" | "error";
+  // Finish chunk includes metadata for immediate UI update
+  messageId?: string;
+  model?: ChatModel | null;
+  cost?: number | null;
 }
 
 /**
@@ -30,6 +38,7 @@ export type SendMutationFn = (
     };
     trigger: SendTrigger;
     messageId?: string;
+    model?: ChatModel;
   },
   opts?: { signal?: AbortSignal },
 ) => Promise<AsyncIterable<StreamChunk>>;
@@ -47,20 +56,26 @@ function validateRole(role: string): MessageRole {
 /**
  * Extracts text content from message parts
  */
-function getMessageContent(message: UIMessage): string {
+function getMessageContent(message: UIMessageWithMetadata): string {
   return message.parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)
     .join("");
 }
 
+export interface TRPCChatTransportOptions {
+  sendMutation: SendMutationFn;
+  getModel?: () => ChatModel | undefined;
+}
+
 /**
  * Creates a tRPC chat transport compatible with @ai-sdk/react's useChat hook.
  * Implements the UI Message Stream Protocol.
  */
-export function createTRPCChatTransport(
-  sendMutation: SendMutationFn,
-): ChatTransport<UIMessage> {
+export function createTRPCChatTransport({
+  sendMutation,
+  getModel,
+}: TRPCChatTransportOptions): ChatTransport<UIMessageWithMetadata> {
   return {
     sendMessages: async (options) => {
       const message = options.messages.at(-1);
@@ -82,6 +97,7 @@ export function createTRPCChatTransport(
             options.trigger === "regenerate-message"
               ? options.messageId
               : undefined,
+          model: getModel?.(),
         },
         { signal: options.abortSignal },
       );
@@ -124,6 +140,10 @@ export function createTRPCChatTransport(
               });
             } else if (chunk.type === "finish") {
               controller.enqueue({ type: "text-end", id: textBlockId });
+              controller.enqueue({
+                type: "message-metadata",
+                messageMetadata: { model: chunk.model, cost: chunk.cost },
+              });
               controller.enqueue({ type: "finish", finishReason: "stop" });
               controller.close();
             }

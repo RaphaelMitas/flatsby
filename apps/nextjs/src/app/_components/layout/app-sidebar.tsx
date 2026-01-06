@@ -1,17 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useSelectedLayoutSegments } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-
-import type { AppSection } from "./app-layout";
-import {
-  MessageSquareIcon,
-  PlusIcon,
-  Receipt,
-  ShoppingCartIcon,
-  Users,
-} from "lucide-react";
+import { MessageSquareIcon, PlusIcon, Receipt, Wallet } from "lucide-react";
 
 import {
   Sidebar,
@@ -20,7 +12,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -28,174 +19,125 @@ import {
   SidebarRail,
 } from "@flatsby/ui/sidebar";
 
-import { useTRPC } from "~/trpc/react";
+import { useGroupContext } from "~/app/_components/context/group-context";
 import { CreateChatDialog } from "~/app/chat/_components/create-chat-dialog";
+import { useTRPC } from "~/trpc/react";
 import { SidebarGroupSwitcher } from "./sidebar-group-switcher";
+import { SidebarShoppingListSwitcher } from "./sidebar-shopping-list-switcher";
 import { SidebarThemeToggle } from "./sidebar-theme-toggle";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 
-interface AppSidebarProps {
-  section: AppSection;
-}
-
-export function AppSidebar({ section }: AppSidebarProps) {
-  const segments = useSelectedLayoutSegments();
+export function AppSidebar() {
+  const pathname = usePathname();
   const trpc = useTRPC();
+  const { hasCurrentGroup } = useGroupContext();
 
-  // Determine active pages based on section and segments
-  const isChatPage = section === "chat";
-  const isGroupSelectPage = section === "group" && segments.length === 0;
-  const isShoppingPage = segments.includes("shopping-list");
-  const isExpensesPage = segments.includes("expenses");
+  // Determine active pages based on pathname
+  const isExpensesPage = pathname.startsWith("/expenses");
+  const isDebtsPage = pathname === "/expenses/debts";
 
-  // Get current group ID from segments (e.g., ["123", "shopping-list"])
-  const currentGroupId = section === "group" && segments[0]
-    ? parseInt(segments[0])
-    : null;
-
-  // Get current conversation ID from segments (e.g., ["abc123"])
-  const currentConversationId = section === "chat" ? segments[0] ?? null : null;
-
-  // Get user data for last used group
-  const { data: userWithGroups } = useQuery(
-    trpc.user.getCurrentUserWithGroups.queryOptions(),
-  );
+  // Get current conversation ID from pathname
+  const conversationMatch = /\/chat\/([^/]+)/.exec(pathname);
+  const currentConversationId = conversationMatch?.[1] ?? null;
 
   // Get conversations for chat section
   const { data: conversations, isLoading: conversationsLoading } = useQuery(
     trpc.chat.getUserConversations.queryOptions({ limit: 50 }),
   );
 
-  // Determine which group ID to use for navigation links
-  const lastGroupId =
-    currentGroupId ??
-    (userWithGroups?.success
-      ? userWithGroups.data.user?.lastGroupUsed?.id
-      : null) ??
-    null;
-
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <SidebarGroupSwitcher />
-      </SidebarHeader>
+      <SidebarGroupSwitcher />
 
       <SidebarContent>
-        {/* Main Navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isGroupSelectPage}
-                  tooltip="Groups"
-                >
-                  <Link href="/group">
-                    <Users />
-                    <span>Groups</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+        {/* Shopping Lists (when a group is selected) */}
+        {hasCurrentGroup && <SidebarShoppingListSwitcher />}
 
-              {lastGroupId && (
-                <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isShoppingPage}
-                      tooltip="Shopping"
-                    >
-                      <Link href={`/group/${lastGroupId}/shopping-list`}>
-                        <ShoppingCartIcon />
-                        <span>Shopping</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isExpensesPage}
-                      tooltip="Expenses"
-                    >
-                      <Link href={`/group/${lastGroupId}/expenses`}>
-                        <Receipt />
-                        <span>Expenses</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </>
-              )}
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isChatPage}
-                  tooltip="Chat"
-                >
-                  <Link href="/chat">
-                    <MessageSquareIcon />
-                    <span>Chat</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Chat Conversations (when on chat pages) */}
-        {isChatPage && (
+        {/* Expenses (when a group is selected) */}
+        {hasCurrentGroup && (
           <SidebarGroup>
-            <SidebarGroupLabel>Conversations</SidebarGroupLabel>
+            <SidebarGroupLabel>Expenses</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <CreateChatDialog>
-                    <SidebarMenuButton tooltip="New Chat">
-                      <PlusIcon />
-                      <span>New Chat</span>
-                    </SidebarMenuButton>
-                  </CreateChatDialog>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isExpensesPage && !isDebtsPage}
+                    tooltip="Expenses"
+                  >
+                    <Link href="/expenses">
+                      <Receipt />
+                      <span>All Expenses</span>
+                    </Link>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
-
-                {conversationsLoading ? (
-                  <>
-                    <SidebarMenuItem>
-                      <SidebarMenuSkeleton showIcon />
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuSkeleton showIcon />
-                    </SidebarMenuItem>
-                  </>
-                ) : conversations?.items.length === 0 ? (
-                  <SidebarMenuItem>
-                    <div className="text-muted-foreground px-2 py-1 text-sm">
-                      No conversations yet
-                    </div>
-                  </SidebarMenuItem>
-                ) : (
-                  conversations?.items.map((conversation) => (
-                    <SidebarMenuItem key={conversation.id}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={conversation.id === currentConversationId}
-                        tooltip={conversation.title ?? "New Chat"}
-                      >
-                        <Link href={`/chat/${conversation.id}`}>
-                          <MessageSquareIcon />
-                          <span className="truncate">
-                            {conversation.title ?? "New Chat"}
-                          </span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))
-                )}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isDebtsPage}
+                    tooltip="Debts"
+                  >
+                    <Link href="/expenses/debts">
+                      <Wallet />
+                      <span>Debts</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {/* Chat */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Chat</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <CreateChatDialog>
+                  <SidebarMenuButton tooltip="New Chat">
+                    <PlusIcon />
+                    <span>New Chat</span>
+                  </SidebarMenuButton>
+                </CreateChatDialog>
+              </SidebarMenuItem>
+
+              {conversationsLoading ? (
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuSkeleton showIcon />
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuSkeleton showIcon />
+                  </SidebarMenuItem>
+                </>
+              ) : conversations?.items.length === 0 ? (
+                <SidebarMenuItem>
+                  <div className="text-muted-foreground px-2 py-1 text-sm">
+                    No conversations yet
+                  </div>
+                </SidebarMenuItem>
+              ) : (
+                conversations?.items.map((conversation) => (
+                  <SidebarMenuItem key={conversation.id}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={conversation.id === currentConversationId}
+                      tooltip={conversation.title ?? "New Chat"}
+                    >
+                      <Link href={`/chat/${conversation.id}`}>
+                        <MessageSquareIcon />
+                        <span className="truncate">
+                          {conversation.title ?? "New Chat"}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>

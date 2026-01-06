@@ -1,40 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useSelectedLayoutSegments } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { HomeIcon, MessageSquareIcon, Receipt, ShoppingCartIcon } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 
+import { useGroupContext } from "~/app/_components/context/group-context";
+
 export function BottomNavigation() {
-  const segments = useSelectedLayoutSegments();
+  const pathname = usePathname();
+  const { hasCurrentGroup } = useGroupContext();
 
-  // Get IDs from segments
-  const groupIndex = segments.indexOf("group") + 1;
-  const currentGroupId = segments[groupIndex]
-    ? parseInt(segments[groupIndex])
-    : null;
+  const isGroupPage = pathname === "/group" || pathname.startsWith("/group/");
+  const isShoppingPage = pathname.startsWith("/shopping-list");
+  const isExpensesPage = pathname.startsWith("/expenses");
+  const isChatPage = pathname.startsWith("/chat");
 
-  const shoppingListIndex = segments.indexOf("shopping-list") + 1;
-  const currentShoppingListId = segments[shoppingListIndex]
-    ? parseInt(segments[shoppingListIndex])
-    : null;
-
-  const expensesIndex = segments.indexOf("expenses");
-  const isExpensesPage = expensesIndex >= 0;
-
-  const isChatPage = segments.includes("chat");
+  // Determine active state - only one can be active
+  const isGroupActive =
+    isGroupPage && !pathname.startsWith("/group/settings");
+  const isShoppingActive = isShoppingPage;
+  const isExpensesActive = isExpensesPage;
+  const isChatActive = isChatPage;
 
   return (
     <div className="bg-background fixed right-0 bottom-0 left-0 z-50 h-16 border-t md:hidden">
       <nav className="flex justify-around py-2">
         <Link
-          href={`/group/${currentGroupId ?? ""}`}
+          href="/group"
           className={cn(
             "hover:text-foreground flex flex-col items-center gap-1",
-            currentShoppingListId || isExpensesPage || isChatPage
-              ? "text-muted-foreground"
-              : "text-foreground",
+            isGroupActive ? "text-foreground" : "text-muted-foreground",
           )}
           prefetch={false}
         >
@@ -42,12 +39,10 @@ export function BottomNavigation() {
           <span className="text-xs">Home</span>
         </Link>
         <Link
-          href={
-            currentGroupId ? `/group/${currentGroupId}/shopping-list` : "/group"
-          }
+          href={hasCurrentGroup ? "/shopping-list" : "/group"}
           className={cn(
             "hover:text-foreground flex flex-col items-center gap-1",
-            currentShoppingListId ? "text-foreground" : "text-muted-foreground",
+            isShoppingActive ? "text-foreground" : "text-muted-foreground",
           )}
           prefetch={false}
         >
@@ -55,12 +50,10 @@ export function BottomNavigation() {
           <span className="text-xs">Shopping</span>
         </Link>
         <Link
-          href={currentGroupId ? `/group/${currentGroupId}/expenses` : "/group"}
+          href={hasCurrentGroup ? "/expenses" : "/group"}
           className={cn(
             "hover:text-foreground flex flex-col items-center gap-1",
-            isExpensesPage && !currentShoppingListId
-              ? "text-foreground"
-              : "text-muted-foreground",
+            isExpensesActive ? "text-foreground" : "text-muted-foreground",
           )}
           prefetch={false}
         >
@@ -71,7 +64,7 @@ export function BottomNavigation() {
           href="/chat"
           className={cn(
             "hover:text-foreground flex flex-col items-center gap-1",
-            isChatPage ? "text-foreground" : "text-muted-foreground",
+            isChatActive ? "text-foreground" : "text-muted-foreground",
           )}
           prefetch={false}
         >

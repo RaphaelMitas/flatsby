@@ -32,16 +32,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@flatsby/ui/sheet";
+import { CHAT_MODELS, chatModelSchema } from "@flatsby/validators/chat";
 
 import { useTRPC } from "~/trpc/react";
 
-const AVAILABLE_MODELS = [
-  { id: "google/gemini-2.0-flash", name: "Gemini 2.0 Flash" },
-  { id: "openai/gpt-4o", name: "GPT-4o" },
-] as const;
-
 const createChatSchema = z.object({
-  model: z.string().min(1, "Model is required"),
+  model: chatModelSchema,
 });
 
 type CreateChatFormValues = z.infer<typeof createChatSchema>;
@@ -59,7 +55,7 @@ export function CreateChatDialog({ children }: CreateChatDialogProps) {
   const form = useForm<CreateChatFormValues>({
     resolver: zodResolver(createChatSchema),
     defaultValues: {
-      model: AVAILABLE_MODELS[0].id,
+      model: CHAT_MODELS[0].id,
     },
   });
 
@@ -108,7 +104,7 @@ export function CreateChatDialog({ children }: CreateChatDialogProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {AVAILABLE_MODELS.map((model) => (
+                      {CHAT_MODELS.map((model) => (
                         <SelectItem key={model.id} value={model.id}>
                           {model.name}
                         </SelectItem>

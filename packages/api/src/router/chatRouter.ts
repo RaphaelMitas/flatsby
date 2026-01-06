@@ -1,9 +1,11 @@
 import crypto from "node:crypto";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 import { and, desc, eq, lt } from "@flatsby/db";
-import { chatMessages, conversations } from "@flatsby/db/schema";
+import { chatMessages, conversations, users } from "@flatsby/db/schema";
 import {
+  chatModelSchema,
   createConversationInputSchema,
   getConversationInputSchema,
   getUserConversationsInputSchema,
@@ -79,16 +81,27 @@ export const chatRouter = createTRPCRouter({
 
   /**
    * Create a new conversation
+   * Uses user's last model preference if available
    */
   createConversation: protectedProcedure
     .input(createConversationInputSchema)
     .mutation(async ({ ctx, input }) => {
+      // Get user's preferred model if not explicitly provided
+      let modelToUse: string | undefined = input.model;
+      if (!modelToUse) {
+        const user = await ctx.db.query.users.findFirst({
+          where: eq(users.id, ctx.session.user.id),
+          columns: { lastChatModelUsed: true },
+        });
+        modelToUse = user?.lastChatModelUsed ?? getDefaultModel();
+      }
+
       const [conversation] = await ctx.db
         .insert(conversations)
         .values({
           userId: ctx.session.user.id,
           title: input.title,
-          model: input.model ?? getDefaultModel(),
+          model: modelToUse,
           systemPrompt: input.systemPrompt,
         })
         .returning();
@@ -104,12 +117,54 @@ export const chatRouter = createTRPCRouter({
     }),
 
   /**
+   * Update conversation model and save as user's preference
+   */
+  updateConversationModel: protectedProcedure
+    .input(
+      z.object({
+        conversationId: z.string().uuid(),
+        model: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify conversation exists and belongs to user
+      const conversation = await ctx.db.query.conversations.findFirst({
+        where: and(
+          eq(conversations.id, input.conversationId),
+          eq(conversations.userId, ctx.session.user.id),
+        ),
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found",
+        });
+      }
+
+      // Update conversation model
+      await ctx.db
+        .update(conversations)
+        .set({ model: input.model })
+        .where(eq(conversations.id, input.conversationId));
+
+      // Save as user's last used model preference
+      await ctx.db
+        .update(users)
+        .set({ lastChatModelUsed: input.model })
+        .where(eq(users.id, ctx.session.user.id));
+
+      return { success: true };
+    }),
+
+  /**
    * Combined streaming mutation that:
    * 1. Inserts user message (if submit trigger)
    * 2. Creates/resets assistant placeholder
    * 3. Builds context
    * 4. Streams response with batched persistence
    * 5. Yields UI message chunks
+   * 6. Updates conversation model and user preference if model changed
    */
   send: protectedProcedure.input(sendInputSchema).mutation(async function* ({
     ctx,
@@ -128,6 +183,23 @@ export const chatRouter = createTRPCRouter({
         code: "NOT_FOUND",
         message: "Conversation not found",
       });
+    }
+
+    // Use provided model or fall back to conversation's model
+    const modelToUse = input.model ?? conversation.model ?? getDefaultModel();
+
+    // Update conversation model if changed
+    if (input.model && input.model !== conversation.model) {
+      await ctx.db
+        .update(conversations)
+        .set({ model: input.model })
+        .where(eq(conversations.id, input.conversationId));
+
+      // Save as user's last used model preference
+      await ctx.db
+        .update(users)
+        .set({ lastChatModelUsed: input.model })
+        .where(eq(users.id, ctx.session.user.id));
     }
 
     // Handle different triggers
@@ -238,11 +310,11 @@ export const chatRouter = createTRPCRouter({
         .set({ status: "streaming" })
         .where(eq(chatMessages.id, assistantMessageId));
 
-      const stream = streamChatCompletion(contextMessages, {
-        model: conversation.model ?? undefined,
+      const streamResult = streamChatCompletion(contextMessages, {
+        model: modelToUse,
       });
 
-      for await (const chunk of stream) {
+      for await (const chunk of streamResult.textStream) {
         buffer += chunk;
 
         // Batch writes every FLUSH_INTERVAL ms
@@ -263,10 +335,25 @@ export const chatRouter = createTRPCRouter({
 
       streamCompleted = true;
 
-      // Final write with complete status
+      // Extract cost and generation info from provider metadata
+      const metadata = await streamResult.providerMetadata;
+      const gateway = metadata?.gateway as
+        | {
+            cost?: string;
+            generationId?: string;
+          }
+        | undefined;
+
+      // Final write with complete status, cost, model, and generationId
       await ctx.db
         .update(chatMessages)
-        .set({ content: buffer, status: "complete" })
+        .set({
+          content: buffer,
+          status: "complete",
+          model: streamResult.model,
+          cost: gateway?.cost ? parseFloat(gateway.cost) : null,
+          generationId: gateway?.generationId ?? null,
+        })
         .where(eq(chatMessages.id, assistantMessageId));
 
       // Update conversation updatedAt timestamp
@@ -275,11 +362,14 @@ export const chatRouter = createTRPCRouter({
         .set({ updatedAt: new Date() })
         .where(eq(conversations.id, input.conversationId));
 
-      // Yield finish event
+      // Yield finish event with cost/model for immediate UI update
       yield {
         type: "finish" as const,
         content: buffer,
         status: "complete" as const,
+        messageId: assistantMessageId,
+        model: chatModelSchema.safeParse(streamResult.model).data,
+        cost: gateway?.cost ? parseFloat(gateway.cost) : null,
       };
     } catch (error) {
       // Update message status to error

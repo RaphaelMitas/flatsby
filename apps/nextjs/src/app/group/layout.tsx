@@ -11,5 +11,5 @@ export default async function GroupLayout({
     redirect("/auth/login");
   }
 
-  return <AppLayout section="group">{children}</AppLayout>;
+  return <AppLayout>{children}</AppLayout>;
 }
