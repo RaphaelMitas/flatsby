@@ -10,7 +10,7 @@ const shoppingListsPage = async (props: {
 
   return (
     <HydrateClient>
-      <div className="mt-4 flex w-svw max-w-prose flex-col p-4">
+      <div className="mx-auto mt-4 flex w-full max-w-prose flex-col p-4">
         <ShoppingListDashboard groupId={groupId} />
       </div>
     </HydrateClient>

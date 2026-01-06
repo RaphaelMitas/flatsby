@@ -20,7 +20,7 @@ const GroupPage = async (props: { params: Promise<{ groupId: string }> }) => {
 
   return (
     <HydrateClient>
-      <div className="flex w-svw max-w-prose flex-col gap-6 p-4">
+      <div className="mx-auto flex w-full max-w-prose flex-col gap-6 p-4">
         <div className="flex w-full items-center justify-between">
           <Button className="w-fit" asChild>
             <Link

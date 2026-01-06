@@ -13,7 +13,7 @@ export default async function ExpenseDetailPage(props: {
 
   return (
     <HydrateClient>
-      <div className="flex w-full max-w-prose flex-col p-4 md:p-6">
+      <div className="mx-auto flex w-full max-w-prose flex-col p-4 md:p-6">
         <ExpenseDetailView expenseId={expenseId} groupId={groupId} />
       </div>
     </HydrateClient>

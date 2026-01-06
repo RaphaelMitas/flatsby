@@ -53,11 +53,11 @@ export default async function ChatConversationPage({
     }));
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
       <div className="shrink-0 border-b px-4 py-2">
         <h1 className="text-sm font-medium">{conversation.title ?? "New Chat"}</h1>
       </div>
-      <div className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <ChatInterface
           conversationId={conversationId}
           initialMessages={initialMessages}
