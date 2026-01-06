@@ -72,4 +72,7 @@ export type {
   PromptInputControllerProps,
   TextInputContext,
 } from "./prompt-input";
-export type { ConversationProps, ConversationContentProps } from "./conversation";
+export type {
+  ConversationProps,
+  ConversationContentProps,
+} from "./conversation";
