@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { MessageSquareIcon } from "lucide-react";
+
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { DesktopNavigation } from "./desktop-navigation";
 import { GroupSwitcher } from "./group-switcher";
@@ -15,7 +18,16 @@ export function AppBar() {
           <DesktopNavigation />
         </div>
         <GroupSwitcher />
-        <UserButton />
+        <div className="flex items-center gap-2">
+          <Link
+            href="/chat"
+            className="hover:bg-accent hover:text-accent-foreground text-muted-foreground hidden items-center gap-2 rounded-md p-2 transition-colors md:flex"
+          >
+            <MessageSquareIcon className="h-5 w-5" />
+            <span className="sr-only">Chat</span>
+          </Link>
+          <UserButton />
+        </div>
       </HydrateClient>
     </div>
   );

@@ -45,11 +45,16 @@ export function useTRPCChat({
 
   // Memoize callbacks to prevent unnecessary re-renders
   const handleFinish = useCallback(() => {
+    // Invalidate conversation data
     void queryClient.invalidateQueries(
       trpc.chat.getConversation.queryOptions({ conversationId }),
     );
+    // Invalidate conversations list (for title updates in sidebar)
+    void queryClient.invalidateQueries({
+      queryKey: trpc.chat.getUserConversations.queryKey(),
+    });
     onFinish?.();
-  }, [queryClient, trpc.chat.getConversation, conversationId, onFinish]);
+  }, [queryClient, trpc.chat.getConversation, trpc.chat.getUserConversations, conversationId, onFinish]);
 
   // Use the AI SDK's useChat hook with our custom transport
   const chat = useChat({

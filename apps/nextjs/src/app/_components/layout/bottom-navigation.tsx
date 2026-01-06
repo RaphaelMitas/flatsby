@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
-import { HomeIcon, Receipt, ShoppingCartIcon } from "lucide-react";
+import { HomeIcon, MessageSquareIcon, Receipt, ShoppingCartIcon } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 
@@ -23,6 +23,8 @@ export function BottomNavigation() {
   const expensesIndex = segments.indexOf("expenses");
   const isExpensesPage = expensesIndex >= 0;
 
+  const isChatPage = segments.includes("chat");
+
   return (
     <div className="bg-background fixed right-0 bottom-0 left-0 z-50 h-16 border-t md:hidden">
       <nav className="flex justify-around py-2">
@@ -30,7 +32,7 @@ export function BottomNavigation() {
           href={`/group/${currentGroupId ?? ""}`}
           className={cn(
             "hover:text-foreground flex flex-col items-center gap-1",
-            currentShoppingListId || isExpensesPage
+            currentShoppingListId || isExpensesPage || isChatPage
               ? "text-muted-foreground"
               : "text-foreground",
           )}
@@ -64,6 +66,17 @@ export function BottomNavigation() {
         >
           <Receipt className="h-6 w-6" />
           <span className="text-xs">Expenses</span>
+        </Link>
+        <Link
+          href="/chat"
+          className={cn(
+            "hover:text-foreground flex flex-col items-center gap-1",
+            isChatPage ? "text-foreground" : "text-muted-foreground",
+          )}
+          prefetch={false}
+        >
+          <MessageSquareIcon className="h-6 w-6" />
+          <span className="text-xs">Chat</span>
         </Link>
       </nav>
     </div>

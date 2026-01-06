@@ -1,9 +1,11 @@
-import { streamText } from "ai";
+import { generateText, streamText } from "ai";
 
 import type { ContextMessage } from "./context-builder";
 
 // Default model using Vercel AI Gateway format: provider/model
 const DEFAULT_MODEL = "google/gemini-2.0-flash";
+// Always use Gemini Flash for title generation (fast and cost-effective)
+const TITLE_GENERATION_MODEL = "google/gemini-2.0-flash";
 
 /**
  * Get the default model name
@@ -40,4 +42,31 @@ export function streamChatCompletion(
 
   // Return the text stream as an async iterable
   return result.textStream;
+}
+
+/**
+ * Generate a conversation title from the first user message
+ * Always uses Gemini Flash for speed and cost efficiency
+ */
+export async function generateConversationTitle(
+  userMessage: string,
+): Promise<string> {
+  const result = await generateText({
+    model: TITLE_GENERATION_MODEL,
+    messages: [
+      {
+        role: "system",
+        content:
+          "Generate a short, concise title (max 6 words) for a conversation that starts with the following message. Return only the title, no quotes or punctuation at the end.",
+      },
+      {
+        role: "user",
+        content: userMessage,
+      },
+    ],
+  });
+
+  // Clean up and truncate the title
+  const title = result.text.trim().slice(0, 100);
+  return title || "New Chat";
 }

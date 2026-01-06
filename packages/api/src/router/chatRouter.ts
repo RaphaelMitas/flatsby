@@ -12,7 +12,11 @@ import {
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { buildContextMessages } from "../utils/context-builder";
-import { getDefaultModel, streamChatCompletion } from "../utils/model-provider";
+import {
+  generateConversationTitle,
+  getDefaultModel,
+  streamChatCompletion,
+} from "../utils/model-provider";
 
 // Batched write interval in milliseconds
 const FLUSH_INTERVAL = 300;
@@ -159,6 +163,21 @@ export const chatRouter = createTRPCRouter({
       }
 
       assistantMessageId = assistantMessage.id;
+
+      // Auto-generate title on first message if conversation has no title
+      if (!conversation.title) {
+        // Run title generation in background (don't await)
+        void generateConversationTitle(input.message.content)
+          .then(async (title) => {
+            await ctx.db
+              .update(conversations)
+              .set({ title })
+              .where(eq(conversations.id, input.conversationId));
+          })
+          .catch((error) => {
+            console.error("Failed to generate conversation title:", error);
+          });
+      }
     } else {
       // Regenerate: reset the existing message
       if (!input.messageId) {

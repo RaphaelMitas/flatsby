@@ -72,9 +72,9 @@ export function ChatInterface({
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Messages Area */}
-      <Conversation className="flex-1">
+      <Conversation className="min-h-0 flex-1">
         <ConversationContent>
           {messages.length === 0 ? (
             <ConversationEmptyState
@@ -127,7 +127,7 @@ export function ChatInterface({
       )}
 
       {/* Input Area */}
-      <div className="border-t p-4">
+      <div className="shrink-0 border-t p-4">
         <PromptInput onSubmit={onFormSubmit}>
           <PromptInputTextarea
             value={input}

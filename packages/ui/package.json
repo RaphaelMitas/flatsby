@@ -31,7 +31,11 @@
     "./winter/snow-effect-native": "./src/winter/snow-effect-native.tsx",
     "./seasonal-theme": "./src/seasonal-theme.ts",
     "./chat-transport": "./src/chat-transport.ts",
-    "./ai-elements": "./src/components/ai-elements/index.ts"
+    "./ai-elements": "./src/components/ai-elements/index.ts",
+    "./sidebar": "./src/sidebar.tsx",
+    "./skeleton": "./src/skeleton.tsx",
+    "./tooltip": "./src/tooltip.tsx",
+    "./hooks/use-mobile": "./hooks/use-mobile.ts"
   },
   "license": "MIT",
   "scripts": {
