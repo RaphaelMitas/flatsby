@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 
 export const env = createEnv({
   server: {
+    AUTUMN_SECRET_KEY: z.string(),
     BETTER_AUTH_SECRET: z.string(),
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
@@ -13,6 +14,7 @@ export const env = createEnv({
     APPLE_SERVICE_ID: z.string(),
   },
   runtimeEnv: {
+    AUTUMN_SECRET_KEY: process.env.AUTUMN_SECRET_KEY,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,

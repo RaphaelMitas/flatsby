@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { AutumnProvider } from "autumn-js/react";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
@@ -7,6 +8,7 @@ import { cn } from "@flatsby/ui";
 import { Toaster } from "@flatsby/ui/toast";
 
 import { WinterEffectsProvider } from "~/app/_components/layout/winterTheme/use-winter-effects";
+import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
 import { WinterSnowWrapper } from "./_components/layout/winterTheme/winter-snow-wrapper";
 
@@ -62,7 +64,11 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <WinterEffectsProvider>
             <WinterSnowWrapper />
-            <TRPCReactProvider>{props.children}</TRPCReactProvider>
+            <TRPCReactProvider>
+              <AutumnProvider betterAuthUrl={env.NEXT_PUBLIC_BETTER_AUTH_URL}>
+                {props.children}
+              </AutumnProvider>
+            </TRPCReactProvider>
             <Toaster />
           </WinterEffectsProvider>
         </ThemeProvider>

@@ -19,12 +19,6 @@ export interface StreamChatOptions {
   systemPrompt?: string;
 }
 
-export interface StreamChatResult {
-  textStream: AsyncIterable<string>;
-  providerMetadata: PromiseLike<Record<string, Record<string, unknown>> | undefined>;
-  model: string;
-}
-
 /**
  * Stream a chat completion via Vercel AI Gateway
  * Uses the AI_GATEWAY_API_KEY environment variable for authentication
@@ -34,7 +28,7 @@ export interface StreamChatResult {
 export function streamChatCompletion(
   messages: ContextMessage[],
   options: StreamChatOptions = {},
-): StreamChatResult {
+) {
   const modelName = options.model ?? DEFAULT_MODEL;
 
   const result = streamText({

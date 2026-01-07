@@ -13,6 +13,7 @@ import {
 } from "@flatsby/validators/chat";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { checkCredits, trackAIUsage } from "../utils/autumn";
 import { buildContextMessages } from "../utils/context-builder";
 import {
   generateConversationTitle,
@@ -214,6 +215,22 @@ export const chatRouter = createTRPCRouter({
       });
     }
 
+    // Check credits before AI generation
+    if (input.trigger === "submit-message") {
+      const { allowed } = await checkCredits({
+        authApi: ctx.authApi,
+        headers: ctx.headers,
+      });
+
+      if (!allowed) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "You've run out of credits. Please upgrade your plan to continue.",
+        });
+      }
+    }
+
     // Use provided model or fall back to conversation's model
     const modelToUse = input.model ?? conversation.model ?? getDefaultModel();
 
@@ -400,6 +417,15 @@ export const chatRouter = createTRPCRouter({
         model: chatModelSchema.safeParse(streamResult.model).data,
         cost: gateway?.cost ? parseFloat(gateway.cost) : null,
       };
+
+      // Track credits after successful completion
+      if (input.trigger === "submit-message") {
+        await trackAIUsage({
+          authApi: ctx.authApi,
+          headers: ctx.headers,
+          cost: gateway?.cost,
+        });
+      }
     } catch (error) {
       // Update message status to error
       await ctx.db

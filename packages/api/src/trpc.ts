@@ -31,6 +31,7 @@ export const createTRPCContext = async (opts: {
   auth: Auth;
 }): Promise<{
   authApi: Auth["api"];
+  headers: Headers;
   session: Awaited<ReturnType<Auth["api"]["getSession"]>>;
   db: typeof db;
 }> => {
@@ -40,6 +41,7 @@ export const createTRPCContext = async (opts: {
   });
   return {
     authApi,
+    headers: opts.headers,
     session,
     db,
   };

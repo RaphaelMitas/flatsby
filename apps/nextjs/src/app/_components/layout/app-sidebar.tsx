@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  CreditCardIcon,
   LoaderIcon,
   MessageSquareIcon,
   PlusIcon,
@@ -244,6 +245,18 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === "/billing"}
+              tooltip="Billing"
+            >
+              <Link href="/billing">
+                <CreditCardIcon />
+                <span>Billing</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarThemeToggle />
           </SidebarMenuItem>
