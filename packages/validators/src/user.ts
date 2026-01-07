@@ -1,5 +1,7 @@
 import { z } from "zod/v4";
 
+import { chatModelSchema } from "./chat";
+
 export const userNameSchema = z
   .string()
   .min(1, {
@@ -25,7 +27,7 @@ export const userSchema = z.object({
   updatedAt: z.date(),
   lastGroupUsed: z.number().optional().nullable(),
   lastShoppingListUsed: z.number().optional().nullable(),
-  lastChatModelUsed: z.string().optional().nullable(),
+  lastChatModelUsed: chatModelSchema.optional(),
 });
 export type User = z.infer<typeof userSchema>;
 

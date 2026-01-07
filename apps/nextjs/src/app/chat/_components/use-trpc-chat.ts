@@ -70,7 +70,7 @@ export function useTRPCChat({
     );
     // Invalidate conversations list (for title updates in sidebar)
     void queryClient.invalidateQueries({
-      queryKey: trpc.chat.getUserConversations.queryKey(),
+      queryKey: trpc.chat.getUserConversations.infiniteQueryKey(),
     });
     onFinish?.();
   }, [
@@ -98,15 +98,17 @@ export function useTRPCChat({
   );
 
   // Handle form submission
+  // Accepts optional message parameter to override input state (useful for auto-send on mount)
   const handleSubmit = useCallback(
-    (e?: React.FormEvent) => {
+    (e?: React.FormEvent, message?: string) => {
       e?.preventDefault();
-      if (!input.trim()) return;
+      const text = message ?? input;
+      if (!text.trim()) return;
 
       // AI SDK v5: use sendMessage with a message object
       void chat.sendMessage({
         role: "user",
-        parts: [{ type: "text", text: input }],
+        parts: [{ type: "text", text }],
       });
       setInput("");
     },

@@ -94,6 +94,106 @@ The tRPC API at `/api/trpc` exposes these routers:
 - `shoppingList` - Shopping lists and items management
 - `expense` - Expense tracking with splits
 - `user` - User preferences and settings
+- `chat` - AI chat conversations and messages
+
+### Validators Package (`packages/validators/`)
+
+Shared Zod schemas for input validation and type inference. Uses `zod/v4`.
+
+```typescript
+// packages/validators/src/chat.ts example
+import { z } from "zod/v4";
+
+// Define schema
+export const chatModelSchema = z.enum(["google/gemini-2.0-flash", "openai/gpt-4o"]);
+export type ChatModel = z.infer<typeof chatModelSchema>;
+
+// Input schemas for tRPC procedures
+export const createConversationInputSchema = z.object({
+  title: z.string().max(256).optional(),
+  model: chatModelSchema.optional(),
+});
+export type CreateConversationInput = z.infer<typeof createConversationInputSchema>;
+```
+
+Import in routers:
+```typescript
+import { createConversationInputSchema } from "@flatsby/validators/chat";
+```
+
+### tRPC Client Usage (Next.js)
+
+Uses `@trpc/tanstack-react-query` with React Query v5. **Always use these patterns:**
+
+```typescript
+"use client";
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useTRPC } from "~/trpc/react";
+
+function MyComponent() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  // Queries
+  const { data, isLoading } = useQuery(
+    trpc.user.getCurrentUser.queryOptions()
+  );
+
+  // Infinite queries (paginated)
+  const { data, hasNextPage, fetchNextPage } = useInfiniteQuery(
+    trpc.chat.getUserConversations.infiniteQueryOptions(
+      { limit: 10 },
+      { getNextPageParam: (lastPage) => lastPage.nextCursor }
+    )
+  );
+
+  // Mutations with callbacks
+  const createConversation = useMutation(
+    trpc.chat.createConversation.mutationOptions({
+      onSuccess: (data) => { /* handle success */ },
+      onError: (error) => { /* handle error */ },
+    })
+  );
+
+  // Optimistic updates
+  const deleteItem = useMutation(
+    trpc.shoppingList.deleteItem.mutationOptions({
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries({ queryKey: trpc.shoppingList.getItems.queryKey() });
+        const previousData = queryClient.getQueryData(trpc.shoppingList.getItems.queryKey());
+        queryClient.setQueryData(trpc.shoppingList.getItems.queryKey(), (old) => /* update */);
+        return { previousData };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previousData) {
+          queryClient.setQueryData(trpc.shoppingList.getItems.queryKey(), context.previousData);
+        }
+      },
+      onSettled: () => {
+        void queryClient.invalidateQueries({ queryKey: trpc.shoppingList.getItems.queryKey() });
+      },
+    })
+  );
+
+  // Calling mutations - can pass callbacks inline for closure access
+  const handleSubmit = () => {
+    createConversation.mutate(
+      { model: selectedModel },
+      {
+        onSuccess: (conversation) => {
+          // Access local state via closure
+          router.push(`/chat/${conversation.id}?message=${encodeURIComponent(message)}`);
+        },
+      }
+    );
+  };
+}
+```
+
+**Query key helpers:**
+- `trpc.router.procedure.queryKey()` - for regular queries
+- `trpc.router.procedure.infiniteQueryKey()` - for infinite queries
+- Pass input params to get specific keys: `queryKey({ id: "123" })`
 
 ## Environment Variables
 

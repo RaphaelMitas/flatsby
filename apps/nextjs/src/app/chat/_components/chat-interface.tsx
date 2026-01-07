@@ -6,6 +6,8 @@ import type {
   UIMessageWithMetadata,
 } from "@flatsby/validators/chat";
 import type { FormEvent } from "react";
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { MessageSquareIcon, RefreshCwIcon } from "lucide-react";
 
 import {
@@ -20,26 +22,27 @@ import {
   MessageContent,
   MessageResponse,
   MessageToolbar,
-  PromptInput,
-  PromptInputFooter,
-  PromptInputSubmit,
-  PromptInputTextarea,
 } from "@flatsby/ui/ai-elements";
 
-import { ChatModelSelector, getModelDisplayName } from "./chat-model-selector";
+import { ChatFooter } from "./chat-footer";
+import { getModelDisplayName } from "./chat-model-selector";
 import { useTRPCChat } from "./use-trpc-chat";
 
 interface ChatInterfaceProps {
   conversationId: string;
   initialMessages?: UIMessageWithMetadata[];
   initialModel?: ChatModel;
+  initialInput?: string;
 }
 
 export function ChatInterface({
   conversationId,
   initialMessages = [],
   initialModel,
+  initialInput,
 }: ChatInterfaceProps) {
+  const router = useRouter();
+  const hasAutoSent = useRef(false);
   const {
     messages,
     input,
@@ -55,6 +58,17 @@ export function ChatInterface({
     initialMessages,
     initialModel,
   });
+
+  // Auto-send initial input if provided (from new chat redirect)
+  useEffect(() => {
+    if (initialInput && !hasAutoSent.current) {
+      hasAutoSent.current = true;
+      // Remove the message from URL to prevent re-sending on refresh
+      router.replace(`/chat/${conversationId}`, { scroll: false });
+      // Pass message directly to handleSubmit to avoid state timing issues
+      handleSubmit(undefined, initialInput);
+    }
+  }, [initialInput, conversationId, router, handleSubmit]);
 
   const isStreaming = status === "streaming";
   const isSubmitting = status === "submitted";
@@ -140,35 +154,15 @@ export function ChatInterface({
         <ConversationScrollButton />
       </Conversation>
 
-      {/* Error Display */}
-      {error && (
-        <div className="border-destructive bg-destructive/10 text-destructive mx-4 mb-2 rounded-lg border p-3 text-sm">
-          {error.message}
-        </div>
-      )}
-
-      {/* Input Area */}
-      <div className="shrink-0 border-t p-4">
-        <PromptInput onSubmit={onFormSubmit}>
-          <PromptInputTextarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            disabled={isLoading}
-          />
-          <PromptInputFooter>
-            <ChatModelSelector
-              currentModel={selectedModel ?? null}
-              onModelChange={handleModelChange}
-              disabled={isLoading}
-            />
-            <PromptInputSubmit
-              status={status}
-              disabled={!input.trim() || isLoading}
-            />
-          </PromptInputFooter>
-        </PromptInput>
-      </div>
+      <ChatFooter
+        input={input}
+        onInputChange={setInput}
+        onSubmit={onFormSubmit}
+        selectedModel={selectedModel ?? null}
+        onModelChange={handleModelChange}
+        status={status}
+        error={error?.message}
+      />
     </div>
   );
 }

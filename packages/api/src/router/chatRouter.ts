@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { and, desc, eq, lt } from "@flatsby/db";
+import { and, desc, eq, isNull, lt } from "@flatsby/db";
 import { chatMessages, conversations, users } from "@flatsby/db/schema";
 import {
   chatModelSchema,
@@ -34,6 +34,7 @@ export const chatRouter = createTRPCRouter({
         where: and(
           eq(conversations.id, input.conversationId),
           eq(conversations.userId, ctx.session.user.id),
+          isNull(conversations.deletedAt),
         ),
         with: {
           messages: {
@@ -61,7 +62,10 @@ export const chatRouter = createTRPCRouter({
       const items = await ctx.db.query.conversations.findMany({
         where: and(
           eq(conversations.userId, ctx.session.user.id),
-          input.cursor ? lt(conversations.id, input.cursor) : undefined,
+          isNull(conversations.deletedAt),
+          input.cursor
+            ? lt(conversations.updatedAt, new Date(input.cursor))
+            : undefined,
         ),
         orderBy: [desc(conversations.updatedAt)],
         limit: input.limit + 1, // Fetch one extra to check for next page
@@ -70,7 +74,7 @@ export const chatRouter = createTRPCRouter({
       let nextCursor: string | undefined;
       if (items.length > input.limit) {
         const nextItem = items.pop();
-        nextCursor = nextItem?.id;
+        nextCursor = nextItem?.updatedAt.toISOString();
       }
 
       return {
@@ -86,7 +90,6 @@ export const chatRouter = createTRPCRouter({
   createConversation: protectedProcedure
     .input(createConversationInputSchema)
     .mutation(async ({ ctx, input }) => {
-      // Get user's preferred model if not explicitly provided
       let modelToUse: string | undefined = input.model;
       if (!modelToUse) {
         const user = await ctx.db.query.users.findFirst({
@@ -127,7 +130,6 @@ export const chatRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify conversation exists and belongs to user
       const conversation = await ctx.db.query.conversations.findFirst({
         where: and(
           eq(conversations.id, input.conversationId),
@@ -142,17 +144,44 @@ export const chatRouter = createTRPCRouter({
         });
       }
 
-      // Update conversation model
       await ctx.db
         .update(conversations)
         .set({ model: input.model })
         .where(eq(conversations.id, input.conversationId));
 
-      // Save as user's last used model preference
       await ctx.db
         .update(users)
         .set({ lastChatModelUsed: input.model })
         .where(eq(users.id, ctx.session.user.id));
+
+      return { success: true };
+    }),
+
+  /**
+   * Soft delete a conversation
+   */
+  deleteConversation: protectedProcedure
+    .input(z.object({ conversationId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const conversation = await ctx.db.query.conversations.findFirst({
+        where: and(
+          eq(conversations.id, input.conversationId),
+          eq(conversations.userId, ctx.session.user.id),
+          isNull(conversations.deletedAt),
+        ),
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found",
+        });
+      }
+
+      await ctx.db
+        .update(conversations)
+        .set({ deletedAt: new Date() })
+        .where(eq(conversations.id, input.conversationId));
 
       return { success: true };
     }),

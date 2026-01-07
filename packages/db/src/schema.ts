@@ -284,6 +284,7 @@ export const conversations = createTable("conversations", {
   systemPrompt: text("system_prompt"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at", { mode: "date" }),
 });
 
 export const conversationsRelations = relations(

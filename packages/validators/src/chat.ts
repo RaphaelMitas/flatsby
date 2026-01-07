@@ -111,7 +111,7 @@ export type GetConversationInput = z.infer<typeof getConversationInputSchema>;
 
 export const getUserConversationsInputSchema = z.object({
   limit: z.number().min(1).max(100).default(50),
-  cursor: z.uuid().optional(),
+  cursor: z.iso.datetime().optional(), // updatedAt timestamp for cursor
 });
 export type GetUserConversationsInput = z.infer<
   typeof getUserConversationsInputSchema

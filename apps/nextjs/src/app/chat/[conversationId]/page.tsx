@@ -7,16 +7,21 @@ import { chatModelSchema, messageRoleSchema } from "@flatsby/validators/chat";
 
 import { getSession } from "~/auth/server";
 import { caller } from "~/trpc/server";
+import { ChatHeader } from "../_components/chat-header";
 import { ChatInterface } from "../_components/chat-interface";
 
 interface ChatConversationPageProps {
   params: Promise<{
     conversationId: string;
   }>;
+  searchParams: Promise<{
+    message?: string;
+  }>;
 }
 
 export default async function ChatConversationPage({
   params,
+  searchParams,
 }: ChatConversationPageProps) {
   const session = await getSession();
 
@@ -25,6 +30,7 @@ export default async function ChatConversationPage({
   }
 
   const { conversationId } = await params;
+  const { message: initialMessage } = await searchParams;
 
   let conversation;
   try {
@@ -57,16 +63,13 @@ export default async function ChatConversationPage({
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 border-b px-4 py-2">
-        <h1 className="text-sm font-medium">
-          {conversation.title ?? "New Chat"}
-        </h1>
-      </div>
+      <ChatHeader title={conversation.title ?? "New Chat"} />
       <div className="min-h-0 flex-1 overflow-hidden">
         <ChatInterface
           conversationId={conversationId}
           initialMessages={initialMessages}
           initialModel={chatModelSchema.safeParse(conversation.model).data}
+          initialInput={initialMessage}
         />
       </div>
     </div>
