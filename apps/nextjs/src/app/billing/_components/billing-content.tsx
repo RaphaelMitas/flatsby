@@ -51,7 +51,7 @@ export function BillingContent() {
               variant="outline"
               onClick={async () => {
                 await openBillingPortal({
-                  returnUrl: `${env.NEXT_PUBLIC_BETTER_AUTH_URL}/billing`,
+                  returnUrl: `${env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL}/billing`,
                 });
               }}
             >
