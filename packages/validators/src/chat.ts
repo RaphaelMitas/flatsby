@@ -3,6 +3,8 @@ import { tool } from "ai";
 import { z } from "zod/v4";
 
 import { categoryIdSchema } from "./categories";
+import { groupNameSchema, groupSchema } from "./group";
+import { shoppingListItemSchema, shoppingListSchema } from "./shopping-list";
 
 // Available AI models
 export const chatModelSchema = z.enum([
@@ -46,20 +48,98 @@ export const sendTriggerSchema = z.enum([
 ]);
 export type SendTrigger = z.infer<typeof sendTriggerSchema>;
 
-// Base message schema (from DB)
-// Note: message IDs are strings (nanoid from AI SDK or UUID we generate)
-export const chatMessageSchema = z.object({
+// Reusable item schemas built from shoppingListItemSchema
+const toolItemInputSchema = shoppingListItemSchema
+  .pick({ name: true })
+  .extend({ categoryId: categoryIdSchema.optional() });
+
+const toolAddedItemSchema = shoppingListItemSchema.pick({
+  id: true,
+  name: true,
+  categoryId: true,
+});
+
+const toolFailedItemSchema = shoppingListItemSchema
+  .pick({ name: true })
+  .extend({ reason: z.string() });
+
+export const addedItemSchema = toolAddedItemSchema;
+export type AddedItem = z.infer<typeof addedItemSchema>;
+
+// Tool result schemas
+export const shoppingListInfoSchema = shoppingListSchema
+  .pick({ id: true, name: true })
+  .extend({
+    groupId: groupSchema.shape.id,
+    groupName: groupNameSchema,
+    uncheckedItemLength: z.number(),
+  });
+export type ShoppingListInfo = z.infer<typeof shoppingListInfoSchema>;
+
+export const getShoppingListsResultSchema = z.object({
+  lists: z.array(shoppingListInfoSchema),
+  userShouldSelect: z.boolean(),
+});
+export type GetShoppingListsResult = z.infer<
+  typeof getShoppingListsResultSchema
+>;
+
+export const addToShoppingListResultSchema = z.object({
+  success: z.boolean(),
+  shoppingListName: shoppingListSchema.shape.name,
+  addedItems: z.array(addedItemSchema),
+  failedItems: z.array(toolFailedItemSchema).optional(),
+});
+export type AddToShoppingListResult = z.infer<
+  typeof addToShoppingListResultSchema
+>;
+
+// Tool input schemas
+export const getShoppingListsInputSchema = z.object({
+  userShouldSelect: z.boolean(),
+});
+
+export const addToShoppingListInputSchema = z.object({
+  shoppingListId: z.number(),
+  groupId: z.number(),
+  items: z.array(toolItemInputSchema),
+});
+
+// Persisted tool call schemas (reuse input/output schemas)
+const getShoppingListsToolCallSchema = z.object({
   id: z.string(),
+  name: z.literal("getShoppingLists"),
+  input: getShoppingListsInputSchema,
+  output: getShoppingListsResultSchema,
+});
+
+const addToShoppingListToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("addToShoppingList"),
+  input: addToShoppingListInputSchema,
+  output: addToShoppingListResultSchema,
+});
+
+const persistedToolCallSchema = z.discriminatedUnion("name", [
+  getShoppingListsToolCallSchema,
+  addToShoppingListToolCallSchema,
+]);
+
+export type PersistedToolCall = z.infer<typeof persistedToolCallSchema>;
+
+// Base message schema (from DB)
+export const chatMessageSchema = z.object({
+  id: z.nanoid(),
   conversationId: z.uuid(),
   role: messageRoleSchema,
   content: z.string(),
   status: messageStatusSchema,
   tokenCount: z.number().nullable(),
   createdAt: z.date(),
-  // AI generation tracking
   generationId: z.string().nullable(),
   cost: z.number().nullable(),
   model: z.string().nullable(),
+  toolCalls: z.array(persistedToolCallSchema).nullable(),
 });
 export type ChatMessage = z.infer<typeof chatMessageSchema>;
 
@@ -84,9 +164,8 @@ export type ConversationWithMessages = z.infer<
 >;
 
 // UI Message schema (compatible with AI SDK v5)
-// AI SDK generates nanoid-style IDs, content is extracted from parts
 export const uiMessageSchema = z.object({
-  id: z.string(),
+  id: z.nanoid(),
   role: messageRoleSchema,
   content: z.string(),
   createdAt: z.date().optional(),
@@ -126,8 +205,7 @@ export const sendInputSchema = z.object({
   conversationId: z.uuid(),
   message: uiMessageSchema,
   trigger: sendTriggerSchema,
-  // Message ID for regeneration - string to accept both nanoid and UUID
-  messageId: z.string().optional(),
+  messageId: z.nanoid().optional(),
   // Model to use for this message (updates conversation model if different)
   model: chatModelSchema.optional(),
   // Tool settings for this message
@@ -153,99 +231,26 @@ export const streamChunkSchema = z.object({
 });
 export type StreamChunk = z.infer<typeof streamChunkSchema>;
 
-// Tool result schemas for shopping list tools
-export const shoppingListInfoSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  groupId: z.number(),
-  groupName: z.string(),
-  uncheckedItemLength: z.number(),
-});
-export type ShoppingListInfo = z.infer<typeof shoppingListInfoSchema>;
-
-// Result from getShoppingLists tool
-export const getShoppingListsResultSchema = z.object({
-  lists: z.array(shoppingListInfoSchema),
-  userShouldSelect: z.boolean(),
-});
-export type GetShoppingListsResult = z.infer<
-  typeof getShoppingListsResultSchema
->;
-
-export const addedItemSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  categoryId: z.string(),
-});
-export type AddedItem = z.infer<typeof addedItemSchema>;
-
-export const addToShoppingListResultSchema = z.object({
-  success: z.boolean(),
-  shoppingListName: z.string(),
-  addedItems: z.array(addedItemSchema),
-  failedItems: z
-    .array(
-      z.object({
-        name: z.string(),
-        reason: z.string(),
-      }),
-    )
-    .optional(),
-});
-export type AddToShoppingListResult = z.infer<
-  typeof addToShoppingListResultSchema
->;
-
-// =============================================================================
-// Typed UIMessage with Tools
-// =============================================================================
-
-/**
- * Message metadata attached to assistant messages
- */
 export const messageMetadataSchema = z.object({
   model: chatModelSchema.optional(),
   cost: z.number().optional(),
 });
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
 
-/**
- * Tool definitions for type inference (mirrors runtime tools in chat-tools.ts)
- * These are used purely for TypeScript type generation via InferUITools
- */
-// Input schemas for tools
-const getShoppingListsInputSchema = z.object({
-  userShouldSelect: z.boolean(),
-});
-
-const addToShoppingListInputSchema = z.object({
-  shoppingListId: z.number(),
-  groupId: z.number(),
-  items: z.array(
-    z.object({
-      name: z.string(),
-      categoryId: categoryIdSchema.optional(),
-    }),
-  ),
-});
-
+// AI SDK tool definitions
 export const chatTools = {
   getShoppingLists: tool({
     description: "Get all shopping lists the user has access to",
     inputSchema: getShoppingListsInputSchema,
+    outputSchema: getShoppingListsResultSchema,
   }),
   addToShoppingList: tool({
     description: "Add items to a shopping list",
     inputSchema: addToShoppingListInputSchema,
+    outputSchema: addToShoppingListResultSchema,
   }),
 } satisfies ToolSet;
 
 export type ChatTools = InferUITools<typeof chatTools>;
 
-/**
- * Fully typed UIMessage for chat interface
- * - Metadata: model and cost info
- * - DataParts: none currently
- * - Tools: getShoppingLists, addToShoppingList
- */
 export type ChatUIMessage = AIUIMessage<MessageMetadata, never, ChatTools>;

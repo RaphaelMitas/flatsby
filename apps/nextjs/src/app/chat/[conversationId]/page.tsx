@@ -48,15 +48,43 @@ export default async function ChatConversationPage({
     .filter((m) => m.status === "complete" || m.status === "streaming")
     .filter((m) => messageRoleSchema.safeParse(m.role).success);
 
-  const initialMessages: ChatUIMessage[] = filteredMessages.map((m) => ({
-    id: m.id,
-    role: messageRoleSchema.parse(m.role),
-    parts: [{ type: "text", text: m.content }],
-    metadata: {
-      model: chatModelSchema.safeParse(m.model).data,
-      cost: m.cost ?? undefined,
-    },
-  }));
+  const initialMessages: ChatUIMessage[] = filteredMessages.map((m) => {
+    const parts: ChatUIMessage["parts"] = [{ type: "text", text: m.content }];
+
+    // Restore tool calls if present
+    if (m.toolCalls) {
+      for (const tc of m.toolCalls) {
+        if (tc.name === "getShoppingLists") {
+          parts.push({
+            type: "tool-getShoppingLists",
+            toolCallId: tc.id,
+            state: "output-available",
+            input: tc.input,
+            output: tc.output,
+          });
+        } else {
+          // tc.name === "addToShoppingList"
+          parts.push({
+            type: "tool-addToShoppingList",
+            toolCallId: tc.id,
+            state: "output-available",
+            input: tc.input,
+            output: tc.output,
+          });
+        }
+      }
+    }
+
+    return {
+      id: m.id,
+      role: messageRoleSchema.parse(m.role),
+      parts,
+      metadata: {
+        model: chatModelSchema.safeParse(m.model).data,
+        cost: m.cost ?? undefined,
+      },
+    };
+  });
 
   return (
     <div className="flex h-full flex-col overflow-hidden">

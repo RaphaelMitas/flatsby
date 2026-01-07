@@ -1,14 +1,19 @@
 import crypto from "node:crypto";
+import type { PersistedToolCall } from "@flatsby/validators/chat";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { and, desc, eq, isNull, lt } from "@flatsby/db";
 import { chatMessages, conversations, users } from "@flatsby/db/schema";
 import {
+  addToShoppingListInputSchema,
+  addToShoppingListResultSchema,
   chatModelSchema,
   conversationWithMessagesSchema,
   createConversationInputSchema,
   getConversationInputSchema,
+  getShoppingListsInputSchema,
+  getShoppingListsResultSchema,
   getUserConversationsInputSchema,
   messageRoleSchema,
   messageStatusSchema,
@@ -387,6 +392,13 @@ export const chatRouter = createTRPCRouter({
           maxSteps: 5,
         });
 
+        // Track pending tool calls until we receive their results
+        const pendingToolCalls = new Map<
+          string,
+          { name: string; input: unknown }
+        >();
+        const completedToolCalls: PersistedToolCall[] = [];
+
         for await (const chunk of streamResult.fullStream) {
           if (chunk.type === "text-delta") {
             buffer += chunk.text;
@@ -405,6 +417,12 @@ export const chatRouter = createTRPCRouter({
               textDelta: chunk.text,
             };
           } else if (chunk.type === "tool-call") {
+            // Store pending tool call for later completion
+            pendingToolCalls.set(chunk.toolCallId, {
+              name: chunk.toolName,
+              input: chunk.input,
+            });
+
             yield {
               type: "tool-call" as const,
               toolCallId: chunk.toolCallId,
@@ -412,6 +430,43 @@ export const chatRouter = createTRPCRouter({
               args: chunk.input as Record<string, unknown>,
             };
           } else if (chunk.type === "tool-result") {
+            // Complete the tool call with its output using safeParse
+            const pending = pendingToolCalls.get(chunk.toolCallId);
+            if (pending) {
+              if (pending.name === "getShoppingLists") {
+                const inputResult = getShoppingListsInputSchema.safeParse(
+                  pending.input,
+                );
+                const outputResult = getShoppingListsResultSchema.safeParse(
+                  chunk.output,
+                );
+                if (inputResult.success && outputResult.success) {
+                  completedToolCalls.push({
+                    id: chunk.toolCallId,
+                    name: "getShoppingLists",
+                    input: inputResult.data,
+                    output: outputResult.data,
+                  });
+                }
+              } else if (pending.name === "addToShoppingList") {
+                const inputResult = addToShoppingListInputSchema.safeParse(
+                  pending.input,
+                );
+                const outputResult = addToShoppingListResultSchema.safeParse(
+                  chunk.output,
+                );
+                if (inputResult.success && outputResult.success) {
+                  completedToolCalls.push({
+                    id: chunk.toolCallId,
+                    name: "addToShoppingList",
+                    input: inputResult.data,
+                    output: outputResult.data,
+                  });
+                }
+              }
+              pendingToolCalls.delete(chunk.toolCallId);
+            }
+
             yield {
               type: "tool-result" as const,
               toolCallId: chunk.toolCallId,
@@ -432,7 +487,7 @@ export const chatRouter = createTRPCRouter({
             }
           | undefined;
 
-        // Final write with complete status
+        // Final write with complete status and tool calls
         await ctx.db
           .update(chatMessages)
           .set({
@@ -441,6 +496,8 @@ export const chatRouter = createTRPCRouter({
             model: streamResult.model,
             cost: gateway?.cost ? parseFloat(gateway.cost) : null,
             generationId: gateway?.generationId ?? null,
+            toolCalls:
+              completedToolCalls.length > 0 ? completedToolCalls : null,
           })
           .where(eq(chatMessages.id, assistantMessageId));
 

@@ -32,6 +32,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@flatsby/validators": "workspace:*",
     "@neondatabase/serverless": "^1.0.2",
     "@t3-oss/env-nextjs": "catalog:",
     "drizzle-orm": "^0.45.1",

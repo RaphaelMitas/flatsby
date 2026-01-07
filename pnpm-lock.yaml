@@ -512,6 +512,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@flatsby/validators':
+        specifier: workspace:*
+        version: link:../validators
       '@neondatabase/serverless':
         specifier: ^1.0.2
         version: 1.0.2
@@ -725,6 +728,9 @@ importers:
       '@flatsby/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      ai:
+        specifier: 'catalog:'
+        version: 6.0.12(zod@4.3.2)
       eslint:
         specifier: 'catalog:'
         version: 9.39.2(jiti@2.6.1)

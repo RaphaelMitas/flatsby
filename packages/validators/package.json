@@ -29,6 +29,7 @@
     "@flatsby/eslint-config": "workspace:*",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
+    "ai": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"

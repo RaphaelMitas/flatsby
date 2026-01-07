@@ -14,7 +14,7 @@ import { formatCredits } from "@flatsby/validators/billing";
 export function UsageDisplay() {
   const { customer } = useCustomer();
 
-  const creditsFeature = customer?.features?.credits;
+  const creditsFeature = customer?.features.credits;
   const balance = creditsFeature?.balance ?? 0;
   const usage = creditsFeature?.usage ?? 0;
   const unlimited = creditsFeature?.unlimited ?? false;

@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTableCreator,
   real,
   serial,
@@ -11,6 +12,8 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+
+import type { PersistedToolCall } from "@flatsby/validators/chat";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -315,6 +318,8 @@ export const chatMessages = createTable(
     generationId: text("generation_id"), // gen_<ulid> from providerMetadata.gateway
     cost: real("cost"), // Cost in USD from providerMetadata.gateway.cost
     model: text("model"), // Model ID used for this generation
+    // Tool calls made during this message
+    toolCalls: jsonb("tool_calls").$type<PersistedToolCall[]>(),
   },
   (table) => [
     index("chat_messages_conv_idx").on(table.conversationId, table.createdAt),
