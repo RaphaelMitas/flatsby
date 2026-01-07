@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useCustomer } from "autumn-js/react";
 import { ChevronsUpDown, LogOut, Settings, Snowflake } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -27,6 +28,9 @@ export function SidebarUserMenu() {
   const { isMobile } = useSidebar();
   const { isEnabled, setEnabled } = useWinterEffects();
   const trpc = useTRPC();
+  const { customer } = useCustomer();
+
+  const planName = customer?.products[0]?.name ?? "Free";
 
   const { data: userWithGroups } = useQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
@@ -54,7 +58,12 @@ export function SidebarUserMenu() {
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user?.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-semibold">{user?.name}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {planName}
+                  </span>
+                </div>
                 <span className="text-muted-foreground truncate text-xs">
                   {user?.email}
                 </span>

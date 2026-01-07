@@ -34,6 +34,7 @@
     "./ai-elements": "./src/components/ai-elements/index.ts",
     "./autumn/checkout-dialog": "./src/components/autumn/checkout-dialog.tsx",
     "./autumn/pricing-table": "./src/components/autumn/pricing-table.tsx",
+    "./progress": "./src/progress.tsx",
     "./sidebar": "./src/sidebar.tsx",
     "./skeleton": "./src/skeleton.tsx",
     "./tooltip": "./src/tooltip.tsx",

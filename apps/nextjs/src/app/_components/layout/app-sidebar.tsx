@@ -8,7 +8,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  CreditCardIcon,
   LoaderIcon,
   MessageSquareIcon,
   PlusIcon,
@@ -34,6 +33,7 @@ import {
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
+import { SidebarCreditsDisplay } from "./sidebar-credits-display";
 import { SidebarGroupSwitcher } from "./sidebar-group-switcher";
 import { SidebarShoppingListSwitcher } from "./sidebar-shopping-list-switcher";
 import { SidebarThemeToggle } from "./sidebar-theme-toggle";
@@ -246,22 +246,11 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === "/billing"}
-              tooltip="Billing"
-            >
-              <Link href="/billing">
-                <CreditCardIcon />
-                <span>Billing</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
             <SidebarThemeToggle />
           </SidebarMenuItem>
+          <SidebarCreditsDisplay />
+          <SidebarUserMenu />
         </SidebarMenu>
-        <SidebarUserMenu />
       </SidebarFooter>
 
       <SidebarRail />
