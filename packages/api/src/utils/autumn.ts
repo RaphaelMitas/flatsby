@@ -1,31 +1,8 @@
+import type { Auth } from "@flatsby/auth";
+import type { CheckResult } from "autumn-js";
 import { TRPCError } from "@trpc/server";
-import { CheckResult } from "autumn-js";
 
-import { Auth } from "@flatsby/auth";
-
-/**
- * Autumn billing feature IDs
- * These should match what's configured in the Autumn dashboard
- */
-export const AUTUMN_FEATURES = {
-  CREDITS: "credits",
-} as const;
-
-export type AutumnFeature =
-  (typeof AUTUMN_FEATURES)[keyof typeof AUTUMN_FEATURES];
-
-/**
- * Credits conversion rate: 1 credit = $0.00001
- */
-export const CREDITS_PER_DOLLAR = 100_000;
-
-/**
- * Convert cost string from gateway to credits
- */
-export function costToCredits(cost: string | undefined): number {
-  if (!cost) return 0;
-  return Math.round(parseFloat(cost) * CREDITS_PER_DOLLAR);
-}
+import { AUTUMN_FEATURES, costToCredits } from "@flatsby/validators/billing";
 
 export async function checkCredits({
   authApi,

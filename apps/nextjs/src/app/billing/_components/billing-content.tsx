@@ -3,6 +3,7 @@
 import { useCustomer } from "autumn-js/react";
 import { ExternalLinkIcon, Loader2Icon } from "lucide-react";
 
+import PricingTable from "@flatsby/ui/autumn/pricing-table";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -11,8 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
-import PricingTable from "@flatsby/ui/autumn/pricing-table";
 
+import { env } from "~/env";
 import { UsageDisplay } from "./usage-display";
 
 export function BillingContent() {
@@ -26,7 +27,7 @@ export function BillingContent() {
     );
   }
 
-  const currentProduct = customer?.products?.[0];
+  const currentProduct = customer?.products[0];
 
   return (
     <div className="grid gap-6">
@@ -45,15 +46,19 @@ export function BillingContent() {
               {currentProduct?.status ?? "Active"}
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={async () => {
-              await openBillingPortal({ returnUrl: "/billing" });
-            }}
-          >
-            Manage Subscription
-            <ExternalLinkIcon className="ml-2 h-4 w-4" />
-          </Button>
+          {currentProduct && currentProduct.id !== "free" && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await openBillingPortal({
+                  returnUrl: `${env.NEXT_PUBLIC_BETTER_AUTH_URL}/billing`,
+                });
+              }}
+            >
+              Manage Subscription
+              <ExternalLinkIcon className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </CardContent>
       </Card>
 

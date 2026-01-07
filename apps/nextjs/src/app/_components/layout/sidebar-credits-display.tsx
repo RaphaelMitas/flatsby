@@ -10,16 +10,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@flatsby/ui/sidebar";
-
-function formatCredits(credits: number): string {
-  if (credits >= 1_000_000) {
-    return `${(credits / 1_000_000).toFixed(1)}M`;
-  }
-  if (credits >= 1_000) {
-    return `${(credits / 1_000).toFixed(1)}K`;
-  }
-  return credits.toLocaleString();
-}
+import { formatCredits } from "@flatsby/validators/billing";
 
 export function SidebarCreditsDisplay() {
   const { customer, isLoading } = useCustomer();

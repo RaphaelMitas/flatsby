@@ -215,20 +215,18 @@ export const chatRouter = createTRPCRouter({
       });
     }
 
-    // Check credits before AI generation
-    if (input.trigger === "submit-message") {
-      const { allowed } = await checkCredits({
-        authApi: ctx.authApi,
-        headers: ctx.headers,
-      });
+    // Check credits before AI generation (applies to all triggers)
+    const { allowed } = await checkCredits({
+      authApi: ctx.authApi,
+      headers: ctx.headers,
+    });
 
-      if (!allowed) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "You've run out of credits. Please upgrade your plan to continue.",
-        });
-      }
+    if (!allowed) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message:
+          "You've run out of credits. Please upgrade your plan to continue.",
+      });
     }
 
     // Use provided model or fall back to conversation's model
@@ -418,14 +416,12 @@ export const chatRouter = createTRPCRouter({
         cost: gateway?.cost ? parseFloat(gateway.cost) : null,
       };
 
-      // Track credits after successful completion
-      if (input.trigger === "submit-message") {
-        await trackAIUsage({
-          authApi: ctx.authApi,
-          headers: ctx.headers,
-          cost: gateway?.cost,
-        });
-      }
+      // Track credits after successful completion (applies to all triggers)
+      await trackAIUsage({
+        authApi: ctx.authApi,
+        headers: ctx.headers,
+        cost: gateway?.cost,
+      });
     } catch (error) {
       // Update message status to error
       await ctx.db

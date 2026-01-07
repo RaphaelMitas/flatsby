@@ -10,6 +10,8 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MessageSquareIcon, RefreshCwIcon } from "lucide-react";
 
+import { costToCredits, formatCredits } from "@flatsby/validators/billing";
+
 import {
   Conversation,
   ConversationContent,
@@ -131,7 +133,8 @@ export function ChatInterface({
                       <span className="text-muted-foreground text-xs">
                         {messageModel && getModelDisplayName(messageModel)}
                         {messageModel && messageCost != null && " · "}
-                        {messageCost != null && `$${messageCost.toFixed(6)}`}
+                        {messageCost != null &&
+                          `${formatCredits(costToCredits(messageCost))} credits`}
                       </span>
                     )}
                     {/* Actions for assistant messages */}

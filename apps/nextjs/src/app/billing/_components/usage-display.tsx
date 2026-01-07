@@ -9,10 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
-
-function formatCredits(credits: number): string {
-  return credits.toLocaleString() + " credits";
-}
+import { formatCredits } from "@flatsby/validators/billing";
 
 export function UsageDisplay() {
   const { customer } = useCustomer();
@@ -34,7 +31,7 @@ export function UsageDisplay() {
         <CardDescription>
           {unlimited
             ? "Unlimited credits"
-            : `${formatCredits(usage)} of ${formatCredits(totalAllowance)} used this period`}
+            : `${formatCredits(usage)} of ${formatCredits(totalAllowance)} credits used this period`}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -47,7 +44,7 @@ export function UsageDisplay() {
               />
             </div>
             <div className="text-muted-foreground flex justify-between text-sm">
-              <span>Remaining: {formatCredits(balance)}</span>
+              <span>Remaining: {formatCredits(balance)} credits</span>
             </div>
           </>
         )}
