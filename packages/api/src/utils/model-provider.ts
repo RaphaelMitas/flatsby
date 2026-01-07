@@ -1,4 +1,5 @@
-import { generateText, streamText } from "ai";
+import type { Tool } from "ai";
+import { generateText, stepCountIs, streamText } from "ai";
 
 import type { ContextMessage } from "./context-builder";
 
@@ -17,6 +18,11 @@ export function getDefaultModel() {
 export interface StreamChatOptions {
   model?: string;
   systemPrompt?: string;
+}
+
+export interface StreamChatWithToolsOptions extends StreamChatOptions {
+  tools?: Record<string, Tool>;
+  maxSteps?: number;
 }
 
 /**
@@ -42,6 +48,35 @@ export function streamChatCompletion(
 
   return {
     textStream: result.textStream,
+    providerMetadata: result.providerMetadata,
+    model: modelName,
+  };
+}
+
+/**
+ * Stream a chat completion with tool calling support
+ * Returns the full stream which includes text-delta, tool-call, tool-result events
+ */
+export function streamChatWithTools(
+  messages: ContextMessage[],
+  options: StreamChatWithToolsOptions = {},
+) {
+  const modelName = options.model ?? DEFAULT_MODEL;
+  const maxSteps = options.maxSteps ?? 5;
+
+  const result = streamText({
+    model: modelName,
+    system: options.systemPrompt,
+    messages: messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    })),
+    tools: options.tools,
+    stopWhen: stepCountIs(maxSteps),
+  });
+
+  return {
+    fullStream: result.fullStream,
     providerMetadata: result.providerMetadata,
     model: modelName,
   };

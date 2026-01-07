@@ -64,6 +64,15 @@ export {
 export { Loader } from "./loader";
 export { Shimmer } from "./shimmer";
 
+export { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "./tool";
+export type {
+  ToolProps,
+  ToolHeaderProps,
+  ToolContentProps,
+  ToolInputProps,
+  ToolOutputProps,
+} from "./tool";
+
 // Re-export types
 export type { MessageProps, MessageContentProps } from "./message";
 export type {

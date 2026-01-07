@@ -3,14 +3,13 @@
 import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
 import type {
   ChatModel,
-  UIMessageWithMetadata,
+  ChatUIMessage,
+  ShoppingListInfo,
 } from "@flatsby/validators/chat";
 import type { FormEvent } from "react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MessageSquareIcon, RefreshCwIcon } from "lucide-react";
-
-import { costToCredits, formatCredits } from "@flatsby/validators/billing";
 
 import {
   Conversation,
@@ -24,15 +23,20 @@ import {
   MessageContent,
   MessageResponse,
   MessageToolbar,
+  Tool,
+  ToolHeader,
 } from "@flatsby/ui/ai-elements";
+import { costToCredits, formatCredits } from "@flatsby/validators/billing";
 
 import { ChatFooter } from "./chat-footer";
 import { getModelDisplayName } from "./chat-model-selector";
+import { ShoppingListSelector } from "./shopping-list-selector";
+import { ShoppingListToolCard } from "./shopping-list-tool-card";
 import { useTRPCChat } from "./use-trpc-chat";
 
 interface ChatInterfaceProps {
   conversationId: string;
-  initialMessages?: UIMessageWithMetadata[];
+  initialMessages?: ChatUIMessage[];
   initialModel?: ChatModel;
   initialInput?: string;
 }
@@ -55,6 +59,8 @@ export function ChatInterface({
     regenerateMessage,
     selectedModel,
     handleModelChange,
+    settings,
+    updateSettings,
   } = useTRPCChat({
     conversationId,
     initialMessages,
@@ -86,8 +92,17 @@ export function ChatInterface({
     handleSubmit(event);
   };
 
+  // Handle shopping list selection - sends a message to the AI
+  const handleShoppingListSelect = useCallback(
+    (list: ShoppingListInfo) => {
+      if (isLoading) return;
+      handleSubmit(undefined, `Add to the "${list.name}" list`);
+    },
+    [handleSubmit, isLoading],
+  );
+
   // Helper to get text content from a message
-  const getMessageContent = (msg: UIMessageWithMetadata): string => {
+  const getMessageContent = (msg: ChatUIMessage): string => {
     return msg.parts
       .filter(
         (part): part is { type: "text"; text: string } =>
@@ -113,16 +128,67 @@ export function ChatInterface({
               const content = getMessageContent(message);
               const messageModel = message.metadata?.model;
               const messageCost = message.metadata?.cost;
+
+              // Extract pending/running tool calls (to show indicators)
+              const pendingToolCalls = message.parts.filter(
+                (part) =>
+                  (part.type === "tool-getShoppingLists" ||
+                    part.type === "tool-addToShoppingList") &&
+                  part.state === "input-available",
+              );
+
+              // Extract tool results for shopping list
+              // AI SDK combines tool name into type like "tool-addToShoppingList"
+              const addToListResults = message.parts.filter(
+                (part) =>
+                  part.type === "tool-addToShoppingList" &&
+                  part.state === "output-available",
+              );
+              // Extract getShoppingLists results for clickable selection
+              const getListsResults = message.parts.filter(
+                (part) =>
+                  part.type === "tool-getShoppingLists" &&
+                  part.state === "output-available",
+              );
+              // Only show selector if this is the last message (not already responded)
+              const isLastMessage = index === messages.length - 1;
               return (
                 <Message key={message.id} from={message.role}>
                   <MessageContent>
                     {message.role === "assistant" ? (
                       <>
+                        {/* Show tool call indicators */}
+                        {pendingToolCalls.map((part) => {
+                          return (
+                            <Tool key={part.toolCallId} className="my-1">
+                              <ToolHeader type={part.type} state={part.state} />
+                            </Tool>
+                          );
+                        })}
                         {content ? (
                           <MessageResponse>{content}</MessageResponse>
                         ) : isLoading && index === messages.length - 1 ? (
                           <Loader size={20} />
                         ) : null}
+                        {addToListResults.map((part) => {
+                          return (
+                            <ShoppingListToolCard
+                              key={part.toolCallId}
+                              result={part.output}
+                            />
+                          );
+                        })}
+                        {getListsResults.map((part) => {
+                          if (!part.output.userShouldSelect) return null;
+                          return (
+                            <ShoppingListSelector
+                              key={part.toolCallId}
+                              lists={part.output.lists}
+                              onSelect={handleShoppingListSelect}
+                              disabled={isLoading || !isLastMessage}
+                            />
+                          );
+                        })}
                       </>
                     ) : (
                       <p className="whitespace-pre-wrap">{content}</p>
@@ -163,6 +229,8 @@ export function ChatInterface({
         onSubmit={onFormSubmit}
         selectedModel={selectedModel ?? null}
         onModelChange={handleModelChange}
+        settings={settings}
+        onSettingsChange={updateSettings}
         status={status}
         error={error?.message}
       />

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatModel } from "@flatsby/validators/chat";
+import type { ChatModel, ChatSettings } from "@flatsby/validators/chat";
 import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
 import type { FormEvent } from "react";
 import { useState } from "react";
@@ -18,6 +18,10 @@ import { CHAT_MODELS } from "@flatsby/validators/chat";
 import { useTRPC } from "~/trpc/react";
 import { ChatFooter } from "./chat-footer";
 
+const DEFAULT_SETTINGS: ChatSettings = {
+  shoppingListToolEnabled: false,
+};
+
 interface NewChatInterfaceProps {
   defaultModel?: ChatModel;
 }
@@ -31,6 +35,7 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
   const [selectedModel, setSelectedModel] = useState<ChatModel>(
     defaultModel ?? CHAT_MODELS[0].id,
   );
+  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
 
   const createConversation = useMutation(
     trpc.chat.createConversation.mutationOptions({}),
@@ -78,6 +83,10 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
         onSubmit={onFormSubmit}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
+        settings={settings}
+        onSettingsChange={(newSettings) =>
+          setSettings((prev) => ({ ...prev, ...newSettings }))
+        }
         status={isLoading ? "submitted" : "ready"}
         error={createConversation.error?.message}
       />

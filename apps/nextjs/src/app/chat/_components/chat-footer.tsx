@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatModel } from "@flatsby/validators/chat";
+import type { ChatModel, ChatSettings } from "@flatsby/validators/chat";
 import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
 import type { FormEvent } from "react";
 
@@ -12,6 +12,7 @@ import {
 } from "@flatsby/ui/ai-elements";
 
 import { ChatModelSelector } from "./chat-model-selector";
+import { ChatSettingsDropdown } from "./chat-settings";
 
 type PromptStatus = "ready" | "submitted" | "streaming" | "error";
 
@@ -21,6 +22,8 @@ interface ChatFooterProps {
   onSubmit: (message: PromptInputMessage, event: FormEvent<HTMLFormElement>) => void;
   selectedModel: ChatModel | null;
   onModelChange: (model: ChatModel) => void;
+  settings: ChatSettings;
+  onSettingsChange: (settings: Partial<ChatSettings>) => void;
   status: PromptStatus;
   disabled?: boolean;
   error?: string | null;
@@ -32,6 +35,8 @@ export function ChatFooter({
   onSubmit,
   selectedModel,
   onModelChange,
+  settings,
+  onSettingsChange,
   status,
   disabled = false,
   error,
@@ -55,11 +60,18 @@ export function ChatFooter({
             disabled={disabled || isLoading}
           />
           <PromptInputFooter>
-            <ChatModelSelector
-              currentModel={selectedModel}
-              onModelChange={onModelChange}
-              disabled={disabled || isLoading}
-            />
+            <div className="flex items-center gap-1">
+              <ChatModelSelector
+                currentModel={selectedModel}
+                onModelChange={onModelChange}
+                disabled={disabled || isLoading}
+              />
+              <ChatSettingsDropdown
+                settings={settings}
+                onSettingsChange={onSettingsChange}
+                disabled={disabled || isLoading}
+              />
+            </div>
             <PromptInputSubmit
               status={status}
               disabled={!input.trim() || disabled || isLoading}

@@ -1,7 +1,7 @@
 import type {
   ChatModel,
+  ChatUIMessage,
   SendTrigger,
-  UIMessageWithMetadata,
 } from "@flatsby/validators/chat";
 import type { ChatTransport, UIMessageChunk } from "ai";
 
@@ -9,7 +9,7 @@ import type { ChatTransport, UIMessageChunk } from "ai";
  * Chunk yielded by the streaming tRPC mutation
  */
 export interface StreamChunk {
-  type: "text-delta" | "finish";
+  type: "text-delta" | "finish" | "tool-call" | "tool-result";
   textDelta?: string;
   content?: string;
   status?: "pending" | "streaming" | "complete" | "error";
@@ -17,12 +17,24 @@ export interface StreamChunk {
   messageId?: string;
   model?: ChatModel | null;
   cost?: number | null;
+  // Tool-specific fields
+  toolCallId?: string;
+  toolName?: string;
+  args?: Record<string, unknown>;
+  result?: unknown;
 }
 
 /**
  * Valid message roles for tRPC
  */
 type MessageRole = "user" | "assistant" | "system";
+
+/**
+ * Chat settings for tool configuration
+ */
+export interface ChatSettings {
+  shoppingListToolEnabled?: boolean;
+}
 
 /**
  * Type for the tRPC send mutation function
@@ -39,6 +51,7 @@ export type SendMutationFn = (
     trigger: SendTrigger;
     messageId?: string;
     model?: ChatModel;
+    settings?: ChatSettings;
   },
   opts?: { signal?: AbortSignal },
 ) => Promise<AsyncIterable<StreamChunk>>;
@@ -56,7 +69,7 @@ function validateRole(role: string): MessageRole {
 /**
  * Extracts text content from message parts
  */
-function getMessageContent(message: UIMessageWithMetadata): string {
+function getMessageContent(message: ChatUIMessage): string {
   return message.parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)
@@ -66,6 +79,7 @@ function getMessageContent(message: UIMessageWithMetadata): string {
 export interface TRPCChatTransportOptions {
   sendMutation: SendMutationFn;
   getModel?: () => ChatModel | undefined;
+  getSettings?: () => ChatSettings | undefined;
 }
 
 /**
@@ -75,7 +89,8 @@ export interface TRPCChatTransportOptions {
 export function createTRPCChatTransport({
   sendMutation,
   getModel,
-}: TRPCChatTransportOptions): ChatTransport<UIMessageWithMetadata> {
+  getSettings,
+}: TRPCChatTransportOptions): ChatTransport<ChatUIMessage> {
   return {
     sendMessages: async (options) => {
       const message = options.messages.at(-1);
@@ -98,6 +113,7 @@ export function createTRPCChatTransport({
               ? options.messageId
               : undefined,
           model: getModel?.(),
+          settings: getSettings?.(),
         },
         { signal: options.abortSignal },
       );
@@ -106,6 +122,7 @@ export function createTRPCChatTransport({
       const iterator = result[Symbol.asyncIterator]();
       let sentStart = false;
       let sentTextStart = false;
+      let textStarted = false;
 
       return new ReadableStream<UIMessageChunk>({
         async pull(controller) {
@@ -116,30 +133,58 @@ export function createTRPCChatTransport({
               return;
             }
 
-            if (!sentTextStart) {
-              controller.enqueue({ type: "text-start", id: textBlockId });
-              sentTextStart = true;
-              return;
-            }
-
             const iterResult = await iterator.next();
 
             if (iterResult.done) {
-              controller.enqueue({ type: "text-end", id: textBlockId });
+              // End text block if it was started
+              if (textStarted) {
+                controller.enqueue({ type: "text-end", id: textBlockId });
+              }
               controller.enqueue({ type: "finish", finishReason: "stop" });
               controller.close();
               return;
             }
 
             const chunk: StreamChunk = iterResult.value;
+
             if (chunk.type === "text-delta" && chunk.textDelta) {
+              // Start text block on first text delta
+              if (!sentTextStart) {
+                controller.enqueue({ type: "text-start", id: textBlockId });
+                sentTextStart = true;
+                textStarted = true;
+              }
               controller.enqueue({
                 type: "text-delta",
                 id: textBlockId,
                 delta: chunk.textDelta,
               });
+            } else if (chunk.type === "tool-call") {
+              // End text block if active before tool call
+              if (textStarted && sentTextStart) {
+                controller.enqueue({ type: "text-end", id: textBlockId });
+                textStarted = false;
+              }
+              // Emit tool input available chunk (UI Message Stream Protocol name for tool-call)
+              controller.enqueue({
+                type: "tool-input-available",
+                toolCallId: chunk.toolCallId ?? "",
+                toolName: chunk.toolName ?? "",
+                input: chunk.args ?? {},
+              });
+            } else if (chunk.type === "tool-result") {
+              // Emit tool output available chunk (UI Message Stream Protocol name for tool-result)
+              controller.enqueue({
+                type: "tool-output-available",
+                toolCallId: chunk.toolCallId ?? "",
+                output: chunk.result,
+              });
             } else if (chunk.type === "finish") {
-              controller.enqueue({ type: "text-end", id: textBlockId });
+              // End text block if active
+              if (textStarted) {
+                controller.enqueue({ type: "text-end", id: textBlockId });
+                textStarted = false;
+              }
               controller.enqueue({
                 type: "message-metadata",
                 messageMetadata: { model: chunk.model, cost: chunk.cost },

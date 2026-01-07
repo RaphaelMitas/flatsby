@@ -1,5 +1,5 @@
-import type { ChatModel } from "@flatsby/validators/chat";
-import type { UIMessage } from "ai";
+import type { RouterOutputs } from "@flatsby/api";
+import type { ChatUIMessage } from "@flatsby/validators/chat";
 import { notFound, redirect } from "next/navigation";
 import { TRPCError } from "@trpc/server";
 
@@ -32,7 +32,7 @@ export default async function ChatConversationPage({
   const { conversationId } = await params;
   const { message: initialMessage } = await searchParams;
 
-  let conversation;
+  let conversation: RouterOutputs["chat"]["getConversation"];
   try {
     conversation = await caller.chat.getConversation({ conversationId });
   } catch (error) {
@@ -48,10 +48,7 @@ export default async function ChatConversationPage({
     .filter((m) => m.status === "complete" || m.status === "streaming")
     .filter((m) => messageRoleSchema.safeParse(m.role).success);
 
-  const initialMessages: UIMessage<{
-    model?: ChatModel;
-    cost?: number;
-  }>[] = filteredMessages.map((m) => ({
+  const initialMessages: ChatUIMessage[] = filteredMessages.map((m) => ({
     id: m.id,
     role: messageRoleSchema.parse(m.role),
     parts: [{ type: "text", text: m.content }],

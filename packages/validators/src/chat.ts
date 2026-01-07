@@ -1,16 +1,14 @@
-import type { UIMessage as AIUIMessage } from "ai";
+import type { UIMessage as AIUIMessage, InferUITools, ToolSet } from "ai";
+import { tool } from "ai";
 import { z } from "zod/v4";
 
-interface MessageMetadata {
-  model?: ChatModel;
-  cost?: number;
-}
+import { categoryIdSchema } from "./categories";
 
-export type UIMessageWithMetadata = AIUIMessage<MessageMetadata>;
 // Available AI models
 export const chatModelSchema = z.enum([
   "google/gemini-2.0-flash",
   "openai/gpt-4o",
+  "openai/gpt-5.2",
 ]);
 export type ChatModel = z.infer<typeof chatModelSchema>;
 
@@ -21,6 +19,7 @@ export const CHAT_MODELS = [
     provider: "google",
   },
   { id: "openai/gpt-4o", name: "GPT-4o", provider: "openai" },
+  { id: "openai/gpt-5.2", name: "GPT-5.2", provider: "openai" },
 ] as const satisfies readonly {
   id: ChatModel;
   name: string;
@@ -117,6 +116,12 @@ export type GetUserConversationsInput = z.infer<
   typeof getUserConversationsInputSchema
 >;
 
+// Chat settings schema for tool configuration
+export const chatSettingsSchema = z.object({
+  shoppingListToolEnabled: z.boolean().default(false),
+});
+export type ChatSettings = z.infer<typeof chatSettingsSchema>;
+
 export const sendInputSchema = z.object({
   conversationId: z.uuid(),
   message: uiMessageSchema,
@@ -125,12 +130,14 @@ export const sendInputSchema = z.object({
   messageId: z.string().optional(),
   // Model to use for this message (updates conversation model if different)
   model: chatModelSchema.optional(),
+  // Tool settings for this message
+  settings: chatSettingsSchema.optional(),
 });
 export type SendInput = z.infer<typeof sendInputSchema>;
 
 // Streaming chunk schema (yielded by the send mutation)
 export const streamChunkSchema = z.object({
-  type: z.enum(["text-delta", "finish"]),
+  type: z.enum(["text-delta", "finish", "tool-call", "tool-result"]),
   textDelta: z.string().optional(),
   content: z.string().optional(),
   status: messageStatusSchema.optional(),
@@ -138,5 +145,107 @@ export const streamChunkSchema = z.object({
   messageId: z.string().optional(),
   model: z.string().optional(),
   cost: z.number().nullable().optional(),
+  // Tool-specific fields
+  toolCallId: z.string().optional(),
+  toolName: z.string().optional(),
+  args: z.record(z.string(), z.unknown()).optional(),
+  result: z.unknown().optional(),
 });
 export type StreamChunk = z.infer<typeof streamChunkSchema>;
+
+// Tool result schemas for shopping list tools
+export const shoppingListInfoSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  groupId: z.number(),
+  groupName: z.string(),
+  uncheckedItemLength: z.number(),
+});
+export type ShoppingListInfo = z.infer<typeof shoppingListInfoSchema>;
+
+// Result from getShoppingLists tool
+export const getShoppingListsResultSchema = z.object({
+  lists: z.array(shoppingListInfoSchema),
+  userShouldSelect: z.boolean(),
+});
+export type GetShoppingListsResult = z.infer<
+  typeof getShoppingListsResultSchema
+>;
+
+export const addedItemSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  categoryId: z.string(),
+});
+export type AddedItem = z.infer<typeof addedItemSchema>;
+
+export const addToShoppingListResultSchema = z.object({
+  success: z.boolean(),
+  shoppingListName: z.string(),
+  addedItems: z.array(addedItemSchema),
+  failedItems: z
+    .array(
+      z.object({
+        name: z.string(),
+        reason: z.string(),
+      }),
+    )
+    .optional(),
+});
+export type AddToShoppingListResult = z.infer<
+  typeof addToShoppingListResultSchema
+>;
+
+// =============================================================================
+// Typed UIMessage with Tools
+// =============================================================================
+
+/**
+ * Message metadata attached to assistant messages
+ */
+export const messageMetadataSchema = z.object({
+  model: chatModelSchema.optional(),
+  cost: z.number().optional(),
+});
+export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
+
+/**
+ * Tool definitions for type inference (mirrors runtime tools in chat-tools.ts)
+ * These are used purely for TypeScript type generation via InferUITools
+ */
+// Input schemas for tools
+const getShoppingListsInputSchema = z.object({
+  userShouldSelect: z.boolean(),
+});
+
+const addToShoppingListInputSchema = z.object({
+  shoppingListId: z.number(),
+  groupId: z.number(),
+  items: z.array(
+    z.object({
+      name: z.string(),
+      categoryId: categoryIdSchema.optional(),
+    }),
+  ),
+});
+
+export const chatTools = {
+  getShoppingLists: tool({
+    description: "Get all shopping lists the user has access to",
+    inputSchema: getShoppingListsInputSchema,
+  }),
+  addToShoppingList: tool({
+    description: "Add items to a shopping list",
+    inputSchema: addToShoppingListInputSchema,
+  }),
+} satisfies ToolSet;
+
+export type ChatTools = InferUITools<typeof chatTools>;
+
+/**
+ * Fully typed UIMessage for chat interface
+ * - Metadata: model and cost info
+ * - DataParts: none currently
+ * - Tools: getShoppingLists, addToShoppingList
+ */
+export type ChatUIMessage = AIUIMessage<MessageMetadata, never, ChatTools>;

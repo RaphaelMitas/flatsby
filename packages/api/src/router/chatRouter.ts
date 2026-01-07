@@ -6,19 +6,27 @@ import { and, desc, eq, isNull, lt } from "@flatsby/db";
 import { chatMessages, conversations, users } from "@flatsby/db/schema";
 import {
   chatModelSchema,
+  conversationWithMessagesSchema,
   createConversationInputSchema,
   getConversationInputSchema,
   getUserConversationsInputSchema,
+  messageRoleSchema,
+  messageStatusSchema,
   sendInputSchema,
 } from "@flatsby/validators/chat";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
+import {
+  createShoppingListTools,
+  SHOPPING_LIST_SYSTEM_PROMPT,
+} from "../utils/chat-tools";
 import { buildContextMessages } from "../utils/context-builder";
 import {
   generateConversationTitle,
   getDefaultModel,
   streamChatCompletion,
+  streamChatWithTools,
 } from "../utils/model-provider";
 
 // Batched write interval in milliseconds
@@ -30,6 +38,7 @@ export const chatRouter = createTRPCRouter({
    */
   getConversation: protectedProcedure
     .input(getConversationInputSchema)
+    .output(conversationWithMessagesSchema)
     .query(async ({ ctx, input }) => {
       const conversation = await ctx.db.query.conversations.findFirst({
         where: and(
@@ -51,7 +60,14 @@ export const chatRouter = createTRPCRouter({
         });
       }
 
-      return conversation;
+      return {
+        ...conversation,
+        messages: conversation.messages.map((m) => ({
+          ...m,
+          role: messageRoleSchema.parse(m.role),
+          status: messageStatusSchema.parse(m.status),
+        })),
+      };
     }),
 
   /**
@@ -347,6 +363,9 @@ export const chatRouter = createTRPCRouter({
     let lastFlush = Date.now();
     let streamCompleted = false;
 
+    // Check if shopping list tools should be enabled
+    const toolsEnabled = input.settings?.shoppingListToolEnabled ?? false;
+
     try {
       // Update status to streaming
       await ctx.db
@@ -354,74 +373,170 @@ export const chatRouter = createTRPCRouter({
         .set({ status: "streaming" })
         .where(eq(chatMessages.id, assistantMessageId));
 
-      const streamResult = streamChatCompletion(contextMessages, {
-        model: modelToUse,
-      });
+      if (toolsEnabled) {
+        // Use streaming with tools
+        const tools = createShoppingListTools(ctx);
+        const systemPrompt = conversation.systemPrompt
+          ? `${conversation.systemPrompt}\n\n${SHOPPING_LIST_SYSTEM_PROMPT}`
+          : SHOPPING_LIST_SYSTEM_PROMPT;
 
-      for await (const chunk of streamResult.textStream) {
-        buffer += chunk;
+        const streamResult = streamChatWithTools(contextMessages, {
+          model: modelToUse,
+          systemPrompt,
+          tools,
+          maxSteps: 5,
+        });
 
-        // Batch writes every FLUSH_INTERVAL ms
-        if (Date.now() - lastFlush > FLUSH_INTERVAL) {
-          await ctx.db
-            .update(chatMessages)
-            .set({ content: buffer })
-            .where(eq(chatMessages.id, assistantMessageId));
-          lastFlush = Date.now();
+        for await (const chunk of streamResult.fullStream) {
+          if (chunk.type === "text-delta") {
+            buffer += chunk.text;
+
+            // Batch writes every FLUSH_INTERVAL ms
+            if (Date.now() - lastFlush > FLUSH_INTERVAL) {
+              await ctx.db
+                .update(chatMessages)
+                .set({ content: buffer })
+                .where(eq(chatMessages.id, assistantMessageId));
+              lastFlush = Date.now();
+            }
+
+            yield {
+              type: "text-delta" as const,
+              textDelta: chunk.text,
+            };
+          } else if (chunk.type === "tool-call") {
+            yield {
+              type: "tool-call" as const,
+              toolCallId: chunk.toolCallId,
+              toolName: chunk.toolName,
+              args: chunk.input as Record<string, unknown>,
+            };
+          } else if (chunk.type === "tool-result") {
+            yield {
+              type: "tool-result" as const,
+              toolCallId: chunk.toolCallId,
+              toolName: chunk.toolName,
+              result: chunk.output as unknown,
+            };
+          }
         }
 
-        // Yield chunk to client
+        streamCompleted = true;
+
+        // Extract cost and generation info from provider metadata
+        const metadata = await streamResult.providerMetadata;
+        const gateway = metadata?.gateway as
+          | {
+              cost?: string;
+              generationId?: string;
+            }
+          | undefined;
+
+        // Final write with complete status
+        await ctx.db
+          .update(chatMessages)
+          .set({
+            content: buffer,
+            status: "complete",
+            model: streamResult.model,
+            cost: gateway?.cost ? parseFloat(gateway.cost) : null,
+            generationId: gateway?.generationId ?? null,
+          })
+          .where(eq(chatMessages.id, assistantMessageId));
+
+        // Update conversation updatedAt timestamp
+        await ctx.db
+          .update(conversations)
+          .set({ updatedAt: new Date() })
+          .where(eq(conversations.id, input.conversationId));
+
+        // Yield finish event
         yield {
-          type: "text-delta" as const,
-          textDelta: chunk,
-        };
-      }
-
-      streamCompleted = true;
-
-      // Extract cost and generation info from provider metadata
-      const metadata = await streamResult.providerMetadata;
-      const gateway = metadata?.gateway as
-        | {
-            cost?: string;
-            generationId?: string;
-          }
-        | undefined;
-
-      // Final write with complete status, cost, model, and generationId
-      await ctx.db
-        .update(chatMessages)
-        .set({
+          type: "finish" as const,
           content: buffer,
-          status: "complete",
-          model: streamResult.model,
+          status: "complete" as const,
+          messageId: assistantMessageId,
+          model: chatModelSchema.safeParse(streamResult.model).data,
           cost: gateway?.cost ? parseFloat(gateway.cost) : null,
-          generationId: gateway?.generationId ?? null,
-        })
-        .where(eq(chatMessages.id, assistantMessageId));
+        };
 
-      // Update conversation updatedAt timestamp
-      await ctx.db
-        .update(conversations)
-        .set({ updatedAt: new Date() })
-        .where(eq(conversations.id, input.conversationId));
+        // Track credits
+        await trackAIUsage({
+          authApi: ctx.authApi,
+          headers: ctx.headers,
+          cost: gateway?.cost,
+        });
+      } else {
+        // Standard streaming without tools
+        const streamResult = streamChatCompletion(contextMessages, {
+          model: modelToUse,
+        });
 
-      // Yield finish event with cost/model for immediate UI update
-      yield {
-        type: "finish" as const,
-        content: buffer,
-        status: "complete" as const,
-        messageId: assistantMessageId,
-        model: chatModelSchema.safeParse(streamResult.model).data,
-        cost: gateway?.cost ? parseFloat(gateway.cost) : null,
-      };
+        for await (const chunk of streamResult.textStream) {
+          buffer += chunk;
 
-      // Track credits after successful completion (applies to all triggers)
-      await trackAIUsage({
-        authApi: ctx.authApi,
-        headers: ctx.headers,
-        cost: gateway?.cost,
-      });
+          // Batch writes every FLUSH_INTERVAL ms
+          if (Date.now() - lastFlush > FLUSH_INTERVAL) {
+            await ctx.db
+              .update(chatMessages)
+              .set({ content: buffer })
+              .where(eq(chatMessages.id, assistantMessageId));
+            lastFlush = Date.now();
+          }
+
+          // Yield chunk to client
+          yield {
+            type: "text-delta" as const,
+            textDelta: chunk,
+          };
+        }
+
+        streamCompleted = true;
+
+        // Extract cost and generation info from provider metadata
+        const metadata = await streamResult.providerMetadata;
+        const gateway = metadata?.gateway as
+          | {
+              cost?: string;
+              generationId?: string;
+            }
+          | undefined;
+
+        // Final write with complete status, cost, model, and generationId
+        await ctx.db
+          .update(chatMessages)
+          .set({
+            content: buffer,
+            status: "complete",
+            model: streamResult.model,
+            cost: gateway?.cost ? parseFloat(gateway.cost) : null,
+            generationId: gateway?.generationId ?? null,
+          })
+          .where(eq(chatMessages.id, assistantMessageId));
+
+        // Update conversation updatedAt timestamp
+        await ctx.db
+          .update(conversations)
+          .set({ updatedAt: new Date() })
+          .where(eq(conversations.id, input.conversationId));
+
+        // Yield finish event with cost/model for immediate UI update
+        yield {
+          type: "finish" as const,
+          content: buffer,
+          status: "complete" as const,
+          messageId: assistantMessageId,
+          model: chatModelSchema.safeParse(streamResult.model).data,
+          cost: gateway?.cost ? parseFloat(gateway.cost) : null,
+        };
+
+        // Track credits after successful completion (applies to all triggers)
+        await trackAIUsage({
+          authApi: ctx.authApi,
+          headers: ctx.headers,
+          cost: gateway?.cost,
+        });
+      }
     } catch (error) {
       // Update message status to error
       await ctx.db

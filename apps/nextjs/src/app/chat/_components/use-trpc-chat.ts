@@ -2,9 +2,10 @@
 
 import type {
   ChatModel,
-  UIMessageWithMetadata,
+  ChatSettings,
+  ChatUIMessage,
 } from "@flatsby/validators/chat";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -12,9 +13,15 @@ import { createTRPCChatTransport } from "@flatsby/ui/chat-transport";
 
 import { useTRPC } from "~/trpc/react";
 
+const SETTINGS_STORAGE_KEY = "chat-settings";
+
+const DEFAULT_SETTINGS: ChatSettings = {
+  shoppingListToolEnabled: false,
+};
+
 export interface UseTRPCChatOptions {
   conversationId: string;
-  initialMessages?: UIMessageWithMetadata[];
+  initialMessages?: ChatUIMessage[];
   initialModel?: ChatModel;
   onFinish?: () => void;
 }
@@ -49,9 +56,41 @@ export function useTRPCChat({
     setSelectedModel(model);
   }, []);
 
+  // Settings state - tracks tool configuration
+  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
+  const settingsRef = useRef<ChatSettings>(settings);
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as ChatSettings;
+        setSettings(parsed);
+        settingsRef.current = parsed;
+      }
+    } catch {
+      // Ignore parse errors, use defaults
+    }
+  }, []);
+
+  // Update settings and persist to localStorage
+  const updateSettings = useCallback((newSettings: Partial<ChatSettings>) => {
+    setSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      settingsRef.current = updated;
+      try {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {
+        // Ignore storage errors
+      }
+      return updated;
+    });
+  }, []);
+
   const sendMutation = useMutation(trpc.chat.send.mutationOptions());
 
-  // Uses ref so transport doesn't need to be recreated when model changes
+  // Uses ref so transport doesn't need to be recreated when model/settings changes
   const transport = useMemo(() => {
     // eslint-disable-next-line react-hooks/refs
     return createTRPCChatTransport({
@@ -59,6 +98,7 @@ export function useTRPCChat({
         return await sendMutation.mutateAsync(mutationInput);
       },
       getModel: () => modelRef.current,
+      getSettings: () => settingsRef.current,
     });
   }, [sendMutation]);
 
@@ -123,6 +163,8 @@ export function useTRPCChat({
     regenerateMessage,
     selectedModel,
     handleModelChange,
+    settings,
+    updateSettings,
     invalidateConversation: () =>
       queryClient.invalidateQueries(
         trpc.chat.getConversation.queryOptions({ conversationId }),
