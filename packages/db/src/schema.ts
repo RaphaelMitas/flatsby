@@ -35,6 +35,8 @@ export const users = createTable("user", {
     () => shoppingLists.id,
   ),
   lastChatModelUsed: text("last_chat_model_used"),
+  lastShoppingListToolsEnabled: boolean("last_shopping_list_tools_enabled"),
+  lastExpenseToolsEnabled: boolean("last_expense_tools_enabled"),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({

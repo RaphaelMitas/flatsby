@@ -5,17 +5,16 @@ import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { createTRPCChatTransport } from "@flatsby/ui/chat-transport";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 
-const SETTINGS_STORAGE_KEY = "chat-settings";
-
 const DEFAULT_SETTINGS: ChatSettings = {
-  toolsEnabled: false,
+  shoppingListToolsEnabled: false,
+  expenseToolsEnabled: false,
 };
 
 export interface UseTRPCChatOptions {
@@ -60,40 +59,55 @@ export function useTRPCChat({
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
   const settingsRef = useRef<ChatSettings>(settings);
   const currentGroupRef = useRef<number | undefined>(currentGroup?.id);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  // Query user data to get tool preferences
+  const { data: userData } = useQuery(
+    trpc.user.getCurrentUserWithGroups.queryOptions(),
+  );
 
   // Keep currentGroupRef in sync
   useEffect(() => {
     currentGroupRef.current = currentGroup?.id;
   }, [currentGroup?.id]);
 
-  // Load settings from localStorage on mount
+  // Load settings from user preferences
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as ChatSettings;
-        // Don't persist groupId - it comes from context
-        setSettings({ ...parsed, groupId: undefined });
-        settingsRef.current = { ...parsed, groupId: undefined };
-      }
-    } catch {
-      // Ignore parse errors, use defaults
-    }
-  }, []);
+    if (prefsLoaded || !userData?.success || !userData.data.user) return;
 
-  // Update settings and persist to localStorage
-  const updateSettings = useCallback((newSettings: Partial<ChatSettings>) => {
-    setSettings((prev) => {
-      const updated = { ...prev, ...newSettings };
-      settingsRef.current = updated;
-      try {
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
-      } catch {
-        // Ignore storage errors
-      }
-      return updated;
-    });
-  }, []);
+    const user = userData.data.user;
+    const loadedSettings: ChatSettings = {
+      shoppingListToolsEnabled: user.lastShoppingListToolsEnabled ?? false,
+      expenseToolsEnabled: user.lastExpenseToolsEnabled ?? false,
+    };
+    setSettings(loadedSettings);
+    settingsRef.current = loadedSettings;
+    setPrefsLoaded(true);
+  }, [userData, prefsLoaded]);
+
+  // Mutation to save tool preferences
+  const updateToolPrefsMutation = useMutation(
+    trpc.chat.updateToolPreferences.mutationOptions(),
+  );
+
+  // Update settings and persist to user preferences
+  const updateSettings = useCallback(
+    (newSettings: Partial<ChatSettings>) => {
+      setSettings((prev) => {
+        const updated = { ...prev, ...newSettings };
+        settingsRef.current = updated;
+
+        // Save to user preferences
+        updateToolPrefsMutation.mutate({
+          shoppingListToolsEnabled: updated.shoppingListToolsEnabled,
+          expenseToolsEnabled: updated.expenseToolsEnabled,
+        });
+
+        return updated;
+      });
+    },
+    [updateToolPrefsMutation],
+  );
 
   const sendMutation = useMutation(trpc.chat.send.mutationOptions());
 
@@ -105,13 +119,17 @@ export function useTRPCChat({
         return await sendMutation.mutateAsync(mutationInput);
       },
       getModel: () => modelRef.current,
-      getSettings: () => ({
-        ...settingsRef.current,
-        // Include groupId from context when tools are enabled
-        groupId: settingsRef.current.toolsEnabled
-          ? currentGroupRef.current
-          : undefined,
-      }),
+      getSettings: () => {
+        const currentSettings = settingsRef.current;
+        const anyToolsEnabled =
+          currentSettings.shoppingListToolsEnabled ||
+          currentSettings.expenseToolsEnabled;
+        return {
+          ...currentSettings,
+          // Include groupId from context when any tools are enabled
+          groupId: anyToolsEnabled ? currentGroupRef.current : undefined,
+        };
+      },
     });
   }, [sendMutation]);
 

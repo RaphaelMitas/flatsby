@@ -28,6 +28,8 @@ export const userSchema = z.object({
   lastGroupUsed: z.number().optional().nullable(),
   lastShoppingListUsed: z.number().optional().nullable(),
   lastChatModelUsed: chatModelSchema.optional(),
+  lastShoppingListToolsEnabled: z.boolean().optional().nullable(),
+  lastExpenseToolsEnabled: z.boolean().optional().nullable(),
 });
 export type User = z.infer<typeof userSchema>;
 

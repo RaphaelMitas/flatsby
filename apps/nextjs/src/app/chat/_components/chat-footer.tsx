@@ -4,16 +4,18 @@ import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
 import type { ChatSettings } from "@flatsby/validators/chat/messages";
 import type { ChatModel } from "@flatsby/validators/models";
 import type { FormEvent } from "react";
+import { ShoppingCart, Wallet } from "lucide-react";
 
+import { cn } from "@flatsby/ui";
 import {
   PromptInput,
+  PromptInputButton,
   PromptInputFooter,
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@flatsby/ui/ai-elements";
 
 import { ChatModelSelector } from "./chat-model-selector";
-import { ChatSettingsDropdown } from "./chat-settings";
 
 type PromptStatus = "ready" | "submitted" | "streaming" | "error";
 
@@ -70,11 +72,34 @@ export function ChatFooter({
                 onModelChange={onModelChange}
                 disabled={disabled || isLoading}
               />
-              <ChatSettingsDropdown
-                settings={settings}
-                onSettingsChange={onSettingsChange}
+              <PromptInputButton
+                className={cn(
+                  settings.shoppingListToolsEnabled &&
+                    "bg-accent text-accent-foreground",
+                )}
+                onClick={() =>
+                  onSettingsChange({
+                    shoppingListToolsEnabled: !settings.shoppingListToolsEnabled,
+                  })
+                }
                 disabled={disabled || isLoading}
-              />
+              >
+                <ShoppingCart className="size-4" />
+              </PromptInputButton>
+              <PromptInputButton
+                className={cn(
+                  settings.expenseToolsEnabled &&
+                    "bg-accent text-accent-foreground",
+                )}
+                onClick={() =>
+                  onSettingsChange({
+                    expenseToolsEnabled: !settings.expenseToolsEnabled,
+                  })
+                }
+                disabled={disabled || isLoading}
+              >
+                <Wallet className="size-4" />
+              </PromptInputButton>
             </div>
             <PromptInputSubmit
               status={status}

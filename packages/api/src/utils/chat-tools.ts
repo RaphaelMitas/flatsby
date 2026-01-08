@@ -40,49 +40,89 @@ type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>> & {
 };
 
 /**
- * System prompt for AI chat tools
+ * System prompt sections for each tool category
  */
-export const CHAT_TOOLS_SYSTEM_PROMPT = `
-You have access to tools for managing shopping lists and expenses in the current group.
-
-SHOPPING LIST TOOLS:
+const SHOPPING_LIST_PROMPT = `SHOPPING LIST TOOLS:
 - getShoppingLists: Get all shopping lists. Set userShouldSelect=true to show clickable buttons.
 - addToShoppingList: Add items to a list. Use IDs from getShoppingLists.
 - getShoppingListItems: View items in a list.
 - markItemComplete: Check off or uncheck an item by name.
 - removeItem: Remove an item by name.
 
-EXPENSE TOOLS:
+SHOPPING LIST RULES:
+- Always call getShoppingLists first to get list IDs before other operations.
+- Item names are matched case-insensitively.
+
+CATEGORIES for shopping items:
+produce, meat-seafood, dairy, bakery, frozen-foods, beverages, snacks, pantry, personal-care, household, other`;
+
+const EXPENSE_PROMPT = `EXPENSE TOOLS:
 - getDebts: See who owes money to whom.
 - addExpense: Record a new expense with equal split.
 - getExpenses: View recent expenses.
 
-RULES:
-1. Always call getShoppingLists first to get list IDs before other shopping list operations.
-2. Item and member names are matched case-insensitively.
-3. For expenses, use member display names (e.g., "John", "Jane").
-4. All tools are scoped to the current group - you cannot access other groups.
-
-CATEGORIES for shopping items:
-produce, meat-seafood, dairy, bakery, frozen-foods, beverages, snacks, pantry, personal-care, household, other
-`;
-
-// Keep old export for backwards compatibility
-export const SHOPPING_LIST_SYSTEM_PROMPT = CHAT_TOOLS_SYSTEM_PROMPT;
+EXPENSE RULES:
+- Use member display names (e.g., "John", "Jane").
+- Member names are matched case-insensitively.`;
 
 /**
- * Creates all chat tools scoped to a specific group
+ * Builds a system prompt based on which tools are enabled
+ */
+export function buildToolsSystemPrompt(options: ChatToolsOptions): string {
+  const sections: string[] = [];
+
+  if (options.shoppingList && options.expenses) {
+    sections.push(
+      "You have access to tools for managing shopping lists and expenses in the current group.",
+    );
+  } else if (options.shoppingList) {
+    sections.push(
+      "You have access to tools for managing shopping lists in the current group.",
+    );
+  } else if (options.expenses) {
+    sections.push(
+      "You have access to tools for managing expenses in the current group.",
+    );
+  }
+
+  if (options.shoppingList) {
+    sections.push(SHOPPING_LIST_PROMPT);
+  }
+
+  if (options.expenses) {
+    sections.push(EXPENSE_PROMPT);
+  }
+
+  sections.push(
+    "All tools are scoped to the current group - you cannot access other groups.",
+  );
+
+  return sections.join("\n\n");
+}
+
+/**
+ * Options for which tool categories to enable
+ */
+export interface ChatToolsOptions {
+  shoppingList: boolean;
+  expenses: boolean;
+}
+
+/**
+ * Creates chat tools scoped to a specific group, filtered by options
  */
 export function createChatTools(
   ctx: TRPCContext,
   groupId: number,
+  options: ChatToolsOptions,
 ): Record<string, Tool> {
-  return {
-    // =========================================================================
-    // Shopping List Tools
-    // =========================================================================
+  const tools: Record<string, Tool> = {};
 
-    getShoppingLists: tool({
+  // =========================================================================
+  // Shopping List Tools
+  // =========================================================================
+  if (options.shoppingList) {
+    tools.getShoppingLists = tool({
       description:
         "Get all shopping lists in the current group. Set userShouldSelect=true to show clickable buttons for the user to pick a list.",
       inputSchema: zodSchema(
@@ -130,9 +170,9 @@ export function createChatTools(
 
         return { lists, userShouldSelect };
       },
-    }),
+    });
 
-    addToShoppingList: tool({
+    tools.addToShoppingList = tool({
       description:
         "Add items to a shopping list. Get the shoppingListId from getShoppingLists first.",
       inputSchema: zodSchema(
@@ -234,9 +274,9 @@ export function createChatTools(
           failedItems: failedItems.length > 0 ? failedItems : undefined,
         };
       },
-    }),
+    });
 
-    getShoppingListItems: tool({
+    tools.getShoppingListItems = tool({
       description: "Get items from a shopping list. Returns up to 50 items.",
       inputSchema: zodSchema(
         z.object({
@@ -290,9 +330,9 @@ export function createChatTools(
           totalCount: items.length,
         };
       },
-    }),
+    });
 
-    markItemComplete: tool({
+    tools.markItemComplete = tool({
       description:
         "Mark a shopping list item as complete or incomplete by name.",
       inputSchema: zodSchema(
@@ -368,9 +408,9 @@ export function createChatTools(
 
         return { success: true, itemName: item.name, completed };
       },
-    }),
+    });
 
-    removeItem: tool({
+    tools.removeItem = tool({
       description: "Remove an item from a shopping list by name.",
       inputSchema: zodSchema(
         z.object({
@@ -421,13 +461,14 @@ export function createChatTools(
 
         return { success: true, removedItemName: item.name };
       },
-    }),
+    });
+  }
 
-    // =========================================================================
-    // Expense Tools
-    // =========================================================================
-
-    getDebts: tool({
+  // =========================================================================
+  // Expense Tools
+  // =========================================================================
+  if (options.expenses) {
+    tools.getDebts = tool({
       description: "Get who owes money to whom in the current group.",
       inputSchema: zodSchema(z.object({})),
       execute: async (): Promise<GetDebtsResult> => {
@@ -496,9 +537,9 @@ export function createChatTools(
 
         return { debts, groupName: group.name };
       },
-    }),
+    });
 
-    addExpense: tool({
+    tools.addExpense = tool({
       description:
         "Add a new expense with equal split. Specify who paid and optionally who to split among.",
       inputSchema: zodSchema(
@@ -638,9 +679,9 @@ export function createChatTools(
           })),
         };
       },
-    }),
+    });
 
-    getExpenses: tool({
+    tools.getExpenses = tool({
       description: "Get recent expenses in the current group.",
       inputSchema: zodSchema(
         z.object({
@@ -689,8 +730,10 @@ export function createChatTools(
           groupName: group.name,
         };
       },
-    }),
-  };
+    });
+  }
+
+  return tools;
 }
 
 // Keep old function name for backwards compatibility

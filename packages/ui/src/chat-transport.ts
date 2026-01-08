@@ -1,7 +1,12 @@
-import type { SendTrigger } from "@flatsby/validators/chat/messages";
+import type {
+  ChatSettings,
+  SendTrigger,
+} from "@flatsby/validators/chat/messages";
 import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import type { ChatTransport, UIMessageChunk } from "ai";
+
+export type { ChatSettings };
 
 /**
  * Chunk yielded by the streaming tRPC mutation
@@ -26,14 +31,6 @@ export interface StreamChunk {
  * Valid message roles for tRPC
  */
 type MessageRole = "user" | "assistant" | "system";
-
-/**
- * Chat settings for tool configuration
- */
-export interface ChatSettings {
-  toolsEnabled?: boolean;
-  groupId?: number;
-}
 
 /**
  * Type for the tRPC send mutation function

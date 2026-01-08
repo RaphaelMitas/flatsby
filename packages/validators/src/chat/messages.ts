@@ -92,7 +92,8 @@ export type GetUserConversationsInput = z.infer<
 
 // Chat settings schema for tool configuration
 export const chatSettingsSchema = z.object({
-  toolsEnabled: z.boolean().default(false),
+  shoppingListToolsEnabled: z.boolean().default(false),
+  expenseToolsEnabled: z.boolean().default(false),
   groupId: z.number().optional(),
 });
 export type ChatSettings = z.infer<typeof chatSettingsSchema>;

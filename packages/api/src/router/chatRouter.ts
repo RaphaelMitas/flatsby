@@ -36,7 +36,7 @@ import { chatModelSchema } from "@flatsby/validators/models";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
-import { CHAT_TOOLS_SYSTEM_PROMPT, createChatTools } from "../utils/chat-tools";
+import { buildToolsSystemPrompt, createChatTools } from "../utils/chat-tools";
 import { buildContextMessages } from "../utils/context-builder";
 import {
   generateConversationTitle,
@@ -220,6 +220,28 @@ export const chatRouter = createTRPCRouter({
     }),
 
   /**
+   * Update user's tool preferences (persisted across sessions)
+   */
+  updateToolPreferences: protectedProcedure
+    .input(
+      z.object({
+        shoppingListToolsEnabled: z.boolean().optional(),
+        expenseToolsEnabled: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(users)
+        .set({
+          lastShoppingListToolsEnabled: input.shoppingListToolsEnabled,
+          lastExpenseToolsEnabled: input.expenseToolsEnabled,
+        })
+        .where(eq(users.id, ctx.session.user.id));
+
+      return { success: true };
+    }),
+
+  /**
    * Combined streaming mutation that:
    * 1. Inserts user message (if submit trigger)
    * 2. Creates/resets assistant placeholder
@@ -380,7 +402,10 @@ export const chatRouter = createTRPCRouter({
     let streamCompleted = false;
 
     // Check if tools should be enabled and get groupId
-    const toolsEnabled = input.settings?.toolsEnabled ?? false;
+    const shoppingListToolsEnabled =
+      input.settings?.shoppingListToolsEnabled ?? false;
+    const expenseToolsEnabled = input.settings?.expenseToolsEnabled ?? false;
+    const anyToolsEnabled = shoppingListToolsEnabled || expenseToolsEnabled;
     const groupId = input.settings?.groupId;
 
     try {
@@ -390,12 +415,17 @@ export const chatRouter = createTRPCRouter({
         .set({ status: "streaming" })
         .where(eq(chatMessages.id, assistantMessageId));
 
-      if (toolsEnabled && groupId) {
+      if (anyToolsEnabled && groupId) {
         // Use streaming with tools
-        const tools = createChatTools(ctx, groupId);
+        const toolOptions = {
+          shoppingList: shoppingListToolsEnabled,
+          expenses: expenseToolsEnabled,
+        };
+        const tools = createChatTools(ctx, groupId, toolOptions);
+        const toolsSystemPrompt = buildToolsSystemPrompt(toolOptions);
         const systemPrompt = conversation.systemPrompt
-          ? `${conversation.systemPrompt}\n\n${CHAT_TOOLS_SYSTEM_PROMPT}`
-          : CHAT_TOOLS_SYSTEM_PROMPT;
+          ? `${conversation.systemPrompt}\n\n${toolsSystemPrompt}`
+          : toolsSystemPrompt;
 
         const streamResult = streamChatWithTools(contextMessages, {
           model: modelToUse,

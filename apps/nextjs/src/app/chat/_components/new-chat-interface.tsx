@@ -20,7 +20,8 @@ import { useTRPC } from "~/trpc/react";
 import { ChatFooter } from "./chat-footer";
 
 const DEFAULT_SETTINGS: ChatSettings = {
-  toolsEnabled: false,
+  shoppingListToolsEnabled: false,
+  expenseToolsEnabled: false,
 };
 
 interface NewChatInterfaceProps {
