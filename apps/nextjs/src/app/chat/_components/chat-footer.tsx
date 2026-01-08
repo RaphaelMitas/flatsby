@@ -14,6 +14,8 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@flatsby/ui/ai-elements";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@flatsby/ui/tooltip";
+import { modelSupportsTools } from "@flatsby/validators/models";
 
 import { ChatModelSelector } from "./chat-model-selector";
 
@@ -48,6 +50,7 @@ export function ChatFooter({
   error,
 }: ChatFooterProps) {
   const isLoading = status === "submitted" || status === "streaming";
+  const toolsSupported = selectedModel ? modelSupportsTools(selectedModel) : false;
 
   return (
     <>
@@ -72,34 +75,59 @@ export function ChatFooter({
                 onModelChange={onModelChange}
                 disabled={disabled || isLoading}
               />
-              <PromptInputButton
-                className={cn(
-                  settings.shoppingListToolsEnabled &&
-                    "bg-accent text-accent-foreground",
-                )}
-                onClick={() =>
-                  onSettingsChange({
-                    shoppingListToolsEnabled: !settings.shoppingListToolsEnabled,
-                  })
-                }
-                disabled={disabled || isLoading}
-              >
-                <ShoppingCart className="size-4" />
-              </PromptInputButton>
-              <PromptInputButton
-                className={cn(
-                  settings.expenseToolsEnabled &&
-                    "bg-accent text-accent-foreground",
-                )}
-                onClick={() =>
-                  onSettingsChange({
-                    expenseToolsEnabled: !settings.expenseToolsEnabled,
-                  })
-                }
-                disabled={disabled || isLoading}
-              >
-                <Wallet className="size-4" />
-              </PromptInputButton>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <PromptInputButton
+                      className={cn(
+                        settings.shoppingListToolsEnabled &&
+                          toolsSupported &&
+                          "bg-accent text-accent-foreground",
+                      )}
+                      onClick={() =>
+                        onSettingsChange({
+                          shoppingListToolsEnabled:
+                            !settings.shoppingListToolsEnabled,
+                        })
+                      }
+                      disabled={disabled || isLoading || !toolsSupported}
+                    >
+                      <ShoppingCart className="size-4" />
+                    </PromptInputButton>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {toolsSupported
+                    ? "Shopping list tools"
+                    : "Shopping list tools: Not supported by this model"}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <PromptInputButton
+                      className={cn(
+                        settings.expenseToolsEnabled &&
+                          toolsSupported &&
+                          "bg-accent text-accent-foreground",
+                      )}
+                      onClick={() =>
+                        onSettingsChange({
+                          expenseToolsEnabled: !settings.expenseToolsEnabled,
+                        })
+                      }
+                      disabled={disabled || isLoading || !toolsSupported}
+                    >
+                      <Wallet className="size-4" />
+                    </PromptInputButton>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {toolsSupported
+                    ? "Expense tools"
+                    : "Expense tools: Not supported by this model"}
+                </TooltipContent>
+              </Tooltip>
             </div>
             <PromptInputSubmit
               status={status}

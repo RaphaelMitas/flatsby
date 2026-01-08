@@ -8,6 +8,7 @@
     "./alert": "./src/alert.tsx",
     "./alert-dialog": "./src/alert-dialog.tsx",
     "./avatar": "./src/avatar.tsx",
+    "./badge": "./src/badge.tsx",
     "./button": "./src/button.tsx",
     "./card": "./src/card.tsx",
     "./checkbox": "./src/checkbox.tsx",

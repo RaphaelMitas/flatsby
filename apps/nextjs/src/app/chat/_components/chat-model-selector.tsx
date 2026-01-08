@@ -16,6 +16,7 @@ import {
   ModelSelectorName,
   ModelSelectorTrigger,
 } from "@flatsby/ui/ai-elements";
+import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import { CHAT_MODELS } from "@flatsby/validators/models";
 
@@ -85,7 +86,15 @@ export function ChatModelSelector({
                     }}
                   >
                     <ModelSelectorLogo provider={model.provider} />
-                    <ModelSelectorName>{model.name}</ModelSelectorName>
+                    <ModelSelectorName>
+                      {model.name}
+                      {model.supportsTools && (
+                        <Badge className="ml-2 text-xs" variant="outline">
+                          Tools
+                        </Badge>
+                      )}
+                    </ModelSelectorName>
+
                     {currentModel === model.id ? (
                       <CheckIcon className="ml-auto size-4" />
                     ) : (

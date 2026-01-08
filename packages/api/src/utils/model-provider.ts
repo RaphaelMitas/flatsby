@@ -3,14 +3,9 @@ import { generateText, stepCountIs, streamText } from "ai";
 
 import type { ContextMessage } from "./context-builder";
 
-// Default model using Vercel AI Gateway format: provider/model
-const DEFAULT_MODEL = "google/gemini-2.0-flash";
-// Always use Gemini Flash for title generation (fast and cost-effective)
-const TITLE_GENERATION_MODEL = "google/gemini-2.0-flash";
+const DEFAULT_MODEL = "openai/gpt-5.2";
+const TITLE_GENERATION_MODEL = "openai/gpt-5.2";
 
-/**
- * Get the default model name
- */
 export function getDefaultModel() {
   return DEFAULT_MODEL;
 }
@@ -25,12 +20,6 @@ export interface StreamChatWithToolsOptions extends StreamChatOptions {
   maxSteps?: number;
 }
 
-/**
- * Stream a chat completion via Vercel AI Gateway
- * Uses the AI_GATEWAY_API_KEY environment variable for authentication
- * Model format: provider/model (e.g., "google/gemini-2.0-flash", "openai/gpt-4o")
- * Returns the streaming result with text stream and metadata
- */
 export function streamChatCompletion(
   messages: ContextMessage[],
   options: StreamChatOptions = {},

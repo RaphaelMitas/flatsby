@@ -32,7 +32,7 @@ import {
   removeItemInputSchema,
   removeItemResultSchema,
 } from "@flatsby/validators/chat/tools";
-import { chatModelSchema } from "@flatsby/validators/models";
+import { chatModelSchema, modelSupportsTools } from "@flatsby/validators/models";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
@@ -402,9 +402,12 @@ export const chatRouter = createTRPCRouter({
     let streamCompleted = false;
 
     // Check if tools should be enabled and get groupId
+    // Tools are only available for models that support them
+    const modelCanUseTools = modelSupportsTools(modelToUse);
     const shoppingListToolsEnabled =
-      input.settings?.shoppingListToolsEnabled ?? false;
-    const expenseToolsEnabled = input.settings?.expenseToolsEnabled ?? false;
+      modelCanUseTools && (input.settings?.shoppingListToolsEnabled ?? false);
+    const expenseToolsEnabled =
+      modelCanUseTools && (input.settings?.expenseToolsEnabled ?? false);
     const anyToolsEnabled = shoppingListToolsEnabled || expenseToolsEnabled;
     const groupId = input.settings?.groupId;
 
