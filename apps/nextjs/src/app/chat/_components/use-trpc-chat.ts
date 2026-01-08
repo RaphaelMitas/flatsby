@@ -1,6 +1,7 @@
 "use client";
 
-import type { ChatSettings, ChatUIMessage } from "@flatsby/validators/chat";
+import type { ChatSettings } from "@flatsby/validators/chat/messages";
+import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
@@ -8,12 +9,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createTRPCChatTransport } from "@flatsby/ui/chat-transport";
 
+import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 
 const SETTINGS_STORAGE_KEY = "chat-settings";
 
 const DEFAULT_SETTINGS: ChatSettings = {
-  shoppingListToolEnabled: false,
+  toolsEnabled: false,
 };
 
 export interface UseTRPCChatOptions {
@@ -38,6 +40,7 @@ export function useTRPCChat({
 }: UseTRPCChatOptions) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { currentGroup } = useGroupContext();
 
   // AI SDK v5: Input state must be managed externally
   const [input, setInput] = useState("");
@@ -53,9 +56,15 @@ export function useTRPCChat({
     setSelectedModel(model);
   }, []);
 
-  // Settings state - tracks tool configuration
+  // Settings state - tracks tool configuration (without groupId, which comes from context)
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
   const settingsRef = useRef<ChatSettings>(settings);
+  const currentGroupRef = useRef<number | undefined>(currentGroup?.id);
+
+  // Keep currentGroupRef in sync
+  useEffect(() => {
+    currentGroupRef.current = currentGroup?.id;
+  }, [currentGroup?.id]);
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -63,8 +72,9 @@ export function useTRPCChat({
       const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as ChatSettings;
-        setSettings(parsed);
-        settingsRef.current = parsed;
+        // Don't persist groupId - it comes from context
+        setSettings({ ...parsed, groupId: undefined });
+        settingsRef.current = { ...parsed, groupId: undefined };
       }
     } catch {
       // Ignore parse errors, use defaults
@@ -95,7 +105,13 @@ export function useTRPCChat({
         return await sendMutation.mutateAsync(mutationInput);
       },
       getModel: () => modelRef.current,
-      getSettings: () => settingsRef.current,
+      getSettings: () => ({
+        ...settingsRef.current,
+        // Include groupId from context when tools are enabled
+        groupId: settingsRef.current.toolsEnabled
+          ? currentGroupRef.current
+          : undefined,
+      }),
     });
   }, [sendMutation]);
 

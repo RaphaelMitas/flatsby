@@ -1,4 +1,4 @@
-import type { PersistedToolCall } from "@flatsby/validators/chat";
+import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import { relations } from "drizzle-orm";
 import {
   boolean,

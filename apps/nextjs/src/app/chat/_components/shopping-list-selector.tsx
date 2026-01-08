@@ -1,6 +1,6 @@
 "use client";
 
-import type { ShoppingListInfo } from "@flatsby/validators/chat";
+import type { ShoppingListInfo } from "@flatsby/validators/chat/tools";
 import { ShoppingCart } from "lucide-react";
 
 import { Button } from "@flatsby/ui/button";
@@ -18,7 +18,7 @@ export function ShoppingListSelector({
 }: ShoppingListSelectorProps) {
   if (lists.length === 0) {
     return (
-      <p className="my-2 text-sm text-muted-foreground">
+      <p className="text-muted-foreground my-2 text-sm">
         No shopping lists found. Create one first!
       </p>
     );

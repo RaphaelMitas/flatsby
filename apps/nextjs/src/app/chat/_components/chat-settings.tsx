@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatSettings } from "@flatsby/validators/chat";
+import type { ChatSettings } from "@flatsby/validators/chat/messages";
 import { Settings, ShoppingCart } from "lucide-react";
 
 import { Button } from "@flatsby/ui/button";
@@ -41,13 +41,13 @@ export function ChatSettingsDropdown({
         <DropdownMenuLabel>Features</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuCheckboxItem
-          checked={settings.shoppingListToolEnabled}
+          checked={settings.toolsEnabled}
           onCheckedChange={(checked) =>
-            onSettingsChange({ shoppingListToolEnabled: checked })
+            onSettingsChange({ toolsEnabled: checked })
           }
         >
           <ShoppingCart className="mr-2 size-4" />
-          Shopping List Helper
+          Tools
         </DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenu>

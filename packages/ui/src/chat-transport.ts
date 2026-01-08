@@ -1,4 +1,5 @@
-import type { ChatUIMessage, SendTrigger } from "@flatsby/validators/chat";
+import type { SendTrigger } from "@flatsby/validators/chat/messages";
+import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import type { ChatTransport, UIMessageChunk } from "ai";
 
@@ -30,7 +31,8 @@ type MessageRole = "user" | "assistant" | "system";
  * Chat settings for tool configuration
  */
 export interface ChatSettings {
-  shoppingListToolEnabled?: boolean;
+  toolsEnabled?: boolean;
+  groupId?: number;
 }
 
 /**

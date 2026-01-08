@@ -1,0 +1,307 @@
+import type { UIMessage as AIUIMessage, InferUITools, ToolSet } from "ai";
+import { tool } from "ai";
+import { z } from "zod/v4";
+
+import { categoryIdSchema } from "../categories";
+import { currencyCodeSchema } from "../expenses/schemas";
+import { groupNameSchema, groupSchema } from "../group";
+import { shoppingListItemSchema, shoppingListSchema } from "../shopping-list";
+
+// ============================================================================
+// Shopping List Tools
+// ============================================================================
+
+// Reusable item schemas built from shoppingListItemSchema
+const toolItemInputSchema = shoppingListItemSchema
+  .pick({ name: true })
+  .extend({ categoryId: categoryIdSchema.optional() });
+
+const toolAddedItemSchema = shoppingListItemSchema.pick({
+  id: true,
+  name: true,
+  categoryId: true,
+});
+
+const toolFailedItemSchema = shoppingListItemSchema
+  .pick({ name: true })
+  .extend({ reason: z.string() });
+
+export const addedItemSchema = toolAddedItemSchema;
+export type AddedItem = z.infer<typeof addedItemSchema>;
+
+// getShoppingLists
+export const shoppingListInfoSchema = shoppingListSchema
+  .pick({ id: true, name: true })
+  .extend({
+    groupId: groupSchema.shape.id,
+    groupName: groupNameSchema,
+    uncheckedItemLength: z.number(),
+  });
+export type ShoppingListInfo = z.infer<typeof shoppingListInfoSchema>;
+
+export const getShoppingListsInputSchema = z.object({
+  userShouldSelect: z.boolean(),
+});
+
+export const getShoppingListsResultSchema = z.object({
+  lists: z.array(shoppingListInfoSchema),
+  userShouldSelect: z.boolean(),
+});
+export type GetShoppingListsResult = z.infer<
+  typeof getShoppingListsResultSchema
+>;
+
+// addToShoppingList
+export const addToShoppingListInputSchema = z.object({
+  shoppingListId: z.number(),
+  items: z.array(toolItemInputSchema),
+});
+
+export const addToShoppingListResultSchema = z.object({
+  success: z.boolean(),
+  shoppingListName: shoppingListSchema.shape.name,
+  addedItems: z.array(addedItemSchema),
+  failedItems: z.array(toolFailedItemSchema).optional(),
+});
+export type AddToShoppingListResult = z.infer<
+  typeof addToShoppingListResultSchema
+>;
+
+// getShoppingListItems
+export const getShoppingListItemsInputSchema = z.object({
+  shoppingListId: z.number(),
+  includeCompleted: z.boolean().optional(),
+});
+
+const shoppingListItemOutputSchema = shoppingListItemSchema.pick({
+  id: true,
+  name: true,
+  categoryId: true,
+  completed: true,
+});
+
+export const getShoppingListItemsResultSchema = z.object({
+  items: z.array(shoppingListItemOutputSchema),
+  listName: z.string(),
+  totalCount: z.number(),
+});
+export type GetShoppingListItemsResult = z.infer<
+  typeof getShoppingListItemsResultSchema
+>;
+
+// markItemComplete
+export const markItemCompleteInputSchema = z.object({
+  shoppingListId: z.number(),
+  itemName: z.string(),
+  completed: z.boolean(),
+});
+
+export const markItemCompleteResultSchema = z.object({
+  success: z.boolean(),
+  itemName: z.string(),
+  completed: z.boolean(),
+  error: z.string().optional(),
+});
+export type MarkItemCompleteResult = z.infer<typeof markItemCompleteResultSchema>;
+
+// removeItem
+export const removeItemInputSchema = z.object({
+  shoppingListId: z.number(),
+  itemName: z.string(),
+});
+
+export const removeItemResultSchema = z.object({
+  success: z.boolean(),
+  removedItemName: z.string(),
+  error: z.string().optional(),
+});
+export type RemoveItemResult = z.infer<typeof removeItemResultSchema>;
+
+// ============================================================================
+// Expense Tools
+// ============================================================================
+
+// getDebts
+export const getDebtsInputSchema = z.object({});
+
+const debtEntrySchema = z.object({
+  fromMember: z.string(),
+  toMember: z.string(),
+  amountInCents: z.number(),
+  currency: z.string(),
+});
+
+export const getDebtsResultSchema = z.object({
+  debts: z.array(debtEntrySchema),
+  groupName: z.string(),
+});
+export type GetDebtsResult = z.infer<typeof getDebtsResultSchema>;
+
+// addExpense
+export const addExpenseInputSchema = z.object({
+  amountInCents: z.number(),
+  currency: currencyCodeSchema,
+  description: z.string(),
+  paidByMemberName: z.string(),
+  splitAmongNames: z.array(z.string()).optional(),
+});
+
+const expenseSplitOutputSchema = z.object({
+  memberName: z.string(),
+  amountInCents: z.number(),
+});
+
+export const addExpenseResultSchema = z.object({
+  success: z.boolean(),
+  expenseId: z.number().optional(),
+  description: z.string(),
+  splits: z.array(expenseSplitOutputSchema),
+  error: z.string().optional(),
+});
+export type AddExpenseResult = z.infer<typeof addExpenseResultSchema>;
+
+// getExpenses
+export const getExpensesInputSchema = z.object({
+  limit: z.number().min(1).max(20).optional(),
+});
+
+const expenseOutputSchema = z.object({
+  id: z.number(),
+  description: z.string().nullable(),
+  amountInCents: z.number(),
+  currency: z.string(),
+  paidByMember: z.string(),
+  expenseDate: z.string(),
+});
+
+export const getExpensesResultSchema = z.object({
+  expenses: z.array(expenseOutputSchema),
+  groupName: z.string(),
+});
+export type GetExpensesResult = z.infer<typeof getExpensesResultSchema>;
+
+// ============================================================================
+// Persisted Tool Calls
+// ============================================================================
+
+const getShoppingListsToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("getShoppingLists"),
+  input: getShoppingListsInputSchema,
+  output: getShoppingListsResultSchema,
+});
+
+const addToShoppingListToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("addToShoppingList"),
+  input: addToShoppingListInputSchema,
+  output: addToShoppingListResultSchema,
+});
+
+const getShoppingListItemsToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("getShoppingListItems"),
+  input: getShoppingListItemsInputSchema,
+  output: getShoppingListItemsResultSchema,
+});
+
+const markItemCompleteToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("markItemComplete"),
+  input: markItemCompleteInputSchema,
+  output: markItemCompleteResultSchema,
+});
+
+const removeItemToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("removeItem"),
+  input: removeItemInputSchema,
+  output: removeItemResultSchema,
+});
+
+const getDebtsToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("getDebts"),
+  input: getDebtsInputSchema,
+  output: getDebtsResultSchema,
+});
+
+const addExpenseToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("addExpense"),
+  input: addExpenseInputSchema,
+  output: addExpenseResultSchema,
+});
+
+const getExpensesToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("getExpenses"),
+  input: getExpensesInputSchema,
+  output: getExpensesResultSchema,
+});
+
+export const persistedToolCallSchema = z.discriminatedUnion("name", [
+  getShoppingListsToolCallSchema,
+  addToShoppingListToolCallSchema,
+  getShoppingListItemsToolCallSchema,
+  markItemCompleteToolCallSchema,
+  removeItemToolCallSchema,
+  getDebtsToolCallSchema,
+  addExpenseToolCallSchema,
+  getExpensesToolCallSchema,
+]);
+
+export type PersistedToolCall = z.infer<typeof persistedToolCallSchema>;
+
+// ============================================================================
+// AI SDK Tool Definitions (for type inference)
+// ============================================================================
+
+export const chatTools = {
+  getShoppingLists: tool({
+    description: "Get all shopping lists in the current group",
+    inputSchema: getShoppingListsInputSchema,
+    outputSchema: getShoppingListsResultSchema,
+  }),
+  addToShoppingList: tool({
+    description: "Add items to a shopping list",
+    inputSchema: addToShoppingListInputSchema,
+    outputSchema: addToShoppingListResultSchema,
+  }),
+  getShoppingListItems: tool({
+    description: "Get items from a shopping list",
+    inputSchema: getShoppingListItemsInputSchema,
+    outputSchema: getShoppingListItemsResultSchema,
+  }),
+  markItemComplete: tool({
+    description: "Mark a shopping list item as complete or incomplete",
+    inputSchema: markItemCompleteInputSchema,
+    outputSchema: markItemCompleteResultSchema,
+  }),
+  removeItem: tool({
+    description: "Remove an item from a shopping list",
+    inputSchema: removeItemInputSchema,
+    outputSchema: removeItemResultSchema,
+  }),
+  getDebts: tool({
+    description: "Get who owes money to whom in the current group",
+    inputSchema: getDebtsInputSchema,
+    outputSchema: getDebtsResultSchema,
+  }),
+  addExpense: tool({
+    description: "Add a new expense with equal split",
+    inputSchema: addExpenseInputSchema,
+    outputSchema: addExpenseResultSchema,
+  }),
+  getExpenses: tool({
+    description: "Get recent expenses in the current group",
+    inputSchema: getExpensesInputSchema,
+    outputSchema: getExpensesResultSchema,
+  }),
+} satisfies ToolSet;
+
+export type ChatTools = InferUITools<typeof chatTools>;
+
+import type { MessageMetadata } from "./messages";
+
+export type ChatUIMessage = AIUIMessage<MessageMetadata, never, ChatTools>;

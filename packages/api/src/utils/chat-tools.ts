@@ -1,20 +1,31 @@
+import type { CategoryId } from "@flatsby/validators/categories";
+import type {
+  AddExpenseResult,
+  AddToShoppingListResult,
+  GetDebtsResult,
+  GetExpensesResult,
+  GetShoppingListItemsResult,
+  GetShoppingListsResult,
+  MarkItemCompleteResult,
+  RemoveItemResult,
+  ShoppingListInfo,
+} from "@flatsby/validators/chat/tools";
 import type { Tool } from "ai";
 import { tool, zodSchema } from "ai";
 import { z } from "zod/v4";
 
-import type { CategoryId } from "@flatsby/validators/categories";
-import { and, eq } from "@flatsby/db";
+import { and, desc, eq, ilike } from "@flatsby/db";
 import {
+  expenses,
+  expenseSplits,
   groupMembers,
+  groups,
   shoppingListItems,
   shoppingLists,
 } from "@flatsby/db/schema";
 import { categoryIdSchema } from "@flatsby/validators/categories";
-import type {
-  AddToShoppingListResult,
-  GetShoppingListsResult,
-  ShoppingListInfo,
-} from "@flatsby/validators/chat";
+import { calculateDebts } from "@flatsby/validators/expenses/debt";
+import { distributeEqualAmounts } from "@flatsby/validators/expenses/distribution";
 
 import type { createTRPCContext } from "../trpc";
 
@@ -29,62 +40,57 @@ type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>> & {
 };
 
 /**
- * System prompt to append when shopping list tools are enabled
+ * System prompt for AI chat tools
  */
-export const SHOPPING_LIST_SYSTEM_PROMPT = `
-You have access to the user's shopping lists and can help them add items.
+export const CHAT_TOOLS_SYSTEM_PROMPT = `
+You have access to tools for managing shopping lists and expenses in the current group.
 
-CRITICAL RULES - YOU MUST FOLLOW THESE:
-1. NEVER make up or guess shopping list IDs or group IDs. You MUST use the exact IDs returned by getShoppingLists.
-2. If you don't have the list of shopping lists yet, you MUST call getShoppingLists FIRST before adding any items.
-3. WAIT for the user to select a list before calling addToShoppingList. Do NOT assume which list they want.
-4. Only use IDs that appear in the getShoppingLists output. If an ID is not in that output, you cannot use it.
+SHOPPING LIST TOOLS:
+- getShoppingLists: Get all shopping lists. Set userShouldSelect=true to show clickable buttons.
+- addToShoppingList: Add items to a list. Use IDs from getShoppingLists.
+- getShoppingListItems: View items in a list.
+- markItemComplete: Check off or uncheck an item by name.
+- removeItem: Remove an item by name.
 
-WORKFLOW:
-1. User mentions items to add -> Call getShoppingLists with userShouldSelect=true
-2. The UI will show clickable buttons for each list - DO NOT ask the user which list in your text response, the component handles it
-3. User selects a list by clicking a button (you'll receive a message like "Add to the Groceries list") -> Look up the EXACT id and groupId from YOUR PREVIOUS getShoppingLists output by matching the list name
-4. Call addToShoppingList with those exact IDs from step 3
+EXPENSE TOOLS:
+- getDebts: See who owes money to whom.
+- addExpense: Record a new expense with equal split.
+- getExpenses: View recent expenses.
 
-WHEN TO USE userShouldSelect:
-- true: When you need the user to choose a list. The UI shows clickable buttons automatically - you don't need to ask or list options in your response
-- false: When you just need to check what lists exist or already know which list to use
+RULES:
+1. Always call getShoppingLists first to get list IDs before other shopping list operations.
+2. Item and member names are matched case-insensitively.
+3. For expenses, use member display names (e.g., "John", "Jane").
+4. All tools are scoped to the current group - you cannot access other groups.
 
-PROACTIVE BEHAVIORS:
-- User says "I need to buy milk" -> Call getShoppingLists with userShouldSelect=true (UI shows list buttons)
-- User says "We're out of eggs and bread" -> Call getShoppingLists with userShouldSelect=true
-- User discusses a recipe -> Offer to add ingredients, call getShoppingLists with userShouldSelect=true
-
-AVAILABLE CATEGORIES for items:
-- produce (fruits, vegetables)
-- meat-seafood
-- dairy (milk, cheese, eggs)
-- bakery (bread, pastries)
-- frozen-foods
-- beverages
-- snacks
-- pantry (canned goods, pasta, rice)
-- personal-care
-- household (cleaning supplies)
-- other
+CATEGORIES for shopping items:
+produce, meat-seafood, dairy, bakery, frozen-foods, beverages, snacks, pantry, personal-care, household, other
 `;
 
+// Keep old export for backwards compatibility
+export const SHOPPING_LIST_SYSTEM_PROMPT = CHAT_TOOLS_SYSTEM_PROMPT;
+
 /**
- * Creates shopping list tools for AI chat with the given context
+ * Creates all chat tools scoped to a specific group
  */
-export function createShoppingListTools(
+export function createChatTools(
   ctx: TRPCContext,
+  groupId: number,
 ): Record<string, Tool> {
   return {
+    // =========================================================================
+    // Shopping List Tools
+    // =========================================================================
+
     getShoppingLists: tool({
       description:
-        "Get all shopping lists the user has access to. Use this when the user wants to add items to a shopping list but hasn't specified which one, or when you need to show available lists. Set userShouldSelect to true if you want the user to pick a list (shows clickable options), or false if you already know which list to use.",
+        "Get all shopping lists in the current group. Set userShouldSelect=true to show clickable buttons for the user to pick a list.",
       inputSchema: zodSchema(
         z.object({
           userShouldSelect: z
             .boolean()
             .describe(
-              "Set to true to show clickable list options for user selection. Set to false if you already know which list to use or are just checking available lists.",
+              "Set to true to show clickable list options for user selection.",
             ),
         }),
       ),
@@ -93,95 +99,65 @@ export function createShoppingListTools(
       }: {
         userShouldSelect: boolean;
       }): Promise<GetShoppingListsResult> => {
-        // Get all groups the user is a member of, with their shopping lists
-        const memberships = await ctx.db.query.groupMembers.findMany({
-          where: eq(groupMembers.userId, ctx.session.user.id),
+        // Get the group with its shopping lists
+        const group = await ctx.db.query.groups.findFirst({
+          where: eq(groups.id, groupId),
+          columns: { id: true, name: true },
           with: {
-            group: {
-              columns: {
-                id: true,
-                name: true,
-              },
+            shoppingLists: {
+              columns: { id: true, name: true },
               with: {
-                shoppingLists: {
-                  columns: {
-                    id: true,
-                    name: true,
-                  },
-                  with: {
-                    shoppingListItems: {
-                      columns: { id: true },
-                      where: eq(shoppingListItems.completed, false),
-                    },
-                  },
+                shoppingListItems: {
+                  columns: { id: true },
+                  where: eq(shoppingListItems.completed, false),
                 },
               },
             },
           },
         });
 
-        // Flatten groups and their shopping lists into a single array
-        const lists: ShoppingListInfo[] = [];
-        for (const membership of memberships) {
-          for (const list of membership.group.shoppingLists) {
-            lists.push({
-              id: list.id,
-              name: list.name,
-              groupId: membership.group.id,
-              groupName: membership.group.name,
-              uncheckedItemLength: list.shoppingListItems.length,
-            });
-          }
+        if (!group) {
+          return { lists: [], userShouldSelect };
         }
 
-        return {
-          lists,
-          userShouldSelect,
-        };
+        const lists: ShoppingListInfo[] = group.shoppingLists.map((list) => ({
+          id: list.id,
+          name: list.name,
+          groupId: group.id,
+          groupName: group.name,
+          uncheckedItemLength: list.shoppingListItems.length,
+        }));
+
+        return { lists, userShouldSelect };
       },
     }),
 
     addToShoppingList: tool({
       description:
-        "Add one or more items to a specific shopping list. Always use getShoppingLists first if the user hasn't specified which list to use.",
+        "Add items to a shopping list. Get the shoppingListId from getShoppingLists first.",
       inputSchema: zodSchema(
         z.object({
-          shoppingListId: z
-            .number()
-            .describe("The ID of the shopping list to add items to"),
-          groupId: z
-            .number()
-            .describe("The group ID that owns the shopping list"),
+          shoppingListId: z.number().describe("The shopping list ID"),
           items: z
             .array(
               z.object({
-                name: z
-                  .string()
-                  .min(1)
-                  .max(256)
-                  .describe("The name of the item to add"),
-                categoryId: categoryIdSchema
-                  .optional()
-                  .describe(
-                    "Category for the item. Pick the most appropriate category.",
-                  ),
+                name: z.string().min(1).max(256).describe("Item name"),
+                categoryId: categoryIdSchema.optional().describe("Category"),
               }),
             )
             .min(1)
             .max(50)
-            .describe("Array of items to add to the shopping list"),
+            .describe("Items to add"),
         }),
       ),
       execute: async ({
         shoppingListId,
-        groupId,
         items,
       }: {
         shoppingListId: number;
-        groupId: number;
         items: { name: string; categoryId?: CategoryId }[];
       }): Promise<AddToShoppingListResult> => {
-        // Verify user is a member of the group
+        // Verify membership and get list
         const membership = await ctx.db.query.groupMembers.findFirst({
           where: and(
             eq(groupMembers.groupId, groupId),
@@ -196,21 +172,17 @@ export function createShoppingListTools(
             addedItems: [],
             failedItems: items.map((item) => ({
               name: item.name,
-              reason: "You are not a member of this group",
+              reason: "Not a member of this group",
             })),
           };
         }
 
-        // Verify shopping list exists in this group
         const list = await ctx.db.query.shoppingLists.findFirst({
           where: and(
             eq(shoppingLists.id, shoppingListId),
             eq(shoppingLists.groupId, groupId),
           ),
-          columns: {
-            id: true,
-            name: true,
-          },
+          columns: { id: true, name: true },
         });
 
         if (!list) {
@@ -220,21 +192,18 @@ export function createShoppingListTools(
             addedItems: [],
             failedItems: items.map((item) => ({
               name: item.name,
-              reason: "Shopping list not found",
+              reason: "Shopping list not found in this group",
             })),
           };
         }
 
-        // Add items
         const addedItems: AddToShoppingListResult["addedItems"] = [];
         const failedItems: NonNullable<AddToShoppingListResult["failedItems"]> =
           [];
 
         for (const item of items) {
           try {
-            // Use provided category or default to "other"
             const categoryId: CategoryId = item.categoryId ?? "other";
-
             const [inserted] = await ctx.db
               .insert(shoppingListItems)
               .values({
@@ -245,22 +214,15 @@ export function createShoppingListTools(
                 createdByGroupMemberId: membership.id,
                 createdAt: new Date(),
               })
-              .returning({
-                id: shoppingListItems.id,
-              });
+              .returning({ id: shoppingListItems.id });
 
             if (inserted) {
-              addedItems.push({
-                id: inserted.id,
-                name: item.name,
-                categoryId,
-              });
+              addedItems.push({ id: inserted.id, name: item.name, categoryId });
             }
           } catch (error) {
             failedItems.push({
               name: item.name,
-              reason:
-                error instanceof Error ? error.message : "Failed to add item",
+              reason: error instanceof Error ? error.message : "Failed to add",
             });
           }
         }
@@ -273,5 +235,463 @@ export function createShoppingListTools(
         };
       },
     }),
+
+    getShoppingListItems: tool({
+      description: "Get items from a shopping list. Returns up to 50 items.",
+      inputSchema: zodSchema(
+        z.object({
+          shoppingListId: z.number().describe("The shopping list ID"),
+          includeCompleted: z
+            .boolean()
+            .optional()
+            .describe("Include completed items"),
+        }),
+      ),
+      execute: async ({
+        shoppingListId,
+        includeCompleted = false,
+      }: {
+        shoppingListId: number;
+        includeCompleted?: boolean;
+      }): Promise<GetShoppingListItemsResult> => {
+        const list = await ctx.db.query.shoppingLists.findFirst({
+          where: and(
+            eq(shoppingLists.id, shoppingListId),
+            eq(shoppingLists.groupId, groupId),
+          ),
+          columns: { name: true },
+        });
+
+        if (!list) {
+          return { items: [], listName: "", totalCount: 0 };
+        }
+
+        const whereClause = includeCompleted
+          ? eq(shoppingListItems.shoppingListId, shoppingListId)
+          : and(
+              eq(shoppingListItems.shoppingListId, shoppingListId),
+              eq(shoppingListItems.completed, false),
+            );
+
+        const items = await ctx.db.query.shoppingListItems.findMany({
+          where: whereClause,
+          columns: { id: true, name: true, categoryId: true, completed: true },
+          limit: 50,
+        });
+
+        return {
+          items: items.map((i) => ({
+            id: i.id,
+            name: i.name,
+            categoryId: i.categoryId as CategoryId,
+            completed: i.completed,
+          })),
+          listName: list.name,
+          totalCount: items.length,
+        };
+      },
+    }),
+
+    markItemComplete: tool({
+      description:
+        "Mark a shopping list item as complete or incomplete by name.",
+      inputSchema: zodSchema(
+        z.object({
+          shoppingListId: z.number().describe("The shopping list ID"),
+          itemName: z.string().describe("Item name (case-insensitive)"),
+          completed: z
+            .boolean()
+            .describe("true to mark complete, false to unmark"),
+        }),
+      ),
+      execute: async ({
+        shoppingListId,
+        itemName,
+        completed,
+      }: {
+        shoppingListId: number;
+        itemName: string;
+        completed: boolean;
+      }): Promise<MarkItemCompleteResult> => {
+        // Verify list belongs to group
+        const list = await ctx.db.query.shoppingLists.findFirst({
+          where: and(
+            eq(shoppingLists.id, shoppingListId),
+            eq(shoppingLists.groupId, groupId),
+          ),
+        });
+
+        if (!list) {
+          return {
+            success: false,
+            itemName,
+            completed,
+            error: "List not found",
+          };
+        }
+
+        // Find item by name (case-insensitive)
+        const item = await ctx.db.query.shoppingListItems.findFirst({
+          where: and(
+            eq(shoppingListItems.shoppingListId, shoppingListId),
+            ilike(shoppingListItems.name, itemName),
+          ),
+        });
+
+        if (!item) {
+          return {
+            success: false,
+            itemName,
+            completed,
+            error: "Item not found",
+          };
+        }
+
+        // Get membership for tracking who completed it
+        const membership = await ctx.db.query.groupMembers.findFirst({
+          where: and(
+            eq(groupMembers.groupId, groupId),
+            eq(groupMembers.userId, ctx.session.user.id),
+          ),
+        });
+
+        await ctx.db
+          .update(shoppingListItems)
+          .set({
+            completed,
+            completedByGroupMemberId: completed
+              ? (membership?.id ?? null)
+              : null,
+            completedAt: completed ? new Date() : null,
+          })
+          .where(eq(shoppingListItems.id, item.id));
+
+        return { success: true, itemName: item.name, completed };
+      },
+    }),
+
+    removeItem: tool({
+      description: "Remove an item from a shopping list by name.",
+      inputSchema: zodSchema(
+        z.object({
+          shoppingListId: z.number().describe("The shopping list ID"),
+          itemName: z.string().describe("Item name (case-insensitive)"),
+        }),
+      ),
+      execute: async ({
+        shoppingListId,
+        itemName,
+      }: {
+        shoppingListId: number;
+        itemName: string;
+      }): Promise<RemoveItemResult> => {
+        const list = await ctx.db.query.shoppingLists.findFirst({
+          where: and(
+            eq(shoppingLists.id, shoppingListId),
+            eq(shoppingLists.groupId, groupId),
+          ),
+        });
+
+        if (!list) {
+          return {
+            success: false,
+            removedItemName: itemName,
+            error: "List not found",
+          };
+        }
+
+        const item = await ctx.db.query.shoppingListItems.findFirst({
+          where: and(
+            eq(shoppingListItems.shoppingListId, shoppingListId),
+            ilike(shoppingListItems.name, itemName),
+          ),
+        });
+
+        if (!item) {
+          return {
+            success: false,
+            removedItemName: itemName,
+            error: "Item not found",
+          };
+        }
+
+        await ctx.db
+          .delete(shoppingListItems)
+          .where(eq(shoppingListItems.id, item.id));
+
+        return { success: true, removedItemName: item.name };
+      },
+    }),
+
+    // =========================================================================
+    // Expense Tools
+    // =========================================================================
+
+    getDebts: tool({
+      description: "Get who owes money to whom in the current group.",
+      inputSchema: zodSchema(z.object({})),
+      execute: async (): Promise<GetDebtsResult> => {
+        const group = await ctx.db.query.groups.findFirst({
+          where: eq(groups.id, groupId),
+          columns: { name: true },
+        });
+
+        if (!group) {
+          return { debts: [], groupName: "" };
+        }
+
+        // Get all expenses with splits for this group
+        const groupExpenses = await ctx.db.query.expenses.findMany({
+          where: eq(expenses.groupId, groupId),
+          with: {
+            paidByGroupMember: {
+              with: { user: { columns: { name: true } } },
+            },
+            expenseSplits: {
+              with: {
+                groupMember: {
+                  with: { user: { columns: { name: true } } },
+                },
+              },
+            },
+          },
+        });
+
+        // Get all group members for name lookup
+        const members = await ctx.db.query.groupMembers.findMany({
+          where: eq(groupMembers.groupId, groupId),
+          with: { user: { columns: { name: true } } },
+        });
+
+        const memberNameMap = new Map(members.map((m) => [m.id, m.user.name]));
+
+        // Calculate debts using existing logic
+        const expensesForCalc = groupExpenses.map((e) => ({
+          paidByGroupMemberId: e.paidByGroupMemberId,
+          amountInCents: e.amountInCents,
+          currency: e.currency,
+          expenseSplits: e.expenseSplits.map((s) => ({
+            groupMemberId: s.groupMemberId,
+            amountInCents: s.amountInCents,
+          })),
+        }));
+
+        const debtSummary = calculateDebts(expensesForCalc);
+
+        // Flatten debts from all currencies
+        const debts: GetDebtsResult["debts"] = [];
+        for (const [currency, summary] of Object.entries(
+          debtSummary.currencies,
+        )) {
+          for (const debt of summary.debts) {
+            debts.push({
+              fromMember:
+                memberNameMap.get(debt.fromGroupMemberId) ?? "Unknown",
+              toMember: memberNameMap.get(debt.toGroupMemberId) ?? "Unknown",
+              amountInCents: debt.amountInCents,
+              currency,
+            });
+          }
+        }
+
+        return { debts, groupName: group.name };
+      },
+    }),
+
+    addExpense: tool({
+      description:
+        "Add a new expense with equal split. Specify who paid and optionally who to split among.",
+      inputSchema: zodSchema(
+        z.object({
+          amountInCents: z.number().min(1).describe("Amount in cents"),
+          currency: z.enum(["EUR", "USD", "GBP"]).describe("Currency"),
+          description: z.string().describe("What was this expense for"),
+          paidByMemberName: z.string().describe("Name of person who paid"),
+          splitAmongNames: z
+            .array(z.string())
+            .optional()
+            .describe(
+              "Names of people to split among (defaults to all members)",
+            ),
+        }),
+      ),
+      execute: async ({
+        amountInCents,
+        currency,
+        description,
+        paidByMemberName,
+        splitAmongNames,
+      }: {
+        amountInCents: number;
+        currency: "EUR" | "USD" | "GBP";
+        description: string;
+        paidByMemberName: string;
+        splitAmongNames?: string[];
+      }): Promise<AddExpenseResult> => {
+        // Get all members
+        const members = await ctx.db.query.groupMembers.findMany({
+          where: eq(groupMembers.groupId, groupId),
+          with: { user: { columns: { id: true, name: true } } },
+        });
+
+        if (members.length === 0) {
+          return {
+            success: false,
+            description,
+            splits: [],
+            error: "No members found in group",
+          };
+        }
+
+        // Find who paid (case-insensitive)
+        const payer = members.find(
+          (m) => m.user.name.toLowerCase() === paidByMemberName.toLowerCase(),
+        );
+
+        if (!payer) {
+          return {
+            success: false,
+            description,
+            splits: [],
+            error: `Member "${paidByMemberName}" not found. Available: ${members.map((m) => m.user.name).join(", ")}`,
+          };
+        }
+
+        // Determine who to split among
+        let splitMembers = members;
+        if (splitAmongNames && splitAmongNames.length > 0) {
+          splitMembers = [];
+          for (const name of splitAmongNames) {
+            const member = members.find(
+              (m) => m.user.name.toLowerCase() === name.toLowerCase(),
+            );
+            if (!member) {
+              return {
+                success: false,
+                description,
+                splits: [],
+                error: `Member "${name}" not found`,
+              };
+            }
+            splitMembers.push(member);
+          }
+        }
+
+        // Calculate equal splits
+        const memberIds = splitMembers.map((m) => m.id);
+        const calculatedSplits = distributeEqualAmounts(
+          memberIds,
+          amountInCents,
+        );
+
+        // Get current user's membership for createdBy
+        const currentMembership = members.find(
+          (m) => m.user.id === ctx.session.user.id,
+        );
+
+        // Create expense
+        const [expense] = await ctx.db
+          .insert(expenses)
+          .values({
+            groupId,
+            paidByGroupMemberId: payer.id,
+            amountInCents,
+            currency,
+            description,
+            expenseDate: new Date(),
+            createdByGroupMemberId: currentMembership?.id ?? payer.id,
+            splitMethod: "equal",
+          })
+          .returning({ id: expenses.id });
+
+        if (!expense) {
+          return {
+            success: false,
+            description,
+            splits: [],
+            error: "Failed to create expense",
+          };
+        }
+
+        // Create splits using the calculated amounts
+        const splitValues = calculatedSplits.map((split) => ({
+          expenseId: expense.id,
+          groupMemberId: split.groupMemberId,
+          amountInCents: split.amountInCents,
+          percentage: split.percentage,
+        }));
+
+        await ctx.db.insert(expenseSplits).values(splitValues);
+
+        // Map back to member names for result
+        const memberIdToName = new Map(
+          splitMembers.map((m) => [m.id, m.user.name]),
+        );
+
+        return {
+          success: true,
+          expenseId: expense.id,
+          description,
+          splits: calculatedSplits.map((s) => ({
+            memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
+            amountInCents: s.amountInCents,
+          })),
+        };
+      },
+    }),
+
+    getExpenses: tool({
+      description: "Get recent expenses in the current group.",
+      inputSchema: zodSchema(
+        z.object({
+          limit: z
+            .number()
+            .min(1)
+            .max(20)
+            .optional()
+            .describe("Number of expenses (default 10)"),
+        }),
+      ),
+      execute: async ({
+        limit = 10,
+      }: {
+        limit?: number;
+      }): Promise<GetExpensesResult> => {
+        const group = await ctx.db.query.groups.findFirst({
+          where: eq(groups.id, groupId),
+          columns: { name: true },
+        });
+
+        if (!group) {
+          return { expenses: [], groupName: "" };
+        }
+
+        const recentExpenses = await ctx.db.query.expenses.findMany({
+          where: eq(expenses.groupId, groupId),
+          orderBy: [desc(expenses.expenseDate)],
+          limit,
+          with: {
+            paidByGroupMember: {
+              with: { user: { columns: { name: true } } },
+            },
+          },
+        });
+
+        return {
+          expenses: recentExpenses.map((e) => ({
+            id: e.id,
+            description: e.description,
+            amountInCents: e.amountInCents,
+            currency: e.currency,
+            paidByMember: e.paidByGroupMember.user.name,
+            expenseDate: e.expenseDate.toISOString(),
+          })),
+          groupName: group.name,
+        };
+      },
+    }),
   };
 }
+
+// Keep old function name for backwards compatibility
+export const createShoppingListTools = createChatTools;

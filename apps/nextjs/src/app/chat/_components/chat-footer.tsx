@@ -1,7 +1,7 @@
 "use client";
 
 import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
-import type { ChatSettings } from "@flatsby/validators/chat";
+import type { ChatSettings } from "@flatsby/validators/chat/messages";
 import type { ChatModel } from "@flatsby/validators/models";
 import type { FormEvent } from "react";
 

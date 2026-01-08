@@ -1,31 +1,42 @@
 import crypto from "node:crypto";
-import type { PersistedToolCall } from "@flatsby/validators/chat";
+import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { and, desc, eq, isNull, lt } from "@flatsby/db";
 import { chatMessages, conversations, users } from "@flatsby/db/schema";
 import {
-  addToShoppingListInputSchema,
-  addToShoppingListResultSchema,
   conversationWithMessagesSchema,
   createConversationInputSchema,
   getConversationInputSchema,
-  getShoppingListsInputSchema,
-  getShoppingListsResultSchema,
   getUserConversationsInputSchema,
   messageRoleSchema,
   messageStatusSchema,
   sendInputSchema,
-} from "@flatsby/validators/chat";
+} from "@flatsby/validators/chat/messages";
+import {
+  addExpenseInputSchema,
+  addExpenseResultSchema,
+  addToShoppingListInputSchema,
+  addToShoppingListResultSchema,
+  getDebtsInputSchema,
+  getDebtsResultSchema,
+  getExpensesInputSchema,
+  getExpensesResultSchema,
+  getShoppingListItemsInputSchema,
+  getShoppingListItemsResultSchema,
+  getShoppingListsInputSchema,
+  getShoppingListsResultSchema,
+  markItemCompleteInputSchema,
+  markItemCompleteResultSchema,
+  removeItemInputSchema,
+  removeItemResultSchema,
+} from "@flatsby/validators/chat/tools";
 import { chatModelSchema } from "@flatsby/validators/models";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
-import {
-  createShoppingListTools,
-  SHOPPING_LIST_SYSTEM_PROMPT,
-} from "../utils/chat-tools";
+import { CHAT_TOOLS_SYSTEM_PROMPT, createChatTools } from "../utils/chat-tools";
 import { buildContextMessages } from "../utils/context-builder";
 import {
   generateConversationTitle,
@@ -368,8 +379,9 @@ export const chatRouter = createTRPCRouter({
     let lastFlush = Date.now();
     let streamCompleted = false;
 
-    // Check if shopping list tools should be enabled
-    const toolsEnabled = input.settings?.shoppingListToolEnabled ?? false;
+    // Check if tools should be enabled and get groupId
+    const toolsEnabled = input.settings?.toolsEnabled ?? false;
+    const groupId = input.settings?.groupId;
 
     try {
       // Update status to streaming
@@ -378,12 +390,12 @@ export const chatRouter = createTRPCRouter({
         .set({ status: "streaming" })
         .where(eq(chatMessages.id, assistantMessageId));
 
-      if (toolsEnabled) {
+      if (toolsEnabled && groupId) {
         // Use streaming with tools
-        const tools = createShoppingListTools(ctx);
+        const tools = createChatTools(ctx, groupId);
         const systemPrompt = conversation.systemPrompt
-          ? `${conversation.systemPrompt}\n\n${SHOPPING_LIST_SYSTEM_PROMPT}`
-          : SHOPPING_LIST_SYSTEM_PROMPT;
+          ? `${conversation.systemPrompt}\n\n${CHAT_TOOLS_SYSTEM_PROMPT}`
+          : CHAT_TOOLS_SYSTEM_PROMPT;
 
         const streamResult = streamChatWithTools(contextMessages, {
           model: modelToUse,
@@ -473,6 +485,96 @@ export const chatRouter = createTRPCRouter({
                   completedToolCalls.push({
                     id: chunk.toolCallId,
                     name: "addToShoppingList",
+                    input: inputResult.data,
+                    output: outputResult.data,
+                  });
+                }
+              } else if (pending.name === "getShoppingListItems") {
+                const inputResult = getShoppingListItemsInputSchema.safeParse(
+                  pending.input,
+                );
+                const outputResult = getShoppingListItemsResultSchema.safeParse(
+                  chunk.output,
+                );
+                if (inputResult.success && outputResult.success) {
+                  completedToolCalls.push({
+                    id: chunk.toolCallId,
+                    name: "getShoppingListItems",
+                    input: inputResult.data,
+                    output: outputResult.data,
+                  });
+                }
+              } else if (pending.name === "markItemComplete") {
+                const inputResult = markItemCompleteInputSchema.safeParse(
+                  pending.input,
+                );
+                const outputResult = markItemCompleteResultSchema.safeParse(
+                  chunk.output,
+                );
+                if (inputResult.success && outputResult.success) {
+                  completedToolCalls.push({
+                    id: chunk.toolCallId,
+                    name: "markItemComplete",
+                    input: inputResult.data,
+                    output: outputResult.data,
+                  });
+                }
+              } else if (pending.name === "removeItem") {
+                const inputResult = removeItemInputSchema.safeParse(
+                  pending.input,
+                );
+                const outputResult = removeItemResultSchema.safeParse(
+                  chunk.output,
+                );
+                if (inputResult.success && outputResult.success) {
+                  completedToolCalls.push({
+                    id: chunk.toolCallId,
+                    name: "removeItem",
+                    input: inputResult.data,
+                    output: outputResult.data,
+                  });
+                }
+              } else if (pending.name === "getDebts") {
+                const inputResult = getDebtsInputSchema.safeParse(
+                  pending.input,
+                );
+                const outputResult = getDebtsResultSchema.safeParse(
+                  chunk.output,
+                );
+                if (inputResult.success && outputResult.success) {
+                  completedToolCalls.push({
+                    id: chunk.toolCallId,
+                    name: "getDebts",
+                    input: inputResult.data,
+                    output: outputResult.data,
+                  });
+                }
+              } else if (pending.name === "addExpense") {
+                const inputResult = addExpenseInputSchema.safeParse(
+                  pending.input,
+                );
+                const outputResult = addExpenseResultSchema.safeParse(
+                  chunk.output,
+                );
+                if (inputResult.success && outputResult.success) {
+                  completedToolCalls.push({
+                    id: chunk.toolCallId,
+                    name: "addExpense",
+                    input: inputResult.data,
+                    output: outputResult.data,
+                  });
+                }
+              } else if (pending.name === "getExpenses") {
+                const inputResult = getExpensesInputSchema.safeParse(
+                  pending.input,
+                );
+                const outputResult = getExpensesResultSchema.safeParse(
+                  chunk.output,
+                );
+                if (inputResult.success && outputResult.success) {
+                  completedToolCalls.push({
+                    id: chunk.toolCallId,
+                    name: "getExpenses",
                     input: inputResult.data,
                     output: outputResult.data,
                   });
