@@ -1,11 +1,8 @@
 "use client";
 
 import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
-import type {
-  ChatModel,
-  ChatUIMessage,
-  ShoppingListInfo,
-} from "@flatsby/validators/chat";
+import type { ChatUIMessage, ShoppingListInfo } from "@flatsby/validators/chat";
+import type { ChatModel } from "@flatsby/validators/models";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";

@@ -12,8 +12,8 @@ import {
   users,
   verificationTokens,
 } from "@flatsby/db/schema";
-import { chatModelSchema } from "@flatsby/validators/chat";
 import { groupSchema } from "@flatsby/validators/group";
+import { chatModelSchema } from "@flatsby/validators/models";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
 import { updateUserNameFormSchema, userSchema } from "@flatsby/validators/user";
 

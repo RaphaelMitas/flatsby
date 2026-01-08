@@ -4,29 +4,8 @@ import { z } from "zod/v4";
 
 import { categoryIdSchema } from "./categories";
 import { groupNameSchema, groupSchema } from "./group";
+import { chatModelSchema } from "./models";
 import { shoppingListItemSchema, shoppingListSchema } from "./shopping-list";
-
-// Available AI models
-export const chatModelSchema = z.enum([
-  "google/gemini-2.0-flash",
-  "openai/gpt-4o",
-  "openai/gpt-5.2",
-]);
-export type ChatModel = z.infer<typeof chatModelSchema>;
-
-export const CHAT_MODELS = [
-  {
-    id: "google/gemini-2.0-flash",
-    name: "Gemini 2.0 Flash",
-    provider: "google",
-  },
-  { id: "openai/gpt-4o", name: "GPT-4o", provider: "openai" },
-  { id: "openai/gpt-5.2", name: "GPT-5.2", provider: "openai" },
-] as const satisfies readonly {
-  id: ChatModel;
-  name: string;
-  provider: string;
-}[];
 
 // Role enum for messages
 export const messageRoleSchema = z.enum(["user", "assistant", "system"]);
@@ -129,12 +108,11 @@ export type PersistedToolCall = z.infer<typeof persistedToolCallSchema>;
 
 // Base message schema (from DB)
 export const chatMessageSchema = z.object({
-  id: z.nanoid(),
+  id: z.string(),
   conversationId: z.uuid(),
   role: messageRoleSchema,
   content: z.string(),
   status: messageStatusSchema,
-  tokenCount: z.number().nullable(),
   createdAt: z.date(),
   generationId: z.string().nullable(),
   cost: z.number().nullable(),
@@ -165,7 +143,7 @@ export type ConversationWithMessages = z.infer<
 
 // UI Message schema (compatible with AI SDK v5)
 export const uiMessageSchema = z.object({
-  id: z.nanoid(),
+  id: z.string(),
   role: messageRoleSchema,
   content: z.string(),
   createdAt: z.date().optional(),
@@ -205,7 +183,7 @@ export const sendInputSchema = z.object({
   conversationId: z.uuid(),
   message: uiMessageSchema,
   trigger: sendTriggerSchema,
-  messageId: z.nanoid().optional(),
+  messageId: z.string().optional(),
   // Model to use for this message (updates conversation model if different)
   model: chatModelSchema.optional(),
   // Tool settings for this message

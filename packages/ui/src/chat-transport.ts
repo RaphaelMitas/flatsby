@@ -1,8 +1,5 @@
-import type {
-  ChatModel,
-  ChatUIMessage,
-  SendTrigger,
-} from "@flatsby/validators/chat";
+import type { ChatUIMessage, SendTrigger } from "@flatsby/validators/chat";
+import type { ChatModel } from "@flatsby/validators/models";
 import type { ChatTransport, UIMessageChunk } from "ai";
 
 /**

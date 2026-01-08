@@ -1,7 +1,8 @@
 "use client";
 
-import type { ChatModel, ChatSettings } from "@flatsby/validators/chat";
 import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
+import type { ChatSettings } from "@flatsby/validators/chat";
+import type { ChatModel } from "@flatsby/validators/models";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,7 +14,7 @@ import {
   ConversationContent,
   ConversationEmptyState,
 } from "@flatsby/ui/ai-elements";
-import { CHAT_MODELS } from "@flatsby/validators/chat";
+import { CHAT_MODELS } from "@flatsby/validators/models";
 
 import { useTRPC } from "~/trpc/react";
 import { ChatFooter } from "./chat-footer";

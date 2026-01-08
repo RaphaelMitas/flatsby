@@ -3,7 +3,8 @@ import type { ChatUIMessage } from "@flatsby/validators/chat";
 import { notFound, redirect } from "next/navigation";
 import { TRPCError } from "@trpc/server";
 
-import { chatModelSchema, messageRoleSchema } from "@flatsby/validators/chat";
+import { messageRoleSchema } from "@flatsby/validators/chat";
+import { chatModelSchema } from "@flatsby/validators/models";
 
 import { getSession } from "~/auth/server";
 import { caller } from "~/trpc/server";

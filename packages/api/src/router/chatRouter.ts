@@ -8,7 +8,6 @@ import { chatMessages, conversations, users } from "@flatsby/db/schema";
 import {
   addToShoppingListInputSchema,
   addToShoppingListResultSchema,
-  chatModelSchema,
   conversationWithMessagesSchema,
   createConversationInputSchema,
   getConversationInputSchema,
@@ -19,6 +18,7 @@ import {
   messageStatusSchema,
   sendInputSchema,
 } from "@flatsby/validators/chat";
+import { chatModelSchema } from "@flatsby/validators/models";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
@@ -400,6 +400,7 @@ export const chatRouter = createTRPCRouter({
         const completedToolCalls: PersistedToolCall[] = [];
 
         for await (const chunk of streamResult.fullStream) {
+          console.log("[DEBUG] Stream chunk:", chunk.type, chunk);
           if (chunk.type === "text-delta") {
             buffer += chunk.text;
 
@@ -432,6 +433,7 @@ export const chatRouter = createTRPCRouter({
           } else if (chunk.type === "tool-result") {
             // Complete the tool call with its output using safeParse
             const pending = pendingToolCalls.get(chunk.toolCallId);
+            console.log("[DEBUG] tool-result pending:", pending);
             if (pending) {
               if (pending.name === "getShoppingLists") {
                 const inputResult = getShoppingListsInputSchema.safeParse(
@@ -440,6 +442,12 @@ export const chatRouter = createTRPCRouter({
                 const outputResult = getShoppingListsResultSchema.safeParse(
                   chunk.output,
                 );
+                console.log("[DEBUG] getShoppingLists parse:", {
+                  inputSuccess: inputResult.success,
+                  inputError: !inputResult.success && inputResult.error,
+                  outputSuccess: outputResult.success,
+                  outputError: !outputResult.success && outputResult.error,
+                });
                 if (inputResult.success && outputResult.success) {
                   completedToolCalls.push({
                     id: chunk.toolCallId,
@@ -455,6 +463,12 @@ export const chatRouter = createTRPCRouter({
                 const outputResult = addToShoppingListResultSchema.safeParse(
                   chunk.output,
                 );
+                console.log("[DEBUG] addToShoppingList parse:", {
+                  inputSuccess: inputResult.success,
+                  inputError: !inputResult.success && inputResult.error,
+                  outputSuccess: outputResult.success,
+                  outputError: !outputResult.success && outputResult.error,
+                });
                 if (inputResult.success && outputResult.success) {
                   completedToolCalls.push({
                     id: chunk.toolCallId,
@@ -488,6 +502,7 @@ export const chatRouter = createTRPCRouter({
           | undefined;
 
         // Final write with complete status and tool calls
+        console.log("[DEBUG] Persisting tool calls:", completedToolCalls);
         await ctx.db
           .update(chatMessages)
           .set({

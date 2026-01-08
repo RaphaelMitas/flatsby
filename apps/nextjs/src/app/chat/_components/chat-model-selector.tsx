@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatModel } from "@flatsby/validators/chat";
+import type { ChatModel } from "@flatsby/validators/models";
 import { useState } from "react";
 import { CheckIcon } from "lucide-react";
 
@@ -17,7 +17,7 @@ import {
   ModelSelectorTrigger,
 } from "@flatsby/ui/ai-elements";
 import { Button } from "@flatsby/ui/button";
-import { CHAT_MODELS } from "@flatsby/validators/chat";
+import { CHAT_MODELS } from "@flatsby/validators/models";
 
 export function getModelDisplayName(
   modelId: string | null | undefined,

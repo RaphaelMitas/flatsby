@@ -1,7 +1,8 @@
 "use client";
 
-import type { ChatModel, ChatSettings } from "@flatsby/validators/chat";
 import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
+import type { ChatSettings } from "@flatsby/validators/chat";
+import type { ChatModel } from "@flatsby/validators/models";
 import type { FormEvent } from "react";
 
 import {
@@ -19,7 +20,10 @@ type PromptStatus = "ready" | "submitted" | "streaming" | "error";
 interface ChatFooterProps {
   input: string;
   onInputChange: (value: string) => void;
-  onSubmit: (message: PromptInputMessage, event: FormEvent<HTMLFormElement>) => void;
+  onSubmit: (
+    message: PromptInputMessage,
+    event: FormEvent<HTMLFormElement>,
+  ) => void;
   selectedModel: ChatModel | null;
   onModelChange: (model: ChatModel) => void;
   settings: ChatSettings;

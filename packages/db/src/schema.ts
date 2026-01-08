@@ -1,3 +1,4 @@
+import type { PersistedToolCall } from "@flatsby/validators/chat";
 import { relations } from "drizzle-orm";
 import {
   boolean,
@@ -12,8 +13,6 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-
-import type { PersistedToolCall } from "@flatsby/validators/chat";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -312,7 +311,6 @@ export const chatMessages = createTable(
     role: varchar("role", { length: 20 }).notNull(), // "user" | "assistant" | "system"
     content: text("content").notNull().default(""),
     status: varchar("status", { length: 20 }).default("pending").notNull(), // "pending" | "streaming" | "complete" | "error"
-    tokenCount: integer("token_count"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     // AI generation tracking
     generationId: text("generation_id"), // gen_<ulid> from providerMetadata.gateway

@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { chatModelSchema } from "./chat";
+import { chatModelSchema } from "./models";
 
 export const userNameSchema = z
   .string()

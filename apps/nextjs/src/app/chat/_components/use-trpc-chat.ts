@@ -1,10 +1,7 @@
 "use client";
 
-import type {
-  ChatModel,
-  ChatSettings,
-  ChatUIMessage,
-} from "@flatsby/validators/chat";
+import type { ChatSettings, ChatUIMessage } from "@flatsby/validators/chat";
+import type { ChatModel } from "@flatsby/validators/models";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
