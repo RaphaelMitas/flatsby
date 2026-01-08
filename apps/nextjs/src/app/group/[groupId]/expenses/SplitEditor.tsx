@@ -9,7 +9,6 @@ import type {
 import type { UseFormReturn } from "react-hook-form";
 import { DollarSign, Equal, Percent } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -25,6 +24,7 @@ import {
   FormMessage,
 } from "@flatsby/ui/form";
 import { Separator } from "@flatsby/ui/separator";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { decimalToCents } from "@flatsby/validators/expenses/conversion";
 import {
   derivePercentagesFromAmounts,
@@ -249,15 +249,11 @@ export function SplitEditor({
                   onClick={() => toggleMember(member.id)}
                   className="flex h-auto flex-col items-center gap-2 py-3"
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      alt={member.user.name}
-                      src={member.user.image ?? ""}
-                    />
-                    <AvatarFallback className="text-muted-foreground bg-muted text-xs">
-                      {member.user.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    name={member.user.name}
+                    image={member.user.image}
+                    size="md"
+                  />
                   <span className="w-full truncate text-xs">
                     {member.user.name}
                   </span>
@@ -291,15 +287,11 @@ export function SplitEditor({
               return (
                 <div key={split.groupMemberId} className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage
-                        alt={memberName}
-                        src={member?.user.image ?? undefined}
-                      />
-                      <AvatarFallback className="text-xs">
-                        {memberName.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                      name={memberName}
+                      image={member?.user.image}
+                      size="sm"
+                    />
                     <span className="flex-1 text-sm font-medium">
                       {memberName}
                     </span>

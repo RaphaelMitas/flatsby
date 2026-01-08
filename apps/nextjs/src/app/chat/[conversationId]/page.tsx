@@ -96,6 +96,14 @@ export default async function ChatConversationPage({
             input: tc.input,
             output: tc.output,
           });
+        } else if (tc.name === "getGroupMembers") {
+          parts.push({
+            type: "tool-getGroupMembers",
+            toolCallId: tc.id,
+            state: "output-available",
+            input: tc.input,
+            output: tc.output,
+          });
         } else if (tc.name === "getDebts") {
           parts.push({
             type: "tool-getDebts",

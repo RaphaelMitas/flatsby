@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useCustomer } from "autumn-js/react";
 import { ChevronsUpDown, LogOut, Settings, Snowflake } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +19,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@flatsby/ui/sidebar";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 
 import { useWinterEffects } from "~/app/_components/layout/winterTheme/use-winter-effects";
 import { useTRPC } from "~/trpc/react";
@@ -51,12 +51,12 @@ export function SidebarUserMenu() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user?.image ?? undefined} alt={user?.name} />
-                <AvatarFallback className="rounded-lg">
-                  {user?.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                name={user?.name ?? ""}
+                image={user?.image}
+                size="md"
+                className="rounded-lg"
+              />
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <div className="flex items-center gap-2">
                   <span className="truncate font-semibold">{user?.name}</span>

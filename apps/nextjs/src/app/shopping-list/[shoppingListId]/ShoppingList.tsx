@@ -201,8 +201,10 @@ const ShoppingListInner = ({
       return (
         <OptimisticShoppingListItem
           key={item.id}
-          {...item}
-          groupMembers={shoppingList?.group.groupMembers ?? []}
+          id={item.id}
+          name={item.name}
+          completed={item.completed}
+          categoryId={item.categoryId}
         />
       );
     return (

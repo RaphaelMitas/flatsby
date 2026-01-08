@@ -3,6 +3,7 @@
 import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
 import type {
   ChatUIMessage,
+  GroupMemberInfo,
   ShoppingListInfo,
 } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
@@ -30,8 +31,7 @@ import { costToCredits, formatCredits } from "@flatsby/validators/billing";
 
 import { ChatFooter } from "./chat-footer";
 import { getModelDisplayName } from "./chat-model-selector";
-import { ShoppingListSelector } from "./shopping-list-selector";
-import { ShoppingListToolCard } from "./shopping-list-tool-card";
+import { ChatToolResults } from "./chat-tool-results";
 import { useTRPCChat } from "./use-trpc-chat";
 
 interface ChatInterfaceProps {
@@ -101,6 +101,18 @@ export function ChatInterface({
     [handleSubmit, isLoading],
   );
 
+  // Handle member selection - appends member name to input field
+  const handleMemberSelect = useCallback(
+    (member: GroupMemberInfo) => {
+      if (isLoading) return;
+      setInput((prev) => {
+        const trimmed = prev.trim();
+        return trimmed ? `${trimmed} ${member.name}` : member.name;
+      });
+    },
+    [isLoading, setInput],
+  );
+
   // Helper to get text content from a message
   const getMessageContent = (msg: ChatUIMessage): string => {
     return msg.parts
@@ -137,20 +149,6 @@ export function ChatInterface({
                   part.state === "input-available",
               );
 
-              // Extract tool results for shopping list
-              // AI SDK combines tool name into type like "tool-addToShoppingList"
-              const addToListResults = message.parts.filter(
-                (part) =>
-                  part.type === "tool-addToShoppingList" &&
-                  part.state === "output-available",
-              );
-              // Extract getShoppingLists results for clickable selection
-              const getListsResults = message.parts.filter(
-                (part) =>
-                  part.type === "tool-getShoppingLists" &&
-                  part.state === "output-available",
-              );
-              // Only show selector if this is the last message (not already responded)
               const isLastMessage = index === messages.length - 1;
               return (
                 <Message key={message.id} from={message.role}>
@@ -170,25 +168,13 @@ export function ChatInterface({
                         ) : isLoading && index === messages.length - 1 ? (
                           <Loader size={20} />
                         ) : null}
-                        {addToListResults.map((part) => {
-                          return (
-                            <ShoppingListToolCard
-                              key={part.toolCallId}
-                              result={part.output}
-                            />
-                          );
-                        })}
-                        {getListsResults.map((part) => {
-                          if (!part.output.userShouldSelect) return null;
-                          return (
-                            <ShoppingListSelector
-                              key={part.toolCallId}
-                              lists={part.output.lists}
-                              onSelect={handleShoppingListSelect}
-                              disabled={isLoading || !isLastMessage}
-                            />
-                          );
-                        })}
+                        <ChatToolResults
+                          message={message}
+                          isLastMessage={isLastMessage}
+                          isLoading={isLoading}
+                          onShoppingListSelect={handleShoppingListSelect}
+                          onMemberSelect={handleMemberSelect}
+                        />
                       </>
                     ) : (
                       <p className="whitespace-pre-wrap">{content}</p>

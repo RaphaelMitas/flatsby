@@ -16,7 +16,6 @@ import {
 import { useForm } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -28,6 +27,7 @@ import {
 import { Form, FormControl, FormField } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { updateUserNameFormSchema } from "@flatsby/validators/user";
 
 import { useTRPC } from "~/trpc/react";
@@ -149,12 +149,7 @@ const UserDetails = () => {
           <div className="grid gap-2">
             <Label htmlFor="profile-picture">Profile Picture</Label>
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage alt="User Avatar" />
-                <AvatarFallback>
-                  {user.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar name={user.name} image={user.image} size="2xl" />
               <Button disabled variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
                 Upload New

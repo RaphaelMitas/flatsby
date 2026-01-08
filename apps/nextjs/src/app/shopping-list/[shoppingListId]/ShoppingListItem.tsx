@@ -44,9 +44,12 @@ export interface ShoppingListItemProps {
   }[];
 }
 
-type OptimisticShoppingListItemProps = ShoppingListItemProps["item"] & {
-  groupMembers: ShoppingListItemProps["groupMembers"];
-};
+interface OptimisticShoppingListItemProps {
+  id: number;
+  name: string;
+  completed: boolean;
+  categoryId: CategoryIdWithAiAutoSelect | null;
+}
 
 export const OptimisticShoppingListItem = ({
   id,
@@ -54,7 +57,7 @@ export const OptimisticShoppingListItem = ({
   completed,
   categoryId,
 }: OptimisticShoppingListItemProps) => {
-  const categoryData = getCategoryData(categoryId);
+  const categoryData = categoryId ? getCategoryData(categoryId) : undefined;
 
   return (
     <div
@@ -79,7 +82,6 @@ export const OptimisticShoppingListItem = ({
             className={cn(
               "line-clamp-2 flex items-center gap-2 text-xs",
               categoryData.colorClasses.base,
-              categoryData.colorClasses.hover,
             )}
           >
             <categoryData.icon size={20} />

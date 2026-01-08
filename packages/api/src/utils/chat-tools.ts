@@ -4,6 +4,7 @@ import type {
   AddToShoppingListResult,
   GetDebtsResult,
   GetExpensesResult,
+  GetGroupMembersResult,
   GetShoppingListItemsResult,
   GetShoppingListsResult,
   MarkItemCompleteResult,
@@ -14,7 +15,7 @@ import type { Tool } from "ai";
 import { tool, zodSchema } from "ai";
 import { z } from "zod/v4";
 
-import { and, desc, eq, ilike } from "@flatsby/db";
+import { and, asc, desc, eq, ilike } from "@flatsby/db";
 import {
   expenses,
   expenseSplits,
@@ -57,12 +58,15 @@ CATEGORIES for shopping items:
 produce, meat-seafood, dairy, bakery, frozen-foods, beverages, snacks, pantry, personal-care, household, other`;
 
 const EXPENSE_PROMPT = `EXPENSE TOOLS:
+- getGroupMembers: Get all group members. Set userShouldSelect=true to show member buttons.
 - getDebts: See who owes money to whom.
 - addExpense: Record a new expense with equal split.
 - getExpenses: View recent expenses.
 
 EXPENSE RULES:
-- Use member display names (e.g., "John", "Jane").
+- When user says "I paid" or clearly indicates they paid, use addExpense with currentUserPaid=true.
+- When unclear who paid, call getGroupMembers with userShouldSelect=true, context="payer" to show member buttons.
+- After user selects a member, call addExpense with paidByMemberName.
 - Member names are matched case-insensitively.`;
 
 /**
@@ -95,6 +99,10 @@ export function buildToolsSystemPrompt(options: ChatToolsOptions): string {
 
   sections.push(
     "All tools are scoped to the current group - you cannot access other groups.",
+  );
+
+  sections.push(
+    "IMPORTANT: Tool results are automatically displayed in the UI. Do NOT repeat or list the data returned by tools in your response. Just acknowledge the action briefly (e.g., 'Here are your items' or 'Added to the list') without listing the items/expenses/debts yourself.",
   );
 
   return sections.join("\n\n");
@@ -316,16 +324,21 @@ export function createChatTools(
         const items = await ctx.db.query.shoppingListItems.findMany({
           where: whereClause,
           columns: { id: true, name: true, categoryId: true, completed: true },
+          orderBy: [
+            asc(shoppingListItems.completed), // unchecked first
+            desc(shoppingListItems.createdAt), // then by most recent
+          ],
           limit: 50,
         });
 
+        const mappedItems = items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          categoryId: i.categoryId as CategoryId,
+          completed: i.completed,
+        }));
         return {
-          items: items.map((i) => ({
-            id: i.id,
-            name: i.name,
-            categoryId: i.categoryId as CategoryId,
-            completed: i.completed,
-          })),
+          items: mappedItems,
           listName: list.name,
           totalCount: items.length,
         };
@@ -468,6 +481,61 @@ export function createChatTools(
   // Expense Tools
   // =========================================================================
   if (options.expenses) {
+    tools.getGroupMembers = tool({
+      description:
+        "Get all members in the current group. Set userShouldSelect=true to show member buttons for the user to pick.",
+      inputSchema: zodSchema(
+        z.object({
+          userShouldSelect: z
+            .boolean()
+            .describe("Set to true to show member buttons for selection."),
+          context: z
+            .enum(["payer", "split"])
+            .optional()
+            .describe("Context for the selection (e.g., 'payer' for who paid)"),
+        }),
+      ),
+      execute: async ({
+        userShouldSelect,
+        context,
+      }: {
+        userShouldSelect: boolean;
+        context?: "payer" | "split";
+      }): Promise<GetGroupMembersResult> => {
+        const group = await ctx.db.query.groups.findFirst({
+          where: eq(groups.id, groupId),
+          columns: { id: true, name: true },
+        });
+
+        if (!group) {
+          return {
+            members: [],
+            userShouldSelect,
+            context,
+            groupName: "",
+          };
+        }
+
+        const members = await ctx.db.query.groupMembers.findMany({
+          where: eq(groupMembers.groupId, groupId),
+          with: { user: { columns: { id: true, name: true, image: true } } },
+        });
+
+        return {
+          members: members.map((m) => ({
+            id: m.id,
+            userId: m.user.id,
+            name: m.user.name,
+            image: m.user.image,
+            isCurrentUser: m.user.id === ctx.session.user.id,
+          })),
+          userShouldSelect,
+          context,
+          groupName: group.name,
+        };
+      },
+    });
+
     tools.getDebts = tool({
       description: "Get who owes money to whom in the current group.",
       inputSchema: zodSchema(z.object({})),
@@ -541,13 +609,20 @@ export function createChatTools(
 
     tools.addExpense = tool({
       description:
-        "Add a new expense with equal split. Specify who paid and optionally who to split among.",
+        "Add a new expense with equal split. Use currentUserPaid=true when user paid, or paidByMemberName for others.",
       inputSchema: zodSchema(
         z.object({
           amountInCents: z.number().min(1).describe("Amount in cents"),
           currency: z.enum(["EUR", "USD", "GBP"]).describe("Currency"),
           description: z.string().describe("What was this expense for"),
-          paidByMemberName: z.string().describe("Name of person who paid"),
+          paidByMemberName: z
+            .string()
+            .optional()
+            .describe("Name of person who paid (if not current user)"),
+          currentUserPaid: z
+            .boolean()
+            .optional()
+            .describe("Set to true if the current user paid"),
           splitAmongNames: z
             .array(z.string())
             .optional()
@@ -561,12 +636,14 @@ export function createChatTools(
         currency,
         description,
         paidByMemberName,
+        currentUserPaid,
         splitAmongNames,
       }: {
         amountInCents: number;
         currency: "EUR" | "USD" | "GBP";
         description: string;
-        paidByMemberName: string;
+        paidByMemberName?: string;
+        currentUserPaid?: boolean;
         splitAmongNames?: string[];
       }): Promise<AddExpenseResult> => {
         // Get all members
@@ -584,17 +661,26 @@ export function createChatTools(
           };
         }
 
-        // Find who paid (case-insensitive)
-        const payer = members.find(
-          (m) => m.user.name.toLowerCase() === paidByMemberName.toLowerCase(),
-        );
+        // Find who paid
+        let payer;
+        if (currentUserPaid) {
+          payer = members.find((m) => m.user.id === ctx.session.user.id);
+        } else if (paidByMemberName) {
+          payer = members.find(
+            (m) => m.user.name.toLowerCase() === paidByMemberName.toLowerCase(),
+          );
+        }
 
         if (!payer) {
           return {
             success: false,
             description,
             splits: [],
-            error: `Member "${paidByMemberName}" not found. Available: ${members.map((m) => m.user.name).join(", ")}`,
+            error: currentUserPaid
+              ? "Current user not found in group"
+              : paidByMemberName
+                ? `Member "${paidByMemberName}" not found. Available: ${members.map((m) => m.user.name).join(", ")}`
+                : "Either paidByMemberName or currentUserPaid is required",
           };
         }
 

@@ -118,6 +118,32 @@ export const removeItemResultSchema = z.object({
 export type RemoveItemResult = z.infer<typeof removeItemResultSchema>;
 
 // ============================================================================
+// Group Member Tools
+// ============================================================================
+
+export const groupMemberInfoSchema = z.object({
+  id: z.number(),
+  userId: z.string(),
+  name: z.string(),
+  image: z.string().nullable(),
+  isCurrentUser: z.boolean(),
+});
+export type GroupMemberInfo = z.infer<typeof groupMemberInfoSchema>;
+
+export const getGroupMembersInputSchema = z.object({
+  userShouldSelect: z.boolean(),
+  context: z.enum(["payer", "split"]).optional(),
+});
+
+export const getGroupMembersResultSchema = z.object({
+  members: z.array(groupMemberInfoSchema),
+  userShouldSelect: z.boolean(),
+  context: z.enum(["payer", "split"]).optional(),
+  groupName: z.string(),
+});
+export type GetGroupMembersResult = z.infer<typeof getGroupMembersResultSchema>;
+
+// ============================================================================
 // Expense Tools
 // ============================================================================
 
@@ -142,7 +168,8 @@ export const addExpenseInputSchema = z.object({
   amountInCents: z.number(),
   currency: currencyCodeSchema,
   description: z.string(),
-  paidByMemberName: z.string(),
+  paidByMemberName: z.string().optional(),
+  currentUserPaid: z.boolean().optional(),
   splitAmongNames: z.array(z.string()).optional(),
 });
 
@@ -219,6 +246,13 @@ const removeItemToolCallSchema = z.object({
   output: removeItemResultSchema,
 });
 
+const getGroupMembersToolCallSchema = z.object({
+  id: z.string(),
+  name: z.literal("getGroupMembers"),
+  input: getGroupMembersInputSchema,
+  output: getGroupMembersResultSchema,
+});
+
 const getDebtsToolCallSchema = z.object({
   id: z.string(),
   name: z.literal("getDebts"),
@@ -246,6 +280,7 @@ export const persistedToolCallSchema = z.discriminatedUnion("name", [
   getShoppingListItemsToolCallSchema,
   markItemCompleteToolCallSchema,
   removeItemToolCallSchema,
+  getGroupMembersToolCallSchema,
   getDebtsToolCallSchema,
   addExpenseToolCallSchema,
   getExpensesToolCallSchema,
@@ -282,6 +317,11 @@ export const chatTools = {
     description: "Remove an item from a shopping list",
     inputSchema: removeItemInputSchema,
     outputSchema: removeItemResultSchema,
+  }),
+  getGroupMembers: tool({
+    description: "Get all members in the current group for selection",
+    inputSchema: getGroupMembersInputSchema,
+    outputSchema: getGroupMembersResultSchema,
   }),
   getDebts: tool({
     description: "Get who owes money to whom in the current group",
