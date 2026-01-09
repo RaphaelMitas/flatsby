@@ -31,10 +31,14 @@ import {
   getShoppingListsResultSchema,
   markItemCompleteInputSchema,
   markItemCompleteResultSchema,
+  persistedToolCallOutputUpdateSchema,
   removeItemInputSchema,
   removeItemResultSchema,
 } from "@flatsby/validators/chat/tools";
-import { chatModelSchema, modelSupportsTools } from "@flatsby/validators/models";
+import {
+  chatModelSchema,
+  modelSupportsTools,
+} from "@flatsby/validators/models";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
@@ -160,7 +164,7 @@ export const chatRouter = createTRPCRouter({
   updateConversationModel: protectedProcedure
     .input(
       z.object({
-        conversationId: z.string().uuid(),
+        conversationId: z.uuid(),
         model: z.string(),
       }),
     )
@@ -196,7 +200,7 @@ export const chatRouter = createTRPCRouter({
    * Soft delete a conversation
    */
   deleteConversation: protectedProcedure
-    .input(z.object({ conversationId: z.string().uuid() }))
+    .input(z.object({ conversationId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const conversation = await ctx.db.query.conversations.findFirst({
         where: and(
@@ -769,4 +773,71 @@ export const chatRouter = createTRPCRouter({
       }
     }
   }),
+
+  /**
+   * Update a tool call's output in the database
+   * Used after user confirms/cancels split editor to update persisted state
+   */
+  updateToolCallOutput: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.uuid(),
+        toolCallId: z.string(),
+        outputUpdate: persistedToolCallOutputUpdateSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Get the message
+      const message = await ctx.db.query.chatMessages.findFirst({
+        where: eq(chatMessages.id, input.messageId),
+        with: {
+          conversation: {
+            columns: { userId: true },
+          },
+        },
+      });
+
+      if (!message) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Message not found",
+        });
+      }
+
+      // Verify ownership
+      if (message.conversation.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Not authorized",
+        });
+      }
+
+      // Update the specific tool call's output
+      // Cast to unknown first to avoid strict type checking on JSON column
+      const toolCalls = message.toolCalls;
+
+      if (!toolCalls) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Message has no tool calls",
+        });
+      }
+
+      const updatedToolCalls = toolCalls.map((tc) => {
+        if (tc.id === input.toolCallId) {
+          return {
+            ...tc,
+            output: { ...tc.output, ...input.outputUpdate },
+          } as PersistedToolCall;
+        }
+        return tc;
+      });
+
+      await ctx.db
+        .update(chatMessages)
+        .set({ toolCalls: updatedToolCalls })
+        .where(eq(chatMessages.id, input.messageId));
+
+      return { success: true };
+    }),
 });

@@ -3,6 +3,7 @@
 import type {
   ChatUIMessage,
   GroupMemberInfo,
+  PersistedToolCallOutputUpdate,
   ShoppingListInfo,
 } from "@flatsby/validators/chat/tools";
 import Link from "next/link";
@@ -22,21 +23,32 @@ import { ChatExpenseCard } from "./chat-expense-card";
 import { MemberSelector } from "./member-selector";
 import { ShoppingListSelector } from "./shopping-list-selector";
 import { ShoppingListToolCard } from "./shopping-list-tool-card";
+import { SplitEditorSelector } from "./split-editor-selector";
 
 interface ChatToolResultsProps {
   message: ChatUIMessage;
+  conversationId: string;
   isLastMessage: boolean;
   isLoading: boolean;
+  groupId?: number;
   onShoppingListSelect: (list: ShoppingListInfo) => void;
   onMemberSelect: (member: GroupMemberInfo) => void;
+  updateToolCallOutput: (
+    messageId: string,
+    toolCallId: string,
+    outputUpdate: PersistedToolCallOutputUpdate,
+  ) => void;
 }
 
 export function ChatToolResults({
   message,
+  conversationId,
   isLastMessage,
   isLoading,
+  groupId,
   onShoppingListSelect,
   onMemberSelect,
+  updateToolCallOutput,
 }: ChatToolResultsProps) {
   // Extract tool results for shopping list
   const addToListResults = message.parts.filter(
@@ -70,8 +82,7 @@ export function ChatToolResults({
 
   const getGroupMembersResults = message.parts.filter(
     (part) =>
-      part.type === "tool-getGroupMembers" &&
-      part.state === "output-available",
+      part.type === "tool-getGroupMembers" && part.state === "output-available",
   );
 
   const getDebtsResults = message.parts.filter(
@@ -91,12 +102,10 @@ export function ChatToolResults({
 
   return (
     <>
-      {/* addToShoppingList results */}
       {addToListResults.map((part) => (
         <ShoppingListToolCard key={part.toolCallId} result={part.output} />
       ))}
 
-      {/* getShoppingLists results - show selector if user should select */}
       {getListsResults.map((part) => {
         if (!part.output.userShouldSelect) return null;
         return (
@@ -109,7 +118,6 @@ export function ChatToolResults({
         );
       })}
 
-      {/* getShoppingListItems - Scrollable list */}
       {getItemsResults.map((part) => {
         return (
           <Card key={part.toolCallId} className="my-2 max-w-sm">
@@ -142,7 +150,6 @@ export function ChatToolResults({
         );
       })}
 
-      {/* markItemComplete - Show item with updated state */}
       {markCompleteResults.map((part) => (
         <div key={part.toolCallId} className="my-2">
           {part.output.success ? (
@@ -163,7 +170,6 @@ export function ChatToolResults({
         </div>
       ))}
 
-      {/* removeItem - Inline feedback */}
       {removeItemResults.map((part) => (
         <div
           key={part.toolCallId}
@@ -183,7 +189,6 @@ export function ChatToolResults({
         </div>
       ))}
 
-      {/* getGroupMembers - Member selector */}
       {getGroupMembersResults.map((part) => {
         if (!part.output.userShouldSelect) return null;
         return (
@@ -197,7 +202,6 @@ export function ChatToolResults({
         );
       })}
 
-      {/* getDebts - Debt list */}
       {getDebtsResults.map((part) => (
         <Card key={part.toolCallId} className="my-2 max-w-sm">
           <CardHeader className="pb-2">
@@ -233,25 +237,77 @@ export function ChatToolResults({
         </Card>
       ))}
 
-      {/* addExpense - Using ChatExpenseCard */}
-      {addExpenseResults.map((part) =>
-        part.output.success && part.output.expenseId ? (
-          <ChatExpenseCard
-            key={part.toolCallId}
-            expenseId={part.output.expenseId}
-          />
-        ) : (
-          <div
-            key={part.toolCallId}
-            className="my-1 flex items-center gap-2 text-sm"
-          >
-            <AlertCircle className="text-destructive size-4" />
-            <span className="text-destructive">{part.output.error}</span>
-          </div>
-        ),
-      )}
+      {addExpenseResults.map((part) => {
+        if (
+          part.output.success &&
+          part.output.userShouldConfirmSplits &&
+          part.output.pendingExpense
+        ) {
+          // Need database message ID (UUID) for tool call updates
+          const dbMessageId = message.metadata?.dbMessageId;
+          if (!dbMessageId) {
+            return (
+              <div
+                key={part.toolCallId}
+                className="my-1 flex items-center gap-2 text-sm"
+              >
+                <AlertCircle className="text-muted-foreground size-4" />
+                <span className="text-muted-foreground">
+                  Reload page to confirm this expense
+                </span>
+              </div>
+            );
+          }
+          if (!groupId) {
+            return (
+              <div
+                key={part.toolCallId}
+                className="my-1 flex items-center gap-2 text-sm"
+              >
+                <AlertCircle className="text-destructive size-4" />
+                <span className="text-destructive">
+                  Please enable expense tools to confirm this expense
+                </span>
+              </div>
+            );
+          }
+          return (
+            <SplitEditorSelector
+              key={part.toolCallId}
+              pendingExpense={part.output.pendingExpense}
+              groupId={groupId}
+              conversationId={conversationId}
+              messageId={message.id}
+              dbMessageId={dbMessageId}
+              toolCallId={part.toolCallId}
+              updateToolCallOutput={updateToolCallOutput}
+              disabled={isLoading || !isLastMessage}
+            />
+          );
+        }
 
-      {/* getExpenses - List of ChatExpenseCards */}
+        if (part.output.success && part.output.expenseId) {
+          return (
+            <ChatExpenseCard
+              key={part.toolCallId}
+              expenseId={part.output.expenseId}
+            />
+          );
+        }
+
+        if (part.output.error) {
+          return (
+            <div
+              key={part.toolCallId}
+              className="my-1 flex items-center gap-2 text-sm"
+            >
+              <AlertCircle className="text-destructive size-4" />
+              <span className="text-destructive">{part.output.error}</span>
+            </div>
+          );
+        }
+      })}
+
       {getExpensesResults.map((part) => (
         <div key={part.toolCallId} className="my-2 space-y-2">
           <p className="text-muted-foreground text-sm">

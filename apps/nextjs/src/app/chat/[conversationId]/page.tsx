@@ -140,6 +140,7 @@ export default async function ChatConversationPage({
       metadata: {
         model: chatModelSchema.safeParse(m.model).data,
         cost: m.cost ?? undefined,
+        dbMessageId: m.id, // Store DB message ID for tool call updates
       },
     };
   });

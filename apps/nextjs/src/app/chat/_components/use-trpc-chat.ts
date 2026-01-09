@@ -1,7 +1,10 @@
 "use client";
 
 import type { ChatSettings } from "@flatsby/validators/chat/messages";
-import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
+import type {
+  ChatUIMessage,
+  PersistedToolCallOutputUpdate,
+} from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
@@ -11,6 +14,21 @@ import { createTRPCChatTransport } from "@flatsby/ui/chat-transport";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
+
+type OutputAvailableToolPart = Extract<
+  ChatUIMessage["parts"][number],
+  { state: "output-available"; toolCallId: string; output: object }
+>;
+
+function withUpdatedOutput<T extends OutputAvailableToolPart>(
+  part: T,
+  update: PersistedToolCallOutputUpdate,
+): T {
+  return {
+    ...part,
+    output: { ...part.output, ...update },
+  };
+}
 
 const DEFAULT_SETTINGS: ChatSettings = {
   shoppingListToolsEnabled: false,
@@ -168,6 +186,38 @@ export function useTRPCChat({
     [chat],
   );
 
+  // Helper to update a tool call's output in local state (for immediate UI updates)
+  const updateToolCallOutput = useCallback(
+    (
+      messageId: string,
+      toolCallId: string,
+      outputUpdate: PersistedToolCallOutputUpdate,
+    ) => {
+      chat.setMessages((prevMessages) =>
+        prevMessages.map((msg): ChatUIMessage => {
+          if (msg.id !== messageId) return msg;
+          return {
+            ...msg,
+            parts: msg.parts.map((part) => {
+              if (
+                "toolCallId" in part &&
+                part.toolCallId === toolCallId &&
+                "state" in part &&
+                part.state === "output-available" &&
+                "output" in part &&
+                part.type !== "dynamic-tool"
+              ) {
+                return withUpdatedOutput(part, outputUpdate);
+              }
+              return part;
+            }),
+          };
+        }),
+      );
+    },
+    [chat],
+  );
+
   // Handle form submission
   // Accepts optional message parameter to override input state (useful for auto-send on mount)
   const handleSubmit = useCallback(
@@ -186,6 +236,10 @@ export function useTRPCChat({
     [chat, input],
   );
 
+  const anyToolsEnabled =
+    settings.shoppingListToolsEnabled || settings.expenseToolsEnabled;
+  const activeGroupId = anyToolsEnabled ? currentGroup?.id : undefined;
+
   return {
     ...chat,
     input,
@@ -196,6 +250,8 @@ export function useTRPCChat({
     handleModelChange,
     settings,
     updateSettings,
+    activeGroupId,
+    updateToolCallOutput,
     invalidateConversation: () =>
       queryClient.invalidateQueries(
         trpc.chat.getConversation.queryOptions({ conversationId }),

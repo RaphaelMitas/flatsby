@@ -61,6 +61,8 @@ export function ChatInterface({
     handleModelChange,
     settings,
     updateSettings,
+    activeGroupId,
+    updateToolCallOutput,
   } = useTRPCChat({
     conversationId,
     initialMessages,
@@ -170,10 +172,13 @@ export function ChatInterface({
                         ) : null}
                         <ChatToolResults
                           message={message}
+                          conversationId={conversationId}
                           isLastMessage={isLastMessage}
                           isLoading={isLoading}
+                          groupId={activeGroupId}
                           onShoppingListSelect={handleShoppingListSelect}
                           onMemberSelect={handleMemberSelect}
+                          updateToolCallOutput={updateToolCallOutput}
                         />
                       </>
                     ) : (

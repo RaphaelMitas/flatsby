@@ -210,3 +210,33 @@ GitHub Actions runs on PRs and main branch:
 - `pnpm lint && pnpm lint:ws` - Linting + workspace deps check
 - `pnpm format` - Formatting check
 - `pnpm typecheck` - TypeScript validation
+
+## Type Safety Guidelines
+
+This codebase prioritizes full type safety. Follow these rules:
+
+- **Avoid `as` type assertions** - They bypass TypeScript's type checking and can hide bugs
+- **Use type guards** instead of assertions when narrowing types
+- **Fix schemas** rather than casting - If data doesn't match expected types, update the Zod schema to reflect reality
+- **Use `satisfies`** for type checking without widening: `const x = { ... } satisfies MyType`
+- **Prefer `unknown` over `any`** - Forces explicit type narrowing
+- **Let TypeScript infer** when possible - Don't add redundant type annotations
+
+```typescript
+// Bad - type assertion hides potential issues
+const data = response as MyType;
+
+// Good - type guard with runtime check
+if (isMyType(data)) {
+  // data is now MyType
+}
+
+// Good - schema validates at runtime
+const data = mySchema.parse(response);
+
+// Good - satisfies checks type without assertion
+const config = {
+  host: "localhost",
+  port: 3000,
+} satisfies ServerConfig;
+```

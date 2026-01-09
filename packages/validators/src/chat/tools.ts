@@ -2,6 +2,7 @@ import type { UIMessage as AIUIMessage, InferUITools, ToolSet } from "ai";
 import { tool } from "ai";
 import { z } from "zod/v4";
 
+import type { MessageMetadata } from "./messages";
 import { categoryIdSchema } from "../categories";
 import { currencyCodeSchema } from "../expenses/schemas";
 import { groupNameSchema, groupSchema } from "../group";
@@ -102,7 +103,9 @@ export const markItemCompleteResultSchema = z.object({
   completed: z.boolean(),
   error: z.string().optional(),
 });
-export type MarkItemCompleteResult = z.infer<typeof markItemCompleteResultSchema>;
+export type MarkItemCompleteResult = z.infer<
+  typeof markItemCompleteResultSchema
+>;
 
 // removeItem
 export const removeItemInputSchema = z.object({
@@ -163,20 +166,55 @@ export const getDebtsResultSchema = z.object({
 });
 export type GetDebtsResult = z.infer<typeof getDebtsResultSchema>;
 
-// addExpense
+// addExpense - ID-based operations (AI gets IDs from getGroupMembers first)
+export const expenseSplitInputSchema = z.object({
+  groupMemberId: z.number(),
+  amountInCents: z.number(),
+});
+export type ExpenseSplitInput = z.infer<typeof expenseSplitInputSchema>;
+
 export const addExpenseInputSchema = z.object({
   amountInCents: z.number(),
   currency: currencyCodeSchema,
   description: z.string(),
-  paidByMemberName: z.string().optional(),
+
+  // Payer - use ID or currentUserPaid flag
+  paidByGroupMemberId: z.number().optional(),
   currentUserPaid: z.boolean().optional(),
-  splitAmongNames: z.array(z.string()).optional(),
+
+  // Split configuration
+  splitMethod: z.enum(["equal", "custom"]).default("equal"),
+  splits: z.array(expenseSplitInputSchema).optional(), // Required if splitMethod="custom"
+  splitAmongMemberIds: z.array(z.number()).optional(), // For equal split subset
+
+  // UI control - show split editor before creating
+  userShouldConfirmSplits: z.boolean().optional(),
 });
 
 const expenseSplitOutputSchema = z.object({
+  groupMemberId: z.number().optional(), // Optional for backward compatibility with old messages
   memberName: z.string(),
   amountInCents: z.number(),
 });
+export type ExpenseSplitOutput = z.infer<typeof expenseSplitOutputSchema>;
+
+// Pending expense split - requires groupMemberId for split editor to work
+const pendingExpenseSplitSchema = z.object({
+  groupMemberId: z.number(),
+  memberName: z.string(),
+  amountInCents: z.number(),
+});
+
+// Pending expense for userShouldConfirmSplits flow
+export const pendingExpenseSchema = z.object({
+  amountInCents: z.number(),
+  currency: currencyCodeSchema,
+  description: z.string(),
+  paidByGroupMemberId: z.number(),
+  paidByMemberName: z.string(),
+  splits: z.array(pendingExpenseSplitSchema),
+});
+export type PendingExpense = z.infer<typeof pendingExpenseSchema>;
 
 export const addExpenseResultSchema = z.object({
   success: z.boolean(),
@@ -184,6 +222,12 @@ export const addExpenseResultSchema = z.object({
   description: z.string(),
   splits: z.array(expenseSplitOutputSchema),
   error: z.string().optional(),
+
+  // For userShouldConfirmSplits=true - returns pending expense for UI
+  // Nullable because it gets set to null when expense is confirmed/cancelled
+  pendingExpense: pendingExpenseSchema.nullable().optional(),
+  userShouldConfirmSplits: z.boolean().optional(),
+  cancelled: z.boolean().optional(),
 });
 export type AddExpenseResult = z.infer<typeof addExpenseResultSchema>;
 
@@ -288,6 +332,19 @@ export const persistedToolCallSchema = z.discriminatedUnion("name", [
 
 export type PersistedToolCall = z.infer<typeof persistedToolCallSchema>;
 
+// Partial output update schema - for updating specific fields in tool call outputs
+// Used by updateToolCallOutput mutation to modify persisted state (e.g., split editor confirm/cancel)
+export const persistedToolCallOutputUpdateSchema = z.object({
+  // addExpense output updates
+  expenseId: z.number().optional(),
+  userShouldConfirmSplits: z.boolean().optional(),
+  pendingExpense: pendingExpenseSchema.optional().nullable(),
+  cancelled: z.boolean().optional(),
+});
+export type PersistedToolCallOutputUpdate = z.infer<
+  typeof persistedToolCallOutputUpdateSchema
+>;
+
 // ============================================================================
 // AI SDK Tool Definitions (for type inference)
 // ============================================================================
@@ -329,7 +386,8 @@ export const chatTools = {
     outputSchema: getDebtsResultSchema,
   }),
   addExpense: tool({
-    description: "Add a new expense with equal split",
+    description:
+      "Add expense. Use member IDs from getGroupMembers. Set userShouldConfirmSplits=true to let user adjust splits before creating.",
     inputSchema: addExpenseInputSchema,
     outputSchema: addExpenseResultSchema,
   }),
@@ -341,7 +399,5 @@ export const chatTools = {
 } satisfies ToolSet;
 
 export type ChatTools = InferUITools<typeof chatTools>;
-
-import type { MessageMetadata } from "./messages";
 
 export type ChatUIMessage = AIUIMessage<MessageMetadata, never, ChatTools>;

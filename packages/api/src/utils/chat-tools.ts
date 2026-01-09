@@ -58,16 +58,19 @@ CATEGORIES for shopping items:
 produce, meat-seafood, dairy, bakery, frozen-foods, beverages, snacks, pantry, personal-care, household, other`;
 
 const EXPENSE_PROMPT = `EXPENSE TOOLS:
-- getGroupMembers: Get all group members. Set userShouldSelect=true to show member buttons.
+- getGroupMembers: Get all group members with their IDs. Set userShouldSelect=true to show member buttons.
 - getDebts: See who owes money to whom.
-- addExpense: Record a new expense with equal split.
+- addExpense: Record a new expense. Use member IDs from getGroupMembers.
 - getExpenses: View recent expenses.
 
 EXPENSE RULES:
+- ALWAYS call getGroupMembers first to get member IDs before adding expenses. Use IDs (numbers), not names.
 - When user says "I paid" or clearly indicates they paid, use addExpense with currentUserPaid=true.
 - When unclear who paid, call getGroupMembers with userShouldSelect=true, context="payer" to show member buttons.
-- After user selects a member, call addExpense with paidByMemberName.
-- Member names are matched case-insensitively.`;
+- After user selects a member, use their groupMemberId from the getGroupMembers response.
+- For custom splits, use splitMethod="custom" with splits array specifying each member's amount.
+- Set userShouldConfirmSplits=true to let user review/adjust splits before creating the expense.
+- Never show member IDs to users - the UI displays names automatically.`;
 
 /**
  * Builds a system prompt based on which tools are enabled
@@ -609,42 +612,63 @@ export function createChatTools(
 
     tools.addExpense = tool({
       description:
-        "Add a new expense with equal split. Use currentUserPaid=true when user paid, or paidByMemberName for others.",
+        "Add expense. Use member IDs from getGroupMembers. Set userShouldConfirmSplits=true to let user adjust splits.",
       inputSchema: zodSchema(
         z.object({
           amountInCents: z.number().min(1).describe("Amount in cents"),
           currency: z.enum(["EUR", "USD", "GBP"]).describe("Currency"),
           description: z.string().describe("What was this expense for"),
-          paidByMemberName: z
-            .string()
+          paidByGroupMemberId: z
+            .number()
             .optional()
-            .describe("Name of person who paid (if not current user)"),
+            .describe("Group member ID of who paid (from getGroupMembers)"),
           currentUserPaid: z
             .boolean()
             .optional()
             .describe("Set to true if the current user paid"),
-          splitAmongNames: z
-            .array(z.string())
+          splitMethod: z
+            .enum(["equal", "custom"])
+            .default("equal")
+            .describe("How to split: 'equal' or 'custom'"),
+          splits: z
+            .array(
+              z.object({
+                groupMemberId: z.number(),
+                amountInCents: z.number(),
+              }),
+            )
             .optional()
-            .describe(
-              "Names of people to split among (defaults to all members)",
-            ),
+            .describe("Custom split amounts (required if splitMethod='custom')"),
+          splitAmongMemberIds: z
+            .array(z.number())
+            .optional()
+            .describe("Member IDs to split among (for equal split subset)"),
+          userShouldConfirmSplits: z
+            .boolean()
+            .optional()
+            .describe("Show split editor for user to review/adjust before creating"),
         }),
       ),
       execute: async ({
         amountInCents,
         currency,
         description,
-        paidByMemberName,
+        paidByGroupMemberId,
         currentUserPaid,
-        splitAmongNames,
+        splitMethod = "equal",
+        splits: customSplits,
+        splitAmongMemberIds,
+        userShouldConfirmSplits,
       }: {
         amountInCents: number;
         currency: "EUR" | "USD" | "GBP";
         description: string;
-        paidByMemberName?: string;
+        paidByGroupMemberId?: number;
         currentUserPaid?: boolean;
-        splitAmongNames?: string[];
+        splitMethod?: "equal" | "custom";
+        splits?: { groupMemberId: number; amountInCents: number }[];
+        splitAmongMemberIds?: number[];
+        userShouldConfirmSplits?: boolean;
       }): Promise<AddExpenseResult> => {
         // Get all members
         const members = await ctx.db.query.groupMembers.findMany({
@@ -661,14 +685,12 @@ export function createChatTools(
           };
         }
 
-        // Find who paid
+        // Find who paid - by ID or currentUserPaid flag
         let payer;
         if (currentUserPaid) {
           payer = members.find((m) => m.user.id === ctx.session.user.id);
-        } else if (paidByMemberName) {
-          payer = members.find(
-            (m) => m.user.name.toLowerCase() === paidByMemberName.toLowerCase(),
-          );
+        } else if (paidByGroupMemberId) {
+          payer = members.find((m) => m.id === paidByGroupMemberId);
         }
 
         if (!payer) {
@@ -678,38 +700,88 @@ export function createChatTools(
             splits: [],
             error: currentUserPaid
               ? "Current user not found in group"
-              : paidByMemberName
-                ? `Member "${paidByMemberName}" not found. Available: ${members.map((m) => m.user.name).join(", ")}`
-                : "Either paidByMemberName or currentUserPaid is required",
+              : paidByGroupMemberId
+                ? `Member with ID ${paidByGroupMemberId} not found`
+                : "Either paidByGroupMemberId or currentUserPaid is required",
           };
         }
 
-        // Determine who to split among
-        let splitMembers = members;
-        if (splitAmongNames && splitAmongNames.length > 0) {
-          splitMembers = [];
-          for (const name of splitAmongNames) {
-            const member = members.find(
-              (m) => m.user.name.toLowerCase() === name.toLowerCase(),
-            );
-            if (!member) {
+        // Calculate splits based on method
+        let calculatedSplits: { groupMemberId: number; amountInCents: number; percentage: number | null }[];
+
+        if (splitMethod === "custom" && customSplits && customSplits.length > 0) {
+          // Verify all member IDs exist
+          const validMemberIds: number[] = [];
+          for (const split of customSplits) {
+            if (!members.some((m) => m.id === split.groupMemberId)) {
               return {
                 success: false,
                 description,
                 splits: [],
-                error: `Member "${name}" not found`,
+                error: `Member with ID ${split.groupMemberId} not found`,
               };
             }
-            splitMembers.push(member);
+            validMemberIds.push(split.groupMemberId);
           }
+
+          // Check if custom splits sum to total - if not, auto-correct with equal distribution
+          const splitTotal = customSplits.reduce((sum, s) => sum + s.amountInCents, 0);
+          if (splitTotal !== amountInCents) {
+            // Auto-correct: redistribute equally among the specified members
+            calculatedSplits = distributeEqualAmounts(validMemberIds, amountInCents);
+          } else {
+            calculatedSplits = customSplits.map((s) => ({
+              ...s,
+              percentage: (s.amountInCents / amountInCents) * 100,
+            }));
+          }
+        } else {
+          // Equal split among specified members or all
+          const memberIds = splitAmongMemberIds && splitAmongMemberIds.length > 0
+            ? splitAmongMemberIds
+            : members.map((m) => m.id);
+
+          // Verify all member IDs exist
+          for (const memberId of memberIds) {
+            if (!members.some((m) => m.id === memberId)) {
+              return {
+                success: false,
+                description,
+                splits: [],
+                error: `Member with ID ${memberId} not found`,
+              };
+            }
+          }
+
+          calculatedSplits = distributeEqualAmounts(memberIds, amountInCents);
         }
 
-        // Calculate equal splits
-        const memberIds = splitMembers.map((m) => m.id);
-        const calculatedSplits = distributeEqualAmounts(
-          memberIds,
-          amountInCents,
-        );
+        // Map member IDs to names for output
+        const memberIdToName = new Map(members.map((m) => [m.id, m.user.name]));
+
+        const outputSplits = calculatedSplits.map((s) => ({
+          groupMemberId: s.groupMemberId,
+          memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
+          amountInCents: s.amountInCents,
+        }));
+
+        // If userShouldConfirmSplits, return pending expense for UI
+        if (userShouldConfirmSplits) {
+          return {
+            success: true,
+            description,
+            splits: outputSplits,
+            userShouldConfirmSplits: true,
+            pendingExpense: {
+              amountInCents,
+              currency,
+              description,
+              paidByGroupMemberId: payer.id,
+              paidByMemberName: payer.user.name,
+              splits: outputSplits,
+            },
+          };
+        }
 
         // Get current user's membership for createdBy
         const currentMembership = members.find(
@@ -727,7 +799,7 @@ export function createChatTools(
             description,
             expenseDate: new Date(),
             createdByGroupMemberId: currentMembership?.id ?? payer.id,
-            splitMethod: "equal",
+            splitMethod: splitMethod === "custom" ? "custom" : "equal",
           })
           .returning({ id: expenses.id });
 
@@ -750,19 +822,11 @@ export function createChatTools(
 
         await ctx.db.insert(expenseSplits).values(splitValues);
 
-        // Map back to member names for result
-        const memberIdToName = new Map(
-          splitMembers.map((m) => [m.id, m.user.name]),
-        );
-
         return {
           success: true,
           expenseId: expense.id,
           description,
-          splits: calculatedSplits.map((s) => ({
-            memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
-            amountInCents: s.amountInCents,
-          })),
+          splits: outputSplits,
         };
       },
     });

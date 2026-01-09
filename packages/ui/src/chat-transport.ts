@@ -183,7 +183,11 @@ export function createTRPCChatTransport({
               }
               controller.enqueue({
                 type: "message-metadata",
-                messageMetadata: { model: chunk.model, cost: chunk.cost },
+                messageMetadata: {
+                  model: chunk.model,
+                  cost: chunk.cost,
+                  dbMessageId: chunk.messageId, // DB message ID for tool call updates
+                },
               });
               controller.enqueue({ type: "finish", finishReason: "stop" });
               controller.close();

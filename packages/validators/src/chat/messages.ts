@@ -131,5 +131,7 @@ export type StreamChunk = z.infer<typeof streamChunkSchema>;
 export const messageMetadataSchema = z.object({
   model: chatModelSchema.optional(),
   cost: z.number().optional(),
+  // Database message ID (UUID) - needed for tool call updates since AI SDK uses its own IDs
+  dbMessageId: z.uuid().optional(),
 });
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
