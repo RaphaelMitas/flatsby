@@ -143,6 +143,8 @@ export function ChatToolResults({
                   name={item.name}
                   completed={item.completed}
                   categoryId={item.categoryId}
+                  showCheckbox={false}
+                  showActions={false}
                 />
               ))}
             </CardContent>

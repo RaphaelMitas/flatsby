@@ -1,9 +1,11 @@
 "use client";
 
 import type { AddToShoppingListResult } from "@flatsby/validators/chat/tools";
-import { AlertCircle, CheckCircle, ShoppingCart } from "lucide-react";
+import { AlertCircle, ShoppingCart } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
+
+import { OptimisticShoppingListItem } from "~/app/shopping-list/[shoppingListId]/ShoppingListItem";
 
 interface ShoppingListToolCardProps {
   result: AddToShoppingListResult;
@@ -39,18 +41,18 @@ export function ShoppingListToolCard({ result }: ShoppingListToolCardProps) {
           Added to {result.shoppingListName}
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
-        <ul className="space-y-1">
-          {result.addedItems.map((item) => (
-            <li key={item.id} className="flex items-center gap-2 text-sm">
-              <CheckCircle className="size-3.5 text-green-500" />
-              <span>{item.name}</span>
-              <span className="text-muted-foreground text-xs">
-                ({item.categoryId})
-              </span>
-            </li>
-          ))}
-        </ul>
+      <CardContent className="space-y-2 pt-0">
+        {result.addedItems.map((item) => (
+          <OptimisticShoppingListItem
+            key={item.id}
+            id={item.id}
+            name={item.name}
+            completed={false}
+            categoryId={item.categoryId}
+            showCheckbox={false}
+            showActions={false}
+          />
+        ))}
         {result.failedItems && result.failedItems.length > 0 && (
           <div className="text-muted-foreground mt-2 flex items-center gap-1 text-xs">
             <AlertCircle className="size-3" />

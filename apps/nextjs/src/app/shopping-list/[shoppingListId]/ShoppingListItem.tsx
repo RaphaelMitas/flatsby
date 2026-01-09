@@ -49,6 +49,8 @@ interface OptimisticShoppingListItemProps {
   name: string;
   completed: boolean;
   categoryId: CategoryIdWithAiAutoSelect | null;
+  showCheckbox?: boolean;
+  showActions?: boolean;
 }
 
 export const OptimisticShoppingListItem = ({
@@ -56,6 +58,8 @@ export const OptimisticShoppingListItem = ({
   name,
   completed,
   categoryId,
+  showCheckbox = true,
+  showActions = true,
 }: OptimisticShoppingListItemProps) => {
   const categoryData = categoryId ? getCategoryData(categoryId) : undefined;
 
@@ -65,10 +69,17 @@ export const OptimisticShoppingListItem = ({
       key={id}
       className="bg-muted flex w-full items-center rounded-lg pr-4"
     >
-      <div className="-m-2 flex cursor-pointer items-center justify-center p-6">
-        <Checkbox checked={completed} disabled={true} />
-      </div>
-      <div className="flex flex-1 justify-between gap-2 truncate p-3 pl-0">
+      {showCheckbox && (
+        <div className="-m-2 flex cursor-pointer items-center justify-center p-6">
+          <Checkbox checked={completed} disabled={true} />
+        </div>
+      )}
+      <div
+        className={cn("flex flex-1 justify-between gap-2 truncate p-3", {
+          "pl-0": showCheckbox,
+          "pr-0 pl-4": !showCheckbox,
+        })}
+      >
         <div
           className={cn(
             "flex-1 truncate text-left text-sm font-medium",
@@ -89,10 +100,12 @@ export const OptimisticShoppingListItem = ({
           </div>
         )}
       </div>
-      <div className="ml-2 hidden gap-2 md:flex">
-        <Pencil size={24} className="min-w-max opacity-50" />
-        <Trash size={24} className="min-w-max opacity-50" />
-      </div>
+      {showActions && (
+        <div className="ml-2 hidden gap-2 md:flex">
+          <Pencil size={24} className="min-w-max opacity-50" />
+          <Trash size={24} className="min-w-max opacity-50" />
+        </div>
+      )}
     </div>
   );
 };
