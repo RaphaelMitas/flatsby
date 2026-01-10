@@ -33,7 +33,7 @@ interface ChatFooterProps {
   error?: string | null;
 }
 
-const ChatToolbar = memo(function ChatToolbar({
+const ChatToolbar = ({
   selectedModel,
   onModelChange,
   toolPreferences,
@@ -49,7 +49,7 @@ const ChatToolbar = memo(function ChatToolbar({
   | "disabled"
 > & {
   isLoading: boolean;
-}) {
+}) => {
   const toolsSupported = selectedModel
     ? modelSupportsTools(selectedModel)
     : false;
@@ -116,9 +116,11 @@ const ChatToolbar = memo(function ChatToolbar({
       </Tooltip>
     </div>
   );
-});
+};
 
-export const ChatFooter = ({
+const _ChatFooter = ({
+  input,
+  setInput,
   sendMessage,
   selectedModel,
   onModelChange,
@@ -127,9 +129,10 @@ export const ChatFooter = ({
   status,
   disabled = false,
   error,
-}: ChatFooterProps) => {
-  const [input, setInput] = useState("");
-
+}: ChatFooterProps & {
+  input: string;
+  setInput: (input: string) => void;
+}) => {
   const isLoading = status === "submitted" || status === "streaming";
 
   const handleSubmit = (
@@ -177,3 +180,30 @@ export const ChatFooter = ({
     </>
   );
 };
+
+export const ChatFooter = memo(function ChatFooter({
+  sendMessage,
+  selectedModel,
+  onModelChange,
+  toolPreferences,
+  onToolPreferencesChange,
+  status,
+  disabled = false,
+  error,
+}: ChatFooterProps) {
+  const [input, setInput] = useState("");
+  return (
+    <_ChatFooter
+      input={input}
+      setInput={setInput}
+      sendMessage={sendMessage}
+      selectedModel={selectedModel}
+      onModelChange={onModelChange}
+      toolPreferences={toolPreferences}
+      onToolPreferencesChange={onToolPreferencesChange}
+      status={status}
+      disabled={disabled}
+      error={error}
+    />
+  );
+});

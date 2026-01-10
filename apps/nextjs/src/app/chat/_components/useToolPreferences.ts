@@ -1,5 +1,5 @@
 import type { ToolPreferences } from "@flatsby/validators/chat/messages";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { DEFAULT_TOOL_PREFERENCES } from "@flatsby/validators/chat/messages";
@@ -85,13 +85,20 @@ export const useToolPreferences = (): UseToolPreferencesResult => {
     };
   }, [userData]);
 
-  return {
-    updateToolPreferences: (newToolPreferences: ToolPreferences) => {
-      void updateToolPreferencesMutation.mutate({
+  const { mutate: mutateToolPreferences } = updateToolPreferencesMutation;
+
+  const updateToolPreferences = useCallback(
+    (newToolPreferences: ToolPreferences) => {
+      void mutateToolPreferences({
         shoppingListToolsEnabled: newToolPreferences.shoppingListToolsEnabled,
         expenseToolsEnabled: newToolPreferences.expenseToolsEnabled,
       });
     },
+    [mutateToolPreferences],
+  );
+
+  return {
+    updateToolPreferences,
     toolPreferences,
   };
 };

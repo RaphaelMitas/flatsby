@@ -4,21 +4,22 @@ packages:
   - tooling/*
 
 catalog:
-  '@ai-sdk/react': ^3.0.12
+  "@ai-sdk/react": ^3.0.12
   autumn-js: ^0.1.63
-  '@better-auth/cli': 1.5.0-beta.2
-  '@better-auth/expo': 1.5.0-beta.2
-  '@eslint/js': ^9.38.0
-  '@t3-oss/env-nextjs': ^0.13.8
-  '@tailwindcss/postcss': ^4.1.16
-  '@tanstack/react-query': ^5.90.12
-  '@trpc/client': ^11.7.2
-  '@trpc/server': ^11.7.2
-  '@trpc/tanstack-react-query': ^11.7.2
-  '@turbo/gen': ^2.6.3
-  '@types/node': ^22.18.12
+  "@better-auth/cli": 1.5.0-beta.2
+  "@better-auth/expo": 1.5.0-beta.2
+  "@eslint/js": ^9.38.0
+  "@t3-oss/env-nextjs": ^0.13.8
+  "@tailwindcss/postcss": ^4.1.16
+  "@tanstack/react-query": ^5.90.12
+  "@trpc/client": ^11.7.2
+  "@trpc/server": ^11.7.2
+  "@trpc/tanstack-react-query": ^11.7.2
+  "@turbo/gen": ^2.6.3
+  "@types/node": ^22.18.12
   ai: ^6.0.12
   better-auth: 1.5.0-beta.2
+  babel-plugin-react-compiler: ^1.0.0
   eslint: ^9.38.0
   next: ^16.0.7
   prettier: ^3.7.4
@@ -30,21 +31,21 @@ catalog:
 
 catalogs:
   react19:
-    '@types/react': ~19.1.0
-    '@types/react-dom': ~19.1.0
+    "@types/react": ~19.1.0
+    "@types/react-dom": ~19.1.0
     react: 19.1.2
     react-dom: 19.1.2
 
 linkWorkspacePackages: true
 
 onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
+  - "@tailwindcss/oxide"
   - esbuild
 
 overrides:
-  '@types/minimatch': 5.1.2
+  "@types/minimatch": 5.1.2
   lightningcss: 1.30.1
 
 publicHoistPattern:
-  - '@ianvs/prettier-plugin-sort-imports'
+  - "@ianvs/prettier-plugin-sort-imports"
   - prettier-plugin-tailwindcss
