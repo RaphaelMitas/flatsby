@@ -22,7 +22,6 @@ interface ChatConversationPageProps {
 
 export default async function ChatConversationPage({
   params,
-  searchParams,
 }: ChatConversationPageProps) {
   const session = await getSession();
 
@@ -31,7 +30,6 @@ export default async function ChatConversationPage({
   }
 
   const { conversationId } = await params;
-  const { message: initialMessage } = await searchParams;
 
   let conversation: RouterOutputs["chat"]["getConversation"];
   try {
@@ -153,7 +151,6 @@ export default async function ChatConversationPage({
           conversationId={conversationId}
           initialMessages={initialMessages}
           initialModel={chatModelSchema.safeParse(conversation.model).data}
-          initialInput={initialMessage}
         />
       </div>
     </div>

@@ -9,11 +9,13 @@ import {
   CHAT_MESSAGE_LIMIT,
   conversationWithMessagesSchema,
   createConversationInputSchema,
+  DEFAULT_TOOL_PREFERENCES,
   getConversationInputSchema,
   getUserConversationsInputSchema,
   messageRoleSchema,
   messageStatusSchema,
   sendInputSchema,
+  toolPreferencesSchema,
 } from "@flatsby/validators/chat/messages";
 import {
   addExpenseInputSchema,
@@ -231,18 +233,18 @@ export const chatRouter = createTRPCRouter({
    * Update user's tool preferences (persisted across sessions)
    */
   updateToolPreferences: protectedProcedure
-    .input(
-      z.object({
-        shoppingListToolsEnabled: z.boolean().optional(),
-        expenseToolsEnabled: z.boolean().optional(),
-      }),
-    )
+    .input(toolPreferencesSchema)
+    .output(z.object({ success: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .update(users)
         .set({
-          lastShoppingListToolsEnabled: input.shoppingListToolsEnabled,
-          lastExpenseToolsEnabled: input.expenseToolsEnabled,
+          ...(input.shoppingListToolsEnabled !== undefined
+            ? { lastShoppingListToolsEnabled: input.shoppingListToolsEnabled }
+            : {}),
+          ...(input.expenseToolsEnabled !== undefined
+            ? { lastExpenseToolsEnabled: input.expenseToolsEnabled }
+            : {}),
         })
         .where(eq(users.id, ctx.session.user.id));
 
@@ -413,11 +415,17 @@ export const chatRouter = createTRPCRouter({
     // Tools are only available for models that support them
     const modelCanUseTools = modelSupportsTools(modelToUse);
     const shoppingListToolsEnabled =
-      modelCanUseTools && (input.settings?.shoppingListToolsEnabled ?? false);
+      modelCanUseTools &&
+      (typeof input.toolPreferences?.shoppingListToolsEnabled === "boolean"
+        ? input.toolPreferences.shoppingListToolsEnabled
+        : DEFAULT_TOOL_PREFERENCES.shoppingListToolsEnabled);
     const expenseToolsEnabled =
-      modelCanUseTools && (input.settings?.expenseToolsEnabled ?? false);
+      modelCanUseTools &&
+      (typeof input.toolPreferences?.expenseToolsEnabled === "boolean"
+        ? input.toolPreferences.expenseToolsEnabled
+        : DEFAULT_TOOL_PREFERENCES.expenseToolsEnabled);
     const anyToolsEnabled = shoppingListToolsEnabled || expenseToolsEnabled;
-    const groupId = input.settings?.groupId;
+    const groupId = input.groupId;
 
     try {
       // Update status to streaming

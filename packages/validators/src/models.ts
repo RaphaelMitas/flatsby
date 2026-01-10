@@ -1,7 +1,10 @@
 import { z } from "zod/v4";
 
 // Available AI models
-export const chatModelSchema = z.enum(["openai/gpt-5.2"]);
+export const chatModelSchema = z.enum([
+  "openai/gpt-5.2",
+  "google/gemini-2.5-flash",
+]);
 export type ChatModel = z.infer<typeof chatModelSchema>;
 
 export const CHAT_MODELS = [
@@ -10,6 +13,12 @@ export const CHAT_MODELS = [
     name: "GPT-5.2",
     provider: "openai",
     supportsTools: true,
+  },
+  {
+    id: "google/gemini-2.5-flash",
+    name: "Gemini 2.5 Flash",
+    provider: "google",
+    supportsTools: false,
   },
 ] as const satisfies readonly {
   id: ChatModel;

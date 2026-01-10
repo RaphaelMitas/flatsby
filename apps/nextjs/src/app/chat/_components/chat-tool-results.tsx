@@ -6,6 +6,7 @@ import type {
   PersistedToolCallOutputUpdate,
   ShoppingListInfo,
 } from "@flatsby/validators/chat/tools";
+import { memo } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -28,7 +29,6 @@ import { SplitEditorSelector } from "./split-editor-selector";
 interface ChatToolResultsProps {
   message: ChatUIMessage;
   conversationId: string;
-  isLastMessage: boolean;
   isLoading: boolean;
   groupId?: number;
   onShoppingListSelect: (list: ShoppingListInfo) => void;
@@ -40,16 +40,15 @@ interface ChatToolResultsProps {
   ) => void;
 }
 
-export function ChatToolResults({
+const _ChatToolResults = ({
   message,
   conversationId,
-  isLastMessage,
   isLoading,
   groupId,
   onShoppingListSelect,
   onMemberSelect,
   updateToolCallOutput,
-}: ChatToolResultsProps) {
+}: ChatToolResultsProps) => {
   // Extract tool results for shopping list
   const addToListResults = message.parts.filter(
     (part) =>
@@ -113,7 +112,7 @@ export function ChatToolResults({
             key={part.toolCallId}
             lists={part.output.lists}
             onSelect={onShoppingListSelect}
-            disabled={isLoading || !isLastMessage}
+            disabled={isLoading}
           />
         );
       })}
@@ -199,7 +198,7 @@ export function ChatToolResults({
             members={part.output.members}
             context={part.output.context}
             onSelect={onMemberSelect}
-            disabled={isLoading || !isLastMessage}
+            disabled={isLoading}
           />
         );
       })}
@@ -283,7 +282,7 @@ export function ChatToolResults({
               dbMessageId={dbMessageId}
               toolCallId={part.toolCallId}
               updateToolCallOutput={updateToolCallOutput}
-              disabled={isLoading || !isLastMessage}
+              disabled={isLoading}
             />
           );
         }
@@ -322,4 +321,6 @@ export function ChatToolResults({
       ))}
     </>
   );
-}
+};
+
+export const ChatToolResults = memo(_ChatToolResults);

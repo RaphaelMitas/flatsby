@@ -1,9 +1,9 @@
 "use client";
 
 import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
-import type { ChatSettings } from "@flatsby/validators/chat/messages";
 import type { ChatModel } from "@flatsby/validators/models";
 import type { FormEvent } from "react";
+import { memo, useState } from "react";
 import { ShoppingCart, Wallet } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
@@ -17,40 +17,130 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@flatsby/ui/tooltip";
 import { modelSupportsTools } from "@flatsby/validators/models";
 
+import type { UseToolPreferencesResult } from "./useToolPreferences";
 import { ChatModelSelector } from "./chat-model-selector";
 
 type PromptStatus = "ready" | "submitted" | "streaming" | "error";
 
 interface ChatFooterProps {
-  input: string;
-  onInputChange: (value: string) => void;
-  onSubmit: (
-    message: PromptInputMessage,
-    event: FormEvent<HTMLFormElement>,
-  ) => void;
+  sendMessage: (text: string) => void;
   selectedModel: ChatModel | null;
   onModelChange: (model: ChatModel) => void;
-  settings: ChatSettings;
-  onSettingsChange: (settings: Partial<ChatSettings>) => void;
+  toolPreferences: UseToolPreferencesResult["toolPreferences"];
+  onToolPreferencesChange: UseToolPreferencesResult["updateToolPreferences"];
   status: PromptStatus;
   disabled?: boolean;
   error?: string | null;
 }
 
-export function ChatFooter({
-  input,
-  onInputChange,
-  onSubmit,
+const ChatToolbar = memo(function ChatToolbar({
   selectedModel,
   onModelChange,
-  settings,
-  onSettingsChange,
+  toolPreferences,
+  onToolPreferencesChange,
+  disabled,
+  isLoading,
+}: Pick<
+  ChatFooterProps,
+  | "selectedModel"
+  | "onModelChange"
+  | "toolPreferences"
+  | "onToolPreferencesChange"
+  | "disabled"
+> & {
+  isLoading: boolean;
+}) {
+  const toolsSupported = selectedModel
+    ? modelSupportsTools(selectedModel)
+    : false;
+
+  return (
+    <div className="flex items-center gap-1">
+      <ChatModelSelector
+        currentModel={selectedModel}
+        onModelChange={onModelChange}
+        disabled={disabled ?? isLoading}
+      />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <PromptInputButton
+              className={cn(
+                toolPreferences.shoppingListToolsEnabled &&
+                  toolsSupported &&
+                  "bg-accent text-accent-foreground",
+              )}
+              onClick={() =>
+                onToolPreferencesChange({
+                  shoppingListToolsEnabled:
+                    !toolPreferences.shoppingListToolsEnabled,
+                })
+              }
+              disabled={(disabled ?? isLoading) || !toolsSupported}
+            >
+              <ShoppingCart className="size-4" />
+            </PromptInputButton>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          {toolsSupported
+            ? "Shopping list tools"
+            : "Shopping list tools: Not supported by this model"}
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <PromptInputButton
+              className={cn(
+                toolPreferences.expenseToolsEnabled &&
+                  toolsSupported &&
+                  "bg-accent text-accent-foreground",
+              )}
+              onClick={() =>
+                onToolPreferencesChange({
+                  expenseToolsEnabled: !toolPreferences.expenseToolsEnabled,
+                })
+              }
+              disabled={(disabled ?? isLoading) || !toolsSupported}
+            >
+              <Wallet className="size-4" />
+            </PromptInputButton>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          {toolsSupported
+            ? "Expense tools"
+            : "Expense tools: Not supported by this model"}
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  );
+});
+
+export const ChatFooter = ({
+  sendMessage,
+  selectedModel,
+  onModelChange,
+  toolPreferences,
+  onToolPreferencesChange,
   status,
   disabled = false,
   error,
-}: ChatFooterProps) {
+}: ChatFooterProps) => {
+  const [input, setInput] = useState("");
+
   const isLoading = status === "submitted" || status === "streaming";
-  const toolsSupported = selectedModel ? modelSupportsTools(selectedModel) : false;
+
+  const handleSubmit = (
+    _message: PromptInputMessage,
+    event: FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
+    if (!input.trim() || isLoading || disabled) return;
+    sendMessage(input);
+    setInput("");
+  };
 
   return (
     <>
@@ -61,74 +151,22 @@ export function ChatFooter({
       )}
 
       <div className="shrink-0 border-t p-4">
-        <PromptInput onSubmit={onSubmit}>
+        <PromptInput onSubmit={handleSubmit}>
           <PromptInputTextarea
             value={input}
-            onChange={(e) => onInputChange(e.target.value)}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             disabled={disabled || isLoading}
           />
           <PromptInputFooter>
-            <div className="flex items-center gap-1">
-              <ChatModelSelector
-                currentModel={selectedModel}
-                onModelChange={onModelChange}
-                disabled={disabled || isLoading}
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex">
-                    <PromptInputButton
-                      className={cn(
-                        settings.shoppingListToolsEnabled &&
-                          toolsSupported &&
-                          "bg-accent text-accent-foreground",
-                      )}
-                      onClick={() =>
-                        onSettingsChange({
-                          shoppingListToolsEnabled:
-                            !settings.shoppingListToolsEnabled,
-                        })
-                      }
-                      disabled={disabled || isLoading || !toolsSupported}
-                    >
-                      <ShoppingCart className="size-4" />
-                    </PromptInputButton>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {toolsSupported
-                    ? "Shopping list tools"
-                    : "Shopping list tools: Not supported by this model"}
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex">
-                    <PromptInputButton
-                      className={cn(
-                        settings.expenseToolsEnabled &&
-                          toolsSupported &&
-                          "bg-accent text-accent-foreground",
-                      )}
-                      onClick={() =>
-                        onSettingsChange({
-                          expenseToolsEnabled: !settings.expenseToolsEnabled,
-                        })
-                      }
-                      disabled={disabled || isLoading || !toolsSupported}
-                    >
-                      <Wallet className="size-4" />
-                    </PromptInputButton>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {toolsSupported
-                    ? "Expense tools"
-                    : "Expense tools: Not supported by this model"}
-                </TooltipContent>
-              </Tooltip>
-            </div>
+            <ChatToolbar
+              selectedModel={selectedModel}
+              onModelChange={onModelChange}
+              toolPreferences={toolPreferences}
+              onToolPreferencesChange={onToolPreferencesChange}
+              disabled={disabled}
+              isLoading={isLoading}
+            />
             <PromptInputSubmit
               status={status}
               disabled={!input.trim() || disabled || isLoading}
@@ -138,4 +176,4 @@ export function ChatFooter({
       </div>
     </>
   );
-}
+};

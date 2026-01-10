@@ -1,10 +1,7 @@
 "use client";
 
-import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
-import type { ChatSettings } from "@flatsby/validators/chat/messages";
 import type { ChatModel } from "@flatsby/validators/models";
-import type { FormEvent } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageSquareIcon } from "lucide-react";
@@ -18,11 +15,7 @@ import { CHAT_MODELS } from "@flatsby/validators/models";
 
 import { useTRPC } from "~/trpc/react";
 import { ChatFooter } from "./chat-footer";
-
-const DEFAULT_SETTINGS: ChatSettings = {
-  shoppingListToolsEnabled: false,
-  expenseToolsEnabled: false,
-};
+import { useToolPreferences } from "./useToolPreferences";
 
 interface NewChatInterfaceProps {
   defaultModel?: ChatModel;
@@ -33,11 +26,11 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState<ChatModel>(
     defaultModel ?? CHAT_MODELS[0].id,
   );
-  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
+
+  const { updateToolPreferences, toolPreferences } = useToolPreferences();
 
   const createConversation = useMutation(
     trpc.chat.createConversation.mutationOptions({}),
@@ -45,27 +38,31 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
 
   const isLoading = createConversation.isPending;
 
-  const onFormSubmit = (
-    _message: PromptInputMessage,
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
-    if (!input.trim() || isLoading) return;
-    const message = input.trim();
-    createConversation.mutate(
-      { model: selectedModel },
-      {
-        onSuccess: (conversation) => {
-          void queryClient.invalidateQueries({
-            queryKey: trpc.chat.getUserConversations.infiniteQueryKey(),
-          });
-          router.push(
-            `/chat/${conversation.id}?message=${encodeURIComponent(message)}`,
-          );
+  const sendMessage = useCallback(
+    (text: string) => {
+      if (!text.trim() || createConversation.isPending) return;
+      createConversation.mutate(
+        { model: selectedModel },
+        {
+          onSuccess: (conversation) => {
+            void queryClient.invalidateQueries({
+              queryKey: trpc.chat.getUserConversations.infiniteQueryKey(),
+            });
+            router.push(
+              `/chat/${conversation.id}?message=${encodeURIComponent(text)}`,
+            );
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [
+      createConversation,
+      queryClient,
+      trpc.chat.getUserConversations,
+      router,
+      selectedModel,
+    ],
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -80,15 +77,11 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
       </Conversation>
 
       <ChatFooter
-        input={input}
-        onInputChange={setInput}
-        onSubmit={onFormSubmit}
+        sendMessage={sendMessage}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
-        settings={settings}
-        onSettingsChange={(newSettings) =>
-          setSettings((prev) => ({ ...prev, ...newSettings }))
-        }
+        toolPreferences={toolPreferences}
+        onToolPreferencesChange={updateToolPreferences}
         status={isLoading ? "submitted" : "ready"}
         error={createConversation.error?.message}
       />

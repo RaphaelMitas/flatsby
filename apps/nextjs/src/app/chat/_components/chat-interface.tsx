@@ -1,20 +1,16 @@
 "use client";
 
-import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
 import type {
   ChatUIMessage,
   GroupMemberInfo,
+  PersistedToolCallOutputUpdate,
   ShoppingListInfo,
 } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
-import type { FormEvent } from "react";
-import { useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MessageSquareIcon, RefreshCwIcon } from "lucide-react";
-
-import { Button } from "@flatsby/ui/button";
-import { CHAT_MESSAGE_LIMIT } from "@flatsby/validators/chat/messages";
 
 import {
   Conversation,
@@ -31,8 +27,11 @@ import {
   Tool,
   ToolHeader,
 } from "@flatsby/ui/ai-elements";
+import { Button } from "@flatsby/ui/button";
 import { costToCredits, formatCredits } from "@flatsby/validators/billing";
+import { CHAT_MESSAGE_LIMIT } from "@flatsby/validators/chat/messages";
 
+import { useGroupContext } from "~/app/_components/context/group-context";
 import { ChatFooter } from "./chat-footer";
 import { getModelDisplayName } from "./chat-model-selector";
 import { ChatToolResults } from "./chat-tool-results";
@@ -42,30 +41,126 @@ interface ChatInterfaceProps {
   conversationId: string;
   initialMessages?: ChatUIMessage[];
   initialModel?: ChatModel;
-  initialInput?: string;
 }
+
+const getMessageContent = (msg: ChatUIMessage): string => {
+  return msg.parts
+    .filter(
+      (part): part is { type: "text"; text: string } =>
+        part.type === "text" && typeof part.text === "string",
+    )
+    .map((part) => part.text)
+    .join("");
+};
+
+interface ChatMessageItemProps {
+  message: ChatUIMessage;
+  conversationId: string;
+  isLoading: boolean;
+  activeGroupId: number | undefined;
+  onShoppingListSelect: (list: ShoppingListInfo) => void;
+  onMemberSelect: (member: GroupMemberInfo) => void;
+  onRegenerate: (messageId: string) => void;
+  updateToolCallOutput: (
+    messageId: string,
+    toolCallId: string,
+    outputUpdate: PersistedToolCallOutputUpdate,
+  ) => void;
+}
+
+const ChatMessageItem = memo(function ChatMessageItem({
+  message,
+  conversationId,
+  isLoading,
+  activeGroupId,
+  onShoppingListSelect,
+  onMemberSelect,
+  onRegenerate,
+  updateToolCallOutput,
+}: ChatMessageItemProps) {
+  const content = useMemo(() => getMessageContent(message), [message]);
+  const messageModel = message.metadata?.model;
+  const messageCost = message.metadata?.cost;
+
+  // Memoize onClick to prevent MessageAction re-renders
+  const handleRegenerate = useCallback(() => {
+    onRegenerate(message.id);
+  }, [onRegenerate, message.id]);
+
+  const pendingToolCalls = message.parts.filter(
+    (part) =>
+      (part.type === "tool-getShoppingLists" ||
+        part.type === "tool-addToShoppingList") &&
+      part.state === "input-available",
+  );
+
+  return (
+    <Message key={message.id} from={message.role}>
+      <MessageContent>
+        {message.role === "assistant" ? (
+          <>
+            {pendingToolCalls.map((part) => {
+              return (
+                <Tool key={part.toolCallId} className="my-1">
+                  <ToolHeader type={part.type} state={part.state} />
+                </Tool>
+              );
+            })}
+            {content ? (
+              <MessageResponse>{content}</MessageResponse>
+            ) : isLoading ? (
+              <Loader size={20} />
+            ) : null}
+            <ChatToolResults
+              message={message}
+              conversationId={conversationId}
+              isLoading={isLoading}
+              groupId={activeGroupId}
+              onShoppingListSelect={onShoppingListSelect}
+              onMemberSelect={onMemberSelect}
+              updateToolCallOutput={updateToolCallOutput}
+            />
+          </>
+        ) : (
+          <p className="whitespace-pre-wrap">{content}</p>
+        )}
+      </MessageContent>
+      <MessageToolbar>
+        {message.role === "assistant" && content && (
+          <span className="text-muted-foreground text-xs">
+            {messageModel && getModelDisplayName(messageModel)}
+            {messageModel && messageCost != null && " · "}
+            {messageCost != null &&
+              `${formatCredits(costToCredits(messageCost))} credits`}
+          </span>
+        )}
+        {message.role === "assistant" && content && !isLoading && (
+          <MessageActions className="opacity-0 transition-opacity group-hover:opacity-100">
+            <MessageAction tooltip="Regenerate" onClick={handleRegenerate}>
+              <RefreshCwIcon className="size-4" />
+            </MessageAction>
+          </MessageActions>
+        )}
+      </MessageToolbar>
+    </Message>
+  );
+});
 
 export function ChatInterface({
   conversationId,
   initialMessages = [],
   initialModel,
-  initialInput,
 }: ChatInterfaceProps) {
-  const router = useRouter();
-  const hasAutoSent = useRef(false);
   const {
     messages,
-    input,
-    setInput,
-    handleSubmit,
+    sendMessage,
     status,
     error,
     regenerateMessage,
     selectedModel,
     handleModelChange,
-    settings,
-    updateSettings,
-    activeGroupId,
+    toolPreferences,
+    updateToolPreferences,
     updateToolCallOutput,
   } = useTRPCChat({
     conversationId,
@@ -73,67 +168,44 @@ export function ChatInterface({
     initialModel,
   });
 
-  // Auto-send initial input if provided (from new chat redirect)
+  const searchParams = useSearchParams();
+  const message = searchParams.get("message");
+  const router = useRouter();
+  const hasAutoSent = useRef(false);
+
   useEffect(() => {
-    if (initialInput && !hasAutoSent.current) {
+    if (message && !hasAutoSent.current) {
+      router.replace(`/chat/${conversationId}`);
+      sendMessage(message);
       hasAutoSent.current = true;
-      // Remove the message from URL to prevent re-sending on refresh
-      router.replace(`/chat/${conversationId}`, { scroll: false });
-      // Pass message directly to handleSubmit to avoid state timing issues
-      handleSubmit(undefined, initialInput);
     }
-  }, [initialInput, conversationId, router, handleSubmit]);
+  }, [message, sendMessage, conversationId, router]);
+
+  const { currentGroup } = useGroupContext();
 
   const isStreaming = status === "streaming";
   const isSubmitting = status === "submitted";
   const isLoading = isStreaming || isSubmitting;
   const isAtMessageLimit = messages.length >= CHAT_MESSAGE_LIMIT;
 
-  // Handle form submission - PromptInput calls this with message and event
-  const onFormSubmit = (
-    _message: PromptInputMessage,
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    if (!input.trim() || isLoading) return;
-    // Pass the form event to our handleSubmit
-    handleSubmit(event);
-  };
-
-  // Handle shopping list selection - sends a message to the AI
   const handleShoppingListSelect = useCallback(
     (list: ShoppingListInfo) => {
       if (isLoading) return;
-      handleSubmit(undefined, `Add to the "${list.name}" list`);
+      sendMessage(`Add to the "${list.name}" list`);
     },
-    [handleSubmit, isLoading],
+    [isLoading, sendMessage],
   );
 
-  // Handle member selection - appends member name to input field
   const handleMemberSelect = useCallback(
     (member: GroupMemberInfo) => {
       if (isLoading) return;
-      setInput((prev) => {
-        const trimmed = prev.trim();
-        return trimmed ? `${trimmed} ${member.name}` : member.name;
-      });
+      sendMessage(member.name);
     },
-    [isLoading, setInput],
+    [isLoading, sendMessage],
   );
-
-  // Helper to get text content from a message
-  const getMessageContent = (msg: ChatUIMessage): string => {
-    return msg.parts
-      .filter(
-        (part): part is { type: "text"; text: string } =>
-          part.type === "text" && typeof part.text === "string",
-      )
-      .map((part) => part.text)
-      .join("");
-  };
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Messages Area */}
       <Conversation className="min-h-0 flex-1">
         <ConversationContent>
           {messages.length === 0 ? (
@@ -143,75 +215,19 @@ export function ChatInterface({
               icon={<MessageSquareIcon className="size-8" />}
             />
           ) : (
-            messages.map((message, index) => {
-              const content = getMessageContent(message);
-              const messageModel = message.metadata?.model;
-              const messageCost = message.metadata?.cost;
-
-              // Extract pending/running tool calls (to show indicators)
-              const pendingToolCalls = message.parts.filter(
-                (part) =>
-                  (part.type === "tool-getShoppingLists" ||
-                    part.type === "tool-addToShoppingList") &&
-                  part.state === "input-available",
-              );
-
-              const isLastMessage = index === messages.length - 1;
+            messages.map((message) => {
               return (
-                <Message key={message.id} from={message.role}>
-                  <MessageContent>
-                    {message.role === "assistant" ? (
-                      <>
-                        {/* Show tool call indicators */}
-                        {pendingToolCalls.map((part) => {
-                          return (
-                            <Tool key={part.toolCallId} className="my-1">
-                              <ToolHeader type={part.type} state={part.state} />
-                            </Tool>
-                          );
-                        })}
-                        {content ? (
-                          <MessageResponse>{content}</MessageResponse>
-                        ) : isLoading && index === messages.length - 1 ? (
-                          <Loader size={20} />
-                        ) : null}
-                        <ChatToolResults
-                          message={message}
-                          conversationId={conversationId}
-                          isLastMessage={isLastMessage}
-                          isLoading={isLoading}
-                          groupId={activeGroupId}
-                          onShoppingListSelect={handleShoppingListSelect}
-                          onMemberSelect={handleMemberSelect}
-                          updateToolCallOutput={updateToolCallOutput}
-                        />
-                      </>
-                    ) : (
-                      <p className="whitespace-pre-wrap">{content}</p>
-                    )}
-                  </MessageContent>
-                  <MessageToolbar>
-                    {message.role === "assistant" && content && (
-                      <span className="text-muted-foreground text-xs">
-                        {messageModel && getModelDisplayName(messageModel)}
-                        {messageModel && messageCost != null && " · "}
-                        {messageCost != null &&
-                          `${formatCredits(costToCredits(messageCost))} credits`}
-                      </span>
-                    )}
-                    {/* Actions for assistant messages */}
-                    {message.role === "assistant" && content && !isLoading && (
-                      <MessageActions className="opacity-0 transition-opacity group-hover:opacity-100">
-                        <MessageAction
-                          tooltip="Regenerate"
-                          onClick={() => regenerateMessage(message.id)}
-                        >
-                          <RefreshCwIcon className="size-4" />
-                        </MessageAction>
-                      </MessageActions>
-                    )}
-                  </MessageToolbar>
-                </Message>
+                <ChatMessageItem
+                  key={message.id}
+                  message={message}
+                  conversationId={conversationId}
+                  isLoading={isLoading}
+                  activeGroupId={currentGroup?.id}
+                  onShoppingListSelect={handleShoppingListSelect}
+                  onMemberSelect={handleMemberSelect}
+                  onRegenerate={regenerateMessage}
+                  updateToolCallOutput={updateToolCallOutput}
+                />
               );
             })
           )}
@@ -231,13 +247,11 @@ export function ChatInterface({
       )}
 
       <ChatFooter
-        input={input}
-        onInputChange={setInput}
-        onSubmit={onFormSubmit}
+        sendMessage={sendMessage}
         selectedModel={selectedModel ?? null}
         onModelChange={handleModelChange}
-        settings={settings}
-        onSettingsChange={updateSettings}
+        toolPreferences={toolPreferences}
+        onToolPreferencesChange={updateToolPreferences}
         status={status}
         disabled={isAtMessageLimit}
         error={error?.message}

@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 
+import { groupSchema } from "../group";
 import { chatModelSchema } from "../models";
 import { persistedToolCallSchema } from "./tools";
 
@@ -92,23 +93,26 @@ export type GetUserConversationsInput = z.infer<
   typeof getUserConversationsInputSchema
 >;
 
+export const DEFAULT_TOOL_PREFERENCES = {
+  shoppingListToolsEnabled: true,
+  expenseToolsEnabled: true,
+} as const;
+export type DefaultToolPreferences = typeof DEFAULT_TOOL_PREFERENCES;
 // Chat settings schema for tool configuration
-export const chatSettingsSchema = z.object({
-  shoppingListToolsEnabled: z.boolean().default(false),
-  expenseToolsEnabled: z.boolean().default(false),
-  groupId: z.number().optional(),
+export const toolPreferencesSchema = z.object({
+  shoppingListToolsEnabled: z.boolean().nullable().optional(),
+  expenseToolsEnabled: z.boolean().nullable().optional(),
 });
-export type ChatSettings = z.infer<typeof chatSettingsSchema>;
+export type ToolPreferences = z.infer<typeof toolPreferencesSchema>;
 
 export const sendInputSchema = z.object({
   conversationId: z.uuid(),
   message: uiMessageSchema,
   trigger: sendTriggerSchema,
   messageId: z.string().optional(),
-  // Model to use for this message (updates conversation model if different)
   model: chatModelSchema.optional(),
-  // Tool settings for this message
-  settings: chatSettingsSchema.optional(),
+  toolPreferences: toolPreferencesSchema.optional(),
+  groupId: groupSchema.shape.id.optional(),
 });
 export type SendInput = z.infer<typeof sendInputSchema>;
 

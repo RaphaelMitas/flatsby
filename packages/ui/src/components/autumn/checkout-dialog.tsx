@@ -11,7 +11,8 @@ import { ArrowRight, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@flatsby/ui";
 
 import { Accordion, AccordionContent, AccordionItem } from "../../accordion";
-import { Button, ButtonProps } from "../../button";
+import type { ButtonProps } from "../../button";
+import { Button } from "../../button";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "../../dialog";
 import { Input } from "../../input";
 import { getCheckoutContent } from "../../lib/autumn/checkout-content";

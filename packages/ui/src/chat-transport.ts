@@ -1,12 +1,10 @@
 import type {
-  ChatSettings,
   SendTrigger,
+  ToolPreferences,
 } from "@flatsby/validators/chat/messages";
 import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import type { ChatTransport, UIMessageChunk } from "ai";
-
-export type { ChatSettings };
 
 /**
  * Chunk yielded by the streaming tRPC mutation
@@ -47,7 +45,8 @@ export type SendMutationFn = (
     trigger: SendTrigger;
     messageId?: string;
     model?: ChatModel;
-    settings?: ChatSettings;
+    toolPreferences?: ToolPreferences;
+    groupId?: number;
   },
   opts?: { signal?: AbortSignal },
 ) => Promise<AsyncIterable<StreamChunk>>;
@@ -75,7 +74,8 @@ function getMessageContent(message: ChatUIMessage): string {
 export interface TRPCChatTransportOptions {
   sendMutation: SendMutationFn;
   getModel?: () => ChatModel | undefined;
-  getSettings?: () => ChatSettings | undefined;
+  getToolPreferences?: () => ToolPreferences | undefined;
+  getGroupId?: () => number | undefined;
 }
 
 /**
@@ -85,7 +85,8 @@ export interface TRPCChatTransportOptions {
 export function createTRPCChatTransport({
   sendMutation,
   getModel,
-  getSettings,
+  getToolPreferences,
+  getGroupId,
 }: TRPCChatTransportOptions): ChatTransport<ChatUIMessage> {
   return {
     sendMessages: async (options) => {
@@ -109,7 +110,8 @@ export function createTRPCChatTransport({
               ? options.messageId
               : undefined,
           model: getModel?.(),
-          settings: getSettings?.(),
+          toolPreferences: getToolPreferences?.(),
+          groupId: getGroupId?.(),
         },
         { signal: options.abortSignal },
       );
