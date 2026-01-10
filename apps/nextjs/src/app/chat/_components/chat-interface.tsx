@@ -9,8 +9,12 @@ import type {
 import type { ChatModel } from "@flatsby/validators/models";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageSquareIcon, RefreshCwIcon } from "lucide-react";
+
+import { Button } from "@flatsby/ui/button";
+import { CHAT_MESSAGE_LIMIT } from "@flatsby/validators/chat/messages";
 
 import {
   Conversation,
@@ -83,6 +87,7 @@ export function ChatInterface({
   const isStreaming = status === "streaming";
   const isSubmitting = status === "submitted";
   const isLoading = isStreaming || isSubmitting;
+  const isAtMessageLimit = messages.length >= CHAT_MESSAGE_LIMIT;
 
   // Handle form submission - PromptInput calls this with message and event
   const onFormSubmit = (
@@ -214,6 +219,17 @@ export function ChatInterface({
         <ConversationScrollButton />
       </Conversation>
 
+      {isAtMessageLimit && (
+        <div className="flex items-center justify-center gap-3 border-t py-3">
+          <span className="text-muted-foreground text-sm">
+            Message limit reached ({CHAT_MESSAGE_LIMIT})
+          </span>
+          <Button asChild size="sm">
+            <Link href="/chat">Start new chat</Link>
+          </Button>
+        </div>
+      )}
+
       <ChatFooter
         input={input}
         onInputChange={setInput}
@@ -223,6 +239,7 @@ export function ChatInterface({
         settings={settings}
         onSettingsChange={updateSettings}
         status={status}
+        disabled={isAtMessageLimit}
         error={error?.message}
       />
     </div>

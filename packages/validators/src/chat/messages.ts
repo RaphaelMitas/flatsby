@@ -3,6 +3,8 @@ import { z } from "zod/v4";
 import { chatModelSchema } from "../models";
 import { persistedToolCallSchema } from "./tools";
 
+export const CHAT_MESSAGE_LIMIT = 50;
+
 // Role enum for messages
 export const messageRoleSchema = z.enum(["user", "assistant", "system"]);
 export type MessageRole = z.infer<typeof messageRoleSchema>;

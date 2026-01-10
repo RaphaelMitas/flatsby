@@ -6,6 +6,7 @@ import { z } from "zod";
 import { and, desc, eq, isNull, lt } from "@flatsby/db";
 import { chatMessages, conversations, users } from "@flatsby/db/schema";
 import {
+  CHAT_MESSAGE_LIMIT,
   conversationWithMessagesSchema,
   createConversationInputSchema,
   getConversationInputSchema,
@@ -71,6 +72,7 @@ export const chatRouter = createTRPCRouter({
         with: {
           messages: {
             orderBy: [chatMessages.createdAt],
+            limit: CHAT_MESSAGE_LIMIT,
           },
         },
       });
