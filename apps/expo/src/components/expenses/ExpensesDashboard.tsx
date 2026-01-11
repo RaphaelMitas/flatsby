@@ -169,13 +169,7 @@ function ExpensesDashboardInner() {
         />
       )}
       {hasExpenses && (
-        <View
-          style={{
-            position: "absolute",
-            bottom: 8,
-            right: 16,
-          }}
-        >
+        <View className="absolute right-4 bottom-4">
           <Button
             size="icon"
             icon="plus"

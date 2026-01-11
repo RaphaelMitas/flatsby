@@ -1,12 +1,16 @@
 {
-  "name": "@flatsby/api",
-  "version": "0.1.0",
+  "name": "@flatsby/chat",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./src/*.ts"
     }
   },
   "license": "MIT",
@@ -19,14 +23,10 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@flatsby/auth": "workspace:*",
-    "@flatsby/db": "workspace:*",
+    "@ai-sdk/react": "catalog:",
     "@flatsby/validators": "workspace:*",
-    "@trpc/server": "catalog:",
-    "ai": "catalog:",
-    "effect": "^3.17.0",
-    "superjson": "catalog:",
-    "zod": "catalog:"
+    "@tanstack/react-query": "catalog:",
+    "ai": "catalog:"
   },
   "devDependencies": {
     "@flatsby/eslint-config": "workspace:*",

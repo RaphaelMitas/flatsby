@@ -1,5 +1,4 @@
-"use client";
-
+import type { ToolPreferences } from "@flatsby/validators/chat/messages";
 import type {
   ChatUIMessage,
   PersistedToolCallOutputUpdate,
@@ -11,9 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createTRPCChatTransport } from "@flatsby/chat";
 
-import { useGroupContext } from "~/app/_components/context/group-context";
-import { useTRPC } from "~/trpc/react";
-import { useToolPreferences } from "./useToolPreferences";
+import { trpc } from "./api";
 
 type OutputAvailableToolPart = Extract<
   ChatUIMessage["parts"][number],
@@ -30,49 +27,52 @@ function withUpdatedOutput<T extends OutputAvailableToolPart>(
   };
 }
 
-// const DEFAULT_SETTINGS: ToolPreferences = {
-//   shoppingListToolsEnabled: true,
-//   expenseToolsEnabled: true,
-// };
-
-export interface UseTRPCChatOptions {
+export interface UseExpoChatOptions {
   conversationId: string;
   initialMessages?: ChatUIMessage[];
   initialModel?: ChatModel;
+  groupId?: number;
   onFinish?: () => void;
 }
 
 /**
- * Custom hook that integrates AI SDK's useChat with tRPC streaming mutations.
- *
- * This provides the best of both worlds:
- * - useChat's built-in message state management and streaming UI
- * - tRPC's type safety and server-side persistence
+ * Custom hook that integrates AI SDK's useChat with tRPC streaming mutations for Expo.
  */
-export function useTRPCChat({
+export function useExpoChat({
   conversationId,
   initialMessages = [],
   initialModel,
+  groupId,
   onFinish,
-}: UseTRPCChatOptions) {
-  const trpc = useTRPC();
+}: UseExpoChatOptions) {
   const queryClient = useQueryClient();
-  const { currentGroup } = useGroupContext();
 
   const [selectedModel, setSelectedModel] = useState<ChatModel | undefined>(
     initialModel,
   );
 
+  const [toolPreferences, setToolPreferences] = useState<ToolPreferences>({
+    shoppingListToolsEnabled: true,
+    expenseToolsEnabled: true,
+  });
+
   const handleModelChange = useCallback((model: ChatModel) => {
     setSelectedModel(model);
   }, []);
 
-  const { updateToolPreferences, toolPreferences } = useToolPreferences();
+  const updateToolPreferences = useCallback(
+    (newPrefs: Partial<ToolPreferences>) => {
+      setToolPreferences((prev) => ({ ...prev, ...newPrefs }));
+    },
+    [],
+  );
 
   const sendMutation = useMutation(trpc.chat.send.mutationOptions());
+
+  // Use refs to always get the latest values without recreating transport
   const modelRef = useRef(selectedModel);
   const toolPreferencesRef = useRef(toolPreferences);
-  const groupIdRef = useRef(currentGroup?.id);
+  const groupIdRef = useRef(groupId);
 
   useEffect(() => {
     modelRef.current = selectedModel;
@@ -83,8 +83,8 @@ export function useTRPCChat({
   }, [toolPreferences]);
 
   useEffect(() => {
-    groupIdRef.current = currentGroup?.id;
-  }, [currentGroup?.id]);
+    groupIdRef.current = groupId;
+  }, [groupId]);
 
   const transport = useMemo(() => {
     // eslint-disable-next-line react-hooks/refs
@@ -97,7 +97,7 @@ export function useTRPCChat({
     });
   }, [sendMutation]);
 
-  const handleFinish = () => {
+  const handleFinish = useCallback(() => {
     void queryClient.invalidateQueries(
       trpc.chat.getConversation.queryOptions({ conversationId }),
     );
@@ -105,7 +105,7 @@ export function useTRPCChat({
       queryKey: trpc.chat.getUserConversations.infiniteQueryKey(),
     });
     onFinish?.();
-  };
+  }, [queryClient, conversationId, onFinish]);
 
   const { regenerate, setMessages, sendMessage, ...restChat } = useChat({
     id: conversationId,

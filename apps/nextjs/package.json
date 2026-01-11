@@ -18,6 +18,7 @@
     "@better-auth/expo": "catalog:",
     "@flatsby/api": "workspace:*",
     "@flatsby/auth": "workspace:*",
+    "@flatsby/chat": "workspace:*",
     "@flatsby/db": "workspace:*",
     "@flatsby/ui": "workspace:*",
     "@flatsby/validators": "workspace:*",

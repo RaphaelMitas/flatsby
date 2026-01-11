@@ -70,12 +70,13 @@ interface ButtonProps
   extends PressableProps, VariantProps<typeof buttonVariants> {
   title?: string;
   icon?: IconProps["name"];
+  children?: React.ReactNode;
 }
 
 const Button = React.forwardRef<
   React.ComponentRef<typeof Pressable>,
   ButtonProps
->(({ className, variant, size, title, icon, disabled, ...props }, ref) => {
+>(({ className, variant, size, title, icon, disabled, children, ...props }, ref) => {
   return (
     <Pressable
       ref={ref}
@@ -100,7 +101,7 @@ const Button = React.forwardRef<
           }
         />
       )}
-      {title && size !== "icon" && (
+      {children ?? (title && size !== "icon" && (
         <Text
           disabled={disabled ?? false}
           className={buttonTextVariants({
@@ -110,7 +111,7 @@ const Button = React.forwardRef<
         >
           {title}
         </Text>
-      )}
+      ))}
     </Pressable>
   );
 });

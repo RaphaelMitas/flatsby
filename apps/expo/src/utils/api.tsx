@@ -1,6 +1,3 @@
-// Polyfill for streaming support in React Native
-import "react-native-polyfill-globals/auto";
-
 import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { QueryClient } from "@tanstack/react-query";
@@ -12,6 +9,7 @@ import {
   splitLink,
 } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import { fetch as expoFetch } from "expo/fetch";
 import superjson from "superjson";
 
 import { authClient } from "./auth/auth-client";
@@ -70,6 +68,8 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
           transformer: superjson,
           url: `${getBaseUrl()}/api/trpc`,
           headers: getHeaders,
+          // Use expo/fetch for proper streaming support in React Native
+          fetch: expoFetch as unknown as typeof globalThis.fetch,
         }),
         false: httpBatchLink({
           transformer: superjson,

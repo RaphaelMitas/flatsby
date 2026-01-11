@@ -32,7 +32,6 @@
     "./winter/snow-effect": "./src/winter/snow-effect.tsx",
     "./winter/snow-effect-native": "./src/winter/snow-effect-native.tsx",
     "./seasonal-theme": "./src/seasonal-theme.ts",
-    "./chat-transport": "./src/chat-transport.ts",
     "./ai-elements": "./src/components/ai-elements/index.ts",
     "./autumn/checkout-dialog": "./src/components/autumn/checkout-dialog.tsx",
     "./autumn/pricing-table": "./src/components/autumn/pricing-table.tsx",
