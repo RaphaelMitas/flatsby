@@ -13,6 +13,7 @@ import { FlashList } from "@shopify/flash-list";
 
 import { CHAT_MESSAGE_LIMIT } from "@flatsby/validators/chat/messages";
 
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -212,6 +213,7 @@ export const ChatInterface = ({
               onLayout={handleLayout}
               onContentSizeChange={handleContentSizeChange}
               scrollEventThrottle={16}
+              renderScrollComponent={(props) => <AppScrollView {...props} />}
               refreshControl={
                 <RefreshControl
                   refreshing={refreshing}

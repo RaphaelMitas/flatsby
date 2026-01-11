@@ -5,10 +5,11 @@ import { Keyboard, Text, TextInput, View } from "react-native";
 
 import { CHAT_MODELS, modelSupportsTools } from "@flatsby/validators/models";
 
+import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
 import { useBottomSheetPicker } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import { Card } from "~/lib/ui/card";
-import { useThemeColors } from "~/lib/utils";
+import { cn, useThemeColors } from "~/lib/utils";
 
 type PromptStatus = "ready" | "submitted" | "streaming" | "error";
 
@@ -152,7 +153,7 @@ export const ChatFooter = memo(function ChatFooter({
 }: ChatFooterProps) {
   const [input, setInput] = useState("");
   const { getColor } = useThemeColors();
-
+  const [isFocused, setIsFocused] = useState(false);
   const isLoading = status === "submitted" || status === "streaming";
   const canSend = input.trim().length > 0 && !isLoading && !disabled;
 
@@ -164,47 +165,57 @@ export const ChatFooter = memo(function ChatFooter({
   }, [canSend, input, sendMessage]);
 
   return (
-    <View className="border-border border-t">
-      {error && (
-        <View className="border-destructive bg-destructive/10 mx-4 mt-4 rounded-lg border p-3">
-          <Text className="text-destructive text-sm">{error}</Text>
-        </View>
-      )}
-
-      <View className="p-4">
-        <Card className="pt-4">
-          <TextInput
-            className="text-foreground max-h-64 min-h-[44px] px-4 py-3"
-            placeholder="Type your message..."
-            placeholderTextColor={getColor("muted-foreground")}
-            value={input}
-            onChangeText={setInput}
-            multiline
-            maxLength={2000}
-            editable={!disabled && !isLoading}
-            onSubmitEditing={handleSubmit}
-            submitBehavior="blurAndSubmit"
-          />
-          <View className="border-border flex-row items-center justify-between border-t px-3 py-2">
-            <ChatToolbar
-              selectedModel={selectedModel}
-              onModelChange={onModelChange}
-              toolPreferences={toolPreferences}
-              onToolPreferencesChange={onToolPreferencesChange}
-              disabled={disabled}
-              isLoading={isLoading}
-            />
-            <Button
-              variant={canSend ? "primary" : "ghost"}
-              size="icon"
-              onPress={handleSubmit}
-              disabled={!canSend}
-              icon={isLoading ? "loader" : "arrow-up"}
-              className="p-3"
-            />
+    <AppKeyboardStickyView disabled={!isFocused}>
+      <View
+        className={cn({
+          "border-border border-t": !isFocused,
+        })}
+      >
+        {error && (
+          <View className="border-destructive bg-destructive/10 mx-4 mt-4 rounded-lg border p-3">
+            <Text className="text-destructive text-sm">{error}</Text>
           </View>
-        </Card>
+        )}
+
+        <View className="p-4">
+          <Card className="pt-4">
+            <TextInput
+              className={cn("text-foreground max-h-64 min-h-[44px] px-4 py-3", {
+                "bg-transparent": isFocused,
+              })}
+              placeholder="Type your message..."
+              placeholderTextColor={getColor("muted-foreground")}
+              value={input}
+              onChangeText={setInput}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              multiline
+              maxLength={2000}
+              editable={!disabled && !isLoading}
+              onSubmitEditing={handleSubmit}
+              submitBehavior="blurAndSubmit"
+            />
+            <View className="border-border flex-row items-center justify-between border-t px-3 py-2">
+              <ChatToolbar
+                selectedModel={selectedModel}
+                onModelChange={onModelChange}
+                toolPreferences={toolPreferences}
+                onToolPreferencesChange={onToolPreferencesChange}
+                disabled={disabled}
+                isLoading={isLoading}
+              />
+              <Button
+                variant={canSend ? "primary" : "ghost"}
+                size="icon"
+                onPress={handleSubmit}
+                disabled={!canSend}
+                icon={isLoading ? "loader" : "arrow-up"}
+                className="p-3"
+              />
+            </View>
+          </Card>
+        </View>
       </View>
-    </View>
+    </AppKeyboardStickyView>
   );
 });

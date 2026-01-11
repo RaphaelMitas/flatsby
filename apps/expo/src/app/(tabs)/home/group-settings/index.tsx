@@ -22,7 +22,7 @@ import { useShoppingStore } from "~/utils/shopping-store";
 export default function GroupSettingsIndex() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { selectedGroupId } = useShoppingStore();
+  const { selectedGroupId, clearSelectedGroup } = useShoppingStore();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: group } = useSuspenseQuery(
@@ -79,7 +79,8 @@ export default function GroupSettingsIndex() {
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
     deleteGroupMutation.mutate({ id: Number(selectedGroupId) });
-    router.replace("/(tabs)/groups");
+    clearSelectedGroup();
+    router.dismissAll();
   };
 
   const handleCloseModal = () => {
@@ -96,24 +97,31 @@ export default function GroupSettingsIndex() {
         <SettingsHeader title={group.data.name} />
 
         <SettingsSection title={group.data.name}>
-          <Link href="/(tabs)/groups/edit-group/group-details" asChild>
+          <Link href="/(tabs)/home/group-settings/group-details" asChild>
             <SettingsItem
               title="Group Details"
               subtitle="Edit your group details"
               iconName="settings"
             />
           </Link>
-          <Link href="/(tabs)/groups/edit-group/members" asChild>
+          <Link href="/(tabs)/home/group-settings/members" asChild>
             <SettingsItem
               title="Members"
               subtitle="Manage your group members"
               iconName="users"
             />
           </Link>
+          <Link href="/(tabs)/home/shopping-lists" asChild>
+            <SettingsItem
+              title="Manage Shopping Lists"
+              subtitle="View, create, and edit shopping lists"
+              iconName="shopping-cart"
+            />
+          </Link>
         </SettingsSection>
 
         <SettingsSection title="Change Group">
-          <Link href="/(tabs)/groups" asChild>
+          <Link href="/settings/manage-groups" asChild>
             <SettingsItem
               title="Change Group"
               subtitle="Change selected group or create a new one"

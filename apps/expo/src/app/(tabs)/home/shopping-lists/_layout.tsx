@@ -1,15 +1,9 @@
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
 
 import { useThemedScreenOptions } from "~/lib/utils";
-import { useSession } from "~/utils/auth/auth-client";
 
 export default function ShoppingListsLayout() {
-  const session = useSession();
   const themedScreenOptions = useThemedScreenOptions();
-
-  if (!session.data?.user) {
-    return <Redirect href="/auth/login" />;
-  }
 
   return (
     <Stack initialRouteName="index" screenOptions={themedScreenOptions}>
@@ -24,13 +18,6 @@ export default function ShoppingListsLayout() {
         name="create"
         options={{
           title: "Create Shopping List",
-          presentation: "modal",
-        }}
-      />
-      <Stack.Screen
-        name="edit-group"
-        options={{
-          title: "Edit Group",
           presentation: "modal",
         }}
       />

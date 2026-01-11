@@ -28,7 +28,7 @@ export function ExpensesDashboard() {
           variant="primary"
           size="lg"
           icon="arrow-left-right"
-          onPress={() => router.push("/(tabs)/groups")}
+          onPress={() => router.push("/(tabs)/home")}
         />
       </View>
     );

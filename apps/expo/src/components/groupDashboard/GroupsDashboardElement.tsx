@@ -107,7 +107,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
 
   const handleGroupSelect = () => {
     setSelectedGroup(group.id, group.name);
-    router.push("/shoppingLists");
+    router.push("/(tabs)/home/shopping-lists");
   };
 
   const isSelected = selectedGroupId === group.id;
@@ -126,7 +126,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
           if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
             setSelectedGroup(group.id, group.name);
-            router.push("/groups/edit-group");
+            router.push("/(tabs)/home/group-settings");
           } else {
             swipeableRef.current?.close();
             setShowDeleteModal(true);

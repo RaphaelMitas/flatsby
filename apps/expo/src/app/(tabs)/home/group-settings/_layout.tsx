@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 
 import { useThemedScreenOptions } from "~/lib/utils";
 
-export default function SettingsLayout() {
+export default function GroupSettingsLayout() {
   const themedScreenOptions = useThemedScreenOptions();
 
   return (

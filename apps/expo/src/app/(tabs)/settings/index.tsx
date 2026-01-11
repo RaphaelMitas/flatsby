@@ -1,7 +1,7 @@
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
 import { useCallback, useRef } from "react";
-import { View } from "react-native";
+import { Linking, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ import { useTheme } from "~/lib/ui/theme";
 import { useWinterEffects } from "~/lib/ui/winter-effects";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
+import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function SettingsIndex() {
@@ -127,7 +128,7 @@ export default function SettingsIndex() {
           />
         </SettingsSection>
         <SettingsSection title="Groups">
-          <Link href="/groups" asChild>
+          <Link href="/settings/manage-groups" asChild>
             <SettingsItem
               title="Your Groups"
               subtitle="Manage your groups"
@@ -143,13 +144,12 @@ export default function SettingsIndex() {
               iconName="user"
             />
           </Link>
-          <Link href="/settings/account" asChild>
-            <SettingsItem
-              title="Account"
-              subtitle="Manage your account settings"
-              iconName="settings"
-            />
-          </Link>
+          <SettingsItem
+            title="Manage Account"
+            subtitle="Manage your account settings on the web"
+            iconName="settings"
+            onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
+          />
           <SettingsItem
             title="Logout"
             subtitle="Sign out of your account"

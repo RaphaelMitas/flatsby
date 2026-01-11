@@ -217,7 +217,7 @@ export default function MembersScreen() {
 
   const handleMemberPress = (memberId: number) => {
     router.push({
-      pathname: "/(tabs)/groups/edit-group/member-actions",
+      pathname: "/(tabs)/home/group-settings/member-actions",
       params: { memberId: memberId.toString() },
     });
   };

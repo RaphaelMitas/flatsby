@@ -31,7 +31,7 @@ export function GroupsDashboard() {
           variant="primary"
           size="lg"
           icon="plus"
-          onPress={() => router.push("/groups/create")}
+          onPress={() => router.push("/(tabs)/home/create-group")}
         />
       </View>
 
@@ -44,7 +44,7 @@ export function GroupsDashboard() {
             title="Create a Group"
             variant="primary"
             size="lg"
-            onPress={() => router.push("/groups/create")}
+            onPress={() => router.push("/(tabs)/home/create-group")}
           />
           <Text className="text-muted-foreground text-center text-sm">
             Pull down to refresh if you've been invited

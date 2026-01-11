@@ -10,9 +10,7 @@ import { useSession } from "~/utils/auth/auth-client";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 const houseIcon = LucideIcon.getImageSourceSync("house", 20);
-const usersIcon = LucideIcon.getImageSourceSync("users", 20);
 const shoppingBasketIcon = LucideIcon.getImageSourceSync("shopping-basket", 20);
-const shoppingCartIcon = LucideIcon.getImageSourceSync("shopping-cart", 20);
 const walletIcon = LucideIcon.getImageSourceSync("wallet", 20);
 const settingsIcon = LucideIcon.getImageSourceSync("settings", 20);
 const messageSquareIcon = LucideIcon.getImageSourceSync("message-square", 20);
@@ -23,12 +21,8 @@ const winterCartIcon = LucideIcon.getImageSourceSync("gift", 20);
 
 export default function TabLayout() {
   const session = useSession();
-  const {
-    selectedGroupId,
-    selectedGroupName,
-    selectedShoppingListId,
-    selectedShoppingListName,
-  } = useShoppingStore();
+  const { selectedGroupId, selectedShoppingListId, selectedShoppingListName } =
+    useShoppingStore();
   const { getColor } = useThemeColors();
   const { isEnabled: isWinterEffectsEnabled } = useWinterEffects();
 
@@ -76,7 +70,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      initialRouteName="index"
+      initialRouteName="home"
       screenOptions={{
         tabBarActiveTintColor: getColor("primary"),
       }}
@@ -87,7 +81,7 @@ export default function TabLayout() {
       rippleColor={getColor("primary")}
     >
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
           title: "Home",
           tabBarIcon:
@@ -96,23 +90,6 @@ export default function TabLayout() {
               : houseIcon
                 ? () => houseIcon
                 : undefined,
-        }}
-      />
-      <Tabs.Screen
-        name="groups"
-        options={{
-          title: "Your Groups",
-          tabBarIcon: usersIcon ? () => usersIcon : undefined,
-          tabBarItemHidden: !!selectedGroupId,
-        }}
-      />
-
-      <Tabs.Screen
-        name="shoppingLists"
-        options={{
-          title: selectedGroupName ?? "Shopping Lists",
-          tabBarIcon: shoppingCartIcon ? () => shoppingCartIcon : undefined,
-          tabBarItemHidden: !selectedGroupId,
         }}
       />
       <Tabs.Screen

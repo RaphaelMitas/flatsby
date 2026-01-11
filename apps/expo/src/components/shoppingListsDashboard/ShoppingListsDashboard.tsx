@@ -25,7 +25,7 @@ export function ShoppingListsDashboard() {
           variant="primary"
           size="lg"
           icon="arrow-left-right"
-          onPress={() => router.push("/groups")}
+          onPress={() => router.push("/")}
         />
       </View>
     );
@@ -81,7 +81,7 @@ function ShoppingListsDashboardInner() {
             variant="outline"
             size="md"
             icon="settings"
-            onPress={() => router.push(`/groups/edit-group`)}
+            onPress={() => router.push("/(tabs)/home/group-settings")}
           />
         </View>
 
@@ -92,7 +92,9 @@ function ShoppingListsDashboardInner() {
           size="lg"
           icon="plus"
           onPress={() =>
-            router.push(`/shoppingLists/create?groupId=${selectedGroupId}`)
+            router.push(
+              `/(tabs)/home/shopping-lists/create?groupId=${selectedGroupId}`,
+            )
           }
         />
 
