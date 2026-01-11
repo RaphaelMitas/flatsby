@@ -63,9 +63,11 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <WinterEffectsProvider>
-            <WinterSnowWrapper />
             <TRPCReactProvider>
-              <AutumnProvider betterAuthUrl={env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL}>
+              <AutumnProvider
+                betterAuthUrl={env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL}
+              >
+                <WinterSnowWrapper />
                 {props.children}
               </AutumnProvider>
             </TRPCReactProvider>

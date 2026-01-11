@@ -6,6 +6,10 @@ import { persistedToolCallSchema } from "./tools";
 
 export const CHAT_MESSAGE_LIMIT = 50;
 
+export const CHAT_FEATURES = {
+  regenerateEnabled: false,
+};
+
 // Role enum for messages
 export const messageRoleSchema = z.enum(["user", "assistant", "system"]);
 export type MessageRole = z.infer<typeof messageRoleSchema>;

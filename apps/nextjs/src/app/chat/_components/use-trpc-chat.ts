@@ -10,30 +10,11 @@ import { useChat } from "@ai-sdk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createTRPCChatTransport } from "@flatsby/chat";
+import { withUpdatedOutput } from "@flatsby/validators/chat/tools";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { useToolPreferences } from "./useToolPreferences";
-
-type OutputAvailableToolPart = Extract<
-  ChatUIMessage["parts"][number],
-  { state: "output-available"; toolCallId: string; output: object }
->;
-
-function withUpdatedOutput<T extends OutputAvailableToolPart>(
-  part: T,
-  update: PersistedToolCallOutputUpdate,
-): T {
-  return {
-    ...part,
-    output: { ...part.output, ...update },
-  };
-}
-
-// const DEFAULT_SETTINGS: ToolPreferences = {
-//   shoppingListToolsEnabled: true,
-//   expenseToolsEnabled: true,
-// };
 
 export interface UseTRPCChatOptions {
   conversationId: string;

@@ -18,32 +18,18 @@ import {
   toolPreferencesSchema,
 } from "@flatsby/validators/chat/messages";
 import {
-  addExpenseInputSchema,
-  addExpenseResultSchema,
-  addToShoppingListInputSchema,
-  addToShoppingListResultSchema,
-  getDebtsInputSchema,
-  getDebtsResultSchema,
-  getExpensesInputSchema,
-  getExpensesResultSchema,
-  getGroupMembersInputSchema,
-  getGroupMembersResultSchema,
-  getShoppingListItemsInputSchema,
-  getShoppingListItemsResultSchema,
-  getShoppingListsInputSchema,
-  getShoppingListsResultSchema,
-  markItemCompleteInputSchema,
-  markItemCompleteResultSchema,
   persistedToolCallOutputUpdateSchema,
-  removeItemInputSchema,
-  removeItemResultSchema,
+  persistedToolCallSchema,
+  withUpdatedOutput,
 } from "@flatsby/validators/chat/tools";
+import type { ChatModel } from "@flatsby/validators/models";
 import {
   chatModelSchema,
   modelSupportsTools,
 } from "@flatsby/validators/models";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import type { Database } from "../types";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
 import { buildToolsSystemPrompt, createChatTools } from "../utils/chat-tools";
 import { buildContextMessages } from "../utils/context-builder";
@@ -56,6 +42,64 @@ import {
 
 // Batched write interval in milliseconds
 const FLUSH_INTERVAL = 300;
+
+// Schema for validating gateway metadata from AI providers
+const gatewayMetadataSchema = z
+  .object({
+    cost: z.string().optional(),
+    generationId: z.string().optional(),
+  })
+  .optional();
+
+interface FinalizeStreamParams {
+  db: Database;
+  assistantMessageId: string;
+  conversationId: string;
+  buffer: string;
+  model: string;
+  providerMetadata: PromiseLike<Record<string, unknown> | undefined>;
+  completedToolCalls?: PersistedToolCall[];
+}
+
+/**
+ * Finalizes the stream by persisting the assistant message and updating the conversation.
+ * Used by both tools and non-tools paths.
+ */
+async function finalizeStream({
+  db,
+  assistantMessageId,
+  conversationId,
+  buffer,
+  model,
+  providerMetadata,
+  completedToolCalls,
+}: FinalizeStreamParams): Promise<{ cost: number | null; model: ChatModel | undefined }> {
+  const metadata = await providerMetadata;
+  const gatewayResult = gatewayMetadataSchema.safeParse(metadata?.gateway);
+  const gateway = gatewayResult.success ? gatewayResult.data : undefined;
+
+  await db
+    .update(chatMessages)
+    .set({
+      content: buffer,
+      status: "complete",
+      model,
+      cost: gateway?.cost ? parseFloat(gateway.cost) : null,
+      generationId: gateway?.generationId ?? null,
+      toolCalls: completedToolCalls?.length ? completedToolCalls : null,
+    })
+    .where(eq(chatMessages.id, assistantMessageId));
+
+  await db
+    .update(conversations)
+    .set({ updatedAt: new Date() })
+    .where(eq(conversations.id, conversationId));
+
+  return {
+    cost: gateway?.cost ? parseFloat(gateway.cost) : null,
+    model: chatModelSchema.safeParse(model).data,
+  };
+}
 
 export const chatRouter = createTRPCRouter({
   /**
@@ -264,7 +308,6 @@ export const chatRouter = createTRPCRouter({
     ctx,
     input,
   }) {
-    // Verify conversation exists and belongs to user
     const conversation = await ctx.db.query.conversations.findFirst({
       where: and(
         eq(conversations.id, input.conversationId),
@@ -279,7 +322,6 @@ export const chatRouter = createTRPCRouter({
       });
     }
 
-    // Check credits before AI generation (applies to all triggers)
     const { allowed } = await checkCredits({
       authApi: ctx.authApi,
       headers: ctx.headers,
@@ -293,28 +335,23 @@ export const chatRouter = createTRPCRouter({
       });
     }
 
-    // Use provided model or fall back to conversation's model
     const modelToUse = input.model ?? conversation.model ?? getDefaultModel();
 
-    // Update conversation model if changed
     if (input.model && input.model !== conversation.model) {
       await ctx.db
         .update(conversations)
         .set({ model: input.model })
         .where(eq(conversations.id, input.conversationId));
 
-      // Save as user's last used model preference
       await ctx.db
         .update(users)
         .set({ lastChatModelUsed: input.model })
         .where(eq(users.id, ctx.session.user.id));
     }
 
-    // Handle different triggers
     let assistantMessageId: string;
 
     if (input.trigger === "submit-message") {
-      // Insert user message
       await ctx.db.insert(chatMessages).values({
         id: input.message.id,
         conversationId: input.conversationId,
@@ -323,7 +360,6 @@ export const chatRouter = createTRPCRouter({
         status: "complete",
       });
 
-      // Create assistant placeholder with generated ID
       const [assistantMessage] = await ctx.db
         .insert(chatMessages)
         .values({
@@ -344,9 +380,7 @@ export const chatRouter = createTRPCRouter({
 
       assistantMessageId = assistantMessage.id;
 
-      // Auto-generate title on first message if conversation has no title
       if (!conversation.title) {
-        // Run title generation in background (don't await)
         void generateConversationTitle(input.message.content)
           .then(async (title) => {
             await ctx.db
@@ -359,7 +393,6 @@ export const chatRouter = createTRPCRouter({
           });
       }
     } else {
-      // Regenerate: reset the existing message
       if (!input.messageId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -367,7 +400,6 @@ export const chatRouter = createTRPCRouter({
         });
       }
 
-      // Reset the message content and status
       const updateResult = await ctx.db
         .update(chatMessages)
         .set({
@@ -392,13 +424,11 @@ export const chatRouter = createTRPCRouter({
       assistantMessageId = input.messageId;
     }
 
-    // Build context from conversation history
     const contextMessages = await buildContextMessages(
       ctx.db,
       input.conversationId,
     );
 
-    // Add the new user message to context if submitting
     if (input.trigger === "submit-message") {
       contextMessages.push({
         role: "user",
@@ -406,13 +436,10 @@ export const chatRouter = createTRPCRouter({
       });
     }
 
-    // Stream the AI response
     let buffer = "";
     let lastFlush = Date.now();
     let streamCompleted = false;
 
-    // Check if tools should be enabled and get groupId
-    // Tools are only available for models that support them
     const modelCanUseTools = modelSupportsTools(modelToUse);
     const shoppingListToolsEnabled =
       modelCanUseTools &&
@@ -428,14 +455,12 @@ export const chatRouter = createTRPCRouter({
     const groupId = input.groupId;
 
     try {
-      // Update status to streaming
       await ctx.db
         .update(chatMessages)
         .set({ status: "streaming" })
         .where(eq(chatMessages.id, assistantMessageId));
 
       if (anyToolsEnabled && groupId) {
-        // Use streaming with tools
         const toolOptions = {
           shoppingList: shoppingListToolsEnabled,
           expenses: expenseToolsEnabled,
@@ -453,7 +478,6 @@ export const chatRouter = createTRPCRouter({
           maxSteps: 5,
         });
 
-        // Track pending tool calls until we receive their results
         const pendingToolCalls = new Map<
           string,
           { name: string; input: unknown }
@@ -461,10 +485,13 @@ export const chatRouter = createTRPCRouter({
         const completedToolCalls: PersistedToolCall[] = [];
 
         for await (const chunk of streamResult.fullStream) {
+          if (ctx.signal?.aborted) {
+            break;
+          }
+
           if (chunk.type === "text-delta") {
             buffer += chunk.text;
 
-            // Batch writes every FLUSH_INTERVAL ms
             if (Date.now() - lastFlush > FLUSH_INTERVAL) {
               await ctx.db
                 .update(chatMessages)
@@ -478,7 +505,6 @@ export const chatRouter = createTRPCRouter({
               textDelta: chunk.text,
             };
           } else if (chunk.type === "tool-call") {
-            // Store pending tool call for later completion
             pendingToolCalls.set(chunk.toolCallId, {
               name: chunk.toolName,
               input: chunk.input,
@@ -491,144 +517,24 @@ export const chatRouter = createTRPCRouter({
               args: chunk.input as Record<string, unknown>,
             };
           } else if (chunk.type === "tool-result") {
-            // Complete the tool call with its output using safeParse
             const pending = pendingToolCalls.get(chunk.toolCallId);
             if (pending) {
-              if (pending.name === "getShoppingLists") {
-                const inputResult = getShoppingListsInputSchema.safeParse(
-                  pending.input,
-                );
-                const outputResult = getShoppingListsResultSchema.safeParse(
-                  chunk.output,
-                );
-                if (inputResult.success && outputResult.success) {
-                  completedToolCalls.push({
-                    id: chunk.toolCallId,
-                    name: "getShoppingLists",
-                    input: inputResult.data,
-                    output: outputResult.data,
-                  });
-                }
-              } else if (pending.name === "addToShoppingList") {
-                const inputResult = addToShoppingListInputSchema.safeParse(
-                  pending.input,
-                );
-                const outputResult = addToShoppingListResultSchema.safeParse(
-                  chunk.output,
-                );
-                if (inputResult.success && outputResult.success) {
-                  completedToolCalls.push({
-                    id: chunk.toolCallId,
-                    name: "addToShoppingList",
-                    input: inputResult.data,
-                    output: outputResult.data,
-                  });
-                }
-              } else if (pending.name === "getShoppingListItems") {
-                const inputResult = getShoppingListItemsInputSchema.safeParse(
-                  pending.input,
-                );
-                const outputResult = getShoppingListItemsResultSchema.safeParse(
-                  chunk.output,
-                );
-                if (inputResult.success && outputResult.success) {
-                  completedToolCalls.push({
-                    id: chunk.toolCallId,
-                    name: "getShoppingListItems",
-                    input: inputResult.data,
-                    output: outputResult.data,
-                  });
-                }
-              } else if (pending.name === "markItemComplete") {
-                const inputResult = markItemCompleteInputSchema.safeParse(
-                  pending.input,
-                );
-                const outputResult = markItemCompleteResultSchema.safeParse(
-                  chunk.output,
-                );
-                if (inputResult.success && outputResult.success) {
-                  completedToolCalls.push({
-                    id: chunk.toolCallId,
-                    name: "markItemComplete",
-                    input: inputResult.data,
-                    output: outputResult.data,
-                  });
-                }
-              } else if (pending.name === "removeItem") {
-                const inputResult = removeItemInputSchema.safeParse(
-                  pending.input,
-                );
-                const outputResult = removeItemResultSchema.safeParse(
-                  chunk.output,
-                );
-                if (inputResult.success && outputResult.success) {
-                  completedToolCalls.push({
-                    id: chunk.toolCallId,
-                    name: "removeItem",
-                    input: inputResult.data,
-                    output: outputResult.data,
-                  });
-                }
-              } else if (pending.name === "getGroupMembers") {
-                const inputResult = getGroupMembersInputSchema.safeParse(
-                  pending.input,
-                );
-                const outputResult = getGroupMembersResultSchema.safeParse(
-                  chunk.output,
-                );
-                if (inputResult.success && outputResult.success) {
-                  completedToolCalls.push({
-                    id: chunk.toolCallId,
-                    name: "getGroupMembers",
-                    input: inputResult.data,
-                    output: outputResult.data,
-                  });
-                }
-              } else if (pending.name === "getDebts") {
-                const inputResult = getDebtsInputSchema.safeParse(
-                  pending.input,
-                );
-                const outputResult = getDebtsResultSchema.safeParse(
-                  chunk.output,
-                );
-                if (inputResult.success && outputResult.success) {
-                  completedToolCalls.push({
-                    id: chunk.toolCallId,
-                    name: "getDebts",
-                    input: inputResult.data,
-                    output: outputResult.data,
-                  });
-                }
-              } else if (pending.name === "addExpense") {
-                const inputResult = addExpenseInputSchema.safeParse(
-                  pending.input,
-                );
-                const outputResult = addExpenseResultSchema.safeParse(
-                  chunk.output,
-                );
-                if (inputResult.success && outputResult.success) {
-                  completedToolCalls.push({
-                    id: chunk.toolCallId,
-                    name: "addExpense",
-                    input: inputResult.data,
-                    output: outputResult.data,
-                  });
-                }
-              } else if (pending.name === "getExpenses") {
-                const inputResult = getExpensesInputSchema.safeParse(
-                  pending.input,
-                );
-                const outputResult = getExpensesResultSchema.safeParse(
-                  chunk.output,
-                );
-                if (inputResult.success && outputResult.success) {
-                  completedToolCalls.push({
-                    id: chunk.toolCallId,
-                    name: "getExpenses",
-                    input: inputResult.data,
-                    output: outputResult.data,
-                  });
-                }
+              // Validate using the discriminated union schema - handles all tool types
+              const toolCallResult = persistedToolCallSchema.safeParse({
+                id: chunk.toolCallId,
+                name: pending.name,
+                input: pending.input,
+                output: chunk.output as unknown,
+              });
+
+              if (toolCallResult.success) {
+                completedToolCalls.push(toolCallResult.data);
+              } else {
+                console.error("[Chat] Tool validation failed:", {
+                  toolName: pending.name,
+                  toolCallId: chunk.toolCallId,
+                  errors: z.flattenError(toolCallResult.error),
+                });
               }
               pendingToolCalls.delete(chunk.toolCallId);
             }
@@ -644,61 +550,42 @@ export const chatRouter = createTRPCRouter({
 
         streamCompleted = true;
 
-        // Extract cost and generation info from provider metadata
-        const metadata = await streamResult.providerMetadata;
-        const gateway = metadata?.gateway as
-          | {
-              cost?: string;
-              generationId?: string;
-            }
-          | undefined;
+        const { cost, model } = await finalizeStream({
+          db: ctx.db,
+          assistantMessageId,
+          conversationId: input.conversationId,
+          buffer,
+          model: streamResult.model,
+          providerMetadata: streamResult.providerMetadata,
+          completedToolCalls,
+        });
 
-        // Final write with complete status and tool calls
-        await ctx.db
-          .update(chatMessages)
-          .set({
-            content: buffer,
-            status: "complete",
-            model: streamResult.model,
-            cost: gateway?.cost ? parseFloat(gateway.cost) : null,
-            generationId: gateway?.generationId ?? null,
-            toolCalls:
-              completedToolCalls.length > 0 ? completedToolCalls : null,
-          })
-          .where(eq(chatMessages.id, assistantMessageId));
-
-        // Update conversation updatedAt timestamp
-        await ctx.db
-          .update(conversations)
-          .set({ updatedAt: new Date() })
-          .where(eq(conversations.id, input.conversationId));
-
-        // Yield finish event
         yield {
           type: "finish" as const,
           content: buffer,
           status: "complete" as const,
           messageId: assistantMessageId,
-          model: chatModelSchema.safeParse(streamResult.model).data,
-          cost: gateway?.cost ? parseFloat(gateway.cost) : null,
+          model,
+          cost,
         };
 
-        // Track credits
         await trackAIUsage({
           authApi: ctx.authApi,
           headers: ctx.headers,
-          cost: gateway?.cost,
+          cost: cost?.toString(),
         });
       } else {
-        // Standard streaming without tools
         const streamResult = streamChatCompletion(contextMessages, {
           model: modelToUse,
         });
 
         for await (const chunk of streamResult.textStream) {
+          if (ctx.signal?.aborted) {
+            break;
+          }
+
           buffer += chunk;
 
-          // Batch writes every FLUSH_INTERVAL ms
           if (Date.now() - lastFlush > FLUSH_INTERVAL) {
             await ctx.db
               .update(chatMessages)
@@ -707,7 +594,6 @@ export const chatRouter = createTRPCRouter({
             lastFlush = Date.now();
           }
 
-          // Yield chunk to client
           yield {
             type: "text-delta" as const,
             textDelta: chunk,
@@ -716,52 +602,31 @@ export const chatRouter = createTRPCRouter({
 
         streamCompleted = true;
 
-        // Extract cost and generation info from provider metadata
-        const metadata = await streamResult.providerMetadata;
-        const gateway = metadata?.gateway as
-          | {
-              cost?: string;
-              generationId?: string;
-            }
-          | undefined;
+        const { cost, model } = await finalizeStream({
+          db: ctx.db,
+          assistantMessageId,
+          conversationId: input.conversationId,
+          buffer,
+          model: streamResult.model,
+          providerMetadata: streamResult.providerMetadata,
+        });
 
-        // Final write with complete status, cost, model, and generationId
-        await ctx.db
-          .update(chatMessages)
-          .set({
-            content: buffer,
-            status: "complete",
-            model: streamResult.model,
-            cost: gateway?.cost ? parseFloat(gateway.cost) : null,
-            generationId: gateway?.generationId ?? null,
-          })
-          .where(eq(chatMessages.id, assistantMessageId));
-
-        // Update conversation updatedAt timestamp
-        await ctx.db
-          .update(conversations)
-          .set({ updatedAt: new Date() })
-          .where(eq(conversations.id, input.conversationId));
-
-        // Yield finish event with cost/model for immediate UI update
         yield {
           type: "finish" as const,
           content: buffer,
           status: "complete" as const,
           messageId: assistantMessageId,
-          model: chatModelSchema.safeParse(streamResult.model).data,
-          cost: gateway?.cost ? parseFloat(gateway.cost) : null,
+          model,
+          cost,
         };
 
-        // Track credits after successful completion (applies to all triggers)
         await trackAIUsage({
           authApi: ctx.authApi,
           headers: ctx.headers,
-          cost: gateway?.cost,
+          cost: cost?.toString(),
         });
       }
     } catch (error) {
-      // Update message status to error
       await ctx.db
         .update(chatMessages)
         .set({ content: buffer, status: "error" })
@@ -797,57 +662,51 @@ export const chatRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Get the message
-      const message = await ctx.db.query.chatMessages.findFirst({
-        where: eq(chatMessages.id, input.messageId),
-        with: {
-          conversation: {
-            columns: { userId: true },
+      return await ctx.db.transaction(async (tx) => {
+        const message = await tx.query.chatMessages.findFirst({
+          where: eq(chatMessages.id, input.messageId),
+          with: {
+            conversation: {
+              columns: { userId: true },
+            },
           },
-        },
-      });
-
-      if (!message) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Message not found",
         });
-      }
 
-      // Verify ownership
-      if (message.conversation.userId !== ctx.session.user.id) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Not authorized",
-        });
-      }
-
-      // Update the specific tool call's output
-      // Cast to unknown first to avoid strict type checking on JSON column
-      const toolCalls = message.toolCalls;
-
-      if (!toolCalls) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Message has no tool calls",
-        });
-      }
-
-      const updatedToolCalls = toolCalls.map((tc) => {
-        if (tc.id === input.toolCallId) {
-          return {
-            ...tc,
-            output: { ...tc.output, ...input.outputUpdate },
-          } as PersistedToolCall;
+        if (!message) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Message not found",
+          });
         }
-        return tc;
+
+        if (message.conversation.userId !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Not authorized",
+          });
+        }
+
+        const toolCalls = message.toolCalls;
+
+        if (!toolCalls) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Message has no tool calls",
+          });
+        }
+
+        const updatedToolCalls = toolCalls.map((tc) =>
+          tc.id === input.toolCallId
+            ? withUpdatedOutput(tc, input.outputUpdate)
+            : tc,
+        );
+
+        await tx
+          .update(chatMessages)
+          .set({ toolCalls: updatedToolCalls })
+          .where(eq(chatMessages.id, input.messageId));
+
+        return { success: true };
       });
-
-      await ctx.db
-        .update(chatMessages)
-        .set({ toolCalls: updatedToolCalls })
-        .where(eq(chatMessages.id, input.messageId));
-
-      return { success: true };
     }),
 });

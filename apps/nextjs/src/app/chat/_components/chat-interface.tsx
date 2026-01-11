@@ -29,7 +29,10 @@ import {
 } from "@flatsby/ui/ai-elements";
 import { Button } from "@flatsby/ui/button";
 import { costToCredits, formatCredits } from "@flatsby/validators/billing";
-import { CHAT_MESSAGE_LIMIT } from "@flatsby/validators/chat/messages";
+import {
+  CHAT_FEATURES,
+  CHAT_MESSAGE_LIMIT,
+} from "@flatsby/validators/chat/messages";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { ChatFooter } from "./chat-footer";
@@ -134,13 +137,16 @@ const ChatMessageItem = memo(function ChatMessageItem({
               `${formatCredits(costToCredits(messageCost))} credits`}
           </span>
         )}
-        {message.role === "assistant" && content && !isLoading && (
-          <MessageActions className="opacity-0 transition-opacity group-hover:opacity-100">
-            <MessageAction tooltip="Regenerate" onClick={handleRegenerate}>
-              <RefreshCwIcon className="size-4" />
-            </MessageAction>
-          </MessageActions>
-        )}
+        {CHAT_FEATURES.regenerateEnabled &&
+          message.role === "assistant" &&
+          content &&
+          !isLoading && (
+            <MessageActions className="opacity-0 transition-opacity group-hover:opacity-100">
+              <MessageAction tooltip="Regenerate" onClick={handleRegenerate}>
+                <RefreshCwIcon className="size-4" />
+              </MessageAction>
+            </MessageActions>
+          )}
       </MessageToolbar>
     </Message>
   );

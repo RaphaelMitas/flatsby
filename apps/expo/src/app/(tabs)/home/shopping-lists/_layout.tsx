@@ -11,7 +11,6 @@ export default function ShoppingListsLayout() {
         name="index"
         options={{
           title: "Your Shopping Lists",
-          headerShown: false,
         }}
       />
       <Stack.Screen

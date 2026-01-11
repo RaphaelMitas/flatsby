@@ -89,7 +89,7 @@ function DashboardWithGroup() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             <Button
-              title="Manage Shopping Lists"
+              title="Select Shopping List"
               variant={selectedShoppingListName ? "outline" : "primary"}
               icon="shopping-cart"
               onPress={() => router.push("/(tabs)/home/shopping-lists")}

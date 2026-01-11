@@ -2,7 +2,11 @@
 
 import type { ReactNode } from "react";
 
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@flatsby/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@flatsby/ui/sidebar";
 
 import { GroupContextProvider } from "~/app/_components/context/group-context";
 import { AppSidebar } from "./app-sidebar";
@@ -23,9 +27,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             <SidebarTrigger className="-ml-1" />
             <HomeLink />
           </header>
-          <main className="flex min-h-0 flex-1 flex-col overflow-auto pb-16 md:pb-0">
+          <div className="flex min-h-0 flex-1 flex-col overflow-auto pb-16 md:pb-0">
             {children}
-          </main>
+          </div>
         </SidebarInset>
         <BottomNavigation />
       </GroupContextProvider>

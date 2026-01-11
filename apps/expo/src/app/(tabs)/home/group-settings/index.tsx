@@ -113,8 +113,8 @@ export default function GroupSettingsIndex() {
           </Link>
           <Link href="/(tabs)/home/shopping-lists" asChild>
             <SettingsItem
-              title="Manage Shopping Lists"
-              subtitle="View, create, and edit shopping lists"
+              title="Select Shopping List"
+              subtitle="Select, create, and edit shopping lists"
               iconName="shopping-cart"
             />
           </Link>

@@ -345,6 +345,20 @@ export type PersistedToolCallOutputUpdate = z.infer<
   typeof persistedToolCallOutputUpdateSchema
 >;
 
+/**
+ * Helper to update an object's output while preserving its type.
+ * Works with both PersistedToolCall (API) and OutputAvailableToolPart (UI).
+ */
+export function withUpdatedOutput<T extends { output: object }>(
+  item: T,
+  update: PersistedToolCallOutputUpdate,
+): T {
+  return {
+    ...item,
+    output: { ...item.output, ...update },
+  };
+}
+
 // ============================================================================
 // AI SDK Tool Definitions (for type inference)
 // ============================================================================

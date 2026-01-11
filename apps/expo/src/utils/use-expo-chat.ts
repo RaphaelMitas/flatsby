@@ -9,23 +9,9 @@ import { useChat } from "@ai-sdk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createTRPCChatTransport } from "@flatsby/chat";
+import { withUpdatedOutput } from "@flatsby/validators/chat/tools";
 
 import { trpc } from "./api";
-
-type OutputAvailableToolPart = Extract<
-  ChatUIMessage["parts"][number],
-  { state: "output-available"; toolCallId: string; output: object }
->;
-
-function withUpdatedOutput<T extends OutputAvailableToolPart>(
-  part: T,
-  update: PersistedToolCallOutputUpdate,
-): T {
-  return {
-    ...part,
-    output: { ...part.output, ...update },
-  };
-}
 
 export interface UseExpoChatOptions {
   conversationId: string;

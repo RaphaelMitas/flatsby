@@ -11,7 +11,10 @@ import { RefreshControl, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 
-import { CHAT_MESSAGE_LIMIT } from "@flatsby/validators/chat/messages";
+import {
+  CHAT_FEATURES,
+  CHAT_MESSAGE_LIMIT,
+} from "@flatsby/validators/chat/messages";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
@@ -178,7 +181,11 @@ export const ChatInterface = ({
         conversationId={conversationId}
         isLoading={isLoading}
         groupId={selectedGroupId ?? undefined}
-        onRegenerate={item.role === "assistant" ? handleRegenerate : undefined}
+        onRegenerate={
+          CHAT_FEATURES.regenerateEnabled && item.role === "assistant"
+            ? handleRegenerate
+            : undefined
+        }
         onShoppingListSelect={handleShoppingListSelect}
         onMemberSelect={handleMemberSelect}
         updateToolCallOutput={updateToolCallOutput}
