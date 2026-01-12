@@ -4,8 +4,8 @@ import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
 import { ArrowRight, Calendar, Users } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Card } from "@flatsby/ui/card";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseCardProps {
@@ -62,29 +62,21 @@ export function ExpenseCard({ expense, groupId }: ExpenseCardProps) {
                   const groupMember = expense.expenseSplits[0].groupMember;
                   return (
                     <>
-                      <Avatar className="h-5 w-5">
-                        <AvatarImage
-                          alt={groupMember.user.name}
-                          src={groupMember.user.image ?? undefined}
-                        />
-                        <AvatarFallback className="text-xs">
-                          {groupMember.user.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar
+                        name={groupMember.user.name}
+                        image={groupMember.user.image}
+                        size="xs"
+                      />
                       <span>{groupMember.user.name}</span>
                       <ArrowRight className="h-4 w-4" />
                     </>
                   );
                 })()}
-              <Avatar className="h-5 w-5">
-                <AvatarImage
-                  alt={paidByName}
-                  src={expense.paidByGroupMember.user.image ?? undefined}
-                />
-                <AvatarFallback className="text-xs">
-                  {paidByName.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                name={paidByName}
+                image={expense.paidByGroupMember.user.image}
+                size="xs"
+              />
               <span className="truncate">
                 {`${expense.splitMethod === "settlement" ? "" : "Paid by "}${paidByName}`}
               </span>

@@ -12,19 +12,26 @@ interface AppKeyboardStickyViewProps extends Omit<
   includeTabBar?: boolean;
   className?: string;
   children: ReactNode;
+  disabled?: boolean;
 }
 
 export function AppKeyboardStickyView({
   children,
   className,
+  disabled = false,
   ...props
 }: AppKeyboardStickyViewProps) {
   const tabbarHeight = useBottomTabBarHeight();
   const safeAreaInsets = useSafeAreaInsets();
+
   return (
     <KeyboardStickyView
       offset={{
-        opened: Platform.OS === "ios" ? tabbarHeight : safeAreaInsets.bottom,
+        opened: disabled
+          ? (tabbarHeight + safeAreaInsets.bottom) * 2
+          : Platform.OS === "ios"
+            ? tabbarHeight
+            : safeAreaInsets.bottom,
         closed: 0,
       }}
       className={className}

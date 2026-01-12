@@ -12,7 +12,6 @@ import { AlertCircle, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
 import {
   Form,
@@ -29,6 +28,7 @@ import {
   SheetTitle,
 } from "@flatsby/ui/sheet";
 import { toast } from "@flatsby/ui/toast";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
@@ -378,15 +378,11 @@ export function SettlementForm({
             <div className="space-y-4">
               <div className="bg-muted flex items-center justify-between rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage
-                      alt={fromName}
-                      src={fromMember?.user.image ?? undefined}
-                    />
-                    <AvatarFallback>
-                      {fromName.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    name={fromName}
+                    image={fromMember?.user.image}
+                    size="md"
+                  />
                   <div>
                     <p className="text-muted-foreground text-sm">Paying</p>
                     <p className="font-semibold">{fromName}</p>

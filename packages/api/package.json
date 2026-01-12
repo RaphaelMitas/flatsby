@@ -19,12 +19,11 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/google": "catalog:",
     "@flatsby/auth": "workspace:*",
     "@flatsby/db": "workspace:*",
-    "@flatsby/ui": "workspace:*",
     "@flatsby/validators": "workspace:*",
     "@trpc/server": "catalog:",
+    "ai": "catalog:",
     "effect": "^3.17.0",
     "superjson": "catalog:",
     "zod": "catalog:"

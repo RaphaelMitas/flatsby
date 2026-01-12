@@ -1,11 +1,16 @@
+import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  index,
   integer,
+  jsonb,
   pgTableCreator,
+  real,
   serial,
   text,
   timestamp,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -29,11 +34,15 @@ export const users = createTable("user", {
   lastShoppingListUsed: integer("last_shopping_list_used").references(
     () => shoppingLists.id,
   ),
+  lastChatModelUsed: text("last_chat_model_used"),
+  lastShoppingListToolsEnabled: boolean("last_shopping_list_tools_enabled"),
+  lastExpenseToolsEnabled: boolean("last_expense_tools_enabled"),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
   groupMembers: many(groupMembers),
+  conversations: many(conversations),
   lastGroupUsed: one(groups, {
     fields: [users.lastGroupUsed],
     references: [groups.id],
@@ -265,5 +274,61 @@ export const expenseSplitsRelations = relations(expenseSplits, ({ one }) => ({
   groupMember: one(groupMembers, {
     fields: [expenseSplits.groupMemberId],
     references: [groupMembers.id],
+  }),
+}));
+
+// Chat tables
+export const conversations = createTable("conversations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title"),
+  model: text("model").default("google/gemini-2.0-flash"),
+  systemPrompt: text("system_prompt"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at", { mode: "date" }),
+});
+
+export const conversationsRelations = relations(
+  conversations,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [conversations.userId],
+      references: [users.id],
+    }),
+    messages: many(chatMessages),
+  }),
+);
+
+export const chatMessages = createTable(
+  "chat_messages",
+  {
+    // Use text instead of uuid to accept AI SDK's nanoid-style IDs
+    id: text("id").primaryKey(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 20 }).notNull(), // "user" | "assistant" | "system"
+    content: text("content").notNull().default(""),
+    status: varchar("status", { length: 20 }).default("pending").notNull(), // "pending" | "streaming" | "complete" | "error"
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    // AI generation tracking
+    generationId: text("generation_id"), // gen_<ulid> from providerMetadata.gateway
+    cost: real("cost"), // Cost in USD from providerMetadata.gateway.cost
+    model: text("model"), // Model ID used for this generation
+    // Tool calls made during this message
+    toolCalls: jsonb("tool_calls").$type<PersistedToolCall[]>(),
+  },
+  (table) => [
+    index("chat_messages_conv_idx").on(table.conversationId, table.createdAt),
+  ],
+);
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [chatMessages.conversationId],
+    references: [conversations.id],
   }),
 }));

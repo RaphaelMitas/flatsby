@@ -3,9 +3,9 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Flatsby",
-  slug: "flatcove",
-  scheme: "flatcove",
-  owner: "frenchrapho",
+  slug: "flatsby",
+  scheme: "flatsby",
+  owner: "flatsby",
   version: "0.5.1",
   orientation: "portrait",
   icon: "./assets/ios-light.png",
@@ -31,8 +31,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     edgeToEdgeEnabled: true,
   },
+  extra: {
+    eas: {
+      projectId: "f7e9d15f-497c-4f4e-ac97-f59a14638cdd",
+    },
+  },
   newArchEnabled: true,
-  extra: { eas: { projectId: "7b82dd84-3fdf-4f1d-953a-7dd9bfa39314" } },
   experiments: {
     tsconfigPaths: true,
     typedRoutes: true,

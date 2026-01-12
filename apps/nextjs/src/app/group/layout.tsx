@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-import { Navigation } from "~/app/_components/layout/navigation";
 import { getSession } from "~/auth/server";
+import { AppLayout } from "~/app/_components/layout/app-layout";
 
 export default async function GroupLayout({
   children,
@@ -11,5 +11,5 @@ export default async function GroupLayout({
     redirect("/auth/login");
   }
 
-  return <Navigation>{children}</Navigation>;
+  return <AppLayout>{children}</AppLayout>;
 }

@@ -16,7 +16,7 @@ const Login = () => {
   const callbackURL = Linking.createURL("/");
 
   if (session) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/(tabs)/home" />;
   }
 
   return (

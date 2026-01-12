@@ -1,5 +1,5 @@
+import type { Auth } from "@flatsby/auth";
 import type { CategoryId } from "@flatsby/validators/categories";
-import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
@@ -32,6 +32,7 @@ import {
   safeDbOperation,
   ValidationUtils,
 } from "../utils";
+import { checkCredits, trackAIUsage } from "../utils/autumn";
 
 export const shoppingList = createTRPCRouter({
   getShoppingListName: protectedProcedure
@@ -538,7 +539,10 @@ export const shoppingList = createTRPCRouter({
                       input.categoryId === "ai-auto-select"
                         ? AIUtils.categorizeItemSafely(
                             validName,
-                            getItemCategory,
+                            createItemCategorizer({
+                              authApi: ctx.authApi,
+                              headers: ctx.headers,
+                            }),
                           )
                         : Effect.succeed(input.categoryId),
                       (categoryId) =>
@@ -644,7 +648,10 @@ export const shoppingList = createTRPCRouter({
                           input.categoryId === "ai-auto-select"
                             ? AIUtils.categorizeItemSafely(
                                 validName,
-                                getItemCategory,
+                                createItemCategorizer({
+                                  authApi: ctx.authApi,
+                                  headers: ctx.headers,
+                                }),
                               )
                             : Effect.succeed(input.categoryId),
                           (categoryId) =>
@@ -812,32 +819,62 @@ export const shoppingList = createTRPCRouter({
       }),
     )
     .output(getApiResultZod(categoryIdSchema))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
           // Validate input name
           ValidationUtils.notEmpty(input.itemName, "Item name"),
           (validItemName) =>
             // Categorize item using AI with fallback
-            AIUtils.categorizeItemSafely(validItemName, getItemCategory),
+            AIUtils.categorizeItemSafely(
+              validItemName,
+              createItemCategorizer({
+                authApi: ctx.authApi,
+                headers: ctx.headers,
+              }),
+            ),
         ),
       );
     }),
 });
 
-const getItemCategory = async (itemName: string): Promise<CategoryId> => {
-  try {
-    const response = await generateObject({
-      model: google("gemini-2.0-flash-exp"),
-      schema: z.object({
-        category: categoryIdSchema,
-      }),
-      prompt: `Tell me the most appropriate category for this item: ${itemName}`,
-    });
+interface CategorizeContext {
+  authApi: Auth["api"];
+  headers: Headers;
+}
 
-    return response.object.category;
-  } catch (error) {
-    console.error("Error categorizing item:", error);
-  }
-  return "other";
+const createItemCategorizer = (ctx: CategorizeContext) => {
+  return async (itemName: string): Promise<CategoryId> => {
+    const { allowed } = await checkCredits({
+      authApi: ctx.authApi,
+      headers: ctx.headers,
+    });
+    if (!allowed) {
+      return "other"; // Fallback if no credits
+    }
+
+    try {
+      const response = await generateObject({
+        model: "google/gemini-2.0-flash",
+        schema: z.object({
+          category: categoryIdSchema,
+        }),
+        prompt: `Tell me the most appropriate category for this item: ${itemName}`,
+      });
+
+      // Track credits after successful AI call
+      const metadata = response.providerMetadata;
+      const cost = (metadata?.gateway as { cost?: string } | undefined)?.cost;
+      await trackAIUsage({
+        authApi: ctx.authApi,
+        headers: ctx.headers,
+        cost: cost,
+      });
+
+      return response.object.category;
+    } catch (error) {
+      console.error("Error categorizing item:", error);
+    }
+    return "other";
+  };
 };

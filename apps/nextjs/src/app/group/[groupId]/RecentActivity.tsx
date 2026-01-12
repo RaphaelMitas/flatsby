@@ -5,9 +5,9 @@ import { Suspense } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Check, Info, ListTodo, Wallet } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 import { useTRPC } from "~/trpc/react";
@@ -43,7 +43,6 @@ function formatRelativeTime(date: Date): string {
 
 function ActivityItemComponent({ activity }: { activity: ActivityItem }) {
   const userName = activity.user.name;
-  const userInitials = userName.substring(0, 2).toUpperCase();
   const relativeTime = formatRelativeTime(activity.timestamp);
 
   let IconComponent: typeof Wallet;
@@ -70,10 +69,7 @@ function ActivityItemComponent({ activity }: { activity: ActivityItem }) {
 
   return (
     <div className="flex items-start gap-3 py-2">
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={activity.user.image ?? undefined} alt={userName} />
-        <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
-      </Avatar>
+      <UserAvatar name={userName} image={activity.user.image} size="md" />
       <div className="flex-1 space-y-1">
         <div className="flex items-center gap-2">
           <IconComponent className="text-muted-foreground h-4 w-4 shrink-0" />

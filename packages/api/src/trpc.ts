@@ -29,10 +29,13 @@ import { db } from "@flatsby/db/client";
 export const createTRPCContext = async (opts: {
   headers: Headers;
   auth: Auth;
+  signal?: AbortSignal;
 }): Promise<{
   authApi: Auth["api"];
+  headers: Headers;
   session: Awaited<ReturnType<Auth["api"]["getSession"]>>;
   db: typeof db;
+  signal?: AbortSignal;
 }> => {
   const authApi = opts.auth.api;
   const session = await authApi.getSession({
@@ -40,8 +43,10 @@ export const createTRPCContext = async (opts: {
   });
   return {
     authApi,
+    headers: opts.headers,
     session,
     db,
+    signal: opts.signal,
   };
 };
 /**

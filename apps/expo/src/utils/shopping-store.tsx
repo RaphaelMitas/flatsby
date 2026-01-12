@@ -1,14 +1,26 @@
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useMutation } from "@tanstack/react-query";
 
 import { trpc } from "~/utils/api";
 
-interface ShoppingStoreState {
+const STORAGE_KEY = "shopping-store";
+
+interface PersistedState {
   selectedGroupId: number | null;
   selectedGroupName: string | null;
   selectedShoppingListId: number | null;
   selectedShoppingListName: string | null;
+}
+
+interface ShoppingStoreState extends PersistedState {
   setSelectedGroup: (groupId: number, groupName: string) => void;
   setSelectedShoppingList: (
     shoppingListId: number,
@@ -21,79 +33,103 @@ interface ShoppingStoreState {
 const ShoppingStoreContext = createContext<ShoppingStoreState | null>(null);
 
 export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
-  // User-selected overrides (null = use persisted value from server)
-  const [groupIdOverride, setGroupIdOverride] = useState<number | null>(null);
-  const [groupNameOverride, setGroupNameOverride] = useState<string | null>(
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [selectedGroupName, setSelectedGroupName] = useState<string | null>(
     null,
   );
-  const [shoppingListIdOverride, setShoppingListIdOverride] = useState<
+  const [selectedShoppingListId, setSelectedShoppingListId] = useState<
     number | null
   >(null);
-  const [shoppingListNameOverride, setShoppingListNameOverride] = useState<
+  const [selectedShoppingListName, setSelectedShoppingListName] = useState<
     string | null
   >(null);
 
-  const { data: res } = useQuery(
-    trpc.user.getCurrentUserWithGroups.queryOptions(),
-  );
   const updateLastUsed = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions(),
   );
 
-  // Derive effective values: user override → persisted server data → null
-  const persistedGroup = res?.success ? res.data.user?.lastGroupUsed : null;
-  const persistedShoppingList = res?.success
-    ? res.data.user?.lastShoppingListUsed
-    : null;
+  const persist = useCallback((state: PersistedState) => {
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch(
+      console.error,
+    );
+  }, []);
 
-  const selectedGroupId = groupIdOverride ?? persistedGroup?.id ?? null;
-  const selectedGroupName = groupNameOverride ?? persistedGroup?.name ?? null;
-  const selectedShoppingListId =
-    shoppingListIdOverride ?? persistedShoppingList?.id ?? null;
-  const selectedShoppingListName =
-    shoppingListNameOverride ?? persistedShoppingList?.name ?? null;
+  // Load persisted state on mount
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEY)
+      .then((value) => {
+        if (value) {
+          const parsed = JSON.parse(value) as PersistedState;
+          setSelectedGroupId(parsed.selectedGroupId);
+          setSelectedGroupName(parsed.selectedGroupName);
+          setSelectedShoppingListId(parsed.selectedShoppingListId);
+          setSelectedShoppingListName(parsed.selectedShoppingListName);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const setSelectedShoppingList = useCallback(
     (shoppingListId: number, shoppingListName: string) => {
-      setShoppingListIdOverride(shoppingListId);
-      setShoppingListNameOverride(shoppingListName);
+      setSelectedShoppingListId(shoppingListId);
+      setSelectedShoppingListName(shoppingListName);
+      persist({
+        selectedGroupId,
+        selectedGroupName,
+        selectedShoppingListId: shoppingListId,
+        selectedShoppingListName: shoppingListName,
+      });
       updateLastUsed.mutate({
         groupId: selectedGroupId,
         shoppingListId,
       });
     },
-    [selectedGroupId, updateLastUsed],
+    [selectedGroupId, selectedGroupName, updateLastUsed, persist],
   );
 
   const clearSelectedShoppingList = useCallback(() => {
-    setShoppingListIdOverride(null);
-    setShoppingListNameOverride(null);
-  }, []);
+    setSelectedShoppingListId(null);
+    setSelectedShoppingListName(null);
+    persist({
+      selectedGroupId,
+      selectedGroupName,
+      selectedShoppingListId: null,
+      selectedShoppingListName: null,
+    });
+  }, [selectedGroupId, selectedGroupName, persist]);
 
   const setSelectedGroup = useCallback(
     (groupId: number, groupName: string) => {
-      setGroupIdOverride((prevGroupId) => {
-        if (prevGroupId !== groupId) {
-          clearSelectedShoppingList();
-        }
-        return groupId;
+      setSelectedGroupId(groupId);
+      setSelectedGroupName(groupName);
+      setSelectedShoppingListId(null);
+      setSelectedShoppingListName(null);
+      persist({
+        selectedGroupId: groupId,
+        selectedGroupName: groupName,
+        selectedShoppingListId: null,
+        selectedShoppingListName: null,
       });
-      setGroupNameOverride(groupName);
       updateLastUsed.mutate({
         groupId,
         shoppingListId: null,
       });
     },
-    [clearSelectedShoppingList, updateLastUsed],
+    [updateLastUsed, persist],
   );
 
-  const clearSelectedGroup = () => {
-    if (selectedShoppingListId || selectedShoppingListName) {
-      clearSelectedShoppingList();
-    }
-    setGroupIdOverride(null);
-    setGroupNameOverride(null);
-  };
+  const clearSelectedGroup = useCallback(() => {
+    setSelectedGroupId(null);
+    setSelectedGroupName(null);
+    setSelectedShoppingListId(null);
+    setSelectedShoppingListName(null);
+    persist({
+      selectedGroupId: null,
+      selectedGroupName: null,
+      selectedShoppingListId: null,
+      selectedShoppingListName: null,
+    });
+  }, [persist]);
 
   return (
     <ShoppingStoreContext.Provider

@@ -72,7 +72,7 @@ function DashboardWithGroup() {
             variant="outline"
             size="md"
             icon="settings"
-            onPress={() => router.push("/(tabs)/groups/edit-group")}
+            onPress={() => router.push("/(tabs)/home/group-settings")}
           />
         </View>
 
@@ -89,10 +89,10 @@ function DashboardWithGroup() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             <Button
-              title="Manage Shopping Lists"
+              title="Select Shopping List"
               variant={selectedShoppingListName ? "outline" : "primary"}
               icon="shopping-cart"
-              onPress={() => router.push("/(tabs)/shoppingLists")}
+              onPress={() => router.push("/(tabs)/home/shopping-lists")}
             />
             {selectedShoppingListName && (
               <Button
