@@ -48,7 +48,7 @@ export function initAuth<
         appBundleIdentifier: options.appleBundleId,
       },
     },
-    trustedOrigins: ["flatsby://", "flatcove://", "expo://"],
+    trustedOrigins: ["flatsby://", "expo://"],
     user: { modelName: "users" },
     session: {
       modelName: "sessions",

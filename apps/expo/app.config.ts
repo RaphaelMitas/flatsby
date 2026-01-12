@@ -3,8 +3,8 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Flatsby",
-  slug: "flatcove",
-  scheme: "flatcove",
+  slug: "flatsby",
+  scheme: "flatsby",
   owner: "frenchrapho",
   version: "0.5.1",
   orientation: "portrait",
