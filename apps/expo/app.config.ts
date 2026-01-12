@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "Flatsby",
   slug: "flatsby",
   scheme: "flatsby",
-  owner: "frenchrapho",
+  owner: "flatsby",
   version: "0.5.1",
   orientation: "portrait",
   icon: "./assets/ios-light.png",
