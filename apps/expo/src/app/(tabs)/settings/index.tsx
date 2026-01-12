@@ -10,6 +10,7 @@ import {
   SettingsHeader,
   SettingsItem,
   SettingsSection,
+  UsageDisplay,
 } from "~/components/settings";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
@@ -99,6 +100,9 @@ export default function SettingsIndex() {
       <AppScrollView>
         <SettingsHeader title={user.name} />
 
+        <SettingsSection title="Usage">
+          <UsageDisplay />
+        </SettingsSection>
         <SettingsSection title="Appearance">
           <ReanimatedSwipeable
             ref={swipeableRef}

@@ -20,11 +20,10 @@ export function SidebarCreditsDisplay() {
   const creditsFeature = customer?.features.credits;
   const balance = creditsFeature?.balance ?? 0;
   const usage = creditsFeature?.usage ?? 0;
-  const unlimited = creditsFeature?.unlimited ?? false;
 
   const totalAllowance = usage + balance;
   const usagePercentage =
-    unlimited || totalAllowance === 0 ? 0 : (usage / totalAllowance) * 100;
+    totalAllowance === 0 ? 0 : (usage / totalAllowance) * 100;
 
   if (isLoading) {
     return null;
@@ -46,12 +45,11 @@ export function SidebarCreditsDisplay() {
             </div>
             {!isCollapsed && (
               <span className="text-muted-foreground truncate text-xs">
-                {unlimited ? "Unlimited" : formatCredits(balance)} credits
-                remaining
+                {formatCredits(balance)} credits remaining
               </span>
             )}
           </div>
-          {!isCollapsed && !unlimited && (
+          {!isCollapsed && (
             <Progress value={100 - usagePercentage} className="h-1" />
           )}
         </Link>

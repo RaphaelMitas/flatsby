@@ -1,3 +1,5 @@
+import { z } from "zod/v4";
+
 /**
  * Autumn billing feature IDs
  * These should match what's configured in the Autumn dashboard
@@ -35,3 +37,22 @@ export function formatCredits(credits: number): string {
   }
   return credits.toLocaleString();
 }
+
+/**
+ * Schema for credit feature data returned from Autumn
+ */
+export const creditFeatureSchema = z.object({
+  balance: z.number(),
+  usage: z.number(),
+});
+
+export type CreditFeature = z.infer<typeof creditFeatureSchema>;
+
+/**
+ * Schema for usage data response
+ */
+export const usageDataSchema = z.object({
+  credits: creditFeatureSchema.nullable(),
+});
+
+export type UsageData = z.infer<typeof usageDataSchema>;
