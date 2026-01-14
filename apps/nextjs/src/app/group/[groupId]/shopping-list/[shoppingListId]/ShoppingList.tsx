@@ -194,7 +194,7 @@ const ShoppingList = ({
 
   return (
     <>
-      <div className="h-full flex-1 overflow-auto">
+      <div className="min-h-0 flex-1 overflow-auto">
         {shoppingList && (
           <h2 className="text-center text-lg font-semibold">
             {shoppingList.name}

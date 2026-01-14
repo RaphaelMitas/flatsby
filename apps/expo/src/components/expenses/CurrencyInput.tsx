@@ -160,9 +160,9 @@ export function CurrencyInput({
       onChangeText={handleChange}
       onFocus={handleFocus}
       onBlur={handleBlur}
-      className={className}
       editable={!disabled}
       keyboardType="decimal-pad"
+      {...(className ? { className } : {})}
     />
   );
 }

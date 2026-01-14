@@ -13,7 +13,7 @@ export default async function DebtsPage(props: {
 
   return (
     <HydrateClient>
-      <div className="flex w-full max-w-prose flex-col p-4 md:p-6">
+      <div className="mx-auto flex w-full max-w-prose flex-col p-4 md:p-6">
         <DebtSummaryView groupId={groupId} />
       </div>
     </HydrateClient>

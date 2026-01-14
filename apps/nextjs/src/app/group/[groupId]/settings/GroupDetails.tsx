@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -25,6 +24,7 @@ import {
 } from "@flatsby/ui/card";
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
@@ -127,12 +127,7 @@ const GroupDetails = ({ id }: { id: number }) => {
           <div className="grid gap-2">
             <Label htmlFor="profile-picture">Profile Picture</Label>
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage alt="Group Avatar" />
-                <AvatarFallback>
-                  {group.data.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar name={group.data.name} size="2xl" />
               <Button disabled variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
                 Upload New

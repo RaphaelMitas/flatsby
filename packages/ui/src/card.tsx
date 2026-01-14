@@ -9,7 +9,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border bg-card text-card-foreground shadow",
+      "bg-card text-card-foreground rounded-xl border shadow",
       className,
     )}
     {...props}
@@ -28,14 +28,13 @@ const CardHeader = React.forwardRef<
   />
 ));
 CardHeader.displayName = "CardHeader";
-
 const CardTitle = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("font-semibold leading-none tracking-tight", className)}
+    className={cn("leading-none font-semibold tracking-tight", className)}
     {...props}
   />
 ));
@@ -47,11 +46,27 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-muted-foreground text-sm", className)}
     {...props}
   />
 ));
 CardDescription.displayName = "CardDescription";
+
+const CardAction = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<"div">
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    data-slot="card-action"
+    className={cn(
+      "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+      className,
+    )}
+    {...props}
+  />
+));
+CardAction.displayName = "CardAction";
 
 const CardContent = React.forwardRef<
   HTMLDivElement,
@@ -76,6 +91,7 @@ CardFooter.displayName = "CardFooter";
 export {
   Card,
   CardHeader,
+  CardAction,
   CardFooter,
   CardTitle,
   CardDescription,

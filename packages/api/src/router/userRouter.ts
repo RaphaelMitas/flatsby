@@ -12,7 +12,9 @@ import {
   users,
   verificationTokens,
 } from "@flatsby/db/schema";
+import { usageDataSchema } from "@flatsby/validators/billing";
 import { groupSchema } from "@flatsby/validators/group";
+import { chatModelSchema } from "@flatsby/validators/models";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
 import { updateUserNameFormSchema, userSchema } from "@flatsby/validators/user";
 
@@ -23,12 +25,32 @@ import {
   withErrorHandlingAsResult,
 } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { checkCredits } from "../utils/autumn";
 import { DbUtils, safeDbOperation } from "../utils";
 
 export const userRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
     const user = ctx.session.user;
     return user;
+  }),
+
+  getUsage: protectedProcedure.output(usageDataSchema).query(async ({ ctx }) => {
+    try {
+      const result = await checkCredits({
+        authApi: ctx.authApi,
+        headers: ctx.headers,
+      });
+
+      return {
+        credits: {
+          balance: result.balance ?? 0,
+          usage: result.usage ?? 0,
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching usage data:", error);
+      return { credits: null };
+    }
   }),
 
   getCurrentUserWithGroups: protectedProcedure
@@ -74,10 +96,20 @@ export const userRouter = createTRPCRouter({
             "fetch user groups",
             "groupMembers",
           ),
-          (groups) => ({
-            user: groups[0]?.user,
-            groups: groups.map((g) => g.group),
-          }),
+          (groups) => {
+            const user = groups[0]?.user;
+            return {
+              user: user
+                ? {
+                    ...user,
+                    lastChatModelUsed: chatModelSchema.safeParse(
+                      user.lastChatModelUsed,
+                    ).data,
+                  }
+                : undefined,
+              groups: groups.map((g) => g.group),
+            };
+          },
         ),
       );
     }),

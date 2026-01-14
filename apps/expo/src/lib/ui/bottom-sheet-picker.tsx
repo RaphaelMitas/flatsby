@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { Keyboard, Platform, Pressable, Text, View } from "react-native";
+import { useBottomTabBarHeight } from "react-native-bottom-tabs";
 import BottomSheetRaw, {
   useBottomSheetScrollableCreator,
 } from "@gorhom/bottom-sheet";
@@ -64,13 +65,7 @@ const bottomSheetVariants = tv({
 });
 
 const bottomSheetContentVariants = tv({
-  base: "flex-1 gap-2",
-  variants: {
-    platform: {
-      ios: "pb-24",
-      default: "pb-0",
-    },
-  },
+  base: "flex-1 gap-2 pb-8",
 });
 
 export interface BottomSheetPickerItem {
@@ -130,9 +125,7 @@ const BottomSheetPickerContent: React.FC<BottomSheetPickerContentProps> = ({
 
   return (
     <FlashList
-      className={bottomSheetContentVariants({
-        platform: Platform.OS === "ios" ? "ios" : "default",
-      })}
+      className={bottomSheetContentVariants()}
       data={items}
       keyExtractor={(item: BottomSheetPickerItem) => item.id}
       renderItem={renderItem}
@@ -153,6 +146,7 @@ export const BottomSheetPickerProvider: React.FC<
     snapPoints: string[];
   } | null>(null);
   const { getColor } = useThemeColors();
+  const tabBarHeight = useBottomTabBarHeight();
 
   const openPicker = useCallback(
     (config: {
@@ -226,6 +220,7 @@ export const BottomSheetPickerProvider: React.FC<
         snapPoints={pickerConfig?.snapPoints ?? ["50%", "80%"]}
         index={-1}
         enablePanDownToClose
+        bottomInset={Platform.OS === "ios" ? tabBarHeight : 0}
         className={bottomSheetVariants()}
         handleIndicatorStyle={{
           backgroundColor: getColor("primary"),

@@ -1,7 +1,7 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import { Suspense } from "react";
 import { ActivityIndicator, RefreshControl, Text, View } from "react-native";
-import { router, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 
@@ -14,6 +14,7 @@ import { ExpenseCard } from "./ExpenseCard";
 
 export function ExpensesDashboard() {
   const { selectedGroupId } = useShoppingStore();
+  const router = useRouter();
 
   if (!selectedGroupId) {
     return (
@@ -27,7 +28,7 @@ export function ExpensesDashboard() {
           variant="primary"
           size="lg"
           icon="arrow-left-right"
-          onPress={() => router.push("/(tabs)/groups")}
+          onPress={() => router.push("/(tabs)/home")}
         />
       </View>
     );
@@ -168,13 +169,7 @@ function ExpensesDashboardInner() {
         />
       )}
       {hasExpenses && (
-        <View
-          style={{
-            position: "absolute",
-            bottom: 8,
-            right: 16,
-          }}
-        >
+        <View className="absolute right-4 bottom-4">
           <Button
             size="icon"
             icon="plus"

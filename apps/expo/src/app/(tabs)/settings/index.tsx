@@ -1,18 +1,18 @@
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
 import { useCallback, useRef } from "react";
-import { View } from "react-native";
-
-import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
+import { Linking, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import { Stack, useRouter } from "expo-router";
+import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import {
   SettingsHeader,
   SettingsItem,
   SettingsSection,
+  UsageDisplay,
 } from "~/components/settings";
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
@@ -20,10 +20,10 @@ import { useTheme } from "~/lib/ui/theme";
 import { useWinterEffects } from "~/lib/ui/winter-effects";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
+import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function SettingsIndex() {
-  const router = useRouter();
   const { storedTheme, setTheme } = useTheme();
   const {
     isEnabled: isWinterEffectsEnabled,
@@ -100,6 +100,9 @@ export default function SettingsIndex() {
       <AppScrollView>
         <SettingsHeader title={user.name} />
 
+        <SettingsSection title="Usage">
+          <UsageDisplay />
+        </SettingsSection>
         <SettingsSection title="Appearance">
           <ReanimatedSwipeable
             ref={swipeableRef}
@@ -129,27 +132,27 @@ export default function SettingsIndex() {
           />
         </SettingsSection>
         <SettingsSection title="Groups">
-          <SettingsItem
-            title="Your Groups"
-            subtitle="Manage your groups"
-            iconName="arrow-left-right"
-            onPress={() => {
-              router.push("/groups");
-            }}
-          />
+          <Link href="/settings/manage-groups" asChild>
+            <SettingsItem
+              title="Your Groups"
+              subtitle="Manage your groups"
+              iconName="arrow-left-right"
+            />
+          </Link>
         </SettingsSection>
         <SettingsSection title="Account">
+          <Link href="/settings/profile" asChild>
+            <SettingsItem
+              title="Profile"
+              subtitle="Edit your name and profile picture"
+              iconName="user"
+            />
+          </Link>
           <SettingsItem
-            title="Profile"
-            subtitle="Edit your name and profile picture"
-            iconName="user"
-            onPress={() => router.push("/settings/profile")}
-          />
-          <SettingsItem
-            title="Account"
-            subtitle="Manage your account settings"
+            title="Manage Account"
+            subtitle="Manage your account settings on the web"
             iconName="settings"
-            onPress={() => router.push("/settings/account")}
+            onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
           />
           <SettingsItem
             title="Logout"
@@ -159,13 +162,14 @@ export default function SettingsIndex() {
           />
         </SettingsSection>
         <SettingsSection title="Danger Zone" className="pb-4">
-          <SettingsItem
-            title="Delete Account"
-            subtitle="Permanently delete your account"
-            iconName="trash-2"
-            onPress={() => router.push("/settings/danger")}
-            variant="destructive"
-          />
+          <Link href="/settings/danger" asChild>
+            <SettingsItem
+              title="Delete Account"
+              subtitle="Permanently delete your account"
+              iconName="trash-2"
+              variant="destructive"
+            />
+          </Link>
         </SettingsSection>
       </AppScrollView>
     </SafeAreaView>

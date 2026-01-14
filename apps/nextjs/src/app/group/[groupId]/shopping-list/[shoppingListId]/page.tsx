@@ -32,7 +32,7 @@ const shoppingListPage = async (props: {
 
   return (
     <HydrateClient>
-      <div className="mt-4 flex h-full w-full max-w-prose flex-col">
+      <div className="mx-auto flex h-full w-full max-w-prose flex-col overflow-hidden pt-4">
         <ShoppingList groupId={groupId} shoppingListId={shoppingListId} />
       </div>
     </HydrateClient>

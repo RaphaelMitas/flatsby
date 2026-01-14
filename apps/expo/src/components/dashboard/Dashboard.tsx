@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-
-import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import {
   Card,
@@ -73,7 +72,7 @@ function DashboardWithGroup() {
             variant="outline"
             size="md"
             icon="settings"
-            onPress={() => router.push("/(tabs)/groups/edit-group")}
+            onPress={() => router.push("/(tabs)/home/group-settings")}
           />
         </View>
 
@@ -90,10 +89,10 @@ function DashboardWithGroup() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             <Button
-              title="Manage Shopping Lists"
+              title="Select Shopping List"
               variant={selectedShoppingListName ? "outline" : "primary"}
               icon="shopping-cart"
-              onPress={() => router.push("/(tabs)/shoppingLists")}
+              onPress={() => router.push("/(tabs)/home/shopping-lists")}
             />
             {selectedShoppingListName && (
               <Button

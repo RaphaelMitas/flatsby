@@ -9,15 +9,8 @@ import { initAuth } from "@flatsby/auth";
 
 import { env } from "~/env";
 
-const baseUrl =
-  env.VERCEL_ENV === "production"
-    ? `${env.BETTER_AUTH_URL}`
-    : env.VERCEL_ENV === "preview"
-      ? `https://${env.VERCEL_URL}`
-      : "http://localhost:3000";
-
 export const auth = initAuth({
-  baseUrl,
+  baseUrl: env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL,
   productionUrl: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   googleClientId: env.GOOGLE_CLIENT_ID,

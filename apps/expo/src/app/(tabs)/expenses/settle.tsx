@@ -39,7 +39,7 @@ export default function SettlePage() {
           </Text>
           <Button
             title="Go to groups"
-            onPress={() => router.push("/(tabs)/groups")}
+            onPress={() => router.push("/(tabs)/home")}
           />
         </View>
       </>

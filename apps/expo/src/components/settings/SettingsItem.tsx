@@ -7,7 +7,7 @@ interface SettingsItemProps {
   title: string;
   subtitle?: string;
   iconName: IconProps["name"];
-  onPress: () => void;
+  onPress?: () => void;
   variant?: "default" | "destructive";
   rightContent?: React.ReactNode;
 }

@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
 
-import { Navigation } from "~/app/_components/layout/navigation";
 import { getSession } from "~/auth/server";
+import { AppLayout } from "~/app/_components/layout/app-layout";
 
-export default async function GroupLayout({
+export default async function UserSettingsLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await getSession();
   if (!session?.user) {
     redirect("/auth/login");
   }
-  return <Navigation>{children}</Navigation>;
+  return <AppLayout>{children}</AppLayout>;
 }

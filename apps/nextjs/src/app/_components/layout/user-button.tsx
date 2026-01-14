@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Snowflake } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +13,7 @@ import {
 } from "@flatsby/ui/dropdown-menu";
 import { Label } from "@flatsby/ui/label";
 import { Separator } from "@flatsby/ui/separator";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 
 import { useWinterEffects } from "~/app/_components/layout/winterTheme/use-winter-effects";
 import { useTRPC } from "~/trpc/react";
@@ -37,23 +37,13 @@ export function UserButton() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.image ?? undefined} alt="user image" />
-            <AvatarFallback>
-              {user?.name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar name={user?.name ?? ""} image={user?.image} size="lg" />
           <span className="sr-only">Toggle user menu</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <div className="flex items-center gap-4 border-b p-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={user?.image ?? undefined} alt="user image" />
-            <AvatarFallback>
-              {user?.name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar name={user?.name ?? ""} image={user?.image} size="xl" />
           <div className="grid gap-1">
             <div className="text-lg font-medium">{user?.name}</div>
             <div className="text-muted-foreground text-sm">{user?.email}</div>

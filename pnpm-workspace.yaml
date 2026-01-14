@@ -4,40 +4,30 @@ packages:
   - tooling/*
 
 catalog:
-  # Better Auth
-  "@better-auth/expo": 1.5.0-beta.2
+  "@ai-sdk/react": ^3.0.12
+  autumn-js: ^0.1.63
   "@better-auth/cli": 1.5.0-beta.2
-  "better-auth": 1.5.0-beta.2
-
-  # Dev tooling
+  "@better-auth/expo": 1.5.0-beta.2
   "@eslint/js": ^9.38.0
-  eslint: ^9.38.0
-  prettier: ^3.7.4
-  tailwindcss: ^4.1.16
-  "@tailwindcss/postcss": ^4.1.16
-  typescript: ^5.9.3
-
-  # Misc
-  zod: ^4.1.12
   "@t3-oss/env-nextjs": ^0.13.8
-  superjson: ^2.2.6
-  "@types/node": ^22.18.12
-
-  # Tanstack & tRPC
+  "@tailwindcss/postcss": ^4.1.16
   "@tanstack/react-query": ^5.90.12
   "@trpc/client": ^11.7.2
-  "@trpc/tanstack-react-query": ^11.7.2
   "@trpc/server": ^11.7.2
-
-  # Next.js
-  next: ^16.0.7
-
-  # AI SDK
-  "ai": ^5.0.52
-  "@ai-sdk/google": ^2.0.3
-
-  turbo: ^2.6.3
+  "@trpc/tanstack-react-query": ^11.7.2
   "@turbo/gen": ^2.6.3
+  "@types/node": ^22.18.12
+  ai: ^6.0.12
+  better-auth: 1.5.0-beta.2
+  babel-plugin-react-compiler: ^1.0.0
+  eslint: ^9.38.0
+  next: ^16.0.7
+  prettier: ^3.7.4
+  superjson: ^2.2.6
+  tailwindcss: ^4.1.16
+  turbo: ^2.6.3
+  typescript: ^5.9.3
+  zod: ^4.1.12
 
 catalogs:
   react19:

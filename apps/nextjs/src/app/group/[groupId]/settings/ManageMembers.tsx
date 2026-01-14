@@ -13,7 +13,6 @@ import { AlertCircle, ChevronDown, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -32,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { addMemberFormSchema } from "@flatsby/validators/group";
 
 import { useTRPC } from "~/trpc/react";
@@ -235,15 +235,11 @@ const MemberCard = ({
     <div id="manage-members" className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex w-full max-w-[250px] items-center gap-4">
-          <Avatar>
-            <AvatarImage
-              alt="Member Avatar"
-              src={groupMember.user.image ?? undefined}
-            />
-            <AvatarFallback>
-              {groupMember.user.name?.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            name={groupMember.user.name ?? ""}
+            image={groupMember.user.image}
+            size="md"
+          />
           <div className="w-full pr-2">
             <div className="flex items-center gap-2 truncate font-medium">
               <div className="inline truncate font-medium">

@@ -2,18 +2,18 @@ import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
-import { Modal, Text, TouchableOpacity, View } from "react-native";
+import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { Checkbox } from "~/lib/ui/checkbox";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
+import { ShoppingItemDisplay } from "./ShoppingItemDisplay";
 import { getCategoryData } from "./ShoppingListCategory";
 import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
 
@@ -195,41 +195,18 @@ const ShoppingListItem = ({
           }
         }}
       >
-        <TouchableOpacity
+        <Pressable
           disabled={item.isPending}
           onPress={() => setShowDetails(true)}
-          className={cn(
-            "bg-muted flex-row items-center rounded-lg",
-            item.isPending && "opacity-70",
-          )}
         >
-          <Checkbox
-            checked={item.completed}
+          <ShoppingItemDisplay
+            name={item.name}
+            completed={item.completed}
+            categoryId={item.categoryId}
             onCheckedChange={handleCheckboxToggle}
             disabled={item.isPending}
           />
-
-          <View className="flex-1 flex-row justify-between gap-2">
-            <View className="flex-1">
-              <Text
-                className={cn(
-                  "text-sm font-medium",
-                  item.completed
-                    ? "text-muted-foreground line-through"
-                    : "text-foreground",
-                )}
-              >
-                {item.name}
-              </Text>
-            </View>
-            <View className="flex-row items-center justify-center gap-2 px-4">
-              {categoryData.icon}
-              <Text className={cn("text-xs font-medium", categoryData.color)}>
-                {categoryData.name}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+        </Pressable>
       </ReanimatedSwipeable>
 
       <Modal
