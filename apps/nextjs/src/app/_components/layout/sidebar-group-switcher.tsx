@@ -8,11 +8,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@flatsby/ui/dropdown-menu";
 import {
-  SidebarHeader,
+  SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -32,18 +34,20 @@ export function SidebarGroupSwitcher() {
 
   if (isLoading) {
     return (
-      <SidebarHeader>
+      <SidebarGroup>
+        <SidebarGroupLabel>Groups</SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuSkeleton showIcon />
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarHeader>
+      </SidebarGroup>
     );
   }
 
   return (
-    <SidebarHeader>
+    <SidebarGroup>
+      <SidebarGroupLabel>Groups</SidebarGroupLabel>
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
@@ -57,6 +61,7 @@ export function SidebarGroupSwitcher() {
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
+              <DropdownMenuLabel>Groups</DropdownMenuLabel>
               {groups.map((group) => (
                 <DropdownMenuItem
                   key={group.id}
@@ -103,6 +108,6 @@ export function SidebarGroupSwitcher() {
           </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
-    </SidebarHeader>
+    </SidebarGroup>
   );
 }
