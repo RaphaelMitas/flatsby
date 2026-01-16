@@ -44,7 +44,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     reactCompiler: true,
   },
   updates: {
-    url: "https://u.expo.dev/7b82dd84-3fdf-4f1d-953a-7dd9bfa39314",
+    url: "https://u.expo.dev/f7e9d15f-497c-4f4e-ac97-f59a14638cdd",
   },
   runtimeVersion: {
     policy: "appVersion",
