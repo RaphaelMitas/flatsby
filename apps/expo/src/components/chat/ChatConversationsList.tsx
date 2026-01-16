@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { Pressable, RefreshControl, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Link, useRouter } from "expo-router";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -96,6 +96,7 @@ export const ChatConversationsList = () => {
       { getNextPageParam: (lastPage) => lastPage.nextCursor },
     ),
   );
+  const router = useRouter();
 
   const conversations = data?.pages.flatMap((page) => page.items) ?? [];
 
@@ -108,7 +109,7 @@ export const ChatConversationsList = () => {
   if (isLoading) {
     return (
       <SafeAreaView>
-        <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
+        <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
           <Text className="text-foreground text-xl font-bold">Chats</Text>
         </View>
         <LoadingSkeleton />
@@ -118,35 +119,39 @@ export const ChatConversationsList = () => {
 
   return (
     <SafeAreaView>
-      <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
+      <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
         <Text className="text-foreground text-xl font-bold">Chats</Text>
-        <Link href="/chat/new" asChild>
-          <Pressable className="bg-primary h-9 w-9 items-center justify-center rounded-full">
-            <Icon name="plus" size={18} color="primary-foreground" />
-          </Pressable>
-        </Link>
       </View>
 
       {conversations.length === 0 ? (
         <EmptyState />
       ) : (
-        <FlashList
-          data={conversations}
-          renderItem={({ item }) => <ConversationListItem item={item} />}
-          keyExtractor={(item) => item.id}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-          }
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <View className="items-center py-4">
-                <Icon name="loader" size={24} color="primary" />
-              </View>
-            ) : null
-          }
-        />
+        <View className="flex-1">
+          <FlashList
+            data={conversations}
+            renderItem={({ item }) => <ConversationListItem item={item} />}
+            keyExtractor={(item) => item.id}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            refreshControl={
+              <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+            }
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View className="items-center py-4">
+                  <Icon name="loader" size={24} color="primary" />
+                </View>
+              ) : null
+            }
+          />
+          <View className="absolute right-4 bottom-4">
+            <Button
+              size="icon"
+              icon="plus"
+              onPress={() => router.push("/chat/new")}
+            />
+          </View>
+        </View>
       )}
     </SafeAreaView>
   );

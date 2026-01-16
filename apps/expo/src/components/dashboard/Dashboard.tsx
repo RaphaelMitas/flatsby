@@ -1,7 +1,7 @@
-import { Suspense } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Suspense, useCallback, useState } from "react";
+import { ActivityIndicator, RefreshControl, Text, View } from "react-native";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
@@ -44,13 +44,21 @@ export function Dashboard() {
 
 function DashboardWithGroup() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { selectedGroupId, selectedGroupName, selectedShoppingListName } =
     useShoppingStore();
+  const [refreshing, setRefreshing] = useState(false);
 
   // All hooks must be called unconditionally
   const { data: userWithGroups } = useSuspenseQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries();
+    setRefreshing(false);
+  }, [queryClient]);
 
   if (!selectedGroupId) {
     return null;
@@ -61,7 +69,12 @@ function DashboardWithGroup() {
   }
 
   return (
-    <AppScrollView className="flex-1">
+    <AppScrollView
+      className="flex-1"
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
+    >
       <View className="flex flex-col gap-6 p-2">
         <View className="flex flex-row items-center justify-between">
           <Text className="text-foreground text-3xl font-bold">
