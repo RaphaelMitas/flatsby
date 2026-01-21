@@ -161,7 +161,7 @@ export default function SettingsIndex() {
             onPress={handleLogout}
           />
         </SettingsSection>
-        <SettingsSection title="Danger Zone" className="pb-4">
+        <SettingsSection title="Danger Zone">
           <Link href="/settings/danger" asChild>
             <SettingsItem
               title="Delete Account"
@@ -170,6 +170,32 @@ export default function SettingsIndex() {
               variant="destructive"
             />
           </Link>
+        </SettingsSection>
+        <SettingsSection title="Legal" className="pb-4">
+          <SettingsItem
+            title="Terms of Service"
+            subtitle="View our terms of service"
+            iconName="file-text"
+            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/terms`)}
+          />
+          <SettingsItem
+            title="Privacy Policy"
+            subtitle="View our privacy policy"
+            iconName="shield"
+            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/privacy`)}
+          />
+          <SettingsItem
+            title="Impressum"
+            subtitle="Legal notice (German law)"
+            iconName="info"
+            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/impressum`)}
+          />
+          <SettingsItem
+            title="Export My Data"
+            subtitle="Download your personal data (GDPR)"
+            iconName="download"
+            onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
+          />
         </SettingsSection>
       </AppScrollView>
     </SafeAreaView>

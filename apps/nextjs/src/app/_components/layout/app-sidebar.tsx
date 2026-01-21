@@ -251,6 +251,17 @@ export function AppSidebar() {
           <SidebarCreditsDisplay />
           <SidebarUserMenu />
         </SidebarMenu>
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 px-2 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+          <Link href="/legal/impressum" className="hover:underline">
+            Impressum
+          </Link>
+          <Link href="/legal/privacy" className="hover:underline">
+            Datenschutz
+          </Link>
+          <Link href="/legal/terms" className="hover:underline">
+            AGB
+          </Link>
+        </div>
       </SidebarFooter>
 
       <SidebarRail />

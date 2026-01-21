@@ -11,6 +11,7 @@ import {
 
 import { prefetch, trpc } from "~/trpc/server";
 import DeleteUser from "./DeleteUser";
+import ExportUserData from "./ExportUserData";
 import ManageUser from "./ManageUser";
 
 export default function Page() {
@@ -33,6 +34,17 @@ export default function Page() {
             <Link href="/billing">
               <Button>Manage Billing</Button>
             </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Data</CardTitle>
+            <CardDescription>
+              Download a copy of your personal data (GDPR Article 20)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ExportUserData />
           </CardContent>
         </Card>
         <DeleteUser />

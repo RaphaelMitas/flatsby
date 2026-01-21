@@ -1,9 +1,12 @@
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, eq, inArray, ne } from "@flatsby/db";
+import { and, count, eq, inArray, isNull, ne } from "@flatsby/db";
 import {
   accounts,
+  chatMessages,
+  conversations,
+  expenses,
   groupMembers,
   groups,
   sessions,
@@ -16,7 +19,12 @@ import { usageDataSchema } from "@flatsby/validators/billing";
 import { groupSchema } from "@flatsby/validators/group";
 import { chatModelSchema } from "@flatsby/validators/models";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
-import { updateUserNameFormSchema, userSchema } from "@flatsby/validators/user";
+import {
+  updateConsentInputSchema,
+  updateUserNameFormSchema,
+  userDataExportSchema,
+  userSchema,
+} from "@flatsby/validators/user";
 
 import {
   Errors,
@@ -350,6 +358,206 @@ export const userRouter = createTRPCRouter({
 
           return { success: true };
         }, "delete user and cleanup related data")(ctx.db),
+      );
+    }),
+
+  updateConsent: protectedProcedure
+    .input(updateConsentInputSchema)
+    .output(getApiResultZod(z.object({ success: z.boolean() })))
+    .mutation(async ({ ctx, input }) => {
+      return withErrorHandlingAsResult(
+        Effect.tryPromise({
+          try: async () => {
+            const now = new Date();
+            const updateData: Record<string, unknown> = {};
+
+            if (input.termsAccepted) {
+              updateData.termsAcceptedAt = now;
+              updateData.termsVersion = input.version;
+            }
+            if (input.privacyAccepted) {
+              updateData.privacyAcceptedAt = now;
+              updateData.privacyVersion = input.version;
+            }
+
+            await ctx.db
+              .update(users)
+              .set(updateData)
+              .where(eq(users.id, ctx.session.user.id));
+
+            return { success: true };
+          },
+          catch: (error) =>
+            Errors.database(
+              "update consent",
+              "users",
+              error,
+              "Unable to update consent at this time. Please try again.",
+            ),
+        }),
+      );
+    }),
+
+  exportUserData: protectedProcedure
+    .output(getApiResultZod(userDataExportSchema))
+    .query(async ({ ctx }) => {
+      return withErrorHandlingAsResult(
+        Effect.tryPromise({
+          try: async () => {
+            const userId = ctx.session.user.id;
+
+            // Fetch user data
+            const user = await ctx.db.query.users.findFirst({
+              where: eq(users.id, userId),
+              columns: {
+                id: true,
+                name: true,
+                email: true,
+                createdAt: true,
+                termsAcceptedAt: true,
+                termsVersion: true,
+                privacyAcceptedAt: true,
+                privacyVersion: true,
+              },
+            });
+
+            if (!user) {
+              throw new Error("User not found");
+            }
+
+            // Fetch user's groups with membership info
+            const userGroups = await ctx.db.query.groupMembers.findMany({
+              where: eq(groupMembers.userId, userId),
+              columns: {
+                role: true,
+                joinedOn: true,
+              },
+              with: {
+                group: {
+                  columns: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            });
+
+            // Get group IDs the user belongs to
+            const groupIds = userGroups.map((g) => g.group.id);
+
+            // Fetch shopping lists from user's groups
+            const userShoppingLists =
+              groupIds.length > 0
+                ? await ctx.db.query.shoppingLists.findMany({
+                    where: inArray(shoppingLists.groupId, groupIds),
+                    columns: {
+                      id: true,
+                      name: true,
+                      groupId: true,
+                    },
+                    with: {
+                      shoppingListItems: {
+                        columns: {
+                          id: true,
+                        },
+                      },
+                    },
+                  })
+                : [];
+
+            // Fetch user's expenses (where they are the payer or creator)
+            const userGroupMemberIds = await ctx.db.query.groupMembers.findMany({
+              where: eq(groupMembers.userId, userId),
+              columns: {
+                id: true,
+              },
+            });
+            const memberIds = userGroupMemberIds.map((m) => m.id);
+
+            const userExpenses =
+              memberIds.length > 0
+                ? await ctx.db.query.expenses.findMany({
+                    where: inArray(expenses.paidByGroupMemberId, memberIds),
+                    columns: {
+                      id: true,
+                      description: true,
+                      amountInCents: true,
+                      currency: true,
+                      expenseDate: true,
+                      groupId: true,
+                    },
+                  })
+                : [];
+
+            // Fetch user's conversations with message counts
+            const userConversations = await ctx.db
+              .select({
+                id: conversations.id,
+                title: conversations.title,
+                createdAt: conversations.createdAt,
+                messageCount: count(chatMessages.id),
+              })
+              .from(conversations)
+              .leftJoin(
+                chatMessages,
+                eq(chatMessages.conversationId, conversations.id),
+              )
+              .where(
+                and(
+                  eq(conversations.userId, userId),
+                  isNull(conversations.deletedAt),
+                ),
+              )
+              .groupBy(conversations.id);
+
+            return {
+              exportedAt: new Date().toISOString(),
+              user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                createdAt: user.createdAt.toISOString(),
+                termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
+                termsVersion: user.termsVersion ?? null,
+                privacyAcceptedAt: user.privacyAcceptedAt?.toISOString() ?? null,
+                privacyVersion: user.privacyVersion ?? null,
+              },
+              groups: userGroups.map((g) => ({
+                id: g.group.id,
+                name: g.group.name,
+                role: g.role,
+                joinedOn: g.joinedOn.toISOString(),
+              })),
+              shoppingLists: userShoppingLists.map((sl) => ({
+                id: sl.id,
+                name: sl.name,
+                groupId: sl.groupId,
+                itemsCount: sl.shoppingListItems.length,
+              })),
+              expenses: userExpenses.map((e) => ({
+                id: e.id,
+                description: e.description,
+                amountInCents: e.amountInCents,
+                currency: e.currency,
+                expenseDate: e.expenseDate.toISOString(),
+                groupId: e.groupId,
+              })),
+              conversations: userConversations.map((c) => ({
+                id: c.id,
+                title: c.title,
+                createdAt: c.createdAt.toISOString(),
+                messageCount: c.messageCount,
+              })),
+            };
+          },
+          catch: (error) =>
+            Errors.database(
+              "export user data",
+              "users",
+              error,
+              "Unable to export your data at this time. Please try again.",
+            ),
+        }),
       );
     }),
 });

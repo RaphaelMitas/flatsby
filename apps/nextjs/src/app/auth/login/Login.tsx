@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import { Button } from "@flatsby/ui/button";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
@@ -15,7 +16,7 @@ const Login = () => {
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-background">
-      <div className="flex flex-col gap-6 rounded-lg bg-muted px-8 py-16">
+      <div className="flex flex-col gap-6 rounded-lg bg-muted p-8">
         <div className="flex flex-col items-center justify-center gap-4 text-center">
           <HomeIcon className="h-20 w-fit self-center text-primary" />
           <h1 className="text-4xl font-bold">Flatsby</h1>
@@ -72,6 +73,32 @@ const Login = () => {
               </>
             )}
           </Button>
+        </div>
+        <div className="text-center text-xs text-muted-foreground">
+          <p>
+            By signing in, you agree to our{" "}
+            <Link
+              href="/legal/terms"
+              className="underline hover:text-foreground"
+            >
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/legal/privacy"
+              className="underline hover:text-foreground"
+            >
+              Privacy Policy
+            </Link>
+          </p>
+          <p className="mt-2">
+            <Link
+              href="/legal/impressum"
+              className="underline hover:text-foreground"
+            >
+              Impressum
+            </Link>
+          </p>
         </div>
       </div>
     </div>
