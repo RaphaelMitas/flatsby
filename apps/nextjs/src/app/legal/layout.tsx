@@ -23,9 +23,9 @@ export default function LegalLayout({
                 Privacy
               </Button>
             </Link>
-            <Link href="/legal/impressum">
+            <Link href="/legal/legal-notice">
               <Button variant="ghost" size="sm">
-                Impressum
+                Legal Notice
               </Button>
             </Link>
           </nav>

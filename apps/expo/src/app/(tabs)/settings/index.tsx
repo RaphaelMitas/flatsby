@@ -185,10 +185,10 @@ export default function SettingsIndex() {
             onPress={() => Linking.openURL(`${getBaseUrl()}/legal/privacy`)}
           />
           <SettingsItem
-            title="Impressum"
+            title="Legal Notice"
             subtitle="Legal notice (German law)"
             iconName="info"
-            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/impressum`)}
+            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/legal-notice`)}
           />
           <SettingsItem
             title="Export My Data"
