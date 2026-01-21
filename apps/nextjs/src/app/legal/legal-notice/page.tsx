@@ -17,15 +17,15 @@ import {
 } from "../_components/legal-content";
 
 export const metadata: Metadata = {
-  title: "Impressum - Flatsby",
-  description: "Legal notice (Impressum) for Flatsby as required by German law",
+  title: "Legal Notice - Flatsby",
+  description: "Legal notice for Flatsby as required by German law",
 };
 
-export default function ImpressumPage() {
+export default function LegalNoticePage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">Impressum (Legal Notice)</CardTitle>
+        <CardTitle className="text-2xl">Legal Notice</CardTitle>
         <CardDescription>
           Information according to §5 DDG (Digitale-Dienste-Gesetz)
         </CardDescription>
