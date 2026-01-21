@@ -22,6 +22,7 @@ import {
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 
 import { useWinterEffects } from "~/app/_components/layout/winterTheme/use-winter-effects";
+import { signOut } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
 
 export function SidebarUserMenu() {
@@ -93,11 +94,9 @@ export function SidebarUserMenu() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/auth/logout" className="cursor-pointer">
-                <LogOut className="mr-2 size-4" />
-                Log out
-              </Link>
+            <DropdownMenuItem onClick={() => signOut()}>
+              <LogOut className="mr-2 size-4" />
+              Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
