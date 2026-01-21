@@ -6,7 +6,7 @@ export default function LegalLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background h-screen overflow-auto">
       <header className="border-b">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
           <Link href="/" className="text-xl font-semibold">

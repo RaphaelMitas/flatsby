@@ -8,13 +8,56 @@ import {
   CardTitle,
 } from "@flatsby/ui/card";
 
+import {
+  LegalAddress,
+  LegalHeading,
+  LegalLink,
+  LegalList,
+  LegalParagraph,
+  LegalSection,
+  LegalSubheading,
+} from "../_components/legal-content";
+
 export const metadata: Metadata = {
   title: "Privacy Policy - Flatsby",
   description: "Privacy Policy for Flatsby",
 };
 
 const PRIVACY_VERSION = "1.0";
-const LAST_UPDATED = "January 2025";
+const LAST_UPDATED = "January 2026";
+
+function TableOfContents() {
+  const items = [
+    { id: "introduction", label: "Introduction" },
+    { id: "data-controller", label: "Data Controller" },
+    { id: "data-collected", label: "Data We Collect" },
+    { id: "legal-basis", label: "Legal Basis for Processing" },
+    { id: "data-use", label: "How We Use Your Data" },
+    { id: "data-sharing", label: "Data Sharing" },
+    { id: "data-retention", label: "Data Retention" },
+    { id: "your-rights", label: "Your Rights (GDPR)" },
+    { id: "security", label: "Data Security" },
+    { id: "international", label: "International Data Transfers" },
+    { id: "children", label: "Children's Privacy" },
+    { id: "changes", label: "Changes to This Policy" },
+    { id: "contact", label: "Contact Us" },
+  ];
+
+  return (
+    <nav className="bg-muted/50 mb-10 rounded-lg p-4">
+      <h3 className="mb-3 text-sm font-semibold">Table of Contents</h3>
+      <ol className="text-muted-foreground list-inside list-decimal space-y-1.5 text-sm">
+        {items.map((item) => (
+          <li key={item.id}>
+            <a href={`#${item.id}`} className="hover:text-foreground underline-offset-4 hover:underline">
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
 
 export default function PrivacyPage() {
   return (
@@ -22,122 +65,57 @@ export default function PrivacyPage() {
       <CardHeader>
         <CardTitle className="text-2xl">Privacy Policy</CardTitle>
         <CardDescription>
-          Version {PRIVACY_VERSION} &middot; Last updated: {LAST_UPDATED}
+          Version {PRIVACY_VERSION} · Last updated: {LAST_UPDATED}
         </CardDescription>
       </CardHeader>
-      <CardContent className="prose dark:prose-invert max-w-none">
-        <nav className="mb-8 rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
-          <h3 className="mb-2 text-sm font-semibold">Table of Contents</h3>
-          <ol className="list-inside list-decimal space-y-1 text-sm">
-            <li>
-              <a href="#introduction" className="hover:underline">
-                Introduction
-              </a>
-            </li>
-            <li>
-              <a href="#data-controller" className="hover:underline">
-                Data Controller
-              </a>
-            </li>
-            <li>
-              <a href="#data-collected" className="hover:underline">
-                Data We Collect
-              </a>
-            </li>
-            <li>
-              <a href="#legal-basis" className="hover:underline">
-                Legal Basis for Processing
-              </a>
-            </li>
-            <li>
-              <a href="#data-use" className="hover:underline">
-                How We Use Your Data
-              </a>
-            </li>
-            <li>
-              <a href="#data-sharing" className="hover:underline">
-                Data Sharing
-              </a>
-            </li>
-            <li>
-              <a href="#data-retention" className="hover:underline">
-                Data Retention
-              </a>
-            </li>
-            <li>
-              <a href="#your-rights" className="hover:underline">
-                Your Rights (GDPR)
-              </a>
-            </li>
-            <li>
-              <a href="#security" className="hover:underline">
-                Data Security
-              </a>
-            </li>
-            <li>
-              <a href="#international" className="hover:underline">
-                International Data Transfers
-              </a>
-            </li>
-            <li>
-              <a href="#children" className="hover:underline">
-                Children&apos;s Privacy
-              </a>
-            </li>
-            <li>
-              <a href="#changes" className="hover:underline">
-                Changes to This Policy
-              </a>
-            </li>
-            <li>
-              <a href="#contact" className="hover:underline">
-                Contact Us
-              </a>
-            </li>
-          </ol>
-        </nav>
+      <CardContent>
+        <TableOfContents />
 
-        <section id="introduction">
-          <h2>1. Introduction</h2>
-          <p>
+        <LegalSection id="introduction">
+          <LegalHeading>1. Introduction</LegalHeading>
+          <LegalParagraph>
             This Privacy Policy explains how Flatsby (&quot;we&quot;,
             &quot;us&quot;, &quot;our&quot;) collects, uses, and protects your
             personal data when you use our household management application. We
             are committed to protecting your privacy and complying with the
             General Data Protection Regulation (GDPR) and other applicable data
             protection laws.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="data-controller">
-          <h2>2. Data Controller</h2>
-          <p>The data controller responsible for your personal data is:</p>
-          <address className="not-italic">
+        <LegalSection id="data-controller">
+          <LegalHeading>2. Data Controller</LegalHeading>
+          <LegalParagraph>
+            The data controller responsible for your personal data is:
+          </LegalParagraph>
+          <LegalAddress>
             Raphael Mitas
             <br />
             Weiterstädter Str. 65
             <br />
-            Darmstadt, Germany
+            64291 Darmstadt, Germany
             <br />
             Email: support@flatsby.com
-          </address>
-        </section>
+          </LegalAddress>
+        </LegalSection>
 
-        <section id="data-collected">
-          <h2>3. Data We Collect</h2>
+        <LegalSection id="data-collected">
+          <LegalHeading>3. Data We Collect</LegalHeading>
 
-          <h3>3.1 Account Information</h3>
-          <p>When you sign up via Google or Apple Sign-In, we receive:</p>
-          <ul>
+          <LegalSubheading>3.1 Account Information</LegalSubheading>
+          <LegalParagraph>
+            When you sign up via Google or Apple Sign-In, we receive:
+          </LegalParagraph>
+          <LegalList>
             <li>Your name</li>
             <li>Email address</li>
             <li>Profile picture (if provided)</li>
             <li>Unique identifier from the authentication provider</li>
-          </ul>
+          </LegalList>
 
-          <h3>3.2 User-Generated Content</h3>
-          <p>Data you create while using the app:</p>
-          <ul>
+          <LegalSubheading>3.2 User-Generated Content</LegalSubheading>
+          <LegalParagraph>Data you create while using the app:</LegalParagraph>
+          <LegalList>
             <li>
               Shopping lists and items (names, categories, completion status)
             </li>
@@ -147,28 +125,31 @@ export default function PrivacyPage() {
             </li>
             <li>Group information (names, member relationships)</li>
             <li>Chat conversations with our AI assistant</li>
-          </ul>
+          </LegalList>
 
-          <h3>3.3 Technical Data</h3>
-          <p>Automatically collected data:</p>
-          <ul>
+          <LegalSubheading>3.3 Technical Data</LegalSubheading>
+          <LegalParagraph>Automatically collected data:</LegalParagraph>
+          <LegalList>
             <li>IP address (for session management)</li>
             <li>Device type and operating system</li>
             <li>App usage patterns (features used, timestamps)</li>
-          </ul>
-        </section>
+          </LegalList>
+        </LegalSection>
 
-        <section id="legal-basis">
-          <h2>4. Legal Basis for Processing</h2>
-          <p>We process your personal data based on:</p>
-          <ul>
+        <LegalSection id="legal-basis">
+          <LegalHeading>4. Legal Basis for Processing</LegalHeading>
+          <LegalParagraph>
+            We process your personal data based on:
+          </LegalParagraph>
+          <LegalList>
             <li>
               <strong>Contract performance (Art. 6(1)(b) GDPR):</strong> To
-              provide the service you signed up for
+              provide the service you signed up for, including AI-powered
+              features like automatic category detection
             </li>
             <li>
-              <strong>Consent (Art. 6(1)(a) GDPR):</strong> For optional features
-              like AI chat functionality
+              <strong>Consent (Art. 6(1)(a) GDPR):</strong> For the AI chat
+              assistant
             </li>
             <li>
               <strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> For
@@ -178,13 +159,13 @@ export default function PrivacyPage() {
               <strong>Legal obligations (Art. 6(1)(c) GDPR):</strong> To comply
               with applicable laws
             </li>
-          </ul>
-        </section>
+          </LegalList>
+        </LegalSection>
 
-        <section id="data-use">
-          <h2>5. How We Use Your Data</h2>
-          <p>We use your personal data to:</p>
-          <ul>
+        <LegalSection id="data-use">
+          <LegalHeading>5. How We Use Your Data</LegalHeading>
+          <LegalParagraph>We use your personal data to:</LegalParagraph>
+          <LegalList>
             <li>Provide and maintain the Flatsby service</li>
             <li>Enable collaboration with your household members</li>
             <li>Process and display your shopping lists and expenses</li>
@@ -192,22 +173,24 @@ export default function PrivacyPage() {
             <li>Send service-related communications</li>
             <li>Improve and optimize the service</li>
             <li>Ensure security and prevent fraud</li>
-          </ul>
-        </section>
+          </LegalList>
+        </LegalSection>
 
-        <section id="data-sharing">
-          <h2>6. Data Sharing</h2>
+        <LegalSection id="data-sharing">
+          <LegalHeading>6. Data Sharing</LegalHeading>
 
-          <h3>6.1 Within Your Groups</h3>
-          <p>
+          <LegalSubheading>6.1 Within Your Groups</LegalSubheading>
+          <LegalParagraph>
             When you join a household group, other group members can see your
             name, profile picture, and the content you share within that group
             (shopping list items, expenses).
-          </p>
+          </LegalParagraph>
 
-          <h3>6.2 Service Providers</h3>
-          <p>We use third-party services to operate Flatsby:</p>
-          <ul>
+          <LegalSubheading>6.2 Service Providers</LegalSubheading>
+          <LegalParagraph>
+            We use third-party services to operate Flatsby:
+          </LegalParagraph>
+          <LegalList>
             <li>
               <strong>Neon (Database):</strong> Stores your data securely
             </li>
@@ -219,44 +202,73 @@ export default function PrivacyPage() {
               services
             </li>
             <li>
-              <strong>AI Providers (OpenRouter):</strong> Powers the AI chat
-              feature (only when you use it)
+              <strong>AI Services (Vercel AI Gateway):</strong> AI features are
+              integrated throughout Flatsby (chat assistant, automatic category
+              detection for shopping items, and more). Data is processed via{" "}
+              <LegalLink href="https://vercel.com/docs/ai-gateway" external>
+                Vercel AI Gateway
+              </LegalLink>
+              , which routes requests to OpenAI (GPT models), Google (Gemini
+              models), or Anthropic (Claude models). See{" "}
+              <LegalLink href="https://vercel.com/legal/dpa" external>
+                Vercel&apos;s DPA
+              </LegalLink>{" "}
+              for data processing terms.
             </li>
-          </ul>
+          </LegalList>
 
-          <h3>6.3 Legal Requirements</h3>
-          <p>
+          <LegalSubheading>6.3 Legal Requirements</LegalSubheading>
+          <LegalParagraph>
             We may disclose your data if required by law or to protect our
             rights and safety.
-          </p>
-        </section>
+          </LegalParagraph>
 
-        <section id="data-retention">
-          <h2>7. Data Retention</h2>
-          <p>
+          <LegalSubheading>6.4 AI Data Processing</LegalSubheading>
+          <LegalParagraph>
+            AI features are integrated throughout Flatsby. The following data
+            may be sent to AI providers:
+          </LegalParagraph>
+          <LegalList>
+            <li>Shopping list item names (for automatic category detection)</li>
+            <li>
+              Chat messages and conversation history (when using the AI
+              assistant)
+            </li>
+            <li>
+              Shopping list and expense data (when using AI assistant tools)
+            </li>
+            <li>Group member names (when AI needs to identify members)</li>
+          </LegalList>
+          <LegalParagraph>
+            AI providers process this data to provide intelligent features. Data
+            processing is governed by Vercel&apos;s DPA linked above.
+          </LegalParagraph>
+        </LegalSection>
+
+        <LegalSection id="data-retention">
+          <LegalHeading>7. Data Retention</LegalHeading>
+          <LegalParagraph>
             We retain your personal data for as long as your account is active.
             When you delete your account:
-          </p>
-          <ul>
+          </LegalParagraph>
+          <LegalList>
             <li>Your personal data is deleted immediately</li>
             <li>
               Shopping list items and expenses you created may be anonymized but
               retained for other group members
             </li>
-            <li>
-              Chat conversations are permanently deleted
-            </li>
-          </ul>
-          <p>
+            <li>Chat conversations are permanently deleted</li>
+          </LegalList>
+          <LegalParagraph>
             We may retain certain data longer if required by law or for
             legitimate business purposes (e.g., billing records).
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="your-rights">
-          <h2>8. Your Rights (GDPR)</h2>
-          <p>Under the GDPR, you have the right to:</p>
-          <ul>
+        <LegalSection id="your-rights">
+          <LegalHeading>8. Your Rights (GDPR)</LegalHeading>
+          <LegalParagraph>Under the GDPR, you have the right to:</LegalParagraph>
+          <LegalList>
             <li>
               <strong>Access:</strong> Request a copy of your personal data
             </li>
@@ -282,75 +294,78 @@ export default function PrivacyPage() {
               <strong>Withdraw consent:</strong> Withdraw consent at any time
               for consent-based processing
             </li>
-          </ul>
-          <p>
+          </LegalList>
+          <LegalParagraph>
             To exercise these rights, use the &quot;Export My Data&quot; feature
             in Settings or contact us at support@flatsby.com. You also have the
             right to lodge a complaint with a supervisory authority.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="security">
-          <h2>9. Data Security</h2>
-          <p>
+        <LegalSection id="security">
+          <LegalHeading>9. Data Security</LegalHeading>
+          <LegalParagraph>
             We implement appropriate technical and organizational measures to
             protect your personal data, including:
-          </p>
-          <ul>
+          </LegalParagraph>
+          <LegalList>
             <li>Encryption of data in transit (HTTPS/TLS)</li>
             <li>Encryption of data at rest</li>
             <li>Secure authentication via OAuth 2.0</li>
             <li>Regular security assessments</li>
             <li>Access controls and monitoring</li>
-          </ul>
-        </section>
+          </LegalList>
+        </LegalSection>
 
-        <section id="international">
-          <h2>10. International Data Transfers</h2>
-          <p>
+        <LegalSection id="international">
+          <LegalHeading>10. International Data Transfers</LegalHeading>
+          <LegalParagraph>
             Your data may be processed outside the European Economic Area (EEA)
-            by our service providers. We ensure appropriate safeguards are in
-            place, such as Standard Contractual Clauses or adequacy decisions.
-          </p>
-        </section>
+            by our service providers. In particular, AI services (OpenAI,
+            Google, Anthropic) process data in the United States. We ensure
+            appropriate safeguards are in place, such as Standard Contractual
+            Clauses (SCCs) or adequacy decisions. See the DPA link in Section
+            6.2 for details.
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="children">
-          <h2>11. Children&apos;s Privacy</h2>
-          <p>
+        <LegalSection id="children">
+          <LegalHeading>11. Children&apos;s Privacy</LegalHeading>
+          <LegalParagraph>
             Flatsby is not intended for children under 16 years of age. We do
             not knowingly collect personal data from children under 16. If you
             believe we have collected data from a child, please contact us
             immediately.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="changes">
-          <h2>12. Changes to This Policy</h2>
-          <p>
+        <LegalSection id="changes">
+          <LegalHeading>12. Changes to This Policy</LegalHeading>
+          <LegalParagraph>
             We may update this Privacy Policy from time to time. We will notify
             you of material changes by updating the &quot;Last updated&quot;
             date and, where appropriate, by additional notice (e.g., in-app
             notification).
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="contact">
-          <h2>13. Contact Us</h2>
-          <p>
+        <LegalSection id="contact">
+          <LegalHeading>13. Contact Us</LegalHeading>
+          <LegalParagraph>
             For privacy-related questions or to exercise your rights, contact
             us:
-          </p>
-          <p>
+          </LegalParagraph>
+          <LegalParagraph>
             <strong>Email:</strong> support@flatsby.com
-          </p>
-          <address className="not-italic">
+          </LegalParagraph>
+          <LegalAddress>
             Raphael Mitas
             <br />
             Weiterstädter Str. 65
             <br />
-            Darmstadt, Germany
-          </address>
-        </section>
+            64291 Darmstadt, Germany
+          </LegalAddress>
+        </LegalSection>
       </CardContent>
     </Card>
   );

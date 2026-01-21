@@ -8,13 +8,50 @@ import {
   CardTitle,
 } from "@flatsby/ui/card";
 
+import {
+  LegalHeading,
+  LegalList,
+  LegalParagraph,
+  LegalSection,
+} from "../_components/legal-content";
+
 export const metadata: Metadata = {
   title: "Terms of Service - Flatsby",
   description: "Terms of Service for using Flatsby",
 };
 
 const TERMS_VERSION = "1.0";
-const LAST_UPDATED = "January 2025";
+const LAST_UPDATED = "January 2026";
+
+function TableOfContents() {
+  const items = [
+    { id: "acceptance", label: "Acceptance of Terms" },
+    { id: "description", label: "Description of Service" },
+    { id: "accounts", label: "User Accounts" },
+    { id: "conduct", label: "User Conduct" },
+    { id: "content", label: "User Content" },
+    { id: "termination", label: "Termination" },
+    { id: "disclaimer", label: "Disclaimer of Warranties" },
+    { id: "liability", label: "Limitation of Liability" },
+    { id: "changes", label: "Changes to Terms" },
+    { id: "contact", label: "Contact Information" },
+  ];
+
+  return (
+    <nav className="bg-muted/50 mb-10 rounded-lg p-4">
+      <h3 className="mb-3 text-sm font-semibold">Table of Contents</h3>
+      <ol className="text-muted-foreground list-inside list-decimal space-y-1.5 text-sm">
+        {items.map((item) => (
+          <li key={item.id}>
+            <a href={`#${item.id}`} className="hover:text-foreground underline-offset-4 hover:underline">
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
 
 export default function TermsPage() {
   return (
@@ -22,110 +59,56 @@ export default function TermsPage() {
       <CardHeader>
         <CardTitle className="text-2xl">Terms of Service</CardTitle>
         <CardDescription>
-          Version {TERMS_VERSION} &middot; Last updated: {LAST_UPDATED}
+          Version {TERMS_VERSION} · Last updated: {LAST_UPDATED}
         </CardDescription>
       </CardHeader>
-      <CardContent className="prose dark:prose-invert max-w-none">
-        <nav className="mb-8 rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
-          <h3 className="mb-2 text-sm font-semibold">Table of Contents</h3>
-          <ol className="list-inside list-decimal space-y-1 text-sm">
-            <li>
-              <a href="#acceptance" className="hover:underline">
-                Acceptance of Terms
-              </a>
-            </li>
-            <li>
-              <a href="#description" className="hover:underline">
-                Description of Service
-              </a>
-            </li>
-            <li>
-              <a href="#accounts" className="hover:underline">
-                User Accounts
-              </a>
-            </li>
-            <li>
-              <a href="#conduct" className="hover:underline">
-                User Conduct
-              </a>
-            </li>
-            <li>
-              <a href="#content" className="hover:underline">
-                User Content
-              </a>
-            </li>
-            <li>
-              <a href="#termination" className="hover:underline">
-                Termination
-              </a>
-            </li>
-            <li>
-              <a href="#disclaimer" className="hover:underline">
-                Disclaimer of Warranties
-              </a>
-            </li>
-            <li>
-              <a href="#liability" className="hover:underline">
-                Limitation of Liability
-              </a>
-            </li>
-            <li>
-              <a href="#changes" className="hover:underline">
-                Changes to Terms
-              </a>
-            </li>
-            <li>
-              <a href="#contact" className="hover:underline">
-                Contact Information
-              </a>
-            </li>
-          </ol>
-        </nav>
+      <CardContent>
+        <TableOfContents />
 
-        <section id="acceptance">
-          <h2>1. Acceptance of Terms</h2>
-          <p>
+        <LegalSection id="acceptance">
+          <LegalHeading>1. Acceptance of Terms</LegalHeading>
+          <LegalParagraph>
             By accessing or using Flatsby (&quot;the Service&quot;), you agree
             to be bound by these Terms of Service. If you do not agree to these
             terms, please do not use the Service.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="description">
-          <h2>2. Description of Service</h2>
-          <p>
+        <LegalSection id="description">
+          <LegalHeading>2. Description of Service</LegalHeading>
+          <LegalParagraph>
             Flatsby is a collaborative household management application that
             enables users to:
-          </p>
-          <ul>
+          </LegalParagraph>
+          <LegalList>
             <li>Create and manage shared shopping lists</li>
             <li>Track and split expenses among household members</li>
             <li>Organize household groups</li>
             <li>Use AI-powered assistance for household tasks</li>
-          </ul>
-        </section>
+          </LegalList>
+        </LegalSection>
 
-        <section id="accounts">
-          <h2>3. User Accounts</h2>
-          <p>
+        <LegalSection id="accounts">
+          <LegalHeading>3. User Accounts</LegalHeading>
+          <LegalParagraph>
             To use the Service, you must create an account using Google or Apple
             Sign-In. You are responsible for:
-          </p>
-          <ul>
+          </LegalParagraph>
+          <LegalList>
             <li>Maintaining the security of your account credentials</li>
             <li>All activities that occur under your account</li>
             <li>Notifying us immediately of any unauthorized access</li>
-          </ul>
-          <p>
+          </LegalList>
+          <LegalParagraph>
             You must be at least 16 years old to create an account and use the
             Service.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="conduct">
-          <h2>4. User Conduct</h2>
-          <p>You agree not to:</p>
-          <ul>
+        <LegalSection id="conduct">
+          <LegalHeading>4. User Conduct</LegalHeading>
+          <LegalParagraph>You agree not to:</LegalParagraph>
+          <LegalList>
             <li>Use the Service for any unlawful purpose</li>
             <li>Harass, abuse, or harm other users</li>
             <li>
@@ -137,78 +120,78 @@ export default function TermsPage() {
               Service
             </li>
             <li>Violate the privacy of other users</li>
-          </ul>
-        </section>
+          </LegalList>
+        </LegalSection>
 
-        <section id="content">
-          <h2>5. User Content</h2>
-          <p>
+        <LegalSection id="content">
+          <LegalHeading>5. User Content</LegalHeading>
+          <LegalParagraph>
             You retain ownership of any content you submit to the Service
             (shopping lists, expenses, group names, etc.). By submitting
             content, you grant us a license to use, store, and process that
             content solely to provide the Service to you.
-          </p>
-          <p>
+          </LegalParagraph>
+          <LegalParagraph>
             You are solely responsible for the content you submit and must
             ensure it does not violate any laws or third-party rights.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="termination">
-          <h2>6. Termination</h2>
-          <p>
+        <LegalSection id="termination">
+          <LegalHeading>6. Termination</LegalHeading>
+          <LegalParagraph>
             You may delete your account at any time through the app settings. We
             may suspend or terminate your account if you violate these Terms.
-          </p>
-          <p>
+          </LegalParagraph>
+          <LegalParagraph>
             Upon termination, your right to use the Service will immediately
             cease. We may retain certain data as required by law or for
             legitimate business purposes.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="disclaimer">
-          <h2>7. Disclaimer of Warranties</h2>
-          <p>
+        <LegalSection id="disclaimer">
+          <LegalHeading>7. Disclaimer of Warranties</LegalHeading>
+          <LegalParagraph>
             THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS
             AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
             IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF
             MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
             NON-INFRINGEMENT.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="liability">
-          <h2>8. Limitation of Liability</h2>
-          <p>
+        <LegalSection id="liability">
+          <LegalHeading>8. Limitation of Liability</LegalHeading>
+          <LegalParagraph>
             TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL FLATSBY OR
             ITS OPERATOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
             CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR
             REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF
             DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="changes">
-          <h2>9. Changes to Terms</h2>
-          <p>
+        <LegalSection id="changes">
+          <LegalHeading>9. Changes to Terms</LegalHeading>
+          <LegalParagraph>
             We reserve the right to modify these Terms at any time. We will
             notify you of material changes by posting the new Terms on this page
             and updating the &quot;Last updated&quot; date. Your continued use
             of the Service after such changes constitutes acceptance of the new
             Terms.
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
 
-        <section id="contact">
-          <h2>10. Contact Information</h2>
-          <p>
+        <LegalSection id="contact">
+          <LegalHeading>10. Contact Information</LegalHeading>
+          <LegalParagraph>
             If you have any questions about these Terms, please contact us at:
-          </p>
-          <p>
+          </LegalParagraph>
+          <LegalParagraph>
             <strong>Email:</strong> support@flatsby.com
-          </p>
-        </section>
+          </LegalParagraph>
+        </LegalSection>
       </CardContent>
     </Card>
   );
