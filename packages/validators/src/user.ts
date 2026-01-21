@@ -30,6 +30,11 @@ export const userSchema = z.object({
   lastChatModelUsed: chatModelSchema.optional(),
   lastShoppingListToolsEnabled: z.boolean().optional().nullable(),
   lastExpenseToolsEnabled: z.boolean().optional().nullable(),
+  // Legal consent tracking
+  termsAcceptedAt: z.date().optional().nullable(),
+  termsVersion: z.string().optional().nullable(),
+  privacyAcceptedAt: z.date().optional().nullable(),
+  privacyVersion: z.string().optional().nullable(),
 });
 export type User = z.infer<typeof userSchema>;
 
@@ -39,3 +44,66 @@ export type User = z.infer<typeof userSchema>;
  */
 export const updateUserNameFormSchema = userSchema.pick({ name: true });
 export type UpdateUserNameFormValues = z.infer<typeof updateUserNameFormSchema>;
+
+/**
+ * Schema for updating legal consent
+ * Used when user accepts terms and/or privacy policy
+ */
+export const updateConsentInputSchema = z.object({
+  termsAccepted: z.boolean(),
+  privacyAccepted: z.boolean(),
+  version: z.string().max(20),
+});
+export type UpdateConsentInput = z.infer<typeof updateConsentInputSchema>;
+
+/**
+ * Schema for GDPR user data export response
+ */
+export const userDataExportSchema = z.object({
+  exportedAt: z.string(),
+  user: z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    createdAt: z.string(),
+    termsAcceptedAt: z.string().nullable(),
+    termsVersion: z.string().nullable(),
+    privacyAcceptedAt: z.string().nullable(),
+    privacyVersion: z.string().nullable(),
+  }),
+  groups: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      role: z.string(),
+      joinedOn: z.string(),
+    }),
+  ),
+  shoppingLists: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      groupId: z.number(),
+      itemsCount: z.number(),
+    }),
+  ),
+  expenses: z.array(
+    z.object({
+      id: z.number(),
+      description: z.string().nullable(),
+      amountInCents: z.number(),
+      currency: z.string(),
+      expenseDate: z.string(),
+      groupId: z.number(),
+    }),
+  ),
+  conversations: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string().nullable(),
+      createdAt: z.string(),
+      messageCount: z.number(),
+    }),
+  ),
+});
+export type UserDataExport = z.infer<typeof userDataExportSchema>;

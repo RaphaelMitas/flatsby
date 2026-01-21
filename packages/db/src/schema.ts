@@ -37,6 +37,11 @@ export const users = createTable("user", {
   lastChatModelUsed: text("last_chat_model_used"),
   lastShoppingListToolsEnabled: boolean("last_shopping_list_tools_enabled"),
   lastExpenseToolsEnabled: boolean("last_expense_tools_enabled"),
+  // Legal consent tracking
+  termsAcceptedAt: timestamp("terms_accepted_at"),
+  termsVersion: varchar("terms_version", { length: 20 }),
+  privacyAcceptedAt: timestamp("privacy_accepted_at"),
+  privacyVersion: varchar("privacy_version", { length: 20 }),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({
