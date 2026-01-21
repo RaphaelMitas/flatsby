@@ -1,0 +1,11 @@
+{
+  "extends": "@flatsby/tsconfig/base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": ".cache/tsbuildinfo.json",
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "noImplicitAny": false
+  },
+  "include": ["src", "convex"],
+  "exclude": ["node_modules", "dist", "convex/_generated"]
+}
