@@ -5,6 +5,7 @@ import {
   index,
   integer,
   jsonb,
+  pgEnum,
   pgTableCreator,
   real,
   serial,
@@ -107,6 +108,12 @@ export const verificationTokens = createTable("verification_token", {
 });
 // end auth
 
+// Enums
+export const groupMemberRoleEnum = pgEnum("group_member_role", [
+  "admin",
+  "member",
+]);
+
 // Create a pgTable that maps to a table in your DB
 export const groups = createTable("groups", {
   id: serial("id").primaryKey(),
@@ -121,8 +128,9 @@ export const groupMembers = createTable("group_members", {
     .notNull()
     .references(() => groups.id),
   userId: text("userId").notNull(),
-  role: varchar("role", { length: 256 }).notNull(),
+  role: groupMemberRoleEnum("role").notNull(),
   joinedOn: timestamp("joinedOn").defaultNow().notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
 });
 
 export const groupsRelations = relations(groups, ({ many }) => ({

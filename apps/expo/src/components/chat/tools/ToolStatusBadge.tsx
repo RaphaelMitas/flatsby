@@ -62,7 +62,9 @@ export function ToolStatusBadge({ state }: ToolStatusBadgeProps) {
   return (
     <View className="bg-secondary flex-row items-center gap-1 rounded-full px-2 py-0.5">
       <Icon
-        name={config.icon as "circle-dot" | "clock" | "circle-check" | "circle-x"}
+        name={
+          config.icon as "circle-dot" | "clock" | "circle-check" | "circle-x"
+        }
         size={12}
         color={
           state === "output-available"

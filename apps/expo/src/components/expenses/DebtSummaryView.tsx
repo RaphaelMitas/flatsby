@@ -2,8 +2,8 @@ import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import type { GroupDebtSummary } from "@flatsby/validators/expenses/types";
 import { useCallback, useState } from "react";
 import { RefreshControl, Text, View } from "react-native";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 

@@ -43,6 +43,18 @@ export const groupMemberSchema = z.object({
 });
 export type GroupMember = z.infer<typeof groupMemberSchema>;
 
+export const groupMemberUserSchema = z.object({
+  email: userEmailSchema,
+  name: userNameSchema.nullable(),
+  image: userImageSchema,
+});
+export type GroupMemberUser = z.infer<typeof groupMemberUserSchema>;
+
+export const groupMemberWithUserSchema = groupMemberSchema.extend({
+  user: groupMemberUserSchema,
+});
+export type GroupMemberWithUser = z.infer<typeof groupMemberWithUserSchema>;
+
 export const updateMemberRoleInputSchema = z.object({
   memberId: z.number(),
   newRole: groupMemberRoleSchema,

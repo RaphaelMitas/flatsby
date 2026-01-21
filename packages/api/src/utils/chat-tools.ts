@@ -638,7 +638,9 @@ export function createChatTools(
               }),
             )
             .optional()
-            .describe("Custom split amounts (required if splitMethod='custom')"),
+            .describe(
+              "Custom split amounts (required if splitMethod='custom')",
+            ),
           splitAmongMemberIds: z
             .array(z.number())
             .optional()
@@ -646,7 +648,9 @@ export function createChatTools(
           userShouldConfirmSplits: z
             .boolean()
             .optional()
-            .describe("Show split editor for user to review/adjust before creating"),
+            .describe(
+              "Show split editor for user to review/adjust before creating",
+            ),
         }),
       ),
       execute: async ({
@@ -707,9 +711,17 @@ export function createChatTools(
         }
 
         // Calculate splits based on method
-        let calculatedSplits: { groupMemberId: number; amountInCents: number; percentage: number | null }[];
+        let calculatedSplits: {
+          groupMemberId: number;
+          amountInCents: number;
+          percentage: number | null;
+        }[];
 
-        if (splitMethod === "custom" && customSplits && customSplits.length > 0) {
+        if (
+          splitMethod === "custom" &&
+          customSplits &&
+          customSplits.length > 0
+        ) {
           // Verify all member IDs exist
           const validMemberIds: number[] = [];
           for (const split of customSplits) {
@@ -725,10 +737,16 @@ export function createChatTools(
           }
 
           // Check if custom splits sum to total - if not, auto-correct with equal distribution
-          const splitTotal = customSplits.reduce((sum, s) => sum + s.amountInCents, 0);
+          const splitTotal = customSplits.reduce(
+            (sum, s) => sum + s.amountInCents,
+            0,
+          );
           if (splitTotal !== amountInCents) {
             // Auto-correct: redistribute equally among the specified members
-            calculatedSplits = distributeEqualAmounts(validMemberIds, amountInCents);
+            calculatedSplits = distributeEqualAmounts(
+              validMemberIds,
+              amountInCents,
+            );
           } else {
             calculatedSplits = customSplits.map((s) => ({
               ...s,
@@ -737,9 +755,10 @@ export function createChatTools(
           }
         } else {
           // Equal split among specified members or all
-          const memberIds = splitAmongMemberIds && splitAmongMemberIds.length > 0
-            ? splitAmongMemberIds
-            : members.map((m) => m.id);
+          const memberIds =
+            splitAmongMemberIds && splitAmongMemberIds.length > 0
+              ? splitAmongMemberIds
+              : members.map((m) => m.id);
 
           // Verify all member IDs exist
           for (const memberId of memberIds) {

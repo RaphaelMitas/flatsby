@@ -46,7 +46,8 @@ export default function ConsentForm() {
     }
   };
 
-  const canSubmit = termsAccepted && privacyAccepted && !updateConsent.isPending;
+  const canSubmit =
+    termsAccepted && privacyAccepted && !updateConsent.isPending;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">

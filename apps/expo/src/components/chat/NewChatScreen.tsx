@@ -2,8 +2,8 @@ import type { ToolPreferences } from "@flatsby/validators/chat/messages";
 import type { ChatModel } from "@flatsby/validators/models";
 import { useCallback, useState } from "react";
 import { Text, View } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { CHAT_MODELS } from "@flatsby/validators/models";
 
@@ -56,12 +56,7 @@ export const NewChatScreen = () => {
         },
       );
     },
-    [
-      createConversation,
-      queryClient,
-      router,
-      selectedModel,
-    ],
+    [createConversation, queryClient, router, selectedModel],
   );
 
   return (

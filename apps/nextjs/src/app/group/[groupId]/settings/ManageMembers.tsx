@@ -1,7 +1,9 @@
 "use client";
 
-import type { groupMembers } from "@flatsby/db/schema";
-import type { AddMemberFormValues } from "@flatsby/validators/group";
+import type {
+  AddMemberFormValues,
+  GroupMemberWithUser,
+} from "@flatsby/validators/group";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -36,14 +38,6 @@ import { addMemberFormSchema } from "@flatsby/validators/group";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
-
-type groupMemberWithUser = typeof groupMembers.$inferSelect & {
-  user: {
-    email: string;
-    name: string | null;
-    image: string | null;
-  };
-};
 
 const ManageMembers = ({ groupId }: { groupId: number }) => {
   const trpc = useTRPC();
@@ -185,8 +179,8 @@ const MemberCard = ({
   groupMember,
   currentUserGroupMember,
 }: {
-  groupMember: groupMemberWithUser;
-  currentUserGroupMember: groupMemberWithUser;
+  groupMember: GroupMemberWithUser;
+  currentUserGroupMember: GroupMemberWithUser;
 }) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
