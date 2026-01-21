@@ -43,7 +43,7 @@ export const groupRouter = createTRPCRouter({
         // Alias the groupMembers table for counting members
         const gmAll = alias(groupMembers, "gm_all");
 
-        // Fetch groups the user is a member of, along with member counts
+        // Fetch groups the user is an active member of, along with active member counts
         return ctx.db
           .select({
             id: groups.id,
@@ -53,8 +53,17 @@ export const groupRouter = createTRPCRouter({
             memberCount: count(gmAll.userId),
           })
           .from(groups)
-          .innerJoin(groupMembers, eq(groups.id, groupMembers.groupId))
-          .innerJoin(gmAll, eq(groups.id, gmAll.groupId))
+          .innerJoin(
+            groupMembers,
+            and(
+              eq(groups.id, groupMembers.groupId),
+              eq(groupMembers.isActive, true),
+            ),
+          )
+          .innerJoin(
+            gmAll,
+            and(eq(groups.id, gmAll.groupId), eq(gmAll.isActive, true)),
+          )
           .where(eq(groupMembers.userId, ctx.session.user.id))
           .groupBy(groups.id);
       }, "fetch user groups with member counts"),
@@ -78,18 +87,23 @@ export const groupRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Fetch the target member with group data
+          // Fetch the target member with group data (must be active)
           DbUtils.findOneOrFail(
             () =>
               ctx.db.query.groupMembers.findFirst({
-                where: eq(groupMembers.id, input.memberId),
+                where: and(
+                  eq(groupMembers.id, input.memberId),
+                  eq(groupMembers.isActive, true),
+                ),
                 with: {
                   group: {
                     columns: {
                       id: true,
                     },
                     with: {
-                      groupMembers: true,
+                      groupMembers: {
+                        where: (members, { eq }) => eq(members.isActive, true),
+                      },
                     },
                   },
                 },
@@ -141,23 +155,27 @@ export const groupRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Find the target group member
+          // Find the target group member (must be active)
           DbUtils.findOneOrFail(
             () =>
               ctx.db.query.groupMembers.findFirst({
-                where: eq(groupMembers.id, input.memberId),
+                where: and(
+                  eq(groupMembers.id, input.memberId),
+                  eq(groupMembers.isActive, true),
+                ),
               }),
             "group member",
           ),
           (targetGroupMember: GroupMember) =>
             Effect.flatMap(
-              // Find current user's membership in the same group
+              // Find current user's active membership in the same group
               DbUtils.findOneOrFail(
                 () =>
                   ctx.db.query.groupMembers.findFirst({
                     where: and(
                       eq(groupMembers.userId, ctx.session.user.id),
                       eq(groupMembers.groupId, targetGroupMember.groupId),
+                      eq(groupMembers.isActive, true),
                     ),
                   }),
                 "group membership",
@@ -174,7 +192,7 @@ export const groupRouter = createTRPCRouter({
                   ),
                   () =>
                     Effect.flatMap(
-                      // If removing an admin, ensure it's not the last admin
+                      // If removing an admin, ensure it's not the last active admin
                       targetGroupMember.role === "admin" &&
                         targetGroupMember.id === currentUserGroupMember.id
                         ? Effect.flatMap(
@@ -190,6 +208,7 @@ export const groupRouter = createTRPCRouter({
                                         targetGroupMember.groupId,
                                       ),
                                       eq(groupMembers.role, "admin"),
+                                      eq(groupMembers.isActive, true),
                                     ),
                                   ),
                               catch: (error) =>
@@ -209,7 +228,7 @@ export const groupRouter = createTRPCRouter({
                           )
                         : Effect.succeed(undefined),
                       () =>
-                        // Perform the removal transaction
+                        // Mark member as inactive (preserves expense history)
                         Effect.tryPromise({
                           try: () =>
                             ctx.db.transaction(async (trx) => {
@@ -234,9 +253,10 @@ export const groupRouter = createTRPCRouter({
                                   ),
                                 );
 
-                              // Remove the group member
+                              // Mark member as inactive instead of deleting
                               await trx
-                                .delete(groupMembers)
+                                .update(groupMembers)
+                                .set({ isActive: false })
                                 .where(
                                   eq(groupMembers.id, targetGroupMember.id),
                                 );
@@ -297,7 +317,7 @@ export const groupRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Check current user's group membership and admin status
+          // Check current user's active group membership and admin status
           DbUtils.findOneOrFail(
             () =>
               ctx.db.query.groupMembers.findFirst({
@@ -307,6 +327,7 @@ export const groupRouter = createTRPCRouter({
                 where: and(
                   eq(groupMembers.groupId, input.groupId),
                   eq(groupMembers.userId, ctx.session.user.id),
+                  eq(groupMembers.isActive, true),
                 ),
               }),
             "group membership",
@@ -332,7 +353,7 @@ export const groupRouter = createTRPCRouter({
                   ),
                   (userToAdd) =>
                     Effect.flatMap(
-                      // Check if user is already a member
+                      // Check if user has any membership (active or inactive)
                       safeDbOperation(
                         () =>
                           ctx.db.query.groupMembers.findFirst({
@@ -343,41 +364,66 @@ export const groupRouter = createTRPCRouter({
                           }),
                         "check existing membership",
                       ),
-                      (existingMembership) =>
-                        Effect.flatMap(
-                          // Fail if user is already a member
-                          existingMembership
-                            ? fail.conflict(
-                                "membership",
-                                "already exists",
-                                "This user is already a member of the group",
-                              )
-                            : Effect.succeed(undefined),
-                          () =>
-                            // Add the new group member
-                            Effect.map(
-                              safeDbOperation(
-                                () =>
-                                  ctx.db
-                                    .insert(groupMembers)
-                                    .values({
-                                      groupId: input.groupId,
-                                      userId: userToAdd.id,
-                                      role: "member",
-                                    })
-                                    .returning({ id: groupMembers.id }),
-                                "add group member",
-                              ),
-                              (result) => {
-                                if (!result[0]) {
-                                  throw new Error(
-                                    "Failed to add new group member",
-                                  );
-                                }
-                                return result[0].id;
-                              },
+                      (existingMembership) => {
+                        // If membership exists and is active, fail with conflict
+                        if (existingMembership?.isActive) {
+                          return fail.conflict(
+                            "membership",
+                            "already exists",
+                            "This user is already a member of the group",
+                          );
+                        }
+
+                        // If membership exists but is inactive, reactivate it
+                        if (
+                          existingMembership &&
+                          !existingMembership.isActive
+                        ) {
+                          return Effect.map(
+                            safeDbOperation(
+                              () =>
+                                ctx.db
+                                  .update(groupMembers)
+                                  .set({ isActive: true, role: "member" })
+                                  .where(
+                                    eq(groupMembers.id, existingMembership.id),
+                                  )
+                                  .returning({ id: groupMembers.id }),
+                              "reactivate group member",
                             ),
-                        ),
+                            (result) => {
+                              if (!result[0]) {
+                                throw new Error(
+                                  "Failed to reactivate group member",
+                                );
+                              }
+                              return result[0].id;
+                            },
+                          );
+                        }
+
+                        // No existing membership, create new one
+                        return Effect.map(
+                          safeDbOperation(
+                            () =>
+                              ctx.db
+                                .insert(groupMembers)
+                                .values({
+                                  groupId: input.groupId,
+                                  userId: userToAdd.id,
+                                  role: "member",
+                                })
+                                .returning({ id: groupMembers.id }),
+                            "add group member",
+                          ),
+                          (result) => {
+                            if (!result[0]) {
+                              throw new Error("Failed to add new group member");
+                            }
+                            return result[0].id;
+                          },
+                        );
+                      },
                     ),
                 ),
             ),

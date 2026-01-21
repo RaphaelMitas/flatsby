@@ -1,5 +1,8 @@
 declare module "@ungap/structured-clone" {
-  const structuredClone: <T>(value: T, options?: StructuredSerializeOptions) => T;
+  const structuredClone: <T>(
+    value: T,
+    options?: StructuredSerializeOptions,
+  ) => T;
   export default structuredClone;
 }
 
@@ -31,10 +34,7 @@ declare module "web-streams-polyfill" {
       transform: ReadableWritablePair<T, R>,
       options?: StreamPipeOptions,
     ): ReadableStream<T>;
-    pipeTo(
-      dest: WritableStream<R>,
-      options?: StreamPipeOptions,
-    ): Promise<void>;
+    pipeTo(dest: WritableStream<R>, options?: StreamPipeOptions): Promise<void>;
     tee(): [ReadableStream<R>, ReadableStream<R>];
   }
 }

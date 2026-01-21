@@ -251,7 +251,7 @@ export function AppSidebar() {
           <SidebarCreditsDisplay />
           <SidebarUserMenu />
         </SidebarMenu>
-        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 px-2 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+        <div className="text-muted-foreground flex flex-wrap justify-center gap-x-3 gap-y-1 px-2 py-2 text-xs group-data-[collapsible=icon]:hidden">
           <Link href="/legal/impressum" className="hover:underline">
             Impressum
           </Link>

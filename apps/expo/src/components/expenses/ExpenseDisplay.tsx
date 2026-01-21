@@ -64,7 +64,10 @@ export function ExpenseDisplay({
         </View>
 
         {description && (
-          <Text className="text-foreground text-sm font-medium" numberOfLines={2}>
+          <Text
+            className="text-foreground text-sm font-medium"
+            numberOfLines={2}
+          >
             {description}
           </Text>
         )}
@@ -79,7 +82,9 @@ export function ExpenseDisplay({
                     {fromName.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <Text className="text-muted-foreground text-sm">{fromName}</Text>
+                <Text className="text-muted-foreground text-sm">
+                  {fromName}
+                </Text>
                 <Icon name="arrow-right" size={16} color="muted-foreground" />
               </>
             )}
@@ -98,14 +103,17 @@ export function ExpenseDisplay({
             <View className="flex-row items-center gap-2">
               <Icon name="users" size={16} color="muted-foreground" />
               <Text className="text-muted-foreground text-sm">
-                Split between {splitCount} {splitCount === 1 ? "person" : "people"}
+                Split between {splitCount}{" "}
+                {splitCount === 1 ? "person" : "people"}
               </Text>
             </View>
           )}
 
           <View className="flex-row items-center gap-2">
             <Icon name="calendar" size={16} color="muted-foreground" />
-            <Text className="text-muted-foreground text-sm">{formattedDate}</Text>
+            <Text className="text-muted-foreground text-sm">
+              {formattedDate}
+            </Text>
             {category && (
               <>
                 <Text className="text-muted-foreground text-sm">•</Text>

@@ -1,7 +1,7 @@
 import { Suspense, useCallback, useState } from "react";
 import { ActivityIndicator, RefreshControl, Text, View } from "react-native";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";

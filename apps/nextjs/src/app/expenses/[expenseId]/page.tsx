@@ -1,4 +1,4 @@
-import { HydrateClient, prefetch, trpc, caller } from "~/trpc/server";
+import { caller, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { ExpenseDetailView } from "./ExpenseDetailView";
 
 export default async function ExpenseDetailPage(props: {

@@ -239,7 +239,7 @@ export const shoppingList = createTRPCRouter({
           ),
           (groupMemberRes) =>
             Effect.map(
-              // Get shopping list with group members
+              // Get shopping list with active group members
               DbUtils.findOneOrFail(
                 () =>
                   ctx.db.query.shoppingLists.findFirst({
@@ -254,6 +254,8 @@ export const shoppingList = createTRPCRouter({
                         },
                         with: {
                           groupMembers: {
+                            where: (members, { eq }) =>
+                              eq(members.isActive, true),
                             columns: {
                               id: true,
                             },
@@ -359,7 +361,10 @@ export const shoppingList = createTRPCRouter({
                       group: {
                         with: {
                           groupMembers: {
-                            where: eq(groupMembers.userId, ctx.session.user.id),
+                            where: and(
+                              eq(groupMembers.userId, ctx.session.user.id),
+                              eq(groupMembers.isActive, true),
+                            ),
                           },
                         },
                       },
@@ -606,9 +611,9 @@ export const shoppingList = createTRPCRouter({
                             },
                             with: {
                               groupMembers: {
-                                where: eq(
-                                  groupMembers.userId,
-                                  ctx.session.user.id,
+                                where: and(
+                                  eq(groupMembers.userId, ctx.session.user.id),
+                                  eq(groupMembers.isActive, true),
                                 ),
                               },
                             },
@@ -727,7 +732,10 @@ export const shoppingList = createTRPCRouter({
                         },
                         with: {
                           groupMembers: {
-                            where: eq(groupMembers.userId, ctx.session.user.id),
+                            where: and(
+                              eq(groupMembers.userId, ctx.session.user.id),
+                              eq(groupMembers.isActive, true),
+                            ),
                           },
                         },
                       },

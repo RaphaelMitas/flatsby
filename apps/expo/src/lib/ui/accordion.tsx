@@ -237,7 +237,7 @@ const AccordionTrigger = React.forwardRef<View, AccordionTriggerProps>(
         })}
         {...props}
       >
-        <View className="flex-1 flex-row items-center min-w-0">{children}</View>
+        <View className="min-w-0 flex-1 flex-row items-center">{children}</View>
         {showChevron && (
           <Icon
             name={itemContext.isOpen ? "chevron-up" : "chevron-down"}
@@ -276,7 +276,7 @@ const AccordionContent = React.forwardRef<View, AccordionContentProps>(
     return (
       <Animated.View ref={ref} style={animatedStyle}>
         <View
-          className={`absolute top-0 left-0 right-0 ${className ?? ""}`}
+          className={`absolute top-0 right-0 left-0 ${className ?? ""}`}
           onLayout={(e) => {
             height.value = e.nativeEvent.layout.height;
           }}

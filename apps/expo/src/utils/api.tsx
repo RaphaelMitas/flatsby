@@ -1,5 +1,6 @@
 import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
+import { fetch as expoFetch } from "expo/fetch";
 import { QueryClient } from "@tanstack/react-query";
 import {
   createTRPCClient,
@@ -9,7 +10,6 @@ import {
   splitLink,
 } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import { fetch as expoFetch } from "expo/fetch";
 import superjson from "superjson";
 
 import { authClient } from "./auth/auth-client";

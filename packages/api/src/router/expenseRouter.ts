@@ -60,20 +60,21 @@ export const expenseRouter = createTRPCRouter({
               ),
               () =>
                 Effect.flatMap(
-                  // Verify paidByGroupMemberId is in the group
+                  // Verify paidByGroupMemberId is an active member of the group
                   DbUtils.findOneOrFail(
                     () =>
                       ctx.db.query.groupMembers.findFirst({
                         where: and(
                           eq(groupMembers.id, input.paidByGroupMemberId),
                           eq(groupMembers.groupId, input.groupId),
+                          eq(groupMembers.isActive, true),
                         ),
                       }),
                     "group member",
                   ),
                   () =>
                     Effect.flatMap(
-                      // Verify all split groupMemberIds are in the group
+                      // Verify all split groupMemberIds are active members of the group
                       Effect.forEach(
                         input.splits,
                         (split) =>
@@ -83,6 +84,7 @@ export const expenseRouter = createTRPCRouter({
                                 where: and(
                                   eq(groupMembers.id, split.groupMemberId),
                                   eq(groupMembers.groupId, input.groupId),
+                                  eq(groupMembers.isActive, true),
                                 ),
                               }),
                             "group member",
@@ -146,7 +148,7 @@ export const expenseRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Get expense with group access check
+          // Get expense with group access check (filter active members only)
           DbUtils.findOneOrFail(
             () =>
               ctx.db.query.expenses.findFirst({
@@ -155,6 +157,7 @@ export const expenseRouter = createTRPCRouter({
                   group: {
                     with: {
                       groupMembers: {
+                        where: (members, { eq }) => eq(members.isActive, true),
                         columns: { userId: true },
                       },
                     },
@@ -190,7 +193,7 @@ export const expenseRouter = createTRPCRouter({
                       : Effect.succeed(undefined),
                   () =>
                     Effect.flatMap(
-                      // Verify group members if updating
+                      // Verify group members if updating (must be active)
                       input.paidByGroupMemberId || input.splits
                         ? Effect.forEach(
                             [
@@ -210,6 +213,7 @@ export const expenseRouter = createTRPCRouter({
                                     where: and(
                                       eq(groupMembers.id, groupMemberId),
                                       eq(groupMembers.groupId, expense.groupId),
+                                      eq(groupMembers.isActive, true),
                                     ),
                                   }),
                                 "group member",
@@ -287,7 +291,7 @@ export const expenseRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Get expense with group access check
+          // Get expense with group access check (filter active members only)
           DbUtils.findOneOrFail(
             () =>
               ctx.db.query.expenses.findFirst({
@@ -296,6 +300,7 @@ export const expenseRouter = createTRPCRouter({
                   group: {
                     with: {
                       groupMembers: {
+                        where: (members, { eq }) => eq(members.isActive, true),
                         columns: { userId: true },
                       },
                     },
@@ -336,7 +341,7 @@ export const expenseRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Get expense with group access check
+          // Get expense with group access check (filter active members only)
           DbUtils.findOneOrFail(
             () =>
               ctx.db.query.expenses.findFirst({
@@ -345,6 +350,7 @@ export const expenseRouter = createTRPCRouter({
                   group: {
                     with: {
                       groupMembers: {
+                        where: (members, { eq }) => eq(members.isActive, true),
                         columns: { userId: true },
                       },
                     },
@@ -368,6 +374,13 @@ export const expenseRouter = createTRPCRouter({
                       where: eq(expenses.id, input.expenseId),
                       with: {
                         paidByGroupMember: {
+                          columns: {
+                            id: true,
+                            groupId: true,
+                            userId: true,
+                            role: true,
+                            joinedOn: true,
+                          },
                           with: {
                             user: {
                               columns: { email: true, name: true, image: true },
@@ -375,6 +388,13 @@ export const expenseRouter = createTRPCRouter({
                           },
                         },
                         createdByGroupMember: {
+                          columns: {
+                            id: true,
+                            groupId: true,
+                            userId: true,
+                            role: true,
+                            joinedOn: true,
+                          },
                           with: {
                             user: {
                               columns: { email: true, name: true, image: true },
@@ -384,7 +404,13 @@ export const expenseRouter = createTRPCRouter({
                         expenseSplits: {
                           with: {
                             groupMember: {
-                              columns: { id: true },
+                              columns: {
+                                id: true,
+                                groupId: true,
+                                userId: true,
+                                role: true,
+                                joinedOn: true,
+                              },
                               with: {
                                 user: {
                                   columns: {
@@ -432,6 +458,13 @@ export const expenseRouter = createTRPCRouter({
                 orderBy: (expenses, { desc }) => [desc(expenses.createdAt)],
                 with: {
                   paidByGroupMember: {
+                    columns: {
+                      id: true,
+                      groupId: true,
+                      userId: true,
+                      role: true,
+                      joinedOn: true,
+                    },
                     with: {
                       user: {
                         columns: { email: true, name: true, image: true },
@@ -439,6 +472,13 @@ export const expenseRouter = createTRPCRouter({
                     },
                   },
                   createdByGroupMember: {
+                    columns: {
+                      id: true,
+                      groupId: true,
+                      userId: true,
+                      role: true,
+                      joinedOn: true,
+                    },
                     with: {
                       user: {
                         columns: { email: true, name: true, image: true },
@@ -448,6 +488,13 @@ export const expenseRouter = createTRPCRouter({
                   expenseSplits: {
                     with: {
                       groupMember: {
+                        columns: {
+                          id: true,
+                          groupId: true,
+                          userId: true,
+                          role: true,
+                          joinedOn: true,
+                        },
                         with: {
                           user: {
                             columns: {

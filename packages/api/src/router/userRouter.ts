@@ -33,8 +33,8 @@ import {
   withErrorHandlingAsResult,
 } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { checkCredits } from "../utils/autumn";
 import { DbUtils, safeDbOperation } from "../utils";
+import { checkCredits } from "../utils/autumn";
 
 export const userRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
@@ -42,24 +42,26 @@ export const userRouter = createTRPCRouter({
     return user;
   }),
 
-  getUsage: protectedProcedure.output(usageDataSchema).query(async ({ ctx }) => {
-    try {
-      const result = await checkCredits({
-        authApi: ctx.authApi,
-        headers: ctx.headers,
-      });
+  getUsage: protectedProcedure
+    .output(usageDataSchema)
+    .query(async ({ ctx }) => {
+      try {
+        const result = await checkCredits({
+          authApi: ctx.authApi,
+          headers: ctx.headers,
+        });
 
-      return {
-        credits: {
-          balance: result.balance ?? 0,
-          usage: result.usage ?? 0,
-        },
-      };
-    } catch (error) {
-      console.error("Error fetching usage data:", error);
-      return { credits: null };
-    }
-  }),
+        return {
+          credits: {
+            balance: result.balance ?? 0,
+            usage: result.usage ?? 0,
+          },
+        };
+      } catch (error) {
+        console.error("Error fetching usage data:", error);
+        return { credits: null };
+      }
+    }),
 
   getCurrentUserWithGroups: protectedProcedure
     .output(
@@ -466,12 +468,14 @@ export const userRouter = createTRPCRouter({
                 : [];
 
             // Fetch user's expenses (where they are the payer or creator)
-            const userGroupMemberIds = await ctx.db.query.groupMembers.findMany({
-              where: eq(groupMembers.userId, userId),
-              columns: {
-                id: true,
+            const userGroupMemberIds = await ctx.db.query.groupMembers.findMany(
+              {
+                where: eq(groupMembers.userId, userId),
+                columns: {
+                  id: true,
+                },
               },
-            });
+            );
             const memberIds = userGroupMemberIds.map((m) => m.id);
 
             const userExpenses =
@@ -519,7 +523,8 @@ export const userRouter = createTRPCRouter({
                 createdAt: user.createdAt.toISOString(),
                 termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
                 termsVersion: user.termsVersion ?? null,
-                privacyAcceptedAt: user.privacyAcceptedAt?.toISOString() ?? null,
+                privacyAcceptedAt:
+                  user.privacyAcceptedAt?.toISOString() ?? null,
                 privacyVersion: user.privacyVersion ?? null,
               },
               groups: userGroups.map((g) => ({

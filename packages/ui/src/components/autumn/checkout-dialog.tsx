@@ -10,8 +10,8 @@ import { ArrowRight, ChevronDown, Loader2 } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 
-import { Accordion, AccordionContent, AccordionItem } from "../../accordion";
 import type { ButtonProps } from "../../button";
+import { Accordion, AccordionContent, AccordionItem } from "../../accordion";
 import { Button } from "../../button";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "../../dialog";
 import { Input } from "../../input";

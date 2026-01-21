@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
+import { AppLayout } from "~/app/_components/layout/app-layout";
 import { getSession } from "~/auth/server";
 import { caller } from "~/trpc/server";
-import { AppLayout } from "~/app/_components/layout/app-layout";
 
 interface ShoppingListLayoutProps {
   children: ReactNode;

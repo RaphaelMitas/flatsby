@@ -1,8 +1,7 @@
 import { Text, View } from "react-native";
-
-import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
