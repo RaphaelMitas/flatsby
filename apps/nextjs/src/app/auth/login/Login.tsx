@@ -93,10 +93,10 @@ const Login = () => {
           </p>
           <p className="mt-2">
             <Link
-              href="/legal/impressum"
+              href="/legal/legal-notice"
               className="hover:text-foreground underline"
             >
-              Impressum
+              Legal Notice
             </Link>
           </p>
         </div>

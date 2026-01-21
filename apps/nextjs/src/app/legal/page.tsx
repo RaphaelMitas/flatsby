@@ -41,12 +41,12 @@ export default function LegalPage() {
           </Card>
         </Link>
 
-        <Link href="/legal/impressum">
+        <Link href="/legal/legal-notice">
           <Card className="h-full transition-colors hover:bg-gray-50 dark:hover:bg-gray-900">
             <CardHeader>
-              <CardTitle>Impressum</CardTitle>
+              <CardTitle>Legal Notice</CardTitle>
               <CardDescription>
-                Legal notice as required by German law (TMG)
+                Legal notice as required by German law
               </CardDescription>
             </CardHeader>
           </Card>
