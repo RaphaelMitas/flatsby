@@ -34,7 +34,7 @@ export default function LegalLayout({
       <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
       <footer className="border-t">
         <div className="mx-auto max-w-4xl px-4 py-6 text-center text-sm text-gray-500">
-          &copy; {new Date().getFullYear()} Flatsby. All rights reserved.
+          Flatsby {new Date().getFullYear()}
         </div>
       </footer>
     </div>
