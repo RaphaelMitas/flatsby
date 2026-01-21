@@ -26,12 +26,11 @@ const toolCallValidator = v.object({
  */
 export const createConversation = mutation({
   args: {
-    sessionToken: v.string(),
     title: v.optional(v.string()),
     model: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const model = args.model ?? user.lastChatModelUsed ?? "google/gemini-2.0-flash";
 
@@ -55,11 +54,10 @@ export const createConversation = mutation({
  */
 export const getConversation = query({
   args: {
-    sessionToken: v.string(),
     conversationId: v.id("conversations"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {
@@ -97,12 +95,11 @@ export const getConversation = query({
  */
 export const getUserConversations = query({
   args: {
-    sessionToken: v.string(),
     limit: v.optional(v.number()),
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const limit = Math.min(Math.max(args.limit ?? 10, 1), 50);
 
@@ -141,12 +138,11 @@ export const getUserConversations = query({
  */
 export const updateConversationModel = mutation({
   args: {
-    sessionToken: v.string(),
     conversationId: v.id("conversations"),
     model: v.string(),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {
@@ -171,11 +167,10 @@ export const updateConversationModel = mutation({
  */
 export const deleteConversation = mutation({
   args: {
-    sessionToken: v.string(),
     conversationId: v.id("conversations"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {
@@ -198,7 +193,6 @@ export const deleteConversation = mutation({
  */
 export const addMessage = mutation({
   args: {
-    sessionToken: v.string(),
     conversationId: v.id("conversations"),
     role: v.union(
       v.literal("user"),
@@ -218,7 +212,7 @@ export const addMessage = mutation({
     toolCalls: v.optional(v.array(toolCallValidator)),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {
@@ -247,7 +241,6 @@ export const addMessage = mutation({
  */
 export const updateMessage = mutation({
   args: {
-    sessionToken: v.string(),
     messageId: v.id("chatMessages"),
     content: v.optional(v.string()),
     status: v.optional(
@@ -263,7 +256,7 @@ export const updateMessage = mutation({
     toolCalls: v.optional(v.array(toolCallValidator)),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const message = await ctx.db.get(args.messageId);
     if (!message) {
@@ -295,7 +288,6 @@ export const updateMessage = mutation({
  */
 export const updateToolCallOutput = mutation({
   args: {
-    sessionToken: v.string(),
     messageId: v.id("chatMessages"),
     toolCallId: v.string(),
     result: v.optional(v.string()),
@@ -306,7 +298,7 @@ export const updateToolCallOutput = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const message = await ctx.db.get(args.messageId);
     if (!message) {
@@ -345,12 +337,11 @@ export const updateToolCallOutput = mutation({
  */
 export const updateConversationTitle = mutation({
   args: {
-    sessionToken: v.string(),
     conversationId: v.id("conversations"),
     title: v.string(),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {
@@ -372,12 +363,11 @@ export const updateConversationTitle = mutation({
  */
 export const deleteMessagesAfter = mutation({
   args: {
-    sessionToken: v.string(),
     conversationId: v.id("conversations"),
     afterMessageId: v.id("chatMessages"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {

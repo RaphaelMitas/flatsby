@@ -18,9 +18,9 @@ import {
  * Get all groups for the current user
  */
 export const getUserGroups = query({
-  args: { sessionToken: v.string() },
-  handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+  args: {},
+  handler: async (ctx) => {
+    const { user } = await requireAuth(ctx);
 
     // Get all group memberships for the user
     const memberships = await ctx.db
@@ -60,11 +60,10 @@ export const getUserGroups = query({
  */
 export const getGroup = query({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupMember(ctx, args.groupId, user._id);
 
     const group = await ctx.db.get(args.groupId);
@@ -88,11 +87,10 @@ export const getGroup = query({
  */
 export const createGroup = mutation({
   args: {
-    sessionToken: v.string(),
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     const validName = validateNotEmpty(args.name, "Group name");
 
     // Create the group
@@ -117,12 +115,11 @@ export const createGroup = mutation({
  */
 export const addGroupMember = mutation({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     memberEmail: v.string(),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupAdmin(ctx, args.groupId, user._id);
 
     // Find user by email
@@ -162,11 +159,10 @@ export const addGroupMember = mutation({
  */
 export const removeGroupMember = mutation({
   args: {
-    sessionToken: v.string(),
     memberId: v.id("groupMembers"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     // Get the target member
     const targetMember = await ctx.db.get(args.memberId);
@@ -242,12 +238,11 @@ export const removeGroupMember = mutation({
  */
 export const updateMemberRole = mutation({
   args: {
-    sessionToken: v.string(),
     memberId: v.id("groupMembers"),
     newRole: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     // Get the target member
     const targetMember = await ctx.db.get(args.memberId);
@@ -280,12 +275,11 @@ export const updateMemberRole = mutation({
  */
 export const changeGroupName = mutation({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupAdmin(ctx, args.groupId, user._id);
 
     const validName = validateNotEmpty(args.name, "Group name");
@@ -301,11 +295,10 @@ export const changeGroupName = mutation({
  */
 export const deleteGroup = mutation({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupAdmin(ctx, args.groupId, user._id);
 
     // Get all shopping lists for this group
@@ -381,12 +374,11 @@ export const deleteGroup = mutation({
  */
 export const getRecentActivity = query({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupMember(ctx, args.groupId, user._id);
 
     const limit = args.limit ?? 10;

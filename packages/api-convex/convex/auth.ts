@@ -1,194 +1,221 @@
-import { v } from "convex/values";
+import { createClient, type GenericCtx } from "@convex-dev/better-auth";
+import { convex } from "@convex-dev/better-auth/plugins";
+import { betterAuth } from "better-auth";
+import { expo } from "@better-auth/expo";
+import { autumn } from "autumn-js/better-auth";
+import { components } from "./_generated/api";
+import type { DataModel } from "./_generated/dataModel";
 import { query, mutation } from "./_generated/server";
-import type { Id } from "./_generated/dataModel";
+import { v } from "convex/values";
+import authConfig from "./auth.config";
 
-// For now, we'll use a simple session token-based auth
-// This can be replaced with Convex Auth or Better Auth integration later
+// Environment variables (set in Convex dashboard):
+// - SITE_URL: Your site URL (e.g., http://localhost:3000)
+// - BETTER_AUTH_SECRET: Secret for encryption
+// - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET: Google OAuth
+// - APPLE_SERVICE_ID, APPLE_CLIENT_SECRET, APPLE_BUNDLE_ID: Apple OAuth
+
+const siteUrl = process.env.SITE_URL!;
+
+// The component client has methods needed for integrating Convex with Better Auth
+export const authComponent = createClient<DataModel>(components.betterAuth);
 
 /**
- * Get the current session from a token
+ * Create the Better Auth instance with all plugins
  */
-export const getSession = query({
-  args: { token: v.string() },
-  handler: async (ctx, args) => {
-    const session = await ctx.db
-      .query("sessions")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
+export const createAuth = (ctx: GenericCtx<DataModel>) => {
+  return betterAuth({
+    baseURL: siteUrl,
+    secret: process.env.BETTER_AUTH_SECRET,
+    database: authComponent.adapter(ctx),
+
+    // OAuth providers
+    socialProviders: {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        redirectURI: `${siteUrl}/api/auth/callback/google`,
+      },
+      apple: {
+        clientId: process.env.APPLE_SERVICE_ID!,
+        clientSecret: process.env.APPLE_CLIENT_SECRET!,
+        redirectURI: `${siteUrl}/api/auth/callback/apple`,
+        appBundleIdentifier: process.env.APPLE_BUNDLE_ID,
+      },
+    },
+
+    // Trusted origins for mobile apps
+    trustedOrigins: ["flatsby://", "exp://"],
+
+    plugins: [
+      // Convex plugin is required for Convex compatibility
+      convex({ authConfig }),
+      // Expo plugin for React Native support
+      expo(),
+      // Autumn plugin for billing/credits
+      autumn(),
+    ],
+  });
+};
+
+/**
+ * Get the currently authenticated user
+ */
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    return authComponent.getAuthUser(ctx);
+  },
+});
+
+/**
+ * Get current user with additional app data (groups, preferences)
+ */
+export const getCurrentUserWithData = query({
+  args: {},
+  handler: async (ctx) => {
+    const authUser = await authComponent.getAuthUser(ctx);
+    if (!authUser) {
+      return null;
+    }
+
+    // Get user's additional data from our users table
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", authUser.email))
       .first();
 
-    if (!session) {
-      return null;
-    }
-
-    // Check if session is expired
-    if (session.expiresAt < Date.now()) {
-      return null;
-    }
-
-    const user = await ctx.db.get(session.userId);
     if (!user) {
-      return null;
+      return { ...authUser, groups: [], preferences: null };
     }
+
+    // Get user's group memberships
+    const memberships = await ctx.db
+      .query("groupMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const groups = await Promise.all(
+      memberships.map(async (m) => {
+        const group = await ctx.db.get(m.groupId);
+        return group ? { id: group._id, name: group.name, role: m.role } : null;
+      })
+    );
+
+    // Get last used preferences
+    const lastGroup = user.lastGroupUsed
+      ? await ctx.db.get(user.lastGroupUsed)
+      : null;
+    const lastShoppingList = user.lastShoppingListUsed
+      ? await ctx.db.get(user.lastShoppingListUsed)
+      : null;
 
     return {
-      session: {
-        id: session._id,
-        token: session.token,
-        expiresAt: session.expiresAt,
-      },
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        image: user.image,
+      ...authUser,
+      convexUserId: user._id,
+      groups: groups.filter((g) => g !== null),
+      preferences: {
+        lastGroupUsed: lastGroup
+          ? { id: lastGroup._id, name: lastGroup.name }
+          : null,
+        lastShoppingListUsed: lastShoppingList
+          ? { id: lastShoppingList._id, name: lastShoppingList.name }
+          : null,
+        lastChatModelUsed: user.lastChatModelUsed,
+        lastShoppingListToolsEnabled: user.lastShoppingListToolsEnabled,
+        lastExpenseToolsEnabled: user.lastExpenseToolsEnabled,
       },
     };
   },
 });
 
 /**
- * Get user by ID - internal helper
+ * Check credits via Autumn
  */
-export const getUserById = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.userId);
+export const checkCredits = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const { auth, headers } = await authComponent.getAuth(createAuth, ctx);
+
+    try {
+      const result = await auth.api.check({
+        body: { featureId: "credits" },
+        headers,
+      });
+
+      return {
+        allowed: result?.allowed ?? false,
+        balance: result?.balance ?? null,
+        usage: result?.usage ?? null,
+      };
+    } catch (error) {
+      console.error("Error checking credits:", error);
+      return { allowed: false, balance: null, usage: null };
+    }
   },
 });
 
 /**
- * Get user by email
+ * Track AI usage via Autumn
  */
-export const getUserByEmail = query({
-  args: { email: v.string() },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .first();
-  },
-});
-
-/**
- * Create a new session
- */
-export const createSession = mutation({
+export const trackUsage = mutation({
   args: {
-    userId: v.id("users"),
-    token: v.string(),
-    expiresAt: v.number(),
-    ipAddress: v.optional(v.string()),
-    userAgent: v.optional(v.string()),
+    credits: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("sessions", {
-      userId: args.userId,
-      token: args.token,
-      expiresAt: args.expiresAt,
-      ipAddress: args.ipAddress,
-      userAgent: args.userAgent,
-    });
-  },
-});
-
-/**
- * Delete a session (logout)
- */
-export const deleteSession = mutation({
-  args: { token: v.string() },
-  handler: async (ctx, args) => {
-    const session = await ctx.db
-      .query("sessions")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
-      .first();
-
-    if (session) {
-      await ctx.db.delete(session._id);
+    if (args.credits <= 0) {
+      return { success: true };
     }
 
-    return { success: true };
+    const { auth, headers } = await authComponent.getAuth(createAuth, ctx);
+
+    try {
+      await auth.api.track({
+        body: { featureId: "credits", value: args.credits },
+        headers,
+      });
+      return { success: true };
+    } catch (error) {
+      console.error("Error tracking usage:", error);
+      return { success: false };
+    }
   },
 });
 
 /**
- * Create or update user (for OAuth login)
+ * Sync Better Auth user to app users table
+ * Called after successful authentication to ensure user exists in our app tables
  */
-export const upsertUser = mutation({
-  args: {
-    email: v.string(),
-    name: v.string(),
-    emailVerified: v.boolean(),
-    image: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
+export const syncAuthUser = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const authUser = await authComponent.getAuthUser(ctx);
+    if (!authUser) {
+      return null;
+    }
+
+    // Check if user exists in our users table
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .withIndex("by_email", (q) => q.eq("email", authUser.email))
       .first();
 
     if (existingUser) {
+      // Update name/image if changed
       await ctx.db.patch(existingUser._id, {
-        name: args.name,
-        emailVerified: args.emailVerified,
-        image: args.image,
+        name: authUser.name,
+        image: authUser.image ?? undefined,
+        emailVerified: authUser.emailVerified,
       });
       return existingUser._id;
     }
 
+    // Create new user in our app tables
     return await ctx.db.insert("users", {
-      email: args.email,
-      name: args.name,
-      emailVerified: args.emailVerified,
-      image: args.image,
-    });
-  },
-});
-
-/**
- * Link OAuth account to user
- */
-export const linkAccount = mutation({
-  args: {
-    userId: v.id("users"),
-    providerId: v.string(),
-    accountId: v.string(),
-    accessToken: v.optional(v.string()),
-    refreshToken: v.optional(v.string()),
-    idToken: v.optional(v.string()),
-    accessTokenExpiresAt: v.optional(v.number()),
-    scope: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    // Check if account already exists
-    const existingAccount = await ctx.db
-      .query("accounts")
-      .withIndex("by_provider", (q) =>
-        q.eq("providerId", args.providerId).eq("accountId", args.accountId)
-      )
-      .first();
-
-    if (existingAccount) {
-      // Update existing account
-      await ctx.db.patch(existingAccount._id, {
-        accessToken: args.accessToken,
-        refreshToken: args.refreshToken,
-        idToken: args.idToken,
-        accessTokenExpiresAt: args.accessTokenExpiresAt,
-        scope: args.scope,
-      });
-      return existingAccount._id;
-    }
-
-    // Create new account link
-    return await ctx.db.insert("accounts", {
-      userId: args.userId,
-      providerId: args.providerId,
-      accountId: args.accountId,
-      accessToken: args.accessToken,
-      refreshToken: args.refreshToken,
-      idToken: args.idToken,
-      accessTokenExpiresAt: args.accessTokenExpiresAt,
-      scope: args.scope,
+      email: authUser.email,
+      name: authUser.name,
+      image: authUser.image ?? undefined,
+      emailVerified: authUser.emailVerified,
     });
   },
 });

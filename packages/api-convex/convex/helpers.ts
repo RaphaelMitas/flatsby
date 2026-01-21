@@ -1,6 +1,7 @@
 import { ConvexError } from "convex/values";
 import type { QueryCtx, MutationCtx } from "./_generated/server";
 import type { Id, Doc } from "./_generated/dataModel";
+import { authComponent } from "./auth";
 
 // Error types for consistent error handling
 export class NotFoundError extends ConvexError<{ type: "NotFound"; resource: string }> {
@@ -34,28 +35,29 @@ export class ConflictError extends ConvexError<{ type: "Conflict"; message: stri
 }
 
 /**
- * Get authenticated user from session token
- * Throws UnauthorizedError if not authenticated
+ * Get authenticated user using Better Auth
+ * Returns the auth user and the corresponding app user from our users table
  */
 export async function requireAuth(
-  ctx: QueryCtx | MutationCtx,
-  sessionToken: string
-): Promise<{ user: Doc<"users">; sessionId: Id<"sessions"> }> {
-  const session = await ctx.db
-    .query("sessions")
-    .withIndex("by_token", (q) => q.eq("token", sessionToken))
-    .first();
+  ctx: QueryCtx | MutationCtx
+): Promise<{ authUser: NonNullable<Awaited<ReturnType<typeof authComponent.getAuthUser>>>; user: Doc<"users"> }> {
+  const authUser = await authComponent.getAuthUser(ctx);
 
-  if (!session || session.expiresAt < Date.now()) {
+  if (!authUser) {
     throw new UnauthorizedError();
   }
 
-  const user = await ctx.db.get(session.userId);
+  // Get the user from our app's users table
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_email", (q) => q.eq("email", authUser.email))
+    .first();
+
   if (!user) {
     throw new UnauthorizedError();
   }
 
-  return { user, sessionId: session._id };
+  return { authUser, user };
 }
 
 /**

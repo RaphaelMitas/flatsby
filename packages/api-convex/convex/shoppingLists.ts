@@ -16,12 +16,11 @@ import {
  */
 export const getShoppingListName = query({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     shoppingListId: v.id("shoppingLists"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupMember(ctx, args.groupId, user._id);
 
     const shoppingList = await ctx.db.get(args.shoppingListId);
@@ -38,11 +37,10 @@ export const getShoppingListName = query({
  */
 export const getShoppingLists = query({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupMember(ctx, args.groupId, user._id);
 
     const lists = await ctx.db
@@ -79,12 +77,11 @@ export const getShoppingLists = query({
  */
 export const getShoppingList = query({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     shoppingListId: v.id("shoppingLists"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     const currentMember = await requireGroupMember(ctx, args.groupId, user._id);
 
     const shoppingList = await ctx.db.get(args.shoppingListId);
@@ -128,14 +125,13 @@ export const getShoppingList = query({
  */
 export const createShoppingList = mutation({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     name: v.string(),
     icon: v.optional(v.string()),
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupMember(ctx, args.groupId, user._id);
 
     const validName = validateNotEmpty(args.name, "Shopping list name");
@@ -156,12 +152,11 @@ export const createShoppingList = mutation({
  */
 export const deleteShoppingList = mutation({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     shoppingListId: v.id("shoppingLists"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupMember(ctx, args.groupId, user._id);
 
     const shoppingList = await ctx.db.get(args.shoppingListId);
@@ -201,12 +196,11 @@ export const deleteShoppingList = mutation({
  */
 export const changeShoppingListName = mutation({
   args: {
-    sessionToken: v.string(),
     shoppingListId: v.id("shoppingLists"),
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const shoppingList = await ctx.db.get(args.shoppingListId);
     if (!shoppingList) {
@@ -228,14 +222,13 @@ export const changeShoppingListName = mutation({
  */
 export const getShoppingListItems = query({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     shoppingListId: v.id("shoppingLists"),
     limit: v.optional(v.number()),
     cursor: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupMember(ctx, args.groupId, user._id);
 
     const shoppingList = await ctx.db.get(args.shoppingListId);
@@ -286,14 +279,13 @@ export const getShoppingListItems = query({
  */
 export const createShoppingListItem = mutation({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     shoppingListId: v.id("shoppingLists"),
     name: v.string(),
     categoryId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     const membership = await requireGroupMember(ctx, args.groupId, user._id);
 
     const shoppingList = await ctx.db.get(args.shoppingListId);
@@ -323,14 +315,13 @@ export const createShoppingListItem = mutation({
  */
 export const updateShoppingListItem = mutation({
   args: {
-    sessionToken: v.string(),
     id: v.id("shoppingListItems"),
     name: v.string(),
     categoryId: v.optional(v.string()),
     completed: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const item = await ctx.db.get(args.id);
     if (!item) {
@@ -382,11 +373,10 @@ export const updateShoppingListItem = mutation({
  */
 export const deleteShoppingListItem = mutation({
   args: {
-    sessionToken: v.string(),
     id: v.id("shoppingListItems"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const item = await ctx.db.get(args.id);
     if (!item) {
@@ -411,12 +401,11 @@ export const deleteShoppingListItem = mutation({
  */
 export const updateLastUsed = mutation({
   args: {
-    sessionToken: v.string(),
     groupId: v.optional(v.id("groups")),
     shoppingListId: v.optional(v.id("shoppingLists")),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const updates: Record<string, Id<"groups"> | Id<"shoppingLists"> | undefined> = {};
 

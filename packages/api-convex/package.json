@@ -20,7 +20,15 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.0.0",
+    "@ai-sdk/openai": "^1.0.0",
+    "@better-auth/expo": "^1.2.0",
+    "@convex-dev/agent": "^0.2.0",
+    "@convex-dev/better-auth": "^0.3.0",
     "@flatsby/validators": "workspace:*",
+    "ai": "^4.0.0",
+    "autumn-js": "catalog:",
+    "better-auth": "catalog:",
     "convex": "^1.22.0",
     "zod": "catalog:"
   },

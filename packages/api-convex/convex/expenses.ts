@@ -162,7 +162,6 @@ function calculateDebts(
  */
 export const createExpense = mutation({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     paidByGroupMemberId: v.id("groupMembers"),
     amountInCents: v.number(),
@@ -184,7 +183,7 @@ export const createExpense = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     const currentMember = await requireGroupMember(ctx, args.groupId, user._id);
 
     // Validate splits
@@ -236,7 +235,6 @@ export const createExpense = mutation({
  */
 export const updateExpense = mutation({
   args: {
-    sessionToken: v.string(),
     expenseId: v.id("expenses"),
     paidByGroupMemberId: v.optional(v.id("groupMembers")),
     amountInCents: v.optional(v.number()),
@@ -262,7 +260,7 @@ export const updateExpense = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const expense = await ctx.db.get(args.expenseId);
     if (!expense) {
@@ -342,11 +340,10 @@ export const updateExpense = mutation({
  */
 export const deleteExpense = mutation({
   args: {
-    sessionToken: v.string(),
     expenseId: v.id("expenses"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const expense = await ctx.db.get(args.expenseId);
     if (!expense) {
@@ -377,11 +374,10 @@ export const deleteExpense = mutation({
  */
 export const getExpense = query({
   args: {
-    sessionToken: v.string(),
     expenseId: v.id("expenses"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const expense = await ctx.db.get(args.expenseId);
     if (!expense) {
@@ -472,13 +468,12 @@ export const getExpense = query({
  */
 export const getGroupExpenses = query({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
     limit: v.optional(v.number()),
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupMember(ctx, args.groupId, user._id);
 
     const limit = Math.min(Math.max(args.limit ?? 50, 1), 100);
@@ -574,11 +569,10 @@ export const getGroupExpenses = query({
  */
 export const getGroupDebts = query({
   args: {
-    sessionToken: v.string(),
     groupId: v.id("groups"),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     await requireGroupMember(ctx, args.groupId, user._id);
 
     // Get all expenses for the group

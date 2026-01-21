@@ -1,19 +1,17 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import type { Id } from "./_generated/dataModel";
 import {
   requireAuth,
   validateNotEmpty,
-  ValidationError,
 } from "./helpers";
 
 /**
  * Get current authenticated user
  */
 export const getCurrentUser = query({
-  args: { sessionToken: v.string() },
-  handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+  args: {},
+  handler: async (ctx) => {
+    const { user } = await requireAuth(ctx);
     return {
       id: user._id,
       email: user.email,
@@ -28,9 +26,9 @@ export const getCurrentUser = query({
  * Get current user with their groups and last used preferences
  */
 export const getCurrentUserWithGroups = query({
-  args: { sessionToken: v.string() },
-  handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+  args: {},
+  handler: async (ctx) => {
+    const { user } = await requireAuth(ctx);
 
     // Get user's group memberships
     const memberships = await ctx.db
@@ -101,11 +99,10 @@ export const getCurrentUserWithGroups = query({
  */
 export const updateUserName = mutation({
   args: {
-    sessionToken: v.string(),
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
     const validName = validateNotEmpty(args.name, "Name");
 
     await ctx.db.patch(user._id, { name: validName });
@@ -119,11 +116,10 @@ export const updateUserName = mutation({
  */
 export const updateLastChatModel = mutation({
   args: {
-    sessionToken: v.string(),
     model: v.string(),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     await ctx.db.patch(user._id, { lastChatModelUsed: args.model });
 
@@ -136,12 +132,11 @@ export const updateLastChatModel = mutation({
  */
 export const updateToolPreferences = mutation({
   args: {
-    sessionToken: v.string(),
     shoppingListToolsEnabled: v.optional(v.boolean()),
     expenseToolsEnabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requireAuth(ctx, args.sessionToken);
+    const { user } = await requireAuth(ctx);
 
     const updates: Record<string, boolean> = {};
     if (args.shoppingListToolsEnabled !== undefined) {
@@ -161,11 +156,12 @@ export const updateToolPreferences = mutation({
 
 /**
  * Delete user account and all related data
+ * Note: This also needs to clean up Better Auth data through authComponent
  */
 export const deleteUser = mutation({
-  args: { sessionToken: v.string() },
-  handler: async (ctx, args) => {
-    const { user, sessionId } = await requireAuth(ctx, args.sessionToken);
+  args: {},
+  handler: async (ctx) => {
+    const { user } = await requireAuth(ctx);
 
     // Get all user's group memberships
     const memberships = await ctx.db
@@ -298,27 +294,8 @@ export const deleteUser = mutation({
       await ctx.db.delete(conv._id);
     }
 
-    // Delete accounts (OAuth links)
-    const accounts = await ctx.db
-      .query("accounts")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    for (const account of accounts) {
-      await ctx.db.delete(account._id);
-    }
-
-    // Delete sessions
-    const sessions = await ctx.db
-      .query("sessions")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    for (const session of sessions) {
-      await ctx.db.delete(session._id);
-    }
-
-    // Delete the user
+    // Delete the user from our app's users table
+    // Note: Better Auth data cleanup happens through authComponent
     await ctx.db.delete(user._id);
 
     return { success: true };
