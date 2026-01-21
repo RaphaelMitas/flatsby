@@ -99,7 +99,9 @@ export function SidebarGroupSwitcher() {
                     <Link href="/group/settings">
                       <Settings className="mr-2 size-4" />
                       <span>Group Settings</span>
-                      {isGroupSettingsPage && <Check className="ml-auto size-4" />}
+                      {isGroupSettingsPage && (
+                        <Check className="ml-auto size-4" />
+                      )}
                     </Link>
                   </DropdownMenuItem>
                 </>

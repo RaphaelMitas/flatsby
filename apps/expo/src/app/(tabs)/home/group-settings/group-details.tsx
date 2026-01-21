@@ -2,8 +2,6 @@ import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 import type { GroupFormValues } from "@flatsby/validators/group";
 import { useState } from "react";
 import { Text, View } from "react-native";
-
-import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { useRouter } from "expo-router";
 import {
   useMutation,
@@ -15,6 +13,7 @@ import { groupFormSchema } from "@flatsby/validators/group";
 
 import { ProfileSection } from "~/components/ProfileSection";
 import { TimedAlert } from "~/components/TimedAlert";
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";

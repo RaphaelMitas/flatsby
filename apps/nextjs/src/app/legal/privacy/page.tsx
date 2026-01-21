@@ -49,7 +49,10 @@ function TableOfContents() {
       <ol className="text-muted-foreground list-inside list-decimal space-y-1.5 text-sm">
         {items.map((item) => (
           <li key={item.id}>
-            <a href={`#${item.id}`} className="hover:text-foreground underline-offset-4 hover:underline">
+            <a
+              href={`#${item.id}`}
+              className="hover:text-foreground underline-offset-4 hover:underline"
+            >
               {item.label}
             </a>
           </li>
@@ -267,7 +270,9 @@ export default function PrivacyPage() {
 
         <LegalSection id="your-rights">
           <LegalHeading>8. Your Rights (GDPR)</LegalHeading>
-          <LegalParagraph>Under the GDPR, you have the right to:</LegalParagraph>
+          <LegalParagraph>
+            Under the GDPR, you have the right to:
+          </LegalParagraph>
           <LegalList>
             <li>
               <strong>Access:</strong> Request a copy of your personal data

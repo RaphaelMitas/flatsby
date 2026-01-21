@@ -1,5 +1,5 @@
-import type { MarkedStyles } from "react-native-marked";
 import type { ColorSchemeName } from "react-native";
+import type { MarkedStyles } from "react-native-marked";
 import { Fragment, useMemo } from "react";
 import { View } from "react-native";
 import { useMarkdown } from "react-native-marked";

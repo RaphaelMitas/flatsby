@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
+import type { ChatModel } from "@flatsby/validators/models";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -22,14 +23,13 @@ import {
   persistedToolCallSchema,
   withUpdatedOutput,
 } from "@flatsby/validators/chat/tools";
-import type { ChatModel } from "@flatsby/validators/models";
 import {
   chatModelSchema,
   modelSupportsTools,
 } from "@flatsby/validators/models";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
 import type { Database } from "../types";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
 import { buildToolsSystemPrompt, createChatTools } from "../utils/chat-tools";
 import { buildContextMessages } from "../utils/context-builder";
@@ -73,7 +73,10 @@ async function finalizeStream({
   model,
   providerMetadata,
   completedToolCalls,
-}: FinalizeStreamParams): Promise<{ cost: number | null; model: ChatModel | undefined }> {
+}: FinalizeStreamParams): Promise<{
+  cost: number | null;
+  model: ChatModel | undefined;
+}> {
   const metadata = await providerMetadata;
   const gatewayResult = gatewayMetadataSchema.safeParse(metadata?.gateway);
   const gateway = gatewayResult.success ? gatewayResult.data : undefined;

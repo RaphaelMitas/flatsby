@@ -1,8 +1,6 @@
 import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 import { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-
-import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { useFocusEffect, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import {
@@ -13,6 +11,7 @@ import {
 
 import type { RouterOutputs } from "~/utils/api";
 import { TimedAlert } from "~/components/TimedAlert";
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";

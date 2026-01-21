@@ -173,6 +173,7 @@ export const OperationUtils = {
             where: (groups, { eq }) => eq(groups.id, groupId),
             with: {
               groupMembers: {
+                where: (members, { eq }) => eq(members.isActive, true),
                 columns: { id: true, userId: true, role: true, joinedOn: true },
                 with: {
                   user: {
@@ -222,6 +223,7 @@ export const OperationUtils = {
               group: {
                 with: {
                   groupMembers: {
+                    where: (members, { eq }) => eq(members.isActive, true),
                     columns: { userId: true },
                   },
                 },
@@ -285,7 +287,11 @@ export const GroupUtils = {
       () =>
         db.query.groupMembers.findFirst({
           where: (members, { and, eq }) =>
-            and(eq(members.userId, userId), eq(members.groupId, groupId)),
+            and(
+              eq(members.userId, userId),
+              eq(members.groupId, groupId),
+              eq(members.isActive, true),
+            ),
           with: {
             user: {
               columns: {
@@ -312,7 +318,11 @@ export const GroupUtils = {
       () =>
         db.query.groupMembers.findFirst({
           where: (members, { and, eq }) =>
-            and(eq(members.userId, userId), eq(members.groupId, groupId)),
+            and(
+              eq(members.userId, userId),
+              eq(members.groupId, groupId),
+              eq(members.isActive, true),
+            ),
         }),
       "group membership",
     );
@@ -333,7 +343,11 @@ export const GroupUtils = {
             role: true,
           },
           where: (members, { and, eq }) =>
-            and(eq(members.groupId, groupId), eq(members.userId, userId)),
+            and(
+              eq(members.groupId, groupId),
+              eq(members.userId, userId),
+              eq(members.isActive, true),
+            ),
         }),
       "group membership",
     );
@@ -355,6 +369,7 @@ export const GroupUtils = {
               eq(members.userId, userId),
               eq(members.groupId, groupId),
               eq(members.role, "admin"),
+              eq(members.isActive, true),
             ),
         }),
       "admin membership",
@@ -373,7 +388,11 @@ export const GroupUtils = {
       () =>
         db.query.groupMembers.findFirst({
           where: (members, { and, eq }) =>
-            and(eq(members.userId, userId), eq(members.groupId, groupId)),
+            and(
+              eq(members.userId, userId),
+              eq(members.groupId, groupId),
+              eq(members.isActive, true),
+            ),
         }),
       "group membership",
     );

@@ -59,7 +59,7 @@ interface LegalAddressProps {
 
 export function LegalAddress({ children }: LegalAddressProps) {
   return (
-    <address className="text-muted-foreground not-italic leading-relaxed">
+    <address className="text-muted-foreground leading-relaxed not-italic">
       {children}
     </address>
   );
@@ -71,11 +71,15 @@ interface LegalLinkProps {
   external?: boolean;
 }
 
-export function LegalLink({ href, children, external = false }: LegalLinkProps) {
+export function LegalLink({
+  href,
+  children,
+  external = false,
+}: LegalLinkProps) {
   return (
     <a
       href={href}
-      className="text-primary underline underline-offset-4 hover:text-primary/80"
+      className="text-primary hover:text-primary/80 underline underline-offset-4"
       {...(external && { target: "_blank", rel: "noopener noreferrer" })}
     >
       {children}

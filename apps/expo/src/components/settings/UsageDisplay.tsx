@@ -30,7 +30,7 @@ export function UsageDisplay() {
       className="border-border bg-card active:bg-muted flex-row items-center justify-between border-b px-4 py-3"
     >
       <View className="flex-1 flex-row items-center gap-3">
-        <View className="h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+        <View className="bg-primary/10 h-8 w-8 items-center justify-center rounded-full">
           <Icon name="zap" size={16} color="primary" />
         </View>
         <View className="flex-1">

@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, MessageSquareIcon, Receipt, ShoppingCartIcon } from "lucide-react";
+import {
+  HomeIcon,
+  MessageSquareIcon,
+  Receipt,
+  ShoppingCartIcon,
+} from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 
@@ -18,8 +23,7 @@ export function BottomNavigation() {
   const isChatPage = pathname.startsWith("/chat");
 
   // Determine active state - only one can be active
-  const isGroupActive =
-    isGroupPage && !pathname.startsWith("/group/settings");
+  const isGroupActive = isGroupPage && !pathname.startsWith("/group/settings");
   const isShoppingActive = isShoppingPage;
   const isExpensesActive = isExpensesPage;
   const isChatActive = isChatPage;

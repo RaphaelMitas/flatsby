@@ -76,45 +76,51 @@ interface ButtonProps
 const Button = React.forwardRef<
   React.ComponentRef<typeof Pressable>,
   ButtonProps
->(({ className, variant, size, title, icon, disabled, children, ...props }, ref) => {
-  return (
-    <Pressable
-      ref={ref}
-      className={buttonVariants({
-        variant: disabled ? "disabled" : variant,
-        size,
-        className,
-      })}
-      disabled={disabled ?? false}
-      {...props}
-    >
-      {icon && (
-        <Icon
-          name={icon}
-          size={16}
-          color={
-            disabled
-              ? iconVariants.disabled
-              : variant === undefined
-                ? iconVariants.primary
-                : iconVariants[variant]
-          }
-        />
-      )}
-      {children ?? (title && size !== "icon" && (
-        <Text
-          disabled={disabled ?? false}
-          className={buttonTextVariants({
-            variant: disabled ? "disabled" : variant,
-            size,
-          })}
-        >
-          {title}
-        </Text>
-      ))}
-    </Pressable>
-  );
-});
+>(
+  (
+    { className, variant, size, title, icon, disabled, children, ...props },
+    ref,
+  ) => {
+    return (
+      <Pressable
+        ref={ref}
+        className={buttonVariants({
+          variant: disabled ? "disabled" : variant,
+          size,
+          className,
+        })}
+        disabled={disabled ?? false}
+        {...props}
+      >
+        {icon && (
+          <Icon
+            name={icon}
+            size={16}
+            color={
+              disabled
+                ? iconVariants.disabled
+                : variant === undefined
+                  ? iconVariants.primary
+                  : iconVariants[variant]
+            }
+          />
+        )}
+        {children ??
+          (title && size !== "icon" && (
+            <Text
+              disabled={disabled ?? false}
+              className={buttonTextVariants({
+                variant: disabled ? "disabled" : variant,
+                size,
+              })}
+            >
+              {title}
+            </Text>
+          ))}
+      </Pressable>
+    );
+  },
+);
 
 Button.displayName = "Button";
 

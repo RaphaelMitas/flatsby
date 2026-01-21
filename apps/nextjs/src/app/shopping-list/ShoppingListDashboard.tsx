@@ -30,7 +30,9 @@ interface ShoppingListDashboardProps {
   limit?: number;
 }
 
-export const ShoppingListDashboard = ({ limit }: ShoppingListDashboardProps) => {
+export const ShoppingListDashboard = ({
+  limit,
+}: ShoppingListDashboardProps) => {
   const router = useRouter();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();

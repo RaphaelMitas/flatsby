@@ -136,7 +136,9 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
 export function useGroupContext() {
   const context = useContext(GroupContext);
   if (!context) {
-    throw new Error("useGroupContext must be used within a GroupContextProvider");
+    throw new Error(
+      "useGroupContext must be used within a GroupContextProvider",
+    );
   }
   return context;
 }

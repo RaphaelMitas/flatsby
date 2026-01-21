@@ -1,7 +1,7 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { cn } from ".";
+import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 
 const sizeConfig = {
   xs: { className: "h-5 w-5", letters: 1, textClass: "text-[10px]" },

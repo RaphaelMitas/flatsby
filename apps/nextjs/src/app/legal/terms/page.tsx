@@ -43,7 +43,10 @@ function TableOfContents() {
       <ol className="text-muted-foreground list-inside list-decimal space-y-1.5 text-sm">
         {items.map((item) => (
           <li key={item.id}>
-            <a href={`#${item.id}`} className="hover:text-foreground underline-offset-4 hover:underline">
+            <a
+              href={`#${item.id}`}
+              className="hover:text-foreground underline-offset-4 hover:underline"
+            >
               {item.label}
             </a>
           </li>

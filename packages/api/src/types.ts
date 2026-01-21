@@ -54,7 +54,10 @@ export type GroupWithAccess = GroupWithMembers & {
   thisGroupMember: GroupMemberWithUserInfo;
 };
 
-export type GroupMemberWithUser = GroupMember & {
+export type GroupMemberWithUser = Pick<
+  GroupMember,
+  "id" | "groupId" | "userId" | "role" | "joinedOn"
+> & {
   user: Pick<User, "email" | "name" | "image">;
 };
 

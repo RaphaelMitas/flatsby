@@ -1,6 +1,6 @@
 import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { messageRoleSchema } from "@flatsby/validators/chat/messages";
 import { chatModelSchema } from "@flatsby/validators/models";
