@@ -1,19 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Text, View } from "react-native";
-import * as Linking from "expo-linking";
+import { Linking, Text, View } from "react-native";
+import * as ExpoLinking from "expo-linking";
 import { Redirect, Stack } from "expo-router";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { authClient, signIn } from "~/utils/auth/auth-client";
+import { getBaseUrl } from "~/utils/base-url";
 
 const Login = () => {
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
   const { data: session } = authClient.useSession();
 
-  const callbackURL = Linking.createURL("/");
+  const callbackURL = ExpoLinking.createURL("/");
 
   if (session) {
     return <Redirect href="/(tabs)/home" />;
@@ -77,6 +78,32 @@ const Login = () => {
             }
             icon={loading === "apple" ? "loader" : "apple"}
           />
+        </View>
+
+        {/* Legal Links */}
+        <View className="mt-6 gap-2">
+          <Text className="text-muted-foreground text-center text-xs">
+            By signing in, you agree to our{" "}
+            <Text
+              className="underline"
+              onPress={() => Linking.openURL(`${getBaseUrl()}/legal/terms`)}
+            >
+              Terms
+            </Text>{" "}
+            and{" "}
+            <Text
+              className="underline"
+              onPress={() => Linking.openURL(`${getBaseUrl()}/legal/privacy`)}
+            >
+              Privacy Policy
+            </Text>
+          </Text>
+          <Text
+            className="text-muted-foreground text-center text-xs underline"
+            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/impressum`)}
+          >
+            Impressum
+          </Text>
         </View>
       </View>
     </View>
