@@ -43,6 +43,7 @@ export function ShoppingListItemEditForm() {
   const updateShoppingListItemMutation = useUpdateShoppingListItemMutation({
     groupId: groupId ?? -1,
     shoppingListId: shoppingListId ?? -1,
+    selectedCategory: null,
   });
 
   const handleUpdateShoppingListItem = (

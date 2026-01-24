@@ -23,7 +23,7 @@ export function ShoppingItemDisplay({
   disabled,
   className,
 }: ShoppingItemDisplayProps) {
-  const categoryData = categoryId ? getCategoryData(categoryId) : null;
+  const categoryData = categoryId ? getCategoryData({ categoryId }) : null;
 
   return (
     <Card>

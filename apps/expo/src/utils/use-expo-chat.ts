@@ -12,6 +12,7 @@ import { createTRPCChatTransport } from "@flatsby/chat";
 import { withUpdatedOutput } from "@flatsby/validators/chat/tools";
 
 import { trpc } from "./api";
+import { useShoppingStore } from "./shopping-store";
 
 export interface UseExpoChatOptions {
   conversationId: string;
@@ -32,6 +33,7 @@ export function useExpoChat({
   onFinish,
 }: UseExpoChatOptions) {
   const queryClient = useQueryClient();
+  const { selectedShoppingListId } = useShoppingStore();
 
   const [selectedModel, setSelectedModel] = useState<ChatModel | undefined>(
     initialModel,
@@ -59,6 +61,7 @@ export function useExpoChat({
   const modelRef = useRef(selectedModel);
   const toolPreferencesRef = useRef(toolPreferences);
   const groupIdRef = useRef(groupId);
+  const shoppingListIdRef = useRef(selectedShoppingListId);
 
   useEffect(() => {
     modelRef.current = selectedModel;
@@ -71,6 +74,10 @@ export function useExpoChat({
   useEffect(() => {
     groupIdRef.current = groupId;
   }, [groupId]);
+
+  useEffect(() => {
+    shoppingListIdRef.current = selectedShoppingListId;
+  }, [selectedShoppingListId]);
 
   const transport = useMemo(() => {
     // eslint-disable-next-line react-hooks/refs
@@ -90,6 +97,26 @@ export function useExpoChat({
     void queryClient.invalidateQueries({
       queryKey: trpc.chat.getUserConversations.infiniteQueryKey(),
     });
+
+    // Invalidate shopping list queries if a shopping list is currently selected
+    const currentGroupId = groupIdRef.current;
+    const currentShoppingListId = shoppingListIdRef.current;
+    if (currentGroupId && currentShoppingListId) {
+      void queryClient.invalidateQueries({
+        queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
+          groupId: currentGroupId,
+          shoppingListId: currentShoppingListId,
+          limit: 20,
+        }),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: trpc.shoppingList.getCategoryCounts.queryKey({
+          groupId: currentGroupId,
+          shoppingListId: currentShoppingListId,
+        }),
+      });
+    }
+
     onFinish?.();
   }, [queryClient, conversationId, onFinish]);
 
