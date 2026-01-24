@@ -349,7 +349,7 @@ const ShoppingListItem = ({
         <div
           id={`list-item-${item.id}`}
           key={item.id}
-          className="group bg-muted md:hover:bg-primary flex w-full items-center rounded-lg pr-4"
+          className="group bg-muted md:hover:bg-primary hover:text-primary-foreground flex w-full items-center rounded-lg pr-4"
         >
           {showEditForm ? (
             <ShoppingListItemEditForm
