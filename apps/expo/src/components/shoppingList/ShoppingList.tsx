@@ -1,12 +1,17 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import type {
+  CategoryId,
+  CategoryIdWithAiAutoSelect,
+} from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { RefreshControl, Text, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -14,9 +19,11 @@ import {
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { trpc } from "~/utils/api";
+import { CategoryFilterPills, CategoryFilterSidebar } from "./CategoryFilter";
 import ShoppingListItem from "./ShoppingListItem";
 import { ShoppingListItemAddForm } from "./ShoppingListItemAddForm";
 import { groupShoppingList } from "./ShoppingListUtils";
+import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
 interface ShoppingListProps {
   groupId: number;
@@ -32,9 +39,23 @@ type ListItem =
 
 const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   const queryClient = useQueryClient();
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
+    null,
+  );
+  const { invalidateAll } = useInvalidateShoppingList({
+    groupId,
+    shoppingListId,
+  });
 
   const { data: shoppingListData } = useSuspenseQuery(
     trpc.shoppingList.getShoppingList.queryOptions({ groupId, shoppingListId }),
+  );
+
+  const { data: categoryCountsData } = useQuery(
+    trpc.shoppingList.getCategoryCounts.queryOptions({
+      groupId,
+      shoppingListId,
+    }),
   );
 
   const {
@@ -46,10 +67,16 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     isRefetching,
   } = useInfiniteQuery(
     trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
-      { groupId, shoppingListId, limit: 20 },
+      {
+        groupId,
+        shoppingListId,
+        limit: 20,
+        categoryId: selectedCategory ?? undefined,
+      },
       {
         getNextPageParam: (lastPage) =>
           lastPage.success === true ? lastPage.data.nextCursor : null,
+        placeholderData: keepPreviousData,
       },
     ),
   );
@@ -67,6 +94,13 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       ) ?? [];
 
   const { uncheckedSections, checkedSections } = groupShoppingList(allItems);
+
+  const categoryCounts =
+    categoryCountsData?.success === true ? categoryCountsData.data.counts : {};
+  const categoryTotal =
+    categoryCountsData?.success === true
+      ? categoryCountsData.data.total
+      : undefined;
 
   // Transform data for FlashList
   const flashListData = useMemo((): ListItem[] => {
@@ -133,6 +167,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         groupId,
         shoppingListId,
         limit: 20,
+        categoryId: selectedCategory ?? undefined,
       }),
       previousItems,
     );
@@ -146,6 +181,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
         );
 
@@ -154,6 +190,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
         );
 
@@ -162,6 +199,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
           (old) => {
             if (!old) return old;
@@ -209,13 +247,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: 20,
-          }),
-        });
+        invalidateAll();
       },
     }),
   );
@@ -257,6 +289,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               shoppingListId={shoppingListId}
               item={item.item}
               groupMembers={shoppingList?.group.groupMembers ?? []}
+              selectedCategory={selectedCategory}
             />
           </View>
         );
@@ -308,22 +341,44 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         </View>
       )}
       <BottomSheetPickerProvider>
-        <View className="flex-1">
-          <FlashList
-            data={flashListData}
-            renderItem={renderItem}
-            getItemType={getItemType}
-            keyExtractor={(item) => item.id}
-            refreshControl={
-              <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-            }
-            onEndReached={handleLoadMore}
-            onEndReachedThreshold={0.5}
-            keyboardDismissMode="on-drag"
-          />
-          <AppKeyboardStickyView>
-            <ShoppingListItemAddForm onSubmit={handleSubmit} />
-          </AppKeyboardStickyView>
+        <View className="flex-1 flex-col md:flex-row">
+          {/* Sidebar - hidden on mobile, shown on md+ */}
+          <View className="hidden md:flex">
+            <CategoryFilterSidebar
+              counts={categoryCounts}
+              total={categoryTotal}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+            />
+          </View>
+
+          <View className="flex-1">
+            {/* Pills - shown on mobile, hidden on md+ */}
+            <View className="flex md:hidden">
+              <CategoryFilterPills
+                counts={categoryCounts}
+                total={categoryTotal}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+              />
+            </View>
+
+            <FlashList
+              data={flashListData}
+              renderItem={renderItem}
+              getItemType={getItemType}
+              keyExtractor={(item) => item.id}
+              refreshControl={
+                <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+              }
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.5}
+              keyboardDismissMode="on-drag"
+            />
+            <AppKeyboardStickyView>
+              <ShoppingListItemAddForm onSubmit={handleSubmit} />
+            </AppKeyboardStickyView>
+          </View>
         </View>
       </BottomSheetPickerProvider>
     </>

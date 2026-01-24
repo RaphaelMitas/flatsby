@@ -1,4 +1,5 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
+import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
@@ -16,6 +17,7 @@ import { useSwipeActions } from "../SwipeActions";
 import { ShoppingItemDisplay } from "./ShoppingItemDisplay";
 import { getCategoryData } from "./ShoppingListCategory";
 import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
+import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
 export interface ShoppingListItemProps {
   groupId: number;
@@ -29,6 +31,7 @@ export interface ShoppingListItemProps {
       image: string | null;
     };
   }[];
+  selectedCategory: CategoryId | null;
 }
 
 const ShoppingListItem = ({
@@ -36,17 +39,24 @@ const ShoppingListItem = ({
   shoppingListId,
   item,
   groupMembers,
+  selectedCategory,
 }: ShoppingListItemProps) => {
   const [showDetails, setShowDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const categoryData = getCategoryData(item.categoryId);
+  const categoryData = getCategoryData({ categoryId: item.categoryId });
+
+  const { invalidateAll } = useInvalidateShoppingList({
+    groupId,
+    shoppingListId,
+  });
 
   const updateShoppingListItemMutation = useUpdateShoppingListItemMutation({
     groupId,
     shoppingListId,
+    selectedCategory,
   });
 
   const onMutateShoppingListItemError = (
@@ -57,6 +67,7 @@ const ShoppingListItem = ({
         groupId,
         shoppingListId,
         limit: 20,
+        categoryId: selectedCategory ?? undefined,
       }),
       previousItems,
     );
@@ -70,6 +81,7 @@ const ShoppingListItem = ({
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
         );
 
@@ -78,6 +90,7 @@ const ShoppingListItem = ({
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
         );
 
@@ -86,6 +99,7 @@ const ShoppingListItem = ({
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
           (old) => {
             if (!old) return old;
@@ -120,13 +134,7 @@ const ShoppingListItem = ({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: 20,
-          }),
-        });
+        invalidateAll();
       },
     }),
   );

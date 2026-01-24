@@ -49,7 +49,7 @@ export default async function ShoppingListDetailPage({
 
   return (
     <HydrateClient>
-      <div className="mx-auto flex h-full w-full max-w-prose flex-col overflow-hidden pt-4">
+      <div className="mx-auto flex h-full w-full max-w-5xl flex-col overflow-hidden pt-4">
         <ShoppingList shoppingListId={shoppingListId} />
       </div>
     </HydrateClient>
