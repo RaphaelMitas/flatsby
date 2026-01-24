@@ -40,7 +40,7 @@ export function ShoppingListItemsCard({
 
   const router = useRouter();
   return (
-    <Card className="h-full w-sm flex-1">
+    <Card className="w-full">
       <CardHeader>
         <View className="flex-row items-center gap-2">
           <View className="flex-1">

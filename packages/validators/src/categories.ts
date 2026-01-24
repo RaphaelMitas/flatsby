@@ -42,3 +42,8 @@ export const categoryIdSchema = z.enum(categoryIds);
 export const categorysIdWithAiAutoSelectSchema = z.enum(
   categorysIdWithAiAutoSelect,
 );
+
+export const categoryCountsSchema = z.object({
+  counts: z.record(categoryIdSchema, z.number().optional()),
+  total: z.number(),
+});

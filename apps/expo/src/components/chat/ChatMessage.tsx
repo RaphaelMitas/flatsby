@@ -124,7 +124,7 @@ export const ChatMessage = memo(function ChatMessage({
 
       {/* Tool results - displayed outside the message bubble */}
       {!isUser && showToolResults && (
-        <View className="mt-2 max-w-[90%] flex-1 flex-row">
+        <View className="mt-2 w-full">
           <ChatToolResults
             message={message}
             conversationId={conversationId}

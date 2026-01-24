@@ -1,8 +1,10 @@
 import type { ShoppingListInfiniteData } from "@flatsby/api";
+import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { trpc } from "~/utils/api";
+import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
 interface GroupedSection {
   title: string;
@@ -83,11 +85,17 @@ export const groupShoppingList = (
 export const useUpdateShoppingListItemMutation = ({
   groupId,
   shoppingListId,
+  selectedCategory,
 }: {
   groupId: number;
   shoppingListId: number;
+  selectedCategory: CategoryId | null;
 }) => {
   const queryClient = useQueryClient();
+  const { invalidateAll } = useInvalidateShoppingList({
+    groupId,
+    shoppingListId,
+  });
 
   const onMutateShoppingListItemError = (
     previousItems: ShoppingListInfiniteData | undefined,
@@ -97,6 +105,7 @@ export const useUpdateShoppingListItemMutation = ({
         groupId,
         shoppingListId,
         limit: 20,
+        categoryId: selectedCategory ?? undefined,
       }),
       previousItems,
     );
@@ -110,6 +119,7 @@ export const useUpdateShoppingListItemMutation = ({
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
         });
 
@@ -118,6 +128,7 @@ export const useUpdateShoppingListItemMutation = ({
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
         );
 
@@ -126,6 +137,7 @@ export const useUpdateShoppingListItemMutation = ({
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
           (oldData) => {
             if (!oldData) return oldData;
@@ -169,13 +181,7 @@ export const useUpdateShoppingListItemMutation = ({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: 20,
-          }),
-        });
+        invalidateAll();
       },
     }),
   );

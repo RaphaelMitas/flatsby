@@ -4,7 +4,7 @@ import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, eq } from "@flatsby/db";
+import { and, count, eq } from "@flatsby/db";
 import {
   groupMembers,
   groups,
@@ -13,6 +13,7 @@ import {
   users,
 } from "@flatsby/db/schema";
 import {
+  categoryCountsSchema,
   categoryIdSchema,
   isCategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
@@ -408,6 +409,7 @@ export const shoppingList = createTRPCRouter({
       z.object({
         groupId: z.number(),
         shoppingListId: z.number(),
+        categoryId: categoryIdSchema.optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.number().min(0).default(0),
       }),
@@ -451,10 +453,18 @@ export const shoppingList = createTRPCRouter({
                   safeDbOperation(
                     () =>
                       ctx.db.query.shoppingListItems.findMany({
-                        where: eq(
-                          shoppingListItems.shoppingListId,
-                          input.shoppingListId,
-                        ),
+                        where: input.categoryId
+                          ? and(
+                              eq(
+                                shoppingListItems.shoppingListId,
+                                input.shoppingListId,
+                              ),
+                              eq(shoppingListItems.categoryId, input.categoryId),
+                            )
+                          : eq(
+                              shoppingListItems.shoppingListId,
+                              input.shoppingListId,
+                            ),
                         columns: {
                           id: true,
                           name: true,
@@ -495,6 +505,79 @@ export const shoppingList = createTRPCRouter({
                       items: itemsWithCategoryId,
                       nextCursor: nextOffset,
                     };
+                  },
+                ),
+            ),
+        ),
+      );
+    }),
+
+  getCategoryCounts: protectedProcedure
+    .input(
+      z.object({
+        groupId: z.number(),
+        shoppingListId: z.number(),
+      }),
+    )
+    .output(getApiResultZod(categoryCountsSchema))
+    .query(async ({ ctx, input }) => {
+      return withErrorHandlingAsResult(
+        Effect.flatMap(
+          // Verify user is member of group
+          GroupUtils.requireMemberAccess(
+            ctx.db,
+            input.groupId,
+            ctx.session.user.id,
+          ),
+          () =>
+            Effect.flatMap(
+              // Check if shopping list exists in this group
+              DbUtils.findOneOrFail(
+                () =>
+                  ctx.db.query.shoppingLists.findFirst({
+                    where: and(
+                      eq(shoppingLists.id, input.shoppingListId),
+                      eq(shoppingLists.groupId, input.groupId),
+                    ),
+                    columns: {
+                      id: true,
+                    },
+                  }),
+                "shopping list",
+              ),
+              () =>
+                // Get category counts for unchecked items
+                Effect.map(
+                  safeDbOperation(
+                    () =>
+                      ctx.db
+                        .select({
+                          categoryId: shoppingListItems.categoryId,
+                          count: count(shoppingListItems.id),
+                        })
+                        .from(shoppingListItems)
+                        .where(
+                          and(
+                            eq(
+                              shoppingListItems.shoppingListId,
+                              input.shoppingListId,
+                            ),
+                            eq(shoppingListItems.completed, false),
+                          ),
+                        )
+                        .groupBy(shoppingListItems.categoryId),
+                    "get category counts",
+                  ),
+                  (results) => {
+                    const counts: Record<string, number> = {};
+                    let total = 0;
+
+                    for (const row of results) {
+                      counts[row.categoryId] = row.count;
+                      total += row.count;
+                    }
+
+                    return { counts, total };
                   },
                 ),
             ),
