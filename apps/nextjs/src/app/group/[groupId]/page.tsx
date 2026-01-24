@@ -5,9 +5,9 @@ import { Plus, Settings as SettingsIcon, ShoppingCart } from "lucide-react";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
+import { ShoppingListDashboard } from "~/app/shopping-list/ShoppingListDashboard";
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { RecentActivity } from "./RecentActivity";
-import { ShoppingListDashboard } from "./shopping-list/ShoppingListDashboard";
 import { UserDebtSummary } from "./UserDebtSummary";
 
 const GroupPage = async (props: { params: Promise<{ groupId: string }> }) => {
@@ -59,7 +59,7 @@ const GroupPage = async (props: { params: Promise<{ groupId: string }> }) => {
               </div>
             }
           >
-            <ShoppingListDashboard groupId={groupId} limit={5} />
+            <ShoppingListDashboard limit={5} />
           </Suspense>
         </div>
 
