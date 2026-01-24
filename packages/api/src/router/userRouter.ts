@@ -86,7 +86,7 @@ export const userRouter = createTRPCRouter({
             () =>
               ctx.db.query.groupMembers.findMany({
                 columns: {},
-                where: eq(groupMembers.userId, ctx.session.user.id),
+                where: and(eq(groupMembers.userId, ctx.session.user.id), eq(groupMembers.isActive, true)),
                 with: {
                   group: {
                     columns: {
