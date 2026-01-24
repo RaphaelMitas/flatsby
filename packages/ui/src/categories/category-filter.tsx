@@ -9,7 +9,7 @@ import { categoryMapping, getCategoryColorClasses } from "./categories";
 
 interface CategoryFilterProps {
   counts: Record<string, number>;
-  total: number;
+  total: number | undefined;
   selectedCategory: CategoryId | null;
   onSelectCategory: (categoryId: CategoryId | null) => void;
 }
@@ -20,14 +20,11 @@ export function CategoryFilter({
   selectedCategory,
   onSelectCategory,
 }: CategoryFilterProps) {
-  // Filter categories that have items (count > 0), excluding ai-auto-select
-  const categoriesWithItems = categoryMapping.filter(
-    (category) =>
-      category.id !== "ai-auto-select" && (counts[category.id] ?? 0) > 0,
+  const availableCategories = categoryMapping.filter(
+    (category) => category.id !== "ai-auto-select",
   );
 
-  // Don't render if no items or only one category
-  if (total === 0 || categoriesWithItems.length <= 1) {
+  if (total === 0) {
     return null;
   }
 
@@ -41,20 +38,22 @@ export function CategoryFilter({
         className="shrink-0 rounded-full"
       >
         All
-        <Badge
-          variant={selectedCategory === null ? "secondary" : "outline"}
-          className={cn(
-            "ml-1 px-1.5",
-            selectedCategory === null &&
-              "bg-primary-foreground/20 text-primary-foreground border-transparent",
-          )}
-        >
-          {total}
-        </Badge>
+        {total && total > 0 && (
+          <Badge
+            variant={selectedCategory === null ? "secondary" : "outline"}
+            className={cn(
+              "ml-1 px-1.5",
+              selectedCategory === null &&
+                "bg-primary-foreground/20 text-primary-foreground border-transparent",
+            )}
+          >
+            {total}
+          </Badge>
+        )}
       </Button>
 
       {/* Category buttons */}
-      {categoriesWithItems.map((category) => {
+      {availableCategories.map((category) => {
         const Icon = category.icon;
         const count = counts[category.id] ?? 0;
         const isSelected = selectedCategory === category.id;
@@ -75,16 +74,18 @@ export function CategoryFilter({
               )}
             />
             {category.name}
-            <Badge
-              variant={isSelected ? "secondary" : "outline"}
-              className={cn(
-                "ml-1 px-1.5",
-                isSelected &&
-                  "bg-primary-foreground/20 text-primary-foreground border-transparent",
-              )}
-            >
-              {count}
-            </Badge>
+            {count > 0 && (
+              <Badge
+                variant={isSelected ? "secondary" : "outline"}
+                className={cn(
+                  "ml-1 px-1.5",
+                  isSelected &&
+                    "bg-primary-foreground/20 text-primary-foreground border-transparent",
+                )}
+              >
+                {count}
+              </Badge>
+            )}
           </Button>
         );
       })}

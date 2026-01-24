@@ -17,7 +17,7 @@ import {
 } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 
-import { CategoryFilter } from "@flatsby/ui/categories";
+import { CategoryFilter, CategoryFilterSidebar } from "@flatsby/ui/categories";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -120,7 +120,9 @@ const ShoppingListInner = ({
   const categoryCounts =
     categoryCountsData?.success === true ? categoryCountsData.data.counts : {};
   const categoryTotal =
-    categoryCountsData?.success === true ? categoryCountsData.data.total : 0;
+    categoryCountsData?.success === true
+      ? categoryCountsData.data.total
+      : undefined;
 
   const onMutateShoppingListItemError = (
     previousItems: ShoppingListInfiniteData | undefined,
@@ -252,72 +254,90 @@ const ShoppingListInner = ({
   };
 
   return (
-    <>
-      <div className="min-h-0 flex-1 overflow-auto">
-        {shoppingList && (
-          <h2 className="text-center text-lg font-semibold">
-            {shoppingList.name}
-          </h2>
-        )}
-        <CategoryFilter
+    <div className="flex min-h-0 flex-1">
+      {/* Sidebar - hidden on mobile, shown on md+ */}
+      <div className="hidden md:block">
+        <CategoryFilterSidebar
           counts={categoryCounts}
           total={categoryTotal}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />
-        <div className="space-y-2 px-4 pt-4">
-          {uncheckedSections.map((section) => (
-            <div
-              className="space-y-2"
-              key={`unchecked-section-${section.title}`}
-            >
-              <div className="text-muted-foreground text-center text-sm">
-                {section.title}
-              </div>
-              {getShoppingList(section.items)}
-            </div>
-          ))}
-
-          {checkedSections.length > 0 && (
-            <div className="text-muted-foreground mt-4 text-center text-sm">
-              Purchased Items
-            </div>
-          )}
-
-          {checkedSections.map((section, index) => (
-            <div className="space-y-2" key={`checked-section-${index}`}>
-              <div className="text-muted-foreground text-center text-sm">
-                {section.title}
-              </div>
-              {getShoppingList(section.items)}
-            </div>
-          ))}
-
-          {hasNextPage && (
-            <InView
-              onChange={(inView) => {
-                if (inView && !isFetchingNextPage && itemsData?.pages) {
-                  void fetchNextPage();
-                }
-              }}
-            >
-              <div className="h-4" />
-            </InView>
-          )}
-          {isFetchingNextPage && (
-            <div className="flex justify-center pt-4">
-              <LoadingSpinner />
-            </div>
-          )}
-          {!hasNextPage && allItems.length > 0 && (
-            <div className="text-muted-foreground py-4 text-center text-sm">
-              No more items to load
-            </div>
-          )}
-        </div>
       </div>
-      <ShoppingListItemAddForm onSubmit={handleSubmit} />
-    </>
+
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {shoppingList && (
+          <h2 className="text-center text-lg font-semibold">
+            {shoppingList.name}
+          </h2>
+        )}
+
+        {/* Pills - shown on mobile, hidden on md+ */}
+        <div className="md:hidden">
+          <CategoryFilter
+            counts={categoryCounts}
+            total={categoryTotal}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-auto">
+          <div className="space-y-2 px-4 pt-4">
+            {uncheckedSections.map((section) => (
+              <div
+                className="space-y-2"
+                key={`unchecked-section-${section.title}`}
+              >
+                <div className="text-muted-foreground text-center text-sm">
+                  {section.title}
+                </div>
+                {getShoppingList(section.items)}
+              </div>
+            ))}
+
+            {checkedSections.length > 0 && (
+              <div className="text-muted-foreground mt-4 text-center text-sm">
+                Purchased Items
+              </div>
+            )}
+
+            {checkedSections.map((section, index) => (
+              <div className="space-y-2" key={`checked-section-${index}`}>
+                <div className="text-muted-foreground text-center text-sm">
+                  {section.title}
+                </div>
+                {getShoppingList(section.items)}
+              </div>
+            ))}
+
+            {hasNextPage && (
+              <InView
+                onChange={(inView) => {
+                  if (inView && !isFetchingNextPage && itemsData?.pages) {
+                    void fetchNextPage();
+                  }
+                }}
+              >
+                <div className="h-4" />
+              </InView>
+            )}
+            {isFetchingNextPage && (
+              <div className="flex justify-center pt-4">
+                <LoadingSpinner />
+              </div>
+            )}
+            {!hasNextPage && allItems.length > 0 && (
+              <div className="text-muted-foreground py-4 text-center text-sm">
+                No more items to load
+              </div>
+            )}
+          </div>
+        </div>
+
+        <ShoppingListItemAddForm onSubmit={handleSubmit} />
+      </div>
+    </div>
   );
 };
 
