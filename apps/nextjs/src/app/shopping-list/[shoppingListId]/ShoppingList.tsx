@@ -90,7 +90,12 @@ const ShoppingListInner = ({
     isFetchingNextPage,
   } = useInfiniteQuery(
     trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
-      { groupId, shoppingListId, limit: 20 },
+      {
+        groupId,
+        shoppingListId,
+        limit: 20,
+        categoryId: selectedCategory ?? undefined,
+      },
       {
         getNextPageParam: (lastPage) =>
           lastPage.success === true ? lastPage.data.nextCursor : null,
@@ -110,13 +115,7 @@ const ShoppingListInner = ({
           index === self.findIndex((t) => t.id === item.id),
       ) ?? [];
 
-  // Filter items by selected category
-  const filteredItems = selectedCategory
-    ? allItems.filter((item) => item.categoryId === selectedCategory)
-    : allItems;
-
-  const { uncheckedSections, checkedSections } =
-    groupShoppingList(filteredItems);
+  const { uncheckedSections, checkedSections } = groupShoppingList(allItems);
 
   const categoryCounts =
     categoryCountsData?.success === true ? categoryCountsData.data.counts : {};
@@ -131,6 +130,7 @@ const ShoppingListInner = ({
         groupId,
         shoppingListId,
         limit: 20,
+        categoryId: selectedCategory ?? undefined,
       }),
       previousItems,
     );
@@ -144,6 +144,7 @@ const ShoppingListInner = ({
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
         );
 
@@ -152,6 +153,7 @@ const ShoppingListInner = ({
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
         );
 
@@ -160,6 +162,7 @@ const ShoppingListInner = ({
             groupId,
             shoppingListId,
             limit: 20,
+            categoryId: selectedCategory ?? undefined,
           }),
           (old) => {
             if (!old) return old;

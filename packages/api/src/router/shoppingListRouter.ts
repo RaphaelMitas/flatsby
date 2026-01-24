@@ -409,6 +409,7 @@ export const shoppingList = createTRPCRouter({
       z.object({
         groupId: z.number(),
         shoppingListId: z.number(),
+        categoryId: categoryIdSchema.optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.number().min(0).default(0),
       }),
@@ -452,10 +453,18 @@ export const shoppingList = createTRPCRouter({
                   safeDbOperation(
                     () =>
                       ctx.db.query.shoppingListItems.findMany({
-                        where: eq(
-                          shoppingListItems.shoppingListId,
-                          input.shoppingListId,
-                        ),
+                        where: input.categoryId
+                          ? and(
+                              eq(
+                                shoppingListItems.shoppingListId,
+                                input.shoppingListId,
+                              ),
+                              eq(shoppingListItems.categoryId, input.categoryId),
+                            )
+                          : eq(
+                              shoppingListItems.shoppingListId,
+                              input.shoppingListId,
+                            ),
                         columns: {
                           id: true,
                           name: true,
