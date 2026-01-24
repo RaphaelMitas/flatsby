@@ -1,17 +1,23 @@
 "use client";
 
 import type { RouterOutputs, ShoppingListInfiniteData } from "@flatsby/api";
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import type {
+  CategoryId,
+  CategoryIdWithAiAutoSelect,
+} from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
+import { useState } from "react";
 import { redirect } from "next/navigation";
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 
+import { CategoryFilter } from "@flatsby/ui/categories";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -21,6 +27,7 @@ import ShoppingListItem, {
 } from "./ShoppingListItem";
 import { ShoppingListItemAddForm } from "./ShoppingListItemAddForm";
 import { groupShoppingList } from "./ShoppingListUtils";
+import { useShoppingListInvalidation } from "./useShoppingListInvalidation";
 
 const ShoppingList = ({ shoppingListId }: { shoppingListId: number }) => {
   const { currentGroup } = useGroupContext();
@@ -61,6 +68,20 @@ const ShoppingListInner = ({
 }) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
+    null,
+  );
+  const { invalidateAll } = useShoppingListInvalidation(
+    groupId,
+    shoppingListId,
+  );
+
+  const { data: categoryCountsData } = useQuery(
+    trpc.shoppingList.getCategoryCounts.queryOptions({
+      groupId,
+      shoppingListId,
+    }),
+  );
 
   const {
     data: itemsData,
@@ -89,7 +110,18 @@ const ShoppingListInner = ({
           index === self.findIndex((t) => t.id === item.id),
       ) ?? [];
 
-  const { uncheckedSections, checkedSections } = groupShoppingList(allItems);
+  // Filter items by selected category
+  const filteredItems = selectedCategory
+    ? allItems.filter((item) => item.categoryId === selectedCategory)
+    : allItems;
+
+  const { uncheckedSections, checkedSections } =
+    groupShoppingList(filteredItems);
+
+  const categoryCounts =
+    categoryCountsData?.success === true ? categoryCountsData.data.counts : {};
+  const categoryTotal =
+    categoryCountsData?.success === true ? categoryCountsData.data.total : 0;
 
   const onMutateShoppingListItemError = (
     previousItems: ShoppingListInfiniteData | undefined,
@@ -173,13 +205,7 @@ const ShoppingListInner = ({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: 20,
-          }),
-        });
+        invalidateAll();
       },
     }),
   );
@@ -230,6 +256,12 @@ const ShoppingListInner = ({
             {shoppingList.name}
           </h2>
         )}
+        <CategoryFilter
+          counts={categoryCounts}
+          total={categoryTotal}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
         <div className="space-y-2 px-4 pt-4">
           {uncheckedSections.map((section) => (
             <div

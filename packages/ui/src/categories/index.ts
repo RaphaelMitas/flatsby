@@ -4,3 +4,4 @@ export {
   getCategoryColorClasses,
   getCategoryData,
 } from "./categories";
+export { CategoryFilter } from "./category-filter";

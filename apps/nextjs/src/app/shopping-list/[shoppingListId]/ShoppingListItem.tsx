@@ -29,6 +29,7 @@ import {
 
 import { useTRPC } from "~/trpc/react";
 import { ShoppingListItemEditForm } from "./ShoppingListItemEditForm";
+import { useShoppingListInvalidation } from "./useShoppingListInvalidation";
 
 export interface ShoppingListItemProps {
   groupId: number;
@@ -120,6 +121,10 @@ const ShoppingListItem = ({
   const categoryData = getCategoryData(item.categoryId);
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { invalidateAll } = useShoppingListInvalidation(
+    groupId,
+    shoppingListId,
+  );
 
   const onMutateShoppingListItemError = (
     previousItems: ShoppingListInfiniteData | undefined,
@@ -204,13 +209,7 @@ const ShoppingListItem = ({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: 20,
-          }),
-        });
+        invalidateAll();
       },
     }),
   );
@@ -274,13 +273,7 @@ const ShoppingListItem = ({
         );
       },
       onSettled: () => {
-        void queryClient.invalidateQueries({
-          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: 20,
-          }),
-        });
+        invalidateAll();
       },
     }),
   );
