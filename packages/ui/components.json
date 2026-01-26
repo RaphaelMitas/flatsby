@@ -7,11 +7,15 @@
     "config": "",
     "css": "../../tooling/tailwind/theme.css",
     "baseColor": "zinc",
-    "cssVariables": true
+    "cssVariables": true,
+    "prefix": ""
   },
   "aliases": {
-    "utils": "@flatsby/ui",
-    "components": "src/",
-    "ui": "src/"
-  }
+    "utils": "@/lib/utils",
+    "components": "src/components",
+    "ui": "src",
+    "lib": "src/lib",
+    "hooks": "hooks"
+  },
+  "iconLibrary": "lucide"
 }
