@@ -36,16 +36,16 @@ import {
 } from "@flatsby/ui/select";
 import { addMemberFormSchema } from "@flatsby/validators/group";
 
-import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
 
-const ManageMembers = () => {
+interface ManageMembersProps {
+  groupId: number;
+}
+
+const ManageMembers = ({ groupId }: ManageMembersProps) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { currentGroup } = useGroupContext();
-
-  const groupId = currentGroup?.id ?? 0;
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),

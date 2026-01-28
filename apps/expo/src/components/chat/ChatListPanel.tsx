@@ -1,14 +1,14 @@
 import { useCallback } from "react";
 import { Pressable, RefreshControl, Text, View } from "react-native";
-import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { Skeleton } from "~/lib/ui/skeleton";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { useMediaQuery } from "../splitview/useMediaQuery";
 
 interface ConversationItem {
   id: string;
@@ -17,13 +17,24 @@ interface ConversationItem {
   updatedAt: Date;
 }
 
-const ConversationListItem = ({ item }: { item: ConversationItem }) => {
-  const router = useRouter();
+interface ConversationListItemProps {
+  item: ConversationItem;
+  isSelected: boolean;
+  onSelect: () => void;
+}
 
+const ConversationListItem = ({
+  item,
+  isSelected,
+  onSelect,
+}: ConversationListItemProps) => {
   return (
     <Pressable
-      onPress={() => router.push(`/chat/${item.id}`)}
-      className="border-border bg-card active:bg-muted flex-row items-center border-b px-4 py-3"
+      onPress={onSelect}
+      className={cn(
+        "border-border active:bg-muted flex-row items-center border-b px-4 py-3",
+        isSelected ? "bg-muted" : "bg-card",
+      )}
     >
       <View className="bg-primary/10 mr-3 h-10 w-10 items-center justify-center rounded-full">
         <Icon name="message-square" size={18} color="primary" />
@@ -44,9 +55,11 @@ const ConversationListItem = ({ item }: { item: ConversationItem }) => {
   );
 };
 
-const EmptyState = () => {
-  const router = useRouter();
+interface EmptyStateProps {
+  onCreateConversation: () => void;
+}
 
+const EmptyState = ({ onCreateConversation }: EmptyStateProps) => {
   return (
     <View className="flex-1 items-center justify-center p-8">
       <View className="bg-muted mb-4 h-16 w-16 items-center justify-center rounded-full">
@@ -58,11 +71,7 @@ const EmptyState = () => {
       <Text className="text-muted-foreground mb-6 text-center">
         Start a new chat to get help with your shopping lists and expenses
       </Text>
-      <Button
-        title="New Chat"
-        icon="plus"
-        onPress={() => router.push("/chat/new")}
-      />
+      <Button title="New Chat" icon="plus" onPress={onCreateConversation} />
     </View>
   );
 };
@@ -81,7 +90,19 @@ const LoadingSkeleton = () => (
   </View>
 );
 
-export const ChatConversationsList = () => {
+interface ChatListPanelProps {
+  selectedConversationId: string | null;
+  onSelectConversation: (conversationId: string) => void;
+  onCreateConversation: () => void;
+}
+
+export function ChatListPanel({
+  selectedConversationId,
+  onSelectConversation,
+  onCreateConversation,
+}: ChatListPanelProps) {
+  const isLargeScreen = useMediaQuery("lg");
+
   const {
     data,
     isLoading,
@@ -96,7 +117,6 @@ export const ChatConversationsList = () => {
       { getNextPageParam: (lastPage) => lastPage.nextCursor },
     ),
   );
-  const router = useRouter();
 
   const conversations = data?.pages.flatMap((page) => page.items) ?? [];
 
@@ -108,28 +128,50 @@ export const ChatConversationsList = () => {
 
   if (isLoading) {
     return (
-      <SafeAreaView>
-        <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
+      <View className="flex-1">
+        <View className="flex-row items-center justify-between px-4 py-3">
           <Text className="text-foreground text-xl font-bold">Chats</Text>
+          {isLargeScreen && (
+            <Button
+              title="New Chat"
+              size="md"
+              icon="plus"
+              onPress={onCreateConversation}
+            />
+          )}
         </View>
         <LoadingSkeleton />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView>
-      <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
+    <View className="flex-1">
+      <View className="flex-row items-center justify-between px-4 py-3">
         <Text className="text-foreground text-xl font-bold">Chats</Text>
+        {isLargeScreen && (
+          <Button
+            title="New Chat"
+            size="md"
+            icon="plus"
+            onPress={onCreateConversation}
+          />
+        )}
       </View>
 
       {conversations.length === 0 ? (
-        <EmptyState />
+        <EmptyState onCreateConversation={onCreateConversation} />
       ) : (
         <View className="flex-1">
           <FlashList
             data={conversations}
-            renderItem={({ item }) => <ConversationListItem item={item} />}
+            renderItem={({ item }) => (
+              <ConversationListItem
+                item={item}
+                isSelected={item.id === selectedConversationId}
+                onSelect={() => onSelectConversation(item.id)}
+              />
+            )}
             keyExtractor={(item) => item.id}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
@@ -144,15 +186,13 @@ export const ChatConversationsList = () => {
               ) : null
             }
           />
-          <View className="absolute right-4 bottom-4">
-            <Button
-              size="icon"
-              icon="plus"
-              onPress={() => router.push("/chat/new")}
-            />
-          </View>
+          {conversations.length > 0 && !isLargeScreen && (
+            <View className="absolute right-4 bottom-4">
+              <Button size="icon" icon="plus" onPress={onCreateConversation} />
+            </View>
+          )}
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
-};
+}

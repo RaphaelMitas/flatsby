@@ -1,7 +1,7 @@
-import { ChatConversationsList } from "~/components/chat/ChatConversationsList";
+import { ChatSplitView } from "~/components/chat/ChatSplitView";
 
 const ChatIndex = () => {
-  return <ChatConversationsList />;
+  return <ChatSplitView />;
 };
 
 export default ChatIndex;

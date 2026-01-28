@@ -211,6 +211,39 @@ GitHub Actions runs on PRs and main branch:
 - `pnpm format` - Formatting check
 - `pnpm typecheck` - TypeScript validation
 
+## Code Style Guidelines
+
+### No Barrel Files (Index Re-exports)
+
+Do not create `index.ts` files that re-export from other modules. Import directly from the specific file instead.
+
+```typescript
+// Bad - barrel file re-export
+import { useMediaQuery, SplitViewContainer } from "../splitview";
+
+// Good - direct imports
+import { useMediaQuery } from "../splitview/useMediaQuery";
+import { SplitViewContainer } from "../splitview/SplitViewContainer";
+```
+
+### No Useless Comments
+
+Do not add comments that merely describe what the code already clearly shows. Code should be self-documenting through good naming.
+
+```typescript
+// Bad - obvious comments
+// Get group data
+const { data: groupData } = useSuspenseQuery(...);
+
+// Show create form
+if (action === "create") {
+
+// Good - no comment needed, code is self-explanatory
+const { data: groupData } = useSuspenseQuery(...);
+
+if (action === "create") {
+```
+
 ## Type Safety Guidelines
 
 This codebase prioritizes full type safety. Follow these rules:

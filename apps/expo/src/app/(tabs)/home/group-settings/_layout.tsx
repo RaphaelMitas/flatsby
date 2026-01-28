@@ -11,7 +11,6 @@ export default function GroupSettingsLayout() {
         name="index"
         options={{
           title: "Group Settings",
-          headerShown: false,
           headerBackTitle: "",
         }}
       />
