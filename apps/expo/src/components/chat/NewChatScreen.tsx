@@ -13,7 +13,11 @@ import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { ChatFooter } from "./ChatFooter";
 
-export const NewChatScreen = () => {
+interface NewChatScreenProps {
+  onSuccess?: (conversationId: string, initialMessage: string) => void;
+}
+
+export const NewChatScreen = ({ onSuccess }: NewChatScreenProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -49,44 +53,51 @@ export const NewChatScreen = () => {
             void queryClient.invalidateQueries({
               queryKey: trpc.chat.getUserConversations.infiniteQueryKey(),
             });
-            router.replace(
-              `/chat/${conversation.id}?message=${encodeURIComponent(text)}` as const,
-            );
+            if (onSuccess) {
+              onSuccess(conversation.id, text);
+            } else {
+              router.replace(
+                `/chat/${conversation.id}?message=${encodeURIComponent(text)}` as const,
+              );
+            }
           },
         },
       );
     },
-    [createConversation, queryClient, router, selectedModel],
+    [createConversation, queryClient, router, selectedModel, onSuccess],
   );
 
-  return (
-    <SafeAreaView>
-      <BottomSheetPickerProvider>
-        <View className="flex-1">
-          {/* Empty state */}
-          <View className="flex-1 items-center justify-center p-8">
-            <View className="bg-muted mb-4 h-16 w-16 items-center justify-center rounded-full">
-              <Icon name="message-square" size={32} color="muted-foreground" />
-            </View>
-            <Text className="text-foreground mb-2 text-xl font-semibold">
-              Start a conversation
-            </Text>
-            <Text className="text-muted-foreground text-center">
-              Ask me anything and I'll help you out
-            </Text>
+  const content = (
+    <BottomSheetPickerProvider>
+      <View className="flex-1">
+        <View className="flex-1 items-center justify-center p-8">
+          <View className="bg-muted mb-4 h-16 w-16 items-center justify-center rounded-full">
+            <Icon name="message-square" size={32} color="muted-foreground" />
           </View>
-
-          <ChatFooter
-            sendMessage={sendMessage}
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
-            toolPreferences={toolPreferences}
-            onToolPreferencesChange={updateToolPreferences}
-            status={isLoading ? "submitted" : "ready"}
-            error={createConversation.error?.message}
-          />
+          <Text className="text-foreground mb-2 text-xl font-semibold">
+            Start a conversation
+          </Text>
+          <Text className="text-muted-foreground text-center">
+            Ask me anything and I'll help you out
+          </Text>
         </View>
-      </BottomSheetPickerProvider>
-    </SafeAreaView>
+
+        <ChatFooter
+          sendMessage={sendMessage}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+          toolPreferences={toolPreferences}
+          onToolPreferencesChange={updateToolPreferences}
+          status={isLoading ? "submitted" : "ready"}
+          error={createConversation.error?.message}
+        />
+      </View>
+    </BottomSheetPickerProvider>
   );
+
+  if (onSuccess) {
+    return content;
+  }
+
+  return <SafeAreaView>{content}</SafeAreaView>;
 };

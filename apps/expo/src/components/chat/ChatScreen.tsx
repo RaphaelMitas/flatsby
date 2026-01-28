@@ -11,11 +11,12 @@ import { ChatInterface } from "./ChatInterface";
 
 interface ChatScreenProps {
   conversationId: string;
+  initialMessage?: string;
 }
 
-const ChatScreenContent = ({ conversationId }: ChatScreenProps) => {
+const ChatScreenContent = ({ conversationId, initialMessage: propInitialMessage }: ChatScreenProps) => {
   const params = useLocalSearchParams<{ message?: string }>();
-  const initialMessage = params.message;
+  const initialMessage = propInitialMessage ?? params.message;
 
   const { data: conversation } = useSuspenseQuery(
     trpc.chat.getConversation.queryOptions({ conversationId }),
@@ -133,6 +134,6 @@ const ChatScreenContent = ({ conversationId }: ChatScreenProps) => {
   );
 };
 
-export const ChatScreen = ({ conversationId }: ChatScreenProps) => {
-  return <ChatScreenContent conversationId={conversationId} />;
+export const ChatScreen = ({ conversationId, initialMessage }: ChatScreenProps) => {
+  return <ChatScreenContent conversationId={conversationId} initialMessage={initialMessage} />;
 };
