@@ -3,6 +3,7 @@ import { View } from "react-native";
 
 import type { Breakpoint } from "@flatsby/validators/breakpoints";
 
+import { cn } from "~/lib/utils";
 import { useMediaQuery } from "./useMediaQuery";
 
 interface SplitViewContainerProps {
@@ -10,6 +11,8 @@ interface SplitViewContainerProps {
   detailContent: ReactNode;
   hasSelection: boolean;
   breakpoint?: Breakpoint;
+  listClass?: string;
+  contentClass?: string;
 }
 
 export function SplitViewContainer({
@@ -17,14 +20,18 @@ export function SplitViewContainer({
   detailContent,
   hasSelection,
   breakpoint = "lg",
+  listClass = "flex-1",
+  contentClass = "flex-1",
 }: SplitViewContainerProps) {
   const isLargeScreen = useMediaQuery(breakpoint);
 
   if (isLargeScreen) {
     return (
       <View className="flex-1 flex-row">
-        <View className="border-border flex-1 border-r">{listContent}</View>
-        <View className="flex-1">{detailContent}</View>
+        <View className={cn("border-border border-r", listClass)}>
+          {listContent}
+        </View>
+        <View className={contentClass}>{detailContent}</View>
       </View>
     );
   }

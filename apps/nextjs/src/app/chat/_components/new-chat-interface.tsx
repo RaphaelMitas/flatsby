@@ -65,7 +65,7 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col">
       <Conversation className="min-h-0 flex-1">
         <ConversationContent>
           <ConversationEmptyState
