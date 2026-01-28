@@ -21,6 +21,8 @@ interface ExpenseCardProps {
   groupId: number;
   onEdit: () => void;
   onDelete?: () => void;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
 export function ExpenseCard({
@@ -28,6 +30,8 @@ export function ExpenseCard({
   groupId,
   onEdit,
   onDelete,
+  isSelected,
+  onSelect,
 }: ExpenseCardProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -127,7 +131,11 @@ export function ExpenseCard({
   });
 
   const handleCardPress = () => {
-    router.push(`/(tabs)/expenses/${expense.id}`);
+    if (onSelect) {
+      onSelect();
+    } else {
+      router.push(`/(tabs)/expenses/${expense.id}`);
+    }
   };
 
   const handleDelete = () => {
@@ -178,6 +186,7 @@ export function ExpenseCard({
             category={expense.category}
             fromName={fromMember?.user.name}
             fromImage={fromMember?.user.image}
+            isSelected={isSelected}
           />
         </Pressable>
       </ReanimatedSwipeable>

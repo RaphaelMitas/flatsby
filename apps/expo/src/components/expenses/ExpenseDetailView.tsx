@@ -28,11 +28,17 @@ import DeleteConfirmationModal from "../DeleteConfirmationModal";
 interface ExpenseDetailViewProps {
   expenseId: number;
   groupId: number;
+  /** Callback when navigating back (for splitview mode). If not provided, uses router.back() */
+  onBack?: () => void;
+  /** Callback when editing (for splitview mode). If not provided, navigates to edit page */
+  onEdit?: () => void;
 }
 
 export function ExpenseDetailView({
   expenseId,
   groupId,
+  onBack,
+  onEdit,
 }: ExpenseDetailViewProps) {
   const router = useRouter();
   const trpcClient = trpc;
@@ -106,7 +112,11 @@ export function ExpenseDetailView({
         void queryClient.invalidateQueries(
           trpcClient.expense.getDebtSummary.queryOptions({ groupId }),
         );
-        router.back();
+        if (onBack) {
+          onBack();
+        } else {
+          router.back();
+        }
       },
     }),
   );
@@ -150,12 +160,16 @@ export function ExpenseDetailView({
           <Button
             title="Edit"
             variant="outline"
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/expenses/[expenseId]/edit",
-                params: { expenseId: expenseId.toString() },
-              })
-            }
+            onPress={() => {
+              if (onEdit) {
+                onEdit();
+              } else {
+                router.push({
+                  pathname: "/(tabs)/expenses/[expenseId]/edit",
+                  params: { expenseId: expenseId.toString() },
+                });
+              }
+            }}
             className="flex-1"
             disabled={deleteExpenseMutation.isPending}
             icon="pencil"

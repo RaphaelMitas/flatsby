@@ -18,6 +18,7 @@ export interface ExpenseDisplayProps {
   category?: string | null;
   fromName?: string;
   fromImage?: string | null;
+  isSelected?: boolean;
 }
 
 export function ExpenseDisplay({
@@ -32,6 +33,7 @@ export function ExpenseDisplay({
   category,
   fromName,
   fromImage,
+  isSelected,
 }: ExpenseDisplayProps) {
   const formattedAmount = formatCurrencyFromCents({
     cents: amountInCents,
@@ -50,7 +52,7 @@ export function ExpenseDisplay({
   const isSettlement = splitMethod === "settlement";
 
   return (
-    <Card>
+    <Card className={isSelected ? "border-primary border-2" : undefined}>
       <CardContent className="gap-3 p-4">
         <View className="flex-row items-center gap-2">
           <Text className="text-foreground text-2xl font-bold">

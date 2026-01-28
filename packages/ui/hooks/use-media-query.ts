@@ -1,14 +1,7 @@
 import * as React from "react";
 
-const BREAKPOINTS = {
-  sm: 640,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
-  "2xl": 1536,
-} as const;
-
-type Breakpoint = keyof typeof BREAKPOINTS;
+import type { Breakpoint } from "@flatsby/validators/breakpoints";
+import { BREAKPOINTS } from "@flatsby/validators/breakpoints";
 
 export function useMediaQuery(breakpoint: Breakpoint) {
   const [matches, setMatches] = React.useState(false);

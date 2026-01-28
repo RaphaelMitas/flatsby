@@ -54,9 +54,18 @@ import { SplitEditor } from "./SplitEditor";
 interface ExpenseFormProps {
   group: GroupWithAccess;
   expense?: ExpenseWithSplitsAndMembers;
+  /** Callback when closing the form (for splitview mode). If not provided, uses router.back() */
+  onClose?: () => void;
+  /** Callback when form is successfully submitted. If not provided, uses router.back() */
+  onSuccess?: (expenseId: number) => void;
 }
 
-export function ExpenseForm({ group, expense }: ExpenseFormProps) {
+export function ExpenseForm({
+  group,
+  expense,
+  onClose,
+  onSuccess,
+}: ExpenseFormProps) {
   const router = useRouter();
   const trpcClient = trpc;
   const queryClient = useQueryClient();
@@ -250,9 +259,15 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
         void queryClient.invalidateQueries(
           trpcClient.expense.getDebtSummary.queryOptions({ groupId: group.id }),
         );
-        router.back();
         form.reset();
         setCurrentStep(1);
+        if (onSuccess && data.data) {
+          onSuccess(data.data.id);
+        } else if (onClose) {
+          onClose();
+        } else {
+          router.back();
+        }
       },
     }),
   );
@@ -333,7 +348,13 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
         void queryClient.invalidateQueries(
           trpcClient.expense.getDebtSummary.queryOptions({ groupId: group.id }),
         );
-        router.back();
+        if (onSuccess && expense?.id) {
+          onSuccess(expense.id);
+        } else if (onClose) {
+          onClose();
+        } else {
+          router.back();
+        }
       },
     }),
   );
