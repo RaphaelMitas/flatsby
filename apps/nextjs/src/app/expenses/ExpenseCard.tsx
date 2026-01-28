@@ -2,17 +2,20 @@
 
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
-import { ArrowRight, Calendar, Users } from "lucide-react";
+import { ArrowRight, Calendar, ChevronRight, Users } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Card } from "@flatsby/ui/card";
+import { cn } from "@flatsby/ui";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-export function ExpenseCard({ expense }: ExpenseCardProps) {
+export function ExpenseCard({ expense, isSelected, onSelect }: ExpenseCardProps) {
   const splitCount = expense.expenseSplits.length;
   const paidByName = expense.paidByGroupMember.user.name;
   const formattedAmount = formatCurrencyFromCents({
@@ -29,10 +32,15 @@ export function ExpenseCard({ expense }: ExpenseCardProps) {
         : undefined,
   });
 
-  return (
-    <Link href={`/expenses/${expense.id}`}>
-      <Card className="bg-muted md:hover:bg-muted/80 cursor-pointer p-4 transition-colors">
-        <div className="flex flex-col gap-3">
+  const cardContent = (
+    <Card
+      className={cn(
+        "bg-muted md:hover:bg-muted/80 cursor-pointer p-4 transition-colors",
+        isSelected && "ring-primary ring-2",
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
           {/* Header: Amount and Currency */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
@@ -111,7 +119,18 @@ export function ExpenseCard({ expense }: ExpenseCardProps) {
             </div>
           </div>
         </div>
-      </Card>
-    </Link>
+        <ChevronRight className="text-muted-foreground h-5 w-5 flex-shrink-0" />
+      </div>
+    </Card>
   );
+
+  if (onSelect) {
+    return (
+      <button type="button" onClick={onSelect} className="w-full text-left">
+        {cardContent}
+      </button>
+    );
+  }
+
+  return <Link href={`/expenses/${expense.id}`}>{cardContent}</Link>;
 }

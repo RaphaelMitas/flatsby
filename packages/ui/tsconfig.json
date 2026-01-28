@@ -3,7 +3,12 @@
   "compilerOptions": {
     "lib": ["ES2022", "dom", "dom.iterable"],
     "jsx": "preserve",
-    "rootDir": "."
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/hooks/*": ["./hooks/*"]
+    }
   },
   "include": ["src", "hooks"],
   "exclude": ["node_modules"]

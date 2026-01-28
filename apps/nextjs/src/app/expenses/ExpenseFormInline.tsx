@@ -1,3 +1,5 @@
+"use client";
+
 import type {
   ExpenseWithSplitsAndMembers,
   GroupWithAccess,
@@ -5,11 +7,37 @@ import type {
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
-import { Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useWatch } from "react-hook-form";
+import { AlertCircle, ArrowLeft, ArrowRight, LoaderCircle, X } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
+import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
+import { Button } from "@flatsby/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@flatsby/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@flatsby/ui/form";
+import { Input } from "@flatsby/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@flatsby/ui/select";
+import { toast } from "@flatsby/ui/toast";
 import {
   calculateEvenPercentageBasisPoints,
   distributeEqualAmounts,
@@ -22,72 +50,41 @@ import {
   isCurrencyCode,
 } from "@flatsby/validators/expenses/types";
 
-import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
-import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
-import {
-  BottomSheetPickerProvider,
-  BottomSheetPickerTrigger,
-} from "~/lib/ui/bottom-sheet-picker";
-import { Button } from "~/lib/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/lib/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormMessage,
-  useForm as useFormHook,
-} from "~/lib/ui/form";
-import { Input } from "~/lib/ui/input";
-import { Label } from "~/lib/ui/label";
-import { SafeAreaView } from "~/lib/ui/safe-area";
-import { trpc } from "~/utils/api";
-import { CurrencyInput } from "./CurrencyInput";
+import { CurrencyInput } from "~/components/CurrencyInput";
+import { useTRPC } from "~/trpc/react";
 import { SplitEditor } from "./SplitEditor";
 
-interface ExpenseFormProps {
+interface ExpenseFormInlineProps {
   group: GroupWithAccess;
   expense?: ExpenseWithSplitsAndMembers;
-  /** Callback when closing the form (for splitview mode). If not provided, uses router.back() */
-  onClose?: () => void;
-  /** Callback when form is successfully submitted. If not provided, uses router.back() */
+  onClose: () => void;
   onSuccess?: (expenseId: number) => void;
 }
 
-export function ExpenseForm({
+export function ExpenseFormInline({
   group,
   expense,
   onClose,
   onSuccess,
-}: ExpenseFormProps) {
-  const router = useRouter();
-  const trpcClient = trpc;
+}: ExpenseFormInlineProps) {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
 
   const isEditMode = !!expense;
   const totalSteps = 3;
 
-  // Get the query key for expense list
-  const expenseListQueryKey =
-    trpcClient.expense.getGroupExpenses.infiniteQueryKey({
-      groupId: group.id,
-      limit: 20,
-    });
+  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
+    groupId: group.id,
+    limit: 20,
+  });
 
   const expenseQueryKey = expense
-    ? trpcClient.expense.getExpense.queryKey({
+    ? trpc.expense.getExpense.queryKey({
         expenseId: expense.id,
       })
     : undefined;
 
-  // Determine the initial split method from the expense or default to "equal"
   const initialSplitMethod: SplitMethod =
     expense?.splitMethod === "equal" ||
     expense?.splitMethod === "percentage" ||
@@ -95,8 +92,8 @@ export function ExpenseForm({
       ? expense.splitMethod
       : "equal";
 
-  const form = useFormHook<ExpenseValues, ExpenseValues>({
-    schema: expenseSchemaWithValidateSplits,
+  const form = useForm<ExpenseValues>({
+    resolver: zodResolver(expenseSchemaWithValidateSplits),
     defaultValues: {
       paidByGroupMemberId:
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,
@@ -120,33 +117,29 @@ export function ExpenseForm({
   const splitMethod = useWatch({ control: form.control, name: "splitMethod" });
 
   const createExpenseMutation = useMutation(
-    trpcClient.expense.createExpense.mutationOptions({
+    trpc.expense.createExpense.mutationOptions({
       onMutate: async (input) => {
-        // Cancel any outgoing queries
         await queryClient.cancelQueries(
-          trpcClient.expense.getGroupExpenses.queryOptions({
+          trpc.expense.getGroupExpenses.queryOptions({
             groupId: group.id,
             limit: 20,
           }),
         );
 
-        // Snapshot the previous value
         const previousData = queryClient.getQueryData(
-          trpcClient.expense.getGroupExpenses.infiniteQueryKey({
+          trpc.expense.getGroupExpenses.infiniteQueryKey({
             groupId: group.id,
             limit: 20,
           }),
         );
 
-        // Get the paidBy and createdBy members for the optimistic expense
         const paidByMember = group.groupMembers.find(
           (m) => m.id === input.paidByGroupMemberId,
         );
         const currentMember = group.thisGroupMember;
 
-        // Optimistically add the new expense
         queryClient.setQueryData(
-          trpcClient.expense.getGroupExpenses.infiniteQueryKey({
+          trpc.expense.getGroupExpenses.infiniteQueryKey({
             groupId: group.id,
             limit: 20,
           }),
@@ -247,46 +240,51 @@ export function ExpenseForm({
         if (context?.previousData) {
           queryClient.setQueryData(expenseListQueryKey, context.previousData);
         }
+        toast.error("Failed to create expense", {
+          description: error.message,
+        });
       },
-      onSuccess: (data) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
+          if (context.previousData) {
+            queryClient.setQueryData(expenseListQueryKey, context.previousData);
+          }
+          toast.error("Failed to create expense", {
+            description: data.error.message,
+          });
           return;
         }
 
+        toast.success("Expense created successfully");
         void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
+          queryKey: trpc.expense.getGroupExpenses.infiniteQueryKey({
+            groupId: group.id,
+            limit: 20,
+          }),
         });
         void queryClient.invalidateQueries(
-          trpcClient.expense.getDebtSummary.queryOptions({ groupId: group.id }),
+          trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
         );
+        onSuccess?.(data.data.id);
+        onClose();
         form.reset();
         setCurrentStep(1);
-        if (onSuccess && data.data) {
-          onSuccess(data.data.id);
-        } else if (onClose) {
-          onClose();
-        } else {
-          router.back();
-        }
       },
     }),
   );
 
   const updateExpenseMutation = useMutation(
-    trpcClient.expense.updateExpense.mutationOptions({
+    trpc.expense.updateExpense.mutationOptions({
       onMutate: async (input) => {
         if (!expense || !expenseQueryKey) return;
-        // Cancel any outgoing queries
         await queryClient.cancelQueries(
-          trpcClient.expense.getExpense.queryOptions({
+          trpc.expense.getExpense.queryOptions({
             expenseId: expense.id,
           }),
         );
 
-        // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseQueryKey);
 
-        // Optimistically update the expense in the list
         queryClient.setQueryData(expenseQueryKey, (old) => {
           if (!old || old.success === false) return old;
 
@@ -329,32 +327,37 @@ export function ExpenseForm({
         if (context?.previousData && expenseQueryKey) {
           queryClient.setQueryData(expenseQueryKey, context.previousData);
         }
+        toast.error("Failed to update expense", {
+          description: error.message,
+        });
       },
-      onSuccess: (data) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
+          if (context?.previousData && expenseQueryKey) {
+            queryClient.setQueryData(expenseQueryKey, context.previousData);
+          }
+          toast.error("Failed to update expense", {
+            description: data.error.message,
+          });
           return;
         }
 
+        toast.success("Expense updated successfully");
         void queryClient.invalidateQueries({
           queryKey: expenseListQueryKey,
         });
         if (expense?.id) {
           void queryClient.invalidateQueries(
-            trpcClient.expense.getExpense.queryOptions({
-              expenseId: expense.id,
-            }),
+            trpc.expense.getExpense.queryOptions({ expenseId: expense.id }),
           );
         }
         void queryClient.invalidateQueries(
-          trpcClient.expense.getDebtSummary.queryOptions({ groupId: group.id }),
+          trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
         );
-        if (onSuccess && expense?.id) {
-          onSuccess(expense.id);
-        } else if (onClose) {
-          onClose();
-        } else {
-          router.back();
+        if (expense) {
+          onSuccess?.(expense.id);
         }
+        onClose();
       },
     }),
   );
@@ -493,83 +496,89 @@ export function ExpenseForm({
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
 
-  const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
-    id: code,
-    title: code,
-  }));
-
-  const paidByItems: BottomSheetPickerItem[] = group.groupMembers.map(
-    (member) => ({
-      id: member.id.toString(),
-      title: member.user.name,
-      icon: (
-        <Avatar className="h-6 w-6">
-          <AvatarImage src={member.user.image ?? undefined} />
-          <AvatarFallback>{member.user.name.charAt(0)}</AvatarFallback>
-        </Avatar>
-      ),
-    }),
-  );
-
   return (
-    <SafeAreaView>
-      <BottomSheetPickerProvider>
-        <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
-          <Text className="text-muted-foreground text-sm">
-            Step {currentStep} of {totalSteps}
-          </Text>
-          <View className="flex-row gap-1">
-            {Array.from({ length: totalSteps }).map((_, i) => (
-              <View
-                key={i}
-                className={`h-2 w-8 rounded ${
-                  i + 1 <= currentStep ? "bg-primary" : "bg-muted"
-                }`}
-              />
-            ))}
-          </View>
-        </View>
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b px-4 py-3">
+        <h2 className="text-xl font-semibold">
+          {isEditMode ? "Edit Expense" : "Add Expense"}
+        </h2>
+        <Button variant="ghost" size="icon" onClick={onClose}>
+          <X className="h-5 w-5" />
+        </Button>
+      </div>
 
+      <div className="flex-1 overflow-y-auto p-4">
         <Form {...form}>
-          <AppScrollView className="flex-1" contentContainerClassName="p-4">
+          <form
+            onSubmit={form.handleSubmit((values) => onSubmit(values))}
+            className="space-y-6"
+          >
+            <div className="text-muted-foreground flex items-center justify-between text-sm">
+              <span>
+                Step {currentStep} of {totalSteps}
+              </span>
+              <div className="flex gap-1">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-2 w-8 rounded ${
+                      i + 1 <= currentStep ? "bg-primary" : "bg-muted"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
             {currentStep === 1 && (
-              <View className="gap-4">
+              <div className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Amount & Details</CardTitle>
+                    <CardTitle className="text-base">
+                      Amount & Details
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="gap-4">
+                  <CardContent className="space-y-4">
                     <FormField
                       control={form.control}
                       name="amountInCents"
                       render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>Amount</Label>
-                          <View className="flex-row items-center gap-2">
-                            <FormField
-                              control={form.control}
-                              name="currency"
-                              render={({ field: currencyField }) => (
-                                <BottomSheetPickerTrigger
-                                  items={currencyItems}
-                                  selectedId={currencyField.value}
-                                  onSelect={(item) => {
-                                    currencyField.onChange(item.id);
-                                  }}
-                                  triggerTitle={currencyField.value}
-                                />
-                              )}
-                            />
-                            <CurrencyInput
-                              value={field.value}
-                              onChange={field.onChange}
-                              placeholder="0.00"
-                              min={1}
-                              className="flex-1"
-                            />
-                          </View>
+                        <FormItem>
+                          <FormLabel>Amount</FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-2">
+                              <FormField
+                                control={form.control}
+                                name="currency"
+                                render={({ field: currencyField }) => (
+                                  <Select
+                                    value={currencyField.value}
+                                    onValueChange={currencyField.onChange}
+                                  >
+                                    <SelectTrigger className="w-24">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {CURRENCY_CODES.map((code) => (
+                                        <SelectItem key={code} value={code}>
+                                          {code}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              />
+                              <CurrencyInput
+                                value={field.value}
+                                onChange={field.onChange}
+                                placeholder="0.00"
+                                min={1}
+                                className="flex-1"
+                              />
+                            </div>
+                          </FormControl>
                           <FormMessage />
-                        </View>
+                        </FormItem>
                       )}
                     />
 
@@ -577,22 +586,32 @@ export function ExpenseForm({
                       control={form.control}
                       name="paidByGroupMemberId"
                       render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>Paid By</Label>
-                          <BottomSheetPickerTrigger
-                            items={paidByItems}
-                            selectedId={field.value.toString()}
-                            onSelect={(item) => {
-                              field.onChange(parseInt(item.id));
-                            }}
-                            triggerTitle={
-                              group.groupMembers.find(
-                                (m) => m.id === field.value,
-                              )?.user.name ?? "Select who paid"
+                        <FormItem>
+                          <FormLabel>Paid By</FormLabel>
+                          <Select
+                            value={field.value.toString()}
+                            onValueChange={(value) =>
+                              field.onChange(parseInt(value))
                             }
-                          />
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select who paid" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {group.groupMembers.map((member) => (
+                                <SelectItem
+                                  key={member.id}
+                                  value={member.id.toString()}
+                                >
+                                  {member.user.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
-                        </View>
+                        </FormItem>
                       )}
                     />
 
@@ -600,18 +619,17 @@ export function ExpenseForm({
                       control={form.control}
                       name="description"
                       render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>Description (Optional)</Label>
+                        <FormItem>
+                          <FormLabel>Description (Optional)</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="What was this expense for?"
-                              value={field.value}
-                              onChangeText={field.onChange}
+                              {...field}
                               maxLength={512}
                             />
                           </FormControl>
                           <FormMessage />
-                        </View>
+                        </FormItem>
                       )}
                     />
 
@@ -619,18 +637,17 @@ export function ExpenseForm({
                       control={form.control}
                       name="category"
                       render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>Category (Optional)</Label>
+                        <FormItem>
+                          <FormLabel>Category (Optional)</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="e.g., Food, Transport, Utilities"
-                              value={field.value}
-                              onChangeText={field.onChange}
+                              {...field}
                               maxLength={100}
                             />
                           </FormControl>
                           <FormMessage />
-                        </View>
+                        </FormItem>
                       )}
                     />
 
@@ -638,140 +655,163 @@ export function ExpenseForm({
                       control={form.control}
                       name="expenseDate"
                       render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>Date</Label>
+                        <FormItem>
+                          <FormLabel>Date</FormLabel>
                           <FormControl>
                             <Input
+                              type="date"
+                              {...field}
                               value={field.value.toISOString().split("T")[0]}
-                              onChangeText={(text) => {
-                                field.onChange(new Date(text));
-                              }}
-                              placeholder="YYYY-MM-DD"
+                              onChange={(e) =>
+                                field.onChange(new Date(e.target.value))
+                              }
                             />
                           </FormControl>
                           <FormMessage />
-                        </View>
+                        </FormItem>
                       )}
                     />
                   </CardContent>
                 </Card>
-              </View>
+              </div>
             )}
 
             {currentStep === 2 && amountInCents > 0 && (
-              <View className="gap-4">
+              <div className="space-y-4">
                 <FormField
                   control={form.control}
                   name="splitMethod"
                   render={({ field }) => (
-                    <FormControl>
-                      <SplitEditor
-                        form={form}
-                        groupMembers={group.groupMembers}
-                        totalAmountCents={amountInCents}
-                        currency={currency}
-                        splitMethod={
-                          splitMethod !== "settlement" ? splitMethod : "equal"
-                        }
-                        onSplitMethodChange={(method) => {
-                          field.onChange(method);
-                        }}
-                      />
-                    </FormControl>
+                    <FormItem className="hidden">
+                      <FormControl>
+                        <Input {...field} value={splitMethod} readOnly />
+                      </FormControl>
+                    </FormItem>
                   )}
                 />
-              </View>
+                <SplitEditor
+                  form={form}
+                  groupMembers={group.groupMembers}
+                  totalAmountCents={amountInCents}
+                  currency={currency}
+                  splitMethod={
+                    splitMethod !== "settlement" ? splitMethod : "equal"
+                  }
+                  onSplitMethodChange={(method) => {
+                    form.setValue("splitMethod", method);
+                  }}
+                />
+              </div>
             )}
 
             {currentStep === 3 && (
-              <View className="gap-4">
+              <div className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Review</CardTitle>
+                    <CardTitle className="text-base">Review</CardTitle>
                     <CardDescription>
                       Review your expense before submitting
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="gap-3">
-                    <View className="flex-row justify-between">
-                      <Text className="text-muted-foreground">Amount:</Text>
-                      <Text className="text-foreground font-semibold">
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Amount:</span>
+                      <span className="font-semibold">
                         {formatCurrencyFromCents({
                           cents: amountInCents,
                           currency: currency,
                         })}
-                      </Text>
-                    </View>
-                    <View className="flex-row justify-between">
-                      <Text className="text-muted-foreground">Paid By:</Text>
-                      <Text className="text-foreground font-semibold">
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Paid By:</span>
+                      <span className="font-semibold">
                         {group.groupMembers.find(
                           (m) => m.id === paidByGroupMemberId,
                         )?.user.name ?? "Unknown"}
-                      </Text>
-                    </View>
+                      </span>
+                    </div>
                     {description && (
-                      <View className="flex-row justify-between">
-                        <Text className="text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
                           Description:
-                        </Text>
-                        <Text className="text-foreground text-right font-semibold">
+                        </span>
+                        <span className="text-right font-semibold">
                           {description}
-                        </Text>
-                      </View>
+                        </span>
+                      </div>
                     )}
-                    <View className="flex-row justify-between">
-                      <Text className="text-muted-foreground">Split:</Text>
-                      <Text className="text-foreground font-semibold">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Split:</span>
+                      <span className="font-semibold">
                         {splits.length}{" "}
                         {splits.length === 1 ? "person" : "people"} (
                         {splitMethod})
-                      </Text>
-                    </View>
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
-              </View>
+              </div>
             )}
-          </AppScrollView>
-          <View className="border-border flex-row gap-2 border-t p-4">
-            {currentStep > 1 && (
-              <Button
-                title="Back"
-                variant="outline"
-                onPress={handleBack}
-                disabled={isPending}
-                icon="arrow-left"
-                className="flex-1"
-              />
+
+            {(createExpenseMutation.isError ||
+              updateExpenseMutation.isError ||
+              createExpenseMutation.data?.success === false ||
+              updateExpenseMutation.data?.success === false) && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {createExpenseMutation.data?.success === false
+                    ? createExpenseMutation.data.error.message
+                    : updateExpenseMutation.data?.success === false
+                      ? updateExpenseMutation.data.error.message
+                      : (createExpenseMutation.error?.message ??
+                        updateExpenseMutation.error?.message ??
+                        "An error occurred")}
+                </AlertDescription>
+              </Alert>
             )}
-            {currentStep < totalSteps ? (
-              <Button
-                title="Next"
-                onPress={handleNext}
-                disabled={isPending || amountInCents <= 0}
-                icon="arrow-right"
-                className="flex-1"
-              />
-            ) : (
-              <Button
-                title={
-                  isPending
-                    ? isEditMode
-                      ? "Updating..."
-                      : "Creating..."
-                    : isEditMode
-                      ? "Update Expense"
-                      : "Create Expense"
-                }
-                disabled={isPending}
-                icon={isPending ? "loader" : undefined}
-                onPress={form.handleSubmit(onSubmit)}
-                className="flex-1"
-              />
-            )}
-          </View>
+
+            <div className="flex gap-2 border-t pt-4">
+              {currentStep > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBack}
+                  disabled={isPending}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+              )}
+              {currentStep < totalSteps ? (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={isPending || amountInCents <= 0}
+                  className="flex-1"
+                >
+                  Next
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button type="submit" disabled={isPending} className="flex-1">
+                  {isPending ? (
+                    <>
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      {isEditMode ? "Updating..." : "Creating..."}
+                    </>
+                  ) : (
+                    <>{isEditMode ? "Update Expense" : "Create Expense"}</>
+                  )}
+                </Button>
+              )}
+            </div>
+          </form>
         </Form>
-      </BottomSheetPickerProvider>
-    </SafeAreaView>
+      </div>
+    </div>
   );
 }
