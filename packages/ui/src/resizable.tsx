@@ -1,8 +1,9 @@
 "use client";
 
-import { cn } from "@flatsby/ui";
 import { GripVerticalIcon } from "lucide-react";
 import * as ResizablePrimitive from "react-resizable-panels";
+
+import { cn } from "@flatsby/ui";
 
 function ResizablePanelGroup({
   className,

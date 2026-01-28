@@ -100,7 +100,9 @@ const Login = () => {
           </Text>
           <Text
             className="text-muted-foreground text-center text-xs underline"
-            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/legal-notice`)}
+            onPress={() =>
+              Linking.openURL(`${getBaseUrl()}/legal/legal-notice`)
+            }
           >
             Legal Notice
           </Text>

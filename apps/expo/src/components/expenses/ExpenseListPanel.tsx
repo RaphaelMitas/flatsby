@@ -4,12 +4,12 @@ import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 
-import { useMediaQuery } from "../splitview/useMediaQuery";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { useMediaQuery } from "../splitview/useMediaQuery";
 import { ExpenseCard } from "./ExpenseCard";
 
 interface ExpenseListPanelProps {

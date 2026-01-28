@@ -1,7 +1,6 @@
+import type { Breakpoint } from "@flatsby/validators/breakpoints";
 import type { ReactNode } from "react";
 import { View } from "react-native";
-
-import type { Breakpoint } from "@flatsby/validators/breakpoints";
 
 import { cn } from "~/lib/utils";
 import { useMediaQuery } from "./useMediaQuery";
@@ -37,8 +36,6 @@ export function SplitViewContainer({
   }
 
   return (
-    <View className="flex-1">
-      {hasSelection ? detailContent : listContent}
-    </View>
+    <View className="flex-1">{hasSelection ? detailContent : listContent}</View>
   );
 }

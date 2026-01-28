@@ -14,7 +14,10 @@ interface ChatScreenProps {
   initialMessage?: string;
 }
 
-const ChatScreenContent = ({ conversationId, initialMessage: propInitialMessage }: ChatScreenProps) => {
+const ChatScreenContent = ({
+  conversationId,
+  initialMessage: propInitialMessage,
+}: ChatScreenProps) => {
   const params = useLocalSearchParams<{ message?: string }>();
   const initialMessage = propInitialMessage ?? params.message;
 
@@ -134,6 +137,14 @@ const ChatScreenContent = ({ conversationId, initialMessage: propInitialMessage 
   );
 };
 
-export const ChatScreen = ({ conversationId, initialMessage }: ChatScreenProps) => {
-  return <ChatScreenContent conversationId={conversationId} initialMessage={initialMessage} />;
+export const ChatScreen = ({
+  conversationId,
+  initialMessage,
+}: ChatScreenProps) => {
+  return (
+    <ChatScreenContent
+      conversationId={conversationId}
+      initialMessage={initialMessage}
+    />
+  );
 };

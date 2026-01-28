@@ -261,7 +261,7 @@ export function ExpenseForm({
         );
         form.reset();
         setCurrentStep(1);
-        if (onSuccess && data.data) {
+        if (onSuccess) {
           onSuccess(data.data.id);
         } else if (onClose) {
           onClose();

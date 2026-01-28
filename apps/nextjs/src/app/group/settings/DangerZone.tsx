@@ -17,17 +17,17 @@ import {
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
 
-import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
 
-export default function DangerZone() {
+interface DangerZoneProps {
+  groupId: number;
+}
+
+export default function DangerZone({ groupId }: DangerZoneProps) {
   const [groupNameInput, setGroupNameInput] = useState("");
   const router = useRouter();
   const trpc = useTRPC();
-  const { currentGroup } = useGroupContext();
-
-  const groupId = currentGroup?.id ?? 0;
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),

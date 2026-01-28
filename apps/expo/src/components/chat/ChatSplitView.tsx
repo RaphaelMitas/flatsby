@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
 
+import { SafeAreaView } from "~/lib/ui/safe-area";
 import { SplitViewContainer } from "../splitview/SplitViewContainer";
 import { useMediaQuery } from "../splitview/useMediaQuery";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { ChatDetailPanel } from "./ChatDetailPanel";
 import { ChatListPanel } from "./ChatListPanel";
 

@@ -1,25 +1,30 @@
-import type React from "react";
-import Link from "next/link";
+"use client";
 
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 
 interface Props {
-  link: string;
+  groupId: number;
   groupName: string;
   memberCount: number;
   avatarSrc?: string;
+  onSelect: (groupId: number) => void;
+  disabled?: boolean;
 }
 
-const GroupsDashboardElement: React.FC<Props> = ({
-  link,
+export function GroupsDashboardElement({
+  groupId,
   groupName,
   memberCount,
   avatarSrc,
-}) => {
+  onSelect,
+  disabled,
+}: Props) {
   return (
-    <Link
-      className="group bg-muted md:hover:bg-primary h-auto w-full items-center gap-4 rounded-lg p-4 shadow-sm"
-      href={link}
+    <button
+      type="button"
+      className="group bg-muted md:hover:bg-primary h-auto w-full items-center gap-4 rounded-lg p-4 text-left shadow-sm disabled:opacity-50"
+      onClick={() => onSelect(groupId)}
+      disabled={disabled}
     >
       <div className="flex items-center gap-3">
         <UserAvatar name={groupName} image={avatarSrc} size="md" />
@@ -34,8 +39,6 @@ const GroupsDashboardElement: React.FC<Props> = ({
           </p>
         </div>
       </div>
-    </Link>
+    </button>
   );
-};
-
-export default GroupsDashboardElement;
+}

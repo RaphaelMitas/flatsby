@@ -9,7 +9,13 @@ import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ArrowLeft, ArrowRight, LoaderCircle, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  LoaderCircle,
+  X,
+} from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
