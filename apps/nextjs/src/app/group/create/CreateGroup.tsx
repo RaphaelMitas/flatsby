@@ -32,10 +32,10 @@ export function CreateGroup() {
           return;
         }
 
-        router.push(`/group/${data.data.groupId}`);
         void queryClient.invalidateQueries(
           trpc.user.getCurrentUserWithGroups.queryOptions(),
         );
+        router.push("/home");
       },
     }),
   );

@@ -1,23 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 
 import { Button } from "@flatsby/ui/button";
 
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
-import GroupsDashboardElement from "./GroupsDashboardElement";
+import { GroupsDashboardElement } from "./GroupsDashboardElement";
 
 export function GroupsDashboard() {
   const trpc = useTRPC();
+  const router = useRouter();
+
   const { data: groups, status } = useSuspenseQuery(
     trpc.group.getUserGroups.queryOptions(),
+  );
+
+  const selectGroup = useMutation(
+    trpc.shoppingList.updateLastUsed.mutationOptions({
+      onSuccess: () => {
+        router.push("/home");
+      },
+    }),
   );
 
   if (!groups.success) {
     return handleApiError(groups.error);
   }
+
+  const handleSelectGroup = (groupId: number) => {
+    selectGroup.mutate({ groupId, shoppingListId: null });
+  };
 
   return (
     <section className="mx-auto h-full w-full max-w-prose">
@@ -48,9 +63,11 @@ export function GroupsDashboard() {
             {groups.data.map((group) => (
               <GroupsDashboardElement
                 key={group.id}
-                link={`/group/${group.id}`}
+                groupId={group.id}
                 groupName={group.name}
                 memberCount={group.memberCount}
+                onSelect={handleSelectGroup}
+                disabled={selectGroup.isPending}
               />
             ))}
           </div>

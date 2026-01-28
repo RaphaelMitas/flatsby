@@ -46,11 +46,7 @@ export function ExpenseDetailContent({
       {(onEdit ?? onDelete) && (
         <div className="flex justify-end gap-2">
           {onEdit && (
-            <Button
-              variant="outline"
-              onClick={onEdit}
-              disabled={isDeleting}
-            >
+            <Button variant="outline" onClick={onEdit} disabled={isDeleting}>
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </Button>

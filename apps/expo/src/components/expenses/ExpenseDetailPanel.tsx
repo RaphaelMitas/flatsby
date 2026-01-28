@@ -1,9 +1,9 @@
-import type { SplitViewAction } from "../splitview/SplitViewContext";
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import type { SplitViewAction } from "../splitview/SplitViewContext";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";

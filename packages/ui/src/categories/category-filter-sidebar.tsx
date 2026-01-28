@@ -71,7 +71,9 @@ export function CategoryFilterSidebar({
                   <Icon
                     className={cn(
                       "h-4 w-4",
-                      isSelected ? "text-primary-foreground" : colorClasses.base,
+                      isSelected
+                        ? "text-primary-foreground"
+                        : colorClasses.base,
                     )}
                   />
                   {category.name}

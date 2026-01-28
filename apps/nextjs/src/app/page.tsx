@@ -19,8 +19,8 @@ export default async function HomePage() {
     return redirect("/auth/login");
   }
 
-  if (userWithGroups.data.user?.lastGroupUsed) {
-    redirect(`/group/${userWithGroups.data.user.lastGroupUsed.id}`);
+  if (userWithGroups.data.groups.length > 0) {
+    redirect("/home");
   } else {
     redirect("/group");
   }

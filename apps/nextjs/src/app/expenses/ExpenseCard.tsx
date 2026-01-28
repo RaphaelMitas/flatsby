@@ -4,9 +4,9 @@ import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
 import { ArrowRight, Calendar, ChevronRight, Users } from "lucide-react";
 
+import { cn } from "@flatsby/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Card } from "@flatsby/ui/card";
-import { cn } from "@flatsby/ui";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseCardProps {
@@ -15,7 +15,11 @@ interface ExpenseCardProps {
   onSelect?: () => void;
 }
 
-export function ExpenseCard({ expense, isSelected, onSelect }: ExpenseCardProps) {
+export function ExpenseCard({
+  expense,
+  isSelected,
+  onSelect,
+}: ExpenseCardProps) {
   const splitCount = expense.expenseSplits.length;
   const paidByName = expense.paidByGroupMember.user.name;
   const formattedAmount = formatCurrencyFromCents({

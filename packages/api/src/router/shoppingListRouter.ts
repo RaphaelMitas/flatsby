@@ -459,7 +459,10 @@ export const shoppingList = createTRPCRouter({
                                 shoppingListItems.shoppingListId,
                                 input.shoppingListId,
                               ),
-                              eq(shoppingListItems.categoryId, input.categoryId),
+                              eq(
+                                shoppingListItems.categoryId,
+                                input.categoryId,
+                              ),
                             )
                           : eq(
                               shoppingListItems.shoppingListId,

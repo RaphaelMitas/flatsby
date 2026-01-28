@@ -3,11 +3,11 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import type { SplitViewAction } from "../splitview/SplitViewContext";
-import { SplitViewContainer } from "../splitview/SplitViewContainer";
-import { useMediaQuery } from "../splitview/useMediaQuery";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { SplitViewContainer } from "../splitview/SplitViewContainer";
+import { useMediaQuery } from "../splitview/useMediaQuery";
 import { ExpenseDetailPanel } from "./ExpenseDetailPanel";
 import { ExpenseListPanel } from "./ExpenseListPanel";
 

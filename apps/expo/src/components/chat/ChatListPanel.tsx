@@ -3,12 +3,12 @@ import { Pressable, RefreshControl, Text, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { useMediaQuery } from "../splitview/useMediaQuery";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Skeleton } from "~/lib/ui/skeleton";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { useMediaQuery } from "../splitview/useMediaQuery";
 
 interface ConversationItem {
   id: string;
@@ -188,11 +188,7 @@ export function ChatListPanel({
           />
           {conversations.length > 0 && !isLargeScreen && (
             <View className="absolute right-4 bottom-4">
-              <Button
-                size="icon"
-                icon="plus"
-                onPress={onCreateConversation}
-              />
+              <Button size="icon" icon="plus" onPress={onCreateConversation} />
             </View>
           )}
         </View>

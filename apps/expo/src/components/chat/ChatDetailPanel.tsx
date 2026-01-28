@@ -11,7 +11,10 @@ interface ChatDetailPanelProps {
   selectedConversationId: string | null;
   action: ChatAction;
   pendingInitialMessage: string | undefined;
-  onSelectConversation: (conversationId: string, initialMessage?: string) => void;
+  onSelectConversation: (
+    conversationId: string,
+    initialMessage?: string,
+  ) => void;
 }
 
 export function ChatDetailPanel({

@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useRouter, useSelectedLayoutSegments } from "next/navigation";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 
 import {
   Select,
@@ -17,58 +20,27 @@ import { handleApiError } from "~/utils";
 
 export function GroupSwitcher() {
   const router = useRouter();
-  const segments = useSelectedLayoutSegments();
-
-  // Get IDs from segments
-  const groupIndex = segments.indexOf("group") + 1;
-  const currentGroupId = segments[groupIndex]
-    ? parseInt(segments[groupIndex])
-    : null;
-
-  const shoppingListIndex = segments.indexOf("shopping-list") + 1;
-  const currentShoppingListId = segments[shoppingListIndex]
-    ? parseInt(segments[shoppingListIndex])
-    : null;
-
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
   const { data: userWithGroups } = useSuspenseQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
+
   const updateLastUsed = useMutation(
-    trpc.shoppingList.updateLastUsed.mutationOptions(),
+    trpc.shoppingList.updateLastUsed.mutationOptions({
+      onSuccess: () => {
+        void queryClient.invalidateQueries();
+        router.refresh();
+      },
+    }),
   );
-  const hasUpdated = useRef(segments.join("/"));
 
-  useEffect(() => {
-    if (!userWithGroups.success) {
-      return;
-    }
-    const currentPath = segments.join("/");
+  if (!userWithGroups.success) {
+    return handleApiError(userWithGroups.error);
+  }
 
-    if (hasUpdated.current !== currentPath && userWithGroups.data.user) {
-      const needsUpdate =
-        (currentGroupId &&
-          userWithGroups.data.user.lastGroupUsed?.id !== currentGroupId) ??
-        (currentShoppingListId &&
-          userWithGroups.data.user.lastShoppingListUsed?.id !==
-            currentShoppingListId);
-
-      if (needsUpdate) {
-        updateLastUsed.mutate({
-          groupId: currentGroupId,
-          shoppingListId: currentShoppingListId,
-        });
-        hasUpdated.current = currentPath;
-      }
-    }
-  }, [
-    segments,
-    currentGroupId,
-    currentShoppingListId,
-    updateLastUsed,
-    userWithGroups,
-    userWithGroups.success,
-  ]);
+  const currentGroupId = userWithGroups.data.user?.lastGroupUsed?.id;
 
   const handleGroupChange = (groupId: string) => {
     if (groupId === "create-group") {
@@ -76,30 +48,20 @@ export function GroupSwitcher() {
       return;
     }
 
-    // If we're in a shopping list context, always go to group home
-    if (segments.includes("shopping-list")) {
-      router.push(`/group/${groupId}`);
-      return;
-    }
+    const id = parseInt(groupId);
+    if (id === currentGroupId) return;
 
-    // If we're already in a group context, replace the group ID
-    if (currentGroupId) {
-      const newPath = `/group/${groupId}${segments.slice(groupIndex + 1).join("/")}`;
-      router.push(newPath);
-    } else {
-      // If we're not in a group context, go to the group's home page
-      router.push(`/group/${groupId}`);
-    }
+    updateLastUsed.mutate({
+      groupId: id,
+      shoppingListId: null,
+    });
   };
-
-  if (!userWithGroups.success) {
-    return handleApiError(userWithGroups.error);
-  }
 
   return (
     <Select
       value={currentGroupId?.toString() ?? ""}
       onValueChange={handleGroupChange}
+      disabled={updateLastUsed.isPending}
     >
       <SelectTrigger className="w-100 xl:absolute xl:left-1/2 xl:-translate-x-1/2">
         <SelectValue placeholder="Select group" />

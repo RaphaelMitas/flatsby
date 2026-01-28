@@ -26,21 +26,30 @@ import {
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
 
-import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
 
-const GroupDetails = () => {
+interface GroupDetailsProps {
+  groupId: number;
+}
+
+const GroupDetails = ({ groupId }: GroupDetailsProps) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { currentGroup } = useGroupContext();
-
-  const groupId = currentGroup?.id ?? 0;
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
-  const [name, setName] = useState(group.success ? group.data.name : "");
+
+  const groupName = group.success ? group.data.name : "";
+  const [name, setName] = useState(groupName);
+  const [prevGroupId, setPrevGroupId] = useState(groupId);
+
+  if (groupId !== prevGroupId) {
+    setName(groupName);
+    setPrevGroupId(groupId);
+  }
+
   const groupNameMutation = useMutation(
     trpc.group.changeGroupName.mutationOptions({
       onSuccess: (data) => {

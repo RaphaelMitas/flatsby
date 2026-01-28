@@ -188,7 +188,9 @@ export default function SettingsIndex() {
             title="Legal Notice"
             subtitle="Legal notice (German law)"
             iconName="info"
-            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/legal-notice`)}
+            onPress={() =>
+              Linking.openURL(`${getBaseUrl()}/legal/legal-notice`)
+            }
           />
           <SettingsItem
             title="Export My Data"
