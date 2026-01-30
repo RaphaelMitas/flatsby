@@ -226,12 +226,10 @@ export const BottomSheetPickerProvider: React.FC<
           backgroundColor: getColor("primary"),
         }}
       >
-        {pickerConfig && (
-          <BottomSheetPickerContent
-            items={pickerConfig.items}
-            renderItem={renderItem}
-          />
-        )}
+        <BottomSheetPickerContent
+          items={pickerConfig?.items ?? []}
+          renderItem={renderItem}
+        />
       </BottomSheet>
     </BottomSheetPickerContext.Provider>
   );
