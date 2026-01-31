@@ -5,11 +5,11 @@ import { Keyboard, Text, TextInput, View } from "react-native";
 
 import { CHAT_MODELS, modelSupportsTools } from "@flatsby/validators/models";
 
+import type { ModelSelectorSheetRef } from "./ModelSelectorSheet";
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
 import { Button } from "~/lib/ui/button";
 import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import type { ModelSelectorSheetRef } from "./ModelSelectorSheet";
 import { cn, useThemeColors } from "~/lib/utils";
 import { ModelSelectorSheet } from "./ModelSelectorSheet";
 
