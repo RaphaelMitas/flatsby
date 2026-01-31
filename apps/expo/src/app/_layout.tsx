@@ -31,7 +31,15 @@ export default function RootLayout() {
         apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? ""}
         options={{
           host: "https://eu.i.posthog.com",
+          errorTracking: {
+            autocapture: {
+              uncaughtExceptions: true,
+              unhandledRejections: true,
+              console: ["error", "warn"],
+            },
+          },
         }}
+        autocapture
       >
         <KeyboardProvider>
           <SafeAreaProvider>
@@ -71,7 +79,7 @@ const StackLayout = () => {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/login/index" options={{ headerShown: false }} />
       </Stack>
     </View>
   );
