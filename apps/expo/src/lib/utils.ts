@@ -140,8 +140,10 @@ export const useBottomInset = () => {
     Platform.OS === "ios" && !Platform.isPad ? tabBarHeight : 0;
 
   const keyboardOffset =
-    Platform.OS === "ios" && !Platform.isPad
-      ? tabBarHeight
+    Platform.OS === "ios"
+      ? Platform.isPad
+        ? 0
+        : tabBarHeight
       : safeAreaInsets.bottom;
 
   return {
