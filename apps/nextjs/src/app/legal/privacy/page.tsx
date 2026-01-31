@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   description: "Privacy Policy for Flatsby",
 };
 
-const PRIVACY_VERSION = "1.0";
-const LAST_UPDATED = "January 2026";
+const PRIVACY_VERSION = "1.1";
+const LAST_UPDATED = "February 2026";
 
 function TableOfContents() {
   const items = [
@@ -131,11 +131,26 @@ export default function PrivacyPage() {
           </LegalList>
 
           <LegalSubheading>3.3 Technical Data</LegalSubheading>
-          <LegalParagraph>Automatically collected data:</LegalParagraph>
+          <LegalParagraph>
+            Automatically collected data varies by platform:
+          </LegalParagraph>
+          <LegalParagraph>
+            <strong>Website:</strong>
+          </LegalParagraph>
           <LegalList>
-            <li>IP address (for session management)</li>
-            <li>Device type and operating system</li>
-            <li>App usage patterns (features used, timestamps)</li>
+            <li>
+              IP address (for session management only, not shared with
+              analytics)
+            </li>
+            <li>Page views and navigation patterns (anonymized)</li>
+          </LegalList>
+          <LegalParagraph>
+            <strong>Mobile App:</strong>
+          </LegalParagraph>
+          <LegalList>
+            <li>IP address (shared with analytics provider)</li>
+            <li>Device type, operating system, and app version</li>
+            <li>Screen views and navigation patterns</li>
           </LegalList>
         </LegalSection>
 
@@ -217,6 +232,28 @@ export default function PrivacyPage() {
                 Vercel&apos;s DPA
               </LegalLink>{" "}
               for data processing terms.
+            </li>
+            <li>
+              <strong>PostHog (Analytics):</strong> Helps us understand how
+              users interact with Flatsby so we can improve the service. Data
+              collection differs by platform:
+              <ul className="ml-4 mt-2 list-disc space-y-1">
+                <li>
+                  <strong>Website:</strong> Analytics are processed on our
+                  servers before being sent to PostHog. Your IP address is not
+                  shared with PostHog.
+                </li>
+                <li>
+                  <strong>Mobile App:</strong> The app connects directly to
+                  PostHog and may collect device information (operating system,
+                  app version), screen views, and IP address.
+                </li>
+              </ul>
+              PostHog processes data on EU servers. See{" "}
+              <LegalLink href="https://posthog.com/privacy" external>
+                PostHog&apos;s Privacy Policy
+              </LegalLink>
+              .
             </li>
           </LegalList>
 
@@ -300,6 +337,11 @@ export default function PrivacyPage() {
               for consent-based processing
             </li>
           </LegalList>
+          <LegalParagraph>
+            <strong>Analytics opt-out:</strong> You can disable analytics
+            tracking in the app settings. This will stop collection of usage
+            data while still allowing the app to function normally.
+          </LegalParagraph>
           <LegalParagraph>
             To exercise these rights, use the &quot;Export My Data&quot; feature
             in Settings or contact us at support@flatsby.com. You also have the

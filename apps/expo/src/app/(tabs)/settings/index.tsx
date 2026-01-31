@@ -1,10 +1,11 @@
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Linking, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { usePostHog } from "posthog-react-native";
 
 import {
   SettingsHeader,
@@ -29,6 +30,10 @@ export default function SettingsIndex() {
     isEnabled: isWinterEffectsEnabled,
     setEnabled: setWinterEffectsEnabled,
   } = useWinterEffects();
+  const posthog = usePostHog();
+  const [isAnalyticsEnabled, setIsAnalyticsEnabled] = useState(
+    () => !posthog.optedOut,
+  );
   const swipeableRef = useRef<SwipeableMethods>(null);
   const { clearSelectedGroup } = useShoppingStore();
 
@@ -39,6 +44,15 @@ export default function SettingsIndex() {
   const handleLogout = async () => {
     clearSelectedGroup();
     await signOut();
+  };
+
+  const handleAnalyticsToggle = (enabled: boolean) => {
+    setIsAnalyticsEnabled(enabled);
+    if (enabled) {
+      void posthog.optIn();
+    } else {
+      void posthog.optOut();
+    }
   };
 
   const getThemeDisplayName = (theme: "light" | "dark" | "system" | null) => {
@@ -153,6 +167,18 @@ export default function SettingsIndex() {
             subtitle="Manage your account settings on the web"
             iconName="settings"
             onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
+          />
+          <SettingsItem
+            title="Share Analytics"
+            subtitle={isAnalyticsEnabled ? "Enabled" : "Disabled"}
+            iconName="activity"
+            onPress={() => handleAnalyticsToggle(!isAnalyticsEnabled)}
+            rightContent={
+              <Checkbox
+                checked={!posthog.optedOut}
+                onCheckedChange={handleAnalyticsToggle}
+              />
+            }
           />
           <SettingsItem
             title="Logout"

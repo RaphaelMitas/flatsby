@@ -1,5 +1,5 @@
 // Current version of legal documents - update when documents change
-export const CURRENT_LEGAL_VERSION = "1.0";
+export const CURRENT_LEGAL_VERSION = "1.1";
 
 interface UserConsentStatus {
   termsAcceptedAt: Date | null;

@@ -1,3 +1,4 @@
+import { analyticsRouter } from "./router/analyticsRouter";
 import { authRouter } from "./router/auth";
 import { chatRouter } from "./router/chatRouter";
 import { expenseRouter } from "./router/expenseRouter";
@@ -8,6 +9,7 @@ import { userRouter } from "./router/userRouter";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
+  analytics: analyticsRouter,
   auth: authRouter,
   chat: chatRouter,
   group: groupRouter,

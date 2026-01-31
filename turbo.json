@@ -59,7 +59,8 @@
     "MODEL_PROVIDER",
     "AI_GATEWAY_API_KEY",
     "AUTUMN_SECRET_KEY",
-    "PORT"
+    "PORT",
+    "POSTHOG_API_KEY"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
