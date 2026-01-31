@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { cn } from "@flatsby/ui";
 import { Toaster } from "@flatsby/ui/toast";
 
+import { AnalyticsProvider } from "~/app/_components/analytics/AnalyticsProvider";
 import { WinterEffectsProvider } from "~/app/_components/layout/winterTheme/use-winter-effects";
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
@@ -67,8 +68,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
               <AutumnProvider
                 betterAuthUrl={env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL}
               >
-                <WinterSnowWrapper />
-                {props.children}
+                <AnalyticsProvider>
+                  <WinterSnowWrapper />
+                  {props.children}
+                </AnalyticsProvider>
               </AutumnProvider>
             </TRPCReactProvider>
             <Toaster />

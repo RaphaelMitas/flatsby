@@ -5,6 +5,7 @@ import LucideIcon from "@react-native-vector-icons/lucide";
 import { Tabs } from "~/lib/components/bottom-tabs";
 import { useWinterEffects } from "~/lib/ui/winter-effects";
 import { useThemeColors } from "~/lib/utils";
+import { usePostHogIdentify } from "~/utils/analytics/use-posthog-identify";
 import { prefetch, trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -25,6 +26,8 @@ export default function TabLayout() {
     useShoppingStore();
   const { getColor } = useThemeColors();
   const { isEnabled: isWinterEffectsEnabled } = useWinterEffects();
+
+  usePostHogIdentify();
 
   useEffect(() => {
     if (!session.data?.user) {

@@ -14,6 +14,7 @@ import "~/lib/nativewind-setup";
 
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { PostHogProvider } from "posthog-react-native";
 
 import { ThemeProvider } from "~/lib/ui/theme";
 import { WinterEffectsProvider } from "~/lib/ui/winter-effects";
@@ -26,28 +27,33 @@ import { ShoppingStoreProvider } from "~/utils/shopping-store";
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider>
-        <SafeAreaProvider>
-          <BottomSheetModalProvider>
-            <ThemeProvider>
-              <WinterEffectsProvider>
-                <QueryClientProvider client={queryClient}>
-                  <ShoppingStoreProvider>
-                    {/*
-                    The Stack component displays the current page.
-                    It also allows you to configure your screens 
-                  */}
-
-                    <StackLayout />
-
-                    <StatusBar />
-                  </ShoppingStoreProvider>
-                </QueryClientProvider>
-              </WinterEffectsProvider>
-            </ThemeProvider>
-          </BottomSheetModalProvider>
-        </SafeAreaProvider>
-      </KeyboardProvider>
+      <PostHogProvider
+        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? ""}
+        options={{
+          host: "https://eu.i.posthog.com",
+        }}
+      >
+        <KeyboardProvider>
+          <SafeAreaProvider>
+            <BottomSheetModalProvider>
+              <ThemeProvider>
+                <WinterEffectsProvider>
+                  <QueryClientProvider client={queryClient}>
+                    <ShoppingStoreProvider>
+                      {/**
+                       The Stack component displays the current page.
+                       It also allows you to configure your screens
+                      **/}
+                      <StackLayout />
+                      <StatusBar />
+                    </ShoppingStoreProvider>
+                  </QueryClientProvider>
+                </WinterEffectsProvider>
+              </ThemeProvider>
+            </BottomSheetModalProvider>
+          </SafeAreaProvider>
+        </KeyboardProvider>
+      </PostHogProvider>
     </GestureHandlerRootView>
   );
 }
