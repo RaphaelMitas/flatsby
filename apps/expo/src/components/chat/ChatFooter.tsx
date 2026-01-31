@@ -1,15 +1,17 @@
 import type { ToolPreferences } from "@flatsby/validators/chat/messages";
 import type { ChatModel } from "@flatsby/validators/models";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { Keyboard, Text, TextInput, View } from "react-native";
 
 import { CHAT_MODELS, modelSupportsTools } from "@flatsby/validators/models";
 
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
-import { useBottomSheetPicker } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import { Card } from "~/lib/ui/card";
+import Icon from "~/lib/ui/custom/icons/Icon";
+import type { ModelSelectorSheetRef } from "./ModelSelectorSheet";
 import { cn, useThemeColors } from "~/lib/utils";
+import { ModelSelectorSheet } from "./ModelSelectorSheet";
 
 type PromptStatus = "ready" | "submitted" | "streaming" | "error";
 
@@ -29,65 +31,59 @@ function getModelDisplayName(modelId: string | null | undefined): string {
   return model?.name ?? modelId ?? "Select Model";
 }
 
-const ModelSelectorButton = memo(function ModelSelectorButton({
+const ModelAndToolsSelector = memo(function ModelAndToolsSelector({
   selectedModel,
   onModelChange,
+  toolsEnabled,
+  onToolsChange,
   disabled,
 }: {
   selectedModel: ChatModel | null;
   onModelChange: (model: ChatModel) => void;
+  toolsEnabled: boolean;
+  onToolsChange: (enabled: boolean) => void;
   disabled: boolean;
 }) {
-  const { openPicker } = useBottomSheetPicker();
+  const sheetRef = useRef<ModelSelectorSheetRef>(null);
 
-  const modelItems = CHAT_MODELS.map((model) => ({
-    id: model.id,
-    title: model.name,
-    description: model.supportsTools ? "Supports tools" : undefined,
-  }));
+  const currentModelSupportsTools = selectedModel
+    ? modelSupportsTools(selectedModel)
+    : false;
+  const showToolsEnabled = toolsEnabled && currentModelSupportsTools;
 
   const handleOpen = useCallback(() => {
     Keyboard.dismiss();
-    openPicker({
-      items: modelItems,
-      selectedId: selectedModel ?? undefined,
-      onSelect: (item) => onModelChange(item.id as ChatModel),
-      snapPoints: ["35%"],
-    });
-  }, [openPicker, modelItems, selectedModel, onModelChange]);
+    sheetRef.current?.open();
+  }, []);
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onPress={handleOpen}
-      disabled={disabled}
-      title={getModelDisplayName(selectedModel)}
-      icon="chevron-down"
-    />
-  );
-});
-
-const ToolToggleButton = memo(function ToolToggleButton({
-  enabled,
-  onToggle,
-  disabled,
-  iconName,
-}: {
-  enabled: boolean;
-  onToggle: () => void;
-  disabled: boolean;
-  iconName: "shopping-cart" | "wallet";
-}) {
-  return (
-    <Button
-      variant={enabled && !disabled ? "secondary" : "ghost"}
-      size="icon"
-      onPress={onToggle}
-      disabled={disabled}
-      icon={iconName}
-      className="p-3"
-    />
+    <>
+      <View className="flex-row items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onPress={handleOpen}
+          disabled={disabled}
+        >
+          <View className="flex-row items-center gap-1.5">
+            <Text className="text-foreground text-sm">
+              {getModelDisplayName(selectedModel)}
+            </Text>
+            {showToolsEnabled && (
+              <Icon name="wrench" size={12} color="muted-foreground" />
+            )}
+            <Icon name="chevron-down" size={14} color="muted-foreground" />
+          </View>
+        </Button>
+      </View>
+      <ModelSelectorSheet
+        ref={sheetRef}
+        selectedModel={selectedModel}
+        onModelChange={onModelChange}
+        toolsEnabled={toolsEnabled}
+        onToolsChange={onToolsChange}
+      />
+    </>
   );
 });
 
@@ -106,36 +102,16 @@ const ChatToolbar = memo(function ChatToolbar({
   disabled: boolean;
   isLoading: boolean;
 }) {
-  const toolsSupported = selectedModel
-    ? modelSupportsTools(selectedModel)
-    : false;
-
   return (
     <View className="flex-row items-center gap-2">
-      <ModelSelectorButton
+      <ModelAndToolsSelector
         selectedModel={selectedModel}
         onModelChange={onModelChange}
+        toolsEnabled={toolPreferences.toolsEnabled ?? true}
+        onToolsChange={(enabled) =>
+          onToolPreferencesChange({ toolsEnabled: enabled })
+        }
         disabled={disabled || isLoading}
-      />
-      <ToolToggleButton
-        enabled={toolPreferences.shoppingListToolsEnabled ?? true}
-        onToggle={() =>
-          onToolPreferencesChange({
-            shoppingListToolsEnabled: !toolPreferences.shoppingListToolsEnabled,
-          })
-        }
-        disabled={disabled || isLoading || !toolsSupported}
-        iconName="shopping-cart"
-      />
-      <ToolToggleButton
-        enabled={toolPreferences.expenseToolsEnabled ?? true}
-        onToggle={() =>
-          onToolPreferencesChange({
-            expenseToolsEnabled: !toolPreferences.expenseToolsEnabled,
-          })
-        }
-        disabled={disabled || isLoading || !toolsSupported}
-        iconName="wallet"
       />
     </View>
   );

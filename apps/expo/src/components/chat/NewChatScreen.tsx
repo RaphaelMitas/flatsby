@@ -26,8 +26,7 @@ export const NewChatScreen = ({ onSuccess }: NewChatScreenProps) => {
   );
 
   const [toolPreferences, setToolPreferences] = useState<ToolPreferences>({
-    shoppingListToolsEnabled: true,
-    expenseToolsEnabled: true,
+    toolsEnabled: true,
   });
 
   const updateToolPreferences = useCallback(

@@ -40,8 +40,7 @@ export function useExpoChat({
   );
 
   const [toolPreferences, setToolPreferences] = useState<ToolPreferences>({
-    shoppingListToolsEnabled: true,
-    expenseToolsEnabled: true,
+    toolsEnabled: true,
   });
 
   const handleModelChange = useCallback((model: ChatModel) => {
