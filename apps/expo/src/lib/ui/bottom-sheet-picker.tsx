@@ -8,8 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Keyboard, Platform, Pressable, Text, View } from "react-native";
-import { useBottomTabBarHeight } from "react-native-bottom-tabs";
+import { Keyboard, Pressable, Text, View } from "react-native";
 import BottomSheetRaw, {
   BottomSheetBackdrop,
   useBottomSheetScrollableCreator,
@@ -18,7 +17,7 @@ import { FlashList } from "@shopify/flash-list";
 import { styled } from "nativewind";
 import { tv } from "tailwind-variants";
 
-import { useThemeColors } from "../utils";
+import { useBottomInset, useThemeColors } from "../utils";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const BottomSheet = styled(BottomSheetRaw, {
@@ -147,7 +146,7 @@ export const BottomSheetPickerProvider: React.FC<
     snapPoints: string[];
   } | null>(null);
   const { getColor } = useThemeColors();
-  const tabBarHeight = useBottomTabBarHeight();
+  const { sheetInset } = useBottomInset();
 
   const openPicker = useCallback(
     (config: {
@@ -232,7 +231,7 @@ export const BottomSheetPickerProvider: React.FC<
         snapPoints={pickerConfig?.snapPoints ?? ["50%", "80%"]}
         index={-1}
         enablePanDownToClose
-        bottomInset={Platform.OS === "ios" ? tabBarHeight : 0}
+        bottomInset={sheetInset}
         className={bottomSheetVariants()}
         handleIndicatorStyle={{
           backgroundColor: getColor("primary"),
