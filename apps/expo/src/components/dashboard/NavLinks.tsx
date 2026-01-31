@@ -1,7 +1,7 @@
-import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
+import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 
@@ -37,11 +37,7 @@ export function NavLinks() {
         iconName="shopping-cart"
         label="Shopping lists"
       />
-      <NavLinkItem
-        href="/(tabs)/expenses"
-        iconName="wallet"
-        label="Expenses"
-      />
+      <NavLinkItem href="/(tabs)/expenses" iconName="wallet" label="Expenses" />
     </View>
   );
 }
