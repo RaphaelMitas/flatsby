@@ -39,6 +39,7 @@
     "./sidebar": "./src/sidebar.tsx",
     "./skeleton": "./src/skeleton.tsx",
     "./tooltip": "./src/tooltip.tsx",
+    "./switch": "./src/switch.tsx",
     "./resizable": "./src/resizable.tsx",
     "./hooks/use-mobile": "./hooks/use-mobile.ts",
     "./hooks/use-media-query": "./hooks/use-media-query.ts"

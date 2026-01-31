@@ -2,8 +2,9 @@
 
 import type { ChatModel } from "@flatsby/validators/models";
 import { useState } from "react";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, WrenchIcon } from "lucide-react";
 
+import { cn } from "@flatsby/ui";
 import {
   ModelSelector,
   ModelSelectorContent,
@@ -14,11 +15,14 @@ import {
   ModelSelectorList,
   ModelSelectorLogo,
   ModelSelectorName,
+  ModelSelectorSeparator,
   ModelSelectorTrigger,
 } from "@flatsby/ui/ai-elements";
 import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
-import { CHAT_MODELS } from "@flatsby/validators/models";
+import { Label } from "@flatsby/ui/label";
+import { Switch } from "@flatsby/ui/switch";
+import { CHAT_MODELS, modelSupportsTools } from "@flatsby/validators/models";
 
 export function getModelDisplayName(
   modelId: string | null | undefined,
@@ -37,17 +41,25 @@ export function getModelProvider(
 interface ChatModelSelectorProps {
   currentModel: string | null;
   onModelChange: (model: ChatModel) => void;
+  toolsEnabled: boolean;
+  onToolsChange: (enabled: boolean) => void;
   disabled?: boolean;
 }
 
 export function ChatModelSelector({
   currentModel,
   onModelChange,
+  toolsEnabled,
+  onToolsChange,
   disabled,
 }: ChatModelSelectorProps) {
   const [open, setOpen] = useState(false);
 
   const selectedModelData = CHAT_MODELS.find((m) => m.id === currentModel);
+  const currentModelSupportsTools = currentModel
+    ? modelSupportsTools(currentModel)
+    : false;
+  const showToolsEnabled = toolsEnabled && currentModelSupportsTools;
 
   // Group models by provider
   const providers = Array.from(new Set(CHAT_MODELS.map((m) => m.provider)));
@@ -67,6 +79,9 @@ export function ChatModelSelector({
           <ModelSelectorName>
             {selectedModelData?.name ?? "Select Model"}
           </ModelSelectorName>
+          {showToolsEnabled && (
+            <WrenchIcon className="text-muted-foreground size-3" />
+          )}
         </Button>
       </ModelSelectorTrigger>
       <ModelSelectorContent>
@@ -105,6 +120,34 @@ export function ChatModelSelector({
               )}
             </ModelSelectorGroup>
           ))}
+          {currentModelSupportsTools && (
+            <>
+              <ModelSelectorSeparator />
+              <div className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label
+                      htmlFor="tools-toggle"
+                      className="text-sm font-medium"
+                    >
+                      Flatsby Tools
+                    </Label>
+                    <p className="text-muted-foreground text-xs">
+                      Shopping lists, expenses & more
+                    </p>
+                  </div>
+                  <Switch
+                    id="tools-toggle"
+                    checked={toolsEnabled}
+                    onCheckedChange={onToolsChange}
+                    className={cn(
+                      toolsEnabled && "data-[state=checked]:bg-primary",
+                    )}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </ModelSelectorList>
       </ModelSelectorContent>
     </ModelSelector>

@@ -278,6 +278,7 @@ export const chatRouter = createTRPCRouter({
 
   /**
    * Update user's tool preferences (persisted across sessions)
+   * Single toggle for all Flatsby tools
    */
   updateToolPreferences: protectedProcedure
     .input(toolPreferencesSchema)
@@ -286,11 +287,8 @@ export const chatRouter = createTRPCRouter({
       await ctx.db
         .update(users)
         .set({
-          ...(input.shoppingListToolsEnabled !== undefined
-            ? { lastShoppingListToolsEnabled: input.shoppingListToolsEnabled }
-            : {}),
-          ...(input.expenseToolsEnabled !== undefined
-            ? { lastExpenseToolsEnabled: input.expenseToolsEnabled }
+          ...(input.toolsEnabled !== undefined
+            ? { lastToolsEnabled: input.toolsEnabled }
             : {}),
         })
         .where(eq(users.id, ctx.session.user.id));
@@ -444,17 +442,11 @@ export const chatRouter = createTRPCRouter({
     let streamCompleted = false;
 
     const modelCanUseTools = modelSupportsTools(modelToUse);
-    const shoppingListToolsEnabled =
+    const toolsEnabled =
       modelCanUseTools &&
-      (typeof input.toolPreferences?.shoppingListToolsEnabled === "boolean"
-        ? input.toolPreferences.shoppingListToolsEnabled
-        : DEFAULT_TOOL_PREFERENCES.shoppingListToolsEnabled);
-    const expenseToolsEnabled =
-      modelCanUseTools &&
-      (typeof input.toolPreferences?.expenseToolsEnabled === "boolean"
-        ? input.toolPreferences.expenseToolsEnabled
-        : DEFAULT_TOOL_PREFERENCES.expenseToolsEnabled);
-    const anyToolsEnabled = shoppingListToolsEnabled || expenseToolsEnabled;
+      (typeof input.toolPreferences?.toolsEnabled === "boolean"
+        ? input.toolPreferences.toolsEnabled
+        : DEFAULT_TOOL_PREFERENCES.toolsEnabled);
     const groupId = input.groupId;
 
     try {
@@ -463,10 +455,10 @@ export const chatRouter = createTRPCRouter({
         .set({ status: "streaming" })
         .where(eq(chatMessages.id, assistantMessageId));
 
-      if (anyToolsEnabled && groupId) {
+      if (toolsEnabled && groupId) {
         const toolOptions = {
-          shoppingList: shoppingListToolsEnabled,
-          expenses: expenseToolsEnabled,
+          shoppingList: true,
+          expenses: true,
         };
         const tools = createChatTools(ctx, groupId, toolOptions);
         const toolsSystemPrompt = buildToolsSystemPrompt(toolOptions);
