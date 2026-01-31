@@ -11,6 +11,7 @@ import {
 import { Keyboard, Platform, Pressable, Text, View } from "react-native";
 import { useBottomTabBarHeight } from "react-native-bottom-tabs";
 import BottomSheetRaw, {
+  BottomSheetBackdrop,
   useBottomSheetScrollableCreator,
 } from "@gorhom/bottom-sheet";
 import { FlashList } from "@shopify/flash-list";
@@ -204,6 +205,17 @@ export const BottomSheetPickerProvider: React.FC<
     [pickerConfig?.selectedId, handleItemSelect],
   );
 
+  const renderBackdrop = useCallback(
+    (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+      />
+    ),
+    [],
+  );
+
   const contextValue = useMemo(
     () => ({
       openPicker,
@@ -225,6 +237,7 @@ export const BottomSheetPickerProvider: React.FC<
         handleIndicatorStyle={{
           backgroundColor: getColor("primary"),
         }}
+        backdropComponent={renderBackdrop}
       >
         <BottomSheetPickerContent
           items={pickerConfig?.items ?? []}

@@ -1,9 +1,10 @@
 "use client";
 
 import type { ChatModel } from "@flatsby/validators/models";
-import { useState } from "react";
-import { CheckIcon } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CheckIcon, WrenchIcon } from "lucide-react";
 
+import { cn } from "@flatsby/ui";
 import {
   ModelSelector,
   ModelSelectorContent,
@@ -14,10 +15,13 @@ import {
   ModelSelectorList,
   ModelSelectorLogo,
   ModelSelectorName,
+  ModelSelectorSeparator,
   ModelSelectorTrigger,
 } from "@flatsby/ui/ai-elements";
 import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
+import { Label } from "@flatsby/ui/label";
+import { Switch } from "@flatsby/ui/switch";
 import { CHAT_MODELS } from "@flatsby/validators/models";
 
 export function getModelDisplayName(
@@ -37,20 +41,32 @@ export function getModelProvider(
 interface ChatModelSelectorProps {
   currentModel: string | null;
   onModelChange: (model: ChatModel) => void;
+  toolsEnabled: boolean;
+  onToolsChange: (enabled: boolean) => void;
   disabled?: boolean;
 }
 
 export function ChatModelSelector({
   currentModel,
   onModelChange,
+  toolsEnabled,
+  onToolsChange,
   disabled,
 }: ChatModelSelectorProps) {
   const [open, setOpen] = useState(false);
 
   const selectedModelData = CHAT_MODELS.find((m) => m.id === currentModel);
 
-  // Group models by provider
-  const providers = Array.from(new Set(CHAT_MODELS.map((m) => m.provider)));
+  // Filter models: when tools are enabled, only show models that support tools
+  const filteredModels = useMemo(() => {
+    if (!toolsEnabled) return CHAT_MODELS;
+    return CHAT_MODELS.filter((model) => model.supportsTools);
+  }, [toolsEnabled]);
+
+  // Group filtered models by provider
+  const providers = useMemo(() => {
+    return Array.from(new Set(filteredModels.map((m) => m.provider)));
+  }, [filteredModels]);
 
   return (
     <ModelSelector open={open} onOpenChange={setOpen}>
@@ -67,6 +83,9 @@ export function ChatModelSelector({
           <ModelSelectorName>
             {selectedModelData?.name ?? "Select Model"}
           </ModelSelectorName>
+          {toolsEnabled && (
+            <WrenchIcon className="text-muted-foreground size-3" />
+          )}
         </Button>
       </ModelSelectorTrigger>
       <ModelSelectorContent>
@@ -75,8 +94,9 @@ export function ChatModelSelector({
           <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
           {providers.map((provider) => (
             <ModelSelectorGroup heading={provider} key={provider}>
-              {CHAT_MODELS.filter((model) => model.provider === provider).map(
-                (model) => (
+              {filteredModels
+                .filter((model) => model.provider === provider)
+                .map((model) => (
                   <ModelSelectorItem
                     key={model.id}
                     value={model.id}
@@ -101,10 +121,30 @@ export function ChatModelSelector({
                       <div className="ml-auto size-4" />
                     )}
                   </ModelSelectorItem>
-                ),
-              )}
+                ))}
             </ModelSelectorGroup>
           ))}
+          <ModelSelectorSeparator />
+          <div className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="tools-toggle" className="text-sm font-medium">
+                  Flatsby Tools
+                </Label>
+                <p className="text-muted-foreground text-xs">
+                  Shopping lists, expenses & more
+                </p>
+              </div>
+              <Switch
+                id="tools-toggle"
+                checked={toolsEnabled}
+                onCheckedChange={onToolsChange}
+                className={cn(
+                  toolsEnabled && "data-[state=checked]:bg-primary",
+                )}
+              />
+            </div>
+          </div>
         </ModelSelectorList>
       </ModelSelectorContent>
     </ModelSelector>

@@ -98,14 +98,11 @@ export type GetUserConversationsInput = z.infer<
 >;
 
 export const DEFAULT_TOOL_PREFERENCES = {
-  shoppingListToolsEnabled: true,
-  expenseToolsEnabled: true,
+  toolsEnabled: true,
 } as const;
 export type DefaultToolPreferences = typeof DEFAULT_TOOL_PREFERENCES;
-// Chat settings schema for tool configuration
 export const toolPreferencesSchema = z.object({
-  shoppingListToolsEnabled: z.boolean().nullable().optional(),
-  expenseToolsEnabled: z.boolean().nullable().optional(),
+  toolsEnabled: z.boolean().nullable().optional(),
 });
 export type ToolPreferences = z.infer<typeof toolPreferencesSchema>;
 

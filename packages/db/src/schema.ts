@@ -36,8 +36,7 @@ export const users = createTable("user", {
     () => shoppingLists.id,
   ),
   lastChatModelUsed: text("last_chat_model_used"),
-  lastShoppingListToolsEnabled: boolean("last_shopping_list_tools_enabled"),
-  lastExpenseToolsEnabled: boolean("last_expense_tools_enabled"),
+  lastToolsEnabled: boolean("last_tools_enabled"),
   // Legal consent tracking
   termsAcceptedAt: timestamp("terms_accepted_at"),
   termsVersion: varchar("terms_version", { length: 20 }),

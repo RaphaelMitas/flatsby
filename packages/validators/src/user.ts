@@ -28,8 +28,7 @@ export const userSchema = z.object({
   lastGroupUsed: z.number().optional().nullable(),
   lastShoppingListUsed: z.number().optional().nullable(),
   lastChatModelUsed: chatModelSchema.optional(),
-  lastShoppingListToolsEnabled: z.boolean().optional().nullable(),
-  lastExpenseToolsEnabled: z.boolean().optional().nullable(),
+  lastToolsEnabled: z.boolean().optional().nullable(),
   // Legal consent tracking
   termsAcceptedAt: z.date().optional().nullable(),
   termsVersion: z.string().optional().nullable(),

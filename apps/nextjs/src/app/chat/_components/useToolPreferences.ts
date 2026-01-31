@@ -6,9 +6,14 @@ import { DEFAULT_TOOL_PREFERENCES } from "@flatsby/validators/chat/messages";
 
 import { useTRPC } from "~/trpc/react";
 
+// Resolved tool preferences with non-nullable values
+export interface ResolvedToolPreferences {
+  toolsEnabled: boolean;
+}
+
 export interface UseToolPreferencesResult {
   updateToolPreferences: (newToolPreferences: ToolPreferences) => void;
-  toolPreferences: ToolPreferences;
+  toolPreferences: ResolvedToolPreferences;
 }
 
 export const useToolPreferences = (): UseToolPreferencesResult => {
@@ -38,17 +43,8 @@ export const useToolPreferences = (): UseToolPreferencesResult => {
                 ...old.data,
                 user: {
                   ...old.data.user,
-                  ...(newToolPreferences.shoppingListToolsEnabled !== undefined
-                    ? {
-                        lastShoppingListToolsEnabled:
-                          newToolPreferences.shoppingListToolsEnabled,
-                      }
-                    : {}),
-                  ...(newToolPreferences.expenseToolsEnabled !== undefined
-                    ? {
-                        lastExpenseToolsEnabled:
-                          newToolPreferences.expenseToolsEnabled,
-                      }
+                  ...(newToolPreferences.toolsEnabled !== undefined
+                    ? { lastToolsEnabled: newToolPreferences.toolsEnabled }
                     : {}),
                 },
               },
@@ -57,7 +53,7 @@ export const useToolPreferences = (): UseToolPreferencesResult => {
         );
         return { previousData };
       },
-      onError: (error, newToolPreferences, context) => {
+      onError: (_error, _newToolPreferences, context) => {
         queryClient.setQueryData(
           trpc.user.getCurrentUserWithGroups.queryKey(),
           context?.previousData,
@@ -70,18 +66,14 @@ export const useToolPreferences = (): UseToolPreferencesResult => {
       },
     }),
   );
-  const toolPreferences = useMemo(() => {
+
+  const toolPreferences = useMemo((): ResolvedToolPreferences => {
     return {
-      shoppingListToolsEnabled:
+      toolsEnabled:
         userData?.success &&
-        typeof userData.data.user?.lastShoppingListToolsEnabled === "boolean"
-          ? userData.data.user.lastShoppingListToolsEnabled
-          : DEFAULT_TOOL_PREFERENCES.shoppingListToolsEnabled,
-      expenseToolsEnabled:
-        userData?.success &&
-        typeof userData.data.user?.lastExpenseToolsEnabled === "boolean"
-          ? userData.data.user.lastExpenseToolsEnabled
-          : DEFAULT_TOOL_PREFERENCES.expenseToolsEnabled,
+        typeof userData.data.user?.lastToolsEnabled === "boolean"
+          ? userData.data.user.lastToolsEnabled
+          : DEFAULT_TOOL_PREFERENCES.toolsEnabled,
     };
   }, [userData]);
 
@@ -90,8 +82,7 @@ export const useToolPreferences = (): UseToolPreferencesResult => {
   const updateToolPreferences = useCallback(
     (newToolPreferences: ToolPreferences) => {
       void mutateToolPreferences({
-        shoppingListToolsEnabled: newToolPreferences.shoppingListToolsEnabled,
-        expenseToolsEnabled: newToolPreferences.expenseToolsEnabled,
+        toolsEnabled: newToolPreferences.toolsEnabled,
       });
     },
     [mutateToolPreferences],
