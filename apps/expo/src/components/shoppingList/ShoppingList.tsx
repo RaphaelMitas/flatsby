@@ -4,7 +4,7 @@ import type {
   CategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { RefreshControl, Text, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import {
@@ -51,7 +51,11 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     trpc.shoppingList.getShoppingList.queryOptions({ groupId, shoppingListId }),
   );
 
-  const { data: categoryCountsData } = useQuery(
+  const {
+    data: categoryCountsData,
+    refetch: refetchCategoryCounts,
+    isRefetching: isRefetchingCategoryCounts,
+  } = useQuery(
     trpc.shoppingList.getCategoryCounts.queryOptions({
       groupId,
       shoppingListId,
@@ -63,8 +67,8 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    refetch,
-    isRefetching,
+    refetch: refetchItems,
+    isRefetching: isRefetchingItems,
   } = useInfiniteQuery(
     trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
       {
@@ -80,6 +84,13 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       },
     ),
   );
+
+  const handleRefresh = useCallback(() => {
+    void refetchItems();
+    void refetchCategoryCounts();
+  }, [refetchItems, refetchCategoryCounts]);
+
+  const isRefreshing = isRefetchingItems || isRefetchingCategoryCounts;
 
   const { shoppingList, currentMember } =
     shoppingListData.success === true
@@ -369,7 +380,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               getItemType={getItemType}
               keyExtractor={(item) => item.id}
               refreshControl={
-                <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+                <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
               }
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
