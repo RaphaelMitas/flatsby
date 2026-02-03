@@ -455,7 +455,10 @@ export const expenseRouter = createTRPCRouter({
               const expensesList = await ctx.db.query.expenses.findMany({
                 where: eq(expenses.groupId, input.groupId),
                 limit: input.limit + 1,
-                orderBy: (expenses, { desc }) => [desc(expenses.expenseDate), desc(expenses.createdAt)],
+                orderBy: (expenses, { desc }) => [
+                  desc(expenses.expenseDate),
+                  desc(expenses.createdAt),
+                ],
                 with: {
                   paidByGroupMember: {
                     columns: {

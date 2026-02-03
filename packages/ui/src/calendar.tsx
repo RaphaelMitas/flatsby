@@ -8,7 +8,9 @@ import {
   ChevronRightIcon,
 } from "lucide-react";
 import { DayPicker, getDefaultClassNames } from "react-day-picker";
+
 import { cn } from "@flatsby/ui";
+
 import { Button, buttonVariants } from "./button";
 
 function Calendar({

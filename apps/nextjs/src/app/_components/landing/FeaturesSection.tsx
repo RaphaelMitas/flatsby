@@ -18,7 +18,7 @@ export function FeaturesSection() {
           {/* Feature 1: Shopping Lists */}
           <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
             <div className="order-2 md:order-1">
-              <div className="text-primary mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+              <div className="text-primary bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                 <ShoppingCart className="h-6 w-6" />
               </div>
               <h3 className="mb-3 text-2xl font-semibold">
@@ -41,7 +41,7 @@ export function FeaturesSection() {
               <ExpenseDemo />
             </div>
             <div className="order-2">
-              <div className="text-primary mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+              <div className="text-primary bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                 <Wallet className="h-6 w-6" />
               </div>
               <h3 className="mb-3 text-2xl font-semibold">Expense Splitting</h3>
@@ -55,7 +55,7 @@ export function FeaturesSection() {
           {/* Feature 3: AI Assistant */}
           <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
             <div className="order-2 md:order-1">
-              <div className="text-primary mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+              <div className="text-primary bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                 <Bot className="h-6 w-6" />
               </div>
               <h3 className="mb-3 text-2xl font-semibold">AI Assistant</h3>
@@ -72,7 +72,7 @@ export function FeaturesSection() {
 
           {/* Feature 4: Household Groups */}
           <div className="mx-auto max-w-2xl text-center">
-            <div className="text-primary mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+            <div className="text-primary bg-primary/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
               <Users className="h-6 w-6" />
             </div>
             <h3 className="mb-3 text-2xl font-semibold">Household Groups</h3>

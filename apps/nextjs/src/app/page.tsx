@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 
 import { auth, getSession } from "~/auth/server";
 import { caller } from "~/trpc/server";
-
 import { LandingPage } from "./_components/landing/LandingPage";
 
 export const metadata: Metadata = {

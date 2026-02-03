@@ -380,7 +380,10 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               getItemType={getItemType}
               keyExtractor={(item) => item.id}
               refreshControl={
-                <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                />
               }
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
