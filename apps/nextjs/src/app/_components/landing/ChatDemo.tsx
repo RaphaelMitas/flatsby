@@ -3,13 +3,13 @@
 import type { AddToShoppingListResult } from "@flatsby/validators/chat/tools";
 import { CornerDownLeft } from "lucide-react";
 
-import { Card } from "@flatsby/ui/card";
 import {
   Conversation,
   ConversationContent,
   Message,
   MessageContent,
 } from "@flatsby/ui/ai-elements";
+import { Card } from "@flatsby/ui/card";
 
 import { ShoppingListToolCard } from "~/app/chat/_components/shopping-list-tool-card";
 
