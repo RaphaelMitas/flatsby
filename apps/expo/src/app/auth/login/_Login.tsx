@@ -3,22 +3,17 @@
 import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { authClient, signIn } from "~/utils/auth/auth-client";
+import { signIn } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
 
 const Login = () => {
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
-  const { data: session } = authClient.useSession();
 
   const callbackURL = ExpoLinking.createURL("/");
-
-  if (session) {
-    return <Redirect href="/(tabs)/home" />;
-  }
 
   return (
     <View className="bg-background flex-1 px-6 py-8">
@@ -28,7 +23,8 @@ const Login = () => {
         <View className="mb-12 items-center">
           <Icon
             name="flatsby"
-            className="text-primary mb-6 h-40 w-full"
+            className="mb-6 h-40 w-full"
+            color="primary"
             size={160}
           />
           <Text className="text-foreground mb-2 text-3xl font-bold">

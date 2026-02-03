@@ -22,6 +22,7 @@ import { ThemeProvider } from "~/lib/ui/theme";
 import { WinterEffectsProvider } from "~/lib/ui/winter-effects";
 import { WinterSnow } from "~/lib/ui/winter-snow";
 import { useThemedScreenOptions } from "~/lib/utils";
+import { useSession } from "~/utils/auth/auth-client";
 import { ShoppingStoreProvider } from "~/utils/shopping-store";
 
 // This is the main layout of the app
@@ -120,6 +121,11 @@ function ScreenTracker() {
 
 const StackLayout = () => {
   const themedScreenOptions = useThemedScreenOptions();
+  const { isPending } = useSession();
+
+  if (isPending) {
+    return <View className="bg-background flex-1" />;
+  }
 
   return (
     <View className="bg-background flex-1">
