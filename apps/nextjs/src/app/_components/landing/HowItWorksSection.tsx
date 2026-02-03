@@ -34,7 +34,7 @@ export function HowItWorksSection() {
                 <div className="bg-primary text-primary-foreground absolute -top-3 left-4 flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold">
                   {index + 1}
                 </div>
-                <div className="text-primary mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <div className="text-primary bg-primary/10 mb-2 flex h-10 w-10 items-center justify-center rounded-lg">
                   <step.icon className="h-5 w-5" />
                 </div>
                 <CardTitle className="text-lg">{step.title}</CardTitle>
