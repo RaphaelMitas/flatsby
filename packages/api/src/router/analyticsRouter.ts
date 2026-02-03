@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { posthog } from "../lib/posthog";
+import { captureEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const analyticsRouter = createTRPCRouter({
@@ -12,12 +12,11 @@ export const analyticsRouter = createTRPCRouter({
       }),
     )
     .mutation(({ ctx, input }) => {
-      if (!posthog) return;
-
-      posthog.capture({
+      captureEvent({
         distinctId: ctx.session.user.id,
         event: input.event,
-        properties: input.properties,
+        headers: ctx.headers,
+        additionalProperties: input.properties,
       });
     }),
 });

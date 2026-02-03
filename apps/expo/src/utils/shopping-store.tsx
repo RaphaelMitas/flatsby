@@ -71,6 +71,7 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
 
   const setSelectedShoppingList = useCallback(
     (shoppingListId: number, shoppingListName: string) => {
+      const hasChanged = selectedShoppingListId !== shoppingListId;
       setSelectedShoppingListId(shoppingListId);
       setSelectedShoppingListName(shoppingListName);
       persist({
@@ -79,12 +80,20 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
         selectedShoppingListId: shoppingListId,
         selectedShoppingListName: shoppingListName,
       });
-      updateLastUsed.mutate({
-        groupId: selectedGroupId,
-        shoppingListId,
-      });
+      if (hasChanged) {
+        updateLastUsed.mutate({
+          groupId: selectedGroupId,
+          shoppingListId,
+        });
+      }
     },
-    [selectedGroupId, selectedGroupName, updateLastUsed, persist],
+    [
+      selectedGroupId,
+      selectedGroupName,
+      selectedShoppingListId,
+      updateLastUsed,
+      persist,
+    ],
   );
 
   const clearSelectedShoppingList = useCallback(() => {
@@ -100,6 +109,7 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
 
   const setSelectedGroup = useCallback(
     (groupId: number, groupName: string) => {
+      const hasChanged = selectedGroupId !== groupId;
       setSelectedGroupId(groupId);
       setSelectedGroupName(groupName);
       setSelectedShoppingListId(null);
@@ -110,12 +120,14 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
         selectedShoppingListId: null,
         selectedShoppingListName: null,
       });
-      updateLastUsed.mutate({
-        groupId,
-        shoppingListId: null,
-      });
+      if (hasChanged) {
+        updateLastUsed.mutate({
+          groupId,
+          shoppingListId: null,
+        });
+      }
     },
-    [updateLastUsed, persist],
+    [selectedGroupId, updateLastUsed, persist],
   );
 
   const clearSelectedGroup = useCallback(() => {
