@@ -88,7 +88,10 @@ const getColor = (
 };
 
 // Hook to get colors based on current theme
-export const useThemeColors = () => {
+export const useThemeColors = (): {
+  getColor: (colorName: ColorName) => string;
+  colorScheme: "light" | "dark";
+} => {
   const colorScheme = useColorScheme();
   const themeColorScheme = colorScheme === "dark" ? "dark" : "light";
 
