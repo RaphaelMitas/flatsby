@@ -5,21 +5,22 @@ import { SafeAreaView as RNCSafeAreaView } from "react-native-safe-area-context"
 
 export const SafeAreaView = ({
   children,
+  edges = ["top"],
   ...props
-}: Omit<ComponentProps<typeof RNCSafeAreaView>, "className" | "edges">) => {
+}: Omit<ComponentProps<typeof RNCSafeAreaView>, "className">) => {
   const tabBarHeight = useBottomTabBarHeight();
   const isIphone = Platform.OS === "ios" && !Platform.isPad;
   const isIpad = Platform.OS === "ios" && Platform.isPad;
 
   return (
     <RNCSafeAreaView
+      {...props}
       style={{
         flex: 1,
         paddingTop: isIpad ? tabBarHeight : 0,
         paddingBottom: isIphone ? tabBarHeight : 0,
       }}
-      edges={["top"]}
-      {...props}
+      edges={edges}
     >
       {children}
     </RNCSafeAreaView>

@@ -66,13 +66,15 @@ export function ExpensesSplitView() {
                   Back
                 </Button>
               </div>
-              <ExpenseDetailPanel
+              <div className="min-h-0 flex-1">
+                <ExpenseDetailPanel
                 selectedExpenseId={selectedExpenseId}
                 action={action}
                 onBack={clearSelection}
                 onSelectExpense={selectExpense}
                 onEditExpense={editExpense}
               />
+              </div>
             </Suspense>
           </div>
         )}
