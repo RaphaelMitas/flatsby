@@ -24,11 +24,14 @@ export function QuickActions() {
           icon="shopping-cart"
           title={selectedShoppingListName ?? "Shop"}
           className="min-w-0 flex-1"
+          numberOfLines={1}
+          textClassName="shrink"
           onPress={() =>
             router.push(
-              selectedShoppingListName
+              !selectedShoppingListName
                 ? "/(tabs)/shoppingList"
                 : "/(tabs)/home/shopping-lists",
+              { withAnchor: true },
             )
           }
         />
@@ -37,7 +40,9 @@ export function QuickActions() {
           icon="plus"
           title="Expense"
           className="flex-1"
-          onPress={() => router.push("/(tabs)/expenses/create")}
+          onPress={() =>
+            router.push("/(tabs)/expenses/create", { withAnchor: true })
+          }
         />
       </View>
     </View>

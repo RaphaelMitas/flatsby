@@ -71,6 +71,8 @@ interface ButtonProps
   title?: string;
   icon?: IconProps["name"];
   children?: React.ReactNode;
+  textClassName?: string;
+  numberOfLines?: number;
 }
 
 const Button = React.forwardRef<
@@ -78,7 +80,18 @@ const Button = React.forwardRef<
   ButtonProps
 >(
   (
-    { className, variant, size, title, icon, disabled, children, ...props },
+    {
+      className,
+      variant,
+      size,
+      title,
+      icon,
+      disabled,
+      children,
+      textClassName,
+      numberOfLines,
+      ...props
+    },
     ref,
   ) => {
     return (
@@ -109,9 +122,11 @@ const Button = React.forwardRef<
           (title && size !== "icon" && (
             <Text
               disabled={disabled ?? false}
+              numberOfLines={numberOfLines}
               className={buttonTextVariants({
                 variant: disabled ? "disabled" : variant,
                 size,
+                className: textClassName,
               })}
             >
               {title}

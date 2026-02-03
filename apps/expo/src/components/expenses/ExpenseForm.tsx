@@ -571,7 +571,7 @@ export function ExpenseForm({
   );
 
   return (
-    <SafeAreaView>
+    <SafeAreaView edges={[]}>
       <BottomSheetPickerProvider>
         <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
           <Text className="text-muted-foreground text-sm">
