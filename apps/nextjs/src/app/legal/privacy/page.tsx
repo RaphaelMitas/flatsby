@@ -237,7 +237,7 @@ export default function PrivacyPage() {
               <strong>PostHog (Analytics):</strong> Helps us understand how
               users interact with Flatsby so we can improve the service. Data
               collection differs by platform:
-              <ul className="ml-4 mt-2 list-disc space-y-1">
+              <ul className="mt-2 ml-4 list-disc space-y-1">
                 <li>
                   <strong>Website:</strong> Analytics are processed on our
                   servers before being sent to PostHog. Your IP address is not

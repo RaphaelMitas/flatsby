@@ -163,8 +163,16 @@ function HomeStatsInner() {
           icon={<TrendingUp className="h-5 w-5" />}
           value={balanceAmount}
           format={formatCurrency(balanceCurrency)}
-          label={userBalance ? (isOwed ? "owed to you" : "you owe") : "balanced"}
-          colorClass={userBalance ? (isOwed ? "text-green-500" : "text-red-500") : "text-green-500"}
+          label={
+            userBalance ? (isOwed ? "owed to you" : "you owe") : "balanced"
+          }
+          colorClass={
+            userBalance
+              ? isOwed
+                ? "text-green-500"
+                : "text-red-500"
+              : "text-green-500"
+          }
         />
       </div>
     </div>

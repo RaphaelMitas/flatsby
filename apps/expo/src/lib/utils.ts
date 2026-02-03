@@ -1,7 +1,9 @@
 import type { ApiErrorResult } from "@flatsby/api";
 import type { ClassValue } from "clsx";
 import type { useRouter } from "expo-router";
-import { useColorScheme } from "react-native";
+import { Platform, useColorScheme } from "react-native";
+import { useBottomTabBarHeight } from "react-native-bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -86,7 +88,10 @@ const getColor = (
 };
 
 // Hook to get colors based on current theme
-export const useThemeColors = () => {
+export const useThemeColors = (): {
+  getColor: (colorName: ColorName) => string;
+  colorScheme: "light" | "dark";
+} => {
   const colorScheme = useColorScheme();
   const themeColorScheme = colorScheme === "dark" ? "dark" : "light";
 
@@ -122,4 +127,32 @@ export const handleApiError = ({
     router.push("/auth/login");
   }
   return null;
+};
+
+/**
+ * Hook to get the correct bottom insets for UI elements.
+ * Returns two values for different use cases:
+ * - sheetInset: For bottom sheets
+ * - keyboardOffset: For keyboard sticky views
+ */
+export const useBottomInset = () => {
+  const tabBarHeight = useBottomTabBarHeight();
+  const safeAreaInsets = useSafeAreaInsets();
+
+  const sheetInset =
+    Platform.OS === "ios" && !Platform.isPad ? tabBarHeight : 0;
+
+  const keyboardOffset =
+    Platform.OS === "ios"
+      ? Platform.isPad
+        ? 0
+        : tabBarHeight
+      : safeAreaInsets.bottom;
+
+  return {
+    sheetInset,
+    keyboardOffset,
+    tabBarHeight,
+    safeAreaInsets,
+  };
 };

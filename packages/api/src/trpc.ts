@@ -13,6 +13,8 @@ import { z, ZodError } from "zod/v4";
 
 import { db } from "@flatsby/db/client";
 
+import { captureEvent, posthog } from "./lib/posthog";
+
 /**
  * 1. CONTEXT
  *
@@ -105,6 +107,32 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   return result;
 });
 
+const analyticsMutationMiddleware = t.middleware(
+  async ({ ctx, next, path, type }) => {
+    if (
+      !posthog ||
+      !ctx.session?.user.id ||
+      type !== "mutation" ||
+      path.startsWith("analytics.")
+    ) {
+      return next();
+    }
+
+    const result = await next();
+
+    void captureEvent({
+      distinctId: ctx.session.user.id,
+      event: path,
+      headers: ctx.headers,
+      additionalProperties: {
+        procedure: path,
+      },
+    });
+
+    return result;
+  },
+);
+
 /**
  * Public (unauthed) procedure
  *
@@ -112,7 +140,9 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * tRPC API. It does not guarantee that a user querying is authorized, but you
  * can still access user session data if they are logged in
  */
-export const publicProcedure = t.procedure.use(timingMiddleware);
+export const publicProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(analyticsMutationMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -124,6 +154,7 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
+  .use(analyticsMutationMiddleware)
   .use(({ ctx, next }) => {
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });

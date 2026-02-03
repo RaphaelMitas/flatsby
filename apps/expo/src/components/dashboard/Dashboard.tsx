@@ -102,7 +102,14 @@ function DashboardContent() {
       },
       snapPoints: ["40%"],
     });
-  }, [openPicker, groupItems, selectedGroupId, setSelectedGroup, queryClient, router]);
+  }, [
+    openPicker,
+    groupItems,
+    selectedGroupId,
+    setSelectedGroup,
+    queryClient,
+    router,
+  ]);
 
   if (!selectedGroupId) {
     return null;

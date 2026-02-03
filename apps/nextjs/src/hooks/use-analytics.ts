@@ -32,6 +32,6 @@ export function usePageViewTracking() {
     if (prevPathRef.current === url) return;
     prevPathRef.current = url;
 
-    capture("$pageview", { $current_url: url });
+    capture("$pageview", { $pathname: pathname });
   }, [pathname, searchParams, session.data?.user, capture]);
 }

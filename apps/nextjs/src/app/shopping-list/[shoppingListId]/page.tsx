@@ -37,14 +37,18 @@ export default async function ShoppingListDetailPage({
     }),
   );
 
-  // Update last used shopping list
-  try {
-    await caller.shoppingList.updateLastUsed({
-      groupId,
-      shoppingListId,
-    });
-  } catch (error) {
-    console.error(error);
+  // Update last used shopping list only if it changed
+  const currentShoppingListId =
+    userWithGroups.data.user.lastShoppingListUsed?.id;
+  if (currentShoppingListId !== shoppingListId) {
+    try {
+      await caller.shoppingList.updateLastUsed({
+        groupId,
+        shoppingListId,
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   return (

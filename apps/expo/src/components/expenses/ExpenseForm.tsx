@@ -5,8 +5,9 @@ import type {
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 
@@ -47,9 +48,67 @@ import {
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
+import { useThemeColors } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
 import { SplitEditor } from "./SplitEditor";
+
+function DatePickerField({
+  value,
+  onChange,
+}: {
+  value: Date;
+  onChange: (date: Date) => void;
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+  const { colorScheme } = useThemeColors();
+  const formattedDate = value.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  if (Platform.OS === "ios") {
+    return (
+      <View className="gap-2">
+        <Label>Date</Label>
+        <DateTimePicker
+          value={value}
+          mode="date"
+          display="default"
+          themeVariant={colorScheme}
+          className="border-input bg-background h-12 rounded-lg border px-3"
+          onChange={(_: unknown, selectedDate: Date | undefined) => {
+            if (selectedDate) onChange(selectedDate);
+          }}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View className="gap-2">
+      <Label>Date</Label>
+      <Pressable
+        onPress={() => setShowPicker(true)}
+        className="border-input bg-background flex h-12 flex-row items-center rounded-lg border px-3"
+      >
+        <Text className="text-foreground">{formattedDate}</Text>
+      </Pressable>
+      {showPicker && (
+        <DateTimePicker
+          value={value}
+          mode="date"
+          display="default"
+          onChange={(_, selectedDate) => {
+            setShowPicker(false);
+            if (selectedDate) onChange(selectedDate);
+          }}
+        />
+      )}
+    </View>
+  );
+}
 
 interface ExpenseFormProps {
   group: GroupWithAccess;
@@ -512,7 +571,7 @@ export function ExpenseForm({
   );
 
   return (
-    <SafeAreaView>
+    <SafeAreaView edges={[]}>
       <BottomSheetPickerProvider>
         <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
           <Text className="text-muted-foreground text-sm">
@@ -638,19 +697,10 @@ export function ExpenseForm({
                       control={form.control}
                       name="expenseDate"
                       render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>Date</Label>
-                          <FormControl>
-                            <Input
-                              value={field.value.toISOString().split("T")[0]}
-                              onChangeText={(text) => {
-                                field.onChange(new Date(text));
-                              }}
-                              placeholder="YYYY-MM-DD"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </View>
+                        <DatePickerField
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
                       )}
                     />
                   </CardContent>

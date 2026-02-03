@@ -78,6 +78,8 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
   // Switch group action
   const switchGroup = useCallback(
     async (groupId: number) => {
+      if (currentGroup?.id === groupId) return;
+
       await updateLastUsed.mutateAsync({
         groupId,
         shoppingListId: null, // Reset shopping list when switching groups
@@ -91,20 +93,21 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
         queryKey: trpc.expense.getGroupExpenses.queryKey({ groupId }),
       });
     },
-    [updateLastUsed, queryClient, trpc],
+    [updateLastUsed, queryClient, trpc, currentGroup],
   );
 
   // Switch shopping list action
   const switchShoppingList = useCallback(
     async (shoppingListId: number | null) => {
       if (!currentGroup) return;
+      if (currentShoppingList?.id === shoppingListId) return;
 
       await updateLastUsed.mutateAsync({
         groupId: currentGroup.id,
         shoppingListId,
       });
     },
-    [updateLastUsed, currentGroup],
+    [updateLastUsed, currentGroup, currentShoppingList],
   );
 
   const value = useMemo<GroupContextValue>(
