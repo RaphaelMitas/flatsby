@@ -6,7 +6,8 @@ import { groupRouter } from "./router/groupRouter";
 import { shoppingList } from "./router/shoppingListRouter";
 import { statsRouter } from "./router/statsRouter";
 import { userRouter } from "./router/userRouter";
-import { createTRPCRouter } from "./trpc";
+import type { createTRPCContext } from "./trpc";
+import { createCallerFactory, createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
   analytics: analyticsRouter,
@@ -21,3 +22,12 @@ export const appRouter = createTRPCRouter({
 
 // export type definition of API
 export type AppRouter = typeof appRouter;
+
+export const callerFactory = createCallerFactory(appRouter);
+export type RouterCaller = ReturnType<typeof callerFactory>;
+
+export function createRouterCaller(
+  ctx: Awaited<ReturnType<typeof createTRPCContext>>,
+): RouterCaller {
+  return callerFactory(ctx);
+}

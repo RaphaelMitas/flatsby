@@ -7,6 +7,7 @@ import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 import {
   createExpenseSchema,
+  deleteExpenseSchema,
   splitMethodSchema,
   updateExpenseSchema,
 } from "@flatsby/validators/expenses/schemas";
@@ -287,7 +288,7 @@ export const expenseRouter = createTRPCRouter({
     }),
 
   deleteExpense: protectedProcedure
-    .input(z.object({ expenseId: z.number() }))
+    .input(deleteExpenseSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(

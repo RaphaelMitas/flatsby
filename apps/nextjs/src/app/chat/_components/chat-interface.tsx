@@ -2,9 +2,7 @@
 
 import type {
   ChatUIMessage,
-  GroupMemberInfo,
   PersistedToolCallOutputUpdate,
-  ShoppingListInfo,
 } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
@@ -61,8 +59,10 @@ interface ChatMessageItemProps {
   conversationId: string;
   isLoading: boolean;
   activeGroupId: number | undefined;
-  onShoppingListSelect: (list: ShoppingListInfo) => void;
-  onMemberSelect: (member: GroupMemberInfo) => void;
+  onUIResponse: (
+    componentId: string,
+    response: { selectedIds?: string[]; confirmed?: boolean },
+  ) => void;
   onRegenerate: (messageId: string) => void;
   updateToolCallOutput: (
     messageId: string,
@@ -76,8 +76,7 @@ const ChatMessageItem = memo(function ChatMessageItem({
   conversationId,
   isLoading,
   activeGroupId,
-  onShoppingListSelect,
-  onMemberSelect,
+  onUIResponse,
   onRegenerate,
   updateToolCallOutput,
 }: ChatMessageItemProps) {
@@ -92,8 +91,9 @@ const ChatMessageItem = memo(function ChatMessageItem({
 
   const pendingToolCalls = message.parts.filter(
     (part) =>
-      (part.type === "tool-getShoppingLists" ||
-        part.type === "tool-addToShoppingList") &&
+      (part.type === "tool-searchData" ||
+        part.type === "tool-modifyData" ||
+        part.type === "tool-showUI") &&
       part.state === "input-available",
   );
 
@@ -119,8 +119,7 @@ const ChatMessageItem = memo(function ChatMessageItem({
               conversationId={conversationId}
               isLoading={isLoading}
               groupId={activeGroupId}
-              onShoppingListSelect={onShoppingListSelect}
-              onMemberSelect={onMemberSelect}
+              onUIResponse={onUIResponse}
               updateToolCallOutput={updateToolCallOutput}
             />
           </>
@@ -168,6 +167,7 @@ export function ChatInterface({
     toolPreferences,
     updateToolPreferences,
     updateToolCallOutput,
+    handleUIResponse,
   } = useTRPCChat({
     conversationId,
     initialMessages,
@@ -194,22 +194,6 @@ export function ChatInterface({
   const isLoading = isStreaming || isSubmitting;
   const isAtMessageLimit = messages.length >= CHAT_MESSAGE_LIMIT;
 
-  const handleShoppingListSelect = useCallback(
-    (list: ShoppingListInfo) => {
-      if (isLoading) return;
-      sendMessage(`Add to the "${list.name}" list`);
-    },
-    [isLoading, sendMessage],
-  );
-
-  const handleMemberSelect = useCallback(
-    (member: GroupMemberInfo) => {
-      if (isLoading) return;
-      sendMessage(member.name);
-    },
-    [isLoading, sendMessage],
-  );
-
   return (
     <div className="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col">
       <Conversation className="min-h-0 flex-1">
@@ -229,8 +213,7 @@ export function ChatInterface({
                   conversationId={conversationId}
                   isLoading={isLoading}
                   activeGroupId={currentGroup?.id}
-                  onShoppingListSelect={handleShoppingListSelect}
-                  onMemberSelect={handleMemberSelect}
+                  onUIResponse={handleUIResponse}
                   onRegenerate={regenerateMessage}
                   updateToolCallOutput={updateToolCallOutput}
                 />

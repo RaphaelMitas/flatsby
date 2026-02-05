@@ -18,10 +18,13 @@ import {
   isCategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 import {
-  createShoppingListItemFormSchema,
-  editShoppingListItemFormSchema,
-  shoppingListFormSchema,
+  createShoppingListItemSchema,
+  createShoppingListSchema,
+  deleteShoppingListItemSchema,
+  deleteShoppingListSchema,
   shoppingListItemSchema,
+  updateShoppingListItemSchema,
+  updateShoppingListSchema,
 } from "@flatsby/validators/shopping-list";
 
 import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
@@ -141,7 +144,7 @@ export const shoppingList = createTRPCRouter({
     }),
 
   createShoppingList: protectedProcedure
-    .input(shoppingListFormSchema.extend({ groupId: z.number() }))
+    .input(createShoppingListSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -286,7 +289,7 @@ export const shoppingList = createTRPCRouter({
     }),
 
   deleteShoppingList: protectedProcedure
-    .input(z.object({ groupId: z.number(), shoppingListId: z.number() }))
+    .input(deleteShoppingListSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -341,11 +344,7 @@ export const shoppingList = createTRPCRouter({
     }),
 
   changeShoppingListName: protectedProcedure
-    .input(
-      shoppingListFormSchema.pick({ name: true }).extend({
-        shoppingListId: z.number(),
-      }),
-    )
+    .input(updateShoppingListSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -589,12 +588,7 @@ export const shoppingList = createTRPCRouter({
     }),
 
   createShoppingListItem: protectedProcedure
-    .input(
-      createShoppingListItemFormSchema.extend({
-        groupId: z.number(),
-        shoppingListId: z.number(),
-      }),
-    )
+    .input(createShoppingListItemSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -671,11 +665,7 @@ export const shoppingList = createTRPCRouter({
     }),
 
   updateShoppingListItem: protectedProcedure
-    .input(
-      editShoppingListItemFormSchema.extend({
-        id: z.number(),
-      }),
-    )
+    .input(updateShoppingListItemSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -796,11 +786,7 @@ export const shoppingList = createTRPCRouter({
     }),
 
   deleteShoppingListItem: protectedProcedure
-    .input(
-      z.object({
-        id: z.number(),
-      }),
-    )
+    .input(deleteShoppingListItemSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(

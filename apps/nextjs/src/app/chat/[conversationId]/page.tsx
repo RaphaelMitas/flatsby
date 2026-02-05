@@ -50,78 +50,29 @@ export default async function ChatConversationPage({
   const initialMessages: ChatUIMessage[] = filteredMessages.map((m) => {
     const parts: ChatUIMessage["parts"] = [{ type: "text", text: m.content }];
 
-    // Restore tool calls if present
+    // Restore tool calls if present (skip old/invalid tool calls from previous schema)
     if (m.toolCalls) {
       for (const tc of m.toolCalls) {
-        // Narrowing by name discriminant for proper type inference
-        if (tc.name === "getShoppingLists") {
+        if (tc.name === "searchData") {
           parts.push({
-            type: "tool-getShoppingLists",
+            type: "tool-searchData",
             toolCallId: tc.id,
             state: "output-available",
             input: tc.input,
             output: tc.output,
           });
-        } else if (tc.name === "addToShoppingList") {
+        } else if (tc.name === "modifyData") {
           parts.push({
-            type: "tool-addToShoppingList",
+            type: "tool-modifyData",
             toolCallId: tc.id,
             state: "output-available",
             input: tc.input,
             output: tc.output,
           });
-        } else if (tc.name === "getShoppingListItems") {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        } else if (tc.name === "showUI") {
           parts.push({
-            type: "tool-getShoppingListItems",
-            toolCallId: tc.id,
-            state: "output-available",
-            input: tc.input,
-            output: tc.output,
-          });
-        } else if (tc.name === "markItemComplete") {
-          parts.push({
-            type: "tool-markItemComplete",
-            toolCallId: tc.id,
-            state: "output-available",
-            input: tc.input,
-            output: tc.output,
-          });
-        } else if (tc.name === "removeItem") {
-          parts.push({
-            type: "tool-removeItem",
-            toolCallId: tc.id,
-            state: "output-available",
-            input: tc.input,
-            output: tc.output,
-          });
-        } else if (tc.name === "getGroupMembers") {
-          parts.push({
-            type: "tool-getGroupMembers",
-            toolCallId: tc.id,
-            state: "output-available",
-            input: tc.input,
-            output: tc.output,
-          });
-        } else if (tc.name === "getDebts") {
-          parts.push({
-            type: "tool-getDebts",
-            toolCallId: tc.id,
-            state: "output-available",
-            input: tc.input,
-            output: tc.output,
-          });
-        } else if (tc.name === "addExpense") {
-          parts.push({
-            type: "tool-addExpense",
-            toolCallId: tc.id,
-            state: "output-available",
-            input: tc.input,
-            output: tc.output,
-          });
-        } else {
-          // tc.name === "getExpenses" (exhaustive)
-          parts.push({
-            type: "tool-getExpenses",
+            type: "tool-showUI",
             toolCallId: tc.id,
             state: "output-available",
             input: tc.input,

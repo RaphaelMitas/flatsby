@@ -3,6 +3,8 @@
 import type {
   ChatUIMessage,
   PersistedToolCallOutputUpdate,
+  SelectorOption,
+  ShowUIInput,
 } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -51,6 +53,9 @@ export function useTRPCChat({
   const { updateToolPreferences, toolPreferences } = useToolPreferences();
 
   const sendMutation = useMutation(trpc.chat.send.mutationOptions());
+  const updateToolCallOutputMutation = useMutation(
+    trpc.chat.updateToolCallOutput.mutationOptions(),
+  );
   const modelRef = useRef(selectedModel);
   const toolPreferencesRef = useRef(toolPreferences);
   const groupIdRef = useRef(currentGroup?.id);
@@ -88,7 +93,7 @@ export function useTRPCChat({
     onFinish?.();
   };
 
-  const { regenerate, setMessages, sendMessage, ...restChat } = useChat({
+  const { regenerate, setMessages, sendMessage, messages, ...restChat } = useChat({
     id: conversationId,
     messages: initialMessages,
     transport,
@@ -144,8 +149,98 @@ export function useTRPCChat({
     [sendMessage],
   );
 
+  /**
+   * Handle user response from interactive UI components (selector, quiz, confirmation).
+   * Updates local state, persists to DB, and auto-sends a message to continue the conversation.
+   */
+  const handleUIResponse = useCallback(
+    (
+      componentId: string,
+      response: { selectedIds?: string[]; confirmed?: boolean },
+    ) => {
+      // Find the message and tool call with this componentId
+      let foundMessageId: string | undefined;
+      let foundToolCallId: string | undefined;
+      let foundDbMessageId: string | undefined;
+      let foundInput: ShowUIInput | undefined;
+
+      for (const msg of messages) {
+        for (const part of msg.parts) {
+          if (
+            part.type === "tool-showUI" &&
+            part.state === "output-available" &&
+            part.output.componentId === componentId
+          ) {
+            foundMessageId = msg.id;
+            foundToolCallId = part.toolCallId;
+            foundDbMessageId = msg.metadata?.dbMessageId;
+            foundInput = part.input;
+            break;
+          }
+        }
+        if (foundMessageId) break;
+      }
+
+      if (!foundMessageId || !foundToolCallId || !foundInput) {
+        console.error("[Chat] Could not find UI component:", componentId);
+        return;
+      }
+
+      // Build the output update
+      const outputUpdate: PersistedToolCallOutputUpdate = {
+        awaitingInput: false,
+        userResponse: response,
+      };
+
+      // Update local state immediately
+      updateToolCallOutput(foundMessageId, foundToolCallId, outputUpdate);
+
+      // Persist to database if we have the DB message ID
+      if (foundDbMessageId) {
+        void updateToolCallOutputMutation.mutateAsync({
+          messageId: foundDbMessageId,
+          toolCallId: foundToolCallId,
+          outputUpdate,
+        });
+      }
+
+      // Build auto-continue message based on the response
+      let autoMessage: string;
+
+      if (response.confirmed !== undefined) {
+        // Confirmation response
+        autoMessage = response.confirmed ? "[Confirmed]" : "[Cancelled]";
+      } else if (response.selectedIds && response.selectedIds.length > 0) {
+        // Selector/quiz response - find the labels
+        const options: SelectorOption[] =
+          foundInput.config.options ?? foundInput.config.choices ?? [];
+        const selectedLabels = response.selectedIds
+          .map((id) => options.find((o) => o.id === id)?.label)
+          .filter(Boolean);
+
+        if (selectedLabels.length === 1) {
+          autoMessage = `[Selected: ${selectedLabels[0]}]`;
+        } else {
+          autoMessage = `[Selected: ${selectedLabels.join(", ")}]`;
+        }
+      } else {
+        return; // No valid response
+      }
+
+      // Send the auto-continue message
+      handleSendMessage(autoMessage);
+    },
+    [
+      messages,
+      updateToolCallOutput,
+      updateToolCallOutputMutation,
+      handleSendMessage,
+    ],
+  );
+
   return {
     ...restChat,
+    messages,
     sendMessage: handleSendMessage,
     regenerateMessage,
     selectedModel,
@@ -153,6 +248,7 @@ export function useTRPCChat({
     toolPreferences,
     updateToolPreferences,
     updateToolCallOutput,
+    handleUIResponse,
     invalidateConversation: () =>
       queryClient.invalidateQueries(
         trpc.chat.getConversation.queryOptions({ conversationId }),
