@@ -1,9 +1,6 @@
 "use client";
 
-import type {
-  ChatUIMessage,
-  PersistedToolCallOutputUpdate,
-} from "@flatsby/validators/chat/tools";
+import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
@@ -32,7 +29,6 @@ import {
   CHAT_MESSAGE_LIMIT,
 } from "@flatsby/validators/chat/messages";
 
-import { useGroupContext } from "~/app/_components/context/group-context";
 import { ChatFooter } from "./chat-footer";
 import { getModelDisplayName } from "./chat-model-selector";
 import { ChatToolResults } from "./chat-tool-results";
@@ -56,29 +52,19 @@ const getMessageContent = (msg: ChatUIMessage): string => {
 
 interface ChatMessageItemProps {
   message: ChatUIMessage;
-  conversationId: string;
   isLoading: boolean;
-  activeGroupId: number | undefined;
   onUIResponse: (
     componentId: string,
     response: { selectedIds?: string[]; confirmed?: boolean },
   ) => void;
   onRegenerate: (messageId: string) => void;
-  updateToolCallOutput: (
-    messageId: string,
-    toolCallId: string,
-    outputUpdate: PersistedToolCallOutputUpdate,
-  ) => void;
 }
 
 const ChatMessageItem = memo(function ChatMessageItem({
   message,
-  conversationId,
   isLoading,
-  activeGroupId,
   onUIResponse,
   onRegenerate,
-  updateToolCallOutput,
 }: ChatMessageItemProps) {
   const content = useMemo(() => getMessageContent(message), [message]);
   const messageModel = message.metadata?.model;
@@ -116,11 +102,8 @@ const ChatMessageItem = memo(function ChatMessageItem({
             ) : null}
             <ChatToolResults
               message={message}
-              conversationId={conversationId}
               isLoading={isLoading}
-              groupId={activeGroupId}
               onUIResponse={onUIResponse}
-              updateToolCallOutput={updateToolCallOutput}
             />
           </>
         ) : (
@@ -166,7 +149,6 @@ export function ChatInterface({
     handleModelChange,
     toolPreferences,
     updateToolPreferences,
-    updateToolCallOutput,
     handleUIResponse,
   } = useTRPCChat({
     conversationId,
@@ -186,8 +168,6 @@ export function ChatInterface({
       hasAutoSent.current = true;
     }
   }, [message, sendMessage, conversationId, router]);
-
-  const { currentGroup } = useGroupContext();
 
   const isStreaming = status === "streaming";
   const isSubmitting = status === "submitted";
@@ -210,12 +190,9 @@ export function ChatInterface({
                 <ChatMessageItem
                   key={message.id}
                   message={message}
-                  conversationId={conversationId}
                   isLoading={isLoading}
-                  activeGroupId={currentGroup?.id}
                   onUIResponse={handleUIResponse}
                   onRegenerate={regenerateMessage}
-                  updateToolCallOutput={updateToolCallOutput}
                 />
               );
             })

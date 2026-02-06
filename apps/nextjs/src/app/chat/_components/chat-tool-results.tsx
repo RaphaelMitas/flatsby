@@ -1,9 +1,6 @@
 "use client";
 
-import type {
-  ChatUIMessage,
-  PersistedToolCallOutputUpdate,
-} from "@flatsby/validators/chat/tools";
+import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import {
   modifyDataOutputSchema,
   searchDataInputSchema,
@@ -19,17 +16,10 @@ import { ShowUIResult } from "./tool-results/show-ui-result";
 
 interface ChatToolResultsProps {
   message: ChatUIMessage;
-  conversationId: string;
   isLoading: boolean;
-  groupId?: number;
   onUIResponse: (
     componentId: string,
     response: { selectedIds?: string[]; confirmed?: boolean },
-  ) => void;
-  updateToolCallOutput: (
-    messageId: string,
-    toolCallId: string,
-    outputUpdate: PersistedToolCallOutputUpdate,
   ) => void;
 }
 
