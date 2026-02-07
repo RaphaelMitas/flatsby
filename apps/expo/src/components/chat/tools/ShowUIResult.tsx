@@ -1,13 +1,12 @@
-"use client";
-
 import type { ShowUIInput, ShowUIOutput } from "@flatsby/validators/chat/tools";
-import { Loader2 } from "lucide-react";
+import { Text, View } from "react-native";
 
-import { UIChart } from "./ui-chart";
-import { UIConfirmation } from "./ui-confirmation";
-import { UIQuiz } from "./ui-quiz";
-import { UISelector } from "./ui-selector";
-import { UITable } from "./ui-table";
+import Icon from "~/lib/ui/custom/icons/Icon";
+import { UIChart } from "./UIChart";
+import { UIConfirmation } from "./UIConfirmation";
+import { UIQuiz } from "./UIQuiz";
+import { UISelector } from "./UISelector";
+import { UITable } from "./UITable";
 
 interface ShowUIResultProps {
   input: ShowUIInput;
@@ -30,13 +29,13 @@ export function ShowUIResult({
   const hasResponded = !output.awaitingInput;
   const userResponse = output.userResponse;
 
-  // Handle pending state (shouldn't normally happen)
+  // Handle pending state
   if (!output.rendered) {
     return (
-      <div className="my-2 flex items-center gap-2 text-sm">
-        <Loader2 className="size-4 animate-spin" />
-        <span>Loading...</span>
-      </div>
+      <View className="my-2 flex-row items-center gap-2">
+        <Icon name="loader" size={16} color="muted-foreground" />
+        <Text className="text-muted-foreground text-sm">Loading...</Text>
+      </View>
     );
   }
 

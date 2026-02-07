@@ -1,6 +1,8 @@
 "use client";
 
 import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
+import { memo } from "react";
+
 import {
   modifyDataOutputSchema,
   searchDataInputSchema,
@@ -8,7 +10,6 @@ import {
   showUIInputSchema,
   showUIOutputSchema,
 } from "@flatsby/validators/chat/tools";
-import { memo } from "react";
 
 import { ModifyDataResult } from "./tool-results/modify-data-result";
 import { SearchDataResult } from "./tool-results/search-data-result";
@@ -52,7 +53,9 @@ const _ChatToolResults = ({
     const output = showUIOutputSchema.safeParse(part.output);
     const input = showUIInputSchema.safeParse(part.input);
     if (!output.success || !input.success) return [];
-    return [{ toolCallId: part.toolCallId, input: input.data, output: output.data }];
+    return [
+      { toolCallId: part.toolCallId, input: input.data, output: output.data },
+    ];
   });
 
   return (

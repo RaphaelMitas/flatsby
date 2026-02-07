@@ -1,5 +1,6 @@
 "use client";
 
+import type { ChartConfig } from "@flatsby/ui/chart";
 import type { ChartDataPoint } from "@flatsby/validators/chat/tools";
 import { BarChart3 } from "lucide-react";
 import {
@@ -16,12 +17,12 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
-import type { ChartConfig } from "@flatsby/ui/chart";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@flatsby/ui/chart";
+
 // Default color palette for charts - using CSS variables directly
 // Note: --chart-* variables already contain hsl() values, so don't wrap in hsl()
 const COLORS = [
@@ -65,11 +66,12 @@ export function UIChart({ chartType, title, data }: UIChartProps) {
       )}
       <CardContent className={title ? "pt-0" : ""}>
         {chartType === "pie" ? (
-          <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[200px]">
+          <ChartContainer
+            config={chartConfig}
+            className="mx-auto aspect-square max-h-[200px]"
+          >
             <PieChart>
-              <ChartTooltip
-                content={<ChartTooltipContent nameKey="label" />}
-              />
+              <ChartTooltip content={<ChartTooltipContent nameKey="label" />} />
               <Pie
                 data={chartData}
                 dataKey="value"
@@ -88,7 +90,11 @@ export function UIChart({ chartType, title, data }: UIChartProps) {
           </ChartContainer>
         ) : chartType === "bar" ? (
           <ChartContainer config={chartConfig} className="max-h-[200px]">
-            <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 40 }}>
+            <BarChart
+              data={chartData}
+              layout="vertical"
+              margin={{ left: 0, right: 40 }}
+            >
               <XAxis type="number" hide />
               <YAxis
                 type="category"
@@ -108,7 +114,10 @@ export function UIChart({ chartType, title, data }: UIChartProps) {
           </ChartContainer>
         ) : (
           <ChartContainer config={chartConfig} className="max-h-[200px]">
-            <LineChart data={chartData} margin={{ left: 0, right: 12, top: 12, bottom: 0 }}>
+            <LineChart
+              data={chartData}
+              margin={{ left: 0, right: 12, top: 12, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="label"

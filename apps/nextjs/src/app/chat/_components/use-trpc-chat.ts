@@ -93,12 +93,13 @@ export function useTRPCChat({
     onFinish?.();
   };
 
-  const { regenerate, setMessages, sendMessage, messages, ...restChat } = useChat({
-    id: conversationId,
-    messages: initialMessages,
-    transport,
-    onFinish: handleFinish,
-  });
+  const { regenerate, setMessages, sendMessage, messages, ...restChat } =
+    useChat({
+      id: conversationId,
+      messages: initialMessages,
+      transport,
+      onFinish: handleFinish,
+    });
 
   const regenerateMessage = useCallback(
     (messageId: string) => {

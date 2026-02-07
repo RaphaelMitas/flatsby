@@ -15,7 +15,9 @@ import type { Database } from "../types";
 function filterValidToolCalls(
   toolCalls: PersistedToolCall[],
 ): PersistedToolCall[] {
-  return toolCalls.filter((tc) => persistedToolCallSchema.safeParse(tc).success);
+  return toolCalls.filter(
+    (tc) => persistedToolCallSchema.safeParse(tc).success,
+  );
 }
 
 /**
@@ -84,9 +86,7 @@ export async function buildContextMessages(
         ? filterValidToolCalls(m.toolCalls)
         : [];
     const toolSummary =
-      validToolCalls.length > 0
-        ? formatToolCallsSummary(validToolCalls)
-        : "";
+      validToolCalls.length > 0 ? formatToolCallsSummary(validToolCalls) : "";
 
     contextMessages.push({
       role: messageRoleSchema.safeParse(m.role).data ?? "user",
