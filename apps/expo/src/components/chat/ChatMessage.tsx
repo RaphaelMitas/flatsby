@@ -69,7 +69,7 @@ export const ChatMessage = memo(function ChatMessage({
       <View
         className={
           isUser
-            ? "max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-4 py-3"
+            ? "bg-primary max-w-[85%] rounded-2xl rounded-br-sm px-4 py-3"
             : "w-full"
         }
       >

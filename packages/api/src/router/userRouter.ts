@@ -15,11 +15,13 @@ import {
   users,
   verificationTokens,
 } from "@flatsby/db/schema";
+import { CURRENT_AI_CONSENT_VERSION } from "@flatsby/validators/ai-consent";
 import { usageDataSchema } from "@flatsby/validators/billing";
 import { groupSchema } from "@flatsby/validators/group";
 import { chatModelSchema } from "@flatsby/validators/models";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
 import {
+  updateAIConsentInputSchema,
   updateConsentInputSchema,
   updateUserNameFormSchema,
   userDataExportSchema,
@@ -398,6 +400,64 @@ export const userRouter = createTRPCRouter({
               "users",
               error,
               "Unable to update consent at this time. Please try again.",
+            ),
+        }),
+      );
+    }),
+
+  getAIConsentStatus: protectedProcedure
+    .output(
+      z.object({
+        hasConsent: z.boolean(),
+        aiConsentAcceptedAt: z.date().nullable(),
+        aiConsentVersion: z.string().nullable(),
+      }),
+    )
+    .query(async ({ ctx }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.session.user.id),
+        columns: {
+          aiConsentAcceptedAt: true,
+          aiConsentVersion: true,
+        },
+      });
+
+      const hasConsent =
+        !!user?.aiConsentAcceptedAt &&
+        user.aiConsentVersion === CURRENT_AI_CONSENT_VERSION;
+
+      return {
+        hasConsent,
+        aiConsentAcceptedAt: user?.aiConsentAcceptedAt ?? null,
+        aiConsentVersion: user?.aiConsentVersion ?? null,
+      };
+    }),
+
+  updateAIConsent: protectedProcedure
+    .input(updateAIConsentInputSchema)
+    .output(getApiResultZod(z.object({ success: z.boolean() })))
+    .mutation(async ({ ctx, input }) => {
+      return withErrorHandlingAsResult(
+        Effect.tryPromise({
+          try: async () => {
+            if (input.accepted) {
+              await ctx.db
+                .update(users)
+                .set({
+                  aiConsentAcceptedAt: new Date(),
+                  aiConsentVersion: input.version,
+                })
+                .where(eq(users.id, ctx.session.user.id));
+            }
+
+            return { success: true };
+          },
+          catch: (error) =>
+            Errors.database(
+              "update AI consent",
+              "users",
+              error,
+              "Unable to update AI consent at this time. Please try again.",
             ),
         }),
       );

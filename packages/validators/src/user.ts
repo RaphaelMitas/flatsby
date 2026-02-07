@@ -34,6 +34,8 @@ export const userSchema = z.object({
   termsVersion: z.string().optional().nullable(),
   privacyAcceptedAt: z.date().optional().nullable(),
   privacyVersion: z.string().optional().nullable(),
+  aiConsentAcceptedAt: z.date().optional().nullable(),
+  aiConsentVersion: z.string().optional().nullable(),
 });
 export type User = z.infer<typeof userSchema>;
 
@@ -54,6 +56,16 @@ export const updateConsentInputSchema = z.object({
   version: z.string().max(20),
 });
 export type UpdateConsentInput = z.infer<typeof updateConsentInputSchema>;
+
+/**
+ * Schema for updating AI consent
+ * Used when user accepts AI data sharing terms
+ */
+export const updateAIConsentInputSchema = z.object({
+  accepted: z.boolean(),
+  version: z.string().max(20),
+});
+export type UpdateAIConsentInput = z.infer<typeof updateAIConsentInputSchema>;
 
 /**
  * Schema for GDPR user data export response
