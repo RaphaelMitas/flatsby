@@ -116,24 +116,41 @@ export function UIChart({ chartType, title, data }: UIChartProps) {
 
       case "line":
         return (
-          <View className="items-center">
+          <View className="items-center overflow-hidden">
             <LineChart
               data={chartData.map((item) => ({
                 value: item.value,
                 label: item.label,
                 dataPointLabelComponent: () => (
-                  <Text className="text-foreground text-xs">{item.value}</Text>
+                  <Text className="text-foreground w-full text-xs text-nowrap">
+                    {`${item.label}: ${item.value}`}
+                  </Text>
                 ),
+                dataPointLabelWidth: 100,
                 dataPointLabelShiftY: -10,
               }))}
-              color={CHART_COLORS[0]}
               thickness={2}
-              dataPointsColor={CHART_COLORS[0]}
+              dataPointsColor={getColor(CHART_COLORS[0])}
+              focusedDataPointColor={getColor("primary")}
+              xAxisColor={getColor("muted")}
+              yAxisColor={getColor("muted")}
+              xAxisIndicesColor={getColor("muted")}
+              yAxisIndicesColor={getColor("muted")}
+              xAxisLabelTextStyle={{ color: getColor("foreground") }}
+              yAxisTextStyle={{ color: getColor("foreground") }}
+              textColor1={getColor("chart-1")}
+              textColor2={getColor("chart-2")}
+              textColor3={getColor("chart-3")}
+              textColor4={getColor("chart-4")}
+              textColor5={getColor("chart-5")}
+              color1={getColor("chart-1")}
+              color2={getColor("chart-2")}
+              color3={getColor("chart-3")}
+              color4={getColor("chart-4")}
+              color5={getColor("chart-5")}
+              curved
               hideRules
-              noOfSections={4}
               maxValue={Math.max(...chartData.map((d) => d.value)) * 1.2}
-              width={280}
-              height={180}
               focusEnabled
               showDataPointLabelOnFocus
             />
