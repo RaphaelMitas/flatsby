@@ -21,7 +21,7 @@ export const splitMethodSchema = z.enum(SPLIT_METHODS);
 
 export const currencyCodeSchema = z.enum(CURRENCY_CODES);
 
-const expenseSchema = z.object({
+export const expenseSchema = z.object({
   paidByGroupMemberId: z.number().min(1, "Please select who paid"),
   amountInCents: z.number().int().min(1, "Amount must be greater than 0"),
   currency: currencyCodeSchema,
@@ -83,6 +83,10 @@ export const updateExpenseSchema = expenseSchema
   });
 
 export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
+
+export const deleteExpenseSchema = z.object({
+  expenseId: updateExpenseSchema.shape.expenseId,
+});
 
 export const settlementFormSchema = z.object({
   amountInCents: z.number().min(1, "Amount must be greater than 0"),

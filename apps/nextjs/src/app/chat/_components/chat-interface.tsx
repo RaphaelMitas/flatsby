@@ -1,11 +1,6 @@
 "use client";
 
-import type {
-  ChatUIMessage,
-  GroupMemberInfo,
-  PersistedToolCallOutputUpdate,
-  ShoppingListInfo,
-} from "@flatsby/validators/chat/tools";
+import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
@@ -34,7 +29,6 @@ import {
   CHAT_MESSAGE_LIMIT,
 } from "@flatsby/validators/chat/messages";
 
-import { useGroupContext } from "~/app/_components/context/group-context";
 import { ChatFooter } from "./chat-footer";
 import { getModelDisplayName } from "./chat-model-selector";
 import { ChatToolResults } from "./chat-tool-results";
@@ -58,28 +52,19 @@ const getMessageContent = (msg: ChatUIMessage): string => {
 
 interface ChatMessageItemProps {
   message: ChatUIMessage;
-  conversationId: string;
   isLoading: boolean;
-  activeGroupId: number | undefined;
-  onShoppingListSelect: (list: ShoppingListInfo) => void;
-  onMemberSelect: (member: GroupMemberInfo) => void;
-  onRegenerate: (messageId: string) => void;
-  updateToolCallOutput: (
-    messageId: string,
-    toolCallId: string,
-    outputUpdate: PersistedToolCallOutputUpdate,
+  onUIResponse: (
+    componentId: string,
+    response: { selectedIds?: string[]; confirmed?: boolean },
   ) => void;
+  onRegenerate: (messageId: string) => void;
 }
 
 const ChatMessageItem = memo(function ChatMessageItem({
   message,
-  conversationId,
   isLoading,
-  activeGroupId,
-  onShoppingListSelect,
-  onMemberSelect,
+  onUIResponse,
   onRegenerate,
-  updateToolCallOutput,
 }: ChatMessageItemProps) {
   const content = useMemo(() => getMessageContent(message), [message]);
   const messageModel = message.metadata?.model;
@@ -92,8 +77,9 @@ const ChatMessageItem = memo(function ChatMessageItem({
 
   const pendingToolCalls = message.parts.filter(
     (part) =>
-      (part.type === "tool-getShoppingLists" ||
-        part.type === "tool-addToShoppingList") &&
+      (part.type === "tool-searchData" ||
+        part.type === "tool-modifyData" ||
+        part.type === "tool-showUI") &&
       part.state === "input-available",
   );
 
@@ -116,12 +102,8 @@ const ChatMessageItem = memo(function ChatMessageItem({
             ) : null}
             <ChatToolResults
               message={message}
-              conversationId={conversationId}
               isLoading={isLoading}
-              groupId={activeGroupId}
-              onShoppingListSelect={onShoppingListSelect}
-              onMemberSelect={onMemberSelect}
-              updateToolCallOutput={updateToolCallOutput}
+              onUIResponse={onUIResponse}
             />
           </>
         ) : (
@@ -167,7 +149,7 @@ export function ChatInterface({
     handleModelChange,
     toolPreferences,
     updateToolPreferences,
-    updateToolCallOutput,
+    handleUIResponse,
   } = useTRPCChat({
     conversationId,
     initialMessages,
@@ -187,28 +169,10 @@ export function ChatInterface({
     }
   }, [message, sendMessage, conversationId, router]);
 
-  const { currentGroup } = useGroupContext();
-
   const isStreaming = status === "streaming";
   const isSubmitting = status === "submitted";
   const isLoading = isStreaming || isSubmitting;
   const isAtMessageLimit = messages.length >= CHAT_MESSAGE_LIMIT;
-
-  const handleShoppingListSelect = useCallback(
-    (list: ShoppingListInfo) => {
-      if (isLoading) return;
-      sendMessage(`Add to the "${list.name}" list`);
-    },
-    [isLoading, sendMessage],
-  );
-
-  const handleMemberSelect = useCallback(
-    (member: GroupMemberInfo) => {
-      if (isLoading) return;
-      sendMessage(member.name);
-    },
-    [isLoading, sendMessage],
-  );
 
   return (
     <div className="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col">
@@ -226,13 +190,9 @@ export function ChatInterface({
                 <ChatMessageItem
                   key={message.id}
                   message={message}
-                  conversationId={conversationId}
                   isLoading={isLoading}
-                  activeGroupId={currentGroup?.id}
-                  onShoppingListSelect={handleShoppingListSelect}
-                  onMemberSelect={handleMemberSelect}
+                  onUIResponse={handleUIResponse}
                   onRegenerate={regenerateMessage}
-                  updateToolCallOutput={updateToolCallOutput}
                 />
               );
             })

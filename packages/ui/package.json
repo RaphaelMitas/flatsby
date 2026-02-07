@@ -42,6 +42,8 @@
     "./tooltip": "./src/tooltip.tsx",
     "./switch": "./src/switch.tsx",
     "./resizable": "./src/resizable.tsx",
+    "./table": "./src/table.tsx",
+    "./chart": "./src/chart.tsx",
     "./hooks/use-mobile": "./hooks/use-mobile.ts",
     "./hooks/use-media-query": "./hooks/use-media-query.ts"
   },
@@ -90,6 +92,7 @@
     "react-day-picker": "^9.13.0",
     "react-hook-form": "^7.57.0",
     "react-resizable-panels": "^4.5.2",
+    "recharts": "2.15.4",
     "shiki": "^3.20.0",
     "sonner": "^1.7.2",
     "streamdown": "^1.6.10",

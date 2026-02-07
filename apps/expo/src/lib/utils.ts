@@ -43,6 +43,11 @@ const lightColors = {
   border: "hsl(240, 5.9%, 90%)",
   input: "hsl(240, 5.9%, 90%)",
   ring: "hsl(240, 5.9%, 10%)",
+  "chart-1": "hsl(12 76% 61%)",
+  "chart-2": "hsl(173 58% 39%)",
+  "chart-3": "hsl(197 37% 24%)",
+  "chart-4": "hsl(43 74% 66%)",
+  "chart-5": "hsl(27 87% 67%)",
 } as const;
 
 const darkColors = {
@@ -75,6 +80,11 @@ const darkColors = {
   border: "hsl(240, 3.7%, 15.9%)",
   input: "hsl(240, 3.7%, 15.9%)",
   ring: "hsl(240, 4.9%, 83.9%)",
+  "chart-1": "hsl(220 70% 50%)",
+  "chart-2": "hsl(160 60% 45%)",
+  "chart-3": "hsl(30 80% 55%)",
+  "chart-4": "hsl(280 65% 60%)",
+  "chart-5": "hsl(340 75% 55%)",
 } as const;
 
 export type ColorName = keyof typeof lightColors;

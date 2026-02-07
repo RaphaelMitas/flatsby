@@ -166,3 +166,10 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Create a server-side caller factory for calling tRPC procedures directly
+ * This is used for internal calls (e.g., from chat tools) without HTTP overhead
+ * @see https://trpc.io/docs/server/server-side-calls
+ */
+export const createCallerFactory = t.createCallerFactory;

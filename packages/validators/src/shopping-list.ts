@@ -2,6 +2,9 @@ import { z } from "zod/v4";
 
 import { categorysIdWithAiAutoSelectSchema } from "./categories";
 
+// Note: We use z.number() directly instead of groupSchema.shape.id to avoid
+// circular dependency with group.ts (which imports from this file)
+
 export const shoppingListNameSchema = z
   .string()
   .min(1, {
@@ -42,6 +45,29 @@ export const shoppingListSchema = z.object({
 });
 export type ShoppingList = z.infer<typeof shoppingListSchema>;
 
+export const createShoppingListSchema = shoppingListSchema
+  .pick({
+    name: true,
+    icon: true,
+    description: true,
+  })
+  .extend({
+    groupId: z.number(),
+  });
+
+export const updateShoppingListSchema = shoppingListSchema
+  .pick({
+    name: true,
+  })
+  .extend({
+    shoppingListId: shoppingListSchema.shape.id,
+  });
+
+export const deleteShoppingListSchema = z.object({
+  shoppingListId: shoppingListSchema.shape.id,
+  groupId: z.number(),
+});
+
 /**
  * Schema for shopping list name form validation
  * Used for creating and renaming shopping lists
@@ -79,6 +105,27 @@ export const shoppingListItemSchema = z.object({
   isPending: z.boolean().optional(),
 });
 export type ShoppingListItem = z.infer<typeof shoppingListItemSchema>;
+
+export const createShoppingListItemSchema = shoppingListItemSchema
+  .pick({
+    name: true,
+    categoryId: true,
+  })
+  .extend({
+    groupId: z.number(),
+    shoppingListId: shoppingListSchema.shape.id,
+  });
+
+export const updateShoppingListItemSchema = shoppingListItemSchema.pick({
+  id: true,
+  name: true,
+  categoryId: true,
+  completed: true,
+});
+
+export const deleteShoppingListItemSchema = shoppingListItemSchema.pick({
+  id: true,
+});
 
 /**
  * Schema for shopping list item form validation

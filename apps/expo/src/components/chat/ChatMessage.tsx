@@ -1,9 +1,4 @@
-import type {
-  ChatUIMessage,
-  GroupMemberInfo,
-  PersistedToolCallOutputUpdate,
-  ShoppingListInfo,
-} from "@flatsby/validators/chat/tools";
+import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import { memo, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -16,16 +11,11 @@ import { ChatToolResults } from "./tools";
 
 interface ChatMessageProps {
   message: ChatUIMessage;
-  conversationId: string;
   isLoading: boolean;
-  groupId?: number;
   onRegenerate?: (messageId: string) => void;
-  onShoppingListSelect: (list: ShoppingListInfo) => void;
-  onMemberSelect: (member: GroupMemberInfo) => void;
-  updateToolCallOutput: (
-    messageId: string,
+  onUIResponse: (
     toolCallId: string,
-    outputUpdate: PersistedToolCallOutputUpdate,
+    response: { selectedIds?: string[]; confirmed?: boolean },
   ) => void;
 }
 
@@ -62,13 +52,9 @@ function hasToolResults(message: ChatUIMessage): boolean {
 
 export const ChatMessage = memo(function ChatMessage({
   message,
-  conversationId,
   isLoading,
-  groupId,
   onRegenerate,
-  onShoppingListSelect,
-  onMemberSelect,
-  updateToolCallOutput,
+  onUIResponse,
 }: ChatMessageProps) {
   const content = useMemo(() => getMessageContent(message), [message]);
   const isUser = message.role === "user";
@@ -79,11 +65,13 @@ export const ChatMessage = memo(function ChatMessage({
   const showToolResults = hasToolResults(message);
 
   return (
-    <View className={`mb-4 ${isUser ? "items-end" : "items-start"}`}>
+    <View className={`mb-4 ${isUser ? "items-end" : ""}`}>
       <View
-        className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-          isUser ? "bg-primary rounded-br-sm" : "bg-muted rounded-bl-sm"
-        }`}
+        className={
+          isUser
+            ? "max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-4 py-3"
+            : "w-full"
+        }
       >
         {/* Pending tools indicator */}
         {pendingTools && !content && (
@@ -127,12 +115,8 @@ export const ChatMessage = memo(function ChatMessage({
         <View className="mt-2 w-full">
           <ChatToolResults
             message={message}
-            conversationId={conversationId}
             isLoading={isLoading}
-            groupId={groupId}
-            onShoppingListSelect={onShoppingListSelect}
-            onMemberSelect={onMemberSelect}
-            updateToolCallOutput={updateToolCallOutput}
+            onUIResponse={onUIResponse}
           />
         </View>
       )}

@@ -1,8 +1,4 @@
-import type {
-  ChatUIMessage,
-  GroupMemberInfo,
-  ShoppingListInfo,
-} from "@flatsby/validators/chat/tools";
+import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import type { ChatModel } from "@flatsby/validators/models";
 import type { ComponentRef } from "react";
 import type { LayoutChangeEvent, NativeScrollEvent } from "react-native";
@@ -73,7 +69,7 @@ export const ChatInterface = ({
     handleModelChange,
     toolPreferences,
     updateToolPreferences,
-    updateToolCallOutput,
+    handleUIResponse,
     invalidateConversation,
   } = useExpoChat({
     conversationId,
@@ -147,24 +143,6 @@ export const ChatInterface = ({
     }
   }, [initialMessage, sendMessage]);
 
-  const handleShoppingListSelect = useCallback(
-    (list: ShoppingListInfo) => {
-      if (!isLoading) {
-        sendMessage(`Add to the "${list.name}" list`);
-      }
-    },
-    [isLoading, sendMessage],
-  );
-
-  const handleMemberSelect = useCallback(
-    (member: GroupMemberInfo) => {
-      if (!isLoading) {
-        sendMessage(member.name);
-      }
-    },
-    [isLoading, sendMessage],
-  );
-
   const handleRegenerate = useCallback(
     (messageId: string) => {
       if (!isLoading) {
@@ -178,28 +156,16 @@ export const ChatInterface = ({
     ({ item }: { item: ChatUIMessage }) => (
       <ChatMessage
         message={item}
-        conversationId={conversationId}
         isLoading={isLoading}
-        groupId={selectedGroupId ?? undefined}
         onRegenerate={
           CHAT_FEATURES.regenerateEnabled && item.role === "assistant"
             ? handleRegenerate
             : undefined
         }
-        onShoppingListSelect={handleShoppingListSelect}
-        onMemberSelect={handleMemberSelect}
-        updateToolCallOutput={updateToolCallOutput}
+        onUIResponse={handleUIResponse}
       />
     ),
-    [
-      conversationId,
-      isLoading,
-      selectedGroupId,
-      handleRegenerate,
-      handleShoppingListSelect,
-      handleMemberSelect,
-      updateToolCallOutput,
-    ],
+    [isLoading, handleRegenerate, handleUIResponse],
   );
 
   return (
