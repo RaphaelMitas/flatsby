@@ -7,6 +7,8 @@ import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
 
+import { Platform } from "react-native";
+
 import {
   SettingsHeader,
   SettingsItem,
@@ -116,6 +118,15 @@ export default function SettingsIndex() {
 
         <SettingsSection title="Usage">
           <UsageDisplay />
+          {Platform.OS === "ios" && (
+            <Link href="/settings/credits" asChild>
+              <SettingsItem
+                title="Buy Credits"
+                subtitle="Purchase credits via In-App Purchase"
+                iconName="credit-card"
+              />
+            </Link>
+          )}
         </SettingsSection>
         <SettingsSection title="Appearance">
           <ReanimatedSwipeable
