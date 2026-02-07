@@ -1,16 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-//lucide
-
-import { Check, Info, Lock, LockOpen, Sparkles } from "lucide-react";
+import { Check, Info, Shield, ShieldOff, Sparkles, X } from "lucide-react";
 
 import { Button } from "@flatsby/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
-import { Checkbox } from "@flatsby/ui/checkbox";
-import { Label } from "@flatsby/ui/label";
 import {
   AI_DATA_DISCLOSURE,
   CURRENT_AI_CONSENT_VERSION,
@@ -27,7 +22,6 @@ export function AIConsentScreen({
   onConsent,
   onDecline,
 }: AIConsentScreenProps) {
-  const [accepted, setAccepted] = useState(false);
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -43,7 +37,6 @@ export function AIConsentScreen({
   );
 
   const handleAccept = () => {
-    if (!accepted) return;
     updateConsent.mutate({
       accepted: true,
       version: CURRENT_AI_CONSENT_VERSION,
@@ -55,7 +48,7 @@ export function AIConsentScreen({
       <div className="w-full max-w-lg space-y-6">
         <div className="text-center">
           <div className="bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-            <Lock className="text-primary h-8 w-8" />
+            <Shield className="text-primary h-8 w-8" />
           </div>
           <h1 className="text-2xl font-bold">AI Data Sharing</h1>
           <p className="text-muted-foreground mt-2">
@@ -103,7 +96,7 @@ export function AIConsentScreen({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <LockOpen className="h-5 w-5" />
+              <ShieldOff className="h-5 w-5" />
               Data NOT Shared
             </CardTitle>
           </CardHeader>
@@ -112,7 +105,7 @@ export function AIConsentScreen({
               {AI_DATA_DISCLOSURE.notShared.map((item, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <div className="bg-destructive/20 mt-0.5 rounded-full p-1">
-                    <Check className="text-destructive h-3 w-3" />
+                    <X className="text-destructive h-3 w-3" />
                   </div>
                   <span className="text-muted-foreground text-sm">{item}</span>
                 </li>
@@ -128,22 +121,10 @@ export function AIConsentScreen({
           </p>
         </div>
 
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="consent"
-            checked={accepted}
-            onCheckedChange={(checked) => setAccepted(checked === true)}
-          />
-          <Label htmlFor="consent" className="cursor-pointer text-sm leading-5">
-            I understand and consent to sharing my data with AI providers as
-            described above
-          </Label>
-        </div>
-
         <div className="flex flex-col gap-3">
           <Button
             onClick={handleAccept}
-            disabled={!accepted || updateConsent.isPending}
+            disabled={updateConsent.isPending}
             className="w-full"
           >
             Accept & Continue
