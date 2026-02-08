@@ -13,10 +13,12 @@ import {
 import {
   activityItemSchema,
   addGroupMemberInputSchema,
+  createGroupSchema,
+  deleteGroupSchema,
   getRecentActivityInputSchema,
-  groupFormSchema,
   groupSchema,
   removeGroupMemberInputSchema,
+  updateGroupSchema,
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
 
@@ -279,7 +281,7 @@ export const groupRouter = createTRPCRouter({
     }),
 
   createGroup: protectedProcedure
-    .input(groupFormSchema)
+    .input(createGroupSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -432,7 +434,7 @@ export const groupRouter = createTRPCRouter({
     }),
 
   changeGroupName: protectedProcedure
-    .input(groupSchema.pick({ name: true, id: true }))
+    .input(updateGroupSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -471,7 +473,7 @@ export const groupRouter = createTRPCRouter({
     }),
 
   deleteGroup: protectedProcedure
-    .input(groupSchema.pick({ id: true }))
+    .input(deleteGroupSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(

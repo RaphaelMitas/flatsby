@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { Redirect } from "expo-router";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
 import { Tabs } from "~/lib/components/bottom-tabs";
@@ -66,10 +65,6 @@ export default function TabLayout() {
 
     void prefetch(trpc.group.getUserGroups.queryOptions());
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
-
-  if (!session.data?.user) {
-    return <Redirect href="/auth/login" />;
-  }
 
   return (
     <Tabs

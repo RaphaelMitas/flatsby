@@ -42,6 +42,9 @@ export const users = createTable("user", {
   termsVersion: varchar("terms_version", { length: 20 }),
   privacyAcceptedAt: timestamp("privacy_accepted_at"),
   privacyVersion: varchar("privacy_version", { length: 20 }),
+  // AI consent tracking
+  aiConsentAcceptedAt: timestamp("ai_consent_accepted_at"),
+  aiConsentVersion: varchar("ai_consent_version", { length: 20 }),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({

@@ -1,6 +1,6 @@
 "use client";
 
-import type { AddToShoppingListResult } from "@flatsby/validators/chat/tools";
+import type { ModifyDataOutput } from "@flatsby/validators/chat/tools";
 import { CornerDownLeft } from "lucide-react";
 
 import {
@@ -11,7 +11,7 @@ import {
 } from "@flatsby/ui/ai-elements";
 import { Card } from "@flatsby/ui/card";
 
-import { ShoppingListToolCard } from "~/app/chat/_components/shopping-list-tool-card";
+import { ModifyDataResult } from "~/app/chat/_components/tool-results/modify-data-result";
 
 interface DemoMessage {
   id: number;
@@ -32,13 +32,16 @@ const demoMessages: DemoMessage[] = [
   },
 ];
 
-const demoToolResult: AddToShoppingListResult = {
+const demoToolResult: ModifyDataOutput = {
   success: true,
-  shoppingListName: "Groceries",
-  addedItems: [
-    { id: 1, name: "Milk", categoryId: "dairy" },
-    { id: 2, name: "Bread", categoryId: "bakery" },
-  ],
+  action: "create",
+  entity: "shoppingListItem",
+  result: {
+    id: 1,
+    name: "Milk",
+    categoryId: "dairy",
+    completed: false,
+  },
 };
 
 export function ChatDemo() {
@@ -51,7 +54,7 @@ export function ChatDemo() {
               <MessageContent>
                 <p className="whitespace-pre-wrap">{message.content}</p>
                 {message.role === "assistant" && (
-                  <ShoppingListToolCard result={demoToolResult} />
+                  <ModifyDataResult output={demoToolResult} />
                 )}
               </MessageContent>
             </Message>

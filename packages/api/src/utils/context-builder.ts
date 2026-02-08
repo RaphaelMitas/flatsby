@@ -4,8 +4,21 @@ import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import { desc, eq } from "@flatsby/db";
 import { chatMessages, conversations } from "@flatsby/db/schema";
 import { messageRoleSchema } from "@flatsby/validators/chat/messages";
+import { persistedToolCallSchema } from "@flatsby/validators/chat/tools";
 
 import type { Database } from "../types";
+
+/**
+ * Validates and filters tool calls from the database.
+ * Old tool calls from previous schema versions are silently dropped.
+ */
+function filterValidToolCalls(
+  toolCalls: PersistedToolCall[],
+): PersistedToolCall[] {
+  return toolCalls.filter(
+    (tc) => persistedToolCallSchema.safeParse(tc).success,
+  );
+}
 
 /**
  * Formats tool calls into a compact string summary for context.
@@ -68,10 +81,12 @@ export async function buildContextMessages(
   }
 
   for (const m of completedMessages) {
-    const toolSummary =
+    const validToolCalls =
       m.role === "assistant" && m.toolCalls?.length
-        ? formatToolCallsSummary(m.toolCalls)
-        : "";
+        ? filterValidToolCalls(m.toolCalls)
+        : [];
+    const toolSummary =
+      validToolCalls.length > 0 ? formatToolCallsSummary(validToolCalls) : "";
 
     contextMessages.push({
       role: messageRoleSchema.safeParse(m.role).data ?? "user",

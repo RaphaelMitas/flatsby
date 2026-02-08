@@ -26,6 +26,12 @@ export const groupSchema = z.object({
 export const groupFormSchema = groupSchema.pick({ name: true });
 export type GroupFormValues = z.infer<typeof groupFormSchema>;
 
+export const createGroupSchema = groupSchema.pick({ name: true });
+
+export const updateGroupSchema = groupSchema.pick({ name: true, id: true });
+
+export const deleteGroupSchema = groupSchema.pick({ id: true });
+
 // Group Member validators
 export const groupMemberRoleSchema = z.enum(["admin", "member"]);
 export type GroupMemberRole = z.infer<typeof groupMemberRoleSchema>;

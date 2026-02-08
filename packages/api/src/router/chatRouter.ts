@@ -456,12 +456,8 @@ export const chatRouter = createTRPCRouter({
         .where(eq(chatMessages.id, assistantMessageId));
 
       if (toolsEnabled && groupId) {
-        const toolOptions = {
-          shoppingList: true,
-          expenses: true,
-        };
-        const tools = createChatTools(ctx, groupId, toolOptions);
-        const toolsSystemPrompt = buildToolsSystemPrompt(toolOptions);
+        const tools = createChatTools({ ctx, groupId });
+        const toolsSystemPrompt = buildToolsSystemPrompt();
         const systemPrompt = conversation.systemPrompt
           ? `${conversation.systemPrompt}\n\n${toolsSystemPrompt}`
           : toolsSystemPrompt;

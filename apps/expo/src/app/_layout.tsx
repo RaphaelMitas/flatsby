@@ -22,6 +22,8 @@ import { ThemeProvider } from "~/lib/ui/theme";
 import { WinterEffectsProvider } from "~/lib/ui/winter-effects";
 import { WinterSnow } from "~/lib/ui/winter-snow";
 import { useThemedScreenOptions } from "~/lib/utils";
+import { useSession } from "~/utils/auth/auth-client";
+import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
 import { ShoppingStoreProvider } from "~/utils/shopping-store";
 
 // This is the main layout of the app
@@ -48,14 +50,16 @@ export default function RootLayout() {
               <ThemeProvider>
                 <WinterEffectsProvider>
                   <QueryClientProvider client={queryClient}>
-                    <ShoppingStoreProvider>
-                      {/**
-                       The Stack component displays the current page.
-                       It also allows you to configure your screens
-                      **/}
-                      <StackLayout />
-                      <StatusBar />
-                    </ShoppingStoreProvider>
+                    <RevenueCatProvider>
+                      <ShoppingStoreProvider>
+                        {/**
+                         The Stack component displays the current page.
+                         It also allows you to configure your screens
+                        **/}
+                        <StackLayout />
+                        <StatusBar />
+                      </ShoppingStoreProvider>
+                    </RevenueCatProvider>
                   </QueryClientProvider>
                 </WinterEffectsProvider>
               </ThemeProvider>
@@ -120,6 +124,11 @@ function ScreenTracker() {
 
 const StackLayout = () => {
   const themedScreenOptions = useThemedScreenOptions();
+  const { isPending } = useSession();
+
+  if (isPending) {
+    return <View className="bg-background flex-1" />;
+  }
 
   return (
     <View className="bg-background flex-1">
