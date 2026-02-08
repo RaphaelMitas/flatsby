@@ -4,11 +4,16 @@ import { Platform } from "react-native";
 import Purchases from "react-native-purchases";
 import { useQuery } from "@tanstack/react-query";
 
+import { PLAN_IDS } from "@flatsby/validators/billing";
+
 import { trpc } from "../api";
 
 export function usePurchaseEligibility() {
   const { data: usageData, isLoading: usageLoading } = useQuery(
     trpc.user.getUsage.queryOptions(),
+  );
+  const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery(
+    trpc.user.getSubscription.queryOptions(),
   );
   const [rcCustomerInfo, setRcCustomerInfo] = useState<CustomerInfo | null>(
     null,
@@ -31,21 +36,28 @@ export function usePurchaseEligibility() {
     void fetchRCInfo();
   }, []);
 
-  const hasMobilePlan =
+  const hasRCEntitlement =
     Object.keys(rcCustomerInfo?.entitlements.active ?? {}).length > 0;
-  const mobilePlanName =
-    Object.keys(rcCustomerInfo?.entitlements.active ?? {})[0] ?? null;
+
+  const autumnPlanId = subscriptionData?.planId ?? PLAN_IDS.FREE;
+  const hasWebPlan =
+    autumnPlanId === PLAN_IDS.STARTER || autumnPlanId === PLAN_IDS.PRO;
+  const hasApplePlan = autumnPlanId === PLAN_IDS.PRO_APPLE || hasRCEntitlement;
+  const hasPaidPlan = autumnPlanId !== PLAN_IDS.FREE;
 
   const hasCredits = (usageData?.credits?.balance ?? 0) > 0;
-  const canPurchaseMobile = !hasMobilePlan;
+  const canPurchaseMobile = !hasPaidPlan;
 
   return {
     canPurchaseMobile,
-    hasMobilePlan,
+    hasWebPlan,
+    hasApplePlan,
+    hasPaidPlan,
     hasCredits,
-    planName: mobilePlanName,
+    planId: autumnPlanId,
+    planName: subscriptionData?.planName ?? "Free",
     managementURL: rcCustomerInfo?.managementURL,
-    isLoading: usageLoading || rcLoading,
+    isLoading: usageLoading || subscriptionLoading || rcLoading,
     creditBalance: usageData?.credits?.balance ?? 0,
   };
 }

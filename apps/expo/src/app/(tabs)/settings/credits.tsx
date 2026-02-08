@@ -16,7 +16,8 @@ export default function CreditsScreen() {
   const queryClient = useQueryClient();
   const {
     canPurchaseMobile,
-    hasMobilePlan,
+    hasWebPlan,
+    hasApplePlan,
     planName,
     isLoading,
     creditBalance,
@@ -48,11 +49,31 @@ export default function CreditsScreen() {
     );
   }
 
-  if (hasMobilePlan) {
+  if (hasWebPlan) {
     return (
       <View className="bg-background flex-1 items-center justify-center p-6">
         <Text className="text-foreground mb-4 text-center text-xl font-bold">
-          {planName ?? "Subscription"} Active
+          {planName} Active
+        </Text>
+        <Text className="text-muted-foreground mb-2 text-center">
+          You have {formatCredits(creditBalance)} credits remaining.
+        </Text>
+        <Text className="text-muted-foreground mb-6 text-center">
+          Manage your subscription on the web.
+        </Text>
+        <Button
+          title="Manage on Web"
+          onPress={() => Linking.openURL(`${getBaseUrl()}/billing`)}
+        />
+      </View>
+    );
+  }
+
+  if (hasApplePlan) {
+    return (
+      <View className="bg-background flex-1 items-center justify-center p-6">
+        <Text className="text-foreground mb-4 text-center text-xl font-bold">
+          {planName} Active
         </Text>
         <Text className="text-muted-foreground mb-2 text-center">
           You have {formatCredits(creditBalance)} credits remaining.
@@ -81,8 +102,8 @@ export default function CreditsScreen() {
           Credits Available
         </Text>
         <Text className="text-muted-foreground mb-6 text-center">
-          You have {formatCredits(creditBalance)} credits. Purchase more credits
-          on the web or through this app.
+          You have {formatCredits(creditBalance)} credits. Manage your
+          subscription on the web.
         </Text>
         <Button title="Go Back" onPress={() => router.back()} />
       </View>
@@ -97,11 +118,17 @@ export default function CreditsScreen() {
           void queryClient.invalidateQueries({
             queryKey: trpc.user.getUsage.queryKey(),
           });
+          void queryClient.invalidateQueries({
+            queryKey: trpc.user.getSubscription.queryKey(),
+          });
           router.back();
         }}
         onRestoreCompleted={() => {
           void queryClient.invalidateQueries({
             queryKey: trpc.user.getUsage.queryKey(),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: trpc.user.getSubscription.queryKey(),
           });
         }}
       />
