@@ -1,6 +1,19 @@
 import { z } from "zod/v4";
 
 /**
+ * Autumn plan IDs
+ * These should match what's configured in the Autumn dashboard
+ */
+export const PLAN_IDS = {
+  FREE: "free",
+  STARTER: "starter",
+  PRO: "pro",
+  PRO_APPLE: "pro_apple",
+} as const;
+
+export type PlanId = (typeof PLAN_IDS)[keyof typeof PLAN_IDS];
+
+/**
  * Autumn billing feature IDs
  * These should match what's configured in the Autumn dashboard
  */
@@ -56,3 +69,13 @@ export const usageDataSchema = z.object({
 });
 
 export type UsageData = z.infer<typeof usageDataSchema>;
+
+/**
+ * Schema for subscription data from Autumn
+ */
+export const subscriptionDataSchema = z.object({
+  planId: z.string(),
+  planName: z.string(),
+});
+
+export type SubscriptionData = z.infer<typeof subscriptionDataSchema>;

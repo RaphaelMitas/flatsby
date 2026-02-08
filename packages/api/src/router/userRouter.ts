@@ -16,7 +16,11 @@ import {
   verificationTokens,
 } from "@flatsby/db/schema";
 import { CURRENT_AI_CONSENT_VERSION } from "@flatsby/validators/ai-consent";
-import { usageDataSchema } from "@flatsby/validators/billing";
+import {
+  PLAN_IDS,
+  subscriptionDataSchema,
+  usageDataSchema,
+} from "@flatsby/validators/billing";
 import { groupSchema } from "@flatsby/validators/group";
 import { chatModelSchema } from "@flatsby/validators/models";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
@@ -62,6 +66,25 @@ export const userRouter = createTRPCRouter({
       } catch (error) {
         console.error("Error fetching usage data:", error);
         return { credits: null };
+      }
+    }),
+
+  getSubscription: protectedProcedure
+    .output(subscriptionDataSchema)
+    .query(async ({ ctx }) => {
+      try {
+        const customer = (await ctx.authApi.createCustomer({
+          headers: ctx.headers,
+          body: { errorOnNotFound: false },
+        })) as { products?: { id: string; name: string | null }[] } | null;
+        const activeProduct = customer?.products?.[0];
+        return {
+          planId: activeProduct?.id ?? PLAN_IDS.FREE,
+          planName: activeProduct?.name ?? "Free",
+        };
+      } catch (error) {
+        console.error("Error fetching subscription data:", error);
+        return { planId: PLAN_IDS.FREE, planName: "Free" };
       }
     }),
 

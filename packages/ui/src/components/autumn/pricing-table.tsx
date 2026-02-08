@@ -5,6 +5,7 @@ import { useCustomer, usePricingTable } from "autumn-js/react";
 import { Loader2 } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
+import { PLAN_IDS } from "@flatsby/validators/billing";
 
 import { Button } from "../../button";
 import { getPricingTableContent } from "../../lib/autumn/pricing-table-content";
@@ -33,9 +34,21 @@ export default function PricingTable({
     return <div> Something went wrong...</div>;
   }
 
+  const currentPlanId = customer?.products[0]?.id;
+  const hasApplePlan = currentPlanId === PLAN_IDS.PRO_APPLE;
+
+  const filteredProducts = products?.filter((product) => {
+    if (hasApplePlan) {
+      return product.id === PLAN_IDS.PRO_APPLE;
+    }
+    return product.id !== PLAN_IDS.PRO_APPLE;
+  });
+
   const intervals = Array.from(
     new Set(
-      products?.map((p) => p.properties.interval_group).filter((i) => !!i),
+      filteredProducts
+        ?.map((p) => p.properties.interval_group)
+        .filter((i) => !!i),
     ),
   );
 
@@ -59,36 +72,45 @@ export default function PricingTable({
 
   return (
     <div className={cn("root")}>
-      {products && (
+      {filteredProducts && (
         <PricingTableContainer
-          products={products}
+          products={filteredProducts}
           isAnnualToggle={isAnnual}
           setIsAnnualToggle={setIsAnnual}
           multiInterval={multiInterval}
         >
-          {products.filter(intervalFilter).map((product, index) => (
-            <PricingCard
-              key={index}
-              productId={product.id}
-              buttonProps={{
-                disabled:
-                  (product.scenario === "active" &&
-                    !product.properties.updateable) ||
-                  product.scenario === "scheduled",
+          {filteredProducts.filter(intervalFilter).map((product, index) => {
+            const isApplePlan = product.id === PLAN_IDS.PRO_APPLE;
+            return (
+              <PricingCard
+                key={index}
+                productId={product.id}
+                disclaimer={
+                  isApplePlan
+                    ? "To cancel, go to App Store subscriptions"
+                    : undefined
+                }
+                buttonProps={{
+                  disabled:
+                    isApplePlan ||
+                    (product.scenario === "active" &&
+                      !product.properties.updateable) ||
+                    product.scenario === "scheduled",
 
-                onClick: async () => {
-                  if (product.id && customer) {
-                    await checkout({
-                      productId: product.id,
-                      dialog: CheckoutDialog,
-                    });
-                  } else if (product.display?.button_url) {
-                    window.open(product.display.button_url, "_blank");
-                  }
-                },
-              }}
-            />
-          ))}
+                  onClick: async () => {
+                    if (product.id && customer) {
+                      await checkout({
+                        productId: product.id,
+                        dialog: CheckoutDialog,
+                      });
+                    } else if (product.display?.button_url) {
+                      window.open(product.display.button_url, "_blank");
+                    }
+                  },
+                }}
+              />
+            );
+          })}
         </PricingTableContainer>
       )}
     </div>
@@ -182,6 +204,7 @@ interface PricingCardProps {
   productId: string;
   showFeatures?: boolean;
   className?: string;
+  disclaimer?: string;
   onButtonClick?: (
     event: React.MouseEvent<HTMLButtonElement>,
   ) => void | Promise<void>;
@@ -195,6 +218,7 @@ interface PricingCardProps {
 export const PricingCard = ({
   productId,
   className,
+  disclaimer,
   buttonProps,
 }: PricingCardProps) => {
   const { products, showFeatures } = usePricingTableContext("PricingCard");
@@ -279,6 +303,11 @@ export const PricingCard = ({
           >
             {productDisplay?.button_text ?? buttonText}
           </PricingCardButton>
+          {disclaimer && (
+            <p className="text-muted-foreground mt-2 text-center text-xs">
+              {disclaimer}
+            </p>
+          )}
         </div>
       </div>
     </div>
