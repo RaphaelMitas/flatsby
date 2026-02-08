@@ -37,6 +37,14 @@ export default function SettingsLayout() {
           headerTintColor: getColor("destructive"),
         }}
       />
+      <Stack.Screen
+        name="credits"
+        options={{
+          title: "Buy Credits",
+          headerBackTitle: "",
+          presentation: "modal",
+        }}
+      />
     </Stack>
   );
 }

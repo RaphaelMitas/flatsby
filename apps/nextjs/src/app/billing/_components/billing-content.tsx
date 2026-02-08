@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
+import { PLAN_IDS } from "@flatsby/validators/billing";
 
 import { env } from "~/env";
 import { UsageDisplay } from "./usage-display";
@@ -28,6 +29,7 @@ export function BillingContent() {
   }
 
   const currentProduct = customer?.products[0];
+  const isApplePlan = currentProduct?.id === PLAN_IDS.PRO_APPLE;
 
   return (
     <div className="grid gap-6">
@@ -45,20 +47,40 @@ export function BillingContent() {
             <p className="text-muted-foreground text-sm">
               {currentProduct?.status ?? "Active"}
             </p>
+            {isApplePlan && (
+              <p className="text-muted-foreground text-xs">
+                Subscribed via App Store
+              </p>
+            )}
           </div>
-          {currentProduct && currentProduct.id !== "free" && (
-            <Button
-              variant="outline"
-              onClick={async () => {
-                await openBillingPortal({
-                  returnUrl: `${env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL}/billing`,
-                });
-              }}
-            >
-              Manage Subscription
-              <ExternalLinkIcon className="ml-2 h-4 w-4" />
-            </Button>
-          )}
+          {currentProduct &&
+            currentProduct.id !== PLAN_IDS.FREE &&
+            (isApplePlan ? (
+              <Button
+                variant="outline"
+                onClick={() =>
+                  window.open(
+                    "https://apps.apple.com/account/subscriptions",
+                    "_blank",
+                  )
+                }
+              >
+                Manage in App Store
+                <ExternalLinkIcon className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  await openBillingPortal({
+                    returnUrl: `${env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL}/billing`,
+                  });
+                }}
+              >
+                Manage Subscription
+                <ExternalLinkIcon className="ml-2 h-4 w-4" />
+              </Button>
+            ))}
         </CardContent>
       </Card>
 
