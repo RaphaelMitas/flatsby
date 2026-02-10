@@ -3,7 +3,7 @@ import type { ChatModel } from "@flatsby/validators/models";
 import { useCallback, useState } from "react";
 import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { CHAT_MODELS } from "@flatsby/validators/models";
 
@@ -21,9 +21,22 @@ export const NewChatScreen = ({ onSuccess }: NewChatScreenProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [selectedModel, setSelectedModel] = useState<ChatModel>(
-    CHAT_MODELS[0].id,
+  const { data: userData, isLoading: isLoadingUser } = useQuery(
+    trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
+
+  const defaultModel =
+    userData?.success && userData.data.user?.lastChatModelUsed
+      ? userData.data.user.lastChatModelUsed
+      : CHAT_MODELS[0].id;
+
+  const [userSelectedModel, setUserSelectedModel] = useState<ChatModel | null>(
+    null,
+  );
+
+  const selectedModel = isLoadingUser
+    ? null
+    : (userSelectedModel ?? defaultModel);
 
   const [toolPreferences, setToolPreferences] = useState<ToolPreferences>({
     toolsEnabled: true,
@@ -44,7 +57,8 @@ export const NewChatScreen = ({ onSuccess }: NewChatScreenProps) => {
 
   const sendMessage = useCallback(
     (text: string) => {
-      if (!text.trim() || createConversation.isPending) return;
+      if (!text.trim() || createConversation.isPending || !selectedModel)
+        return;
       createConversation.mutate(
         { model: selectedModel },
         {
@@ -84,7 +98,7 @@ export const NewChatScreen = ({ onSuccess }: NewChatScreenProps) => {
         <ChatFooter
           sendMessage={sendMessage}
           selectedModel={selectedModel}
-          onModelChange={setSelectedModel}
+          onModelChange={setUserSelectedModel}
           toolPreferences={toolPreferences}
           onToolPreferencesChange={updateToolPreferences}
           status={isLoading ? "submitted" : "ready"}

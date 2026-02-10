@@ -22,7 +22,7 @@ import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import { Label } from "@flatsby/ui/label";
 import { Switch } from "@flatsby/ui/switch";
-import { CHAT_MODELS } from "@flatsby/validators/models";
+import { CHAT_MODELS, getModelTier } from "@flatsby/validators/models";
 
 export function getModelDisplayName(
   modelId: string | null | undefined,
@@ -60,7 +60,7 @@ export function ChatModelSelector({
   // Filter models: when tools are enabled, only show models that support tools
   const filteredModels = useMemo(() => {
     if (!toolsEnabled) return CHAT_MODELS;
-    return CHAT_MODELS.filter((model) => model.supportsTools);
+    return CHAT_MODELS.filter((model) => model.supportsTools as boolean);
   }, [toolsEnabled]);
 
   // Group filtered models by provider
@@ -108,8 +108,11 @@ export function ChatModelSelector({
                     <ModelSelectorLogo provider={model.provider} />
                     <ModelSelectorName>
                       {model.name}
-                      {model.supportsTools && (
-                        <Badge className="ml-2 text-xs" variant="outline">
+                      <Badge className="ml-2 text-xs" variant="secondary">
+                        {getModelTier(model.id)}
+                      </Badge>
+                      {(model.supportsTools as boolean) && (
+                        <Badge className="ml-1 text-xs" variant="outline">
                           Tools
                         </Badge>
                       )}

@@ -17,7 +17,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { tv } from "tailwind-variants";
 
-import { CHAT_MODELS } from "@flatsby/validators/models";
+import { CHAT_MODELS, getModelTier } from "@flatsby/validators/models";
 
 import { Badge } from "~/lib/ui/badge";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -166,7 +166,12 @@ export const ModelSelectorSheet = forwardRef<
                         <Text className="text-foreground text-base font-medium">
                           {model.name}
                         </Text>
-                        {model.supportsTools && (
+                        <Badge
+                          variant="secondary"
+                          label={getModelTier(model.id)}
+                          size="sm"
+                        />
+                        {(model.supportsTools as boolean) && (
                           <Badge variant="outline" label="Tools" size="sm" />
                         )}
                       </View>

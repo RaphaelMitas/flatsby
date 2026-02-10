@@ -2,7 +2,7 @@
 
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -48,7 +48,6 @@ export function ShoppingListDashboardItem({
 }: ShoppingListDashboardItemProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
-  const [, startTransition] = useTransition();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
@@ -62,36 +61,87 @@ export function ShoppingListDashboardItem({
     },
   });
 
+  const handleDeleteError = (
+    groupId: number,
+    previousLists: ApiResult<ShoppingListSummary[]> | undefined,
+    errorMessage: string,
+  ) => {
+    if (previousLists) {
+      queryClient.setQueryData(
+        trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
+        previousLists,
+      );
+    }
+    toast.error("Error deleting list", { description: errorMessage });
+  };
+
   const deleteMutation = useMutation(
     trpc.shoppingList.deleteShoppingList.mutationOptions({
-      onError: (error) => {
-        toast.error("Error deleting list", {
-          description: error.message,
-        });
-        // Revert optimistic update
-        if (groupId) {
-          void queryClient.invalidateQueries(
-            trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
+      onMutate: async ({ groupId, shoppingListId }) => {
+        await queryClient.cancelQueries(
+          trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
+        );
+
+        const previousLists = queryClient.getQueryData(
+          trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
+        );
+
+        queryClient.setQueryData(
+          trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
+          (old) => {
+            if (!old?.success) return old;
+            return {
+              ...old,
+              data: old.data.filter((item) => item.id !== shoppingListId),
+            };
+          },
+        );
+
+        return { previousLists };
+      },
+      onSuccess: (data, variables, context) => {
+        if (!data.success) {
+          handleDeleteError(
+            variables.groupId,
+            context.previousLists,
+            data.error.message,
           );
+          return;
         }
+        void queryClient.invalidateQueries(
+          trpc.shoppingList.getShoppingLists.queryOptions({
+            groupId: variables.groupId,
+          }),
+        );
+      },
+      onError: (error, variables, context) => {
+        handleDeleteError(
+          variables.groupId,
+          context?.previousLists,
+          error.message,
+        );
       },
     }),
   );
 
-  const onMutateShoppingListError = (
+  const handleRenameError = (
+    groupId: number | undefined,
     previousLists: ApiResult<ShoppingListSummary[]> | undefined,
+    errorMessage: string,
   ) => {
-    if (!groupId) return;
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
-      previousLists,
-    );
+    if (groupId && previousLists) {
+      queryClient.setQueryData(
+        trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
+        previousLists,
+      );
+    }
+    toast.error("Error renaming shopping list", { description: errorMessage });
   };
 
   const renameMutation = useMutation(
     trpc.shoppingList.changeShoppingListName.mutationOptions({
       onMutate: (data) => {
-        if (!groupId) return { previousLists: undefined };
+        if (!groupId) return { previousLists: undefined, groupId: undefined };
 
         void queryClient.cancelQueries(
           trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
@@ -117,18 +167,24 @@ export function ShoppingListDashboardItem({
           },
         );
 
-        return { previousLists };
+        return { previousLists, groupId };
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
-          onMutateShoppingListError(context.previousLists);
+          handleRenameError(
+            context.groupId,
+            context.previousLists,
+            data.error.message,
+          );
           return;
         }
 
         toast.success("Shopping list renamed successfully");
-        if (groupId) {
+        if (context.groupId) {
           void queryClient.invalidateQueries(
-            trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
+            trpc.shoppingList.getShoppingLists.queryOptions({
+              groupId: context.groupId,
+            }),
           );
         }
       },
@@ -139,38 +195,20 @@ export function ShoppingListDashboardItem({
           .map(([_, errors]) => errors?.map((error) => error).join(", "))
           .join(", ");
 
-        toast.error("Error renaming shopping list", {
-          description: errorMessage.length > 0 ? errorMessage : "Unknown error",
-        });
-        // Revert optimistic update
-        onMutateShoppingListError(context?.previousLists);
+        handleRenameError(
+          context?.groupId,
+          context?.previousLists,
+          errorMessage.length > 0 ? errorMessage : "Unknown error",
+        );
       },
     }),
   );
 
   const handleDelete = () => {
     if (!groupId) return;
-
-    startTransition(() => {
-      // Optimistically remove from UI
-      void queryClient.setQueryData(
-        trpc.shoppingList.getShoppingLists.queryOptions({ groupId }).queryKey,
-        (old) => {
-          if (!old?.success) {
-            return old;
-          }
-
-          return {
-            ...old,
-            data: old.data.filter((item) => item.id !== list.id),
-          };
-        },
-      );
-
-      deleteMutation.mutate({
-        groupId,
-        shoppingListId: list.id,
-      });
+    deleteMutation.mutate({
+      groupId,
+      shoppingListId: list.id,
     });
     setShowDeleteDialog(false);
   };
