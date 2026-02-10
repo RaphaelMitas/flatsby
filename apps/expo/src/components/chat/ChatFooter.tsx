@@ -7,6 +7,7 @@ import { CHAT_MODELS, modelSupportsTools } from "@flatsby/validators/models";
 
 import type { ModelSelectorSheetRef } from "./ModelSelectorSheet";
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
+import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Button } from "~/lib/ui/button";
 import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -24,6 +25,7 @@ interface ChatFooterProps {
   status: PromptStatus;
   disabled?: boolean;
   error?: string | null;
+  hasGroup?: boolean;
 }
 
 function getModelDisplayName(modelId: string | null | undefined): string {
@@ -37,12 +39,14 @@ const ModelAndToolsSelector = memo(function ModelAndToolsSelector({
   toolsEnabled,
   onToolsChange,
   disabled,
+  hasGroup,
 }: {
   selectedModel: ChatModel | null;
   onModelChange: (model: ChatModel) => void;
   toolsEnabled: boolean;
   onToolsChange: (enabled: boolean) => void;
   disabled: boolean;
+  hasGroup: boolean;
 }) {
   const sheetRef = useRef<ModelSelectorSheetRef>(null);
 
@@ -82,6 +86,7 @@ const ModelAndToolsSelector = memo(function ModelAndToolsSelector({
         onModelChange={onModelChange}
         toolsEnabled={toolsEnabled}
         onToolsChange={onToolsChange}
+        hasGroup={hasGroup}
       />
     </>
   );
@@ -94,6 +99,7 @@ const ChatToolbar = memo(function ChatToolbar({
   onToolPreferencesChange,
   disabled,
   isLoading,
+  hasGroup,
 }: {
   selectedModel: ChatModel | null;
   onModelChange: (model: ChatModel) => void;
@@ -101,6 +107,7 @@ const ChatToolbar = memo(function ChatToolbar({
   onToolPreferencesChange: (prefs: Partial<ToolPreferences>) => void;
   disabled: boolean;
   isLoading: boolean;
+  hasGroup: boolean;
 }) {
   return (
     <View className="flex-row items-center gap-2">
@@ -112,6 +119,7 @@ const ChatToolbar = memo(function ChatToolbar({
           onToolPreferencesChange({ toolsEnabled: enabled })
         }
         disabled={disabled || isLoading}
+        hasGroup={hasGroup}
       />
     </View>
   );
@@ -126,12 +134,16 @@ export const ChatFooter = memo(function ChatFooter({
   status,
   disabled = false,
   error,
+  hasGroup = false,
 }: ChatFooterProps) {
   const [input, setInput] = useState("");
   const { getColor } = useThemeColors();
   const [isFocused, setIsFocused] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const isLoading = status === "submitted" || status === "streaming";
   const canSend = input.trim().length > 0 && !isLoading && !disabled;
+
+  const showToolsBanner = !hasGroup && !bannerDismissed;
 
   const handleSubmit = useCallback(() => {
     if (!canSend) return;
@@ -151,6 +163,30 @@ export const ChatFooter = memo(function ChatFooter({
           <View className="border-destructive bg-destructive/10 mx-4 mt-4 rounded-lg border p-3">
             <Text className="text-destructive text-sm">{error}</Text>
           </View>
+        )}
+
+        {showToolsBanner && (
+          <Alert
+            variant="info"
+            className="mx-4 mt-4 w-fit flex-row items-start gap-3"
+          >
+            <Icon name="info" size={16} color="info" className="mt-0.5" />
+            <View className="flex-1">
+              <AlertTitle variant="info">
+                Select a group to enable AI tools
+              </AlertTitle>
+              <AlertDescription variant="info">
+                Tools let AI manage your shopping lists and expenses
+              </AlertDescription>
+            </View>
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => setBannerDismissed(true)}
+              title="dismiss"
+              icon="x"
+            />
+          </Alert>
         )}
 
         <View className="p-4">
@@ -179,6 +215,7 @@ export const ChatFooter = memo(function ChatFooter({
                 onToolPreferencesChange={onToolPreferencesChange}
                 disabled={disabled}
                 isLoading={isLoading}
+                hasGroup={hasGroup}
               />
               <Button
                 variant={canSend ? "primary" : "ghost"}

@@ -50,7 +50,7 @@ export const CHAT_MODELS = [
     id: "google/gemini-2.5-flash",
     name: "Gemini 2.5 Flash",
     provider: "google",
-    supportsTools: true,
+    supportsTools: false,
     pricing: { input: 0.5, output: 2.8 },
   },
 ] as const satisfies readonly {

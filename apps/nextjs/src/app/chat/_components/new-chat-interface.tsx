@@ -13,6 +13,7 @@ import {
 } from "@flatsby/ui/ai-elements";
 import { CHAT_MODELS } from "@flatsby/validators/models";
 
+import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { ChatFooter } from "./chat-footer";
 import { useToolPreferences } from "./useToolPreferences";
@@ -25,6 +26,7 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { currentGroup } = useGroupContext();
 
   const [selectedModel, setSelectedModel] = useState<ChatModel>(
     defaultModel ?? CHAT_MODELS[0].id,
@@ -84,6 +86,7 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
         onToolPreferencesChange={updateToolPreferences}
         status={isLoading ? "submitted" : "ready"}
         error={createConversation.error?.message}
+        hasGroup={!!currentGroup}
       />
     </div>
   );

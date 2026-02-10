@@ -29,6 +29,7 @@ import {
   CHAT_MESSAGE_LIMIT,
 } from "@flatsby/validators/chat/messages";
 
+import { useGroupContext } from "~/app/_components/context/group-context";
 import { ChatFooter } from "./chat-footer";
 import { getModelDisplayName } from "./chat-model-selector";
 import { ChatToolResults } from "./chat-tool-results";
@@ -139,6 +140,7 @@ export function ChatInterface({
   initialMessages = [],
   initialModel,
 }: ChatInterfaceProps) {
+  const { currentGroup } = useGroupContext();
   const {
     messages,
     sendMessage,
@@ -221,6 +223,7 @@ export function ChatInterface({
         status={status}
         disabled={isAtMessageLimit}
         error={error?.message}
+        hasGroup={!!currentGroup}
       />
     </div>
   );
