@@ -231,6 +231,7 @@ export const ChatInterface = ({
           status={status}
           disabled={isAtMessageLimit}
           error={error?.message}
+          hasGroup={!!selectedGroupId}
         />
       </View>
     </BottomSheetPickerProvider>

@@ -2,7 +2,7 @@
 
 import type { ChatModel } from "@flatsby/validators/models";
 import { useMemo, useState } from "react";
-import { CheckIcon, WrenchIcon } from "lucide-react";
+import { CheckIcon, InfoIcon, WrenchIcon } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 import {
@@ -22,7 +22,7 @@ import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import { Label } from "@flatsby/ui/label";
 import { Switch } from "@flatsby/ui/switch";
-import { CHAT_MODELS } from "@flatsby/validators/models";
+import { CHAT_MODELS, getModelTier } from "@flatsby/validators/models";
 
 export function getModelDisplayName(
   modelId: string | null | undefined,
@@ -44,6 +44,7 @@ interface ChatModelSelectorProps {
   toolsEnabled: boolean;
   onToolsChange: (enabled: boolean) => void;
   disabled?: boolean;
+  hasGroup?: boolean;
 }
 
 export function ChatModelSelector({
@@ -52,6 +53,7 @@ export function ChatModelSelector({
   toolsEnabled,
   onToolsChange,
   disabled,
+  hasGroup = false,
 }: ChatModelSelectorProps) {
   const [open, setOpen] = useState(false);
 
@@ -108,8 +110,11 @@ export function ChatModelSelector({
                     <ModelSelectorLogo provider={model.provider} />
                     <ModelSelectorName>
                       {model.name}
+                      <Badge className="ml-2 text-xs" variant="secondary">
+                        {getModelTier(model.id)}
+                      </Badge>
                       {model.supportsTools && (
-                        <Badge className="ml-2 text-xs" variant="outline">
+                        <Badge className="ml-1 text-xs" variant="outline">
                           Tools
                         </Badge>
                       )}
@@ -126,24 +131,31 @@ export function ChatModelSelector({
           ))}
           <ModelSelectorSeparator />
           <div className="p-3">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="tools-toggle" className="text-sm font-medium">
-                  Flatsby Tools
-                </Label>
-                <p className="text-muted-foreground text-xs">
-                  Shopping lists, expenses & more
-                </p>
+            {hasGroup ? (
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="tools-toggle" className="text-sm font-medium">
+                    Flatsby Tools
+                  </Label>
+                  <p className="text-muted-foreground text-xs">
+                    Shopping lists, expenses & more
+                  </p>
+                </div>
+                <Switch
+                  id="tools-toggle"
+                  checked={toolsEnabled}
+                  onCheckedChange={onToolsChange}
+                  className={cn(
+                    toolsEnabled && "data-[state=checked]:bg-primary",
+                  )}
+                />
               </div>
-              <Switch
-                id="tools-toggle"
-                checked={toolsEnabled}
-                onCheckedChange={onToolsChange}
-                className={cn(
-                  toolsEnabled && "data-[state=checked]:bg-primary",
-                )}
-              />
-            </div>
+            ) : (
+              <div className="text-muted-foreground flex items-center gap-2">
+                <InfoIcon className="size-4" />
+                <span className="text-sm">Select a group to enable tools</span>
+              </div>
+            )}
           </div>
         </ModelSelectorList>
       </ModelSelectorContent>

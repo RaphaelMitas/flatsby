@@ -23,6 +23,7 @@ import { WinterEffectsProvider } from "~/lib/ui/winter-effects";
 import { WinterSnow } from "~/lib/ui/winter-snow";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
+import { ChatStoreProvider } from "~/utils/chat-store";
 import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
 import { ShoppingStoreProvider } from "~/utils/shopping-store";
 
@@ -52,12 +53,14 @@ export default function RootLayout() {
                   <QueryClientProvider client={queryClient}>
                     <RevenueCatProvider>
                       <ShoppingStoreProvider>
-                        {/**
-                         The Stack component displays the current page.
-                         It also allows you to configure your screens
-                        **/}
-                        <StackLayout />
-                        <StatusBar />
+                        <ChatStoreProvider>
+                          {/**
+                           The Stack component displays the current page.
+                           It also allows you to configure your screens
+                          **/}
+                          <StackLayout />
+                          <StatusBar />
+                        </ChatStoreProvider>
                       </ShoppingStoreProvider>
                     </RevenueCatProvider>
                   </QueryClientProvider>

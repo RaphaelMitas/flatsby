@@ -17,7 +17,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { tv } from "tailwind-variants";
 
-import { CHAT_MODELS } from "@flatsby/validators/models";
+import { CHAT_MODELS, getModelTier } from "@flatsby/validators/models";
 
 import { Badge } from "~/lib/ui/badge";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -44,13 +44,14 @@ interface ModelSelectorSheetProps {
   onModelChange: (model: ChatModel) => void;
   toolsEnabled: boolean;
   onToolsChange: (enabled: boolean) => void;
+  hasGroup: boolean;
 }
 
 export const ModelSelectorSheet = forwardRef<
   ModelSelectorSheetRef,
   ModelSelectorSheetProps
 >(function ModelSelectorSheet(
-  { selectedModel, onModelChange, toolsEnabled, onToolsChange },
+  { selectedModel, onModelChange, toolsEnabled, onToolsChange, hasGroup },
   ref,
 ) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -166,7 +167,12 @@ export const ModelSelectorSheet = forwardRef<
                         <Text className="text-foreground text-base font-medium">
                           {model.name}
                         </Text>
-                        {model.supportsTools && (
+                        <Badge
+                          variant="secondary"
+                          label={getModelTier(model.id)}
+                          size="sm"
+                        />
+                        {(model.supportsTools as boolean) && (
                           <Badge variant="outline" label="Tools" size="sm" />
                         )}
                       </View>
@@ -182,17 +188,26 @@ export const ModelSelectorSheet = forwardRef<
 
         <Separator className="my-2" />
         <View className="px-4 py-3 pb-8">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1">
-              <Text className="text-foreground text-sm font-medium">
-                Flatsby Tools
-              </Text>
-              <Text className="text-muted-foreground text-xs">
-                Shopping lists, expenses & more
+          {hasGroup ? (
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <Text className="text-foreground text-sm font-medium">
+                  Flatsby Tools
+                </Text>
+                <Text className="text-muted-foreground text-xs">
+                  Shopping lists, expenses & more
+                </Text>
+              </View>
+              <Switch checked={toolsEnabled} onCheckedChange={onToolsChange} />
+            </View>
+          ) : (
+            <View className="flex-row items-center gap-2">
+              <Icon name="info" size={16} color="muted-foreground" />
+              <Text className="text-muted-foreground text-sm">
+                Select a group from Home to enable tools
               </Text>
             </View>
-            <Switch checked={toolsEnabled} onCheckedChange={onToolsChange} />
-          </View>
+          )}
         </View>
       </BottomSheetScrollView>
     </RawBottomSheetModal>
