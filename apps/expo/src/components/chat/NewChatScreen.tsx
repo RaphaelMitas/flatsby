@@ -1,16 +1,15 @@
 import type { ToolPreferences } from "@flatsby/validators/chat/messages";
-import type { ChatModel } from "@flatsby/validators/models";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { CHAT_MODELS } from "@flatsby/validators/models";
 
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
+import { useChatStore } from "~/utils/chat-store";
+import { useShoppingStore } from "~/utils/shopping-store";
 import { ChatFooter } from "./ChatFooter";
 
 interface NewChatScreenProps {
@@ -20,20 +19,22 @@ interface NewChatScreenProps {
 export const NewChatScreen = ({ onSuccess }: NewChatScreenProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-
-  const [selectedModel, setSelectedModel] = useState<ChatModel>(
-    CHAT_MODELS[0].id,
-  );
-
-  const [toolPreferences, setToolPreferences] = useState<ToolPreferences>({
-    toolsEnabled: true,
-  });
+  const { selectedGroupId } = useShoppingStore();
+  const {
+    selectedModel,
+    setSelectedModel,
+    toolsEnabled,
+    setToolsEnabled,
+    isLoading: isLoadingStore,
+  } = useChatStore();
 
   const updateToolPreferences = useCallback(
     (newPrefs: Partial<ToolPreferences>) => {
-      setToolPreferences((prev) => ({ ...prev, ...newPrefs }));
+      if (typeof newPrefs.toolsEnabled === "boolean") {
+        setToolsEnabled(newPrefs.toolsEnabled);
+      }
     },
-    [],
+    [setToolsEnabled],
   );
 
   const createConversation = useMutation(
@@ -44,7 +45,8 @@ export const NewChatScreen = ({ onSuccess }: NewChatScreenProps) => {
 
   const sendMessage = useCallback(
     (text: string) => {
-      if (!text.trim() || createConversation.isPending) return;
+      if (!text.trim() || createConversation.isPending || isLoadingStore)
+        return;
       createConversation.mutate(
         { model: selectedModel },
         {
@@ -63,7 +65,14 @@ export const NewChatScreen = ({ onSuccess }: NewChatScreenProps) => {
         },
       );
     },
-    [createConversation, queryClient, router, selectedModel, onSuccess],
+    [
+      createConversation,
+      queryClient,
+      router,
+      selectedModel,
+      onSuccess,
+      isLoadingStore,
+    ],
   );
 
   const content = (
@@ -83,12 +92,13 @@ export const NewChatScreen = ({ onSuccess }: NewChatScreenProps) => {
 
         <ChatFooter
           sendMessage={sendMessage}
-          selectedModel={selectedModel}
+          selectedModel={isLoadingStore ? null : selectedModel}
           onModelChange={setSelectedModel}
-          toolPreferences={toolPreferences}
+          toolPreferences={{ toolsEnabled }}
           onToolPreferencesChange={updateToolPreferences}
           status={isLoading ? "submitted" : "ready"}
           error={createConversation.error?.message}
+          hasGroup={!!selectedGroupId}
         />
       </View>
     </BottomSheetPickerProvider>

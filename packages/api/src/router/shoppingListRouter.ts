@@ -290,6 +290,7 @@ export const shoppingList = createTRPCRouter({
 
   deleteShoppingList: protectedProcedure
     .input(deleteShoppingListSchema)
+    .output(getApiResultZod(z.object({ success: z.boolean() })))
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -319,7 +320,13 @@ export const shoppingList = createTRPCRouter({
                 // Delete shopping list and all items in transaction
                 Effect.map(
                   DbUtils.transaction(async (trx) => {
-                    // First delete all shopping list items
+                    // Clear lastShoppingListUsed references from users
+                    await trx
+                      .update(users)
+                      .set({ lastShoppingListUsed: null })
+                      .where(eq(users.lastShoppingListUsed, input.shoppingListId));
+
+                    // Delete all shopping list items
                     await trx
                       .delete(shoppingListItems)
                       .where(
@@ -329,7 +336,7 @@ export const shoppingList = createTRPCRouter({
                         ),
                       );
 
-                    // Then delete the shopping list itself
+                    // Delete the shopping list itself
                     await trx
                       .delete(shoppingLists)
                       .where(eq(shoppingLists.id, input.shoppingListId));

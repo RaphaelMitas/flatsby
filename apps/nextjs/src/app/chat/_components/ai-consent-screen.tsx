@@ -5,7 +5,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Info, Shield, ShieldOff, Sparkles, X } from "lucide-react";
 
 import { Button } from "@flatsby/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@flatsby/ui/card";
 import {
   AI_DATA_DISCLOSURE,
   CURRENT_AI_CONSENT_VERSION,
@@ -50,9 +56,9 @@ export function AIConsentScreen({
           <div className="bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
             <Shield className="text-primary h-8 w-8" />
           </div>
-          <h1 className="text-2xl font-bold">AI Data Sharing</h1>
+          <h1 className="text-2xl font-bold">Third-Party AI Data Sharing</h1>
           <p className="text-muted-foreground mt-2">
-            Before using the AI assistant, please review how your data is used.
+            {AI_DATA_DISCLOSURE.sharingStatement}
           </p>
         </div>
 
@@ -60,15 +66,29 @@ export function AIConsentScreen({
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Sparkles className="h-5 w-5" />
-              AI Providers
+              Your Data Will Be Shared With
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              Your messages are processed by{" "}
-              {AI_DATA_DISCLOSURE.providers.join(", ")} via{" "}
-              {AI_DATA_DISCLOSURE.gateway} to generate responses.
-            </p>
+          <CardContent className="space-y-3">
+            {AI_DATA_DISCLOSURE.providers.map((provider, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <div className="bg-primary/20 mt-0.5 rounded-full p-1">
+                  <Check className="text-primary h-3 w-3" />
+                </div>
+                <div>
+                  <span className="font-medium">{provider.name}</span>
+                  <p className="text-muted-foreground text-sm">
+                    {provider.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div className="border-t pt-3">
+              <p className="text-muted-foreground text-sm">
+                via {AI_DATA_DISCLOSURE.gateway}:{" "}
+                {AI_DATA_DISCLOSURE.gatewayDescription}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -76,7 +96,7 @@ export function AIConsentScreen({
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Check className="h-5 w-5" />
-              Data Shared
+              Data Shared With Third Parties
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -114,30 +134,44 @@ export function AIConsentScreen({
           </CardContent>
         </Card>
 
-        <div className="bg-muted/50 flex items-start gap-2 rounded-lg border p-4">
-          <Info className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
-          <p className="text-muted-foreground text-sm">
-            {AI_DATA_DISCLOSURE.usage}
-          </p>
-        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Info className="h-5 w-5" />
+              How Your Data Is Used
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-sm">
+              {AI_DATA_DISCLOSURE.usage}
+            </p>
+          </CardContent>
+        </Card>
 
-        <div className="flex flex-col gap-3">
-          <Button
-            onClick={handleAccept}
-            disabled={updateConsent.isPending}
-            className="w-full"
-          >
-            Accept & Continue
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onDecline}
-            disabled={updateConsent.isPending}
-            className="w-full"
-          >
-            Decline
-          </Button>
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center font-medium">
+              {AI_DATA_DISCLOSURE.permissionRequest}
+            </p>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-3">
+            <Button
+              onClick={handleAccept}
+              disabled={updateConsent.isPending}
+              className="w-full"
+            >
+              Yes, I Consent
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onDecline}
+              disabled={updateConsent.isPending}
+              className="w-full"
+            >
+              No, Do Not Share
+            </Button>
+          </CardFooter>
+        </Card>
 
         <div className="text-center">
           <Link

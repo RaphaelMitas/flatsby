@@ -1,7 +1,5 @@
-import type { Tool } from "ai";
+import type { ModelMessage, Tool } from "ai";
 import { generateText, stepCountIs, streamText } from "ai";
-
-import type { ContextMessage } from "./context-builder";
 
 const DEFAULT_MODEL = "openai/gpt-5.2";
 const TITLE_GENERATION_MODEL = "openai/gpt-5.2";
@@ -21,7 +19,7 @@ export interface StreamChatWithToolsOptions extends StreamChatOptions {
 }
 
 export function streamChatCompletion(
-  messages: ContextMessage[],
+  messages: ModelMessage[],
   options: StreamChatOptions = {},
 ) {
   const modelName = options.model ?? DEFAULT_MODEL;
@@ -29,10 +27,7 @@ export function streamChatCompletion(
   const result = streamText({
     // AI SDK v5: string model ID uses Vercel AI Gateway by default
     model: modelName,
-    messages: messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    })),
+    messages,
   });
 
   return {
@@ -47,7 +42,7 @@ export function streamChatCompletion(
  * Returns the full stream which includes text-delta, tool-call, tool-result events
  */
 export function streamChatWithTools(
-  messages: ContextMessage[],
+  messages: ModelMessage[],
   options: StreamChatWithToolsOptions = {},
 ) {
   const modelName = options.model ?? DEFAULT_MODEL;
@@ -56,10 +51,7 @@ export function streamChatWithTools(
   const result = streamText({
     model: modelName,
     system: options.systemPrompt,
-    messages: messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    })),
+    messages,
     tools: options.tools,
     stopWhen: stepCountIs(maxSteps),
   });

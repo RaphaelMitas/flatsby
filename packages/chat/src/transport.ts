@@ -116,11 +116,16 @@ export function createTRPCChatTransport({
         { signal: options.abortSignal },
       );
 
-      const textBlockId = `text-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      let textBlockId = `text-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const iterator = result[Symbol.asyncIterator]();
       let sentStart = false;
       let sentTextStart = false;
       let textStarted = false;
+      let pendingTextDelta: string | undefined;
+
+      const generateNewTextBlockId = () => {
+        textBlockId = `text-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      };
 
       return new ReadableStream<UIMessageChunk>({
         async pull(controller) {
@@ -128,6 +133,17 @@ export function createTRPCChatTransport({
             if (!sentStart) {
               controller.enqueue({ type: "start" });
               sentStart = true;
+              return;
+            }
+
+            // Send pending text delta from previous pull (after text-start was sent)
+            if (pendingTextDelta !== undefined) {
+              controller.enqueue({
+                type: "text-delta",
+                id: textBlockId,
+                delta: pendingTextDelta,
+              });
+              pendingTextDelta = undefined;
               return;
             }
 
@@ -146,11 +162,14 @@ export function createTRPCChatTransport({
             const chunk: StreamChunk = iterResult.value;
 
             if (chunk.type === "text-delta" && chunk.textDelta) {
-              // Start text block on first text delta
+              // Start text block on first text delta - must return to ensure it's processed first
               if (!sentTextStart) {
                 controller.enqueue({ type: "text-start", id: textBlockId });
                 sentTextStart = true;
                 textStarted = true;
+                // Store the pending delta to send on next pull
+                pendingTextDelta = chunk.textDelta;
+                return;
               }
               controller.enqueue({
                 type: "text-delta",
@@ -162,6 +181,8 @@ export function createTRPCChatTransport({
               if (textStarted && sentTextStart) {
                 controller.enqueue({ type: "text-end", id: textBlockId });
                 textStarted = false;
+                sentTextStart = false; // Reset so next text gets a new text-start
+                generateNewTextBlockId(); // New ID for next text block
               }
               // Emit tool input available chunk (UI Message Stream Protocol name for tool-call)
               controller.enqueue({

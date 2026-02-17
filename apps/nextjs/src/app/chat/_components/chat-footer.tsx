@@ -4,6 +4,7 @@ import type { PromptInputMessage } from "@flatsby/ui/ai-elements";
 import type { ChatModel } from "@flatsby/validators/models";
 import type { FormEvent } from "react";
 import { memo, useState } from "react";
+import { InfoIcon, XIcon } from "lucide-react";
 
 import {
   PromptInput,
@@ -11,6 +12,8 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@flatsby/ui/ai-elements";
+import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
+import { Button } from "@flatsby/ui/button";
 
 import type { UseToolPreferencesResult } from "./useToolPreferences";
 import { ChatModelSelector } from "./chat-model-selector";
@@ -26,6 +29,7 @@ interface ChatFooterProps {
   status: PromptStatus;
   disabled?: boolean;
   error?: string | null;
+  hasGroup?: boolean;
 }
 
 const ChatToolbar = ({
@@ -35,6 +39,7 @@ const ChatToolbar = ({
   onToolPreferencesChange,
   disabled,
   isLoading,
+  hasGroup,
 }: Pick<
   ChatFooterProps,
   | "selectedModel"
@@ -42,6 +47,7 @@ const ChatToolbar = ({
   | "toolPreferences"
   | "onToolPreferencesChange"
   | "disabled"
+  | "hasGroup"
 > & {
   isLoading: boolean;
 }) => {
@@ -55,6 +61,7 @@ const ChatToolbar = ({
           onToolPreferencesChange({ toolsEnabled: enabled })
         }
         disabled={disabled ?? isLoading}
+        hasGroup={hasGroup}
       />
     </div>
   );
@@ -71,11 +78,17 @@ const _ChatFooter = ({
   status,
   disabled = false,
   error,
+  hasGroup = false,
+  bannerDismissed,
+  setBannerDismissed,
 }: ChatFooterProps & {
   input: string;
   setInput: (input: string) => void;
+  bannerDismissed: boolean;
+  setBannerDismissed: (dismissed: boolean) => void;
 }) => {
   const isLoading = status === "submitted" || status === "streaming";
+  const showToolsBanner = !hasGroup && !bannerDismissed;
 
   const handleSubmit = (
     _message: PromptInputMessage,
@@ -95,7 +108,27 @@ const _ChatFooter = ({
         </div>
       )}
 
-      <div className="shrink-0 border-t p-4">
+      <div className="flex shrink-0 flex-col gap-4 border-t p-4">
+        {showToolsBanner && (
+          <Alert variant="info" className="w-full">
+            <InfoIcon className="size-4" />
+            <div className="flex items-start justify-between">
+              <div>
+                <AlertTitle>Select a group to enable AI tools</AlertTitle>
+                <AlertDescription>
+                  Tools let AI manage your shopping lists and expenses
+                </AlertDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setBannerDismissed(true)}
+              >
+                <XIcon className="size-4" /> dismiss
+              </Button>
+            </div>
+          </Alert>
+        )}
         <PromptInput onSubmit={handleSubmit}>
           <PromptInputTextarea
             value={input}
@@ -111,6 +144,7 @@ const _ChatFooter = ({
               onToolPreferencesChange={onToolPreferencesChange}
               disabled={disabled}
               isLoading={isLoading}
+              hasGroup={hasGroup}
             />
             <PromptInputSubmit
               status={status}
@@ -132,8 +166,10 @@ export const ChatFooter = memo(function ChatFooter({
   status,
   disabled = false,
   error,
+  hasGroup = false,
 }: ChatFooterProps) {
   const [input, setInput] = useState("");
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   return (
     <_ChatFooter
       input={input}
@@ -146,6 +182,9 @@ export const ChatFooter = memo(function ChatFooter({
       status={status}
       disabled={disabled}
       error={error}
+      hasGroup={hasGroup}
+      bannerDismissed={bannerDismissed}
+      setBannerDismissed={setBannerDismissed}
     />
   );
 });

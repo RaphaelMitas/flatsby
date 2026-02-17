@@ -1,10 +1,15 @@
-import type { MessageRole } from "@flatsby/validators/chat/messages";
+import type {
+  AssistantModelMessage,
+  ModelMessage,
+  ToolModelMessage,
+} from "ai";
 import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 
 import { desc, eq } from "@flatsby/db";
 import { chatMessages, conversations } from "@flatsby/db/schema";
 import { messageRoleSchema } from "@flatsby/validators/chat/messages";
 import { persistedToolCallSchema } from "@flatsby/validators/chat/tools";
+import superjson from "superjson";
 
 import type { Database } from "../types";
 
@@ -21,34 +26,14 @@ function filterValidToolCalls(
 }
 
 /**
- * Formats tool calls into a compact string summary for context.
- */
-function formatToolCallsSummary(toolCalls: PersistedToolCall[]): string {
-  if (toolCalls.length === 0) return "";
-
-  const summaries = toolCalls.map((tc) => {
-    const outputStr = JSON.stringify(tc.output);
-    const truncatedOutput =
-      outputStr.length > 500 ? outputStr.slice(0, 500) + "..." : outputStr;
-    return `${tc.name}(${JSON.stringify(tc.input)}) → ${truncatedOutput}`;
-  });
-
-  return `\n[Tool calls: ${summaries.join("; ")}]`;
-}
-
-export interface ContextMessage {
-  role: MessageRole;
-  content: string;
-}
-
-/**
  * Builds context messages for an AI model from a conversation.
- * With 50 message limit and 400K+ context windows, no trimming needed.
+ * Uses AI SDK's CoreMessage format with proper tool call/result structure
+ * to prevent models from misinterpreting truncated tool outputs.
  */
 export async function buildContextMessages(
   db: Database,
   conversationId: string,
-): Promise<ContextMessage[]> {
+): Promise<ModelMessage[]> {
   const conversation = await db.query.conversations.findFirst({
     where: eq(conversations.id, conversationId),
     columns: {
@@ -71,7 +56,7 @@ export async function buildContextMessages(
     .filter((m) => m.status === "complete")
     .reverse();
 
-  const contextMessages: ContextMessage[] = [];
+  const contextMessages: ModelMessage[] = [];
 
   if (conversation?.systemPrompt) {
     contextMessages.push({
@@ -81,17 +66,50 @@ export async function buildContextMessages(
   }
 
   for (const m of completedMessages) {
+    const role = messageRoleSchema.safeParse(m.role).data ?? "user";
     const validToolCalls =
       m.role === "assistant" && m.toolCalls?.length
         ? filterValidToolCalls(m.toolCalls)
         : [];
-    const toolSummary =
-      validToolCalls.length > 0 ? formatToolCallsSummary(validToolCalls) : "";
 
-    contextMessages.push({
-      role: messageRoleSchema.safeParse(m.role).data ?? "user",
-      content: m.content + toolSummary,
-    });
+    if (role === "assistant" && validToolCalls.length > 0) {
+      // Assistant message with tool calls - use proper AI SDK structure
+      const assistantMessage: AssistantModelMessage = {
+        role: "assistant",
+        content: [
+          ...(m.content ? [{ type: "text" as const, text: m.content }] : []),
+          ...validToolCalls.map((tc) => ({
+            type: "tool-call" as const,
+            toolCallId: tc.id,
+            toolName: tc.name,
+            input: tc.input,
+          })),
+        ],
+      };
+      contextMessages.push(assistantMessage);
+
+      // Tool results as separate messages - full output, no truncation
+      // Use SuperJSON to properly serialize Date objects and other non-JSON types
+      const toolMessage: ToolModelMessage = {
+        role: "tool",
+        content: validToolCalls.map((tc) => ({
+          type: "tool-result" as const,
+          toolCallId: tc.id,
+          toolName: tc.name,
+          output: {
+            type: "text" as const,
+            value: superjson.stringify(tc.output),
+          },
+        })),
+      };
+      contextMessages.push(toolMessage);
+    } else {
+      // Regular user/assistant/system messages
+      contextMessages.push({
+        role,
+        content: m.content,
+      });
+    }
   }
 
   return contextMessages;
