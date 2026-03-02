@@ -17,7 +17,9 @@ export default async function HomePage() {
   const session = await getSession();
 
   if (!session?.user) {
-    return <LandingPage />;
+    const ua = (await headers()).get("user-agent") ?? "";
+    const isIOS = /iPhone|iPad|iPod/.test(ua);
+    return <LandingPage isIOS={isIOS} />;
   }
 
   const userWithGroups = await caller.user.getCurrentUserWithGroups();
