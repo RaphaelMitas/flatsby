@@ -5,12 +5,12 @@ import { HeroSection } from "./HeroSection";
 import { HowItWorksSection } from "./HowItWorksSection";
 import { LandingHeader } from "./LandingHeader";
 
-export function LandingPage() {
+export function LandingPage({ isIOS }: { isIOS: boolean }) {
   return (
     <div className="bg-background h-screen overflow-auto">
       <LandingHeader />
       <main>
-        <HeroSection />
+        <HeroSection isIOS={isIOS} />
         <FeaturesSection />
         <HowItWorksSection />
         <CTASection />
