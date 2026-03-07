@@ -4,7 +4,7 @@ packages:
   - tooling/*
 
 catalog:
-  "@ai-sdk/react": ^3.0.12
+  "@ai-sdk/react": ^3.0.118
   autumn-js: ^0.1.63
   "@better-auth/cli": 1.5.0-beta.2
   "@better-auth/expo": 1.5.0-beta.2
