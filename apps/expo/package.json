@@ -14,7 +14,7 @@
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
     "eas:build": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile development",
-    "eas:build:prod": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile production",
+    "eas:build:prod": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile production --auto-submit",
     "eas:build:local": "cross-env EXPO_NO_CAPABILITY_SYNC=1 eas build --profile development --local",
     "eas:update": "eas update --channel development",
     "eas:update:prod": "eas update --channel production",
