@@ -5,8 +5,6 @@ import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { createTracedModel } from "../utils/model-provider";
-
 import { and, count, eq } from "@flatsby/db";
 import {
   groupMembers,
@@ -40,6 +38,7 @@ import {
   ValidationUtils,
 } from "../utils";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
+import { createTracedModel } from "../utils/model-provider";
 
 export const shoppingList = createTRPCRouter({
   getShoppingListName: protectedProcedure
@@ -327,7 +326,9 @@ export const shoppingList = createTRPCRouter({
                     await trx
                       .update(users)
                       .set({ lastShoppingListUsed: null })
-                      .where(eq(users.lastShoppingListUsed, input.shoppingListId));
+                      .where(
+                        eq(users.lastShoppingListUsed, input.shoppingListId),
+                      );
 
                     // Delete all shopping list items
                     await trx

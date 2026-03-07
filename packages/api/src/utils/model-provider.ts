@@ -1,6 +1,6 @@
 import type { ModelMessage, Tool } from "ai";
-import { gateway, generateText, stepCountIs, streamText } from "ai";
 import { withTracing } from "@posthog/ai";
+import { gateway, generateText, stepCountIs, streamText } from "ai";
 
 import { posthog } from "../lib/posthog";
 
@@ -30,10 +30,7 @@ export interface StreamChatWithToolsOptions extends StreamChatOptions {
   maxSteps?: number;
 }
 
-export function createTracedModel(
-  modelName: string,
-  tracing?: TracingOptions,
-) {
+export function createTracedModel(modelName: string, tracing?: TracingOptions) {
   const baseModel = gateway(modelName);
   if (!posthog || !tracing) return baseModel;
   return withTracing(baseModel, posthog, {

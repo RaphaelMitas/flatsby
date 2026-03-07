@@ -2,7 +2,7 @@
 
 import type { ModifyDataOutput } from "@flatsby/validators/chat/tools";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, Pencil, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
@@ -32,24 +32,6 @@ export function ModifyDataResult({ output }: ModifyDataResultProps) {
     update: "Updated",
     delete: "Deleted",
   }[output.action];
-
-  const entityLabel = {
-    shoppingListItem: "item",
-    expense: "expense",
-    shoppingList: "shopping list",
-    group: "group",
-  }[output.entity];
-
-  if (!output.result) {
-    return (
-      <div className="my-2 flex items-center gap-2 text-sm">
-        <CheckCircle2 className="size-4 text-green-500" />
-        <span>
-          {actionLabel} {entityLabel}
-        </span>
-      </div>
-    );
-  }
 
   switch (output.entity) {
     case "shoppingListItem":

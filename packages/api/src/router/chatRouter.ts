@@ -29,11 +29,11 @@ import {
 } from "@flatsby/validators/models";
 
 import type { Database } from "../types";
+import type { TracingOptions } from "../utils/model-provider";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
 import { buildToolsSystemPrompt, createChatTools } from "../utils/chat-tools";
 import { buildContextMessages } from "../utils/context-builder";
-import type { TracingOptions } from "../utils/model-provider";
 import {
   generateConversationTitle,
   getDefaultModel,

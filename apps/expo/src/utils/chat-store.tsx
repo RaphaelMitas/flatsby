@@ -1,8 +1,14 @@
+import type { ChatModel } from "@flatsby/validators/models";
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import type { ChatModel } from "@flatsby/validators/models";
 import { CHAT_MODELS } from "@flatsby/validators/models";
 
 const STORAGE_KEY = "chat-store";
@@ -46,7 +52,9 @@ export function ChatStoreProvider({ children }: { children: ReactNode }) {
         if (value) {
           const parsed = JSON.parse(value) as PersistedState;
           // Validate that the stored model is still valid
-          const isValidModel = CHAT_MODELS.some((m) => m.id === parsed.selectedModel);
+          const isValidModel = CHAT_MODELS.some(
+            (m) => m.id === parsed.selectedModel,
+          );
           if (isValidModel) {
             setSelectedModelState(parsed.selectedModel);
           }

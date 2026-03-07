@@ -30,11 +30,17 @@ export default async function ShoppingListDetailPage({
     }),
   );
   prefetch(
-    trpc.shoppingList.getShoppingListItems.infiniteQueryOptions({
-      groupId,
-      shoppingListId,
-      limit: 20,
-    }),
+    trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
+      {
+        groupId,
+        shoppingListId,
+        limit: 20,
+      },
+      {
+        getNextPageParam: (lastPage) =>
+          lastPage.success === true ? lastPage.data.nextCursor : null,
+      },
+    ),
   );
 
   // Update last used shopping list only if it changed
