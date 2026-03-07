@@ -22,6 +22,7 @@
     "@flatsby/auth": "workspace:*",
     "@flatsby/db": "workspace:*",
     "@flatsby/validators": "workspace:*",
+    "@posthog/ai": "^7.9.5",
     "@trpc/server": "catalog:",
     "ai": "catalog:",
     "effect": "^3.17.0",

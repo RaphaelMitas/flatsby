@@ -1,5 +1,8 @@
 import type { ModelMessage, Tool } from "ai";
-import { generateText, stepCountIs, streamText } from "ai";
+import { gateway, generateText, stepCountIs, streamText } from "ai";
+import { withTracing } from "@posthog/ai";
+
+import { posthog } from "../lib/posthog";
 
 const DEFAULT_MODEL = "openai/gpt-5.2";
 const TITLE_GENERATION_MODEL = "openai/gpt-5.2";
@@ -8,9 +11,18 @@ export function getDefaultModel() {
   return DEFAULT_MODEL;
 }
 
+export type TracingFeature = "chat" | "title-generation" | "categorize-item";
+
+export interface TracingOptions {
+  distinctId: string;
+  traceId: string;
+  feature: TracingFeature;
+}
+
 export interface StreamChatOptions {
   model?: string;
   systemPrompt?: string;
+  tracing?: TracingOptions;
 }
 
 export interface StreamChatWithToolsOptions extends StreamChatOptions {
@@ -18,15 +30,29 @@ export interface StreamChatWithToolsOptions extends StreamChatOptions {
   maxSteps?: number;
 }
 
+export function createTracedModel(
+  modelName: string,
+  tracing?: TracingOptions,
+) {
+  const baseModel = gateway(modelName);
+  if (!posthog || !tracing) return baseModel;
+  return withTracing(baseModel, posthog, {
+    posthogDistinctId: tracing.distinctId,
+    posthogTraceId: tracing.traceId,
+    posthogPrivacyMode: true,
+    posthogProperties: { feature: tracing.feature },
+  });
+}
+
 export function streamChatCompletion(
   messages: ModelMessage[],
   options: StreamChatOptions = {},
 ) {
   const modelName = options.model ?? DEFAULT_MODEL;
+  const model = createTracedModel(modelName, options.tracing);
 
   const result = streamText({
-    // AI SDK v5: string model ID uses Vercel AI Gateway by default
-    model: modelName,
+    model,
     messages,
   });
 
@@ -47,9 +73,10 @@ export function streamChatWithTools(
 ) {
   const modelName = options.model ?? DEFAULT_MODEL;
   const maxSteps = options.maxSteps ?? 5;
+  const model = createTracedModel(modelName, options.tracing);
 
   const result = streamText({
-    model: modelName,
+    model,
     system: options.systemPrompt,
     messages,
     tools: options.tools,
@@ -65,13 +92,15 @@ export function streamChatWithTools(
 
 /**
  * Generate a conversation title from the first user message
- * Always uses Gemini Flash for speed and cost efficiency
  */
 export async function generateConversationTitle(
   userMessage: string,
+  tracing?: TracingOptions,
 ): Promise<string> {
+  const model = createTracedModel(TITLE_GENERATION_MODEL, tracing);
+
   const result = await generateText({
-    model: TITLE_GENERATION_MODEL,
+    model,
     messages: [
       {
         role: "system",

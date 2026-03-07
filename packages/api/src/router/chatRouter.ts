@@ -33,6 +33,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
 import { buildToolsSystemPrompt, createChatTools } from "../utils/chat-tools";
 import { buildContextMessages } from "../utils/context-builder";
+import type { TracingOptions } from "../utils/model-provider";
 import {
   generateConversationTitle,
   getDefaultModel,
@@ -337,6 +338,16 @@ export const chatRouter = createTRPCRouter({
     }
 
     const modelToUse = input.model ?? conversation.model ?? getDefaultModel();
+    const tracing: TracingOptions = {
+      distinctId: ctx.session.user.id,
+      traceId: input.conversationId,
+      feature: "chat",
+    };
+    const titleTracing: TracingOptions = {
+      distinctId: ctx.session.user.id,
+      traceId: input.conversationId,
+      feature: "title-generation",
+    };
 
     if (input.model && input.model !== conversation.model) {
       await ctx.db
@@ -382,7 +393,7 @@ export const chatRouter = createTRPCRouter({
       assistantMessageId = assistantMessage.id;
 
       if (!conversation.title) {
-        void generateConversationTitle(input.message.content)
+        void generateConversationTitle(input.message.content, titleTracing)
           .then(async (title) => {
             await ctx.db
               .update(conversations)
@@ -467,6 +478,7 @@ export const chatRouter = createTRPCRouter({
           systemPrompt,
           tools,
           maxSteps: 5,
+          tracing,
         });
 
         const pendingToolCalls = new Map<
@@ -568,6 +580,7 @@ export const chatRouter = createTRPCRouter({
       } else {
         const streamResult = streamChatCompletion(contextMessages, {
           model: modelToUse,
+          tracing,
         });
 
         for await (const chunk of streamResult.textStream) {

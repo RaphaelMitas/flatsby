@@ -27,7 +27,7 @@ export const AI_DATA_DISCLOSURE = {
     "Payment information",
   ],
   usage:
-    "Your data is shared solely to generate AI responses. It is not used to train AI models.",
+    "Your data is shared solely to generate AI responses. It is not used to train AI models. Anonymous usage metrics (such as which model was used, token counts, and response time) are tracked for service improvement.",
   permissionRequest:
     "Do you consent to sharing your data with these third-party AI services?",
 };
