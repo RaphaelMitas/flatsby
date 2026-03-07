@@ -1,8 +1,11 @@
+import crypto from "node:crypto";
 import type { Auth } from "@flatsby/auth";
 import type { CategoryId } from "@flatsby/validators/categories";
 import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
+
+import { createTracedModel } from "../utils/model-provider";
 
 import { and, count, eq } from "@flatsby/db";
 import {
@@ -634,6 +637,7 @@ export const shoppingList = createTRPCRouter({
                             createItemCategorizer({
                               authApi: ctx.authApi,
                               headers: ctx.headers,
+                              distinctId: ctx.session.user.id,
                             }),
                           )
                         : Effect.succeed(input.categoryId),
@@ -739,6 +743,7 @@ export const shoppingList = createTRPCRouter({
                                 createItemCategorizer({
                                   authApi: ctx.authApi,
                                   headers: ctx.headers,
+                                  distinctId: ctx.session.user.id,
                                 }),
                               )
                             : Effect.succeed(input.categoryId),
@@ -918,6 +923,7 @@ export const shoppingList = createTRPCRouter({
               createItemCategorizer({
                 authApi: ctx.authApi,
                 headers: ctx.headers,
+                distinctId: ctx.session.user.id,
               }),
             ),
         ),
@@ -928,6 +934,7 @@ export const shoppingList = createTRPCRouter({
 interface CategorizeContext {
   authApi: Auth["api"];
   headers: Headers;
+  distinctId: string;
 }
 
 const createItemCategorizer = (ctx: CategorizeContext) => {
@@ -941,8 +948,14 @@ const createItemCategorizer = (ctx: CategorizeContext) => {
     }
 
     try {
+      const model = createTracedModel("google/gemini-2.0-flash", {
+        distinctId: ctx.distinctId,
+        traceId: crypto.randomUUID(),
+        feature: "categorize-item",
+      });
+
       const response = await generateObject({
-        model: "google/gemini-2.0-flash",
+        model,
         schema: z.object({
           category: categoryIdSchema,
         }),

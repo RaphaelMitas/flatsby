@@ -132,7 +132,7 @@ export default function GroupSettingsIndex() {
         <SettingsSection title="Danger Zone">
           <SettingsItem
             title="Delete Group"
-            subtitle="Permanently delete your account"
+            subtitle="Permanently delete this group"
             iconName="trash-2"
             onPress={() => setShowDeleteModal(true)}
             variant="destructive"
