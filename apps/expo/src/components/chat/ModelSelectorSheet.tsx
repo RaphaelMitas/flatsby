@@ -172,7 +172,7 @@ export const ModelSelectorSheet = forwardRef<
                           label={getModelTier(model.id)}
                           size="sm"
                         />
-                        {(model.supportsTools as boolean) && (
+                        {model.supportsTools && (
                           <Badge variant="outline" label="Tools" size="sm" />
                         )}
                       </View>

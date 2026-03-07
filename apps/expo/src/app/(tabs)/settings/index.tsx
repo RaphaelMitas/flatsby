@@ -1,13 +1,11 @@
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
 import { useCallback, useRef, useState } from "react";
-import { Linking, View } from "react-native";
+import { Linking, Platform, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
-
-import { Platform } from "react-native";
 
 import {
   SettingsHeader,

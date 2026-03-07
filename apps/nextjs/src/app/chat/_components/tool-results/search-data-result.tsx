@@ -1,6 +1,7 @@
 "use client";
 
 import type { SearchDataOutput } from "@flatsby/validators/chat/tools";
+import Image from "next/image";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -152,9 +153,11 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
                 >
                   <div className="flex items-center gap-2">
                     {member.image ? (
-                      <img
+                      <Image
                         src={member.image}
                         alt={member.name}
+                        width={24}
+                        height={24}
                         className="size-6 rounded-full"
                       />
                     ) : (

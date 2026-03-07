@@ -249,11 +249,11 @@ export default function PrivacyPage() {
                   app version), screen views, and IP address.
                 </li>
               </ul>
-              AI feature usage analytics (such as which AI model was used,
-              token counts, response latency, and cost) are also tracked via
-              PostHog to help us monitor and improve AI features. No chat
-              messages, prompts, or AI responses are shared with PostHog.
-              PostHog processes data on EU servers. See{" "}
+              AI feature usage analytics (such as which AI model was used, token
+              counts, response latency, and cost) are also tracked via PostHog
+              to help us monitor and improve AI features. No chat messages,
+              prompts, or AI responses are shared with PostHog. PostHog
+              processes data on EU servers. See{" "}
               <LegalLink href="https://posthog.com/privacy" external>
                 PostHog&apos;s Privacy Policy
               </LegalLink>

@@ -1,15 +1,11 @@
-import type {
-  AssistantModelMessage,
-  ModelMessage,
-  ToolModelMessage,
-} from "ai";
 import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
+import type { AssistantModelMessage, ModelMessage, ToolModelMessage } from "ai";
+import superjson from "superjson";
 
 import { desc, eq } from "@flatsby/db";
 import { chatMessages, conversations } from "@flatsby/db/schema";
 import { messageRoleSchema } from "@flatsby/validators/chat/messages";
 import { persistedToolCallSchema } from "@flatsby/validators/chat/tools";
-import superjson from "superjson";
 
 import type { Database } from "../types";
 

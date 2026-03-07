@@ -41,11 +41,17 @@ export default function TabLayout() {
         }),
       );
       void prefetch(
-        trpc.shoppingList.getShoppingListItems.infiniteQueryOptions({
-          groupId: selectedGroupId,
-          shoppingListId: selectedShoppingListId,
-          limit: 20,
-        }),
+        trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
+          {
+            groupId: selectedGroupId,
+            shoppingListId: selectedShoppingListId,
+            limit: 20,
+          },
+          {
+            getNextPageParam: (lastPage) =>
+              lastPage.success === true ? lastPage.data.nextCursor : null,
+          },
+        ),
       );
     }
 
@@ -56,10 +62,16 @@ export default function TabLayout() {
         }),
       );
       void prefetch(
-        trpc.expense.getGroupExpenses.infiniteQueryOptions({
-          groupId: selectedGroupId,
-          limit: 20,
-        }),
+        trpc.expense.getGroupExpenses.infiniteQueryOptions(
+          {
+            groupId: selectedGroupId,
+            limit: 20,
+          },
+          {
+            getNextPageParam: (lastPage) =>
+              lastPage.success === true ? lastPage.data.nextCursor : null,
+          },
+        ),
       );
     }
 

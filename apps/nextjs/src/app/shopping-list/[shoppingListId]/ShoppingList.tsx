@@ -141,14 +141,14 @@ const ShoppingListInner = ({
   const createShoppingListItemMutation = useMutation(
     trpc.shoppingList.createShoppingListItem.mutationOptions({
       onMutate: async ({ name, categoryId }) => {
-        await queryClient.cancelQueries(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryOptions({
+        await queryClient.cancelQueries({
+          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
             limit: 20,
             categoryId: selectedCategory ?? undefined,
           }),
-        );
+        });
 
         const previousItems = queryClient.getQueryData(
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({

@@ -34,11 +34,10 @@
     }
   },
   "submit": {
-    "production": {},
-    "internal": {
+    "production": {
       "android": {
         "track": "internal",
-        "releaseStatus": "draft"
+        "releaseStatus": "completed"
       }
     }
   }
