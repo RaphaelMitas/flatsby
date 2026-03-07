@@ -1,0 +1,87 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":separateMajorReleases",
+    ":combinePatchMinorReleases",
+    "schedule:weekends"
+  ],
+  "baseBranches": ["develop"],
+  "rangeStrategy": "bump",
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Automerge non-major updates",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true
+    },
+    {
+      "description": "Group Expo ecosystem",
+      "groupName": "expo",
+      "matchPackagePatterns": ["^expo", "^@expo/", "^react-native"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Group React",
+      "groupName": "react",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+    },
+    {
+      "description": "Group Next.js",
+      "groupName": "nextjs",
+      "matchPackageNames": ["next", "eslint-config-next", "@next/env"]
+    },
+    {
+      "description": "Group tRPC",
+      "groupName": "trpc",
+      "matchPackagePatterns": ["^@trpc/"]
+    },
+    {
+      "description": "Group Drizzle",
+      "groupName": "drizzle",
+      "matchPackagePatterns": ["^drizzle-"]
+    },
+    {
+      "description": "Group Tailwind CSS",
+      "groupName": "tailwindcss",
+      "matchPackagePatterns": ["^@tailwindcss/", "^tailwindcss$"]
+    },
+    {
+      "description": "Group Radix UI",
+      "groupName": "radix-ui",
+      "matchPackagePatterns": ["^@radix-ui/"],
+      "automerge": true
+    },
+    {
+      "description": "Group AI SDK",
+      "groupName": "ai-sdk",
+      "matchPackagePatterns": ["^@ai-sdk/", "^ai$"]
+    },
+    {
+      "description": "Group Tanstack",
+      "groupName": "tanstack",
+      "matchPackagePatterns": ["^@tanstack/"]
+    },
+    {
+      "description": "Group ESLint",
+      "groupName": "eslint",
+      "matchPackagePatterns": ["^eslint", "^@eslint/", "^@typescript-eslint/"]
+    },
+    {
+      "description": "Group PostHog",
+      "groupName": "posthog",
+      "matchPackagePatterns": ["^posthog", "^@posthog/"]
+    },
+    {
+      "description": "Group type definitions",
+      "groupName": "types",
+      "matchPackagePatterns": ["^@types/"],
+      "automerge": true
+    },
+    {
+      "description": "Allow Better Auth prereleases",
+      "matchPackageNames": ["better-auth"],
+      "ignoreUnstable": false
+    }
+  ]
+}
