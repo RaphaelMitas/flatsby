@@ -7,7 +7,7 @@ settings:
 catalogs:
   default:
     '@ai-sdk/react':
-      specifier: ^3.0.12
+      specifier: ^3.0.118
       version: 3.0.118
     '@better-auth/cli':
       specifier: 1.5.0-beta.13
@@ -40,7 +40,7 @@ catalogs:
       specifier: ^22.18.12
       version: 22.19.15
     ai:
-      specifier: ^6.0.12
+      specifier: ^6.0.116
       version: 6.0.116
     autumn-js:
       specifier: ^0.1.63
