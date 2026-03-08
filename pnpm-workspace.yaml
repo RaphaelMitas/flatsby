@@ -5,7 +5,7 @@ packages:
 
 catalog:
   "@ai-sdk/react": ^3.0.118
-  autumn-js: ^0.1.63
+  autumn-js: ^0.1.82
   "@better-auth/cli": 1.5.0-beta.13
   "@better-auth/expo": 1.5.4
   "@eslint/js": ^9.38.0
