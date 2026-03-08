@@ -34,7 +34,7 @@
     "@react-native-community/datetimepicker": "^8.6.0",
     "@react-native-vector-icons/get-image": "^12.3.0",
     "@react-native-vector-icons/lucide": "^12.4.1",
-    "@shopify/flash-list": "^2.2.0",
+    "@shopify/flash-list": "^2.3.0",
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
