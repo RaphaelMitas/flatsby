@@ -19,7 +19,7 @@ catalogs:
       specifier: ^9.38.0
       version: 9.39.4
     '@t3-oss/env-nextjs':
-      specifier: ^0.13.8
+      specifier: ^0.13.10
       version: 0.13.10
     '@tailwindcss/postcss':
       specifier: ^4.1.16
