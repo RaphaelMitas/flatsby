@@ -849,7 +849,7 @@ importers:
         specifier: 'catalog:'
         version: 9.39.4
       '@next/eslint-plugin-next':
-        specifier: ^16.0.0
+        specifier: ^16.1.6
         version: 16.1.6
       eslint-plugin-import:
         specifier: ^2.32.0
