@@ -18,7 +18,7 @@ import { Button } from "~/lib/ui/button";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useTheme } from "~/lib/ui/theme";
-import { useWinterEffects } from "~/lib/ui/winter-effects";
+import { useSpringEffects } from "~/lib/ui/spring-effects";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
@@ -27,9 +27,9 @@ import { useShoppingStore } from "~/utils/shopping-store";
 export default function SettingsIndex() {
   const { storedTheme, setTheme } = useTheme();
   const {
-    isEnabled: isWinterEffectsEnabled,
-    setEnabled: setWinterEffectsEnabled,
-  } = useWinterEffects();
+    isEnabled: isSpringEffectsEnabled,
+    setEnabled: setSpringEffectsEnabled,
+  } = useSpringEffects();
   const posthog = usePostHog();
   const [isAnalyticsEnabled, setIsAnalyticsEnabled] = useState(
     () => !posthog.optedOut,
@@ -142,14 +142,14 @@ export default function SettingsIndex() {
             />
           </ReanimatedSwipeable>
           <SettingsItem
-            title="Winter Effects"
-            subtitle={isWinterEffectsEnabled ? "Enabled" : "Disabled"}
-            iconName="snowflake"
-            onPress={() => setWinterEffectsEnabled(!isWinterEffectsEnabled)}
+            title="Spring Effects"
+            subtitle={isSpringEffectsEnabled ? "Enabled" : "Disabled"}
+            iconName="flower-2"
+            onPress={() => setSpringEffectsEnabled(!isSpringEffectsEnabled)}
             rightContent={
               <Checkbox
-                checked={isWinterEffectsEnabled}
-                onCheckedChange={setWinterEffectsEnabled}
+                checked={isSpringEffectsEnabled}
+                onCheckedChange={setSpringEffectsEnabled}
               />
             }
           />

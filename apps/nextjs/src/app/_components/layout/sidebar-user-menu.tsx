@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomer } from "autumn-js/react";
-import { ChevronsUpDown, LogOut, Settings, Snowflake } from "lucide-react";
+import { ChevronsUpDown, Flower2, LogOut, Settings } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -21,13 +21,13 @@ import {
 } from "@flatsby/ui/sidebar";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 
-import { useWinterEffects } from "~/app/_components/layout/winterTheme/use-winter-effects";
+import { useSpringEffects } from "~/app/_components/layout/springTheme/use-spring-effects";
 import { signOut } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
 
 export function SidebarUserMenu() {
   const { isMobile } = useSidebar();
-  const { isEnabled, setEnabled } = useWinterEffects();
+  const { isEnabled, setEnabled } = useSpringEffects();
   const trpc = useTRPC();
   const { customer } = useCustomer();
 
@@ -89,8 +89,8 @@ export function SidebarUserMenu() {
                 onClick={() => setEnabled((prev) => !prev)}
                 className="cursor-pointer"
               >
-                <Snowflake className="mr-2 size-4" />
-                Winter Effects {isEnabled ? "(On)" : "(Off)"}
+                <Flower2 className="mr-2 size-4" />
+                Spring Effects {isEnabled ? "(On)" : "(Off)"}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
