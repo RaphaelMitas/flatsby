@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Snowflake } from "lucide-react";
+import { Flower2 } from "lucide-react";
 
 import { Button } from "@flatsby/ui/button";
 import {
@@ -15,7 +15,7 @@ import { Label } from "@flatsby/ui/label";
 import { Separator } from "@flatsby/ui/separator";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 
-import { useWinterEffects } from "~/app/_components/layout/winterTheme/use-winter-effects";
+import { useSpringEffects } from "~/app/_components/layout/springTheme/use-spring-effects";
 import { useTRPC } from "~/trpc/react";
 import { handleApiError } from "~/utils";
 import { ModeToggle } from "./ModeToggle";
@@ -23,7 +23,7 @@ import UserLogoutButton from "./user-logout-button";
 
 export function UserButton() {
   const trpc = useTRPC();
-  const { isEnabled, setEnabled } = useWinterEffects();
+  const { isEnabled, setEnabled } = useSpringEffects();
   const { data: userWithGroups } = useSuspenseQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
@@ -58,9 +58,9 @@ export function UserButton() {
               onClick={() => setEnabled((prev) => !prev)}
             >
               <div className="flex items-center gap-2">
-                <Snowflake className="h-4 w-4" />
-                <Label htmlFor="winter-effects" className="cursor-pointer">
-                  Winter Effects
+                <Flower2 className="h-4 w-4" />
+                <Label htmlFor="spring-effects" className="cursor-pointer">
+                  Spring Effects
                 </Label>
               </div>
             </Button>

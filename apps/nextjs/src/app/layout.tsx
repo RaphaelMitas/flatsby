@@ -8,10 +8,10 @@ import { cn } from "@flatsby/ui";
 import { Toaster } from "@flatsby/ui/toast";
 
 import { AnalyticsProvider } from "~/app/_components/analytics/AnalyticsProvider";
-import { WinterEffectsProvider } from "~/app/_components/layout/winterTheme/use-winter-effects";
+import { SpringEffectsProvider } from "~/app/_components/layout/springTheme/use-spring-effects";
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
-import { WinterSnowWrapper } from "./_components/layout/winterTheme/winter-snow-wrapper";
+import { SpringPetalWrapper } from "./_components/layout/springTheme/spring-petal-wrapper";
 
 import "~/app/globals.css";
 
@@ -63,19 +63,19 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <WinterEffectsProvider>
+          <SpringEffectsProvider>
             <TRPCReactProvider>
               <AutumnProvider
                 betterAuthUrl={env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL}
               >
                 <AnalyticsProvider>
-                  <WinterSnowWrapper />
+                  <SpringPetalWrapper />
                   {props.children}
                 </AnalyticsProvider>
               </AutumnProvider>
             </TRPCReactProvider>
             <Toaster />
-          </WinterEffectsProvider>
+          </SpringEffectsProvider>
         </ThemeProvider>
       </body>
     </html>

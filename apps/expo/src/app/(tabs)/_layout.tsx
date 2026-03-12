@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
 import { Tabs } from "~/lib/components/bottom-tabs";
-import { useWinterEffects } from "~/lib/ui/winter-effects";
+import { useSpringEffects } from "~/lib/ui/spring-effects";
 import { useThemeColors } from "~/lib/utils";
 import { usePostHogIdentify } from "~/utils/analytics/use-posthog-identify";
 import { prefetch, trpc } from "~/utils/api";
@@ -15,16 +15,16 @@ const walletIcon = LucideIcon.getImageSourceSync("wallet", 20);
 const settingsIcon = LucideIcon.getImageSourceSync("settings", 20);
 const messageSquareIcon = LucideIcon.getImageSourceSync("message-square", 20);
 
-//winter themed icons
-const winterHomeIcon = LucideIcon.getImageSourceSync("snowflake", 20);
-const winterCartIcon = LucideIcon.getImageSourceSync("gift", 20);
+// spring themed icons
+const springHomeIcon = LucideIcon.getImageSourceSync("flower-2", 20);
+const springCartIcon = LucideIcon.getImageSourceSync("cherry", 20);
 
 export default function TabLayout() {
   const session = useSession();
   const { selectedGroupId, selectedShoppingListId, selectedShoppingListName } =
     useShoppingStore();
   const { getColor } = useThemeColors();
-  const { isEnabled: isWinterEffectsEnabled } = useWinterEffects();
+  const { isEnabled: isSpringEffectsEnabled } = useSpringEffects();
 
   usePostHogIdentify();
 
@@ -95,8 +95,8 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon:
-            isWinterEffectsEnabled && winterHomeIcon
-              ? () => winterHomeIcon
+            isSpringEffectsEnabled && springHomeIcon
+              ? () => springHomeIcon
               : houseIcon
                 ? () => houseIcon
                 : undefined,
@@ -107,8 +107,8 @@ export default function TabLayout() {
         options={{
           title: selectedShoppingListName ?? "Shopping List",
           tabBarIcon:
-            isWinterEffectsEnabled && winterCartIcon
-              ? () => winterCartIcon
+            isSpringEffectsEnabled && springCartIcon
+              ? () => springCartIcon
               : shoppingBasketIcon
                 ? () => shoppingBasketIcon
                 : undefined,

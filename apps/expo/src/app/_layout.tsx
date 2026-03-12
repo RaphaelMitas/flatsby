@@ -19,8 +19,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
 
 import { ThemeProvider } from "~/lib/ui/theme";
-import { WinterEffectsProvider } from "~/lib/ui/winter-effects";
-import { WinterSnow } from "~/lib/ui/winter-snow";
+import { SpringEffectsProvider } from "~/lib/ui/spring-effects";
+import { SpringPetals } from "~/lib/ui/spring-petals";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { ChatStoreProvider } from "~/utils/chat-store";
@@ -49,7 +49,7 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <BottomSheetModalProvider>
               <ThemeProvider>
-                <WinterEffectsProvider>
+                <SpringEffectsProvider>
                   <QueryClientProvider client={queryClient}>
                     <RevenueCatProvider>
                       <ShoppingStoreProvider>
@@ -64,7 +64,7 @@ export default function RootLayout() {
                       </ShoppingStoreProvider>
                     </RevenueCatProvider>
                   </QueryClientProvider>
-                </WinterEffectsProvider>
+                </SpringEffectsProvider>
               </ThemeProvider>
             </BottomSheetModalProvider>
           </SafeAreaProvider>
@@ -135,7 +135,7 @@ const StackLayout = () => {
 
   return (
     <View className="bg-background flex-1">
-      <WinterSnow />
+      <SpringPetals />
       <ScreenTracker />
       <Stack
         screenOptions={{

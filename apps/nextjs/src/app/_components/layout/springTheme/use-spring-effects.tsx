@@ -7,39 +7,32 @@ import {
   useSyncExternalStore,
 } from "react";
 
-const WINTER_EFFECTS_STORAGE_KEY = "winter_effects_enabled";
+const SPRING_EFFECTS_STORAGE_KEY = "spring_effects_enabled";
 
-interface WinterEffectsContextValue {
+interface SpringEffectsContextValue {
   isEnabled: boolean;
   setEnabled: (updater: boolean | ((prev: boolean) => boolean)) => void;
 }
 
-const WinterEffectsContext = createContext<WinterEffectsContextValue | null>(
+const SpringEffectsContext = createContext<SpringEffectsContextValue | null>(
   null,
 );
 
-// Subscribe to storage changes
 function subscribe(callback: () => void) {
   window.addEventListener("storage", callback);
   return () => window.removeEventListener("storage", callback);
 }
 
-// Get current value from localStorage
 function getSnapshot() {
-  const stored = localStorage.getItem(WINTER_EFFECTS_STORAGE_KEY);
+  const stored = localStorage.getItem(SPRING_EFFECTS_STORAGE_KEY);
   return stored === null ? true : stored === "true";
 }
 
-// Server snapshot - always return false to match initial client render
 function getServerSnapshot() {
   return false;
 }
 
-/**
- * Provider component for winter effects state
- * Wrap your app with this to share winter effects state across components
- */
-export function WinterEffectsProvider({
+export function SpringEffectsProvider({
   children,
 }: {
   children: React.ReactNode;
@@ -57,35 +50,30 @@ export function WinterEffectsProvider({
         typeof updater === "function"
           ? (updater as (prev: boolean) => boolean)(current)
           : updater;
-      localStorage.setItem(WINTER_EFFECTS_STORAGE_KEY, String(next));
-      // Dispatch storage event to trigger re-render
+      localStorage.setItem(SPRING_EFFECTS_STORAGE_KEY, String(next));
       window.dispatchEvent(new Event("storage"));
     },
     [],
   );
 
   return (
-    <WinterEffectsContext.Provider
+    <SpringEffectsContext.Provider
       value={{
         isEnabled,
         setEnabled,
       }}
     >
       {children}
-    </WinterEffectsContext.Provider>
+    </SpringEffectsContext.Provider>
   );
 }
 
-/**
- * Hook to manage winter effects preference in Next.js
- * Must be used within a WinterEffectsProvider
- */
-export function useWinterEffects() {
-  const context = useContext(WinterEffectsContext);
+export function useSpringEffects() {
+  const context = useContext(SpringEffectsContext);
 
   if (!context) {
     throw new Error(
-      "useWinterEffects must be used within a WinterEffectsProvider",
+      "useSpringEffects must be used within a SpringEffectsProvider",
     );
   }
 
