@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
-import { appRouter, createTRPCContext } from "@flatsby/api";
+import { appRouter, captureError, createTRPCContext } from "@flatsby/api";
 
 import { auth } from "~/auth/server";
 
@@ -35,8 +35,13 @@ const handler = async (req: NextRequest) => {
         headers: req.headers,
         signal: req.signal,
       }),
-    onError({ error, path }) {
-      console.error(`>>> tRPC Error on '${path}'`, error);
+    onError({ error, path, ctx }) {
+      captureError({
+        error: error.cause ?? error,
+        operation: `trpc.${path}`,
+        distinctId: ctx?.session?.user.id,
+        additionalProperties: { trpcCode: error.code },
+      });
     },
   });
 

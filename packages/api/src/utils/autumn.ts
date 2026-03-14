@@ -5,6 +5,8 @@ import { Autumn } from "autumn-js";
 import { env } from "@flatsby/auth/env";
 import { AUTUMN_FEATURES, costToCredits } from "@flatsby/validators/billing";
 
+import { captureError } from "../lib/posthog";
+
 export const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
 
 export async function checkCredits({
@@ -19,7 +21,11 @@ export async function checkCredits({
     });
     return result;
   } catch (error) {
-    console.error("Error checking credits:", error);
+    captureError({
+      error,
+      operation: "billing.checkCredits",
+      distinctId: customerId,
+    });
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Error checking credits",
