@@ -17,8 +17,8 @@ import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
-import { useTheme } from "~/lib/ui/theme";
 import { useSpringEffects } from "~/lib/ui/spring-effects";
+import { useTheme } from "~/lib/ui/theme";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
@@ -157,9 +157,16 @@ export default function SettingsIndex() {
         <SettingsSection title="Groups">
           <Link href="/settings/manage-groups" asChild>
             <SettingsItem
-              title="Your Groups"
-              subtitle="Manage your groups"
+              title="Change Group"
+              subtitle="Change selected group or create a new one"
               iconName="arrow-left-right"
+            />
+          </Link>
+          <Link href="/settings/group-settings" asChild>
+            <SettingsItem
+              title="Group Settings"
+              subtitle="Manage members and group details"
+              iconName="users"
             />
           </Link>
         </SettingsSection>

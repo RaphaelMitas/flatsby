@@ -11,13 +11,14 @@ import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 import { ExpenseCard } from "./ExpenseCard";
 import { ExpenseForm } from "./ExpenseForm";
 
 export function ExpenseDashboard() {
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
+  const handleApiError = useHandleApiError();
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   const groupId = currentGroup?.id ?? 0;

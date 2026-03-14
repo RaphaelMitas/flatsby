@@ -1,24 +1,31 @@
-import type { Auth } from "@flatsby/auth";
-import type { CheckResult } from "autumn-js";
+import type { CheckResponse } from "autumn-js";
 import { TRPCError } from "@trpc/server";
+import { Autumn } from "autumn-js";
 
+import { env } from "@flatsby/auth/env";
 import { AUTUMN_FEATURES, costToCredits } from "@flatsby/validators/billing";
 
+import { captureError } from "../lib/posthog";
+
+export const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
+
 export async function checkCredits({
-  authApi,
-  headers,
+  customerId,
 }: {
-  authApi: Auth["api"];
-  headers: Headers;
-}): Promise<CheckResult> {
+  customerId: string;
+}): Promise<CheckResponse> {
   try {
-    const result: CheckResult = (await authApi.check({
-      headers,
-      body: { featureId: AUTUMN_FEATURES.CREDITS },
-    })) as CheckResult;
+    const result = await autumn.check({
+      customerId,
+      featureId: AUTUMN_FEATURES.CREDITS,
+    });
     return result;
   } catch (error) {
-    console.error("Error checking credits:", error);
+    captureError({
+      error,
+      operation: "billing.checkCredits",
+      distinctId: customerId,
+    });
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Error checking credits",
@@ -27,19 +34,18 @@ export async function checkCredits({
 }
 
 export async function trackAIUsage({
-  authApi,
-  headers,
+  customerId,
   cost,
 }: {
-  authApi: Auth["api"];
-  headers: Headers;
+  customerId: string;
   cost: string | undefined;
 }): Promise<void> {
   const credits = costToCredits(cost);
   if (credits > 0) {
-    await authApi.track({
-      headers,
-      body: { featureId: AUTUMN_FEATURES.CREDITS, value: credits },
+    await autumn.track({
+      customerId,
+      featureId: AUTUMN_FEATURES.CREDITS,
+      value: credits,
     });
   }
 }

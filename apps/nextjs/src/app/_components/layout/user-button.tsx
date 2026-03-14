@@ -17,13 +17,14 @@ import { UserAvatar } from "@flatsby/ui/user-avatar";
 
 import { useSpringEffects } from "~/app/_components/layout/springTheme/use-spring-effects";
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 import { ModeToggle } from "./ModeToggle";
 import UserLogoutButton from "./user-logout-button";
 
 export function UserButton() {
   const trpc = useTRPC();
   const { isEnabled, setEnabled } = useSpringEffects();
+  const handleApiError = useHandleApiError();
   const { data: userWithGroups } = useSuspenseQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );

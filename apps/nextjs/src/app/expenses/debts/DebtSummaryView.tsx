@@ -18,12 +18,13 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 import { SettlementForm } from "./SettlementForm";
 
 export function DebtSummaryView() {
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
+  const handleApiError = useHandleApiError();
   const [selectedDebt, setSelectedDebt] = useState<{
     fromGroupMemberId: number;
     toGroupMemberId: number;

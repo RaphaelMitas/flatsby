@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { nextCookies } from "better-auth/next-js";
 import { importPKCS8, SignJWT } from "jose";
 
@@ -27,6 +28,11 @@ export const auth = initAuth({
 export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
 );
+
+export async function signOutAndRedirect() {
+  await auth.api.signOut({ headers: await headers() });
+  redirect("/auth/login");
+}
 
 async function makeAppleClientSecret(): Promise<string> {
   try {

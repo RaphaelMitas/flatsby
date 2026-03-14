@@ -16,12 +16,13 @@ import {
 } from "@flatsby/ui/select";
 
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 
 export function GroupSwitcher() {
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const handleApiError = useHandleApiError();
 
   const { data: userWithGroups } = useSuspenseQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),

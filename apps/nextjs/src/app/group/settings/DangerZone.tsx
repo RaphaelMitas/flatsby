@@ -18,7 +18,7 @@ import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
 
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 
 interface DangerZoneProps {
   groupId: number;
@@ -28,6 +28,7 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
   const [groupNameInput, setGroupNameInput] = useState("");
   const router = useRouter();
   const trpc = useTRPC();
+  const handleApiError = useHandleApiError();
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),

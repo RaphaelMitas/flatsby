@@ -1,31 +1,49 @@
-import type { Product, ProductItem } from "autumn-js";
-import type { ProductDetails } from "autumn-js/react";
 import React, { createContext, useContext, useState } from "react";
-import { useCustomer, usePricingTable } from "autumn-js/react";
-import { Loader2 } from "lucide-react";
+import { useCustomer, useListPlans } from "autumn-js/react";
+import { CheckIcon, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { cn } from "@flatsby/ui";
-import { PLAN_IDS } from "@flatsby/validators/billing";
+import { getCurrentSubscription, PLAN_IDS } from "@flatsby/validators/billing";
 
+import { Badge } from "../../badge";
 import { Button } from "../../button";
-import { getPricingTableContent } from "../../lib/autumn/pricing-table-content";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../../card";
+import { Separator } from "../../separator";
+import { Skeleton } from "../../skeleton";
 import { Switch } from "../../switch";
-import CheckoutDialog from "./checkout-dialog";
 
-export default function PricingTable({
-  productDetails,
-}: {
-  productDetails?: ProductDetails[];
-}) {
-  const { customer, checkout } = useCustomer({ errorOnNotFound: false });
+type Plan = NonNullable<ReturnType<typeof useListPlans>["data"]>[number];
+
+export default function PricingTable() {
+  const {
+    data: customer,
+    attach,
+    updateSubscription,
+    refetch: refetchCustomer,
+  } = useCustomer({ errorOnNotFound: false });
 
   const [isAnnual, setIsAnnual] = useState(false);
-  const { products, isLoading, error } = usePricingTable({ productDetails });
+  const {
+    data: plans,
+    isLoading,
+    error,
+    refetch: refetchPlans,
+  } = useListPlans();
 
   if (isLoading) {
     return (
-      <div className="flex h-full min-h-[300px] w-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <PricingCardSkeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -34,36 +52,45 @@ export default function PricingTable({
     return <div> Something went wrong...</div>;
   }
 
-  const currentPlanId = customer?.products[0]?.id;
+  const currentPlanId = getCurrentSubscription(
+    customer?.subscriptions ?? [],
+  )?.planId;
   const hasApplePlan = currentPlanId === PLAN_IDS.PRO_APPLE;
 
-  const filteredProducts = products?.filter((product) => {
+  const filteredPlans = plans?.filter((plan) => {
     if (hasApplePlan) {
-      return product.id === PLAN_IDS.PRO_APPLE;
+      return plan.id === PLAN_IDS.PRO_APPLE;
     }
-    return product.id !== PLAN_IDS.PRO_APPLE;
+    return plan.id !== PLAN_IDS.PRO_APPLE;
   });
 
+  const getIntervalGroup = (plan: Plan): string | undefined => {
+    if (!plan.price) return undefined;
+    const interval = plan.price.interval;
+    if (!interval || interval === "one_off") return undefined;
+    if (interval === "year" || interval === "semi_annual") return "year";
+    return "month";
+  };
+
   const intervals = Array.from(
-    new Set(
-      filteredProducts
-        ?.map((p) => p.properties.interval_group)
-        .filter((i) => !!i),
-    ),
+    new Set(filteredPlans?.map((p) => getIntervalGroup(p)).filter((i) => !!i)),
   );
 
   const multiInterval = intervals.length > 1;
 
-  const intervalFilter = (product: Product) => {
-    if (!product.properties.interval_group) {
-      return true;
-    }
+  const recommendedPlanId =
+    filteredPlans?.find((p) => p.customerEligibility?.scenario === "upgrade")
+      ?.id ?? PLAN_IDS.STARTER;
+
+  const intervalFilter = (plan: Plan) => {
+    const group = getIntervalGroup(plan);
+    if (!group) return true;
 
     if (multiInterval) {
       if (isAnnual) {
-        return product.properties.interval_group === "year";
+        return group === "year";
       } else {
-        return product.properties.interval_group === "month";
+        return group === "month";
       }
     }
 
@@ -72,19 +99,21 @@ export default function PricingTable({
 
   return (
     <div className={cn("root")}>
-      {filteredProducts && (
+      {filteredPlans && (
         <PricingTableContainer
-          products={filteredProducts}
+          plans={filteredPlans}
           isAnnualToggle={isAnnual}
           setIsAnnualToggle={setIsAnnual}
           multiInterval={multiInterval}
         >
-          {filteredProducts.filter(intervalFilter).map((product, index) => {
-            const isApplePlan = product.id === PLAN_IDS.PRO_APPLE;
+          {filteredPlans.filter(intervalFilter).map((plan, index) => {
+            const isApplePlan = plan.id === PLAN_IDS.PRO_APPLE;
+            const scenario = plan.customerEligibility?.scenario;
             return (
               <PricingCard
                 key={index}
-                productId={product.id}
+                planId={plan.id}
+                isRecommended={plan.id === recommendedPlanId}
                 disclaimer={
                   isApplePlan
                     ? "To cancel, go to App Store subscriptions"
@@ -93,18 +122,28 @@ export default function PricingTable({
                 buttonProps={{
                   disabled:
                     isApplePlan ||
-                    (product.scenario === "active" &&
-                      !product.properties.updateable) ||
-                    product.scenario === "scheduled",
+                    scenario === "active" ||
+                    scenario === "scheduled",
 
                   onClick: async () => {
-                    if (product.id && customer) {
-                      await checkout({
-                        productId: product.id,
-                        dialog: CheckoutDialog,
-                      });
-                    } else if (product.display?.button_url) {
-                      window.open(product.display.button_url, "_blank");
+                    if (!plan.id || !customer) return;
+
+                    const pendingCancelSub = customer.subscriptions.find(
+                      (s) => s.canceledAt !== null,
+                    );
+
+                    try {
+                      if (pendingCancelSub && scenario === "renew") {
+                        await updateSubscription({
+                          planId: pendingCancelSub.planId,
+                          cancelAction: "uncancel",
+                        });
+                      } else {
+                        await attach({ planId: plan.id });
+                      }
+                      await Promise.all([refetchCustomer(), refetchPlans()]);
+                    } catch {
+                      toast.error("Failed to update plan. Please try again.");
                     }
                   },
                 }}
@@ -120,14 +159,14 @@ export default function PricingTable({
 const PricingTableContext = createContext<{
   isAnnualToggle: boolean;
   setIsAnnualToggle: (isAnnual: boolean) => void;
-  products: Product[];
+  plans: Plan[];
   showFeatures: boolean;
 }>({
   isAnnualToggle: false,
   setIsAnnualToggle: () => {
     /* empty */
   },
-  products: [],
+  plans: [],
   showFeatures: true,
 });
 
@@ -144,7 +183,7 @@ export const usePricingTableContext = (componentName: string) => {
 
 export const PricingTableContainer = ({
   children,
-  products,
+  plans,
   showFeatures = true,
   className,
   isAnnualToggle,
@@ -152,35 +191,28 @@ export const PricingTableContainer = ({
   multiInterval,
 }: {
   children?: React.ReactNode;
-  products?: Product[];
+  plans?: Plan[];
   showFeatures?: boolean;
   className?: string;
   isAnnualToggle: boolean;
   setIsAnnualToggle: (isAnnual: boolean) => void;
   multiInterval: boolean;
 }) => {
-  if (!products) {
-    throw new Error("products is required in <PricingTable />");
+  if (!plans) {
+    throw new Error("plans is required in <PricingTable />");
   }
 
-  if (products.length === 0) {
+  if (plans.length === 0) {
     return <></>;
   }
 
-  const hasRecommended = products.some((p) => p.display?.recommend_text);
   return (
     <PricingTableContext.Provider
-      value={{ isAnnualToggle, setIsAnnualToggle, products, showFeatures }}
+      value={{ isAnnualToggle, setIsAnnualToggle, plans, showFeatures }}
     >
-      <div
-        className={cn("flex flex-col items-center", hasRecommended && "!py-10")}
-      >
+      <div className={cn("flex flex-col items-center")}>
         {multiInterval && (
-          <div
-            className={cn(
-              products.some((p) => p.display?.recommend_text) && "mb-8",
-            )}
-          >
+          <div>
             <AnnualSwitch
               isAnnualToggle={isAnnualToggle}
               setIsAnnualToggle={setIsAnnualToggle}
@@ -189,7 +221,7 @@ export const PricingTableContainer = ({
         )}
         <div
           className={cn(
-            "grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]",
+            "grid w-full grid-cols-1 gap-4 pt-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]",
             className,
           )}
         >
@@ -201,7 +233,8 @@ export const PricingTableContainer = ({
 };
 
 interface PricingCardProps {
-  productId: string;
+  planId: string;
+  isRecommended?: boolean;
   showFeatures?: boolean;
   className?: string;
   disclaimer?: string;
@@ -216,130 +249,113 @@ interface PricingCardProps {
 }
 
 export const PricingCard = ({
-  productId,
+  planId,
+  isRecommended,
   className,
   disclaimer,
   buttonProps,
 }: PricingCardProps) => {
-  const { products, showFeatures } = usePricingTableContext("PricingCard");
+  const { plans, showFeatures } = usePricingTableContext("PricingCard");
 
-  const product = products.find((p) => p.id === productId);
+  const plan = plans.find((p) => p.id === planId);
 
-  if (!product) {
-    throw new Error(`Product with id ${productId} not found`);
+  if (!plan) {
+    throw new Error(`Plan with id ${planId} not found`);
   }
 
-  const { name, display: productDisplay } = product;
+  const { buttonText } = getPricingTableContent(plan);
 
-  const { buttonText } = getPricingTableContent(product);
-
-  const isRecommended = productDisplay?.recommend_text ? true : false;
-  const mainPriceDisplay = product.properties.is_free
+  const isFree = plan.autoEnable || plan.price === null;
+  const mainPriceDisplay = isFree
     ? {
-        primary_text: "Free",
+        primaryText: "Free",
       }
-    : product.items[0]?.display;
+    : plan.price?.display;
 
-  const featureItems = product.properties.is_free
-    ? product.items
-    : product.items.slice(1);
+  const featureItems = plan.items;
 
   return (
-    <div
+    <Card
       className={cn(
-        "text-foreground h-full w-full max-w-xl rounded-lg border py-6 shadow-sm",
-        isRecommended &&
-          "bg-secondary/40 lg:h-[calc(100%+48px)] lg:-translate-y-6 lg:shadow-lg dark:shadow-zinc-800/80",
+        "relative h-full w-full max-w-xl rounded-2xl shadow-sm transition-all",
+        isRecommended && "ring-primary shadow-md ring-2 sm:scale-[1.02]",
         className,
       )}
     >
-      {productDisplay?.recommend_text && (
-        <RecommendedBadge recommended={productDisplay.recommend_text} />
+      {isRecommended && (
+        <Badge className="hover:bg-primary absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1">
+          Recommended
+        </Badge>
       )}
-      <div
-        className={cn(
-          "flex h-full flex-grow flex-col",
-          isRecommended && "lg:translate-y-6",
+      <CardHeader className="pb-4">
+        <CardTitle className="truncate text-xl font-bold">
+          {plan.name}
+        </CardTitle>
+        {plan.description && (
+          <CardDescription className="min-h-10">
+            <p className="line-clamp-2">{plan.description}</p>
+          </CardDescription>
         )}
-      >
-        <div className="h-full">
-          <div className="flex flex-col">
-            <div className="pb-4">
-              <h2 className="truncate px-6 text-2xl font-semibold">
-                {productDisplay?.name ?? name}
-              </h2>
-              {productDisplay?.description && (
-                <div className="text-muted-foreground h-8 px-6 text-sm">
-                  <p className="line-clamp-2">{productDisplay.description}</p>
-                </div>
+        <div className="mb-2 pt-2">
+          <h3 className="flex h-16 items-center">
+            <div className="line-clamp-2">
+              <span className="text-3xl font-bold tracking-tight">
+                {mainPriceDisplay?.primaryText}
+              </span>{" "}
+              {mainPriceDisplay?.secondaryText && (
+                <span className="text-muted-foreground text-base font-normal">
+                  {mainPriceDisplay.secondaryText}
+                </span>
               )}
             </div>
-            <div className="mb-2">
-              <h3 className="bg-secondary/40 mb-4 flex h-16 items-center border-y px-6 font-semibold">
-                <div className="line-clamp-2">
-                  {mainPriceDisplay?.primary_text}{" "}
-                  {mainPriceDisplay?.secondary_text && (
-                    <span className="text-muted-foreground mt-1 font-normal">
-                      {mainPriceDisplay.secondary_text}
-                    </span>
-                  )}
-                </div>
-              </h3>
-            </div>
-          </div>
-          {showFeatures && featureItems.length > 0 && (
-            <div className="mb-6 flex-grow px-6">
-              <PricingFeatureList
-                items={featureItems}
-                everythingFrom={product.display?.everything_from}
-              />
-            </div>
-          )}
+          </h3>
         </div>
-        <div className={cn("px-6", isRecommended && "lg:-translate-y-12")}>
-          <PricingCardButton
-            recommended={productDisplay?.recommend_text ? true : false}
-            {...buttonProps}
-          >
-            {productDisplay?.button_text ?? buttonText}
-          </PricingCardButton>
-          {disclaimer && (
-            <p className="text-muted-foreground mt-2 text-center text-xs">
-              {disclaimer}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
+      </CardHeader>
+      {showFeatures && featureItems.length > 0 && (
+        <CardContent className="mb-8 grow">
+          <Separator className="mb-6" />
+          <PricingFeatureList items={featureItems} />
+        </CardContent>
+      )}
+      <CardFooter className="mt-auto flex-col items-stretch">
+        <PricingCardButton recommended={isRecommended} {...buttonProps}>
+          {buttonText}
+        </PricingCardButton>
+        {disclaimer && (
+          <p className="text-muted-foreground mt-2 text-center text-xs">
+            {disclaimer}
+          </p>
+        )}
+      </CardFooter>
+    </Card>
   );
 };
 
-// Pricing Feature List
+interface PlanItem {
+  display?: {
+    primaryText?: string;
+    secondaryText?: string;
+  };
+}
+
 export const PricingFeatureList = ({
   items,
-  everythingFrom,
   className,
 }: {
-  items: ProductItem[];
-  everythingFrom?: string;
+  items: PlanItem[];
   className?: string;
 }) => {
   return (
-    <div className={cn("flex-grow", className)}>
-      {everythingFrom && (
-        <p className="mb-4 text-sm">Everything from {everythingFrom}, plus:</p>
-      )}
+    <div className={cn("grow", className)}>
       <div className="space-y-3">
         {items.map((item, index) => (
-          <div key={index} className="flex items-start gap-2 text-sm">
-            {/* {showIcon && (
-              <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-            )} */}
+          <div key={index} className="flex items-start gap-3 text-sm">
+            <CheckIcon className="text-primary mt-0.5 h-4 w-4 shrink-0" />
             <div className="flex flex-col">
-              <span>{item.display?.primary_text}</span>
-              {item.display?.secondary_text && (
-                <span className="text-muted-foreground text-sm">
-                  {item.display.secondary_text}
+              <span>{item.display?.primaryText}</span>
+              {item.display?.secondaryText && (
+                <span className="text-muted-foreground text-xs">
+                  {item.display.secondaryText}
                 </span>
               )}
             </div>
@@ -417,7 +433,7 @@ export const AnnualSwitch = ({
   setIsAnnualToggle: (isAnnual: boolean) => void;
 }) => {
   return (
-    <div className="mb-4 flex items-center space-x-2">
+    <div className="mb-6 flex items-center space-x-2">
       <span className="text-muted-foreground text-sm">Monthly</span>
       <Switch
         id="annual-billing"
@@ -429,10 +445,63 @@ export const AnnualSwitch = ({
   );
 };
 
-export const RecommendedBadge = ({ recommended }: { recommended: string }) => {
+const PricingCardSkeleton = () => {
   return (
-    <div className="bg-secondary text-muted-foreground absolute top-[-1px] right-[-1px] rounded-bl-lg border px-3 text-sm font-medium lg:top-4 lg:right-4 lg:rounded-full lg:py-0.5">
-      {recommended}
-    </div>
+    <Card className="h-full w-full max-w-xl rounded-2xl shadow-sm">
+      <CardHeader className="pb-4">
+        <Skeleton className="h-6 w-24" />
+        <Skeleton className="mt-2 h-4 w-40" />
+        <div className="mb-2 pt-2">
+          <div className="flex h-16 items-center">
+            <Skeleton className="h-8 w-28" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="mb-8 grow">
+        <Separator className="mb-6" />
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <Skeleton className="mt-0.5 h-4 w-4 shrink-0 rounded-full" />
+              <Skeleton className="h-4 w-full max-w-[180px]" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Skeleton className="h-11 w-full rounded-lg" />
+      </CardFooter>
+    </Card>
   );
 };
+
+function getPricingTableContent(plan: Plan) {
+  const scenario = plan.customerEligibility?.scenario;
+  const hasTrial = plan.freeTrial !== undefined;
+  const isOneOff = plan.price?.interval === "one_off";
+
+  if (hasTrial) {
+    return { buttonText: <p>Start Free Trial</p> };
+  }
+
+  switch (scenario) {
+    case "scheduled":
+      return { buttonText: <p>Plan Scheduled</p> };
+    case "active":
+      return { buttonText: <p>Current Plan</p> };
+    case "new":
+      return {
+        buttonText: <p>{isOneOff ? "Purchase" : "Get started"}</p>,
+      };
+    case "renew":
+      return { buttonText: <p>Renew</p> };
+    case "upgrade":
+      return { buttonText: <p>Upgrade</p> };
+    case "downgrade":
+      return { buttonText: <p>Downgrade</p> };
+    case "cancel":
+      return { buttonText: <p>Cancel Plan</p> };
+    default:
+      return { buttonText: <p>Get Started</p> };
+  }
+}

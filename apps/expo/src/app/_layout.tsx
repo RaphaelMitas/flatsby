@@ -18,9 +18,9 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
 
-import { ThemeProvider } from "~/lib/ui/theme";
 import { SpringEffectsProvider } from "~/lib/ui/spring-effects";
 import { SpringPetals } from "~/lib/ui/spring-petals";
+import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { ChatStoreProvider } from "~/utils/chat-store";
@@ -81,10 +81,10 @@ function getScreenName(segments: string[]): string {
   const names: Record<string, string> = {
     home: "Home",
     "home/create-group": "Create Group",
-    "home/group-settings": "Group Settings",
-    "home/group-settings/members": "Group Members",
-    "home/group-settings/member-actions": "Member Actions",
-    "home/group-settings/group-details": "Group Details",
+    "settings/group-settings": "Group Settings",
+    "settings/group-settings/members": "Group Members",
+    "settings/group-settings/member-actions": "Member Actions",
+    "settings/group-settings/group-details": "Group Details",
     "home/shopping-lists": "Shopping Lists",
     "home/shopping-lists/create": "Create Shopping List",
     shoppingList: "Shopping List",

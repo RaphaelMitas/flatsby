@@ -97,14 +97,14 @@ export default function GroupSettingsIndex() {
         <SettingsHeader title={group.data.name} />
 
         <SettingsSection title={group.data.name}>
-          <Link href="/(tabs)/home/group-settings/group-details" asChild>
+          <Link href="/(tabs)/settings/group-settings/group-details" asChild>
             <SettingsItem
               title="Group Details"
               subtitle="Edit your group details"
               iconName="settings"
             />
           </Link>
-          <Link href="/(tabs)/home/group-settings/members" asChild>
+          <Link href="/(tabs)/settings/group-settings/members" asChild>
             <SettingsItem
               title="Members"
               subtitle="Manage your group members"
@@ -116,6 +116,13 @@ export default function GroupSettingsIndex() {
               title="Select Shopping List"
               subtitle="Select, create, and edit shopping lists"
               iconName="shopping-cart"
+            />
+          </Link>
+          <Link href="/(tabs)/settings/group-settings/import-expenses" asChild>
+            <SettingsItem
+              title="Import Expenses"
+              subtitle="Import from Splitwise CSV"
+              iconName="upload"
             />
           </Link>
         </SettingsSection>

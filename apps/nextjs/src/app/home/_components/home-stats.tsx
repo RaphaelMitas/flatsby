@@ -10,7 +10,7 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 
 function useCountUp(target: number, duration = 500) {
   const [value, setValue] = useState(0);
@@ -82,6 +82,7 @@ function StatCardSkeleton() {
 function HomeStatsInner() {
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
+  const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id ?? 0;
 

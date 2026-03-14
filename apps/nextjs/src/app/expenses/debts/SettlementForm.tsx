@@ -36,7 +36,7 @@ import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { CurrencyInput } from "~/components/CurrencyInput";
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 
 interface SettlementFormProps {
   fromGroupMemberId: number;
@@ -60,6 +60,7 @@ export function SettlementForm({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
+  const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id ?? 0;
   const isEditMode = !!expense;

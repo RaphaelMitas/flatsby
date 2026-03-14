@@ -29,12 +29,6 @@ export default function HomeLayout() {
         }}
       />
       <Stack.Screen
-        name="group-settings"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
         name="shopping-lists"
         options={{
           headerShown: false,

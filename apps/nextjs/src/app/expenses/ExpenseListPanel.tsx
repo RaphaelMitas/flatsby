@@ -11,7 +11,7 @@ import { ScrollArea } from "@flatsby/ui/scroll-area";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 import { ExpenseCard } from "./ExpenseCard";
 
 interface ExpenseListPanelProps {
@@ -27,6 +27,7 @@ export function ExpenseListPanel({
 }: ExpenseListPanelProps) {
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
+  const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id ?? 0;
 

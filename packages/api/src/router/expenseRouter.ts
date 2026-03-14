@@ -2,7 +2,7 @@ import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, eq } from "@flatsby/db";
+import { and, eq, inArray } from "@flatsby/db";
 import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 import {
@@ -11,6 +11,7 @@ import {
   splitMethodSchema,
   updateExpenseSchema,
 } from "@flatsby/validators/expenses/schemas";
+import { bulkCreateExpensesSchema } from "@flatsby/validators/expenses/splitwise-import";
 import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
 
 import type { ApiError } from "../errors";
@@ -619,5 +620,167 @@ export const expenseRouter = createTRPCRouter({
         const debtSummary = calculateDebts(result.data);
         return { success: true as const, data: debtSummary };
       });
+    }),
+
+  deleteAllGroupExpenses: protectedProcedure
+    .input(z.object({ groupId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      return withErrorHandlingAsResult(
+        Effect.flatMap(
+          OperationUtils.getGroupWithAccess(
+            ctx.db,
+            input.groupId,
+            ctx.session.user.id,
+          ),
+          () =>
+            DbUtils.transaction(async (trx) => {
+              // Get all expense IDs in this group
+              const groupExpenses = await trx.query.expenses.findMany({
+                where: eq(expenses.groupId, input.groupId),
+                columns: { id: true },
+              });
+
+              if (groupExpenses.length === 0) {
+                return { deletedCount: 0 };
+              }
+
+              const expenseIds = groupExpenses.map((e) => e.id);
+
+              // Delete splits first (foreign key constraint)
+              await trx
+                .delete(expenseSplits)
+                .where(inArray(expenseSplits.expenseId, expenseIds));
+
+              // Delete expenses
+              await trx
+                .delete(expenses)
+                .where(eq(expenses.groupId, input.groupId));
+
+              return { deletedCount: expenseIds.length };
+            }, "delete all group expenses")(ctx.db),
+        ),
+      );
+    }),
+
+  bulkCreateExpenses: protectedProcedure
+    .input(bulkCreateExpensesSchema)
+    .mutation(async ({ ctx, input }) => {
+      return withErrorHandlingAsResult(
+        Effect.flatMap(
+          OperationUtils.getGroupWithAccess(
+            ctx.db,
+            input.groupId,
+            ctx.session.user.id,
+          ),
+          () =>
+            Effect.flatMap(
+              GroupUtils.getBasicMembership(
+                ctx.db,
+                input.groupId,
+                ctx.session.user.id,
+              ),
+              (currentUserGroupMember) => {
+                // Collect all referenced groupMemberIds
+                const allMemberIds = new Set<number>();
+                for (const expense of input.expenses) {
+                  allMemberIds.add(expense.paidByGroupMemberId);
+                  for (const split of expense.splits) {
+                    allMemberIds.add(split.groupMemberId);
+                  }
+                }
+
+                return Effect.flatMap(
+                  // Batch-verify all referenced members are active
+                  safeDbOperation(
+                    () =>
+                      ctx.db.query.groupMembers.findMany({
+                        where: and(
+                          inArray(groupMembers.id, [...allMemberIds]),
+                          eq(groupMembers.groupId, input.groupId),
+                          eq(groupMembers.isActive, true),
+                        ),
+                        columns: { id: true },
+                      }),
+                    "verify group members",
+                  ),
+                  (activeMembers) => {
+                    const activeIds = new Set(activeMembers.map((m) => m.id));
+                    for (const memberId of allMemberIds) {
+                      if (!activeIds.has(memberId)) {
+                        return fail.notFound("group member");
+                      }
+                    }
+
+                    // Validate all splits
+                    for (const expense of input.expenses) {
+                      const result = validateExpenseSplitsStrict(
+                        expense.amountInCents,
+                        expense.splits,
+                        expense.splitMethod,
+                      );
+                      if (!result.valid) {
+                        return fail.validation(
+                          "splits",
+                          result.error,
+                          result.userMessage,
+                        );
+                      }
+                    }
+
+                    return DbUtils.transaction(async (trx) => {
+                      const createdExpenses = await trx
+                        .insert(expenses)
+                        .values(
+                          input.expenses.map((expense) => ({
+                            groupId: input.groupId,
+                            paidByGroupMemberId: expense.paidByGroupMemberId,
+                            amountInCents: expense.amountInCents,
+                            currency: expense.currency,
+                            description: expense.description,
+                            category: expense.category,
+                            expenseDate: expense.expenseDate,
+                            createdByGroupMemberId: currentUserGroupMember.id,
+                            splitMethod: expense.splitMethod,
+                          })),
+                        )
+                        .returning({ id: expenses.id });
+
+                      if (createdExpenses.length !== input.expenses.length) {
+                        throw new Error("Failed to create all expenses");
+                      }
+
+                      const allSplits: {
+                        expenseId: number;
+                        groupMemberId: number;
+                        amountInCents: number;
+                        percentage: number | null;
+                      }[] = [];
+
+                      for (let i = 0; i < input.expenses.length; i++) {
+                        const expense = input.expenses[i];
+                        const created = createdExpenses[i];
+                        if (!expense || !created) continue;
+                        for (const split of expense.splits) {
+                          allSplits.push({
+                            expenseId: created.id,
+                            groupMemberId: split.groupMemberId,
+                            amountInCents: split.amountInCents,
+                            percentage: split.percentage,
+                          });
+                        }
+                      }
+
+                      if (allSplits.length > 0) {
+                        await trx.insert(expenseSplits).values(allSplits);
+                      }
+
+                      return { importedCount: createdExpenses.length };
+                    }, "bulk create expenses")(ctx.db);
+                  },
+                );
+              },
+            ),
+        ),
+      );
     }),
 });

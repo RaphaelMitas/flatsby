@@ -23,6 +23,8 @@ type RouterOutputs = inferRouterOutputs<AppRouter>;
 export { createTRPCContext, appRouter };
 export type { AppRouter, RouterInputs, RouterOutputs };
 
+export { captureError } from "./lib/posthog";
+
 // Export new error handling utilities
 export {
   // Error types and factories

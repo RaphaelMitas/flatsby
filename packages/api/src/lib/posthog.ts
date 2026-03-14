@@ -171,6 +171,39 @@ export function buildPostHogProperties(headers: Headers) {
   );
 }
 
+export function captureError({
+  error,
+  operation,
+  distinctId,
+  additionalProperties,
+}: {
+  error: unknown;
+  operation: string;
+  distinctId?: string;
+  additionalProperties?: Record<string, unknown>;
+}) {
+  const err = error instanceof Error ? error : new Error(String(error));
+
+  if (process.env.NODE_ENV === "development") {
+    console.error(`[${operation}]`, error);
+  }
+
+  if (!posthog) return;
+
+  posthog.capture({
+    distinctId: distinctId ?? "system",
+    event: "$exception",
+    properties: {
+      $exception_type: err.name,
+      $exception_message: err.message,
+      $exception_stack_trace_raw: err.stack,
+      $exception_source: "server",
+      operation,
+      ...additionalProperties,
+    },
+  });
+}
+
 export function captureEvent({
   distinctId,
   event,

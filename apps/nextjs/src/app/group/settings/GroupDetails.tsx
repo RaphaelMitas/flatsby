@@ -27,7 +27,7 @@ import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
 
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 
 interface GroupDetailsProps {
   groupId: number;
@@ -36,6 +36,7 @@ interface GroupDetailsProps {
 const GroupDetails = ({ groupId }: GroupDetailsProps) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const handleApiError = useHandleApiError();
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
