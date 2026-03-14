@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import { File } from "expo-file-system/next";
+import { File } from "expo-file-system";
 import { useRouter } from "expo-router";
 import {
   useMutation,
