@@ -2,6 +2,8 @@ import { TRPCError } from "@trpc/server";
 import { Data, Effect } from "effect";
 import { z } from "zod/v4";
 
+import { captureError } from "./lib/posthog";
+
 /**
  * Domain Error Types
  * These represent the various error scenarios that can occur in our API
@@ -274,14 +276,21 @@ export const toTRPCError = (error: ApiError): TRPCError => {
       });
 
     case "DatabaseError":
-      console.error("Database error:", error.cause);
+      captureError({
+        error,
+        operation: `db.${error.operation}`,
+        additionalProperties: { table: error.table },
+      });
       return new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: error.message,
       });
 
     case "ExternalServiceError":
-      console.error("External service error:", error.cause);
+      captureError({
+        error,
+        operation: `external.${error.service}.${error.operation}`,
+      });
       return new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: error.message,
@@ -289,7 +298,10 @@ export const toTRPCError = (error: ApiError): TRPCError => {
 
     case "InternalServerError":
     default:
-      console.error("Internal server error:", error.cause);
+      captureError({
+        error,
+        operation: error.operation ?? "unknown",
+      });
       return new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: error.message,

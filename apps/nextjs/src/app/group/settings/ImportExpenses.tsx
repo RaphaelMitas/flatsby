@@ -78,7 +78,10 @@ export default function ImportExpenses({
             }}
           >
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={deleteAllMutation.isPending}>
+              <Button
+                variant="destructive"
+                disabled={deleteAllMutation.isPending}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 {deleteAllMutation.isPending ? "Deleting..." : "Reset Expenses"}
               </Button>

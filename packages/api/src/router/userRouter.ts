@@ -39,6 +39,7 @@ import {
   getApiResultZod,
   withErrorHandlingAsResult,
 } from "../errors";
+import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { DbUtils, safeDbOperation } from "../utils";
 import { autumn, checkCredits } from "../utils/autumn";
@@ -64,7 +65,11 @@ export const userRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching usage data:", error);
+        captureError({
+          error,
+          operation: "user.getUsage",
+          distinctId: ctx.session.user.id,
+        });
         return { credits: null };
       }
     }),
@@ -85,7 +90,11 @@ export const userRouter = createTRPCRouter({
           planName: activeSub?.plan?.name ?? "Free",
         };
       } catch (error) {
-        console.error("Error fetching subscription data:", error);
+        captureError({
+          error,
+          operation: "user.getSubscription",
+          distinctId: ctx.session.user.id,
+        });
         return { planId: PLAN_IDS.FREE, planName: "Free" };
       }
     }),

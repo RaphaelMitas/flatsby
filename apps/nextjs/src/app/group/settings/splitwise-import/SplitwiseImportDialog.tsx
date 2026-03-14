@@ -16,7 +16,6 @@ import {
 
 import { cn } from "@flatsby/ui";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
-import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { Button } from "@flatsby/ui/button";
 import {
   Dialog,
@@ -43,6 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from "@flatsby/ui/table";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { centsToDecimal } from "@flatsby/validators/expenses/conversion";
 import {
   CURRENCY_CODES,
@@ -309,7 +309,10 @@ function StepMapping({
   members,
 }: {
   wizard: WizardReturn;
-  members: { id: number; user: { name: string | null; email: string; image?: string | null } }[];
+  members: {
+    id: number;
+    user: { name: string | null; email: string; image?: string | null };
+  }[];
 }) {
   return (
     <div className="space-y-4">
@@ -333,7 +336,11 @@ function StepMapping({
               {members.map((m) => (
                 <SelectItem key={m.id} value={m.id.toString()}>
                   <div className="flex items-center gap-2">
-                    <UserAvatar name={m.user.name ?? m.user.email} image={m.user.image} size="xs" />
+                    <UserAvatar
+                      name={m.user.name ?? m.user.email}
+                      image={m.user.image}
+                      size="xs"
+                    />
                     {m.user.name ?? m.user.email}
                   </div>
                 </SelectItem>

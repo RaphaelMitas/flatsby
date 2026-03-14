@@ -30,6 +30,7 @@ import {
 
 import type { Database } from "../types";
 import type { TracingOptions } from "../utils/model-provider";
+import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkCredits, trackAIUsage } from "../utils/autumn";
 import { buildToolsSystemPrompt, createChatTools } from "../utils/chat-tools";
@@ -400,7 +401,11 @@ export const chatRouter = createTRPCRouter({
               .where(eq(conversations.id, input.conversationId));
           })
           .catch((error) => {
-            console.error("Failed to generate conversation title:", error);
+            captureError({
+              error,
+              operation: "chat.generateTitle",
+              distinctId: ctx.session.user.id,
+            });
           });
       }
     } else {
@@ -532,10 +537,16 @@ export const chatRouter = createTRPCRouter({
               if (toolCallResult.success) {
                 completedToolCalls.push(toolCallResult.data);
               } else {
-                console.error("[Chat] Tool validation failed:", {
-                  toolName: pending.name,
-                  toolCallId: chunk.toolCallId,
-                  errors: z.flattenError(toolCallResult.error),
+                captureError({
+                  error: new Error(
+                    `Tool validation failed: ${JSON.stringify(z.flattenError(toolCallResult.error))}`,
+                  ),
+                  operation: "chat.toolValidation",
+                  distinctId: ctx.session.user.id,
+                  additionalProperties: {
+                    toolName: pending.name,
+                    toolCallId: chunk.toolCallId,
+                  },
                 });
               }
               pendingToolCalls.delete(chunk.toolCallId);
