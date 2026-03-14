@@ -1,6 +1,5 @@
 import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { expo } from "@better-auth/expo";
-import { autumn } from "autumn-js/better-auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { oAuthProxy } from "better-auth/plugins";
@@ -8,7 +7,7 @@ import { oAuthProxy } from "better-auth/plugins";
 import { db } from "@flatsby/db/client";
 
 export function initAuth<
-  TExtraPlugins extends BetterAuthPlugin[] = [] & typeof autumn,
+  TExtraPlugins extends BetterAuthPlugin[] = [],
 >(options: {
   baseUrl: string;
   productionUrl: string;
@@ -32,7 +31,6 @@ export function initAuth<
         productionURL: options.productionUrl,
       }),
       expo(),
-      autumn(),
       ...(options.extraPlugins ?? []),
     ],
     socialProviders: {

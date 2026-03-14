@@ -17,6 +17,7 @@ import {
 } from "@flatsby/db/schema";
 import { CURRENT_AI_CONSENT_VERSION } from "@flatsby/validators/ai-consent";
 import {
+  getCurrentSubscription,
   PLAN_IDS,
   subscriptionDataSchema,
   usageDataSchema,
@@ -40,7 +41,7 @@ import {
 } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { DbUtils, safeDbOperation } from "../utils";
-import { checkCredits } from "../utils/autumn";
+import { autumn, checkCredits } from "../utils/autumn";
 
 export const userRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
@@ -53,14 +54,13 @@ export const userRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       try {
         const result = await checkCredits({
-          authApi: ctx.authApi,
-          headers: ctx.headers,
+          customerId: ctx.session.user.id,
         });
 
         return {
           credits: {
-            balance: result.balance ?? 0,
-            usage: result.usage ?? 0,
+            balance: result.balance?.remaining ?? 0,
+            usage: result.balance?.usage ?? 0,
           },
         };
       } catch (error) {
@@ -73,14 +73,16 @@ export const userRouter = createTRPCRouter({
     .output(subscriptionDataSchema)
     .query(async ({ ctx }) => {
       try {
-        const customer = (await ctx.authApi.createCustomer({
-          headers: ctx.headers,
-          body: { errorOnNotFound: false },
-        })) as { products?: { id: string; name: string | null }[] } | null;
-        const activeProduct = customer?.products?.[0];
+        const customer = await autumn.customers.getOrCreate({
+          customerId: ctx.session.user.id,
+          name: ctx.session.user.name,
+          email: ctx.session.user.email,
+          expand: ["subscriptions.plan"],
+        });
+        const activeSub = getCurrentSubscription(customer.subscriptions);
         return {
-          planId: activeProduct?.id ?? PLAN_IDS.FREE,
-          planName: activeProduct?.name ?? "Free",
+          planId: activeSub?.planId ?? PLAN_IDS.FREE,
+          planName: activeSub?.plan?.name ?? "Free",
         };
       } catch (error) {
         console.error("Error fetching subscription data:", error);

@@ -9,7 +9,6 @@ import { Toaster } from "@flatsby/ui/toast";
 
 import { AnalyticsProvider } from "~/app/_components/analytics/AnalyticsProvider";
 import { SpringEffectsProvider } from "~/app/_components/layout/springTheme/use-spring-effects";
-import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
 import { SpringPetalWrapper } from "./_components/layout/springTheme/spring-petal-wrapper";
 
@@ -65,9 +64,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SpringEffectsProvider>
             <TRPCReactProvider>
-              <AutumnProvider
-                betterAuthUrl={env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL}
-              >
+              <AutumnProvider pathPrefix="/api/autumn" includeCredentials>
                 <AnalyticsProvider>
                   <SpringPetalWrapper />
                   {props.children}
