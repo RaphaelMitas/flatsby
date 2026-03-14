@@ -7,6 +7,7 @@ import type {
   SplitMethod,
 } from "@flatsby/validators/expenses/types";
 import type { UseFormReturn } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 import { DollarSign, Equal, Percent } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -53,7 +54,7 @@ export function SplitEditor({
   splitMethod,
   onSplitMethodChange,
 }: SplitEditorProps) {
-  const splits = form.watch("splits");
+  const splits = useWatch({ control: form.control, name: "splits" });
   const selectedMemberIds = splits.map(
     (s: { groupMemberId: number }) => s.groupMemberId,
   );
