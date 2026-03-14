@@ -22,7 +22,7 @@ import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 import { ShoppingListDashboardItem } from "./ShoppingListDashboardItem";
 
 interface ShoppingListDashboardProps {
@@ -36,6 +36,7 @@ export const ShoppingListDashboard = ({
   const router = useRouter();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
+  const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id;
 

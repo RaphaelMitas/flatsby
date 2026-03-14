@@ -25,7 +25,7 @@ import { toast } from "@flatsby/ui/toast";
 import type { ExpenseAction } from "./useExpenseSelection";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 import { ExpenseDetailContent } from "./ExpenseDetailContent";
 import { ExpenseFormInline } from "./ExpenseFormInline";
 
@@ -47,6 +47,7 @@ export function ExpenseDetailPanel({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
+  const handleApiError = useHandleApiError();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const groupId = currentGroup?.id ?? 0;
@@ -207,6 +208,7 @@ function ExpenseDetailPanelContent({
   onSelectExpense,
 }: ExpenseDetailPanelContentProps) {
   const trpc = useTRPC();
+  const handleApiError = useHandleApiError();
 
   const { data: expenseData } = useSuspenseQuery(
     trpc.expense.getExpense.queryOptions({ expenseId }),

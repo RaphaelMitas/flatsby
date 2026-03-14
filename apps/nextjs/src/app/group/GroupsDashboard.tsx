@@ -7,12 +7,13 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Button } from "@flatsby/ui/button";
 
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 import { GroupsDashboardElement } from "./GroupsDashboardElement";
 
 export function GroupsDashboard() {
   const trpc = useTRPC();
   const router = useRouter();
+  const handleApiError = useHandleApiError();
 
   const { data: groups, status } = useSuspenseQuery(
     trpc.group.getUserGroups.queryOptions(),

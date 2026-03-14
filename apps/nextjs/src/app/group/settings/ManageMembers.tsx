@@ -37,7 +37,7 @@ import {
 import { addMemberFormSchema } from "@flatsby/validators/group";
 
 import { useTRPC } from "~/trpc/react";
-import { handleApiError } from "~/utils";
+import { useHandleApiError } from "~/utils";
 
 interface ManageMembersProps {
   groupId: number;
@@ -46,6 +46,7 @@ interface ManageMembersProps {
 const ManageMembers = ({ groupId }: ManageMembersProps) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const handleApiError = useHandleApiError();
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),

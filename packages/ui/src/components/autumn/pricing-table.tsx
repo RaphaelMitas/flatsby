@@ -283,7 +283,7 @@ export const PricingCard = ({
       )}
     >
       {isRecommended && (
-        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 hover:bg-primary">
+        <Badge className="hover:bg-primary absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1">
           Recommended
         </Badge>
       )}
