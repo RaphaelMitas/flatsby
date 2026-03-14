@@ -186,9 +186,6 @@ importers:
       expo-device:
         specifier: ~8.0.10
         version: 8.0.10(expo@54.0.33)
-      expo-document-picker:
-        specifier: ^55.0.8
-        version: 55.0.8(expo@54.0.33)
       expo-file-system:
         specifier: ~19.0.21
         version: 19.0.21(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))
@@ -820,6 +817,9 @@ importers:
       papaparse:
         specifier: ^5.5.3
         version: 5.5.3
+      react:
+        specifier: '>=18'
+        version: 19.1.2
       zod:
         specifier: 'catalog:'
         version: 4.3.6
@@ -5808,11 +5808,6 @@ packages:
 
   expo-device@8.0.10:
     resolution: {integrity: sha512-jd5BxjaF7382JkDMaC+P04aXXknB2UhWaVx5WiQKA05ugm/8GH5uaz9P9ckWdMKZGQVVEOC8MHaUADoT26KmFA==}
-    peerDependencies:
-      expo: '*'
-
-  expo-document-picker@55.0.8:
-    resolution: {integrity: sha512-p6rYEQ1/h3UqGl3+hzTjv51fsNxoOVfMGSYjHX2/e3cvcy02MWWE+bpj4QEGo9MBwU4RyyIbuv/SCxGtAtG+eA==}
     peerDependencies:
       expo: '*'
 
@@ -14960,10 +14955,6 @@ snapshots:
     dependencies:
       expo: 54.0.33(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2)
       ua-parser-js: 0.7.41
-
-  expo-document-picker@55.0.8(expo@54.0.33):
-    dependencies:
-      expo: 54.0.33(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2)
 
   expo-eas-client@1.0.8: {}
 
