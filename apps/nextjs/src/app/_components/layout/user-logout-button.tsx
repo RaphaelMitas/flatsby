@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
-import { signOut } from "~/auth/client";
+import { signOutAndRedirect } from "~/auth/client";
 
 const UserLogoutButton = () => {
   const [loading, setLoading] = useState(false);
@@ -18,13 +18,7 @@ const UserLogoutButton = () => {
       className="w-full"
       onClick={async () => {
         setLoading(true);
-        await signOut({
-          fetchOptions: {
-            onSuccess: () => {
-              router.push("/auth/login");
-            },
-          },
-        });
+        await signOutAndRedirect(router);
         setLoading(false);
       }}
       disabled={loading}

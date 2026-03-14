@@ -7,8 +7,8 @@ import type {
   SplitMethod,
 } from "@flatsby/validators/expenses/types";
 import type { UseFormReturn } from "react-hook-form";
-import { useWatch } from "react-hook-form";
 import { DollarSign, Equal, Percent } from "lucide-react";
+import { useWatch } from "react-hook-form";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";

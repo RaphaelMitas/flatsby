@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomer } from "autumn-js/react";
 import { ChevronsUpDown, Flower2, LogOut, Settings } from "lucide-react";
@@ -23,11 +24,12 @@ import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { getCurrentSubscription } from "@flatsby/validators/billing";
 
 import { useSpringEffects } from "~/app/_components/layout/springTheme/use-spring-effects";
-import { signOut } from "~/auth/client";
+import { signOutAndRedirect } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
 
 export function SidebarUserMenu() {
   const { isMobile } = useSidebar();
+  const router = useRouter();
   const { isEnabled, setEnabled } = useSpringEffects();
   const trpc = useTRPC();
   const { data: customer } = useCustomer({
@@ -98,7 +100,7 @@ export function SidebarUserMenu() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>
+            <DropdownMenuItem onClick={() => signOutAndRedirect(router)}>
               <LogOut className="mr-2 size-4" />
               Log out
             </DropdownMenuItem>

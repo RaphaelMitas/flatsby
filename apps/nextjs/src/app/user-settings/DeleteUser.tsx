@@ -20,7 +20,7 @@ import {
 } from "@flatsby/ui/card";
 import { Input } from "@flatsby/ui/input";
 
-import { signOut } from "~/auth/client";
+import { signOutAndRedirect } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
 
 export default function DeleteUser() {
@@ -32,7 +32,6 @@ export default function DeleteUser() {
     trpc.user.getCurrentUser.queryOptions(),
   );
   const router = useRouter();
-
   const deleteUserMutation = useMutation(
     trpc.user.deleteUser.mutationOptions({
       onSuccess: async (data) => {
@@ -41,8 +40,7 @@ export default function DeleteUser() {
         }
 
         queryClient.clear();
-        await signOut();
-        router.push("auth/login");
+        await signOutAndRedirect(router);
       },
     }),
   );
