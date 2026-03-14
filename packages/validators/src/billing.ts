@@ -79,3 +79,15 @@ export const subscriptionDataSchema = z.object({
 });
 
 export type SubscriptionData = z.infer<typeof subscriptionDataSchema>;
+
+export function getCurrentSubscription<
+  T extends { canceledAt: number | null; planId: string },
+>(subscriptions: T[]): T | undefined {
+  return (
+    subscriptions.find(
+      (s) => s.canceledAt !== null && s.planId !== PLAN_IDS.FREE,
+    ) ??
+    subscriptions.find((s) => s.planId !== PLAN_IDS.FREE) ??
+    subscriptions[0]
+  );
+}

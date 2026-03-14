@@ -1,12 +1,23 @@
 import React, { createContext, useContext, useState } from "react";
 import { useCustomer, useListPlans } from "autumn-js/react";
-import { Loader2 } from "lucide-react";
+import { CheckIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@flatsby/ui";
-import { PLAN_IDS } from "@flatsby/validators/billing";
+import { getCurrentSubscription, PLAN_IDS } from "@flatsby/validators/billing";
 
+import { Badge } from "../../badge";
 import { Button } from "../../button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../../card";
+import { Separator } from "../../separator";
+import { Skeleton } from "../../skeleton";
 import { Switch } from "../../switch";
 
 type Plan = NonNullable<ReturnType<typeof useListPlans>["data"]>[number];
@@ -29,8 +40,10 @@ export default function PricingTable() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full min-h-[300px] w-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <PricingCardSkeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -39,7 +52,9 @@ export default function PricingTable() {
     return <div> Something went wrong...</div>;
   }
 
-  const currentPlanId = customer?.subscriptions[0]?.planId;
+  const currentPlanId = getCurrentSubscription(
+    customer?.subscriptions ?? [],
+  )?.planId;
   const hasApplePlan = currentPlanId === PLAN_IDS.PRO_APPLE;
 
   const filteredPlans = plans?.filter((plan) => {
@@ -62,6 +77,10 @@ export default function PricingTable() {
   );
 
   const multiInterval = intervals.length > 1;
+
+  const recommendedPlanId =
+    filteredPlans?.find((p) => p.customerEligibility?.scenario === "upgrade")
+      ?.id ?? PLAN_IDS.STARTER;
 
   const intervalFilter = (plan: Plan) => {
     const group = getIntervalGroup(plan);
@@ -94,6 +113,7 @@ export default function PricingTable() {
               <PricingCard
                 key={index}
                 planId={plan.id}
+                isRecommended={plan.id === recommendedPlanId}
                 disclaimer={
                   isApplePlan
                     ? "To cancel, go to App Store subscriptions"
@@ -201,7 +221,7 @@ export const PricingTableContainer = ({
         )}
         <div
           className={cn(
-            "grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]",
+            "grid w-full grid-cols-1 gap-4 pt-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]",
             className,
           )}
         >
@@ -214,6 +234,7 @@ export const PricingTableContainer = ({
 
 interface PricingCardProps {
   planId: string;
+  isRecommended?: boolean;
   showFeatures?: boolean;
   className?: string;
   disclaimer?: string;
@@ -229,6 +250,7 @@ interface PricingCardProps {
 
 export const PricingCard = ({
   planId,
+  isRecommended,
   className,
   disclaimer,
   buttonProps,
@@ -248,59 +270,64 @@ export const PricingCard = ({
     ? {
         primaryText: "Free",
       }
-    : plan.items[0]?.display;
+    : plan.price?.display;
 
-  const featureItems = isFree ? plan.items : plan.items.slice(1);
+  const featureItems = plan.items;
 
   return (
-    <div
+    <Card
       className={cn(
-        "text-foreground h-full w-full max-w-xl rounded-lg border py-6 shadow-sm",
+        "relative h-full w-full max-w-xl rounded-2xl shadow-sm transition-all",
+        isRecommended && "ring-primary shadow-md ring-2 sm:scale-[1.02]",
         className,
       )}
     >
-      <div className={cn("flex h-full flex-grow flex-col")}>
-        <div className="h-full">
-          <div className="flex flex-col">
-            <div className="pb-4">
-              <h2 className="truncate px-6 text-2xl font-semibold">
-                {plan.name}
-              </h2>
-              {plan.description && (
-                <div className="text-muted-foreground h-8 px-6 text-sm">
-                  <p className="line-clamp-2">{plan.description}</p>
-                </div>
+      {isRecommended && (
+        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 hover:bg-primary">
+          Recommended
+        </Badge>
+      )}
+      <CardHeader className="pb-4">
+        <CardTitle className="truncate text-xl font-bold">
+          {plan.name}
+        </CardTitle>
+        {plan.description && (
+          <CardDescription className="min-h-10">
+            <p className="line-clamp-2">{plan.description}</p>
+          </CardDescription>
+        )}
+        <div className="mb-2 pt-2">
+          <h3 className="flex h-16 items-center">
+            <div className="line-clamp-2">
+              <span className="text-3xl font-bold tracking-tight">
+                {mainPriceDisplay?.primaryText}
+              </span>{" "}
+              {mainPriceDisplay?.secondaryText && (
+                <span className="text-muted-foreground text-base font-normal">
+                  {mainPriceDisplay.secondaryText}
+                </span>
               )}
             </div>
-            <div className="mb-2">
-              <h3 className="bg-secondary/40 mb-4 flex h-16 items-center border-y px-6 font-semibold">
-                <div className="line-clamp-2">
-                  {mainPriceDisplay?.primaryText}{" "}
-                  {mainPriceDisplay?.secondaryText && (
-                    <span className="text-muted-foreground mt-1 font-normal">
-                      {mainPriceDisplay.secondaryText}
-                    </span>
-                  )}
-                </div>
-              </h3>
-            </div>
-          </div>
-          {showFeatures && featureItems.length > 0 && (
-            <div className="mb-6 flex-grow px-6">
-              <PricingFeatureList items={featureItems} />
-            </div>
-          )}
+          </h3>
         </div>
-        <div className={cn("px-6")}>
-          <PricingCardButton {...buttonProps}>{buttonText}</PricingCardButton>
-          {disclaimer && (
-            <p className="text-muted-foreground mt-2 text-center text-xs">
-              {disclaimer}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
+      </CardHeader>
+      {showFeatures && featureItems.length > 0 && (
+        <CardContent className="mb-8 grow">
+          <Separator className="mb-6" />
+          <PricingFeatureList items={featureItems} />
+        </CardContent>
+      )}
+      <CardFooter className="mt-auto flex-col items-stretch">
+        <PricingCardButton recommended={isRecommended} {...buttonProps}>
+          {buttonText}
+        </PricingCardButton>
+        {disclaimer && (
+          <p className="text-muted-foreground mt-2 text-center text-xs">
+            {disclaimer}
+          </p>
+        )}
+      </CardFooter>
+    </Card>
   );
 };
 
@@ -319,14 +346,15 @@ export const PricingFeatureList = ({
   className?: string;
 }) => {
   return (
-    <div className={cn("flex-grow", className)}>
+    <div className={cn("grow", className)}>
       <div className="space-y-3">
         {items.map((item, index) => (
-          <div key={index} className="flex items-start gap-2 text-sm">
+          <div key={index} className="flex items-start gap-3 text-sm">
+            <CheckIcon className="text-primary mt-0.5 h-4 w-4 shrink-0" />
             <div className="flex flex-col">
               <span>{item.display?.primaryText}</span>
               {item.display?.secondaryText && (
-                <span className="text-muted-foreground text-sm">
+                <span className="text-muted-foreground text-xs">
                   {item.display.secondaryText}
                 </span>
               )}
@@ -405,7 +433,7 @@ export const AnnualSwitch = ({
   setIsAnnualToggle: (isAnnual: boolean) => void;
 }) => {
   return (
-    <div className="mb-4 flex items-center space-x-2">
+    <div className="mb-6 flex items-center space-x-2">
       <span className="text-muted-foreground text-sm">Monthly</span>
       <Switch
         id="annual-billing"
@@ -417,11 +445,33 @@ export const AnnualSwitch = ({
   );
 };
 
-export const RecommendedBadge = ({ recommended }: { recommended: string }) => {
+const PricingCardSkeleton = () => {
   return (
-    <div className="bg-secondary text-muted-foreground absolute top-[-1px] right-[-1px] rounded-bl-lg border px-3 text-sm font-medium lg:top-4 lg:right-4 lg:rounded-full lg:py-0.5">
-      {recommended}
-    </div>
+    <Card className="h-full w-full max-w-xl rounded-2xl shadow-sm">
+      <CardHeader className="pb-4">
+        <Skeleton className="h-6 w-24" />
+        <Skeleton className="mt-2 h-4 w-40" />
+        <div className="mb-2 pt-2">
+          <div className="flex h-16 items-center">
+            <Skeleton className="h-8 w-28" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="mb-8 grow">
+        <Separator className="mb-6" />
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <Skeleton className="mt-0.5 h-4 w-4 shrink-0 rounded-full" />
+              <Skeleton className="h-4 w-full max-w-[180px]" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Skeleton className="h-11 w-full rounded-lg" />
+      </CardFooter>
+    </Card>
   );
 };
 

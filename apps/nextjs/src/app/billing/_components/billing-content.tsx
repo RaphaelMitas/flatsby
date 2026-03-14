@@ -8,7 +8,11 @@ import { Button } from "@flatsby/ui/button";
 import { Card, CardContent } from "@flatsby/ui/card";
 import { Separator } from "@flatsby/ui/separator";
 import { Skeleton } from "@flatsby/ui/skeleton";
-import { formatCredits, PLAN_IDS } from "@flatsby/validators/billing";
+import {
+  formatCredits,
+  getCurrentSubscription,
+  PLAN_IDS,
+} from "@flatsby/validators/billing";
 
 function BillingContentSkeleton() {
   return (
@@ -24,7 +28,7 @@ function BillingContentSkeleton() {
 }
 
 function formatDate(timestamp: number) {
-  return new Date(timestamp * 1000).toLocaleDateString(undefined, {
+  return new Date(timestamp).toLocaleDateString(undefined, {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -38,16 +42,19 @@ function getUsageColor(percentage: number) {
 }
 
 export function BillingContent() {
-  const { data: customer, isLoading, openCustomerPortal } = useCustomer({
+  const {
+    data: customer,
+    isLoading,
+    openCustomerPortal,
+  } = useCustomer({
     expand: ["subscriptions.plan"],
   });
 
   if (isLoading) return <BillingContentSkeleton />;
 
-  const subscription = customer?.subscriptions[0];
+  const subscription = getCurrentSubscription(customer?.subscriptions ?? []);
   const isApplePlan = subscription?.planId === PLAN_IDS.PRO_APPLE;
-  const isPaidPlan =
-    subscription && subscription.planId !== PLAN_IDS.FREE;
+  const isPaidPlan = subscription && subscription.planId !== PLAN_IDS.FREE;
   const isCanceled = subscription?.canceledAt !== null;
 
   const creditsBalance = customer?.balances.credits;

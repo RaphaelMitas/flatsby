@@ -20,6 +20,7 @@ import {
   useSidebar,
 } from "@flatsby/ui/sidebar";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
+import { getCurrentSubscription } from "@flatsby/validators/billing";
 
 import { useSpringEffects } from "~/app/_components/layout/springTheme/use-spring-effects";
 import { signOut } from "~/auth/client";
@@ -33,7 +34,8 @@ export function SidebarUserMenu() {
     expand: ["subscriptions.plan"],
   });
 
-  const planName = customer?.subscriptions[0]?.plan?.name ?? "Free";
+  const planName =
+    getCurrentSubscription(customer?.subscriptions ?? [])?.plan?.name ?? "Free";
 
   const { data: userWithGroups } = useQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),

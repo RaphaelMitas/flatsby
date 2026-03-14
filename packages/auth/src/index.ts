@@ -6,7 +6,9 @@ import { oAuthProxy } from "better-auth/plugins";
 
 import { db } from "@flatsby/db/client";
 
-export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options: {
+export function initAuth<
+  TExtraPlugins extends BetterAuthPlugin[] = [],
+>(options: {
   baseUrl: string;
   productionUrl: string;
   secret: string | undefined;

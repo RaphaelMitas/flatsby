@@ -17,6 +17,7 @@ import {
 } from "@flatsby/db/schema";
 import { CURRENT_AI_CONSENT_VERSION } from "@flatsby/validators/ai-consent";
 import {
+  getCurrentSubscription,
   PLAN_IDS,
   subscriptionDataSchema,
   usageDataSchema,
@@ -78,7 +79,7 @@ export const userRouter = createTRPCRouter({
           email: ctx.session.user.email,
           expand: ["subscriptions.plan"],
         });
-        const activeSub = customer.subscriptions[0];
+        const activeSub = getCurrentSubscription(customer.subscriptions);
         return {
           planId: activeSub?.planId ?? PLAN_IDS.FREE,
           planName: activeSub?.plan?.name ?? "Free",

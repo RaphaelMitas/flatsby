@@ -18,9 +18,9 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
 
-import { ThemeProvider } from "~/lib/ui/theme";
 import { SpringEffectsProvider } from "~/lib/ui/spring-effects";
 import { SpringPetals } from "~/lib/ui/spring-petals";
+import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { ChatStoreProvider } from "~/utils/chat-store";
