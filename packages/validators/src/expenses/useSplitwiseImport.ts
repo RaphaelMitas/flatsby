@@ -1,11 +1,11 @@
-import type { CurrencyCode } from "./types";
+import { useCallback, useState } from "react";
+
 import type {
   ParsedSplitwiseResult,
   SkippedRow,
   TransformedExpense,
 } from "./splitwise-import";
-import { useCallback, useState } from "react";
-
+import type { CurrencyCode } from "./types";
 import { parseSplitwiseCsv, transformSplitwiseRows } from "./splitwise-import";
 
 type WizardStep = "file" | "mapping" | "preview" | "confirm";
