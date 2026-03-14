@@ -157,9 +157,16 @@ export default function SettingsIndex() {
         <SettingsSection title="Groups">
           <Link href="/settings/manage-groups" asChild>
             <SettingsItem
-              title="Your Groups"
-              subtitle="Manage your groups"
+              title="Change Group"
+              subtitle="Change selected group or create a new one"
               iconName="arrow-left-right"
+            />
+          </Link>
+          <Link href="/settings/group-settings" asChild>
+            <SettingsItem
+              title="Group Settings"
+              subtitle="Manage members and group details"
+              iconName="users"
             />
           </Link>
         </SettingsSection>

@@ -97,14 +97,14 @@ export default function GroupSettingsIndex() {
         <SettingsHeader title={group.data.name} />
 
         <SettingsSection title={group.data.name}>
-          <Link href="/(tabs)/home/group-settings/group-details" asChild>
+          <Link href="/(tabs)/settings/group-settings/group-details" asChild>
             <SettingsItem
               title="Group Details"
               subtitle="Edit your group details"
               iconName="settings"
             />
           </Link>
-          <Link href="/(tabs)/home/group-settings/members" asChild>
+          <Link href="/(tabs)/settings/group-settings/members" asChild>
             <SettingsItem
               title="Members"
               subtitle="Manage your group members"

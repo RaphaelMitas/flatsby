@@ -45,6 +45,35 @@ export default function SettingsLayout() {
           presentation: "modal",
         }}
       />
+      <Stack.Screen
+        name="group-settings/index"
+        options={{
+          title: "Group Settings",
+          headerBackTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="group-settings/members"
+        options={{
+          title: "Members",
+          headerBackTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="group-settings/group-details"
+        options={{
+          title: "Group Details",
+          headerBackTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="group-settings/member-actions"
+        options={{
+          title: "Member Actions",
+          presentation: "modal",
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

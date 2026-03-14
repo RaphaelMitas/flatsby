@@ -81,7 +81,7 @@ function ShoppingListsDashboardInner() {
             variant="outline"
             size="md"
             icon="settings"
-            onPress={() => router.push("/(tabs)/home/group-settings")}
+            onPress={() => router.push("/(tabs)/settings/group-settings")}
           />
         </View>
 
