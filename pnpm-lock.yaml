@@ -186,6 +186,9 @@ importers:
       expo-device:
         specifier: ~8.0.10
         version: 8.0.10(expo@54.0.33)
+      expo-document-picker:
+        specifier: ^55.0.8
+        version: 55.0.8(expo@54.0.33)
       expo-file-system:
         specifier: ~19.0.21
         version: 19.0.21(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))
@@ -814,6 +817,12 @@ importers:
 
   packages/validators:
     dependencies:
+      papaparse:
+        specifier: ^5.5.3
+        version: 5.5.3
+      react:
+        specifier: '>=18'
+        version: 19.1.2
       zod:
         specifier: 'catalog:'
         version: 4.3.6
@@ -827,6 +836,9 @@ importers:
       '@flatsby/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@types/papaparse':
+        specifier: ^5.5.2
+        version: 5.5.2
       ai:
         specifier: 'catalog:'
         version: 6.0.116(zod@4.3.6)
@@ -4030,6 +4042,9 @@ packages:
   '@types/node@25.3.5':
     resolution: {integrity: sha512-oX8xrhvpiyRCQkG1MFchB09f+cXftgIXb3a7UUa4Y3wpmZPw5tyZGTLWhlESOLq1Rq6oDlc8npVU2/9xiCuXMA==}
 
+  '@types/papaparse@5.5.2':
+    resolution: {integrity: sha512-gFnFp/JMzLHCwRf7tQHrNnfhN4eYBVYYI897CGX4MY1tzY9l2aLkVyx2IlKZ/SAqDbB3I1AOZW5gTMGGsqWliA==}
+
   '@types/pg@8.18.0':
     resolution: {integrity: sha512-gT+oueVQkqnj6ajGJXblFR4iavIXWsGAFCk3dP4Kki5+a9R4NMt0JARdk6s8cUKcfUoqP5dAtDSLU8xYUTFV+Q==}
 
@@ -5796,6 +5811,11 @@ packages:
 
   expo-device@8.0.10:
     resolution: {integrity: sha512-jd5BxjaF7382JkDMaC+P04aXXknB2UhWaVx5WiQKA05ugm/8GH5uaz9P9ckWdMKZGQVVEOC8MHaUADoT26KmFA==}
+    peerDependencies:
+      expo: '*'
+
+  expo-document-picker@55.0.8:
+    resolution: {integrity: sha512-p6rYEQ1/h3UqGl3+hzTjv51fsNxoOVfMGSYjHX2/e3cvcy02MWWE+bpj4QEGo9MBwU4RyyIbuv/SCxGtAtG+eA==}
     peerDependencies:
       expo: '*'
 
@@ -7786,6 +7806,9 @@ packages:
 
   package-manager-detector@1.6.0:
     resolution: {integrity: sha512-61A5ThoTiDG/C8s8UMZwSorAGwMJ0ERVGj2OjoW5pAalsNOg15+iQiPzrLJ4jhZ1HJzmC2PIHT2oEiH3R5fzNA==}
+
+  papaparse@5.5.3:
+    resolution: {integrity: sha512-5QvjGxYVjxO59MGU2lHVYpRWBBtKHnlIAcSe1uNFCkkptUh63NFRj0FJQm7nR67puEruUci/ZkjmEFrjCAyP4A==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -13025,6 +13048,10 @@ snapshots:
     dependencies:
       undici-types: 7.18.2
 
+  '@types/papaparse@5.5.2':
+    dependencies:
+      '@types/node': 25.3.5
+
   '@types/pg@8.18.0':
     dependencies:
       '@types/node': 25.3.5
@@ -14936,6 +14963,10 @@ snapshots:
     dependencies:
       expo: 54.0.33(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2)
       ua-parser-js: 0.7.41
+
+  expo-document-picker@55.0.8(expo@54.0.33):
+    dependencies:
+      expo: 54.0.33(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2)
 
   expo-eas-client@1.0.8: {}
 
@@ -17460,6 +17491,8 @@ snapshots:
   package-json-from-dist@1.0.1: {}
 
   package-manager-detector@1.6.0: {}
+
+  papaparse@5.5.3: {}
 
   parent-module@1.0.1:
     dependencies:

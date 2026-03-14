@@ -23,12 +23,22 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "papaparse": "^5.5.3",
     "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@flatsby/eslint-config": "workspace:*",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
+    "@types/papaparse": "^5.5.2",
     "ai": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
