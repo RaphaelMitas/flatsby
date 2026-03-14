@@ -8,6 +8,7 @@ import { Skeleton } from "@flatsby/ui/skeleton";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import DangerZone from "./DangerZone";
 import GroupDetails from "./GroupDetails";
+import ImportExpenses from "./ImportExpenses";
 import ManageMembers from "./ManageMembers";
 
 export function GroupSettingsContent() {
@@ -35,6 +36,7 @@ export function GroupSettingsContent() {
         <div className="grid gap-6"></div>
         <GroupDetails groupId={groupId} />
         <ManageMembers groupId={groupId} />
+        <ImportExpenses groupId={groupId} />
         <DangerZone groupId={groupId} />
       </div>
     </div>
