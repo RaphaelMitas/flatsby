@@ -29,9 +29,11 @@ export function SidebarUserMenu() {
   const { isMobile } = useSidebar();
   const { isEnabled, setEnabled } = useSpringEffects();
   const trpc = useTRPC();
-  const { customer } = useCustomer();
+  const { data: customer } = useCustomer({
+    expand: ["subscriptions.plan"],
+  });
 
-  const planName = customer?.products[0]?.name ?? "Free";
+  const planName = customer?.subscriptions[0]?.plan?.name ?? "Free";
 
   const { data: userWithGroups } = useQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),

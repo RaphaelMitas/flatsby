@@ -13,13 +13,13 @@ import {
 import { formatCredits } from "@flatsby/validators/billing";
 
 export function SidebarCreditsDisplay() {
-  const { customer, isLoading } = useCustomer();
+  const { data: customer, isLoading } = useCustomer();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
 
-  const creditsFeature = customer?.features.credits;
-  const balance = creditsFeature?.balance ?? 0;
-  const usage = creditsFeature?.usage ?? 0;
+  const creditsBalance = customer?.balances.credits;
+  const balance = creditsBalance?.remaining ?? 0;
+  const usage = creditsBalance?.usage ?? 0;
 
   const totalAllowance = usage + balance;
   const usagePercentage =

@@ -14,11 +14,12 @@ import {
 } from "@flatsby/ui/card";
 import { PLAN_IDS } from "@flatsby/validators/billing";
 
-import { env } from "~/env";
 import { UsageDisplay } from "./usage-display";
 
 export function BillingContent() {
-  const { customer, isLoading, openBillingPortal } = useCustomer();
+  const { data: customer, isLoading, openCustomerPortal } = useCustomer({
+    expand: ["subscriptions.plan"],
+  });
 
   if (isLoading) {
     return (
@@ -28,8 +29,8 @@ export function BillingContent() {
     );
   }
 
-  const currentProduct = customer?.products[0];
-  const isApplePlan = currentProduct?.id === PLAN_IDS.PRO_APPLE;
+  const currentProduct = customer?.subscriptions[0];
+  const isApplePlan = currentProduct?.planId === PLAN_IDS.PRO_APPLE;
 
   return (
     <div className="grid gap-6">
@@ -43,7 +44,9 @@ export function BillingContent() {
         </CardHeader>
         <CardContent className="flex items-center justify-between">
           <div>
-            <p className="font-medium">{currentProduct?.name ?? "Free Plan"}</p>
+            <p className="font-medium">
+              {currentProduct?.plan?.name ?? "Free Plan"}
+            </p>
             <p className="text-muted-foreground text-sm">
               {currentProduct?.status ?? "Active"}
             </p>
@@ -54,7 +57,7 @@ export function BillingContent() {
             )}
           </div>
           {currentProduct &&
-            currentProduct.id !== PLAN_IDS.FREE &&
+            currentProduct.planId !== PLAN_IDS.FREE &&
             (isApplePlan ? (
               <Button
                 variant="outline"
@@ -72,9 +75,7 @@ export function BillingContent() {
               <Button
                 variant="outline"
                 onClick={async () => {
-                  await openBillingPortal({
-                    returnUrl: `${env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL}/billing`,
-                  });
+                  await openCustomerPortal();
                 }}
               >
                 Manage Subscription

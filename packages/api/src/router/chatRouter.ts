@@ -325,8 +325,7 @@ export const chatRouter = createTRPCRouter({
     }
 
     const { allowed } = await checkCredits({
-      authApi: ctx.authApi,
-      headers: ctx.headers,
+      customerId: ctx.session.user.id,
     });
 
     if (!allowed) {
@@ -573,8 +572,7 @@ export const chatRouter = createTRPCRouter({
         };
 
         await trackAIUsage({
-          authApi: ctx.authApi,
-          headers: ctx.headers,
+          customerId: ctx.session.user.id,
           cost: cost?.toString(),
         });
       } else {
@@ -625,8 +623,7 @@ export const chatRouter = createTRPCRouter({
         };
 
         await trackAIUsage({
-          authApi: ctx.authApi,
-          headers: ctx.headers,
+          customerId: ctx.session.user.id,
           cost: cost?.toString(),
         });
       }

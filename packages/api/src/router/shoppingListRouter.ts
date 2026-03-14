@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import type { Auth } from "@flatsby/auth";
 import type { CategoryId } from "@flatsby/validators/categories";
 import { generateObject } from "ai";
 import { Effect } from "effect";
@@ -636,8 +635,7 @@ export const shoppingList = createTRPCRouter({
                         ? AIUtils.categorizeItemSafely(
                             validName,
                             createItemCategorizer({
-                              authApi: ctx.authApi,
-                              headers: ctx.headers,
+                              customerId: ctx.session.user.id,
                               distinctId: ctx.session.user.id,
                             }),
                           )
@@ -742,8 +740,7 @@ export const shoppingList = createTRPCRouter({
                             ? AIUtils.categorizeItemSafely(
                                 validName,
                                 createItemCategorizer({
-                                  authApi: ctx.authApi,
-                                  headers: ctx.headers,
+                                  customerId: ctx.session.user.id,
                                   distinctId: ctx.session.user.id,
                                 }),
                               )
@@ -922,8 +919,7 @@ export const shoppingList = createTRPCRouter({
             AIUtils.categorizeItemSafely(
               validItemName,
               createItemCategorizer({
-                authApi: ctx.authApi,
-                headers: ctx.headers,
+                customerId: ctx.session.user.id,
                 distinctId: ctx.session.user.id,
               }),
             ),
@@ -933,16 +929,14 @@ export const shoppingList = createTRPCRouter({
 });
 
 interface CategorizeContext {
-  authApi: Auth["api"];
-  headers: Headers;
+  customerId: string;
   distinctId: string;
 }
 
 const createItemCategorizer = (ctx: CategorizeContext) => {
   return async (itemName: string): Promise<CategoryId> => {
     const { allowed } = await checkCredits({
-      authApi: ctx.authApi,
-      headers: ctx.headers,
+      customerId: ctx.customerId,
     });
     if (!allowed) {
       return "other"; // Fallback if no credits
@@ -967,8 +961,7 @@ const createItemCategorizer = (ctx: CategorizeContext) => {
       const metadata = response.providerMetadata;
       const cost = (metadata?.gateway as { cost?: string } | undefined)?.cost;
       await trackAIUsage({
-        authApi: ctx.authApi,
-        headers: ctx.headers,
+        customerId: ctx.customerId,
         cost: cost,
       });
 
