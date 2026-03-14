@@ -118,6 +118,13 @@ export default function GroupSettingsIndex() {
               iconName="shopping-cart"
             />
           </Link>
+          <Link href="/(tabs)/settings/group-settings/import-expenses" asChild>
+            <SettingsItem
+              title="Import Expenses"
+              subtitle="Import from Splitwise CSV"
+              iconName="upload"
+            />
+          </Link>
         </SettingsSection>
 
         <SettingsSection title="Change Group">

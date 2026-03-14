@@ -74,6 +74,13 @@ export default function SettingsLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="group-settings/import-expenses"
+        options={{
+          title: "Import Expenses",
+          headerBackTitle: "",
+        }}
+      />
     </Stack>
   );
 }
