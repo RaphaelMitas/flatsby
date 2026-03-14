@@ -1,15 +1,12 @@
+import type { CurrencyCode } from "./types";
 import type {
   ParsedSplitwiseResult,
   SkippedRow,
   TransformedExpense,
-} from "@flatsby/validators/expenses/splitwise-import";
-import type { CurrencyCode } from "@flatsby/validators/expenses/types";
+} from "./splitwise-import";
 import { useCallback, useState } from "react";
 
-import {
-  parseSplitwiseCsv,
-  transformSplitwiseRows,
-} from "@flatsby/validators/expenses/splitwise-import";
+import { parseSplitwiseCsv, transformSplitwiseRows } from "./splitwise-import";
 
 type WizardStep = "file" | "mapping" | "preview" | "confirm";
 

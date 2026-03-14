@@ -36,7 +36,7 @@ export function GroupSettingsContent() {
         <div className="grid gap-6"></div>
         <GroupDetails groupId={groupId} />
         <ManageMembers groupId={groupId} />
-        <ImportExpenses groupId={groupId} />
+        <ImportExpenses groupId={groupId} groupName={currentGroup.name} />
         <DangerZone groupId={groupId} />
       </div>
     </div>

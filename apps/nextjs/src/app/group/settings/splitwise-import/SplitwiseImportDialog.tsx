@@ -1,6 +1,5 @@
 "use client";
 
-import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useCallback, useRef, useState } from "react";
 import {
   useMutation,
@@ -15,6 +14,7 @@ import {
   Upload,
 } from "lucide-react";
 
+import { cn } from "@flatsby/ui";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import {
@@ -25,7 +25,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@flatsby/ui/dialog";
-import { cn } from "@flatsby/ui";
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
 import {
@@ -44,10 +43,13 @@ import {
   TableRow,
 } from "@flatsby/ui/table";
 import { centsToDecimal } from "@flatsby/validators/expenses/conversion";
-import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
+import {
+  CURRENCY_CODES,
+  isCurrencyCode,
+} from "@flatsby/validators/expenses/types";
+import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImport";
 
 import { useTRPC } from "~/trpc/react";
-import { useSplitwiseImport } from "./useSplitwiseImport";
 
 interface SplitwiseImportDialogProps {
   groupId: number;
@@ -78,6 +80,9 @@ export function SplitwiseImportDialog({
           void queryClient.invalidateQueries(
             trpc.expense.getGroupDebts.queryOptions({ groupId }),
           );
+          void queryClient.invalidateQueries({
+            queryKey: trpc.expense.getDebtSummary.queryKey(),
+          });
         }
       },
     }),
@@ -103,8 +108,8 @@ export function SplitwiseImportDialog({
       groupId,
       expenses: wizard.expenses.map((exp) => ({
         ...exp,
-        description: exp.description || undefined,
-        category: exp.category || undefined,
+        description: exp.description,
+        category: exp.category,
       })),
     });
   };
@@ -232,7 +237,9 @@ function StepFile({
         >
           <Upload className="text-muted-foreground h-8 w-8" />
           {wizard.parsed ? (
-            <p className="text-sm font-medium">File loaded. Click or drop to replace.</p>
+            <p className="text-sm font-medium">
+              File loaded. Click or drop to replace.
+            </p>
           ) : (
             <p className="text-muted-foreground text-sm">
               Drag &amp; drop your CSV file here, or click to browse
@@ -252,7 +259,9 @@ function StepFile({
         <Label>Currency to import</Label>
         <Select
           value={wizard.currency}
-          onValueChange={(val) => wizard.setCurrency(val as CurrencyCode)}
+          onValueChange={(val) => {
+            if (isCurrencyCode(val)) wizard.setCurrency(val);
+          }}
         >
           <SelectTrigger>
             <SelectValue />

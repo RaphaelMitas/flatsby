@@ -26,6 +26,14 @@
     "papaparse": "^5.5.3",
     "zod": "catalog:"
   },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@flatsby/eslint-config": "workspace:*",
     "@flatsby/prettier-config": "workspace:*",

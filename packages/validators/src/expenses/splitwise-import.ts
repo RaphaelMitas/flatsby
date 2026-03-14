@@ -86,6 +86,13 @@ export function parseSplitwiseCsv(csvText: string): ParsedSplitwiseResult {
   return { rows, personNames, errors };
 }
 
+function parseSplitwiseDate(dateStr: string): Date {
+  // Splitwise exports dates as YYYY-MM-DD. new Date("YYYY-MM-DD") parses as
+  // UTC midnight, which shifts to the previous day in negative-offset timezones.
+  // Appending T12:00:00 keeps the date stable regardless of timezone.
+  return new Date(`${dateStr}T12:00:00`);
+}
+
 function getMemberId(
   mapping: Record<string, number>,
   name: string,
@@ -138,13 +145,14 @@ export function transformSplitwiseRows(
     const firstPayer = payers[0];
     const firstDebtor = debtors[0];
 
-    if (
+    const isSettlement =
       payers.length === 1 &&
       debtors.length === 1 &&
       firstPayer &&
       firstDebtor &&
-      Math.abs(firstPayer.amount + firstDebtor.amount) < 0.01
-    ) {
+      row.Category === "Payment";
+
+    if (isSettlement) {
       const payerMemberId = getMemberId(config.memberMapping, firstPayer.name);
       const receiverMemberId = getMemberId(
         config.memberMapping,
@@ -160,7 +168,7 @@ export function transformSplitwiseRows(
         currency: config.targetCurrency,
         description: row.Description,
         category: row.Category,
-        expenseDate: new Date(row.Date),
+        expenseDate: parseSplitwiseDate(row.Date),
         splits: [
           {
             groupMemberId: receiverMemberId,
