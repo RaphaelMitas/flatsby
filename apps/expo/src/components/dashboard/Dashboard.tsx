@@ -139,7 +139,7 @@ function DashboardContent() {
             title="Group Settings"
             variant="outline"
             icon="settings"
-            onPress={() => router.push("/(tabs)/settings/group-settings")}
+            onPress={() => router.navigate("/(tabs)/settings/group-settings", { withAnchor: true })}
           />
         </View>
 
