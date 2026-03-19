@@ -8,7 +8,7 @@ catalog:
   autumn-js: ^1.0.7
   "@eslint/js": ^9.39.4
   "@t3-oss/env-nextjs": ^0.13.10
-  "@tailwindcss/postcss": ^4.1.16
+  "@tailwindcss/postcss": ^4.2.2
   "@tanstack/react-query": ^5.90.21
   "@trpc/client": ^11.7.2
   "@trpc/server": ^11.7.2
@@ -21,7 +21,7 @@ catalog:
   next: ^16.1.6
   prettier: ^3.8.1
   superjson: ^2.2.6
-  tailwindcss: ^4.1.16
+  tailwindcss: ^4.2.2
   turbo: ^2.6.3
   typescript: ^5.9.3
   zod: ^4.3.6
