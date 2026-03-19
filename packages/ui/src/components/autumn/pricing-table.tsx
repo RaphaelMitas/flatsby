@@ -121,9 +121,7 @@ export default function PricingTable() {
                     : undefined
                 }
                 buttonProps={{
-                  disabled:
-                    isApplePlan ||
-                    eligibility?.attachAction === "none",
+                  disabled: isApplePlan || eligibility?.attachAction === "none",
 
                   onClick: async () => {
                     if (!plan.id || !customer) return;

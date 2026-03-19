@@ -126,7 +126,9 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
           if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
             setSelectedGroup(group.id, group.name);
-            router.navigate("/(tabs)/settings/group-settings", { withAnchor: true });
+            router.navigate("/(tabs)/settings/group-settings", {
+              withAnchor: true,
+            });
           } else {
             swipeableRef.current?.close();
             setShowDeleteModal(true);
