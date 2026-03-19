@@ -18,19 +18,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-auth/expo": "catalog:",
+    "@better-auth/expo": "catalog:better-auth",
     "@flatsby/db": "workspace:*",
     "@t3-oss/env-nextjs": "catalog:",
     "ai": "catalog:",
     "autumn-js": "catalog:",
-    "better-auth": "catalog:",
+    "better-auth": "catalog:better-auth",
     "next": "catalog:",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@better-auth/cli": "catalog:",
     "@flatsby/eslint-config": "workspace:*",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",

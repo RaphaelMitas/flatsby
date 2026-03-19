@@ -1,14 +1,13 @@
-import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
+import type { BetterAuthOptions } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { nextCookies } from "better-auth/next-js";
 import { oAuthProxy } from "better-auth/plugins";
 
 import { db } from "@flatsby/db/client";
 
-export function initAuth<
-  TExtraPlugins extends BetterAuthPlugin[] = [],
->(options: {
+export function initAuth(options: {
   baseUrl: string;
   productionUrl: string;
   secret: string | undefined;
@@ -20,7 +19,6 @@ export function initAuth<
   appleTeamId: string;
   appleKeyId: string;
   appleClientSecret: string;
-  extraPlugins?: TExtraPlugins;
 }) {
   const config = {
     database: drizzleAdapter(db, { provider: "pg" }),
@@ -31,7 +29,7 @@ export function initAuth<
         productionURL: options.productionUrl,
       }),
       expo(),
-      ...(options.extraPlugins ?? []),
+      nextCookies(),
     ],
     socialProviders: {
       google: {
