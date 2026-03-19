@@ -81,7 +81,11 @@ function ShoppingListsDashboardInner() {
             variant="outline"
             size="md"
             icon="settings"
-            onPress={() => router.navigate("/(tabs)/settings/group-settings", { withAnchor: true })}
+            onPress={() =>
+              router.navigate("/(tabs)/settings/group-settings", {
+                withAnchor: true,
+              })
+            }
           />
         </View>
 

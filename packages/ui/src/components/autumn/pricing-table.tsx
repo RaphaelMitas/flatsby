@@ -79,8 +79,9 @@ export default function PricingTable() {
   const multiInterval = intervals.length > 1;
 
   const recommendedPlanId =
-    filteredPlans?.find((p) => p.customerEligibility?.scenario === "upgrade")
-      ?.id ?? PLAN_IDS.STARTER;
+    filteredPlans?.find(
+      (p) => p.customerEligibility?.attachAction === "upgrade",
+    )?.id ?? PLAN_IDS.STARTER;
 
   const intervalFilter = (plan: Plan) => {
     const group = getIntervalGroup(plan);
@@ -108,7 +109,7 @@ export default function PricingTable() {
         >
           {filteredPlans.filter(intervalFilter).map((plan, index) => {
             const isApplePlan = plan.id === PLAN_IDS.PRO_APPLE;
-            const scenario = plan.customerEligibility?.scenario;
+            const eligibility = plan.customerEligibility;
             return (
               <PricingCard
                 key={index}
@@ -120,10 +121,7 @@ export default function PricingTable() {
                     : undefined
                 }
                 buttonProps={{
-                  disabled:
-                    isApplePlan ||
-                    scenario === "active" ||
-                    scenario === "scheduled",
+                  disabled: isApplePlan || eligibility?.attachAction === "none",
 
                   onClick: async () => {
                     if (!plan.id || !customer) return;
@@ -133,7 +131,7 @@ export default function PricingTable() {
                     );
 
                     try {
-                      if (pendingCancelSub && scenario === "renew") {
+                      if (pendingCancelSub && eligibility?.canceling === true) {
                         await updateSubscription({
                           planId: pendingCancelSub.planId,
                           cancelAction: "uncancel",
@@ -476,31 +474,28 @@ const PricingCardSkeleton = () => {
 };
 
 function getPricingTableContent(plan: Plan) {
-  const scenario = plan.customerEligibility?.scenario;
+  const { status, attachAction } = plan.customerEligibility ?? {};
   const hasTrial = plan.freeTrial !== undefined;
   const isOneOff = plan.price?.interval === "one_off";
 
   if (hasTrial) {
     return { buttonText: <p>Start Free Trial</p> };
   }
+  if (status === "scheduled") {
+    return { buttonText: <p>Plan Scheduled</p> };
+  }
+  if (status === "active" && attachAction === "none") {
+    return { buttonText: <p>Current Plan</p> };
+  }
 
-  switch (scenario) {
-    case "scheduled":
-      return { buttonText: <p>Plan Scheduled</p> };
-    case "active":
-      return { buttonText: <p>Current Plan</p> };
-    case "new":
-      return {
-        buttonText: <p>{isOneOff ? "Purchase" : "Get started"}</p>,
-      };
-    case "renew":
-      return { buttonText: <p>Renew</p> };
+  switch (attachAction) {
+    case "purchase":
+    case "activate":
+      return { buttonText: <p>{isOneOff ? "Purchase" : "Get started"}</p> };
     case "upgrade":
       return { buttonText: <p>Upgrade</p> };
     case "downgrade":
       return { buttonText: <p>Downgrade</p> };
-    case "cancel":
-      return { buttonText: <p>Cancel Plan</p> };
     default:
       return { buttonText: <p>Get Started</p> };
   }
