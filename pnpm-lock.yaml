@@ -764,7 +764,7 @@ importers:
         specifier: ^3.23.0
         version: 3.23.0
       sonner:
-        specifier: ^1.7.2
+        specifier: ^1.7.4
         version: 1.7.4(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       streamdown:
         specifier: ^1.6.10
