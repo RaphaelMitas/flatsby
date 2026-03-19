@@ -84,7 +84,7 @@
     "react-native-worklets": "~0.5.1",
     "superjson": "catalog:",
     "tailwind-variants": "^1.0.0",
-    "web-streams-polyfill": "^4.1.0"
+    "web-streams-polyfill": "^4.2.0"
   },
   "devDependencies": {
     "@flatsby/api": "workspace:*",
