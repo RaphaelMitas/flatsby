@@ -227,8 +227,8 @@ importers:
         specifier: ~15.0.8
         version: 15.0.10(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))
       nativewind:
-        specifier: 5.0.0-preview.2
-        version: 5.0.0-preview.2(react-native-css@3.0.4(@expo/metro-config@54.0.14(expo@54.0.33))(lightningcss@1.31.1)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2))(tailwindcss@4.2.1)
+        specifier: 5.0.0-preview.3
+        version: 5.0.0-preview.3(react-native-css@3.0.4(@expo/metro-config@54.0.14(expo@54.0.33))(lightningcss@1.31.1)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2))(tailwindcss@4.2.1)
       posthog-react-native:
         specifier: ^4.27.0
         version: 4.37.1(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2)))(@react-navigation/native@7.1.33(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2))(expo-application@7.0.8(expo@54.0.33))(expo-device@8.0.10(expo@54.0.33))(expo-file-system@19.0.21(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2)))(expo-localization@17.0.8(expo@54.0.33)(react@19.1.2))(posthog-react-native-session-replay@1.5.1(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2))(react-native-safe-area-context@5.6.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2))(react-native-svg@15.15.3(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2))
@@ -7454,8 +7454,8 @@ packages:
   napi-build-utils@2.0.0:
     resolution: {integrity: sha512-GEbrYkbfF7MoNaoh2iGG84Mnf/WZfB0GdGEsM8wz7Expx/LlWf5U8t9nvJKXSp3qr5IsEbK04cBGhol/KwOsWA==}
 
-  nativewind@5.0.0-preview.2:
-    resolution: {integrity: sha512-rTNrwFIwl/n2VH7KPvsZj/NdvKf+uGHF4NYtPamr5qG2eTYGT8B8VeyCPfYf/xUskpWOLJVqVEXaFO/vuIDEdw==}
+  nativewind@5.0.0-preview.3:
+    resolution: {integrity: sha512-cbl1GzzY55NL2IG35AaAVfrL4+bCh77sa39aST5/o7xy3TLPthAtzhNPstnrCn+DtIglTnXOlOJGFrX2WdhI6w==}
     engines: {node: '>=20'}
     peerDependencies:
       react-native-css: ^3.0.1
@@ -16951,7 +16951,7 @@ snapshots:
   napi-build-utils@2.0.0:
     optional: true
 
-  nativewind@5.0.0-preview.2(react-native-css@3.0.4(@expo/metro-config@54.0.14(expo@54.0.33))(lightningcss@1.31.1)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2))(tailwindcss@4.2.1):
+  nativewind@5.0.0-preview.3(react-native-css@3.0.4(@expo/metro-config@54.0.14(expo@54.0.33))(lightningcss@1.31.1)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2))(tailwindcss@4.2.1):
     dependencies:
       react-native-css: 3.0.4(@expo/metro-config@54.0.14(expo@54.0.33))(lightningcss@1.31.1)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.2))(react@19.1.2)
       tailwindcss: 4.2.1
