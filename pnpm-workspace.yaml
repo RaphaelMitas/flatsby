@@ -5,7 +5,7 @@ packages:
 
 catalog:
   "@ai-sdk/react": ^3.0.118
-  autumn-js: ^1.0.0
+  autumn-js: ^1.0.7
   "@eslint/js": ^9.39.4
   "@t3-oss/env-nextjs": ^0.13.10
   "@tailwindcss/postcss": ^4.1.16
