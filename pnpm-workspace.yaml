@@ -6,8 +6,6 @@ packages:
 catalog:
   "@ai-sdk/react": ^3.0.118
   autumn-js: ^1.0.7
-  "@better-auth/cli": 1.5.0-beta.13
-  "@better-auth/expo": 1.5.4
   "@eslint/js": ^9.39.4
   "@t3-oss/env-nextjs": ^0.13.10
   "@tailwindcss/postcss": ^4.1.16
@@ -18,7 +16,6 @@ catalog:
   "@turbo/gen": ^2.6.3
   "@types/node": ^22.18.12
   ai: ^6.0.116
-  better-auth: 1.5.0-beta.2
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^9.39.4
   next: ^16.1.6
@@ -30,6 +27,9 @@ catalog:
   zod: ^4.3.6
 
 catalogs:
+  better-auth:
+    "@better-auth/expo": 1.5.5
+    better-auth: 1.5.5
   react19:
     "@types/react": ~19.1.0
     "@types/react-dom": ~19.1.0
