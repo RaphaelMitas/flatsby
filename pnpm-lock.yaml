@@ -116,8 +116,8 @@ importers:
         specifier: catalog:better-auth
         version: 1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.2)(kysely@0.28.11)(nanostores@1.1.1))(better-auth@1.5.5(32de2b3658180a884a260cc50ae45be2))(expo-constants@18.0.13)(expo-linking@8.0.11)(expo-network@8.0.8(expo@54.0.33)(react@19.1.2))(expo-web-browser@15.0.10(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2)))
       '@bottom-tabs/react-navigation':
-        specifier: ^0.9.2
-        version: 0.9.2(@react-navigation/native@7.1.33(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2))(react-native-bottom-tabs@0.9.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2)
+        specifier: ^0.12.2
+        version: 0.12.2(@react-navigation/native@7.1.33(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2))(react-native-bottom-tabs@0.9.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2)
       '@flatsby/chat':
         specifier: workspace:*
         version: link:../../packages/chat
@@ -1594,8 +1594,8 @@ packages:
   '@better-fetch/fetch@1.1.21':
     resolution: {integrity: sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A==}
 
-  '@bottom-tabs/react-navigation@0.9.2':
-    resolution: {integrity: sha512-IZZKllcaqCGsKIgeXmYFGU95IXxbBpXtwKws4Lg2GJw/qqAYYsPFEl0JBvnymSD7G1zkHYEilg5UHuTd0NmX7A==}
+  '@bottom-tabs/react-navigation@0.12.2':
+    resolution: {integrity: sha512-vQ/7pNcWk2TgveVCBfdQnbLC6zaRbIL2EM4Vsifk/NCCZ49oT1G2K7iXAsCPby9/ofd6ndGOMmsVLFVq5M7fjw==}
     peerDependencies:
       '@react-navigation/native': '>=7'
       react: '*'
@@ -4860,18 +4860,34 @@ packages:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
     engines: {node: '>=7.0.0'}
 
+  color-convert@3.1.3:
+    resolution: {integrity: sha512-fasDH2ont2GqF5HpyO4w0+BcewlhHEZOFn9c1ckZdHpJ56Qb7MHhH/IcJZbBGgvdtwdwNbLvxiBEdg336iA9Sg==}
+    engines: {node: '>=14.6'}
+
   color-name@1.1.3:
     resolution: {integrity: sha512-72fSenhMw2HZMTVHeCA9KCmpEIbzWiQsjN+BHcBbS9vr1mtt+vJjPdksIBNUmKAW8TFUDPJK5SUU3QhE9NEXDw==}
 
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
+  color-name@2.1.0:
+    resolution: {integrity: sha512-1bPaDNFm0axzE4MEAzKPuqKWeRaT43U/hyxKPBdqTfmPF+d6n7FSoTFxLVULUJOmiLp01KjhIPPH+HrXZJN4Rg==}
+    engines: {node: '>=12.20'}
+
   color-string@1.9.1:
     resolution: {integrity: sha512-shrVawQFojnZv6xM40anx4CkoDP+fZsw/ZerEMsW/pyzsRbElpsL/DBVW7q3ExxwusdNXI3lXpuhEZkzs8p5Eg==}
+
+  color-string@2.1.4:
+    resolution: {integrity: sha512-Bb6Cq8oq0IjDOe8wJmi4JeNn763Xs9cfrBcaylK1tPypWzyoy2G3l90v9k64kjphl/ZJjPIShFztenRomi8WTg==}
+    engines: {node: '>=18'}
 
   color@4.2.3:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
     engines: {node: '>=12.5.0'}
+
+  color@5.0.3:
+    resolution: {integrity: sha512-ezmVcLR3xAVp8kYOm4GS45ZLLgIE6SPAFoduLr6hTDajwb3KZ2F46gulK3XpcwRFb5KKGCSezCBAY4Dw4HsyXA==}
+    engines: {node: '>=18'}
 
   colorjs.io@0.6.0-alpha.1:
     resolution: {integrity: sha512-c/h/8uAmPydQcriRdX8UTAFHj6SpSHFHBA8LvMikvYWAVApPTwg/pyOXNsGmaCBd6L/EeDlRHSNhTtnIFp/qsg==}
@@ -10232,10 +10248,10 @@ snapshots:
 
   '@better-fetch/fetch@1.1.21': {}
 
-  '@bottom-tabs/react-navigation@0.9.2(@react-navigation/native@7.1.33(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2))(react-native-bottom-tabs@0.9.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2)':
+  '@bottom-tabs/react-navigation@0.12.2(@react-navigation/native@7.1.33(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2))(react-native-bottom-tabs@0.9.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2)':
     dependencies:
       '@react-navigation/native': 7.1.33(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2)
-      color: 4.2.3
+      color: 5.0.3
       react: 19.1.2
       react-native: 0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2)
       react-native-bottom-tabs: 0.9.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.2))(react@19.1.2)
@@ -13687,19 +13703,34 @@ snapshots:
     dependencies:
       color-name: 1.1.4
 
+  color-convert@3.1.3:
+    dependencies:
+      color-name: 2.1.0
+
   color-name@1.1.3: {}
 
   color-name@1.1.4: {}
+
+  color-name@2.1.0: {}
 
   color-string@1.9.1:
     dependencies:
       color-name: 1.1.4
       simple-swizzle: 0.2.4
 
+  color-string@2.1.4:
+    dependencies:
+      color-name: 2.1.0
+
   color@4.2.3:
     dependencies:
       color-convert: 2.0.1
       color-string: 1.9.1
+
+  color@5.0.3:
+    dependencies:
+      color-convert: 3.1.3
+      color-string: 2.1.4
 
   colorjs.io@0.6.0-alpha.1: {}
 
