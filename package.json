@@ -31,5 +31,10 @@
     "turbo": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@flatsby/prettier-config"
+  "prettier": "@flatsby/prettier-config",
+  "pnpm": {
+    "overrides": {
+      "lightningcss": "1.30.1"
+    }
+  }
 }

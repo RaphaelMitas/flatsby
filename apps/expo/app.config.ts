@@ -103,6 +103,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-web-browser",
     "expo-localization",
     "react-native-bottom-tabs",
+    "@react-native-community/datetimepicker",
     [
       "expo-splash-screen",
       {
