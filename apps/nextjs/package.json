@@ -32,7 +32,7 @@
     "better-auth": "catalog:better-auth",
     "geist": "^1.7.0",
     "jose": "^6.2.2",
-    "next": "^16.1.6",
+    "next": "^16.2.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-intersection-observer": "^9.16.0",
