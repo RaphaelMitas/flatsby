@@ -13,7 +13,7 @@ catalog:
   "@trpc/client": ^11.7.2
   "@trpc/server": ^11.7.2
   "@trpc/tanstack-react-query": ^11.7.2
-  "@turbo/gen": ^2.6.3
+  "@turbo/gen": ^2.8.20
   "@types/node": ^22.19.15
   ai: ^6.0.116
   babel-plugin-react-compiler: ^1.0.0
@@ -22,7 +22,7 @@ catalog:
   prettier: ^3.8.1
   superjson: ^2.2.6
   tailwindcss: ^4.2.2
-  turbo: ^2.6.3
+  turbo: ^2.8.20
   typescript: ^5.9.3
   zod: ^4.3.6
 
