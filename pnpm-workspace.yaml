@@ -4,7 +4,7 @@ packages:
   - tooling/*
 
 catalog:
-  "@ai-sdk/react": ^3.0.118
+  "@ai-sdk/react": ^3.0.136
   autumn-js: ^1.0.7
   "@eslint/js": ^9.39.4
   "@t3-oss/env-nextjs": ^0.13.10
@@ -15,7 +15,7 @@ catalog:
   "@trpc/tanstack-react-query": ^11.14.1
   "@turbo/gen": ^2.8.20
   "@types/node": ^22.19.15
-  ai: ^6.0.116
+  ai: ^6.0.134
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^9.39.4
   next: ^16.2.0
