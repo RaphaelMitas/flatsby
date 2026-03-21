@@ -31,10 +31,10 @@ catalogs:
     "@better-auth/expo": 1.5.5
     better-auth: 1.5.5
   react19:
-    "@types/react": ~19.2.14
-    "@types/react-dom": ~19.2.3
-    react: 19.2.4
-    react-dom: 19.2.4
+    "@types/react": ~19.1.0
+    "@types/react-dom": ~19.1.0
+    react: 19.1.5
+    react-dom: 19.1.5
 
 linkWorkspacePackages: true
 
