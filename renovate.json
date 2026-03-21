@@ -4,11 +4,16 @@
     "config:recommended",
     ":separateMajorReleases",
     ":combinePatchMinorReleases",
-    "schedule:weekends"
+    "schedule:weekends",
+    "group:expoMonorepo"
   ],
   "baseBranchPatterns": ["develop"],
   "rangeStrategy": "bump",
   "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on the first day of the month"]
+  },
   "packageRules": [
     {
       "description": "Automerge non-major updates",
@@ -16,20 +21,31 @@
       "automerge": true
     },
     {
-      "description": "Group Expo ecosystem",
-      "groupName": "expo",
-      "matchUpdateTypes": ["minor", "patch"],
-      "matchPackageNames": ["/^expo/", "/^@expo//", "/^react-native/"]
+      "description": "Expo-managed deps – update via `expo doctor --fix-dependencies`, not Renovate",
+      "matchFileNames": ["apps/expo/package.json"],
+      "matchPackageNames": [
+        "/^expo/",
+        "react-native",
+        "react-native-gesture-handler",
+        "react-native-reanimated",
+        "react-native-safe-area-context",
+        "react-native-screens",
+        "react-native-worklets",
+        "react-native-css",
+        "@react-native-async-storage/async-storage",
+        "@react-native-community/datetimepicker"
+      ],
+      "enabled": false
     },
     {
-      "description": "Group React",
-      "groupName": "react",
+      "description": "React pinned to Expo SDK-compatible version – update when upgrading Expo SDK",
       "matchPackageNames": [
         "react",
         "react-dom",
         "@types/react",
         "@types/react-dom"
-      ]
+      ],
+      "enabled": false
     },
     {
       "description": "Group Next.js",
