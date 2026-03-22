@@ -45,6 +45,17 @@ jobs:
       - name: Format
         run: pnpm format
 
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Audit
+        run: pnpm audit
+
   typecheck:
     runs-on: ubuntu-latest
     steps:
