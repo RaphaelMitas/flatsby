@@ -257,7 +257,7 @@ importers:
         specifier: ~2.28.0
         version: 2.28.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
       react-native-gifted-charts:
-        specifier: ^1.4.73
+        specifier: ^1.4.76
         version: 1.4.76(expo-linear-gradient@15.0.8(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native-svg@15.15.3(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
       react-native-keyboard-controller:
         specifier: 1.18.5
