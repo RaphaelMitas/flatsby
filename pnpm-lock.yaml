@@ -20,8 +20,8 @@ catalogs:
       specifier: ^9.39.4
       version: 9.39.4
     '@t3-oss/env-nextjs':
-      specifier: ^0.13.10
-      version: 0.13.10
+      specifier: ^0.13.11
+      version: 0.13.11
     '@tailwindcss/postcss':
       specifier: ^4.2.2
       version: 4.2.2
@@ -358,7 +358,7 @@ importers:
         version: link:../../packages/validators
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
-        version: 0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
+        version: 0.13.11(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.94.5(react@19.1.5)
@@ -516,7 +516,7 @@ importers:
         version: link:../db
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
-        version: 0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
+        version: 0.13.11(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
       ai:
         specifier: 'catalog:'
         version: 6.0.134(zod@4.3.6)
@@ -605,7 +605,7 @@ importers:
         version: 1.0.2
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
-        version: 0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
+        version: 0.13.11(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.1(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0(prisma@7.4.2(@types/react@19.2.14)(better-sqlite3@12.6.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)))(@types/pg@8.18.0)(better-sqlite3@12.6.2)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(better-sqlite3@12.6.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))
@@ -3848,8 +3848,8 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
-  '@t3-oss/env-core@0.13.10':
-    resolution: {integrity: sha512-NNFfdlJ+HmPHkLi2HKy7nwuat9SIYOxei9K10lO2YlcSObDILY7mHZNSHsieIM3A0/5OOzw/P/b+yLvPdaG52g==}
+  '@t3-oss/env-core@0.13.11':
+    resolution: {integrity: sha512-sM7GYY+KL7H/Hl0BE0inWfk3nRHZOLhmVn7sHGxaZt9FAR6KqREXAE+6TqKfiavfXmpRxO/OZ2QgKRd+oiBYRQ==}
     peerDependencies:
       arktype: ^2.1.0
       typescript: '>=5.0.0'
@@ -3865,8 +3865,8 @@ packages:
       zod:
         optional: true
 
-  '@t3-oss/env-nextjs@0.13.10':
-    resolution: {integrity: sha512-JfSA2WXOnvcc/uMdp31paMsfbYhhdvLLRxlwvrnlPE9bwM/n0Z+Qb9xRv48nPpvfMhOrkrTYw1I5Yc06WIKBJQ==}
+  '@t3-oss/env-nextjs@0.13.11':
+    resolution: {integrity: sha512-NC+3j7YWgpzdFu1t5y/8wqibTK0lm5RS4bjXA1n8uwik3wIR4iZM4Fa+U2BaMa5k3Qk8RZiYhoAIX0WogmGkzg==}
     peerDependencies:
       arktype: ^2.1.0
       typescript: '>=5.0.0'
@@ -12799,15 +12799,15 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@t3-oss/env-core@0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)':
+  '@t3-oss/env-core@0.13.11(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)':
     optionalDependencies:
       typescript: 5.9.3
       valibot: 1.2.0(typescript@5.9.3)
       zod: 4.3.6
 
-  '@t3-oss/env-nextjs@0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)':
+  '@t3-oss/env-nextjs@0.13.11(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)':
     dependencies:
-      '@t3-oss/env-core': 0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
+      '@t3-oss/env-core': 0.13.11(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
     optionalDependencies:
       typescript: 5.9.3
       valibot: 1.2.0(typescript@5.9.3)
