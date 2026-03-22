@@ -4,7 +4,7 @@ import type {
   ExpenseSplit,
   SplitMethod,
 } from "@flatsby/validators/expenses/types";
-import type { UseFormReturn } from "react-hook-form";
+import { useWatch, type UseFormReturn } from "react-hook-form";
 import { Text, TouchableOpacity, View } from "react-native";
 
 import {
@@ -45,7 +45,7 @@ export function SplitEditor({
   splitMethod,
   onSplitMethodChange,
 }: SplitEditorProps) {
-  const splits = form.watch("splits");
+  const splits = useWatch({ control: form.control, name: "splits" });
   const selectedMemberIds = splits.map(
     (s: { groupMemberId: number }) => s.groupMemberId,
   );
