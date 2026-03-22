@@ -6,6 +6,7 @@ import type {
 } from "@flatsby/validators/expenses/types";
 import type { UseFormReturn } from "react-hook-form";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useWatch } from "react-hook-form";
 
 import {
   derivePercentagesFromAmounts,
@@ -45,7 +46,7 @@ export function SplitEditor({
   splitMethod,
   onSplitMethodChange,
 }: SplitEditorProps) {
-  const splits = form.watch("splits");
+  const splits = useWatch({ control: form.control, name: "splits" });
   const selectedMemberIds = splits.map(
     (s: { groupMemberId: number }) => s.groupMemberId,
   );
