@@ -4,8 +4,9 @@ import type {
   ExpenseSplit,
   SplitMethod,
 } from "@flatsby/validators/expenses/types";
-import { useWatch, type UseFormReturn } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useWatch } from "react-hook-form";
 
 import {
   derivePercentagesFromAmounts,
