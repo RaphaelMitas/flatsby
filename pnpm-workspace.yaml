@@ -4,32 +4,32 @@ packages:
   - tooling/*
 
 catalog:
-  "@ai-sdk/react": ^3.0.118
-  autumn-js: ^1.0.0
-  "@better-auth/cli": 1.5.0-beta.13
-  "@better-auth/expo": 1.5.4
+  "@ai-sdk/react": ^3.0.136
+  autumn-js: ^1.0.7
   "@eslint/js": ^9.39.4
   "@t3-oss/env-nextjs": ^0.13.10
-  "@tailwindcss/postcss": ^4.1.16
-  "@tanstack/react-query": ^5.90.21
-  "@trpc/client": ^11.7.2
-  "@trpc/server": ^11.7.2
-  "@trpc/tanstack-react-query": ^11.7.2
-  "@turbo/gen": ^2.6.3
-  "@types/node": ^22.18.12
-  ai: ^6.0.116
-  better-auth: 1.5.0-beta.2
+  "@tailwindcss/postcss": ^4.2.2
+  "@tanstack/react-query": ^5.94.5
+  "@trpc/client": ^11.14.1
+  "@trpc/server": ^11.14.1
+  "@trpc/tanstack-react-query": ^11.14.1
+  "@turbo/gen": ^2.8.20
+  "@types/node": ^22.19.15
+  ai: ^6.0.134
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^9.39.4
-  next: ^16.1.6
+  next: ^16.2.1
   prettier: ^3.8.1
   superjson: ^2.2.6
-  tailwindcss: ^4.1.16
-  turbo: ^2.6.3
+  tailwindcss: ^4.2.2
+  turbo: ^2.8.20
   typescript: ^5.9.3
   zod: ^4.3.6
 
 catalogs:
+  better-auth:
+    "@better-auth/expo": 1.5.6
+    better-auth: 1.5.6
   react19:
     "@types/react": ~19.1.0
     "@types/react-dom": ~19.1.0
@@ -45,3 +45,24 @@ onlyBuiltDependencies:
 publicHoistPattern:
   - "@ianvs/prettier-plugin-sort-imports"
   - prettier-plugin-tailwindcss
+
+# Unfixable transitive dep vulnerabilities (pinned by parent packages).
+# Remove entries as upstream packages release fixes.
+# - hono, @hono/node-server, lodash: @prisma/dev@0.20.0 pins exact versions
+# - effect: @prisma/config@7.4.2 pins exact version
+# - esbuild: @esbuild-kit/core-utils@3.3.2 pins ~0.18.20
+auditConfig:
+  ignoreGhsas:
+    - GHSA-q5qw-h33p-qvwr
+    - GHSA-wc8c-qw6v-h7f6
+    - GHSA-38f7-945m-qr2g
+    - GHSA-67mh-4wv8-2f99
+    - GHSA-xxjr-mmjv-4gpg
+    - GHSA-9r54-q6cx-xmh5
+    - GHSA-6wqw-2p9w-4vw4
+    - GHSA-r354-f388-2fhh
+    - GHSA-w332-q679-j88p
+    - GHSA-5pq2-9x2x-5p6w
+    - GHSA-p6xx-57qc-3wxr
+    - GHSA-v8w9-8mx6-g223
+    - GHSA-gq3j-xvxp-8hrf
