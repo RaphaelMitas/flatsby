@@ -15,6 +15,7 @@ const config = {
     "@flatsby/ui",
     "@flatsby/validators",
   ],
+  serverExternalPackages: ["@posthog/ai"],
   reactCompiler: true,
 
   /** We already do linting and typechecking as separate tasks in CI */
