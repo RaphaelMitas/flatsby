@@ -45,7 +45,7 @@
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
     "@types/ws": "^8.18.1",
-    "dotenv-cli": "^8.0.0",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "catalog:",
     "prettier": "catalog:",
