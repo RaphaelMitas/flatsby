@@ -35,7 +35,7 @@
     "next": "^16.2.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-intersection-observer": "^9.16.0",
+    "react-intersection-observer": "^10.0.3",
     "react-swipeable-list": "^1.10.0",
     "superjson": "catalog:",
     "zod": "catalog:"
