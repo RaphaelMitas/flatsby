@@ -1,5 +1,4 @@
 import type { ComponentProps } from "react";
-import { Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -19,7 +18,7 @@ export function AppScrollView({
     <KeyboardAwareScrollView
       keyboardShouldPersistTaps="handled"
       className={cn("flex-1", className)}
-      bottomOffset={Platform.OS === "ios" ? safeAreaInsets.bottom : 85}
+      bottomOffset={safeAreaInsets.bottom}
       contentContainerClassName={cn("grow", contentContainerClassName)}
       {...props}
     >

@@ -17,7 +17,7 @@ import { FlashList } from "@shopify/flash-list";
 import { styled } from "nativewind";
 import { tv } from "tailwind-variants";
 
-import { useBottomInset, useThemeColors } from "../utils";
+import { useThemeColors } from "../utils";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const BottomSheet = styled(BottomSheetRaw, {
@@ -146,7 +146,6 @@ export const BottomSheetPickerProvider: React.FC<
     snapPoints: string[];
   } | null>(null);
   const { getColor } = useThemeColors();
-  const { sheetInset } = useBottomInset();
 
   const openPicker = useCallback(
     (config: {
@@ -231,7 +230,6 @@ export const BottomSheetPickerProvider: React.FC<
         snapPoints={pickerConfig?.snapPoints ?? ["50%", "80%"]}
         index={-1}
         enablePanDownToClose
-        bottomInset={sheetInset}
         className={bottomSheetVariants()}
         handleIndicatorStyle={{
           backgroundColor: getColor("primary"),
