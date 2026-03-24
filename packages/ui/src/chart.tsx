@@ -1,9 +1,12 @@
 "use client";
 
+import type { TooltipValueType } from "recharts";
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@flatsby/ui";
+
+type TooltipNameType = number | string;
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -126,7 +129,13 @@ function ChartTooltipContent({
     indicator?: "line" | "dot" | "dashed";
     nameKey?: string;
     labelKey?: string;
-  }) {
+  } & Omit<
+    RechartsPrimitive.DefaultTooltipContentProps<
+      TooltipValueType,
+      TooltipNameType
+    >,
+    "accessibilityLayer"
+  >) {
   const { config } = useChart();
 
   const tooltipLabel = React.useMemo(() => {
@@ -135,7 +144,7 @@ function ChartTooltipContent({
     }
 
     const [item] = payload;
-    const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`;
+    const key = `${String(labelKey ?? item?.dataKey ?? item?.name ?? "value")}`;
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
     const value =
       !labelKey && typeof label === "string"
@@ -183,14 +192,16 @@ function ChartTooltipContent({
         {payload
           .filter((item) => item.type !== "none")
           .map((item, index) => {
-            const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`;
+            const key = `${String(nameKey ?? item.name ?? item.dataKey ?? "value")}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-            const indicatorColor = color ?? item.payload.fill ?? item.color;
+            const indicatorColor =
+              color ??
+              (item.payload as Record<string, unknown>).fill ??
+              item.color;
 
             return (
               <div
-                key={item.dataKey}
+                key={index}
                 className={cn(
                   "[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5",
                   indicator === "dot" && "items-center",
@@ -218,9 +229,7 @@ function ChartTooltipContent({
                           )}
                           style={
                             {
-                              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                               "--color-bg": indicatorColor,
-                              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                               "--color-border": indicatorColor,
                             } as React.CSSProperties
                           }
@@ -239,9 +248,11 @@ function ChartTooltipContent({
                           {itemConfig?.label ?? item.name}
                         </span>
                       </div>
-                      {item.value && (
+                      {item.value != null && (
                         <span className="text-foreground font-mono font-medium tabular-nums">
-                          {item.value.toLocaleString()}
+                          {typeof item.value === "number"
+                            ? item.value.toLocaleString()
+                            : String(item.value)}
                         </span>
                       )}
                     </div>
@@ -263,11 +274,10 @@ function ChartLegendContent({
   payload,
   verticalAlign = "bottom",
   nameKey,
-}: React.ComponentProps<"div"> &
-  Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
-    hideIcon?: boolean;
-    nameKey?: string;
-  }) {
+}: React.ComponentProps<"div"> & {
+  hideIcon?: boolean;
+  nameKey?: string;
+} & RechartsPrimitive.DefaultLegendContentProps) {
   const { config } = useChart();
 
   if (!payload?.length) {
@@ -284,15 +294,13 @@ function ChartLegendContent({
     >
       {payload
         .filter((item) => item.type !== "none")
-        .map((item) => {
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          const key = `${nameKey ?? item.dataKey ?? "value"}`;
+        .map((item, index) => {
+          const key = `${String(nameKey ?? item.dataKey ?? "value")}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
           return (
             <div
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              key={item.value}
+              key={index}
               className={cn(
                 "[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3",
               )}
