@@ -12,6 +12,7 @@ export function initAuth(options: {
   productionUrl: string;
   secret: string | undefined;
   nodeEnv: string;
+  enableTestUtils?: boolean;
   googleClientId: string;
   googleClientSecret: string;
   appleServiceId: string;
@@ -31,7 +32,7 @@ export function initAuth(options: {
       }),
       expo(),
       nextCookies(),
-      ...(options.nodeEnv !== "production" ? [testUtils()] : []),
+      ...(options.enableTestUtils ? [testUtils()] : []),
     ],
     socialProviders: {
       google: {

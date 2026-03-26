@@ -14,6 +14,7 @@ export const auth = initAuth({
   productionUrl: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   nodeEnv: env.NODE_ENV,
+  enableTestUtils: env.E2E_TESTING,
   googleClientId: env.GOOGLE_CLIENT_ID,
   googleClientSecret: env.GOOGLE_CLIENT_SECRET,
   appleServiceId: env.APPLE_SERVICE_ID,

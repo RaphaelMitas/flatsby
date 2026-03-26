@@ -19,9 +19,9 @@ const TEST_USER = {
  * Guarded to only work outside production.
  */
 export async function POST() {
-  if (env.NODE_ENV === "production") {
+  if (!env.E2E_TESTING) {
     return NextResponse.json(
-      { error: "Not available in production" },
+      { error: "E2E testing is not enabled" },
       { status: 403 },
     );
   }
@@ -104,9 +104,9 @@ export async function POST() {
  * Cleanup route: removes test user and associated data.
  */
 export async function DELETE() {
-  if (env.NODE_ENV === "production") {
+  if (!env.E2E_TESTING) {
     return NextResponse.json(
-      { error: "Not available in production" },
+      { error: "E2E testing is not enabled" },
       { status: 403 },
     );
   }

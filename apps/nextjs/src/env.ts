@@ -31,6 +31,7 @@ export const env = createEnv({
     DATABASE_URL: z.url(),
     BETTER_AUTH_URL: z.string(),
     POSTHOG_API_KEY: z.string().optional(),
+    E2E_TESTING: z.coerce.boolean().default(false),
   },
   client: {
     NEXT_PUBLIC_BETTER_AUTH_BASE_URL: z.url(),
