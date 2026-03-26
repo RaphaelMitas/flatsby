@@ -44,9 +44,7 @@ async function cleanupAuthSession(
   await page.request.delete(apiUrl);
 }
 
-function normalizeSameSite(
-  sameSite: string,
-): "Strict" | "Lax" | "None" {
+function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
   const lower = sameSite.toLowerCase();
   if (lower === "strict") return "Strict";
   if (lower === "none") return "None";
