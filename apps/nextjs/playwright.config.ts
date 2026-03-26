@@ -20,6 +20,7 @@ export default defineConfig({
       ? {
           extraHTTPHeaders: {
             "x-vercel-protection-bypass": bypassSecret,
+            "x-vercel-set-bypass-cookie": "samesitenonealidate",
           },
         }
       : {}),
