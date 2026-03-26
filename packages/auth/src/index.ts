@@ -3,7 +3,7 @@ import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { oAuthProxy } from "better-auth/plugins";
+import { oAuthProxy, testUtils } from "better-auth/plugins";
 
 import { db } from "@flatsby/db/client";
 
@@ -11,6 +11,8 @@ export function initAuth(options: {
   baseUrl: string;
   productionUrl: string;
   secret: string | undefined;
+  nodeEnv: string;
+  enableTestUtils?: boolean;
   googleClientId: string;
   googleClientSecret: string;
   appleServiceId: string;
@@ -30,6 +32,7 @@ export function initAuth(options: {
       }),
       expo(),
       nextCookies(),
+      ...(options.enableTestUtils ? [testUtils()] : []),
     ],
     socialProviders: {
       google: {

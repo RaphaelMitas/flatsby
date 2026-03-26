@@ -48,21 +48,9 @@ publicHoistPattern:
 
 # Unfixable transitive dep vulnerabilities (pinned by parent packages).
 # Remove entries as upstream packages release fixes.
-# - hono, @hono/node-server, lodash: @prisma/dev@0.20.0 pins exact versions
-# - effect: @prisma/config@7.4.2 pins exact version
-# - esbuild: @esbuild-kit/core-utils@3.3.2 pins ~0.18.20
+# - esbuild: @esbuild-kit/core-utils@3.3.2 pins ~0.18.20 (drizzle-kit)
+# - brace-expansion: expo SDK 54 pins minimatch@9/3 → brace-expansion@2/1 (no patch for <v5)
 auditConfig:
   ignoreGhsas:
-    - GHSA-q5qw-h33p-qvwr
-    - GHSA-wc8c-qw6v-h7f6
-    - GHSA-38f7-945m-qr2g
     - GHSA-67mh-4wv8-2f99
-    - GHSA-xxjr-mmjv-4gpg
-    - GHSA-9r54-q6cx-xmh5
-    - GHSA-6wqw-2p9w-4vw4
-    - GHSA-r354-f388-2fhh
-    - GHSA-w332-q679-j88p
-    - GHSA-5pq2-9x2x-5p6w
-    - GHSA-p6xx-57qc-3wxr
-    - GHSA-v8w9-8mx6-g223
-    - GHSA-gq3j-xvxp-8hrf
+    - GHSA-f886-m6hf-6m8v
