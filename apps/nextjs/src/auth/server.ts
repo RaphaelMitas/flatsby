@@ -13,6 +13,7 @@ export const auth = initAuth({
   baseUrl: env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL,
   productionUrl: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
+  nodeEnv: env.NODE_ENV,
   googleClientId: env.GOOGLE_CLIENT_ID,
   googleClientSecret: env.GOOGLE_CLIENT_SECRET,
   appleServiceId: env.APPLE_SERVICE_ID,
@@ -27,7 +28,7 @@ export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
 );
 
-export async function signOutAndRedirect() {
+export async function signOutAndRedirect(): Promise<never> {
   await auth.api.signOut({ headers: await headers() });
   redirect("/auth/login");
 }

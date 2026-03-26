@@ -43,6 +43,10 @@
     "ui-add": {
       "cache": false,
       "interactive": true
+    },
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "cache": false
     }
   },
   "globalEnv": [
@@ -68,6 +72,8 @@
     "VERCEL",
     "VERCEL_ENV",
     "VERCEL_URL",
-    "npm_lifecycle_event"
+    "npm_lifecycle_event",
+    "BASE_URL",
+    "VERCEL_AUTOMATION_BYPASS_SECRET"
   ]
 }

@@ -1,0 +1,51 @@
+name: E2E Tests
+
+on:
+  deployment_status:
+
+concurrency:
+  group: e2e-${{ github.event.deployment.sha }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 3
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+
+jobs:
+  e2e-web:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment_status.environment == 'Preview'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Install Playwright Chromium
+        run: pnpm dlx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: pnpm turbo run test:e2e --filter=@flatsby/nextjs
+        env:
+          BASE_URL: ${{ github.event.deployment_status.target_url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/nextjs/playwright-report/
+          retention-days: 7
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: apps/nextjs/test-results/
+          retention-days: 7

@@ -57,5 +57,9 @@ dist/
 # service account keys
 serviceAccount*.json
 
+# playwright
+playwright-report/
+test-results/
+
 # claude
 .claude

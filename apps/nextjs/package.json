@@ -10,6 +10,8 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "start": "pnpm with-env next start",
+    "test:e2e": "pnpm with-env playwright test",
+    "test:e2e:ui": "pnpm with-env playwright test --ui",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
@@ -45,6 +47,7 @@
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tailwind-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
+    "@playwright/test": "^1.58.2",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
