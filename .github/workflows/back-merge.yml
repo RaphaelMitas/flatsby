@@ -1,0 +1,48 @@
+name: Back-merge main to develop
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  back-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Attempt merge
+        id: merge
+        run: |
+          git checkout develop
+          git merge origin/main --no-edit && echo "result=success" >> "$GITHUB_OUTPUT" || echo "result=conflict" >> "$GITHUB_OUTPUT"
+
+      - name: Push if clean
+        if: steps.merge.outputs.result == 'success'
+        run: git push origin develop
+
+      - name: Create PR if conflicts
+        if: steps.merge.outputs.result == 'conflict'
+        run: |
+          git merge --abort
+          BRANCH="auto/back-merge-main-to-develop-$(date +%Y%m%d%H%M%S)"
+          git checkout -b "$BRANCH" origin/main
+          git push origin "$BRANCH"
+          gh pr create \
+            --base develop \
+            --head "$BRANCH" \
+            --title "chore: back-merge main into develop" \
+            --body "Automatic back-merge from \`main\` to \`develop\` had conflicts. Please resolve manually." \
+            --label "back-merge"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
