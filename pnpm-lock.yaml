@@ -29,13 +29,13 @@ catalogs:
       specifier: ^5.95.2
       version: 5.95.2
     '@trpc/client':
-      specifier: ^11.15.0
+      specifier: ^11.15.1
       version: 11.15.1
     '@trpc/server':
-      specifier: ^11.15.0
+      specifier: ^11.15.1
       version: 11.15.1
     '@trpc/tanstack-react-query':
-      specifier: ^11.15.0
+      specifier: ^11.15.1
       version: 11.15.1
     '@types/node':
       specifier: ^24.12.0
