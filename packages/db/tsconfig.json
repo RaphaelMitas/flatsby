@@ -1,5 +1,9 @@
 {
   "extends": "@flatsby/tsconfig/internal-package.json",
-  "include": ["src"],
+  "compilerOptions": {
+    "types": ["ws"],
+    "rootDir": "."
+  },
+  "include": ["src", "env.ts"],
   "exclude": ["node_modules"]
 }
