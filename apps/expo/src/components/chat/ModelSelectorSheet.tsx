@@ -23,7 +23,7 @@ import { Badge } from "~/lib/ui/badge";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Separator } from "~/lib/ui/separator";
 import { Switch } from "~/lib/ui/switch";
-import { useBottomInset, useThemeColors } from "~/lib/utils";
+import { useThemeColors } from "~/lib/utils";
 
 const itemVariants = tv({
   base: "flex-row items-center gap-3 px-4 py-3 active:bg-muted/50",
@@ -56,7 +56,6 @@ export const ModelSelectorSheet = forwardRef<
 ) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const { getColor } = useThemeColors();
-  const { sheetInset } = useBottomInset();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter models by search (name or provider) and tools preference
@@ -129,7 +128,6 @@ export const ModelSelectorSheet = forwardRef<
       ref={bottomSheetRef}
       snapPoints={["50%"]}
       enablePanDownToClose
-      bottomInset={sheetInset}
       backdropComponent={renderBackdrop}
       backgroundStyle={backgroundStyle}
       handleIndicatorStyle={handleIndicatorStyle}

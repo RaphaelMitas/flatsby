@@ -1,10 +1,10 @@
 {
   "extends": "@flatsby/tsconfig/internal-package.json",
   "compilerOptions": {
-    "lib": ["ES2022", "dom", "dom.iterable"],
+    "lib": ["ES2022", "dom"],
+    "types": ["react"],
     "jsx": "preserve",
     "rootDir": ".",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@/hooks/*": ["./hooks/*"]

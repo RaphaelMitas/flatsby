@@ -43,6 +43,10 @@
     "ui-add": {
       "cache": false,
       "interactive": true
+    },
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "cache": false
     }
   },
   "globalEnv": [
@@ -56,6 +60,7 @@
     "APPLE_SERVICE_ID",
     "BETTER_AUTH_URL",
     "DATABASE_URL",
+    "E2E_TESTING",
     "MODEL_PROVIDER",
     "AI_GATEWAY_API_KEY",
     "AUTUMN_SECRET_KEY",
@@ -68,6 +73,8 @@
     "VERCEL",
     "VERCEL_ENV",
     "VERCEL_URL",
-    "npm_lifecycle_event"
+    "npm_lifecycle_event",
+    "BASE_URL",
+    "VERCEL_AUTOMATION_BYPASS_SECRET"
   ]
 }

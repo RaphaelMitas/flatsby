@@ -1,6 +1,7 @@
 {
   "extends": ["@flatsby/tsconfig/base.json"],
   "compilerOptions": {
+    "types": ["react"],
     "jsx": "react-native",
     "checkJs": false,
     "moduleSuffixes": [".ios", ".android", ".native", ""],
