@@ -1,9 +1,9 @@
 {
   "extends": "@flatsby/tsconfig/base.json",
   "compilerOptions": {
-    "lib": ["ES2022", "dom", "dom.iterable"],
+    "lib": ["ES2022", "dom"],
+    "types": ["node", "react", "react-dom"],
     "jsx": "preserve",
-    "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"]
     },
