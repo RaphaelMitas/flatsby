@@ -4,18 +4,18 @@ packages:
   - tooling/*
 
 catalog:
-  "@ai-sdk/react": ^3.0.139
-  autumn-js: ^1.1.2
+  "@ai-sdk/react": ^3.0.142
+  autumn-js: ^1.1.8
   "@eslint/js": ^10.0.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.2.2
   "@tanstack/react-query": ^5.95.2
-  "@trpc/client": ^11.15.0
-  "@trpc/server": ^11.15.0
-  "@trpc/tanstack-react-query": ^11.15.0
+  "@trpc/client": ^11.15.1
+  "@trpc/server": ^11.15.1
+  "@trpc/tanstack-react-query": ^11.15.1
   "@turbo/gen": ^2.8.20
   "@types/node": ^24.12.0
-  ai: ^6.0.137
+  ai: ^6.0.140
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^10.1.0
   next: ^16.2.1
