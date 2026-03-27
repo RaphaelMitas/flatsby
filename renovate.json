@@ -9,7 +9,6 @@
   "baseBranchPatterns": ["develop"],
   "rangeStrategy": "bump",
   "labels": ["dependencies"],
-  "schedule": ["before 9am every weekday", "after 6pm every weekday"],
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 5am on the first day of the month"]
