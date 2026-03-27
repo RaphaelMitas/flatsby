@@ -758,7 +758,7 @@ importers:
         specifier: ^7.72.0
         version: 7.72.0(react@19.1.5)
       react-resizable-panels:
-        specifier: ^4.7.5
+        specifier: ^4.7.6
         version: 4.7.6(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
       recharts:
         specifier: 3.8.1
