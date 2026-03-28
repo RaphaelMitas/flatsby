@@ -5,4 +5,3 @@ appId: com.flatcove.app.v2
     clearState: true
 - assertVisible:
     id: "login-screen"
-    timeout: 15000
