@@ -716,8 +716,8 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2(@types/react@19.1.17)(react@19.1.5)
       '@xyflow/react':
-        specifier: ^12.10.1
-        version: 12.10.1(@types/react@19.1.17)(immer@11.1.4)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+        specifier: ^12.10.2
+        version: 12.10.2(@types/react@19.1.17)(immer@11.1.4)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
       ai:
         specifier: 'catalog:'
         version: 6.0.141(zod@4.3.6)
@@ -4277,14 +4277,14 @@ packages:
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
 
-  '@xyflow/react@12.10.1':
-    resolution: {integrity: sha512-5eSWtIK/+rkldOuFbOOz44CRgQRjtS9v5nufk77DV+XBnfCGL9HAQ8PG00o2ZYKqkEU/Ak6wrKC95Tu+2zuK3Q==}
+  '@xyflow/react@12.10.2':
+    resolution: {integrity: sha512-CgIi6HwlcHXwlkTpr0fxLv/0sRVNZ8IdwKLzzeCscaYBwpvfcH1QFOCeaTCuEn1FQEs/B8CjnTSjhs8udgmBgQ==}
     peerDependencies:
       react: '>=17'
       react-dom: '>=17'
 
-  '@xyflow/system@0.0.75':
-    resolution: {integrity: sha512-iXs+AGFLi8w/VlAoc/iSxk+CxfT6o64Uw/k0CKASOPqjqz6E0rb5jFZgJtXGZCpfQI6OQpu5EnumP5fGxQheaQ==}
+  '@xyflow/system@0.0.76':
+    resolution: {integrity: sha512-hvwvnRS1B3REwVDlWexsq7YQaPZeG3/mKo1jv38UmnpWmxihp14bW6VtEOuHEwJX2FvzFw8k77LyKSk/wiZVNA==}
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -12354,9 +12354,9 @@ snapshots:
 
   '@xmldom/xmldom@0.8.11': {}
 
-  '@xyflow/react@12.10.1(@types/react@19.1.17)(immer@11.1.4)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)':
+  '@xyflow/react@12.10.2(@types/react@19.1.17)(immer@11.1.4)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)':
     dependencies:
-      '@xyflow/system': 0.0.75
+      '@xyflow/system': 0.0.76
       classcat: 5.0.5
       react: 19.1.5
       react-dom: 19.1.5(react@19.1.5)
@@ -12365,7 +12365,7 @@ snapshots:
       - '@types/react'
       - immer
 
-  '@xyflow/system@0.0.75':
+  '@xyflow/system@0.0.76':
     dependencies:
       '@types/d3-drag': 3.0.7
       '@types/d3-interpolate': 3.0.4
