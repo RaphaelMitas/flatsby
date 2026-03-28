@@ -74,7 +74,8 @@ jobs:
         working-directory: apps/expo
         run: |
           mkdir -p build-cache
-          pnpm dlx eas-cli build --local --profile e2e --platform ios --output build-cache/Flatsby.app
+          pnpm dlx eas-cli build --local --profile e2e --platform ios --output build-cache/Flatsby.tar.gz
+          cd build-cache && tar -xzf Flatsby.tar.gz && rm Flatsby.tar.gz
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
