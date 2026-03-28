@@ -5,7 +5,7 @@ import { reactConfig } from "@flatsby/eslint-config/react";
 
 export default defineConfig(
   {
-    ignores: [".expo/**", "expo-plugins/**"],
+    ignores: [".expo/**", "expo-plugins/**", "e2e/**"],
   },
   baseConfig,
   reactConfig,

@@ -96,6 +96,7 @@ export async function POST() {
   return NextResponse.json({
     userId: TEST_USER.id,
     cookies: result.cookies,
+    token: result.token,
     ok: true,
   });
 }

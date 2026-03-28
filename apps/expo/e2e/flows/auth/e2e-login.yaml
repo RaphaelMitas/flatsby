@@ -1,0 +1,13 @@
+appId: com.flatcove.app.v2
+---
+# Reusable sub-flow: authenticates via deep link using E2E API session token.
+# Requires E2E_API_URL env var to be set.
+- runScript:
+    file: ../../scripts/create-session.js
+    env:
+      E2E_API_URL: ${E2E_API_URL}
+    output: SESSION
+- openLink: flatsby://e2e-login?token=${output.SESSION.token}
+- assertVisible:
+    id: "home-screen"
+    timeout: 10000

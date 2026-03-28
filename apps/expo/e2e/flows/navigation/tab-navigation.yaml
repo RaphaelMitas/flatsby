@@ -1,0 +1,17 @@
+appId: com.flatcove.app.v2
+---
+# Verifies authenticated tab navigation between Home, Chat, and Settings.
+- launchApp:
+    clearState: true
+- runFlow: ../auth/e2e-login.yaml
+- assertVisible:
+    id: "home-screen"
+- tapOn: "Chat"
+- assertVisible:
+    id: "chat-screen"
+- tapOn: "Settings"
+- assertVisible:
+    id: "settings-screen"
+- tapOn: "Home"
+- assertVisible:
+    id: "home-screen"
