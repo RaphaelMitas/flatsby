@@ -26,7 +26,6 @@
   },
   "devDependencies": {
     "@flatsby/prettier-config": "workspace:*",
-    "glob": "^13.0.6",
     "prettier": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"
