@@ -91,6 +91,7 @@ jobs:
         working-directory: apps/expo
         run: |
           export PATH="$HOME/.maestro/bin:$PATH"
+          mkdir -p e2e/results
           maestro test e2e/flows/ --format junit --output e2e/results/report.xml
         env:
           E2E_API_URL: ${{ github.event.deployment_status.target_url }}
