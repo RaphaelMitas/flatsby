@@ -1,6 +1,12 @@
 name: "Setup and install"
 description: "Common setup steps for Actions"
 
+inputs:
+  node-cache:
+    description: "Package manager cache for setup-node (empty string to disable)"
+    required: false
+    default: "pnpm"
+
 runs:
   using: composite
   steps:
@@ -8,7 +14,7 @@ runs:
     - uses: actions/setup-node@v6
       with:
         node-version-file: ".nvmrc"
-        cache: "pnpm"
+        cache: ${{ inputs.node-cache }}
 
     - shell: bash
       run: pnpm add -g turbo
