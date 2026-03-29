@@ -1,28 +1,34 @@
 import { useEffect } from "react";
 import { Text, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import * as Updates from "expo-updates";
 
-import { authClient } from "~/utils/auth/auth-client";
+import { E2E_API_URL_KEY } from "~/utils/base-url";
 
 /**
- * E2E-only deep link handler: flatsby://e2e-login?token=<session-token>
+ * E2E-only deep link handler:
+ *   flatsby://e2e-login?token=<session-token>&apiUrl=<server-url>
  *
- * Writes the session token as a cookie to SecureStore using the same key
- * format that @better-auth/expo uses ({storagePrefix}_cookie), then
- * triggers a session refresh and navigates to the home screen.
+ * Persists the API URL and session cookie to SecureStore, then reloads
+ * the app so the auth client initialises against the correct server.
  *
  * This route is only reachable via deep link from E2E test flows.
  * It is harmless in production since writing an invalid cookie does nothing.
  */
 export default function E2ELogin() {
-  const { token } = useLocalSearchParams<{ token: string }>();
-  const router = useRouter();
+  const { token, apiUrl } = useLocalSearchParams<{
+    token: string;
+    apiUrl: string;
+  }>();
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !apiUrl) return;
 
     const injectSession = async () => {
+      // Store the API URL so getBaseUrl() returns it after reload.
+      await SecureStore.setItemAsync(E2E_API_URL_KEY, apiUrl);
+
       // Write the token in the JSON format @better-auth/expo expects.
       // The expo client reads from "{storagePrefix}_cookie" and parses it as JSON:
       // { "cookie_name": { "value": "token", "expires": null } }
@@ -34,18 +40,13 @@ export default function E2ELogin() {
       });
       await SecureStore.setItemAsync("flatsby_cookie", cookieValue);
 
-      // Trigger useSession() hooks across the app to re-fetch
-      authClient.$store.notify("$sessionSignal");
-
-      // Confirm the session is valid before navigating
-      const session = await authClient.getSession();
-      if (session.data) {
-        router.replace("/");
-      }
+      // Reload the app so the auth client picks up both the API URL
+      // and the cookie on fresh initialisation.
+      await Updates.reloadAsync();
     };
 
     void injectSession();
-  }, [token, router]);
+  }, [token, apiUrl]);
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
