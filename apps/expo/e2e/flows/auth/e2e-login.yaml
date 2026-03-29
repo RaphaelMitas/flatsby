@@ -6,8 +6,8 @@ appId: com.flatcove.app.v2
     file: ../../scripts/create-session.js
     env:
       E2E_API_URL: ${E2E_API_URL}
-    output: SESSION
 - openLink: flatsby://e2e-login?token=${output.SESSION.token}
-- assertVisible:
-    id: "home-screen"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
     timeout: 10000
