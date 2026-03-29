@@ -5,7 +5,7 @@ import { ChatSplitView } from "~/components/chat/ChatSplitView";
 
 const ChatIndex = () => {
   return (
-    <View testID="chat-screen" style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <AIConsentGate>
         <ChatSplitView />
       </AIConsentGate>

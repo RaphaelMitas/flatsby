@@ -109,7 +109,7 @@ export default function SettingsIndex() {
   );
 
   return (
-    <SafeAreaView testID="settings-screen">
+    <SafeAreaView>
       <Stack.Screen options={{ title: "Settings" }} />
       <AppScrollView>
         <SettingsHeader title={user.name} />
