@@ -4,28 +4,36 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
 import { authClient } from "~/utils/auth/auth-client";
+import { installE2EBaseUrlOverride } from "~/utils/base-url";
 
 /**
- * E2E-only deep link handler: flatsby://e2e-login?token=<session-token>
+ * E2E-only deep link handler: flatsby://e2e-login?token=<session-token>&apiUrl=<url>
  *
  * Writes the session token as a cookie to SecureStore using the same key
  * format that @better-auth/expo uses ({storagePrefix}_cookie), then
  * navigates to the authenticated home screen.
  *
+ * When apiUrl is provided, it overrides getBaseUrl() so the app talks to
+ * the correct preview deployment instead of production.
+ *
  * This route is only reachable via deep link from E2E test flows.
  * It is harmless in production since writing an invalid cookie does nothing.
  */
 export default function E2ELogin() {
-  const { token } = useLocalSearchParams<{ token: string }>();
+  const { token, apiUrl } = useLocalSearchParams<{
+    token: string;
+    apiUrl: string;
+  }>();
   const router = useRouter();
 
   useEffect(() => {
     if (!token) return;
 
     const injectSession = async () => {
-      // Write the token in the JSON format @better-auth/expo expects.
-      // The expo client reads from "{storagePrefix}_cookie" and parses it as JSON:
-      // { "cookie_name": { "value": "token", "expires": null } }
+      if (apiUrl) {
+        installE2EBaseUrlOverride(apiUrl);
+      }
+
       const cookieValue = JSON.stringify({
         "__Secure-better-auth.session_token": {
           value: token,
@@ -42,7 +50,7 @@ export default function E2ELogin() {
     };
 
     void injectSession();
-  }, [token, router]);
+  }, [token, apiUrl, router]);
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
