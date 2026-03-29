@@ -21,10 +21,15 @@ export default function E2ELogin() {
     if (!token) return;
 
     const injectSession = async () => {
-      // Write the token as a cookie string in the format @better-auth/expo expects.
-      // The expo client reads from "{storagePrefix}_cookie" and parses it with getCookie().
-      // The cookie format is: "better-auth.session_token=<token>"
-      const cookieValue = `better-auth.session_token=${token}`;
+      // Write the token in the JSON format @better-auth/expo expects.
+      // The expo client reads from "{storagePrefix}_cookie" and parses it as JSON:
+      // { "cookie_name": { "value": "token", "expires": null } }
+      const cookieValue = JSON.stringify({
+        "__Secure-better-auth.session_token": {
+          value: token,
+          expires: null,
+        },
+      });
       await SecureStore.setItemAsync("flatsby_cookie", cookieValue);
 
       // Navigate to the authenticated home screen
