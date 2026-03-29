@@ -20,7 +20,8 @@
     "eas:update:prod": "eas update --environment production",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "maestro test e2e/flows/"
   },
   "dependencies": {
     "@ai-sdk/react": "catalog:",

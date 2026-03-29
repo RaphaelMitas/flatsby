@@ -1,0 +1,13 @@
+appId: com.flatcove.app.v2
+---
+# Verifies the login screen renders all expected elements.
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: "login-screen"
+- assertVisible:
+    id: "sign-in-google-button"
+- assertVisible:
+    id: "sign-in-apple-button"
+- assertVisible:
+    text: "Manage your daily life with your flatmates."

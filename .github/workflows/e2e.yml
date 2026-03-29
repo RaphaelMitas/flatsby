@@ -49,3 +49,54 @@ jobs:
           name: playwright-results
           path: apps/nextjs/test-results/
           retention-days: 7
+
+  e2e-ios:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment_status.environment == 'Preview'
+    runs-on: [self-hosted, macos, arm64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Build app for simulator
+        working-directory: apps/expo
+        run: |
+          mkdir -p build-cache
+          pnpm dlx eas-cli build --local --profile e2e --platform ios --output build-cache/Flatsby.tar.gz
+          cd build-cache && tar -xzf Flatsby.tar.gz && rm Flatsby.tar.gz
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Boot iOS Simulator
+        run: |
+          xcrun simctl boot "Flatsby-E2E" || true
+          xcrun simctl bootstatus "Flatsby-E2E"
+
+      - name: Install app on simulator
+        run: xcrun simctl install "Flatsby-E2E" apps/expo/build-cache/Flatsby.app
+
+      - name: Run Maestro tests
+        working-directory: apps/expo
+        run: |
+          export PATH="$HOME/.maestro/bin:$PATH"
+          mkdir -p e2e/results
+          maestro test -e E2E_API_URL="$E2E_API_URL" -e VERCEL_BYPASS_SECRET="$VERCEL_BYPASS_SECRET" e2e/flows/ --format junit --output e2e/results/report.xml
+        env:
+          E2E_API_URL: ${{ github.event.deployment_status.target_url }}
+          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: maestro-results
+          path: apps/expo/e2e/results/
+          retention-days: 7
+
+      - name: Shutdown simulator
+        if: always()
+        run: xcrun simctl shutdown "Flatsby-E2E" || true

@@ -61,5 +61,9 @@ serviceAccount*.json
 playwright-report/
 test-results/
 
+# maestro
+apps/expo/e2e/results/
+apps/expo/build-cache/
+
 # claude
 .claude
