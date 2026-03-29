@@ -8,7 +8,6 @@ import { oAuthProxy, testUtils } from "better-auth/plugins";
 import { db } from "@flatsby/db/client";
 
 export function initAuth(options: {
-  baseUrl: string;
   productionUrl: string;
   secret: string | undefined;
   nodeEnv: string;
@@ -24,7 +23,14 @@ export function initAuth(options: {
 }) {
   const config = {
     database: drizzleAdapter(db, { provider: "pg" }),
-    baseURL: options.baseUrl,
+    baseURL: {
+      allowedHosts: [
+        new URL(options.productionUrl).host,
+        "*.vercel.app",
+        "localhost:*",
+      ],
+      fallback: options.productionUrl,
+    },
     secret: options.secret,
     plugins: [
       oAuthProxy({

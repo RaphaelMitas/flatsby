@@ -10,7 +10,6 @@ import { initAuth } from "@flatsby/auth";
 import { env } from "~/env";
 
 export const auth = initAuth({
-  baseUrl: env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL,
   productionUrl: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   nodeEnv: env.NODE_ENV,
