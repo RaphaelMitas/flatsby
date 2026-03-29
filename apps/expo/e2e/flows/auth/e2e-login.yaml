@@ -7,7 +7,7 @@ appId: com.flatcove.app.v2
     env:
       E2E_API_URL: ${E2E_API_URL}
       VERCEL_BYPASS_SECRET: ${VERCEL_BYPASS_SECRET}
-- openLink: flatsby://e2e-login?token=${output.SESSION.token}&apiUrl=${E2E_API_URL}
+- openLink: flatsby://e2e-login?token=${output.SESSION.token}&apiUrl=${output.SESSION.apiUrl}
 - extendedWaitUntil:
     visible:
       id: "home-screen"

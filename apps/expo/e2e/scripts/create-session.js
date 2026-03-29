@@ -14,4 +14,4 @@ if (!data.ok) {
   throw new Error("Failed to create E2E session: " + response.body);
 }
 
-output.SESSION = { token: data.token };
+output.SESSION = { token: data.token, apiUrl: encodeURIComponent(E2E_API_URL) };
