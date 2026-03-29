@@ -14,4 +14,19 @@ if (!data.ok) {
   throw new Error("Failed to create E2E session: " + response.body);
 }
 
-output.SESSION = { token: data.token, apiUrl: encodeURIComponent(E2E_API_URL) };
+// Extract the session token cookie name from the server response
+// so we don't hardcode the __Secure- prefix (depends on HTTPS config).
+const sessionCookie = data.cookies.find(function (c) {
+  return c.name.includes("session_token");
+});
+if (!sessionCookie) {
+  throw new Error(
+    "No session_token cookie in response: " + response.body,
+  );
+}
+
+output.SESSION = {
+  token: data.token,
+  apiUrl: encodeURIComponent(E2E_API_URL),
+  cookieName: encodeURIComponent(sessionCookie.name),
+};

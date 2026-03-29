@@ -13,7 +13,7 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
 
 import { authClient } from "./auth/auth-client";
-import { getBaseUrl } from "./base-url";
+import { getBaseUrl, getE2ETargetUrl } from "./base-url";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,8 +68,16 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
           transformer: superjson,
           url: `${getBaseUrl()}/api/trpc`,
           headers: getHeaders,
-          // Use expo/fetch for proper streaming support in React Native
-          fetch: expoFetch as unknown as typeof globalThis.fetch,
+          fetch: ((input: string | URL | Request, init?: RequestInit) => {
+            const e2eUrl = getE2ETargetUrl();
+            if (e2eUrl && typeof input === "string") {
+              return expoFetch(
+                input.replace("https://www.flatsby.com", e2eUrl),
+                init,
+              );
+            }
+            return expoFetch(input as string, init);
+          }) as typeof globalThis.fetch,
         }),
         false: httpBatchLink({
           transformer: superjson,

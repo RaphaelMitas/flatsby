@@ -7,22 +7,23 @@ import { authClient } from "~/utils/auth/auth-client";
 import { installE2EBaseUrlOverride } from "~/utils/base-url";
 
 /**
- * E2E-only deep link handler: flatsby://e2e-login?token=<session-token>&apiUrl=<url>
+ * E2E-only deep link handler:
+ *   flatsby://e2e-login?token=<session-token>&apiUrl=<url>&cookieName=<name>
  *
- * Writes the session token as a cookie to SecureStore using the same key
- * format that @better-auth/expo uses ({storagePrefix}_cookie), then
- * navigates to the authenticated home screen.
- *
- * When apiUrl is provided, it overrides getBaseUrl() so the app talks to
- * the correct preview deployment instead of production.
+ * 1. Installs a global fetch interceptor so all requests go to the preview
+ *    deployment instead of production.
+ * 2. Writes the session token to SecureStore using the cookie name the server
+ *    actually uses (passed via deep link, not hardcoded).
+ * 3. Calls authClient.getSession() to hydrate the reactive session state.
+ * 4. Navigates to the authenticated home screen.
  *
  * This route is only reachable via deep link from E2E test flows.
- * It is harmless in production since writing an invalid cookie does nothing.
  */
 export default function E2ELogin() {
-  const { token, apiUrl } = useLocalSearchParams<{
+  const { token, apiUrl, cookieName } = useLocalSearchParams<{
     token: string;
     apiUrl: string;
+    cookieName: string;
   }>();
   const router = useRouter();
 
@@ -34,23 +35,23 @@ export default function E2ELogin() {
         installE2EBaseUrlOverride(apiUrl);
       }
 
+      const effectiveCookieName =
+        cookieName || "__Secure-better-auth.session_token";
       const cookieValue = JSON.stringify({
-        "__Secure-better-auth.session_token": {
+        [effectiveCookieName]: {
           value: token,
           expires: null,
         },
       });
       await SecureStore.setItemAsync("flatsby_cookie", cookieValue);
 
-      // Force the auth client to re-read the session from SecureStore
       await authClient.getSession();
 
-      // Navigate to the authenticated home screen
       router.replace("/(tabs)/home");
     };
 
     void injectSession();
-  }, [token, apiUrl, router]);
+  }, [token, apiUrl, cookieName, router]);
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
