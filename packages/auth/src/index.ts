@@ -53,6 +53,7 @@ export function initAuth(options: {
     account: {
       modelName: "accounts",
       accountLinking: { enabled: true, trustedProviders: ["google", "apple"] },
+      storeStateStrategy: "cookie",
     },
     verification: { modelName: "verificationTokens" },
   } satisfies BetterAuthOptions;
