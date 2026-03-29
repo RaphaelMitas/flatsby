@@ -233,8 +233,8 @@ importers:
         specifier: 5.0.0-preview.3
         version: 5.0.0-preview.3(react-native-css@3.0.4(@expo/metro-config@54.0.14(expo@54.0.33))(lightningcss@1.30.1)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(tailwindcss@4.2.2)
       posthog-react-native:
-        specifier: ^4.37.6
-        version: 4.37.6(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)))(@react-navigation/native@7.2.1(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(expo-application@7.0.8(expo@54.0.33))(expo-device@8.0.10(expo@54.0.33))(expo-file-system@19.0.21(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)))(expo-localization@17.0.8(expo@54.0.33)(react@19.1.5))(react-native-safe-area-context@5.6.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native-svg@15.15.4(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))
+        specifier: ^4.39.0
+        version: 4.39.0(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)))(@react-navigation/native@7.2.1(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(expo-application@7.0.8(expo@54.0.33))(expo-device@8.0.10(expo@54.0.33))(expo-file-system@19.0.21(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)))(expo-localization@17.0.8(expo@54.0.33)(react@19.1.5))(react-native-safe-area-context@5.6.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native-svg@15.15.4(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))
       react:
         specifier: catalog:react19
         version: 19.1.5
@@ -469,8 +469,8 @@ importers:
         specifier: workspace:*
         version: link:../validators
       '@posthog/ai':
-        specifier: 7.11.2
-        version: 7.11.2(@ai-sdk/provider@3.0.8)(@opentelemetry/api@1.9.0)(posthog-node@5.28.6)(react-dom@19.1.5(react@19.2.4))(react@19.2.4)(ws@8.20.0)
+        specifier: 7.12.4
+        version: 7.12.4(@ai-sdk/provider@3.0.8)(@opentelemetry/api@1.9.0)(posthog-node@5.28.8)(react-dom@19.1.5(react@19.2.4))(react@19.2.4)(ws@8.20.0)
       '@trpc/server':
         specifier: 'catalog:'
         version: 11.16.0(typescript@6.0.2)
@@ -481,8 +481,8 @@ importers:
         specifier: ^3.21.0
         version: 3.21.0
       posthog-node:
-        specifier: ^5.28.5
-        version: 5.28.6
+        specifier: ^5.28.8
+        version: 5.28.8
       superjson:
         specifier: 'catalog:'
         version: 2.2.6
@@ -2716,27 +2716,24 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@posthog/ai@7.11.2':
-    resolution: {integrity: sha512-RBYGVzslDUi+vUtAjMElPE14aIkK6SYagx2oKEPIwv93SgYxwCeBBrvvOoMEdp5hFw9ddDVf9175IbOJZS8mpg==}
+  '@posthog/ai@7.12.4':
+    resolution: {integrity: sha512-9VIz/0y5B45YJZTwI2wHORpDwDf9cJ4R1oQ9EjB32/AS/kVIIi8AjNL3hMSaa554NCnh0CiPtIsnjaLkNDzFKw==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       '@ai-sdk/provider': ^2.0.0 || ^3.0.0
       '@opentelemetry/api': ^1.9.0
-      '@opentelemetry/sdk-trace-base': ^2.2.0
+      '@opentelemetry/exporter-trace-otlp-http': ^0.200.0
       posthog-node: ^5.0.0
     peerDependenciesMeta:
       '@ai-sdk/provider':
         optional: true
       '@opentelemetry/api':
         optional: true
-      '@opentelemetry/sdk-trace-base':
+      '@opentelemetry/exporter-trace-otlp-http':
         optional: true
 
-  '@posthog/core@1.23.4':
-    resolution: {integrity: sha512-gSM1gnIuw5UOBUOTz0IhCTH8jOHoFr5rzSDb5m7fn9ofLHvz3boZT1L1f+bcuk+mvzNJfrJ3ByVQGKmUQnKQ8g==}
-
-  '@posthog/core@1.24.1':
-    resolution: {integrity: sha512-e8AciAnc6MRFws89ux8lJKFAaI03yEon0ASDoUO7yS91FVqbUGXYekObUUR3LHplcg+pmyiJBI0jolY0SFbGRA==}
+  '@posthog/core@1.24.3':
+    resolution: {integrity: sha512-nTyL1R/8V5vfdH37MbjXDYWFnUoxVijb2TnfJSNHz0+RBLtNnq0hNnBDCwWLl5yh1bzeJBYTT8UF+dV7D8y03w==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -7482,8 +7479,8 @@ packages:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
 
-  posthog-node@5.28.6:
-    resolution: {integrity: sha512-f3k45gplzVxbhIMj3x6jZP6iH1wacBurKrZxD1VwW+7f8L2DtjJbkiQw0oKwubgtCZcKNroPa8y6t/nDITgOMw==}
+  posthog-node@5.28.8:
+    resolution: {integrity: sha512-UD55SdSbgUvoOb3HkvNC22ZgpdeNknDrao8+yYTB/rDnwgaibPB7pJJzgn4j7MIUw7DOTEHEmJRqza1EDtK2Zw==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -7491,8 +7488,8 @@ packages:
       rxjs:
         optional: true
 
-  posthog-react-native@4.37.6:
-    resolution: {integrity: sha512-LoZTcSYPebr125QFdTySwLyZT/LVU8xmkRAYPCwS18IqLpXY6hsbgjeIyQhi9RpEKIbdvUR6sNuCKx/EaKnqNg==}
+  posthog-react-native@4.39.0:
+    resolution: {integrity: sha512-hFVI+udE1QjJ719Qnkn3EEAibZS3Pg94oTDnz0xcxi38FUPwU4OdsafkaxphRrPRF6WXMdKkRWgEuRgIJp6cIg==}
     peerDependencies:
       '@react-native-async-storage/async-storage': '>=1.0.0'
       '@react-navigation/native': '>= 5.0.0'
@@ -10650,15 +10647,15 @@ snapshots:
     dependencies:
       playwright: 1.58.2
 
-  '@posthog/ai@7.11.2(@ai-sdk/provider@3.0.8)(@opentelemetry/api@1.9.0)(posthog-node@5.28.6)(react-dom@19.1.5(react@19.2.4))(react@19.2.4)(ws@8.20.0)':
+  '@posthog/ai@7.12.4(@ai-sdk/provider@3.0.8)(@opentelemetry/api@1.9.0)(posthog-node@5.28.8)(react-dom@19.1.5(react@19.2.4))(react@19.2.4)(ws@8.20.0)':
     dependencies:
       '@anthropic-ai/sdk': 0.78.0(zod@4.3.6)
       '@google/genai': 1.46.0
       '@langchain/core': 1.1.36(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0)
-      '@posthog/core': 1.23.4
+      '@posthog/core': 1.24.3
       langchain: 1.2.37(@langchain/core@1.1.36(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0))(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@8.20.0)(zod@4.3.6))(react-dom@19.1.5(react@19.2.4))(react@19.2.4)(ws@8.20.0)
       openai: 6.33.0(ws@8.20.0)(zod@4.3.6)
-      posthog-node: 5.28.6
+      posthog-node: 5.28.8
       uuid: 11.1.0
       zod: 4.3.6
     optionalDependencies:
@@ -10667,6 +10664,7 @@ snapshots:
     transitivePeerDependencies:
       - '@modelcontextprotocol/sdk'
       - '@opentelemetry/exporter-trace-otlp-proto'
+      - '@opentelemetry/sdk-trace-base'
       - bufferutil
       - react
       - react-dom
@@ -10677,11 +10675,7 @@ snapshots:
       - ws
       - zod-to-json-schema
 
-  '@posthog/core@1.23.4':
-    dependencies:
-      cross-spawn: 7.0.6
-
-  '@posthog/core@1.24.1':
+  '@posthog/core@1.24.3':
     dependencies:
       cross-spawn: 7.0.6
 
@@ -16263,13 +16257,13 @@ snapshots:
     dependencies:
       xtend: 4.0.2
 
-  posthog-node@5.28.6:
+  posthog-node@5.28.8:
     dependencies:
-      '@posthog/core': 1.24.1
+      '@posthog/core': 1.24.3
 
-  posthog-react-native@4.37.6(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)))(@react-navigation/native@7.2.1(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(expo-application@7.0.8(expo@54.0.33))(expo-device@8.0.10(expo@54.0.33))(expo-file-system@19.0.21(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)))(expo-localization@17.0.8(expo@54.0.33)(react@19.1.5))(react-native-safe-area-context@5.6.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native-svg@15.15.4(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)):
+  posthog-react-native@4.39.0(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)))(@react-navigation/native@7.2.1(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(expo-application@7.0.8(expo@54.0.33))(expo-device@8.0.10(expo@54.0.33))(expo-file-system@19.0.21(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)))(expo-localization@17.0.8(expo@54.0.33)(react@19.1.5))(react-native-safe-area-context@5.6.2(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native-svg@15.15.4(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)):
     dependencies:
-      '@posthog/core': 1.24.1
+      '@posthog/core': 1.24.3
       react-native-svg: 15.15.4(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
     optionalDependencies:
       '@react-native-async-storage/async-storage': 2.2.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))
