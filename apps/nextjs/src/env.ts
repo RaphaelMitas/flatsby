@@ -5,20 +5,16 @@ import { z } from "zod/v4";
 import { env as authEnv } from "@flatsby/auth/env";
 
 /**
- * Compute base URL based on Vercel environment:
- * - Production: Use BETTER_AUTH_URL (custom domain)
- * - Preview: Use VERCEL_URL (auto-generated preview URL)
+ * Compute base URL:
+ * - Vercel (any env): Use BETTER_AUTH_URL — the canonical auth domain registered
+ *   with OAuth providers. The oAuthProxy plugin uses `request.url` (not baseURL)
+ *   to detect whether it's on the production origin, so preview deployments
+ *   accessed via their auto-generated URL still get correct proxy behavior.
  * - Development: Use localhost
- *
- * Can be overridden by setting NEXT_PUBLIC_BETTER_AUTH_BASE_URL explicitly
- * (useful for preview deployments with custom domain aliases)
  */
-const baseUrl =
-  process.env.VERCEL_ENV === "production"
-    ? process.env.BETTER_AUTH_URL
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+const baseUrl = process.env.VERCEL_URL
+  ? process.env.BETTER_AUTH_URL
+  : "http://localhost:3000";
 
 export const env = createEnv({
   extends: [authEnv, vercel()],
