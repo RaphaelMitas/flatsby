@@ -129,14 +129,10 @@ const StackLayout = () => {
   const themedScreenOptions = useThemedScreenOptions();
   const { isPending } = useSession();
 
-  if (isPending) {
-    return <View className="bg-background flex-1" />;
-  }
-
   return (
     <View className="bg-background flex-1">
-      <SpringPetals />
-      <ScreenTracker />
+      {!isPending && <SpringPetals />}
+      {!isPending && <ScreenTracker />}
       <Stack
         screenOptions={{
           headerShown: false,
