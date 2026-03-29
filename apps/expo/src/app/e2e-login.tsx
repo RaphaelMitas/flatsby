@@ -10,7 +10,7 @@ import { authClient } from "~/utils/auth/auth-client";
  *
  * Writes the session token as a cookie to SecureStore using the same key
  * format that @better-auth/expo uses ({storagePrefix}_cookie), then
- * navigates to the authenticated home screen.
+ * triggers a session refresh and navigates to the home screen.
  *
  * This route is only reachable via deep link from E2E test flows.
  * It is harmless in production since writing an invalid cookie does nothing.
@@ -34,11 +34,14 @@ export default function E2ELogin() {
       });
       await SecureStore.setItemAsync("flatsby_cookie", cookieValue);
 
-      // Force the auth client to re-read the session from SecureStore
-      await authClient.getSession();
+      // Trigger useSession() hooks across the app to re-fetch
+      authClient.$store.notify("$sessionSignal");
 
-      // Navigate to the authenticated home screen
-      router.replace("/(tabs)/home");
+      // Confirm the session is valid before navigating
+      const session = await authClient.getSession();
+      if (session.data) {
+        router.replace("/");
+      }
     };
 
     void injectSession();
