@@ -92,9 +92,10 @@ jobs:
         run: |
           export PATH="$HOME/.maestro/bin:$PATH"
           mkdir -p e2e/results
-          maestro test e2e/flows/ --format junit --output e2e/results/report.xml
+          maestro test -e E2E_API_URL="$E2E_API_URL" -e VERCEL_BYPASS_SECRET="$VERCEL_BYPASS_SECRET" e2e/flows/ --format junit --output e2e/results/report.xml
         env:
           E2E_API_URL: ${{ github.event.deployment_status.target_url }}
+          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       - name: Upload test results
         if: always()

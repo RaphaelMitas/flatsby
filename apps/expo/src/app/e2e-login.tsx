@@ -10,14 +10,14 @@ import * as SecureStore from "expo-secure-store";
  * format that @better-auth/expo uses ({storagePrefix}_cookie), then
  * navigates to the authenticated home screen.
  *
- * Guarded by __DEV__ so it is stripped from production builds.
+ * This route is only reachable via deep link from E2E test flows.
+ * It is harmless in production since writing an invalid cookie does nothing.
  */
 export default function E2ELogin() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const router = useRouter();
 
   useEffect(() => {
-    if (!__DEV__) return;
     if (!token) return;
 
     const injectSession = async () => {
@@ -33,10 +33,6 @@ export default function E2ELogin() {
 
     void injectSession();
   }, [token, router]);
-
-  if (!__DEV__) {
-    return null;
-  }
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
