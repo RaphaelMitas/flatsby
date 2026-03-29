@@ -140,11 +140,11 @@ importers:
         specifier: ^8.6.0
         version: 8.6.0(expo@54.0.33)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
       '@react-native-vector-icons/get-image':
-        specifier: ^12.3.0
-        version: 12.3.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
+        specifier: ^13.0.0
+        version: 13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
       '@react-native-vector-icons/lucide':
         specifier: ^12.5.0
-        version: 12.5.0(@react-native-vector-icons/get-image@12.3.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
+        version: 12.5.0(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
       '@shopify/flash-list':
         specifier: ^2.3.1
         version: 2.3.1(@babel/runtime@7.29.2)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
@@ -3572,8 +3572,8 @@ packages:
       '@react-native-vector-icons/get-image':
         optional: true
 
-  '@react-native-vector-icons/get-image@12.3.0':
-    resolution: {integrity: sha512-ch9mwFWePde7AR0DfhcuNDeMH7N/vLPvoiJbqm28oeJPnCS6XA98F5GPwpMO9IE/omTv2RYwBTmhMA+8Wlwv/A==}
+  '@react-native-vector-icons/get-image@13.0.0':
+    resolution: {integrity: sha512-7p4T8SDVLHtquZ3q0eIfkuhj/vl8WvU2J/DSqo7z7w8Vc99YKDMwx+6Q1TbZAnfl+J9ij+E2rhosomL9R1YoYA==}
     peerDependencies:
       react: '*'
       react-native: '*'
@@ -11533,7 +11533,7 @@ snapshots:
     optionalDependencies:
       expo: 54.0.33(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
 
-  '@react-native-vector-icons/common@12.4.2(@react-native-vector-icons/get-image@12.3.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
+  '@react-native-vector-icons/common@12.4.2(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
     dependencies:
       find-up: 7.0.0
       picocolors: 1.1.1
@@ -11541,16 +11541,16 @@ snapshots:
       react: 19.1.5
       react-native: 0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)
     optionalDependencies:
-      '@react-native-vector-icons/get-image': 12.3.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
+      '@react-native-vector-icons/get-image': 13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
 
-  '@react-native-vector-icons/get-image@12.3.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
+  '@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
     dependencies:
       react: 19.1.5
       react-native: 0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)
 
-  '@react-native-vector-icons/lucide@12.5.0(@react-native-vector-icons/get-image@12.3.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
+  '@react-native-vector-icons/lucide@12.5.0(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
     dependencies:
-      '@react-native-vector-icons/common': 12.4.2(@react-native-vector-icons/get-image@12.3.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
+      '@react-native-vector-icons/common': 12.4.2(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
       react: 19.1.5
       react-native: 0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)
     transitivePeerDependencies:
