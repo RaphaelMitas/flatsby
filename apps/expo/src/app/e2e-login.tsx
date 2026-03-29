@@ -3,6 +3,8 @@ import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
+import { authClient } from "~/utils/auth/auth-client";
+
 /**
  * E2E-only deep link handler: flatsby://e2e-login?token=<session-token>
  *
@@ -31,6 +33,9 @@ export default function E2ELogin() {
         },
       });
       await SecureStore.setItemAsync("flatsby_cookie", cookieValue);
+
+      // Force the auth client to re-read the session from SecureStore
+      await authClient.getSession();
 
       // Navigate to the authenticated home screen
       router.replace("/(tabs)/home");
