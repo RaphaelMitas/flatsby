@@ -62,7 +62,7 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
         with:
-          node-cache: ""
+          cache: "false"
 
       - name: Build app for simulator
         working-directory: apps/expo
