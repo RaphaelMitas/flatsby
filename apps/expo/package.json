@@ -20,7 +20,8 @@
     "eas:update:prod": "eas update --environment production",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "maestro test e2e/flows/"
   },
   "dependencies": {
     "@ai-sdk/react": "catalog:",
@@ -40,7 +41,6 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
-    "@ungap/structured-clone": "^1.3.0",
     "better-auth": "catalog:better-auth",
     "expo": "~54.0.20",
     "expo-application": "~7.0.8",
@@ -63,7 +63,7 @@
     "expo-updates": "~29.0.15",
     "expo-web-browser": "~15.0.8",
     "nativewind": "5.0.0-preview.3",
-    "posthog-react-native": "^4.37.6",
+    "posthog-react-native": "^4.39.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-hook-form": "^7.72.0",
