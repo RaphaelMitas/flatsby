@@ -143,8 +143,8 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
       '@react-native-vector-icons/lucide':
-        specifier: ^12.5.0
-        version: 12.5.0(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
+        specifier: ^13.0.0
+        version: 13.0.0(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(@react-native/assets-registry@0.81.6)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
       '@shopify/flash-list':
         specifier: ^2.3.1
         version: 2.3.1(@babel/runtime@7.29.2)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
@@ -3560,16 +3560,19 @@ packages:
       react-native-windows:
         optional: true
 
-  '@react-native-vector-icons/common@12.4.2':
-    resolution: {integrity: sha512-15ViuwfYdkQ79VE6PiQjsGyQcEvhv4lgguhIeQU4pXLXRAFhl89Q8FdKDrGZh7+a/8WMqT1v2+JtghdoGKDE6Q==}
+  '@react-native-vector-icons/common@13.0.0':
+    resolution: {integrity: sha512-FJ0Ql5UTGVtK0ak4vLTxmhFHadb8NmTk4yOWoggh7UvC2pVQNyJK7L9nIZeIZ0IaVJtKfmKXtBWA0nKqqzQ/FQ==}
     engines: {node: '>=20.19.0 <21.0.0 || >=22.0.0'}
     hasBin: true
     peerDependencies:
-      '@react-native-vector-icons/get-image': ^12.3.0
+      '@react-native-vector-icons/get-image': ^13.0.0
+      '@react-native/assets-registry': '*'
       react: '*'
       react-native: '*'
     peerDependenciesMeta:
       '@react-native-vector-icons/get-image':
+        optional: true
+      '@react-native/assets-registry':
         optional: true
 
   '@react-native-vector-icons/get-image@13.0.0':
@@ -3578,8 +3581,8 @@ packages:
       react: '*'
       react-native: '*'
 
-  '@react-native-vector-icons/lucide@12.5.0':
-    resolution: {integrity: sha512-2Vry4G3eBgizE8DQrFn5lOxCrIUaUK3zZW0F3FNy2KV6XzgOwHzJmQPwnplWN7HaY2Zu8gZeVte5Yhr5c0ktjA==}
+  '@react-native-vector-icons/lucide@13.0.0':
+    resolution: {integrity: sha512-c+h3nXcBLrW6+IMmcM4d2fAtTmA+p6qttxUt4Y0m0ds2Pq3MJScYvTJm4V37mszQc398qHcQ4oh+7q3iIDSYWw==}
     engines: {node: '>= 18.0.0'}
     peerDependencies:
       react: '*'
@@ -4276,6 +4279,7 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xyflow/react@12.10.2':
     resolution: {integrity: sha512-CgIi6HwlcHXwlkTpr0fxLv/0sRVNZ8IdwKLzzeCscaYBwpvfcH1QFOCeaTCuEn1FQEs/B8CjnTSjhs8udgmBgQ==}
@@ -11533,7 +11537,7 @@ snapshots:
     optionalDependencies:
       expo: 54.0.33(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
 
-  '@react-native-vector-icons/common@12.4.2(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
+  '@react-native-vector-icons/common@13.0.0(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(@react-native/assets-registry@0.81.6)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
     dependencies:
       find-up: 7.0.0
       picocolors: 1.1.1
@@ -11542,19 +11546,21 @@ snapshots:
       react-native: 0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)
     optionalDependencies:
       '@react-native-vector-icons/get-image': 13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
+      '@react-native/assets-registry': 0.81.6
 
   '@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
     dependencies:
       react: 19.1.5
       react-native: 0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)
 
-  '@react-native-vector-icons/lucide@12.5.0(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
+  '@react-native-vector-icons/lucide@13.0.0(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(@react-native/assets-registry@0.81.6)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)':
     dependencies:
-      '@react-native-vector-icons/common': 12.4.2(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
+      '@react-native-vector-icons/common': 13.0.0(@react-native-vector-icons/get-image@13.0.0(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5))(@react-native/assets-registry@0.81.6)(react-native@0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5))(react@19.1.5)
       react: 19.1.5
       react-native: 0.81.6(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.5)
     transitivePeerDependencies:
       - '@react-native-vector-icons/get-image'
+      - '@react-native/assets-registry'
 
   '@react-native/assets-registry@0.81.6': {}
 
