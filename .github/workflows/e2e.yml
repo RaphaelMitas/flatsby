@@ -26,7 +26,7 @@ jobs:
         uses: ./tooling/github/setup
 
       - name: Install Playwright Chromium
-        run: pnpm dlx playwright install --with-deps chromium
+        run: pnpm --filter @flatsby/nextjs exec playwright install --with-deps chromium
 
       - name: Run Playwright tests
         run: pnpm turbo run test:e2e --filter=@flatsby/nextjs
