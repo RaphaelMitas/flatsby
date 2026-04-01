@@ -38,13 +38,17 @@ export function initAuth(options: {
       google: {
         clientId: options.googleClientId,
         clientSecret: options.googleClientSecret,
-        redirectURI: `${options.productionUrl}/api/auth/callback/google`,
+        ...(options.nodeEnv === "production" && {
+          redirectURI: `${options.productionUrl}/api/auth/callback/google`,
+        }),
       },
       apple: {
         clientId: options.appleServiceId,
         clientSecret: options.appleClientSecret,
-        redirectURI: `${options.productionUrl}/api/auth/callback/apple`,
         appBundleIdentifier: options.appleBundleId,
+        ...(options.nodeEnv === "production" && {
+          redirectURI: `${options.productionUrl}/api/auth/callback/apple`,
+        }),
       },
     },
     trustedOrigins: ["flatsby://", "expo://"],
