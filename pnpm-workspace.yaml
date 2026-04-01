@@ -38,7 +38,8 @@ catalogs:
 
 overrides:
   lightningcss: 1.30.1
-  '@xmldom/xmldom': '>=0.8.12'
+  # Pin to 0.8.12: last non-deprecated 0.8.x; 0.9.x breaks @expo/plist & plist (missing mimeType arg)
+  '@xmldom/xmldom': 0.8.12
 
 linkWorkspacePackages: true
 
