@@ -94,24 +94,16 @@ export default function TabLayout() {
         name="home"
         options={{
           title: "Home",
-          tabBarIcon:
-            isSpringEffectsEnabled && springHomeIcon
-              ? () => springHomeIcon
-              : houseIcon
-                ? () => houseIcon
-                : undefined,
+          tabBarIcon: () =>
+            isSpringEffectsEnabled ? springHomeIcon : houseIcon,
         }}
       />
       <Tabs.Screen
         name="shoppingList"
         options={{
           title: selectedShoppingListName ?? "Shopping List",
-          tabBarIcon:
-            isSpringEffectsEnabled && springCartIcon
-              ? () => springCartIcon
-              : shoppingBasketIcon
-                ? () => shoppingBasketIcon
-                : undefined,
+          tabBarIcon: () =>
+            isSpringEffectsEnabled ? springCartIcon : shoppingBasketIcon,
           tabBarItemHidden: !selectedShoppingListId,
         }}
       />
@@ -119,7 +111,7 @@ export default function TabLayout() {
         name="expenses"
         options={{
           title: "Expenses",
-          tabBarIcon: walletIcon ? () => walletIcon : undefined,
+          tabBarIcon: () => walletIcon,
           tabBarItemHidden: !selectedGroupId,
         }}
       />
@@ -127,14 +119,14 @@ export default function TabLayout() {
         name="chat"
         options={{
           title: "Chat",
-          tabBarIcon: messageSquareIcon ? () => messageSquareIcon : undefined,
+          tabBarIcon: () => messageSquareIcon,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: settingsIcon ? () => settingsIcon : undefined,
+          tabBarIcon: () => settingsIcon,
         }}
       />
     </Tabs>

@@ -1,14 +1,25 @@
 name: "Setup and install"
 description: "Common setup steps for Actions"
 
+inputs:
+  cache:
+    description: "Enable pnpm caching in setup-node (disable on self-hosted runners)"
+    required: false
+    default: "true"
+
 runs:
   using: composite
   steps:
     - uses: pnpm/action-setup@v5
     - uses: actions/setup-node@v6
+      if: inputs.cache == 'true'
       with:
         node-version-file: ".nvmrc"
         cache: "pnpm"
+    - uses: actions/setup-node@v6
+      if: inputs.cache != 'true'
+      with:
+        node-version-file: ".nvmrc"
 
     - shell: bash
       run: pnpm add -g turbo

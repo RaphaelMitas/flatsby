@@ -36,6 +36,11 @@ export function ExpenseCard({
         : undefined,
   });
 
+  const settlementCounterparty =
+    expense.splitMethod === "settlement" && expense.expenseSplits[0]
+      ? expense.expenseSplits[0].groupMember
+      : null;
+
   const cardContent = (
     <Card
       className={cn(
@@ -67,26 +72,23 @@ export function ExpenseCard({
           {/* Details: Paid by, Split info, Date */}
           <div className="text-muted-foreground flex flex-col gap-2 text-sm">
             <div className="flex items-center gap-2">
-              {expense.splitMethod === "settlement" &&
-                expense.expenseSplits[0] &&
-                (() => {
-                  const groupMember = expense.expenseSplits[0].groupMember;
-                  return (
-                    <>
-                      <Avatar className="h-5 w-5">
-                        <AvatarImage
-                          alt={groupMember.user.name}
-                          src={groupMember.user.image ?? undefined}
-                        />
-                        <AvatarFallback className="text-xs">
-                          {groupMember.user.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{groupMember.user.name}</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </>
-                  );
-                })()}
+              {settlementCounterparty && (
+                <>
+                  <Avatar className="h-5 w-5">
+                    <AvatarImage
+                      alt={settlementCounterparty.user.name}
+                      src={settlementCounterparty.user.image ?? undefined}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {settlementCounterparty.user.name
+                        .substring(0, 2)
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{settlementCounterparty.user.name}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
               <Avatar className="h-5 w-5">
                 <AvatarImage
                   alt={paidByName}
@@ -123,7 +125,7 @@ export function ExpenseCard({
             </div>
           </div>
         </div>
-        <ChevronRight className="text-muted-foreground h-5 w-5 flex-shrink-0" />
+        <ChevronRight className="text-muted-foreground h-5 w-5 shrink-0" />
       </div>
     </Card>
   );

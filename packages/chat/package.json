@@ -36,5 +36,8 @@
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
+  "peerDependencies": {
+    "react": "catalog:react19"
+  },
   "prettier": "@flatsby/prettier-config"
 }

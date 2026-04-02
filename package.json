@@ -13,7 +13,7 @@
     "clean:workspaces": "turbo run clean",
     "db:push": "turbo -F @flatsby/db push",
     "db:studio": "turbo -F @flatsby/db studio",
-    "dev": "turbo watch dev --continue",
+    "dev": "bash scripts/setup-adb-reverse.sh; turbo watch dev --continue",
     "dev:next": "turbo watch dev -F @flatsby/nextjs...",
     "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
     "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
@@ -26,7 +26,6 @@
   },
   "devDependencies": {
     "@flatsby/prettier-config": "workspace:*",
-    "glob": "^13.0.6",
     "prettier": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"

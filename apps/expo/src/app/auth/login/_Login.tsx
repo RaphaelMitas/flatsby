@@ -16,7 +16,7 @@ const Login = () => {
   const callbackURL = ExpoLinking.createURL("/");
 
   return (
-    <View className="bg-background flex-1 px-6 py-8">
+    <View testID="login-screen" className="bg-background flex-1 px-6 py-8">
       <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 justify-center">
         {/* Header Section */}
@@ -38,6 +38,7 @@ const Login = () => {
         {/* Auth Buttons Section */}
         <View className="w-full gap-4">
           <Button
+            testID="sign-in-google-button"
             onPress={async () => {
               setLoading("google");
               await signIn.social({
@@ -57,6 +58,7 @@ const Login = () => {
           />
 
           <Button
+            testID="sign-in-apple-button"
             onPress={async () => {
               setLoading("apple");
               await signIn.social({

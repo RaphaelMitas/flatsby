@@ -34,6 +34,14 @@
       "autoIncrement": true,
       "channel": "production",
       "environment": "production"
+    },
+    "e2e": {
+      "extends": "preview",
+      "env": {
+        "E2E_TESTING": "true"
+      },
+      "channel": "e2e",
+      "environment": "preview"
     }
   },
   "submit": {

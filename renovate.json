@@ -4,7 +4,6 @@
     "config:recommended",
     ":separateMajorReleases",
     ":combinePatchMinorReleases",
-    "schedule:weekends",
     "group:expoMonorepo"
   ],
   "baseBranchPatterns": ["develop"],
@@ -104,8 +103,14 @@
       "matchPackageNames": ["/^@types//"]
     },
     {
-      "description": "Allow Better Auth prereleases",
-      "matchPackageNames": ["better-auth"],
+      "description": "Group React Native Vector Icons",
+      "groupName": "react-native-vector-icons",
+      "matchPackageNames": ["/^@react-native-vector-icons//"]
+    },
+    {
+      "description": "Group Better Auth",
+      "groupName": "better-auth",
+      "matchPackageNames": ["/^@better-auth//", "better-auth"],
       "ignoreUnstable": false
     }
   ]
