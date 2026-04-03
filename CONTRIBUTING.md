@@ -18,8 +18,6 @@ This project uses [GitHub Flow](https://docs.github.com/en/get-started/using-git
 3. Open a PR targeting `main` with context and a checklist (template provided)
 4. After review and CI passes, merge to `main`
 
-Branch names must match one of these prefixes: `feature/`, `bugfix/`, `hotfix/`, `auto/`, `renovate/`, `claude/`.
-
 ## Testing & Linting
 
 - Ensure `pnpm lint` and `pnpm typecheck` are clean
