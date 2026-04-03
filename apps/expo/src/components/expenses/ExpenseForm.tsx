@@ -792,9 +792,8 @@ export function ExpenseForm({
                     <View className="flex-row justify-between">
                       <Text className="text-muted-foreground">Paid By:</Text>
                       <Text className="text-foreground font-semibold">
-                        {allMembers.find(
-                          (m) => m.id === paidByGroupMemberId,
-                        )?.user.name ?? "Unknown"}
+                        {allMembers.find((m) => m.id === paidByGroupMemberId)
+                          ?.user.name ?? "Unknown"}
                       </Text>
                     </View>
                     {description && (
