@@ -111,7 +111,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
-    ["expo-build-properties", { ios: { useFrameworks: "static" } }],
+    "expo-build-properties",
     ["expo-font", { fonts: ["./assets/fonts/lucide.ttf"] }],
   ],
 });
