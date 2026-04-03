@@ -112,6 +112,11 @@
       "groupName": "better-auth",
       "matchPackageNames": ["/^@better-auth//", "better-auth"],
       "ignoreUnstable": false
+    },
+    {
+      "description": "Group RevenueCat",
+      "groupName": "revenuecat",
+      "matchPackageNames": ["/^react-native-purchases/"]
     }
   ]
 }

@@ -4,25 +4,25 @@ packages:
   - tooling/*
 
 catalog:
-  "@ai-sdk/react": ^3.0.143
-  autumn-js: ^1.2.2
+  "@ai-sdk/react": ^3.0.147
+  autumn-js: ^1.2.4
   "@eslint/js": ^10.0.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.2.2
-  "@tanstack/react-query": ^5.95.2
+  "@tanstack/react-query": ^5.96.2
   "@trpc/client": ^11.16.0
   "@trpc/server": ^11.16.0
   "@trpc/tanstack-react-query": ^11.16.0
-  "@turbo/gen": ^2.8.21
-  "@types/node": ^24.12.0
-  ai: ^6.0.141
+  "@turbo/gen": ^2.9.3
+  "@types/node": ^24.12.2
+  ai: ^6.0.145
   babel-plugin-react-compiler: ^1.0.0
-  eslint: ^10.1.0
-  next: ^16.2.1
+  eslint: ^10.2.0
+  next: ^16.2.2
   prettier: ^3.8.1
   superjson: ^2.2.6
   tailwindcss: ^4.2.2
-  turbo: ^2.8.21
+  turbo: ^2.9.3
   typescript: ^6.0.0
   zod: ^4.3.6
 
@@ -31,13 +31,16 @@ catalogs:
     "@better-auth/expo": 1.5.6
     better-auth: 1.5.6
   react19:
-    "@types/react": ~19.1.0
-    "@types/react-dom": ~19.1.0
-    react: 19.1.5
-    react-dom: 19.1.5
+    "@types/react": ~19.2.0
+    "@types/react-dom": ~19.2.0
+    react: 19.2.0
+    react-dom: 19.2.0
 
 overrides:
   lightningcss: 1.30.1
+  # Align metro packages with @expo/metro's bundled metro@0.83.3
+  metro-resolver: 0.83.3
+  metro-file-map: 0.83.3
   # Pin to 0.8.12: last non-deprecated 0.8.x; 0.9.x breaks @expo/plist & plist (missing mimeType arg)
   '@xmldom/xmldom': 0.8.12
   # chevrotain@11.x pins 4.17.23; langium doesn't support chevrotain@12 yet
