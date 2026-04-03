@@ -38,7 +38,7 @@ catalogs:
       specifier: ^11.16.0
       version: 11.16.0
     '@types/node':
-      specifier: ^24.12.1
+      specifier: ^24.12.2
       version: 24.12.2
     ai:
       specifier: ^6.0.145
@@ -11951,7 +11951,7 @@ snapshots:
 
   '@types/pg@8.20.0':
     dependencies:
-      '@types/node': 22.19.17
+      '@types/node': 25.5.2
       pg-protocol: 1.13.0
       pg-types: 2.2.0
 
