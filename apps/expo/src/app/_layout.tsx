@@ -30,7 +30,7 @@ import { ShoppingStoreProvider } from "~/utils/shopping-store";
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 export default function RootLayout() {
-  const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
+  const posthogApiKey = String(process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "");
   if (!posthogApiKey) throw new Error("EXPO_PUBLIC_POSTHOG_API_KEY is not set");
 
   return (

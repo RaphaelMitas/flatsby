@@ -16,8 +16,7 @@ export function RevenueCatProvider({
     if (Platform.OS !== "ios") return;
     if (!userId) return;
 
-    const apiKey: string | undefined =
-      process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
+    const apiKey = String(process.env.EXPO_PUBLIC_REVENUECAT_API_KEY ?? "");
     if (!apiKey) throw new Error("EXPO_PUBLIC_REVENUECAT_API_KEY is not set");
 
     if (__DEV__) {
