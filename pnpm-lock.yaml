@@ -273,8 +273,8 @@ importers:
         specifier: 9.15.0
         version: 9.15.0(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       react-native-purchases-ui:
-        specifier: 9.15.0
-        version: 9.15.0(react-native-purchases@9.15.0(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
+        specifier: 9.15.1
+        version: 9.15.1(react-native-purchases@9.15.0(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       react-native-reanimated:
         specifier: ~4.2.1
         version: 4.2.1(react-native-worklets@0.7.2(@babel/core@7.29.0)(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
@@ -3841,6 +3841,9 @@ packages:
 
   '@revenuecat/purchases-typescript-internal@17.53.0':
     resolution: {integrity: sha512-jAZ7vOgSE5PSDJZqLRoUBVUnqsMcDx+SDXB8E6qZf+mgHIfLeb4vlKqdGaiAXSF9d7R0qbqL8U/PT/r9b/b0Yw==}
+
+  '@revenuecat/purchases-typescript-internal@17.54.0':
+    resolution: {integrity: sha512-qEtoLal9L8T4kVX/5nEfNJcd4qPgfjHQuEA67CDMmLt11w0iirWRk9D/gwkfh8qKUfXqZPI6mJY8DXvK+BYzAg==}
 
   '@shikijs/core@4.0.2':
     resolution: {integrity: sha512-hxT0YF4ExEqB8G/qFdtJvpmHXBYJ2lWW7qTHDarVkIudPFE6iCIrqdgWxGn5s+ppkGXI0aEGlibI0PAyzP3zlw==}
@@ -7584,12 +7587,12 @@ packages:
       react-native: '>=0.76.0'
       react-native-svg: '>=12.3.0'
 
-  react-native-purchases-ui@9.15.0:
-    resolution: {integrity: sha512-/JjSTxyWJnlgpJEN8sNpbYdYn7LTCnS5wUAgOfrqN1FqonL9eJWUIi++MqJ2a+nYilkgw0wWXEmt0iCqudV/Hw==}
+  react-native-purchases-ui@9.15.1:
+    resolution: {integrity: sha512-GwalJJjbuIiLaCvBtflhufBwLPtf1SavoUkvF1+x0UmnuGXLUfzzZYEVLBk0WnBbUQxoaP3xqkSFBmK+LdNT0g==}
     peerDependencies:
       react: '*'
       react-native: '>= 0.73.0'
-      react-native-purchases: 9.15.0
+      react-native-purchases: 9.15.1
       react-native-web: '*'
     peerDependenciesMeta:
       react-native-web:
@@ -11576,6 +11579,8 @@ snapshots:
   '@revenuecat/purchases-js@1.29.0': {}
 
   '@revenuecat/purchases-typescript-internal@17.53.0': {}
+
+  '@revenuecat/purchases-typescript-internal@17.54.0': {}
 
   '@shikijs/core@4.0.2':
     dependencies:
@@ -15734,9 +15739,9 @@ snapshots:
       react-native-svg: 15.15.3(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       svg-parser: 2.0.4
 
-  react-native-purchases-ui@9.15.0(react-native-purchases@9.15.0(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0):
+  react-native-purchases-ui@9.15.1(react-native-purchases@9.15.0(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0):
     dependencies:
-      '@revenuecat/purchases-typescript-internal': 17.53.0
+      '@revenuecat/purchases-typescript-internal': 17.54.0
       react: 19.2.0
       react-native: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
       react-native-purchases: 9.15.0(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
