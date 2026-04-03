@@ -82,6 +82,9 @@ jobs:
         working-directory: apps/expo
         run: rm -rf ios android build-cache
 
+      - name: Update CocoaPods repo
+        run: pod repo update
+
       - name: Build app for simulator
         working-directory: apps/expo
         run: |
