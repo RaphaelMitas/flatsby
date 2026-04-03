@@ -215,7 +215,6 @@ export const expenseRouter = createTRPCRouter({
                                     where: and(
                                       eq(groupMembers.id, groupMemberId),
                                       eq(groupMembers.groupId, expense.groupId),
-                                      eq(groupMembers.isActive, true),
                                     ),
                                   }),
                                 "group member",

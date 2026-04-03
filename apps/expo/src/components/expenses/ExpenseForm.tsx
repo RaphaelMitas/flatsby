@@ -4,8 +4,8 @@ import type {
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
-import { useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -178,6 +178,21 @@ export function ExpenseForm({
   });
   const splitMethod = useWatch({ control: form.control, name: "splitMethod" });
 
+  const allMembers = useMemo(() => {
+    if (!expense) return group.groupMembers;
+    const activeIds = new Set(group.groupMembers.map((m) => m.id));
+    const inactiveMembers = expense.expenseSplits
+      .filter((s) => !activeIds.has(s.groupMemberId))
+      .map((s) => ({
+        id: s.groupMember.id,
+        userId: "",
+        role: "member" as const,
+        joinedOn: new Date(),
+        user: s.groupMember.user,
+      }));
+    return [...group.groupMembers, ...inactiveMembers];
+  }, [expense, group.groupMembers]);
+
   const createExpenseMutation = useMutation(
     trpcClient.expense.createExpense.mutationOptions({
       onMutate: async (input) => {
@@ -306,9 +321,14 @@ export function ExpenseForm({
         if (context?.previousData) {
           queryClient.setQueryData(expenseListQueryKey, context.previousData);
         }
+        Alert.alert("Error", "Failed to create expense");
       },
-      onSuccess: (data) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
+          if (context.previousData) {
+            queryClient.setQueryData(expenseListQueryKey, context.previousData);
+          }
+          Alert.alert("Error", data.error.message);
           return;
         }
 
@@ -359,6 +379,9 @@ export function ExpenseForm({
                     const member = group.groupMembers.find(
                       (m) => m.id === split.groupMemberId,
                     );
+                    const existingSplit = expense.expenseSplits.find(
+                      (s) => s.groupMemberId === split.groupMemberId,
+                    );
                     const splits = {
                       ...split,
                       id: Date.now() + index,
@@ -366,14 +389,23 @@ export function ExpenseForm({
                       expenseId: expense.id,
                       groupMember: member
                         ? { ...member, groupId: group.id }
-                        : {
-                            id: split.groupMemberId,
-                            groupId: group.id,
-                            userId: "",
-                            role: "member" as const,
-                            joinedOn: new Date(),
-                            user: { email: "", name: "Unknown", image: null },
-                          },
+                        : existingSplit
+                          ? {
+                              id: existingSplit.groupMember.id,
+                              groupId: group.id,
+                              userId: "",
+                              role: "member" as const,
+                              joinedOn: new Date(),
+                              user: existingSplit.groupMember.user,
+                            }
+                          : {
+                              id: split.groupMemberId,
+                              groupId: group.id,
+                              userId: "",
+                              role: "member" as const,
+                              joinedOn: new Date(),
+                              user: { email: "", name: "Unknown", image: null },
+                            },
                     };
                     return splits;
                   })
@@ -388,9 +420,14 @@ export function ExpenseForm({
         if (context?.previousData && expenseQueryKey) {
           queryClient.setQueryData(expenseQueryKey, context.previousData);
         }
+        Alert.alert("Error", "Failed to update expense");
       },
-      onSuccess: (data) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
+          if (context?.previousData && expenseQueryKey) {
+            queryClient.setQueryData(expenseQueryKey, context.previousData);
+          }
+          Alert.alert("Error", data.error.message);
           return;
         }
 
@@ -717,7 +754,7 @@ export function ExpenseForm({
                     <FormControl>
                       <SplitEditor
                         form={form}
-                        groupMembers={group.groupMembers}
+                        groupMembers={allMembers}
                         totalAmountCents={amountInCents}
                         currency={currency}
                         splitMethod={
@@ -755,7 +792,7 @@ export function ExpenseForm({
                     <View className="flex-row justify-between">
                       <Text className="text-muted-foreground">Paid By:</Text>
                       <Text className="text-foreground font-semibold">
-                        {group.groupMembers.find(
+                        {allMembers.find(
                           (m) => m.id === paidByGroupMemberId,
                         )?.user.name ?? "Unknown"}
                       </Text>
