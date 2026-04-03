@@ -35,7 +35,7 @@ export function ThemeProvider({
   // Helper to apply color scheme to appearance
   const applyColorScheme = (theme: "light" | "dark" | "system") => {
     if (theme === "system") {
-      Appearance.setColorScheme(null); // Reset to system default
+      Appearance.setColorScheme("unspecified"); // Reset to system default
     } else {
       Appearance.setColorScheme(theme);
     }

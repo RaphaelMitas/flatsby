@@ -9,6 +9,7 @@ export const StyledSvg = styled(Svg, {
   className: "style",
 });
 
+// @ts-expect-error - NativeWind styled() produces overly complex union type with Icon component
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 export const StyledIcon = styled(Icon, {
   className: "style",
