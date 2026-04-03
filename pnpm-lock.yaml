@@ -38,8 +38,8 @@ catalogs:
       specifier: ^11.16.0
       version: 11.16.0
     '@types/node':
-      specifier: ^24.12.0
-      version: 24.12.0
+      specifier: ^24.12.1
+      version: 24.12.1
     ai:
       specifier: ^6.0.145
       version: 6.0.145
@@ -432,7 +432,7 @@ importers:
         version: 1.59.1
       '@types/node':
         specifier: 'catalog:'
-        version: 24.12.0
+        version: 24.12.1
       '@types/react':
         specifier: catalog:react19
         version: 19.2.14
@@ -898,7 +898,7 @@ importers:
         version: link:../typescript
       '@types/node':
         specifier: 'catalog:'
-        version: 24.12.0
+        version: 24.12.1
       eslint:
         specifier: 'catalog:'
         version: 10.1.0(jiti@2.6.1)
@@ -928,7 +928,7 @@ importers:
         version: link:../typescript
       '@types/node':
         specifier: 'catalog:'
-        version: 24.12.0
+        version: 24.12.1
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -956,7 +956,7 @@ importers:
         version: link:../typescript
       '@types/node':
         specifier: 'catalog:'
-        version: 24.12.0
+        version: 24.12.1
       eslint:
         specifier: 'catalog:'
         version: 10.1.0(jiti@2.6.1)
@@ -4257,8 +4257,8 @@ packages:
   '@types/node@22.19.15':
     resolution: {integrity: sha512-F0R/h2+dsy5wJAUe3tAU6oqa2qbWY5TpNfL/RGmo1y38hiyO1w3x2jPtt76wmuaJI4DQnOBu21cNXQ2STIUUWg==}
 
-  '@types/node@24.12.0':
-    resolution: {integrity: sha512-GYDxsZi3ChgmckRT9HPU0WEhKLP08ev/Yfcq2AstjrDASOYCSXeyjDsHg4v5t4jOj7cyDX3vmprafKlWIG9MXQ==}
+  '@types/node@24.12.1':
+    resolution: {integrity: sha512-v6Ct1W1Fdz7xg5jYCg4FTrbNcIqzds2jv/HL6+5Rs/Cyjf0oljAgW59zvDZXyYG7nt9MLrAFJv9erP/fLjwt+g==}
 
   '@types/node@25.5.0':
     resolution: {integrity: sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw==}
@@ -11973,7 +11973,7 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/node@24.12.0':
+  '@types/node@24.12.1':
     dependencies:
       undici-types: 7.16.0
 
