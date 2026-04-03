@@ -6,7 +6,7 @@ import type {
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
@@ -278,6 +278,9 @@ export function useExpenseForm({
                     const member = group.groupMembers.find(
                       (m) => m.id === split.groupMemberId,
                     );
+                    const existingSplit = expense.expenseSplits.find(
+                      (s) => s.groupMemberId === split.groupMemberId,
+                    );
                     const splits = {
                       ...split,
                       id: Date.now() + index,
@@ -285,14 +288,23 @@ export function useExpenseForm({
                       expenseId: expense.id,
                       groupMember: member
                         ? { ...member, groupId: group.id }
-                        : {
-                            id: split.groupMemberId,
-                            groupId: group.id,
-                            userId: "",
-                            role: "member" as const,
-                            joinedOn: new Date(),
-                            user: { email: "", name: "Unknown", image: null },
-                          },
+                        : existingSplit
+                          ? {
+                              id: existingSplit.groupMember.id,
+                              groupId: group.id,
+                              userId: "",
+                              role: "member" as const,
+                              joinedOn: new Date(),
+                              user: existingSplit.groupMember.user,
+                            }
+                          : {
+                              id: split.groupMemberId,
+                              groupId: group.id,
+                              userId: "",
+                              role: "member" as const,
+                              joinedOn: new Date(),
+                              user: { email: "", name: "Unknown", image: null },
+                            },
                     };
                     return splits;
                   })
@@ -465,6 +477,21 @@ export function useExpenseForm({
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
 
+  const allMembers = useMemo(() => {
+    if (!expense) return group.groupMembers;
+    const activeIds = new Set(group.groupMembers.map((m) => m.id));
+    const inactiveMembers = expense.expenseSplits
+      .filter((s) => !activeIds.has(s.groupMemberId))
+      .map((s) => ({
+        id: s.groupMember.id,
+        userId: "",
+        role: "member" as const,
+        joinedOn: new Date(),
+        user: s.groupMember.user,
+      }));
+    return [...group.groupMembers, ...inactiveMembers];
+  }, [expense, group.groupMembers]);
+
   return {
     form,
     currentStep,
@@ -483,6 +510,7 @@ export function useExpenseForm({
     handleNext,
     handleBack,
     group,
+    allMembers,
   };
 }
 

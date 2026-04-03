@@ -66,6 +66,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     handleNext,
     handleBack,
     group,
+    allMembers,
   } = formState;
 
   return (
@@ -265,7 +266,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
             />
             <SplitEditor
               form={form}
-              groupMembers={group.groupMembers}
+              groupMembers={allMembers}
               totalAmountCents={amountInCents}
               currency={currency}
               splitMethod={splitMethod !== "settlement" ? splitMethod : "equal"}
@@ -298,9 +299,8 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Paid By:</span>
                   <span className="font-semibold">
-                    {group.groupMembers.find(
-                      (m) => m.id === paidByGroupMemberId,
-                    )?.user.name ?? "Unknown"}
+                    {allMembers.find((m) => m.id === paidByGroupMemberId)?.user
+                      .name ?? "Unknown"}
                   </span>
                 </div>
                 {description && (
