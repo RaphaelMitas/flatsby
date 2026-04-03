@@ -11,9 +11,14 @@ Thanks for your interest in contributing! This repo is open to collaborate in th
 
 ## Branching & PRs
 
-- Create a feature branch from `main`
-- Write clear commits; prefer conventional style
-- Open a PR with context and checklists (template provided)
+This project uses [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow):
+
+1. Create a short-lived branch from `main` (e.g., `feature/add-receipt-scanning`, `bugfix/fix-expense-total`)
+2. Make your changes with clear, conventional-style commits
+3. Open a PR targeting `main` with context and a checklist (template provided)
+4. After review and CI passes, merge to `main`
+
+Branch names must match one of these prefixes: `feature/`, `bugfix/`, `hotfix/`, `auto/`, `renovate/`, `claude/`.
 
 ## Testing & Linting
 

@@ -7,15 +7,13 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    if: >-
-      github.head_ref != 'main' &&
-      github.head_ref != 'develop'
+    if: github.head_ref != 'main'
     steps:
       - name: Validate branch name
         env:
           BRANCH: ${{ github.head_ref }}
         run: |
-          PATTERN="^(feature|bugfix|release|hotfix|auto|renovate|claude)/"
+          PATTERN="^(feature|bugfix|hotfix|auto|renovate|claude)/"
           if [[ ! "$BRANCH" =~ $PATTERN ]]; then
             echo "::error::Branch name '$BRANCH' does not match required pattern: feature/, bugfix/, release/, hotfix/, renovate/, claude/"
             exit 1
