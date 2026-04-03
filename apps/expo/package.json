@@ -100,10 +100,5 @@
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
-  "expo": {
-    "install": {
-      "exclude": ["typescript"]
-    }
-  },
   "prettier": "@flatsby/prettier-config"
 }
