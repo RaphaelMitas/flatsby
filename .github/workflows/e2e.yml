@@ -13,11 +13,25 @@ env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
 
 jobs:
-  e2e-web:
+  check-pr:
     if: >-
       github.event.deployment_status.state == 'success' &&
-      github.event.deployment_status.environment == 'Preview' &&
-      github.event.deployment.ref != 'develop'
+      github.event.deployment_status.environment == 'Preview'
+    runs-on: ubuntu-latest
+    outputs:
+      has-pr: ${{ steps.check.outputs.has-pr }}
+    steps:
+      - name: Check for associated PR
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_COUNT=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number --jq 'length')
+          echo "has-pr=$([[ "$PR_COUNT" -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  e2e-web:
+    needs: check-pr
+    if: needs.check-pr.outputs.has-pr == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -52,10 +66,8 @@ jobs:
           retention-days: 7
 
   e2e-ios:
-    if: >-
-      github.event.deployment_status.state == 'success' &&
-      github.event.deployment_status.environment == 'Preview' &&
-      github.event.deployment.ref != 'develop'
+    needs: check-pr
+    if: needs.check-pr.outputs.has-pr == 'true'
     runs-on: [self-hosted, macos, arm64]
     timeout-minutes: 45
     steps:
