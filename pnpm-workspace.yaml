@@ -18,7 +18,7 @@ catalog:
   ai: ^6.0.145
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^10.1.0
-  next: ^16.2.1
+  next: ^16.2.2
   prettier: ^3.8.1
   superjson: ^2.2.6
   tailwindcss: ^4.2.2
