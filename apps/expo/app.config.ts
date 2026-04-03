@@ -77,18 +77,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
     },
-    edgeToEdgeEnabled: true,
   },
   extra: {
     eas: {
       projectId: "f7e9d15f-497c-4f4e-ac97-f59a14638cdd",
     },
   },
-  newArchEnabled: true,
   experiments: {
     tsconfigPaths: true,
     typedRoutes: true,
-    reactCanary: true,
     reactCompiler: true,
   },
   updates: {
@@ -114,7 +111,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
-    ["expo-build-properties", { ios: { useFrameworks: "static" } }],
+    "expo-build-properties",
     ["expo-font", { fonts: ["./assets/fonts/lucide.ttf"] }],
   ],
 });

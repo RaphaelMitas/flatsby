@@ -64,6 +64,10 @@ jobs:
         with:
           cache: "false"
 
+      - name: Clean native build artifacts
+        working-directory: apps/expo
+        run: rm -rf ios android build-cache
+
       - name: Build app for simulator
         working-directory: apps/expo
         run: |
