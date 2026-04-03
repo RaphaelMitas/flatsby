@@ -34,7 +34,7 @@
     "better-auth": "catalog:better-auth",
     "geist": "^1.7.0",
     "jose": "^6.2.2",
-    "next": "^16.2.1",
+    "next": "^16.2.2",
     "prop-types": "^15.8.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
