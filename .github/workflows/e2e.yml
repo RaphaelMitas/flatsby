@@ -16,7 +16,8 @@ jobs:
   e2e-web:
     if: >-
       github.event.deployment_status.state == 'success' &&
-      github.event.deployment_status.environment == 'Preview'
+      github.event.deployment_status.environment == 'Preview' &&
+      github.event.deployment.ref != 'develop'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -53,7 +54,8 @@ jobs:
   e2e-ios:
     if: >-
       github.event.deployment_status.state == 'success' &&
-      github.event.deployment_status.environment == 'Preview'
+      github.event.deployment_status.environment == 'Preview' &&
+      github.event.deployment.ref != 'develop'
     runs-on: [self-hosted, macos, arm64]
     timeout-minutes: 45
     steps:
