@@ -40,7 +40,7 @@ function useCountUp(target: number, duration = 500) {
 }
 
 interface StatCardProps {
-  iconName: "wallet" | "circle-check" | "message-square" | "trending-up";
+  iconName: "wallet" | "circle-check" | "trending-up";
   value: number;
   format?: (value: number) => string;
   label: string;
@@ -100,7 +100,6 @@ export function HomeStats({ groupId }: HomeStatsProps) {
   let spendingCents = 0;
   let spendingCurrency = "EUR";
   let itemsCompleted = 0;
-  let chatMessages = 0;
   let balanceAmount = 0;
   let balanceCurrency = "EUR";
   let balanceLabel = "balanced";
@@ -125,7 +124,6 @@ export function HomeStats({ groupId }: HomeStatsProps) {
     spendingCents = primarySpending?.totalInCents ?? 0;
     spendingCurrency = primarySpending?.currency ?? "EUR";
     itemsCompleted = statsData.data.itemsCompleted;
-    chatMessages = statsData.data.chatMessages;
 
     balanceAmount = userBalance ? Math.abs(userBalance.amount) : 0;
     balanceCurrency = userBalance?.currency ?? "EUR";
@@ -163,23 +161,14 @@ export function HomeStats({ groupId }: HomeStatsProps) {
           loading={isLoading}
         />
       </View>
-      <View className="flex-row gap-3">
-        <StatCard
-          iconName="message-square"
-          value={chatMessages}
-          label="messages"
-          iconColor="purple"
-          loading={isLoading}
-        />
-        <StatCard
-          iconName="trending-up"
-          value={balanceAmount}
-          format={formatCurrency(balanceCurrency)}
-          label={balanceLabel}
-          iconColor={balanceIconColor}
-          loading={isLoading}
-        />
-      </View>
+      <StatCard
+        iconName="trending-up"
+        value={balanceAmount}
+        format={formatCurrency(balanceCurrency)}
+        label={balanceLabel}
+        iconColor={balanceIconColor}
+        loading={isLoading}
+      />
     </View>
   );
 }

@@ -13,8 +13,6 @@ const houseIcon = LucideIcon.getImageSourceSync("house", 20);
 const shoppingBasketIcon = LucideIcon.getImageSourceSync("shopping-basket", 20);
 const walletIcon = LucideIcon.getImageSourceSync("wallet", 20);
 const settingsIcon = LucideIcon.getImageSourceSync("settings", 20);
-const messageSquareIcon = LucideIcon.getImageSourceSync("message-square", 20);
-
 // spring themed icons
 const springHomeIcon = LucideIcon.getImageSourceSync("flower-2", 20);
 const springCartIcon = LucideIcon.getImageSourceSync("cherry", 20);
@@ -113,13 +111,6 @@ export default function TabLayout() {
           title: "Expenses",
           tabBarIcon: () => walletIcon,
           tabBarItemHidden: !selectedGroupId,
-        }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{
-          title: "Chat",
-          tabBarIcon: () => messageSquareIcon,
         }}
       />
       <Tabs.Screen

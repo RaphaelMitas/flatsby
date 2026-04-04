@@ -14,13 +14,6 @@ export function QuickActions() {
       <View className="flex-row gap-2">
         <Button
           variant="outline"
-          icon="message-square"
-          title="Chat"
-          className="flex-1"
-          onPress={() => router.push("/(tabs)/chat")}
-        />
-        <Button
-          variant="outline"
           icon="shopping-cart"
           title={selectedShoppingListName ?? "Shop"}
           className="min-w-0 flex-1"
@@ -28,7 +21,7 @@ export function QuickActions() {
           textClassName="shrink"
           onPress={() =>
             router.push(
-              !selectedShoppingListName
+              selectedShoppingListName
                 ? "/(tabs)/shoppingList"
                 : "/(tabs)/home/shopping-lists",
               { withAnchor: true },

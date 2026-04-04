@@ -24,12 +24,10 @@
     "test:e2e": "maestro test e2e/flows/"
   },
   "dependencies": {
-    "@ai-sdk/react": "catalog:",
     "@babel/traverse--for-generate-function-map": "npm:@babel/traverse@^7.29.0",
     "@better-auth/expo": "catalog:better-auth",
     "@bottom-tabs/react-navigation": "^1.1.0",
     "@expo/metro-runtime": "~55.0.9",
-    "@flatsby/chat": "workspace:*",
     "@flatsby/validators": "workspace:*",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
@@ -75,7 +73,6 @@
     "react-native-gesture-handler": "~2.30.1",
     "react-native-gifted-charts": "^1.4.76",
     "react-native-keyboard-controller": "1.21.3",
-    "react-native-marked": "^8.0.1",
     "react-native-purchases": "9.15.1",
     "react-native-purchases-ui": "9.15.1",
     "react-native-reanimated": "~4.2.1",
