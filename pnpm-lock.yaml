@@ -14,8 +14,8 @@ catalogs:
       version: 1.5.6
   default:
     '@ai-sdk/react':
-      specifier: ^3.0.147
-      version: 3.0.147
+      specifier: ^3.0.148
+      version: 3.0.148
     '@eslint/js':
       specifier: ^10.0.1
       version: 10.0.1
@@ -41,8 +41,8 @@ catalogs:
       specifier: ^24.12.2
       version: 24.12.2
     ai:
-      specifier: ^6.0.145
-      version: 6.0.145
+      specifier: ^6.0.146
+      version: 6.0.146
     autumn-js:
       specifier: ^1.2.4
       version: 1.2.4
@@ -115,7 +115,7 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: 'catalog:'
-        version: 3.0.147(react@19.2.0)(zod@4.3.6)
+        version: 3.0.148(react@19.2.0)(zod@4.3.6)
       '@babel/traverse--for-generate-function-map':
         specifier: npm:@babel/traverse@^7.29.0
         version: '@babel/traverse@7.29.0'
@@ -338,7 +338,7 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: 'catalog:'
-        version: 3.0.147(react@19.2.0)(zod@4.3.6)
+        version: 3.0.148(react@19.2.0)(zod@4.3.6)
       '@better-auth/expo':
         specifier: catalog:better-auth
         version: 1.5.6(@better-auth/core@1.5.6(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.2(zod@4.3.6))(jose@6.2.2)(kysely@0.28.15)(nanostores@1.2.0))(better-auth@1.5.6(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.20.0)(kysely@0.28.15))(next@16.2.2(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(expo-constants@55.0.11)(expo-linking@55.0.11)(expo-network@55.0.11(expo@55.0.11)(react@19.2.0))(expo-web-browser@55.0.12(expo@55.0.11)(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))
@@ -377,7 +377,7 @@ importers:
         version: 11.16.0(@tanstack/react-query@5.96.2(react@19.2.0))(@trpc/client@11.16.0(@trpc/server@11.16.0(typescript@6.0.2))(typescript@6.0.2))(@trpc/server@11.16.0(typescript@6.0.2))(react@19.2.0)(typescript@6.0.2)
       ai:
         specifier: 'catalog:'
-        version: 6.0.145(zod@4.3.6)
+        version: 6.0.146(zod@4.3.6)
       autumn-js:
         specifier: 'catalog:'
         version: 1.2.4(better-auth@1.5.6(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.20.0)(kysely@0.28.15))(next@16.2.2(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(better-call@1.3.2(zod@4.3.6))(next@16.2.2(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
@@ -483,7 +483,7 @@ importers:
         version: 11.16.0(typescript@6.0.2)
       ai:
         specifier: 'catalog:'
-        version: 6.0.145(zod@4.3.6)
+        version: 6.0.146(zod@4.3.6)
       effect:
         specifier: ^3.21.0
         version: 3.21.0
@@ -532,7 +532,7 @@ importers:
         version: 0.13.11(typescript@6.0.2)(zod@4.3.6)
       ai:
         specifier: 'catalog:'
-        version: 6.0.145(zod@4.3.6)
+        version: 6.0.146(zod@4.3.6)
       autumn-js:
         specifier: 'catalog:'
         version: 1.2.4(better-auth@1.5.6(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.20.0)(kysely@0.28.15))(next@16.2.2(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(better-call@1.3.2(zod@4.3.6))(next@16.2.2(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
@@ -578,7 +578,7 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: 'catalog:'
-        version: 3.0.147(react@19.2.0)(zod@4.3.6)
+        version: 3.0.148(react@19.2.0)(zod@4.3.6)
       '@flatsby/validators':
         specifier: workspace:*
         version: link:../validators
@@ -587,7 +587,7 @@ importers:
         version: 5.96.2(react@19.2.0)
       ai:
         specifier: 'catalog:'
-        version: 6.0.145(zod@4.3.6)
+        version: 6.0.146(zod@4.3.6)
       react:
         specifier: catalog:react19
         version: 19.2.0
@@ -667,7 +667,7 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: 'catalog:'
-        version: 3.0.147(react@19.2.0)(zod@4.3.6)
+        version: 3.0.148(react@19.2.0)(zod@4.3.6)
       '@flatsby/validators':
         specifier: workspace:*
         version: link:../validators
@@ -733,7 +733,7 @@ importers:
         version: 12.10.2(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       ai:
         specifier: 'catalog:'
-        version: 6.0.145(zod@4.3.6)
+        version: 6.0.146(zod@4.3.6)
       autumn-js:
         specifier: 'catalog:'
         version: 1.2.4(better-auth@1.5.6(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.20.0)(kysely@0.28.15))(next@16.2.2(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(better-call@1.3.2(zod@4.3.6))(next@16.2.2(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
@@ -852,7 +852,7 @@ importers:
         version: 5.5.2
       ai:
         specifier: 'catalog:'
-        version: 6.0.145(zod@4.3.6)
+        version: 6.0.146(zod@4.3.6)
       eslint:
         specifier: 'catalog:'
         version: 10.2.0(jiti@2.6.1)
@@ -971,8 +971,8 @@ importers:
 
 packages:
 
-  '@ai-sdk/gateway@3.0.87':
-    resolution: {integrity: sha512-knLx/VY0u5KAZGgrTorWCTbEnwK3oCCdm8yjxVQm3s14erqVo60SP08dsFWm+xNULPTusftQGVD/l0/hx5QOHg==}
+  '@ai-sdk/gateway@3.0.88':
+    resolution: {integrity: sha512-AFoj7xdWAtCQcy0jJ235ENSakYM8D28qBX+rB+/rX4r8qe/LXgl0e5UivOqxAlIM5E9jnQdYxIPuj3XFtGk/yg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -987,8 +987,8 @@ packages:
     resolution: {integrity: sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@3.0.147':
-    resolution: {integrity: sha512-Ig5DVtZt21xwP2cdX9zTtBBQL6upminiwHP4k0a87Z1SY+ZcDY/wv3IRKGEPkM/INuvpEoGQFZtvqElcLtYRpQ==}
+  '@ai-sdk/react@3.0.148':
+    resolution: {integrity: sha512-bxKtS3KINzjtEf9xrAhORRN0HIMgqlI1Nwhd0eaAXL3Eljf3XVl9Bw+HXiCLVNzyOcyOwwBLlvq8SZ0amys7eA==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
@@ -4506,8 +4506,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai@6.0.145:
-    resolution: {integrity: sha512-RbMiFsPZxE4uf5Hhs8rscp5bIwvjQOrqS5dQGWNVRHGM947QZgkKX7Ih5hto8MK/7xkbtneoOZruZ8oSLO828A==}
+  ai@6.0.146:
+    resolution: {integrity: sha512-70DE8k1rR0N3mXxyyfjYAx/FxRln/kQ5ym18lt1ys1eUklcPuoIXGbUBwdfCbmkt6YF3jCDZ5+OgkWieP/NGDw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -8533,7 +8533,7 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/gateway@3.0.87(zod@4.3.6)':
+  '@ai-sdk/gateway@3.0.88(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.22(zod@4.3.6)
@@ -8551,10 +8551,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@3.0.147(react@19.2.0)(zod@4.3.6)':
+  '@ai-sdk/react@3.0.148(react@19.2.0)(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider-utils': 4.0.22(zod@4.3.6)
-      ai: 6.0.145(zod@4.3.6)
+      ai: 6.0.146(zod@4.3.6)
       react: 19.2.0
       swr: 2.4.1(react@19.2.0)
       throttleit: 2.1.0
@@ -12185,9 +12185,9 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@6.0.145(zod@4.3.6):
+  ai@6.0.146(zod@4.3.6):
     dependencies:
-      '@ai-sdk/gateway': 3.0.87(zod@4.3.6)
+      '@ai-sdk/gateway': 3.0.88(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.22(zod@4.3.6)
       '@opentelemetry/api': 1.9.0
