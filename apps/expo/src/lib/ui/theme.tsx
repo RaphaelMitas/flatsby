@@ -34,9 +34,12 @@ export function ThemeProvider({
 
   // Helper to apply color scheme to appearance
   const applyColorScheme = (theme: "light" | "dark" | "system") => {
-    if (theme === "system") {
-      Appearance.setColorScheme("unspecified"); // Reset to system default
-    } else {
+    if (theme !== "system") {
+      // Only override for explicit dark/light. For "system", the native
+      // default already follows the system preference. Calling
+      // setColorScheme("unspecified") triggers an RN 0.83 bug (#54959)
+      // where useColorScheme() returns "unspecified" instead of the
+      // actual system value.
       Appearance.setColorScheme(theme);
     }
   };
