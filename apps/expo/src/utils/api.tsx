@@ -1,13 +1,14 @@
 import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { fetch as expoFetch } from "expo/fetch";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
 import {
   createTRPCClient,
   httpBatchLink,
   httpBatchStreamLink,
   loggerLink,
   splitLink,
+  TRPCClientError,
 } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
@@ -15,10 +16,35 @@ import superjson from "superjson";
 import { authClient } from "./auth/auth-client";
 import { getBaseUrl } from "./base-url";
 
+function isUnauthorizedError(error: unknown): boolean {
+  if (!(error instanceof TRPCClientError)) return false;
+  const data: unknown = error.data;
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "code" in data &&
+    data.code === "UNAUTHORIZED"
+  );
+}
+
+const queryCache = new QueryCache({
+  onError: (error) => {
+    if (isUnauthorizedError(error)) {
+      void authClient.signOut();
+    }
+  },
+});
+
 export const queryClient = new QueryClient({
+  queryCache,
   defaultOptions: {
     queries: {
-      // ...
+      retry: (failureCount, error) => {
+        if (isUnauthorizedError(error)) {
+          return false;
+        }
+        return failureCount < 3;
+      },
     },
   },
 });
