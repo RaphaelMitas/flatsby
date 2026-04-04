@@ -23,7 +23,6 @@ import { SpringPetals } from "~/lib/ui/spring-petals";
 import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
-import { ChatStoreProvider } from "~/utils/chat-store";
 import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
 import { ShoppingStoreProvider } from "~/utils/shopping-store";
 
@@ -56,14 +55,12 @@ export default function RootLayout() {
                   <QueryClientProvider client={queryClient}>
                     <RevenueCatProvider>
                       <ShoppingStoreProvider>
-                        <ChatStoreProvider>
-                          {/**
-                           The Stack component displays the current page.
-                           It also allows you to configure your screens
-                          **/}
-                          <StackLayout />
-                          <StatusBar />
-                        </ChatStoreProvider>
+                        {/**
+                         The Stack component displays the current page.
+                         It also allows you to configure your screens
+                        **/}
+                        <StackLayout />
+                        <StatusBar />
                       </ShoppingStoreProvider>
                     </RevenueCatProvider>
                   </QueryClientProvider>
@@ -96,8 +93,6 @@ function getScreenName(segments: string[]): string {
     "expenses/create": "Create Expense",
     "expenses/debts": "Debts",
     "expenses/settle": "Settle Debts",
-    chat: "Chat",
-    "chat/new": "New Chat",
     settings: "Settings",
     "settings/account": "Account Settings",
     "settings/profile": "Profile",
@@ -110,8 +105,6 @@ function getScreenName(segments: string[]): string {
     if (key.endsWith("/edit")) return "Edit Expense";
     return "Expense Detail";
   }
-  if (key.includes("[conversationId]")) return "Chat Conversation";
-
   return names[key] ?? filtered.join(" > ");
 }
 
