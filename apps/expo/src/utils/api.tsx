@@ -3,12 +3,12 @@ import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { fetch as expoFetch } from "expo/fetch";
 import { QueryClient } from "@tanstack/react-query";
 import {
-  TRPCClientError,
   createTRPCClient,
   httpBatchLink,
   httpBatchStreamLink,
   loggerLink,
   splitLink,
+  TRPCClientError,
 } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";

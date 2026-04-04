@@ -15,8 +15,7 @@ export function ErrorBoundary({
   error: Error;
   retry: () => void;
 }) {
-  const data: unknown =
-    error instanceof TRPCClientError ? error.data : null;
+  const data: unknown = error instanceof TRPCClientError ? error.data : null;
   const isUnauthorized =
     typeof data === "object" &&
     data !== null &&
