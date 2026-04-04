@@ -1,5 +1,6 @@
 "use client";
 
+import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import { useRef } from "react";
 
@@ -12,10 +13,12 @@ import { ShoppingListItemInputFormField } from "./ShoppingListItemInputFormField
 
 interface ShoppingListItemAddFormProps {
   onSubmit: (values: CreateShoppingListItemFormValues) => void;
+  groupId: number;
 }
 
 export const ShoppingListItemAddForm = ({
   onSubmit,
+  groupId,
 }: ShoppingListItemAddFormProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const form = useForm<
@@ -53,8 +56,17 @@ export const ShoppingListItemAddForm = ({
                 <ShoppingListItemInputFormField
                   ref={inputRef}
                   field={field}
+                  groupId={groupId}
                   onCategoryDetected={(categoryId) => {
                     form.setValue("categoryId", categoryId);
+                  }}
+                  onSuggestionSelected={(
+                    name: string,
+                    categoryId: CategoryIdWithAiAutoSelect,
+                  ) => {
+                    form.setValue("name", name, { shouldDirty: true });
+                    form.setValue("categoryId", categoryId);
+                    inputRef.current?.focus();
                   }}
                 />
               )}
