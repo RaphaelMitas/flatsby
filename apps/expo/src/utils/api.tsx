@@ -8,6 +8,7 @@ import {
   httpBatchStreamLink,
   loggerLink,
   splitLink,
+  TRPCClientError,
 } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
@@ -15,10 +16,26 @@ import superjson from "superjson";
 import { authClient } from "./auth/auth-client";
 import { getBaseUrl } from "./base-url";
 
+function isUnauthorizedError(error: unknown): boolean {
+  if (!(error instanceof TRPCClientError)) return false;
+  const data: unknown = error.data;
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "code" in data &&
+    data.code === "UNAUTHORIZED"
+  );
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // ...
+      retry: (failureCount, error) => {
+        if (isUnauthorizedError(error)) {
+          return false;
+        }
+        return failureCount < 3;
+      },
     },
   },
 });
