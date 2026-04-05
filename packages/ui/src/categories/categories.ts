@@ -68,10 +68,6 @@ export const getCategoryColorClasses = (categoryId: string) => ({
   ),
 });
 
-export const getCategoryData = (categoryId: string) => {
-  return categoryMapping.find((category) => category.id === categoryId);
-};
-
 const categories: Category[] = [
   {
     id: "ai-auto-select",
@@ -156,5 +152,17 @@ const categoryMapping = categories.map((category) => {
     colorClasses: colors,
   };
 });
+
+export type CategoryMappingItem = (typeof categoryMapping)[number];
+
+export const getCategoryData = (
+  categoryId: CategoryIdWithAiAutoSelect,
+): CategoryMappingItem => {
+  const item = categoryMapping.find((c) => c.id === categoryId);
+  if (item === undefined) {
+    throw new Error(`Missing category data for: ${categoryId}`);
+  }
+  return item;
+};
 
 export { categories, categoryMapping };

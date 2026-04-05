@@ -1,17 +1,19 @@
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import type {
+  CategoryId,
+  CategoryIdWithAiAutoSelect,
+} from "@flatsby/validators/categories";
 import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import { useShoppingListSuggestions } from "@flatsby/api/hooks/useShoppingListSuggestions";
-import { isCategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import { createShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
 
 import { Badge } from "~/lib/ui/badge";
 import { Button } from "~/lib/ui/button";
 import { Input } from "~/lib/ui/input";
 import { trpc } from "~/utils/api";
-import { CategoryPicker } from "./ShoppingListCategory";
+import { CategoryPicker, getCategoryData } from "./ShoppingListCategory";
 
 interface ShoppingListItemAddFormProps {
   onSubmit: (values: CreateShoppingListItemFormValues) => void;
@@ -54,14 +56,10 @@ export const ShoppingListItemAddForm = ({
 
   const handleSuggestionPress = (item: {
     name: string;
-    categoryId: string;
+    categoryId: CategoryId;
   }) => {
     setName(item.name);
-    setCategoryId(
-      isCategoryIdWithAiAutoSelect(item.categoryId)
-        ? item.categoryId
-        : "ai-auto-select",
-    );
+    setCategoryId(item.categoryId);
   };
 
   return (
@@ -79,6 +77,7 @@ export const ShoppingListItemAddForm = ({
               variant="outline"
               label={item.name}
               size="lg"
+              icon={getCategoryData({ categoryId: item.categoryId }).icon}
               onPress={() => handleSuggestionPress(item)}
             />
           ))}

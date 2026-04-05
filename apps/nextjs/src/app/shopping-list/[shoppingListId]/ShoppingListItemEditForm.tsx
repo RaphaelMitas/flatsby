@@ -48,14 +48,7 @@ export const ShoppingListItemEditForm = ({
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <>
-                    <ShoppingListItemInputFormField
-                      field={field}
-                      onCategoryDetected={(categoryId) => {
-                        form.setValue("categoryId", categoryId);
-                      }}
-                    />
-                  </>
+                  <ShoppingListItemInputFormField field={field} />
                 )}
               />
             </div>

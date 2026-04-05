@@ -23,6 +23,7 @@ import {
   deleteShoppingListItemSchema,
   deleteShoppingListSchema,
   shoppingListItemSchema,
+  suggestItemsOutputSchema,
   suggestItemsSchema,
   updateShoppingListItemSchema,
   updateShoppingListSchema,
@@ -903,37 +904,11 @@ export const shoppingList = createTRPCRouter({
       );
     }),
 
-  categorizeItem: protectedProcedure
-    .input(
-      z.object({
-        itemName: z.string(),
-      }),
-    )
-    .output(getApiResultZod(categoryIdSchema))
-    .mutation(async ({ input, ctx }) => {
-      return withErrorHandlingAsResult(
-        Effect.flatMap(
-          // Validate input name
-          ValidationUtils.notEmpty(input.itemName, "Item name"),
-          (validItemName) =>
-            // Categorize item using AI with fallback
-            AIUtils.categorizeItemSafely(
-              validItemName,
-              createItemCategorizer({
-                customerId: ctx.session.user.id,
-                distinctId: ctx.session.user.id,
-              }),
-            ),
-        ),
-      );
-    }),
-
   suggestItems: protectedProcedure
     .input(suggestItemsSchema)
+    .output(getApiResultZod(z.array(suggestItemsOutputSchema)))
     .query(async ({ ctx, input }) => {
-      const escaped = input.query
-        .replace(/%/g, "\\%")
-        .replace(/_/g, "\\_");
+      const escaped = input.query.replace(/%/g, "\\%").replace(/_/g, "\\_");
 
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -950,7 +925,7 @@ export const shoppingList = createTRPCRouter({
                     .select({
                       name: sql<string>`min(${shoppingListItems.name})`,
                       frequency: count(shoppingListItems.id),
-                      categoryId: sql<string>`mode() WITHIN GROUP (ORDER BY ${shoppingListItems.categoryId})`,
+                      categoryId: sql<CategoryId>`mode() WITHIN GROUP (ORDER BY ${shoppingListItems.categoryId})`,
                     })
                     .from(shoppingListItems)
                     .innerJoin(
