@@ -390,7 +390,10 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               keyboardDismissMode="on-drag"
             />
             <AppKeyboardStickyView>
-              <ShoppingListItemAddForm onSubmit={handleSubmit} groupId={groupId} />
+              <ShoppingListItemAddForm
+                onSubmit={handleSubmit}
+                groupId={groupId}
+              />
             </AppKeyboardStickyView>
           </View>
         </View>

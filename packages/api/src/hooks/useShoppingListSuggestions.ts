@@ -1,5 +1,5 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useDebouncedValue } from "@tanstack/react-pacer";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import type { RouterOutputs } from "..";
 
@@ -32,8 +32,7 @@ export function useShoppingListSuggestions<
     placeholderData: keepPreviousData,
   });
 
-  const suggestionItems =
-    suggestions?.success === true ? suggestions.data : [];
+  const suggestionItems = suggestions?.success === true ? suggestions.data : [];
   const showSuggestions = name.length > 0 && suggestionItems.length > 0;
 
   return { suggestionItems, showSuggestions };
