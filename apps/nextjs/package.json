@@ -25,6 +25,7 @@
     "@flatsby/ui": "workspace:*",
     "@flatsby/validators": "workspace:*",
     "@t3-oss/env-nextjs": "catalog:",
+    "@tanstack/react-pacer": "^0.21.1",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",

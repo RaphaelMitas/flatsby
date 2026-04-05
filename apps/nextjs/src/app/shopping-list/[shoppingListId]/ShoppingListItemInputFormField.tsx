@@ -1,14 +1,9 @@
-import type { CategoryId } from "@flatsby/validators/categories";
 import type { ControllerRenderProps } from "react-hook-form";
 import { forwardRef } from "react";
-import { useMutation } from "@tanstack/react-query";
 
-import { Button } from "@flatsby/ui/button";
 import { FormControl, FormItem, FormMessage } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
 import { shoppingListItemNameSchema } from "@flatsby/validators/shopping-list";
-
-import { useTRPC } from "~/trpc/react";
 
 type NameFieldProps = Pick<
   ControllerRenderProps<{ name: string }, "name">,
@@ -17,29 +12,12 @@ type NameFieldProps = Pick<
 
 interface ShoppingListItemInputFormFieldProps {
   field: NameFieldProps;
-  onCategoryDetected: (categoryId: CategoryId) => void;
 }
 
 export const ShoppingListItemInputFormField = forwardRef<
   HTMLInputElement,
   ShoppingListItemInputFormFieldProps
->(({ field, onCategoryDetected }, ref) => {
-  const trpc = useTRPC();
-  const categorizeItem = useMutation(
-    trpc.shoppingList.categorizeItem.mutationOptions({
-      onSuccess: (data) => {
-        if (data.success) {
-          onCategoryDetected(data.data);
-        } else {
-          onCategoryDetected("other");
-        }
-      },
-      onError: () => {
-        onCategoryDetected("other");
-      },
-    }),
-  );
-
+>(({ field }, ref) => {
   return (
     <FormItem className="relative flex-1">
       <FormControl>
@@ -50,17 +28,6 @@ export const ShoppingListItemInputFormField = forwardRef<
           ref={ref}
         />
       </FormControl>
-      {field.value && (
-        <Button
-          type="button"
-          variant="ghost"
-          className="text-info hover:text-info absolute top-0 right-0 h-10 text-xs hover:bg-[unset] md:hover:underline"
-          disabled={categorizeItem.isPending}
-          onClick={() => categorizeItem.mutateAsync({ itemName: field.value })}
-        >
-          {categorizeItem.isPending ? "detecting..." : "detect category"}
-        </Button>
-      )}
       <FormMessage />
     </FormItem>
   );

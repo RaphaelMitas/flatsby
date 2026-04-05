@@ -4,7 +4,7 @@ import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, count, eq } from "@flatsby/db";
+import { and, count, desc, eq, ilike, sql } from "@flatsby/db";
 import {
   groupMembers,
   groups,
@@ -23,6 +23,8 @@ import {
   deleteShoppingListItemSchema,
   deleteShoppingListSchema,
   shoppingListItemSchema,
+  suggestItemsOutputSchema,
+  suggestItemsSchema,
   updateShoppingListItemSchema,
   updateShoppingListSchema,
 } from "@flatsby/validators/shopping-list";
@@ -902,26 +904,51 @@ export const shoppingList = createTRPCRouter({
       );
     }),
 
-  categorizeItem: protectedProcedure
-    .input(
-      z.object({
-        itemName: z.string(),
-      }),
-    )
-    .output(getApiResultZod(categoryIdSchema))
-    .mutation(async ({ input, ctx }) => {
+  suggestItems: protectedProcedure
+    .input(suggestItemsSchema)
+    .output(getApiResultZod(z.array(suggestItemsOutputSchema)))
+    .query(async ({ ctx, input }) => {
+      const escaped = input.query.replace(/%/g, "\\%").replace(/_/g, "\\_");
+
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Validate input name
-          ValidationUtils.notEmpty(input.itemName, "Item name"),
-          (validItemName) =>
-            // Categorize item using AI with fallback
-            AIUtils.categorizeItemSafely(
-              validItemName,
-              createItemCategorizer({
-                customerId: ctx.session.user.id,
-                distinctId: ctx.session.user.id,
-              }),
+          GroupUtils.requireMemberAccess(
+            ctx.db,
+            input.groupId,
+            ctx.session.user.id,
+          ),
+          () =>
+            Effect.map(
+              safeDbOperation(
+                () =>
+                  ctx.db
+                    .select({
+                      name: sql<string>`min(${shoppingListItems.name})`,
+                      frequency: count(shoppingListItems.id),
+                      categoryId: sql<CategoryId>`mode() WITHIN GROUP (ORDER BY ${shoppingListItems.categoryId})`,
+                    })
+                    .from(shoppingListItems)
+                    .innerJoin(
+                      shoppingLists,
+                      eq(shoppingListItems.shoppingListId, shoppingLists.id),
+                    )
+                    .where(
+                      and(
+                        eq(shoppingLists.groupId, input.groupId),
+                        ilike(shoppingListItems.name, `%${escaped}%`),
+                      ),
+                    )
+                    .groupBy(sql`lower(${shoppingListItems.name})`)
+                    .orderBy(desc(count(shoppingListItems.id)))
+                    .limit(8),
+                "suggest items",
+              ),
+              (results) =>
+                results.map((row) => ({
+                  name: row.name,
+                  frequency: row.frequency,
+                  categoryId: row.categoryId,
+                })),
             ),
         ),
       );

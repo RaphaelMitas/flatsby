@@ -33,6 +33,7 @@
     "./custom/icons/PasskeyIcon": "./src/custom/icons/PasskeyIcon.tsx",
     "./spring/petal-effect": "./src/spring/petal-effect.tsx",
     "./ai-elements": "./src/components/ai-elements/index.ts",
+    "./ai-elements/suggestion": "./src/components/ai-elements/suggestion.tsx",
     "./autumn/pricing-table": "./src/components/autumn/pricing-table.tsx",
     "./progress": "./src/progress.tsx",
     "./sidebar": "./src/sidebar.tsx",

@@ -375,18 +375,16 @@ const ShoppingListItem = ({
                   >
                     {item.name}
                   </div>
-                  {categoryData && (
-                    <div
-                      className={cn(
-                        "line-clamp-2 flex items-center gap-2 text-xs",
-                        categoryData.colorClasses.base,
-                        categoryData.colorClasses.hover,
-                      )}
-                    >
-                      <categoryData.icon size={20} />
-                      <span>{categoryData.name}</span>
-                    </div>
-                  )}
+                  <div
+                    className={cn(
+                      "line-clamp-2 flex items-center gap-2 text-xs",
+                      categoryData.colorClasses.base,
+                      categoryData.colorClasses.hover,
+                    )}
+                  >
+                    <categoryData.icon size={20} />
+                    <span>{categoryData.name}</span>
+                  </div>
                 </PopoverTrigger>
                 <PopoverContent
                   side="top"
@@ -405,18 +403,16 @@ const ShoppingListItem = ({
                         </div>
                       </div>
 
-                      {categoryData && (
-                        <div
-                          className={cn(
-                            "flex flex-col items-center justify-center gap-2 text-xs text-nowrap",
-                            categoryData.colorClasses.base,
-                            categoryData.colorClasses.hover,
-                          )}
-                        >
-                          <categoryData.icon size={20} />
-                          <span>{categoryData.name}</span>
-                        </div>
-                      )}
+                      <div
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-2 text-xs text-nowrap",
+                          categoryData.colorClasses.base,
+                          categoryData.colorClasses.hover,
+                        )}
+                      >
+                        <categoryData.icon size={20} />
+                        <span>{categoryData.name}</span>
+                      </div>
                     </div>
                   </PopoverClose>
                 </PopoverContent>

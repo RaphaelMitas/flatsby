@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
+    },
+    "./hooks/useShoppingListSuggestions": {
+      "types": "./dist/hooks/useShoppingListSuggestions.d.ts",
+      "default": "./src/hooks/useShoppingListSuggestions.ts"
     }
   },
   "license": "MIT",
@@ -39,6 +43,8 @@
     "typescript": "catalog:"
   },
   "peerDependencies": {
+    "@tanstack/react-pacer": "*",
+    "@tanstack/react-query": "catalog:",
     "react": "catalog:react19"
   },
   "prettier": "@flatsby/prettier-config"

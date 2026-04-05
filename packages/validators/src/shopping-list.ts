@@ -1,6 +1,9 @@
 import { z } from "zod/v4";
 
-import { categorysIdWithAiAutoSelectSchema } from "./categories";
+import {
+  categoryIdSchema,
+  categorysIdWithAiAutoSelectSchema,
+} from "./categories";
 
 // Note: We use z.number() directly instead of groupSchema.shape.id to avoid
 // circular dependency with group.ts (which imports from this file)
@@ -151,3 +154,14 @@ export const editShoppingListItemFormSchema = shoppingListItemSchema.pick({
 export type EditShoppingListItemFormValues = z.infer<
   typeof editShoppingListItemFormSchema
 >;
+
+export const suggestItemsSchema = z.object({
+  groupId: z.number(),
+  query: z.string().min(1).max(64),
+});
+
+export const suggestItemsOutputSchema = z.object({
+  name: shoppingListItemNameSchema,
+  frequency: z.number(),
+  categoryId: categoryIdSchema,
+});

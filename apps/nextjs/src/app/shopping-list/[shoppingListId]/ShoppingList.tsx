@@ -335,7 +335,7 @@ const ShoppingListInner = ({
           </div>
         </div>
 
-        <ShoppingListItemAddForm onSubmit={handleSubmit} />
+        <ShoppingListItemAddForm onSubmit={handleSubmit} groupId={groupId} />
       </div>
     </div>
   );
