@@ -1,12 +1,13 @@
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { useShoppingListSuggestions } from "@flatsby/api/hooks/useShoppingListSuggestions";
 import { isCategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import { createShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
 
+import { Badge } from "~/lib/ui/badge";
 import { Button } from "~/lib/ui/button";
 import { Input } from "~/lib/ui/input";
 import { trpc } from "~/utils/api";
@@ -64,27 +65,26 @@ export const ShoppingListItemAddForm = ({
   };
 
   return (
-    <View className="bg-background">
+    <View className="bg-background gap-4 p-4">
       {showSuggestions && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          className="px-4 pb-2"
           contentContainerClassName="gap-2"
           keyboardShouldPersistTaps="always"
         >
           {suggestionItems.map((item) => (
-            <Pressable
+            <Badge
               key={item.name}
+              variant="outline"
+              label={item.name}
+              size="lg"
               onPress={() => handleSuggestionPress(item)}
-              className="border-input bg-background rounded-full border px-3 py-1.5"
-            >
-              <Text className="text-foreground text-sm">{item.name}</Text>
-            </Pressable>
+            />
           ))}
         </ScrollView>
       )}
-      <View className="flex-row items-center gap-3 p-4">
+      <View className="flex-row items-center gap-3">
         <Input
           className="flex-1"
           placeholder="Add new item..."
