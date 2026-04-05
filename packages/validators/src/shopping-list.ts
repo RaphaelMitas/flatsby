@@ -151,3 +151,8 @@ export const editShoppingListItemFormSchema = shoppingListItemSchema.pick({
 export type EditShoppingListItemFormValues = z.infer<
   typeof editShoppingListItemFormSchema
 >;
+
+export const suggestItemsSchema = z.object({
+  groupId: z.number(),
+  query: z.string().min(1).max(64),
+});

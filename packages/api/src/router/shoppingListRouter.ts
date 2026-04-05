@@ -4,7 +4,7 @@ import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, count, eq } from "@flatsby/db";
+import { and, count, desc, eq, ilike, sql } from "@flatsby/db";
 import {
   groupMembers,
   groups,
@@ -23,6 +23,7 @@ import {
   deleteShoppingListItemSchema,
   deleteShoppingListSchema,
   shoppingListItemSchema,
+  suggestItemsSchema,
   updateShoppingListItemSchema,
   updateShoppingListSchema,
 } from "@flatsby/validators/shopping-list";
@@ -922,6 +923,57 @@ export const shoppingList = createTRPCRouter({
                 customerId: ctx.session.user.id,
                 distinctId: ctx.session.user.id,
               }),
+            ),
+        ),
+      );
+    }),
+
+  suggestItems: protectedProcedure
+    .input(suggestItemsSchema)
+    .query(async ({ ctx, input }) => {
+      const escaped = input.query
+        .replace(/%/g, "\\%")
+        .replace(/_/g, "\\_");
+
+      return withErrorHandlingAsResult(
+        Effect.flatMap(
+          GroupUtils.requireMemberAccess(
+            ctx.db,
+            input.groupId,
+            ctx.session.user.id,
+          ),
+          () =>
+            Effect.map(
+              safeDbOperation(
+                () =>
+                  ctx.db
+                    .select({
+                      name: sql<string>`min(${shoppingListItems.name})`,
+                      frequency: count(shoppingListItems.id),
+                      categoryId: sql<string>`mode() WITHIN GROUP (ORDER BY ${shoppingListItems.categoryId})`,
+                    })
+                    .from(shoppingListItems)
+                    .innerJoin(
+                      shoppingLists,
+                      eq(shoppingListItems.shoppingListId, shoppingLists.id),
+                    )
+                    .where(
+                      and(
+                        eq(shoppingLists.groupId, input.groupId),
+                        ilike(shoppingListItems.name, `%${escaped}%`),
+                      ),
+                    )
+                    .groupBy(sql`lower(${shoppingListItems.name})`)
+                    .orderBy(desc(count(shoppingListItems.id)))
+                    .limit(8),
+                "suggest items",
+              ),
+              (results) =>
+                results.map((row) => ({
+                  name: row.name,
+                  frequency: row.frequency,
+                  categoryId: row.categoryId,
+                })),
             ),
         ),
       );
