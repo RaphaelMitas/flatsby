@@ -49,19 +49,15 @@ export function ExpenseCategorySelector({
           )}
         >
           <span className="flex items-center">
-            {selectedData && (
-              <selectedData.icon
-                className={cn(
-                  "h-5 w-5",
-                  selectedData.colorClasses.base,
-                  !iconButton && "mr-2",
-                )}
-              />
-            )}
+            <selectedData.icon
+              className={cn(
+                "h-5 w-5",
+                selectedData.colorClasses.base,
+                !iconButton && "mr-2",
+              )}
+            />
             {!iconButton && (
-              <span className="text-foreground">
-                {selectedData?.name ?? "Select Category"}
-              </span>
+              <span className="text-foreground">{selectedData.name}</span>
             )}
           </span>
           {!iconButton && (
@@ -83,7 +79,7 @@ export function ExpenseCategorySelector({
                 }
                 className={cn(
                   "flex w-full items-center justify-start gap-4 px-4 py-3",
-                  selectedData?.id === item.id && "bg-muted",
+                  selectedData.id === item.id && "bg-muted",
                 )}
               >
                 <div

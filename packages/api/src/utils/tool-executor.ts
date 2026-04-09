@@ -576,7 +576,7 @@ async function handleExpenseCreate(
     entity: "expense",
     result: {
       id: expense.id,
-      description: data.description ?? null,
+      description: data.description,
       amountInCents: data.amountInCents,
       currency: parseCurrency(data.currency),
       paidByMemberName:

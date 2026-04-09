@@ -2,7 +2,13 @@
 
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
-import { ArrowRight, Calendar, ChevronRight, Handshake, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Calendar,
+  ChevronRight,
+  Handshake,
+  Users,
+} from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";

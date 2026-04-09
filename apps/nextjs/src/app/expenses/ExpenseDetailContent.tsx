@@ -3,10 +3,9 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import { Calendar, Edit, Handshake, Trash2, Users } from "lucide-react";
 
+import { cn } from "@flatsby/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Badge } from "@flatsby/ui/badge";
-import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
-import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -15,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
+import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
 import { Separator } from "@flatsby/ui/separator";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 

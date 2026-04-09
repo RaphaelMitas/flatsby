@@ -143,7 +143,9 @@ export function ExpenseDetailView({
   }
 
   const expense = expenseData.data;
-  const categoryData = getExpenseCategoryData({ subcategoryId: expense.subcategory });
+  const categoryData = getExpenseCategoryData({
+    subcategoryId: expense.subcategory,
+  });
 
   const formattedAmount = formatCurrencyFromCents({
     cents: expense.amountInCents,
@@ -203,7 +205,11 @@ export function ExpenseDetailView({
                 </View>
                 {expense.splitMethod === "settlement" && (
                   <Badge variant="secondary">
-                    <Icon name="handshake" size={12} color="secondary-foreground" />
+                    <Icon
+                      name="handshake"
+                      size={12}
+                      color="secondary-foreground"
+                    />
                     <Text className="text-secondary-foreground text-xs font-medium">
                       Settlement
                     </Text>
@@ -281,9 +287,7 @@ export function ExpenseDetailView({
                   className={`self-start ${categoryData.bgColor} ${categoryData.borderColor}`}
                 >
                   {categoryData.icon}
-                  <Text
-                    className={`text-sm font-medium ${categoryData.color}`}
-                  >
+                  <Text className={`text-sm font-medium ${categoryData.color}`}>
                     {categoryData.name}
                   </Text>
                 </Badge>

@@ -280,7 +280,9 @@ export function useExpenseForm({
               ...old.data,
               ...input,
               category: coerceCategory(input.category ?? old.data.category),
-              subcategory: coerceSubcategory(input.subcategory ?? old.data.subcategory),
+              subcategory: coerceSubcategory(
+                input.subcategory ?? old.data.subcategory,
+              ),
               expenseSplits: input.splits
                 ? input.splits.map((split, index) => {
                     const member = group.groupMembers.find(

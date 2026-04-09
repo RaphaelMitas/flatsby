@@ -148,7 +148,6 @@ const groupBorderClassMap: Record<string, string> = {
   zinc: "border-zinc-300 dark:border-zinc-700",
 };
 
-
 function getColorKey(groupId: string): string {
   if (groupId === "auto") return "primary";
   return isExpenseCategoryGroup(groupId)

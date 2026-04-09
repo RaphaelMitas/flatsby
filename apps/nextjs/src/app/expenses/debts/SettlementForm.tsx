@@ -126,7 +126,9 @@ export function SettlementForm({
         queryClient.setQueryData(expenseListQueryKey, (old) => {
           if (!old) return old;
 
-          const optimisticSettlement: ExpenseWithSplitsAndMembers & { isPending: true } = {
+          const optimisticSettlement: ExpenseWithSplitsAndMembers & {
+            isPending: true;
+          } = {
             id: Date.now(),
             groupId,
             paidByGroupMemberId: input.paidByGroupMemberId,

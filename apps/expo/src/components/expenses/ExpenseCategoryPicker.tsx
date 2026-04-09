@@ -30,7 +30,6 @@ export function ExpenseCategoryPicker({
     const items: BottomSheetPickerItem[] = [];
     for (const subcategoryId of expenseSubcategoryIdsWithAuto) {
       const data = getExpenseCategoryData({ subcategoryId });
-      if (!data) continue;
       items.push({
         id: subcategoryId,
         title: data.name,

@@ -215,36 +215,34 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   render={() => {
                     const sub = form.getValues("subcategory");
                     const pickerValue =
-                      sub && isExpenseSubcategoryId(sub)
-                        ? sub
-                        : AI_AUTO_DETECT;
+                      sub && isExpenseSubcategoryId(sub) ? sub : AI_AUTO_DETECT;
 
                     return (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormControl>
-                        <div className="flex items-center gap-2">
-                          <ExpenseCategorySelector
-                            value={pickerValue}
-                            onChange={(subcategoryId) => {
-                              if (subcategoryId === AI_AUTO_DETECT) {
-                                form.setValue("category", "");
-                                form.setValue("subcategory", "");
-                              } else {
-                                const group =
-                                  getSubcategoryGroup(subcategoryId);
-                                form.setValue("category", group ?? "");
-                                form.setValue("subcategory", subcategoryId);
-                              }
-                            }}
-                            disabled={isCategorizing}
-                          />
-                          {isCategorizing && (
-                            <LoaderCircle className="text-muted-foreground h-4 w-4 animate-spin" />
-                          )}
-                        </div>
-                      </FormControl>
-                    </FormItem>
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center gap-2">
+                            <ExpenseCategorySelector
+                              value={pickerValue}
+                              onChange={(subcategoryId) => {
+                                if (subcategoryId === AI_AUTO_DETECT) {
+                                  form.setValue("category", "");
+                                  form.setValue("subcategory", "");
+                                } else {
+                                  const group =
+                                    getSubcategoryGroup(subcategoryId);
+                                  form.setValue("category", group ?? "");
+                                  form.setValue("subcategory", subcategoryId);
+                                }
+                              }}
+                              disabled={isCategorizing}
+                            />
+                            {isCategorizing && (
+                              <LoaderCircle className="text-muted-foreground h-4 w-4 animate-spin" />
+                            )}
+                          </div>
+                        </FormControl>
+                      </FormItem>
                     );
                   }}
                 />

@@ -28,10 +28,6 @@ export function ExpenseCategoryBadge({
     colorVariant,
   });
 
-  if (!categoryData) {
-    return null;
-  }
-
   return (
     <Badge icon={categoryData.icon} variant={variant} {...props}>
       {showLabel && (

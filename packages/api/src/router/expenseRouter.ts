@@ -437,7 +437,11 @@ export const expenseRouter = createTRPCRouter({
                             },
                             with: {
                               user: {
-                                columns: { email: true, name: true, image: true },
+                                columns: {
+                                  email: true,
+                                  name: true,
+                                  image: true,
+                                },
                               },
                             },
                           },
@@ -451,7 +455,11 @@ export const expenseRouter = createTRPCRouter({
                             },
                             with: {
                               user: {
-                                columns: { email: true, name: true, image: true },
+                                columns: {
+                                  email: true,
+                                  name: true,
+                                  image: true,
+                                },
                               },
                             },
                           },
@@ -485,8 +493,14 @@ export const expenseRouter = createTRPCRouter({
                     const userId = ctx.session.user.id;
                     return {
                       ...exp,
-                      category: coerceCategory(exp.category, { expenseId: exp.id, userId }),
-                      subcategory: coerceSubcategory(exp.subcategory, { expenseId: exp.id, userId }),
+                      category: coerceCategory(exp.category, {
+                        expenseId: exp.id,
+                        userId,
+                      }),
+                      subcategory: coerceSubcategory(exp.subcategory, {
+                        expenseId: exp.id,
+                        userId,
+                      }),
                     };
                   },
                 ),
@@ -499,9 +513,7 @@ export const expenseRouter = createTRPCRouter({
     .input(
       z.object({
         groupId: z.number(),
-        cursor: z
-          .object({ date: z.date(), id: z.number() })
-          .optional(),
+        cursor: z.object({ date: z.date(), id: z.number() }).optional(),
         limit: z.number().int().min(1).max(100).default(50),
       }),
     )
@@ -531,9 +543,7 @@ export const expenseRouter = createTRPCRouter({
                     )
                   : eq(expenses.groupId, input.groupId),
                 limit: input.limit + 1,
-                orderBy: (expenses, { desc }) => [
-                  desc(expenses.expenseDate),
-                ],
+                orderBy: (expenses, { desc }) => [desc(expenses.expenseDate)],
                 with: {
                   paidByGroupMember: {
                     columns: {
@@ -602,8 +612,14 @@ export const expenseRouter = createTRPCRouter({
               return {
                 items: items.map((item) => ({
                   ...item,
-                  category: coerceCategory(item.category, { expenseId: item.id, userId }),
-                  subcategory: coerceSubcategory(item.subcategory, { expenseId: item.id, userId }),
+                  category: coerceCategory(item.category, {
+                    expenseId: item.id,
+                    userId,
+                  }),
+                  subcategory: coerceSubcategory(item.subcategory, {
+                    expenseId: item.id,
+                    userId,
+                  }),
                 })),
                 nextCursor,
               };
@@ -931,8 +947,7 @@ const createExpenseCategorizer = (ctx: ExpenseCategorizeContext) => {
 
       try {
         const metadata = response.providerMetadata;
-        const cost = (metadata?.gateway as { cost?: string } | undefined)
-          ?.cost;
+        const cost = (metadata?.gateway as { cost?: string } | undefined)?.cost;
         await trackAIUsage({
           customerId: ctx.customerId,
           cost: cost,

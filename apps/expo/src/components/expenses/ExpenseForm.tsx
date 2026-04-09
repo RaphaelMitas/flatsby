@@ -3,10 +3,6 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
-import {
-  coerceCategory,
-  coerceSubcategory,
-} from "@flatsby/validators/expenses/categories";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useCallback, useMemo, useState } from "react";
@@ -18,6 +14,8 @@ import { useWatch } from "react-hook-form";
 
 import {
   AI_AUTO_DETECT,
+  coerceCategory,
+  coerceSubcategory,
   getSubcategoryGroup,
 } from "@flatsby/validators/expenses/categories";
 import {
@@ -387,7 +385,9 @@ export function ExpenseForm({
               ...old.data,
               ...input,
               category: coerceCategory(input.category ?? old.data.category),
-              subcategory: coerceSubcategory(input.subcategory ?? old.data.subcategory),
+              subcategory: coerceSubcategory(
+                input.subcategory ?? old.data.subcategory,
+              ),
               expenseSplits: input.splits
                 ? input.splits.map((split, index) => {
                     const member = group.groupMembers.find(
