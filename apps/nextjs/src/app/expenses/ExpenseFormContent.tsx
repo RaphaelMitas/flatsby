@@ -231,10 +231,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                                 } else {
                                   const group =
                                     getSubcategoryGroup(subcategoryId);
-                                  form.setValue(
-                                    "category",
-                                    group ?? "other",
-                                  );
+                                  form.setValue("category", group ?? "other");
                                   form.setValue("subcategory", subcategoryId);
                                 }
                               }}
