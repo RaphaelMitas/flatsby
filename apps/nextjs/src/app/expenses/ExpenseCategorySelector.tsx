@@ -44,7 +44,7 @@ export function ExpenseCategorySelector({
           role="combobox"
           disabled={disabled}
           className={cn(
-            "flex items-center justify-between",
+            "flex w-full items-center justify-between",
             iconButton && "h-10 w-10 justify-center p-0",
           )}
         >
