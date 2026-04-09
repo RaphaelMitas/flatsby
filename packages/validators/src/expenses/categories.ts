@@ -46,7 +46,7 @@ export const expenseCategoryGroupColorKeys: Record<
   ExpenseCategoryGroup,
   string
 > = {
-  "food-drinks": "orange",
+  "food-drinks": "green",
   transport: "blue",
   shopping: "cyan",
   entertainment: "pink",
@@ -54,7 +54,7 @@ export const expenseCategoryGroupColorKeys: Record<
   utilities: "gray",
   health: "red",
   travel: "blue",
-  subscriptions: "green",
+  subscriptions: "orange",
   education: "yellow",
   gifts: "pink",
   other: "zinc",

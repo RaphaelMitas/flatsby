@@ -6,7 +6,7 @@ import { tv } from "tailwind-variants";
 
 const badgeVariants = tv({
   slots: {
-    base: "flex-row items-center gap-1.5 rounded-full px-2.5 py-0.5",
+    base: "flex-row items-center gap-1.5 rounded-full border border-transparent px-2.5 py-0.5",
     text: "text-xs font-medium",
     countBase: "rounded-full px-2 py-0.5",
     countText: "text-xs font-medium",
@@ -20,7 +20,7 @@ const badgeVariants = tv({
         countText: "text-primary-foreground",
       },
       secondary: {
-        base: "bg-secondary",
+        base: "bg-secondary border-secondary-foreground/20",
         text: "text-secondary-foreground",
         countBase: "bg-muted",
         countText: "text-muted-foreground",

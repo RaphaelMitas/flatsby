@@ -278,7 +278,7 @@ export function ExpenseDetailView({
                   Category
                 </Text>
                 <Badge
-                  className={`self-start border ${categoryData.bgColor} ${categoryData.borderColor}`}
+                  className={`self-start ${categoryData.bgColor} ${categoryData.borderColor}`}
                 >
                   {categoryData.icon}
                   <Text

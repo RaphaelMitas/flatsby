@@ -83,7 +83,7 @@ export function ExpenseDetailContent({
             </div>
             {expense.splitMethod === "settlement" && (
               <Badge variant="secondary" className="gap-1.5 rounded-full">
-                <Handshake size={12} />
+                <Handshake size={14} />
                 Settlement
               </Badge>
             )}
@@ -157,7 +157,7 @@ export function ExpenseDetailContent({
                 categoryData.colorClasses.border,
               )}
             >
-              <categoryData.icon size={12} />
+              <categoryData.icon size={14} />
               {categoryData.name}
             </Badge>
           </div>

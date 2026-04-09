@@ -61,7 +61,7 @@ export function ExpenseCard({
                 <span className="text-2xl font-bold">{formattedAmount}</span>
                 {expense.splitMethod === "settlement" ? (
                   <Badge variant="secondary" className="gap-1.5 rounded-full">
-                    <Handshake size={12} />
+                    <Handshake size={14} />
                     Settlement
                   </Badge>
                 ) : (
@@ -73,13 +73,13 @@ export function ExpenseCard({
                       categoryData.colorClasses.border,
                     )}
                   >
-                    <categoryData.icon size={12} />
+                    <categoryData.icon size={14} />
                     {categoryData.name}
                   </Badge>
                 )}
               </div>
               {expense.description && (
-                <p className="mt-1 line-clamp-2 text-sm font-medium">
+                <p className="mt-1 line-clamp-2 text-lg font-medium">
                   {expense.description}
                 </p>
               )}
@@ -120,17 +120,17 @@ export function ExpenseCard({
               </span>
             </div>
 
-            {expense.splitMethod !== "settlement" && (
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>
-                  Split between {splitCount}{" "}
-                  {splitCount === 1 ? "person" : "people"}
-                </span>
-              </div>
-            )}
-
             <div className="flex items-center gap-2">
+              {expense.splitMethod !== "settlement" && (
+                <>
+                  <Users className="h-4 w-4" />
+                  <span>
+                    Split between {splitCount}{" "}
+                    {splitCount === 1 ? "person" : "people"}
+                  </span>
+                  <span>·</span>
+                </>
+              )}
               <Calendar className="h-4 w-4" />
               <span>{formattedDate}</span>
             </div>

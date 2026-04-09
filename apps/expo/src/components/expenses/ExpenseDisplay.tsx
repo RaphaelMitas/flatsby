@@ -70,7 +70,7 @@ export function ExpenseDisplay({
             </Badge>
           ) : (
             <Badge
-              className={`border ${categoryData.bgColor} ${categoryData.borderColor}`}
+              className={`${categoryData.bgColor} ${categoryData.borderColor}`}
             >
               {categoryData.icon}
               <Text className={`text-xs font-medium ${categoryData.color}`}>
@@ -82,7 +82,7 @@ export function ExpenseDisplay({
 
         {description && (
           <Text
-            className="text-foreground text-sm font-medium"
+            className="text-foreground text-lg font-medium"
             numberOfLines={2}
           >
             {description}
@@ -116,17 +116,17 @@ export function ExpenseDisplay({
             </Text>
           </View>
 
-          {!isSettlement && splitCount != null && (
-            <View className="flex-row items-center gap-2">
-              <Icon name="users" size={16} color="muted-foreground" />
-              <Text className="text-muted-foreground text-sm">
-                Split between {splitCount}{" "}
-                {splitCount === 1 ? "person" : "people"}
-              </Text>
-            </View>
-          )}
-
           <View className="flex-row items-center gap-2">
+            {!isSettlement && splitCount != null && (
+              <>
+                <Icon name="users" size={16} color="muted-foreground" />
+                <Text className="text-muted-foreground text-sm">
+                  Split between {splitCount}{" "}
+                  {splitCount === 1 ? "person" : "people"}
+                </Text>
+                <Text className="text-muted-foreground text-sm">·</Text>
+              </>
+            )}
             <Icon name="calendar" size={16} color="muted-foreground" />
             <Text className="text-muted-foreground text-sm">
               {formattedDate}

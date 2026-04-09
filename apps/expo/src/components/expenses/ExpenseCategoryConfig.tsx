@@ -22,7 +22,7 @@ import {
 } from "~/components/shoppingList/ShoppingListCategory";
 import Icon from "~/lib/ui/custom/icons/Icon";
 
-const iconSize = 20;
+const iconSize = 14;
 
 function isCategoryColorKey(value: string): value is CategoryColorKey {
   return value in CATEGORY_COLORS;

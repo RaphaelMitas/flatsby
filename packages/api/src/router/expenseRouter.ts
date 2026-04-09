@@ -8,11 +8,11 @@ import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, eq, inArray } from "@flatsby/db";
+import { and, eq, inArray, lt, or } from "@flatsby/db";
 import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
 import {
-  expenseCategoryGroupSchema,
   expenseSubcategoryIdSchema,
+  getSubcategoryGroup,
   isExpenseCategoryGroup,
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
@@ -499,7 +499,9 @@ export const expenseRouter = createTRPCRouter({
     .input(
       z.object({
         groupId: z.number(),
-        cursor: z.number().optional(),
+        cursor: z
+          .object({ date: z.date(), id: z.number() })
+          .optional(),
         limit: z.number().int().min(1).max(100).default(50),
       }),
     )
@@ -516,11 +518,21 @@ export const expenseRouter = createTRPCRouter({
             // Get expenses with pagination
             safeDbOperation(async () => {
               const expensesList = await ctx.db.query.expenses.findMany({
-                where: eq(expenses.groupId, input.groupId),
+                where: input.cursor
+                  ? and(
+                      eq(expenses.groupId, input.groupId),
+                      or(
+                        lt(expenses.expenseDate, input.cursor.date),
+                        and(
+                          eq(expenses.expenseDate, input.cursor.date),
+                          lt(expenses.id, input.cursor.id),
+                        ),
+                      ),
+                    )
+                  : eq(expenses.groupId, input.groupId),
                 limit: input.limit + 1,
                 orderBy: (expenses, { desc }) => [
                   desc(expenses.expenseDate),
-                  desc(expenses.createdAt),
                 ],
                 with: {
                   paidByGroupMember: {
@@ -580,9 +592,11 @@ export const expenseRouter = createTRPCRouter({
               const items = hasMore
                 ? expensesList.slice(0, input.limit)
                 : expensesList;
-              const nextCursor = hasMore
-                ? items[items.length - 1]?.id
-                : undefined;
+              const lastItem = items[items.length - 1];
+              const nextCursor =
+                hasMore && lastItem
+                  ? { date: lastItem.expenseDate, id: lastItem.id }
+                  : undefined;
 
               const userId = ctx.session.user.id;
               return {
@@ -907,22 +921,43 @@ const createExpenseCategorizer = (ctx: ExpenseCategorizeContext) => {
       const response = await generateObject({
         model,
         schema: z.object({
-          group: expenseCategoryGroupSchema,
           subcategory: expenseSubcategoryIdSchema,
         }),
-        prompt: `Classify this expense description into a category group and subcategory: ${description}`,
+        prompt: `Classify this expense description into a subcategory: ${description}`,
       });
 
-      const metadata = response.providerMetadata;
-      const cost = (metadata?.gateway as { cost?: string } | undefined)?.cost;
-      await trackAIUsage({
-        customerId: ctx.customerId,
-        cost: cost,
-      });
+      const subcategory = response.object.subcategory;
+      const group = getSubcategoryGroup(subcategory) ?? "other";
 
-      return response.object;
+      try {
+        const metadata = response.providerMetadata;
+        const cost = (metadata?.gateway as { cost?: string } | undefined)
+          ?.cost;
+        await trackAIUsage({
+          customerId: ctx.customerId,
+          cost: cost,
+        });
+      } catch (trackingError) {
+        captureError({
+          error:
+            trackingError instanceof Error
+              ? trackingError
+              : new Error("Failed to track AI usage"),
+          operation: "track-categorize-expense-usage",
+          distinctId: ctx.distinctId,
+        });
+      }
+
+      return { group, subcategory };
     } catch (error) {
-      console.error("Error categorizing expense:", error);
+      captureError({
+        error:
+          error instanceof Error
+            ? error
+            : new Error("AI categorization failed"),
+        operation: "categorize-expense",
+        distinctId: ctx.distinctId,
+      });
     }
     return { group: "other", subcategory: "other" };
   };
