@@ -1,5 +1,7 @@
 import { z } from "zod/v4";
 
+import type { CategoryColorKey } from "./category-colors";
+
 // ============================================================================
 // Category Groups (determines color)
 // ============================================================================
@@ -44,7 +46,7 @@ export const expenseCategoryGroupLabels: Record<ExpenseCategoryGroup, string> =
  */
 export const expenseCategoryGroupColorKeys: Record<
   ExpenseCategoryGroup,
-  string
+  CategoryColorKey
 > = {
   "food-drinks": "green",
   transport: "blue",

@@ -1,15 +1,13 @@
 import { Text } from "react-native";
 
 import type { BadgeProps } from "./badge";
-import type { CategoryColorVariant } from "~/components/expenses/ExpenseCategoryConfig";
+import type { CategoryColorVariant } from "@flatsby/validators/expenses/category-colors";
 import { getExpenseCategoryData } from "~/components/expenses/ExpenseCategoryConfig";
 import { cn } from "~/lib/utils";
 import { Badge } from "./badge";
 
-export interface ExpenseCategoryBadgeProps extends Omit<
-  BadgeProps,
-  "icon" | "label"
-> {
+export interface ExpenseCategoryBadgeProps
+  extends Omit<BadgeProps, "icon" | "label"> {
   subcategoryId: string;
   showLabel?: boolean;
 }
@@ -18,7 +16,8 @@ export function ExpenseCategoryBadge({
   subcategoryId,
   showLabel = true,
   children,
-  variant = "ghost",
+  variant,
+  className,
   ...props
 }: ExpenseCategoryBadgeProps) {
   const colorVariant: CategoryColorVariant =
@@ -29,9 +28,16 @@ export function ExpenseCategoryBadge({
   });
 
   return (
-    <Badge icon={categoryData.icon} variant={variant} {...props}>
+    <Badge
+      icon={categoryData.icon}
+      variant={variant}
+      className={cn(categoryData.bgColor, categoryData.borderColor, className)}
+      {...props}
+    >
       {showLabel && (
-        <Text className={cn("text-base", categoryData.color)}>
+        <Text
+          className={cn("text-xs font-medium", categoryData.color)}
+        >
           {categoryData.name}
         </Text>
       )}

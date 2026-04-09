@@ -4,6 +4,11 @@ import { useMemo } from "react";
 import { View } from "react-native";
 
 import { categorysIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import type {
+  CategoryColorKey,
+  CategoryColorVariant,
+} from "@flatsby/validators/expenses/category-colors";
+import { getCategoryTextColor } from "@flatsby/validators/expenses/category-colors";
 
 import type {
   BottomSheetPickerItem,
@@ -14,61 +19,6 @@ import { BottomSheetPickerTrigger } from "~/lib/ui/bottom-sheet-picker";
 import Icon from "~/lib/ui/custom/icons/Icon";
 
 const iconSize = 20 as const;
-
-export const CATEGORY_COLORS = {
-  primary: {
-    default: "text-primary",
-    inverted: "text-primary",
-  },
-  green: {
-    default: "text-green-600 dark:text-green-300",
-    inverted: "text-green-300 dark:text-green-600",
-  },
-  red: {
-    default: "text-red-600 dark:text-red-300",
-    inverted: "text-red-300 dark:text-red-600",
-  },
-  blue: {
-    default: "text-blue-600 dark:text-blue-300",
-    inverted: "text-blue-300 dark:text-blue-600",
-  },
-  orange: {
-    default: "text-orange-600 dark:text-orange-300",
-    inverted: "text-orange-300 dark:text-orange-600",
-  },
-  cyan: {
-    default: "text-cyan-600 dark:text-cyan-300",
-    inverted: "text-cyan-300 dark:text-cyan-600",
-  },
-  purple: {
-    default: "text-purple-600 dark:text-purple-300",
-    inverted: "text-purple-300 dark:text-purple-600",
-  },
-  yellow: {
-    default: "text-yellow-600 dark:text-yellow-300",
-    inverted: "text-yellow-300 dark:text-yellow-600",
-  },
-  pink: {
-    default: "text-pink-600 dark:text-pink-300",
-    inverted: "text-pink-300 dark:text-pink-600",
-  },
-  gray: {
-    default: "text-gray-600 dark:text-gray-300",
-    inverted: "text-gray-300 dark:text-gray-600",
-  },
-  zinc: {
-    default: "text-zinc-600 dark:text-zinc-300",
-    inverted: "text-zinc-300 dark:text-zinc-600",
-  },
-} as const;
-
-export type CategoryColorKey = keyof typeof CATEGORY_COLORS;
-export type CategoryColorVariant = "default" | "inverted";
-
-export const getCategoryColor = (
-  colorKey: CategoryColorKey,
-  variant: CategoryColorVariant = "default",
-) => CATEGORY_COLORS[colorKey][variant];
 
 interface CategoryConfig {
   name: string;
@@ -160,7 +110,7 @@ export const getCategoryData = ({
   colorVariant?: CategoryColorVariant;
 }) => {
   const config = CATEGORY_CONFIG[categoryId];
-  const color = getCategoryColor(config.colorKey, colorVariant);
+  const color = getCategoryTextColor(config.colorKey, colorVariant);
 
   return {
     name: config.name,

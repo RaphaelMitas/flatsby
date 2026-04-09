@@ -22,10 +22,10 @@ import {
 } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Separator } from "~/lib/ui/separator";
+import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
-import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 
 interface ExpenseDetailViewProps {
   expenseId: number;
@@ -143,9 +143,6 @@ export function ExpenseDetailView({
   }
 
   const expense = expenseData.data;
-  const categoryData = getExpenseCategoryData({
-    subcategoryId: expense.subcategory,
-  });
 
   const formattedAmount = formatCurrencyFromCents({
     cents: expense.amountInCents,
@@ -283,14 +280,10 @@ export function ExpenseDetailView({
                 <Text className="text-muted-foreground mb-1.5 text-sm">
                   Category
                 </Text>
-                <Badge
-                  className={`self-start ${categoryData.bgColor} ${categoryData.borderColor}`}
-                >
-                  {categoryData.icon}
-                  <Text className={`text-sm font-medium ${categoryData.color}`}>
-                    {categoryData.name}
-                  </Text>
-                </Badge>
+                <ExpenseCategoryBadge
+                  subcategoryId={expense.subcategory}
+                  className="self-start"
+                />
               </View>
             </CardContent>
           </Card>

@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Badge } from "~/lib/ui/badge";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { getExpenseCategoryData } from "../expenses/ExpenseCategoryConfig";
+import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 
 export interface ExpenseDisplayProps {
   amountInCents: number;
@@ -52,7 +52,6 @@ export function ExpenseDisplay({
   });
 
   const isSettlement = splitMethod === "settlement";
-  const categoryData = getExpenseCategoryData({ subcategoryId: subcategory });
 
   return (
     <Card className={isSelected ? "border-primary border-2" : undefined}>
@@ -69,14 +68,7 @@ export function ExpenseDisplay({
               </Text>
             </Badge>
           ) : (
-            <Badge
-              className={`${categoryData.bgColor} ${categoryData.borderColor}`}
-            >
-              {categoryData.icon}
-              <Text className={`text-xs font-medium ${categoryData.color}`}>
-                {categoryData.name}
-              </Text>
-            </Badge>
+            <ExpenseCategoryBadge subcategoryId={subcategory} />
           )}
         </View>
 
