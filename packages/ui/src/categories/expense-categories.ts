@@ -42,6 +42,7 @@ import {
   Zap,
 } from "lucide-react";
 
+import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
 import {
   AI_AUTO_DETECT,
   expenseCategoryGroupColorKeys,
@@ -127,7 +128,7 @@ export function getExpenseCategoryColorClasses(groupId: string) {
 }
 
 export interface ExpenseCategoryDataItem {
-  id: string;
+  id: ExpenseSubcategoryIdWithAuto;
   name: string;
   description: string;
   groupId: string;

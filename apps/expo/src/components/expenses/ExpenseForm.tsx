@@ -2,7 +2,6 @@ import type {
   ExpenseWithSplitsAndMembers,
   GroupWithAccess,
 } from "@flatsby/api";
-import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useCallback, useMemo, useState } from "react";
@@ -17,6 +16,7 @@ import {
   coerceCategory,
   coerceSubcategory,
   getSubcategoryGroup,
+  isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
 import {
   calculateEvenPercentageBasisPoints,
@@ -621,9 +621,14 @@ export function ExpenseForm({
     name: "paidByGroupMemberId",
   });
   const description = useWatch({ control: form.control, name: "description" });
+  const subcategory = useWatch({ control: form.control, name: "subcategory" });
   const splits = useWatch({ control: form.control, name: "splits" });
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
+  const categoryPickerValue =
+    subcategory && isExpenseSubcategoryId(subcategory)
+      ? subcategory
+      : AI_AUTO_DETECT;
 
   const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
     id: code,
@@ -754,11 +759,7 @@ export function ExpenseForm({
                     <View className="gap-2">
                       <Label>Category</Label>
                       <ExpenseCategoryPicker
-                        value={
-                          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty string should fallback
-                          (form.getValues("subcategory") ||
-                            AI_AUTO_DETECT) as ExpenseSubcategoryIdWithAuto
-                        }
+                        value={categoryPickerValue}
                         onChange={(subcategoryId) => {
                           if (subcategoryId === AI_AUTO_DETECT) {
                             form.setValue("category", "");

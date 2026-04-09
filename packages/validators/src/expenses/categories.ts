@@ -326,6 +326,8 @@ const subcategoryRecord: Record<string, (typeof expenseSubcategories)[number]> =
 
 const subcategoryIdSet = new Set<string>(expenseSubcategories.map((s) => s.id));
 
+const subcategoryIdWithAutoSet = new Set<string>(expenseSubcategoryIdsWithAuto);
+
 const categoryGroupSet = new Set<string>(expenseCategoryGroups);
 
 export function getSubcategoryConfig(subcategoryId: string) {
@@ -344,6 +346,12 @@ export function isExpenseSubcategoryId(
   value: string,
 ): value is ExpenseSubcategoryId {
   return subcategoryIdSet.has(value);
+}
+
+export function isExpenseSubcategoryIdWithAuto(
+  value: string,
+): value is ExpenseSubcategoryIdWithAuto {
+  return subcategoryIdWithAutoSet.has(value);
 }
 
 export function isExpenseCategoryGroup(

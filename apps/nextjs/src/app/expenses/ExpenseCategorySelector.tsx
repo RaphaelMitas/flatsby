@@ -74,9 +74,7 @@ export function ExpenseCategorySelector({
             <SheetClose asChild key={item.id} className="h-full">
               <Button
                 variant="ghost"
-                onClick={() =>
-                  onChange?.(item.id as ExpenseSubcategoryIdWithAuto)
-                }
+                onClick={() => onChange?.(item.id)}
                 className={cn(
                   "flex w-full items-center justify-start gap-4 px-4 py-3",
                   selectedData.id === item.id && "bg-muted",

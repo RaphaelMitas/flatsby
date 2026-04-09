@@ -2,7 +2,10 @@ import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/
 import { useMemo } from "react";
 import { View } from "react-native";
 
-import { expenseSubcategoryIdsWithAuto } from "@flatsby/validators/expenses/categories";
+import {
+  expenseSubcategoryIdsWithAuto,
+  isExpenseSubcategoryIdWithAuto,
+} from "@flatsby/validators/expenses/categories";
 
 import type {
   BottomSheetPickerItem,
@@ -43,7 +46,9 @@ export function ExpenseCategoryPicker({
   }, []);
 
   const handleSelect = (item: BottomSheetPickerItem) => {
-    onChange?.(item.id as ExpenseSubcategoryIdWithAuto);
+    if (isExpenseSubcategoryIdWithAuto(item.id)) {
+      onChange?.(item.id);
+    }
   };
 
   const selectedData = value
