@@ -2,6 +2,10 @@ import type {
   ExpenseCategoryGroup,
   ExpenseSubcategoryIdWithAuto,
 } from "@flatsby/validators/expenses/categories";
+import type {
+  CategoryColorKey,
+  CategoryColorVariant,
+} from "@flatsby/validators/expenses/category-colors";
 
 import {
   AI_AUTO_DETECT,
@@ -10,10 +14,6 @@ import {
   expenseSubcategories,
   expenseSubcategoryIdsWithAuto,
 } from "@flatsby/validators/expenses/categories";
-import type {
-  CategoryColorKey,
-  CategoryColorVariant,
-} from "@flatsby/validators/expenses/category-colors";
 import {
   categoryBgColorMap,
   categoryBorderColorMap,

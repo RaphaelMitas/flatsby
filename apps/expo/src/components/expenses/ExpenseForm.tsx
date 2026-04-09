@@ -171,8 +171,8 @@ export function ExpenseForm({
       currency:
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
-      category: expense?.category ?? "",
-      subcategory: expense?.subcategory ?? "",
+      category: coerceCategory(expense?.category),
+      subcategory: coerceSubcategory(expense?.subcategory),
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),
@@ -762,11 +762,11 @@ export function ExpenseForm({
                         value={categoryPickerValue}
                         onChange={(subcategoryId) => {
                           if (subcategoryId === AI_AUTO_DETECT) {
-                            form.setValue("category", "");
-                            form.setValue("subcategory", "");
+                            form.setValue("category", undefined);
+                            form.setValue("subcategory", undefined);
                           } else {
                             const group = getSubcategoryGroup(subcategoryId);
-                            form.setValue("category", group ?? "");
+                            form.setValue("category", group ?? "other");
                             form.setValue("subcategory", subcategoryId);
                           }
                         }}

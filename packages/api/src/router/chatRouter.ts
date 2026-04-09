@@ -32,7 +32,11 @@ import type { Database } from "../types";
 import type { TracingOptions } from "../utils/model-provider";
 import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { checkCredits, trackAIUsage } from "../utils/autumn";
+import {
+  checkCredits,
+  extractGatewayMetadata,
+  trackAIUsage,
+} from "../utils/autumn";
 import { buildToolsSystemPrompt, createChatTools } from "../utils/chat-tools";
 import { buildContextMessages } from "../utils/context-builder";
 import {
@@ -44,14 +48,6 @@ import {
 
 // Batched write interval in milliseconds
 const FLUSH_INTERVAL = 300;
-
-// Schema for validating gateway metadata from AI providers
-const gatewayMetadataSchema = z
-  .object({
-    cost: z.string().optional(),
-    generationId: z.string().optional(),
-  })
-  .optional();
 
 interface FinalizeStreamParams {
   db: Database;
@@ -80,8 +76,7 @@ async function finalizeStream({
   model: ChatModel | undefined;
 }> {
   const metadata = await providerMetadata;
-  const gatewayResult = gatewayMetadataSchema.safeParse(metadata?.gateway);
-  const gateway = gatewayResult.success ? gatewayResult.data : undefined;
+  const gateway = extractGatewayMetadata(metadata);
 
   await db
     .update(chatMessages)

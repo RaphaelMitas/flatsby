@@ -1,3 +1,5 @@
+import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
+import type { CategoryColorKey } from "@flatsby/validators/expenses/category-colors";
 import type { LucideIcon } from "lucide-react";
 import {
   AppWindow,
@@ -42,7 +44,6 @@ import {
   Zap,
 } from "lucide-react";
 
-import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
 import {
   AI_AUTO_DETECT,
   expenseCategoryGroupColorKeys,
@@ -50,7 +51,6 @@ import {
   expenseSubcategories,
   isExpenseCategoryGroup,
 } from "@flatsby/validators/expenses/categories";
-import type { CategoryColorKey } from "@flatsby/validators/expenses/category-colors";
 import {
   categoryBgColorMap,
   categoryBorderColorMap,

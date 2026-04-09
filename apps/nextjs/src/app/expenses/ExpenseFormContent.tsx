@@ -226,12 +226,15 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                               value={pickerValue}
                               onChange={(subcategoryId) => {
                                 if (subcategoryId === AI_AUTO_DETECT) {
-                                  form.setValue("category", "");
-                                  form.setValue("subcategory", "");
+                                  form.setValue("category", undefined);
+                                  form.setValue("subcategory", undefined);
                                 } else {
                                   const group =
                                     getSubcategoryGroup(subcategoryId);
-                                  form.setValue("category", group ?? "");
+                                  form.setValue(
+                                    "category",
+                                    group ?? "other",
+                                  );
                                   form.setValue("subcategory", subcategoryId);
                                 }
                               }}

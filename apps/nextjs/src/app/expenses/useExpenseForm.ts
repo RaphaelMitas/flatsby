@@ -73,8 +73,8 @@ export function useExpenseForm({
       currency:
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
-      category: expense?.category ?? "",
-      subcategory: expense?.subcategory ?? "",
+      category: coerceCategory(expense?.category),
+      subcategory: coerceSubcategory(expense?.subcategory),
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),

@@ -3,7 +3,11 @@ import { z } from "zod/v4";
 
 import type { ExpenseCategoryGroup, ExpenseSubcategoryId } from "./categories";
 import type { CurrencyCode } from "./types";
-import { expenseSubcategories } from "./categories";
+import {
+  expenseCategoryGroupSchema,
+  expenseSubcategories,
+  expenseSubcategoryIdSchema,
+} from "./categories";
 import { decimalToCents } from "./conversion";
 import { currencyCodeSchema, expenseSplitSchema } from "./schemas";
 
@@ -80,8 +84,8 @@ for (const sub of expenseSubcategories) {
 }
 
 function mapSplitwiseCategory(rawCategory: string): {
-  category: string;
-  subcategory: string;
+  category: ExpenseCategoryGroup;
+  subcategory: ExpenseSubcategoryId;
 } {
   const normalized = rawCategory.trim().toLowerCase();
 
@@ -129,8 +133,8 @@ export interface TransformedExpense {
   amountInCents: number;
   currency: CurrencyCode;
   description?: string;
-  category?: string;
-  subcategory?: string;
+  category?: ExpenseCategoryGroup;
+  subcategory?: ExpenseSubcategoryId;
   expenseDate: Date;
   splits: z.infer<typeof expenseSplitSchema>[];
   splitMethod: "custom" | "settlement";
@@ -368,8 +372,8 @@ export const bulkCreateExpensesSchema = z.object({
         amountInCents: z.number().int().min(1),
         currency: currencyCodeSchema,
         description: z.string().max(512).optional(),
-        category: z.string().max(100).optional(),
-        subcategory: z.string().max(100).optional(),
+        category: expenseCategoryGroupSchema.optional(),
+        subcategory: expenseSubcategoryIdSchema.optional(),
         expenseDate: z.date(),
         splits: z.array(expenseSplitSchema).min(1),
         splitMethod: z.enum(["custom", "settlement"]),

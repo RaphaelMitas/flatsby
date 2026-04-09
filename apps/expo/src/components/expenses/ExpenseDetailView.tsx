@@ -21,8 +21,8 @@ import {
   CardTitle,
 } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { Separator } from "~/lib/ui/separator";
 import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
+import { Separator } from "~/lib/ui/separator";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";

@@ -1,13 +1,13 @@
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import type {
+  CategoryColorKey,
+  CategoryColorVariant,
+} from "@flatsby/validators/expenses/category-colors";
 import type React from "react";
 import { useMemo } from "react";
 import { View } from "react-native";
 
 import { categorysIdWithAiAutoSelect } from "@flatsby/validators/categories";
-import type {
-  CategoryColorKey,
-  CategoryColorVariant,
-} from "@flatsby/validators/expenses/category-colors";
 import { getCategoryTextColor } from "@flatsby/validators/expenses/category-colors";
 
 import type {
