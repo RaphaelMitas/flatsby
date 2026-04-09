@@ -1,9 +1,21 @@
+import crypto from "node:crypto";
+import type {
+  ExpenseCategoryGroup,
+  ExpenseSubcategoryId,
+} from "@flatsby/validators/expenses/categories";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
+import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
 import { and, eq, inArray } from "@flatsby/db";
 import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
+import {
+  expenseCategoryGroupSchema,
+  expenseSubcategoryIdSchema,
+  isExpenseCategoryGroup,
+  isExpenseSubcategoryId,
+} from "@flatsby/validators/expenses/categories";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 import {
   createExpenseSchema,
@@ -16,8 +28,17 @@ import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/valida
 
 import type { ApiError } from "../errors";
 import { fail, withErrorHandlingAsResult } from "../errors";
+import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, GroupUtils, OperationUtils, safeDbOperation } from "../utils";
+import {
+  DbUtils,
+  GroupUtils,
+  OperationUtils,
+  safeDbOperation,
+  ValidationUtils,
+} from "../utils";
+import { checkCredits, trackAIUsage } from "../utils/autumn";
+import { createTracedModel } from "../utils/model-provider";
 
 /**
  * Wrapper to convert validateExpenseSplitsStrict result to Effect
@@ -38,6 +59,34 @@ function validateExpenseSplitsEffect(
   }
 
   return fail.validation("splits", result.error, result.userMessage);
+}
+
+function coerceCategory(
+  raw: string,
+  ctx: { expenseId: number; userId: string },
+): ExpenseCategoryGroup {
+  if (isExpenseCategoryGroup(raw)) return raw;
+  captureError({
+    error: new Error(`Unknown expense category: "${raw}"`),
+    operation: "coerce-expense-category",
+    distinctId: ctx.userId,
+    additionalProperties: { expenseId: ctx.expenseId, rawValue: raw },
+  });
+  return "other";
+}
+
+function coerceSubcategory(
+  raw: string,
+  ctx: { expenseId: number; userId: string },
+): ExpenseSubcategoryId {
+  if (isExpenseSubcategoryId(raw)) return raw;
+  captureError({
+    error: new Error(`Unknown expense subcategory: "${raw}"`),
+    operation: "coerce-expense-subcategory",
+    distinctId: ctx.userId,
+    additionalProperties: { expenseId: ctx.expenseId, rawValue: raw },
+  });
+  return "other";
 }
 
 export const expenseRouter = createTRPCRouter({
@@ -113,7 +162,8 @@ export const expenseRouter = createTRPCRouter({
                                   amountInCents: input.amountInCents,
                                   currency: input.currency,
                                   description: input.description,
-                                  category: input.category,
+                                  category: input.category ?? "other",
+                                  subcategory: input.subcategory ?? "other",
                                   expenseDate: input.expenseDate,
                                   createdByGroupMemberId:
                                     currentUserGroupMember.id,
@@ -244,6 +294,9 @@ export const expenseRouter = createTRPCRouter({
                           if (input.category !== undefined) {
                             updateData.category = input.category;
                           }
+                          if (input.subcategory !== undefined) {
+                            updateData.subcategory = input.subcategory;
+                          }
                           if (input.expenseDate !== undefined) {
                             updateData.expenseDate = input.expenseDate;
                           }
@@ -368,65 +421,74 @@ export const expenseRouter = createTRPCRouter({
                 "You don't have access to this expense",
               ),
               () =>
-                // Get full expense with splits and member info
-                DbUtils.findOneOrFail(
-                  () =>
-                    ctx.db.query.expenses.findFirst({
-                      where: eq(expenses.id, input.expenseId),
-                      with: {
-                        paidByGroupMember: {
-                          columns: {
-                            id: true,
-                            groupId: true,
-                            userId: true,
-                            role: true,
-                            joinedOn: true,
-                          },
-                          with: {
-                            user: {
-                              columns: { email: true, name: true, image: true },
+                Effect.map(
+                  DbUtils.findOneOrFail(
+                    () =>
+                      ctx.db.query.expenses.findFirst({
+                        where: eq(expenses.id, input.expenseId),
+                        with: {
+                          paidByGroupMember: {
+                            columns: {
+                              id: true,
+                              groupId: true,
+                              userId: true,
+                              role: true,
+                              joinedOn: true,
                             },
-                          },
-                        },
-                        createdByGroupMember: {
-                          columns: {
-                            id: true,
-                            groupId: true,
-                            userId: true,
-                            role: true,
-                            joinedOn: true,
-                          },
-                          with: {
-                            user: {
-                              columns: { email: true, name: true, image: true },
-                            },
-                          },
-                        },
-                        expenseSplits: {
-                          with: {
-                            groupMember: {
-                              columns: {
-                                id: true,
-                                groupId: true,
-                                userId: true,
-                                role: true,
-                                joinedOn: true,
+                            with: {
+                              user: {
+                                columns: { email: true, name: true, image: true },
                               },
-                              with: {
-                                user: {
-                                  columns: {
-                                    email: true,
-                                    name: true,
-                                    image: true,
+                            },
+                          },
+                          createdByGroupMember: {
+                            columns: {
+                              id: true,
+                              groupId: true,
+                              userId: true,
+                              role: true,
+                              joinedOn: true,
+                            },
+                            with: {
+                              user: {
+                                columns: { email: true, name: true, image: true },
+                              },
+                            },
+                          },
+                          expenseSplits: {
+                            with: {
+                              groupMember: {
+                                columns: {
+                                  id: true,
+                                  groupId: true,
+                                  userId: true,
+                                  role: true,
+                                  joinedOn: true,
+                                },
+                                with: {
+                                  user: {
+                                    columns: {
+                                      email: true,
+                                      name: true,
+                                      image: true,
+                                    },
                                   },
                                 },
                               },
                             },
                           },
                         },
-                      },
-                    }),
-                  "get expense",
+                      }),
+                    "get expense",
+                  ),
+                  (exp) => {
+                    const userId = ctx.session.user.id;
+                    return {
+                      ...exp,
+                      category: coerceCategory(exp.category, { expenseId: exp.id, userId }),
+                      subcategory: coerceSubcategory(exp.subcategory, { expenseId: exp.id, userId }),
+                    };
+                  },
                 ),
             ),
         ),
@@ -522,8 +584,13 @@ export const expenseRouter = createTRPCRouter({
                 ? items[items.length - 1]?.id
                 : undefined;
 
+              const userId = ctx.session.user.id;
               return {
-                items,
+                items: items.map((item) => ({
+                  ...item,
+                  category: coerceCategory(item.category, { expenseId: item.id, userId }),
+                  subcategory: coerceSubcategory(item.subcategory, { expenseId: item.id, userId }),
+                })),
                 nextCursor,
               };
             }, "fetch group expenses"),
@@ -735,8 +802,9 @@ export const expenseRouter = createTRPCRouter({
                             paidByGroupMemberId: expense.paidByGroupMemberId,
                             amountInCents: expense.amountInCents,
                             currency: expense.currency,
-                            description: expense.description,
-                            category: expense.category,
+                            description: expense.description ?? "",
+                            category: expense.category ?? "other",
+                            subcategory: expense.subcategory ?? "other",
                             expenseDate: expense.expenseDate,
                             createdByGroupMemberId: currentUserGroupMember.id,
                             splitMethod: expense.splitMethod,
@@ -782,4 +850,80 @@ export const expenseRouter = createTRPCRouter({
         ),
       );
     }),
+
+  categorizeExpense: protectedProcedure
+    .input(z.object({ description: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      return withErrorHandlingAsResult(
+        Effect.flatMap(
+          ValidationUtils.notEmpty(input.description, "Description"),
+          (validDescription) =>
+            Effect.orElse(
+              Effect.tryPromise({
+                try: () =>
+                  createExpenseCategorizer({
+                    customerId: ctx.session.user.id,
+                    distinctId: ctx.session.user.id,
+                  })(validDescription),
+                catch: () => new Error("AI categorization failed"),
+              }),
+              () =>
+                Effect.succeed({
+                  group: "other" as const,
+                  subcategory: "other" as const,
+                }),
+            ),
+        ),
+      );
+    }),
 });
+
+interface ExpenseCategorizeContext {
+  customerId: string;
+  distinctId: string;
+}
+
+export interface ExpenseCategorizeResult {
+  group: ExpenseCategoryGroup;
+  subcategory: ExpenseSubcategoryId;
+}
+
+const createExpenseCategorizer = (ctx: ExpenseCategorizeContext) => {
+  return async (description: string): Promise<ExpenseCategorizeResult> => {
+    const { allowed } = await checkCredits({
+      customerId: ctx.customerId,
+    });
+    if (!allowed) {
+      return { group: "other", subcategory: "other" };
+    }
+
+    try {
+      const model = createTracedModel("google/gemini-2.0-flash", {
+        distinctId: ctx.distinctId,
+        traceId: crypto.randomUUID(),
+        feature: "categorize-expense",
+      });
+
+      const response = await generateObject({
+        model,
+        schema: z.object({
+          group: expenseCategoryGroupSchema,
+          subcategory: expenseSubcategoryIdSchema,
+        }),
+        prompt: `Classify this expense description into a category group and subcategory: ${description}`,
+      });
+
+      const metadata = response.providerMetadata;
+      const cost = (metadata?.gateway as { cost?: string } | undefined)?.cost;
+      await trackAIUsage({
+        customerId: ctx.customerId,
+        cost: cost,
+      });
+
+      return response.object;
+    } catch (error) {
+      console.error("Error categorizing expense:", error);
+    }
+    return { group: "other", subcategory: "other" };
+  };
+};

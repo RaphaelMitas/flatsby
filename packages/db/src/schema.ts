@@ -238,8 +238,9 @@ export const expenses = createTable("expenses", {
     .references(() => groupMembers.id),
   amountInCents: integer("amount_in_cents").notNull(),
   currency: varchar("currency", { length: 3 }).notNull(),
-  description: varchar("description", { length: 512 }),
-  category: varchar("category", { length: 100 }),
+  description: varchar("description", { length: 512 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  subcategory: varchar("subcategory", { length: 100 }).notNull(),
   expenseDate: timestamp("expenseDate").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   createdByGroupMemberId: integer("createdByGroupMemberId")

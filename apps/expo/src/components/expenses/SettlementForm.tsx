@@ -188,19 +188,19 @@ export function SettlementForm({
         queryClient.setQueryData(expenseListQueryKey, (old) => {
           if (!old) return old;
 
-          const optimisticSettlement = {
+          const optimisticSettlement: ExpenseWithSplitsAndMembers = {
             id: Date.now(),
             groupId,
             paidByGroupMemberId: input.paidByGroupMemberId,
             amountInCents: input.amountInCents,
             currency: input.currency,
-            description: input.description ?? null,
-            category: null,
+            description: input.description,
+            category: "other",
+            subcategory: "other",
             expenseDate: input.expenseDate,
             createdByGroupMemberId: currentMember?.id ?? 0,
-            splitMethod: "settlement" as const,
+            splitMethod: "settlement",
             createdAt: new Date(),
-            updatedAt: new Date(),
             paidByGroupMember: paidByMember
               ? {
                   id: paidByMember.id,
@@ -260,7 +260,6 @@ export function SettlementForm({
                     user: { email: "", name: "Unknown", image: null },
                   },
             })),
-            isPending: true,
           };
 
           const updatedPages = old.pages.map((page, pageIndex) => {
@@ -325,6 +324,8 @@ export function SettlementForm({
             data: {
               ...old.data,
               ...input,
+              category: old.data.category,
+              subcategory: old.data.subcategory,
             },
           };
 
@@ -378,6 +379,7 @@ export function SettlementForm({
         paidByGroupMemberId: values.fromGroupMemberId,
         amountInCents: values.amountInCents,
         currency: values.currency,
+        description: "Settlement",
         expenseDate: new Date(),
         splits: [
           {

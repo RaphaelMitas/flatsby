@@ -2,15 +2,24 @@ import type {
   ExpenseWithSplitsAndMembers,
   GroupWithAccess,
 } from "@flatsby/api";
+import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
+import {
+  coerceCategory,
+  coerceSubcategory,
+} from "@flatsby/validators/expenses/categories";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 
+import {
+  AI_AUTO_DETECT,
+  getSubcategoryGroup,
+} from "@flatsby/validators/expenses/categories";
 import {
   calculateEvenPercentageBasisPoints,
   distributeEqualAmounts,
@@ -51,6 +60,7 @@ import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useThemeColors } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
+import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
 import { SplitEditor } from "./SplitEditor";
 
 function DatePickerField({
@@ -164,6 +174,7 @@ export function ExpenseForm({
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
       category: expense?.category ?? "",
+      subcategory: expense?.subcategory ?? "",
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),
@@ -233,8 +244,9 @@ export function ExpenseForm({
               paidByGroupMemberId: input.paidByGroupMemberId,
               amountInCents: input.amountInCents,
               currency: input.currency,
-              description: input.description ?? null,
-              category: input.category ?? null,
+              description: input.description,
+              category: coerceCategory(input.category),
+              subcategory: coerceSubcategory(input.subcategory),
               expenseDate: input.expenseDate,
               createdByGroupMemberId: currentMember.id,
               splitMethod: input.splitMethod,
@@ -374,6 +386,8 @@ export function ExpenseForm({
             data: {
               ...old.data,
               ...input,
+              category: coerceCategory(input.category ?? old.data.category),
+              subcategory: coerceSubcategory(input.subcategory ?? old.data.subcategory),
               expenseSplits: input.splits
                 ? input.splits.map((split, index) => {
                     const member = group.groupMembers.find(
@@ -455,6 +469,25 @@ export function ExpenseForm({
     }),
   );
 
+  const categorizeExpenseMutation = useMutation(
+    trpcClient.expense.categorizeExpense.mutationOptions({
+      onSuccess: (data) => {
+        if (data.success) {
+          form.setValue("category", data.data.group);
+          form.setValue("subcategory", data.data.subcategory);
+        }
+      },
+    }),
+  );
+
+  const onDescriptionBlur = useCallback(() => {
+    const desc = form.getValues("description");
+    const subcat = form.getValues("subcategory");
+    if (desc && desc.trim().length > 0 && !subcat) {
+      categorizeExpenseMutation.mutate({ description: desc.trim() });
+    }
+  }, [form, categorizeExpenseMutation]);
+
   const onSubmit = (values: ExpenseValues) => {
     let splits;
 
@@ -486,6 +519,7 @@ export function ExpenseForm({
         currency: values.currency,
         description: values.description,
         category: values.category,
+        subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,
         splitMethod: values.splitMethod,
@@ -498,6 +532,7 @@ export function ExpenseForm({
         currency: values.currency,
         description: values.description,
         category: values.category,
+        subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,
         splitMethod: values.splitMethod,
@@ -513,6 +548,7 @@ export function ExpenseForm({
         "paidByGroupMemberId",
         "amountInCents",
         "currency",
+        "description",
         "expenseDate",
       ];
     } else if (currentStep === 2) {
@@ -697,12 +733,16 @@ export function ExpenseForm({
                       name="description"
                       render={({ field }) => (
                         <View className="gap-2">
-                          <Label>Description (Optional)</Label>
+                          <Label>Description</Label>
                           <FormControl>
                             <Input
                               placeholder="What was this expense for?"
                               value={field.value}
                               onChangeText={field.onChange}
+                              onBlur={() => {
+                                field.onBlur();
+                                onDescriptionBlur();
+                              }}
                               maxLength={512}
                             />
                           </FormControl>
@@ -711,24 +751,26 @@ export function ExpenseForm({
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>Category (Optional)</Label>
-                          <FormControl>
-                            <Input
-                              placeholder="e.g., Food, Transport, Utilities"
-                              value={field.value}
-                              onChangeText={field.onChange}
-                              maxLength={100}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </View>
-                      )}
-                    />
+                    <View className="gap-2">
+                      <Label>Category</Label>
+                      <ExpenseCategoryPicker
+                        value={
+                          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty string should fallback
+                          (form.getValues("subcategory") ||
+                            AI_AUTO_DETECT) as ExpenseSubcategoryIdWithAuto
+                        }
+                        onChange={(subcategoryId) => {
+                          if (subcategoryId === AI_AUTO_DETECT) {
+                            form.setValue("category", "");
+                            form.setValue("subcategory", "");
+                          } else {
+                            const group = getSubcategoryGroup(subcategoryId);
+                            form.setValue("category", group ?? "");
+                            form.setValue("subcategory", subcategoryId);
+                          }
+                        }}
+                      />
+                    </View>
 
                     <FormField
                       control={form.control}

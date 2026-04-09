@@ -3,8 +3,10 @@ import { Text, View } from "react-native";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
+import { Badge } from "~/lib/ui/badge";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { getExpenseCategoryData } from "../expenses/ExpenseCategoryConfig";
 
 export interface ExpenseDisplayProps {
   amountInCents: number;
@@ -15,7 +17,7 @@ export interface ExpenseDisplayProps {
   expenseDate: Date;
   splitMethod?: string;
   splitCount?: number;
-  category?: string | null;
+  subcategory: string;
   fromName?: string;
   fromImage?: string | null;
   isSelected?: boolean;
@@ -30,7 +32,7 @@ export function ExpenseDisplay({
   expenseDate,
   splitMethod,
   splitCount,
-  category,
+  subcategory,
   fromName,
   fromImage,
   isSelected,
@@ -50,18 +52,31 @@ export function ExpenseDisplay({
   });
 
   const isSettlement = splitMethod === "settlement";
+  const categoryData = getExpenseCategoryData({ subcategoryId: subcategory });
 
   return (
     <Card className={isSelected ? "border-primary border-2" : undefined}>
       <CardContent className="gap-3 p-4">
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row flex-wrap items-center gap-2">
           <Text className="text-foreground text-2xl font-bold">
             {formattedAmount}
           </Text>
-          {isSettlement && (
-            <View className="bg-muted-foreground/20 rounded px-2 py-1">
-              <Text className="text-muted-foreground text-xs">Settlement</Text>
-            </View>
+          {isSettlement ? (
+            <Badge variant="secondary">
+              <Icon name="handshake" size={12} color="secondary-foreground" />
+              <Text className="text-secondary-foreground text-xs font-medium">
+                Settlement
+              </Text>
+            </Badge>
+          ) : (
+            <Badge
+              className={`border ${categoryData.bgColor} ${categoryData.borderColor}`}
+            >
+              {categoryData.icon}
+              <Text className={`text-xs font-medium ${categoryData.color}`}>
+                {categoryData.name}
+              </Text>
+            </Badge>
           )}
         </View>
 
@@ -116,14 +131,6 @@ export function ExpenseDisplay({
             <Text className="text-muted-foreground text-sm">
               {formattedDate}
             </Text>
-            {category && (
-              <>
-                <Text className="text-muted-foreground text-sm">•</Text>
-                <Text className="text-muted-foreground text-sm capitalize">
-                  {category}
-                </Text>
-              </>
-            )}
           </View>
         </View>
       </CardContent>

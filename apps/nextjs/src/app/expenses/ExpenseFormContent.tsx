@@ -36,11 +36,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
+import {
+  AI_AUTO_DETECT,
+  getSubcategoryGroup,
+  isExpenseSubcategoryId,
+} from "@flatsby/validators/expenses/categories";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 
 import type { UseExpenseFormReturn } from "./useExpenseForm";
 import { CurrencyInput } from "~/components/CurrencyInput";
+import { ExpenseCategorySelector } from "./ExpenseCategorySelector";
 import { SplitEditor } from "./SplitEditor";
 
 interface ExpenseFormContentProps {
@@ -67,6 +73,8 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     handleBack,
     group,
     allMembers,
+    isCategorizing,
+    onDescriptionBlur,
   } = formState;
 
   return (
@@ -184,11 +192,15 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description (Optional)</FormLabel>
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="What was this expense for?"
                           {...field}
+                          onBlur={() => {
+                            field.onBlur();
+                            onDescriptionBlur();
+                          }}
                           maxLength={512}
                         />
                       </FormControl>
@@ -200,19 +212,41 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 <FormField
                   control={form.control}
                   name="category"
-                  render={({ field }) => (
+                  render={() => {
+                    const sub = form.getValues("subcategory");
+                    const pickerValue =
+                      sub && isExpenseSubcategoryId(sub)
+                        ? sub
+                        : AI_AUTO_DETECT;
+
+                    return (
                     <FormItem>
-                      <FormLabel>Category (Optional)</FormLabel>
+                      <FormLabel>Category</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="e.g., Food, Transport, Utilities"
-                          {...field}
-                          maxLength={100}
-                        />
+                        <div className="flex items-center gap-2">
+                          <ExpenseCategorySelector
+                            value={pickerValue}
+                            onChange={(subcategoryId) => {
+                              if (subcategoryId === AI_AUTO_DETECT) {
+                                form.setValue("category", "");
+                                form.setValue("subcategory", "");
+                              } else {
+                                const group =
+                                  getSubcategoryGroup(subcategoryId);
+                                form.setValue("category", group ?? "");
+                                form.setValue("subcategory", subcategoryId);
+                              }
+                            }}
+                            disabled={isCategorizing}
+                          />
+                          {isCategorizing && (
+                            <LoaderCircle className="text-muted-foreground h-4 w-4 animate-spin" />
+                          )}
+                        </div>
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
-                  )}
+                    );
+                  }}
                 />
 
                 <FormField

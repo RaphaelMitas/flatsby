@@ -6,12 +6,16 @@ import type {
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 
 import { toast } from "@flatsby/ui/toast";
+import {
+  coerceCategory,
+  coerceSubcategory,
+} from "@flatsby/validators/expenses/categories";
 import {
   calculateEvenPercentageBasisPoints,
   distributeEqualAmounts,
@@ -70,6 +74,7 @@ export function useExpenseForm({
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
       category: expense?.category ?? "",
+      subcategory: expense?.subcategory ?? "",
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),
@@ -132,8 +137,9 @@ export function useExpenseForm({
               paidByGroupMemberId: input.paidByGroupMemberId,
               amountInCents: input.amountInCents,
               currency: input.currency,
-              description: input.description ?? null,
-              category: input.category ?? null,
+              description: input.description,
+              category: coerceCategory(input.category),
+              subcategory: coerceSubcategory(input.subcategory),
               expenseDate: input.expenseDate,
               createdByGroupMemberId: currentMember.id,
               splitMethod: input.splitMethod,
@@ -273,6 +279,8 @@ export function useExpenseForm({
             data: {
               ...old.data,
               ...input,
+              category: coerceCategory(input.category ?? old.data.category),
+              subcategory: coerceSubcategory(input.subcategory ?? old.data.subcategory),
               expenseSplits: input.splits
                 ? input.splits.map((split, index) => {
                     const member = group.groupMembers.find(
@@ -354,6 +362,27 @@ export function useExpenseForm({
     }),
   );
 
+  const categorizeExpenseMutation = useMutation(
+    trpc.expense.categorizeExpense.mutationOptions({
+      onSuccess: (data) => {
+        if (data.success) {
+          form.setValue("category", data.data.group);
+          form.setValue("subcategory", data.data.subcategory);
+        }
+      },
+    }),
+  );
+
+  const isCategorizing = categorizeExpenseMutation.isPending;
+
+  const onDescriptionBlur = useCallback(() => {
+    const desc = form.getValues("description");
+    const subcat = form.getValues("subcategory");
+    if (desc && desc.trim().length > 0 && !subcat) {
+      categorizeExpenseMutation.mutate({ description: desc.trim() });
+    }
+  }, [form, categorizeExpenseMutation]);
+
   const onSubmit = (values: ExpenseValues) => {
     let splits;
 
@@ -385,6 +414,7 @@ export function useExpenseForm({
         currency: values.currency,
         description: values.description,
         category: values.category,
+        subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,
         splitMethod: values.splitMethod,
@@ -397,6 +427,7 @@ export function useExpenseForm({
         currency: values.currency,
         description: values.description,
         category: values.category,
+        subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,
         splitMethod: values.splitMethod,
@@ -412,6 +443,7 @@ export function useExpenseForm({
         "paidByGroupMemberId",
         "amountInCents",
         "currency",
+        "description",
         "expenseDate",
       ];
     } else if (currentStep === 2) {
@@ -511,6 +543,8 @@ export function useExpenseForm({
     handleBack,
     group,
     allMembers,
+    isCategorizing,
+    onDescriptionBlur,
   };
 }
 

@@ -706,7 +706,7 @@ async function handleExpenseUpdate(
     entity: "expense",
     result: {
       id: expense.id,
-      description: outputDescription ?? null,
+      description: outputDescription,
       amountInCents: outputAmount,
       currency: parseCurrency(outputCurrency),
       paidByMemberName: memberIdToName.get(outputPaidByMemberId) ?? "Unknown",
