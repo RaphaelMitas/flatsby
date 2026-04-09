@@ -25,7 +25,7 @@ export const expenseSchema = z.object({
   paidByGroupMemberId: z.number().min(1, "Please select who paid"),
   amountInCents: z.number().int().min(1, "Amount must be greater than 0"),
   currency: currencyCodeSchema,
-  description: z.string().min(1, "Description is required").max(512),
+  description: z.string().max(512),
   category: z.string().max(100).optional(),
   subcategory: z.string().max(100).optional(),
   expenseDate: z.date(),
