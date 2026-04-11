@@ -80,7 +80,7 @@ jobs:
 
       - name: Clean native build artifacts
         working-directory: apps/expo
-        run: rm -rf ios android build-cache
+        run: rm -rf ios android build-cache "$RUNNER_TEMP/eas-build"
 
       - name: Update CocoaPods repo
         run: pod repo update
@@ -89,13 +89,11 @@ jobs:
         working-directory: apps/expo
         run: |
           mkdir -p build-cache
-          # Resolve macOS /var -> /private/var symlink so Xcode and Node.js
-          # agree on paths during the Metro bundling build phase.
-          export TMPDIR="$(cd "$TMPDIR" && pwd -P)"
           pnpm dlx eas-cli build --local --profile e2e --platform ios --output build-cache/Flatsby.tar.gz
           cd build-cache && tar -xzf Flatsby.tar.gz && rm Flatsby.tar.gz
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_LOCAL_BUILD_WORKINGDIR: ${{ runner.temp }}/eas-build
 
       - name: Boot iOS Simulator
         run: |
