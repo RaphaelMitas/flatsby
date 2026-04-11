@@ -3,9 +3,15 @@ packages:
   - packages/*
   - tooling/*
 
+# Unfixable transitive dep vulnerabilities (pinned by parent packages).
+# Remove entries as upstream packages release fixes.
+# - esbuild: @esbuild-kit/core-utils@3.3.2 pins ~0.18.20 (drizzle-kit)
+auditConfig:
+  ignoreGhsas:
+    - GHSA-67mh-4wv8-2f99
+
 catalog:
   "@ai-sdk/react": ^3.0.159
-  autumn-js: ^1.2.5
   "@eslint/js": ^10.0.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.2.2
@@ -16,6 +22,7 @@ catalog:
   "@turbo/gen": ^2.9.3
   "@types/node": ^24.12.2
   ai: ^6.0.157
+  autumn-js: ^1.2.5
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^10.2.0
   next: ^16.2.3
@@ -35,30 +42,27 @@ catalogs:
     "@types/react-dom": ~19.2.0
     react: 19.2.0
     react-dom: 19.2.0
-
-overrides:
-  lightningcss: 1.30.1
-  # Align metro packages with @expo/metro's bundled metro@0.83.3
-  metro-resolver: 0.83.3
-  metro-file-map: 0.83.3
-  # Pin to 0.8.12: last non-deprecated 0.8.x; 0.9.x breaks @expo/plist & plist (missing mimeType arg)
-  '@xmldom/xmldom': 0.8.12
-  # chevrotain@11.x pins 4.17.23; langium doesn't support chevrotain@12 yet
-  lodash-es: '>=4.18.0'
+ignoredBuiltDependencies:
+  - unrs-resolver
 
 linkWorkspacePackages: true
 
 onlyBuiltDependencies:
   - "@tailwindcss/oxide"
   - esbuild
+  - protobufjs
+  - sharp
+
+overrides:
+  # Pin to 0.8.12: last non-deprecated 0.8.x; 0.9.x breaks @expo/plist & plist (missing mimeType arg)
+  '@xmldom/xmldom': 0.8.12
+  lightningcss: 1.30.1
+  # chevrotain@11.x pins 4.17.23; langium doesn't support chevrotain@12 yet
+  lodash-es: '>=4.18.0'
+  metro-file-map: 0.83.3
+  # Align metro packages with @expo/metro's bundled metro@0.83.3
+  metro-resolver: 0.83.3
 
 publicHoistPattern:
   - "@ianvs/prettier-plugin-sort-imports"
   - prettier-plugin-tailwindcss
-
-# Unfixable transitive dep vulnerabilities (pinned by parent packages).
-# Remove entries as upstream packages release fixes.
-# - esbuild: @esbuild-kit/core-utils@3.3.2 pins ~0.18.20 (drizzle-kit)
-auditConfig:
-  ignoreGhsas:
-    - GHSA-67mh-4wv8-2f99
