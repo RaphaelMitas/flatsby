@@ -89,6 +89,9 @@ jobs:
         working-directory: apps/expo
         run: |
           mkdir -p build-cache
+          # Resolve macOS /var -> /private/var symlink so Xcode and Node.js
+          # agree on paths during the Metro bundling build phase.
+          export TMPDIR="$(cd "$TMPDIR" && pwd -P)"
           pnpm dlx eas-cli build --local --profile e2e --platform ios --output build-cache/Flatsby.tar.gz
           cd build-cache && tar -xzf Flatsby.tar.gz && rm Flatsby.tar.gz
         env:
