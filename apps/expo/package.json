@@ -64,7 +64,7 @@
     "expo-updates": "~55.0.18",
     "expo-web-browser": "~55.0.12",
     "nativewind": "5.0.0-preview.3",
-    "posthog-react-native": "^4.39.4",
+    "posthog-react-native": "^4.41.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-hook-form": "^7.72.1",
