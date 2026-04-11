@@ -547,7 +547,7 @@ export const expenseRouter = createTRPCRouter({
                     )
                   : eq(expenses.groupId, input.groupId),
                 limit: input.limit + 1,
-                orderBy: (expenses, { desc }) => [desc(expenses.expenseDate)],
+                orderBy: (expenses, { desc }) => [desc(expenses.expenseDate), desc(expenses.id)],
                 with: {
                   paidByGroupMember: {
                     columns: {
