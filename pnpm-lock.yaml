@@ -872,7 +872,7 @@ importers:
         specifier: ^4.2.3
         version: 4.2.3(eslint@10.2.0(jiti@2.6.1))(typescript@6.0.2)
       '@eslint/compat':
-        specifier: ^2.0.4
+        specifier: ^2.0.5
         version: 2.0.5(eslint@10.2.0(jiti@2.6.1))
       '@eslint/js':
         specifier: 'catalog:'
@@ -887,7 +887,7 @@ importers:
         specifier: ^7.0.1
         version: 7.0.1(eslint@10.2.0(jiti@2.6.1))
       eslint-plugin-turbo:
-        specifier: ^2.9.3
+        specifier: ^2.9.6
         version: 2.9.6(eslint@10.2.0(jiti@2.6.1))(turbo@2.9.6)
       typescript-eslint:
         specifier: ^8.58.1
