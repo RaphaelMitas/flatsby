@@ -753,7 +753,7 @@ importers:
         specifier: ^8.6.0
         version: 8.6.0(react@19.2.0)
       lucide-react:
-        specifier: ^1.7.0
+        specifier: ^1.8.0
         version: 1.8.0(react@19.2.0)
       motion:
         specifier: ^12.38.0
