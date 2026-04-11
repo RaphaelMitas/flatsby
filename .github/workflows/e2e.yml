@@ -67,9 +67,7 @@ jobs:
 
   e2e-ios:
     needs: check-pr
-    # TODO(RAP-39): Re-enable when Mac Mini runner is back online after upgrade.
-    # Cloud runner migration deferred — see RAP-39 for Option A details.
-    if: false
+    if: needs.check-pr.outputs.has-pr == 'true'
     runs-on: [self-hosted, macos, arm64]
     timeout-minutes: 45
     steps:
