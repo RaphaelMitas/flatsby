@@ -19,7 +19,7 @@ catalog:
   "@trpc/client": ^11.16.0
   "@trpc/server": ^11.16.0
   "@trpc/tanstack-react-query": ^11.16.0
-  "@turbo/gen": ^2.9.3
+  "@turbo/gen": ^2.9.6
   "@types/node": ^24.12.2
   ai: ^6.0.158
   autumn-js: ^1.2.8
@@ -29,7 +29,7 @@ catalog:
   prettier: ^3.8.2
   superjson: ^2.2.6
   tailwindcss: ^4.2.2
-  turbo: ^2.9.3
+  turbo: ^2.9.6
   typescript: ^6.0.0
   zod: ^4.3.6
 
