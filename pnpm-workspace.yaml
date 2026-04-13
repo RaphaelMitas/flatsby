@@ -56,7 +56,7 @@ onlyBuiltDependencies:
 overrides:
   # Pin to 0.8.12: last non-deprecated 0.8.x; 0.9.x breaks @expo/plist & plist (missing mimeType arg)
   '@xmldom/xmldom': 0.8.12
-  lightningcss: 1.30.1
+  lightningcss: 1.32.0
   # chevrotain@11.x pins 4.17.23; langium doesn't support chevrotain@12 yet
   lodash-es: '>=4.18.0'
   metro-file-map: 0.83.3
