@@ -4,7 +4,7 @@ on:
   deployment_status:
 
 concurrency:
-  group: e2e-${{ github.event.deployment.sha }}
+  group: e2e-${{ github.event.deployment.ref }}
   cancel-in-progress: true
 
 env:
@@ -97,7 +97,9 @@ jobs:
 
       - name: Boot iOS Simulator
         run: |
-          xcrun simctl boot "Flatsby-E2E" || true
+          xcrun simctl shutdown "Flatsby-E2E" 2>/dev/null || true
+          sleep 2
+          xcrun simctl boot "Flatsby-E2E"
           xcrun simctl bootstatus "Flatsby-E2E"
 
       - name: Install app on simulator
