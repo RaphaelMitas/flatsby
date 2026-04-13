@@ -3,10 +3,6 @@ name: E2E Tests
 on:
   deployment_status:
 
-concurrency:
-  group: e2e-${{ github.event.deployment.ref }}
-  cancel-in-progress: true
-
 env:
   FORCE_COLOR: 3
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
@@ -20,20 +16,29 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       has-pr: ${{ steps.check.outputs.has-pr }}
+      branch: ${{ steps.check.outputs.branch }}
     steps:
       - name: Check for associated PR
         id: check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_COUNT=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number --jq 'length')
-          echo "has-pr=$([[ "$PR_COUNT" -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          PR_JSON=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number,headRefName --jq '.[0]')
+          if [[ -n "$PR_JSON" && "$PR_JSON" != "null" ]]; then
+            echo "has-pr=true" >> "$GITHUB_OUTPUT"
+            echo "branch=$(echo "$PR_JSON" | jq -r '.headRefName')" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-pr=false" >> "$GITHUB_OUTPUT"
+          fi
 
   e2e-web:
     needs: check-pr
     if: needs.check-pr.outputs.has-pr == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: e2e-web-${{ needs.check-pr.outputs.branch }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
 
@@ -70,6 +75,9 @@ jobs:
     if: needs.check-pr.outputs.has-pr == 'true'
     runs-on: [self-hosted, macos, arm64]
     timeout-minutes: 45
+    concurrency:
+      group: e2e-ios-${{ needs.check-pr.outputs.branch }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
 
