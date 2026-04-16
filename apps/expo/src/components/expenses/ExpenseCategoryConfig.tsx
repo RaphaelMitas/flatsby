@@ -2,10 +2,7 @@ import type {
   ExpenseCategoryGroup,
   ExpenseSubcategoryIdWithAuto,
 } from "@flatsby/validators/expenses/categories";
-import type {
-  CategoryColorKey,
-  CategoryColorVariant,
-} from "@flatsby/validators/expenses/category-colors";
+import type { CategoryColorKey } from "@flatsby/validators/expenses/category-colors";
 
 import {
   AI_AUTO_DETECT,
@@ -15,14 +12,12 @@ import {
   expenseSubcategoryIdsWithAuto,
 } from "@flatsby/validators/expenses/categories";
 import {
-  categoryBgColorMap,
-  categoryBorderColorMap,
-  getCategoryTextColor,
+  getNativeCategoryColor,
   isCategoryColorKey,
 } from "@flatsby/validators/expenses/category-colors";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
-import Icon from "~/lib/ui/custom/icons/Icon";
+import { CategoryIcon } from "~/lib/ui/category-icon";
 
 const iconSize = 14;
 
@@ -73,29 +68,30 @@ for (const sub of expenseSubcategories) {
 
 export function getExpenseCategoryData({
   subcategoryId,
-  colorVariant = "default",
+  isDark = false,
 }: {
   subcategoryId: string;
-  colorVariant?: CategoryColorVariant;
+  isDark?: boolean;
 }) {
   const entry = subcategoryRecord[subcategoryId] ?? otherEntry;
-
-  const color = getCategoryTextColor(entry.colorKey, colorVariant);
-  const bgColor = categoryBgColorMap[entry.colorKey];
-  const borderColor = categoryBorderColorMap[entry.colorKey];
+  const nativeColors = getNativeCategoryColor(entry.colorKey, isDark);
 
   return {
     name: entry.name,
     description: entry.description,
     groupName: entry.groupName,
-    color,
-    bgColor,
-    borderColor,
     colorKey: entry.colorKey,
-    icon: <Icon name={entry.iconName} size={iconSize} className={color} />,
+    nativeColors,
+    icon: (
+      <CategoryIcon
+        name={entry.iconName}
+        size={iconSize}
+        color={nativeColors.text}
+      />
+    ),
   };
 }
 
 export { AI_AUTO_DETECT, expenseSubcategoryIdsWithAuto };
 export type { ExpenseSubcategoryIdWithAuto };
-export type { CategoryColorKey, CategoryColorVariant };
+export type { CategoryColorKey };

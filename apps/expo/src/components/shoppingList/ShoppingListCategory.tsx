@@ -1,18 +1,11 @@
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
-import type {
-  CategoryColorKey,
-  CategoryColorVariant,
-} from "@flatsby/validators/expenses/category-colors";
+import type { CategoryColorKey } from "@flatsby/validators/expenses/category-colors";
 import type React from "react";
 import { useMemo } from "react";
 import { View } from "react-native";
 
 import { categorysIdWithAiAutoSelect } from "@flatsby/validators/categories";
-import {
-  categoryBgColorMap,
-  categoryBorderColorMap,
-  getCategoryTextColor,
-} from "@flatsby/validators/expenses/category-colors";
+import { getNativeCategoryColor } from "@flatsby/validators/expenses/category-colors";
 
 import type {
   BottomSheetPickerItem,
@@ -20,7 +13,7 @@ import type {
 } from "~/lib/ui/bottom-sheet-picker";
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { BottomSheetPickerTrigger } from "~/lib/ui/bottom-sheet-picker";
-import Icon from "~/lib/ui/custom/icons/Icon";
+import { CategoryIcon } from "~/lib/ui/category-icon";
 
 const iconSize = 20 as const;
 
@@ -108,23 +101,25 @@ const CATEGORY_CONFIG: Record<CategoryIdWithAiAutoSelect, CategoryConfig> = {
 
 export const getCategoryData = ({
   categoryId,
-  colorVariant = "default",
+  isDark = false,
 }: {
   categoryId: CategoryIdWithAiAutoSelect;
-  colorVariant?: CategoryColorVariant;
+  isDark?: boolean;
 }) => {
   const config = CATEGORY_CONFIG[categoryId];
-  const color = getCategoryTextColor(config.colorKey, colorVariant);
-  const bgColor = categoryBgColorMap[config.colorKey];
-  const borderColor = categoryBorderColorMap[config.colorKey];
+  const nativeColors = getNativeCategoryColor(config.colorKey, isDark);
 
   return {
     name: config.name,
-    color,
-    bgColor,
-    borderColor,
     colorKey: config.colorKey,
-    icon: <Icon name={config.iconName} size={iconSize} className={color} />,
+    nativeColors,
+    icon: (
+      <CategoryIcon
+        name={config.iconName}
+        size={iconSize}
+        color={nativeColors.text}
+      />
+    ),
     description: config.description,
   };
 };

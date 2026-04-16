@@ -3,14 +3,20 @@ import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
-import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
+import {
+  Modal,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
 import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
@@ -46,7 +52,8 @@ const ShoppingListItem = ({
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const categoryData = getCategoryData({ categoryId: item.categoryId });
+  const isDark = useColorScheme() === "dark";
+  const categoryData = getCategoryData({ categoryId: item.categoryId, isDark });
 
   const { invalidateAll } = useInvalidateShoppingList({
     groupId,
@@ -243,7 +250,10 @@ const ShoppingListItem = ({
               </View>
 
               <View className="items-center justify-center">
-                <Text className={cn("text-xs font-medium", categoryData.color)}>
+                <Text
+                  className="text-xs font-medium"
+                  style={{ color: categoryData.nativeColors.text }}
+                >
                   {categoryData.name}
                 </Text>
               </View>
