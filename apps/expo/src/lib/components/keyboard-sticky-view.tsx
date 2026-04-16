@@ -25,10 +25,14 @@ export function AppKeyboardStickyView({
   const tabBarHeight = useBottomTabBarHeight();
   const safeAreaInsets = useSafeAreaInsets();
   const isIpad = Platform.OS === "ios" && Platform.isPad;
+  const androidApiLevel =
+    typeof Platform.Version === "number"
+      ? Platform.Version
+      : Number.parseInt(Platform.Version, 10);
   const isAndroidApi37OrHigher =
     Platform.OS === "android" &&
-    typeof Platform.Version === "number" &&
-    Platform.Version >= 37;
+    Number.isFinite(androidApiLevel) &&
+    androidApiLevel >= 37;
 
   const keyboardOffset =
     includeTabBar && !isIpad && !isAndroidApi37OrHigher ? tabBarHeight : 0;
