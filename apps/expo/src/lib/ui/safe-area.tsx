@@ -11,7 +11,6 @@ export const SafeAreaView = ({
   const tabBarHeight = useBottomTabBarHeight();
   const isIphone = Platform.OS === "ios" && !Platform.isPad;
   const isIpad = Platform.OS === "ios" && Platform.isPad;
-  const isAndroid = Platform.OS === "android";
 
   return (
     <RNCSafeAreaView
@@ -19,7 +18,7 @@ export const SafeAreaView = ({
       style={{
         flex: 1,
         paddingTop: isIpad ? tabBarHeight : 0,
-        paddingBottom: isIphone || isAndroid ? tabBarHeight : 0,
+        paddingBottom: isIphone ? tabBarHeight : 0,
       }}
       edges={edges}
     >
