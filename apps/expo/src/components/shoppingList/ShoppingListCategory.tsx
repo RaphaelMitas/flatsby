@@ -1,11 +1,18 @@
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
-import type { CategoryColorKey } from "@flatsby/validators/expenses/category-colors";
+import type {
+  CategoryColorKey,
+  CategoryColorVariant,
+} from "@flatsby/validators/expenses/category-colors";
 import type React from "react";
 import { useMemo } from "react";
 import { View } from "react-native";
 
 import { categorysIdWithAiAutoSelect } from "@flatsby/validators/categories";
-import { getNativeCategoryColor } from "@flatsby/validators/expenses/category-colors";
+import {
+  categoryBgColorMap,
+  categoryBorderColorMap,
+  getCategoryTextColor,
+} from "@flatsby/validators/expenses/category-colors";
 
 import type {
   BottomSheetPickerItem,
@@ -13,7 +20,7 @@ import type {
 } from "~/lib/ui/bottom-sheet-picker";
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { BottomSheetPickerTrigger } from "~/lib/ui/bottom-sheet-picker";
-import { CategoryIcon } from "~/lib/ui/category-icon";
+import Icon from "~/lib/ui/custom/icons/Icon";
 
 const iconSize = 20 as const;
 
@@ -101,25 +108,23 @@ const CATEGORY_CONFIG: Record<CategoryIdWithAiAutoSelect, CategoryConfig> = {
 
 export const getCategoryData = ({
   categoryId,
-  isDark = false,
+  colorVariant = "default",
 }: {
   categoryId: CategoryIdWithAiAutoSelect;
-  isDark?: boolean;
+  colorVariant?: CategoryColorVariant;
 }) => {
   const config = CATEGORY_CONFIG[categoryId];
-  const nativeColors = getNativeCategoryColor(config.colorKey, isDark);
+  const color = getCategoryTextColor(config.colorKey, colorVariant);
+  const bgColor = categoryBgColorMap[config.colorKey];
+  const borderColor = categoryBorderColorMap[config.colorKey];
 
   return {
     name: config.name,
+    color,
+    bgColor,
+    borderColor,
     colorKey: config.colorKey,
-    nativeColors,
-    icon: (
-      <CategoryIcon
-        name={config.iconName}
-        size={iconSize}
-        color={nativeColors.text}
-      />
-    ),
+    icon: <Icon name={config.iconName} size={iconSize} className={color} />,
     description: config.description,
   };
 };

@@ -1,4 +1,4 @@
-import type { PressableProps, StyleProp, ViewStyle } from "react-native";
+import type { PressableProps } from "react-native";
 import type { VariantProps } from "tailwind-variants";
 import * as React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -78,14 +78,12 @@ const badgeVariants = tv({
 });
 
 export interface BadgeProps
-  extends Omit<PressableProps, "children" | "style">,
-    VariantProps<typeof badgeVariants> {
+  extends Omit<PressableProps, "children">, VariantProps<typeof badgeVariants> {
   children?: React.ReactNode;
   icon?: React.ReactNode;
   label?: string;
   className?: string;
   count?: number;
-  style?: StyleProp<ViewStyle>;
 }
 
 const Badge = React.forwardRef<
@@ -102,7 +100,6 @@ const Badge = React.forwardRef<
       className,
       onPress,
       count,
-      style,
       ...props
     },
     ref,
@@ -129,7 +126,6 @@ const Badge = React.forwardRef<
         <Pressable
           ref={ref}
           className={base({ className })}
-          style={style}
           onPress={onPress}
           {...props}
         >
@@ -138,11 +134,7 @@ const Badge = React.forwardRef<
       );
     }
 
-    return (
-      <View className={base({ className })} style={style}>
-        {content}
-      </View>
-    );
+    return <View className={base({ className })}>{content}</View>;
   },
 );
 

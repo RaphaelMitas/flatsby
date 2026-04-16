@@ -2,7 +2,10 @@ import type {
   ExpenseCategoryGroup,
   ExpenseSubcategoryIdWithAuto,
 } from "@flatsby/validators/expenses/categories";
-import type { CategoryColorKey } from "@flatsby/validators/expenses/category-colors";
+import type {
+  CategoryColorKey,
+  CategoryColorVariant,
+} from "@flatsby/validators/expenses/category-colors";
 
 import {
   AI_AUTO_DETECT,
@@ -12,12 +15,14 @@ import {
   expenseSubcategoryIdsWithAuto,
 } from "@flatsby/validators/expenses/categories";
 import {
-  getNativeCategoryColor,
+  categoryBgColorMap,
+  categoryBorderColorMap,
+  getCategoryTextColor,
   isCategoryColorKey,
 } from "@flatsby/validators/expenses/category-colors";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
-import { CategoryIcon } from "~/lib/ui/category-icon";
+import Icon from "~/lib/ui/custom/icons/Icon";
 
 const iconSize = 14;
 
@@ -68,30 +73,29 @@ for (const sub of expenseSubcategories) {
 
 export function getExpenseCategoryData({
   subcategoryId,
-  isDark = false,
+  colorVariant = "default",
 }: {
   subcategoryId: string;
-  isDark?: boolean;
+  colorVariant?: CategoryColorVariant;
 }) {
   const entry = subcategoryRecord[subcategoryId] ?? otherEntry;
-  const nativeColors = getNativeCategoryColor(entry.colorKey, isDark);
+
+  const color = getCategoryTextColor(entry.colorKey, colorVariant);
+  const bgColor = categoryBgColorMap[entry.colorKey];
+  const borderColor = categoryBorderColorMap[entry.colorKey];
 
   return {
     name: entry.name,
     description: entry.description,
     groupName: entry.groupName,
+    color,
+    bgColor,
+    borderColor,
     colorKey: entry.colorKey,
-    nativeColors,
-    icon: (
-      <CategoryIcon
-        name={entry.iconName}
-        size={iconSize}
-        color={nativeColors.text}
-      />
-    ),
+    icon: <Icon name={entry.iconName} size={iconSize} className={color} />,
   };
 }
 
 export { AI_AUTO_DETECT, expenseSubcategoryIdsWithAuto };
 export type { ExpenseSubcategoryIdWithAuto };
-export type { CategoryColorKey };
+export type { CategoryColorKey, CategoryColorVariant };

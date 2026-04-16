@@ -1,8 +1,9 @@
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
-import { Text, useColorScheme } from "react-native";
+import { Text } from "react-native";
 
 import type { BadgeProps } from "./badge";
 import { getCategoryData } from "~/components/shoppingList/ShoppingListCategory";
+import { cn } from "~/lib/utils";
 import { Badge } from "./badge";
 
 export interface CategoryBadgeProps extends Omit<BadgeProps, "icon" | "label"> {
@@ -14,31 +15,24 @@ export function CategoryBadge({
   categoryId,
   showLabel = true,
   children,
-  variant = "outline",
+  variant = "ghost",
   className,
   ...props
 }: CategoryBadgeProps) {
-  const isDark = useColorScheme() === "dark";
   const categoryData = getCategoryData({
     categoryId,
-    isDark,
+    colorVariant: variant === "default" ? "inverted" : "default",
   });
-  const { nativeColors } = categoryData;
 
   return (
     <Badge
       icon={categoryData.icon}
       variant={variant}
-      className={className}
-      style={{
-        backgroundColor: nativeColors.bg,
-        borderColor: nativeColors.border,
-        borderWidth: 1,
-      }}
+      className={cn(categoryData.bgColor, categoryData.borderColor, className)}
       {...props}
     >
       {showLabel && (
-        <Text className="text-base" style={{ color: nativeColors.text }}>
+        <Text className={cn("text-base", categoryData.color)}>
           {categoryData.name}
         </Text>
       )}
