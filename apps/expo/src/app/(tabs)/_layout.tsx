@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { Platform } from "react-native";
+import { useKeyboardState } from "react-native-keyboard-controller";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
 import { Tabs } from "~/lib/components/bottom-tabs";
@@ -16,6 +18,7 @@ const settingsIcon = LucideIcon.getImageSourceSync("settings", 20);
 // spring themed icons
 const springHomeIcon = LucideIcon.getImageSourceSync("flower-2", 20);
 const springCartIcon = LucideIcon.getImageSourceSync("cherry", 20);
+const renderHiddenTabBar = () => null;
 
 export default function TabLayout() {
   const session = useSession();
@@ -23,6 +26,8 @@ export default function TabLayout() {
     useShoppingStore();
   const { getColor } = useThemeColors();
   const { isEnabled: isSpringEffectsEnabled } = useSpringEffects();
+  const isKeyboardVisible = useKeyboardState((state) => state.isVisible);
+  const shouldHideAndroidTabBar = Platform.OS === "android" && isKeyboardVisible;
 
   usePostHogIdentify();
 
@@ -82,6 +87,7 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: getColor("primary"),
       }}
+      tabBar={shouldHideAndroidTabBar ? renderHiddenTabBar : undefined}
       tabBarStyle={{
         backgroundColor: getColor("background"),
       }}
