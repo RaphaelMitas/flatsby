@@ -5,6 +5,3 @@
 @import "nativewind/theme";
 
 @import "@flatsby/tailwind-config/theme";
-
-@source "../../packages/validators/src/**/*.ts";
-@source "../../packages/ui/src/**/*.{ts,tsx}";
