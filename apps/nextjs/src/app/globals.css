@@ -3,6 +3,7 @@
 @import "@flatsby/tailwind-config/theme";
 
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../../packages/validators/src/**/*.ts";
 
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant light (&:where(.light, .light *));

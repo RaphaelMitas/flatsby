@@ -16,6 +16,7 @@ export function CategoryBadge({
   showLabel = true,
   children,
   variant = "ghost",
+  className,
   ...props
 }: CategoryBadgeProps) {
   const categoryData = getCategoryData({
@@ -24,7 +25,12 @@ export function CategoryBadge({
   });
 
   return (
-    <Badge icon={categoryData.icon} variant={variant} {...props}>
+    <Badge
+      icon={categoryData.icon}
+      variant={variant}
+      className={cn(categoryData.bgColor, categoryData.borderColor, className)}
+      {...props}
+    >
       {showLabel && (
         <Text className={cn("text-base", categoryData.color)}>
           {categoryData.name}

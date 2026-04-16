@@ -8,7 +8,11 @@ import { useMemo } from "react";
 import { View } from "react-native";
 
 import { categorysIdWithAiAutoSelect } from "@flatsby/validators/categories";
-import { getCategoryTextColor } from "@flatsby/validators/expenses/category-colors";
+import {
+  categoryBgColorMap,
+  categoryBorderColorMap,
+  getCategoryTextColor,
+} from "@flatsby/validators/expenses/category-colors";
 
 import type {
   BottomSheetPickerItem,
@@ -111,10 +115,14 @@ export const getCategoryData = ({
 }) => {
   const config = CATEGORY_CONFIG[categoryId];
   const color = getCategoryTextColor(config.colorKey, colorVariant);
+  const bgColor = categoryBgColorMap[config.colorKey];
+  const borderColor = categoryBorderColorMap[config.colorKey];
 
   return {
     name: config.name,
     color,
+    bgColor,
+    borderColor,
     colorKey: config.colorKey,
     icon: <Icon name={config.iconName} size={iconSize} className={color} />,
     description: config.description,
