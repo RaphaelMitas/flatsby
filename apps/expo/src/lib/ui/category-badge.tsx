@@ -21,14 +21,19 @@ export function CategoryBadge({
 }: CategoryBadgeProps) {
   const categoryData = getCategoryData({
     categoryId,
-    colorVariant: variant === "default" ? "inverted" : "default",
   });
 
   return (
     <Badge
       icon={categoryData.icon}
       variant={variant}
-      className={cn(categoryData.bgColor, categoryData.borderColor, className)}
+      className={cn(
+        categoryData.borderColor,
+        {
+          [categoryData.bgColor]: variant !== "outline",
+        },
+        className,
+      )}
       {...props}
     >
       {showLabel && (
