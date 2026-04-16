@@ -18,14 +18,20 @@ interface AppKeyboardStickyViewProps extends Omit<
 export function AppKeyboardStickyView({
   children,
   className,
+  includeTabBar = true,
   disabled = false,
   ...props
 }: AppKeyboardStickyViewProps) {
   const tabBarHeight = useBottomTabBarHeight();
   const safeAreaInsets = useSafeAreaInsets();
+  const isIpad = Platform.OS === "ios" && Platform.isPad;
+  const isAndroidApi37OrHigher =
+    Platform.OS === "android" &&
+    typeof Platform.Version === "number" &&
+    Platform.Version >= 37;
 
   const keyboardOffset =
-    Platform.OS === "ios" && Platform.isPad ? 0 : tabBarHeight;
+    includeTabBar && !isIpad && !isAndroidApi37OrHigher ? tabBarHeight : 0;
 
   const openedOffset = disabled
     ? (tabBarHeight + safeAreaInsets.bottom) * 2
