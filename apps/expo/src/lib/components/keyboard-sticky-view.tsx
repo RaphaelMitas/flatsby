@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { ReactNode } from "react";
 import type { KeyboardStickyViewProps } from "react-native-keyboard-controller";
 import { Platform } from "react-native";
@@ -23,22 +22,13 @@ export function AppKeyboardStickyView({
   ...props
 }: AppKeyboardStickyViewProps) {
   const tabBarHeight = useBottomTabBarHeight();
-  const [lastNonZeroTabBarHeight, setLastNonZeroTabBarHeight] =
-    useState(tabBarHeight);
   const safeAreaInsets = useSafeAreaInsets();
 
-  if (tabBarHeight > 0 && tabBarHeight !== lastNonZeroTabBarHeight) {
-    setLastNonZeroTabBarHeight(tabBarHeight);
-  }
-
-  const effectiveTabBarHeight =
-    tabBarHeight > 0 ? tabBarHeight : lastNonZeroTabBarHeight;
-
   const keyboardOffset =
-    Platform.OS === "ios" && Platform.isPad ? 0 : effectiveTabBarHeight;
+    Platform.OS === "ios" && Platform.isPad ? 0 : tabBarHeight;
 
   const openedOffset = disabled
-    ? (effectiveTabBarHeight + safeAreaInsets.bottom) * 2
+    ? (tabBarHeight + safeAreaInsets.bottom) * 2
     : keyboardOffset;
 
   return (
