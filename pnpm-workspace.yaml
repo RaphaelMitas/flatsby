@@ -35,8 +35,8 @@ catalog:
 
 catalogs:
   better-auth:
-    "@better-auth/expo": 1.6.2
-    better-auth: 1.6.2
+    "@better-auth/expo": 1.6.5
+    better-auth: 1.6.5
   react19:
     "@types/react": ~19.2.0
     "@types/react-dom": ~19.2.0
