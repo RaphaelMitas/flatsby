@@ -27,7 +27,8 @@ export default function TabLayout() {
   const { getColor } = useThemeColors();
   const { isEnabled: isSpringEffectsEnabled } = useSpringEffects();
   const isKeyboardVisible = useKeyboardState((state) => state.isVisible);
-  const shouldHideAndroidTabBar = Platform.OS === "android" && isKeyboardVisible;
+  const shouldHideAndroidTabBar =
+    Platform.OS === "android" && isKeyboardVisible;
 
   usePostHogIdentify();
 
