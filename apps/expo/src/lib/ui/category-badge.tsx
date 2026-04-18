@@ -16,15 +16,26 @@ export function CategoryBadge({
   showLabel = true,
   children,
   variant = "ghost",
+  className,
   ...props
 }: CategoryBadgeProps) {
   const categoryData = getCategoryData({
     categoryId,
-    colorVariant: variant === "default" ? "inverted" : "default",
   });
 
   return (
-    <Badge icon={categoryData.icon} variant={variant} {...props}>
+    <Badge
+      icon={categoryData.icon}
+      variant={variant}
+      className={cn(
+        categoryData.borderColor,
+        {
+          [categoryData.bgColor]: variant !== "outline",
+        },
+        className,
+      )}
+      {...props}
+    >
       {showLabel && (
         <Text className={cn("text-base", categoryData.color)}>
           {categoryData.name}
