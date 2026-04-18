@@ -5,3 +5,7 @@
 @import "nativewind/theme";
 
 @import "@flatsby/tailwind-config/theme";
+
+/* Include workspace package files that contain shared Tailwind class strings. */
+@source "../../../packages/validators/src/**/*.ts";
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
