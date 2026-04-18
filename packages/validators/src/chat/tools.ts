@@ -93,7 +93,7 @@ export type ShoppingListItemInfo = z.infer<typeof shoppingListItemInfoSchema>;
 // Expense info for search results
 export const expenseInfoSchema = z.object({
   id: z.number(),
-  description: expenseSchema.shape.description.unwrap().nullable(),
+  description: expenseSchema.shape.description.nullable(),
   amountInCents: expenseSchema.shape.amountInCents,
   currency: currencyCodeSchema,
   paidByMemberId: groupMemberSchema.shape.id,
@@ -371,7 +371,7 @@ const shoppingListItemResultSchema = shoppingListItemSchema.pick({
 
 const expenseResultSchema = z.object({
   id: z.number(),
-  description: expenseSchema.shape.description.unwrap().nullable(),
+  description: expenseSchema.shape.description.nullable(),
   amountInCents: expenseSchema.shape.amountInCents,
   currency: currencyCodeSchema,
   paidByMemberName: userNameSchema,

@@ -11,6 +11,7 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
+import { Badge } from "~/lib/ui/badge";
 import { Button } from "~/lib/ui/button";
 import {
   Card,
@@ -20,6 +21,7 @@ import {
   CardTitle,
 } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 import { Separator } from "~/lib/ui/separator";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
@@ -141,6 +143,7 @@ export function ExpenseDetailView({
   }
 
   const expense = expenseData.data;
+
   const formattedAmount = formatCurrencyFromCents({
     cents: expense.amountInCents,
     currency: expense.currency,
@@ -198,11 +201,16 @@ export function ExpenseDetailView({
                   )}
                 </View>
                 {expense.splitMethod === "settlement" && (
-                  <View className="bg-muted-foreground/20 rounded px-3 py-1">
-                    <Text className="text-muted-foreground text-xs">
+                  <Badge variant="secondary">
+                    <Icon
+                      name="handshake"
+                      size={12}
+                      color="secondary-foreground"
+                    />
+                    <Text className="text-secondary-foreground text-xs font-medium">
                       Settlement
                     </Text>
-                  </View>
+                  </Badge>
                 )}
               </View>
             </CardHeader>
@@ -267,19 +275,16 @@ export function ExpenseDetailView({
                 </View>
               </View>
 
-              {expense.category && (
-                <>
-                  <Separator />
-                  <View>
-                    <Text className="text-muted-foreground text-sm">
-                      Category
-                    </Text>
-                    <Text className="text-foreground font-semibold capitalize">
-                      {expense.category}
-                    </Text>
-                  </View>
-                </>
-              )}
+              <Separator />
+              <View>
+                <Text className="text-muted-foreground mb-1.5 text-sm">
+                  Category
+                </Text>
+                <ExpenseCategoryBadge
+                  subcategoryId={expense.subcategory}
+                  className="self-start"
+                />
+              </View>
             </CardContent>
           </Card>
 
@@ -375,7 +380,7 @@ export function ExpenseDetailView({
         visible={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
         onConfirm={handleDelete}
-        itemName={expense.description ?? formattedAmount}
+        itemName={expense.description}
         title="Delete Expense"
         description={`Are you sure you want to delete this expense? This action cannot be undone.`}
       />

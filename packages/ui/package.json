@@ -26,6 +26,7 @@
     "./sheet": "./src/sheet.tsx",
     "./toast": "./src/toast.tsx",
     "./categories": "./src/categories/index.ts",
+    "./categories/expense-categories": "./src/categories/expense-categories.ts",
     "./custom/loadingSpinner": "./src/custom/loadingSpinner.tsx",
     "./custom/icons/AppleIcon": "./src/custom/icons/AppleIcon.tsx",
     "./custom/icons/GoogleIcon": "./src/custom/icons/GoogleIcon.tsx",

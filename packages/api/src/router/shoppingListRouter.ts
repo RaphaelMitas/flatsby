@@ -38,7 +38,11 @@ import {
   safeDbOperation,
   ValidationUtils,
 } from "../utils";
-import { checkCredits, trackAIUsage } from "../utils/autumn";
+import {
+  checkCredits,
+  extractGatewayMetadata,
+  trackAIUsage,
+} from "../utils/autumn";
 import { createTracedModel } from "../utils/model-provider";
 
 export const shoppingList = createTRPCRouter({
@@ -985,11 +989,10 @@ const createItemCategorizer = (ctx: CategorizeContext) => {
       });
 
       // Track credits after successful AI call
-      const metadata = response.providerMetadata;
-      const cost = (metadata?.gateway as { cost?: string } | undefined)?.cost;
+      const gateway = extractGatewayMetadata(response.providerMetadata);
       await trackAIUsage({
         customerId: ctx.customerId,
-        cost: cost,
+        cost: gateway?.cost,
       });
 
       return response.object.category;

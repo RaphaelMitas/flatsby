@@ -1,9 +1,11 @@
 "use client";
 
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
-import { Calendar, Edit, Trash2, Users } from "lucide-react";
+import { Calendar, Edit, Handshake, Trash2, Users } from "lucide-react";
 
+import { cn } from "@flatsby/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
+import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -12,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
+import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
 import { Separator } from "@flatsby/ui/separator";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
@@ -28,6 +31,8 @@ export function ExpenseDetailContent({
   onDelete,
   isDeleting,
 }: ExpenseDetailContentProps) {
+  const categoryData = getExpenseCategoryData(expense.subcategory);
+
   const formattedAmount = formatCurrencyFromCents({
     cents: expense.amountInCents,
     currency: expense.currency,
@@ -77,9 +82,10 @@ export function ExpenseDetailContent({
               )}
             </div>
             {expense.splitMethod === "settlement" && (
-              <span className="bg-muted-foreground/20 text-muted-foreground rounded px-3 py-1 text-xs">
+              <Badge variant="secondary" className="gap-1.5 rounded-full">
+                <Handshake size={14} />
                 Settlement
-              </span>
+              </Badge>
             )}
           </div>
         </CardHeader>
@@ -140,15 +146,21 @@ export function ExpenseDetailContent({
             </div>
           </div>
 
-          {expense.category && (
-            <>
-              <Separator />
-              <div>
-                <p className="text-muted-foreground text-sm">Category</p>
-                <p className="font-semibold capitalize">{expense.category}</p>
-              </div>
-            </>
-          )}
+          <Separator />
+          <div>
+            <p className="text-muted-foreground mb-1.5 text-sm">Category</p>
+            <Badge
+              className={cn(
+                "w-fit gap-1.5 rounded-full",
+                categoryData.colorClasses.bg,
+                categoryData.colorClasses.base,
+                categoryData.colorClasses.border,
+              )}
+            >
+              <categoryData.icon size={14} />
+              {categoryData.name}
+            </Badge>
+          </div>
         </CardContent>
       </Card>
 

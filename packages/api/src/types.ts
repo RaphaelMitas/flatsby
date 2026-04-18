@@ -14,6 +14,10 @@ import type {
   shoppingLists,
   users,
 } from "@flatsby/db/schema";
+import type {
+  ExpenseCategoryGroup,
+  ExpenseSubcategoryId,
+} from "@flatsby/validators/expenses/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import type { InfiniteData } from "@tanstack/react-query";
 
@@ -120,12 +124,20 @@ export type ExpenseWithSplits = Expense & {
 };
 
 export type ExpenseSplitWithMember = ExpenseSplit & {
-  groupMember: Pick<GroupMember, "id"> & {
+  groupMember: Pick<
+    GroupMember,
+    "id" | "groupId" | "userId" | "role" | "joinedOn"
+  > & {
     user: Pick<User, "email" | "name" | "image">;
   };
 };
 
-export type ExpenseWithSplitsAndMembers = Expense & {
+export type ExpenseWithSplitsAndMembers = Omit<
+  Expense,
+  "category" | "subcategory"
+> & {
+  category: ExpenseCategoryGroup;
+  subcategory: ExpenseSubcategoryId;
   paidByGroupMember: GroupMemberWithUser;
   createdByGroupMember: GroupMemberWithUser;
   expenseSplits: ExpenseSplitWithMember[];

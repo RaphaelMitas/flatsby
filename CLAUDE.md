@@ -12,7 +12,9 @@ pnpm lint:fix
 pnpm typecheck
 pnpm format           # Check Prettier formatting
 pnpm format:fix
-pnpm db:push          # Push Drizzle schema changes
+pnpm db:generate      # Generate migration from schema changes
+pnpm db:migrate       # Apply pending migrations
+pnpm db:push          # Push Drizzle schema changes (local dev only)
 pnpm db:studio        # Open Drizzle Studio
 pnpm ui-add           # Add shadcn/ui components
 pnpm -F @flatsby/nextjs dev

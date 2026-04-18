@@ -1,11 +1,28 @@
 import type { CheckResponse } from "autumn-js";
 import { TRPCError } from "@trpc/server";
 import { Autumn } from "autumn-js";
+import { z } from "zod";
 
 import { env } from "@flatsby/auth/env";
 import { AUTUMN_FEATURES, costToCredits } from "@flatsby/validators/billing";
 
 import { captureError } from "../lib/posthog";
+
+const gatewayMetadataSchema = z
+  .object({
+    cost: z.string().optional(),
+    generationId: z.string().optional(),
+  })
+  .optional();
+
+export type GatewayMetadata = z.infer<typeof gatewayMetadataSchema>;
+
+export function extractGatewayMetadata(
+  providerMetadata: Record<string, unknown> | undefined,
+): GatewayMetadata {
+  const result = gatewayMetadataSchema.safeParse(providerMetadata?.gateway);
+  return result.success ? result.data : undefined;
+}
 
 export const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
 

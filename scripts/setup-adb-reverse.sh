@@ -6,8 +6,12 @@ if ! command -v adb &>/dev/null; then
   exit 0
 fi
 
-if ! adb devices 2>/dev/null | grep -q "device$"; then
+devices=$(adb devices 2>/dev/null | grep -w "device$" | awk '{print $1}')
+
+if [ -z "$devices" ]; then
   exit 0
 fi
 
-adb reverse tcp:3000 tcp:3000 2>/dev/null
+for device in $devices; do
+  adb -s "$device" reverse tcp:3000 tcp:3000 2>/dev/null
+done

@@ -2,11 +2,19 @@
 
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
-import { ArrowRight, Calendar, ChevronRight, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Calendar,
+  ChevronRight,
+  Handshake,
+  Users,
+} from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
+import { Badge } from "@flatsby/ui/badge";
 import { Card } from "@flatsby/ui/card";
+import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseCardProps {
@@ -41,6 +49,8 @@ export function ExpenseCard({
       ? expense.expenseSplits[0].groupMember
       : null;
 
+  const categoryData = getExpenseCategoryData(expense.subcategory);
+
   const cardContent = (
     <Card
       className={cn(
@@ -53,16 +63,29 @@ export function ExpenseCard({
           {/* Header: Amount and Currency */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-2xl font-bold">{formattedAmount}</span>
-                {expense.splitMethod === "settlement" && (
-                  <span className="bg-muted-foreground/20 text-muted-foreground rounded px-2 py-1 text-xs">
+                {expense.splitMethod === "settlement" ? (
+                  <Badge variant="secondary" className="gap-1.5 rounded-full">
+                    <Handshake size={14} />
                     Settlement
-                  </span>
+                  </Badge>
+                ) : (
+                  <Badge
+                    className={cn(
+                      "gap-1.5 rounded-full",
+                      categoryData.colorClasses.bg,
+                      categoryData.colorClasses.base,
+                      categoryData.colorClasses.border,
+                    )}
+                  >
+                    <categoryData.icon size={14} />
+                    {categoryData.name}
+                  </Badge>
                 )}
               </div>
               {expense.description && (
-                <p className="mt-1 line-clamp-2 text-sm font-medium">
+                <p className="mt-1 line-clamp-2 text-lg font-medium">
                   {expense.description}
                 </p>
               )}
@@ -103,25 +126,19 @@ export function ExpenseCard({
               </span>
             </div>
 
-            {expense.splitMethod !== "settlement" && (
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>
-                  Split between {splitCount}{" "}
-                  {splitCount === 1 ? "person" : "people"}
-                </span>
-              </div>
-            )}
-
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>{formattedDate}</span>
-              {expense.category && (
+              {expense.splitMethod !== "settlement" && (
                 <>
-                  <span>•</span>
-                  <span className="capitalize">{expense.category}</span>
+                  <Users className="h-4 w-4" />
+                  <span>
+                    Split between {splitCount}{" "}
+                    {splitCount === 1 ? "person" : "people"}
+                  </span>
+                  <span>·</span>
                 </>
               )}
+              <Calendar className="h-4 w-4" />
+              <span>{formattedDate}</span>
             </div>
           </div>
         </div>

@@ -183,7 +183,7 @@ export function ExpenseCard({
             expenseDate={expenseDate}
             splitMethod={expense.splitMethod}
             splitCount={splitCount}
-            category={expense.category}
+            subcategory={expense.subcategory}
             fromName={fromMember?.user.name}
             fromImage={fromMember?.user.image}
             isSelected={isSelected}
@@ -195,7 +195,7 @@ export function ExpenseCard({
         visible={showDeleteModal}
         onClose={handleCloseModal}
         onConfirm={handleDelete}
-        itemName={expense.description ?? formattedAmount}
+        itemName={expense.description || formattedAmount}
         title="Delete Expense"
         description={`Are you sure you want to delete this ${expense.splitMethod === "settlement" ? "settlement" : "expense"}? This action cannot be undone.`}
         needsConfirmationInput={false}

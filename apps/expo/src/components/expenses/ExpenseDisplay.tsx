@@ -3,8 +3,10 @@ import { Text, View } from "react-native";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
+import { Badge } from "~/lib/ui/badge";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 
 export interface ExpenseDisplayProps {
   amountInCents: number;
@@ -15,7 +17,7 @@ export interface ExpenseDisplayProps {
   expenseDate: Date;
   splitMethod?: string;
   splitCount?: number;
-  category?: string | null;
+  subcategory: string;
   fromName?: string;
   fromImage?: string | null;
   isSelected?: boolean;
@@ -30,7 +32,7 @@ export function ExpenseDisplay({
   expenseDate,
   splitMethod,
   splitCount,
-  category,
+  subcategory,
   fromName,
   fromImage,
   isSelected,
@@ -54,20 +56,25 @@ export function ExpenseDisplay({
   return (
     <Card className={isSelected ? "border-primary border-2" : undefined}>
       <CardContent className="gap-3 p-4">
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row flex-wrap items-center gap-2">
           <Text className="text-foreground text-2xl font-bold">
             {formattedAmount}
           </Text>
-          {isSettlement && (
-            <View className="bg-muted-foreground/20 rounded px-2 py-1">
-              <Text className="text-muted-foreground text-xs">Settlement</Text>
-            </View>
+          {isSettlement ? (
+            <Badge variant="secondary">
+              <Icon name="handshake" size={12} color="secondary-foreground" />
+              <Text className="text-secondary-foreground text-xs font-medium">
+                Settlement
+              </Text>
+            </Badge>
+          ) : (
+            <ExpenseCategoryBadge subcategoryId={subcategory} />
           )}
         </View>
 
         {description && (
           <Text
-            className="text-foreground text-sm font-medium"
+            className="text-foreground text-lg font-medium"
             numberOfLines={2}
           >
             {description}
@@ -101,29 +108,21 @@ export function ExpenseDisplay({
             </Text>
           </View>
 
-          {!isSettlement && splitCount != null && (
-            <View className="flex-row items-center gap-2">
-              <Icon name="users" size={16} color="muted-foreground" />
-              <Text className="text-muted-foreground text-sm">
-                Split between {splitCount}{" "}
-                {splitCount === 1 ? "person" : "people"}
-              </Text>
-            </View>
-          )}
-
           <View className="flex-row items-center gap-2">
+            {!isSettlement && splitCount != null && (
+              <>
+                <Icon name="users" size={16} color="muted-foreground" />
+                <Text className="text-muted-foreground text-sm">
+                  Split between {splitCount}{" "}
+                  {splitCount === 1 ? "person" : "people"}
+                </Text>
+                <Text className="text-muted-foreground text-sm">·</Text>
+              </>
+            )}
             <Icon name="calendar" size={16} color="muted-foreground" />
             <Text className="text-muted-foreground text-sm">
               {formattedDate}
             </Text>
-            {category && (
-              <>
-                <Text className="text-muted-foreground text-sm">•</Text>
-                <Text className="text-muted-foreground text-sm capitalize">
-                  {category}
-                </Text>
-              </>
-            )}
           </View>
         </View>
       </CardContent>
