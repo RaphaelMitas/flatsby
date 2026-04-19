@@ -245,7 +245,7 @@ importers:
         specifier: ~0.83.4
         version: 0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
       react-native-bottom-tabs:
-        specifier: ^1.1.0
+        specifier: ^1.2.0
         version: 1.2.0(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       react-native-css:
         specifier: 3.0.6
