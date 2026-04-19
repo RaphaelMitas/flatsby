@@ -938,7 +938,7 @@ importers:
         specifier: 'catalog:'
         version: 4.2.2
       postcss:
-        specifier: ^8.5.9
+        specifier: ^8.5.10
         version: 8.5.10
       tailwindcss:
         specifier: 'catalog:'
