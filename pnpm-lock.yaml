@@ -53,7 +53,7 @@ catalogs:
       specifier: ^10.2.0
       version: 10.2.1
     next:
-      specifier: ^16.2.3
+      specifier: ^16.2.4
       version: 16.2.4
     prettier:
       specifier: ^3.8.2
