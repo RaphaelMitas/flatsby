@@ -30,7 +30,7 @@ catalog:
   superjson: ^2.2.6
   tailwindcss: ^4.2.2
   turbo: ^2.9.6
-  typescript: ^6.0.0
+  typescript: ^6.0.3
   zod: ^4.3.6
 
 catalogs:
