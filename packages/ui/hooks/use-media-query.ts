@@ -1,19 +1,24 @@
 import type { Breakpoint } from "@flatsby/validators/breakpoints";
-import * as React from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 import { BREAKPOINTS } from "@flatsby/validators/breakpoints";
 
 export function useMediaQuery(breakpoint: Breakpoint) {
-  const [matches, setMatches] = React.useState(false);
+  const query = `(min-width: ${BREAKPOINTS[breakpoint]}px)`;
 
-  React.useEffect(() => {
-    const query = `(min-width: ${BREAKPOINTS[breakpoint]}px)`;
-    const mql = window.matchMedia(query);
-    const onChange = () => setMatches(mql.matches);
-    mql.addEventListener("change", onChange);
-    setMatches(mql.matches);
-    return () => mql.removeEventListener("change", onChange);
-  }, [breakpoint]);
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener("change", callback);
+      return () => mql.removeEventListener("change", callback);
+    },
+    [query],
+  );
 
-  return matches;
+  const getSnapshot = useCallback(
+    () => window.matchMedia(query).matches,
+    [query],
+  );
+
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
