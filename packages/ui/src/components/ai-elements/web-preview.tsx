@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps, ReactNode } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { ChevronDownIcon } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
@@ -136,11 +136,12 @@ export const WebPreviewUrl = ({
 }: WebPreviewUrlProps) => {
   const { url, setUrl } = useWebPreview();
   const [inputValue, setInputValue] = useState(url);
+  const [lastSyncedUrl, setLastSyncedUrl] = useState(url);
 
-  // Sync input value with context URL when it changes externally
-  useEffect(() => {
+  if (url !== lastSyncedUrl) {
+    setLastSyncedUrl(url);
     setInputValue(url);
-  }, [url]);
+  }
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);
