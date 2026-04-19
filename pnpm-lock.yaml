@@ -44,7 +44,7 @@ catalogs:
       specifier: ^6.0.168
       version: 6.0.168
     autumn-js:
-      specifier: ^1.2.8
+      specifier: ^1.2.9
       version: 1.2.9
     babel-plugin-react-compiler:
       specifier: ^1.0.0
