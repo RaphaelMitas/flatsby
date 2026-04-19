@@ -755,7 +755,7 @@ importers:
         specifier: ^12.38.0
         version: 12.38.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       nanoid:
-        specifier: ^5.1.7
+        specifier: ^5.1.9
         version: 5.1.9
       next-themes:
         specifier: ^0.4.6
