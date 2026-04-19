@@ -14,7 +14,7 @@ catalogs:
       version: 1.6.5
   default:
     '@ai-sdk/react':
-      specifier: ^3.0.162
+      specifier: ^3.0.170
       version: 3.0.170
     '@eslint/js':
       specifier: ^10.0.1
@@ -41,7 +41,7 @@ catalogs:
       specifier: ^24.12.2
       version: 24.12.2
     ai:
-      specifier: ^6.0.160
+      specifier: ^6.0.168
       version: 6.0.168
     autumn-js:
       specifier: ^1.2.8
