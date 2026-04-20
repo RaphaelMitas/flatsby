@@ -50,7 +50,7 @@ catalogs:
       specifier: ^1.0.0
       version: 1.0.0
     eslint:
-      specifier: ^10.2.0
+      specifier: ^10.2.1
       version: 10.2.1
     next:
       specifier: ^16.2.4
@@ -880,7 +880,7 @@ importers:
         specifier: ^4.16.2
         version: 4.16.2(@typescript-eslint/utils@8.58.2(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(eslint@10.2.1(jiti@2.6.1))
       eslint-plugin-react-hooks:
-        specifier: ^7.0.1
+        specifier: ^7.1.1
         version: 7.1.1(eslint@10.2.1(jiti@2.6.1))
       eslint-plugin-turbo:
         specifier: ^2.9.6
