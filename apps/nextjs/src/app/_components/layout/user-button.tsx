@@ -54,7 +54,7 @@ export function UserButton() {
           <div className="grid gap-2">
             <ModeToggle />
             <Button
-              variant={isEnabled ? "primary" : "outline"}
+              variant={isEnabled ? "default" : "outline"}
               className="w-full"
               onClick={() => setEnabled((prev) => !prev)}
             >

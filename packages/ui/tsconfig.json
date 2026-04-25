@@ -6,8 +6,10 @@
     "jsx": "preserve",
     "rootDir": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/hooks/*": ["./hooks/*"]
+      "@flatsby/ui": ["./src"],
+      "@flatsby/ui/*": ["./src/*"],
+      "@flatsby/ui/hooks": ["./hooks"],
+      "@flatsby/ui/hooks/*": ["./hooks/*"]
     }
   },
   "include": ["src", "hooks"],

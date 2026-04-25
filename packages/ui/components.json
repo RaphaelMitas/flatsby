@@ -11,11 +11,11 @@
     "prefix": ""
   },
   "aliases": {
-    "utils": "@/lib/utils",
-    "components": "src/components",
-    "ui": "src",
-    "lib": "src/lib",
-    "hooks": "hooks"
+    "utils": "@flatsby/ui/lib/utils",
+    "components": "@flatsby/ui/components",
+    "ui": "@flatsby/ui",
+    "lib": "@flatsby/ui/lib",
+    "hooks": "@flatsby/ui/hooks"
   },
   "iconLibrary": "lucide"
 }

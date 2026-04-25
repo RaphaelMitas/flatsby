@@ -37,7 +37,7 @@ export function CategoryFilterSidebar({
         <div className="space-y-1 p-4">
           {/* All Items button */}
           <Button
-            variant={selectedCategory === null ? "primary" : "ghost"}
+            variant={selectedCategory === null ? "default" : "ghost"}
             size="sm"
             onClick={() => onSelectCategory(null)}
             className="w-full justify-between"
@@ -62,7 +62,7 @@ export function CategoryFilterSidebar({
             return (
               <Button
                 key={category.id}
-                variant={isSelected ? "primary" : "ghost"}
+                variant={isSelected ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onSelectCategory(category.id as CategoryId)}
                 className="w-full justify-between"
