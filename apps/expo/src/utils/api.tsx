@@ -86,7 +86,7 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
           url: `${getBaseUrl()}/api/trpc`,
           headers: getHeaders,
           // Use expo/fetch for proper streaming support in React Native
-          fetch: expoFetch as unknown as typeof globalThis.fetch,
+          fetch: expoFetch,
         }),
         false: httpBatchLink({
           transformer: superjson,

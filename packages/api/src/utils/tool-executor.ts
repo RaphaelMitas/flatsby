@@ -435,7 +435,7 @@ export async function executeModifyData(
         return handleShoppingListCreate(
           ctx,
           groupId,
-          input as ShoppingListCreateInput,
+          input,
         );
       }
       if (action === "update") {
@@ -471,7 +471,7 @@ async function handleShoppingListItemCreate(
     result: {
       id: itemId,
       name: data.name,
-      categoryId: data.categoryId as CategoryId,
+      categoryId: data.categoryId,
       completed: false,
     },
   }));

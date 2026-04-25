@@ -48,7 +48,7 @@ export function SpringEffectsProvider({
       const current = getSnapshot();
       const next =
         typeof updater === "function"
-          ? (updater as (prev: boolean) => boolean)(current)
+          ? (updater)(current)
           : updater;
       localStorage.setItem(SPRING_EFFECTS_STORAGE_KEY, String(next));
       window.dispatchEvent(new Event("storage"));
