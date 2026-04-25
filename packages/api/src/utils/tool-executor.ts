@@ -432,11 +432,7 @@ export async function executeModifyData(
 
     case "shoppingList":
       if (action === "create") {
-        return handleShoppingListCreate(
-          ctx,
-          groupId,
-          input,
-        );
+        return handleShoppingListCreate(ctx, groupId, input);
       }
       if (action === "update") {
         return handleShoppingListUpdate(ctx, groupId, input);
