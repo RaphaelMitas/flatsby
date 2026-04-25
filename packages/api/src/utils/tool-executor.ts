@@ -432,11 +432,7 @@ export async function executeModifyData(
 
     case "shoppingList":
       if (action === "create") {
-        return handleShoppingListCreate(
-          ctx,
-          groupId,
-          input as ShoppingListCreateInput,
-        );
+        return handleShoppingListCreate(ctx, groupId, input);
       }
       if (action === "update") {
         return handleShoppingListUpdate(ctx, groupId, input);
@@ -471,7 +467,7 @@ async function handleShoppingListItemCreate(
     result: {
       id: itemId,
       name: data.name,
-      categoryId: data.categoryId as CategoryId,
+      categoryId: data.categoryId,
       completed: false,
     },
   }));

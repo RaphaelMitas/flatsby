@@ -22,7 +22,7 @@ import {
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
 
-import type { GroupMember, GroupMemberWithGroupMinimal, Role } from "../types";
+import type { GroupMember, GroupMemberWithGroupMinimal } from "../types";
 import {
   Errors,
   fail,
@@ -125,7 +125,7 @@ export const groupRouter = createTRPCRouter({
                   // Ensure we're not removing the last admin
                   DbUtils.ensureNotLastAdmin(
                     input.memberId,
-                    targetMember.role as Role,
+                    targetMember.role,
                     input.newRole,
                     targetMember.group.groupMembers,
                   ),
