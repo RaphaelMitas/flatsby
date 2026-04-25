@@ -15,7 +15,7 @@ function NavLinkItem({ href, iconName, label }: NavLinkItemProps) {
   const router = useRouter();
 
   return (
-    <Pressable onPress={() => router.push(href as never)}>
+    <Pressable onPress={() => router.push(href)}>
       <Card>
         <CardContent className="flex-row items-center justify-between p-4">
           <View className="flex-row items-center gap-3">
