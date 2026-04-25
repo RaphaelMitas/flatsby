@@ -29,7 +29,7 @@
     "@bottom-tabs/react-navigation": "^1.2.0",
     "@expo/metro-runtime": "~55.0.10",
     "@flatsby/validators": "workspace:*",
-    "@gorhom/bottom-sheet": "^5.2.9",
+    "@gorhom/bottom-sheet": "^5.2.10",
     "@hookform/resolvers": "^5.2.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^8.6.0",
