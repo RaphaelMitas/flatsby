@@ -74,7 +74,7 @@ export function UIConfirmation({
         <p className="text-muted-foreground mb-3 text-sm">{message}</p>
         <div className="flex gap-2">
           <Button
-            variant={destructive ? "destructive" : "primary"}
+            variant={destructive ? "destructive" : "default"}
             size="sm"
             disabled={disabled}
             onClick={onConfirm}

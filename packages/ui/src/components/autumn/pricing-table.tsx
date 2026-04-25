@@ -398,7 +398,7 @@ export const PricingCardButton = React.forwardRef<
         className,
       )}
       {...props}
-      variant={recommended ? "primary" : "secondary"}
+      variant={recommended ? "default" : "secondary"}
       ref={ref}
       disabled={loading || props.disabled}
       onClick={handleClick}

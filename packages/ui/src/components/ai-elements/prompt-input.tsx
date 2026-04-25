@@ -881,7 +881,7 @@ export const PromptInputTextarea = ({
 
     const files: File[] = [];
 
-    for (const item of items) {
+    for (const item of Array.from(items)) {
       if (item.kind === "file") {
         const file = item.getAsFile();
         if (file) {
@@ -1034,7 +1034,7 @@ export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
 
 export const PromptInputSubmit = ({
   className,
-  variant = "primary",
+  variant = "default",
   size = "icon-sm",
   status,
   children,

@@ -201,7 +201,7 @@ export function SplitEditor({
       <div className="flex gap-2">
         <Button
           type="button"
-          variant={splitMethod === "equal" ? "primary" : "outline"}
+          variant={splitMethod === "equal" ? "default" : "outline"}
           size="sm"
           onClick={() => handleSplitMethodChange("equal")}
           className="flex-1"
@@ -211,7 +211,7 @@ export function SplitEditor({
         </Button>
         <Button
           type="button"
-          variant={splitMethod === "percentage" ? "primary" : "outline"}
+          variant={splitMethod === "percentage" ? "default" : "outline"}
           size="sm"
           onClick={() => handleSplitMethodChange("percentage")}
           className="flex-1"
@@ -221,7 +221,7 @@ export function SplitEditor({
         </Button>
         <Button
           type="button"
-          variant={splitMethod === "custom" ? "primary" : "outline"}
+          variant={splitMethod === "custom" ? "default" : "outline"}
           size="sm"
           onClick={() => handleSplitMethodChange("custom")}
           className="flex-1"
@@ -246,7 +246,7 @@ export function SplitEditor({
                 <Button
                   key={member.id}
                   type="button"
-                  variant={isSelected ? "primary" : "outline"}
+                  variant={isSelected ? "default" : "outline"}
                   onClick={() => toggleMember(member.id)}
                   className="flex h-auto flex-col items-center gap-2 py-3"
                 >

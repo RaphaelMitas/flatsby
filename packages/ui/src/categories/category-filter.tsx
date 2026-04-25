@@ -32,7 +32,7 @@ export function CategoryFilter({
     <div className="flex gap-2 overflow-x-auto px-4 pb-2">
       {/* All button */}
       <Button
-        variant={selectedCategory === null ? "primary" : "outline"}
+        variant={selectedCategory === null ? "default" : "outline"}
         size="sm"
         onClick={() => onSelectCategory(null)}
         className="shrink-0 rounded-full"
@@ -62,7 +62,7 @@ export function CategoryFilter({
         return (
           <Button
             key={category.id}
-            variant={isSelected ? "primary" : "outline"}
+            variant={isSelected ? "default" : "outline"}
             size="sm"
             onClick={() => onSelectCategory(category.id as CategoryId)}
             className="shrink-0 rounded-full"

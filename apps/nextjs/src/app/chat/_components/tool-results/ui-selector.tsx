@@ -89,7 +89,7 @@ export function UISelector({
           {options.map((option) => (
             <Button
               key={option.id}
-              variant={selected.has(option.id) ? "primary" : "outline"}
+              variant={selected.has(option.id) ? "default" : "outline"}
               size="sm"
               disabled={disabled}
               onClick={() => handleSelect(option.id)}
