@@ -29,7 +29,7 @@
     "@posthog/ai": "7.16.10",
     "@trpc/server": "catalog:",
     "ai": "catalog:",
-    "effect": "^3.21.1",
+    "effect": "^3.21.2",
     "posthog-node": "^5.29.2",
     "superjson": "catalog:",
     "zod": "catalog:"
