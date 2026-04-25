@@ -3,12 +3,16 @@ packages:
   - packages/*
   - tooling/*
 
-# Unfixable transitive dep vulnerabilities (pinned by parent packages).
+# Unfixable transitive dependency vulnerabilities (pinned by parent packages).
 # Remove entries as upstream packages release fixes.
 # - esbuild: @esbuild-kit/core-utils@3.3.2 pins ~0.18.20 (drizzle-kit)
+# - uuid: Expo/LangChain/PostHog dependency chain has no uuid >=14 path yet.
+# - postcss: Next and Expo Metro still pin vulnerable 8.4.x releases.
 auditConfig:
   ignoreGhsas:
     - GHSA-67mh-4wv8-2f99
+    - GHSA-w5hq-g745-h8pq
+    - GHSA-qx2v-qp2m-jg93
 
 catalog:
   "@ai-sdk/react": ^3.0.170
