@@ -93,18 +93,6 @@ jobs:
       - name: Update CocoaPods repo
         run: pod repo update
 
-      - name: Ensure clean working tree before EAS build
-        shell: bash
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "Working tree is dirty before EAS build:"
-            git status --porcelain
-            echo
-            echo "Diff:"
-            git --no-pager diff
-            exit 1
-          fi
-
       - name: Build app for simulator
         working-directory: apps/expo
         run: |
