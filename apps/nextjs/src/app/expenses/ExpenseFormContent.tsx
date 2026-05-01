@@ -64,6 +64,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     currency,
     paidByGroupMemberId,
     description,
+    subcategory,
     splits,
     isPending,
     createExpenseMutation,
@@ -213,9 +214,10 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   control={form.control}
                   name="category"
                   render={() => {
-                    const sub = form.getValues("subcategory");
                     const pickerValue =
-                      sub && isExpenseSubcategoryId(sub) ? sub : AI_AUTO_DETECT;
+                      subcategory && isExpenseSubcategoryId(subcategory)
+                        ? subcategory
+                        : AI_AUTO_DETECT;
 
                     return (
                       <FormItem>
