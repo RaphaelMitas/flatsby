@@ -99,6 +99,7 @@ export function useExpenseForm({
     name: "paidByGroupMemberId",
   });
   const description = useWatch({ control: form.control, name: "description" });
+  const subcategory = useWatch({ control: form.control, name: "subcategory" });
   const splits = useWatch({ control: form.control, name: "splits" });
 
   const createExpenseMutation = useMutation(
@@ -536,6 +537,7 @@ export function useExpenseForm({
     currency,
     paidByGroupMemberId,
     description,
+    subcategory,
     splits,
     isPending,
     createExpenseMutation,
