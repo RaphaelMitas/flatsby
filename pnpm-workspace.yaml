@@ -28,7 +28,7 @@ catalog:
   ai: ^6.0.174
   autumn-js: ^1.2.17
   babel-plugin-react-compiler: ^1.0.0
-  eslint: ^10.2.1
+  eslint: ^10.3.0
   next: ^16.2.4
   prettier: ^3.8.3
   superjson: ^2.2.6
