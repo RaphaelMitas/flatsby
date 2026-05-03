@@ -35,7 +35,7 @@ catalog:
   tailwindcss: ^4.2.4
   turbo: ^2.9.8
   typescript: ^6.0.3
-  zod: ^4.3.6
+  zod: ^4.4.2
 
 catalogs:
   better-auth:
