@@ -375,6 +375,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             </View>
 
             <FlashList
+              className="flex-1"
               data={flashListData}
               renderItem={renderItem}
               getItemType={getItemType}
@@ -388,6 +389,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
               keyboardDismissMode="on-drag"
+              keyboardShouldPersistTaps="handled"
             />
             <AppKeyboardStickyView>
               <ShoppingListItemAddForm

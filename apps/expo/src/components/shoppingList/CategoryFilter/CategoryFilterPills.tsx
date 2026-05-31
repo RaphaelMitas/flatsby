@@ -28,6 +28,7 @@ export function CategoryFilterPills({
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerClassName="gap-2 px-4 pb-2"
+      keyboardShouldPersistTaps="handled"
     >
       {/* All button - keep as custom since it's not a category */}
       <Badge
