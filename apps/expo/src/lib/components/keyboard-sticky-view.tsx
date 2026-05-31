@@ -23,6 +23,7 @@ export function AppKeyboardStickyView({
 }: AppKeyboardStickyViewProps) {
   const tabBarHeight = useBottomTabBarHeight();
   const safeAreaInsets = useSafeAreaInsets();
+  const isAndroid = Platform.OS === "android";
 
   const keyboardOffset =
     Platform.OS === "ios" && !Platform.isPad ? tabBarHeight : 0;
@@ -37,6 +38,7 @@ export function AppKeyboardStickyView({
         opened: openedOffset,
         closed: 0,
       }}
+      enabled={!isAndroid}
       className={className}
       {...props}
     >
