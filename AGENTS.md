@@ -19,9 +19,29 @@ Copy `.env.example` to `.env` at the repo root. The Next.js app loads it via `do
 
 For local dev without real credentials, populate `.env` with placeholder strings. The dev server will start and render pages, but OAuth login and database operations will fail without real `DATABASE_URL` and OAuth provider credentials.
 
+### Toolchain (cloud VM)
+
+Use **Node 24.15.0** (`.nvmrc`) and **pnpm 10.33.2** (root `packageManager` field) via Corepack:
+
+```bash
+nvm install 24.15.0 && nvm use 24.15.0
+export PATH="$NVM_DIR/versions/node/v24.15.0/bin:$PATH"   # before /exec-daemon/node
+corepack enable && corepack prepare pnpm@10.33.2 --activate
+pnpm install
+```
+
+Expo checks (no extra setup after `pnpm install`):
+
+```bash
+pnpm -F @flatsby/expo lint
+pnpm -F @flatsby/expo typecheck
+```
+
 ### Non-obvious caveats
 
-- **Node.js version**: Requires Node.js >= 24.14.1 (see `.nvmrc`). Use `nvm install 24.14.1 && nvm use 24.14.1` if not already on this version.
+- **Node.js version**: Requires Node.js >= 24.15.0 (see `.nvmrc`). Cloud VMs may ship `/exec-daemon/node` (older Node) ahead of nvm on `PATH`; always prepend `$NVM_DIR/versions/node/v24.15.0/bin` after `nvm use` so `node -v` is 24.15+ before `pnpm install` or Expo/Next dev commands.
+- **`pnpm db:push` in headless shells**: The root `pnpm db:push` task is marked `interactive` in `turbo.json` and fails without a Turbo UI. Use `cd packages/db && pnpm with-env drizzle-kit push --force` instead (non-interactive).
+- **`.env` file**: Copy `.env.example` to `.env` and fill values (or sync from injected secrets). The dev server loads repo-root `.env` via `dotenv -e ../../.env`; shell-exported vars alone are not enough unless written to `.env`.
 - **Build scripts warning**: `pnpm install` may warn about ignored build scripts for `protobufjs` and `sharp`. These are non-blocking for development; the `onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` intentionally permits only `@tailwindcss/oxide` and `esbuild`.
 - **postinstall**: `pnpm install` runs `pnpm lint:ws` (sherif workspace linter) as a postinstall hook.
 - **Env loading**: The Next.js dev server uses `dotenv -e ../../.env` (via the `with-env` script in `apps/nextjs/package.json`) to load env vars from the monorepo root `.env` file.
