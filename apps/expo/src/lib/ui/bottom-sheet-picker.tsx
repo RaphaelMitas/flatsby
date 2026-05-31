@@ -207,8 +207,9 @@ export const BottomSheetPickerProvider: React.FC<
     (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
       <BottomSheetBackdrop
         {...props}
-        disappearsOnIndex={-1}
+        disappearsOnIndex={-0.5}
         appearsOnIndex={0}
+        pressBehavior="close"
       />
     ),
     [],
