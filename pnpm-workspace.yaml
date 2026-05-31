@@ -58,6 +58,9 @@ onlyBuiltDependencies:
   - sharp
 
 overrides:
+  # Better Auth 1.6.12's SQLite dialect bundle imports Kysely migration
+  # constants removed in 0.29.x during Next/Turbopack builds.
+  kysely: 0.28.17
   # NativeWind v5 / Lightning CSS deserialization regression workaround.
   lightningcss: 1.30.1
 
