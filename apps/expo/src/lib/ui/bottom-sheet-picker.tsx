@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Keyboard, Pressable, Text, View } from "react-native";
+import { Keyboard, Text, View } from "react-native";
 import BottomSheetRaw, {
   BottomSheetBackdrop,
   useBottomSheetScrollableCreator,
@@ -18,6 +18,7 @@ import { styled } from "nativewind";
 import { tv } from "tailwind-variants";
 
 import { useThemeColors } from "../utils";
+import { Pressable } from "./pressable";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const BottomSheet = styled(BottomSheetRaw, {

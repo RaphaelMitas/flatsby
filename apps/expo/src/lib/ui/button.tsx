@@ -1,11 +1,12 @@
 import type { PressableProps } from "react-native";
 import type { VariantProps } from "tailwind-variants";
 import * as React from "react";
-import { Pressable, Text } from "react-native";
+import { Text } from "react-native";
 import { tv } from "tailwind-variants";
 
 import type { IconProps } from "./custom/icons/Icon";
 import Icon from "./custom/icons/Icon";
+import { Pressable } from "./pressable";
 
 const buttonVariants = tv({
   base: "flex-row items-center justify-center rounded-lg transition-colors gap-2",

@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 
 import { cn } from "../utils";
 import Icon from "./custom/icons/Icon";
+import { Pressable } from "./pressable";
 
 interface CheckboxProps {
   checked?: boolean;

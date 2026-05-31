@@ -1,8 +1,10 @@
 import type { PressableProps } from "react-native";
 import type { VariantProps } from "tailwind-variants";
 import * as React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { tv } from "tailwind-variants";
+
+import { Pressable } from "./pressable";
 
 const badgeVariants = tv({
   slots: {

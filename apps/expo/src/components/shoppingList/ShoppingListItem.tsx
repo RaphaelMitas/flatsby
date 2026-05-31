@@ -3,13 +3,14 @@ import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
-import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
+import { Modal, Text, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { Pressable } from "~/lib/ui/pressable";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
