@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
+import type { KeyboardStickyViewProps } from "react-native-keyboard-controller";
 import { Platform } from "react-native";
 import { useBottomTabBarHeight } from "react-native-bottom-tabs";
-import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
-import Animated, {
-  interpolate,
-  useAnimatedStyle,
-} from "react-native-reanimated";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-interface AppKeyboardStickyViewProps {
+interface AppKeyboardStickyViewProps extends Omit<
+  KeyboardStickyViewProps,
+  "offset"
+> {
   includeTabBar?: boolean;
   className?: string;
   children: ReactNode;
@@ -19,10 +19,10 @@ export function AppKeyboardStickyView({
   children,
   className,
   disabled = false,
+  ...props
 }: AppKeyboardStickyViewProps) {
   const tabBarHeight = useBottomTabBarHeight();
   const safeAreaInsets = useSafeAreaInsets();
-  const { height, progress } = useReanimatedKeyboardAnimation();
 
   const keyboardOffset =
     Platform.OS === "ios" && !Platform.isPad ? tabBarHeight : 0;
@@ -31,17 +31,16 @@ export function AppKeyboardStickyView({
     ? (tabBarHeight + safeAreaInsets.bottom) * 2
     : keyboardOffset;
 
-  const animatedStyle = useAnimatedStyle(() => {
-    const offset = interpolate(progress.value, [0, 1], [0, openedOffset]);
-
-    return {
-      transform: [{ translateY: height.value + offset }],
-    };
-  });
-
   return (
-    <Animated.View className={className} style={animatedStyle}>
+    <KeyboardStickyView
+      offset={{
+        opened: openedOffset,
+        closed: 0,
+      }}
+      className={className}
+      {...props}
+    >
       {children}
-    </Animated.View>
+    </KeyboardStickyView>
   );
 }
