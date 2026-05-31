@@ -1,3 +1,4 @@
+import type { Href } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -6,7 +7,7 @@ import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 
 interface NavLinkItemProps {
-  href: string;
+  href: Href;
   iconName: IconProps["name"];
   label: string;
 }
