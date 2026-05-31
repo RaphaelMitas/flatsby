@@ -28,7 +28,7 @@ export function AppKeyboardStickyView({
     Platform.OS === "ios" && !Platform.isPad
       ? tabBarHeight
       : Platform.OS === "android"
-        ? Math.min(safeAreaInsets.bottom, 24)
+        ? safeAreaInsets.bottom
         : 0;
 
   const openedOffset = disabled
