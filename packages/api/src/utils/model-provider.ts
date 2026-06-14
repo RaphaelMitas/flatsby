@@ -1,10 +1,15 @@
-import type { ModelMessage, ProviderOptions, Tool } from "ai";
+import type { ModelMessage, Tool } from "ai";
 import { withTracing } from "@posthog/ai";
 import { gateway, generateText, stepCountIs, streamText } from "ai";
 
+import { DEFAULT_CHAT_MODEL } from "@flatsby/validators/models";
+
 import { posthog } from "../lib/posthog";
 
-export const DEFAULT_CHAT_MODEL = "openai/gpt-5.4-mini";
+type ProviderOptions = NonNullable<
+  Parameters<typeof streamText>[0]["providerOptions"]
+>;
+
 export const CHEAP_AI_MODEL = "openai/gpt-5.4-nano";
 
 const CHAT_PROVIDER_OPTIONS = {

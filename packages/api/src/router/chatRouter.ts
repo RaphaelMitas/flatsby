@@ -49,7 +49,9 @@ import {
 // Batched write interval in milliseconds
 const FLUSH_INTERVAL = 300;
 
-function parseChatModel(model: string | null | undefined): ChatModel | undefined {
+function parseChatModel(
+  model: string | null | undefined,
+): ChatModel | undefined {
   return chatModelSchema.safeParse(model).data;
 }
 
@@ -187,7 +189,8 @@ export const chatRouter = createTRPCRouter({
           where: eq(users.id, ctx.session.user.id),
           columns: { lastChatModelUsed: true },
         });
-        modelToUse = parseChatModel(user?.lastChatModelUsed) ?? getDefaultModel();
+        modelToUse =
+          parseChatModel(user?.lastChatModelUsed) ?? getDefaultModel();
       }
 
       const [conversation] = await ctx.db

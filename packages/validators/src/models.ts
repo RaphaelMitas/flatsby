@@ -8,8 +8,17 @@ export const chatModelSchema = z.enum([
   "google/gemini-3-flash",
 ]);
 export type ChatModel = z.infer<typeof chatModelSchema>;
+export const DEFAULT_CHAT_MODEL = "openai/gpt-5.4-mini" satisfies ChatModel;
 
-export const CHAT_MODELS = [
+interface ChatModelDefinition {
+  id: ChatModel;
+  name: string;
+  provider: string;
+  supportsTools: boolean;
+  pricing: { input: number; output: number };
+}
+
+export const CHAT_MODELS: readonly ChatModelDefinition[] = [
   {
     id: "openai/gpt-5.4-mini",
     name: "GPT-5.4 Mini",
@@ -45,13 +54,7 @@ export const CHAT_MODELS = [
     supportsTools: true,
     pricing: { input: 0.5, output: 3.0 },
   },
-] as const satisfies readonly {
-  id: ChatModel;
-  name: string;
-  provider: string;
-  supportsTools: boolean;
-  pricing: { input: number; output: number };
-}[];
+];
 
 export function getModelTier(modelId: string): "Fast" | "Balanced" | "Premium" {
   const model = CHAT_MODELS.find((m) => m.id === modelId);

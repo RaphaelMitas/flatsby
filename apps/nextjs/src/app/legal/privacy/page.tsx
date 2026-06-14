@@ -373,10 +373,9 @@ export default function PrivacyPage() {
           <LegalParagraph>
             Your data may be processed outside the European Economic Area (EEA)
             by our service providers. In particular, AI services (OpenAI and
-            Google) process data in the United States. We ensure
-            appropriate safeguards are in place, such as Standard Contractual
-            Clauses (SCCs) or adequacy decisions. See the DPA link in Section
-            6.2 for details.
+            Google) process data in the United States. We ensure appropriate
+            safeguards are in place, such as Standard Contractual Clauses (SCCs)
+            or adequacy decisions. See the DPA link in Section 6.2 for details.
           </LegalParagraph>
         </LegalSection>
 

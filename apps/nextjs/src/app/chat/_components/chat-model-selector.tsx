@@ -59,16 +59,9 @@ export function ChatModelSelector({
 
   const selectedModelData = CHAT_MODELS.find((m) => m.id === currentModel);
 
-  // Filter models: when tools are enabled, only show models that support tools
-  const filteredModels = useMemo(() => {
-    if (!toolsEnabled) return CHAT_MODELS;
-    return CHAT_MODELS.filter((model) => model.supportsTools);
-  }, [toolsEnabled]);
-
-  // Group filtered models by provider
   const providers = useMemo(() => {
-    return Array.from(new Set(filteredModels.map((m) => m.provider)));
-  }, [filteredModels]);
+    return Array.from(new Set(CHAT_MODELS.map((m) => m.provider)));
+  }, []);
 
   return (
     <ModelSelector open={open} onOpenChange={setOpen}>
@@ -96,9 +89,8 @@ export function ChatModelSelector({
           <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
           {providers.map((provider) => (
             <ModelSelectorGroup heading={provider} key={provider}>
-              {filteredModels
-                .filter((model) => model.provider === provider)
-                .map((model) => (
+              {CHAT_MODELS.filter((model) => model.provider === provider).map(
+                (model) => (
                   <ModelSelectorItem
                     key={model.id}
                     value={model.id}
@@ -113,11 +105,9 @@ export function ChatModelSelector({
                       <Badge className="ml-2 text-xs" variant="secondary">
                         {getModelTier(model.id)}
                       </Badge>
-                      {model.supportsTools && (
-                        <Badge className="ml-1 text-xs" variant="outline">
-                          Tools
-                        </Badge>
-                      )}
+                      <Badge className="ml-1 text-xs" variant="outline">
+                        Tools
+                      </Badge>
                     </ModelSelectorName>
 
                     {currentModel === model.id ? (
@@ -126,7 +116,8 @@ export function ChatModelSelector({
                       <div className="ml-auto size-4" />
                     )}
                   </ModelSelectorItem>
-                ))}
+                ),
+              )}
             </ModelSelectorGroup>
           ))}
           <ModelSelectorSeparator />
