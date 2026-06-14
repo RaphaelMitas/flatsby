@@ -1,14 +1,33 @@
-import type { ModelMessage, Tool } from "ai";
+import type { ModelMessage, ProviderOptions, Tool } from "ai";
 import { withTracing } from "@posthog/ai";
 import { gateway, generateText, stepCountIs, streamText } from "ai";
 
 import { posthog } from "../lib/posthog";
 
-const DEFAULT_MODEL = "openai/gpt-5.2";
-const TITLE_GENERATION_MODEL = "openai/gpt-5.2";
+export const DEFAULT_CHAT_MODEL = "openai/gpt-5.4-mini";
+export const CHEAP_AI_MODEL = "openai/gpt-5.4-nano";
+
+const CHAT_PROVIDER_OPTIONS = {
+  openai: {
+    reasoningEffort: "none",
+  },
+  google: {
+    thinkingConfig: {
+      thinkingLevel: "low",
+    },
+  },
+} as const satisfies ProviderOptions;
+
+export const CHEAP_AI_PROVIDER_OPTIONS = {
+  openai: {
+    reasoningEffort: "none",
+  },
+} as const satisfies ProviderOptions;
+
+const TITLE_GENERATION_MODEL = CHEAP_AI_MODEL;
 
 export function getDefaultModel() {
-  return DEFAULT_MODEL;
+  return DEFAULT_CHAT_MODEL;
 }
 
 export type TracingFeature =
@@ -27,6 +46,7 @@ export interface StreamChatOptions {
   model?: string;
   systemPrompt?: string;
   tracing?: TracingOptions;
+  providerOptions?: ProviderOptions;
 }
 
 export interface StreamChatWithToolsOptions extends StreamChatOptions {
@@ -49,12 +69,13 @@ export function streamChatCompletion(
   messages: ModelMessage[],
   options: StreamChatOptions = {},
 ) {
-  const modelName = options.model ?? DEFAULT_MODEL;
+  const modelName = options.model ?? DEFAULT_CHAT_MODEL;
   const model = createTracedModel(modelName, options.tracing);
 
   const result = streamText({
     model,
     messages,
+    providerOptions: options.providerOptions ?? CHAT_PROVIDER_OPTIONS,
   });
 
   return {
@@ -72,7 +93,7 @@ export function streamChatWithTools(
   messages: ModelMessage[],
   options: StreamChatWithToolsOptions = {},
 ) {
-  const modelName = options.model ?? DEFAULT_MODEL;
+  const modelName = options.model ?? DEFAULT_CHAT_MODEL;
   const maxSteps = options.maxSteps ?? 5;
   const model = createTracedModel(modelName, options.tracing);
 
@@ -82,6 +103,7 @@ export function streamChatWithTools(
     messages,
     tools: options.tools,
     stopWhen: stepCountIs(maxSteps),
+    providerOptions: options.providerOptions ?? CHAT_PROVIDER_OPTIONS,
   });
 
   return {
@@ -102,6 +124,7 @@ export async function generateConversationTitle(
 
   const result = await generateText({
     model,
+    providerOptions: CHEAP_AI_PROVIDER_OPTIONS,
     messages: [
       {
         role: "system",

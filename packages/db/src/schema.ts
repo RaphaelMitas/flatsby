@@ -300,7 +300,7 @@ export const conversations = createTable("conversations", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   title: text("title"),
-  model: text("model").default("google/gemini-2.0-flash"),
+  model: text("model").default("openai/gpt-5.4-mini"),
   systemPrompt: text("system_prompt"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

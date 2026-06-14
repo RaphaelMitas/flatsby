@@ -226,8 +226,8 @@ export default function PrivacyPage() {
               <LegalLink href="https://vercel.com/docs/ai-gateway" external>
                 Vercel AI Gateway
               </LegalLink>
-              , which routes requests to OpenAI (GPT models), Google (Gemini
-              models), or Anthropic (Claude models). See{" "}
+              , which routes requests to OpenAI (GPT models) or Google (Gemini
+              models). See{" "}
               <LegalLink href="https://vercel.com/legal/dpa" external>
                 Vercel&apos;s DPA
               </LegalLink>{" "}
@@ -372,8 +372,8 @@ export default function PrivacyPage() {
           <LegalHeading>10. International Data Transfers</LegalHeading>
           <LegalParagraph>
             Your data may be processed outside the European Economic Area (EEA)
-            by our service providers. In particular, AI services (OpenAI,
-            Google, Anthropic) process data in the United States. We ensure
+            by our service providers. In particular, AI services (OpenAI and
+            Google) process data in the United States. We ensure
             appropriate safeguards are in place, such as Standard Contractual
             Clauses (SCCs) or adequacy decisions. See the DPA link in Section
             6.2 for details.

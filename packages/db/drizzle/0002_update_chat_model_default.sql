@@ -1,0 +1,1 @@
+ALTER TABLE "flat-cove_conversations" ALTER COLUMN "model" SET DEFAULT 'openai/gpt-5.4-mini';

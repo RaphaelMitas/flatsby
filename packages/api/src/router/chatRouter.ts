@@ -49,6 +49,10 @@ import {
 // Batched write interval in milliseconds
 const FLUSH_INTERVAL = 300;
 
+function parseChatModel(model: string | null | undefined): ChatModel | undefined {
+  return chatModelSchema.safeParse(model).data;
+}
+
 interface FinalizeStreamParams {
   db: Database;
   assistantMessageId: string;
@@ -183,7 +187,7 @@ export const chatRouter = createTRPCRouter({
           where: eq(users.id, ctx.session.user.id),
           columns: { lastChatModelUsed: true },
         });
-        modelToUse = user?.lastChatModelUsed ?? getDefaultModel();
+        modelToUse = parseChatModel(user?.lastChatModelUsed) ?? getDefaultModel();
       }
 
       const [conversation] = await ctx.db
@@ -213,7 +217,7 @@ export const chatRouter = createTRPCRouter({
     .input(
       z.object({
         conversationId: z.uuid(),
-        model: z.string(),
+        model: chatModelSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -332,7 +336,8 @@ export const chatRouter = createTRPCRouter({
       });
     }
 
-    const modelToUse = input.model ?? conversation.model ?? getDefaultModel();
+    const modelToUse =
+      input.model ?? parseChatModel(conversation.model) ?? getDefaultModel();
     const tracing: TracingOptions = {
       distinctId: ctx.session.user.id,
       traceId: input.conversationId,
