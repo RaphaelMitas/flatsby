@@ -26,11 +26,12 @@
     "@flatsby/auth": "workspace:*",
     "@flatsby/db": "workspace:*",
     "@flatsby/validators": "workspace:*",
-    "@posthog/ai": "7.20.0",
+    "@posthog/ai": "8.2.1",
     "@trpc/server": "catalog:",
     "ai": "catalog:",
     "effect": "^3.21.2",
     "posthog-node": "^5.33.0",
+    "protobufjs": "^7.6.3",
     "superjson": "catalog:",
     "zod": "catalog:"
   },

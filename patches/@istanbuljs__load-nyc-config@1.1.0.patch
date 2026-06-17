@@ -1,0 +1,13 @@
+diff --git a/package.json b/package.json
+index 53207ef348efe5436cddabe6b7a5eed4c0a6df1c..7815f3540a7fbb7b9b7d50a228519e0f8c77fc88 100644
+--- a/package.json
++++ b/package.json
+@@ -25,7 +25,7 @@
+ 		"camelcase": "^5.3.1",
+ 		"find-up": "^4.1.0",
+ 		"get-package-type": "^0.1.0",
+-		"js-yaml": "^3.13.1",
++		"js-yaml": "^4.2.0",
+ 		"resolve-from": "^5.0.0"
+ 	},
+ 	"devDependencies": {

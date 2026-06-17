@@ -36,6 +36,7 @@
     "geist": "^1.7.0",
     "jose": "^6.2.3",
     "next": "catalog:",
+    "postcss": "^8.5.15",
     "prop-types": "^15.8.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

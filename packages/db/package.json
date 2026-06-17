@@ -23,11 +23,11 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "generate": "pnpm with-env drizzle-kit generate",
+    "generate": "pnpm with-env pnpm dlx drizzle-kit@1.0.0-beta.22 generate",
     "lint": "eslint",
-    "migrate": "pnpm with-env drizzle-kit migrate",
-    "push": "pnpm with-env drizzle-kit push",
-    "studio": "pnpm with-env drizzle-kit studio",
+    "migrate": "pnpm with-env pnpm dlx drizzle-kit@1.0.0-beta.22 migrate",
+    "push": "pnpm with-env pnpm dlx drizzle-kit@1.0.0-beta.22 push",
+    "studio": "pnpm with-env pnpm dlx drizzle-kit@1.0.0-beta.22 studio",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env --"
   },
@@ -46,7 +46,6 @@
     "@flatsby/tsconfig": "workspace:*",
     "@types/ws": "^8.18.1",
     "dotenv-cli": "^11.0.0",
-    "drizzle-kit": "^0.31.10",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"

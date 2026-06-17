@@ -3,16 +3,7 @@ packages:
   - packages/*
   - tooling/*
 
-# Unfixable transitive dependency vulnerabilities (pinned by parent packages).
-# Remove entries as upstream packages release fixes.
-# - esbuild: @esbuild-kit/core-utils@3.3.2 pins ~0.18.20 (drizzle-kit)
-# - uuid: Expo/LangChain/PostHog dependency chain has no uuid >=14 path yet.
-# - postcss: Next and Expo Metro still pin vulnerable 8.4.x releases.
-auditConfig:
-  ignoreGhsas:
-    - GHSA-67mh-4wv8-2f99
-    - GHSA-w5hq-g745-h8pq
-    - GHSA-qx2v-qp2m-jg93
+autoInstallPeers: false
 
 catalog:
   "@ai-sdk/react": ^3.0.176
@@ -29,7 +20,7 @@ catalog:
   autumn-js: ^1.2.17
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^10.5.0
-  next: ^16.2.6
+  next: 16.3.0-preview.3
   prettier: ^3.8.3
   superjson: ^2.2.6
   tailwindcss: ^4.2.4
@@ -63,6 +54,14 @@ overrides:
   kysely: 0.28.17
   # NativeWind v5 / Lightning CSS deserialization regression workaround.
   lightningcss: 1.30.1
+
+patchedDependencies:
+  '@istanbuljs/load-nyc-config@1.1.0': patches/@istanbuljs__load-nyc-config@1.1.0.patch
+  xcode@3.0.1: patches/xcode@3.0.1.patch
+
+peerDependencyRules:
+  ignoreMissing:
+    - drizzle-kit
 
 publicHoistPattern:
   - "@ianvs/prettier-plugin-sort-imports"
