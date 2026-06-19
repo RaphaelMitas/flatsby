@@ -30,7 +30,7 @@
     "@expo/metro-runtime": "~55.0.11",
     "@flatsby/validators": "workspace:*",
     "@gorhom/bottom-sheet": "^5.2.14",
-    "@hookform/resolvers": "^5.2.2",
+    "@hookform/resolvers": "^5.4.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^8.6.0",
     "@react-native-vector-icons/get-image": "^13.0.0",
