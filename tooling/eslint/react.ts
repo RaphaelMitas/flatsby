@@ -13,7 +13,6 @@ export const reactConfig = defineConfig(
     },
     rules: {
       "@eslint-react/no-nested-component-definitions": "warn",
-      "@eslint-react/component-hook-factories": "warn",
       "@eslint-react/unsupported-syntax": "warn",
     },
   },
