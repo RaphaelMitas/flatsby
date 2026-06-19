@@ -38,7 +38,7 @@ export const useToolPreferences = (): UseToolPreferencesResult => {
             if (!old || old.success === false || !old.data.user) return old;
 
             return {
-              ...old,
+              success: true as const,
               data: {
                 ...old.data,
                 user: {

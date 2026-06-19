@@ -91,7 +91,7 @@ export function ShoppingListDashboardItem({
           (old) => {
             if (!old?.success) return old;
             return {
-              ...old,
+              success: true as const,
               data: old.data.filter((item) => item.id !== shoppingListId),
             };
           },
@@ -159,7 +159,7 @@ export function ShoppingListDashboardItem({
             }
 
             return {
-              ...old,
+              success: true as const,
               data: old.data.map((item) =>
                 item.id === list.id ? { ...item, name: data.name } : item,
               ),

@@ -52,7 +52,7 @@ export default function GroupSettingsIndex() {
         queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
           if (!old?.success) return old;
           return {
-            ...old,
+            success: true as const,
             data: old.data.filter((g) => g.id !== Number(selectedGroupId)),
           };
         });
