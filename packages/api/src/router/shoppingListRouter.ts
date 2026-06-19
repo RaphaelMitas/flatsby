@@ -43,7 +43,11 @@ import {
   extractGatewayMetadata,
   trackAIUsage,
 } from "../utils/autumn";
-import { createTracedModel } from "../utils/model-provider";
+import {
+  CHEAP_AI_MODEL,
+  CHEAP_AI_PROVIDER_OPTIONS,
+  createTracedModel,
+} from "../utils/model-provider";
 
 export const shoppingList = createTRPCRouter({
   getShoppingListName: protectedProcedure
@@ -974,7 +978,7 @@ const createItemCategorizer = (ctx: CategorizeContext) => {
     }
 
     try {
-      const model = createTracedModel("google/gemini-2.0-flash", {
+      const model = createTracedModel(CHEAP_AI_MODEL, {
         distinctId: ctx.distinctId,
         traceId: crypto.randomUUID(),
         feature: "categorize-item",
@@ -982,6 +986,7 @@ const createItemCategorizer = (ctx: CategorizeContext) => {
 
       const response = await generateObject({
         model,
+        providerOptions: CHEAP_AI_PROVIDER_OPTIONS,
         schema: z.object({
           category: categoryIdSchema,
         }),

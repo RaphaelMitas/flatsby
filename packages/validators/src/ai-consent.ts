@@ -6,10 +6,6 @@ export const AI_DATA_DISCLOSURE = {
   providers: [
     { name: "OpenAI", description: "Processes chat messages using GPT models" },
     {
-      name: "Anthropic",
-      description: "Processes chat messages using Claude models",
-    },
-    {
       name: "Google",
       description: "Processes chat messages using Gemini models",
     },

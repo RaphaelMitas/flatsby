@@ -36,7 +36,11 @@ import {
   extractGatewayMetadata,
   trackAIUsage,
 } from "../utils/autumn";
-import { createTracedModel } from "../utils/model-provider";
+import {
+  CHEAP_AI_MODEL,
+  CHEAP_AI_PROVIDER_OPTIONS,
+  createTracedModel,
+} from "../utils/model-provider";
 
 /**
  * Wrapper to convert validateExpenseSplitsStrict result to Effect
@@ -931,7 +935,7 @@ const createExpenseCategorizer = (ctx: ExpenseCategorizeContext) => {
     }
 
     try {
-      const model = createTracedModel("google/gemini-2.0-flash", {
+      const model = createTracedModel(CHEAP_AI_MODEL, {
         distinctId: ctx.distinctId,
         traceId: crypto.randomUUID(),
         feature: "categorize-expense",
@@ -939,6 +943,7 @@ const createExpenseCategorizer = (ctx: ExpenseCategorizeContext) => {
 
       const response = await generateObject({
         model,
+        providerOptions: CHEAP_AI_PROVIDER_OPTIONS,
         schema: z.object({
           subcategory: expenseSubcategoryIdSchema,
         }),

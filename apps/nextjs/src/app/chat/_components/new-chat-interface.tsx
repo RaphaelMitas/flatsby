@@ -11,7 +11,7 @@ import {
   ConversationContent,
   ConversationEmptyState,
 } from "@flatsby/ui/ai-elements";
-import { CHAT_MODELS } from "@flatsby/validators/models";
+import { DEFAULT_CHAT_MODEL } from "@flatsby/validators/models";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
@@ -29,7 +29,7 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
   const { currentGroup } = useGroupContext();
 
   const [selectedModel, setSelectedModel] = useState<ChatModel>(
-    defaultModel ?? CHAT_MODELS[0].id,
+    defaultModel ?? DEFAULT_CHAT_MODEL,
   );
 
   const { updateToolPreferences, toolPreferences } = useToolPreferences();

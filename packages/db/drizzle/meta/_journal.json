@@ -15,6 +15,13 @@
       "when": 1775752103304,
       "tag": "0001_sweet_kingpin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781444016350,
+      "tag": "0002_update_chat_model_default",
+      "breakpoints": true
     }
   ]
 }
