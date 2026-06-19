@@ -380,7 +380,7 @@ export function ExpenseForm({
           if (!old || old.success === false) return old;
 
           return {
-            ...old,
+            success: true as const,
             data: {
               ...old.data,
               ...input,

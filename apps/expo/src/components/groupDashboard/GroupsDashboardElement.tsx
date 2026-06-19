@@ -68,7 +68,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
           if (!old?.success) return old;
           return {
-            ...old,
+            success: true as const,
             data: old.data.filter((g) => g.id !== group.id),
           };
         });
