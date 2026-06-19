@@ -68,8 +68,11 @@ export default function GroupDetailsScreen() {
             id: Number(selectedGroupId),
           }),
           (old) => {
-            if (!old) return old;
-            return { ...old, name: data.name };
+            if (!old?.success) return old;
+            return {
+              success: true as const,
+              data: { ...old.data, name: data.name },
+            };
           },
         );
         return { previousGroup };

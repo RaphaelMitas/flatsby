@@ -64,7 +64,7 @@ export default function CreateShoppingList() {
             }
 
             return {
-              ...old,
+              success: true as const,
               data: [...old.data, newShoppingList],
             };
           },

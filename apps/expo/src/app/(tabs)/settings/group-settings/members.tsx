@@ -142,7 +142,7 @@ export default function MembersScreen() {
           (old) => {
             if (!old?.success) return old;
             return {
-              ...old,
+              success: true as const,
               data: {
                 ...old.data,
                 groupMembers: old.data.groupMembers.map((member) =>

@@ -319,8 +319,8 @@ export function SettlementForm({
         queryClient.setQueryData(expenseQueryKey, (old) => {
           if (!old || old.success === false) return old;
 
-          const updatedExpense = {
-            ...old,
+          return {
+            success: true as const,
             data: {
               ...old.data,
               ...input,
@@ -328,8 +328,6 @@ export function SettlementForm({
               subcategory: old.data.subcategory,
             },
           };
-
-          return updatedExpense;
         });
 
         return { previousData };

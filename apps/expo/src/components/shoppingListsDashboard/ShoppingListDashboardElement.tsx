@@ -95,7 +95,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
             }
 
             return {
-              ...old,
+              success: true as const,
               data: old.data.filter((list) => list.id !== shoppingList.id),
             };
           },
@@ -146,7 +146,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
             }
 
             return {
-              ...old,
+              success: true as const,
               data: old.data.map((list) =>
                 list.id === shoppingList.id
                   ? { ...list, name: data.name }
