@@ -1,5 +1,4 @@
 /* eslint-disable @eslint-react/no-nested-component-definitions */
-/* eslint-disable @eslint-react/component-hook-factories */
 "use client";
 
 import type { DayButton } from "react-day-picker";
