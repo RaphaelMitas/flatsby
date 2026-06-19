@@ -472,7 +472,7 @@ importers:
         version: link:../validators
       '@posthog/ai':
         specifier: 7.20.0
-        version: 7.20.0(@ai-sdk/provider@3.0.10)(@opentelemetry/api@1.9.1)(posthog-node@5.38.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)
+        version: 7.20.0(@ai-sdk/provider@3.0.10)(@opentelemetry/api@1.9.1)(posthog-node@5.38.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)
       '@tanstack/react-pacer':
         specifier: '*'
         version: 0.22.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -490,7 +490,7 @@ importers:
         version: 3.21.4
       posthog-node:
         specifier: ^5.33.0
-        version: 5.38.1
+        version: 5.38.2
       react:
         specifier: catalog:react19
         version: 19.2.0
@@ -2897,14 +2897,14 @@ packages:
   '@posthog/core@1.29.13':
     resolution: {integrity: sha512-7Me5zaeAue/wmA364Go8ChYbsVAfNAHbtDxXopWu3D6hq9PVScUcauRgjD1njgvP8NzN91SrIllE+pri3XvJVw==}
 
-  '@posthog/core@1.35.2':
-    resolution: {integrity: sha512-aV6nkkKCF//NnR9SyQD00+sPg0A4v1m3Xk/fcsnYs+z3qCRXgjwOhfQX2lceAKWlru3o5l9Yn/480GovLOnqKA==}
+  '@posthog/core@1.35.3':
+    resolution: {integrity: sha512-EsGPbSLl39Jgo2KZ+kI9UAxFnh5nddaN5bNm2rXvUwF+vGmam9eN1EXeNbxhRU7ulEeIiGdm7XjoU7pzavkgIQ==}
 
   '@posthog/types@1.376.4':
     resolution: {integrity: sha512-EoDEvA925lf6yxPpbP4wozlXgu4b9WEqxZlFBUDd4k2akP5R/RWyHpvQT8aYyfY6BtSLn8TnVwxPQOM4b90isA==}
 
-  '@posthog/types@1.390.1':
-    resolution: {integrity: sha512-GPyZY8eOa/c/EKFLW0Aa1ECVysa1TFLenGPgYbRz/PX/nrzd1IiQPlHAYLkeifE6oBVxHiv5AwkTyzX/fdOYSA==}
+  '@posthog/types@1.390.2':
+    resolution: {integrity: sha512-WcfKz2GNn2vfDX8vXmJYbKxegPxVWHuDQ/pHdAn0HoZDXDFnEp/+x3qBQA+fEvtbPjjtjgAt2wIgJMlM7asx7g==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -4021,8 +4021,8 @@ packages:
   '@tailwindcss/postcss@4.3.1':
     resolution: {integrity: sha512-dNJuNbdEJT/SWRuXTYP1WSamelsz3ztkUsdtWQPjrexysrTpaEPM40P/71knXiXLYEojqPOEGitVLLpPMS5T6A==}
 
-  '@tanstack/devtools-event-client@0.4.3':
-    resolution: {integrity: sha512-OZI6QyULw0FI0wjgmeYzCIfbgPsOEzwJtCpa69XrfLMtNXLGnz3d/dIabk7frg0TmHo+Ah49w5I4KC7Tufwsvw==}
+  '@tanstack/devtools-event-client@0.4.4':
+    resolution: {integrity: sha512-6T5Yop/793YI+H+5J8Hsyj4kCih9sl4t3ElLgKioW5hk3ocn+ZdSJ94tT7vL7uabxSugWYBZlOTMPzEw2puvQw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -7249,8 +7249,8 @@ packages:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-node@5.38.1:
-    resolution: {integrity: sha512-qjcy8pGrgcycDjUOHv8xOPBJ/5PdjqmeB3LhwDt428LEwMgjLWjUdK6n+g0mjSXhLD9WO6NKFMZH85z4ukKM+w==}
+  posthog-node@5.38.2:
+    resolution: {integrity: sha512-eiKpU+vX4hVuHbO/EosvPHsmh2AVIdoVmWss/uUOs1t4b0ViCblw2o8OIFqHxKj3mYRnSOBlX0Dw3wBvcCaYpA==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -10382,7 +10382,7 @@ snapshots:
     dependencies:
       playwright: 1.61.0
 
-  '@posthog/ai@7.20.0(@ai-sdk/provider@3.0.10)(@opentelemetry/api@1.9.1)(posthog-node@5.38.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)':
+  '@posthog/ai@7.20.0(@ai-sdk/provider@3.0.10)(@opentelemetry/api@1.9.1)(posthog-node@5.38.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)':
     dependencies:
       '@anthropic-ai/sdk': 0.78.0(zod@4.4.3)
       '@google/genai': 1.52.0
@@ -10390,7 +10390,7 @@ snapshots:
       '@posthog/core': 1.29.13
       langchain: 1.5.0(@langchain/core@1.2.0(@opentelemetry/api@1.9.1)(openai@6.44.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))(@opentelemetry/api@1.9.1)(openai@6.44.0(ws@8.21.0)(zod@4.4.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)
       openai: 6.44.0(ws@8.21.0)(zod@4.4.3)
-      posthog-node: 5.38.1
+      posthog-node: 5.38.2
       uuid: 11.1.1
       zod: 4.4.3
     optionalDependencies:
@@ -10413,13 +10413,13 @@ snapshots:
     dependencies:
       '@posthog/types': 1.376.4
 
-  '@posthog/core@1.35.2':
+  '@posthog/core@1.35.3':
     dependencies:
-      '@posthog/types': 1.390.1
+      '@posthog/types': 1.390.2
 
   '@posthog/types@1.376.4': {}
 
-  '@posthog/types@1.390.1': {}
+  '@posthog/types@1.390.2': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -11627,11 +11627,11 @@ snapshots:
       postcss: 8.5.15
       tailwindcss: 4.3.1
 
-  '@tanstack/devtools-event-client@0.4.3': {}
+  '@tanstack/devtools-event-client@0.4.4': {}
 
   '@tanstack/pacer@0.21.1':
     dependencies:
-      '@tanstack/devtools-event-client': 0.4.3
+      '@tanstack/devtools-event-client': 0.4.4
       '@tanstack/store': 0.11.0
 
   '@tanstack/query-core@5.101.0': {}
@@ -15282,14 +15282,14 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-node@5.38.1:
+  posthog-node@5.38.2:
     dependencies:
-      '@posthog/core': 1.35.2
+      '@posthog/core': 1.35.3
 
   posthog-react-native@4.50.0(@react-native-async-storage/async-storage@2.2.0(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)))(@react-navigation/native@7.3.3(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(expo-application@55.0.15(expo@55.0.26))(expo-device@55.0.17(expo@55.0.26))(expo-file-system@55.0.22(expo@55.0.26)(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)))(expo-localization@55.0.15(expo@55.0.26)(react@19.2.0))(react-native-safe-area-context@5.6.2(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(react-native-svg@15.15.5(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)):
     dependencies:
-      '@posthog/core': 1.35.2
-      '@posthog/types': 1.390.1
+      '@posthog/core': 1.35.3
+      '@posthog/types': 1.390.2
     optionalDependencies:
       '@react-native-async-storage/async-storage': 2.2.0(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))
       '@react-navigation/native': 7.3.3(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
