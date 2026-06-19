@@ -3,8 +3,6 @@ packages:
   - packages/*
   - tooling/*
 
-autoInstallPeers: false
-
 catalog:
   "@ai-sdk/react": ^3.0.176
   "@eslint/js": ^10.0.1
@@ -20,7 +18,7 @@ catalog:
   autumn-js: ^1.2.17
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^10.5.0
-  next: 16.3.0-preview.3
+  next: ^16.2.9
   prettier: ^3.8.3
   superjson: ^2.2.6
   tailwindcss: ^4.2.4
@@ -54,14 +52,12 @@ overrides:
   kysely: 0.28.17
   # NativeWind v5 / Lightning CSS deserialization regression workaround.
   lightningcss: 1.30.1
-
-patchedDependencies:
-  '@istanbuljs/load-nyc-config@1.1.0': patches/@istanbuljs__load-nyc-config@1.1.0.patch
-  xcode@3.0.1: patches/xcode@3.0.1.patch
-
-peerDependencyRules:
-  ignoreMissing:
-    - drizzle-kit
+  # Transitive audit fixes (pinned by drizzle-kit, next, xcode, mermaid, and babel-jest).
+  dompurify: ">=3.4.11"
+  esbuild: ">=0.28.1"
+  js-yaml: ">=4.2.0"
+  postcss: ">=8.5.15"
+  uuid: ">=11.1.1"
 
 publicHoistPattern:
   - "@ianvs/prettier-plugin-sort-imports"
