@@ -63,7 +63,7 @@
     "expo-system-ui": "~55.0.15",
     "expo-updates": "~55.0.20",
     "expo-web-browser": "~55.0.14",
-    "nativewind": "5.0.0-preview.3",
+    "nativewind": "5.0.0-preview.4",
     "posthog-react-native": "^4.44.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
