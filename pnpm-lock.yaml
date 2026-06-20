@@ -38,7 +38,7 @@ catalogs:
       specifier: ^11.17.0
       version: 11.18.0
     '@types/node':
-      specifier: ^24.12.2
+      specifier: ^24.13.2
       version: 24.13.2
     ai:
       specifier: ^6.0.208
