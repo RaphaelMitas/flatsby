@@ -830,7 +830,7 @@ importers:
   packages/validators:
     dependencies:
       papaparse:
-        specifier: ^5.5.3
+        specifier: ^5.5.4
         version: 5.5.4
       react:
         specifier: catalog:react19

@@ -23,7 +23,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "papaparse": "^5.5.3",
+    "papaparse": "^5.5.4",
     "zod": "catalog:"
   },
   "peerDependencies": {
