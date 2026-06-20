@@ -142,7 +142,7 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
       '@react-native-vector-icons/lucide':
-        specifier: ^13.1.1
+        specifier: ^13.1.2
         version: 13.1.2(@expo/config-plugins@55.0.10)(@react-native-vector-icons/get-image@13.0.0(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(@react-native/assets-registry@0.83.9)(expo-font@55.0.8)(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
       '@shopify/flash-list':
         specifier: ^2.3.1
