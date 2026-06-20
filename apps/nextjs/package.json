@@ -33,7 +33,7 @@
     "ai": "catalog:",
     "autumn-js": "catalog:",
     "better-auth": "catalog:better-auth",
-    "geist": "^1.7.0",
+    "geist": "^1.7.2",
     "jose": "^6.2.3",
     "next": "catalog:",
     "prop-types": "^15.8.1",
