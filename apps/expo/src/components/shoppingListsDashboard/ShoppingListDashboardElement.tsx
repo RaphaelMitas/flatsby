@@ -345,6 +345,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
         title="Delete Shopping List"
         description={`Are you sure you want to delete "${shoppingList.name}"? This action cannot be undone and will permanently remove all items in this list.`}
         confirmationLabel={`To confirm deletion, please type the shopping list name: ${shoppingList.name}`}
+        needsConfirmationInput
       />
     </>
   );

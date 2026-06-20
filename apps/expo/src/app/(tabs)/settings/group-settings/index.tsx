@@ -155,6 +155,7 @@ export default function GroupSettingsIndex() {
         title="Delete Group"
         description={`Are you sure you want to delete "${group.data.name}"? This action cannot be undone and will permanently remove all data associated with this group.`}
         confirmationLabel={`To confirm deletion, please type the group name: ${group.data.name}`}
+        needsConfirmationInput
       />
     </SafeAreaView>
   );
