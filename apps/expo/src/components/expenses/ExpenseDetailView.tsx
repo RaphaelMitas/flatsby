@@ -158,7 +158,7 @@ export function ExpenseDetailView({
 
   return (
     <>
-      <View className="h-full gap-4">
+      <View className="h-full gap-4 p-4">
         <View className="flex-row gap-2">
           <Button
             title="Edit"
@@ -382,7 +382,7 @@ export function ExpenseDetailView({
         onConfirm={handleDelete}
         itemName={expense.description}
         title="Delete Expense"
-        description={`Are you sure you want to delete this expense? This action cannot be undone.`}
+        description="Are you sure you want to delete this expense? This action cannot be undone."
       />
     </>
   );

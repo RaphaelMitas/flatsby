@@ -32,7 +32,7 @@ const DeleteConfirmationModal: React.FC<Props> = ({
   title = "Delete Item",
   description,
   confirmationLabel,
-  needsConfirmationInput = true,
+  needsConfirmationInput = false,
 }) => {
   const form = useForm<DeleteFormValues>({
     defaultValues: {

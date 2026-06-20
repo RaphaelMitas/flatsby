@@ -198,7 +198,6 @@ export function ExpenseCard({
         itemName={expense.description || formattedAmount}
         title="Delete Expense"
         description={`Are you sure you want to delete this ${expense.splitMethod === "settlement" ? "settlement" : "expense"}? This action cannot be undone.`}
-        needsConfirmationInput={false}
       />
     </>
   );

@@ -268,7 +268,6 @@ const ShoppingListItem = ({
         itemName={item.name}
         title="Delete Item"
         description={`Are you sure you want to delete "${item.name}"?`}
-        needsConfirmationInput={false}
       />
     </>
   );

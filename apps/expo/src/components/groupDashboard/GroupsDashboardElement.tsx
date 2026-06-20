@@ -142,7 +142,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
             isOptimistic && "animate-pulse",
           )}
         >
-          <View className="flex flex-grow flex-row items-center gap-3">
+          <View className="flex grow flex-row items-center gap-3">
             <Avatar>
               <AvatarImage alt="Group Avatar" src={undefined} />
               <AvatarFallback>
@@ -191,6 +191,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         title="Delete Group"
         description={`Are you sure you want to delete "${group.name}"? This action cannot be undone and will permanently remove all data associated with this group.`}
         confirmationLabel={`To confirm deletion, please type the group name: ${group.name}`}
+        needsConfirmationInput
       />
     </>
   );
