@@ -277,7 +277,7 @@ importers:
         specifier: ~4.23.0
         version: 4.23.0(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
       react-native-svg:
-        specifier: ^15.15.4
+        specifier: ^15.15.5
         version: 15.15.5(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
       react-native-worklets:
         specifier: ~0.7.2
