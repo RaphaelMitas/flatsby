@@ -888,7 +888,7 @@ importers:
         specifier: ^2.9.18
         version: 2.9.18(eslint@10.5.0(jiti@2.7.0))(turbo@2.9.18)
       typescript-eslint:
-        specifier: ^8.59.1
+        specifier: ^8.61.1
         version: 8.61.1(eslint@10.5.0(jiti@2.7.0))(typescript@6.0.3)
     devDependencies:
       '@flatsby/prettier-config':
