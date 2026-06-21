@@ -778,7 +778,7 @@ importers:
         specifier: 3.8.1
         version: 3.8.1(@types/react@19.2.17)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.7)(react@19.2.0)(redux@5.0.1)
       shiki:
-        specifier: ^4.0.2
+        specifier: ^4.2.0
         version: 4.2.0
       sonner:
         specifier: ^2.0.7
