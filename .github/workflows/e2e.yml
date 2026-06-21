@@ -40,7 +40,7 @@ jobs:
       group: e2e-web-${{ needs.check-pr.outputs.branch }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup
@@ -79,7 +79,7 @@ jobs:
       group: e2e-ios-${{ needs.check-pr.outputs.branch }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup
