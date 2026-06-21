@@ -37,7 +37,7 @@
     "@react-native-vector-icons/lucide": "^13.1.2",
     "@shopify/flash-list": "^2.3.2",
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@tanstack/react-pacer": "^0.22.0",
+    "@tanstack/react-pacer": "^0.22.1",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
