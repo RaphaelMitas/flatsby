@@ -472,7 +472,7 @@ importers:
         version: link:../validators
       '@posthog/ai':
         specifier: 7.21.0
-        version: 7.21.0(@ai-sdk/provider@3.0.10)(@opentelemetry/api@1.9.1)(posthog-node@5.38.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)
+        version: 7.21.0(@ai-sdk/provider@3.0.10)(@opentelemetry/api@1.9.1)(posthog-node@5.38.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)
       '@tanstack/react-pacer':
         specifier: '*'
         version: 0.22.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -489,8 +489,8 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
       posthog-node:
-        specifier: ^5.38.4
-        version: 5.38.4
+        specifier: ^5.38.5
+        version: 5.38.5
       react:
         specifier: catalog:react19
         version: 19.2.0
@@ -2900,6 +2900,9 @@ packages:
 
   '@posthog/core@1.37.2':
     resolution: {integrity: sha512-qq9ASrhqxEcfzMQ/kc7dC00pibIcSbQ57FwVHxOGQOeSHr+uN18LA01ESsQX+UcgJ1beFvM6goa8SMxW99OLUw==}
+
+  '@posthog/core@1.37.3':
+    resolution: {integrity: sha512-Dvw4CTlRVH4K5ag/B8YIHgG4E27w43MCUsXpn1iKQHIggIMN3Shq9whG4Omm3OvXPF+VikBTmpyMKUjckPxw+g==}
 
   '@posthog/types@1.382.0':
     resolution: {integrity: sha512-iK4OcSgvtmS9FZ9EUpvwlRZmHCLXaZ3+6dbRjkE7q9LL0zHLewxJH84H6uGvCw8aGzxs5rIliZqPHgimTcQEaw==}
@@ -7250,8 +7253,8 @@ packages:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-node@5.38.4:
-    resolution: {integrity: sha512-Jti056f+5C9y1MXb5yhxwwYBITxypWZHWcAp+UevcZ7/AKEQdSB9FiJP3WzEznw4vH3Bz0IlRKVgsofizRAoEA==}
+  posthog-node@5.38.5:
+    resolution: {integrity: sha512-ZqMK2MFXQWkfdc0PDzPMRBrZXHCZLvl9jbvaaIyXTgbfn802/hMJ8M24BJiChPrMpZejsTzfAq8ZsQYF8zcOoA==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -10383,7 +10386,7 @@ snapshots:
     dependencies:
       playwright: 1.61.1
 
-  '@posthog/ai@7.21.0(@ai-sdk/provider@3.0.10)(@opentelemetry/api@1.9.1)(posthog-node@5.38.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)':
+  '@posthog/ai@7.21.0(@ai-sdk/provider@3.0.10)(@opentelemetry/api@1.9.1)(posthog-node@5.38.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)':
     dependencies:
       '@anthropic-ai/sdk': 0.78.0(zod@4.4.3)
       '@google/genai': 1.52.0
@@ -10391,7 +10394,7 @@ snapshots:
       '@posthog/core': 1.30.10
       langchain: 1.5.0(@langchain/core@1.2.0(@opentelemetry/api@1.9.1)(openai@6.44.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))(@opentelemetry/api@1.9.1)(openai@6.44.0(ws@8.21.0)(zod@4.4.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(ws@8.21.0)
       openai: 6.44.0(ws@8.21.0)(zod@4.4.3)
-      posthog-node: 5.38.4
+      posthog-node: 5.38.5
       uuid: 11.1.1
       zod: 4.4.3
     optionalDependencies:
@@ -10415,6 +10418,10 @@ snapshots:
       '@posthog/types': 1.382.0
 
   '@posthog/core@1.37.2':
+    dependencies:
+      '@posthog/types': 1.391.1
+
+  '@posthog/core@1.37.3':
     dependencies:
       '@posthog/types': 1.391.1
 
@@ -15273,9 +15280,9 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-node@5.38.4:
+  posthog-node@5.38.5:
     dependencies:
-      '@posthog/core': 1.37.2
+      '@posthog/core': 1.37.3
 
   posthog-react-native@4.52.0(@react-native-async-storage/async-storage@2.2.0(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)))(@react-navigation/native@7.3.3(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(expo-application@55.0.15(expo@55.0.26))(expo-device@55.0.17(expo@55.0.26))(expo-file-system@55.0.22(expo@55.0.26)(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)))(expo-localization@55.0.15(expo@55.0.26)(react@19.2.0))(react-native-safe-area-context@5.6.2(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(react-native-svg@15.15.5(react-native@0.83.9(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)):
     dependencies:
