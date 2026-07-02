@@ -65,6 +65,8 @@ function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
  */
 export const test = base.extend<{ authPage: Page }>({
   authPage: async ({ page, context, baseURL }, use) => {
+    await cleanupAuthSession(page, baseURL);
+
     const cookies = await createAuthSession(page, baseURL);
 
     const playwrightCookies = cookies.map((cookie) => ({
@@ -82,8 +84,6 @@ export const test = base.extend<{ authPage: Page }>({
 
     // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture callback, not a React hook
     await use(page);
-
-    await cleanupAuthSession(page, baseURL);
   },
 });
 
