@@ -102,7 +102,7 @@ test.describe("Shopping List Items", () => {
     await expect(purchasedItem.getByRole("checkbox")).toBeChecked();
 
     await purchasedItem.getByRole("checkbox").click();
-    await authPage.waitForTimeout(1500);
+    await authPage.waitForLoadState("networkidle");
 
     await expect(
       authPage

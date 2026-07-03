@@ -20,7 +20,7 @@ async function createAndSelectGroup(
   await groupCard.click();
   await page.waitForURL("/home");
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(1000);
+  await page.waitForURL(/\/group\/\d+/);
 
   const match = page.url().match(/\/group\/(\d+)/);
   return match ? parseInt(match[1], 10) : 0;
@@ -86,7 +86,7 @@ test.describe("Group Management", () => {
 
     // The add member call will fail for a non-existent user, showing an error.
     // Wait for the request to complete and verify the error state.
-    await authPage.waitForTimeout(2000);
+    await authPage.waitForLoadState("networkidle");
     await expect(emailInput).toHaveValue("newuser@example.com");
   });
 
@@ -123,7 +123,9 @@ test.describe("Group Management", () => {
 
     await authPage.goto("/group/settings");
     await authPage.waitForLoadState("networkidle");
-    await authPage.waitForTimeout(1000);
+    await expect(
+      authPage.locator('input[id="name"]'),
+    ).toBeVisible();
 
     const currentGroupName = await authPage
       .locator('input[id="name"]')
@@ -155,7 +157,9 @@ test.describe("Group Management", () => {
 
     await authPage.goto("/group/settings");
     await authPage.waitForLoadState("networkidle");
-    await authPage.waitForTimeout(1000);
+    await expect(
+      authPage.locator('input[id="name"]'),
+    ).toBeVisible();
 
     const currentGroupName = await authPage
       .locator('input[id="name"]')
@@ -194,7 +198,9 @@ test.describe("Group Management", () => {
 
     await authPage.goto("/group/settings");
     await authPage.waitForLoadState("networkidle");
-    await authPage.waitForTimeout(1000);
+    await expect(
+      authPage.locator('input[id="name"]'),
+    ).toBeVisible();
 
     const currentGroupName = await authPage
       .locator('input[id="name"]')

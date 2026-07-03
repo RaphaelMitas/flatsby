@@ -43,8 +43,6 @@ test.describe("Shopping List Suggestions", () => {
 
     const input = authPage.getByTestId("shopping-list-item-input");
     await input.fill("M");
-    await authPage.waitForTimeout(1000);
-
     await authPage.getByTestId("shopping-list-suggestion").getByText("Milk").waitFor({
       state: "visible",
       timeout: 15000,
@@ -65,8 +63,6 @@ test.describe("Shopping List Suggestions", () => {
 
     const input = authPage.getByTestId("shopping-list-item-input");
     await input.fill("Mil");
-    await authPage.waitForTimeout(1000);
-
     await authPage.getByTestId("shopping-list-suggestion").getByText("Milk").waitFor({
       state: "visible",
       timeout: 15000,

@@ -29,7 +29,6 @@ async function createTestExpense(page: Page): Promise<{ expenseId: number; descr
 
   await page.getByRole("button", { name: "Create Expense" }).click();
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(2000);
 
   const expenseCard = page
     .getByRole("button", { name: new RegExp(uniqueDesc) })
@@ -44,7 +43,6 @@ async function createTestExpense(page: Page): Promise<{ expenseId: number; descr
 async function openExpenseDetail(page: Page, _expenseId: number, description: string) {
   await page.goto("/expenses");
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(2000);
 
   const expenseCard = page
     .getByRole("button", { name: new RegExp(description) })
@@ -52,7 +50,6 @@ async function openExpenseDetail(page: Page, _expenseId: number, description: st
   await expect(expenseCard).toBeVisible({ timeout: 10000 });
   await expenseCard.click();
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(2000);
 }
 
 test.describe("Expense Management", () => {
