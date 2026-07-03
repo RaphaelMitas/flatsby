@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "@flatsby/db/client";
-import { accounts, sessions, users } from "@flatsby/db/schema";
+import {
+  accounts,
+  groupMembers,
+  groups,
+  sessions,
+  users,
+} from "@flatsby/db/schema";
 
 import { auth } from "~/auth/server";
 import { env } from "~/env";
@@ -17,6 +23,9 @@ const TEST_USER = {
  * E2E-only route: creates a test user and session via better-auth's testUtils plugin.
  * Returns properly signed session cookies for Playwright to inject.
  * Guarded to only work outside production.
+ *
+ * This handler is fully idempotent and safe for concurrent calls from parallel tests.
+ * It does NOT delete existing sessions to avoid invalidating other parallel test sessions.
  */
 export async function POST() {
   if (!env.E2E_TESTING) {
@@ -58,8 +67,47 @@ export async function POST() {
     })
     .onConflictDoNothing();
 
-  // Clean up any existing test sessions
-  await db.delete(sessions).where(eq(sessions.userId, TEST_USER.id));
+  // Seed test group and group membership (upsert)
+  const existingGroups = await db
+    .select()
+    .from(groups)
+    .where(eq(groups.name, "E2E Test Group"));
+
+  let groupId: number;
+  if (existingGroups.length > 0) {
+    groupId = existingGroups[0].id;
+  } else {
+    const [newGroup] = await db
+      .insert(groups)
+      .values({ name: "E2E Test Group" })
+      .returning();
+    groupId = newGroup.id;
+  }
+
+  const existingMember = await db
+    .select()
+    .from(groupMembers)
+    .where(
+      and(
+        eq(groupMembers.groupId, groupId),
+        eq(groupMembers.userId, TEST_USER.id),
+      ),
+    );
+
+  if (existingMember.length === 0) {
+    await db.insert(groupMembers).values({
+      groupId,
+      userId: TEST_USER.id,
+      role: "admin",
+      isActive: true,
+    });
+  }
+
+  // Set user's lastGroupUsed so the app knows which group is active
+  await db
+    .update(users)
+    .set({ lastGroupUsed: groupId })
+    .where(eq(users.id, TEST_USER.id));
 
   // Use better-auth's testUtils plugin to create a properly signed session
   const ctx = await auth.$context;
@@ -102,6 +150,7 @@ export async function POST() {
 
 /**
  * Cleanup route: removes test user and associated data.
+ * Only called after all tests complete.
  */
 export async function DELETE() {
   if (!env.E2E_TESTING) {
@@ -113,6 +162,8 @@ export async function DELETE() {
 
   await db.delete(sessions).where(eq(sessions.userId, TEST_USER.id));
   await db.delete(accounts).where(eq(accounts.userId, TEST_USER.id));
+  await db.delete(groupMembers).where(eq(groupMembers.userId, TEST_USER.id));
+  await db.delete(groups).where(eq(groups.name, "E2E Test Group"));
   await db.delete(users).where(eq(users.id, TEST_USER.id));
 
   return NextResponse.json({ ok: true });

@@ -36,14 +36,6 @@ async function createAuthSession(
   return data.cookies;
 }
 
-async function cleanupAuthSession(
-  page: Page,
-  baseURL: string | undefined,
-): Promise<void> {
-  const apiUrl = `${baseURL}/api/e2e/create-session`;
-  await page.request.delete(apiUrl);
-}
-
 function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
   const lower = sameSite.toLowerCase();
   if (lower === "strict") return "Strict";
@@ -65,8 +57,6 @@ function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
  */
 export const test = base.extend<{ authPage: Page }>({
   authPage: async ({ page, context, baseURL }, use) => {
-    await cleanupAuthSession(page, baseURL);
-
     const cookies = await createAuthSession(page, baseURL);
 
     const playwrightCookies = cookies.map((cookie) => ({
