@@ -11,12 +11,12 @@ async function setupList(page: Page): Promise<number> {
   await page.getByRole("button", { name: "Create List" }).click();
   await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
 
-  const url = page.url();
-  const match = url.match(/\/shopping-list\/(\d+)/);
+  const match = /\/shopping-list\/(\d+)/.exec(page.url());
   if (!match) {
     throw new Error("Could not extract shopping list ID from URL");
   }
-  return parseInt(match[1], 10);
+  const id = match[1] ?? "";
+  return parseInt(id, 10);
 }
 
 async function addItem(page: Page, name: string) {

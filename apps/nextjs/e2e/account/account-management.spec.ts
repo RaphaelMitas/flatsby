@@ -1,5 +1,3 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "../fixtures/auth";
 
 const TEST_USER_EMAIL = "e2e-test@flatsby.test";

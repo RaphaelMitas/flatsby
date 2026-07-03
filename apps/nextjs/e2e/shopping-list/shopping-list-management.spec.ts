@@ -11,8 +11,12 @@ async function createShoppingList(page: Page): Promise<number> {
   await page.getByPlaceholder("add new list").fill(listName);
   await page.getByRole("button", { name: "Create List" }).click();
   await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
-  const match = page.url().match(/\/shopping-list\/(\d+)/);
-  return parseInt(match![1], 10);
+  const match = /\/shopping-list\/(\d+)/.exec(page.url());
+  if (!match) {
+    throw new Error("Could not extract shopping list ID from URL");
+  }
+  const id = match[1] ?? "";
+  return parseInt(id, 10);
 }
 
 test.describe("Shopping List Management", () => {

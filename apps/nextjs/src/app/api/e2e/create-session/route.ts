@@ -74,13 +74,20 @@ export async function POST() {
     .where(eq(groups.name, "E2E Test Group"));
 
   let groupId: number;
-  if (existingGroups.length > 0) {
-    groupId = existingGroups[0].id;
+  const existingGroup = existingGroups[0];
+  if (existingGroup) {
+    groupId = existingGroup.id;
   } else {
     const [newGroup] = await db
       .insert(groups)
       .values({ name: "E2E Test Group" })
       .returning();
+    if (!newGroup) {
+      return NextResponse.json(
+        { error: "Failed to create test group" },
+        { status: 500 },
+      );
+    }
     groupId = newGroup.id;
   }
 

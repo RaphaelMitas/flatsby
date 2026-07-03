@@ -14,7 +14,7 @@ async function createTestExpense(page: Page): Promise<string> {
   await amountInput.pressSequentially("25.00");
 
   const paidByTrigger = page.getByRole("combobox", { name: "Paid By" }).first();
-  if ((await paidByTrigger.allTextContents())[0].trim() === "") {
+  if ((await paidByTrigger.allTextContents())[0]?.trim() === "") {
     await paidByTrigger.click();
     await page.getByRole("option").first().click();
   }

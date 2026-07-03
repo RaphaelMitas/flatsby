@@ -19,7 +19,8 @@ async function createTestExpenseViaAPI(
   await amountInput.pressSequentially(amountDecimal);
 
   const paidByTrigger = page.getByRole("combobox", { name: "Paid By" }).first();
-  if ((await paidByTrigger.allTextContents())[0].trim() === "") {
+  const paidByText = (await paidByTrigger.allTextContents())[0]?.trim();
+  if (paidByText === "") {
     await paidByTrigger.click();
     await page.getByRole("option").first().click();
   }
@@ -74,7 +75,7 @@ test.describe("Expense Creation", () => {
     const paidByTrigger = authPage
       .getByRole("combobox", { name: "Paid By" })
       .first();
-    if ((await paidByTrigger.allTextContents())[0].trim() === "") {
+    if ((await paidByTrigger.allTextContents())[0]?.trim() === "") {
       await paidByTrigger.click();
       await authPage.getByRole("option").first().click();
     }
@@ -129,7 +130,7 @@ test.describe("Expense Creation", () => {
     const paidByTrigger = authPage
       .getByRole("combobox", { name: "Paid By" })
       .first();
-    if ((await paidByTrigger.allTextContents())[0].trim() === "") {
+    if ((await paidByTrigger.allTextContents())[0]?.trim() === "") {
       await paidByTrigger.click();
       await authPage.getByRole("option").first().click();
     }
@@ -184,7 +185,7 @@ test.describe("Expense Creation", () => {
     const paidByTrigger = authPage
       .getByRole("combobox", { name: "Paid By" })
       .first();
-    if ((await paidByTrigger.allTextContents())[0].trim() === "") {
+    if ((await paidByTrigger.allTextContents())[0]?.trim() === "") {
       await paidByTrigger.click();
       await authPage.getByRole("option").first().click();
     }
