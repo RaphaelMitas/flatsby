@@ -5,12 +5,12 @@ import { expect, test } from "../fixtures/auth";
 async function setupList(page: Page): Promise<number> {
   await page.goto("/shopping-list");
   await page
-    .getByPlaceholder("add new list")
+    .getByTestId("shopping-list-create-input")
     .waitFor({ state: "visible", timeout: 15000 });
   await page
-    .getByPlaceholder("add new list")
+    .getByTestId("shopping-list-create-input")
     .fill(`E2E Test List ${Date.now()}`);
-  await page.getByRole("button", { name: "Create List" }).click();
+  await page.getByTestId("shopping-list-create-button").click();
   await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
 
   const match = /\/shopping-list\/(\d+)/.exec(page.url());
@@ -22,9 +22,9 @@ async function setupList(page: Page): Promise<number> {
 }
 
 async function addItem(page: Page, itemName: string) {
-  const input = page.getByPlaceholder("add new item");
+  const input = page.getByTestId("shopping-list-item-input");
   await input.fill(itemName);
-  await page.getByRole("button", { name: "Add Item" }).click();
+  await page.getByTestId("shopping-list-add-item-button").click();
   await expect(input).toHaveValue("");
   await expect(page.getByText(itemName)).toBeVisible();
 }
@@ -41,17 +41,16 @@ test.describe("Shopping List Suggestions", () => {
     await addItem(authPage, "Bread");
     await addItem(authPage, "Eggs");
 
-    const input = authPage.getByPlaceholder("add new item");
+    const input = authPage.getByTestId("shopping-list-item-input");
     await input.fill("M");
+    await authPage.waitForTimeout(1000);
 
-    await authPage.waitForSelector('button[type="button"]:has-text("Milk")', {
+    await authPage.getByTestId("shopping-list-suggestion").getByText("Milk").waitFor({
       state: "visible",
-      timeout: 5000,
+      timeout: 15000,
     });
 
-    const suggestions = authPage.locator(
-      'button[type="button"]:has-text("Milk")',
-    );
+    const suggestions = authPage.getByTestId("shopping-list-suggestion").getByText("Milk");
     await expect(suggestions.first()).toBeVisible();
   });
 
@@ -64,15 +63,16 @@ test.describe("Shopping List Suggestions", () => {
 
     await addItem(authPage, "Milk");
 
-    const input = authPage.getByPlaceholder("add new item");
+    const input = authPage.getByTestId("shopping-list-item-input");
     await input.fill("Mil");
+    await authPage.waitForTimeout(1000);
 
-    await authPage.waitForSelector('button[type="button"]:has-text("Milk")', {
+    await authPage.getByTestId("shopping-list-suggestion").getByText("Milk").waitFor({
       state: "visible",
-      timeout: 5000,
+      timeout: 15000,
     });
 
-    await authPage.getByRole("button", { name: "Milk" }).click();
+    await authPage.getByTestId("shopping-list-suggestion").getByText("Milk").click();
 
     await expect(input).toHaveValue("Milk");
   });

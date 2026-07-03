@@ -23,6 +23,7 @@ export const ShoppingListItemInputFormField = forwardRef<
       <FormControl>
         <Input
           {...field}
+          data-testid="shopping-list-item-input"
           placeholder="add new item"
           maxLength={shoppingListItemNameSchema.maxLength ?? undefined}
           ref={ref}

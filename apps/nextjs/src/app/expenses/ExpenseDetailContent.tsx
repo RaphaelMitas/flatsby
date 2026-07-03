@@ -51,13 +51,19 @@ export function ExpenseDetailContent({
       {(onEdit ?? onDelete) && (
         <div className="flex justify-end gap-2">
           {onEdit && (
-            <Button variant="outline" onClick={onEdit} disabled={isDeleting}>
+            <Button
+              data-testid="expense-edit-button"
+              variant="outline"
+              onClick={onEdit}
+              disabled={isDeleting}
+            >
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </Button>
           )}
           {onDelete && (
             <Button
+              data-testid="expense-delete-button"
               variant="destructive"
               onClick={onDelete}
               disabled={isDeleting}
@@ -166,7 +172,7 @@ export function ExpenseDetailContent({
 
       {/* Split details card */}
       {expense.splitMethod !== "settlement" && (
-        <Card>
+        <Card data-testid="expense-split-details">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />

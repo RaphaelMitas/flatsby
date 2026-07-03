@@ -105,6 +105,7 @@ export const ShoppingListItemAddForm = ({
           />
         </div>
         <Button
+          data-testid="shopping-list-add-item-button"
           type="submit"
           className={`md:block ${form.getFieldState("name").isDirty ? "block" : "hidden"}`}
         >

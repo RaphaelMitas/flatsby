@@ -5,10 +5,10 @@ import { expect, test } from "../fixtures/auth";
 async function createShoppingList(page: Page): Promise<number> {
   await page.goto("/shopping-list");
   await page
-    .getByPlaceholder("add new list")
+    .getByTestId("shopping-list-create-input")
     .waitFor({ state: "visible", timeout: 15000 });
   const listName = `E2E Test List ${Date.now()}`;
-  await page.getByPlaceholder("add new list").fill(listName);
+  await page.getByTestId("shopping-list-create-input").fill(listName);
   await page.getByRole("button", { name: "Create List" }).click();
   await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
   const match = /\/shopping-list\/(\d+)/.exec(page.url());
@@ -30,7 +30,9 @@ test.describe("Shopping List Management", () => {
     await authPage.goto("/shopping-list");
     await authPage.waitForLoadState("networkidle");
 
-    const renameButton = authPage.getByTitle("Rename shopping list").last();
+    const renameButton = authPage.getByTestId(
+      `shopping-list-dashboard-rename-${listId}`,
+    );
     await expect(renameButton).toBeVisible();
     await renameButton.click();
 
@@ -40,11 +42,15 @@ test.describe("Shopping List Management", () => {
       .fill(newListName);
     await authPage.getByRole("button", { name: "Save" }).click();
 
-    await expect(authPage.getByText(newListName).first()).toBeVisible();
+    await expect(authPage.getByText(newListName).first()).toBeVisible({
+      timeout: 10000,
+    });
 
-    const listLink = authPage.locator(`a[href="/shopping-list/${listId}"]`);
+    const listLink = authPage.getByTestId(
+      `shopping-list-dashboard-link-${listId}`,
+    );
     await expect(listLink).toBeVisible();
-    await expect(listLink.getByText(newListName)).toBeVisible();
+    await expect(listLink).toContainText(newListName);
   });
 
   test("Delete List: deleting a list removes it from the dashboard and cleans up associated items", async ({
@@ -55,34 +61,32 @@ test.describe("Shopping List Management", () => {
     const listId = await createShoppingList(authPage);
 
     const itemName = `Item ${Date.now()}`;
-    await authPage.getByPlaceholder("add new item").fill(itemName);
-    await authPage.getByRole("button", { name: "Add Item" }).click();
+    await authPage.getByTestId("shopping-list-item-input").fill(itemName);
+    await authPage.getByTestId("shopping-list-add-item-button").click();
     await expect(authPage.getByText(itemName)).toBeVisible();
 
     await authPage.goto("/shopping-list");
     await authPage.waitForLoadState("networkidle");
 
-    const deleteButton = authPage.getByTitle("Delete shopping list").last();
+    const deleteButton = authPage.getByTestId(
+      `shopping-list-dashboard-delete-${listId}`,
+    );
     await expect(deleteButton).toBeVisible();
     await deleteButton.click();
 
-    const dialog = authPage
-      .getByRole("alertdialog")
-      .or(authPage.getByRole("dialog"));
+    const dialog = authPage.getByTestId("shopping-list-delete-dialog");
     await expect(dialog).toBeVisible({ timeout: 10000 });
     await expect(dialog.getByText("Delete Shopping List")).toBeVisible();
-    await expect(
-      dialog.getByText("Are you sure you want to delete"),
-    ).toBeVisible();
-    await expect(
-      dialog.getByText("This action cannot be undone"),
-    ).toBeVisible();
+    await expect(dialog.getByText("Are you sure you want to delete")).toBeVisible();
+    await expect(dialog.getByText("This action cannot be undone")).toBeVisible();
 
     await dialog.getByRole("button", { name: "Delete" }).click();
 
     await expect(dialog).not.toBeVisible();
 
-    const listLink = authPage.locator(`a[href="/shopping-list/${listId}"]`);
+    const listLink = authPage.getByTestId(
+      `shopping-list-dashboard-link-${listId}`,
+    );
     await expect(listLink).not.toBeVisible();
 
     await expect(authPage.getByText(itemName)).not.toBeVisible();
@@ -102,18 +106,18 @@ test.describe("Shopping List Management", () => {
 
     await categoryButton.click();
     await authPage.getByRole("heading", { name: "Select Category" }).waitFor();
-    await authPage.getByText("Produce").click();
+    await authPage.getByRole("button", { name: /^Produce/ }).first().click();
 
-    await authPage.getByPlaceholder("add new item").fill(produceItem);
-    await authPage.getByRole("button", { name: "Add Item" }).click();
+    await authPage.getByTestId("shopping-list-item-input").fill(produceItem);
+    await authPage.getByTestId("shopping-list-add-item-button").click();
     await expect(authPage.getByText(produceItem)).toBeVisible();
 
     await categoryButton.click();
     await authPage.getByRole("heading", { name: "Select Category" }).waitFor();
-    await authPage.getByText("Dairy").click();
+    await authPage.getByRole("button", { name: /^Dairy/ }).first().click();
 
-    await authPage.getByPlaceholder("add new item").fill(dairyItem);
-    await authPage.getByRole("button", { name: "Add Item" }).click();
+    await authPage.getByTestId("shopping-list-item-input").fill(dairyItem);
+    await authPage.getByTestId("shopping-list-add-item-button").click();
     await expect(authPage.getByText(dairyItem)).toBeVisible();
 
     const produceFilter = authPage.getByRole("button", { name: "Produce" });

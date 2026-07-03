@@ -85,7 +85,10 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
         className="space-y-6"
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
+          <h2
+            data-testid="expense-form-title"
+            className="text-lg font-semibold"
+          >
             {isEditMode ? "Edit Expense" : "Add Expense"}
           </h2>
           <div className="text-muted-foreground flex items-center gap-4 text-sm">

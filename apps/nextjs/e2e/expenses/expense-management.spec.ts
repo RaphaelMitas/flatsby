@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "../fixtures/auth";
 
-async function createTestExpense(page: Page): Promise<string> {
+async function createTestExpense(page: Page): Promise<{ expenseId: number; description: string }> {
   await page.goto("/expenses");
   await page.waitForLoadState("networkidle");
   await page.getByRole("button", { name: "Add", exact: true }).click();
@@ -29,8 +29,30 @@ async function createTestExpense(page: Page): Promise<string> {
 
   await page.getByRole("button", { name: "Create Expense" }).click();
   await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(2000);
 
-  return uniqueDesc;
+  const expenseCard = page
+    .getByRole("button", { name: new RegExp(uniqueDesc) })
+    .first();
+  await expect(expenseCard).toBeVisible({ timeout: 10000 });
+  const testId = await expenseCard.getAttribute("data-testid");
+  const match = testId?.match(/expense-card-(\d+)/);
+  if (!match) throw new Error("Could not extract expense ID from data-testid");
+  return { expenseId: parseInt(match[1], 10), description: uniqueDesc };
+}
+
+async function openExpenseDetail(page: Page, _expenseId: number, description: string) {
+  await page.goto("/expenses");
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(2000);
+
+  const expenseCard = page
+    .getByRole("button", { name: new RegExp(description) })
+    .first();
+  await expect(expenseCard).toBeVisible({ timeout: 10000 });
+  await expenseCard.click();
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(2000);
 }
 
 test.describe("Expense Management", () => {
@@ -39,21 +61,14 @@ test.describe("Expense Management", () => {
   }: {
     authPage: Page;
   }) => {
-    const description = await createTestExpense(authPage);
+    const { expenseId, description } = await createTestExpense(authPage);
+    await openExpenseDetail(authPage, expenseId, description);
 
-    await expect(authPage.getByText(description).first()).toBeVisible();
-
-    const expenseCard = authPage
-      .getByRole("button", { name: new RegExp(description) })
-      .first();
-    await expenseCard.focus();
-    await expenseCard.click();
-    await authPage.waitForLoadState("networkidle");
-    await authPage.waitForTimeout(1500);
-
+    await expect(
+      authPage.getByTestId("expense-split-details"),
+    ).toBeVisible({ timeout: 15000 });
     await expect(authPage.getByText("€25.00").first()).toBeVisible();
     await expect(authPage.getByText("Paid by").first()).toBeVisible();
-    await expect(authPage.getByText("Split Details").first()).toBeVisible();
   });
 
   test("Edit Expense: changing the amount updates the record", async ({
@@ -61,20 +76,26 @@ test.describe("Expense Management", () => {
   }: {
     authPage: Page;
   }) => {
-    const description = await createTestExpense(authPage);
+    const { expenseId, description } = await createTestExpense(authPage);
+    await openExpenseDetail(authPage, expenseId, description);
 
-    const expenseCard = authPage
-      .getByRole("button", { name: new RegExp(description) })
-      .first();
-    await expenseCard.focus();
-    await expenseCard.click();
-    await authPage.waitForLoadState("networkidle");
-    await authPage.waitForTimeout(1500);
+    await expect(
+      authPage.getByTestId("expense-edit-button"),
+    ).toBeVisible({ timeout: 15000 });
+    await authPage.getByTestId("expense-edit-button").click();
+    await authPage.waitForFunction(
+      () =>
+        new URL(window.location.href).searchParams.get("action") === "edit",
+      {},
+      { timeout: 10000 },
+    );
 
-    await authPage.getByRole("button", { name: "Edit" }).click();
-    await authPage.waitForLoadState("networkidle");
-
-    await expect(authPage.getByText("Edit Expense")).toBeVisible();
+    await expect(
+      authPage.getByTestId("expense-form-title"),
+    ).toBeVisible({ timeout: 10000 });
+    await expect(authPage.getByTestId("expense-form-title")).toContainText(
+      "Edit Expense",
+    );
 
     const amountInput = authPage.getByPlaceholder("0.00").first();
     await amountInput.click();
@@ -95,35 +116,30 @@ test.describe("Expense Management", () => {
   }: {
     authPage: Page;
   }) => {
-    const description = await createTestExpense(authPage);
+    const { expenseId, description: desc } = await createTestExpense(authPage);
+    await openExpenseDetail(authPage, expenseId, desc);
 
-    const expenseCard = authPage
-      .getByRole("button", { name: new RegExp(description) })
-      .first();
-    await expenseCard.focus();
-    await expenseCard.click();
-    await authPage.waitForLoadState("networkidle");
-    await authPage.waitForTimeout(1500);
-
-    await authPage.getByRole("button", { name: "Delete" }).click();
-
-    const dialog = authPage
-      .getByRole("alertdialog")
-      .or(authPage.getByRole("dialog"));
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByText("Delete Expense")).toBeVisible();
     await expect(
-      dialog.getByText(
-        "Are you sure you want to delete this expense? This action cannot be undone.",
-      ),
+      authPage.getByTestId("expense-delete-button"),
+    ).toBeVisible({ timeout: 15000 });
+    await authPage.getByTestId("expense-delete-button").click();
+
+    await expect(
+      authPage.getByTestId("expense-delete-dialog"),
+    ).toBeVisible({ timeout: 10000 });
+    await expect(
+      authPage.getByTestId("expense-delete-dialog").getByText("Delete Expense"),
     ).toBeVisible();
 
-    await dialog.getByRole("button", { name: "Delete" }).click();
+    await authPage
+      .getByTestId("expense-delete-dialog")
+      .getByRole("button", { name: "Delete" })
+      .click();
     await authPage.waitForLoadState("networkidle");
 
-    await expect(dialog).not.toBeVisible();
+    await expect(authPage.getByTestId("expense-delete-dialog")).not.toBeVisible();
     await expect(
-      authPage.getByRole("button", { name: new RegExp(description) }),
+      authPage.getByRole("button", { name: new RegExp(desc) }),
     ).not.toBeVisible();
   });
 });

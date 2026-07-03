@@ -120,6 +120,7 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
                     <FormControl>
                       <Input
                         {...field}
+                        data-testid="group-add-member-email"
                         placeholder={
                           isAdmin
                             ? "Enter email"
@@ -135,6 +136,7 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
                 )}
               />
               <Button
+                data-testid="group-add-member-button"
                 type="submit"
                 className="w-full min-w-37.5 md:w-fit"
                 disabled={!isAdmin || addGroupMemberMutation.isPending}

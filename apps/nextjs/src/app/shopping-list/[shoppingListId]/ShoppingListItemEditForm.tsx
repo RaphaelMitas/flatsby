@@ -38,6 +38,7 @@ export const ShoppingListItemEditForm = ({
   return (
     <Form {...form}>
       <form
+        data-testid="shopping-list-item-edit-form"
         className="w-full py-4 pl-4"
         onSubmit={form.handleSubmit(handleSubmit)}
       >
@@ -79,6 +80,7 @@ export const ShoppingListItemEditForm = ({
               cancel
             </Button>
             <Button
+              data-testid="shopping-list-item-edit-save"
               className="md:group-hover:bg-primary-foreground md:group-hover:text-primary flex-1"
               type="submit"
               disabled={isSubmitting}
