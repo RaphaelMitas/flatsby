@@ -42,7 +42,10 @@ async function createTestExpense(
   if (expenseIdFromMatch === undefined) {
     throw new Error("Could not extract expense ID from data-testid");
   }
-  return { expenseId: parseInt(expenseIdFromMatch, 10), description: uniqueDesc };
+  return {
+    expenseId: parseInt(expenseIdFromMatch, 10),
+    description: uniqueDesc,
+  };
 }
 
 async function openExpenseDetail(

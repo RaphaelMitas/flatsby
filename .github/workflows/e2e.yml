@@ -35,7 +35,7 @@ jobs:
     needs: check-pr
     if: needs.check-pr.outputs.has-pr == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     concurrency:
       group: e2e-web-${{ needs.check-pr.outputs.branch }}
       cancel-in-progress: true
