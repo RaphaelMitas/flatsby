@@ -1,6 +1,12 @@
 import type { BrowserContext, Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 
+import {
+  getVercelBypassHeaders,
+  getVercelBypassSecret,
+  parseVercelJwt,
+} from "../helpers/vercel";
+
 interface TestCookie {
   name: string;
   value: string;
@@ -65,23 +71,16 @@ async function createAuthSession(
     return (await response.json()) as SessionData;
   }
 
-  const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  const bypassSecret = getVercelBypassSecret();
   if (!bypassSecret) {
     throw new Error(
       "VERCEL_AUTOMATION_BYPASS_SECRET is required for remote E2E testing",
     );
   }
 
-  // Use Node's native fetch to obtain the Vercel bypass cookie.
-  // Use redirect: 'manual' because Vercel responds with a 307 redirect that
-  // sets the _vercel_jwt cookie. Node's fetch follows 307 poorly and may
-  // redirect infinitely.
   const getRes = await fetch(baseURL, {
     redirect: "manual",
-    headers: {
-      "x-vercel-protection-bypass": bypassSecret,
-      "x-vercel-set-bypass-cookie": "samesitenone",
-    },
+    headers: getVercelBypassHeaders("samesitenone"),
   });
 
   const setCookieHeader = getRes.headers.get("set-cookie");
@@ -91,25 +90,25 @@ async function createAuthSession(
     );
   }
 
-  const cookieRegex =
-    /_vercel_jwt=([^;]+)(?:;.*?expires=([^;]+))?;.*?path=([^;]+);.*?Secure;.*?SameSite=([^;]+)/i;
-  const cookieMatch = cookieRegex.exec(setCookieHeader);
-
-  if (!cookieMatch) {
+  const cookieValue = parseVercelJwt(setCookieHeader);
+  if (!cookieValue) {
     throw new Error(
       `Could not parse _vercel_jwt from Set-Cookie: ${setCookieHeader.slice(0, 200)}`,
     );
   }
 
-  const [, cookieValue, expiresStr, cookiePath] = cookieMatch;
-  const expires = expiresStr ? parseInt(expiresStr, 10) : undefined;
+  const pathMatch = /path=([^;]+)/i.exec(setCookieHeader);
+  const expiresMatch = /expires=([^;]+)/i.exec(setCookieHeader);
+  const expires = expiresMatch?.[1]
+    ? parseInt(expiresMatch[1], 10)
+    : undefined;
 
   await context.addCookies([
     {
       name: "_vercel_jwt",
-      value: cookieValue ?? "",
+      value: cookieValue,
       domain: new URL(baseURL).hostname,
-      path: cookiePath ?? "/",
+      path: pathMatch?.[1] ?? "/",
       ...(expires ? { expires } : {}),
       httpOnly: true,
       secure: true,

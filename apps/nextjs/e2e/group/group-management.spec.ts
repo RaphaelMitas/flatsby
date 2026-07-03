@@ -1,48 +1,13 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "../fixtures/auth";
-
-const uniqueGroupName = () => `E2E Group ${Date.now()}`;
-
-/**
- * Fills and submits the create-group form. Under heavy parallel load the
- * page may not be hydrated yet when the button is clicked, which triggers a
- * native form submit that reloads /group/create without calling the API.
- * Detect that (URL unchanged) and retry.
- */
-async function submitCreateGroupForm(page: Page, name: string) {
-  await page.goto("/group/create");
-  await expect(async () => {
-    if (new URL(page.url()).pathname === "/home") return;
-    await page.getByTestId("group-create-name-input").fill(name);
-    await page.getByTestId("group-create-submit").click();
-    await page.waitForURL("/home", { timeout: 10000 });
-  }).toPass({ timeout: 45000 });
-}
-
-async function createAndSelectGroup(page: Page, name: string): Promise<number> {
-  await submitCreateGroupForm(page, name);
-
-  await page.goto("/group");
-
-  const groupCard = page
-    .getByTestId(/^group-card-\d+$/)
-    .filter({ hasText: name })
-    .first();
-  await expect(groupCard).toBeVisible({ timeout: 15000 });
-  const testId = await groupCard.getAttribute("data-testid");
-  const match = testId?.match(/group-card-(\d+)/);
-  const idFromMatch = match?.[1];
-  const groupId = idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
-
-  await groupCard.click();
-  await page.waitForURL("/home");
-
-  return groupId;
-}
+import {
+  createAndSelectGroup,
+  deleteCurrentGroup,
+  submitCreateGroupForm,
+  uniqueGroupName,
+} from "../helpers/group";
 
 test.describe("Group Management", () => {
-  test("create group via UI", async ({ authPage }: { authPage: Page }) => {
+  test("create group via UI", async ({ authPage }) => {
     const groupName = uniqueGroupName();
 
     await authPage.goto("/group/create");
@@ -53,18 +18,12 @@ test.describe("Group Management", () => {
     await submitCreateGroupForm(authPage, groupName);
   });
 
-  test("group appears in dashboard", async ({
-    authPage,
-  }: {
-    authPage: Page;
-  }) => {
+  test("group appears in dashboard", async ({ authPage }) => {
     const groupName = uniqueGroupName();
 
     await submitCreateGroupForm(authPage, groupName);
 
     await authPage.goto("/group");
-    // .first(): during navigation the App Router can briefly render the
-    // outgoing and incoming page at the same time, duplicating the title.
     await expect(
       authPage.getByTestId("group-dashboard-title").first(),
     ).toContainText("Your Groups");
@@ -81,11 +40,7 @@ test.describe("Group Management", () => {
     await expect(authPage.getByTestId(`group-card-${groupId}`)).toBeVisible();
   });
 
-  test("add member by email form interaction", async ({
-    authPage,
-  }: {
-    authPage: Page;
-  }) => {
+  test("add member by email form interaction", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     await createAndSelectGroup(authPage, groupName);
 
@@ -106,7 +61,7 @@ test.describe("Group Management", () => {
     await expect(emailInput).toHaveValue("newuser@example.com");
   });
 
-  test("change group name", async ({ authPage }: { authPage: Page }) => {
+  test("change group name", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     const newName = `${groupName} Updated`;
 
@@ -133,52 +88,25 @@ test.describe("Group Management", () => {
   // test("non-admin cannot add members", () => {});
   // test("non-admin cannot remove other members", () => {});
 
-  test("delete group", async ({ authPage }: { authPage: Page }) => {
+  test("delete group", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     await createAndSelectGroup(authPage, groupName);
 
     await authPage.goto("/group/settings");
     await expect(authPage.getByTestId("group-name-input")).toBeVisible();
-
-    const currentGroupName = await authPage
-      .getByTestId("group-name-input")
-      .inputValue();
     await expect(
       authPage.getByTestId("group-delete-confirm-button"),
     ).toBeVisible();
     await expect(authPage.getByTestId("group-danger-zone-title")).toBeVisible();
 
-    const deleteInput = authPage.getByTestId("group-delete-name-input");
-    await deleteInput.fill(currentGroupName);
-
-    const deleteButton = authPage.getByTestId("group-delete-confirm-button");
-    await expect(deleteButton).toBeEnabled();
-    await deleteButton.click();
-
-    await authPage.waitForURL("/group");
+    await deleteCurrentGroup(authPage);
   });
 
-  test("deleted group inaccessible", async ({
-    authPage,
-  }: {
-    authPage: Page;
-  }) => {
+  test("deleted group inaccessible", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     const groupId = await createAndSelectGroup(authPage, groupName);
 
-    await authPage.goto("/group/settings");
-    await expect(authPage.getByTestId("group-name-input")).toBeVisible();
-
-    const currentGroupName = await authPage
-      .getByTestId("group-name-input")
-      .inputValue();
-
-    const deleteInput = authPage.getByTestId("group-delete-name-input");
-    await deleteInput.fill(currentGroupName);
-
-    const deleteButton = authPage.getByTestId("group-delete-confirm-button");
-    await deleteButton.click();
-    await authPage.waitForURL("/group");
+    await deleteCurrentGroup(authPage);
 
     await expect(
       authPage.getByTestId(`group-card-${groupId}`),
@@ -194,27 +122,11 @@ test.describe("Group Management", () => {
   // test("re-add previously removed member", () => {});
   // test("member sees group", () => {});
 
-  test("delete group clears user references", async ({
-    authPage,
-  }: {
-    authPage: Page;
-  }) => {
+  test("delete group clears user references", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     await createAndSelectGroup(authPage, groupName);
 
-    await authPage.goto("/group/settings");
-    await expect(authPage.getByTestId("group-name-input")).toBeVisible();
-
-    const currentGroupName = await authPage
-      .getByTestId("group-name-input")
-      .inputValue();
-
-    const deleteInput = authPage.getByTestId("group-delete-name-input");
-    await deleteInput.fill(currentGroupName);
-
-    const deleteButton = authPage.getByTestId("group-delete-confirm-button");
-    await deleteButton.click();
-    await authPage.waitForURL("/group");
+    await deleteCurrentGroup(authPage);
 
     await authPage.goto("/", { timeout: 30000 });
     await authPage.waitForURL(/\/(home|group|auth)/, { timeout: 15000 });

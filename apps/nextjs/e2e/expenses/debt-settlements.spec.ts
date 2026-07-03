@@ -1,12 +1,8 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "../fixtures/auth";
 
 test.describe("Debt & Settlements", () => {
   test("displays debt summary page with correct title and subtitle", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
     await authPage.goto("/expenses/debts");
 
@@ -18,8 +14,6 @@ test.describe("Debt & Settlements", () => {
 
   test("shows all settled up state when no debts exist", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
     await authPage.goto("/expenses/debts");
 
@@ -32,8 +26,6 @@ test.describe("Debt & Settlements", () => {
 
   test("opens settlement form when clicking Settle Up and records settlement", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
     await authPage.goto("/expenses/debts");
 
@@ -68,8 +60,6 @@ test.describe("Debt & Settlements", () => {
 
   test("clears debts after recording full settlement", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
     await authPage.goto("/expenses/debts");
 

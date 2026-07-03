@@ -1,60 +1,16 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "../fixtures/auth";
 import { selectShoppingListCategory } from "../helpers/categories";
-
-async function setupList(page: Page): Promise<{ listId: number }> {
-  await page.goto("/shopping-list");
-  await page
-    .getByTestId("shopping-list-create-input")
-    .waitFor({ state: "visible", timeout: 15000 });
-  await page
-    .getByTestId("shopping-list-create-input")
-    .fill(`E2E List ${Date.now()}`);
-  await page.getByTestId("shopping-list-create-button").click();
-  await page.waitForURL(/\/shopping-list\/\d+/);
-  await page
-    .getByTestId("shopping-list-item-input")
-    .waitFor({ state: "visible" });
-
-  const match = /\/shopping-list\/(\d+)/.exec(page.url());
-  if (!match) {
-    throw new Error("Could not extract shopping list ID from URL");
-  }
-  const id = match[1] ?? "";
-  return { listId: parseInt(id, 10) };
-}
-
-async function addItem(page: Page, name: string, categoryId = "other") {
-  await selectShoppingListCategory(page, categoryId);
-  await page.getByTestId("shopping-list-item-input").fill(name);
-  await page.getByTestId("shopping-list-add-item-button").click();
-  await expect(page.getByText(name)).toBeVisible({ timeout: 10000 });
-}
-
-async function getItemLocator(page: Page, itemName: string) {
-  const items = page.getByTestId(/^shopping-list-item-\d+$/);
-  for (let i = 0; i < (await items.count()); i++) {
-    const item = items.nth(i);
-    if (
-      await item
-        .getByText(itemName)
-        .isVisible()
-        .catch(() => false)
-    ) {
-      return item;
-    }
-  }
-  throw new Error(`Item "${itemName}" not found`);
-}
+import {
+  addShoppingListItem,
+  createShoppingList,
+  getShoppingListItemLocator,
+} from "../helpers/shopping-list";
 
 test.describe("Shopping List Items", () => {
   test("Add Item: adding an item with a name and manual category adds it to the active items list", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
-    await setupList(authPage);
+    await createShoppingList(authPage);
 
     const itemName = `Test Item ${Date.now()}`;
 
@@ -69,39 +25,35 @@ test.describe("Shopping List Items", () => {
 
   test("Complete Item: checking an item moves it from the Active section to the Purchased section", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
-    await setupList(authPage);
+    await createShoppingList(authPage);
 
     const itemName = `Complete Me ${Date.now()}`;
-    await addItem(authPage, itemName);
+    await addShoppingListItem(authPage, itemName);
 
-    const listItem = await getItemLocator(authPage, itemName);
+    const listItem = await getShoppingListItemLocator(authPage, itemName);
     await listItem.getByRole("checkbox").click();
 
     await expect(authPage.getByText("Purchased Items")).toBeVisible();
 
-    const purchasedItem = await getItemLocator(authPage, itemName);
+    const purchasedItem = await getShoppingListItemLocator(authPage, itemName);
     await expect(purchasedItem.getByRole("checkbox")).toBeChecked();
   });
 
   test("Undo Completion: unchecking a purchased item moves it back to the active list", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
-    await setupList(authPage);
+    await createShoppingList(authPage);
 
     const itemName = `Undo Me ${Date.now()}`;
-    await addItem(authPage, itemName);
+    await addShoppingListItem(authPage, itemName);
 
-    const activeItem = await getItemLocator(authPage, itemName);
+    const activeItem = await getShoppingListItemLocator(authPage, itemName);
     await activeItem.getByRole("checkbox").click();
 
     await expect(authPage.getByText("Purchased Items")).toBeVisible();
 
-    const purchasedItem = await getItemLocator(authPage, itemName);
+    const purchasedItem = await getShoppingListItemLocator(authPage, itemName);
     await expect(purchasedItem.getByRole("checkbox")).toBeChecked();
 
     await purchasedItem.getByRole("checkbox").click();
@@ -113,7 +65,7 @@ test.describe("Shopping List Items", () => {
         .getByText(itemName),
     ).not.toBeVisible({ timeout: 10000 });
 
-    const restoredItem = await getItemLocator(authPage, itemName);
+    const restoredItem = await getShoppingListItemLocator(authPage, itemName);
     await expect(restoredItem.getByRole("checkbox")).not.toBeChecked({
       timeout: 10000,
     });
@@ -121,15 +73,13 @@ test.describe("Shopping List Items", () => {
 
   test("Edit Item: renaming an existing item updates the text correctly", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
-    await setupList(authPage);
+    await createShoppingList(authPage);
 
     const originalName = `Original ${Date.now()}`;
-    await addItem(authPage, originalName);
+    await addShoppingListItem(authPage, originalName);
 
-    const listItem = await getItemLocator(authPage, originalName);
+    const listItem = await getShoppingListItemLocator(authPage, originalName);
     const editButton = listItem.getByTestId(/^shopping-list-item-edit-\d+$/);
     await editButton.click({ force: true });
 
@@ -157,15 +107,13 @@ test.describe("Shopping List Items", () => {
 
   test("Delete Item: removing an item deletes it from the list immediately", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
-    await setupList(authPage);
+    await createShoppingList(authPage);
 
     const itemName = `Delete Me ${Date.now()}`;
-    await addItem(authPage, itemName);
+    await addShoppingListItem(authPage, itemName);
 
-    const listItem = await getItemLocator(authPage, itemName);
+    const listItem = await getShoppingListItemLocator(authPage, itemName);
     const deleteButton = listItem.getByTestId(
       /^shopping-list-item-delete-\d+$/,
     );
