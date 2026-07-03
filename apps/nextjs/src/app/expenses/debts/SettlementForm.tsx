@@ -367,7 +367,10 @@ export function SettlementForm({
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-lg" data-testid="settlement-form">
+      <SheetContent
+        className="w-full sm:max-w-lg"
+        data-testid="settlement-form"
+      >
         <SheetHeader>
           <SheetTitle>
             {isEditMode ? "Edit Settlement" : "Settle Up"}

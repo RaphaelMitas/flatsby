@@ -129,6 +129,8 @@ test.describe("Expense Management", () => {
     await expect(
       authPage.getByTestId("expense-delete-dialog"),
     ).not.toBeVisible();
-    await expect(authPage.getByTestId(`expense-card-${expenseId}`)).not.toBeVisible();
+    await expect(
+      authPage.getByTestId(`expense-card-${expenseId}`),
+    ).not.toBeVisible();
   });
 });

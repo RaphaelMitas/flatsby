@@ -75,7 +75,12 @@ export function ExpenseListPanel({
           Expenses
         </h2>
         <div className="flex items-center gap-2">
-          <Button variant="outline" asChild size="sm" data-testid="expense-debts-link">
+          <Button
+            variant="outline"
+            asChild
+            size="sm"
+            data-testid="expense-debts-link"
+          >
             <Link href="/expenses/debts">
               <Receipt className="mr-2 h-4 w-4" />
               Debts

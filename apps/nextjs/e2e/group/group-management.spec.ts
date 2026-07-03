@@ -62,8 +62,7 @@ test.describe("Group Management", () => {
     const testId = await groupCard.getAttribute("data-testid");
     const match = testId?.match(/group-card-(\d+)/);
     const idFromMatch = match?.[1];
-    const groupId =
-      idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
+    const groupId = idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
     await expect(authPage.getByTestId(`group-card-${groupId}`)).toBeVisible();
   });
 

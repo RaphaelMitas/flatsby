@@ -60,7 +60,10 @@ export function GroupsDashboard() {
               You are not a member of any groups.
             </div>
             <Button asChild className="mx-auto grid max-w-6xl gap-2">
-              <Link href="/group/create" data-testid="group-empty-create-button">
+              <Link
+                href="/group/create"
+                data-testid="group-empty-create-button"
+              >
                 Create a Group
               </Link>
             </Button>
