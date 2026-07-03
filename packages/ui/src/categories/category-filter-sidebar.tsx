@@ -41,6 +41,7 @@ export function CategoryFilterSidebar({
             size="sm"
             onClick={() => onSelectCategory(null)}
             className="w-full justify-between"
+            data-testid="category-filter-all"
           >
             All Items
             {total && total > 0 && (
@@ -66,6 +67,7 @@ export function CategoryFilterSidebar({
                 size="sm"
                 onClick={() => onSelectCategory(category.id as CategoryId)}
                 className="w-full justify-between"
+                data-testid={`category-filter-${category.id}`}
               >
                 <span className="flex items-center gap-2">
                   <Icon

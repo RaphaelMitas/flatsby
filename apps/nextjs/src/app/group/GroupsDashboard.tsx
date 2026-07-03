@@ -39,12 +39,16 @@ export function GroupsDashboard() {
     <section className="mx-auto h-full w-full max-w-prose">
       <div className="flex h-full w-full flex-col gap-6 p-4 md:p-6">
         <div className="flex h-fit items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+          <h2
+            className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl"
+            data-testid="group-dashboard-title"
+          >
             Your Groups
           </h2>
           <Link
             className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors focus-visible:ring-1 focus-visible:ring-gray-950 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 md:hover:bg-gray-900/90 dark:bg-gray-50 dark:text-gray-900 dark:focus-visible:ring-gray-300 md:dark:hover:bg-gray-50/90"
             href="group/create"
+            data-testid="group-create-link"
           >
             Create Group
           </Link>
@@ -56,7 +60,12 @@ export function GroupsDashboard() {
               You are not a member of any groups.
             </div>
             <Button asChild className="mx-auto grid max-w-6xl gap-2">
-              <Link href="/group/create">Create a Group</Link>
+              <Link
+                href="/group/create"
+                data-testid="group-empty-create-button"
+              >
+                Create a Group
+              </Link>
             </Button>
           </div>
         ) : (

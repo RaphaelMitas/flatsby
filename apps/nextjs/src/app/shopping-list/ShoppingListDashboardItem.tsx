@@ -253,6 +253,7 @@ export function ShoppingListDashboardItem({
                   <FormControl>
                     <Input
                       {...field}
+                      data-testid="shopping-list-rename-input"
                       autoFocus
                       placeholder="Enter shopping list name"
                       onKeyDown={(e) => {
@@ -274,7 +275,11 @@ export function ShoppingListDashboardItem({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={renameMutation.isPending}>
+              <Button
+                type="submit"
+                data-testid="shopping-list-rename-save"
+                disabled={renameMutation.isPending}
+              >
                 Save
               </Button>
             </div>
@@ -289,6 +294,7 @@ export function ShoppingListDashboardItem({
       <div className="bg-muted md:group-hover:bg-primary flex cursor-pointer items-center justify-between gap-4 rounded-lg p-4 shadow">
         <div className="flex flex-col gap-2 truncate sm:flex-1 sm:flex-row sm:justify-between">
           <Link
+            data-testid={`shopping-list-dashboard-link-${list.id}`}
             href={`/shopping-list/${list.id}`}
             className="md:group-hover:text-primary-foreground flex flex-1 flex-col gap-2 truncate"
           >
@@ -305,6 +311,7 @@ export function ShoppingListDashboardItem({
         </div>
         <div className="flex items-center gap-1">
           <div
+            data-testid={`shopping-list-dashboard-rename-${list.id}`}
             className="md:group-hover:text-primary-foreground md:group-hover:hover:text-info cursor-pointer rounded p-2 transition-colors"
             onClick={handleEditClick}
             title="Rename shopping list"
@@ -312,6 +319,7 @@ export function ShoppingListDashboardItem({
             <Pencil size={24} />
           </div>
           <div
+            data-testid={`shopping-list-dashboard-delete-${list.id}`}
             className="md:group-hover:text-primary-foreground md:group-hover:hover:text-destructive cursor-pointer rounded p-2 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
@@ -324,7 +332,7 @@ export function ShoppingListDashboardItem({
         </div>
       </div>
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent data-testid="shopping-list-delete-dialog">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Shopping List</AlertDialogTitle>
             <AlertDialogDescription className="wrap-break-word break-all">

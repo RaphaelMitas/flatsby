@@ -16,6 +16,7 @@ interface CurrencyInputProps {
   min?: number; // Minimum value in cents
   max?: number; // Maximum value in cents
   disabled?: boolean;
+  "data-testid"?: string;
 }
 
 /**
@@ -35,6 +36,7 @@ export function CurrencyInput({
   min,
   max,
   disabled,
+  "data-testid": dataTestId,
 }: CurrencyInputProps) {
   const [rawInput, setRawInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -245,6 +247,7 @@ export function CurrencyInput({
       onPaste={handlePaste}
       className={className}
       disabled={disabled}
+      data-testid={dataTestId}
     />
   );
 }

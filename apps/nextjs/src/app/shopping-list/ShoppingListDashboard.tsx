@@ -121,6 +121,7 @@ export const ShoppingListDashboard = ({
                   <FormItem className="w-full flex-1">
                     <FormControl>
                       <Input
+                        data-testid="shopping-list-create-input"
                         disabled={createNewListMutation.isPending}
                         placeholder="add new list"
                         {...field}
@@ -135,6 +136,7 @@ export const ShoppingListDashboard = ({
                 )}
               />
               <Button
+                data-testid="shopping-list-create-button"
                 className="w-full self-start md:w-fit md:min-w-37.5"
                 disabled={
                   !form.formState.isDirty || createNewListMutation.isPending

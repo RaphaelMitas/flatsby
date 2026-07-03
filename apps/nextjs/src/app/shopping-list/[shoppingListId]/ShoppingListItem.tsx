@@ -67,6 +67,7 @@ export const OptimisticShoppingListItem = ({
   return (
     <div
       id={`list-item-${id}`}
+      data-testid={`shopping-list-item-${id}`}
       key={id}
       className="bg-muted flex w-full items-center rounded-lg pr-4"
     >
@@ -341,6 +342,7 @@ const ShoppingListItem = ({
       >
         <div
           id={`list-item-${item.id}`}
+          data-testid={`shopping-list-item-${item.id}`}
           key={item.id}
           className="group bg-muted md:hover:bg-primary hover:text-primary-foreground flex w-full items-center rounded-lg pr-4"
         >
@@ -419,11 +421,13 @@ const ShoppingListItem = ({
               </Popover>
               <div className="ml-2 hidden gap-2 md:flex">
                 <Pencil
+                  data-testid={`shopping-list-item-edit-${item.id}`}
                   size={24}
                   className="md:group-hover:text-primary-foreground md:group-hover:hover:text-info min-w-max cursor-pointer"
                   onClick={() => setShowEditForm(true)}
                 />
                 <Trash
+                  data-testid={`shopping-list-item-delete-${item.id}`}
                   size={24}
                   className="md:group-hover:text-primary-foreground md:group-hover:hover:text-error min-w-max cursor-pointer"
                   onClick={handleDeleteItem}

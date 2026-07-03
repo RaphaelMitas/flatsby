@@ -205,6 +205,7 @@ export function SplitEditor({
           size="sm"
           onClick={() => handleSplitMethodChange("equal")}
           className="flex-1"
+          data-testid="split-method-equal"
         >
           <Equal className="mr-2 h-4 w-4" />
           Equal
@@ -215,6 +216,7 @@ export function SplitEditor({
           size="sm"
           onClick={() => handleSplitMethodChange("percentage")}
           className="flex-1"
+          data-testid="split-method-percentage"
         >
           <Percent className="mr-2 h-4 w-4" />
           Percentage
@@ -225,6 +227,7 @@ export function SplitEditor({
           size="sm"
           onClick={() => handleSplitMethodChange("custom")}
           className="flex-1"
+          data-testid="split-method-custom"
         >
           <DollarSign className="mr-2 h-4 w-4" />
           Custom
@@ -249,6 +252,7 @@ export function SplitEditor({
                   variant={isSelected ? "default" : "outline"}
                   onClick={() => toggleMember(member.id)}
                   className="flex h-auto flex-col items-center gap-2 py-3"
+                  data-testid={`split-member-${member.id}`}
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
@@ -270,7 +274,7 @@ export function SplitEditor({
       </Card>
 
       {splits.length > 0 && (
-        <Card>
+        <Card data-testid="split-details-card">
           <CardHeader>
             <CardTitle className="text-base">Split Details</CardTitle>
             <CardDescription>
@@ -330,6 +334,7 @@ export function SplitEditor({
                                 min={0}
                                 max={10000}
                                 className="flex-1"
+                                data-testid={`split-member-amount-${split.groupMemberId}`}
                               />
                               <span className="text-muted-foreground text-sm">
                                 %
@@ -363,6 +368,7 @@ export function SplitEditor({
                                 min={0}
                                 max={totalAmountCents}
                                 className="flex-1"
+                                data-testid={`split-member-amount-${split.groupMemberId}`}
                               />
                             </div>
                           </FormControl>

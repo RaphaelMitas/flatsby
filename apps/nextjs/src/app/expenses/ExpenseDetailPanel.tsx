@@ -248,7 +248,7 @@ function ExpenseDetailPanelContent({
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent data-testid="expense-delete-dialog">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Expense</AlertDialogTitle>
             <AlertDialogDescription>
@@ -262,6 +262,7 @@ function ExpenseDetailPanelContent({
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="expense-delete-confirm-button"
             >
               {isDeleting ? <LoadingSpinner /> : "Delete"}
             </AlertDialogAction>

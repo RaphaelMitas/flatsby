@@ -21,6 +21,7 @@ export function GroupsDashboardElement({
 }: Props) {
   return (
     <button
+      data-testid={`group-card-${groupId}`}
       type="button"
       className="group bg-muted md:hover:bg-primary h-auto w-full items-center gap-4 rounded-lg p-4 text-left shadow-sm disabled:opacity-50"
       onClick={() => onSelect(groupId)}

@@ -43,6 +43,7 @@ export function ExpenseCategorySelector({
           variant="outline"
           role="combobox"
           disabled={disabled}
+          data-testid="expense-form-category"
           className={cn(
             "flex w-full items-center justify-between",
             iconButton && "h-10 w-10 justify-center p-0",
@@ -75,6 +76,7 @@ export function ExpenseCategorySelector({
               <Button
                 variant="ghost"
                 onClick={() => onChange?.(item.id)}
+                data-testid={`expense-category-option-${item.id}`}
                 className={cn(
                   "flex w-full items-center justify-start gap-4 px-4 py-3",
                   selectedData.id === item.id && "bg-muted",

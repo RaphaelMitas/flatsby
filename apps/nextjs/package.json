@@ -11,6 +11,7 @@
     "lint": "eslint",
     "start": "pnpm with-env next start",
     "test:e2e": "pnpm with-env playwright test",
+    "test:e2e:fast": "PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-18} pnpm with-env playwright test",
     "test:e2e:ui": "pnpm with-env playwright test --ui",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"

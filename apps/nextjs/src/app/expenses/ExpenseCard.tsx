@@ -149,7 +149,12 @@ export function ExpenseCard({
 
   if (onSelect) {
     return (
-      <button type="button" onClick={onSelect} className="w-full text-left">
+      <button
+        data-testid={`expense-card-${expense.id}`}
+        type="button"
+        onClick={onSelect}
+        className="w-full text-left"
+      >
         {cardContent}
       </button>
     );

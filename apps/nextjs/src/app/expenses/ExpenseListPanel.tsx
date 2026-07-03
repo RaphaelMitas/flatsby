@@ -68,15 +68,29 @@ export function ExpenseListPanel({
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 border-b p-4">
-        <h2 className="text-xl font-bold tracking-tight">Expenses</h2>
+        <h2
+          data-testid="expense-heading"
+          className="text-xl font-bold tracking-tight"
+        >
+          Expenses
+        </h2>
         <div className="flex items-center gap-2">
-          <Button variant="outline" asChild size="sm">
+          <Button
+            variant="outline"
+            asChild
+            size="sm"
+            data-testid="expense-debts-link"
+          >
             <Link href="/expenses/debts">
               <Receipt className="mr-2 h-4 w-4" />
               Debts
             </Link>
           </Button>
-          <Button size="sm" onClick={onCreateExpense}>
+          <Button
+            size="sm"
+            onClick={onCreateExpense}
+            data-testid="expense-add-button"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add
           </Button>
@@ -95,7 +109,10 @@ export function ExpenseListPanel({
                   Start tracking expenses by adding your first one
                 </p>
               </div>
-              <Button onClick={onCreateExpense}>
+              <Button
+                onClick={onCreateExpense}
+                data-testid="expense-empty-add-button"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Expense
               </Button>

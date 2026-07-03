@@ -85,11 +85,14 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
         className="space-y-6"
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
+          <h2
+            data-testid="expense-form-title"
+            className="text-lg font-semibold"
+          >
             {isEditMode ? "Edit Expense" : "Add Expense"}
           </h2>
           <div className="text-muted-foreground flex items-center gap-4 text-sm">
-            <span>
+            <span data-testid="expense-form-step">
               Step {currentStep}/{totalSteps}
             </span>
             <div className="flex gap-1">
@@ -128,7 +131,10 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                                 value={currencyField.value}
                                 onValueChange={currencyField.onChange}
                               >
-                                <SelectTrigger className="w-24">
+                                <SelectTrigger
+                                  className="w-24"
+                                  data-testid="expense-form-currency"
+                                >
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -147,6 +153,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                             placeholder="0.00"
                             min={1}
                             className="flex-1"
+                            data-testid="expense-form-amount"
                           />
                         </div>
                       </FormControl>
@@ -168,7 +175,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                         }
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger data-testid="expense-form-paid-by">
                             <SelectValue placeholder="Select who paid" />
                           </SelectTrigger>
                         </FormControl>
@@ -198,6 +205,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                         <Input
                           placeholder="What was this expense for?"
                           {...field}
+                          data-testid="expense-form-description"
                           onBlur={() => {
                             field.onBlur();
                             onDescriptionBlur();
@@ -384,6 +392,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
               onClick={handleBack}
               disabled={isPending}
               className="flex-1"
+              data-testid="expense-form-back"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
@@ -399,12 +408,18 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
               }}
               disabled={isPending || amountInCents <= 0}
               className="flex-1"
+              data-testid="expense-form-next"
             >
               Next
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button type="submit" disabled={isPending} className="flex-1">
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="flex-1"
+              data-testid="expense-form-submit"
+            >
               {isPending ? (
                 <>
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />

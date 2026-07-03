@@ -5,6 +5,9 @@ on:
 
 env:
   FORCE_COLOR: 3
+  # Stream task logs live; the GHA default ("grouped") buffers all output until
+  # a task finishes, which looks like a hang and loses logs on job timeout.
+  TURBO_LOG_ORDER: stream
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
 
@@ -35,7 +38,7 @@ jobs:
     needs: check-pr
     if: needs.check-pr.outputs.has-pr == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     concurrency:
       group: e2e-web-${{ needs.check-pr.outputs.branch }}
       cancel-in-progress: true

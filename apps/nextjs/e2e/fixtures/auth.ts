@@ -1,5 +1,11 @@
-import type { Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
+
+import {
+  getVercelBypassHeaders,
+  getVercelBypassSecret,
+  parseVercelJwt,
+} from "../helpers/vercel";
 
 interface TestCookie {
   name: string;
@@ -12,36 +18,106 @@ interface TestCookie {
   expires?: number;
 }
 
+export interface TestUser {
+  userId: string;
+  email: string;
+  groupId: number;
+}
+
+interface SessionData extends TestUser {
+  cookies: TestCookie[];
+}
+
+function isLocalhost(baseURL: string): boolean {
+  const hostname = new URL(baseURL).hostname;
+  return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
+async function callCreateSessionApi(
+  apiUrl: string,
+  headers: Record<string, string> = {},
+): Promise<SessionData> {
+  const apiRes = await fetch(apiUrl, {
+    method: "POST",
+    headers,
+  });
+
+  if (!apiRes.ok) {
+    const body = await apiRes.text();
+    throw new Error(`E2E session failed: ${apiRes.status} ${body}`);
+  }
+
+  return (await apiRes.json()) as SessionData;
+}
+
 async function createAuthSession(
   page: Page,
   baseURL: string | undefined,
-): Promise<TestCookie[]> {
+  context: BrowserContext,
+): Promise<SessionData> {
+  if (!baseURL) {
+    throw new Error("baseURL is required for E2E testing");
+  }
+
   const apiUrl = `${baseURL}/api/e2e/create-session`;
 
-  const response = await page.request.post(apiUrl);
+  if (isLocalhost(baseURL)) {
+    const response = await page.request.post(apiUrl);
+    if (!response.ok()) {
+      const body = await response.text();
+      throw new Error(`E2E session failed: ${response.status()} ${body}`);
+    }
 
-  if (!response.ok()) {
-    const body = await response.text();
+    return (await response.json()) as SessionData;
+  }
+
+  const bypassSecret = getVercelBypassSecret();
+  if (!bypassSecret) {
     throw new Error(
-      `Failed to create E2E session: ${response.status()} ${body}`,
+      "VERCEL_AUTOMATION_BYPASS_SECRET is required for remote E2E testing",
     );
   }
 
-  const data = (await response.json()) as {
-    cookies: TestCookie[];
-    userId: string;
-    ok: boolean;
-  };
+  const getRes = await fetch(baseURL, {
+    redirect: "manual",
+    headers: getVercelBypassHeaders("samesitenone"),
+  });
 
-  return data.cookies;
-}
+  const setCookieHeader = getRes.headers.get("set-cookie");
+  if (!setCookieHeader) {
+    throw new Error(
+      "No Set-Cookie header from Vercel. Check VERCEL_AUTOMATION_BYPASS_SECRET.",
+    );
+  }
 
-async function cleanupAuthSession(
-  page: Page,
-  baseURL: string | undefined,
-): Promise<void> {
-  const apiUrl = `${baseURL}/api/e2e/create-session`;
-  await page.request.delete(apiUrl);
+  const cookieValue = parseVercelJwt(setCookieHeader);
+  if (!cookieValue) {
+    throw new Error(
+      `Could not parse _vercel_jwt from Set-Cookie: ${setCookieHeader.slice(0, 200)}`,
+    );
+  }
+
+  const pathMatch = /path=([^;]+)/i.exec(setCookieHeader);
+  const expiresMatch = /expires=([^;]+)/i.exec(setCookieHeader);
+  const expires = expiresMatch?.[1] ? parseInt(expiresMatch[1], 10) : undefined;
+
+  await context.addCookies([
+    {
+      name: "_vercel_jwt",
+      value: cookieValue,
+      domain: new URL(baseURL).hostname,
+      path: pathMatch?.[1] ?? "/",
+      ...(expires ? { expires } : {}),
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    },
+  ]);
+
+  return callCreateSessionApi(apiUrl, {
+    "x-vercel-protection-bypass": bypassSecret,
+    cookie: `_vercel_jwt=${cookieValue}`,
+  });
 }
 
 function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
@@ -54,20 +130,19 @@ function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
 /**
  * Authenticated test fixture.
  *
- * Creates a test user + session via the E2E API route (which uses better-auth's
- * testUtils plugin to create properly signed session cookies).
+ * Creates a unique test user + group + session per test via the E2E API route
+ * (which uses better-auth's testUtils plugin to create properly signed session
+ * cookies). Because every test gets its own isolated user and group, tests
+ * can run with any number of parallel workers without polluting each other.
  *
- * The x-vercel-protection-bypass header is set automatically via
- * extraHTTPHeaders in playwright.config.ts when VERCEL_AUTOMATION_BYPASS_SECRET
- * is present — no need to add it manually here.
- *
- * Cleans up test data after each test.
+ * On Vercel preview deployments, obtains the _vercel_jwt bypass cookie via
+ * Node fetch before calling the session API.
  */
-export const test = base.extend<{ authPage: Page }>({
-  authPage: async ({ page, context, baseURL }, use) => {
-    const cookies = await createAuthSession(page, baseURL);
+export const test = base.extend<{ authPage: Page; testUser: TestUser }>({
+  testUser: async ({ page, context, baseURL }, use) => {
+    const session = await createAuthSession(page, baseURL, context);
 
-    const playwrightCookies = cookies.map((cookie) => ({
+    const playwrightCookies = session.cookies.map((cookie) => ({
       name: cookie.name,
       value: cookie.value,
       domain: cookie.domain,
@@ -80,10 +155,15 @@ export const test = base.extend<{ authPage: Page }>({
 
     await context.addCookies(playwrightCookies);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture callback, not a React hook
+    await use({
+      userId: session.userId,
+      email: session.email,
+      groupId: session.groupId,
+    });
+  },
+  authPage: async ({ page, testUser: _testUser }, use) => {
+    // Depending on testUser guarantees the session cookies are set.
     await use(page);
-
-    await cleanupAuthSession(page, baseURL);
   },
 });
 

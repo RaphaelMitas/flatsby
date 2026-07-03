@@ -59,7 +59,9 @@ export default function DeleteUser() {
         <div className="space-y-4">
           <Alert variant="destructive">
             <TriangleAlertIcon className="h-4 w-4" />
-            <AlertTitle>Danger Zone</AlertTitle>
+            <AlertTitle data-testid="delete-user-danger-zone-title">
+              Danger Zone
+            </AlertTitle>
             <AlertDescription>
               Deleting this user will permanently remove it and all its data.
               Please type your email <strong>{user.email}</strong> below to
@@ -72,6 +74,7 @@ export default function DeleteUser() {
                 <>
                   <Input
                     id="delete-user-name-input"
+                    data-testid="delete-user-email-input"
                     placeholder="Enter user name"
                     maxLength={256}
                     value={userNameInput}
@@ -79,6 +82,7 @@ export default function DeleteUser() {
                   />
                   <Button
                     className="w-full min-w-[150px] md:w-fit"
+                    data-testid="delete-user-cancel-button"
                     onClick={() => setDeleteUserOpen(false)}
                   >
                     Cancel
@@ -87,6 +91,7 @@ export default function DeleteUser() {
               )}
               <Button
                 variant="destructive"
+                data-testid="delete-user-confirm-button"
                 disabled={
                   !deleteUserOpen
                     ? false
