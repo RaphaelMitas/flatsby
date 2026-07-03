@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../fixtures/auth";
+import { selectShoppingListCategory } from "../helpers/categories";
 
 async function setupList(page: Page): Promise<{ listId: number }> {
   await page.goto("/shopping-list");
@@ -24,7 +25,8 @@ async function setupList(page: Page): Promise<{ listId: number }> {
   return { listId: parseInt(id, 10) };
 }
 
-async function addItem(page: Page, name: string) {
+async function addItem(page: Page, name: string, categoryId = "other") {
+  await selectShoppingListCategory(page, categoryId);
   await page.getByTestId("shopping-list-item-input").fill(name);
   await page.getByTestId("shopping-list-add-item-button").click();
   await expect(page.getByText(name)).toBeVisible({ timeout: 10000 });
@@ -56,10 +58,7 @@ test.describe("Shopping List Items", () => {
 
     const itemName = `Test Item ${Date.now()}`;
 
-    await authPage.getByTestId("category-selector-trigger").click();
-
-    await authPage.getByTestId("category-selector-title").waitFor();
-    await authPage.getByTestId("category-selector-option-produce").click();
+    await selectShoppingListCategory(authPage, "produce");
 
     await authPage.getByTestId("shopping-list-item-input").fill(itemName);
     await authPage.getByTestId("shopping-list-add-item-button").click();

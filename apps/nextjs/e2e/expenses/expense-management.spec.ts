@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../fixtures/auth";
+import { selectExpenseCategory } from "../helpers/categories";
 
 async function createTestExpense(
   page: Page,
@@ -21,11 +22,16 @@ async function createTestExpense(
 
   const uniqueDesc = `Test dinner ${Date.now()}`;
   await page.getByTestId("expense-form-description").fill(uniqueDesc);
+  await selectExpenseCategory(page, "restaurant");
   await page.getByTestId("expense-form-next").click();
 
   await page.getByTestId("expense-form-next").click();
 
   await page.getByTestId("expense-form-submit").click();
+
+  await expect(page.getByTestId("expense-form-title")).not.toBeVisible({
+    timeout: 15000,
+  });
 
   const expenseCard = page
     .getByTestId(/^expense-card-\d+$/)
@@ -44,12 +50,25 @@ async function createTestExpense(
   };
 }
 
-async function openExpenseDetail(page: Page, expenseId: number) {
-  await page.goto("/expenses");
+async function openExpenseDetail(page: Page, description: string) {
+  const expenseCard = page
+    .getByTestId(/^expense-card-\d+$/)
+    .filter({ hasText: description })
+    .first();
 
-  const expenseCard = page.getByTestId(`expense-card-${expenseId}`);
-  await expect(expenseCard).toBeVisible({ timeout: 10000 });
-  await expenseCard.click();
+  if (!(await expenseCard.isVisible().catch(() => false))) {
+    await page.goto("/expenses");
+    await expect(expenseCard).toBeVisible({ timeout: 15000 });
+  }
+
+  // The list rerenders right after creation (query invalidation), which can
+  // swallow the first click, so retry until the detail view actually opens.
+  await expect(async () => {
+    await expenseCard.click();
+    await expect(page.getByTestId("expense-delete-button")).toBeVisible({
+      timeout: 3000,
+    });
+  }).toPass({ timeout: 20000 });
 }
 
 test.describe("Expense Management", () => {
@@ -59,7 +78,7 @@ test.describe("Expense Management", () => {
     authPage: Page;
   }) => {
     const { expenseId, description } = await createTestExpense(authPage);
-    await openExpenseDetail(authPage, expenseId);
+    await openExpenseDetail(authPage, description);
 
     await expect(authPage.getByTestId("expense-split-details")).toBeVisible({
       timeout: 15000,
@@ -74,7 +93,7 @@ test.describe("Expense Management", () => {
     authPage: Page;
   }) => {
     const { expenseId, description } = await createTestExpense(authPage);
-    await openExpenseDetail(authPage, expenseId);
+    await openExpenseDetail(authPage, description);
 
     await expect(authPage.getByTestId("expense-edit-button")).toBeVisible({
       timeout: 15000,
@@ -110,7 +129,7 @@ test.describe("Expense Management", () => {
     authPage: Page;
   }) => {
     const { expenseId, description: desc } = await createTestExpense(authPage);
-    await openExpenseDetail(authPage, expenseId);
+    await openExpenseDetail(authPage, desc);
 
     await expect(authPage.getByTestId("expense-delete-button")).toBeVisible({
       timeout: 15000,
@@ -130,7 +149,7 @@ test.describe("Expense Management", () => {
       authPage.getByTestId("expense-delete-dialog"),
     ).not.toBeVisible();
     await expect(
-      authPage.getByTestId(`expense-card-${expenseId}`),
+      authPage.getByTestId(/^expense-card-\d+$/).filter({ hasText: desc }),
     ).not.toBeVisible();
   });
 });

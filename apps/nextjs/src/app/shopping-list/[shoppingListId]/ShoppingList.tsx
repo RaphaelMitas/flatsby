@@ -30,7 +30,7 @@ import { groupShoppingList } from "./ShoppingListUtils";
 import { useShoppingListInvalidation } from "./useShoppingListInvalidation";
 
 const ShoppingList = ({ shoppingListId }: { shoppingListId: number }) => {
-  const { currentGroup } = useGroupContext();
+  const { currentGroup, isLoading } = useGroupContext();
   const trpc = useTRPC();
 
   const { data: shoppingListData } = useSuspenseQuery(
@@ -41,6 +41,15 @@ const ShoppingList = ({ shoppingListId }: { shoppingListId: number }) => {
   );
 
   if (!currentGroup) {
+    // The group context query may still be in flight on a hard page load;
+    // only redirect once it has actually resolved without a group.
+    if (isLoading) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      );
+    }
     redirect("/group");
   }
 

@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../fixtures/auth";
+import { selectExpenseCategory } from "../helpers/categories";
 
 async function createTestExpenseViaAPI(
   page: Page,
@@ -25,6 +26,8 @@ async function createTestExpenseViaAPI(
 
   const descInput = page.getByTestId("expense-form-description");
   await descInput.fill(description);
+
+  await selectExpenseCategory(page, "groceries");
 
   await page.getByTestId("expense-form-next").click();
 
@@ -73,6 +76,8 @@ test.describe("Expense Creation", () => {
 
     const descInput = authPage.getByTestId("expense-form-description");
     await descInput.fill("Dinner split by percentage");
+
+    await selectExpenseCategory(authPage, "restaurant");
 
     await authPage.getByTestId("expense-form-next").click();
     await expect(authPage.getByTestId("expense-form-step")).toContainText(
@@ -128,6 +133,8 @@ test.describe("Expense Creation", () => {
     const descInput = authPage.getByTestId("expense-form-description");
     await descInput.fill("Rent utilities custom split");
 
+    await selectExpenseCategory(authPage, "other-housing");
+
     await authPage.getByTestId("expense-form-next").click();
     await expect(authPage.getByTestId("expense-form-step")).toContainText(
       "Step 2/3",
@@ -182,13 +189,7 @@ test.describe("Expense Creation", () => {
     const descInput = authPage.getByTestId("expense-form-description");
     await descInput.fill("Coffee with friends");
 
-    await authPage.getByTestId("expense-form-category").click();
-    const coffeeOption = authPage.getByTestId("expense-category-option-coffee");
-    if (await coffeeOption.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await coffeeOption.click();
-    } else {
-      await authPage.keyboard.press("Escape");
-    }
+    await selectExpenseCategory(authPage, "coffee");
 
     await authPage.getByTestId("expense-form-next").click();
 

@@ -1,31 +1,34 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, like, lt, or } from "drizzle-orm";
 
 import { db } from "@flatsby/db/client";
 import {
   accounts,
+  expenses,
+  expenseSplits,
   groupMembers,
   groups,
   sessions,
+  shoppingListItems,
+  shoppingLists,
   users,
 } from "@flatsby/db/schema";
 
 import { auth } from "~/auth/server";
 import { env } from "~/env";
 
-const TEST_USER = {
-  id: "e2e-test-user-001",
-  name: "E2E Test User",
-  email: "e2e-test@flatsby.test",
-} as const;
+const E2E_EMAIL_DOMAIN = "flatsby.test";
 
 /**
- * E2E-only route: creates a test user and session via better-auth's testUtils plugin.
- * Returns properly signed session cookies for Playwright to inject.
- * Guarded to only work outside production.
+ * E2E-only route: creates a unique test user, group, and session per call via
+ * better-auth's testUtils plugin. Returns properly signed session cookies for
+ * Playwright to inject.
  *
- * This handler is fully idempotent and safe for concurrent calls from parallel tests.
- * It does NOT delete existing sessions to avoid invalidating other parallel test sessions.
+ * Every call mints a fresh user + group, so parallel tests are fully isolated
+ * from each other regardless of worker count.
+ *
+ * Guarded to only work outside production.
  */
 export async function POST() {
   if (!env.E2E_TESTING) {
@@ -36,85 +39,54 @@ export async function POST() {
   }
 
   const now = new Date();
+  const userId = `e2e-${randomUUID()}`;
+  const email = `${userId}@${E2E_EMAIL_DOMAIN}`;
 
-  // Seed user (upsert)
-  await db
-    .insert(users)
-    .values({
-      id: TEST_USER.id,
-      name: TEST_USER.name,
-      email: TEST_USER.email,
-      emailVerified: true,
-      createdAt: now,
-      updatedAt: now,
-      termsAcceptedAt: now,
-      termsVersion: "1.1",
-      privacyAcceptedAt: now,
-      privacyVersion: "1.1",
-    })
-    .onConflictDoNothing();
+  await db.insert(users).values({
+    id: userId,
+    name: "E2E Test User",
+    email,
+    emailVerified: true,
+    createdAt: now,
+    updatedAt: now,
+    termsAcceptedAt: now,
+    termsVersion: "1.1",
+    privacyAcceptedAt: now,
+    privacyVersion: "1.1",
+  });
 
-  // Seed account (upsert)
-  await db
-    .insert(accounts)
-    .values({
-      id: `e2e-account-${TEST_USER.id}`,
-      accountId: "e2e-google-id",
-      providerId: "google",
-      userId: TEST_USER.id,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .onConflictDoNothing();
+  await db.insert(accounts).values({
+    id: `e2e-account-${userId}`,
+    accountId: `e2e-google-${userId}`,
+    providerId: "google",
+    userId,
+    createdAt: now,
+    updatedAt: now,
+  });
 
-  // Seed test group and group membership (upsert)
-  const existingGroups = await db
-    .select()
-    .from(groups)
-    .where(eq(groups.name, "E2E Test Group"));
+  const [group] = await db
+    .insert(groups)
+    .values({ name: `E2E Test Group ${userId.slice(0, 12)}` })
+    .returning();
 
-  let groupId: number;
-  const existingGroup = existingGroups[0];
-  if (existingGroup) {
-    groupId = existingGroup.id;
-  } else {
-    const [newGroup] = await db
-      .insert(groups)
-      .values({ name: "E2E Test Group" })
-      .returning();
-    if (!newGroup) {
-      return NextResponse.json(
-        { error: "Failed to create test group" },
-        { status: 500 },
-      );
-    }
-    groupId = newGroup.id;
-  }
-
-  const existingMember = await db
-    .select()
-    .from(groupMembers)
-    .where(
-      and(
-        eq(groupMembers.groupId, groupId),
-        eq(groupMembers.userId, TEST_USER.id),
-      ),
+  if (!group) {
+    return NextResponse.json(
+      { error: "Failed to create test group" },
+      { status: 500 },
     );
-
-  if (existingMember.length === 0) {
-    await db.insert(groupMembers).values({
-      groupId,
-      userId: TEST_USER.id,
-      role: "admin",
-      isActive: true,
-    });
   }
 
-  // Set user's lastGroupUsed so the app knows which group is active
+  await db.insert(groupMembers).values({
+    groupId: group.id,
+    userId,
+    role: "admin",
+    isActive: true,
+  });
+
   await db
     .update(users)
-    .set({ lastGroupUsed: groupId })
-    .where(eq(users.id, TEST_USER.id));
+    .set({ lastGroupUsed: group.id })
+    .where(eq(users.id, userId));
 
   // Use better-auth's testUtils plugin to create a properly signed session
   const ctx = await auth.$context;
@@ -146,18 +118,26 @@ export async function POST() {
     );
   }
 
-  const result = await testHelpers.login({ userId: TEST_USER.id });
+  const result = await testHelpers.login({ userId });
 
   return NextResponse.json({
-    userId: TEST_USER.id,
+    userId,
+    email,
+    groupId: group.id,
     cookies: result.cookies,
     ok: true,
   });
 }
 
+const STALE_AFTER_MS = 60 * 60 * 1000;
+
 /**
- * Cleanup route: removes test user and associated data.
- * Only called after all tests complete.
+ * Cleanup route: removes stale E2E test users and their associated data
+ * (groups, expenses, shopping lists, sessions).
+ *
+ * Only data older than one hour is deleted, so concurrent test suites
+ * sharing a database never delete each other's in-flight users. Each suite's
+ * own leftovers are swept by whichever cleanup runs an hour later.
  */
 export async function DELETE() {
   if (!env.E2E_TESTING) {
@@ -167,11 +147,94 @@ export async function DELETE() {
     );
   }
 
-  await db.delete(sessions).where(eq(sessions.userId, TEST_USER.id));
-  await db.delete(accounts).where(eq(accounts.userId, TEST_USER.id));
-  await db.delete(groupMembers).where(eq(groupMembers.userId, TEST_USER.id));
-  await db.delete(groups).where(eq(groups.name, "E2E Test Group"));
-  await db.delete(users).where(eq(users.id, TEST_USER.id));
+  const staleCutoff = new Date(Date.now() - STALE_AFTER_MS);
 
-  return NextResponse.json({ ok: true });
+  const e2eUsers = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(
+      and(
+        like(users.email, `%@${E2E_EMAIL_DOMAIN}`),
+        lt(users.createdAt, staleCutoff),
+      ),
+    );
+  const userIds = e2eUsers.map((u) => u.id);
+
+  // Groups the stale e2e users belong to, plus any orphaned E2E-named groups
+  // past the cutoff (e.g. created via the UI by an already-deleted user)
+  const memberships =
+    userIds.length > 0
+      ? await db
+          .select({ groupId: groupMembers.groupId })
+          .from(groupMembers)
+          .where(inArray(groupMembers.userId, userIds))
+      : [];
+  const namedGroups = await db
+    .select({ id: groups.id })
+    .from(groups)
+    .where(
+      and(
+        or(
+          like(groups.name, "E2E Test Group%"),
+          like(groups.name, "E2E Group%"),
+        ),
+        lt(groups.createdAt, staleCutoff),
+      ),
+    );
+  const groupIds = [
+    ...new Set([
+      ...memberships.map((m) => m.groupId),
+      ...namedGroups.map((g) => g.id),
+    ]),
+  ];
+
+  if (userIds.length > 0) {
+    await db
+      .update(users)
+      .set({ lastGroupUsed: null, lastShoppingListUsed: null })
+      .where(inArray(users.id, userIds));
+  }
+
+  if (groupIds.length > 0) {
+    const groupExpenses = await db
+      .select({ id: expenses.id })
+      .from(expenses)
+      .where(inArray(expenses.groupId, groupIds));
+    const expenseIds = groupExpenses.map((e) => e.id);
+    if (expenseIds.length > 0) {
+      await db
+        .delete(expenseSplits)
+        .where(inArray(expenseSplits.expenseId, expenseIds));
+      await db.delete(expenses).where(inArray(expenses.id, expenseIds));
+    }
+
+    const lists = await db
+      .select({ id: shoppingLists.id })
+      .from(shoppingLists)
+      .where(inArray(shoppingLists.groupId, groupIds));
+    const listIds = lists.map((l) => l.id);
+    if (listIds.length > 0) {
+      await db
+        .delete(shoppingListItems)
+        .where(inArray(shoppingListItems.shoppingListId, listIds));
+      await db.delete(shoppingLists).where(inArray(shoppingLists.id, listIds));
+    }
+
+    await db
+      .delete(groupMembers)
+      .where(inArray(groupMembers.groupId, groupIds));
+    await db.delete(groups).where(inArray(groups.id, groupIds));
+  }
+
+  if (userIds.length > 0) {
+    await db.delete(sessions).where(inArray(sessions.userId, userIds));
+    await db.delete(accounts).where(inArray(accounts.userId, userIds));
+    await db.delete(users).where(inArray(users.id, userIds));
+  }
+
+  return NextResponse.json({
+    ok: true,
+    deletedUsers: userIds.length,
+    deletedGroups: groupIds.length,
+  });
 }

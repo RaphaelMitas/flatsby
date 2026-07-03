@@ -1,7 +1,5 @@
 import { expect, test } from "../fixtures/auth";
 
-const TEST_USER_EMAIL = "e2e-test@flatsby.test";
-
 test.describe("Account Management", () => {
   test("access account deletion settings", async ({ authPage }) => {
     await authPage.goto("/user-settings");
@@ -18,7 +16,7 @@ test.describe("Account Management", () => {
     ).toBeVisible();
   });
 
-  test("two-step email confirmation", async ({ authPage }) => {
+  test("two-step email confirmation", async ({ authPage, testUser }) => {
     await authPage.goto("/user-settings");
 
     const deleteUserButton = authPage.getByTestId("delete-user-confirm-button");
@@ -37,28 +35,34 @@ test.describe("Account Management", () => {
     await deleteInput.fill("wrong-email@test.com");
     await expect(deleteUserButton).toBeDisabled();
 
-    await deleteInput.fill(TEST_USER_EMAIL);
+    await deleteInput.fill(testUser.email);
     await expect(deleteUserButton).toBeEnabled();
   });
 
-  test("delete account signs out and redirects", async ({ authPage }) => {
+  test("delete account signs out and redirects", async ({
+    authPage,
+    testUser,
+  }) => {
     await authPage.goto("/user-settings");
 
     const deleteUserButton = authPage.getByTestId("delete-user-confirm-button");
     await deleteUserButton.click();
 
     const deleteInput = authPage.getByTestId("delete-user-email-input");
-    await deleteInput.fill(TEST_USER_EMAIL);
+    await deleteInput.fill(testUser.email);
 
     await authPage.getByTestId("delete-user-confirm-button").click();
 
-    await authPage.waitForURL(/\/(auth\/login|\/)/);
+    await authPage.waitForURL(
+      (url) => {
+        const { pathname } = new URL(url);
+        return pathname === "/" || pathname.startsWith("/auth/login");
+      },
+      { timeout: 30000 },
+    );
 
-    const currentUrl = authPage.url();
-    expect(currentUrl).toMatch(/\/(auth\/login|\/)/);
-
-    await expect(
-      authPage.getByTestId("delete-user-confirm-button"),
-    ).not.toBeVisible();
+    const { pathname } = new URL(authPage.url());
+    expect(pathname === "/" || pathname.startsWith("/auth/login")).toBe(true);
+    await expect(authPage).not.toHaveURL(/user-settings/);
   });
 });

@@ -4,24 +4,41 @@ import { expect, test } from "../fixtures/auth";
 
 const uniqueGroupName = () => `E2E Group ${Date.now()}`;
 
-async function createAndSelectGroup(page: Page, name: string): Promise<number> {
+/**
+ * Fills and submits the create-group form. Under heavy parallel load the
+ * page may not be hydrated yet when the button is clicked, which triggers a
+ * native form submit that reloads /group/create without calling the API.
+ * Detect that (URL unchanged) and retry.
+ */
+async function submitCreateGroupForm(page: Page, name: string) {
   await page.goto("/group/create");
-  await page.getByTestId("group-create-name-input").fill(name);
-  await page.getByTestId("group-create-submit").click();
-  await page.waitForURL("/home");
+  await expect(async () => {
+    if (new URL(page.url()).pathname === "/home") return;
+    await page.getByTestId("group-create-name-input").fill(name);
+    await page.getByTestId("group-create-submit").click();
+    await page.waitForURL("/home", { timeout: 10000 });
+  }).toPass({ timeout: 45000 });
+}
+
+async function createAndSelectGroup(page: Page, name: string): Promise<number> {
+  await submitCreateGroupForm(page, name);
 
   await page.goto("/group");
 
-  const groupCard = page.getByTestId(/^group-card-\d+$/).filter({
-    hasText: name,
-  });
-  await groupCard.click();
-  await page.waitForURL("/home");
-
+  const groupCard = page
+    .getByTestId(/^group-card-\d+$/)
+    .filter({ hasText: name })
+    .first();
+  await expect(groupCard).toBeVisible({ timeout: 15000 });
   const testId = await groupCard.getAttribute("data-testid");
   const match = testId?.match(/group-card-(\d+)/);
   const idFromMatch = match?.[1];
-  return idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
+  const groupId = idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
+
+  await groupCard.click();
+  await page.waitForURL("/home");
+
+  return groupId;
 }
 
 test.describe("Group Management", () => {
@@ -33,9 +50,7 @@ test.describe("Group Management", () => {
       "Create a Group",
     );
 
-    await authPage.getByTestId("group-create-name-input").fill(groupName);
-    await authPage.getByTestId("group-create-submit").click();
-    await authPage.waitForURL("/home");
+    await submitCreateGroupForm(authPage, groupName);
   });
 
   test("group appears in dashboard", async ({
@@ -45,18 +60,16 @@ test.describe("Group Management", () => {
   }) => {
     const groupName = uniqueGroupName();
 
-    await authPage.goto("/group/create");
-    await authPage.getByTestId("group-create-name-input").fill(groupName);
-    await authPage.getByTestId("group-create-submit").click();
-    await authPage.waitForURL("/home");
+    await submitCreateGroupForm(authPage, groupName);
 
     await authPage.goto("/group");
     await expect(authPage.getByTestId("group-dashboard-title")).toContainText(
       "Your Groups",
     );
-    const groupCard = authPage.getByTestId(/^group-card-\d+$/).filter({
-      hasText: groupName,
-    });
+    const groupCard = authPage
+      .getByTestId(/^group-card-\d+$/)
+      .filter({ hasText: groupName })
+      .first();
     await expect(groupCard).toBeVisible();
     await expect(groupCard.getByText("1 member")).toBeVisible();
     const testId = await groupCard.getAttribute("data-testid");

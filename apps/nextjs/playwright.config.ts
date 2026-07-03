@@ -1,3 +1,4 @@
+import os from "node:os";
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = process.env.CI ? 3000 : 3100;
@@ -5,12 +6,19 @@ const baseURL = process.env.BASE_URL ?? `http://localhost:${PORT}`;
 
 const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
+// Every test gets its own isolated user + group (see e2e/fixtures/auth.ts),
+// so any worker count is safe. Override with PLAYWRIGHT_WORKERS.
+const workers = process.env.PLAYWRIGHT_WORKERS
+  ? Number.parseInt(process.env.PLAYWRIGHT_WORKERS, 10)
+  : Math.min(os.cpus().length, 8);
+
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 3,
+  workers,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   timeout: 60_000,
   expect: {

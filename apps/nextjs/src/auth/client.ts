@@ -10,11 +10,11 @@ export const signOut: AuthClient["signOut"] = authClient.signOut;
 export const useSession: AuthClient["useSession"] = authClient.useSession;
 
 export async function signOutAndRedirect(router: AppRouterInstance) {
-  await signOut({
-    fetchOptions: {
-      onSuccess: () => {
-        router.push("/auth/login");
-      },
-    },
-  });
+  // Redirect even if the sign-out request fails, e.g. when the session was
+  // already invalidated server-side (account deletion deletes all sessions).
+  try {
+    await signOut();
+  } finally {
+    router.push("/auth/login");
+  }
 }

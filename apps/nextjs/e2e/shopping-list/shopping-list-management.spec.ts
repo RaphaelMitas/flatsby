@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../fixtures/auth";
+import { selectShoppingListCategory } from "../helpers/categories";
 
 async function createShoppingList(page: Page): Promise<number> {
   await page.goto("/shopping-list");
@@ -61,6 +62,7 @@ test.describe("Shopping List Management", () => {
     const listId = await createShoppingList(authPage);
 
     const itemName = `Item ${Date.now()}`;
+    await selectShoppingListCategory(authPage, "other");
     await authPage.getByTestId("shopping-list-item-input").fill(itemName);
     await authPage.getByTestId("shopping-list-add-item-button").click();
     await expect(authPage.getByText(itemName)).toBeVisible();
@@ -105,17 +107,13 @@ test.describe("Shopping List Management", () => {
     const produceItem = `Produce Item ${Date.now()}`;
     const dairyItem = `Dairy Item ${Date.now()}`;
 
-    await authPage.getByTestId("category-selector-trigger").click();
-    await authPage.getByTestId("category-selector-title").waitFor();
-    await authPage.getByTestId("category-selector-option-produce").click();
+    await selectShoppingListCategory(authPage, "produce");
 
     await authPage.getByTestId("shopping-list-item-input").fill(produceItem);
     await authPage.getByTestId("shopping-list-add-item-button").click();
     await expect(authPage.getByText(produceItem)).toBeVisible();
 
-    await authPage.getByTestId("category-selector-trigger").click();
-    await authPage.getByTestId("category-selector-title").waitFor();
-    await authPage.getByTestId("category-selector-option-dairy").click();
+    await selectShoppingListCategory(authPage, "dairy");
 
     await authPage.getByTestId("shopping-list-item-input").fill(dairyItem);
     await authPage.getByTestId("shopping-list-add-item-button").click();

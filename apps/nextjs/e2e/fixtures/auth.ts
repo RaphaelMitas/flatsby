@@ -12,6 +12,16 @@ interface TestCookie {
   expires?: number;
 }
 
+export interface TestUser {
+  userId: string;
+  email: string;
+  groupId: number;
+}
+
+interface SessionData extends TestUser {
+  cookies: TestCookie[];
+}
+
 function isLocalhost(baseURL: string): boolean {
   const hostname = new URL(baseURL).hostname;
   return hostname === "localhost" || hostname === "127.0.0.1";
@@ -20,7 +30,7 @@ function isLocalhost(baseURL: string): boolean {
 async function callCreateSessionApi(
   apiUrl: string,
   headers: Record<string, string> = {},
-): Promise<TestCookie[]> {
+): Promise<SessionData> {
   const apiRes = await fetch(apiUrl, {
     method: "POST",
     headers,
@@ -31,20 +41,14 @@ async function callCreateSessionApi(
     throw new Error(`E2E session failed: ${apiRes.status} ${body}`);
   }
 
-  const data = (await apiRes.json()) as {
-    cookies: TestCookie[];
-    userId: string;
-    ok: boolean;
-  };
-
-  return data.cookies;
+  return (await apiRes.json()) as SessionData;
 }
 
 async function createAuthSession(
   page: Page,
   baseURL: string | undefined,
   context: BrowserContext,
-): Promise<TestCookie[]> {
+): Promise<SessionData> {
   if (!baseURL) {
     throw new Error("baseURL is required for E2E testing");
   }
@@ -58,13 +62,7 @@ async function createAuthSession(
       throw new Error(`E2E session failed: ${response.status()} ${body}`);
     }
 
-    const data = (await response.json()) as {
-      cookies: TestCookie[];
-      userId: string;
-      ok: boolean;
-    };
-
-    return data.cookies;
+    return (await response.json()) as SessionData;
   }
 
   const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
@@ -135,17 +133,19 @@ function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
 /**
  * Authenticated test fixture.
  *
- * Creates a test user + session via the E2E API route (which uses better-auth's
- * testUtils plugin to create properly signed session cookies).
+ * Creates a unique test user + group + session per test via the E2E API route
+ * (which uses better-auth's testUtils plugin to create properly signed session
+ * cookies). Because every test gets its own isolated user and group, tests
+ * can run with any number of parallel workers without polluting each other.
  *
  * On Vercel preview deployments, obtains the _vercel_jwt bypass cookie via
  * Node fetch before calling the session API.
  */
-export const test = base.extend<{ authPage: Page }>({
-  authPage: async ({ page, context, baseURL }, use) => {
-    const cookies = await createAuthSession(page, baseURL, context);
+export const test = base.extend<{ authPage: Page; testUser: TestUser }>({
+  testUser: async ({ page, context, baseURL }, use) => {
+    const session = await createAuthSession(page, baseURL, context);
 
-    const playwrightCookies = cookies.map((cookie) => ({
+    const playwrightCookies = session.cookies.map((cookie) => ({
       name: cookie.name,
       value: cookie.value,
       domain: cookie.domain,
@@ -158,7 +158,14 @@ export const test = base.extend<{ authPage: Page }>({
 
     await context.addCookies(playwrightCookies);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture callback, not a React hook
+    await use({
+      userId: session.userId,
+      email: session.email,
+      groupId: session.groupId,
+    });
+  },
+  authPage: async ({ page, testUser: _testUser }, use) => {
+    // Depending on testUser guarantees the session cookies are set.
     await use(page);
   },
 });
