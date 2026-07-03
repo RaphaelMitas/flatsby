@@ -16,7 +16,9 @@ test.describe("Shopping List Suggestions", () => {
     await addShoppingListItem(authPage, "Bread", "bakery", {
       waitForCommit: true,
     });
-    await addShoppingListItem(authPage, "Eggs", "dairy", { waitForCommit: true });
+    await addShoppingListItem(authPage, "Eggs", "dairy", {
+      waitForCommit: true,
+    });
 
     const input = authPage.getByTestId("shopping-list-item-input");
     await input.fill("M");

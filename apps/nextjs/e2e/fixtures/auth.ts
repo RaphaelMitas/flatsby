@@ -99,9 +99,7 @@ async function createAuthSession(
 
   const pathMatch = /path=([^;]+)/i.exec(setCookieHeader);
   const expiresMatch = /expires=([^;]+)/i.exec(setCookieHeader);
-  const expires = expiresMatch?.[1]
-    ? parseInt(expiresMatch[1], 10)
-    : undefined;
+  const expires = expiresMatch?.[1] ? parseInt(expiresMatch[1], 10) : undefined;
 
   await context.addCookies([
     {

@@ -1,8 +1,5 @@
 import { expect, test } from "../fixtures/auth";
-import {
-  createTestExpense,
-  openExpenseDetail,
-} from "../helpers/expenses";
+import { createTestExpense, openExpenseDetail } from "../helpers/expenses";
 
 test.describe("Expense Management", () => {
   test("View Details: clicking an expense opens a detail view showing the total, payer, and splits", async ({

@@ -58,9 +58,7 @@ test.describe("Debt & Settlements", () => {
     await expect(authPage.getByTestId("settlement-form")).not.toBeVisible();
   });
 
-  test("clears debts after recording full settlement", async ({
-    authPage,
-  }) => {
+  test("clears debts after recording full settlement", async ({ authPage }) => {
     await authPage.goto("/expenses/debts");
 
     const settleUpButton = authPage.getByTestId("debt-settle-up-button");
