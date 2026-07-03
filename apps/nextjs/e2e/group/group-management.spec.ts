@@ -63,9 +63,11 @@ test.describe("Group Management", () => {
     await submitCreateGroupForm(authPage, groupName);
 
     await authPage.goto("/group");
-    await expect(authPage.getByTestId("group-dashboard-title")).toContainText(
-      "Your Groups",
-    );
+    // .first(): during navigation the App Router can briefly render the
+    // outgoing and incoming page at the same time, duplicating the title.
+    await expect(
+      authPage.getByTestId("group-dashboard-title").first(),
+    ).toContainText("Your Groups");
     const groupCard = authPage
       .getByTestId(/^group-card-\d+$/)
       .filter({ hasText: groupName })

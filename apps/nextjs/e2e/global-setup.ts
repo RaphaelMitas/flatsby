@@ -17,11 +17,35 @@ export default async function globalSetup(config: FullConfig) {
     headers["x-vercel-set-bypass-cookie"] = "true";
   }
 
+  const url = `${baseURL}/api/e2e/create-session`;
+
   try {
-    const res = await fetch(`${baseURL}/api/e2e/create-session`, {
+    // Vercel deployment protection answers with a 307 that sets the
+    // _vercel_jwt cookie. Node's fetch follows it infinitely instead of
+    // storing the cookie, so handle the redirect manually and retry with
+    // the cookie attached (same workaround as in fixtures/auth.ts).
+    let res = await fetch(url, {
       method: "DELETE",
       headers,
+      redirect: "manual",
     });
+
+    if (res.status >= 300 && res.status < 400) {
+      const setCookie = res.headers.get("set-cookie") ?? "";
+      const jwtMatch = /_vercel_jwt=([^;]+)/.exec(setCookie);
+      if (!jwtMatch) {
+        console.warn(
+          `E2E cleanup got a redirect (${res.status}) without a _vercel_jwt cookie; skipping cleanup.`,
+        );
+        return;
+      }
+      res = await fetch(url, {
+        method: "DELETE",
+        headers: { ...headers, cookie: `_vercel_jwt=${jwtMatch[1]}` },
+        redirect: "manual",
+      });
+    }
+
     if (!res.ok) {
       console.warn(
         `E2E cleanup failed: ${res.status} ${await res.text().catch(() => "")}`,
