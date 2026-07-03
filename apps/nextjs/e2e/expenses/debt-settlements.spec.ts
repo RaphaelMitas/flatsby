@@ -110,9 +110,9 @@ test.describe("Debt & Settlements", () => {
       const recordButton = authPage.getByRole("button", {
         name: "Record Settlement",
       });
-       await recordButton.click();
+      await recordButton.click();
 
-       await authPage.waitForLoadState("networkidle");
+      await authPage.waitForLoadState("networkidle");
     }
 
     await authPage.reload();

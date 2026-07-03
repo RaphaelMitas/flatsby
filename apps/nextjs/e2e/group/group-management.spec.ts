@@ -4,10 +4,7 @@ import { expect, test } from "../fixtures/auth";
 
 const uniqueGroupName = () => `E2E Group ${Date.now()}`;
 
-async function createAndSelectGroup(
-  page: Page,
-  name: string,
-): Promise<number> {
+async function createAndSelectGroup(page: Page, name: string): Promise<number> {
   await page.goto("/group/create");
   await page.fill('input[id="groupName"]', name);
   await page.click('button:has-text("Create Group")');
@@ -22,8 +19,9 @@ async function createAndSelectGroup(
   await page.waitForLoadState("networkidle");
   await page.waitForURL(/\/group\/\d+/);
 
-  const match = page.url().match(/\/group\/(\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
+  const match = /\/group\/(\d+)/.exec(page.url());
+  const groupId = match?.[1];
+  return groupId !== undefined ? parseInt(groupId, 10) : 0;
 }
 
 test.describe("Group Management", () => {
@@ -57,11 +55,10 @@ test.describe("Group Management", () => {
     await expect(groupCard.getByText("1 member")).toBeVisible();
     const groupId = await groupCard.getAttribute("data-testid").then((id) => {
       const match = id?.match(/group-card-(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
+      const idFromMatch = match?.[1];
+      return idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
     });
-    await expect(
-      authPage.getByTestId(`group-card-${groupId}`),
-    ).toBeVisible();
+    await expect(authPage.getByTestId(`group-card-${groupId}`)).toBeVisible();
   });
 
   test("add member by email form interaction", async ({
@@ -123,9 +120,7 @@ test.describe("Group Management", () => {
 
     await authPage.goto("/group/settings");
     await authPage.waitForLoadState("networkidle");
-    await expect(
-      authPage.locator('input[id="name"]'),
-    ).toBeVisible();
+    await expect(authPage.locator('input[id="name"]')).toBeVisible();
 
     const currentGroupName = await authPage
       .locator('input[id="name"]')
@@ -157,9 +152,7 @@ test.describe("Group Management", () => {
 
     await authPage.goto("/group/settings");
     await authPage.waitForLoadState("networkidle");
-    await expect(
-      authPage.locator('input[id="name"]'),
-    ).toBeVisible();
+    await expect(authPage.locator('input[id="name"]')).toBeVisible();
 
     const currentGroupName = await authPage
       .locator('input[id="name"]')
@@ -198,9 +191,7 @@ test.describe("Group Management", () => {
 
     await authPage.goto("/group/settings");
     await authPage.waitForLoadState("networkidle");
-    await expect(
-      authPage.locator('input[id="name"]'),
-    ).toBeVisible();
+    await expect(authPage.locator('input[id="name"]')).toBeVisible();
 
     const currentGroupName = await authPage
       .locator('input[id="name"]')

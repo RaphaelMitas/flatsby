@@ -7,7 +7,9 @@ async function setupList(page: Page): Promise<{ listId: number }> {
   await page
     .getByTestId("shopping-list-create-input")
     .waitFor({ state: "visible", timeout: 15000 });
-  await page.getByTestId("shopping-list-create-input").fill(`E2E List ${Date.now()}`);
+  await page
+    .getByTestId("shopping-list-create-input")
+    .fill(`E2E List ${Date.now()}`);
   await page.getByRole("button", { name: "Create List" }).click();
   await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
 
@@ -55,7 +57,10 @@ test.describe("Shopping List Items", () => {
     await categoryButton.click();
 
     await authPage.getByRole("heading", { name: "Select Category" }).waitFor();
-    await authPage.getByRole("button", { name: /^Produce/ }).first().click();
+    await authPage
+      .getByRole("button", { name: /^Produce/ })
+      .first()
+      .click();
 
     await authPage.getByTestId("shopping-list-item-input").fill(itemName);
     await authPage.getByRole("button", { name: "Add Item" }).click();
@@ -112,7 +117,9 @@ test.describe("Shopping List Items", () => {
     ).not.toBeVisible({ timeout: 10000 });
 
     const restoredItem = await getItemLocator(authPage, itemName);
-    await expect(restoredItem.getByRole("checkbox")).not.toBeChecked({ timeout: 10000 });
+    await expect(restoredItem.getByRole("checkbox")).not.toBeChecked({
+      timeout: 10000,
+    });
   });
 
   test("Edit Item: renaming an existing item updates the text correctly", async ({
@@ -126,7 +133,9 @@ test.describe("Shopping List Items", () => {
     await addItem(authPage, originalName);
 
     const listItem = await getItemLocator(authPage, originalName);
-    const editButton = listItem.locator("[data-testid^='shopping-list-item-edit-']");
+    const editButton = listItem.locator(
+      "[data-testid^='shopping-list-item-edit-']",
+    );
     await editButton.click({ force: true });
 
     await expect(
@@ -162,7 +171,9 @@ test.describe("Shopping List Items", () => {
     await addItem(authPage, itemName);
 
     const listItem = await getItemLocator(authPage, itemName);
-    const deleteButton = listItem.locator("[data-testid^='shopping-list-item-delete-']");
+    const deleteButton = listItem.locator(
+      "[data-testid^='shopping-list-item-delete-']",
+    );
     await deleteButton.click({ force: true });
 
     await expect(

@@ -43,12 +43,17 @@ test.describe("Shopping List Suggestions", () => {
 
     const input = authPage.getByTestId("shopping-list-item-input");
     await input.fill("M");
-    await authPage.getByTestId("shopping-list-suggestion").getByText("Milk").waitFor({
-      state: "visible",
-      timeout: 15000,
-    });
+    await authPage
+      .getByTestId("shopping-list-suggestion")
+      .getByText("Milk")
+      .waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
 
-    const suggestions = authPage.getByTestId("shopping-list-suggestion").getByText("Milk");
+    const suggestions = authPage
+      .getByTestId("shopping-list-suggestion")
+      .getByText("Milk");
     await expect(suggestions.first()).toBeVisible();
   });
 
@@ -63,12 +68,18 @@ test.describe("Shopping List Suggestions", () => {
 
     const input = authPage.getByTestId("shopping-list-item-input");
     await input.fill("Mil");
-    await authPage.getByTestId("shopping-list-suggestion").getByText("Milk").waitFor({
-      state: "visible",
-      timeout: 15000,
-    });
+    await authPage
+      .getByTestId("shopping-list-suggestion")
+      .getByText("Milk")
+      .waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
 
-    await authPage.getByTestId("shopping-list-suggestion").getByText("Milk").click();
+    await authPage
+      .getByTestId("shopping-list-suggestion")
+      .getByText("Milk")
+      .click();
 
     await expect(input).toHaveValue("Milk");
   });

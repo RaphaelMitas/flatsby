@@ -77,8 +77,12 @@ test.describe("Shopping List Management", () => {
     const dialog = authPage.getByTestId("shopping-list-delete-dialog");
     await expect(dialog).toBeVisible({ timeout: 10000 });
     await expect(dialog.getByText("Delete Shopping List")).toBeVisible();
-    await expect(dialog.getByText("Are you sure you want to delete")).toBeVisible();
-    await expect(dialog.getByText("This action cannot be undone")).toBeVisible();
+    await expect(
+      dialog.getByText("Are you sure you want to delete"),
+    ).toBeVisible();
+    await expect(
+      dialog.getByText("This action cannot be undone"),
+    ).toBeVisible();
 
     await dialog.getByRole("button", { name: "Delete" }).click();
 
@@ -106,7 +110,10 @@ test.describe("Shopping List Management", () => {
 
     await categoryButton.click();
     await authPage.getByRole("heading", { name: "Select Category" }).waitFor();
-    await authPage.getByRole("button", { name: /^Produce/ }).first().click();
+    await authPage
+      .getByRole("button", { name: /^Produce/ })
+      .first()
+      .click();
 
     await authPage.getByTestId("shopping-list-item-input").fill(produceItem);
     await authPage.getByTestId("shopping-list-add-item-button").click();
@@ -114,7 +121,10 @@ test.describe("Shopping List Management", () => {
 
     await categoryButton.click();
     await authPage.getByRole("heading", { name: "Select Category" }).waitFor();
-    await authPage.getByRole("button", { name: /^Dairy/ }).first().click();
+    await authPage
+      .getByRole("button", { name: /^Dairy/ })
+      .first()
+      .click();
 
     await authPage.getByTestId("shopping-list-item-input").fill(dairyItem);
     await authPage.getByTestId("shopping-list-add-item-button").click();

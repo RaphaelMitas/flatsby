@@ -2,7 +2,9 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "../fixtures/auth";
 
-async function createTestExpense(page: Page): Promise<{ expenseId: number; description: string }> {
+async function createTestExpense(
+  page: Page,
+): Promise<{ expenseId: number; description: string }> {
   await page.goto("/expenses");
   await page.waitForLoadState("networkidle");
   await page.getByRole("button", { name: "Add", exact: true }).click();
@@ -36,11 +38,18 @@ async function createTestExpense(page: Page): Promise<{ expenseId: number; descr
   await expect(expenseCard).toBeVisible({ timeout: 10000 });
   const testId = await expenseCard.getAttribute("data-testid");
   const match = testId?.match(/expense-card-(\d+)/);
-  if (!match) throw new Error("Could not extract expense ID from data-testid");
-  return { expenseId: parseInt(match[1], 10), description: uniqueDesc };
+  const expenseIdFromMatch = match?.[1];
+  if (expenseIdFromMatch === undefined) {
+    throw new Error("Could not extract expense ID from data-testid");
+  }
+  return { expenseId: parseInt(expenseIdFromMatch, 10), description: uniqueDesc };
 }
 
-async function openExpenseDetail(page: Page, _expenseId: number, description: string) {
+async function openExpenseDetail(
+  page: Page,
+  _expenseId: number,
+  description: string,
+) {
   await page.goto("/expenses");
   await page.waitForLoadState("networkidle");
 
@@ -61,9 +70,9 @@ test.describe("Expense Management", () => {
     const { expenseId, description } = await createTestExpense(authPage);
     await openExpenseDetail(authPage, expenseId, description);
 
-    await expect(
-      authPage.getByTestId("expense-split-details"),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(authPage.getByTestId("expense-split-details")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(authPage.getByText("€25.00").first()).toBeVisible();
     await expect(authPage.getByText("Paid by").first()).toBeVisible();
   });
@@ -76,20 +85,19 @@ test.describe("Expense Management", () => {
     const { expenseId, description } = await createTestExpense(authPage);
     await openExpenseDetail(authPage, expenseId, description);
 
-    await expect(
-      authPage.getByTestId("expense-edit-button"),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(authPage.getByTestId("expense-edit-button")).toBeVisible({
+      timeout: 15000,
+    });
     await authPage.getByTestId("expense-edit-button").click();
     await authPage.waitForFunction(
-      () =>
-        new URL(window.location.href).searchParams.get("action") === "edit",
+      () => new URL(window.location.href).searchParams.get("action") === "edit",
       {},
       { timeout: 10000 },
     );
 
-    await expect(
-      authPage.getByTestId("expense-form-title"),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(authPage.getByTestId("expense-form-title")).toBeVisible({
+      timeout: 10000,
+    });
     await expect(authPage.getByTestId("expense-form-title")).toContainText(
       "Edit Expense",
     );
@@ -116,14 +124,14 @@ test.describe("Expense Management", () => {
     const { expenseId, description: desc } = await createTestExpense(authPage);
     await openExpenseDetail(authPage, expenseId, desc);
 
-    await expect(
-      authPage.getByTestId("expense-delete-button"),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(authPage.getByTestId("expense-delete-button")).toBeVisible({
+      timeout: 15000,
+    });
     await authPage.getByTestId("expense-delete-button").click();
 
-    await expect(
-      authPage.getByTestId("expense-delete-dialog"),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(authPage.getByTestId("expense-delete-dialog")).toBeVisible({
+      timeout: 10000,
+    });
     await expect(
       authPage.getByTestId("expense-delete-dialog").getByText("Delete Expense"),
     ).toBeVisible();
@@ -134,7 +142,9 @@ test.describe("Expense Management", () => {
       .click();
     await authPage.waitForLoadState("networkidle");
 
-    await expect(authPage.getByTestId("expense-delete-dialog")).not.toBeVisible();
+    await expect(
+      authPage.getByTestId("expense-delete-dialog"),
+    ).not.toBeVisible();
     await expect(
       authPage.getByRole("button", { name: new RegExp(desc) }),
     ).not.toBeVisible();
