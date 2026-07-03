@@ -92,7 +92,9 @@ test.describe("Debt & Settlements", () => {
 
       if ((await currentSettleButton.count()) === 0) break;
 
-      const outstandingText = await authPage.getByText("Outstanding debt").textContent();
+      const outstandingText = await authPage
+        .getByText("Outstanding debt")
+        .textContent();
       if (!outstandingText) {
         await currentSettleButton.first().click();
       } else {

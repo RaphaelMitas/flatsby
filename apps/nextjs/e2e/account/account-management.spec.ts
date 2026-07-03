@@ -9,10 +9,18 @@ test.describe("Account Management", () => {
     await authPage.goto("/user-settings");
     await authPage.waitForLoadState("networkidle");
 
-    await expect(authPage.getByRole("heading", { name: "User Settings" })).toBeVisible();
-    await expect(authPage.getByRole("button", { name: "Delete User" })).toBeVisible();
-    await expect(authPage.getByText("This action cannot be undone.", { exact: true })).toBeVisible();
-    await expect(authPage.getByRole("heading", { name: "Danger Zone" })).toBeVisible();
+    await expect(
+      authPage.getByRole("heading", { name: "User Settings" }),
+    ).toBeVisible();
+    await expect(
+      authPage.getByRole("button", { name: "Delete User" }),
+    ).toBeVisible();
+    await expect(
+      authPage.getByText("This action cannot be undone.", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      authPage.getByRole("heading", { name: "Danger Zone" }),
+    ).toBeVisible();
   });
 
   test("two-step email confirmation", async ({ authPage }) => {
@@ -33,7 +41,9 @@ test.describe("Account Management", () => {
 
     const deleteInput = authPage.locator("#delete-user-name-input");
     await expect(deleteInput).toBeVisible();
-    await expect(authPage.getByRole("button", { name: "Cancel" })).toBeVisible();
+    await expect(
+      authPage.getByRole("button", { name: "Cancel" }),
+    ).toBeVisible();
 
     await expect(deleteUserButton).toBeDisabled();
 
@@ -48,7 +58,9 @@ test.describe("Account Management", () => {
     await authPage.goto("/user-settings");
     await authPage.waitForLoadState("networkidle");
 
-    const deleteUserButton = authPage.getByRole("button", { name: "Delete User" });
+    const deleteUserButton = authPage.getByRole("button", {
+      name: "Delete User",
+    });
     await deleteUserButton.last().click();
 
     const deleteInput = authPage.locator("#delete-user-name-input");
@@ -61,6 +73,8 @@ test.describe("Account Management", () => {
     const currentUrl = authPage.url();
     expect(currentUrl).toMatch(/\/(auth\/login|\/)/);
 
-    await expect(authPage.getByRole("button", { name: "Delete User" })).not.toBeVisible();
+    await expect(
+      authPage.getByRole("button", { name: "Delete User" }),
+    ).not.toBeVisible();
   });
 });

@@ -67,7 +67,9 @@ test.describe("Group Management", () => {
     await expect(emailInput).toBeVisible();
     await emailInput.fill("newuser@example.com");
 
-    const addMemberButton = authPage.getByRole("button", { name: "Add member" });
+    const addMemberButton = authPage.getByRole("button", {
+      name: "Add member",
+    });
     await expect(addMemberButton).toBeVisible();
     await addMemberButton.click();
 
@@ -116,7 +118,9 @@ test.describe("Group Management", () => {
     await authPage.waitForLoadState("networkidle");
     await authPage.waitForTimeout(1000);
 
-    const currentGroupName = await authPage.locator('input[id="name"]').inputValue();
+    const currentGroupName = await authPage
+      .locator('input[id="name"]')
+      .inputValue();
     await expect(
       authPage.getByRole("button", { name: "Delete Group" }),
     ).toBeVisible();
@@ -146,7 +150,9 @@ test.describe("Group Management", () => {
     await authPage.waitForLoadState("networkidle");
     await authPage.waitForTimeout(1000);
 
-    const currentGroupName = await authPage.locator('input[id="name"]').inputValue();
+    const currentGroupName = await authPage
+      .locator('input[id="name"]')
+      .inputValue();
 
     const deleteInput = authPage.locator("#delete-group-name-input");
     await deleteInput.fill(currentGroupName);
@@ -200,7 +206,9 @@ test.describe("Group Management", () => {
     await authPage.waitForLoadState("networkidle");
     await authPage.waitForTimeout(1000);
 
-    const currentGroupName = await authPage.locator('input[id="name"]').inputValue();
+    const currentGroupName = await authPage
+      .locator('input[id="name"]')
+      .inputValue();
 
     const deleteInput = authPage.locator("#delete-group-name-input");
     await deleteInput.fill(currentGroupName);

@@ -12,7 +12,9 @@ test.describe("Shopping List Dashboard", () => {
     await authPage.waitForURL("/shopping-list");
 
     await expect(authPage.getByPlaceholder("add new list")).toBeVisible();
-    await expect(authPage.getByRole("button", { name: "Create List" })).toBeVisible();
+    await expect(
+      authPage.getByRole("button", { name: "Create List" }),
+    ).toBeVisible();
   });
 
   test("creates a new shopping list and navigates into it", async ({

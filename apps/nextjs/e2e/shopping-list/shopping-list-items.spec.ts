@@ -4,7 +4,9 @@ import { expect, test } from "../fixtures/auth";
 
 async function setupList(page: Page): Promise<number> {
   await page.goto("/shopping-list");
-  await page.getByPlaceholder("add new list").waitFor({ state: "visible", timeout: 15000 });
+  await page
+    .getByPlaceholder("add new list")
+    .waitFor({ state: "visible", timeout: 15000 });
   await page.getByPlaceholder("add new list").fill(`E2E List ${Date.now()}`);
   await page.getByRole("button", { name: "Create List" }).click();
   await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
@@ -27,7 +29,12 @@ async function getItemLocator(page: Page, itemName: string) {
   const items = page.locator("[id^='list-item-']");
   for (let i = 0; i < (await items.count()); i++) {
     const item = items.nth(i);
-    if (await item.getByText(itemName).isVisible().catch(() => false)) {
+    if (
+      await item
+        .getByText(itemName)
+        .isVisible()
+        .catch(() => false)
+    ) {
       return item;
     }
   }
@@ -97,7 +104,10 @@ test.describe("Shopping List Items", () => {
     await purchasedItem.getByRole("checkbox").click();
 
     await expect(
-      authPage.getByText("Purchased Items").locator("+ div").getByText(itemName),
+      authPage
+        .getByText("Purchased Items")
+        .locator("+ div")
+        .getByText(itemName),
     ).not.toBeVisible();
 
     const restoredItem = await getItemLocator(authPage, itemName);
@@ -124,9 +134,16 @@ test.describe("Shopping List Items", () => {
     await editIcon.click();
     await authPage.waitForTimeout(500);
 
-    const editInput = authPage.getByRole("textbox").filter({ hasText: originalName }).locator("input").or(
-      authPage.locator("[id^='list-item-']").filter({ hasText: originalName }).locator("input"),
-    );
+    const editInput = authPage
+      .getByRole("textbox")
+      .filter({ hasText: originalName })
+      .locator("input")
+      .or(
+        authPage
+          .locator("[id^='list-item-']")
+          .filter({ hasText: originalName })
+          .locator("input"),
+      );
     await editInput.waitFor({ state: "visible", timeout: 5000 });
     await editInput.click();
     await editInput.press("Meta+a");
@@ -134,9 +151,11 @@ test.describe("Shopping List Items", () => {
     const newName = `Renamed ${Date.now()}`;
     await editInput.fill(newName);
 
-    const saveButton = authPage.locator("[id^='list-item-']").filter({ hasText: originalName }).getByRole("button", { name: "Save" }).or(
-      authPage.getByRole("button", { name: "Save" }).first(),
-    );
+    const saveButton = authPage
+      .locator("[id^='list-item-']")
+      .filter({ hasText: originalName })
+      .getByRole("button", { name: "Save" })
+      .or(authPage.getByRole("button", { name: "Save" }).first());
     await saveButton.click();
 
     await expect(authPage.getByText(newName).first()).toBeVisible();

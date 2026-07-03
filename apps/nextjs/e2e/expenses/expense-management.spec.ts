@@ -43,7 +43,9 @@ test.describe("Expense Management", () => {
 
     await expect(authPage.getByText(description).first()).toBeVisible();
 
-    const expenseCard = authPage.getByRole("button", { name: new RegExp(description) }).first();
+    const expenseCard = authPage
+      .getByRole("button", { name: new RegExp(description) })
+      .first();
     await expenseCard.focus();
     await expenseCard.click();
     await authPage.waitForLoadState("networkidle");
@@ -61,7 +63,9 @@ test.describe("Expense Management", () => {
   }) => {
     const description = await createTestExpense(authPage);
 
-    const expenseCard = authPage.getByRole("button", { name: new RegExp(description) }).first();
+    const expenseCard = authPage
+      .getByRole("button", { name: new RegExp(description) })
+      .first();
     await expenseCard.focus();
     await expenseCard.click();
     await authPage.waitForLoadState("networkidle");
@@ -93,7 +97,9 @@ test.describe("Expense Management", () => {
   }) => {
     const description = await createTestExpense(authPage);
 
-    const expenseCard = authPage.getByRole("button", { name: new RegExp(description) }).first();
+    const expenseCard = authPage
+      .getByRole("button", { name: new RegExp(description) })
+      .first();
     await expenseCard.focus();
     await expenseCard.click();
     await authPage.waitForLoadState("networkidle");
@@ -101,9 +107,9 @@ test.describe("Expense Management", () => {
 
     await authPage.getByRole("button", { name: "Delete" }).click();
 
-    const dialog = authPage.getByRole("alertdialog").or(
-      authPage.getByRole("dialog"),
-    );
+    const dialog = authPage
+      .getByRole("alertdialog")
+      .or(authPage.getByRole("dialog"));
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("Delete Expense")).toBeVisible();
     await expect(

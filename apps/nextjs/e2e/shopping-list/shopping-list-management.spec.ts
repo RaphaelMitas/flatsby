@@ -4,7 +4,9 @@ import { expect, test } from "../fixtures/auth";
 
 async function createShoppingList(page: Page): Promise<number> {
   await page.goto("/shopping-list");
-  await page.getByPlaceholder("add new list").waitFor({ state: "visible", timeout: 15000 });
+  await page
+    .getByPlaceholder("add new list")
+    .waitFor({ state: "visible", timeout: 15000 });
   const listName = `E2E Test List ${Date.now()}`;
   await page.getByPlaceholder("add new list").fill(listName);
   await page.getByRole("button", { name: "Create List" }).click();
@@ -29,7 +31,9 @@ test.describe("Shopping List Management", () => {
     await renameButton.click();
 
     const newListName = `Renamed List ${Date.now()}`;
-    await authPage.getByPlaceholder("Enter shopping list name").fill(newListName);
+    await authPage
+      .getByPlaceholder("Enter shopping list name")
+      .fill(newListName);
     await authPage.getByRole("button", { name: "Save" }).click();
 
     await expect(authPage.getByText(newListName).first()).toBeVisible();
@@ -58,13 +62,17 @@ test.describe("Shopping List Management", () => {
     await expect(deleteButton).toBeVisible();
     await deleteButton.click();
 
-    const dialog = authPage.getByRole("alertdialog").or(
-      authPage.getByRole("dialog"),
-    );
+    const dialog = authPage
+      .getByRole("alertdialog")
+      .or(authPage.getByRole("dialog"));
     await expect(dialog).toBeVisible({ timeout: 10000 });
     await expect(dialog.getByText("Delete Shopping List")).toBeVisible();
-    await expect(dialog.getByText("Are you sure you want to delete")).toBeVisible();
-    await expect(dialog.getByText("This action cannot be undone")).toBeVisible();
+    await expect(
+      dialog.getByText("Are you sure you want to delete"),
+    ).toBeVisible();
+    await expect(
+      dialog.getByText("This action cannot be undone"),
+    ).toBeVisible();
 
     await dialog.getByRole("button", { name: "Delete" }).click();
 

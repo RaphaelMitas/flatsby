@@ -4,8 +4,12 @@ import { expect, test } from "../fixtures/auth";
 
 async function setupList(page: Page): Promise<number> {
   await page.goto("/shopping-list");
-  await page.getByPlaceholder("add new list").waitFor({ state: "visible", timeout: 15000 });
-  await page.getByPlaceholder("add new list").fill(`E2E Test List ${Date.now()}`);
+  await page
+    .getByPlaceholder("add new list")
+    .waitFor({ state: "visible", timeout: 15000 });
+  await page
+    .getByPlaceholder("add new list")
+    .fill(`E2E Test List ${Date.now()}`);
   await page.getByRole("button", { name: "Create List" }).click();
   await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
 

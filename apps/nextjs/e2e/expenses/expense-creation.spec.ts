@@ -192,9 +192,9 @@ test.describe("Expense Creation", () => {
     const descInput = authPage.getByPlaceholder("What was this expense for?");
     await descInput.fill("Coffee with friends");
 
-    const categoryButton = authPage.getByRole("combobox", { name: "Category" }).or(
-      authPage.getByText("Other").last(),
-    );
+    const categoryButton = authPage
+      .getByRole("combobox", { name: "Category" })
+      .or(authPage.getByText("Other").last());
     if (await categoryButton.isVisible().catch(() => false)) {
       await categoryButton.click();
       await authPage.waitForLoadState("networkidle");
@@ -218,6 +218,8 @@ test.describe("Expense Creation", () => {
     await authPage.waitForLoadState("networkidle");
 
     await expect(authPage.getByText("€15.00").first()).toBeVisible();
-    await expect(authPage.getByText("Coffee with friends").first()).toBeVisible();
+    await expect(
+      authPage.getByText("Coffee with friends").first(),
+    ).toBeVisible();
   });
 });
