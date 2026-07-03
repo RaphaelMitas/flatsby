@@ -15,7 +15,9 @@ concurrency:
 # @link https://turborepo.org/docs/core-concepts/remote-caching#remote-caching-on-vercel-builds
 env:
   FORCE_COLOR: 3
-  TURBO_UI: false
+  # Stream task logs live; the GHA default ("grouped") buffers all output until
+  # a task finishes, which looks like a hang and loses logs on job timeout.
+  TURBO_LOG_ORDER: stream
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
 
