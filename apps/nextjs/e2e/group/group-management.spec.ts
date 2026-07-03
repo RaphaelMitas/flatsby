@@ -11,17 +11,17 @@ async function createAndSelectGroup(page: Page, name: string): Promise<number> {
   await page.waitForURL("/home");
 
   await page.goto("/group");
-  await page.waitForLoadState("networkidle");
 
   const groupCard = page.locator("button").filter({ hasText: name }).first();
   await groupCard.click();
   await page.waitForURL("/home");
-  await page.waitForLoadState("networkidle");
-  await page.waitForURL(/\/group\/\d+/);
 
-  const match = /\/group\/(\d+)/.exec(page.url());
-  const groupId = match?.[1];
-  return groupId !== undefined ? parseInt(groupId, 10) : 0;
+  const groupId = await groupCard.getAttribute("data-testid").then((id) => {
+    const match = id?.match(/group-card-(\d+)/);
+    const idFromMatch = match?.[1];
+    return idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
+  });
+  return groupId;
 }
 
 test.describe("Group Management", () => {
@@ -83,7 +83,6 @@ test.describe("Group Management", () => {
 
     // The add member call will fail for a non-existent user, showing an error.
     // Wait for the request to complete and verify the error state.
-    await authPage.waitForLoadState("networkidle");
     await expect(emailInput).toHaveValue("newuser@example.com");
   });
 
@@ -119,7 +118,6 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, groupName);
 
     await authPage.goto("/group/settings");
-    await authPage.waitForLoadState("networkidle");
     await expect(authPage.locator('input[id="name"]')).toBeVisible();
 
     const currentGroupName = await authPage
@@ -151,7 +149,6 @@ test.describe("Group Management", () => {
     const groupId = await createAndSelectGroup(authPage, groupName);
 
     await authPage.goto("/group/settings");
-    await authPage.waitForLoadState("networkidle");
     await expect(authPage.locator('input[id="name"]')).toBeVisible();
 
     const currentGroupName = await authPage
@@ -190,7 +187,6 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, groupName);
 
     await authPage.goto("/group/settings");
-    await authPage.waitForLoadState("networkidle");
     await expect(authPage.locator('input[id="name"]')).toBeVisible();
 
     const currentGroupName = await authPage

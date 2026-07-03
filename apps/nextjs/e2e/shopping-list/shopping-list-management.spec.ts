@@ -10,7 +10,10 @@ async function createShoppingList(page: Page): Promise<number> {
   const listName = `E2E Test List ${Date.now()}`;
   await page.getByTestId("shopping-list-create-input").fill(listName);
   await page.getByRole("button", { name: "Create List" }).click();
-  await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
+  await page.waitForURL(/\/shopping-list\/\d+/);
+  await page
+    .getByTestId("shopping-list-item-input")
+    .waitFor({ state: "visible" });
   const match = /\/shopping-list\/(\d+)/.exec(page.url());
   if (!match) {
     throw new Error("Could not extract shopping list ID from URL");
@@ -28,7 +31,6 @@ test.describe("Shopping List Management", () => {
     const listId = await createShoppingList(authPage);
 
     await authPage.goto("/shopping-list");
-    await authPage.waitForLoadState("networkidle");
 
     const renameButton = authPage.getByTestId(
       `shopping-list-dashboard-rename-${listId}`,
@@ -66,7 +68,6 @@ test.describe("Shopping List Management", () => {
     await expect(authPage.getByText(itemName)).toBeVisible();
 
     await authPage.goto("/shopping-list");
-    await authPage.waitForLoadState("networkidle");
 
     const deleteButton = authPage.getByTestId(
       `shopping-list-dashboard-delete-${listId}`,

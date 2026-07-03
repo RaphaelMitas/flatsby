@@ -11,7 +11,10 @@ async function setupList(page: Page): Promise<number> {
     .getByTestId("shopping-list-create-input")
     .fill(`E2E Test List ${Date.now()}`);
   await page.getByTestId("shopping-list-create-button").click();
-  await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
+  await page.waitForURL(/\/shopping-list\/\d+/);
+  await page
+    .getByTestId("shopping-list-item-input")
+    .waitFor({ state: "visible" });
 
   const match = /\/shopping-list\/(\d+)/.exec(page.url());
   if (!match) {

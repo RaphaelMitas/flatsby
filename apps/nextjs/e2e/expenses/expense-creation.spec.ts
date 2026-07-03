@@ -8,10 +8,8 @@ async function createTestExpenseViaAPI(
   description: string,
 ): Promise<string> {
   await page.goto("/expenses");
-  await page.waitForLoadState("networkidle");
 
   await page.getByRole("button", { name: "Add", exact: true }).click();
-  await page.waitForLoadState("networkidle");
 
   const amountInput = page.getByPlaceholder("0.00").first();
   await amountInput.click();
@@ -29,13 +27,10 @@ async function createTestExpenseViaAPI(
   await descInput.fill(description);
 
   await page.getByRole("button", { name: "Next", exact: true }).click();
-  await page.waitForLoadState("networkidle");
 
   await page.getByRole("button", { name: "Next", exact: true }).click();
-  await page.waitForLoadState("networkidle");
 
   await page.getByRole("button", { name: "Create Expense" }).click();
-  await page.waitForLoadState("networkidle");
 
   return description;
 }
@@ -84,10 +79,12 @@ test.describe("Expense Creation", () => {
     await descInput.fill("Dinner split by percentage");
 
     await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.waitForLoadState("networkidle");
     await expect(authPage.getByText("Step 2/3")).toBeVisible();
 
-    await authPage.getByRole("button", { name: "Percentage" }).click();
+    const splitMethodToggle = authPage
+      .getByRole("button", { name: "Equal", exact: true })
+      .locator("..");
+    await splitMethodToggle.getByRole("button", { name: "Percentage" }).click();
 
     const splitDetailsCard = authPage.getByText("Split Details").first();
     const percentInputs = splitDetailsCard.getByPlaceholder("0.00");
@@ -99,13 +96,11 @@ test.describe("Expense Creation", () => {
     }
 
     await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.waitForLoadState("networkidle");
     await expect(authPage.getByText("Step 3/3")).toBeVisible();
 
     await expect(authPage.getByText("€100.00").first()).toBeVisible();
 
     await authPage.getByRole("button", { name: "Create Expense" }).click();
-    await authPage.waitForLoadState("networkidle");
 
     await expect(authPage.getByText("€100.00").first()).toBeVisible();
     await expect(
@@ -139,10 +134,12 @@ test.describe("Expense Creation", () => {
     await descInput.fill("Rent utilities custom split");
 
     await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.waitForLoadState("networkidle");
     await expect(authPage.getByText("Step 2/3")).toBeVisible();
 
-    await authPage.getByRole("button", { name: "Custom" }).click();
+    const splitMethodToggle = authPage
+      .getByRole("button", { name: "Equal", exact: true })
+      .locator("..");
+    await splitMethodToggle.getByRole("button", { name: "Custom" }).click();
 
     const splitDetailsCard = authPage.getByText("Split Details").first();
     const customInputs = splitDetailsCard.getByPlaceholder("0.00");
@@ -154,13 +151,11 @@ test.describe("Expense Creation", () => {
     }
 
     await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.waitForLoadState("networkidle");
     await expect(authPage.getByText("Step 3/3")).toBeVisible();
 
     await expect(authPage.getByText("€30.00").first()).toBeVisible();
 
     await authPage.getByRole("button", { name: "Create Expense" }).click();
-    await authPage.waitForLoadState("networkidle");
 
     await expect(authPage.getByText("€30.00").first()).toBeVisible();
     await expect(
@@ -198,25 +193,21 @@ test.describe("Expense Creation", () => {
       .or(authPage.getByText("Other").last());
     if (await categoryButton.isVisible().catch(() => false)) {
       await categoryButton.click();
-      await authPage.waitForLoadState("networkidle");
-      const coffeeOption = authPage.getByText("Coffee").first();
-      if (await coffeeOption.isVisible().catch(() => false)) {
+      const coffeeOption = authPage.getByRole("option", { name: "Coffee" });
+      if (await coffeeOption.isVisible({ timeout: 3000 }).catch(() => false)) {
         await coffeeOption.click();
       } else {
-        await authPage.getByRole("option").first().click();
+        await authPage.keyboard.press("Escape");
       }
     }
 
     await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.waitForLoadState("networkidle");
 
     await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.waitForLoadState("networkidle");
 
     await expect(authPage.getByText("€15.00").first()).toBeVisible();
 
     await authPage.getByRole("button", { name: "Create Expense" }).click();
-    await authPage.waitForLoadState("networkidle");
 
     await expect(authPage.getByText("€15.00").first()).toBeVisible();
     await expect(

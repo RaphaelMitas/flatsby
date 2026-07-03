@@ -111,8 +111,6 @@ test.describe("Debt & Settlements", () => {
         name: "Record Settlement",
       });
       await recordButton.click();
-
-      await authPage.waitForLoadState("networkidle");
     }
 
     await authPage.reload();

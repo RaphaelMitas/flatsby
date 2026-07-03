@@ -12,20 +12,69 @@ interface TestCookie {
   expires?: number;
 }
 
+function isLocalhost(baseURL: string): boolean {
+  const hostname = new URL(baseURL).hostname;
+  return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
+async function callCreateSessionApi(
+  apiUrl: string,
+  headers: Record<string, string> = {},
+): Promise<TestCookie[]> {
+  const apiRes = await fetch(apiUrl, {
+    method: "POST",
+    headers,
+  });
+
+  if (!apiRes.ok) {
+    const body = await apiRes.text();
+    throw new Error(`E2E session failed: ${apiRes.status} ${body}`);
+  }
+
+  const data = (await apiRes.json()) as {
+    cookies: TestCookie[];
+    userId: string;
+    ok: boolean;
+  };
+
+  return data.cookies;
+}
+
 async function createAuthSession(
-  _page: Page,
+  page: Page,
   baseURL: string | undefined,
   context: BrowserContext,
 ): Promise<TestCookie[]> {
-  const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  if (!baseURL) {
+    throw new Error("baseURL is required for E2E testing");
+  }
 
-  if (!bypassSecret || !baseURL) {
+  const apiUrl = `${baseURL}/api/e2e/create-session`;
+
+  if (isLocalhost(baseURL)) {
+    const response = await page.request.post(apiUrl);
+    if (!response.ok()) {
+      const body = await response.text();
+      throw new Error(`E2E session failed: ${response.status()} ${body}`);
+    }
+
+    const data = (await response.json()) as {
+      cookies: TestCookie[];
+      userId: string;
+      ok: boolean;
+    };
+
+    return data.cookies;
+  }
+
+  const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  if (!bypassSecret) {
     throw new Error(
-      "VERCEL_AUTOMATION_BYPASS_SECRET and BASE_URL are required for E2E testing",
+      "VERCEL_AUTOMATION_BYPASS_SECRET is required for remote E2E testing",
     );
   }
 
-  // Step 1: Use Node's native fetch to obtain the Vercel bypass cookie.
+  // Use Node's native fetch to obtain the Vercel bypass cookie.
   // Use redirect: 'manual' because Vercel responds with a 307 redirect that
   // sets the _vercel_jwt cookie. Node's fetch follows 307 poorly and may
   // redirect infinitely.
@@ -44,7 +93,6 @@ async function createAuthSession(
     );
   }
 
-  // Parse the _vercel_jwt cookie from Set-Cookie header
   const cookieRegex =
     /_vercel_jwt=([^;]+)(?:;.*?expires=([^;]+))?;.*?path=([^;]+);.*?Secure;.*?SameSite=([^;]+)/i;
   const cookieMatch = cookieRegex.exec(setCookieHeader);
@@ -58,7 +106,6 @@ async function createAuthSession(
   const [, cookieValue, expiresStr, cookiePath] = cookieMatch;
   const expires = expiresStr ? parseInt(expiresStr, 10) : undefined;
 
-  // Step 2: Add the Vercel bypass cookie to the browser context
   await context.addCookies([
     {
       name: "_vercel_jwt",
@@ -72,28 +119,10 @@ async function createAuthSession(
     },
   ]);
 
-  // Step 3: Call the E2E session API using Node fetch (with the bypass cookie)
-  const apiUrl = `${baseURL}/api/e2e/create-session`;
-  const apiRes = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      "x-vercel-protection-bypass": bypassSecret,
-      cookie: `_vercel_jwt=${cookieValue}`,
-    },
+  return callCreateSessionApi(apiUrl, {
+    "x-vercel-protection-bypass": bypassSecret,
+    cookie: `_vercel_jwt=${cookieValue}`,
   });
-
-  if (!apiRes.ok) {
-    const body = await apiRes.text();
-    throw new Error(`E2E session failed: ${apiRes.status} ${body}`);
-  }
-
-  const data = (await apiRes.json()) as {
-    cookies: TestCookie[];
-    userId: string;
-    ok: boolean;
-  };
-
-  return data.cookies;
 }
 
 function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
@@ -109,10 +138,8 @@ function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
  * Creates a test user + session via the E2E API route (which uses better-auth's
  * testUtils plugin to create properly signed session cookies).
  *
- * Handles Vercel bot protection by obtaining the _vercel_jwt bypass cookie
- * via Node's native fetch, then injecting it into the browser context.
- *
- * Cleans up test data after each test.
+ * On Vercel preview deployments, obtains the _vercel_jwt bypass cookie via
+ * Node fetch before calling the session API.
  */
 export const test = base.extend<{ authPage: Page }>({
   authPage: async ({ page, context, baseURL }, use) => {

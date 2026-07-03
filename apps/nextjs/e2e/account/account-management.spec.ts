@@ -5,7 +5,6 @@ const TEST_USER_EMAIL = "e2e-test@flatsby.test";
 test.describe("Account Management", () => {
   test("access account deletion settings", async ({ authPage }) => {
     await authPage.goto("/user-settings");
-    await authPage.waitForLoadState("networkidle");
 
     await expect(
       authPage.getByRole("heading", { name: "User Settings" }),
@@ -23,7 +22,6 @@ test.describe("Account Management", () => {
 
   test("two-step email confirmation", async ({ authPage }) => {
     await authPage.goto("/user-settings");
-    await authPage.waitForLoadState("networkidle");
 
     const deleteUserSection = authPage.getByText("Delete User").first();
     await expect(deleteUserSection).toBeVisible();
@@ -54,7 +52,6 @@ test.describe("Account Management", () => {
 
   test("delete account signs out and redirects", async ({ authPage }) => {
     await authPage.goto("/user-settings");
-    await authPage.waitForLoadState("networkidle");
 
     const deleteUserButton = authPage.getByRole("button", {
       name: "Delete User",

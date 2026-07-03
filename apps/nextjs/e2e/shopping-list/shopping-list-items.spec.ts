@@ -11,7 +11,10 @@ async function setupList(page: Page): Promise<{ listId: number }> {
     .getByTestId("shopping-list-create-input")
     .fill(`E2E List ${Date.now()}`);
   await page.getByRole("button", { name: "Create List" }).click();
-  await page.waitForURL(/\/shopping-list\/\d+/, { waitUntil: "networkidle" });
+  await page.waitForURL(/\/shopping-list\/\d+/);
+  await page
+    .getByTestId("shopping-list-item-input")
+    .waitFor({ state: "visible" });
 
   const match = /\/shopping-list\/(\d+)/.exec(page.url());
   if (!match) {
@@ -107,7 +110,6 @@ test.describe("Shopping List Items", () => {
     await expect(purchasedItem.getByRole("checkbox")).toBeChecked();
 
     await purchasedItem.getByRole("checkbox").click();
-    await authPage.waitForLoadState("networkidle");
 
     await expect(
       authPage

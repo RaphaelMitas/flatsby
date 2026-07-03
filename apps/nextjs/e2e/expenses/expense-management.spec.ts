@@ -6,9 +6,7 @@ async function createTestExpense(
   page: Page,
 ): Promise<{ expenseId: number; description: string }> {
   await page.goto("/expenses");
-  await page.waitForLoadState("networkidle");
   await page.getByRole("button", { name: "Add", exact: true }).click();
-  await page.waitForLoadState("networkidle");
 
   const amountInput = page.getByPlaceholder("0.00").first();
   await amountInput.click();
@@ -24,13 +22,10 @@ async function createTestExpense(
   const uniqueDesc = `Test dinner ${Date.now()}`;
   await page.getByPlaceholder("What was this expense for?").fill(uniqueDesc);
   await page.getByRole("button", { name: "Next", exact: true }).click();
-  await page.waitForLoadState("networkidle");
 
   await page.getByRole("button", { name: "Next", exact: true }).click();
-  await page.waitForLoadState("networkidle");
 
   await page.getByRole("button", { name: "Create Expense" }).click();
-  await page.waitForLoadState("networkidle");
 
   const expenseCard = page
     .getByRole("button", { name: new RegExp(uniqueDesc) })
@@ -54,14 +49,12 @@ async function openExpenseDetail(
   description: string,
 ) {
   await page.goto("/expenses");
-  await page.waitForLoadState("networkidle");
 
   const expenseCard = page
     .getByRole("button", { name: new RegExp(description) })
     .first();
   await expect(expenseCard).toBeVisible({ timeout: 10000 });
   await expenseCard.click();
-  await page.waitForLoadState("networkidle");
 }
 
 test.describe("Expense Management", () => {
@@ -110,11 +103,8 @@ test.describe("Expense Management", () => {
     await amountInput.clear();
     await amountInput.pressSequentially("50.00");
     await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.waitForLoadState("networkidle");
     await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.waitForLoadState("networkidle");
     await authPage.getByRole("button", { name: "Update Expense" }).click();
-    await authPage.waitForLoadState("networkidle");
 
     await expect(authPage.getByText("€50.00").first()).toBeVisible();
   });
@@ -143,7 +133,6 @@ test.describe("Expense Management", () => {
       .getByTestId("expense-delete-dialog")
       .getByRole("button", { name: "Delete" })
       .click();
-    await authPage.waitForLoadState("networkidle");
 
     await expect(
       authPage.getByTestId("expense-delete-dialog"),
