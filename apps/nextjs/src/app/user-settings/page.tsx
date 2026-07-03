@@ -20,7 +20,12 @@ export default function Page() {
     <div className="flex flex-col p-4 md:pt-16">
       <div className="mx-auto grid w-full max-w-6xl items-start gap-6 lg:grid-cols-[1fr]">
         <div className="mx-auto grid w-full max-w-6xl gap-2">
-          <h1 className="text-3xl font-semibold">User Settings</h1>
+          <h1
+            className="text-3xl font-semibold"
+            data-testid="account-settings-title"
+          >
+            User Settings
+          </h1>
         </div>
         <ManageUser />
         <Card>

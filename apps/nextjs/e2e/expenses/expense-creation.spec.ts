@@ -9,28 +9,28 @@ async function createTestExpenseViaAPI(
 ): Promise<string> {
   await page.goto("/expenses");
 
-  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await page.getByTestId("expense-add-button").click();
 
-  const amountInput = page.getByPlaceholder("0.00").first();
+  const amountInput = page.getByTestId("expense-form-amount");
   await amountInput.click();
   await amountInput.clear();
   await amountInput.pressSequentially(amountDecimal);
 
-  const paidByTrigger = page.getByRole("combobox", { name: "Paid By" }).first();
+  const paidByTrigger = page.getByTestId("expense-form-paid-by");
   const paidByText = (await paidByTrigger.allTextContents())[0]?.trim();
   if (paidByText === "") {
     await paidByTrigger.click();
     await page.getByRole("option").first().click();
   }
 
-  const descInput = page.getByPlaceholder("What was this expense for?");
+  const descInput = page.getByTestId("expense-form-description");
   await descInput.fill(description);
 
-  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByTestId("expense-form-next").click();
 
-  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByTestId("expense-form-next").click();
 
-  await page.getByRole("button", { name: "Create Expense" }).click();
+  await page.getByTestId("expense-form-submit").click();
 
   return description;
 }
@@ -42,9 +42,7 @@ test.describe("Expense Creation", () => {
     authPage: Page;
   }) => {
     await authPage.goto("/expenses");
-    await expect(
-      authPage.getByRole("heading", { name: "Expenses" }),
-    ).toBeVisible();
+    await expect(authPage.getByTestId("expense-heading")).toBeVisible();
 
     const description = "Groceries";
     await createTestExpenseViaAPI(authPage, "25.00", description);
@@ -59,35 +57,32 @@ test.describe("Expense Creation", () => {
     authPage: Page;
   }) => {
     await authPage.goto("/expenses");
-    await authPage.getByRole("button", { name: "Add", exact: true }).click();
+    await authPage.getByTestId("expense-add-button").click();
     await expect(authPage.getByText("Add Expense")).toBeVisible();
 
-    const amountInput = authPage.getByPlaceholder("0.00").first();
+    const amountInput = authPage.getByTestId("expense-form-amount");
     await amountInput.click();
     await amountInput.clear();
     await amountInput.pressSequentially("100.00");
 
-    const paidByTrigger = authPage
-      .getByRole("combobox", { name: "Paid By" })
-      .first();
+    const paidByTrigger = authPage.getByTestId("expense-form-paid-by");
     if ((await paidByTrigger.allTextContents())[0]?.trim() === "") {
       await paidByTrigger.click();
       await authPage.getByRole("option").first().click();
     }
 
-    const descInput = authPage.getByPlaceholder("What was this expense for?");
+    const descInput = authPage.getByTestId("expense-form-description");
     await descInput.fill("Dinner split by percentage");
 
-    await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await expect(authPage.getByText("Step 2/3")).toBeVisible();
+    await authPage.getByTestId("expense-form-next").click();
+    await expect(authPage.getByTestId("expense-form-step")).toContainText(
+      "Step 2/3",
+    );
 
-    const splitMethodToggle = authPage
-      .getByRole("button", { name: "Equal", exact: true })
-      .locator("..");
-    await splitMethodToggle.getByRole("button", { name: "Percentage" }).click();
+    await authPage.getByTestId("split-method-percentage").click();
 
-    const splitDetailsCard = authPage.getByText("Split Details").first();
-    const percentInputs = splitDetailsCard.getByPlaceholder("0.00");
+    const splitDetailsCard = authPage.getByTestId("split-details-card");
+    const percentInputs = splitDetailsCard.getByTestId(/^split-member-amount-/);
     const count = await percentInputs.count();
     if (count >= 1) {
       await percentInputs.first().click();
@@ -95,12 +90,14 @@ test.describe("Expense Creation", () => {
       await percentInputs.first().pressSequentially("100");
     }
 
-    await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await expect(authPage.getByText("Step 3/3")).toBeVisible();
+    await authPage.getByTestId("expense-form-next").click();
+    await expect(authPage.getByTestId("expense-form-step")).toContainText(
+      "Step 3/3",
+    );
 
     await expect(authPage.getByText("€100.00").first()).toBeVisible();
 
-    await authPage.getByRole("button", { name: "Create Expense" }).click();
+    await authPage.getByTestId("expense-form-submit").click();
 
     await expect(authPage.getByText("€100.00").first()).toBeVisible();
     await expect(
@@ -114,35 +111,32 @@ test.describe("Expense Creation", () => {
     authPage: Page;
   }) => {
     await authPage.goto("/expenses");
-    await authPage.getByRole("button", { name: "Add", exact: true }).click();
+    await authPage.getByTestId("expense-add-button").click();
     await expect(authPage.getByText("Add Expense")).toBeVisible();
 
-    const amountInput = authPage.getByPlaceholder("0.00").first();
+    const amountInput = authPage.getByTestId("expense-form-amount");
     await amountInput.click();
     await amountInput.clear();
     await amountInput.pressSequentially("30.00");
 
-    const paidByTrigger = authPage
-      .getByRole("combobox", { name: "Paid By" })
-      .first();
+    const paidByTrigger = authPage.getByTestId("expense-form-paid-by");
     if ((await paidByTrigger.allTextContents())[0]?.trim() === "") {
       await paidByTrigger.click();
       await authPage.getByRole("option").first().click();
     }
 
-    const descInput = authPage.getByPlaceholder("What was this expense for?");
+    const descInput = authPage.getByTestId("expense-form-description");
     await descInput.fill("Rent utilities custom split");
 
-    await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await expect(authPage.getByText("Step 2/3")).toBeVisible();
+    await authPage.getByTestId("expense-form-next").click();
+    await expect(authPage.getByTestId("expense-form-step")).toContainText(
+      "Step 2/3",
+    );
 
-    const splitMethodToggle = authPage
-      .getByRole("button", { name: "Equal", exact: true })
-      .locator("..");
-    await splitMethodToggle.getByRole("button", { name: "Custom" }).click();
+    await authPage.getByTestId("split-method-custom").click();
 
-    const splitDetailsCard = authPage.getByText("Split Details").first();
-    const customInputs = splitDetailsCard.getByPlaceholder("0.00");
+    const splitDetailsCard = authPage.getByTestId("split-details-card");
+    const customInputs = splitDetailsCard.getByTestId(/^split-member-amount-/);
     const count = await customInputs.count();
     if (count >= 1) {
       await customInputs.first().click();
@@ -150,12 +144,14 @@ test.describe("Expense Creation", () => {
       await customInputs.first().pressSequentially("3000");
     }
 
-    await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await expect(authPage.getByText("Step 3/3")).toBeVisible();
+    await authPage.getByTestId("expense-form-next").click();
+    await expect(authPage.getByTestId("expense-form-step")).toContainText(
+      "Step 3/3",
+    );
 
     await expect(authPage.getByText("€30.00").first()).toBeVisible();
 
-    await authPage.getByRole("button", { name: "Create Expense" }).click();
+    await authPage.getByTestId("expense-form-submit").click();
 
     await expect(authPage.getByText("€30.00").first()).toBeVisible();
     await expect(
@@ -169,45 +165,38 @@ test.describe("Expense Creation", () => {
     authPage: Page;
   }) => {
     await authPage.goto("/expenses");
-    await authPage.getByRole("button", { name: "Add", exact: true }).click();
+    await authPage.getByTestId("expense-add-button").click();
     await expect(authPage.getByText("Add Expense")).toBeVisible();
 
-    const amountInput = authPage.getByPlaceholder("0.00").first();
+    const amountInput = authPage.getByTestId("expense-form-amount");
     await amountInput.click();
     await amountInput.clear();
     await amountInput.pressSequentially("15.00");
 
-    const paidByTrigger = authPage
-      .getByRole("combobox", { name: "Paid By" })
-      .first();
+    const paidByTrigger = authPage.getByTestId("expense-form-paid-by");
     if ((await paidByTrigger.allTextContents())[0]?.trim() === "") {
       await paidByTrigger.click();
       await authPage.getByRole("option").first().click();
     }
 
-    const descInput = authPage.getByPlaceholder("What was this expense for?");
+    const descInput = authPage.getByTestId("expense-form-description");
     await descInput.fill("Coffee with friends");
 
-    const categoryButton = authPage
-      .getByRole("combobox", { name: "Category" })
-      .or(authPage.getByText("Other").last());
-    if (await categoryButton.isVisible().catch(() => false)) {
-      await categoryButton.click();
-      const coffeeOption = authPage.getByRole("option", { name: "Coffee" });
-      if (await coffeeOption.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await coffeeOption.click();
-      } else {
-        await authPage.keyboard.press("Escape");
-      }
+    await authPage.getByTestId("expense-form-category").click();
+    const coffeeOption = authPage.getByTestId("expense-category-option-coffee");
+    if (await coffeeOption.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await coffeeOption.click();
+    } else {
+      await authPage.keyboard.press("Escape");
     }
 
-    await authPage.getByRole("button", { name: "Next", exact: true }).click();
+    await authPage.getByTestId("expense-form-next").click();
 
-    await authPage.getByRole("button", { name: "Next", exact: true }).click();
+    await authPage.getByTestId("expense-form-next").click();
 
     await expect(authPage.getByText("€15.00").first()).toBeVisible();
 
-    await authPage.getByRole("button", { name: "Create Expense" }).click();
+    await authPage.getByTestId("expense-form-submit").click();
 
     await expect(authPage.getByText("€15.00").first()).toBeVisible();
     await expect(

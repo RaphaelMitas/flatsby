@@ -11,9 +11,11 @@ test.describe("Shopping List Dashboard", () => {
     await authPage.goto("/shopping-list");
     await authPage.waitForURL("/shopping-list");
 
-    await expect(authPage.getByPlaceholder("add new list")).toBeVisible();
     await expect(
-      authPage.getByRole("button", { name: "Create List" }),
+      authPage.getByTestId("shopping-list-create-input"),
+    ).toBeVisible();
+    await expect(
+      authPage.getByTestId("shopping-list-create-button"),
     ).toBeVisible();
   });
 
@@ -27,8 +29,8 @@ test.describe("Shopping List Dashboard", () => {
 
     const listName = `Test List ${Date.now()}`;
 
-    await authPage.getByPlaceholder("add new list").fill(listName);
-    await authPage.getByRole("button", { name: "Create List" }).click();
+    await authPage.getByTestId("shopping-list-create-input").fill(listName);
+    await authPage.getByTestId("shopping-list-create-button").click();
 
     await authPage.waitForURL(/\/shopping-list\/\d+/);
 
@@ -44,11 +46,13 @@ test.describe("Shopping List Dashboard", () => {
     await authPage.goto("/shopping-list");
     await authPage.waitForURL("/shopping-list");
 
-    const listItems = authPage.locator('[class*="group"][class*="relative"]');
+    const listItems = authPage.getByTestId(/^shopping-list-dashboard-link-/);
     const count = await listItems.count();
 
     if (count === 0) {
-      await expect(authPage.getByPlaceholder("add new list")).toBeVisible();
+      await expect(
+        authPage.getByTestId("shopping-list-create-input"),
+      ).toBeVisible();
     }
   });
 });

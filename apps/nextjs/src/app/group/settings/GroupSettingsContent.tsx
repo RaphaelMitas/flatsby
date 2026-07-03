@@ -31,7 +31,12 @@ export function GroupSettingsContent() {
     <div className="flex h-full flex-col p-4 md:pt-16">
       <div className="mx-auto grid w-full max-w-6xl items-start gap-2 lg:grid-cols-[1fr]">
         <div className="mx-auto grid w-full max-w-6xl gap-2">
-          <h1 className="text-center text-3xl font-semibold">Group Settings</h1>
+          <h1
+            className="text-center text-3xl font-semibold"
+            data-testid="group-settings-title"
+          >
+            Group Settings
+          </h1>
         </div>
         <div className="grid gap-6"></div>
         <GroupDetails groupId={groupId} />

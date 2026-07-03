@@ -75,7 +75,10 @@ export function DebtSummaryView() {
   return (
     <div className="flex w-full max-w-prose flex-col gap-4">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+        <h2
+          data-testid="debt-summary-title"
+          className="text-2xl font-bold tracking-tight sm:text-3xl"
+        >
           Debt Summary
         </h2>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -84,7 +87,7 @@ export function DebtSummaryView() {
       </div>
 
       {!hasAnyDebts ? (
-        <Card>
+        <Card data-testid="debt-summary-empty">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center justify-center gap-4 py-8 text-center">
               <CheckCircle2 className="text-muted-foreground h-12 w-12" />
@@ -152,6 +155,7 @@ export function DebtSummaryView() {
                                   })
                                 }
                                 className="text-primary text-sm hover:underline"
+                                data-testid="debt-settle-up-button"
                               >
                                 Settle Up
                               </button>

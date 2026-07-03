@@ -6,39 +6,30 @@ test.describe("Account Management", () => {
   test("access account deletion settings", async ({ authPage }) => {
     await authPage.goto("/user-settings");
 
+    await expect(authPage.getByTestId("account-settings-title")).toBeVisible();
     await expect(
-      authPage.getByRole("heading", { name: "User Settings" }),
-    ).toBeVisible();
-    await expect(
-      authPage.getByRole("button", { name: "Delete User" }),
+      authPage.getByTestId("delete-user-confirm-button"),
     ).toBeVisible();
     await expect(
       authPage.getByText("This action cannot be undone.", { exact: true }),
     ).toBeVisible();
     await expect(
-      authPage.getByRole("heading", { name: "Danger Zone" }),
+      authPage.getByTestId("delete-user-danger-zone-title"),
     ).toBeVisible();
   });
 
   test("two-step email confirmation", async ({ authPage }) => {
     await authPage.goto("/user-settings");
 
-    const deleteUserSection = authPage.getByText("Delete User").first();
-    await expect(deleteUserSection).toBeVisible();
-
-    const deleteUserButton = deleteUserSection
-      .locator("..")
-      .locator("..")
-      .getByRole("button", { name: "Delete User" });
-
+    const deleteUserButton = authPage.getByTestId("delete-user-confirm-button");
     await expect(deleteUserButton).toBeVisible();
 
     await deleteUserButton.click();
 
-    const deleteInput = authPage.locator("#delete-user-name-input");
+    const deleteInput = authPage.getByTestId("delete-user-email-input");
     await expect(deleteInput).toBeVisible();
     await expect(
-      authPage.getByRole("button", { name: "Cancel" }),
+      authPage.getByTestId("delete-user-cancel-button"),
     ).toBeVisible();
 
     await expect(deleteUserButton).toBeDisabled();
@@ -53,15 +44,13 @@ test.describe("Account Management", () => {
   test("delete account signs out and redirects", async ({ authPage }) => {
     await authPage.goto("/user-settings");
 
-    const deleteUserButton = authPage.getByRole("button", {
-      name: "Delete User",
-    });
-    await deleteUserButton.last().click();
+    const deleteUserButton = authPage.getByTestId("delete-user-confirm-button");
+    await deleteUserButton.click();
 
-    const deleteInput = authPage.locator("#delete-user-name-input");
+    const deleteInput = authPage.getByTestId("delete-user-email-input");
     await deleteInput.fill(TEST_USER_EMAIL);
 
-    await authPage.getByRole("button", { name: "Delete User" }).click();
+    await authPage.getByTestId("delete-user-confirm-button").click();
 
     await authPage.waitForURL(/\/(auth\/login|\/)/);
 
@@ -69,7 +58,7 @@ test.describe("Account Management", () => {
     expect(currentUrl).toMatch(/\/(auth\/login|\/)/);
 
     await expect(
-      authPage.getByRole("button", { name: "Delete User" }),
+      authPage.getByTestId("delete-user-confirm-button"),
     ).not.toBeVisible();
   });
 });

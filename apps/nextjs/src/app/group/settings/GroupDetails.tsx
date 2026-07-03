@@ -90,6 +90,7 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
               <>
                 <Input
                   id="name"
+                  data-testid="group-name-input"
                   placeholder="Enter group name"
                   value={name}
                   maxLength={256}
@@ -98,6 +99,7 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
                 />
                 <Button
                   className="w-full min-w-[150px] md:w-fit"
+                  data-testid="group-name-save"
                   disabled={groupNameMutation.isPending || !isAdmin}
                   onClick={() =>
                     groupNameMutation.mutate({ id: groupId, name: name || "" })

@@ -367,7 +367,7 @@ export function SettlementForm({
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-lg">
+      <SheetContent className="w-full sm:max-w-lg" data-testid="settlement-form">
         <SheetHeader>
           <SheetTitle>
             {isEditMode ? "Edit Settlement" : "Settle Up"}
@@ -435,6 +435,7 @@ export function SettlementForm({
                         min={1}
                         max={amount}
                         className="flex-1"
+                        data-testid="settlement-amount-input"
                       />
                     </div>
                   </FormControl>
@@ -471,10 +472,16 @@ export function SettlementForm({
                 onClick={onClose}
                 disabled={isPending}
                 className="flex-1"
+                data-testid="settlement-cancel-button"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending} className="flex-1">
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="flex-1"
+                data-testid="settlement-record-button"
+              >
                 {isPending ? (
                   <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />

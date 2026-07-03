@@ -19,14 +19,20 @@ const Login = () => {
       <div className="bg-muted flex flex-col gap-6 rounded-lg p-8">
         <div className="flex flex-col items-center justify-center gap-4 text-center">
           <HomeIcon className="text-primary h-20 w-fit self-center" />
-          <h1 className="text-4xl font-bold">Flatsby</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="text-4xl font-bold" data-testid="auth-login-title">
+            Flatsby
+          </h1>
+          <p
+            className="text-muted-foreground text-sm"
+            data-testid="auth-login-tagline"
+          >
             Manage your daily life with your flatmates.
           </p>
         </div>
         <div className="flex w-80 flex-col gap-6">
           <Button
             type="button"
+            data-testid="auth-login-google-button"
             onClick={async () => {
               setLoading("google");
 
@@ -52,6 +58,7 @@ const Login = () => {
 
           <Button
             type="button"
+            data-testid="auth-login-apple-button"
             onClick={async () => {
               setLoading("apple");
               await signIn.social({
@@ -80,6 +87,7 @@ const Login = () => {
             <Link
               href="/legal/terms"
               className="hover:text-foreground underline"
+              data-testid="auth-login-terms-link"
             >
               Terms
             </Link>{" "}
@@ -87,6 +95,7 @@ const Login = () => {
             <Link
               href="/legal/privacy"
               className="hover:text-foreground underline"
+              data-testid="auth-login-privacy-link"
             >
               Privacy Policy
             </Link>
@@ -95,6 +104,7 @@ const Login = () => {
             <Link
               href="/legal/legal-notice"
               className="hover:text-foreground underline"
+              data-testid="auth-login-legal-notice-link"
             >
               Legal Notice
             </Link>

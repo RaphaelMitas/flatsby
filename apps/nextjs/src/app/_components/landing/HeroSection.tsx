@@ -12,7 +12,10 @@ export function HeroSection({ isIOS }: { isIOS: boolean }) {
         <Badge variant="secondary" className="mb-4">
           Free for all
         </Badge>
-        <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+        <h1
+          className="mb-4 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl"
+          data-testid="hero-title"
+        >
           Household management, simplified.
         </h1>
         <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-lg md:text-xl">

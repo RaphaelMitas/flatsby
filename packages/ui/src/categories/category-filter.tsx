@@ -36,6 +36,7 @@ export function CategoryFilter({
         size="sm"
         onClick={() => onSelectCategory(null)}
         className="shrink-0 rounded-full"
+        data-testid="category-filter-all"
       >
         All
         {total && total > 0 && (
@@ -66,6 +67,7 @@ export function CategoryFilter({
             size="sm"
             onClick={() => onSelectCategory(category.id as CategoryId)}
             className="shrink-0 rounded-full"
+            data-testid={`category-filter-${category.id}`}
           >
             <Icon
               className={cn(

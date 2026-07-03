@@ -6,22 +6,22 @@ const uniqueGroupName = () => `E2E Group ${Date.now()}`;
 
 async function createAndSelectGroup(page: Page, name: string): Promise<number> {
   await page.goto("/group/create");
-  await page.fill('input[id="groupName"]', name);
-  await page.click('button:has-text("Create Group")');
+  await page.getByTestId("group-create-name-input").fill(name);
+  await page.getByTestId("group-create-submit").click();
   await page.waitForURL("/home");
 
   await page.goto("/group");
 
-  const groupCard = page.locator("button").filter({ hasText: name }).first();
+  const groupCard = page.getByTestId(/^group-card-\d+$/).filter({
+    hasText: name,
+  });
   await groupCard.click();
   await page.waitForURL("/home");
 
-  const groupId = await groupCard.getAttribute("data-testid").then((id) => {
-    const match = id?.match(/group-card-(\d+)/);
-    const idFromMatch = match?.[1];
-    return idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
-  });
-  return groupId;
+  const testId = await groupCard.getAttribute("data-testid");
+  const match = testId?.match(/group-card-(\d+)/);
+  const idFromMatch = match?.[1];
+  return idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
 }
 
 test.describe("Group Management", () => {
@@ -29,10 +29,12 @@ test.describe("Group Management", () => {
     const groupName = uniqueGroupName();
 
     await authPage.goto("/group/create");
-    await expect(authPage.locator("h1")).toContainText("Create a Group");
+    await expect(authPage.getByTestId("group-create-title")).toContainText(
+      "Create a Group",
+    );
 
-    await authPage.fill('input[id="groupName"]', groupName);
-    await authPage.click('button:has-text("Create Group")');
+    await authPage.getByTestId("group-create-name-input").fill(groupName);
+    await authPage.getByTestId("group-create-submit").click();
     await authPage.waitForURL("/home");
   });
 
@@ -44,20 +46,24 @@ test.describe("Group Management", () => {
     const groupName = uniqueGroupName();
 
     await authPage.goto("/group/create");
-    await authPage.fill('input[id="groupName"]', groupName);
-    await authPage.click('button:has-text("Create Group")');
+    await authPage.getByTestId("group-create-name-input").fill(groupName);
+    await authPage.getByTestId("group-create-submit").click();
     await authPage.waitForURL("/home");
 
     await authPage.goto("/group");
-    await expect(authPage.locator("h2")).toContainText("Your Groups");
-    const groupCard = authPage.locator("button").filter({ hasText: groupName });
+    await expect(authPage.getByTestId("group-dashboard-title")).toContainText(
+      "Your Groups",
+    );
+    const groupCard = authPage.getByTestId(/^group-card-\d+$/).filter({
+      hasText: groupName,
+    });
     await expect(groupCard).toBeVisible();
     await expect(groupCard.getByText("1 member")).toBeVisible();
-    const groupId = await groupCard.getAttribute("data-testid").then((id) => {
-      const match = id?.match(/group-card-(\d+)/);
-      const idFromMatch = match?.[1];
-      return idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
-    });
+    const testId = await groupCard.getAttribute("data-testid");
+    const match = testId?.match(/group-card-(\d+)/);
+    const idFromMatch = match?.[1];
+    const groupId =
+      idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
     await expect(authPage.getByTestId(`group-card-${groupId}`)).toBeVisible();
   });
 
@@ -70,8 +76,10 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, groupName);
 
     await authPage.goto("/group/settings");
-    await expect(authPage.getByText("Group Settings")).toBeVisible();
-    await expect(authPage.getByText("Manage Members")).toBeVisible();
+    await expect(authPage.getByTestId("group-settings-title")).toBeVisible();
+    await expect(
+      authPage.getByTestId("group-manage-members-title"),
+    ).toBeVisible();
 
     const emailInput = authPage.getByTestId("group-add-member-email");
     await expect(emailInput).toBeVisible();
@@ -81,8 +89,6 @@ test.describe("Group Management", () => {
     await expect(addMemberButton).toBeVisible();
     await addMemberButton.click();
 
-    // The add member call will fail for a non-existent user, showing an error.
-    // Wait for the request to complete and verify the error state.
     await expect(emailInput).toHaveValue("newuser@example.com");
   });
 
@@ -93,13 +99,13 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, groupName);
 
     await authPage.goto("/group/settings");
-    await expect(authPage.getByText("Group Settings")).toBeVisible();
+    await expect(authPage.getByTestId("group-settings-title")).toBeVisible();
 
-    const nameInput = authPage.locator('input[id="name"]');
+    const nameInput = authPage.getByTestId("group-name-input");
     await expect(nameInput).toBeVisible();
     await nameInput.fill(newName);
 
-    const saveButton = authPage.getByRole("button", { name: "Save" });
+    const saveButton = authPage.getByTestId("group-name-save");
     await saveButton.click();
 
     await expect(
@@ -118,22 +124,20 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, groupName);
 
     await authPage.goto("/group/settings");
-    await expect(authPage.locator('input[id="name"]')).toBeVisible();
+    await expect(authPage.getByTestId("group-name-input")).toBeVisible();
 
     const currentGroupName = await authPage
-      .locator('input[id="name"]')
+      .getByTestId("group-name-input")
       .inputValue();
     await expect(
-      authPage.getByRole("button", { name: "Delete Group" }),
+      authPage.getByTestId("group-delete-confirm-button"),
     ).toBeVisible();
-    await expect(authPage.getByText("Danger Zone")).toBeVisible();
+    await expect(authPage.getByTestId("group-danger-zone-title")).toBeVisible();
 
-    const deleteInput = authPage.locator("#delete-group-name-input");
+    const deleteInput = authPage.getByTestId("group-delete-name-input");
     await deleteInput.fill(currentGroupName);
 
-    const deleteButton = authPage.getByRole("button", {
-      name: "Delete Group",
-    });
+    const deleteButton = authPage.getByTestId("group-delete-confirm-button");
     await expect(deleteButton).toBeEnabled();
     await deleteButton.click();
 
@@ -149,18 +153,16 @@ test.describe("Group Management", () => {
     const groupId = await createAndSelectGroup(authPage, groupName);
 
     await authPage.goto("/group/settings");
-    await expect(authPage.locator('input[id="name"]')).toBeVisible();
+    await expect(authPage.getByTestId("group-name-input")).toBeVisible();
 
     const currentGroupName = await authPage
-      .locator('input[id="name"]')
+      .getByTestId("group-name-input")
       .inputValue();
 
-    const deleteInput = authPage.locator("#delete-group-name-input");
+    const deleteInput = authPage.getByTestId("group-delete-name-input");
     await deleteInput.fill(currentGroupName);
 
-    const deleteButton = authPage.getByRole("button", {
-      name: "Delete Group",
-    });
+    const deleteButton = authPage.getByTestId("group-delete-confirm-button");
     await deleteButton.click();
     await authPage.waitForURL("/group");
 
@@ -187,18 +189,16 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, groupName);
 
     await authPage.goto("/group/settings");
-    await expect(authPage.locator('input[id="name"]')).toBeVisible();
+    await expect(authPage.getByTestId("group-name-input")).toBeVisible();
 
     const currentGroupName = await authPage
-      .locator('input[id="name"]')
+      .getByTestId("group-name-input")
       .inputValue();
 
-    const deleteInput = authPage.locator("#delete-group-name-input");
+    const deleteInput = authPage.getByTestId("group-delete-name-input");
     await deleteInput.fill(currentGroupName);
 
-    const deleteButton = authPage.getByRole("button", {
-      name: "Delete Group",
-    });
+    const deleteButton = authPage.getByTestId("group-delete-confirm-button");
     await deleteButton.click();
     await authPage.waitForURL("/group");
 

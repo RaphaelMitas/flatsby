@@ -9,7 +9,7 @@ async function createShoppingList(page: Page): Promise<number> {
     .waitFor({ state: "visible", timeout: 15000 });
   const listName = `E2E Test List ${Date.now()}`;
   await page.getByTestId("shopping-list-create-input").fill(listName);
-  await page.getByRole("button", { name: "Create List" }).click();
+  await page.getByTestId("shopping-list-create-button").click();
   await page.waitForURL(/\/shopping-list\/\d+/);
   await page
     .getByTestId("shopping-list-item-input")
@@ -39,10 +39,8 @@ test.describe("Shopping List Management", () => {
     await renameButton.click();
 
     const newListName = `Renamed List ${Date.now()}`;
-    await authPage
-      .getByPlaceholder("Enter shopping list name")
-      .fill(newListName);
-    await authPage.getByRole("button", { name: "Save" }).click();
+    await authPage.getByTestId("shopping-list-rename-input").fill(newListName);
+    await authPage.getByTestId("shopping-list-rename-save").click();
 
     await expect(authPage.getByText(newListName).first()).toBeVisible({
       timeout: 10000,
@@ -107,32 +105,24 @@ test.describe("Shopping List Management", () => {
     const produceItem = `Produce Item ${Date.now()}`;
     const dairyItem = `Dairy Item ${Date.now()}`;
 
-    const categoryButton = authPage.getByRole("combobox");
-
-    await categoryButton.click();
-    await authPage.getByRole("heading", { name: "Select Category" }).waitFor();
-    await authPage
-      .getByRole("button", { name: /^Produce/ })
-      .first()
-      .click();
+    await authPage.getByTestId("category-selector-trigger").click();
+    await authPage.getByTestId("category-selector-title").waitFor();
+    await authPage.getByTestId("category-selector-option-produce").click();
 
     await authPage.getByTestId("shopping-list-item-input").fill(produceItem);
     await authPage.getByTestId("shopping-list-add-item-button").click();
     await expect(authPage.getByText(produceItem)).toBeVisible();
 
-    await categoryButton.click();
-    await authPage.getByRole("heading", { name: "Select Category" }).waitFor();
-    await authPage
-      .getByRole("button", { name: /^Dairy/ })
-      .first()
-      .click();
+    await authPage.getByTestId("category-selector-trigger").click();
+    await authPage.getByTestId("category-selector-title").waitFor();
+    await authPage.getByTestId("category-selector-option-dairy").click();
 
     await authPage.getByTestId("shopping-list-item-input").fill(dairyItem);
     await authPage.getByTestId("shopping-list-add-item-button").click();
     await expect(authPage.getByText(dairyItem)).toBeVisible();
 
-    const produceFilter = authPage.getByRole("button", { name: "Produce" });
-    const dairyFilter = authPage.getByRole("button", { name: "Dairy" });
+    const produceFilter = authPage.getByTestId("category-filter-produce");
+    const dairyFilter = authPage.getByTestId("category-filter-dairy");
 
     if (await produceFilter.isVisible().catch(() => false)) {
       await produceFilter.click();

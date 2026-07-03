@@ -10,7 +10,7 @@ async function setupList(page: Page): Promise<{ listId: number }> {
   await page
     .getByTestId("shopping-list-create-input")
     .fill(`E2E List ${Date.now()}`);
-  await page.getByRole("button", { name: "Create List" }).click();
+  await page.getByTestId("shopping-list-create-button").click();
   await page.waitForURL(/\/shopping-list\/\d+/);
   await page
     .getByTestId("shopping-list-item-input")
@@ -31,7 +31,7 @@ async function addItem(page: Page, name: string) {
 }
 
 async function getItemLocator(page: Page, itemName: string) {
-  const items = page.locator("[data-testid^='shopping-list-item-']");
+  const items = page.getByTestId(/^shopping-list-item-\d+$/);
   for (let i = 0; i < (await items.count()); i++) {
     const item = items.nth(i);
     if (
@@ -56,17 +56,13 @@ test.describe("Shopping List Items", () => {
 
     const itemName = `Test Item ${Date.now()}`;
 
-    const categoryButton = authPage.getByRole("combobox");
-    await categoryButton.click();
+    await authPage.getByTestId("category-selector-trigger").click();
 
-    await authPage.getByRole("heading", { name: "Select Category" }).waitFor();
-    await authPage
-      .getByRole("button", { name: /^Produce/ })
-      .first()
-      .click();
+    await authPage.getByTestId("category-selector-title").waitFor();
+    await authPage.getByTestId("category-selector-option-produce").click();
 
     await authPage.getByTestId("shopping-list-item-input").fill(itemName);
-    await authPage.getByRole("button", { name: "Add Item" }).click();
+    await authPage.getByTestId("shopping-list-add-item-button").click();
 
     await expect(authPage.getByText(itemName)).toBeVisible();
     await expect(authPage.getByText("Produce").first()).toBeVisible();
@@ -135,9 +131,7 @@ test.describe("Shopping List Items", () => {
     await addItem(authPage, originalName);
 
     const listItem = await getItemLocator(authPage, originalName);
-    const editButton = listItem.locator(
-      "[data-testid^='shopping-list-item-edit-']",
-    );
+    const editButton = listItem.getByTestId(/^shopping-list-item-edit-\d+$/);
     await editButton.click({ force: true });
 
     await expect(
@@ -173,14 +167,14 @@ test.describe("Shopping List Items", () => {
     await addItem(authPage, itemName);
 
     const listItem = await getItemLocator(authPage, itemName);
-    const deleteButton = listItem.locator(
-      "[data-testid^='shopping-list-item-delete-']",
+    const deleteButton = listItem.getByTestId(
+      /^shopping-list-item-delete-\d+$/,
     );
     await deleteButton.click({ force: true });
 
     await expect(
       authPage
-        .locator("[data-testid^='shopping-list-item-']")
+        .getByTestId(/^shopping-list-item-\d+$/)
         .filter({ hasText: itemName }),
     ).not.toBeVisible({ timeout: 10000 });
   });

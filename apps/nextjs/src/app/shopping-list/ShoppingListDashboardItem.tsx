@@ -253,6 +253,7 @@ export function ShoppingListDashboardItem({
                   <FormControl>
                     <Input
                       {...field}
+                      data-testid="shopping-list-rename-input"
                       autoFocus
                       placeholder="Enter shopping list name"
                       onKeyDown={(e) => {
@@ -274,7 +275,11 @@ export function ShoppingListDashboardItem({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={renameMutation.isPending}>
+              <Button
+                type="submit"
+                data-testid="shopping-list-rename-save"
+                disabled={renameMutation.isPending}
+              >
                 Save
               </Button>
             </div>

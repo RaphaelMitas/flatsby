@@ -57,7 +57,9 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
         <div className="space-y-4">
           <Alert variant="destructive">
             <TriangleAlertIcon className="h-4 w-4" />
-            <AlertTitle>Danger Zone</AlertTitle>
+            <AlertTitle data-testid="group-danger-zone-title">
+              Danger Zone
+            </AlertTitle>
             <AlertDescription>
               Deleting this group will permanently remove it and all its data.
               Please type the name of the group below to confirm.
@@ -68,6 +70,7 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
             <div className="flex flex-col gap-4 md:flex-row">
               <Input
                 id="delete-group-name-input"
+                data-testid="group-delete-name-input"
                 placeholder="Enter group name"
                 maxLength={256}
                 value={groupNameInput}
@@ -76,6 +79,7 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
               />
               <Button
                 variant="destructive"
+                data-testid="group-delete-confirm-button"
                 disabled={
                   groupNameInput !== group.data.name ||
                   deleteGroupMutation.isPending ||

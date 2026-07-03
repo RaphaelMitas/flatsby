@@ -6,29 +6,30 @@ async function createTestExpense(
   page: Page,
 ): Promise<{ expenseId: number; description: string }> {
   await page.goto("/expenses");
-  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await page.getByTestId("expense-add-button").click();
 
-  const amountInput = page.getByPlaceholder("0.00").first();
+  const amountInput = page.getByTestId("expense-form-amount");
   await amountInput.click();
   await amountInput.clear();
   await amountInput.pressSequentially("25.00");
 
-  const paidByTrigger = page.getByRole("combobox", { name: "Paid By" }).first();
+  const paidByTrigger = page.getByTestId("expense-form-paid-by");
   if ((await paidByTrigger.allTextContents())[0]?.trim() === "") {
     await paidByTrigger.click();
     await page.getByRole("option").first().click();
   }
 
   const uniqueDesc = `Test dinner ${Date.now()}`;
-  await page.getByPlaceholder("What was this expense for?").fill(uniqueDesc);
-  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByTestId("expense-form-description").fill(uniqueDesc);
+  await page.getByTestId("expense-form-next").click();
 
-  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByTestId("expense-form-next").click();
 
-  await page.getByRole("button", { name: "Create Expense" }).click();
+  await page.getByTestId("expense-form-submit").click();
 
   const expenseCard = page
-    .getByRole("button", { name: new RegExp(uniqueDesc) })
+    .getByTestId(/^expense-card-\d+$/)
+    .filter({ hasText: uniqueDesc })
     .first();
   await expect(expenseCard).toBeVisible({ timeout: 10000 });
   const testId = await expenseCard.getAttribute("data-testid");
@@ -43,16 +44,10 @@ async function createTestExpense(
   };
 }
 
-async function openExpenseDetail(
-  page: Page,
-  _expenseId: number,
-  description: string,
-) {
+async function openExpenseDetail(page: Page, expenseId: number) {
   await page.goto("/expenses");
 
-  const expenseCard = page
-    .getByRole("button", { name: new RegExp(description) })
-    .first();
+  const expenseCard = page.getByTestId(`expense-card-${expenseId}`);
   await expect(expenseCard).toBeVisible({ timeout: 10000 });
   await expenseCard.click();
 }
@@ -64,7 +59,7 @@ test.describe("Expense Management", () => {
     authPage: Page;
   }) => {
     const { expenseId, description } = await createTestExpense(authPage);
-    await openExpenseDetail(authPage, expenseId, description);
+    await openExpenseDetail(authPage, expenseId);
 
     await expect(authPage.getByTestId("expense-split-details")).toBeVisible({
       timeout: 15000,
@@ -79,7 +74,7 @@ test.describe("Expense Management", () => {
     authPage: Page;
   }) => {
     const { expenseId, description } = await createTestExpense(authPage);
-    await openExpenseDetail(authPage, expenseId, description);
+    await openExpenseDetail(authPage, expenseId);
 
     await expect(authPage.getByTestId("expense-edit-button")).toBeVisible({
       timeout: 15000,
@@ -98,13 +93,13 @@ test.describe("Expense Management", () => {
       "Edit Expense",
     );
 
-    const amountInput = authPage.getByPlaceholder("0.00").first();
+    const amountInput = authPage.getByTestId("expense-form-amount");
     await amountInput.click();
     await amountInput.clear();
     await amountInput.pressSequentially("50.00");
-    await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.getByRole("button", { name: "Next", exact: true }).click();
-    await authPage.getByRole("button", { name: "Update Expense" }).click();
+    await authPage.getByTestId("expense-form-next").click();
+    await authPage.getByTestId("expense-form-next").click();
+    await authPage.getByTestId("expense-form-submit").click();
 
     await expect(authPage.getByText("€50.00").first()).toBeVisible();
   });
@@ -115,7 +110,7 @@ test.describe("Expense Management", () => {
     authPage: Page;
   }) => {
     const { expenseId, description: desc } = await createTestExpense(authPage);
-    await openExpenseDetail(authPage, expenseId, desc);
+    await openExpenseDetail(authPage, expenseId);
 
     await expect(authPage.getByTestId("expense-delete-button")).toBeVisible({
       timeout: 15000,
@@ -129,16 +124,11 @@ test.describe("Expense Management", () => {
       authPage.getByTestId("expense-delete-dialog").getByText("Delete Expense"),
     ).toBeVisible();
 
-    await authPage
-      .getByTestId("expense-delete-dialog")
-      .getByRole("button", { name: "Delete" })
-      .click();
+    await authPage.getByTestId("expense-delete-confirm-button").click();
 
     await expect(
       authPage.getByTestId("expense-delete-dialog"),
     ).not.toBeVisible();
-    await expect(
-      authPage.getByRole("button", { name: new RegExp(desc) }),
-    ).not.toBeVisible();
+    await expect(authPage.getByTestId(`expense-card-${expenseId}`)).not.toBeVisible();
   });
 });

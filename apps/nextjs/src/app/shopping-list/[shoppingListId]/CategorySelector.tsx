@@ -32,6 +32,7 @@ export function CategorySelector({
     <Sheet>
       <SheetTrigger asChild>
         <Button
+          data-testid="category-selector-trigger"
           variant="outline"
           role="combobox"
           aria-expanded={false}
@@ -61,12 +62,15 @@ export function CategorySelector({
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[80vh]">
         <SheetHeader>
-          <SheetTitle>Select Category</SheetTitle>
+          <SheetTitle data-testid="category-selector-title">
+            Select Category
+          </SheetTitle>
         </SheetHeader>
         <ScrollArea className="mt-4 h-[calc(80vh-6rem)]">
           {categories.map((category) => (
             <SheetClose asChild key={category.id} className="h-full">
               <Button
+                data-testid={`category-selector-option-${category.id}`}
                 variant="ghost"
                 onClick={() => onChange?.(category.id)}
                 className={cn(

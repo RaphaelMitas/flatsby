@@ -100,7 +100,9 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Manage Members</CardTitle>
+        <CardTitle data-testid="group-manage-members-title">
+          Manage Members
+        </CardTitle>
         <CardDescription>
           Add new members and update their roles.
         </CardDescription>

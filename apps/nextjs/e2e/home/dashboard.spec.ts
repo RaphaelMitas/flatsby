@@ -10,7 +10,6 @@ test.describe("Authenticated dashboard", () => {
   }) => {
     await authPage.goto("/");
 
-    // Authenticated users get redirected to /home (if they have groups) or /group (if not)
     await authPage.waitForURL(/\/(home|group)/);
 
     const url = authPage.url();
@@ -25,9 +24,6 @@ test.describe("Authenticated dashboard", () => {
     await authPage.goto("/");
     await authPage.waitForURL(/\/(home|group)/);
 
-    // Should NOT see the landing page content
-    await expect(
-      authPage.getByText("Household management, simplified."),
-    ).not.toBeVisible();
+    await expect(authPage.getByTestId("hero-title")).not.toBeVisible();
   });
 });

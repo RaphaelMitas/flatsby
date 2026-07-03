@@ -10,7 +10,7 @@ test.describe("Debt & Settlements", () => {
   }) => {
     await authPage.goto("/expenses/debts");
 
-    await expect(authPage.getByText("Debt Summary")).toBeVisible();
+    await expect(authPage.getByTestId("debt-summary-title")).toBeVisible();
     await expect(
       authPage.getByText("Simplified view of who owes whom"),
     ).toBeVisible();
@@ -23,6 +23,7 @@ test.describe("Debt & Settlements", () => {
   }) => {
     await authPage.goto("/expenses/debts");
 
+    await expect(authPage.getByTestId("debt-summary-empty")).toBeVisible();
     await expect(authPage.getByText("All settled up!")).toBeVisible();
     await expect(
       authPage.getByText("No outstanding debts in this group"),
@@ -36,35 +37,33 @@ test.describe("Debt & Settlements", () => {
   }) => {
     await authPage.goto("/expenses/debts");
 
-    const settleUpButton = authPage.getByRole("button", { name: "Settle Up" });
+    const settleUpButton = authPage.getByTestId("debt-settle-up-button");
 
     if ((await settleUpButton.count()) === 0) {
-      await expect(authPage.getByText("All settled up!")).toBeVisible();
+      await expect(authPage.getByTestId("debt-summary-empty")).toBeVisible();
       return;
     }
 
     await settleUpButton.first().click();
 
-    await expect(authPage.getByText("Settle Up")).toBeVisible();
+    await expect(authPage.getByTestId("settlement-form")).toBeVisible();
     await expect(authPage.getByText("Paying")).toBeVisible();
     await expect(authPage.getByText("Receiving")).toBeVisible();
 
-    const amountInput = authPage.getByPlaceholder("0.00");
+    const amountInput = authPage.getByTestId("settlement-amount-input");
     await expect(amountInput).toBeVisible();
 
     await expect(authPage.getByText("Outstanding debt")).toBeVisible();
 
     await amountInput.fill("100");
 
-    const recordButton = authPage.getByRole("button", {
-      name: "Record Settlement",
-    });
+    const recordButton = authPage.getByTestId("settlement-record-button");
     await expect(recordButton).toBeVisible();
 
-    const cancelButton = authPage.getByRole("button", { name: "Cancel" });
+    const cancelButton = authPage.getByTestId("settlement-cancel-button");
     await cancelButton.click();
 
-    await expect(authPage.getByText("Settle Up")).not.toBeVisible();
+    await expect(authPage.getByTestId("settlement-form")).not.toBeVisible();
   });
 
   test("clears debts after recording full settlement", async ({
@@ -74,10 +73,10 @@ test.describe("Debt & Settlements", () => {
   }) => {
     await authPage.goto("/expenses/debts");
 
-    const settleUpButton = authPage.getByRole("button", { name: "Settle Up" });
+    const settleUpButton = authPage.getByTestId("debt-settle-up-button");
 
     if ((await settleUpButton.count()) === 0) {
-      await expect(authPage.getByText("All settled up!")).toBeVisible();
+      await expect(authPage.getByTestId("debt-summary-empty")).toBeVisible();
       return;
     }
 
@@ -86,35 +85,24 @@ test.describe("Debt & Settlements", () => {
     for (let i = 0; i < debtCount; i++) {
       await authPage.reload();
 
-      const currentSettleButton = authPage.getByRole("button", {
-        name: "Settle Up",
-      });
+      const currentSettleButton = authPage.getByTestId("debt-settle-up-button");
 
       if ((await currentSettleButton.count()) === 0) break;
 
-      const outstandingText = await authPage
-        .getByText("Outstanding debt")
-        .textContent();
-      if (!outstandingText) {
-        await currentSettleButton.first().click();
-      } else {
-        await currentSettleButton.first().click();
-      }
+      await currentSettleButton.first().click();
 
-      await expect(authPage.getByText("Settle Up")).toBeVisible();
+      await expect(authPage.getByTestId("settlement-form")).toBeVisible();
 
-      const amountInput = authPage.getByPlaceholder("0.00");
-      const fillValue = amountInput;
-      await fillValue.fill("1");
+      const amountInput = authPage.getByTestId("settlement-amount-input");
+      await amountInput.fill("1");
 
-      const recordButton = authPage.getByRole("button", {
-        name: "Record Settlement",
-      });
+      const recordButton = authPage.getByTestId("settlement-record-button");
       await recordButton.click();
     }
 
     await authPage.reload();
 
+    await expect(authPage.getByTestId("debt-summary-empty")).toBeVisible();
     await expect(authPage.getByText("All settled up!")).toBeVisible();
   });
 });

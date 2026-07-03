@@ -44,7 +44,9 @@ export function CreateGroup() {
     <div className="p-8">
       <div className="bg-muted mx-auto max-w-md rounded-lg p-8 shadow-lg">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold">Create a Group</h1>
+          <h1 className="text-3xl font-bold" data-testid="group-create-title">
+            Create a Group
+          </h1>
           <p className="mt-2">Enter a name for your new group.</p>
         </div>
         <form
@@ -63,6 +65,7 @@ export function CreateGroup() {
             </label>
             <Input
               id="groupName"
+              data-testid="group-create-name-input"
               maxLength={256}
               placeholder="Enter group name"
               onChange={(event) => {
@@ -85,6 +88,7 @@ export function CreateGroup() {
           <Button
             className="w-full"
             type="submit"
+            data-testid="group-create-submit"
             disabled={groupMutation.isPending}
           >
             {groupMutation.isPending ? <LoadingSpinner /> : "Create Group"}
