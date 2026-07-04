@@ -8,20 +8,20 @@ env:
     clearState: true
 - extendedWaitUntil:
     visible:
-        id: "login-screen"
+      id: "login-screen"
 - tapOn:
     id: "sign-in-e2e-button"
 - extendedWaitUntil:
     visible:
-        text: "Your Groups"
+      text: "Your Groups"
 - extendedWaitUntil:
     visible:
-        id: "groups-create-group-button"
+      id: "groups-create-group-button"
 - tapOn:
     id: "groups-create-group-button"
 - extendedWaitUntil:
     visible:
-        id: "create-group-name-input"
+      id: "create-group-name-input"
 - inputText:
     id: "create-group-name-input"
     text: "${GROUP_NAME}"
@@ -29,14 +29,14 @@ env:
     id: "create-group-submit-button"
 - extendedWaitUntil:
     visible:
-        text: "${GROUP_NAME}"
+      text: "${GROUP_NAME}"
 
 # Navigate to settings tab
 - tapOn:
     text: "Settings"
 - extendedWaitUntil:
     visible:
-        id: "settings-delete-account"
+      id: "settings-delete-account"
 - assertVisible:
     id: "settings-delete-account"
 - assertVisible:

@@ -197,13 +197,13 @@ export default function SettingsIndex() {
               />
             }
           />
-            <SettingsItem
-              testID="settings-logout"
-              title="Logout"
-              subtitle="Sign out of your account"
-              iconName="log-out"
-              onPress={handleLogout}
-            />
+          <SettingsItem
+            testID="settings-logout"
+            title="Logout"
+            subtitle="Sign out of your account"
+            iconName="log-out"
+            onPress={handleLogout}
+          />
         </SettingsSection>
         <SettingsSection title="Danger Zone">
           <Link href="/settings/danger" asChild>

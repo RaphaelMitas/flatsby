@@ -8,20 +8,20 @@ env:
     clearState: true
 - extendedWaitUntil:
     visible:
-        id: "login-screen"
+      id: "login-screen"
 - tapOn:
     id: "sign-in-e2e-button"
 - extendedWaitUntil:
     visible:
-        text: "Your Groups"
+      text: "Your Groups"
 - extendedWaitUntil:
     visible:
-        id: "groups-create-group-button"
+      id: "groups-create-group-button"
 - tapOn:
     id: "groups-create-group-button"
 - extendedWaitUntil:
     visible:
-        id: "create-group-name-input"
+      id: "create-group-name-input"
 - inputText:
     id: "create-group-name-input"
     text: "${GROUP_NAME}"
@@ -29,24 +29,24 @@ env:
     id: "create-group-submit-button"
 - extendedWaitUntil:
     visible:
-        text: "${GROUP_NAME}"
+      text: "${GROUP_NAME}"
 
 # Navigate to settings tab -> group settings -> members
 - tapOn:
     text: "Settings"
 - extendedWaitUntil:
     visible:
-        id: "settings-group-settings"
+      id: "settings-group-settings"
 - tapOn:
     id: "settings-group-settings"
 - extendedWaitUntil:
     visible:
-        text: "Members"
+      text: "Members"
 - tapOn:
     text: "Members"
 - extendedWaitUntil:
     visible:
-        id: "members-add-email-input"
+      id: "members-add-email-input"
 - assertVisible:
     id: "members-add-email-input"
 - assertVisible:

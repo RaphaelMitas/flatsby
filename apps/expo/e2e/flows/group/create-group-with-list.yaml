@@ -10,20 +10,20 @@ env:
     clearState: true
 - extendedWaitUntil:
     visible:
-        id: "login-screen"
+      id: "login-screen"
 - tapOn:
     id: "sign-in-e2e-button"
 - extendedWaitUntil:
     visible:
-        text: "Your Groups"
+      text: "Your Groups"
 - extendedWaitUntil:
     visible:
-        id: "groups-create-group-button"
+      id: "groups-create-group-button"
 - tapOn:
     id: "groups-create-group-button"
 - extendedWaitUntil:
     visible:
-        id: "create-group-name-input"
+      id: "create-group-name-input"
 - inputText:
     id: "create-group-name-input"
     text: "${GROUP_NAME}"
@@ -31,7 +31,7 @@ env:
     id: "create-group-submit-button"
 - extendedWaitUntil:
     visible:
-        text: "${GROUP_NAME}"
+      text: "${GROUP_NAME}"
 - assertVisible:
     text: "${GROUP_NAME}"
 
@@ -40,7 +40,7 @@ env:
     text: "Select Group"
 - extendedWaitUntil:
     visible:
-        id: "shopping-lists-create-button"
+      id: "shopping-lists-create-button"
 - assertVisible:
     id: "shopping-lists-create-button"
 
@@ -49,7 +49,7 @@ env:
     id: "shopping-lists-create-button"
 - extendedWaitUntil:
     visible:
-        id: "create-shopping-list-name-input"
+      id: "create-shopping-list-name-input"
 - assertVisible:
     id: "create-shopping-list-name-input"
 - inputText:
@@ -59,7 +59,7 @@ env:
     id: "create-shopping-list-submit-button"
 - extendedWaitUntil:
     visible:
-        text: "${LIST_NAME}"
+      text: "${LIST_NAME}"
 - assertVisible:
     text: "${LIST_NAME}"
 
@@ -68,7 +68,7 @@ env:
     text: "${LIST_NAME}"
 - extendedWaitUntil:
     visible:
-        id: "shopping-list-add-input"
+      id: "shopping-list-add-input"
 - assertVisible:
     id: "shopping-list-add-input"
 
@@ -80,6 +80,6 @@ env:
     id: "shopping-list-add-button"
 - extendedWaitUntil:
     visible:
-        text: "${ITEM_NAME}"
+      text: "${ITEM_NAME}"
 - assertVisible:
     text: "${ITEM_NAME}"

@@ -8,22 +8,22 @@ env:
     clearState: true
 - extendedWaitUntil:
     visible:
-        id: "login-screen"
+      id: "login-screen"
 - tapOn:
     id: "sign-in-e2e-button"
 - extendedWaitUntil:
     visible:
-        text: "Your Groups"
+      text: "Your Groups"
 - extendedWaitUntil:
     visible:
-        id: "groups-create-group-button"
+      id: "groups-create-group-button"
 - assertVisible:
     id: "groups-create-group-button"
 - tapOn:
     id: "groups-create-group-button"
 - extendedWaitUntil:
     visible:
-        id: "create-group-name-input"
+      id: "create-group-name-input"
 - assertVisible:
     id: "create-group-name-input"
 - inputText:
@@ -33,6 +33,6 @@ env:
     id: "create-group-submit-button"
 - extendedWaitUntil:
     visible:
-        text: "${GROUP_NAME}"
+      text: "${GROUP_NAME}"
 - assertVisible:
     text: "${GROUP_NAME}"

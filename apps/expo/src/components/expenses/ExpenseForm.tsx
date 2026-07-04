@@ -652,7 +652,10 @@ export function ExpenseForm({
     <SafeAreaView edges={[]}>
       <BottomSheetPickerProvider>
         <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
-          <Text testID="expense-form-step-indicator" className="text-muted-foreground text-sm">
+          <Text
+            testID="expense-form-step-indicator"
+            className="text-muted-foreground text-sm"
+          >
             Step {currentStep} of {totalSteps}
           </Text>
           <View className="flex-row gap-1">

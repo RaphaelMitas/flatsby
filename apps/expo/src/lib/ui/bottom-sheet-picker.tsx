@@ -303,7 +303,11 @@ export const BottomSheetPickerTrigger: React.FC<
   }
 
   return (
-    <Pressable testID={testID} onPress={handleOpen} className={triggerVariants()}>
+    <Pressable
+      testID={testID}
+      onPress={handleOpen}
+      className={triggerVariants()}
+    >
       {selectedItem?.icon}
       <Text className={triggerTextVariants()}>
         {triggerTitle ?? selectedItem?.title ?? "Select"}

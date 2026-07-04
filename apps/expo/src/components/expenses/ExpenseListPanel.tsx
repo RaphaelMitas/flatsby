@@ -112,14 +112,14 @@ export function ExpenseListPanel({
           <Text className="text-muted-foreground text-center text-sm">
             Start tracking expenses by adding your first one
           </Text>
-            <Button
-              testID="expenses-empty-add-button"
-              title="Add Expense"
-              variant="primary"
-              size="lg"
-              icon="plus"
-              onPress={onCreateExpense}
-            />
+          <Button
+            testID="expenses-empty-add-button"
+            title="Add Expense"
+            variant="primary"
+            size="lg"
+            icon="plus"
+            onPress={onCreateExpense}
+          />
         </View>
       ) : (
         <FlashList
@@ -154,7 +154,12 @@ export function ExpenseListPanel({
       )}
       {hasExpenses && !isLargeScreen && (
         <View className="absolute right-4 bottom-4">
-              <Button testID="expenses-add-fab" size="icon" icon="plus" onPress={onCreateExpense} />
+          <Button
+            testID="expenses-add-fab"
+            size="icon"
+            icon="plus"
+            onPress={onCreateExpense}
+          />
         </View>
       )}
     </View>

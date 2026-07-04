@@ -3,8 +3,8 @@
 import { useCallback, useState } from "react";
 import { Linking, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
-import * as SecureStore from "expo-secure-store";
 import { Stack, useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -16,7 +16,9 @@ const SESSION_DATA_KEY = "flatsby_session_data";
 
 const Login = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState<"apple" | "google" | "e2e" | "false">("false");
+  const [loading, setLoading] = useState<"apple" | "google" | "e2e" | "false">(
+    "false",
+  );
   const [e2eError, setE2eError] = useState("");
   const callbackURL = ExpoLinking.createURL("/");
 
@@ -43,7 +45,9 @@ const Login = () => {
 
       const cookieJar: Record<string, { value: string; expires: string }> = {};
       const expiresInDays = 7;
-      const expires = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toUTCString();
+      const expires = new Date(
+        Date.now() + expiresInDays * 24 * 60 * 60 * 1000,
+      ).toUTCString();
 
       for (const cookie of data.cookies) {
         cookieJar[cookie.name] = {
@@ -53,10 +57,13 @@ const Login = () => {
       }
 
       await SecureStore.setItemAsync(COOKIE_KEY, JSON.stringify(cookieJar));
-      await SecureStore.setItemAsync(SESSION_DATA_KEY, JSON.stringify({
-        user: { id: data.userId, email: data.email },
-        expires: expiresInDays,
-      }));
+      await SecureStore.setItemAsync(
+        SESSION_DATA_KEY,
+        JSON.stringify({
+          user: { id: data.userId, email: data.email },
+          expires: expiresInDays,
+        }),
+      );
 
       router.replace("/(tabs)/home");
     } catch (error: unknown) {
@@ -134,16 +141,15 @@ const Login = () => {
             onPress={handleE2eLogin}
             disabled={loading !== "false"}
             className="w-full py-4"
-            title={
-              loading === "e2e"
-                ? "Signing in..."
-                : "Sign in (E2E Test)"
-            }
+            title={loading === "e2e" ? "Signing in..." : "Sign in (E2E Test)"}
             icon={loading === "e2e" ? "loader" : undefined}
             variant="secondary"
           />
           {e2eError ? (
-            <Text testID="e2e-login-error" className="text-destructive text-center text-sm">
+            <Text
+              testID="e2e-login-error"
+              className="text-destructive text-center text-sm"
+            >
               {e2eError}
             </Text>
           ) : null}
