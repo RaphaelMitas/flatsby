@@ -1,4 +1,4 @@
-import { by, element, expect, waitFor } from "detox";
+import { by, element, expect } from "detox";
 
 import { signIn } from "../fixtures/auth";
 import { selectSplitMethod } from "../helpers/categories";
@@ -9,6 +9,7 @@ import {
   submitEqualSplitExpense,
 } from "../helpers/expenses";
 import { selectBootstrapGroup } from "../helpers/group";
+import { tapIdUntilVisible, tapUntilVisible } from "../helpers/interaction";
 
 describe("Expense Creation", () => {
   beforeEach(async () => {
@@ -35,17 +36,27 @@ describe("Expense Creation", () => {
       categoryId: "restaurant",
     });
 
-    await element(by.id("expense-form-next-button")).tap();
-    await expect(element(by.text("Step 2 of 3"))).toBeVisible();
+    await tapUntilVisible(
+      by.id("expense-form-next-button"),
+      by.text("Step 2 of 3"),
+      { timeout: 10_000 },
+    );
 
     await selectSplitMethod("percentage");
     await fillFirstSplitMemberAmount("100");
 
-    await element(by.id("expense-form-next-button")).tap();
-    await expect(element(by.text("Step 3 of 3"))).toBeVisible();
+    await tapUntilVisible(
+      by.id("expense-form-next-button"),
+      by.text("Step 3 of 3"),
+      { timeout: 10_000 },
+    );
     await expect(element(by.text("€100.00"))).toBeVisible();
 
-    await element(by.id("expense-form-submit-button")).tap();
+    await tapUntilVisible(
+      by.id("expense-form-submit-button"),
+      by.text("Dinner split by percentage"),
+      { timeout: 15_000 },
+    );
 
     await expect(element(by.text("€100.00"))).toBeVisible();
     await expect(element(by.text("Dinner split by percentage"))).toBeVisible();
@@ -58,17 +69,27 @@ describe("Expense Creation", () => {
       categoryId: "other-housing",
     });
 
-    await element(by.id("expense-form-next-button")).tap();
-    await expect(element(by.text("Step 2 of 3"))).toBeVisible();
+    await tapUntilVisible(
+      by.id("expense-form-next-button"),
+      by.text("Step 2 of 3"),
+      { timeout: 10_000 },
+    );
 
     await selectSplitMethod("custom");
     await fillFirstSplitMemberAmount("3000");
 
-    await element(by.id("expense-form-next-button")).tap();
-    await expect(element(by.text("Step 3 of 3"))).toBeVisible();
+    await tapUntilVisible(
+      by.id("expense-form-next-button"),
+      by.text("Step 3 of 3"),
+      { timeout: 10_000 },
+    );
     await expect(element(by.text("€30.00"))).toBeVisible();
 
-    await element(by.id("expense-form-submit-button")).tap();
+    await tapUntilVisible(
+      by.id("expense-form-submit-button"),
+      by.text("Rent utilities custom split"),
+      { timeout: 15_000 },
+    );
 
     await expect(element(by.text("€30.00"))).toBeVisible();
     await expect(element(by.text("Rent utilities custom split"))).toBeVisible();

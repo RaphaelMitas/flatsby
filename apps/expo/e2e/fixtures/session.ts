@@ -2,12 +2,17 @@ import { by, device, element, waitFor } from "detox";
 
 import { tapUntilVisible } from "../helpers/interaction";
 
+const E2E_LAUNCH_ARGS = {
+  detoxURLBlacklistRegex: '(".*posthog.*")',
+  detoxEnableSynchronization: "false",
+};
+
 export async function launchFreshApp(): Promise<void> {
   await device.clearKeychain();
   await device.launchApp({
     newInstance: true,
     delete: true,
-    launchArgs: { detoxEnableSynchronization: "false" },
+    launchArgs: E2E_LAUNCH_ARGS,
   });
 }
 

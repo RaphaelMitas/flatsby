@@ -19,7 +19,7 @@ async function scrollToInput(testId: string): Promise<void> {
 
 export async function fillInput(testId: string, text: string): Promise<void> {
   const input = element(by.id(testId));
-  await waitFor(input).toExist().withTimeout(15_000);
+  await waitFor(input).toBeVisible().withTimeout(15_000);
 
   try {
     await input.replaceText(text);
@@ -33,7 +33,14 @@ export async function fillInput(testId: string, text: string): Promise<void> {
 export async function dismissKeyboard(): Promise<void> {
   try {
     await element(by.label("Return")).tap();
+    return;
   } catch {
     // Keyboard may already be dismissed.
+  }
+
+  try {
+    await element(by.id("expenses-debt-overview-button")).tap();
+  } catch {
+    // Fall back to tapping outside inputs.
   }
 }

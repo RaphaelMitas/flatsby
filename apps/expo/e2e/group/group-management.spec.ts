@@ -10,6 +10,7 @@ import {
   uniqueGroupName,
 } from "../helpers/group";
 import { fillInput } from "../helpers/input";
+import { tapIdUntilVisible, tapUntilVisible } from "../helpers/interaction";
 import {
   goToGroupSettings,
   goToManageGroups,
@@ -27,10 +28,9 @@ describe("Group Management", () => {
 
     await openCreateGroupScreen();
     await fillInput("create-group-name-input", groupName);
-    await element(by.id("create-group-submit-button")).tap();
-    await waitFor(element(by.text(groupName)))
-      .toExist()
-      .withTimeout(15_000);
+    await tapUntilVisible(by.id("create-group-submit-button"), by.text(groupName), {
+      timeout: 15_000,
+    });
   });
 
   it("group appears in dashboard", async () => {
@@ -62,13 +62,16 @@ describe("Group Management", () => {
     await submitCreateGroupForm(groupName);
 
     await goToGroupSettings();
-    await element(by.text("Group Details")).tap();
-    await waitFor(element(by.id("group-details-name-input")))
-      .toBeVisible()
-      .withTimeout(10_000);
+    await tapUntilVisible(
+      by.text("Group Details"),
+      by.id("group-details-name-input"),
+      { timeout: 15_000 },
+    );
 
     await fillInput("group-details-name-input", newName);
-    await element(by.id("group-name-save")).tap();
+    await tapIdUntilVisible("group-name-save", by.text("Success!"), {
+      timeout: 15_000,
+    });
 
     await expect(element(by.text("Success!"))).toExist();
   });

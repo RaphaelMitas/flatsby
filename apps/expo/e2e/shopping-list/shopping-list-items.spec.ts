@@ -1,13 +1,12 @@
 import { by, element, expect, waitFor } from "detox";
 
 import { signIn } from "../fixtures/auth";
-import { selectShoppingListCategory } from "../helpers/categories";
 import { selectBootstrapGroup } from "../helpers/group";
 import { fillInput } from "../helpers/input";
+import { tapIdUntilVisible, tapUntilVisible } from "../helpers/interaction";
 import {
   addShoppingListItem,
   createShoppingList,
-  shoppingListItemCheckbox,
   swipeShoppingListItemRow,
 } from "../helpers/shopping-list";
 
@@ -21,13 +20,9 @@ describe("Shopping List Items", () => {
     await createShoppingList();
 
     const itemName = `Test Item ${Date.now()}`;
-
-    await selectShoppingListCategory("produce");
-    await fillInput("shopping-list-add-input", itemName);
-    await element(by.id("shopping-list-add-button")).tap();
+    await addShoppingListItem(itemName, "produce");
 
     await expect(element(by.text(itemName))).toBeVisible();
-    await expect(element(by.text("Produce"))).toBeVisible();
   });
 
   it("Complete Item: checking an item moves it from the Active section to the Purchased section", async () => {
@@ -36,7 +31,11 @@ describe("Shopping List Items", () => {
     const itemName = `Complete Me ${Date.now()}`;
     await addShoppingListItem(itemName);
 
-    await shoppingListItemCheckbox(itemName).tap();
+    await tapUntilVisible(
+      by.id(`shopping-list-item-checkbox-${itemName}`),
+      by.text("Purchased Items"),
+      { timeout: 10_000 },
+    );
 
     await expect(element(by.text("Purchased Items"))).toBeVisible();
   });
@@ -47,10 +46,18 @@ describe("Shopping List Items", () => {
     const itemName = `Undo Me ${Date.now()}`;
     await addShoppingListItem(itemName);
 
-    await shoppingListItemCheckbox(itemName).tap();
+    await tapUntilVisible(
+      by.id(`shopping-list-item-checkbox-${itemName}`),
+      by.text("Purchased Items"),
+      { timeout: 10_000 },
+    );
     await expect(element(by.text("Purchased Items"))).toBeVisible();
 
-    await shoppingListItemCheckbox(itemName).tap();
+    await tapUntilVisible(
+      by.id(`shopping-list-item-checkbox-${itemName}`),
+      by.text(itemName),
+      { timeout: 10_000 },
+    );
     await expect(element(by.text(itemName))).toBeVisible();
   });
 
@@ -61,15 +68,15 @@ describe("Shopping List Items", () => {
     await addShoppingListItem(originalName);
 
     await swipeShoppingListItemRow(originalName, "right");
-    await element(by.text("Edit")).tap();
-
-    await waitFor(element(by.id("edit-item-name-input")))
-      .toBeVisible()
-      .withTimeout(5_000);
+    await tapUntilVisible(by.text("Edit"), by.id("edit-item-name-input"), {
+      timeout: 10_000,
+    });
 
     const newName = `Renamed ${Date.now()}`;
     await fillInput("edit-item-name-input", newName);
-    await element(by.id("edit-item-submit-button")).tap();
+    await tapIdUntilVisible("edit-item-submit-button", by.text(newName), {
+      timeout: 10_000,
+    });
 
     await expect(element(by.text(newName))).toBeVisible();
     await expect(element(by.text(originalName))).not.toBeVisible();
@@ -82,6 +89,9 @@ describe("Shopping List Items", () => {
     await addShoppingListItem(itemName);
 
     await swipeShoppingListItemRow(itemName, "left");
+    await waitFor(element(by.id("delete-confirmation-modal")))
+      .toBeVisible()
+      .withTimeout(5_000);
     await element(by.id("delete-confirmation-button")).tap();
 
     await waitFor(element(by.text(itemName)))

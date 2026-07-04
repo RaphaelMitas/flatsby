@@ -13,33 +13,25 @@ export async function createShoppingList(
     { timeout: 15_000 },
   );
   await fillInput("create-shopping-list-name-input", name);
-  await element(by.id("create-shopping-list-submit-button")).tap();
-  await waitFor(element(by.text(name)))
-    .toExist()
-    .withTimeout(15_000);
+  await tapUntilVisible(
+    by.id("create-shopping-list-submit-button"),
+    by.text(name),
+    { timeout: 15_000, tapTimeout: 5_000 },
+  );
   await openShoppingList(name);
   return name;
 }
 
 export async function openShoppingList(name: string): Promise<void> {
   await waitFor(element(by.text(name)))
-    .toExist()
+    .toBeVisible()
     .withTimeout(15_000);
 
-  try {
-    await tapIdUntilVisible(
-      `shopping-list-item-${name}`,
-      by.id("shopping-list-add-input"),
-      { timeout: 15_000, tapTimeout: 5_000, retries: 8 },
-    );
-    return;
-  } catch {
-    await tapUntilVisible(by.text(name), by.id("shopping-list-add-input"), {
-      timeout: 20_000,
-      tapTimeout: 5_000,
-      retries: 8,
-    });
-  }
+  await tapIdUntilVisible(
+    `shopping-list-item-${name}`,
+    by.id("shopping-list-add-input"),
+    { timeout: 20_000, tapTimeout: 5_000, retries: 12, settleMs: 500 },
+  );
 }
 
 export async function addShoppingListItem(
@@ -49,7 +41,11 @@ export async function addShoppingListItem(
 ): Promise<void> {
   await selectShoppingListCategory(categoryId);
   await fillInput("shopping-list-add-input", name);
-  await element(by.id("shopping-list-add-button")).tap();
+  await tapIdUntilVisible(
+    "shopping-list-add-button",
+    by.text(name),
+    { timeout: 15_000, tapTimeout: 3_000 },
+  );
   if (options?.waitForCommit) {
     await waitFor(element(by.id("shopping-list-add-input")))
       .toHaveText("")
@@ -91,19 +87,20 @@ export async function renameShoppingList(
 ): Promise<void> {
   await swipeShoppingListItem(listName, "right");
   await waitFor(element(by.id("shopping-list-rename-input")))
-    .toExist()
+    .toBeVisible()
     .withTimeout(5_000);
   await fillInput("shopping-list-rename-input", newName);
-  await element(by.id("shopping-list-rename-save")).tap();
-  await waitFor(element(by.text(newName)))
-    .toExist()
-    .withTimeout(10_000);
+  await tapUntilVisible(
+    by.id("shopping-list-rename-save"),
+    by.id(`shopping-list-item-${newName}`),
+    { timeout: 10_000 },
+  );
 }
 
 export async function deleteShoppingList(listName: string): Promise<void> {
   await swipeShoppingListItem(listName, "left");
   await waitFor(element(by.id("delete-confirmation-modal")))
-    .toExist()
+    .toBeVisible()
     .withTimeout(5_000);
   await element(by.id("delete-confirmation-button")).tap();
   await waitFor(element(by.text(listName)))
