@@ -179,7 +179,7 @@ export default function GroupDetailsScreen() {
             </View>
 
             <Button
-              testID="group-details-save-button"
+              testID="group-name-save"
               icon={form.formState.isSubmitting ? "loader" : "save"}
               disabled={form.formState.isSubmitting || !isAdmin}
               title={

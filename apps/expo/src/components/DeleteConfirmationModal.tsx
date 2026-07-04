@@ -63,6 +63,7 @@ const DeleteConfirmationModal: React.FC<Props> = ({
 
   return (
     <Modal
+      testID="delete-confirmation-modal"
       visible={visible}
       transparent={true}
       animationType="fade"
@@ -96,6 +97,7 @@ const DeleteConfirmationModal: React.FC<Props> = ({
                   render={({ field }) => (
                     <FormControl>
                       <Input
+                        testID="delete-confirmation-input"
                         {...field}
                         placeholder="Enter item name"
                         className="w-full"
@@ -110,12 +112,14 @@ const DeleteConfirmationModal: React.FC<Props> = ({
 
             <View className="flex-row gap-3">
               <Button
+                testID="delete-cancel-button"
                 title="Cancel"
                 variant="outline"
                 className="flex-1"
                 onPress={handleClose}
               />
               <Button
+                testID="delete-confirmation-button"
                 title="Delete"
                 variant="destructive"
                 className="flex-1"

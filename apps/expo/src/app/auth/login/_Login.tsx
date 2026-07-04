@@ -120,6 +120,7 @@ const Login = () => {
           <Text className="text-muted-foreground text-center text-xs">
             By signing in, you agree to our{" "}
             <Text
+              testID="auth-login-terms-link"
               className="underline"
               onPress={() => Linking.openURL(`${getBaseUrl()}/legal/terms`)}
             >
@@ -127,6 +128,7 @@ const Login = () => {
             </Text>{" "}
             and{" "}
             <Text
+              testID="auth-login-privacy-link"
               className="underline"
               onPress={() => Linking.openURL(`${getBaseUrl()}/legal/privacy`)}
             >
@@ -134,6 +136,7 @@ const Login = () => {
             </Text>
           </Text>
           <Text
+            testID="auth-login-legal-notice-link"
             className="text-muted-foreground text-center text-xs underline"
             onPress={() =>
               Linking.openURL(`${getBaseUrl()}/legal/legal-notice`)

@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import * as React from "react";
 import { Text, View } from "react-native";
 import { tv } from "tailwind-variants";
@@ -26,12 +27,10 @@ const cardFooterVariants = tv({
   base: "flex items-center p-6 pt-0",
 });
 
-interface CardProps {
-  className?: string;
-  children: React.ReactNode;
-}
+type CardViewProps = ComponentProps<typeof View>;
+type CardTextProps = ComponentProps<typeof Text>;
 
-const Card = React.forwardRef<View, CardProps>(
+const Card = React.forwardRef<View, CardViewProps>(
   ({ className, children, ...props }, ref) => (
     <View ref={ref} className={cardVariants({ className })} {...props}>
       {children}
@@ -40,7 +39,7 @@ const Card = React.forwardRef<View, CardProps>(
 );
 Card.displayName = "Card";
 
-const CardHeader = React.forwardRef<View, CardProps>(
+const CardHeader = React.forwardRef<View, CardViewProps>(
   ({ className, children, ...props }, ref) => (
     <View ref={ref} className={cardHeaderVariants({ className })} {...props}>
       {children}
@@ -49,7 +48,7 @@ const CardHeader = React.forwardRef<View, CardProps>(
 );
 CardHeader.displayName = "CardHeader";
 
-const CardTitle = React.forwardRef<Text, CardProps>(
+const CardTitle = React.forwardRef<Text, CardTextProps>(
   ({ className, children, ...props }, ref) => (
     <Text ref={ref} className={cardTitleVariants({ className })} {...props}>
       {children}
@@ -58,7 +57,7 @@ const CardTitle = React.forwardRef<Text, CardProps>(
 );
 CardTitle.displayName = "CardTitle";
 
-const CardDescription = React.forwardRef<Text, CardProps>(
+const CardDescription = React.forwardRef<Text, CardTextProps>(
   ({ className, children, ...props }, ref) => (
     <Text
       ref={ref}
@@ -71,7 +70,7 @@ const CardDescription = React.forwardRef<Text, CardProps>(
 );
 CardDescription.displayName = "CardDescription";
 
-const CardContent = React.forwardRef<View, CardProps>(
+const CardContent = React.forwardRef<View, CardViewProps>(
   ({ className, children, ...props }, ref) => (
     <View ref={ref} className={cardContentVariants({ className })} {...props}>
       {children}
@@ -80,7 +79,7 @@ const CardContent = React.forwardRef<View, CardProps>(
 );
 CardContent.displayName = "CardContent";
 
-const CardFooter = React.forwardRef<View, CardProps>(
+const CardFooter = React.forwardRef<View, CardViewProps>(
   ({ className, children, ...props }, ref) => (
     <View ref={ref} className={cardFooterVariants({ className })} {...props}>
       {children}

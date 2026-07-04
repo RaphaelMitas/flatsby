@@ -74,6 +74,7 @@ export const ShoppingListItemAddForm = ({
           {suggestionItems.map((item) => (
             <Badge
               key={item.name}
+              testID="shopping-list-suggestion"
               variant="outline"
               label={item.name}
               size="lg"

@@ -181,6 +181,7 @@ export const BottomSheetPickerProvider: React.FC<
     ({ item }: { item: BottomSheetPickerItem }) => (
       <Pressable
         onPress={() => handleItemSelect(item)}
+        testID={`picker-option-${item.id}`}
         className={itemVariants({
           className: item.disabled ? "opacity-50" : "",
           selected: pickerConfig?.selectedId === item.id,

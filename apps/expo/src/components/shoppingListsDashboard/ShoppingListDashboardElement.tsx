@@ -277,6 +277,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
                   render={({ field }) => (
                     <>
                       <Input
+                        testID="shopping-list-rename-input"
                         value={field.value}
                         onChangeText={field.onChange}
                         placeholder="Enter new name"
@@ -296,6 +297,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
                     onPress={handleCancelRename}
                   />
                   <Button
+                    testID="shopping-list-rename-save"
                     title="Save"
                     variant="primary"
                     size="md"

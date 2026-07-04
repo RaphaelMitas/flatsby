@@ -58,6 +58,7 @@ export function ExpenseCategoryPicker({
 
   return (
     <BottomSheetPickerTrigger
+      testID="expense-form-category"
       items={categoryItems}
       selectedId={value}
       onSelect={handleSelect}

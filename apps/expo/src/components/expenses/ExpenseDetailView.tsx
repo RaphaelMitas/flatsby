@@ -161,7 +161,7 @@ export function ExpenseDetailView({
       <View className="h-full gap-4 p-4">
         <View className="flex-row gap-2">
           <Button
-            testID="expense-detail-edit-button"
+            testID="expense-edit-button"
             title="Edit"
             variant="outline"
             onPress={() => {
@@ -179,7 +179,7 @@ export function ExpenseDetailView({
             icon="pencil"
           />
           <Button
-            testID="expense-detail-delete-button"
+            testID="expense-delete-button"
             title="Delete"
             variant="destructive"
             onPress={() => setShowDeleteDialog(true)}
@@ -292,61 +292,65 @@ export function ExpenseDetailView({
 
           {/* Split Details Card */}
           {expense.splitMethod !== "settlement" && (
-            <Card>
-              <CardHeader>
-                <View className="flex-row items-center gap-2">
-                  <Icon name="users" size={20} color="foreground" />
-                  <CardTitle>Split Details</CardTitle>
-                </View>
-                <CardDescription>
-                  {`Split between ${expense.expenseSplits.length} ${expense.expenseSplits.length === 1 ? "person" : "people"}`}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <View className="gap-3">
-                  {expense.expenseSplits.map((split, index) => {
-                    const member = split.groupMember;
-                    const splitAmount = formatCurrencyFromCents({
-                      cents: split.amountInCents,
-                      currency: expense.currency,
-                    });
-                    const percentage =
-                      (split.amountInCents / expense.amountInCents) * 100;
+            <View testID="expense-split-details">
+              <Card>
+                <CardHeader>
+                  <View className="flex-row items-center gap-2">
+                    <Icon name="users" size={20} color="foreground" />
+                    <CardTitle>Split Details</CardTitle>
+                  </View>
+                  <CardDescription>
+                    {`Split between ${expense.expenseSplits.length} ${expense.expenseSplits.length === 1 ? "person" : "people"}`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <View className="gap-3">
+                    {expense.expenseSplits.map((split, index) => {
+                      const member = split.groupMember;
+                      const splitAmount = formatCurrencyFromCents({
+                        cents: split.amountInCents,
+                        currency: expense.currency,
+                      });
+                      const percentage =
+                        (split.amountInCents / expense.amountInCents) * 100;
 
-                    return (
-                      <View key={split.id}>
-                        <View className="flex-row items-center justify-between">
-                          <View className="flex-row items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage
-                                src={member.user.image ?? undefined}
-                              />
-                              <AvatarFallback className="text-xs">
-                                {member.user.name.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <View>
-                              <Text className="text-foreground font-medium">
-                                {member.user.name}
-                              </Text>
-                              <Text className="text-muted-foreground text-xs">
-                                {percentage.toFixed(1)}%
-                              </Text>
+                      return (
+                        <View key={split.id}>
+                          <View className="flex-row items-center justify-between">
+                            <View className="flex-row items-center gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage
+                                  src={member.user.image ?? undefined}
+                                />
+                                <AvatarFallback className="text-xs">
+                                  {member.user.name
+                                    .substring(0, 2)
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <View>
+                                <Text className="text-foreground font-medium">
+                                  {member.user.name}
+                                </Text>
+                                <Text className="text-muted-foreground text-xs">
+                                  {percentage.toFixed(1)}%
+                                </Text>
+                              </View>
                             </View>
+                            <Text className="text-foreground font-semibold">
+                              {splitAmount}
+                            </Text>
                           </View>
-                          <Text className="text-foreground font-semibold">
-                            {splitAmount}
-                          </Text>
+                          {index < expense.expenseSplits.length - 1 && (
+                            <Separator className="mt-3" />
+                          )}
                         </View>
-                        {index < expense.expenseSplits.length - 1 && (
-                          <Separator className="mt-3" />
-                        )}
-                      </View>
-                    );
-                  })}
-                </View>
-              </CardContent>
-            </Card>
+                      );
+                    })}
+                  </View>
+                </CardContent>
+              </Card>
+            </View>
           )}
 
           {/* Created By Card */}

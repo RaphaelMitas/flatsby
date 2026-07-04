@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "node"],
+    "noEmit": true,
+    "rootDir": ".",
+    "esModuleInterop": true
+  },
+  "include": ["./**/*.ts", "./detox-jest.d.ts"]
+}

@@ -54,6 +54,9 @@ export default function DangerScreen() {
           Actions in this section are irreversible. Please proceed with caution.
         </Text>
 
+        <Text testID="danger-user-email" className="absolute h-0 w-0 opacity-0">
+          {user.email}
+        </Text>
         <Alert variant="destructive" className="mb-6">
           <AlertTitle>
             <View className="flex-row items-center gap-2">

@@ -47,6 +47,7 @@ export function CategoryFilterPills({
         return (
           <CategoryBadge
             key={categoryId}
+            testID={`category-filter-${categoryId}`}
             categoryId={categoryId}
             size="xl"
             variant={isSelected ? "default" : "outline"}

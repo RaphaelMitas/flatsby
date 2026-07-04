@@ -176,6 +176,7 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
 
   return (
     <BottomSheetPickerTrigger
+      testID="category-selector-trigger"
       items={categoryItems}
       selectedId={value}
       onSelect={handleSelect}

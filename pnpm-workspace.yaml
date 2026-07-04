@@ -53,6 +53,7 @@ linkWorkspacePackages: true
 
 onlyBuiltDependencies:
   - "@tailwindcss/oxide"
+  - detox
   - esbuild
   - protobufjs
   - sharp

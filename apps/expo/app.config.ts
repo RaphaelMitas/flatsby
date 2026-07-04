@@ -119,6 +119,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     policy: "appVersion",
   },
   plugins: [
+    [
+      "expo-detox-config-plugin",
+      {
+        subdomains: ["10.0.2.2", "localhost", "127.0.0.1"],
+      },
+    ],
     "expo-router",
     "expo-secure-store",
     "expo-web-browser",
