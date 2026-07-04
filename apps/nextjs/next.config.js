@@ -16,6 +16,12 @@ const config = {
     "@flatsby/validators",
   ],
   reactCompiler: true,
+  compiler: {
+    reactRemoveProperties:
+      process.env.E2E_TESTING !== "true"
+        ? { properties: ["^data-testid$"] }
+        : false,
+  },
 
   /** We already do linting and typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: true },
