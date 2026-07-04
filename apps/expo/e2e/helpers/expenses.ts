@@ -93,7 +93,9 @@ export async function openExpenseForm(options: {
 }
 
 export async function submitEqualSplitExpense(): Promise<void> {
+  await dismissKeyboard();
   await scrollExpenseFormDown();
+  await dismissKeyboard();
   await waitFor(element(by.id("expense-form-next-button")))
     .toBeVisible()
     .withTimeout(15_000);

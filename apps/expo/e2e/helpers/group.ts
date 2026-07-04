@@ -1,7 +1,12 @@
-import { by, element, expect, waitFor } from "detox";
+import { by, device, element, expect, waitFor } from "detox";
 
 import { fillInput } from "./input";
-import { tapIdUntilVisible, tapUntilVisible } from "./interaction";
+import {
+  safeTapId,
+  scrollToMatcher,
+  tapIdUntilVisible,
+  tapUntilVisible,
+} from "./interaction";
 import { goToGroupSettings, goToManageGroups } from "./navigation";
 
 export const uniqueGroupName = () => `E2E Group ${Date.now()}`;
@@ -96,17 +101,23 @@ export async function createAndSelectGroup(name: string): Promise<void> {
 
 export async function deleteCurrentGroup(groupName: string): Promise<void> {
   await goToGroupSettings();
+  await scrollToMatcher(by.id("group-settings-delete-group"));
   await tapUntilVisible(
     by.id("group-settings-delete-group"),
     by.id("delete-confirmation-modal"),
     { timeout: 15_000 },
   );
+  const confirmationInput = element(by.id("delete-confirmation-input"));
+  await waitFor(confirmationInput).toBeVisible().withTimeout(10_000);
   await fillInput("delete-confirmation-input", groupName);
-  await tapUntilVisible(
-    by.id("delete-confirmation-button"),
-    by.text("Your Groups"),
-    { timeout: 15_000 },
-  );
+  await confirmationInput.tapReturnKey();
+  await waitFor(element(by.id("delete-confirmation-button")))
+    .toBeVisible()
+    .withTimeout(10_000);
+  await element(by.id("delete-confirmation-button")).tap();
+  await waitFor(element(by.text("Your Groups")))
+    .toBeVisible()
+    .withTimeout(15_000);
 }
 
 export async function expectGroupVisible(groupName: string): Promise<void> {

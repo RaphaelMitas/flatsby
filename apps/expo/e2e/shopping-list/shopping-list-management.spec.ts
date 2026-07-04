@@ -1,7 +1,8 @@
-import { by, device, element, expect } from "detox";
+import { by, element, expect } from "detox";
 
 import { signIn } from "../fixtures/auth";
 import { selectBootstrapGroup } from "../helpers/group";
+import { goToTab } from "../helpers/navigation";
 import {
   addShoppingListItem,
   createShoppingList,
@@ -17,7 +18,7 @@ describe("Shopping List Management", () => {
 
   it("Rename List: user can change the name of an existing shopping list from the dashboard", async () => {
     const listName = await createShoppingList();
-    await device.pressBack();
+    await goToTab("Home");
 
     const newListName = `Renamed List ${Date.now()}`;
     await renameShoppingList(listName, newListName);
@@ -31,7 +32,7 @@ describe("Shopping List Management", () => {
     const listName = await createShoppingList();
     const itemName = `Item ${Date.now()}`;
     await addShoppingListItem(itemName);
-    await device.pressBack();
+    await goToTab("Home");
 
     await deleteShoppingList(listName);
     await expect(

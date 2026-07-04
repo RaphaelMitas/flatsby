@@ -26,9 +26,12 @@ const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
 };
 
 const PICKER_OPEN_MARKERS = [
-  "picker-option-produce",
   "picker-option-ai-auto-select",
   "picker-option-groceries",
+  "picker-option-restaurant",
+  "picker-option-coffee",
+  "picker-option-produce",
+  "picker-option-dairy",
 ] as const;
 
 function pickerOptionId(categoryId: string): string {
@@ -77,14 +80,20 @@ async function waitForPickerOption(
   }
 
   for (const scrollMatcher of scrollViews) {
-    try {
-      await waitFor(option)
-        .toBeVisible()
-        .whileElement(scrollMatcher)
-        .scroll(150, "down");
-      return;
-    } catch {
-      // Try the next scroll container type.
+    for (let scrollAttempt = 0; scrollAttempt < 12; scrollAttempt++) {
+      try {
+        await waitFor(option)
+          .toBeVisible()
+          .whileElement(scrollMatcher)
+          .scroll(150, "down");
+        return;
+      } catch {
+        try {
+          await element(scrollMatcher).atIndex(0).scroll(200, "down");
+        } catch {
+          break;
+        }
+      }
     }
   }
 

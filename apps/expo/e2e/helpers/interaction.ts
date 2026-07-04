@@ -38,7 +38,12 @@ export async function tapUntilVisible(
   const tapTarget = element(tapMatcher);
   const resultTarget = element(resultMatcher);
 
-  await waitFor(tapTarget).toBeVisible().withTimeout(timeout);
+  try {
+    await waitFor(tapTarget).toBeVisible().withTimeout(timeout);
+  } catch {
+    await scrollToMatcher(tapMatcher);
+    await waitFor(tapTarget).toBeVisible().withTimeout(timeout);
+  }
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
@@ -103,7 +108,11 @@ export async function safeTapId(
 
 export async function scrollToMatcher(matcher: Matcher): Promise<void> {
   const target = element(matcher);
-  const scrollViews = [by.type("RCTScrollView"), by.type("UIScrollView")];
+  const scrollViews = [
+    by.type("RCTScrollView"),
+    by.type("UIScrollView"),
+    by.type("XCUIElementTypeScrollView"),
+  ];
 
   for (const scrollMatcher of scrollViews) {
     try {
@@ -118,7 +127,7 @@ export async function scrollToMatcher(matcher: Matcher): Promise<void> {
   }
 
   for (const scrollMatcher of scrollViews) {
-    for (let attempt = 0; attempt < 6; attempt++) {
+    for (let attempt = 0; attempt < 8; attempt++) {
       try {
         await waitFor(target).toBeVisible(90).withTimeout(1_000);
         return;

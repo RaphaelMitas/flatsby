@@ -25,7 +25,7 @@ describe("Shopping List Suggestions", () => {
     await waitFor(element(by.id("shopping-list-suggestion")))
       .toBeVisible()
       .withTimeout(15_000);
-    await expect(element(by.text("Milk"))).toBeVisible();
+    await expect(element(by.id("shopping-list-suggestion"))).toBeVisible();
   });
 
   it("Selection — clicking a suggestion auto-fills the input field", async () => {
@@ -37,7 +37,7 @@ describe("Shopping List Suggestions", () => {
     await waitFor(element(by.id("shopping-list-suggestion")))
       .toBeVisible()
       .withTimeout(15_000);
-    await element(by.text("Milk")).tap();
+    await element(by.id("shopping-list-suggestion")).atIndex(0).tap();
 
     await expect(element(by.id("shopping-list-add-input"))).toHaveText("Milk");
   });

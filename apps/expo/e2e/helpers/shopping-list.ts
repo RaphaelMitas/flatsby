@@ -70,7 +70,11 @@ export async function swipeShoppingListItem(
     );
     return;
   } catch {
-    await element(by.text(listName)).swipe(direction, "fast", 0.8);
+    await element(by.text(listName)).atIndex(0).swipe(
+      direction,
+      "fast",
+      0.8,
+    );
   }
 }
 

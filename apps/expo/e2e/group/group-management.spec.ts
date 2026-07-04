@@ -10,7 +10,11 @@ import {
   uniqueGroupName,
 } from "../helpers/group";
 import { fillInput } from "../helpers/input";
-import { tapIdUntilVisible, tapUntilVisible } from "../helpers/interaction";
+import {
+  scrollToMatcher,
+  tapIdUntilVisible,
+  tapUntilVisible,
+} from "../helpers/interaction";
 import {
   goToGroupSettings,
   goToManageGroups,
@@ -42,7 +46,7 @@ describe("Group Management", () => {
 
   it("add member by email form interaction", async () => {
     const groupName = uniqueGroupName();
-    await submitCreateGroupForm(groupName);
+    await createAndSelectGroup(groupName);
 
     await goToMembers();
 
@@ -59,7 +63,7 @@ describe("Group Management", () => {
     const groupName = uniqueGroupName();
     const newName = `${groupName} Updated`;
 
-    await submitCreateGroupForm(groupName);
+    await createAndSelectGroup(groupName);
 
     await goToGroupSettings();
     await tapUntilVisible(
@@ -81,6 +85,7 @@ describe("Group Management", () => {
     await createAndSelectGroup(groupName);
 
     await goToGroupSettings();
+    await scrollToMatcher(by.id("group-settings-delete-group"));
     await expect(element(by.id("group-settings-delete-group"))).toBeVisible();
     await deleteCurrentGroup(groupName);
   });

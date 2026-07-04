@@ -12,9 +12,12 @@ const EXPENSES_SCREEN_MARKERS: Matcher[] = [
 ];
 
 const TAB_SCREEN_MARKERS: Record<string, Matcher[]> = {
-  Home: [by.id("shopping-lists-create-button"), by.id("home-group-picker-button")],
+  Home: [
+    by.id("shopping-lists-create-button"),
+    by.id("home-group-picker-button"),
+  ],
   Expenses: EXPENSES_SCREEN_MARKERS,
-  Settings: [by.id("settings-logout")],
+  Settings: [by.id("settings-group-settings"), by.id("settings-logout")],
 };
 
 function sleep(ms: number): Promise<void> {
@@ -129,16 +132,31 @@ export async function goToTab(tabTitle: string): Promise<void> {
 }
 
 export async function goToSettings(): Promise<void> {
-  await goToTab("Settings");
+  try {
+    await device.openURL({ url: "flatsby:///(tabs)/settings" });
+    TAB_SCREEN_MARKERS.Settings &&
+      (await waitForAnyVisible(TAB_SCREEN_MARKERS.Settings, 10_000));
+    return;
+  } catch {
+    await goToTab("Settings");
+  }
 }
 
 export async function goToGroupSettings(): Promise<void> {
-  await goToSettings();
-  await tapUntilVisible(
-    by.id("settings-group-settings"),
-    by.text("Group Details"),
-    { timeout: 15_000 },
-  );
+  try {
+    await device.openURL({ url: "flatsby:///(tabs)/settings/group-settings" });
+    await waitFor(element(by.text("Group Details")))
+      .toBeVisible()
+      .withTimeout(15_000);
+    return;
+  } catch {
+    await goToSettings();
+    await tapUntilVisible(
+      by.id("settings-group-settings"),
+      by.text("Group Details"),
+      { timeout: 15_000 },
+    );
+  }
 }
 
 export async function goToMembers(): Promise<void> {
