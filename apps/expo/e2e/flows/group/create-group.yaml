@@ -4,16 +4,8 @@ env:
 ---
 # Test: Create a group via UI
 # Matches Next.js group-management.spec.ts "create group via UI"
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "login-screen"
-- tapOn:
-    id: "sign-in-e2e-button"
-- extendedWaitUntil:
-    visible:
-      text: "Your Groups"
+- runFlow: ../../subflows/launch-fresh.yaml
+- runFlow: ../../subflows/e2e-login.yaml
 - extendedWaitUntil:
     visible:
       id: "groups-create-group-button"

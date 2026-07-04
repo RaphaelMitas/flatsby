@@ -6,16 +6,8 @@ env:
 ---
 # Test: Shopping list - add item and check/uncheck it
 # Matches Next.js shopping-list-items.spec.ts
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "login-screen"
-- tapOn:
-    id: "sign-in-e2e-button"
-- extendedWaitUntil:
-    visible:
-      text: "Your Groups"
+- runFlow: ../../subflows/launch-fresh.yaml
+- runFlow: ../../subflows/e2e-login.yaml
 - extendedWaitUntil:
     visible:
       id: "groups-create-group-button"

@@ -4,16 +4,8 @@ env:
 ---
 # Test: Add member by email form interaction
 # Matches Next.js group-management.spec.ts "add member by email form interaction"
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "login-screen"
-- tapOn:
-    id: "sign-in-e2e-button"
-- extendedWaitUntil:
-    visible:
-      text: "Your Groups"
+- runFlow: ../../subflows/launch-fresh.yaml
+- runFlow: ../../subflows/e2e-login.yaml
 - extendedWaitUntil:
     visible:
       id: "groups-create-group-button"

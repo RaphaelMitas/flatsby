@@ -1,7 +1,6 @@
 appId: com.flatcove.app.v2
 ---
 # Smoke test: app launches and shows the login screen (no auth state).
-- launchApp:
-    clearState: true
+- runFlow: ../../subflows/launch-fresh.yaml
 - assertVisible:
     id: "login-screen"

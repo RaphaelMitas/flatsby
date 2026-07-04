@@ -4,15 +4,12 @@ import { useCallback, useState } from "react";
 import { Linking, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
 import { Stack, useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { signIn } from "~/utils/auth/auth-client";
+import { establishE2eSession } from "~/utils/auth/establish-e2e-session";
 import { getBaseUrl } from "~/utils/base-url";
-
-const COOKIE_KEY = "flatsby_cookie";
-const SESSION_DATA_KEY = "flatsby_session_data";
 
 const Login = () => {
   const router = useRouter();
@@ -26,49 +23,12 @@ const Login = () => {
     setLoading("e2e");
     setE2eError("");
     try {
-      const baseUrl = getBaseUrl();
-      const res = await fetch(`${baseUrl}/api/e2e/create-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!res.ok) {
-        const body = await res.text();
-        throw new Error(`E2E session failed: ${res.status} ${body}`);
-      }
-
-      const data = (await res.json()) as {
-        cookies: { name: string; value: string }[];
-        userId: string;
-        email: string;
-      };
-
-      const cookieJar: Record<string, { value: string; expires: string }> = {};
-      const expiresInDays = 7;
-      const expires = new Date(
-        Date.now() + expiresInDays * 24 * 60 * 60 * 1000,
-      ).toUTCString();
-
-      for (const cookie of data.cookies) {
-        cookieJar[cookie.name] = {
-          value: cookie.value,
-          expires,
-        };
-      }
-
-      await SecureStore.setItemAsync(COOKIE_KEY, JSON.stringify(cookieJar));
-      await SecureStore.setItemAsync(
-        SESSION_DATA_KEY,
-        JSON.stringify({
-          user: { id: data.userId, email: data.email },
-          expires: expiresInDays,
-        }),
-      );
-
+      await establishE2eSession();
       router.replace("/(tabs)/home");
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Unknown error";
       setE2eError(message);
+    } finally {
       setLoading("false");
     }
   }, [router]);

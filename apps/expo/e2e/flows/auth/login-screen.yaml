@@ -1,8 +1,7 @@
 appId: com.flatcove.app.v2
 ---
 # Verifies the login screen renders all expected elements (matches Next.js auth/login.spec.ts).
-- launchApp:
-    clearState: true
+- runFlow: ../../subflows/launch-fresh.yaml
 - assertVisible:
     id: "login-screen"
 - assertVisible:

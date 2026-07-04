@@ -4,16 +4,8 @@ env:
 ---
 # Test: Navigate to settings and verify key elements exist
 # Matches Next.js account-management.spec.ts structure
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "login-screen"
-- tapOn:
-    id: "sign-in-e2e-button"
-- extendedWaitUntil:
-    visible:
-      text: "Your Groups"
+- runFlow: ../../subflows/launch-fresh.yaml
+- runFlow: ../../subflows/e2e-login.yaml
 - extendedWaitUntil:
     visible:
       id: "groups-create-group-button"

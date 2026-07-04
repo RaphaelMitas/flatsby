@@ -1,5 +1,20 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+function isLocalE2eApiUrl(): boolean {
+  const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+  if (!apiBaseUrl) return false;
+  try {
+    const hostname = new URL(apiBaseUrl).hostname;
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "host.macos"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Flatsby",
@@ -19,7 +34,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       dark: "./assets/ios-dark.png",
       tinted: "./assets/ios-tinted.png",
     },
-    infoPlist: { ITSAppUsesNonExemptEncryption: false },
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+      ...(isLocalE2eApiUrl()
+        ? {
+            NSAppTransportSecurity: {
+              NSAllowsLocalNetworking: true,
+            },
+          }
+        : {}),
+    },
     privacyManifests: {
       NSPrivacyCollectedDataTypes: [
         {

@@ -5,16 +5,8 @@ env:
 ---
 # Test: Shopping list management - create and verify list appears
 # Matches Next.js shopping-list-management.spec.ts
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "login-screen"
-- tapOn:
-    id: "sign-in-e2e-button"
-- extendedWaitUntil:
-    visible:
-      text: "Your Groups"
+- runFlow: ../../subflows/launch-fresh.yaml
+- runFlow: ../../subflows/e2e-login.yaml
 - extendedWaitUntil:
     visible:
       id: "groups-create-group-button"

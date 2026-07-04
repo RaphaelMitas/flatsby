@@ -1,0 +1,22 @@
+appId: com.flatcove.app.v2
+---
+# Log in when needed; skip when a previous flow already left a valid session.
+- runFlow:
+    when:
+      visible:
+        id: "login-screen"
+    commands:
+      - tapOn:
+          id: "sign-in-e2e-button"
+      - extendedWaitUntil:
+          notVisible:
+            id: "e2e-login-error"
+          timeout: 20000
+      - extendedWaitUntil:
+          visible:
+            text: "Your Groups"
+          timeout: 30000
+- extendedWaitUntil:
+    visible:
+      text: "Your Groups"
+    timeout: 30000

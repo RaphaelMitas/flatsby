@@ -1,0 +1,6 @@
+appId: com.flatcove.app.v2
+---
+# SecureStore uses the iOS Keychain, which clearState alone does not wipe.
+- launchApp:
+    clearState: true
+    clearKeychain: true
