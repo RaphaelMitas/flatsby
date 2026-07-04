@@ -1,7 +1,7 @@
 appId: com.flatcove.app.v2
 env:
-  GROUP_NAME: "E2E Group ${timestamp}"
-  LIST_NAME: "E2E List ${timestamp}"
+  GROUP_NAME: ${'E2E Group ' + Date.now()}
+  LIST_NAME: ${'E2E List ' + Date.now()}
   ITEM_NAME: "Bread"
 ---
 # Test: Shopping list - add item and check/uncheck it
@@ -16,9 +16,11 @@ env:
 - extendedWaitUntil:
     visible:
       id: "create-group-name-input"
-- inputText:
-    id: "create-group-name-input"
-    text: "${GROUP_NAME}"
+- runFlow:
+    file: ../../subflows/fill-input.yaml
+    env:
+      INPUT_ID: create-group-name-input
+      TEXT: ${GROUP_NAME}
 - tapOn:
     id: "create-group-submit-button"
 - extendedWaitUntil:
@@ -28,6 +30,8 @@ env:
 # Select the group
 - tapOn:
     text: "Select Group"
+    rightOf:
+      text: "${GROUP_NAME}"
 - extendedWaitUntil:
     visible:
       id: "shopping-lists-create-button"
@@ -38,26 +42,31 @@ env:
 - extendedWaitUntil:
     visible:
       id: "create-shopping-list-name-input"
-- inputText:
-    id: "create-shopping-list-name-input"
-    text: "${LIST_NAME}"
+- runFlow:
+    file: ../../subflows/fill-input.yaml
+    env:
+      INPUT_ID: create-shopping-list-name-input
+      TEXT: ${LIST_NAME}
 - tapOn:
     id: "create-shopping-list-submit-button"
 - extendedWaitUntil:
     visible:
-      text: "${LIST_NAME}"
+      text: "${LIST_NAME}, 0 items left"
+    timeout: 30000
 
 # Select the shopping list
 - tapOn:
-    text: "${LIST_NAME}"
+    text: "${LIST_NAME}, 0 items left"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-add-input"
 
 # Add an item
-- inputText:
-    id: "shopping-list-add-input"
-    text: "${ITEM_NAME}"
+- runFlow:
+    file: ../../subflows/fill-input.yaml
+    env:
+      INPUT_ID: shopping-list-add-input
+      TEXT: ${ITEM_NAME}
 - tapOn:
     id: "shopping-list-add-button"
 - extendedWaitUntil:

@@ -1,0 +1,6 @@
+appId: com.flatcove.app.v2
+---
+# Requires env: INPUT_ID, TEXT
+- tapOn:
+    id: ${INPUT_ID}
+- inputText: ${TEXT}

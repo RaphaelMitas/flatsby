@@ -1,7 +1,7 @@
 appId: com.flatcove.app.v2
 env:
-  GROUP_NAME: "E2E Group ${timestamp}"
-  LIST_NAME: "E2E List ${timestamp}"
+  GROUP_NAME: ${'E2E Group ' + Date.now()}
+  LIST_NAME: ${'E2E List ' + Date.now()}
 ---
 # Test: Shopping list management - create and verify list appears
 # Matches Next.js shopping-list-management.spec.ts
@@ -15,9 +15,11 @@ env:
 - extendedWaitUntil:
     visible:
       id: "create-group-name-input"
-- inputText:
-    id: "create-group-name-input"
-    text: "${GROUP_NAME}"
+- runFlow:
+    file: ../../subflows/fill-input.yaml
+    env:
+      INPUT_ID: create-group-name-input
+      TEXT: ${GROUP_NAME}
 - tapOn:
     id: "create-group-submit-button"
 - extendedWaitUntil:
@@ -27,6 +29,8 @@ env:
 # Select the group
 - tapOn:
     text: "Select Group"
+    rightOf:
+      text: "${GROUP_NAME}"
 - extendedWaitUntil:
     visible:
       id: "shopping-lists-create-button"
@@ -37,13 +41,16 @@ env:
 - extendedWaitUntil:
     visible:
       id: "create-shopping-list-name-input"
-- inputText:
-    id: "create-shopping-list-name-input"
-    text: "${LIST_NAME}"
+- runFlow:
+    file: ../../subflows/fill-input.yaml
+    env:
+      INPUT_ID: create-shopping-list-name-input
+      TEXT: ${LIST_NAME}
 - tapOn:
     id: "create-shopping-list-submit-button"
 - extendedWaitUntil:
     visible:
-      text: "${LIST_NAME}"
+      text: "${LIST_NAME}, 0 items left"
+    timeout: 30000
 - assertVisible:
-    text: "${LIST_NAME}"
+    text: "${LIST_NAME}, 0 items left"

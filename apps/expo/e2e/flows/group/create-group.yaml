@@ -1,6 +1,6 @@
 appId: com.flatcove.app.v2
 env:
-  GROUP_NAME: "E2E Group ${timestamp}"
+  GROUP_NAME: ${'E2E Group ' + Date.now()}
 ---
 # Test: Create a group via UI
 # Matches Next.js group-management.spec.ts "create group via UI"
@@ -18,9 +18,11 @@ env:
       id: "create-group-name-input"
 - assertVisible:
     id: "create-group-name-input"
-- inputText:
-    id: "create-group-name-input"
-    text: "${GROUP_NAME}"
+- runFlow:
+    file: ../../subflows/fill-input.yaml
+    env:
+      INPUT_ID: create-group-name-input
+      TEXT: ${GROUP_NAME}
 - tapOn:
     id: "create-group-submit-button"
 - extendedWaitUntil:

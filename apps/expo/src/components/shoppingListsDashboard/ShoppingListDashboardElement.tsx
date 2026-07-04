@@ -310,6 +310,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
           </View>
         ) : (
           <TouchableOpacity
+            testID={`shopping-list-item-${shoppingList.name}`}
             className={cn(
               "bg-muted flex-row items-center justify-between rounded-lg p-4",
               isOptimistic && "animate-pulse",
