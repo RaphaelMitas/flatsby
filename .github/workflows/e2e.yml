@@ -102,6 +102,7 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_LOCAL_BUILD_WORKINGDIR: ${{ runner.temp }}/eas-build
+          EXPO_PUBLIC_API_BASE_URL: ${{ github.event.deployment_status.target_url }}
 
       - name: Boot iOS Simulator
         working-directory: apps/expo

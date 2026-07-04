@@ -38,7 +38,7 @@
     "e2e": {
       "extends": "preview",
       "env": {
-        "E2E_TESTING": "true"
+        "EXPO_PUBLIC_API_BASE_URL": "http://host.macos:3000"
       },
       "channel": "e2e",
       "environment": "preview"
