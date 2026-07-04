@@ -138,6 +138,7 @@ export default function GroupSettingsIndex() {
         </SettingsSection>
         <SettingsSection title="Danger Zone">
           <SettingsItem
+            testID="group-settings-delete-group"
             title="Delete Group"
             subtitle="Permanently delete this group"
             iconName="trash-2"

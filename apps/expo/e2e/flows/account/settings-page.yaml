@@ -1,0 +1,45 @@
+appId: com.flatcove.app.v2
+env:
+  GROUP_NAME: "E2E Group ${timestamp}"
+---
+# Test: Navigate to settings and verify key elements exist
+# Matches Next.js account-management.spec.ts structure
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+        id: "login-screen"
+- tapOn:
+    id: "sign-in-e2e-button"
+- extendedWaitUntil:
+    visible:
+        text: "Your Groups"
+- extendedWaitUntil:
+    visible:
+        id: "groups-create-group-button"
+- tapOn:
+    id: "groups-create-group-button"
+- extendedWaitUntil:
+    visible:
+        id: "create-group-name-input"
+- inputText:
+    id: "create-group-name-input"
+    text: "${GROUP_NAME}"
+- tapOn:
+    id: "create-group-submit-button"
+- extendedWaitUntil:
+    visible:
+        text: "${GROUP_NAME}"
+
+# Navigate to settings tab
+- tapOn:
+    text: "Settings"
+- extendedWaitUntil:
+    visible:
+        id: "settings-delete-account"
+- assertVisible:
+    id: "settings-delete-account"
+- assertVisible:
+    id: "settings-logout"
+- assertVisible:
+    id: "settings-group-settings"

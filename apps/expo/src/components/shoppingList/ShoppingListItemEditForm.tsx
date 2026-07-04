@@ -71,6 +71,7 @@ export function ShoppingListItemEditForm() {
               <>
                 <FormControl>
                   <Input
+                    testID="edit-item-name-input"
                     {...field}
                     onChangeText={field.onChange}
                     maxLength={
@@ -98,12 +99,14 @@ export function ShoppingListItemEditForm() {
 
           <View className="flex flex-row gap-2">
             <Button
+              testID="edit-item-cancel-button"
               title="Cancel"
               variant="secondary"
               onPress={() => router.back()}
               className="flex-1"
             />
             <Button
+              testID="edit-item-submit-button"
               title={form.formState.isSubmitting ? "Updating..." : "Update"}
               className="flex-1"
               disabled={form.formState.isSubmitting}

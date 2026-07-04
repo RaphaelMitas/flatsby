@@ -85,6 +85,7 @@ export function ExpenseListPanel({
         <Text className="text-foreground text-3xl font-bold">Expenses</Text>
         <View className="flex-row items-center gap-2">
           <Button
+            testID="expenses-debt-overview-button"
             title="Debt Overview"
             size="md"
             icon="arrow-right"
@@ -92,6 +93,7 @@ export function ExpenseListPanel({
           />
           {isLargeScreen && (
             <Button
+              testID="expenses-add-button"
               title="Add"
               size="md"
               icon="plus"
@@ -110,13 +112,14 @@ export function ExpenseListPanel({
           <Text className="text-muted-foreground text-center text-sm">
             Start tracking expenses by adding your first one
           </Text>
-          <Button
-            title="Add Expense"
-            variant="primary"
-            size="lg"
-            icon="plus"
-            onPress={onCreateExpense}
-          />
+            <Button
+              testID="expenses-empty-add-button"
+              title="Add Expense"
+              variant="primary"
+              size="lg"
+              icon="plus"
+              onPress={onCreateExpense}
+            />
         </View>
       ) : (
         <FlashList
@@ -151,7 +154,7 @@ export function ExpenseListPanel({
       )}
       {hasExpenses && !isLargeScreen && (
         <View className="absolute right-4 bottom-4">
-          <Button size="icon" icon="plus" onPress={onCreateExpense} />
+              <Button testID="expenses-add-fab" size="icon" icon="plus" onPress={onCreateExpense} />
         </View>
       )}
     </View>

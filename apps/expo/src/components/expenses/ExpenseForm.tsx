@@ -652,7 +652,7 @@ export function ExpenseForm({
     <SafeAreaView edges={[]}>
       <BottomSheetPickerProvider>
         <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
-          <Text className="text-muted-foreground text-sm">
+          <Text testID="expense-form-step-indicator" className="text-muted-foreground text-sm">
             Step {currentStep} of {totalSteps}
           </Text>
           <View className="flex-row gap-1">
@@ -698,6 +698,7 @@ export function ExpenseForm({
                               )}
                             />
                             <CurrencyInput
+                              testID="expense-form-amount-input"
                               value={field.value}
                               onChange={field.onChange}
                               placeholder="0.00"
@@ -717,6 +718,7 @@ export function ExpenseForm({
                         <View className="gap-2">
                           <Label>Paid By</Label>
                           <BottomSheetPickerTrigger
+                            testID="expense-form-paid-by-picker"
                             items={paidByItems}
                             selectedId={field.value.toString()}
                             onSelect={(item) => {
@@ -741,6 +743,7 @@ export function ExpenseForm({
                           <Label>Description</Label>
                           <FormControl>
                             <Input
+                              testID="expense-form-description-input"
                               placeholder="What was this expense for?"
                               value={field.value}
                               onChangeText={field.onChange}
@@ -865,6 +868,7 @@ export function ExpenseForm({
           <View className="border-border flex-row gap-2 border-t p-4">
             {currentStep > 1 && (
               <Button
+                testID="expense-form-back-button"
                 title="Back"
                 variant="outline"
                 onPress={handleBack}
@@ -875,6 +879,7 @@ export function ExpenseForm({
             )}
             {currentStep < totalSteps ? (
               <Button
+                testID="expense-form-next-button"
                 title="Next"
                 onPress={handleNext}
                 disabled={isPending || amountInCents <= 0}
@@ -883,6 +888,7 @@ export function ExpenseForm({
               />
             ) : (
               <Button
+                testID="expense-form-submit-button"
                 title={
                   isPending
                     ? isEditMode

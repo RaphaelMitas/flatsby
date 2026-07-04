@@ -1,0 +1,67 @@
+appId: com.flatcove.app.v2
+env:
+  GROUP_NAME: "E2E Group ${timestamp}"
+  GROUP_NEW_NAME: "E2E Updated ${timestamp}"
+---
+# Test: Change group name via group settings
+# Matches Next.js group-management.spec.ts "change group name"
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+        id: "login-screen"
+- tapOn:
+    id: "sign-in-e2e-button"
+- extendedWaitUntil:
+    visible:
+        text: "Your Groups"
+- extendedWaitUntil:
+    visible:
+        id: "groups-create-group-button"
+- tapOn:
+    id: "groups-create-group-button"
+- extendedWaitUntil:
+    visible:
+        id: "create-group-name-input"
+- inputText:
+    id: "create-group-name-input"
+    text: "${GROUP_NAME}"
+- tapOn:
+    id: "create-group-submit-button"
+- extendedWaitUntil:
+    visible:
+        text: "${GROUP_NAME}"
+
+# Navigate to settings tab -> group settings -> group details
+- tapOn:
+    text: "Settings"
+- extendedWaitUntil:
+    visible:
+        id: "settings-group-settings"
+- tapOn:
+    id: "settings-group-settings"
+- extendedWaitUntil:
+    visible:
+        text: "Group Details"
+- tapOn:
+    text: "Group Details"
+- extendedWaitUntil:
+    visible:
+        id: "group-details-name-input"
+- assertVisible:
+    id: "group-details-name-input"
+
+# Change the name
+- tapOn:
+    id: "group-details-name-input"
+- eraseText
+- inputText:
+    text: "${GROUP_NEW_NAME}"
+- hideKeyboard
+- tapOn:
+    id: "group-details-save-button"
+- extendedWaitUntil:
+    visible:
+        text: "Success!"
+- assertVisible:
+    text: "Success!"

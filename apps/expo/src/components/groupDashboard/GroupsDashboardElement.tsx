@@ -171,6 +171,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
                 </Text>
               </View>
               <Button
+                testID={`groups-item-select-button-${group.id}`}
                 title={isSelected ? "Go to Group" : "Select Group"}
                 variant="outline"
                 size="md"

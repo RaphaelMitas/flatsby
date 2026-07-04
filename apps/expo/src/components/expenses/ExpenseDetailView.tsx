@@ -161,6 +161,7 @@ export function ExpenseDetailView({
       <View className="h-full gap-4 p-4">
         <View className="flex-row gap-2">
           <Button
+            testID="expense-detail-edit-button"
             title="Edit"
             variant="outline"
             onPress={() => {
@@ -178,6 +179,7 @@ export function ExpenseDetailView({
             icon="pencil"
           />
           <Button
+            testID="expense-detail-delete-button"
             title="Delete"
             variant="destructive"
             onPress={() => setShowDeleteDialog(true)}

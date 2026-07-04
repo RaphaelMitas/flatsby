@@ -6,10 +6,15 @@ import Constants from "expo-constants";
  */
 export const getBaseUrl = () => {
   const debuggerHost = Constants.expoConfig?.hostUri;
-  const localhost = debuggerHost?.split(":")[0];
+  const host = debuggerHost?.split(":")[0];
 
-  if (!localhost) {
+  if (!host) {
     return "https://www.flatsby.com";
   }
-  return `http://localhost:3000`;
+  // On iOS simulator, localhost refers to the simulator itself.
+  // Use host.macos (iOS 17+) to reach the Mac's localhost.
+  if (host === "localhost" || host === "127.0.0.1") {
+    return `http://host.macos:3000`;
+  }
+  return `http://${host}:3000`;
 };

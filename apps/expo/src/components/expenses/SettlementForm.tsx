@@ -449,6 +449,7 @@ export function SettlementForm({
                   <View className="gap-2">
                     <Label>Paying</Label>
                     <BottomSheetPickerTrigger
+                      testID="settle-from-picker"
                       items={memberItems}
                       selectedId={
                         field.value ? field.value.toString() : undefined
@@ -473,6 +474,7 @@ export function SettlementForm({
                   <View className="gap-2">
                     <Label>Receiving</Label>
                     <BottomSheetPickerTrigger
+                      testID="settle-to-picker"
                       items={memberItems}
                       selectedId={
                         field.value ? field.value.toString() : undefined
@@ -515,6 +517,7 @@ export function SettlementForm({
                   <View className="gap-2">
                     <Label>Currency</Label>
                     <BottomSheetPickerTrigger
+                      testID="settle-currency-picker"
                       items={currencyItems}
                       selectedId={field.value}
                       onSelect={(item) => {
@@ -536,6 +539,7 @@ export function SettlementForm({
                     <Label>Settlement Amount</Label>
                     <FormControl>
                       <CurrencyInput
+                        testID="settle-amount-input"
                         value={field.value}
                         onChange={field.onChange}
                         placeholder="0.00"
@@ -561,6 +565,7 @@ export function SettlementForm({
             {/* Submit Button */}
             <View className="border-border flex-row gap-2 border-t pt-4">
               <Button
+                testID="settle-cancel-button"
                 title="Cancel"
                 variant="outline"
                 onPress={onClose}
@@ -568,6 +573,7 @@ export function SettlementForm({
                 className="flex-1"
               />
               <Button
+                testID="settle-submit-button"
                 title={
                   isPending
                     ? isEditMode

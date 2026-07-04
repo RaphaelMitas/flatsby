@@ -1,0 +1,61 @@
+appId: com.flatcove.app.v2
+env:
+  GROUP_NAME: "E2E Group ${timestamp}"
+---
+# Test: Add member by email form interaction
+# Matches Next.js group-management.spec.ts "add member by email form interaction"
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+        id: "login-screen"
+- tapOn:
+    id: "sign-in-e2e-button"
+- extendedWaitUntil:
+    visible:
+        text: "Your Groups"
+- extendedWaitUntil:
+    visible:
+        id: "groups-create-group-button"
+- tapOn:
+    id: "groups-create-group-button"
+- extendedWaitUntil:
+    visible:
+        id: "create-group-name-input"
+- inputText:
+    id: "create-group-name-input"
+    text: "${GROUP_NAME}"
+- tapOn:
+    id: "create-group-submit-button"
+- extendedWaitUntil:
+    visible:
+        text: "${GROUP_NAME}"
+
+# Navigate to settings tab -> group settings -> members
+- tapOn:
+    text: "Settings"
+- extendedWaitUntil:
+    visible:
+        id: "settings-group-settings"
+- tapOn:
+    id: "settings-group-settings"
+- extendedWaitUntil:
+    visible:
+        text: "Members"
+- tapOn:
+    text: "Members"
+- extendedWaitUntil:
+    visible:
+        id: "members-add-email-input"
+- assertVisible:
+    id: "members-add-email-input"
+- assertVisible:
+    id: "members-add-button"
+
+# Try adding a member (will fail for non-existent user, but verifies form interaction)
+- tapOn:
+    id: "members-add-email-input"
+- inputText:
+    text: "newuser@example.com"
+- tapOn:
+    id: "members-add-button"

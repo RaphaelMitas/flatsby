@@ -1,0 +1,38 @@
+appId: com.flatcove.app.v2
+env:
+  GROUP_NAME: "E2E Group ${timestamp}"
+---
+# Test: Create a group via UI
+# Matches Next.js group-management.spec.ts "create group via UI"
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+        id: "login-screen"
+- tapOn:
+    id: "sign-in-e2e-button"
+- extendedWaitUntil:
+    visible:
+        text: "Your Groups"
+- extendedWaitUntil:
+    visible:
+        id: "groups-create-group-button"
+- assertVisible:
+    id: "groups-create-group-button"
+- tapOn:
+    id: "groups-create-group-button"
+- extendedWaitUntil:
+    visible:
+        id: "create-group-name-input"
+- assertVisible:
+    id: "create-group-name-input"
+- inputText:
+    id: "create-group-name-input"
+    text: "${GROUP_NAME}"
+- tapOn:
+    id: "create-group-submit-button"
+- extendedWaitUntil:
+    visible:
+        text: "${GROUP_NAME}"
+- assertVisible:
+    text: "${GROUP_NAME}"

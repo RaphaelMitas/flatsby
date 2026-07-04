@@ -1,0 +1,52 @@
+appId: com.flatcove.app.v2
+env:
+  GROUP_NAME: "E2E Group ${timestamp}"
+---
+# Test: View debt summary page
+# Matches Next.js debt-settlements.spec.ts "displays debt summary page"
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+        id: "login-screen"
+- tapOn:
+    id: "sign-in-e2e-button"
+- extendedWaitUntil:
+    visible:
+        text: "Your Groups"
+- extendedWaitUntil:
+    visible:
+        id: "groups-create-group-button"
+- tapOn:
+    id: "groups-create-group-button"
+- extendedWaitUntil:
+    visible:
+        id: "create-group-name-input"
+- inputText:
+    id: "create-group-name-input"
+    text: "${GROUP_NAME}"
+- tapOn:
+    id: "create-group-submit-button"
+- extendedWaitUntil:
+    visible:
+        text: "${GROUP_NAME}"
+
+# Navigate to expenses
+- tapOn:
+    text: "Expenses"
+- extendedWaitUntil:
+    visible:
+        id: "expenses-debt-overview-button"
+- tapOn:
+    id: "expenses-debt-overview-button"
+- extendedWaitUntil:
+    visible:
+        id: "debts-title"
+- assertVisible:
+    id: "debts-title"
+- assertVisible:
+    text: "Simplified view of who owes whom"
+
+# With no expenses, should show settled state
+- assertVisible:
+    text: "All settled up!"

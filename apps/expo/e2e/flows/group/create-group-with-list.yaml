@@ -1,0 +1,85 @@
+appId: com.flatcove.app.v2
+env:
+  GROUP_NAME: "E2E Group ${timestamp}"
+  LIST_NAME: "E2E List ${timestamp}"
+  ITEM_NAME: "Milk"
+---
+# Test: Create group, then create shopping list, then add an item
+# Full integration flow matching Next.js e2e coverage
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+        id: "login-screen"
+- tapOn:
+    id: "sign-in-e2e-button"
+- extendedWaitUntil:
+    visible:
+        text: "Your Groups"
+- extendedWaitUntil:
+    visible:
+        id: "groups-create-group-button"
+- tapOn:
+    id: "groups-create-group-button"
+- extendedWaitUntil:
+    visible:
+        id: "create-group-name-input"
+- inputText:
+    id: "create-group-name-input"
+    text: "${GROUP_NAME}"
+- tapOn:
+    id: "create-group-submit-button"
+- extendedWaitUntil:
+    visible:
+        text: "${GROUP_NAME}"
+- assertVisible:
+    text: "${GROUP_NAME}"
+
+# Select the group
+- tapOn:
+    text: "Select Group"
+- extendedWaitUntil:
+    visible:
+        id: "shopping-lists-create-button"
+- assertVisible:
+    id: "shopping-lists-create-button"
+
+# Create a shopping list
+- tapOn:
+    id: "shopping-lists-create-button"
+- extendedWaitUntil:
+    visible:
+        id: "create-shopping-list-name-input"
+- assertVisible:
+    id: "create-shopping-list-name-input"
+- inputText:
+    id: "create-shopping-list-name-input"
+    text: "${LIST_NAME}"
+- tapOn:
+    id: "create-shopping-list-submit-button"
+- extendedWaitUntil:
+    visible:
+        text: "${LIST_NAME}"
+- assertVisible:
+    text: "${LIST_NAME}"
+
+# Select the shopping list
+- tapOn:
+    text: "${LIST_NAME}"
+- extendedWaitUntil:
+    visible:
+        id: "shopping-list-add-input"
+- assertVisible:
+    id: "shopping-list-add-input"
+
+# Add an item
+- inputText:
+    id: "shopping-list-add-input"
+    text: "${ITEM_NAME}"
+- tapOn:
+    id: "shopping-list-add-button"
+- extendedWaitUntil:
+    visible:
+        text: "${ITEM_NAME}"
+- assertVisible:
+    text: "${ITEM_NAME}"

@@ -27,6 +27,7 @@ export function GroupsDashboard() {
         <Text className="text-foreground text-3xl font-bold">Your Groups</Text>
 
         <Button
+          testID="groups-create-group-button"
           title="Create Group"
           variant="primary"
           size="lg"
@@ -41,6 +42,7 @@ export function GroupsDashboard() {
             No groups yet
           </Text>
           <Button
+            testID="groups-empty-create-button"
             title="Create a Group"
             variant="primary"
             size="lg"

@@ -71,6 +71,7 @@ export default function DangerScreen() {
 
           {!showConfirmation ? (
             <Button
+              testID="danger-delete-account-button"
               variant="destructive"
               title="Delete My Account"
               icon="trash-2"
@@ -88,6 +89,7 @@ export default function DangerScreen() {
                   {user.email}
                 </Label>
                 <Input
+                  testID="danger-confirmation-input"
                   value={confirmationInput}
                   onChangeText={setConfirmationInput}
                   placeholder="Enter your email address"
@@ -99,6 +101,7 @@ export default function DangerScreen() {
 
               <View className="flex-row gap-2">
                 <Button
+                  testID="danger-cancel-button"
                   variant="outline"
                   title="Cancel"
                   onPress={() => {
@@ -108,6 +111,7 @@ export default function DangerScreen() {
                   className="flex-1"
                 />
                 <Button
+                  testID="danger-confirm-delete-button"
                   variant="destructive"
                   title={
                     deleteUserMutation.isPending

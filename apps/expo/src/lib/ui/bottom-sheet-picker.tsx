@@ -253,6 +253,7 @@ export interface BottomSheetPickerTriggerProps {
   triggerTitle?: string;
   snapPoints?: string[];
   iconButton?: boolean;
+  testID?: string;
 }
 
 export const BottomSheetPickerTrigger: React.FC<
@@ -265,6 +266,7 @@ export const BottomSheetPickerTrigger: React.FC<
   triggerTitle,
   snapPoints,
   iconButton = false,
+  testID,
 }) => {
   const { openPicker } = useBottomSheetPicker();
 
@@ -289,6 +291,7 @@ export const BottomSheetPickerTrigger: React.FC<
   if (iconButton) {
     return (
       <Pressable
+        testID={testID}
         onPress={handleOpen}
         className={triggerVariants({
           iconButton,
@@ -300,7 +303,7 @@ export const BottomSheetPickerTrigger: React.FC<
   }
 
   return (
-    <Pressable onPress={handleOpen} className={triggerVariants()}>
+    <Pressable testID={testID} onPress={handleOpen} className={triggerVariants()}>
       {selectedItem?.icon}
       <Text className={triggerTextVariants()}>
         {triggerTitle ?? selectedItem?.title ?? "Select"}

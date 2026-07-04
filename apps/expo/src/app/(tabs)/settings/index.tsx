@@ -164,6 +164,7 @@ export default function SettingsIndex() {
           </Link>
           <Link href="/settings/group-settings" asChild>
             <SettingsItem
+              testID="settings-group-settings"
               title="Group Settings"
               subtitle="Manage members and group details"
               iconName="users"
@@ -196,16 +197,18 @@ export default function SettingsIndex() {
               />
             }
           />
-          <SettingsItem
-            title="Logout"
-            subtitle="Sign out of your account"
-            iconName="log-out"
-            onPress={handleLogout}
-          />
+            <SettingsItem
+              testID="settings-logout"
+              title="Logout"
+              subtitle="Sign out of your account"
+              iconName="log-out"
+              onPress={handleLogout}
+            />
         </SettingsSection>
         <SettingsSection title="Danger Zone">
           <Link href="/settings/danger" asChild>
             <SettingsItem
+              testID="settings-delete-account"
               title="Delete Account"
               subtitle="Permanently delete your account"
               iconName="trash-2"

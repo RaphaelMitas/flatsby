@@ -116,6 +116,7 @@ export default function CreateShoppingList() {
             render={({ field }) => (
               <FormControl>
                 <Input
+                  testID="create-shopping-list-name-input"
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
@@ -137,12 +138,14 @@ export default function CreateShoppingList() {
 
           <View className="flex flex-row gap-2">
             <Button
+              testID="create-shopping-list-cancel-button"
               title="Cancel"
               variant="secondary"
               onPress={handleGoBack}
               className="flex-1"
             />
             <Button
+              testID="create-shopping-list-submit-button"
               title={form.formState.isSubmitting ? "Creating..." : "Create"}
               className="flex-1"
               disabled={form.formState.isSubmitting}

@@ -35,6 +35,7 @@ export function ShoppingItemDisplay({
         )}
       >
         <Checkbox
+          testID={`shopping-list-item-checkbox-${name}`}
           checked={completed}
           onCheckedChange={onCheckedChange}
           disabled={disabled ?? !onCheckedChange}

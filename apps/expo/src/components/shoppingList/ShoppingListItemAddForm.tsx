@@ -85,6 +85,7 @@ export const ShoppingListItemAddForm = ({
       )}
       <View className="flex-row items-center gap-3">
         <Input
+          testID="shopping-list-add-input"
           className="flex-1"
           placeholder="Add new item..."
           value={name}
@@ -105,6 +106,7 @@ export const ShoppingListItemAddForm = ({
         />
         {name.trim().length > 0 && (
           <Button
+            testID="shopping-list-add-button"
             title="Add"
             onPress={handleSubmit}
             disabled={isSubmitting}

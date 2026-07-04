@@ -11,6 +11,7 @@ interface CheckboxProps {
   onCheckedChange?: (checked: boolean) => void;
   disabled?: boolean;
   className?: string;
+  testID?: string;
 }
 
 const Checkbox = React.forwardRef<
@@ -18,7 +19,7 @@ const Checkbox = React.forwardRef<
   CheckboxProps
 >(
   (
-    { className, checked = false, onCheckedChange, disabled, ...props },
+    { className, checked = false, onCheckedChange, disabled, testID, ...props },
     ref,
   ) => {
     const handlePress = () => {
@@ -30,6 +31,7 @@ const Checkbox = React.forwardRef<
     return (
       <Pressable
         ref={ref}
+        testID={testID}
         className="p-4"
         onPress={handlePress}
         disabled={disabled}
