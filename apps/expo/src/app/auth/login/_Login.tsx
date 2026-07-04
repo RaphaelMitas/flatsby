@@ -24,7 +24,7 @@ const Login = () => {
     setE2eError("");
     try {
       await establishE2eSession();
-      router.replace("/(tabs)/home");
+      router.replace("/");
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Unknown error";
       setE2eError(message);
