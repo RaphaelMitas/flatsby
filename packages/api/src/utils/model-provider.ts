@@ -36,10 +36,7 @@ export function getDefaultModel() {
 }
 
 export type TracingFeature =
-  | "chat"
-  | "title-generation"
-  | "categorize-item"
-  | "categorize-expense";
+  "chat" | "title-generation" | "categorize-item" | "categorize-expense";
 
 export interface TracingOptions {
   distinctId: string;

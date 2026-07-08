@@ -12,12 +12,7 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 
 interface TimedAlertProps {
   variant?:
-    | "default"
-    | "destructive"
-    | "info"
-    | "success"
-    | "warning"
-    | "error";
+    "default" | "destructive" | "info" | "success" | "warning" | "error";
   title: string;
   description?: string;
   duration?: number;
