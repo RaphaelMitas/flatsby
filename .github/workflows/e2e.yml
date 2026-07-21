@@ -106,6 +106,15 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_LOCAL_BUILD_WORKINGDIR: ${{ runner.temp }}/eas-build
 
+      - name: Verify build artifact
+        working-directory: apps/expo
+        run: |
+          if [ ! -d "build-cache/Flatsby.app" ]; then
+            echo "ERROR: build-cache/Flatsby.app not found"
+            ls -la build-cache || true
+            exit 1
+          fi
+
       - name: Boot iOS Simulator
         run: |
           xcrun simctl shutdown "Flatsby-E2E" 2>/dev/null || true
@@ -125,6 +134,18 @@ jobs:
         env:
           E2E_API_URL: ${{ github.event.deployment_status.target_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+      - name: Collect simulator logs & crash reports
+        if: always()
+        working-directory: apps/expo
+        run: |
+          mkdir -p e2e/results/diagnostics
+          cp -f ~/Library/Logs/DiagnosticReports/*.crash e2e/results/diagnostics/ 2>/dev/null || true
+          cp -f ~/Library/Logs/DiagnosticReports/*.ips e2e/results/diagnostics/ 2>/dev/null || true
+          # Best-effort device log snapshot (may fail if sim is already shut down)
+          xcrun simctl spawn "Flatsby-E2E" log show --style compact --last 5m \
+            --predicate 'processImagePath CONTAINS "Flatsby" OR senderImagePath CONTAINS "Flatsby"' \
+            > e2e/results/diagnostics/sim-log.txt 2>/dev/null || true
 
       - name: Upload test results
         if: always()
