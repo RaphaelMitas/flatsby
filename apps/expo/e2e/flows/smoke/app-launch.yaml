@@ -1,7 +1,15 @@
 appId: com.flatcove.app.v2
 ---
-# Smoke test: app launches and shows the login screen (no auth state).
+# Smoke test: app launches and shows the full login screen (no auth state).
 - launchApp:
     clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "login-screen"
+    timeout: 30000
 - assertVisible:
-    id: "login-screen"
+    id: "sign-in-google-button"
+- assertVisible:
+    id: "sign-in-apple-button"
+- assertVisible:
+    text: "Manage your daily life with your flatmates."

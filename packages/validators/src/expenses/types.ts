@@ -33,8 +33,7 @@ export interface SplitValidationResult {
  * Strict validation result with user-friendly message
  */
 export type StrictValidationResult =
-  | { valid: true }
-  | { valid: false; error: string; userMessage: string };
+  { valid: true } | { valid: false; error: string; userMessage: string };
 
 /**
  * Debt entry between two members
