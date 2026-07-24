@@ -1,2 +1,3 @@
 flows:
-  - "**/*.yaml"
+  - "smoke/**/*.yaml"
+  - "auth/**/*.yaml"

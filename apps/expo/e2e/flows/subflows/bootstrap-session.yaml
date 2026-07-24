@@ -1,0 +1,13 @@
+appId: com.flatcove.app.v2
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "login-screen"
+    timeout: 60000
+- openLink: "flatsby://e2e-login?apiUrl=${E2E_API_URL}&bypass=${VERCEL_BYPASS_SECRET}"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 60000

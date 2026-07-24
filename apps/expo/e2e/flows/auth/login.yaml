@@ -1,0 +1,6 @@
+appId: com.flatcove.app.v2
+tags: [auth]
+---
+- runFlow: ../subflows/bootstrap-session.yaml
+- assertVisible:
+    id: "home-screen"

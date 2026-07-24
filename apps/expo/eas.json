@@ -38,7 +38,7 @@
     "e2e": {
       "extends": "preview",
       "env": {
-        "E2E_TESTING": "true"
+        "EXPO_PUBLIC_E2E_TESTING": "true"
       },
       "channel": "e2e",
       "environment": "preview"

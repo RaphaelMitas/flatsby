@@ -55,7 +55,7 @@ export default function Index() {
   }
 
   return (
-    <SafeAreaView>
+    <SafeAreaView testID="home-screen">
       <Dashboard />
     </SafeAreaView>
   );

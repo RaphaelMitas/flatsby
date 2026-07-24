@@ -21,6 +21,12 @@ import { env } from "~/env";
 const E2E_EMAIL_DOMAIN = "flatsby.test";
 
 /**
+ * Type guard for SameSite cookie values
+ */
+const isSameSite = (v: unknown): v is "lax" | "strict" | "none" =>
+  v === "lax" || v === "strict" || v === "none";
+
+/**
  * E2E-only route: creates a unique test user, group, and session per call via
  * better-auth's testUtils plugin. Returns properly signed session cookies for
  * Playwright to inject.
@@ -120,13 +126,26 @@ export async function POST() {
 
   const result = await testHelpers.login({ userId });
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     userId,
     email,
     groupId: group.id,
     cookies: result.cookies,
     ok: true,
   });
+
+  for (const cookie of result.cookies) {
+    response.cookies.set(cookie.name, cookie.value, {
+      domain: cookie.domain,
+      path: cookie.path,
+      httpOnly: cookie.httpOnly,
+      secure: cookie.secure,
+      sameSite: isSameSite(cookie.sameSite) ? cookie.sameSite : undefined,
+      expires: cookie.expires ? new Date(cookie.expires) : undefined,
+    });
+  }
+
+  return response;
 }
 
 const STALE_AFTER_MS = 60 * 60 * 1000;
