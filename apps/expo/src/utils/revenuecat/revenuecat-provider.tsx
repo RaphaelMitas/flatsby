@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 
 import { useSession } from "../auth/auth-client";
+import { isE2EBuild } from "../e2e-config";
 
 export function RevenueCatProvider({
   children,
@@ -23,10 +24,12 @@ export function RevenueCatProvider({
       void Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     }
 
-    Purchases.configure({
-      apiKey,
-      appUserID: userId,
-    });
+    if (!isE2EBuild()) {
+      Purchases.configure({
+        apiKey,
+        appUserID: userId,
+      });
+    }
   }, [userId]);
 
   return <>{children}</>;

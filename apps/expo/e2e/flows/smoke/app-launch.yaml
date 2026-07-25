@@ -3,6 +3,7 @@ appId: com.flatcove.app.v2
 # Smoke test: app launches and shows the full login screen (no auth state).
 - launchApp:
     clearState: true
+    clearKeychain: true
 - extendedWaitUntil:
     visible:
       id: "login-screen"

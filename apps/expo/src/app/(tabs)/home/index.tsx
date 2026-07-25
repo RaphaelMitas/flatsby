@@ -48,7 +48,11 @@ export function ErrorBoundary({
 }
 
 export default function Index() {
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
+
+  if (isPending) {
+    return null;
+  }
 
   if (!session) {
     return <Redirect href="/auth/login" />;
