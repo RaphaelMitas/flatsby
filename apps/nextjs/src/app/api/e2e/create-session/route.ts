@@ -20,9 +20,6 @@ import { env } from "~/env";
 
 const E2E_EMAIL_DOMAIN = "flatsby.test";
 
-/**
- * Type guard for SameSite cookie values
- */
 const isSameSite = (v: unknown): v is "lax" | "strict" | "none" =>
   v === "lax" || v === "strict" || v === "none";
 
@@ -141,7 +138,7 @@ export async function POST() {
       httpOnly: cookie.httpOnly,
       secure: cookie.secure,
       sameSite: isSameSite(cookie.sameSite) ? cookie.sameSite : undefined,
-      expires: cookie.expires ? new Date(cookie.expires) : undefined,
+      expires: cookie.expires ? new Date(cookie.expires * 1000) : undefined,
     });
   }
 
