@@ -68,3 +68,6 @@ apps/expo/build-cache/
 # claude
 .claude
 CLAUDE.local.md
+
+# codex
+.codex
