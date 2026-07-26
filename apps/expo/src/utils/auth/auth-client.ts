@@ -8,7 +8,7 @@ import { getE2EHeaders } from "../e2e-config";
 export const authClient = createAuthClient({
   baseURL: getBaseUrl(),
   fetchOptions: {
-    headers: () => getE2EHeaders(),
+    headers: getE2EHeaders(),
   },
   plugins: [
     expoClient({
