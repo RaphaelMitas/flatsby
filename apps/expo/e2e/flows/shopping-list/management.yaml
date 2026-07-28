@@ -3,7 +3,8 @@ tags:
   - shopping-list
 ---
 # Mirrors apps/nextjs/e2e/shopping-list/shopping-list-management.spec.ts:
-# rename a list from the dashboard, then delete it (with typed confirmation).
+# rename a list from the dashboard, then delete a list (with typed
+# confirmation). Like the web spec, deletion targets a freshly created list.
 - runFlow: ../../subflows/e2e-login.yaml
 
 # Select group, create a list, but stay on the lists dashboard
@@ -47,10 +48,26 @@ tags:
     visible: "Renamed List"
     timeout: 15000
 
+# Create a second list to exercise deletion
+- tapOn:
+    id: "shopping-list-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-input"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-create-input"
+- inputText: "Doomed List"
+- tapOn:
+    id: "shopping-list-create-submit"
+- extendedWaitUntil:
+    visible: "Doomed List"
+    timeout: 15000
+
 # Delete: swipe left on the list row, type the name in the dialog, confirm
 - swipe:
     from:
-      text: "Renamed List"
+      text: "Doomed List"
     direction: LEFT
 - extendedWaitUntil:
     visible:
@@ -58,12 +75,12 @@ tags:
     timeout: 15000
 - tapOn:
     id: "delete-confirmation-input"
-- inputText: "Renamed List"
+- inputText: "Doomed List"
 - waitForAnimationToEnd
 - extendedWaitUntil:
     visible:
       id: "delete-confirmation-input"
-      text: "Renamed List"
+      text: "Doomed List"
     timeout: 5000
 # Dismiss the keyboard (tapping the modal body dismisses it), then confirm
 - tapOn: "Confirmation Required"
@@ -77,7 +94,9 @@ tags:
     notVisible:
       id: "delete-confirmation-confirm"
     timeout: 10000
+
+# Only the deleted list is gone
 - extendedWaitUntil:
-    notVisible: "Renamed List"
+    notVisible: "Doomed List"
     timeout: 15000
-- assertVisible: "No shopping lists yet"
+- assertVisible: "Renamed List"
