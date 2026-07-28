@@ -93,6 +93,7 @@ export default function CreateGroup() {
             render={({ field }) => (
               <FormControl>
                 <Input
+                  testID="group-create-name-input"
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
@@ -117,6 +118,7 @@ export default function CreateGroup() {
               className="flex-1"
             />
             <Button
+              testID="group-create-submit"
               title={form.formState.isSubmitting ? "Creating..." : "Create"}
               className="flex-1"
               disabled={form.formState.isSubmitting}

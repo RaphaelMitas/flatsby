@@ -21,7 +21,8 @@
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "maestro test e2e/flows/"
+    "test:e2e": "maestro test e2e/flows/",
+    "test:e2e:validate": "node e2e/validate-flows.mjs"
   },
   "dependencies": {
     "@babel/traverse--for-generate-function-map": "npm:@babel/traverse@^8.0.0",
@@ -96,7 +97,8 @@
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "yaml": "2.9.0"
   },
   "prettier": "@flatsby/prettier-config"
 }

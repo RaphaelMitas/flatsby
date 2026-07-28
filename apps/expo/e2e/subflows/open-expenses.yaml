@@ -1,0 +1,15 @@
+appId: com.flatcove.app.v2
+---
+# Shared subflow: from the authenticated group dashboard, selects the fixture
+# group and switches to the Expenses tab.
+- tapOn:
+    id: "group-select-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 15000
+- tapOn: "Expenses"
+- extendedWaitUntil:
+    visible:
+      id: "expense-heading"
+    timeout: 15000

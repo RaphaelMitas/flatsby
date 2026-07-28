@@ -1,6 +1,14 @@
 import type React from "react";
 import { useCallback } from "react";
-import { Modal, Text, View } from "react-native";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "~/lib/ui/button";
@@ -68,8 +76,15 @@ const DeleteConfirmationModal: React.FC<Props> = ({
       animationType="fade"
       onRequestClose={handleClose}
     >
-      <View className="flex-1 items-center justify-center bg-black/50">
-        <View className="bg-background mx-4 w-full max-w-sm rounded-lg p-6 shadow-lg">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1 items-center justify-center bg-black/50"
+      >
+        <Pressable
+          accessible={false}
+          onPress={Keyboard.dismiss}
+          className="bg-background mx-4 w-full max-w-sm rounded-lg p-6 shadow-lg"
+        >
           <View className="mb-4 flex-row items-center gap-3">
             <Icon name="triangle-alert" size={24} color="destructive" />
             <Text className="text-foreground text-lg font-semibold">
@@ -97,10 +112,18 @@ const DeleteConfirmationModal: React.FC<Props> = ({
                     <FormControl>
                       <Input
                         {...field}
+                        testID="delete-confirmation-input"
                         placeholder="Enter item name"
                         className="w-full"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        spellCheck={false}
+                        returnKeyType="done"
                         value={field.value}
                         onChangeText={field.onChange}
+                        onSubmitEditing={() => {
+                          if (isConfirmationValid) handleConfirm();
+                        }}
                       />
                     </FormControl>
                   )}
@@ -110,12 +133,14 @@ const DeleteConfirmationModal: React.FC<Props> = ({
 
             <View className="flex-row gap-3">
               <Button
+                testID="delete-confirmation-cancel"
                 title="Cancel"
                 variant="outline"
                 className="flex-1"
                 onPress={handleClose}
               />
               <Button
+                testID="delete-confirmation-confirm"
                 title="Delete"
                 variant="destructive"
                 className="flex-1"
@@ -125,8 +150,8 @@ const DeleteConfirmationModal: React.FC<Props> = ({
               />
             </View>
           </Form>
-        </View>
-      </View>
+        </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

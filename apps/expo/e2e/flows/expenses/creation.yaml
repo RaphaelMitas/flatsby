@@ -1,0 +1,55 @@
+appId: com.flatcove.app.v2
+tags:
+  - expenses
+---
+# Mirrors "creates an expense with equal split" and "manual category selection"
+# from apps/nextjs/e2e/expenses/expense-creation.spec.ts.
+- runFlow: ../../subflows/e2e-login.yaml
+- runFlow: ../../subflows/open-expenses.yaml
+
+# Empty state on a fresh group
+- assertVisible: "No expenses yet"
+
+# Create an equal-split expense with a manually selected category
+- tapOn:
+    id: "expense-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-amount"
+- inputText: "25.00"
+- tapOn:
+    id: "expense-form-description"
+- inputText: "Team snacks"
+- tapOn: "Amount & Details"
+- tapOn:
+    id: "expense-form-category"
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/creation-category-sheet
+- extendedWaitUntil:
+    visible:
+      id: "picker-item-restaurant"
+    timeout: 20000
+- tapOn:
+    id: "picker-item-restaurant"
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- assertVisible: ".*25[.,]00.*"
+- tapOn:
+    id: "expense-form-submit"
+
+# Back on the list: the new expense is visible
+- extendedWaitUntil:
+    visible: "Team snacks"
+    timeout: 20000
+- assertVisible: ".*25[.,]00.*"

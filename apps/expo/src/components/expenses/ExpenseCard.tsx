@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 import { trpc } from "~/utils/api";
+import { e2eAccessibilityOverride } from "~/utils/e2e";
 import { useShoppingStore } from "~/utils/shopping-store";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
@@ -173,7 +174,11 @@ export function ExpenseCard({
           }
         }}
       >
-        <Pressable onPress={handleCardPress} disabled={isOptimistic}>
+        <Pressable
+          accessible={e2eAccessibilityOverride()}
+          onPress={handleCardPress}
+          disabled={isOptimistic}
+        >
           <ExpenseDisplay
             amountInCents={expense.amountInCents}
             currency={expense.currency}

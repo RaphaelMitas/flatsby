@@ -189,6 +189,7 @@ export function SplitEditor({
       {/* Split Method Selection */}
       <View className="flex-row gap-2">
         <Button
+          testID="split-method-equal"
           title="Equal"
           variant={splitMethod === "equal" ? "primary" : "outline"}
           size="sm"
@@ -197,6 +198,7 @@ export function SplitEditor({
           className="flex-1"
         />
         <Button
+          testID="split-method-percentage"
           title="Percentage"
           variant={splitMethod === "percentage" ? "primary" : "outline"}
           size="sm"
@@ -205,6 +207,7 @@ export function SplitEditor({
           className="flex-1"
         />
         <Button
+          testID="split-method-custom"
           title="Custom"
           variant={splitMethod === "custom" ? "primary" : "outline"}
           size="sm"
@@ -260,7 +263,7 @@ export function SplitEditor({
 
       {/* Split Details */}
       {splits.length > 0 && (
-        <Card>
+        <Card testID="split-details-card">
           <CardHeader>
             <CardTitle>Split Details</CardTitle>
             <CardDescription>
@@ -308,6 +311,7 @@ export function SplitEditor({
                           <FormControl>
                             <View className="flex-row items-center gap-2">
                               <CurrencyInput
+                                testID={`split-member-amount-${index}`}
                                 value={field.value ?? 0}
                                 onChange={(cents) => {
                                   field.onChange(cents);
@@ -341,6 +345,7 @@ export function SplitEditor({
                                 {currency}
                               </Text>
                               <CurrencyInput
+                                testID={`split-member-amount-${index}`}
                                 value={field.value}
                                 onChange={(cents) => {
                                   field.onChange(cents);

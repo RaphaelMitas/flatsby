@@ -1,0 +1,20 @@
+appId: com.flatcove.app.v2
+tags:
+  - expenses
+---
+# Mirrors apps/nextjs/e2e/expenses/debt-settlements.spec.ts:
+# debt summary page renders, fresh group shows the settled-up empty state.
+- runFlow: ../../subflows/e2e-login.yaml
+- runFlow: ../../subflows/open-expenses.yaml
+
+- tapOn:
+    id: "expense-debt-overview-button"
+- extendedWaitUntil:
+    visible:
+      id: "debt-summary-title"
+    timeout: 15000
+- assertVisible: "Simplified view of who owes whom"
+- assertVisible:
+    id: "debt-summary-empty"
+- assertVisible: "All settled up!"
+- assertVisible: "No outstanding debts in this group"

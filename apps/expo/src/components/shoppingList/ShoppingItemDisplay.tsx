@@ -13,6 +13,7 @@ export interface ShoppingItemDisplayProps {
   onCheckedChange?: (checked: boolean) => void;
   disabled?: boolean;
   className?: string;
+  checkboxTestID?: string;
 }
 
 export function ShoppingItemDisplay({
@@ -22,6 +23,7 @@ export function ShoppingItemDisplay({
   onCheckedChange,
   disabled,
   className,
+  checkboxTestID,
 }: ShoppingItemDisplayProps) {
   const categoryData = categoryId ? getCategoryData({ categoryId }) : null;
 
@@ -35,6 +37,7 @@ export function ShoppingItemDisplay({
         )}
       >
         <Checkbox
+          testID={checkboxTestID}
           checked={completed}
           onCheckedChange={onCheckedChange}
           disabled={disabled ?? !onCheckedChange}

@@ -1,0 +1,65 @@
+appId: com.flatcove.app.v2
+tags:
+  - expenses
+---
+# Mirrors apps/nextjs/e2e/expenses/expense-management.spec.ts:
+# view details, edit the amount, delete the expense.
+- runFlow: ../../subflows/e2e-login.yaml
+- runFlow: ../../subflows/open-expenses.yaml
+- runFlow:
+    file: ../../subflows/create-expense.yaml
+    env:
+      AMOUNT: "25.00"
+      DESCRIPTION: "Manage Me"
+
+# View details
+- tapOn: "Manage Me"
+- extendedWaitUntil:
+    visible:
+      id: "expense-split-details"
+    timeout: 15000
+- assertVisible: "Paid by"
+- assertVisible: ".*25[.,]00.*"
+
+# Edit: change the amount to 50
+- tapOn:
+    id: "expense-edit-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-amount"
+- eraseText
+- inputText: "50.00"
+- tapOn: "Amount & Details"
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    visible: ".*50[.,]00.*"
+    timeout: 20000
+
+# Delete from the detail view
+- tapOn:
+    id: "expense-delete-button"
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-confirm"
+    timeout: 15000
+- tapOn:
+    id: "delete-confirmation-confirm"
+
+# Back on the list, the expense is gone
+- extendedWaitUntil:
+    notVisible: "Manage Me"
+    timeout: 20000

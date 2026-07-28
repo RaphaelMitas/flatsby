@@ -99,6 +99,7 @@ export default function GroupSettingsIndex() {
         <SettingsSection title={group.data.name}>
           <Link href="/(tabs)/settings/group-settings/group-details" asChild>
             <SettingsItem
+              testID="group-settings-details"
               title="Group Details"
               subtitle="Edit your group details"
               iconName="settings"
@@ -106,6 +107,7 @@ export default function GroupSettingsIndex() {
           </Link>
           <Link href="/(tabs)/settings/group-settings/members" asChild>
             <SettingsItem
+              testID="group-settings-members"
               title="Members"
               subtitle="Manage your group members"
               iconName="users"
@@ -138,6 +140,7 @@ export default function GroupSettingsIndex() {
         </SettingsSection>
         <SettingsSection title="Danger Zone">
           <SettingsItem
+            testID="group-settings-delete"
             title="Delete Group"
             subtitle="Permanently delete this group"
             iconName="trash-2"

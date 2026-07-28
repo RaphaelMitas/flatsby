@@ -72,6 +72,7 @@ export function ShoppingListItemEditForm() {
                 <FormControl>
                   <Input
                     {...field}
+                    testID="shopping-list-item-edit-input"
                     onChangeText={field.onChange}
                     maxLength={
                       editShoppingListItemFormSchema.shape.name.maxLength ??
@@ -104,6 +105,7 @@ export function ShoppingListItemEditForm() {
               className="flex-1"
             />
             <Button
+              testID="shopping-list-item-edit-save"
               title={form.formState.isSubmitting ? "Updating..." : "Update"}
               className="flex-1"
               disabled={form.formState.isSubmitting}

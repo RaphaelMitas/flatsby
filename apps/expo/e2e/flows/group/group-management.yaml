@@ -1,0 +1,61 @@
+appId: com.flatcove.app.v2
+tags:
+  - group
+---
+# Mirrors apps/nextjs/e2e/group/group-management.spec.ts:
+# create group via UI, group appears in dashboard, change group name.
+- runFlow: ../../subflows/e2e-login.yaml
+
+# Create a group via the UI
+- tapOn:
+    id: "group-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-create-name-input"
+    timeout: 15000
+- tapOn:
+    id: "group-create-name-input"
+- inputText: "Maestro Group"
+- tapOn:
+    id: "group-create-submit"
+
+# New group appears on the dashboard
+- extendedWaitUntil:
+    visible: "Maestro Group"
+    timeout: 15000
+- assertVisible:
+    id: "group-dashboard-title"
+
+# Select the new group (second card; the e2e fixture group is first)
+- tapOn:
+    id: "group-select-button"
+    index: 1
+- extendedWaitUntil:
+    visible: "Maestro Group"
+    timeout: 15000
+
+# Change group name via group settings
+- tapOn:
+    id: "shopping-lists-group-settings"
+- extendedWaitUntil:
+    visible:
+      id: "group-settings-details"
+    timeout: 15000
+- tapOn:
+    id: "group-settings-details"
+- extendedWaitUntil:
+    visible:
+      id: "group-name-input"
+    timeout: 15000
+- tapOn:
+    id: "group-name-input"
+- eraseText
+- inputText: "Maestro Group Updated"
+- tapOn: "Group Name"
+- tapOn:
+    id: "group-name-save"
+- extendedWaitUntil:
+    visible:
+      id: "group-name-input"
+      text: "Maestro Group Updated"
+    timeout: 15000

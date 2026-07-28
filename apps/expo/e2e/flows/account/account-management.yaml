@@ -1,0 +1,65 @@
+appId: com.flatcove.app.v2
+tags:
+  - account
+---
+# Mirrors apps/nextjs/e2e/account/account-management.spec.ts:
+# danger zone access, two-step email confirmation, account deletion signs out.
+- runFlow: ../../subflows/e2e-login.yaml
+
+# Navigate to Settings -> Delete Account
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element:
+      id: "settings-delete-account"
+    direction: DOWN
+- tapOn:
+    id: "settings-delete-account"
+- extendedWaitUntil:
+    visible:
+      id: "delete-user-danger-zone-title"
+    timeout: 15000
+- assertVisible:
+    id: "delete-user-confirm-button"
+- assertVisible: ".*This action cannot be undone.*"
+
+# Start deletion: confirmation input appears, confirm stays disabled
+- tapOn:
+    id: "delete-user-confirm-button"
+- extendedWaitUntil:
+    visible:
+      id: "delete-user-email-input"
+    timeout: 15000
+- assertVisible:
+    id: "delete-user-cancel-button"
+- assertVisible:
+    id: "delete-user-forever-button"
+    enabled: false
+
+# Wrong email keeps the button disabled
+- tapOn:
+    id: "delete-user-email-input"
+- inputText: "wrong-email@test.com"
+- tapOn: "Confirmation Required"
+- assertVisible:
+    id: "delete-user-forever-button"
+    enabled: false
+
+# Correct email (copied from the screen) enables deletion
+- copyTextFrom:
+    id: "delete-user-email"
+- tapOn:
+    id: "delete-user-email-input"
+- eraseText
+- pasteText
+- tapOn: "Confirmation Required"
+- assertVisible:
+    id: "delete-user-forever-button"
+    enabled: true
+
+# Delete the account: signs out and returns to the login screen
+- tapOn:
+    id: "delete-user-forever-button"
+- extendedWaitUntil:
+    visible:
+      id: "login-screen"
+    timeout: 30000
