@@ -1,6 +1,9 @@
 import { Text, View } from "react-native";
 
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  formatExpenseDateShort,
+} from "@flatsby/validators/expenses/formatting";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Badge } from "~/lib/ui/badge";
@@ -42,14 +45,7 @@ export function ExpenseDisplay({
     currency,
   });
 
-  const formattedDate = expenseDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year:
-      expenseDate.getFullYear() !== new Date().getFullYear()
-        ? "numeric"
-        : undefined,
-  });
+  const formattedDate = formatExpenseDateShort(expenseDate);
 
   const isSettlement = splitMethod === "settlement";
 

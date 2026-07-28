@@ -32,11 +32,13 @@ import { toast } from "@flatsby/ui/toast";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { CurrencyInput } from "~/components/CurrencyInput";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
+import { useExpenseInvalidation } from "../useExpenseInvalidation";
 
 interface SettlementFormProps {
   fromGroupMemberId: number;
@@ -81,10 +83,8 @@ export function SettlementForm({
   });
 
   // Query key for expense list
-  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
-    groupId,
-    limit: 20,
-  });
+  const { expenseListQueryKey, invalidateList, invalidateDebtSummary } =
+    useExpenseInvalidation(groupId);
 
   const expenseQueryKey = expense
     ? trpc.expense.getExpense.queryKey({
@@ -107,7 +107,7 @@ export function SettlementForm({
         await queryClient.cancelQueries(
           trpc.expense.getGroupExpenses.queryOptions({
             groupId,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           }),
         );
 
@@ -241,12 +241,8 @@ export function SettlementForm({
         }
 
         toast.success("Settlement recorded successfully");
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        void invalidateList();
+        void invalidateDebtSummary();
         onClose();
         form.reset();
       },
@@ -306,10 +302,7 @@ export function SettlementForm({
         void queryClient.invalidateQueries({
           queryKey: expenseQueryKey,
         });
-
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        void invalidateDebtSummary();
         onClose();
       },
     }),

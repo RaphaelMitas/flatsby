@@ -15,7 +15,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Badge } from "@flatsby/ui/badge";
 import { Card } from "@flatsby/ui/card";
 import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  formatExpenseDateShort,
+} from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -35,14 +38,7 @@ export function ExpenseCard({
     currency: expense.currency,
   });
   const expenseDate = new Date(expense.expenseDate);
-  const formattedDate = expenseDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year:
-      expenseDate.getFullYear() !== new Date().getFullYear()
-        ? "numeric"
-        : undefined,
-  });
+  const formattedDate = formatExpenseDateShort(expenseDate);
 
   const settlementCounterparty =
     expense.splitMethod === "settlement" && expense.expenseSplits[0]

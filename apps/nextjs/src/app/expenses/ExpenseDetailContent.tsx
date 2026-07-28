@@ -16,7 +16,10 @@ import {
 } from "@flatsby/ui/card";
 import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
 import { Separator } from "@flatsby/ui/separator";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  formatExpenseDateLong,
+} from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseDetailContentProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -38,12 +41,7 @@ export function ExpenseDetailContent({
     currency: expense.currency,
   });
   const expenseDate = new Date(expense.expenseDate);
-  const formattedDate = expenseDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = formatExpenseDateLong(expenseDate);
 
   return (
     <div className="flex w-full flex-col gap-4">

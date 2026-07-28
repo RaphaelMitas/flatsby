@@ -1,1 +1,0 @@
-export { ShoppingListsDashboard } from "./ShoppingListsDashboard";

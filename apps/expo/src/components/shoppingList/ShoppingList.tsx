@@ -16,10 +16,13 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
+
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { trpc } from "~/utils/api";
-import { CategoryFilterPills, CategoryFilterSidebar } from "./CategoryFilter";
+import { CategoryFilterPills } from "./CategoryFilter/CategoryFilterPills";
+import { CategoryFilterSidebar } from "./CategoryFilter/CategoryFilterSidebar";
 import ShoppingListItem from "./ShoppingListItem";
 import { ShoppingListItemAddForm } from "./ShoppingListItemAddForm";
 import { groupShoppingList } from "./ShoppingListUtils";
@@ -74,7 +77,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       {
         groupId,
         shoppingListId,
-        limit: 20,
+        limit: PAGE_SIZE.shoppingListItems,
         categoryId: selectedCategory ?? undefined,
       },
       {
@@ -177,7 +180,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
         groupId,
         shoppingListId,
-        limit: 20,
+        limit: PAGE_SIZE.shoppingListItems,
         categoryId: selectedCategory ?? undefined,
       }),
       previousItems,
@@ -191,7 +194,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
           queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
         });
@@ -200,7 +203,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
         );
@@ -209,7 +212,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
           (old) => {

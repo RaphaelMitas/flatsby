@@ -26,6 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@flatsby/ui/popover";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useTRPC } from "~/trpc/react";
 import { ShoppingListItemEditForm } from "./ShoppingListItemEditForm";
@@ -134,7 +135,7 @@ const ShoppingListItem = ({
       trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
         groupId,
         shoppingListId,
-        limit: 20,
+        limit: PAGE_SIZE.shoppingListItems,
       }),
       previousItems,
     );
@@ -147,7 +148,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.queryOptions({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
           }),
         );
 
@@ -155,7 +156,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
           }),
         );
 
@@ -163,7 +164,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
           }),
           (old) => {
             if (!old) return old;
@@ -222,7 +223,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.queryOptions({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
           }),
         );
 
@@ -230,7 +231,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
           }),
         );
 
@@ -238,7 +239,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
           }),
           (old) => {
             if (!old) return old;
@@ -268,7 +269,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
           }),
           context?.previousItems,
         );

@@ -9,12 +9,13 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
-import { useShoppingStore } from "~/utils/shopping-store";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ExpenseDisplay } from "./ExpenseDisplay";
+import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -38,13 +39,8 @@ export function ExpenseCard({
   const trpcClient = trpc;
   const swipeableRef = useRef<SwipeableMethods>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { selectedGroupId } = useShoppingStore();
 
-  const expenseListQueryKey =
-    trpcClient.expense.getGroupExpenses.infiniteQueryKey({
-      groupId,
-      limit: 20,
-    });
+  const { expenseListQueryKey, invalidateAll } = useInvalidateExpenses(groupId);
 
   const deleteExpenseMutation = useMutation(
     trpcClient.expense.deleteExpense.mutationOptions({
@@ -53,7 +49,7 @@ export function ExpenseCard({
         await queryClient.cancelQueries(
           trpcClient.expense.getGroupExpenses.queryOptions({
             groupId,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           }),
         );
 
@@ -93,16 +89,7 @@ export function ExpenseCard({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        if (selectedGroupId) {
-          void queryClient.invalidateQueries(
-            trpcClient.expense.getDebtSummary.queryOptions({
-              groupId: selectedGroupId,
-            }),
-          );
-        }
+        invalidateAll();
         onDelete?.();
       },
     }),

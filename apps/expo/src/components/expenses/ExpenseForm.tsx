@@ -29,6 +29,7 @@ import {
   CURRENCY_CODES,
   isCurrencyCode,
 } from "@flatsby/validators/expenses/types";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -60,6 +61,7 @@ import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
 import { SplitEditor } from "./SplitEditor";
+import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 function DatePickerField({
   value,
@@ -141,12 +143,9 @@ export function ExpenseForm({
   const isEditMode = !!expense;
   const totalSteps = 3;
 
-  // Get the query key for expense list
-  const expenseListQueryKey =
-    trpcClient.expense.getGroupExpenses.infiniteQueryKey({
-      groupId: group.id,
-      limit: 20,
-    });
+  const { expenseListQueryKey, invalidateAll } = useInvalidateExpenses(
+    group.id,
+  );
 
   const expenseQueryKey = expense
     ? trpcClient.expense.getExpense.queryKey({
@@ -209,7 +208,7 @@ export function ExpenseForm({
         await queryClient.cancelQueries(
           trpcClient.expense.getGroupExpenses.queryOptions({
             groupId: group.id,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           }),
         );
 
@@ -217,7 +216,7 @@ export function ExpenseForm({
         const previousData = queryClient.getQueryData(
           trpcClient.expense.getGroupExpenses.infiniteQueryKey({
             groupId: group.id,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           }),
         );
 
@@ -231,7 +230,7 @@ export function ExpenseForm({
         queryClient.setQueryData(
           trpcClient.expense.getGroupExpenses.infiniteQueryKey({
             groupId: group.id,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           }),
           (old) => {
             if (!old) return old;
@@ -342,12 +341,7 @@ export function ExpenseForm({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        void queryClient.invalidateQueries(
-          trpcClient.expense.getDebtSummary.queryOptions({ groupId: group.id }),
-        );
+        invalidateAll();
         form.reset();
         setCurrentStep(1);
         if (onSuccess) {
@@ -445,19 +439,7 @@ export function ExpenseForm({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        if (expense?.id) {
-          void queryClient.invalidateQueries(
-            trpcClient.expense.getExpense.queryOptions({
-              expenseId: expense.id,
-            }),
-          );
-        }
-        void queryClient.invalidateQueries(
-          trpcClient.expense.getDebtSummary.queryOptions({ groupId: group.id }),
-        );
+        invalidateAll(expense?.id);
         if (onSuccess && expense?.id) {
           onSuccess(expense.id);
         } else if (onClose) {

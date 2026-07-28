@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
+
 import { trpc } from "~/utils/api";
 
 /**
@@ -21,7 +23,7 @@ export function useInvalidateShoppingList({
       queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
         groupId,
         shoppingListId,
-        limit: 20,
+        limit: PAGE_SIZE.shoppingListItems,
       }),
     });
   }, [queryClient, groupId, shoppingListId]);

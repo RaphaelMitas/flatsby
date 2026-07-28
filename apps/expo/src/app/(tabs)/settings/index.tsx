@@ -7,12 +7,10 @@ import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
 
-import {
-  SettingsHeader,
-  SettingsItem,
-  SettingsSection,
-  UsageDisplay,
-} from "~/components/settings";
+import { SettingsHeader } from "~/components/settings/SettingsHeader";
+import { SettingsItem } from "~/components/settings/SettingsItem";
+import { SettingsSection } from "~/components/settings/SettingsSection";
+import { UsageDisplay } from "~/components/settings/UsageDisplay";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { Checkbox } from "~/lib/ui/checkbox";

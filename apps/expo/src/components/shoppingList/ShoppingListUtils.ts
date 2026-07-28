@@ -3,6 +3,8 @@ import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
+
 import { trpc } from "~/utils/api";
 import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
@@ -104,7 +106,7 @@ export const useUpdateShoppingListItemMutation = ({
       trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
         groupId,
         shoppingListId,
-        limit: 20,
+        limit: PAGE_SIZE.shoppingListItems,
         categoryId: selectedCategory ?? undefined,
       }),
       previousItems,
@@ -118,7 +120,7 @@ export const useUpdateShoppingListItemMutation = ({
           queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
         });
@@ -127,7 +129,7 @@ export const useUpdateShoppingListItemMutation = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
         );
@@ -136,7 +138,7 @@ export const useUpdateShoppingListItemMutation = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
           (oldData) => {

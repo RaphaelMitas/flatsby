@@ -23,8 +23,10 @@ import {
 } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useTRPC } from "~/trpc/react";
+import { useExpenseInvalidation } from "./useExpenseInvalidation";
 
 interface UseExpenseFormProps {
   group: GroupWithAccess;
@@ -46,10 +48,9 @@ export function useExpenseForm({
   const isEditMode = !!expense;
   const totalSteps = 3;
 
-  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
-    groupId: group.id,
-    limit: 20,
-  });
+  const { expenseListQueryKey, invalidateAll } = useExpenseInvalidation(
+    group.id,
+  );
 
   const expenseQueryKey = expense
     ? trpc.expense.getExpense.queryKey({
@@ -108,14 +109,14 @@ export function useExpenseForm({
         await queryClient.cancelQueries(
           trpc.expense.getGroupExpenses.queryOptions({
             groupId: group.id,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           }),
         );
 
         const previousData = queryClient.getQueryData(
           trpc.expense.getGroupExpenses.infiniteQueryKey({
             groupId: group.id,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           }),
         );
 
@@ -127,7 +128,7 @@ export function useExpenseForm({
         queryClient.setQueryData(
           trpc.expense.getGroupExpenses.infiniteQueryKey({
             groupId: group.id,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           }),
           (old) => {
             if (!old) return old;
@@ -243,15 +244,7 @@ export function useExpenseForm({
         }
 
         toast.success("Expense created successfully");
-        void queryClient.invalidateQueries({
-          queryKey: trpc.expense.getGroupExpenses.infiniteQueryKey({
-            groupId: group.id,
-            limit: 20,
-          }),
-        });
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
-        );
+        invalidateAll();
         onSuccess?.(data.data.id);
         onClose();
         form.reset();
@@ -346,17 +339,7 @@ export function useExpenseForm({
         }
 
         toast.success("Expense updated successfully");
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        if (expense?.id) {
-          void queryClient.invalidateQueries(
-            trpc.expense.getExpense.queryOptions({ expenseId: expense.id }),
-          );
-        }
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
-        );
+        invalidateAll(expense?.id);
         if (expense) {
           onSuccess?.(expense.id);
         }

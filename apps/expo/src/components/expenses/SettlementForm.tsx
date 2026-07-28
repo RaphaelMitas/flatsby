@@ -17,6 +17,7 @@ import {
   CURRENCY_CODES,
   isCurrencyCode,
 } from "@flatsby/validators/expenses/types";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -31,6 +32,7 @@ import { Form, FormControl, FormField, FormMessage } from "~/lib/ui/form";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
+import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface SettlementFormProps {
   groupId: number;
@@ -144,10 +146,8 @@ export function SettlementForm({
     watchedToMemberId,
   );
 
-  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
-    groupId,
-    limit: 20,
-  });
+  const { expenseListQueryKey, invalidateList, invalidateDebtSummary } =
+    useInvalidateExpenses(groupId);
 
   const expenseQueryKey = expense
     ? trpc.expense.getExpense.queryKey({
@@ -169,7 +169,7 @@ export function SettlementForm({
         await queryClient.cancelQueries(
           trpc.expense.getGroupExpenses.queryOptions({
             groupId,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           }),
         );
 
@@ -290,12 +290,8 @@ export function SettlementForm({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        void invalidateList();
+        void invalidateDebtSummary();
         onClose();
         form.reset();
       },
@@ -345,10 +341,7 @@ export function SettlementForm({
         void queryClient.invalidateQueries({
           queryKey: expenseQueryKey,
         });
-
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        void invalidateDebtSummary();
         onClose();
       },
     }),
