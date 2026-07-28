@@ -91,6 +91,7 @@ function ShoppingListsDashboardInner() {
 
         {/* Create New List Button */}
         <Button
+          testID="shopping-list-create-button"
           title="Create Shopping List"
           variant="primary"
           size="lg"

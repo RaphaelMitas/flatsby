@@ -1,0 +1,79 @@
+appId: com.flatcove.app.v2
+tags:
+  - shopping-list
+---
+# Mirrors apps/nextjs/e2e/shopping-list/shopping-list-items.spec.ts:
+# add with manual category, complete, undo completion, edit, delete.
+- runFlow: ../../subflows/e2e-login.yaml
+- runFlow:
+    file: ../../subflows/create-shopping-list.yaml
+    env:
+      LIST_NAME: "Items List"
+
+# Add item with a manual category
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: "Apples"
+- tapOn:
+    id: "shopping-list-category-picker"
+- extendedWaitUntil:
+    visible: "Fruits, vegetables, fresh herbs"
+    timeout: 10000
+# Tap the sheet item by its unique description (the "Produce" title can also
+# appear in filter pills behind the sheet)
+- tapOn: "Fruits, vegetables, fresh herbs"
+- tapOn:
+    id: "shopping-list-add-item-button"
+- extendedWaitUntil:
+    visible: "Apples"
+    timeout: 15000
+- assertVisible: "Produce"
+
+# Complete the item -> moves to Purchased Items
+- tapOn:
+    id: "shopping-list-item-checkbox-Apples"
+- extendedWaitUntil:
+    visible: "Purchased Items"
+    timeout: 15000
+
+# Undo completion -> Purchased section disappears
+- tapOn:
+    id: "shopping-list-item-checkbox-Apples"
+- extendedWaitUntil:
+    notVisible: "Purchased Items"
+    timeout: 15000
+
+# Edit: swipe right on the item to open the edit screen
+- swipe:
+    from:
+      text: "Apples"
+    direction: RIGHT
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-item-edit-input"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-item-edit-input"
+- eraseText
+- inputText: "Green Apples"
+- tapOn:
+    id: "shopping-list-item-edit-save"
+- extendedWaitUntil:
+    visible: "Green Apples"
+    timeout: 15000
+- assertNotVisible: "Apples"
+
+# Delete: swipe left on the item, confirm in the dialog
+- swipe:
+    from:
+      text: "Green Apples"
+    direction: LEFT
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-confirm"
+    timeout: 15000
+- tapOn:
+    id: "delete-confirmation-confirm"
+- extendedWaitUntil:
+    notVisible: "Green Apples"
+    timeout: 15000

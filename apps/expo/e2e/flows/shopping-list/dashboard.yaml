@@ -1,0 +1,41 @@
+appId: com.flatcove.app.v2
+tags:
+  - shopping-list
+---
+# Mirrors apps/nextjs/e2e/shopping-list/shopping-list-dashboard.spec.ts:
+# empty state, creating a list, and navigating into it.
+- runFlow: ../../subflows/e2e-login.yaml
+
+- tapOn:
+    id: "group-select-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 15000
+# Fresh group has no lists yet
+- assertVisible: "No shopping lists yet"
+
+# Create a new list and navigate into it
+- tapOn:
+    id: "shopping-list-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-input"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-create-input"
+- inputText: "Groceries List"
+- tapOn:
+    id: "shopping-list-create-submit"
+- extendedWaitUntil:
+    visible: "Groceries List"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-dashboard-link"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-item-input"
+    timeout: 15000
+- assertVisible:
+    id: "shopping-list-title"
+    text: "Groceries List"

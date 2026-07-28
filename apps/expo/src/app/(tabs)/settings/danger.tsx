@@ -47,7 +47,10 @@ export default function DangerScreen() {
   return (
     <SafeAreaView>
       <AppScrollView className="p-4">
-        <Text className="text-destructive mb-2 text-2xl font-bold">
+        <Text
+          testID="delete-user-danger-zone-title"
+          className="text-destructive mb-2 text-2xl font-bold"
+        >
           Danger Zone
         </Text>
         <Text className="text-muted-foreground mb-8 text-sm">
@@ -71,6 +74,7 @@ export default function DangerScreen() {
 
           {!showConfirmation ? (
             <Button
+              testID="delete-user-confirm-button"
               variant="destructive"
               title="Delete My Account"
               icon="trash-2"
@@ -84,10 +88,16 @@ export default function DangerScreen() {
                   Confirmation Required
                 </Text>
                 <Label htmlFor="email-confirmation" className="mb-2">
-                  To confirm deletion, please type your email address:{" "}
-                  {user.email}
+                  To confirm deletion, please type your email address:
                 </Label>
+                <Text
+                  testID="delete-user-email"
+                  className="text-muted-foreground mb-2 text-sm"
+                >
+                  {user.email}
+                </Text>
                 <Input
+                  testID="delete-user-email-input"
                   value={confirmationInput}
                   onChangeText={setConfirmationInput}
                   placeholder="Enter your email address"
@@ -99,6 +109,7 @@ export default function DangerScreen() {
 
               <View className="flex-row gap-2">
                 <Button
+                  testID="delete-user-cancel-button"
                   variant="outline"
                   title="Cancel"
                   onPress={() => {
@@ -108,6 +119,7 @@ export default function DangerScreen() {
                   className="flex-1"
                 />
                 <Button
+                  testID="delete-user-forever-button"
                   variant="destructive"
                   title={
                     deleteUserMutation.isPending

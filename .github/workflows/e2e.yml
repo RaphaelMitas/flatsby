@@ -89,6 +89,10 @@ jobs:
         with:
           cache: "false"
 
+      - name: Validate Maestro flows
+        working-directory: apps/expo
+        run: node e2e/validate-flows.mjs
+
       - name: Clean native build artifacts
         working-directory: apps/expo
         run: rm -rf ios android build-cache "$RUNNER_TEMP/eas-build"

@@ -1,0 +1,59 @@
+appId: com.flatcove.app.v2
+tags:
+  - shopping-list
+---
+# Mirrors "Category Filtering" from
+# apps/nextjs/e2e/shopping-list/shopping-list-management.spec.ts.
+- runFlow: ../../subflows/e2e-login.yaml
+- runFlow:
+    file: ../../subflows/create-shopping-list.yaml
+    env:
+      LIST_NAME: "Filter List"
+
+# Add a produce item
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: "Carrots"
+- tapOn:
+    id: "shopping-list-category-picker"
+- extendedWaitUntil:
+    visible: "Fruits, vegetables, fresh herbs"
+    timeout: 10000
+- tapOn: "Fruits, vegetables, fresh herbs"
+- tapOn:
+    id: "shopping-list-add-item-button"
+- extendedWaitUntil:
+    visible: "Carrots"
+    timeout: 15000
+
+# Add a dairy item
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: "Cheese"
+- tapOn:
+    id: "shopping-list-category-picker"
+- extendedWaitUntil:
+    visible: "Milk, cheese, yogurt, eggs"
+    timeout: 10000
+- tapOn: "Milk, cheese, yogurt, eggs"
+- tapOn:
+    id: "shopping-list-add-item-button"
+- extendedWaitUntil:
+    visible: "Cheese"
+    timeout: 15000
+
+# Filter by produce: only the produce item stays visible
+- tapOn:
+    id: "category-filter-produce"
+- extendedWaitUntil:
+    notVisible: "Cheese"
+    timeout: 15000
+- assertVisible: "Carrots"
+
+# Back to all
+- tapOn:
+    id: "category-filter-all"
+- extendedWaitUntil:
+    visible: "Cheese"
+    timeout: 15000
+- assertVisible: "Carrots"

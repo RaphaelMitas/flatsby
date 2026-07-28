@@ -1,0 +1,92 @@
+appId: com.flatcove.app.v2
+tags:
+  - expenses
+---
+# Mirrors the percentage and custom split cases from
+# apps/nextjs/e2e/expenses/expense-creation.spec.ts.
+- runFlow: ../../subflows/e2e-login.yaml
+- runFlow: ../../subflows/open-expenses.yaml
+
+# --- Percentage split ---
+- tapOn:
+    id: "expense-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-amount"
+- inputText: "100.00"
+- tapOn:
+    id: "expense-form-description"
+- inputText: "Percent dinner"
+- hideKeyboard
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- tapOn:
+    id: "split-method-percentage"
+- extendedWaitUntil:
+    visible:
+      id: "split-member-amount-0"
+    timeout: 10000
+- tapOn:
+    id: "split-member-amount-0"
+- eraseText
+- inputText: "100"
+- hideKeyboard
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- assertVisible: ".*100[.,]00.*"
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    visible: "Percent dinner"
+    timeout: 20000
+
+# --- Custom split ---
+- tapOn:
+    id: "expense-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-amount"
+- inputText: "30.00"
+- tapOn:
+    id: "expense-form-description"
+- inputText: "Custom utilities"
+- hideKeyboard
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- tapOn:
+    id: "split-method-custom"
+- extendedWaitUntil:
+    visible:
+      id: "split-member-amount-0"
+    timeout: 10000
+- tapOn:
+    id: "split-member-amount-0"
+- eraseText
+- inputText: "30"
+- hideKeyboard
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- assertVisible: ".*30[.,]00.*"
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    visible: "Custom utilities"
+    timeout: 20000

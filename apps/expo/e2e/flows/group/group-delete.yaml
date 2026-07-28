@@ -1,0 +1,59 @@
+appId: com.flatcove.app.v2
+tags:
+  - group
+---
+# Mirrors "delete group" + "deleted group inaccessible" from
+# apps/nextjs/e2e/group/group-management.spec.ts.
+- runFlow: ../../subflows/e2e-login.yaml
+
+# Create a group we can safely delete (known name for the confirmation input)
+- tapOn:
+    id: "group-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-create-name-input"
+    timeout: 15000
+- tapOn:
+    id: "group-create-name-input"
+- inputText: "Delete Me Group"
+- tapOn:
+    id: "group-create-submit"
+- extendedWaitUntil:
+    visible: "Delete Me Group"
+    timeout: 15000
+
+# Select it (second card) and open its settings
+- tapOn:
+    id: "group-select-button"
+    index: 1
+- extendedWaitUntil:
+    visible: "Group Settings"
+    timeout: 15000
+- tapOn: "Group Settings"
+- extendedWaitUntil:
+    visible: "Group Details"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      text: "Delete Group"
+    direction: DOWN
+
+# Delete with typed confirmation
+- tapOn: "Delete Group"
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-input"
+    timeout: 15000
+- tapOn:
+    id: "delete-confirmation-input"
+- inputText: "Delete Me Group"
+- tapOn:
+    id: "delete-confirmation-confirm"
+
+# Back on the group dashboard, the deleted group is gone
+- tapOn: "Home"
+- extendedWaitUntil:
+    visible:
+      id: "group-dashboard-title"
+    timeout: 20000
+- assertNotVisible: "Delete Me Group"

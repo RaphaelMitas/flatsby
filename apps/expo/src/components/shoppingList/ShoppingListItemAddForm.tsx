@@ -74,6 +74,7 @@ export const ShoppingListItemAddForm = ({
           {suggestionItems.map((item) => (
             <Badge
               key={item.name}
+              testID="shopping-list-suggestion"
               variant="outline"
               label={item.name}
               size="lg"
@@ -85,6 +86,7 @@ export const ShoppingListItemAddForm = ({
       )}
       <View className="flex-row items-center gap-3">
         <Input
+          testID="shopping-list-item-input"
           className="flex-1"
           placeholder="Add new item..."
           value={name}
@@ -99,12 +101,14 @@ export const ShoppingListItemAddForm = ({
         />
 
         <CategoryPicker
+          testID="shopping-list-category-picker"
           value={categoryId}
           onChange={setCategoryId}
           iconButton
         />
         {name.trim().length > 0 && (
           <Button
+            testID="shopping-list-add-item-button"
             title="Add"
             onPress={handleSubmit}
             disabled={isSubmitting}

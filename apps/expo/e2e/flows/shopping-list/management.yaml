@@ -1,0 +1,67 @@
+appId: com.flatcove.app.v2
+tags:
+  - shopping-list
+---
+# Mirrors apps/nextjs/e2e/shopping-list/shopping-list-management.spec.ts:
+# rename a list from the dashboard, then delete it (with typed confirmation).
+- runFlow: ../../subflows/e2e-login.yaml
+
+# Select group, create a list, but stay on the lists dashboard
+- tapOn:
+    id: "group-select-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-input"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-create-input"
+- inputText: "Rename Me"
+- tapOn:
+    id: "shopping-list-create-submit"
+- extendedWaitUntil:
+    visible: "Rename Me"
+    timeout: 15000
+
+# Rename: swipe right on the list row to reveal the inline rename form
+- swipe:
+    from:
+      text: "Rename Me"
+    direction: RIGHT
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-rename-input"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-rename-input"
+- eraseText
+- inputText: "Renamed List"
+- tapOn:
+    id: "shopping-list-rename-save"
+- extendedWaitUntil:
+    visible: "Renamed List"
+    timeout: 15000
+
+# Delete: swipe left on the list row, type the name in the dialog, confirm
+- swipe:
+    from:
+      text: "Renamed List"
+    direction: LEFT
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-input"
+    timeout: 15000
+- tapOn:
+    id: "delete-confirmation-input"
+- inputText: "Renamed List"
+- tapOn:
+    id: "delete-confirmation-confirm"
+- extendedWaitUntil:
+    notVisible: "Renamed List"
+    timeout: 15000
+- assertVisible: "No shopping lists yet"

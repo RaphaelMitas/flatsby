@@ -32,6 +32,7 @@ export function CategoryFilterPills({
     >
       {/* All button - keep as custom since it's not a category */}
       <Badge
+        testID="category-filter-all"
         variant={selectedCategory ? "outline" : "default"}
         onPress={() => onSelectCategory(null)}
         label="All"
@@ -47,6 +48,7 @@ export function CategoryFilterPills({
         return (
           <CategoryBadge
             key={categoryId}
+            testID={`category-filter-${categoryId}`}
             categoryId={categoryId}
             size="xl"
             variant={isSelected ? "default" : "outline"}

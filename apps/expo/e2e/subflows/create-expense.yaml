@@ -1,0 +1,30 @@
+# Shared subflow: from the Expenses tab, creates an equal-split expense with
+# amount ${AMOUNT} (decimal string) and description ${DESCRIPTION}.
+- tapOn:
+    id: "expense-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-amount"
+- inputText: ${AMOUNT}
+- tapOn:
+    id: "expense-form-description"
+- inputText: ${DESCRIPTION}
+- hideKeyboard
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    visible: ${DESCRIPTION}
+    timeout: 20000

@@ -213,6 +213,7 @@ const ShoppingListItem = ({
             categoryId={item.categoryId}
             onCheckedChange={handleCheckboxToggle}
             disabled={item.isPending}
+            checkboxTestID={`shopping-list-item-checkbox-${item.name}`}
           />
         </Pressable>
       </ReanimatedSwipeable>

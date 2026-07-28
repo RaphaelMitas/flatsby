@@ -163,6 +163,7 @@ export default function GroupDetailsScreen() {
                 render={({ field }) => (
                   <FormControl>
                     <Input
+                      testID="group-name-input"
                       value={field.value}
                       onChangeText={field.onChange}
                       onBlur={field.onBlur}
@@ -178,6 +179,7 @@ export default function GroupDetailsScreen() {
             </View>
 
             <Button
+              testID="group-name-save"
               icon={form.formState.isSubmitting ? "loader" : "save"}
               disabled={form.formState.isSubmitting || !isAdmin}
               title={

@@ -82,6 +82,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "f7e9d15f-497c-4f4e-ac97-f59a14638cdd",
     },
+    e2eTesting: process.env.E2E_TESTING === "true",
   },
   experiments: {
     tsconfigPaths: true,

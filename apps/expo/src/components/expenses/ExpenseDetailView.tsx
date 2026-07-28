@@ -161,6 +161,7 @@ export function ExpenseDetailView({
       <View className="h-full gap-4 p-4">
         <View className="flex-row gap-2">
           <Button
+            testID="expense-edit-button"
             title="Edit"
             variant="outline"
             onPress={() => {
@@ -178,6 +179,7 @@ export function ExpenseDetailView({
             icon="pencil"
           />
           <Button
+            testID="expense-delete-button"
             title="Delete"
             variant="destructive"
             onPress={() => setShowDeleteDialog(true)}
@@ -290,7 +292,7 @@ export function ExpenseDetailView({
 
           {/* Split Details Card */}
           {expense.splitMethod !== "settlement" && (
-            <Card>
+            <Card testID="expense-split-details">
               <CardHeader>
                 <View className="flex-row items-center gap-2">
                   <Icon name="users" size={20} color="foreground" />

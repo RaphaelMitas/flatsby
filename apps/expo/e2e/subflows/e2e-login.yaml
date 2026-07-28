@@ -1,0 +1,25 @@
+# Shared subflow: creates an isolated e2e user + session and relaunches the
+# app authenticated. Mirrors the web suite's fixtures/auth.ts.
+#
+# Requires env vars (passed via `maestro test -e`):
+#   E2E_API_URL            - the deployment to test against
+#   VERCEL_BYPASS_SECRET   - Vercel protection bypass secret (optional)
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "login-screen"
+    timeout: 30000
+- evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + '&bypass=' + encodeURIComponent(typeof VERCEL_BYPASS_SECRET !== 'undefined' ? VERCEL_BYPASS_SECRET : '')}"
+- openLink: ${output.e2eLoginLink}
+- extendedWaitUntil:
+    visible:
+      id: "e2e-login-done"
+    timeout: 45000
+# Relaunch (keeping state) so the auth client and tRPC links initialize with
+# the injected session + API URL override.
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "group-dashboard-title"
+    timeout: 30000

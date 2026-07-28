@@ -1,0 +1,43 @@
+appId: com.flatcove.app.v2
+tags:
+  - shopping-list
+---
+# Mirrors apps/nextjs/e2e/shopping-list/shopping-list-suggestions.spec.ts:
+# previously added items are suggested while typing; tapping one fills the input.
+- runFlow: ../../subflows/e2e-login.yaml
+- runFlow:
+    file: ../../subflows/create-shopping-list.yaml
+    env:
+      LIST_NAME: "Suggest List"
+
+# Add "Milk" with the dairy category and wait for the server commit
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: "Milk"
+- tapOn:
+    id: "shopping-list-category-picker"
+- extendedWaitUntil:
+    visible: "Milk, cheese, yogurt, eggs"
+    timeout: 10000
+- tapOn: "Milk, cheese, yogurt, eggs"
+- tapOn:
+    id: "shopping-list-add-item-button"
+- extendedWaitUntil:
+    visible: "Milk"
+    timeout: 15000
+
+# Type a prefix -> the suggestion badge appears
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: "Mil"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-suggestion"
+    timeout: 20000
+
+# Tapping the suggestion fills the input
+- tapOn:
+    id: "shopping-list-suggestion"
+- assertVisible:
+    id: "shopping-list-item-input"
+    text: "Milk"

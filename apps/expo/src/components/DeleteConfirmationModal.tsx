@@ -97,6 +97,7 @@ const DeleteConfirmationModal: React.FC<Props> = ({
                     <FormControl>
                       <Input
                         {...field}
+                        testID="delete-confirmation-input"
                         placeholder="Enter item name"
                         className="w-full"
                         value={field.value}
@@ -110,12 +111,14 @@ const DeleteConfirmationModal: React.FC<Props> = ({
 
             <View className="flex-row gap-3">
               <Button
+                testID="delete-confirmation-cancel"
                 title="Cancel"
                 variant="outline"
                 className="flex-1"
                 onPress={handleClose}
               />
               <Button
+                testID="delete-confirmation-confirm"
                 title="Delete"
                 variant="destructive"
                 className="flex-1"

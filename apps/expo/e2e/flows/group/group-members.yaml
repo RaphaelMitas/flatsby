@@ -1,0 +1,35 @@
+appId: com.flatcove.app.v2
+tags:
+  - group
+---
+# Mirrors "add member by email form interaction" from
+# apps/nextjs/e2e/group/group-management.spec.ts.
+- runFlow: ../../subflows/e2e-login.yaml
+
+# Select the fixture group to enter it
+- tapOn:
+    id: "group-select-button"
+- extendedWaitUntil:
+    visible: "Create Shopping List"
+    timeout: 15000
+
+# Open group settings -> members
+- tapOn: "Group Settings"
+- extendedWaitUntil:
+    visible: "Members"
+    timeout: 15000
+- tapOn: "Members"
+- extendedWaitUntil:
+    visible:
+      id: "group-add-member-email"
+    timeout: 15000
+
+# Fill the add-member form and submit; the email stays visible in the input
+# (the user does not exist, mirroring the web assertion).
+- tapOn:
+    id: "group-add-member-email"
+- inputText: "newuser@example.com"
+- hideKeyboard
+- tapOn:
+    id: "group-add-member-button"
+- assertVisible: "newuser@example.com"
