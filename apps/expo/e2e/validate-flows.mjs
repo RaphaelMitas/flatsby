@@ -21,7 +21,6 @@ const flowsDir = join(e2eDir, "flows");
 const subflowsDir = join(e2eDir, "subflows");
 
 const errors = [];
-const warnings = [];
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir)) {
@@ -134,6 +133,10 @@ function validateCommands(file, commands, { isSubflow }) {
     "waitForAnimationToEnd",
   ]);
   for (const command of commands) {
+    if (command == null) {
+      errors.push(`${rel}: empty list entry`);
+      continue;
+    }
     if (typeof command === "string") {
       if (!BARE_COMMANDS.has(command)) {
         errors.push(`${rel}: unknown bare command "${command}"`);
@@ -168,6 +171,14 @@ function validateCommands(file, commands, { isSubflow }) {
       }
     }
 
+    if (
+      (name === "repeat" || name === "retry") &&
+      value != null &&
+      Array.isArray(value.commands)
+    ) {
+      validateCommands(file, value.commands, { isSubflow });
+    }
+
     for (const id of iterateSelectors(value)) {
       if (id.includes("${")) continue; // env-templated, checked at runtime
       if (!idExists(id)) {
@@ -175,7 +186,6 @@ function validateCommands(file, commands, { isSubflow }) {
       }
     }
   }
-  if (isSubflow) return;
 }
 
 const flowFiles = walk(flowsDir).filter((f) => !f.endsWith("config.yaml"));
@@ -232,7 +242,6 @@ for (const file of subflowFiles) {
 console.log(
   `Checked ${flowFiles.length} flows + ${subflowFiles.length} subflows against ${knownIDs.size} static testIDs (${dynamicPrefixes.size} dynamic prefixes).`,
 );
-for (const w of warnings) console.warn(`WARN ${w}`);
 if (errors.length > 0) {
   for (const e of errors) console.error(`ERROR ${e}`);
   process.exit(1);

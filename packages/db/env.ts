@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
+    DB_WSPROXY_PORT: z.string().optional(),
   },
   client: {},
   experimental__runtimeEnv: {},

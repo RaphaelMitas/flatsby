@@ -29,6 +29,15 @@ export function getE2EApiUrlOverride(): string | null {
   return SecureStore.getItem(API_URL_KEY);
 }
 
+/**
+ * In e2e builds, list-row containers set accessible={false} so Maestro can
+ * reach their child elements (checkboxes, texts). Outside e2e builds this
+ * returns undefined, keeping the default grouped VoiceOver behavior.
+ */
+export function e2eAccessibilityOverride(): false | undefined {
+  return isE2ETestingEnabled() ? false : undefined;
+}
+
 export function getE2EBypassHeaders(): Record<string, string> {
   if (!isE2ETestingEnabled()) return {};
   const secret = SecureStore.getItem(BYPASS_SECRET_KEY);

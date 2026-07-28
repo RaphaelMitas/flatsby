@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ShoppingItemDisplay } from "./ShoppingItemDisplay";
@@ -207,7 +208,7 @@ const ShoppingListItem = ({
         }}
       >
         <Pressable
-          accessible={false}
+          accessible={e2eAccessibilityOverride()}
           disabled={item.isPending}
           onPress={() => setShowDetails(true)}
         >

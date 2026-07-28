@@ -19,6 +19,7 @@ import { Form, FormField, FormMessage, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { e2eAccessibilityOverride } from "~/utils/e2e";
 import { useShoppingStore } from "~/utils/shopping-store";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 
@@ -313,7 +314,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
         ) : (
           <TouchableOpacity
             testID="shopping-list-dashboard-link"
-            accessible={false}
+            accessible={e2eAccessibilityOverride()}
             className={cn(
               "bg-muted flex-row items-center justify-between rounded-lg p-4",
               isOptimistic && "animate-pulse",
