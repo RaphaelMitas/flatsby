@@ -17,7 +17,6 @@ import {
   CURRENCY_CODES,
   isCurrencyCode,
 } from "@flatsby/validators/expenses/types";
-import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -166,12 +165,7 @@ export function SettlementForm({
     trpc.expense.createExpense.mutationOptions({
       onMutate: async (input) => {
         // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpc.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: PAGE_SIZE.expenses,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);

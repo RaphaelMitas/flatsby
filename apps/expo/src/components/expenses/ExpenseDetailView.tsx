@@ -11,7 +11,6 @@ import {
   formatCurrencyFromCents,
   formatExpenseDateLong,
 } from "@flatsby/validators/expenses/formatting";
-import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
@@ -65,12 +64,7 @@ export function ExpenseDetailView({
     trpcClient.expense.deleteExpense.mutationOptions({
       onMutate: async (input) => {
         // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpcClient.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: PAGE_SIZE.expenses,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);

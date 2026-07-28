@@ -9,7 +9,6 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
@@ -47,12 +46,7 @@ export function ExpenseCard({
     trpcClient.expense.deleteExpense.mutationOptions({
       onMutate: async (input) => {
         // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpcClient.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: PAGE_SIZE.expenses,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);

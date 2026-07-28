@@ -23,7 +23,6 @@ import {
 } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
-import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useTRPC } from "~/trpc/react";
 import { useExpenseInvalidation } from "./useExpenseInvalidation";
@@ -106,121 +105,105 @@ export function useExpenseForm({
   const createExpenseMutation = useMutation(
     trpc.expense.createExpense.mutationOptions({
       onMutate: async (input) => {
-        await queryClient.cancelQueries(
-          trpc.expense.getGroupExpenses.queryOptions({
-            groupId: group.id,
-            limit: PAGE_SIZE.expenses,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
-        const previousData = queryClient.getQueryData(
-          trpc.expense.getGroupExpenses.infiniteQueryKey({
-            groupId: group.id,
-            limit: PAGE_SIZE.expenses,
-          }),
-        );
+        const previousData = queryClient.getQueryData(expenseListQueryKey);
 
         const paidByMember = group.groupMembers.find(
           (m) => m.id === input.paidByGroupMemberId,
         );
         const currentMember = group.thisGroupMember;
 
-        queryClient.setQueryData(
-          trpc.expense.getGroupExpenses.infiniteQueryKey({
+        queryClient.setQueryData(expenseListQueryKey, (old) => {
+          if (!old) return old;
+
+          const optimisticExpense = {
+            id: Date.now(),
             groupId: group.id,
-            limit: PAGE_SIZE.expenses,
-          }),
-          (old) => {
-            if (!old) return old;
-
-            const optimisticExpense = {
-              id: Date.now(),
-              groupId: group.id,
-              paidByGroupMemberId: input.paidByGroupMemberId,
-              amountInCents: input.amountInCents,
-              currency: input.currency,
-              description: input.description,
-              category: coerceCategory(input.category),
-              subcategory: coerceSubcategory(input.subcategory),
-              expenseDate: input.expenseDate,
-              createdByGroupMemberId: currentMember.id,
-              splitMethod: input.splitMethod,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              paidByGroupMember: paidByMember
-                ? {
-                    id: paidByMember.id,
-                    groupId: group.id,
-                    userId: paidByMember.userId,
-                    role: paidByMember.role,
-                    joinedOn: paidByMember.joinedOn,
-                    user: paidByMember.user,
-                  }
-                : {
-                    id: input.paidByGroupMemberId,
-                    groupId: group.id,
-                    userId: "",
-                    role: "member" as const,
-                    joinedOn: new Date(),
-                    user: { email: "", name: "Unknown", image: null },
-                  },
-              createdByGroupMember: {
-                id: currentMember.id,
-                groupId: group.id,
-                userId: currentMember.userId,
-                role: currentMember.role,
-                joinedOn: currentMember.joinedOn,
-                user: currentMember.user,
-              },
-              expenseSplits: input.splits.map((split, index) => {
-                const member = group.groupMembers.find(
-                  (m) => m.id === split.groupMemberId,
-                );
-                return {
-                  id: Date.now() + index,
-                  createdAt: new Date(),
-                  expenseId: Date.now(),
-                  groupMemberId: split.groupMemberId,
-                  amountInCents: split.amountInCents,
-                  percentage: split.percentage,
-                  groupMember: member
-                    ? {
-                        id: member.id,
-                        groupId: group.id,
-                        userId: member.userId,
-                        role: member.role,
-                        joinedOn: member.joinedOn,
-                        user: member.user,
-                      }
-                    : {
-                        id: split.groupMemberId,
-                        groupId: group.id,
-                        userId: "",
-                        role: "member" as const,
-                        joinedOn: new Date(),
-                        user: { email: "", name: "Unknown", image: null },
-                      },
-                };
-              }),
-              isPending: true,
-            };
-
-            const updatedPages = old.pages.map((page, pageIndex) => {
-              if (page.success === false) return page;
-              if (pageIndex !== 0) return page;
-
-              return {
-                ...page,
-                data: {
-                  ...page.data,
-                  items: [optimisticExpense, ...page.data.items],
+            paidByGroupMemberId: input.paidByGroupMemberId,
+            amountInCents: input.amountInCents,
+            currency: input.currency,
+            description: input.description,
+            category: coerceCategory(input.category),
+            subcategory: coerceSubcategory(input.subcategory),
+            expenseDate: input.expenseDate,
+            createdByGroupMemberId: currentMember.id,
+            splitMethod: input.splitMethod,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            paidByGroupMember: paidByMember
+              ? {
+                  id: paidByMember.id,
+                  groupId: group.id,
+                  userId: paidByMember.userId,
+                  role: paidByMember.role,
+                  joinedOn: paidByMember.joinedOn,
+                  user: paidByMember.user,
+                }
+              : {
+                  id: input.paidByGroupMemberId,
+                  groupId: group.id,
+                  userId: "",
+                  role: "member" as const,
+                  joinedOn: new Date(),
+                  user: { email: "", name: "Unknown", image: null },
                 },
+            createdByGroupMember: {
+              id: currentMember.id,
+              groupId: group.id,
+              userId: currentMember.userId,
+              role: currentMember.role,
+              joinedOn: currentMember.joinedOn,
+              user: currentMember.user,
+            },
+            expenseSplits: input.splits.map((split, index) => {
+              const member = group.groupMembers.find(
+                (m) => m.id === split.groupMemberId,
+              );
+              return {
+                id: Date.now() + index,
+                createdAt: new Date(),
+                expenseId: Date.now(),
+                groupMemberId: split.groupMemberId,
+                amountInCents: split.amountInCents,
+                percentage: split.percentage,
+                groupMember: member
+                  ? {
+                      id: member.id,
+                      groupId: group.id,
+                      userId: member.userId,
+                      role: member.role,
+                      joinedOn: member.joinedOn,
+                      user: member.user,
+                    }
+                  : {
+                      id: split.groupMemberId,
+                      groupId: group.id,
+                      userId: "",
+                      role: "member" as const,
+                      joinedOn: new Date(),
+                      user: { email: "", name: "Unknown", image: null },
+                    },
               };
-            });
+            }),
+            isPending: true,
+          };
 
-            return { ...old, pages: updatedPages };
-          },
-        );
+          const updatedPages = old.pages.map((page, pageIndex) => {
+            if (page.success === false) return page;
+            if (pageIndex !== 0) return page;
+
+            return {
+              ...page,
+              data: {
+                ...page.data,
+                items: [optimisticExpense, ...page.data.items],
+              },
+            };
+          });
+
+          return { ...old, pages: updatedPages };
+        });
 
         return { previousData };
       },

@@ -21,7 +21,6 @@ import {
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { ScrollArea } from "@flatsby/ui/scroll-area";
 import { toast } from "@flatsby/ui/toast";
-import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import type { ExpenseAction } from "./useExpenseSelection";
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -64,12 +63,7 @@ export function ExpenseDetailPanel({
   const deleteExpenseMutation = useMutation(
     trpc.expense.deleteExpense.mutationOptions({
       onMutate: async (input) => {
-        await queryClient.cancelQueries(
-          trpc.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: PAGE_SIZE.expenses,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         const previousData = queryClient.getQueryData(expenseListQueryKey);
 

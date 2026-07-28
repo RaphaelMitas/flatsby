@@ -32,7 +32,6 @@ import { toast } from "@flatsby/ui/toast";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
-import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { CurrencyInput } from "~/components/CurrencyInput";
@@ -104,12 +103,7 @@ export function SettlementForm({
     trpc.expense.createExpense.mutationOptions({
       onMutate: async (input) => {
         // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpc.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: PAGE_SIZE.expenses,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);

@@ -20,10 +20,13 @@ export default async function ExpensesPage(props: {
 
   // Prefetch initial expenses and group data
   prefetch(
-    trpc.expense.getGroupExpenses.queryOptions({
-      groupId,
-      limit: PAGE_SIZE.expenses,
-    }),
+    trpc.expense.getGroupExpenses.infiniteQueryOptions(
+      { groupId, limit: PAGE_SIZE.expenses },
+      {
+        getNextPageParam: (lastPage) =>
+          lastPage.success === true ? lastPage.data.nextCursor : null,
+      },
+    ),
   );
   prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
   prefetch(trpc.expense.getDebtSummary.queryOptions({ groupId }));
