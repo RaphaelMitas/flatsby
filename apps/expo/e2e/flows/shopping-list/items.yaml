@@ -17,11 +17,11 @@ tags:
 - tapOn:
     id: "shopping-list-category-picker"
 - extendedWaitUntil:
-    visible: "Fruits, vegetables, fresh herbs"
+    visible:
+      id: "picker-item-produce"
     timeout: 10000
-# Tap the sheet item by its unique description (the "Produce" title can also
-# appear in filter pills behind the sheet)
-- tapOn: "Fruits, vegetables, fresh herbs"
+- tapOn:
+    id: "picker-item-produce"
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:

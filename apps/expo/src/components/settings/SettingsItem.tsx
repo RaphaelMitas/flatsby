@@ -10,6 +10,7 @@ interface SettingsItemProps {
   onPress?: () => void;
   variant?: "default" | "destructive";
   rightContent?: React.ReactNode;
+  testID?: string;
 }
 
 export const SettingsItem = ({
@@ -19,11 +20,13 @@ export const SettingsItem = ({
   onPress,
   variant = "default",
   rightContent,
+  testID,
 }: SettingsItemProps) => {
   const isDestructive = variant === "destructive";
 
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
       className={`border-border bg-card active:bg-muted flex-row items-center justify-between border-b px-4 py-3 ${
         isDestructive ? "bg-destructive/10" : ""

@@ -10,9 +10,10 @@ tags:
 - tapOn: "Settings"
 - scrollUntilVisible:
     element:
-      text: "Delete Account"
+      id: "settings-delete-account"
     direction: DOWN
-- tapOn: "Delete Account"
+- tapOn:
+    id: "settings-delete-account"
 - extendedWaitUntil:
     visible:
       id: "delete-user-danger-zone-title"
@@ -38,7 +39,7 @@ tags:
 - tapOn:
     id: "delete-user-email-input"
 - inputText: "wrong-email@test.com"
-- hideKeyboard
+- tapOn: "Confirmation Required"
 - assertVisible:
     id: "delete-user-forever-button"
     enabled: false
@@ -50,7 +51,7 @@ tags:
     id: "delete-user-email-input"
 - eraseText
 - pasteText
-- hideKeyboard
+- tapOn: "Confirmation Required"
 - assertVisible:
     id: "delete-user-forever-button"
     enabled: true

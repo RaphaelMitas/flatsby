@@ -20,7 +20,7 @@ tags:
 - tapOn:
     id: "expense-form-description"
 - inputText: "Percent dinner"
-- hideKeyboard
+- tapOn: "Amount & Details"
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:
@@ -36,7 +36,7 @@ tags:
     id: "split-member-amount-0"
 - eraseText
 - inputText: "100"
-- hideKeyboard
+- tapOn: "Split Details"
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:
@@ -62,7 +62,7 @@ tags:
 - tapOn:
     id: "expense-form-description"
 - inputText: "Custom utilities"
-- hideKeyboard
+- tapOn: "Amount & Details"
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:
@@ -78,7 +78,7 @@ tags:
     id: "split-member-amount-0"
 - eraseText
 - inputText: "30"
-- hideKeyboard
+- tapOn: "Split Details"
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:

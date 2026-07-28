@@ -180,6 +180,7 @@ export const BottomSheetPickerProvider: React.FC<
   const renderItem = useCallback(
     ({ item }: { item: BottomSheetPickerItem }) => (
       <Pressable
+        testID={`picker-item-${item.id}`}
         onPress={() => handleItemSelect(item)}
         className={itemVariants({
           className: item.disabled ? "opacity-50" : "",

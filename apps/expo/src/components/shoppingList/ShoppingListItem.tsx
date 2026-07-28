@@ -204,6 +204,7 @@ const ShoppingListItem = ({
         }}
       >
         <Pressable
+          accessible={false}
           disabled={item.isPending}
           onPress={() => setShowDetails(true)}
         >

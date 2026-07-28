@@ -28,7 +28,8 @@ tags:
 - tapOn:
     id: "shopping-list-create-submit"
 - extendedWaitUntil:
-    visible: "Groceries List"
+    visible:
+      id: "shopping-list-dashboard-link"
     timeout: 15000
 - tapOn:
     id: "shopping-list-dashboard-link"

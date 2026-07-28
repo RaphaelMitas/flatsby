@@ -173,7 +173,11 @@ export function ExpenseCard({
           }
         }}
       >
-        <Pressable onPress={handleCardPress} disabled={isOptimistic}>
+        <Pressable
+          accessible={false}
+          onPress={handleCardPress}
+          disabled={isOptimistic}
+        >
           <ExpenseDisplay
             amountInCents={expense.amountInCents}
             currency={expense.currency}

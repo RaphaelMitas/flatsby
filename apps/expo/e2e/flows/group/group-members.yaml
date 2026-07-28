@@ -10,15 +10,19 @@ tags:
 - tapOn:
     id: "group-select-button"
 - extendedWaitUntil:
-    visible: "Create Shopping List"
+    visible:
+      id: "shopping-list-create-button"
     timeout: 15000
 
 # Open group settings -> members
-- tapOn: "Group Settings"
+- tapOn:
+    id: "shopping-lists-group-settings"
 - extendedWaitUntil:
-    visible: "Members"
+    visible:
+      id: "group-settings-members"
     timeout: 15000
-- tapOn: "Members"
+- tapOn:
+    id: "group-settings-members"
 - extendedWaitUntil:
     visible:
       id: "group-add-member-email"
@@ -29,7 +33,9 @@ tags:
 - tapOn:
     id: "group-add-member-email"
 - inputText: "newuser@example.com"
-- hideKeyboard
+- tapOn: "Manage Members"
 - tapOn:
     id: "group-add-member-button"
-- assertVisible: "newuser@example.com"
+- assertVisible:
+    id: "group-add-member-email"
+    text: "newuser@example.com"

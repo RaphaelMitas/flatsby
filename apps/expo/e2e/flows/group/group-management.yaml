@@ -35,11 +35,14 @@ tags:
     timeout: 15000
 
 # Change group name via group settings
-- tapOn: "Group Settings"
+- tapOn:
+    id: "shopping-lists-group-settings"
 - extendedWaitUntil:
-    visible: "Group Details"
+    visible:
+      id: "group-settings-details"
     timeout: 15000
-- tapOn: "Group Details"
+- tapOn:
+    id: "group-settings-details"
 - extendedWaitUntil:
     visible:
       id: "group-name-input"

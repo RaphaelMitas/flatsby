@@ -17,9 +17,11 @@ tags:
 - tapOn:
     id: "shopping-list-category-picker"
 - extendedWaitUntil:
-    visible: "Fruits, vegetables, fresh herbs"
+    visible:
+      id: "picker-item-produce"
     timeout: 10000
-- tapOn: "Fruits, vegetables, fresh herbs"
+- tapOn:
+    id: "picker-item-produce"
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
@@ -33,9 +35,11 @@ tags:
 - tapOn:
     id: "shopping-list-category-picker"
 - extendedWaitUntil:
-    visible: "Milk, cheese, yogurt, eggs"
+    visible:
+      id: "picker-item-dairy"
     timeout: 10000
-- tapOn: "Milk, cheese, yogurt, eggs"
+- tapOn:
+    id: "picker-item-dairy"
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:

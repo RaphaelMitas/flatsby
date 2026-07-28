@@ -23,13 +23,15 @@ tags:
 - tapOn:
     id: "expense-form-description"
 - inputText: "Team snacks"
-- hideKeyboard
+- tapOn: "Amount & Details"
 - tapOn:
     id: "expense-form-category"
 - extendedWaitUntil:
-    visible: "Groceries"
+    visible:
+      id: "picker-item-groceries"
     timeout: 10000
-- tapOn: "Groceries"
+- tapOn:
+    id: "picker-item-groceries"
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:

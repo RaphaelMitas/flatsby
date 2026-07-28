@@ -32,7 +32,7 @@ tags:
     id: "expense-form-amount"
 - eraseText
 - inputText: "50.00"
-- hideKeyboard
+- tapOn: "Amount & Details"
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:

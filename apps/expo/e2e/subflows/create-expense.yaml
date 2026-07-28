@@ -14,7 +14,8 @@ appId: com.flatcove.app.v2
 - tapOn:
     id: "expense-form-description"
 - inputText: ${DESCRIPTION}
-- hideKeyboard
+# Tap a neutral text to dismiss the keyboard (hideKeyboard is flaky on iOS)
+- tapOn: "Amount & Details"
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:

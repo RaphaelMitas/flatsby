@@ -77,6 +77,7 @@ function ShoppingListsDashboardInner() {
             {selectedGroupName}
           </Text>
           <Button
+            testID="shopping-lists-group-settings"
             title="Group Settings"
             variant="outline"
             size="md"

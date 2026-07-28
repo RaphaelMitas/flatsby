@@ -16,6 +16,6 @@ tags:
 - assertVisible:
     id: "sign-in-apple-button"
 - assertVisible: "Manage your daily life with your flatmates."
-- assertVisible: "Terms"
-- assertVisible: "Privacy Policy"
+# The Terms/Privacy links are nested Text nodes, exposed as one combined string
+- assertVisible: ".*Terms.*Privacy Policy.*"
 - assertVisible: "Legal Notice"

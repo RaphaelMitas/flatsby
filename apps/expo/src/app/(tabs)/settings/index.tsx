@@ -206,6 +206,7 @@ export default function SettingsIndex() {
         <SettingsSection title="Danger Zone">
           <Link href="/settings/danger" asChild>
             <SettingsItem
+              testID="settings-delete-account"
               title="Delete Account"
               subtitle="Permanently delete your account"
               iconName="trash-2"

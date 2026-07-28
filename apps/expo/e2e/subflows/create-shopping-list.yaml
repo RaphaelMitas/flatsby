@@ -20,7 +20,8 @@ appId: com.flatcove.app.v2
 - tapOn:
     id: "shopping-list-create-submit"
 - extendedWaitUntil:
-    visible: ${LIST_NAME}
+    visible:
+      id: "shopping-list-dashboard-link"
     timeout: 15000
 - tapOn:
     id: "shopping-list-dashboard-link"
