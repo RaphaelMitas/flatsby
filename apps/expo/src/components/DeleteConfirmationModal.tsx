@@ -109,6 +109,9 @@ const DeleteConfirmationModal: React.FC<Props> = ({
                         testID="delete-confirmation-input"
                         placeholder="Enter item name"
                         className="w-full"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        spellCheck={false}
                         value={field.value}
                         onChangeText={field.onChange}
                       />

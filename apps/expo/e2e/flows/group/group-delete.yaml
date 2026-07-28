@@ -34,6 +34,7 @@ tags:
 - tapOn:
     id: "delete-confirmation-input"
 - inputText: "Delete Me Group"
+- waitForAnimationToEnd
 - extendedWaitUntil:
     visible:
       id: "delete-confirmation-input"

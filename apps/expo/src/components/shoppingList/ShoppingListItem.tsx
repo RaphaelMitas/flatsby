@@ -191,6 +191,9 @@ const ShoppingListItem = ({
       <ReanimatedSwipeable
         ref={swipeableRef}
         enabled={!item.isPending}
+        friction={2}
+        leftThreshold={40}
+        rightThreshold={40}
         renderRightActions={renderRightActions}
         renderLeftActions={renderLeftActions}
         onSwipeableOpen={(direction) => {

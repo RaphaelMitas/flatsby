@@ -59,6 +59,7 @@ tags:
 - tapOn:
     id: "delete-confirmation-input"
 - inputText: "Renamed List"
+- waitForAnimationToEnd
 - extendedWaitUntil:
     visible:
       id: "delete-confirmation-input"
