@@ -6,6 +6,7 @@ tags:
 # login screen renders with OAuth buttons, tagline, and legal links.
 - launchApp:
     clearState: true
+    clearKeychain: true
 - extendedWaitUntil:
     visible:
       id: "login-screen"

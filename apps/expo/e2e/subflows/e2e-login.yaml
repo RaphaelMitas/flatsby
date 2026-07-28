@@ -6,8 +6,11 @@ appId: com.flatcove.app.v2
 # Requires env vars (passed via `maestro test -e`):
 #   E2E_API_URL            - the deployment to test against
 #   VERCEL_BYPASS_SECRET   - Vercel protection bypass secret (optional)
+# clearState alone leaves the iOS Keychain intact, where expo-secure-store
+# keeps the previous flow's session — clear it so every flow starts logged out.
 - launchApp:
     clearState: true
+    clearKeychain: true
 - extendedWaitUntil:
     visible:
       id: "login-screen"
