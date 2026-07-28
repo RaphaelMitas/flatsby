@@ -40,6 +40,12 @@ tags:
       id: "delete-confirmation-input"
       text: "Delete Me Group"
     timeout: 5000
+# Dismiss the keyboard (tapping the modal body dismisses it), then confirm
+- tapOn: "Confirmation Required"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "delete-confirmation-confirm"
+    enabled: true
 - tapOn:
     id: "delete-confirmation-confirm"
 - extendedWaitUntil:

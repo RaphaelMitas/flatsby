@@ -1,9 +1,11 @@
 import type React from "react";
 import { useCallback } from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   Text,
   View,
 } from "react-native";
@@ -78,7 +80,11 @@ const DeleteConfirmationModal: React.FC<Props> = ({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1 items-center justify-center bg-black/50"
       >
-        <View className="bg-background mx-4 w-full max-w-sm rounded-lg p-6 shadow-lg">
+        <Pressable
+          accessible={false}
+          onPress={Keyboard.dismiss}
+          className="bg-background mx-4 w-full max-w-sm rounded-lg p-6 shadow-lg"
+        >
           <View className="mb-4 flex-row items-center gap-3">
             <Icon name="triangle-alert" size={24} color="destructive" />
             <Text className="text-foreground text-lg font-semibold">
@@ -112,8 +118,12 @@ const DeleteConfirmationModal: React.FC<Props> = ({
                         autoCapitalize="none"
                         autoCorrect={false}
                         spellCheck={false}
+                        returnKeyType="done"
                         value={field.value}
                         onChangeText={field.onChange}
+                        onSubmitEditing={() => {
+                          if (isConfirmationValid) handleConfirm();
+                        }}
                       />
                     </FormControl>
                   )}
@@ -140,7 +150,7 @@ const DeleteConfirmationModal: React.FC<Props> = ({
               />
             </View>
           </Form>
-        </View>
+        </Pressable>
       </KeyboardAvoidingView>
     </Modal>
   );
