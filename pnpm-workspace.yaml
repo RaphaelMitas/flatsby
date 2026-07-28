@@ -3,18 +3,26 @@ packages:
   - packages/*
   - tooling/*
 
-# Unfixable transitive dependency vulnerabilities (pinned by parent packages).
-# Remove entries as upstream packages release fixes.
-# - esbuild: @esbuild-kit/core-utils@3.3.2 pins ~0.18.20 (drizzle-kit)
-# - uuid: Expo/LangChain/PostHog dependency chain has no uuid >=14 path yet.
-# - postcss: Next and Expo Metro still pin vulnerable 8.4.x releases.
-# - sharp: next 16.2.11 still pins sharp ^0.34.5; libvips CVEs fixed in 0.35.0.
+# Transitive vulnerabilities with no upstream fix path: each is held back by a
+# parent package we do not control, via an exact pin or a range that excludes the
+# patched release. Re-check with `pnpm audit` and drop entries as upstream ships.
 auditConfig:
   ignoreGhsas:
+    # esbuild <=0.24.2 - @esbuild-kit/core-utils@3.3.2 pins ~0.18.20 (via drizzle-kit).
     - GHSA-67mh-4wv8-2f99
+    # uuid <11.1.1 - xcode@3.0.1 pins ^7.0.3 (Expo iOS tooling).
     - GHSA-w5hq-g745-h8pq
+    # postcss <8.5.10 / <=8.5.11 / <=8.5.17 - next@16.2.x depends on exactly
+    # 8.4.31, so no range update can reach a patched release. The workspace's own
+    # postcss (tooling/tailwind, Expo Metro, Tailwind) is on 8.5.24 and unaffected.
     - GHSA-qx2v-qp2m-jg93
+    - GHSA-6g55-p6wh-862q
+    - GHSA-r28c-9q8g-f849
+    # sharp <0.35.0 - next@16.2.x pins sharp ^0.34.5; libvips CVEs fixed in 0.35.0.
     - GHSA-f88m-g3jw-g9cj
+    # brace-expansion <=5.0.7 - minimatch@3.x (expo > @expo/cli > ... > glob) pins
+    # ^1.1.7; 1.1.16 is the newest 1.x and carries no backport of the 5.0.8 fix.
+    - GHSA-mh99-v99m-4gvg
 
 catalog:
   "@ai-sdk/react": ^3.0.221
@@ -41,8 +49,8 @@ catalog:
 
 catalogs:
   better-auth:
-    "@better-auth/expo": 1.6.20
-    better-auth: 1.6.20
+    "@better-auth/expo": 1.6.23
+    better-auth: 1.6.23
   react19:
     "@types/react": ~19.2.0
     "@types/react-dom": ~19.2.0
