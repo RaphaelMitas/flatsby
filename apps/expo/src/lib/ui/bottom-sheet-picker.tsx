@@ -228,6 +228,7 @@ export const BottomSheetPickerProvider: React.FC<
       {children}
       <BottomSheet
         ref={bottomSheetRef}
+        accessible={false}
         snapPoints={pickerConfig?.snapPoints ?? ["50%", "80%"]}
         index={-1}
         enablePanDownToClose

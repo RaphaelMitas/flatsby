@@ -59,9 +59,17 @@ tags:
 - tapOn:
     id: "delete-confirmation-input"
 - inputText: "Renamed List"
-- pressKey: Enter
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-input"
+      text: "Renamed List"
+    timeout: 5000
 - tapOn:
     id: "delete-confirmation-confirm"
+- extendedWaitUntil:
+    notVisible:
+      id: "delete-confirmation-confirm"
+    timeout: 10000
 - extendedWaitUntil:
     notVisible: "Renamed List"
     timeout: 15000

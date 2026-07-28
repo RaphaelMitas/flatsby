@@ -22,29 +22,11 @@ tags:
     visible: "Delete Me Group"
     timeout: 15000
 
-# Select it (second card) and open its settings
-- tapOn:
-    id: "group-select-button"
-    index: 1
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-create-button"
-    timeout: 15000
-- tapOn:
-    id: "shopping-lists-group-settings"
-- extendedWaitUntil:
-    visible:
-      id: "group-settings-details"
-    timeout: 15000
-- scrollUntilVisible:
-    element:
-      id: "group-settings-delete"
-    direction: DOWN
-    centerElement: true
-
-# Delete with typed confirmation
-- tapOn:
-    id: "group-settings-delete"
+# Swipe left on the dashboard row to reveal Delete, confirm with typed name
+- swipe:
+    from:
+      text: "Delete Me Group"
+    direction: LEFT
 - extendedWaitUntil:
     visible:
       id: "delete-confirmation-input"
@@ -52,14 +34,21 @@ tags:
 - tapOn:
     id: "delete-confirmation-input"
 - inputText: "Delete Me Group"
-- pressKey: Enter
-- tapOn:
-    id: "delete-confirmation-confirm"
-
-# Back on the group dashboard, the deleted group is gone
-- tapOn: "Home"
 - extendedWaitUntil:
     visible:
-      id: "group-dashboard-title"
-    timeout: 20000
-- assertNotVisible: "Delete Me Group"
+      id: "delete-confirmation-input"
+      text: "Delete Me Group"
+    timeout: 5000
+- tapOn:
+    id: "delete-confirmation-confirm"
+- extendedWaitUntil:
+    notVisible:
+      id: "delete-confirmation-confirm"
+    timeout: 10000
+
+# The deleted group is gone from the dashboard
+- extendedWaitUntil:
+    notVisible: "Delete Me Group"
+    timeout: 15000
+- assertVisible:
+    id: "group-dashboard-title"
