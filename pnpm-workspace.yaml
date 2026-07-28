@@ -33,7 +33,7 @@ auditConfig:
     - GHSA-mh99-v99m-4gvg
 
 catalog:
-  "@ai-sdk/react": ^3.0.221
+  "@ai-sdk/react": ^3.0.238
   "@eslint/js": ^10.0.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.3.1
@@ -43,7 +43,7 @@ catalog:
   "@trpc/tanstack-react-query": ^11.18.0
   "@turbo/gen": ^2.10.0
   "@types/node": ^24.13.2
-  ai: ^6.0.219
+  ai: ^6.0.236
   autumn-js: ^1.2.31
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^10.5.0
