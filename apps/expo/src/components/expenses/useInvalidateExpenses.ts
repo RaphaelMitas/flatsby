@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
@@ -12,10 +12,14 @@ import { trpc } from "~/utils/api";
 export function useInvalidateExpenses(groupId: number) {
   const queryClient = useQueryClient();
 
-  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
-    groupId,
-    limit: PAGE_SIZE.expenses,
-  });
+  const expenseListQueryKey = useMemo(
+    () =>
+      trpc.expense.getGroupExpenses.infiniteQueryKey({
+        groupId,
+        limit: PAGE_SIZE.expenses,
+      }),
+    [groupId],
+  );
 
   const invalidateList = useCallback(() => {
     return queryClient.invalidateQueries({ queryKey: expenseListQueryKey });
