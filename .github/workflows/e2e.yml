@@ -26,7 +26,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_JSON=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number,headRefName --jq '.[0]')
+          # deployment_status runs carry secrets, so fork PRs (cross-repo
+          # heads) must not gate downstream jobs on.
+          PR_JSON=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number,headRefName,isCrossRepository --jq '[.[] | select(.isCrossRepository == false)][0]')
           if [[ -n "$PR_JSON" && "$PR_JSON" != "null" ]]; then
             echo "has-pr=true" >> "$GITHUB_OUTPUT"
             echo "branch=$(echo "$PR_JSON" | jq -r '.headRefName')" >> "$GITHUB_OUTPUT"
@@ -76,82 +78,138 @@ jobs:
   e2e-ios:
     needs: check-pr
     if: needs.check-pr.outputs.has-pr == 'true'
-    runs-on: [self-hosted, macos, arm64]
+    runs-on: macos-26
     timeout-minutes: 45
     concurrency:
       group: e2e-ios-${{ needs.check-pr.outputs.branch }}
       cancel-in-progress: true
+    env:
+      MAESTRO_VERSION: "2.3.0"
+      MAESTRO_CLI_NO_ANALYTICS: "1"
     steps:
+      # The app throws on launch without these (PostHog at the root layout,
+      # RevenueCat after login). EAS builds injected them from the EAS
+      # "preview" environment; prebuild + xcodebuild needs them as repo
+      # secrets (copy values via `eas env:list preview --include-sensitive`).
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.EXPO_PUBLIC_POSTHOG_API_KEY }}" ] || [ -z "${{ secrets.EXPO_PUBLIC_REVENUECAT_API_KEY }}" ]; then
+            echo "::error::Repo secrets EXPO_PUBLIC_POSTHOG_API_KEY and EXPO_PUBLIC_REVENUECAT_API_KEY are required for the iOS e2e build"
+            exit 1
+          fi
+
       - uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup
-        with:
-          cache: "false"
 
       - name: Validate Maestro flows
         working-directory: apps/expo
         run: node e2e/validate-flows.mjs
 
-      - name: Clean native build artifacts
-        working-directory: apps/expo
-        run: rm -rf ios android build-cache "$RUNNER_TEMP/eas-build"
-
-      - name: Update CocoaPods repo
-        run: pod repo update
-
-      - name: Build app for simulator
-        working-directory: apps/expo
+      - name: Select Xcode
         run: |
-          mkdir -p build-cache
-          pnpm dlx eas-cli build --local --profile e2e --platform ios --output build-cache/Flatsby.tar.gz
-          cd build-cache && tar -xzf Flatsby.tar.gz && rm Flatsby.tar.gz
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+          xcodebuild -version
+
+      - name: Install Maestro
+        run: |
+          curl -fsSL https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/expo/ios/Pods
+            ~/Library/Caches/CocoaPods
+          key: pods-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/expo/package.json') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Prebuild iOS project
+        working-directory: apps/expo
+        run: pnpm expo prebuild --platform ios --no-install
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EAS_LOCAL_BUILD_WORKINGDIR: ${{ runner.temp }}/eas-build
+          E2E_TESTING: "true"
 
-      - name: Verify build artifact
-        working-directory: apps/expo
+      - name: Install CocoaPods dependencies
+        working-directory: apps/expo/ios
+        run: pod install
+        env:
+          LANG: en_US.UTF-8
+
+      # E2E_TESTING must be present here too: the expo-constants build phase
+      # re-evaluates app.config.ts (extra.e2eTesting) during xcodebuild, and
+      # the EXPO_PUBLIC_ vars are inlined by the Metro bundle phase.
+      # CODE_SIGN_IDENTITY=- instead of CODE_SIGNING_ALLOWED=NO: the latter
+      # strips keychain entitlements and expo-secure-store crashes on launch.
+      - name: Build app for simulator
+        working-directory: apps/expo/ios
         run: |
-          if [ ! -d "build-cache/Flatsby.app" ]; then
-            echo "ERROR: build-cache/Flatsby.app not found"
-            ls -la build-cache || true
+          set -o pipefail
+          xcodebuild -workspace Flatsby.xcworkspace -scheme Flatsby \
+            -configuration Release -sdk iphonesimulator \
+            -derivedDataPath build CODE_SIGN_IDENTITY=- build | xcbeautify
+        env:
+          E2E_TESTING: "true"
+          EXPO_PUBLIC_POSTHOG_API_KEY: ${{ secrets.EXPO_PUBLIC_POSTHOG_API_KEY }}
+          EXPO_PUBLIC_REVENUECAT_API_KEY: ${{ secrets.EXPO_PUBLIC_REVENUECAT_API_KEY }}
+
+      - name: Boot iOS simulator
+        id: sim
+        run: |
+          UDID=""
+          for DEVICE_TYPE in "iPhone 17" "iPhone 16" "iPhone 15"; do
+            if UDID=$(xcrun simctl create "Flatsby-E2E" "$DEVICE_TYPE" 2>/dev/null); then
+              echo "Created Flatsby-E2E ($DEVICE_TYPE): $UDID"
+              break
+            fi
+          done
+          if [ -z "$UDID" ]; then
+            echo "::error::No known iPhone device type available on this image"
+            xcrun simctl list devicetypes
             exit 1
           fi
-
-      - name: Boot iOS Simulator
-        run: |
-          xcrun simctl shutdown "Flatsby-E2E" 2>/dev/null || true
-          sleep 2
-          xcrun simctl boot "Flatsby-E2E"
-          xcrun simctl bootstatus "Flatsby-E2E"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID"
+          # Reduce Motion: animation settle time is a flake source on shared runners
+          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
       - name: Install app on simulator
-        run: xcrun simctl install "Flatsby-E2E" apps/expo/build-cache/Flatsby.app
+        run: xcrun simctl install "${{ steps.sim.outputs.udid }}" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
+
+      - name: Start screen recording
+        working-directory: apps/expo
+        run: |
+          mkdir -p e2e/results
+          nohup xcrun simctl io "${{ steps.sim.outputs.udid }}" recordVideo --codec h264 --force e2e/results/recording.mp4 > e2e/results/recording.log 2>&1 &
+          echo $! > "$RUNNER_TEMP/recording.pid"
 
       - name: Run Maestro tests
         working-directory: apps/expo
-        run: |
-          export PATH="$HOME/.maestro/bin:$PATH"
-          mkdir -p e2e/results
-          maestro test -e E2E_API_URL="$E2E_API_URL" -e VERCEL_BYPASS_SECRET="$VERCEL_BYPASS_SECRET" e2e/flows/ --format junit --output e2e/results/report.xml
+        run: node e2e/run-flows.mjs
         env:
           E2E_API_URL: ${{ github.event.deployment_status.target_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
-      - name: Collect simulator logs & crash reports
+      - name: Stop screen recording
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/recording.pid" ]; then
+            kill -INT "$(cat "$RUNNER_TEMP/recording.pid")" 2>/dev/null || true
+            sleep 5
+          fi
+
+      - name: Collect crash reports & simulator logs
         if: always()
         working-directory: apps/expo
         run: |
           mkdir -p e2e/results/diagnostics
-          latest_maestro_run=$(ls -t ~/.maestro/tests 2>/dev/null | head -1)
-          if [ -n "$latest_maestro_run" ]; then
-            cp -R ~/.maestro/tests/"$latest_maestro_run" e2e/results/maestro-artifacts || true
-          fi
           cp -f ~/Library/Logs/DiagnosticReports/*.crash e2e/results/diagnostics/ 2>/dev/null || true
           cp -f ~/Library/Logs/DiagnosticReports/*.ips e2e/results/diagnostics/ 2>/dev/null || true
-          # Best-effort device log snapshot (may fail if sim is already shut down)
-          xcrun simctl spawn "Flatsby-E2E" log show --style compact --last 5m \
+          xcrun simctl spawn "${{ steps.sim.outputs.udid }}" log show --style compact --last 30m \
             --predicate 'processImagePath CONTAINS "Flatsby" OR senderImagePath CONTAINS "Flatsby"' \
             > e2e/results/diagnostics/sim-log.txt 2>/dev/null || true
 
@@ -162,7 +220,3 @@ jobs:
           name: maestro-results
           path: apps/expo/e2e/results/
           retention-days: 7
-
-      - name: Shutdown simulator
-        if: always()
-        run: xcrun simctl shutdown "Flatsby-E2E" || true
