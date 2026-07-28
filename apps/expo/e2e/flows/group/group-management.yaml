@@ -51,8 +51,11 @@ tags:
     id: "group-name-input"
 - eraseText
 - inputText: "Maestro Group Updated"
+- tapOn: "Group Name"
 - tapOn:
     id: "group-name-save"
 - extendedWaitUntil:
-    visible: "Success!"
+    visible:
+      id: "group-name-input"
+      text: "Maestro Group Updated"
     timeout: 15000

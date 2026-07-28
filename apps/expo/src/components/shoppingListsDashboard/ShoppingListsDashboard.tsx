@@ -73,7 +73,10 @@ function ShoppingListsDashboardInner() {
       <View className="flex-1 flex-col gap-6 p-4">
         {/* Header */}
         <View className="flex flex-row items-center justify-between">
-          <Text className="text-foreground text-3xl font-bold">
+          <Text
+            className="text-foreground flex-1 text-3xl font-bold"
+            numberOfLines={1}
+          >
             {selectedGroupName}
           </Text>
           <Button

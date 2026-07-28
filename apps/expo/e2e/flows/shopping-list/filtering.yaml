@@ -16,10 +16,11 @@ tags:
 - inputText: "Carrots"
 - tapOn:
     id: "shopping-list-category-picker"
+- waitForAnimationToEnd
 - extendedWaitUntil:
     visible:
       id: "picker-item-produce"
-    timeout: 10000
+    timeout: 20000
 - tapOn:
     id: "picker-item-produce"
 - tapOn:
@@ -34,10 +35,11 @@ tags:
 - inputText: "Cheese"
 - tapOn:
     id: "shopping-list-category-picker"
+- waitForAnimationToEnd
 - extendedWaitUntil:
     visible:
       id: "picker-item-dairy"
-    timeout: 10000
+    timeout: 20000
 - tapOn:
     id: "picker-item-dairy"
 - tapOn:

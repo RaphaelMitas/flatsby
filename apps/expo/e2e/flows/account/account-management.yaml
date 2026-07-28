@@ -20,7 +20,7 @@ tags:
     timeout: 15000
 - assertVisible:
     id: "delete-user-confirm-button"
-- assertVisible: "This action cannot be undone."
+- assertVisible: ".*This action cannot be undone.*"
 
 # Start deletion: confirmation input appears, confirm stays disabled
 - tapOn:

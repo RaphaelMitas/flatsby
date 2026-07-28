@@ -40,6 +40,7 @@ tags:
     element:
       id: "group-settings-delete"
     direction: DOWN
+    centerElement: true
 
 # Delete with typed confirmation
 - tapOn:
@@ -51,6 +52,7 @@ tags:
 - tapOn:
     id: "delete-confirmation-input"
 - inputText: "Delete Me Group"
+- pressKey: Enter
 - tapOn:
     id: "delete-confirmation-confirm"
 

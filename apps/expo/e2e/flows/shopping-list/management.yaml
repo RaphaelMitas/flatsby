@@ -59,6 +59,7 @@ tags:
 - tapOn:
     id: "delete-confirmation-input"
 - inputText: "Renamed List"
+- pressKey: Enter
 - tapOn:
     id: "delete-confirmation-confirm"
 - extendedWaitUntil:

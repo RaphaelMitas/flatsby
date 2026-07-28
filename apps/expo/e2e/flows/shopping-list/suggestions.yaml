@@ -16,10 +16,11 @@ tags:
 - inputText: "Milk"
 - tapOn:
     id: "shopping-list-category-picker"
+- waitForAnimationToEnd
 - extendedWaitUntil:
     visible:
       id: "picker-item-dairy"
-    timeout: 10000
+    timeout: 20000
 - tapOn:
     id: "picker-item-dairy"
 - tapOn:

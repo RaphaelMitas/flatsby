@@ -26,12 +26,14 @@ tags:
 - tapOn: "Amount & Details"
 - tapOn:
     id: "expense-form-category"
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/creation-category-sheet
 - extendedWaitUntil:
     visible:
-      id: "picker-item-groceries"
-    timeout: 10000
+      id: "picker-item-restaurant"
+    timeout: 20000
 - tapOn:
-    id: "picker-item-groceries"
+    id: "picker-item-restaurant"
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:

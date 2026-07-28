@@ -144,6 +144,10 @@ jobs:
         working-directory: apps/expo
         run: |
           mkdir -p e2e/results/diagnostics
+          latest_maestro_run=$(ls -t ~/.maestro/tests 2>/dev/null | head -1)
+          if [ -n "$latest_maestro_run" ]; then
+            cp -R ~/.maestro/tests/"$latest_maestro_run" e2e/results/maestro-artifacts || true
+          fi
           cp -f ~/Library/Logs/DiagnosticReports/*.crash e2e/results/diagnostics/ 2>/dev/null || true
           cp -f ~/Library/Logs/DiagnosticReports/*.ips e2e/results/diagnostics/ 2>/dev/null || true
           # Best-effort device log snapshot (may fail if sim is already shut down)

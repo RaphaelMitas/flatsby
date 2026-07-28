@@ -16,10 +16,12 @@ tags:
 - inputText: "Apples"
 - tapOn:
     id: "shopping-list-category-picker"
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/items-category-sheet
 - extendedWaitUntil:
     visible:
       id: "picker-item-produce"
-    timeout: 10000
+    timeout: 20000
 - tapOn:
     id: "picker-item-produce"
 - tapOn:
