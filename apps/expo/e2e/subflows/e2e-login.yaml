@@ -1,3 +1,5 @@
+appId: com.flatcove.app.v2
+---
 # Shared subflow: creates an isolated e2e user + session and relaunches the
 # app authenticated. Mirrors the web suite's fixtures/auth.ts.
 #

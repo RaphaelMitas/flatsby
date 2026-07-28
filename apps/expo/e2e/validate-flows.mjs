@@ -214,6 +214,17 @@ for (const file of subflowFiles) {
       for (const e of d.errors) errors.push(`${rel}: YAML error: ${e.message}`);
     continue;
   }
+  // Maestro requires a config section (appId + ---) in subflows too.
+  if (docs.length !== 2) {
+    errors.push(
+      `${rel}: expected front matter + commands (2 documents), got ${docs.length}`,
+    );
+    continue;
+  }
+  const config = docs[0].toJS();
+  if (!config || typeof config.appId !== "string") {
+    errors.push(`${rel}: front matter missing appId`);
+  }
   const commands = docs[docs.length - 1].toJS();
   validateCommands(file, commands, { isSubflow: true });
 }

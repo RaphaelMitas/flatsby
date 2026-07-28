@@ -1,3 +1,5 @@
+appId: com.flatcove.app.v2
+---
 # Shared subflow: from the Expenses tab, creates an equal-split expense with
 # amount ${AMOUNT} (decimal string) and description ${DESCRIPTION}.
 - tapOn:
