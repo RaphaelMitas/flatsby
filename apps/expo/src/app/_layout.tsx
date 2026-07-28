@@ -23,20 +23,24 @@ import { SpringPetals } from "~/lib/ui/spring-petals";
 import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
+import { isE2ETestingEnabled } from "~/utils/e2e";
 import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
 import { ShoppingStoreProvider } from "~/utils/shopping-store";
 
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 export default function RootLayout() {
+  const e2eTesting = isE2ETestingEnabled();
   const posthogApiKey = String(process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "");
-  if (!posthogApiKey) throw new Error("EXPO_PUBLIC_POSTHOG_API_KEY is not set");
+  if (!posthogApiKey && !e2eTesting)
+    throw new Error("EXPO_PUBLIC_POSTHOG_API_KEY is not set");
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PostHogProvider
-        apiKey={posthogApiKey}
+        apiKey={posthogApiKey || "phc-e2e-disabled"}
         options={{
+          disabled: e2eTesting,
           host: "https://eu.i.posthog.com",
           errorTracking: {
             autocapture: {
