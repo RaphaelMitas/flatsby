@@ -91,6 +91,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   updates: {
     url: "https://u.expo.dev/f7e9d15f-497c-4f4e-ac97-f59a14638cdd",
+    // e2e builds go through bare prebuild + xcodebuild, which lacks the EAS
+    // channel headers — every launch would hit the update server and 400.
+    enabled: process.env.E2E_TESTING !== "true",
   },
   runtimeVersion: {
     policy: "appVersion",

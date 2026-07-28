@@ -6,25 +6,49 @@ appId: com.flatcove.app.v2
 # Requires env vars (passed via `maestro test -e`):
 #   E2E_API_URL            - the deployment to test against
 #   VERCEL_BYPASS_SECRET   - Vercel protection bypass secret (optional)
+# A failed flow can leave the springboard's "Open in Flatsby?" deep-link
+# confirmation on screen, which blocks launchApp for every flow after it —
+# dismiss it before touching the app.
+- runFlow:
+    when:
+      visible: "Open in .*Flatsby.*"
+    commands:
+      - tapOn: "Cancel"
 # clearState alone leaves the iOS Keychain intact, where expo-secure-store
 # keeps the previous flow's session — clear it so every flow starts logged out.
-- launchApp:
-    clearState: true
-    clearKeychain: true
-- extendedWaitUntil:
-    visible:
-      id: "login-screen"
-    timeout: 30000
+# On GitHub-hosted runners the post-clearState relaunch can stall on the
+# springboard for minutes; retry instead of waiting it out.
+- retry:
+    maxRetries: 2
+    commands:
+      - launchApp:
+          clearState: true
+          clearKeychain: true
+      - extendedWaitUntil:
+          visible:
+            id: "login-screen"
+          timeout: 60000
 - evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + '&bypass=' + encodeURIComponent(typeof VERCEL_BYPASS_SECRET !== 'undefined' ? VERCEL_BYPASS_SECRET : '')}"
 - openLink: ${output.e2eLoginLink}
-- extendedWaitUntil:
-    visible:
-      id: "e2e-login-done"
-    timeout: 45000
+# iOS confirms scheme links opened from outside the app, sometimes a beat
+# after openLink returns — the conditional tap lives inside the retry so a
+# late dialog is caught on the second pass.
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible: "Open in .*Flatsby.*"
+          commands:
+            - tapOn: "Open"
+      - extendedWaitUntil:
+          visible:
+            id: "e2e-login-done"
+          timeout: 30000
 # Relaunch (keeping state) so the auth client and tRPC links initialize with
 # the injected session + API URL override.
 - launchApp
 - extendedWaitUntil:
     visible:
       id: "group-dashboard-title"
-    timeout: 30000
+    timeout: 60000

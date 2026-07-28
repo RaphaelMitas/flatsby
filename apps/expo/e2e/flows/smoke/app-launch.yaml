@@ -7,7 +7,7 @@ appId: com.flatcove.app.v2
 - extendedWaitUntil:
     visible:
       id: "login-screen"
-    timeout: 30000
+    timeout: 60000
 - assertVisible:
     id: "sign-in-google-button"
 - assertVisible:
