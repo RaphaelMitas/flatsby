@@ -16,6 +16,7 @@ interface CurrencyInputProps {
   min?: number; // Minimum value in cents
   max?: number; // Maximum value in cents
   disabled?: boolean;
+  testID?: string;
 }
 
 /**
@@ -35,6 +36,7 @@ export function CurrencyInput({
   min,
   max,
   disabled,
+  testID,
 }: CurrencyInputProps) {
   const [rawInput, setRawInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -154,6 +156,7 @@ export function CurrencyInput({
   return (
     <Input
       ref={inputRef}
+      testID={testID}
       inputMode="decimal"
       placeholder={placeholder}
       value={formattedDisplayValue}

@@ -349,7 +349,10 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     <>
       {shoppingList && (
         <View className="p-4">
-          <Text className="text-foreground text-center text-xl font-semibold">
+          <Text
+            testID="shopping-list-title"
+            className="text-foreground text-center text-xl font-semibold"
+          >
             {shoppingList.name}
           </Text>
         </View>

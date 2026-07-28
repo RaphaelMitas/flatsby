@@ -11,6 +11,7 @@ interface CheckboxProps {
   onCheckedChange?: (checked: boolean) => void;
   disabled?: boolean;
   className?: string;
+  testID?: string;
 }
 
 const Checkbox = React.forwardRef<

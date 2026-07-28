@@ -91,7 +91,10 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
       <View className="flex w-full flex-col gap-4 p-4">
         <View className="flex flex-row items-center justify-between">
           <View>
-            <Text className="text-foreground text-2xl font-bold tracking-tight">
+            <Text
+              testID="debt-summary-title"
+              className="text-foreground text-2xl font-bold tracking-tight"
+            >
               Debt Summary
             </Text>
             <Text className="text-muted-foreground mt-1 text-sm">
@@ -108,7 +111,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         </View>
 
         {!hasAnyDebts ? (
-          <Card>
+          <Card testID="debt-summary-empty">
             <CardContent className="pt-6">
               <View className="flex flex-row items-center justify-center gap-4 py-8">
                 <Icon name="circle-check" size={48} color="success" />
@@ -204,6 +207,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
                                   {formattedAmount}
                                 </Text>
                                 <Button
+                                  testID="debt-settle-up-button"
                                   title="Settle Up"
                                   size="sm"
                                   variant="outline"

@@ -12,6 +12,7 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
+import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ExpenseDisplay } from "./ExpenseDisplay";
@@ -160,7 +161,11 @@ export function ExpenseCard({
           }
         }}
       >
-        <Pressable onPress={handleCardPress} disabled={isOptimistic}>
+        <Pressable
+          accessible={e2eAccessibilityOverride()}
+          onPress={handleCardPress}
+          disabled={isOptimistic}
+        >
           <ExpenseDisplay
             amountInCents={expense.amountInCents}
             currency={expense.currency}

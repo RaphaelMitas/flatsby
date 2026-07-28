@@ -1,0 +1,61 @@
+appId: com.flatcove.app.v2
+tags:
+  - group
+---
+# Mirrors "delete group" + "deleted group inaccessible" from
+# apps/nextjs/e2e/group/group-management.spec.ts.
+- runFlow: ../../subflows/e2e-login.yaml
+
+# Create a group we can safely delete (known name for the confirmation input)
+- tapOn:
+    id: "group-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-create-name-input"
+    timeout: 15000
+- tapOn:
+    id: "group-create-name-input"
+- inputText: "Delete Me Group"
+- tapOn:
+    id: "group-create-submit"
+- extendedWaitUntil:
+    visible: "Delete Me Group"
+    timeout: 15000
+
+# Swipe left on the dashboard row to reveal Delete, confirm with typed name
+- swipe:
+    from:
+      text: "Delete Me Group"
+    direction: LEFT
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-input"
+    timeout: 15000
+- tapOn:
+    id: "delete-confirmation-input"
+- inputText: "Delete Me Group"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-input"
+      text: "Delete Me Group"
+    timeout: 5000
+# Dismiss the keyboard (tapping the modal body dismisses it), then confirm
+- tapOn: "Confirmation Required"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "delete-confirmation-confirm"
+    enabled: true
+- tapOn:
+    id: "delete-confirmation-confirm"
+- extendedWaitUntil:
+    notVisible:
+      id: "delete-confirmation-confirm"
+    timeout: 10000
+
+# The deleted group is gone from the dashboard
+- extendedWaitUntil:
+    notVisible: "Delete Me Group"
+    timeout: 15000
+- assertVisible:
+    id: "group-dashboard-title"

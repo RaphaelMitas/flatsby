@@ -1,0 +1,21 @@
+appId: com.flatcove.app.v2
+tags:
+  - auth
+---
+# Mirrors apps/nextjs/e2e/auth/login.spec.ts:
+# login screen renders with OAuth buttons, tagline, and legal links.
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible:
+      id: "login-screen"
+    timeout: 30000
+- assertVisible:
+    id: "sign-in-google-button"
+- assertVisible:
+    id: "sign-in-apple-button"
+- assertVisible: "Manage your daily life with your flatmates."
+# The Terms/Privacy links are nested Text nodes, exposed as one combined string
+- assertVisible: ".*Terms.*Privacy Policy.*"
+- assertVisible: "Legal Notice"

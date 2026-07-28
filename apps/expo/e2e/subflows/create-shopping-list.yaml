@@ -1,0 +1,31 @@
+appId: com.flatcove.app.v2
+---
+# Shared subflow: from the authenticated group dashboard, selects the fixture
+# group, creates a shopping list named ${LIST_NAME}, and navigates into it.
+- tapOn:
+    id: "group-select-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-input"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-create-input"
+- inputText: ${LIST_NAME}
+- tapOn:
+    id: "shopping-list-create-submit"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-dashboard-link"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-dashboard-link"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-item-input"
+    timeout: 15000

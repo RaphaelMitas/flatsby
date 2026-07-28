@@ -129,6 +129,7 @@ function DashboardContent() {
       <View className="flex flex-col gap-6 p-2">
         <View className="flex flex-row items-center justify-between gap-2">
           <Button
+            testID="dashboard-group-picker"
             className="flex-1"
             onPress={handleOpenGroupPicker}
             variant="outline"
@@ -136,6 +137,7 @@ function DashboardContent() {
             icon="chevron-down"
           />
           <Button
+            testID="dashboard-group-settings"
             title="Group Settings"
             variant="outline"
             icon="settings"

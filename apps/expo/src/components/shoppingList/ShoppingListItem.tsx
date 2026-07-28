@@ -14,6 +14,7 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ShoppingItemDisplay } from "./ShoppingItemDisplay";
@@ -193,6 +194,9 @@ const ShoppingListItem = ({
       <ReanimatedSwipeable
         ref={swipeableRef}
         enabled={!item.isPending}
+        friction={2}
+        leftThreshold={40}
+        rightThreshold={40}
         renderRightActions={renderRightActions}
         renderLeftActions={renderLeftActions}
         onSwipeableOpen={(direction) => {
@@ -206,6 +210,7 @@ const ShoppingListItem = ({
         }}
       >
         <Pressable
+          accessible={e2eAccessibilityOverride()}
           disabled={item.isPending}
           onPress={() => setShowDetails(true)}
         >
@@ -215,6 +220,7 @@ const ShoppingListItem = ({
             categoryId={item.categoryId}
             onCheckedChange={handleCheckboxToggle}
             disabled={item.isPending}
+            checkboxTestID={`shopping-list-item-checkbox-${item.name}`}
           />
         </Pressable>
       </ReanimatedSwipeable>

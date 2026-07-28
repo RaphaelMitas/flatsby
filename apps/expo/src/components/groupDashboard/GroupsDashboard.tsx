@@ -24,9 +24,15 @@ export function GroupsDashboard() {
   return (
     <View className="flex-1 flex-col gap-6 p-4">
       <View className="flex flex-row items-center justify-between">
-        <Text className="text-foreground text-3xl font-bold">Your Groups</Text>
+        <Text
+          testID="group-dashboard-title"
+          className="text-foreground text-3xl font-bold"
+        >
+          Your Groups
+        </Text>
 
         <Button
+          testID="group-create-button"
           title="Create Group"
           variant="primary"
           size="lg"

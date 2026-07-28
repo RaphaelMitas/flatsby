@@ -3,9 +3,13 @@ import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
 
 import { getBaseUrl } from "../base-url";
+import { getE2EBypassHeaders } from "../e2e";
 
 export const authClient = createAuthClient({
   baseURL: getBaseUrl(),
+  fetchOptions: {
+    headers: getE2EBypassHeaders(),
+  },
   plugins: [
     expoClient({
       scheme: "flatsby",

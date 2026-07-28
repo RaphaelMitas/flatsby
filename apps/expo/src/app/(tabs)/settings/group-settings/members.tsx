@@ -254,6 +254,7 @@ export default function MembersScreen() {
         </Text>
         <View className="gap-3">
           <Input
+            testID="group-add-member-email"
             placeholder={
               isAdmin ? "Enter email address" : "Only admins can add members"
             }
@@ -264,6 +265,7 @@ export default function MembersScreen() {
             autoCapitalize="none"
           />
           <Button
+            testID="group-add-member-button"
             title="Add Member"
             icon="plus"
             disabled={!isAdmin || !newMemberEmail.trim()}

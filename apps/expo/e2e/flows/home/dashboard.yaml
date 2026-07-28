@@ -1,0 +1,14 @@
+appId: com.flatcove.app.v2
+tags:
+  - home
+---
+# Mirrors apps/nextjs/e2e/home/dashboard.spec.ts:
+# an authenticated user lands on the dashboard, not the login/landing screen.
+- runFlow: ../../subflows/e2e-login.yaml
+- assertVisible:
+    id: "group-dashboard-title"
+- assertNotVisible:
+    id: "login-screen"
+# The e2e session comes with a pre-created group.
+- assertVisible: "E2E Test Group.*"
+- assertVisible: "1 member"

@@ -73,10 +73,14 @@ function ShoppingListsDashboardInner() {
       <View className="flex-1 flex-col gap-6 p-4">
         {/* Header */}
         <View className="flex flex-row items-center justify-between">
-          <Text className="text-foreground text-3xl font-bold">
+          <Text
+            className="text-foreground flex-1 text-3xl font-bold"
+            numberOfLines={1}
+          >
             {selectedGroupName}
           </Text>
           <Button
+            testID="shopping-lists-group-settings"
             title="Group Settings"
             variant="outline"
             size="md"
@@ -91,6 +95,7 @@ function ShoppingListsDashboardInner() {
 
         {/* Create New List Button */}
         <Button
+          testID="shopping-list-create-button"
           title="Create Shopping List"
           variant="primary"
           size="lg"

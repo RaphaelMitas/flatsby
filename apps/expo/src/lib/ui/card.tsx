@@ -29,6 +29,7 @@ const cardFooterVariants = tv({
 interface CardProps {
   className?: string;
   children: React.ReactNode;
+  testID?: string;
 }
 
 const Card = React.forwardRef<View, CardProps>(

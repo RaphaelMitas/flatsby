@@ -84,9 +84,15 @@ export function ExpenseListPanel({
   return (
     <View className="flex-1 px-4">
       <View className="mb-6 flex-row items-center justify-between">
-        <Text className="text-foreground text-3xl font-bold">Expenses</Text>
+        <Text
+          testID="expense-heading"
+          className="text-foreground text-3xl font-bold"
+        >
+          Expenses
+        </Text>
         <View className="flex-row items-center gap-2">
           <Button
+            testID="expense-debt-overview-button"
             title="Debt Overview"
             size="md"
             icon="arrow-right"
@@ -113,6 +119,7 @@ export function ExpenseListPanel({
             Start tracking expenses by adding your first one
           </Text>
           <Button
+            testID="expense-add-button"
             title="Add Expense"
             variant="primary"
             size="lg"
@@ -153,7 +160,12 @@ export function ExpenseListPanel({
       )}
       {hasExpenses && !isLargeScreen && (
         <View className="absolute right-4 bottom-4">
-          <Button size="icon" icon="plus" onPress={onCreateExpense} />
+          <Button
+            testID="expense-add-button"
+            size="icon"
+            icon="plus"
+            onPress={onCreateExpense}
+          />
         </View>
       )}
     </View>

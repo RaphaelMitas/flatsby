@@ -3,21 +3,37 @@ packages:
   - packages/*
   - tooling/*
 
-# Unfixable transitive dependency vulnerabilities (pinned by parent packages).
-# Remove entries as upstream packages release fixes.
-# - esbuild: @esbuild-kit/core-utils@3.3.2 pins ~0.18.20 (drizzle-kit)
-# - uuid: Expo/LangChain/PostHog dependency chain has no uuid >=14 path yet.
-# - postcss: Next and Expo Metro still pin vulnerable 8.4.x releases.
-# - sharp: next 16.2.11 still pins sharp ^0.34.5; libvips CVEs fixed in 0.35.0.
+# Transitive vulnerabilities with no upstream fix path: each is held back by a
+# parent package we do not control, via an exact pin or a range that excludes the
+# patched release. Re-check with `pnpm audit` and drop entries as upstream ships.
 auditConfig:
   ignoreGhsas:
+    # esbuild <=0.24.2 - drizzle-kit@0.31.10 (latest) > @esbuild-kit/esm-loader >
+    # @esbuild-kit/core-utils@3.3.2, which pins ~0.18.20. The @esbuild-kit packages
+    # are deprecated (folded into tsx); clears when drizzle-kit drops esm-loader.
     - GHSA-67mh-4wv8-2f99
+    # uuid <11.1.1 - xcode@3.0.1 (latest) pins ^7.0.3, and @expo/config-plugins
+    # still depends on xcode ^3.0.1 as of 57.x. Reached via the direct dependency
+    # @react-native-vector-icons/lucide@13.1.2 (also latest).
     - GHSA-w5hq-g745-h8pq
+    # postcss <8.5.10 / <=8.5.11 / <=8.5.17 - next@16.2.x depends on exactly
+    # 8.4.31, so no range update can reach a patched release. The workspace's own
+    # postcss (tooling/tailwind, Expo Metro, Tailwind) is on 8.5.24 and unaffected.
     - GHSA-qx2v-qp2m-jg93
+    - GHSA-6g55-p6wh-862q
+    - GHSA-r28c-9q8g-f849
+    # sharp <0.35.0 - next@16.2.x pins sharp ^0.34.5; libvips CVEs fixed in 0.35.0.
     - GHSA-f88m-g3jw-g9cj
+    # brace-expansion <=5.0.7 - reached only through chromium-edge-launcher@0.2.0,
+    # which pulls rimraf > glob > minimatch@3.x (brace-expansion ^1.1.7; 1.1.16 is
+    # the newest 1.x and has no backport). chromium-edge-launcher 0.3.0 drops rimraf
+    # outright, but @react-native/dev-middleware@0.83.x requires ^0.2.0 and only
+    # moves to ^0.3.0 in 0.86.x. This clears with the Expo 57 / RN 0.86 upgrade,
+    # not with any change to brace-expansion itself.
+    - GHSA-mh99-v99m-4gvg
 
 catalog:
-  "@ai-sdk/react": ^3.0.221
+  "@ai-sdk/react": ^3.0.238
   "@eslint/js": ^10.0.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.3.1
@@ -27,7 +43,7 @@ catalog:
   "@trpc/tanstack-react-query": ^11.18.0
   "@turbo/gen": ^2.10.0
   "@types/node": ^24.13.2
-  ai: ^6.0.219
+  ai: ^6.0.236
   autumn-js: ^1.2.31
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^10.5.0
@@ -41,8 +57,8 @@ catalog:
 
 catalogs:
   better-auth:
-    "@better-auth/expo": 1.6.20
-    better-auth: 1.6.20
+    "@better-auth/expo": 1.6.23
+    better-auth: 1.6.23
   react19:
     "@types/react": ~19.2.0
     "@types/react-dom": ~19.2.0
