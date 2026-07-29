@@ -111,16 +111,30 @@ jobs:
           restore-keys: |
             pods-${{ runner.os }}-
 
-      # A cold Release build takes ~27 min on the 3-core runner; incremental
-      # rebuilds from cached DerivedData are the main runtime win. Keyed on the
-      # lockfile so any dependency bump starts clean.
-      - name: Cache DerivedData
+      # DerivedData caching can't work here (prebuild regenerates the project
+      # with fresh mtimes, forcing full rebuilds), so builds use ccache keyed
+      # on file content instead — expo-build-properties wires it into the
+      # Xcode project when E2E_TESTING=true.
+      - name: Setup ccache
+        run: |
+          brew install ccache
+          mkdir -p "$HOME/.ccache"
+          cat > "$HOME/.ccache/ccache.conf" <<'EOF'
+          max_size = 3.0G
+          compiler_check = content
+          inode_cache = true
+          file_clone = true
+          sloppiness = clang_index_store,file_stat_matches,include_file_ctime,include_file_mtime,ivfsoverlay,pch_defines,modules,system_headers,time_macros
+          EOF
+          echo "CCACHE_DIR=$HOME/.ccache" >> "$GITHUB_ENV"
+
+      - name: Cache ccache
         uses: actions/cache@v4
         with:
-          path: apps/expo/ios/build
-          key: deriveddata-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/expo/package.json') }}
+          path: ~/.ccache
+          key: ccache-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            deriveddata-${{ runner.os }}-
+            ccache-${{ runner.os }}-
 
       - name: Prebuild iOS project
         working-directory: apps/expo
@@ -147,6 +161,7 @@ jobs:
           xcodebuild -workspace Flatsby.xcworkspace -scheme Flatsby \
             -configuration Release -sdk iphonesimulator \
             -derivedDataPath build CODE_SIGN_IDENTITY=- build | xcbeautify
+          ccache --show-stats
         env:
           E2E_TESTING: "true"
 
@@ -167,17 +182,25 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      # Shards balanced on observed flow times (group 4-6 min each,
-      # shopping-list 5-7.5 min each on the 3-core runners), leaving room
-      # for the failed-flow rerun inside the timeout.
+      # Shards balanced on observed flow times (group flows 4-6 min,
+      # shopping-list 4-7.5 min, expenses up to 15 min each on the 3-core
+      # runners), leaving room for the failed-flow rerun inside the timeout.
+      # macOS runner concurrency for the repo is 5, so one shard queues
+      # briefly behind the first finisher.
       matrix:
         include:
-          - shard: core
-            areas: smoke auth home account group
-          - shard: shopping-list
-            areas: shopping-list
-          - shard: expenses
-            areas: expenses
+          - shard: quick
+            areas: smoke auth home account
+          - shard: group
+            areas: group
+          - shard: sl-browse
+            areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
+          - shard: sl-manage
+            areas: shopping-list/management shopping-list/suggestions
+          - shard: exp-create
+            areas: expenses/creation expenses/management
+          - shard: exp-splits
+            areas: expenses/splits expenses/debts
     concurrency:
       group: e2e-ios-${{ needs.check-pr.outputs.branch }}-${{ matrix.shard }}
       cancel-in-progress: true
@@ -208,16 +231,19 @@ jobs:
       - name: Boot iOS simulator
         id: sim
         run: |
+          # Device names vary across runner images; try every iPhone device
+          # type, newest first, until one pairs with an installed runtime.
           UDID=""
-          for DEVICE_TYPE in "iPhone 17" "iPhone 16" "iPhone 15"; do
+          while read -r DEVICE_TYPE; do
             if UDID=$(xcrun simctl create "Flatsby-E2E" "$DEVICE_TYPE" 2>/dev/null); then
               echo "Created Flatsby-E2E ($DEVICE_TYPE): $UDID"
               break
             fi
-          done
+          done < <(xcrun simctl list devicetypes --json | jq -r '.devicetypes | map(select(.productFamily == "iPhone")) | reverse | .[].identifier')
           if [ -z "$UDID" ]; then
-            echo "::error::No known iPhone device type available on this image"
+            echo "::error::Could not create an iPhone simulator on this image"
             xcrun simctl list devicetypes
+            xcrun simctl list runtimes
             exit 1
           fi
           xcrun simctl boot "$UDID"

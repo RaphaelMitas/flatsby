@@ -115,7 +115,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
-    "expo-build-properties",
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          // CI e2e builds compile with ccache (installed by the workflow) so
+          // warm rebuilds skip most C++/ObjC compilation.
+          ccacheEnabled: process.env.E2E_TESTING === "true",
+        },
+      },
+    ],
     ["expo-font", { fonts: ["./assets/fonts/lucide.ttf"] }],
   ],
 });

@@ -6,10 +6,10 @@
  * failure looks systemic: no parseable JUnit report, or most of the suite
  * failed.
  *
- * Usage: node e2e/run-flows.mjs [area ...]
- *   area - flow directory under e2e/flows (e.g. "group shopping-list");
- *          no args runs the full suite. CI shards the suite by area so each
- *          job fits its time budget.
+ * Usage: node e2e/run-flows.mjs [target ...]
+ *   target - flow directory or single flow under e2e/flows (e.g. "group" or
+ *            "expenses/splits"); no args runs the full suite. CI shards the
+ *            suite so each job fits its time budget.
  * Env:
  *   E2E_API_URL           - deployment to test against (required)
  *   VERCEL_BYPASS_SECRET  - Vercel protection bypass secret (optional)
@@ -110,12 +110,14 @@ function flowFilesByName(files) {
 const areas = process.argv.slice(2);
 const shardFiles = areas.length
   ? areas.flatMap((area) => {
-      const dir = join(flowsDir, area);
-      if (!existsSync(dir)) {
-        console.error(`Unknown flow area: ${area}`);
-        process.exit(1);
+      const target = join(flowsDir, area);
+      if (existsSync(target) && statSync(target).isDirectory()) {
+        return listFlowFiles(target);
       }
-      return listFlowFiles(dir);
+      const file = /\.ya?ml$/.test(target) ? target : `${target}.yaml`;
+      if (existsSync(file)) return [file];
+      console.error(`Unknown flow area or file: ${area}`);
+      process.exit(1);
     })
   : listFlowFiles(flowsDir);
 
