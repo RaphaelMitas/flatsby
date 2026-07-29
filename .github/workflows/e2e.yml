@@ -164,15 +164,20 @@ jobs:
   e2e-ios:
     needs: [check-pr, e2e-ios-build]
     runs-on: macos-26
-    timeout-minutes: 40
+    timeout-minutes: 45
     strategy:
       fail-fast: false
+      # Shards balanced on observed flow times (group 4-6 min each,
+      # shopping-list 5-7.5 min each on the 3-core runners), leaving room
+      # for the failed-flow rerun inside the timeout.
       matrix:
         include:
           - shard: core
             areas: smoke auth home account group
-          - shard: features
-            areas: shopping-list expenses
+          - shard: shopping-list
+            areas: shopping-list
+          - shard: expenses
+            areas: expenses
     concurrency:
       group: e2e-ios-${{ needs.check-pr.outputs.branch }}-${{ matrix.shard }}
       cancel-in-progress: true
