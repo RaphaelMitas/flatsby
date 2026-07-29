@@ -162,6 +162,16 @@ console.log(
     .map((f) => relative(e2eDir, f))
     .join(", ")}`,
 );
-const retryStatus = runMaestro(rerunFiles, "report-retry.xml", "debug-retry");
+// One maestro invocation per flow: a crashed driver ("Unknown error") fails
+// every remaining flow in its batch instantly, so each rerun gets a fresh one.
+let retryStatus = 0;
+for (const [i, file] of rerunFiles.entries()) {
+  const status = runMaestro(
+    [file],
+    `report-retry-${i}.xml`,
+    `debug-retry-${i}`,
+  );
+  if (status !== 0) retryStatus = status;
+}
 if (retryStatus === 0) console.log("All failed flows passed on rerun.");
 process.exit(retryStatus);

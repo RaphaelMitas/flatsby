@@ -42,11 +42,21 @@ tags:
     id: "shopping-list-rename-input"
 - eraseText
 - inputText: "Renamed List"
-- tapOn:
-    id: "shopping-list-rename-save"
-- extendedWaitUntil:
-    visible: "Renamed List"
-    timeout: 15000
+# The save tap sometimes doesn't register on hosted runners; tap again if
+# the row text hasn't updated.
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "shopping-list-rename-save"
+          commands:
+            - tapOn:
+                id: "shopping-list-rename-save"
+      - extendedWaitUntil:
+          visible: "Renamed List"
+          timeout: 15000
 
 # Create a second list to exercise deletion
 - tapOn:

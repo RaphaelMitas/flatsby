@@ -9,10 +9,9 @@ tags:
 # Open Settings, then deep-link to the danger screen: Maestro's synthetic
 # swipes don't move this screen's KeyboardAwareScrollView on GitHub-hosted
 # simulators, so scrollUntilVisible never reaches the Danger Zone row.
+# (No screen assertion here: SettingsItem rows merge their children into one
+# accessibility label, so row texts like "Buy Credits" aren't queryable.)
 - tapOn: "Settings"
-- extendedWaitUntil:
-    visible: "Buy Credits"
-    timeout: 15000
 - openLink: flatsby://settings/danger
 - retry:
     maxRetries: 2
