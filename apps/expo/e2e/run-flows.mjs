@@ -6,7 +6,10 @@
  * failure looks systemic: no parseable JUnit report, or most of the suite
  * failed.
  *
- * Usage: node e2e/run-flows.mjs
+ * Usage: node e2e/run-flows.mjs [area ...]
+ *   area - flow directory under e2e/flows (e.g. "group shopping-list");
+ *          no args runs the full suite. CI shards the suite by area so each
+ *          job fits its time budget.
  * Env:
  *   E2E_API_URL           - deployment to test against (required)
  *   VERCEL_BYPASS_SECRET  - Vercel protection bypass secret (optional)
@@ -77,26 +80,55 @@ function failedFlowNames(reportPath) {
   return failed;
 }
 
-function flowFilesByName() {
-  const map = new Map();
-  const walk = (dir) => {
-    for (const entry of readdirSync(dir)) {
-      const full = join(dir, entry);
-      if (statSync(full).isDirectory()) {
-        walk(full);
-      } else if (/\.ya?ml$/.test(entry) && entry !== "config.yaml") {
-        const name = entry.replace(/\.ya?ml$/, "");
-        map.set(name, [...(map.get(name) ?? []), full]);
-      }
+function listFlowFiles(dir) {
+  const files = [];
+  for (const entry of readdirSync(dir).sort()) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      files.push(...listFlowFiles(full));
+    } else if (/\.ya?ml$/.test(entry) && entry !== "config.yaml") {
+      files.push(full);
     }
-  };
-  walk(flowsDir);
+  }
+  return files;
+}
+
+/** JUnit names can collide across areas (e.g. two dashboard.yaml), so the
+ * rerun map is restricted to this shard's files. */
+function flowFilesByName(files) {
+  const map = new Map();
+  for (const file of files) {
+    const name = relative(flowsDir, file)
+      .split("/")
+      .pop()
+      .replace(/\.ya?ml$/, "");
+    map.set(name, [...(map.get(name) ?? []), file]);
+  }
   return map;
 }
 
+const areas = process.argv.slice(2);
+const shardFiles = areas.length
+  ? areas.flatMap((area) => {
+      const dir = join(flowsDir, area);
+      if (!existsSync(dir)) {
+        console.error(`Unknown flow area: ${area}`);
+        process.exit(1);
+      }
+      return listFlowFiles(dir);
+    })
+  : listFlowFiles(flowsDir);
+
 mkdirSync(resultsDir, { recursive: true });
 
-const firstStatus = runMaestro([flowsDir], "report.xml", "debug");
+// The full suite runs via the flows dir (picks up config.yaml); shards pass
+// explicit files since Maestro treats a bare subdirectory as its own
+// workspace root.
+const firstStatus = runMaestro(
+  areas.length ? shardFiles : [flowsDir],
+  "report.xml",
+  "debug",
+);
 if (firstStatus === 0) process.exit(0);
 
 const failed = failedFlowNames(join(resultsDir, "report.xml"));
@@ -116,7 +148,7 @@ if (failed.size > MAX_RERUN_FLOWS) {
 // Flows sharing a file name (e.g. home/dashboard.yaml and
 // shopping-list/dashboard.yaml) can't be told apart in the JUnit report, so
 // all files matching a failed name rerun together.
-const byName = flowFilesByName();
+const byName = flowFilesByName(shardFiles);
 const rerunFiles = [...failed].flatMap((name) => byName.get(name) ?? []);
 if (rerunFiles.length === 0) {
   console.error(
