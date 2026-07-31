@@ -115,18 +115,20 @@ jobs:
       # with fresh mtimes, forcing full rebuilds), so builds use ccache keyed
       # on file content instead — expo-build-properties wires it into the
       # Xcode project when E2E_TESTING=true.
+      # CCACHE_BINARY must be a real env var: React Native's ccache-clang.sh
+      # wrapper runs `exec $CCACHE_BINARY clang`, and the build setting
+      # CocoaPods writes for it doesn't reach the compiler's environment — so
+      # without this the wrapper silently execs plain clang and caches nothing.
+      # The wrapper points CCACHE_CONFIGPATH at React Native's own tuned conf
+      # (sloppiness, depend_mode), so size/location go through env vars.
       - name: Setup ccache
         run: |
           brew install ccache
-          mkdir -p "$HOME/.ccache"
-          cat > "$HOME/.ccache/ccache.conf" <<'EOF'
-          max_size = 3.0G
-          compiler_check = content
-          inode_cache = true
-          file_clone = true
-          sloppiness = clang_index_store,file_stat_matches,include_file_ctime,include_file_mtime,ivfsoverlay,pch_defines,modules,system_headers,time_macros
-          EOF
-          echo "CCACHE_DIR=$HOME/.ccache" >> "$GITHUB_ENV"
+          {
+            echo "CCACHE_BINARY=$(command -v ccache)"
+            echo "CCACHE_DIR=$HOME/.ccache"
+            echo "CCACHE_MAXSIZE=3G"
+          } >> "$GITHUB_ENV"
 
       - name: Cache ccache
         uses: actions/cache@v4
