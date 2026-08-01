@@ -101,16 +101,6 @@ jobs:
           sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
           xcodebuild -version
 
-      - name: Cache CocoaPods
-        uses: actions/cache@v6
-        with:
-          path: |
-            apps/expo/ios/Pods
-            ~/Library/Caches/CocoaPods
-          key: pods-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/expo/package.json') }}
-          restore-keys: |
-            pods-${{ runner.os }}-
-
       # DerivedData caching can't work here (prebuild regenerates the project
       # with fresh mtimes, forcing full rebuilds), so builds use ccache keyed
       # on file content instead — expo-build-properties wires it into the
@@ -130,13 +120,23 @@ jobs:
             echo "CCACHE_MAXSIZE=3G"
           } >> "$GITHUB_ENV"
 
-      - name: Cache ccache
-        uses: actions/cache@v6
-        with:
-          path: ~/.ccache
-          key: ccache-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os }}-
+      # actions/cache cannot restore or save on deployment_status runs (the
+      # cache service rejects the event: "not tied to a branch or tag ref"),
+      # so the ccache pool travels as a workflow artifact instead — artifacts
+      # work fine on these runs (the .app already ships between jobs as one).
+      - name: Restore ccache from artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ART_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=ccache-macos&per_page=1" --jq '.artifacts[0].id // empty')
+          if [ -n "$ART_ID" ]; then
+            gh api "repos/${{ github.repository }}/actions/artifacts/$ART_ID/zip" > /tmp/ccache.zip
+            unzip -q -o /tmp/ccache.zip -d /tmp/ccache-artifact
+            tar -xzf /tmp/ccache-artifact/ccache.tar.gz -C "$HOME"
+            echo "Restored ccache from artifact $ART_ID"
+          else
+            echo "No ccache artifact found; building cold"
+          fi
 
       - name: Prebuild iOS project
         working-directory: apps/expo
@@ -171,6 +171,16 @@ jobs:
           ccache --show-stats
         env:
           E2E_TESTING: "true"
+
+      - name: Pack ccache for next run
+        run: tar -C "$HOME" -czf ccache.tar.gz .ccache
+
+      - name: Upload ccache artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ccache-macos
+          path: ccache.tar.gz
+          retention-days: 3
 
       # tar keeps the executable bits that upload-artifact's zip would strip.
       - name: Pack app for test shards
