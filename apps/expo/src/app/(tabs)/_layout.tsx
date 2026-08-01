@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Redirect } from "expo-router";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
 import { Tabs } from "~/lib/components/bottom-tabs";
@@ -75,6 +76,14 @@ export default function TabLayout() {
 
     void prefetch(trpc.group.getUserGroups.queryOptions());
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
+
+  // Guard the whole authenticated area here rather than per screen: signing
+  // out (or deleting the account) from a Settings screen used to redirect
+  // from the backgrounded home tab, tearing down one tab's navigation stack
+  // while another was still mounted, which segfaults inside UIKit.
+  if (!session.isPending && !session.data?.user) {
+    return <Redirect href="/auth/login" />;
+  }
 
   return (
     <Tabs
