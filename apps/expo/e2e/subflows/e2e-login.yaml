@@ -41,10 +41,12 @@ appId: com.flatcove.app.v2
             visible: "Open in .*Flatsby.*"
           commands:
             - tapOn: "Open"
+      # 45s: the first flow after a fresh install pays for a cold Vercel
+      # function + DB on create-session, which alone can take 15-20s.
       - extendedWaitUntil:
           visible:
             id: "e2e-login-done"
-          timeout: 30000
+          timeout: 45000
 # Relaunch (keeping state) so the auth client and tRPC links initialize with
 # the injected session + API URL override.
 - launchApp
