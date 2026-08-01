@@ -209,6 +209,9 @@ jobs:
     env:
       MAESTRO_VERSION: "2.3.0"
       MAESTRO_CLI_NO_ANALYTICS: "1"
+      # The XCTest driver install/boot is slow on these shared runners; the
+      # 3-core box blew the default startup timeout on a cold simulator.
+      MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
       - uses: actions/checkout@v7
 
@@ -233,19 +236,32 @@ jobs:
       - name: Boot iOS simulator
         id: sim
         run: |
-          # Device names vary across runner images; try every iPhone device
-          # type, newest first, until one pairs with an installed runtime.
-          UDID=""
-          while read -r DEVICE_TYPE; do
-            if UDID=$(xcrun simctl create "Flatsby-E2E" "$DEVICE_TYPE" 2>/dev/null); then
-              echo "Created Flatsby-E2E ($DEVICE_TYPE): $UDID"
-              break
-            fi
-          done < <(xcrun simctl list devicetypes --json | jq -r '.devicetypes | map(select(.productFamily == "iPhone")) | reverse | .[].identifier')
+          # Prefer a simulator the image already provisioned for its runtime,
+          # picking the highest iPhone model number (an old device like the
+          # iPhone 11 boots slowly enough to time out Maestro's driver).
+          UDID=$(xcrun simctl list devices available --json | jq -r '
+            [.devices | to_entries[] | select(.key | test("iOS")) | .value[]
+              | select(.name | startswith("iPhone"))
+              | {udid, name, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
+            | sort_by(.n) | last // {} | .udid // empty')
+          if [ -n "$UDID" ]; then
+            echo "Reusing provisioned simulator: $(xcrun simctl list devices | grep "$UDID")"
+            xcrun simctl erase "$UDID"
+          else
+            while read -r DEVICE_TYPE; do
+              if UDID=$(xcrun simctl create "Flatsby-E2E" "$DEVICE_TYPE" 2>/dev/null); then
+                echo "Created Flatsby-E2E ($DEVICE_TYPE): $UDID"
+                break
+              fi
+            done < <(xcrun simctl list devicetypes --json | jq -r '
+              [.devicetypes[] | select(.productFamily == "iPhone")
+                | {identifier, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
+              | sort_by(.n) | reverse | .[].identifier')
+          fi
           if [ -z "$UDID" ]; then
-            echo "::error::Could not create an iPhone simulator on this image"
+            echo "::error::Could not select an iPhone simulator on this image"
+            xcrun simctl list devices available
             xcrun simctl list devicetypes
-            xcrun simctl list runtimes
             exit 1
           fi
           xcrun simctl boot "$UDID"
