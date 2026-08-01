@@ -156,13 +156,18 @@ jobs:
       # keys are needed for this build.
       # CODE_SIGN_IDENTITY=- instead of CODE_SIGNING_ALLOWED=NO: the latter
       # strips keychain entitlements and expo-secure-store crashes on launch.
+      # ARCHS=arm64: the default Release simulator build produces universal
+      # arm64+x86_64 binaries — double the compile work for a simulator that
+      # only runs arm64.
       - name: Build app for simulator
         working-directory: apps/expo/ios
         run: |
           set -o pipefail
+          ccache --zero-stats > /dev/null
           xcodebuild -workspace Flatsby.xcworkspace -scheme Flatsby \
             -configuration Release -sdk iphonesimulator \
-            -derivedDataPath build CODE_SIGN_IDENTITY=- build | xcbeautify
+            -derivedDataPath build CODE_SIGN_IDENTITY=- \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES build | xcbeautify
           ccache --show-stats
         env:
           E2E_TESTING: "true"
