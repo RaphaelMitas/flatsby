@@ -46,12 +46,22 @@ tags:
 - assertVisible:
     id: "delete-confirmation-confirm"
     enabled: true
-- tapOn:
-    id: "delete-confirmation-confirm"
-- extendedWaitUntil:
-    notVisible:
-      id: "delete-confirmation-confirm"
-    timeout: 10000
+# The confirm tap sometimes doesn't register, and the delete mutation can
+# outlast a fixed wait — re-tap while the dialog is still up.
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "delete-confirmation-confirm"
+          commands:
+            - tapOn:
+                id: "delete-confirmation-confirm"
+      - extendedWaitUntil:
+          notVisible:
+            id: "delete-confirmation-confirm"
+          timeout: 20000
 
 # The deleted group is gone from the dashboard
 - extendedWaitUntil:

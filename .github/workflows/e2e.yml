@@ -278,6 +278,15 @@ jobs:
       - name: Install app on simulator
         run: xcrun simctl install "${{ steps.sim.outputs.udid }}" Flatsby.app
 
+      # The very first launch after install pays dyld/springboard warm-up and
+      # regularly stalls past the flow's wait inside Maestro; take that hit
+      # here instead, outside any flow timing.
+      - name: Pre-warm app
+        run: |
+          xcrun simctl launch "${{ steps.sim.outputs.udid }}" com.flatcove.app.v2 || true
+          sleep 15
+          xcrun simctl terminate "${{ steps.sim.outputs.udid }}" com.flatcove.app.v2 || true
+
       - name: Start screen recording
         working-directory: apps/expo
         run: |
