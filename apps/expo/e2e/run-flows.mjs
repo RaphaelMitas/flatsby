@@ -82,6 +82,27 @@ const shardFiles = areas.length
 
 mkdirSync(resultsDir, { recursive: true });
 
+// Each shard's first flow otherwise pays the cold Vercel function + DB
+// connection on create-session inside its login wait, which is the main
+// source of first-attempt bootstrap flakes.
+async function warmUpApi() {
+  const url = `${apiUrl.replace(/\/+$/, "")}/api/e2e/create-session`;
+  const started = Date.now();
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "x-vercel-protection-bypass": process.env.VERCEL_BYPASS_SECRET ?? "",
+      },
+      signal: AbortSignal.timeout(60000),
+    });
+    console.log(`API warm-up: HTTP ${res.status} in ${Date.now() - started}ms`);
+  } catch (error) {
+    console.warn(`API warm-up failed after ${Date.now() - started}ms:`, error);
+  }
+}
+await warmUpApi();
+
 const failed = [];
 for (const [i, file] of shardFiles.entries()) {
   const status = runMaestro(file, `report-${i}.xml`, `debug-${i}`);
