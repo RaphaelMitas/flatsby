@@ -26,8 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # deployment_status runs carry secrets, so fork PRs (cross-repo
-          # heads) must not gate downstream jobs on.
+          # deployment_status runs carry secrets; never gate on fork PRs.
           PR_JSON=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number,headRefName,isCrossRepository --jq '[.[] | select(.isCrossRepository == false)][0]')
           if [[ -n "$PR_JSON" && "$PR_JSON" != "null" ]]; then
             echo "has-pr=true" >> "$GITHUB_OUTPUT"
@@ -75,9 +74,6 @@ jobs:
           path: apps/nextjs/test-results/
           retention-days: 7
 
-  # Build once, test in parallel shards: the .app travels to the shard jobs
-  # as an artifact, so the build isn't paid once per shard and the whole
-  # suite (~45 min of flows on these 3-core runners) fits in its timeouts.
   e2e-ios-build:
     needs: check-pr
     if: needs.check-pr.outputs.has-pr == 'true'
@@ -101,12 +97,8 @@ jobs:
           sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
           xcodebuild -version
 
-      # DerivedData caching can't work here (prebuild regenerates the project
-      # with fresh mtimes), so builds use content-keyed ccache instead —
-      # expo-build-properties wires it in when E2E_TESTING=true. CCACHE_BINARY
-      # must be a real env var: React Native's ccache-clang.sh wrapper execs
-      # `$CCACHE_BINARY clang`, and the build setting CocoaPods writes for it
-      # never reaches the compiler's environment.
+      # CCACHE_BINARY has to be a real env var: React Native's ccache-clang.sh
+      # execs it, and the build setting CocoaPods writes never reaches it.
       - name: Setup ccache
         run: |
           brew install ccache
@@ -116,10 +108,8 @@ jobs:
             echo "CCACHE_MAXSIZE=3G"
           } >> "$GITHUB_ENV"
 
-      # actions/cache cannot restore or save on deployment_status runs (the
-      # cache service rejects the event: "not tied to a branch or tag ref"),
-      # so the ccache pool travels as a workflow artifact instead — artifacts
-      # work fine on these runs (the .app already ships between jobs as one).
+      # actions/cache rejects deployment_status runs ("not tied to a branch or
+      # tag ref"); artifacts work, so the pool travels as one.
       - name: Restore ccache from artifact
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -130,7 +120,6 @@ jobs:
             echo "No ccache artifact available; building cold"
             exit 0
           fi
-          # A missing or corrupt pool only costs build time — never fail here.
           gh api "repos/${{ github.repository }}/actions/artifacts/$ART_ID/zip" > /tmp/ccache.zip \
             && unzip -q -o /tmp/ccache.zip -d /tmp/ccache-artifact \
             && tar -xzf /tmp/ccache-artifact/ccache.tar.gz -C "$HOME" \
@@ -149,13 +138,9 @@ jobs:
         env:
           LANG: en_US.UTF-8
 
-      # E2E_TESTING is needed here too: the expo-constants build phase
-      # re-evaluates app.config.ts (extra.e2eTesting) during xcodebuild, and
-      # that flag is what disables PostHog/RevenueCat in the built app.
-      # CODE_SIGN_IDENTITY=- instead of CODE_SIGNING_ALLOWED=NO: the latter
-      # strips keychain entitlements and expo-secure-store crashes on launch.
-      # ARCHS=arm64: the default Release simulator build is universal, double
-      # the compile work for a simulator that only runs arm64.
+      # E2E_TESTING again: the expo-constants build phase re-evaluates
+      # app.config.ts during xcodebuild. CODE_SIGNING_ALLOWED=NO would be the
+      # obvious flag but strips keychain entitlements, crashing secure-store.
       - name: Build app for simulator
         working-directory: apps/expo/ios
         run: |
@@ -196,9 +181,8 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      # Five shards, balanced on observed run times (10-13 min each) — the
-      # repo's macOS runner concurrency is also 5, so a sixth shard would just
-      # queue behind the first finisher and pay another ~6 min of setup.
+      # Five shards of ~10-13 min: the repo's macOS runner concurrency is 5,
+      # so a sixth would queue behind the first finisher.
       matrix:
         include:
           - shard: quick
@@ -217,13 +201,10 @@ jobs:
     env:
       MAESTRO_VERSION: "2.3.0"
       MAESTRO_CLI_NO_ANALYTICS: "1"
-      # The XCTest driver install/boot is slow on these shared runners; the
-      # 3-core box blew the default startup timeout on a cold simulator.
       MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
       - uses: actions/checkout@v7
 
-      # run-flows.mjs only needs Node (no workspace install).
       - uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
@@ -241,9 +222,8 @@ jobs:
       - name: Unpack app
         run: tar -xzf Flatsby-app.tar.gz
 
-      # Reuse a simulator the image already provisioned, taking the highest
-      # iPhone model number: the images still carry old devices (an iPhone 11
-      # boots slowly enough to time out Maestro's driver).
+      # Highest iPhone model number: the images still carry old devices, and
+      # an iPhone 11 boots slowly enough to time out Maestro's driver.
       - name: Boot iOS simulator
         id: sim
         run: |
@@ -260,13 +240,11 @@ jobs:
           xcrun simctl erase "$UDID"
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID"
-          # Animation settle time is a flake source on shared runners.
           xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
-      # The first launch after install pays dyld/springboard warm-up and
-      # regularly stalls past the first flow's wait inside Maestro; take that
-      # hit here instead, outside any flow timing.
+      # The first launch pays dyld/springboard warm-up, which stalls past the
+      # first flow's wait if it happens inside Maestro.
       - name: Install and pre-warm app
         env:
           UDID: ${{ steps.sim.outputs.udid }}

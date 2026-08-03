@@ -1,19 +1,11 @@
 #!/usr/bin/env node
 /**
- * CI Maestro runner. Runs every flow in its own maestro invocation — the
- * XCTest driver occasionally crashes mid-batch on hosted runners, and in a
- * shared invocation that fails every remaining flow instantly ("Unknown
- * error" at 0s). Per-flow invocations cap a driver crash at one flow, one
- * attempt. Failed flows are rerun once (fresh driver) and the run passes
- * when the rerun is green; a mostly-failing shard skips reruns as systemic.
+ * CI Maestro runner: `node e2e/run-flows.mjs [dir-or-flow ...]`, no args for
+ * the whole suite. Needs E2E_API_URL, optionally VERCEL_BYPASS_SECRET.
  *
- * Usage: node e2e/run-flows.mjs [target ...]
- *   target - flow directory or single flow under e2e/flows (e.g. "group" or
- *            "expenses/splits"); no args runs the full suite. CI shards the
- *            suite so each job fits its time budget.
- * Env:
- *   E2E_API_URL           - deployment to test against (required)
- *   VERCEL_BYPASS_SECRET  - Vercel protection bypass secret (optional)
+ * One maestro invocation per flow, because the XCTest driver occasionally
+ * crashes mid-batch on hosted runners and a shared invocation then fails
+ * every remaining flow instantly ("Unknown error" at 0s).
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
@@ -68,15 +60,13 @@ function runFlow(file, tag) {
     { stdio: "inherit" },
   );
   if (error) throw error;
-  // Screenshots and hierarchy dumps are only worth keeping for failures —
-  // uploading them for every flow made the results artifact ~10x bigger.
+  // Screenshots and hierarchy dumps are only worth keeping for failures.
   if (status === 0) rmSync(debugDir, { recursive: true, force: true });
   return status ?? 1;
 }
 
-// Without this the shard's first flow pays the cold Vercel function + DB
-// connection on create-session inside its login wait, which is the main
-// source of first-attempt bootstrap flakes.
+// Otherwise the shard's first flow pays the cold Vercel function + DB inside
+// its login wait, the main source of first-attempt bootstrap flakes.
 async function warmUpApi() {
   const started = Date.now();
   try {

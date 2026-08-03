@@ -6,11 +6,10 @@ tags:
 # danger zone access, two-step email confirmation, account deletion signs out.
 - runFlow: ../../subflows/e2e-login.yaml
 
-# Open Settings, then deep-link to the danger screen: Maestro's synthetic
-# swipes don't move this screen's KeyboardAwareScrollView on GitHub-hosted
-# simulators, so scrollUntilVisible never reaches the Danger Zone row.
-# (No screen assertion here: SettingsItem rows merge their children into one
-# accessibility label, so row texts like "Buy Credits" aren't queryable.)
+# Deep-link to the danger screen: Maestro's synthetic swipes don't move this
+# screen's KeyboardAwareScrollView on hosted simulators, and SettingsItem rows
+# merge their children into one accessibility label, so neither scrolling to
+# the row nor asserting on the rows in between works.
 - tapOn: "Settings"
 - openLink: flatsby://settings/danger
 - retry:

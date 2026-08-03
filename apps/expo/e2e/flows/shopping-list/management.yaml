@@ -42,8 +42,7 @@ tags:
     id: "shopping-list-rename-input"
 - eraseText
 - inputText: "Renamed List"
-# The save tap sometimes doesn't register on hosted runners; tap again if
-# the row text hasn't updated.
+# The save tap sometimes doesn't register on hosted runners.
 - retry:
     maxRetries: 2
     commands:

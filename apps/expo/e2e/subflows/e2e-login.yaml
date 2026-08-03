@@ -6,9 +6,8 @@ appId: com.flatcove.app.v2
 # Requires env vars (passed via `maestro test -e`):
 #   E2E_API_URL            - the deployment to test against
 #   VERCEL_BYPASS_SECRET   - Vercel protection bypass secret (optional)
-# A failed flow can leave the springboard's "Open in Flatsby?" deep-link
-# confirmation on screen, which blocks launchApp for every flow after it —
-# dismiss it before touching the app.
+# A failed flow can leave the "Open in Flatsby?" confirmation on the
+# springboard, which blocks launchApp for every flow after it.
 - runFlow:
     when:
       visible: "Open in .*Flatsby.*"
@@ -16,8 +15,7 @@ appId: com.flatcove.app.v2
       - tapOn: "Cancel"
 # clearState alone leaves the iOS Keychain intact, where expo-secure-store
 # keeps the previous flow's session — clear it so every flow starts logged out.
-# On GitHub-hosted runners the post-clearState relaunch can stall on the
-# springboard for minutes; retry instead of waiting it out.
+# The post-clearState relaunch can stall on the springboard for minutes.
 - retry:
     maxRetries: 2
     commands:
@@ -31,8 +29,7 @@ appId: com.flatcove.app.v2
 - evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + '&bypass=' + encodeURIComponent(typeof VERCEL_BYPASS_SECRET !== 'undefined' ? VERCEL_BYPASS_SECRET : '')}"
 - openLink: ${output.e2eLoginLink}
 # iOS confirms scheme links opened from outside the app, sometimes a beat
-# after openLink returns — the conditional tap lives inside the retry so a
-# late dialog is caught on the second pass.
+# after openLink returns, so the tap has to be retried alongside the wait.
 - retry:
     maxRetries: 2
     commands:
@@ -41,8 +38,6 @@ appId: com.flatcove.app.v2
             visible: "Open in .*Flatsby.*"
           commands:
             - tapOn: "Open"
-      # 45s: the first flow after a fresh install pays for a cold Vercel
-      # function + DB on create-session, which alone can take 15-20s.
       - extendedWaitUntil:
           visible:
             id: "e2e-login-done"

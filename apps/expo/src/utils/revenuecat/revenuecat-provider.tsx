@@ -16,8 +16,7 @@ export function RevenueCatProvider({
   useEffect(() => {
     if (Platform.OS !== "ios") return;
     if (!userId) return;
-    // RevenueCat's test-key dialog blocks the UI in e2e simulator builds, and
-    // purchases aren't under test — skip configuration entirely.
+    // RevenueCat's test-key dialog blocks the UI in simulator builds.
     if (isE2ETestingEnabled()) return;
 
     const apiKey = String(process.env.EXPO_PUBLIC_REVENUECAT_API_KEY ?? "");
