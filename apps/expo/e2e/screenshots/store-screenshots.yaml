@@ -1,0 +1,193 @@
+appId: ${APP_ID}
+---
+# Store screenshot flow: logs in via the e2e session endpoint, seeds a
+# presentable group with expenses and a shopping list, then captures the
+# screens used for App Store / Play Store listings into
+# e2e/results/screenshots/. Run via `node e2e/run-flows.mjs
+# ../screenshots/store-screenshots` (outside flows/ so the regular e2e suite
+# never picks it up).
+#
+# Ordering matters: expenses and the Home screenshot come before item
+# seeding, because the item-entry keyboard covers the tab bar and relaunching
+# mid-flow leaves Maestro's iOS hierarchy stale (the screen renders but no
+# selector ever matches).
+- runFlow: ../subflows/e2e-login.yaml
+
+# The e2e fixture group has a generated name ("E2E Test Group 3f2a...");
+# create a real-looking one for the screenshots.
+- tapOn:
+    id: "group-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-create-name-input"
+    timeout: 15000
+- tapOn:
+    id: "group-create-name-input"
+- inputText: "Sunset Villa"
+- tapOn:
+    id: "group-create-submit"
+- extendedWaitUntil:
+    visible: "Sunset Villa"
+    timeout: 15000
+
+# Select it (second card; the e2e fixture group is first). The name check
+# guards the positional index: the fixture group's screen would pass the
+# create-button wait too.
+- tapOn:
+    id: "group-select-button"
+    index: 1
+- extendedWaitUntil:
+    visible: "Sunset Villa"
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 15000
+
+# Create the shopping list now (its card should appear in the Home
+# screenshot) but stay out of it until the end. Inlined rather than via the
+# create-shopping-list subflow, which would re-select the fixture group.
+- tapOn:
+    id: "shopping-list-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-input"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-create-input"
+- inputText: "Groceries"
+- tapOn:
+    id: "shopping-list-create-submit"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-dashboard-link"
+    timeout: 15000
+
+# Seed expenses. Descriptions must not collide with tab titles ("Groceries",
+# "Expenses", "Home") — Maestro taps by full-text match on the tab bar.
+- tapOn: "Expenses"
+- extendedWaitUntil:
+    visible:
+      id: "expense-heading"
+    timeout: 15000
+- runFlow:
+    file: ../subflows/create-expense.yaml
+    env:
+      AMOUNT: "84.20"
+      DESCRIPTION: "Weekly shopping"
+- runFlow:
+    file: ../subflows/create-expense.yaml
+    env:
+      AMOUNT: "39.99"
+      DESCRIPTION: "Internet bill"
+- runFlow:
+    file: ../subflows/create-expense.yaml
+    env:
+      AMOUNT: "18.50"
+      DESCRIPTION: "Cleaning supplies"
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/03-expenses
+
+# Home tab: either the group dashboard (stats + quick actions) or the lists
+# overview, depending on what the tab restores — both are presentable.
+- tapOn: "Home"
+- extendedWaitUntil:
+    visible: "Sunset Villa"
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/01-home
+
+# Into the seeded list. The "Shopping lists" card only exists on the group
+# dashboard variant; on the lists overview the link is directly visible.
+- runFlow:
+    when:
+      visible: "Shopping lists"
+    commands:
+      - tapOn: "Shopping lists"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-dashboard-link"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-dashboard-link"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-item-input"
+    timeout: 15000
+
+# Seed items with categories so the list looks lived-in.
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: "Apples"
+- tapOn:
+    id: "shopping-list-category-picker"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "picker-item-produce"
+    timeout: 20000
+- tapOn:
+    id: "picker-item-produce"
+- tapOn:
+    id: "shopping-list-add-item-button"
+- extendedWaitUntil:
+    visible: "Apples"
+    timeout: 15000
+
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: "Oat Milk"
+- tapOn:
+    id: "shopping-list-category-picker"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "picker-item-dairy"
+    timeout: 20000
+- tapOn:
+    id: "picker-item-dairy"
+- tapOn:
+    id: "shopping-list-add-item-button"
+- extendedWaitUntil:
+    visible: "Oat Milk"
+    timeout: 15000
+
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: "Sourdough Bread"
+- tapOn:
+    id: "shopping-list-category-picker"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "picker-item-bakery"
+    timeout: 20000
+- tapOn:
+    id: "picker-item-bakery"
+- tapOn:
+    id: "shopping-list-add-item-button"
+- extendedWaitUntil:
+    visible: "Sourdough Bread"
+    timeout: 15000
+
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: "Paper Towels"
+- tapOn:
+    id: "shopping-list-add-item-button"
+- extendedWaitUntil:
+    visible: "Paper Towels"
+    timeout: 15000
+
+# Dismiss the item-entry keyboard: hideKeyboard is flaky on iOS, but opening
+# and closing the item-detail modal steals focus deterministically.
+- tapOn: "Apples"
+- extendedWaitUntil:
+    visible: "Close"
+    timeout: 15000
+- tapOn: "Close"
+- extendedWaitUntil:
+    notVisible: "Close"
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/02-shopping-list
