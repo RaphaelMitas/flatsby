@@ -23,4 +23,19 @@ node e2e/run-flows.mjs "$@"
 status=$?
 mkdir -p e2e/results/diagnostics
 adb logcat -d > e2e/results/diagnostics/logcat.txt || true
+
+# On failure, print the evidence into the job log itself — the results
+# artifact is not always reachable from where the logs get read.
+if [ "$status" -ne 0 ]; then
+  echo "=== diagnostics: crash buffer ==="
+  adb logcat -d -b crash | tail -n 120 || true
+  echo "=== diagnostics: ReactNativeJS ==="
+  adb logcat -d -s ReactNativeJS:* | tail -n 60 || true
+  echo "=== diagnostics: UI hierarchy after fresh launch ==="
+  adb shell monkey -p com.flatcove.app -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
+  sleep 20
+  adb shell uiautomator dump /sdcard/e2e-window.xml >/dev/null 2>&1 || true
+  adb shell cat /sdcard/e2e-window.xml | head -c 6000 || true
+  echo
+fi
 exit "$status"

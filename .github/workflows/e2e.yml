@@ -427,7 +427,11 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_7
-          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          # -dns-server: the hosted runner resolves via systemd-resolved on
+          # 127.0.0.53, which the emulator guest can't reach — DNS lookups in
+          # the app then hang instead of resolving, and the session check
+          # blocks the first screen past every flow's wait.
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -dns-server 8.8.8.8
           disable-animations: true
           script: bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/app-release.apk" ${{ matrix.areas }}
         env:
