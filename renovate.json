@@ -8,6 +8,9 @@
   ],
   "baseBranchPatterns": ["main"],
   "minimumReleaseAge": "1 day",
+  "statusCheckNames": {
+    "minimumReleaseAge": null
+  },
   "rangeStrategy": "bump",
   "labels": ["dependencies"],
   "osvVulnerabilityAlerts": true,
