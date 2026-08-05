@@ -3,6 +3,13 @@ packages:
   - packages/*
   - tooling/*
 
+allowBuilds:
+  '@google/genai': false
+  esbuild: true
+  protobufjs: true
+  sharp: true
+  unrs-resolver: false
+
 # Transitive vulnerabilities with no upstream fix path: each is held back by a
 # parent package we do not control, via an exact pin or a range that excludes the
 # patched release. Re-check with `pnpm audit` and drop entries as upstream ships.
