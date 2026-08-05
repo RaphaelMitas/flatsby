@@ -323,14 +323,24 @@ jobs:
         env:
           E2E_TESTING: "true"
 
+      # The template's 512m Metaspace cap OOMs the daemon mid-build; a later
+      # duplicate key in gradle.properties wins, so appending overrides it.
+      - name: Raise Gradle memory limits
+        working-directory: apps/expo/android
+        run: printf '\norg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g\n' >> gradle.properties
+
       # E2E_TESTING again: the expo-constants Gradle task re-evaluates
       # app.config.ts during the build. x86_64 only — that's what the CI
       # emulator runs, and skipping the other ABIs halves native compile time.
       # Release builds sign with the debug keystore in the Expo template, so
-      # the APK installs on the emulator as-is.
+      # the APK installs on the emulator as-is. lintVital is excluded: release
+      # lint adds nothing to a throwaway e2e APK and is the heaviest Metaspace
+      # consumer.
       - name: Build APK for emulator
         working-directory: apps/expo/android
-        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+        run: |
+          ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon \
+            -x lintVitalRelease -x lintVitalAnalyzeRelease -x lintVitalReportRelease
         env:
           E2E_TESTING: "true"
 
