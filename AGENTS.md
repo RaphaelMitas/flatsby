@@ -93,12 +93,12 @@ For local dev without real credentials, populate `.env` with placeholder strings
 
 ### Toolchain (cloud VM)
 
-Use **Node 24.15.0** (`.nvmrc`) and **pnpm 10.33.2** (root `packageManager` field) via Corepack:
+Use **Node 24.18.0** (`.nvmrc`) and **pnpm 11.20.0** (root `packageManager` field) via Corepack:
 
 ```bash
-nvm install 24.15.0 && nvm use 24.15.0
-export PATH="$NVM_DIR/versions/node/v24.15.0/bin:$PATH"   # before /exec-daemon/node
-corepack enable && corepack prepare pnpm@10.33.2 --activate
+nvm install 24.18.0 && nvm use 24.18.0
+export PATH="$NVM_DIR/versions/node/v24.18.0/bin:$PATH"   # before /exec-daemon/node
+corepack enable && corepack prepare pnpm@11.20.0 --activate
 pnpm install
 ```
 
@@ -111,7 +111,7 @@ pnpm -F @flatsby/expo typecheck
 
 ### Non-obvious caveats
 
-- **Node.js version**: Requires Node.js >= 24.15.0 (see `.nvmrc`). Cloud VMs may ship `/exec-daemon/node` (older Node) ahead of nvm on `PATH`; always prepend `$NVM_DIR/versions/node/v24.15.0/bin` after `nvm use` so `node -v` is 24.15+ before `pnpm install` or Expo/Next dev commands.
+- **Node.js version**: Requires Node.js >= 24.18.0 (see `.nvmrc`). Cloud VMs may ship `/exec-daemon/node` (older Node) ahead of nvm on `PATH`; always prepend `$NVM_DIR/versions/node/v24.18.0/bin` after `nvm use` so `node -v` is 24.18+ before `pnpm install` or Expo/Next dev commands.
 - **`pnpm db:push` in headless shells**: The root `pnpm db:push` task is marked `interactive` in `turbo.json` and fails without a Turbo UI. Use `cd packages/db && pnpm with-env drizzle-kit push --force` instead (non-interactive).
 - **`.env` file**: Copy `.env.example` to `.env` and fill values (or sync from injected secrets). The dev server loads repo-root `.env` via `dotenv -e ../../.env`; shell-exported vars alone are not enough unless written to `.env`.
 - **postinstall**: `pnpm install` runs `pnpm lint:ws` (sherif workspace linter) as a postinstall hook.
