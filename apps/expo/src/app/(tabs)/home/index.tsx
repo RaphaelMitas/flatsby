@@ -49,8 +49,7 @@ export function ErrorBoundary({
 export default function Index() {
   const { data: session } = authClient.useSession();
 
-  // The tab layout owns the redirect to login; render nothing here so a
-  // background tab never drives navigation while another stack is mounted.
+  // The tab layout owns the redirect to login.
   if (!session) {
     return null;
   }

@@ -19,8 +19,8 @@ interface SpringEffectsProviderProps {
   children: React.ReactNode;
 }
 
-// The constant petal animation competes with Maestro for the simulator's few
-// CPU cores and keeps the UI from ever settling, so e2e builds default it off.
+// The petal animation competes with Maestro for the simulator's CPU cores and
+// keeps the UI from ever settling.
 const DEFAULT_ENABLED = !isE2ETestingEnabled();
 
 export function SpringEffectsProvider({

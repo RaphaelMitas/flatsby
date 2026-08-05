@@ -32,9 +32,8 @@ export default function DangerScreen() {
           return;
         }
 
-        // Sign out first: clearing the cache while this screen's suspense
-        // queries are still mounted makes them re-suspend and refetch as the
-        // tab tree unwinds, which segfaults in SwiftUI's AttributeGraph.
+        // Clearing the cache first makes this screen's suspense queries
+        // re-suspend as the tab tree unwinds, which segfaults in SwiftUI.
         await signOut();
         queryClient.clear();
       },

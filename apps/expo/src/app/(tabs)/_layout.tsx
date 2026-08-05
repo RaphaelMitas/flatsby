@@ -77,10 +77,9 @@ export default function TabLayout() {
     void prefetch(trpc.group.getUserGroups.queryOptions());
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
 
-  // Guard the whole authenticated area here rather than per screen: signing
-  // out (or deleting the account) from a Settings screen used to redirect
-  // from the backgrounded home tab, tearing down one tab's navigation stack
-  // while another was still mounted, which segfaults inside UIKit.
+  // Guarding per screen segfaults in UIKit: signing out from Settings
+  // redirected from the backgrounded home tab, tearing down one tab's
+  // navigation stack while another was still mounted.
   if (!session.isPending && !session.data?.user) {
     return <Redirect href="/auth/login" />;
   }

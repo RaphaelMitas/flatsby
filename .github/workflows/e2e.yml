@@ -26,8 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # deployment_status runs carry secrets, so fork PRs (cross-repo
-          # heads) must not gate downstream jobs on.
+          # deployment_status runs carry secrets; never gate on fork PRs.
           PR_JSON=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number,headRefName,isCrossRepository --jq '[.[] | select(.isCrossRepository == false)][0]')
           if [[ -n "$PR_JSON" && "$PR_JSON" != "null" ]]; then
             echo "has-pr=true" >> "$GITHUB_OUTPUT"
@@ -75,9 +74,6 @@ jobs:
           path: apps/nextjs/test-results/
           retention-days: 7
 
-  # Build and test are separate jobs: a full suite run doesn't fit one 60-min
-  # job on the 3-core runners (cold build ~27 min + ~40 min of flows), and a
-  # timed-out job never saves its caches, so every retry rebuilt cold.
   e2e-ios-build:
     needs: check-pr
     if: needs.check-pr.outputs.has-pr == 'true'
@@ -101,16 +97,8 @@ jobs:
           sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
           xcodebuild -version
 
-      # DerivedData caching can't work here (prebuild regenerates the project
-      # with fresh mtimes, forcing full rebuilds), so builds use ccache keyed
-      # on file content instead — expo-build-properties wires it into the
-      # Xcode project when E2E_TESTING=true.
-      # CCACHE_BINARY must be a real env var: React Native's ccache-clang.sh
-      # wrapper runs `exec $CCACHE_BINARY clang`, and the build setting
-      # CocoaPods writes for it doesn't reach the compiler's environment — so
-      # without this the wrapper silently execs plain clang and caches nothing.
-      # The wrapper points CCACHE_CONFIGPATH at React Native's own tuned conf
-      # (sloppiness, depend_mode), so size/location go through env vars.
+      # CCACHE_BINARY has to be a real env var: React Native's ccache-clang.sh
+      # execs it, and the build setting CocoaPods writes never reaches it.
       - name: Setup ccache
         run: |
           brew install ccache
@@ -120,23 +108,23 @@ jobs:
             echo "CCACHE_MAXSIZE=3G"
           } >> "$GITHUB_ENV"
 
-      # actions/cache cannot restore or save on deployment_status runs (the
-      # cache service rejects the event: "not tied to a branch or tag ref"),
-      # so the ccache pool travels as a workflow artifact instead — artifacts
-      # work fine on these runs (the .app already ships between jobs as one).
+      # actions/cache rejects deployment_status runs ("not tied to a branch or
+      # tag ref"); artifacts work, so the pool travels as one.
       - name: Restore ccache from artifact
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ART_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=ccache-macos&per_page=1" --jq '.artifacts[0].id // empty')
-          if [ -n "$ART_ID" ]; then
-            gh api "repos/${{ github.repository }}/actions/artifacts/$ART_ID/zip" > /tmp/ccache.zip
-            unzip -q -o /tmp/ccache.zip -d /tmp/ccache-artifact
-            tar -xzf /tmp/ccache-artifact/ccache.tar.gz -C "$HOME"
-            echo "Restored ccache from artifact $ART_ID"
-          else
-            echo "No ccache artifact found; building cold"
+          ART_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=ccache-macos&per_page=5" \
+            --jq '[.artifacts[] | select(.expired == false)][0].id // empty')
+          if [ -z "$ART_ID" ]; then
+            echo "No ccache artifact available; building cold"
+            exit 0
           fi
+          gh api "repos/${{ github.repository }}/actions/artifacts/$ART_ID/zip" > /tmp/ccache.zip \
+            && unzip -q -o /tmp/ccache.zip -d /tmp/ccache-artifact \
+            && tar -xzf /tmp/ccache-artifact/ccache.tar.gz -C "$HOME" \
+            && echo "Restored ccache from artifact $ART_ID" \
+            || echo "ccache artifact $ART_ID unusable; building cold"
 
       - name: Prebuild iOS project
         working-directory: apps/expo
@@ -150,15 +138,9 @@ jobs:
         env:
           LANG: en_US.UTF-8
 
-      # E2E_TESTING must be present here too: the expo-constants build phase
-      # re-evaluates app.config.ts (extra.e2eTesting) during xcodebuild. It
-      # also disables PostHog and RevenueCat in-app, so no EXPO_PUBLIC_* API
-      # keys are needed for this build.
-      # CODE_SIGN_IDENTITY=- instead of CODE_SIGNING_ALLOWED=NO: the latter
-      # strips keychain entitlements and expo-secure-store crashes on launch.
-      # ARCHS=arm64: the default Release simulator build produces universal
-      # arm64+x86_64 binaries — double the compile work for a simulator that
-      # only runs arm64.
+      # E2E_TESTING again: the expo-constants build phase re-evaluates
+      # app.config.ts during xcodebuild. CODE_SIGNING_ALLOWED=NO would be the
+      # obvious flag but strips keychain entitlements, crashing secure-store.
       - name: Build app for simulator
         working-directory: apps/expo/ios
         run: |
@@ -199,11 +181,8 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      # Shards balanced on observed flow times (group flows 4-6 min,
-      # shopping-list 4-7.5 min, expenses up to 15 min each on the 3-core
-      # runners), leaving room for the failed-flow rerun inside the timeout.
-      # macOS runner concurrency for the repo is 5, so one shard queues
-      # briefly behind the first finisher.
+      # Five shards of ~10-13 min: the repo's macOS runner concurrency is 5,
+      # so a sixth would queue behind the first finisher.
       matrix:
         include:
           - shard: quick
@@ -214,23 +193,18 @@ jobs:
             areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
           - shard: sl-manage
             areas: shopping-list/management shopping-list/suggestions
-          - shard: exp-create
-            areas: expenses/creation expenses/management
-          - shard: exp-splits
-            areas: expenses/splits expenses/debts
+          - shard: expenses
+            areas: expenses
     concurrency:
       group: e2e-ios-${{ needs.check-pr.outputs.branch }}-${{ matrix.shard }}
       cancel-in-progress: true
     env:
       MAESTRO_VERSION: "2.3.0"
       MAESTRO_CLI_NO_ANALYTICS: "1"
-      # The XCTest driver install/boot is slow on these shared runners; the
-      # 3-core box blew the default startup timeout on a cold simulator.
       MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
       - uses: actions/checkout@v7
 
-      # run-flows.mjs only needs Node (no workspace install).
       - uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
@@ -248,61 +222,37 @@ jobs:
       - name: Unpack app
         run: tar -xzf Flatsby-app.tar.gz
 
+      # Highest iPhone model number: the images still carry old devices, and
+      # an iPhone 11 boots slowly enough to time out Maestro's driver.
       - name: Boot iOS simulator
         id: sim
         run: |
-          # Prefer a simulator the image already provisioned for its runtime,
-          # picking the highest iPhone model number (an old device like the
-          # iPhone 11 boots slowly enough to time out Maestro's driver).
           UDID=$(xcrun simctl list devices available --json | jq -r '
             [.devices | to_entries[] | select(.key | test("iOS")) | .value[]
               | select(.name | startswith("iPhone"))
-              | {udid, name, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
+              | {udid, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
             | sort_by(.n) | last // {} | .udid // empty')
-          if [ -n "$UDID" ]; then
-            echo "Reusing provisioned simulator: $(xcrun simctl list devices | grep "$UDID")"
-            xcrun simctl erase "$UDID"
-          else
-            while read -r DEVICE_TYPE; do
-              if UDID=$(xcrun simctl create "Flatsby-E2E" "$DEVICE_TYPE" 2>/dev/null); then
-                echo "Created Flatsby-E2E ($DEVICE_TYPE): $UDID"
-                break
-              fi
-            done < <(xcrun simctl list devicetypes --json | jq -r '
-              [.devicetypes[] | select(.productFamily == "iPhone")
-                | {identifier, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
-              | sort_by(.n) | reverse | .[].identifier')
-          fi
           if [ -z "$UDID" ]; then
-            echo "::error::Could not select an iPhone simulator on this image"
+            echo "::error::No iPhone simulator available on this image"
             xcrun simctl list devices available
-            xcrun simctl list devicetypes
             exit 1
           fi
+          xcrun simctl erase "$UDID"
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID"
-          # Reduce Motion: animation settle time is a flake source on shared runners
           xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
-      - name: Install app on simulator
-        run: xcrun simctl install "${{ steps.sim.outputs.udid }}" Flatsby.app
-
-      # The very first launch after install pays dyld/springboard warm-up and
-      # regularly stalls past the flow's wait inside Maestro; take that hit
-      # here instead, outside any flow timing.
-      - name: Pre-warm app
+      # The first launch pays dyld/springboard warm-up, which stalls past the
+      # first flow's wait if it happens inside Maestro.
+      - name: Install and pre-warm app
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
         run: |
-          xcrun simctl launch "${{ steps.sim.outputs.udid }}" com.flatcove.app.v2 || true
+          xcrun simctl install "$UDID" Flatsby.app
+          xcrun simctl launch "$UDID" com.flatcove.app.v2 || true
           sleep 15
-          xcrun simctl terminate "${{ steps.sim.outputs.udid }}" com.flatcove.app.v2 || true
-
-      - name: Start screen recording
-        working-directory: apps/expo
-        run: |
-          mkdir -p e2e/results
-          nohup xcrun simctl io "${{ steps.sim.outputs.udid }}" recordVideo --codec h264 --force e2e/results/recording.mp4 > e2e/results/recording.log 2>&1 &
-          echo $! > "$RUNNER_TEMP/recording.pid"
+          xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
 
       - name: Run Maestro tests
         working-directory: apps/expo
@@ -310,14 +260,6 @@ jobs:
         env:
           E2E_API_URL: ${{ github.event.deployment_status.target_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-
-      - name: Stop screen recording
-        if: always()
-        run: |
-          if [ -f "$RUNNER_TEMP/recording.pid" ]; then
-            kill -INT "$(cat "$RUNNER_TEMP/recording.pid")" 2>/dev/null || true
-            sleep 5
-          fi
 
       - name: Collect crash reports & simulator logs
         if: always()

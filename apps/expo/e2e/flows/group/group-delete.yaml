@@ -46,8 +46,7 @@ tags:
 - assertVisible:
     id: "delete-confirmation-confirm"
     enabled: true
-# The confirm tap sometimes doesn't register, and the delete mutation can
-# outlast a fixed wait — re-tap while the dialog is still up.
+# The confirm tap sometimes doesn't register on hosted runners.
 - retry:
     maxRetries: 2
     commands:
