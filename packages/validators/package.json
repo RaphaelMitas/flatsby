@@ -39,9 +39,11 @@
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
     "@types/papaparse": "^5.5.2",
+    "@types/react": "catalog:react19",
     "ai": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "react": "catalog:react19",
     "typescript": "catalog:"
   },
   "prettier": "@flatsby/prettier-config"

@@ -23,6 +23,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@ai-sdk/provider": "catalog:",
     "@flatsby/auth": "workspace:*",
     "@flatsby/db": "workspace:*",
     "@flatsby/validators": "workspace:*",
