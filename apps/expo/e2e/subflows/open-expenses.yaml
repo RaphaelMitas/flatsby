@@ -1,4 +1,4 @@
-appId: com.flatcove.app.v2
+appId: ${APP_ID}
 ---
 # Shared subflow: from the authenticated group dashboard, selects the fixture
 # group and switches to the Expenses tab.
