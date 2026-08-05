@@ -427,6 +427,9 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_7
+          # Default is 2 of the runner's 4 vCPUs; the software-rendered
+          # emulator ANRs the launcher under load with only 2.
+          cores: 3
           # -dns-server: the hosted runner resolves via systemd-resolved on
           # 127.0.0.53, which the emulator guest can't reach — DNS lookups in
           # the app then hang instead of resolving, and the session check
