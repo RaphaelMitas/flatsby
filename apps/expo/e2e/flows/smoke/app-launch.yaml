@@ -1,4 +1,4 @@
-appId: com.flatcove.app.v2
+appId: ${APP_ID}
 ---
 # Smoke test: app launches and shows the full login screen (no auth state).
 - launchApp:

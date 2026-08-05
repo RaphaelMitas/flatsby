@@ -1,4 +1,4 @@
-appId: com.flatcove.app.v2
+appId: ${APP_ID}
 tags:
   - expenses
 ---

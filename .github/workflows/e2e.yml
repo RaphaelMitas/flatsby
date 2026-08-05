@@ -279,3 +279,173 @@ jobs:
           name: maestro-results-${{ matrix.shard }}
           path: apps/expo/e2e/results/
           retention-days: 7
+
+  e2e-android-build:
+    needs: check-pr
+    if: needs.check-pr.outputs.has-pr == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: e2e-android-build-${{ needs.check-pr.outputs.branch }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # actions/cache rejects deployment_status runs ("not tied to a branch or
+      # tag ref"); artifacts work, same as the iOS ccache pool.
+      - name: Restore Gradle cache from artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ART_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=gradle-android&per_page=5" \
+            --jq '[.artifacts[] | select(.expired == false)][0].id // empty')
+          if [ -z "$ART_ID" ]; then
+            echo "No Gradle cache artifact available; building cold"
+            exit 0
+          fi
+          gh api "repos/${{ github.repository }}/actions/artifacts/$ART_ID/zip" > /tmp/gradle.zip \
+            && unzip -q -o /tmp/gradle.zip -d /tmp/gradle-artifact \
+            && tar -xzf /tmp/gradle-artifact/gradle-cache.tar.gz -C "$HOME" \
+            && echo "Restored Gradle cache from artifact $ART_ID" \
+            || echo "Gradle cache artifact $ART_ID unusable; building cold"
+
+      - name: Prebuild Android project
+        working-directory: apps/expo
+        run: pnpm expo prebuild --platform android --no-install
+        env:
+          E2E_TESTING: "true"
+
+      # The template's 512m Metaspace cap OOMs the daemon mid-build; a later
+      # duplicate key in gradle.properties wins, so appending overrides it.
+      - name: Raise Gradle memory limits
+        working-directory: apps/expo/android
+        run: printf '\norg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g\n' >> gradle.properties
+
+      # E2E_TESTING again: the expo-constants Gradle task re-evaluates
+      # app.config.ts during the build. x86_64 only — that's what the CI
+      # emulator runs, and skipping the other ABIs halves native compile time.
+      # Release builds sign with the debug keystore in the Expo template, so
+      # the APK installs on the emulator as-is. lintVital is excluded: release
+      # lint adds nothing to a throwaway e2e APK and is the heaviest Metaspace
+      # consumer.
+      - name: Build APK for emulator
+        working-directory: apps/expo/android
+        run: |
+          ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon \
+            -x lintVitalRelease -x lintVitalAnalyzeRelease -x lintVitalReportRelease
+        env:
+          E2E_TESTING: "true"
+
+      - name: Pack Gradle cache for next run
+        run: tar -C "$HOME" -czf gradle-cache.tar.gz .gradle/caches .gradle/wrapper
+
+      - name: Upload Gradle cache artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gradle-android
+          path: gradle-cache.tar.gz
+          retention-days: 3
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-e2e-app
+          path: apps/expo/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 1
+
+  e2e-android:
+    needs: [check-pr, e2e-android-build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      # Same shards as e2e-ios so a red shard points at the same area on both
+      # platforms.
+      matrix:
+        include:
+          - shard: quick
+            areas: smoke auth home account
+          - shard: group
+            areas: group
+          - shard: sl-browse
+            areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
+          - shard: sl-manage
+            areas: shopping-list/management shopping-list/suggestions
+          - shard: expenses
+            areas: expenses
+    concurrency:
+      group: e2e-android-${{ needs.check-pr.outputs.branch }}-${{ matrix.shard }}
+      cancel-in-progress: true
+    env:
+      MAESTRO_VERSION: "2.3.0"
+      MAESTRO_CLI_NO_ANALYTICS: "1"
+      MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Hosted Linux runners expose /dev/kvm but gate it behind root; without
+      # this the emulator falls back to software virtualization and times out.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install Maestro
+        run: |
+          curl -fsSL https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Download app artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: android-e2e-app
+
+      # The runner executes every `script` line as a separate `sh -c`, so the
+      # install / pre-warm / run / logcat sequence lives in one script file.
+      - name: Run Maestro tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_7
+          # Default is 2 of the runner's 4 vCPUs; the software-rendered
+          # emulator ANRs the launcher under load with only 2.
+          cores: 3
+          # -dns-server: the hosted runner resolves via systemd-resolved on
+          # 127.0.0.53, which the emulator guest can't reach — DNS lookups in
+          # the app then hang instead of resolving, and the session check
+          # blocks the first screen past every flow's wait.
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -dns-server 8.8.8.8
+          disable-animations: true
+          script: bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/app-release.apk" ${{ matrix.areas }}
+        env:
+          E2E_PLATFORM: android
+          E2E_API_URL: ${{ github.event.deployment_status.target_url }}
+          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: maestro-android-results-${{ matrix.shard }}
+          path: apps/expo/e2e/results/
+          retention-days: 7
