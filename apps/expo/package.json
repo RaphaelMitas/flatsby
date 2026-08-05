@@ -21,7 +21,8 @@
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "maestro test e2e/flows/",
+    "test:e2e": "maestro test -e APP_ID=com.flatcove.app.v2 e2e/flows/",
+    "test:e2e:android": "maestro test -e APP_ID=com.flatcove.app e2e/flows/",
     "test:e2e:ci": "node e2e/run-flows.mjs",
     "test:e2e:validate": "node e2e/validate-flows.mjs"
   },

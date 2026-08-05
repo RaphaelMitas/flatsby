@@ -213,8 +213,10 @@ for (const file of flowFiles) {
   const config = docs[0].toJS();
   if (!config || typeof config.appId !== "string") {
     errors.push(`${rel}: front matter missing appId`);
-  } else if (config.appId !== "com.flatcove.app.v2") {
-    errors.push(`${rel}: unexpected appId "${config.appId}"`);
+  } else if (config.appId !== "${APP_ID}") {
+    // Hardcoding a bundle id breaks the other platform; run-flows.mjs
+    // injects APP_ID per platform.
+    errors.push(`${rel}: appId must be "\${APP_ID}", got "${config.appId}"`);
   }
   validateCommands(file, docs[1].toJS(), { isSubflow: false });
 }
@@ -238,6 +240,8 @@ for (const file of subflowFiles) {
   const config = docs[0].toJS();
   if (!config || typeof config.appId !== "string") {
     errors.push(`${rel}: front matter missing appId`);
+  } else if (config.appId !== "${APP_ID}") {
+    errors.push(`${rel}: appId must be "\${APP_ID}", got "${config.appId}"`);
   }
   const commands = docs[docs.length - 1].toJS();
   validateCommands(file, commands, { isSubflow: true });

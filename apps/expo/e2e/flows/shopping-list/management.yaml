@@ -1,4 +1,4 @@
-appId: com.flatcove.app.v2
+appId: ${APP_ID}
 tags:
   - shopping-list
 ---
@@ -38,14 +38,21 @@ tags:
     visible:
       id: "shopping-list-rename-input"
     timeout: 15000
-- tapOn:
-    id: "shopping-list-rename-input"
-- eraseText
-- inputText: "Renamed List"
-# The save tap sometimes doesn't register on hosted runners.
+# Taps and text input sometimes don't register on hosted runners; retry the
+# whole fill-and-save so a dropped inputText can recover too, not just a
+# dropped save tap. The conditionals skip steps once the form has closed.
 - retry:
     maxRetries: 2
     commands:
+      - runFlow:
+          when:
+            visible:
+              id: "shopping-list-rename-input"
+          commands:
+            - tapOn:
+                id: "shopping-list-rename-input"
+            - eraseText
+            - inputText: "Renamed List"
       - runFlow:
           when:
             visible:
