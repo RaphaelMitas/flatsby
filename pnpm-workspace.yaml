@@ -66,18 +66,10 @@ catalogs:
     "@types/react-dom": ~19.2.0
     react: 19.2.0
     react-dom: 19.2.0
-ignoredBuiltDependencies:
-  - unrs-resolver
 
 linkWorkspacePackages: true
 
 nodeLinker: hoisted
-
-onlyBuiltDependencies:
-  - "@tailwindcss/oxide"
-  - esbuild
-  - protobufjs
-  - sharp
 
 overrides:
   # Better Auth 1.6.12's SQLite dialect bundle imports Kysely migration
