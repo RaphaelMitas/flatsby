@@ -2,6 +2,7 @@
 /**
  * CI Maestro runner: `node e2e/run-flows.mjs [dir-or-flow ...]`, no args for
  * the whole suite. Needs E2E_API_URL, optionally VERCEL_BYPASS_SECRET.
+ * E2E_PLATFORM selects the app id ("ios" default, or "android").
  *
  * One maestro invocation per flow, because the XCTest driver occasionally
  * crashes mid-batch on hosted runners and a shared invocation then fails
@@ -21,6 +22,21 @@ const MAX_RERUN_FLOWS = 5;
 const apiUrl = process.env.E2E_API_URL;
 if (!apiUrl) {
   console.error("E2E_API_URL is required");
+  process.exit(1);
+}
+
+// The iOS bundle id and Android package differ (see app.config.ts); flows
+// reference ${APP_ID} so one suite drives both.
+const APP_IDS = {
+  ios: "com.flatcove.app.v2",
+  android: "com.flatcove.app",
+};
+const platform = process.env.E2E_PLATFORM ?? "ios";
+const appId = APP_IDS[platform];
+if (!appId) {
+  console.error(
+    `Unknown E2E_PLATFORM "${platform}" (expected ${Object.keys(APP_IDS).join(" or ")})`,
+  );
   process.exit(1);
 }
 
@@ -45,6 +61,8 @@ function runFlow(file, tag) {
     "maestro",
     [
       "test",
+      "-e",
+      `APP_ID=${appId}`,
       "-e",
       `E2E_API_URL=${apiUrl}`,
       "-e",

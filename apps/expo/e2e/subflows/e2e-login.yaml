@@ -1,4 +1,4 @@
-appId: com.flatcove.app.v2
+appId: ${APP_ID}
 ---
 # Shared subflow: creates an isolated e2e user + session and relaunches the
 # app authenticated. Mirrors the web suite's fixtures/auth.ts.
@@ -7,7 +7,8 @@ appId: com.flatcove.app.v2
 #   E2E_API_URL            - the deployment to test against
 #   VERCEL_BYPASS_SECRET   - Vercel protection bypass secret (optional)
 # A failed flow can leave the "Open in Flatsby?" confirmation on the
-# springboard, which blocks launchApp for every flow after it.
+# springboard, which blocks launchApp for every flow after it. (iOS only:
+# Android opens scheme links directly, so the conditionals never fire there.)
 - runFlow:
     when:
       visible: "Open in .*Flatsby.*"
