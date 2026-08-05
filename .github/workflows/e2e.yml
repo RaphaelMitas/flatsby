@@ -418,9 +418,8 @@ jobs:
         with:
           name: android-e2e-app
 
-      # Same pre-warm as iOS: the first launch pays JIT/dex warm-up, which
-      # stalls past the first flow's wait if it happens inside Maestro.
-      # logcat is dumped before the emulator dies with the step, pass or fail.
+      # The runner executes every `script` line as a separate `sh -c`, so the
+      # install / pre-warm / run / logcat sequence lives in one script file.
       - name: Run Maestro tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -430,18 +429,7 @@ jobs:
           profile: pixel_7
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: |
-            adb install "$GITHUB_WORKSPACE/app-release.apk"
-            adb shell monkey -p com.flatcove.app -c android.intent.category.LAUNCHER 1 || true
-            sleep 15
-            adb shell am force-stop com.flatcove.app || true
-            cd apps/expo
-            set +e
-            node e2e/run-flows.mjs ${{ matrix.areas }}
-            status=$?
-            mkdir -p e2e/results/diagnostics
-            adb logcat -d > e2e/results/diagnostics/logcat.txt || true
-            exit $status
+          script: bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/app-release.apk" ${{ matrix.areas }}
         env:
           E2E_PLATFORM: android
           E2E_API_URL: ${{ github.event.deployment_status.target_url }}
