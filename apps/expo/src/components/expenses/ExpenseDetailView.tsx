@@ -7,7 +7,10 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  formatExpenseDateLong,
+} from "@flatsby/validators/expenses/formatting";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
@@ -26,6 +29,7 @@ import { Separator } from "~/lib/ui/separator";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
+import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface ExpenseDetailViewProps {
   expenseId: number;
@@ -54,23 +58,13 @@ export function ExpenseDetailView({
     trpcClient.expense.getExpense.queryOptions({ expenseId }),
   );
 
-  // Query key for expense list
-  const expenseListQueryKey =
-    trpcClient.expense.getGroupExpenses.infiniteQueryKey({
-      groupId,
-      limit: 20,
-    });
+  const { expenseListQueryKey, invalidateAll } = useInvalidateExpenses(groupId);
 
   const deleteExpenseMutation = useMutation(
     trpcClient.expense.deleteExpense.mutationOptions({
       onMutate: async (input) => {
         // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpcClient.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: 20,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);
@@ -108,12 +102,7 @@ export function ExpenseDetailView({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        void queryClient.invalidateQueries(
-          trpcClient.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        invalidateAll();
         if (onBack) {
           onBack();
         } else {
@@ -149,12 +138,7 @@ export function ExpenseDetailView({
     currency: expense.currency,
   });
   const expenseDate = new Date(expense.expenseDate);
-  const formattedDate = expenseDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = formatExpenseDateLong(expenseDate);
 
   return (
     <>

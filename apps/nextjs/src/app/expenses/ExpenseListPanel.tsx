@@ -8,6 +8,7 @@ import { InView } from "react-intersection-observer";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { ScrollArea } from "@flatsby/ui/scroll-area";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
@@ -42,7 +43,7 @@ export function ExpenseListPanel({
     isFetchingNextPage,
   } = useInfiniteQuery(
     trpc.expense.getGroupExpenses.infiniteQueryOptions(
-      { groupId, limit: 20 },
+      { groupId, limit: PAGE_SIZE.expenses },
       {
         getNextPageParam: (lastPage) =>
           lastPage.success === true ? lastPage.data.nextCursor : null,

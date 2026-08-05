@@ -2,7 +2,7 @@ import { Suspense, useCallback, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import type { SplitViewAction } from "../splitview/SplitViewContext";
+import type { SplitViewAction } from "../splitview/SplitViewAction";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { useShoppingStore } from "~/utils/shopping-store";

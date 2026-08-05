@@ -30,6 +30,7 @@ import {
   SidebarMenuSkeleton,
   SidebarRail,
 } from "@flatsby/ui/sidebar";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
@@ -63,7 +64,7 @@ export function AppSidebar() {
     isFetchingNextPage,
   } = useInfiniteQuery(
     trpc.chat.getUserConversations.infiniteQueryOptions(
-      { limit: 10 },
+      { limit: PAGE_SIZE.conversations },
       { getNextPageParam: (lastPage) => lastPage.nextCursor },
     ),
   );
@@ -77,11 +78,15 @@ export function AppSidebar() {
         });
 
         const previousData = queryClient.getQueryData(
-          trpc.chat.getUserConversations.infiniteQueryKey({ limit: 10 }),
+          trpc.chat.getUserConversations.infiniteQueryKey({
+            limit: PAGE_SIZE.conversations,
+          }),
         );
 
         queryClient.setQueryData(
-          trpc.chat.getUserConversations.infiniteQueryKey({ limit: 10 }),
+          trpc.chat.getUserConversations.infiniteQueryKey({
+            limit: PAGE_SIZE.conversations,
+          }),
           (old: typeof previousData) =>
             old
               ? {
@@ -105,7 +110,9 @@ export function AppSidebar() {
       onError: (_err, _variables, context) => {
         if (context?.previousData) {
           queryClient.setQueryData(
-            trpc.chat.getUserConversations.infiniteQueryKey({ limit: 10 }),
+            trpc.chat.getUserConversations.infiniteQueryKey({
+              limit: PAGE_SIZE.conversations,
+            }),
             context.previousData,
           );
         }

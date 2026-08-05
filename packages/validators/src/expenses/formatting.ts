@@ -1,5 +1,5 @@
 // ============================================================================
-// Formatting Utilities - Currency Display
+// Formatting Utilities - Currency and Date Display
 // ============================================================================
 
 import { centsToDecimal } from "./conversion";
@@ -48,5 +48,42 @@ export function formatCurrencyFromCents({
     amountDecimal: centsToDecimal(cents),
     currency,
     locale,
+  });
+}
+
+/**
+ * Format an expense date for list and card views
+ * The year is omitted for expenses in the current year to keep rows compact.
+ * @param date - Date the expense was incurred
+ * @param locale - Locale to use for formatting (default: "en-US")
+ * @returns Formatted string (e.g., "Mar 4" or "Mar 4, 2024")
+ */
+export function formatExpenseDateShort(
+  date: Date,
+  locale: Intl.LocalesArgument = "en-US",
+): string {
+  return date.toLocaleDateString(locale, {
+    month: "short",
+    day: "numeric",
+    year:
+      date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+  });
+}
+
+/**
+ * Format an expense date for detail views
+ * @param date - Date the expense was incurred
+ * @param locale - Locale to use for formatting (default: "en-US")
+ * @returns Formatted string (e.g., "Monday, March 4, 2024")
+ */
+export function formatExpenseDateLong(
+  date: Date,
+  locale: Intl.LocalesArgument = "en-US",
+): string {
+  return date.toLocaleDateString(locale, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }

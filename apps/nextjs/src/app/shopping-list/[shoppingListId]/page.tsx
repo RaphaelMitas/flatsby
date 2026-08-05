@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
+
 import { caller, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import ShoppingList from "./ShoppingList";
 
@@ -34,7 +36,7 @@ export default async function ShoppingListDetailPage({
       {
         groupId,
         shoppingListId,
-        limit: 20,
+        limit: PAGE_SIZE.shoppingListItems,
       },
       {
         getNextPageParam: (lastPage) =>

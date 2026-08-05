@@ -31,6 +31,7 @@ import { Form, FormControl, FormField, FormMessage } from "~/lib/ui/form";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
+import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface SettlementFormProps {
   groupId: number;
@@ -144,10 +145,8 @@ export function SettlementForm({
     watchedToMemberId,
   );
 
-  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
-    groupId,
-    limit: 20,
-  });
+  const { expenseListQueryKey, invalidateList, invalidateDebtSummary } =
+    useInvalidateExpenses(groupId);
 
   const expenseQueryKey = expense
     ? trpc.expense.getExpense.queryKey({
@@ -166,12 +165,7 @@ export function SettlementForm({
     trpc.expense.createExpense.mutationOptions({
       onMutate: async (input) => {
         // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpc.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: 20,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);
@@ -290,12 +284,8 @@ export function SettlementForm({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        void invalidateList();
+        void invalidateDebtSummary();
         onClose();
         form.reset();
       },
@@ -345,10 +335,7 @@ export function SettlementForm({
         void queryClient.invalidateQueries({
           queryKey: expenseQueryKey,
         });
-
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        void invalidateDebtSummary();
         onClose();
       },
     }),

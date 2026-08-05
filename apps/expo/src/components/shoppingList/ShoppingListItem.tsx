@@ -10,6 +10,8 @@ import ReanimatedSwipeable, {
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
+
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
@@ -67,7 +69,7 @@ const ShoppingListItem = ({
       trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
         groupId,
         shoppingListId,
-        limit: 20,
+        limit: PAGE_SIZE.shoppingListItems,
         categoryId: selectedCategory ?? undefined,
       }),
       previousItems,
@@ -81,7 +83,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.queryOptions({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
         );
@@ -90,7 +92,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
         );
@@ -99,7 +101,7 @@ const ShoppingListItem = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
           (old) => {

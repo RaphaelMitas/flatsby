@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
+
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { handleApiError } from "~/lib/utils";
@@ -40,7 +42,7 @@ export function ExpenseListPanel({
     isRefetching,
   } = useInfiniteQuery(
     trpc.expense.getGroupExpenses.infiniteQueryOptions(
-      { groupId: selectedGroupId ?? -1, limit: 20 },
+      { groupId: selectedGroupId ?? -1, limit: PAGE_SIZE.expenses },
       {
         getNextPageParam: (lastPage) =>
           lastPage.success === true ? lastPage.data.nextCursor : null,

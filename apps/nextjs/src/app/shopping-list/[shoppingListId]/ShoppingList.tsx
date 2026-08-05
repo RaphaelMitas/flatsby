@@ -19,6 +19,7 @@ import { InView } from "react-intersection-observer";
 
 import { CategoryFilter, CategoryFilterSidebar } from "@flatsby/ui/categories";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
@@ -102,7 +103,7 @@ const ShoppingListInner = ({
       {
         groupId,
         shoppingListId,
-        limit: 20,
+        limit: PAGE_SIZE.shoppingListItems,
         categoryId: selectedCategory ?? undefined,
       },
       {
@@ -140,7 +141,7 @@ const ShoppingListInner = ({
       trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
         groupId,
         shoppingListId,
-        limit: 20,
+        limit: PAGE_SIZE.shoppingListItems,
         categoryId: selectedCategory ?? undefined,
       }),
       previousItems,
@@ -154,7 +155,7 @@ const ShoppingListInner = ({
           queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
         });
@@ -163,7 +164,7 @@ const ShoppingListInner = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
         );
@@ -172,7 +173,7 @@ const ShoppingListInner = ({
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,
             shoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
             categoryId: selectedCategory ?? undefined,
           }),
           (old) => {

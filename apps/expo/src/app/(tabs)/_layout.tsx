@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Redirect } from "expo-router";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
+
 import { Tabs } from "~/lib/components/bottom-tabs";
 import { useSpringEffects } from "~/lib/ui/spring-effects";
 import { useThemeColors } from "~/lib/utils";
@@ -44,7 +46,7 @@ export default function TabLayout() {
           {
             groupId: selectedGroupId,
             shoppingListId: selectedShoppingListId,
-            limit: 20,
+            limit: PAGE_SIZE.shoppingListItems,
           },
           {
             getNextPageParam: (lastPage) =>
@@ -64,7 +66,7 @@ export default function TabLayout() {
         trpc.expense.getGroupExpenses.infiniteQueryOptions(
           {
             groupId: selectedGroupId,
-            limit: 20,
+            limit: PAGE_SIZE.expenses,
           },
           {
             getNextPageParam: (lastPage) =>

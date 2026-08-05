@@ -28,6 +28,7 @@ import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
 import { ExpenseDetailContent } from "./ExpenseDetailContent";
 import { ExpenseFormInline } from "./ExpenseFormInline";
+import { useExpenseInvalidation } from "./useExpenseInvalidation";
 
 interface ExpenseDetailPanelProps {
   selectedExpenseId: number | null;
@@ -56,20 +57,13 @@ export function ExpenseDetailPanel({
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
-    groupId,
-    limit: 20,
-  });
+  const { expenseListQueryKey, invalidateAll } =
+    useExpenseInvalidation(groupId);
 
   const deleteExpenseMutation = useMutation(
     trpc.expense.deleteExpense.mutationOptions({
       onMutate: async (input) => {
-        await queryClient.cancelQueries(
-          trpc.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: 20,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         const previousData = queryClient.getQueryData(expenseListQueryKey);
 
@@ -115,12 +109,7 @@ export function ExpenseDetailPanel({
         }
 
         toast.success("Expense deleted successfully");
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        invalidateAll();
         onBack();
       },
     }),

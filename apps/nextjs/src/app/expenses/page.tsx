@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { caller, HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { ExpensesSplitView } from "./ExpensesSplitView";
@@ -18,7 +19,15 @@ export default async function ExpensesPage(props: {
   const groupId = userWithGroups.data.user.lastGroupUsed.id;
 
   // Prefetch initial expenses and group data
-  prefetch(trpc.expense.getGroupExpenses.queryOptions({ groupId, limit: 20 }));
+  prefetch(
+    trpc.expense.getGroupExpenses.infiniteQueryOptions(
+      { groupId, limit: PAGE_SIZE.expenses },
+      {
+        getNextPageParam: (lastPage) =>
+          lastPage.success === true ? lastPage.data.nextCursor : null,
+      },
+    ),
+  );
   prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
   prefetch(trpc.expense.getDebtSummary.queryOptions({ groupId }));
 

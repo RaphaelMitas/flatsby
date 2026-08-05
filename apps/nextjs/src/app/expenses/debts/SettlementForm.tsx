@@ -37,6 +37,7 @@ import { useGroupContext } from "~/app/_components/context/group-context";
 import { CurrencyInput } from "~/components/CurrencyInput";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
+import { useExpenseInvalidation } from "../useExpenseInvalidation";
 
 interface SettlementFormProps {
   fromGroupMemberId: number;
@@ -81,10 +82,8 @@ export function SettlementForm({
   });
 
   // Query key for expense list
-  const expenseListQueryKey = trpc.expense.getGroupExpenses.infiniteQueryKey({
-    groupId,
-    limit: 20,
-  });
+  const { expenseListQueryKey, invalidateList, invalidateDebtSummary } =
+    useExpenseInvalidation(groupId);
 
   const expenseQueryKey = expense
     ? trpc.expense.getExpense.queryKey({
@@ -104,12 +103,7 @@ export function SettlementForm({
     trpc.expense.createExpense.mutationOptions({
       onMutate: async (input) => {
         // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpc.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: 20,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);
@@ -241,12 +235,8 @@ export function SettlementForm({
         }
 
         toast.success("Settlement recorded successfully");
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        void invalidateList();
+        void invalidateDebtSummary();
         onClose();
         form.reset();
       },
@@ -306,10 +296,7 @@ export function SettlementForm({
         void queryClient.invalidateQueries({
           queryKey: expenseQueryKey,
         });
-
-        void queryClient.invalidateQueries(
-          trpc.expense.getDebtSummary.queryOptions({ groupId }),
-        );
+        void invalidateDebtSummary();
         onClose();
       },
     }),

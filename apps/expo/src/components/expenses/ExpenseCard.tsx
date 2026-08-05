@@ -12,10 +12,10 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
-import { useShoppingStore } from "~/utils/shopping-store";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ExpenseDisplay } from "./ExpenseDisplay";
+import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -39,24 +39,14 @@ export function ExpenseCard({
   const trpcClient = trpc;
   const swipeableRef = useRef<SwipeableMethods>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { selectedGroupId } = useShoppingStore();
 
-  const expenseListQueryKey =
-    trpcClient.expense.getGroupExpenses.infiniteQueryKey({
-      groupId,
-      limit: 20,
-    });
+  const { expenseListQueryKey, invalidateAll } = useInvalidateExpenses(groupId);
 
   const deleteExpenseMutation = useMutation(
     trpcClient.expense.deleteExpense.mutationOptions({
       onMutate: async (input) => {
         // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpcClient.expense.getGroupExpenses.queryOptions({
-            groupId,
-            limit: 20,
-          }),
-        );
+        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
         // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);
@@ -94,16 +84,7 @@ export function ExpenseCard({
           return;
         }
 
-        void queryClient.invalidateQueries({
-          queryKey: expenseListQueryKey,
-        });
-        if (selectedGroupId) {
-          void queryClient.invalidateQueries(
-            trpcClient.expense.getDebtSummary.queryOptions({
-              groupId: selectedGroupId,
-            }),
-          );
-        }
+        invalidateAll();
         onDelete?.();
       },
     }),

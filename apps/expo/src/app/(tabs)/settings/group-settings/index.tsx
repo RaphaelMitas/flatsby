@@ -8,11 +8,9 @@ import {
 } from "@tanstack/react-query";
 
 import DeleteConfirmationModal from "~/components/DeleteConfirmationModal";
-import {
-  SettingsHeader,
-  SettingsItem,
-  SettingsSection,
-} from "~/components/settings";
+import { SettingsHeader } from "~/components/settings/SettingsHeader";
+import { SettingsItem } from "~/components/settings/SettingsItem";
+import { SettingsSection } from "~/components/settings/SettingsSection";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
