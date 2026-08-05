@@ -69,6 +69,11 @@ catalogs:
 
 linkWorkspacePackages: true
 
+# pnpm 11 default, stated explicitly because Renovate's minimumReleaseAge in
+# renovate.json must stay in sync with it (Renovate waits out the same window
+# so its lockfile updates pass pnpm's release-age verification).
+minimumReleaseAge: 1440
+
 nodeLinker: hoisted
 
 overrides:
