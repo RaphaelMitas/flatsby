@@ -88,14 +88,12 @@ appId: ${APP_ID}
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/03-expenses
 
-# Home tab: either the group dashboard (stats + quick actions) or the lists
-# overview, depending on what the tab restores — both are presentable.
+# Back to Home, then into the list; the Home screenshot happens at the end,
+# once the list is populated.
 - tapOn: "Home"
 - extendedWaitUntil:
     visible: "Sunset Villa"
     timeout: 15000
-- waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/01-home
 
 # Into the seeded list. The "Shopping lists" card only exists on the group
 # dashboard variant; on the lists overview the link is directly visible.
@@ -179,15 +177,31 @@ appId: ${APP_ID}
     visible: "Paper Towels"
     timeout: 15000
 
-# Dismiss the item-entry keyboard: hideKeyboard is flaky on iOS, but opening
-# and closing the item-detail modal steals focus deterministically.
-- tapOn: "Apples"
-- extendedWaitUntil:
-    visible: "Close"
-    timeout: 15000
-- tapOn: "Close"
-- extendedWaitUntil:
-    notVisible: "Close"
-    timeout: 15000
+# Dismiss the item-entry keyboard: the list uses
+# keyboardDismissMode="on-drag" (ShoppingList.tsx), so a drag on the list
+# area above the keyboard clears it. (hideKeyboard is flaky on iOS, and the
+# item-detail modal is invisible to Maestro's hierarchy.)
+- swipe:
+    start: "50%, 45%"
+    end: "50%, 25%"
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/02-shopping-list
+
+# Home tab again, now showing the populated list card. The card's item
+# count is cached from the pre-seeding visit, so pull-to-refresh
+# (RefreshControl in ShoppingListsDashboard) before capturing.
+- tapOn: "Home"
+- extendedWaitUntil:
+    visible: "Sunset Villa"
+    timeout: 15000
+- retry:
+    maxRetries: 2
+    commands:
+      - swipe:
+          start: "50%, 30%"
+          end: "50%, 80%"
+      - extendedWaitUntil:
+          visible: "4 items left"
+          timeout: 10000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/01-home

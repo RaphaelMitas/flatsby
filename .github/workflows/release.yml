@@ -225,6 +225,10 @@ jobs:
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID"
           xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
+          # A fresh simulator shows the QuickPath swipe-typing tutorial over
+          # the keyboard the second time an input gains focus, which would
+          # end up in the screenshots.
+          xcrun simctl spawn "$UDID" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
       - name: Clean up status bar for screenshots
