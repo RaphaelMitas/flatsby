@@ -69,6 +69,8 @@ catalogs:
 
 linkWorkspacePackages: true
 
+minimumReleaseAge: 1440
+
 nodeLinker: hoisted
 
 overrides:
