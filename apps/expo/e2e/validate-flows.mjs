@@ -159,8 +159,12 @@ function validateCommands(file, commands, { isSubflow }) {
 
     if (name === "runFlow") {
       const ref = typeof value === "string" ? value : value?.file;
-      if (typeof ref !== "string") {
-        errors.push(`${rel}: runFlow without a file reference`);
+      const inlineCommands =
+        typeof value === "object" && value !== null ? value.commands : null;
+      if (Array.isArray(inlineCommands)) {
+        validateCommands(file, inlineCommands, { isSubflow });
+      } else if (typeof ref !== "string") {
+        errors.push(`${rel}: runFlow without a file reference or commands`);
       } else {
         const target = resolve(dirname(file), ref);
         try {

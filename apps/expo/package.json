@@ -22,6 +22,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:e2e": "maestro test e2e/flows/",
+    "test:e2e:ci": "node e2e/run-flows.mjs",
     "test:e2e:validate": "node e2e/validate-flows.mjs"
   },
   "dependencies": {

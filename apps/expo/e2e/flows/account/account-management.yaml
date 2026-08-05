@@ -6,18 +6,24 @@ tags:
 # danger zone access, two-step email confirmation, account deletion signs out.
 - runFlow: ../../subflows/e2e-login.yaml
 
-# Navigate to Settings -> Delete Account
+# Deep-link to the danger screen: Maestro's synthetic swipes don't move this
+# screen's KeyboardAwareScrollView on hosted simulators, and SettingsItem rows
+# merge their children into one accessibility label, so neither scrolling to
+# the row nor asserting on the rows in between works.
 - tapOn: "Settings"
-- scrollUntilVisible:
-    element:
-      id: "settings-delete-account"
-    direction: DOWN
-- tapOn:
-    id: "settings-delete-account"
-- extendedWaitUntil:
-    visible:
-      id: "delete-user-danger-zone-title"
-    timeout: 15000
+- openLink: flatsby://settings/danger
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible: "Open in .*Flatsby.*"
+          commands:
+            - tapOn: "Open"
+      - extendedWaitUntil:
+          visible:
+            id: "delete-user-danger-zone-title"
+          timeout: 15000
 - assertVisible:
     id: "delete-user-confirm-button"
 - assertVisible: ".*This action cannot be undone.*"

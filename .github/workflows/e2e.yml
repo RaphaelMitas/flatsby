@@ -26,7 +26,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_JSON=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number,headRefName --jq '.[0]')
+          # deployment_status runs carry secrets; never gate on fork PRs.
+          PR_JSON=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number,headRefName,isCrossRepository --jq '[.[] | select(.isCrossRepository == false)][0]')
           if [[ -n "$PR_JSON" && "$PR_JSON" != "null" ]]; then
             echo "has-pr=true" >> "$GITHUB_OUTPUT"
             echo "branch=$(echo "$PR_JSON" | jq -r '.headRefName')" >> "$GITHUB_OUTPUT"
@@ -73,85 +74,201 @@ jobs:
           path: apps/nextjs/test-results/
           retention-days: 7
 
-  e2e-ios:
+  e2e-ios-build:
     needs: check-pr
     if: needs.check-pr.outputs.has-pr == 'true'
-    runs-on: [self-hosted, macos, arm64]
+    runs-on: macos-26
     timeout-minutes: 45
     concurrency:
-      group: e2e-ios-${{ needs.check-pr.outputs.branch }}
+      group: e2e-ios-build-${{ needs.check-pr.outputs.branch }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup
-        with:
-          cache: "false"
 
       - name: Validate Maestro flows
         working-directory: apps/expo
         run: node e2e/validate-flows.mjs
 
-      - name: Clean native build artifacts
-        working-directory: apps/expo
-        run: rm -rf ios android build-cache "$RUNNER_TEMP/eas-build"
-
-      - name: Update CocoaPods repo
-        run: pod repo update
-
-      - name: Build app for simulator
-        working-directory: apps/expo
+      - name: Select Xcode
         run: |
-          mkdir -p build-cache
-          pnpm dlx eas-cli build --local --profile e2e --platform ios --output build-cache/Flatsby.tar.gz
-          cd build-cache && tar -xzf Flatsby.tar.gz && rm Flatsby.tar.gz
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+          xcodebuild -version
+
+      # CCACHE_BINARY has to be a real env var: React Native's ccache-clang.sh
+      # execs it, and the build setting CocoaPods writes never reaches it.
+      - name: Setup ccache
+        run: |
+          brew install ccache
+          {
+            echo "CCACHE_BINARY=$(command -v ccache)"
+            echo "CCACHE_DIR=$HOME/.ccache"
+            echo "CCACHE_MAXSIZE=3G"
+          } >> "$GITHUB_ENV"
+
+      # actions/cache rejects deployment_status runs ("not tied to a branch or
+      # tag ref"); artifacts work, so the pool travels as one.
+      - name: Restore ccache from artifact
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EAS_LOCAL_BUILD_WORKINGDIR: ${{ runner.temp }}/eas-build
-
-      - name: Verify build artifact
-        working-directory: apps/expo
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ ! -d "build-cache/Flatsby.app" ]; then
-            echo "ERROR: build-cache/Flatsby.app not found"
-            ls -la build-cache || true
+          ART_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=ccache-macos&per_page=5" \
+            --jq '[.artifacts[] | select(.expired == false)][0].id // empty')
+          if [ -z "$ART_ID" ]; then
+            echo "No ccache artifact available; building cold"
+            exit 0
+          fi
+          gh api "repos/${{ github.repository }}/actions/artifacts/$ART_ID/zip" > /tmp/ccache.zip \
+            && unzip -q -o /tmp/ccache.zip -d /tmp/ccache-artifact \
+            && tar -xzf /tmp/ccache-artifact/ccache.tar.gz -C "$HOME" \
+            && echo "Restored ccache from artifact $ART_ID" \
+            || echo "ccache artifact $ART_ID unusable; building cold"
+
+      - name: Prebuild iOS project
+        working-directory: apps/expo
+        run: pnpm expo prebuild --platform ios --no-install
+        env:
+          E2E_TESTING: "true"
+
+      - name: Install CocoaPods dependencies
+        working-directory: apps/expo/ios
+        run: pod install
+        env:
+          LANG: en_US.UTF-8
+
+      # E2E_TESTING again: the expo-constants build phase re-evaluates
+      # app.config.ts during xcodebuild. CODE_SIGNING_ALLOWED=NO would be the
+      # obvious flag but strips keychain entitlements, crashing secure-store.
+      - name: Build app for simulator
+        working-directory: apps/expo/ios
+        run: |
+          set -o pipefail
+          ccache --zero-stats > /dev/null
+          xcodebuild -workspace Flatsby.xcworkspace -scheme Flatsby \
+            -configuration Release -sdk iphonesimulator \
+            -derivedDataPath build CODE_SIGN_IDENTITY=- \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES build | xcbeautify
+          ccache --show-stats
+        env:
+          E2E_TESTING: "true"
+
+      - name: Pack ccache for next run
+        run: tar -C "$HOME" -czf ccache.tar.gz .ccache
+
+      - name: Upload ccache artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ccache-macos
+          path: ccache.tar.gz
+          retention-days: 3
+
+      # tar keeps the executable bits that upload-artifact's zip would strip.
+      - name: Pack app for test shards
+        run: tar -C apps/expo/ios/build/Build/Products/Release-iphonesimulator -czf Flatsby-app.tar.gz Flatsby.app
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-e2e-app
+          path: Flatsby-app.tar.gz
+          retention-days: 1
+
+  e2e-ios:
+    needs: [check-pr, e2e-ios-build]
+    runs-on: macos-26
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      # Five shards of ~10-13 min: the repo's macOS runner concurrency is 5,
+      # so a sixth would queue behind the first finisher.
+      matrix:
+        include:
+          - shard: quick
+            areas: smoke auth home account
+          - shard: group
+            areas: group
+          - shard: sl-browse
+            areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
+          - shard: sl-manage
+            areas: shopping-list/management shopping-list/suggestions
+          - shard: expenses
+            areas: expenses
+    concurrency:
+      group: e2e-ios-${{ needs.check-pr.outputs.branch }}-${{ matrix.shard }}
+      cancel-in-progress: true
+    env:
+      MAESTRO_VERSION: "2.3.0"
+      MAESTRO_CLI_NO_ANALYTICS: "1"
+      MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install Maestro
+        run: |
+          curl -fsSL https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Download app artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-e2e-app
+
+      - name: Unpack app
+        run: tar -xzf Flatsby-app.tar.gz
+
+      # Highest iPhone model number: the images still carry old devices, and
+      # an iPhone 11 boots slowly enough to time out Maestro's driver.
+      - name: Boot iOS simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available --json | jq -r '
+            [.devices | to_entries[] | select(.key | test("iOS")) | .value[]
+              | select(.name | startswith("iPhone"))
+              | {udid, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
+            | sort_by(.n) | last // {} | .udid // empty')
+          if [ -z "$UDID" ]; then
+            echo "::error::No iPhone simulator available on this image"
+            xcrun simctl list devices available
             exit 1
           fi
+          xcrun simctl erase "$UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID"
+          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
-      - name: Boot iOS Simulator
+      # The first launch pays dyld/springboard warm-up, which stalls past the
+      # first flow's wait if it happens inside Maestro.
+      - name: Install and pre-warm app
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
         run: |
-          xcrun simctl shutdown "Flatsby-E2E" 2>/dev/null || true
-          sleep 2
-          xcrun simctl boot "Flatsby-E2E"
-          xcrun simctl bootstatus "Flatsby-E2E"
-
-      - name: Install app on simulator
-        run: xcrun simctl install "Flatsby-E2E" apps/expo/build-cache/Flatsby.app
+          xcrun simctl install "$UDID" Flatsby.app
+          xcrun simctl launch "$UDID" com.flatcove.app.v2 || true
+          sleep 15
+          xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
 
       - name: Run Maestro tests
         working-directory: apps/expo
-        run: |
-          export PATH="$HOME/.maestro/bin:$PATH"
-          mkdir -p e2e/results
-          maestro test -e E2E_API_URL="$E2E_API_URL" -e VERCEL_BYPASS_SECRET="$VERCEL_BYPASS_SECRET" e2e/flows/ --format junit --output e2e/results/report.xml
+        run: node e2e/run-flows.mjs ${{ matrix.areas }}
         env:
           E2E_API_URL: ${{ github.event.deployment_status.target_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
-      - name: Collect simulator logs & crash reports
+      - name: Collect crash reports & simulator logs
         if: always()
         working-directory: apps/expo
         run: |
           mkdir -p e2e/results/diagnostics
-          latest_maestro_run=$(ls -t ~/.maestro/tests 2>/dev/null | head -1)
-          if [ -n "$latest_maestro_run" ]; then
-            cp -R ~/.maestro/tests/"$latest_maestro_run" e2e/results/maestro-artifacts || true
-          fi
           cp -f ~/Library/Logs/DiagnosticReports/*.crash e2e/results/diagnostics/ 2>/dev/null || true
           cp -f ~/Library/Logs/DiagnosticReports/*.ips e2e/results/diagnostics/ 2>/dev/null || true
-          # Best-effort device log snapshot (may fail if sim is already shut down)
-          xcrun simctl spawn "Flatsby-E2E" log show --style compact --last 5m \
+          xcrun simctl spawn "${{ steps.sim.outputs.udid }}" log show --style compact --last 30m \
             --predicate 'processImagePath CONTAINS "Flatsby" OR senderImagePath CONTAINS "Flatsby"' \
             > e2e/results/diagnostics/sim-log.txt 2>/dev/null || true
 
@@ -159,10 +276,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: maestro-results
+          name: maestro-results-${{ matrix.shard }}
           path: apps/expo/e2e/results/
           retention-days: 7
-
-      - name: Shutdown simulator
-        if: always()
-        run: xcrun simctl shutdown "Flatsby-E2E" || true

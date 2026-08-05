@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Text, View } from "react-native";
-import { Redirect } from "expo-router";
 import { TRPCClientError } from "@trpc/client";
 
 import { Dashboard } from "~/components/dashboard/Dashboard";
@@ -50,8 +49,9 @@ export function ErrorBoundary({
 export default function Index() {
   const { data: session } = authClient.useSession();
 
+  // The tab layout owns the redirect to login.
   if (!session) {
-    return <Redirect href="/auth/login" />;
+    return null;
   }
 
   return (

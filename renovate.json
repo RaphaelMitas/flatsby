@@ -9,6 +9,13 @@
   "baseBranchPatterns": ["main"],
   "rangeStrategy": "bump",
   "labels": ["dependencies"],
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "groupName": "security-fixes",
+    "labels": ["dependencies", "security"],
+    "prCreation": "immediate"
+  },
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 5am on the first day of the month"]

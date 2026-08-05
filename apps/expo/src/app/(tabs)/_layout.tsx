@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Redirect } from "expo-router";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
@@ -77,6 +78,13 @@ export default function TabLayout() {
 
     void prefetch(trpc.group.getUserGroups.queryOptions());
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
+
+  // Guarding per screen segfaults in UIKit: signing out from Settings
+  // redirected from the backgrounded home tab, tearing down one tab's
+  // navigation stack while another was still mounted.
+  if (!session.isPending && !session.data?.user) {
+    return <Redirect href="/auth/login" />;
+  }
 
   return (
     <Tabs

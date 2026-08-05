@@ -4,9 +4,9 @@
   "license": "MIT",
   "engines": {
     "node": ">=24.18.0",
-    "pnpm": "^10.34.4"
+    "pnpm": "^11.20.0"
   },
-  "packageManager": "pnpm@10.34.4+sha512.8768be55200ae3f2226b6527fcca2687e14bc4e5f12d7721a0f25da3df47915177058648db4177baf348120fa0ba2752d8d8d93f6beaf1fe64ae18da8de961af",
+  "packageManager": "pnpm@11.20.0+sha512.9a6f330a95b66446ea088faf1521405a8a01f07fde7124cc9958dfed52d4bb436737e65b08f85f37b46fcba375092558ac51262b816844b22f63406ed166bfee",
   "scripts": {
     "build": "turbo run build",
     "clean": "git clean -xdf node_modules",

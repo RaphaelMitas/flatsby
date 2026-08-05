@@ -91,6 +91,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   updates: {
     url: "https://u.expo.dev/f7e9d15f-497c-4f4e-ac97-f59a14638cdd",
+    // Bare prebuild + xcodebuild has no EAS channel headers, so every launch
+    // would hit the update server and 400.
+    enabled: process.env.E2E_TESTING !== "true",
   },
   runtimeVersion: {
     policy: "appVersion",
@@ -112,7 +115,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
-    "expo-build-properties",
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          ccacheEnabled: process.env.E2E_TESTING === "true",
+        },
+      },
+    ],
     ["expo-font", { fonts: ["./assets/fonts/lucide.ttf"] }],
   ],
 });
