@@ -1,0 +1,61 @@
+# Temporary: dumps the iOS store-screenshot debug bundle from release run
+# 31111596417 into the job log, because the artifact itself is unreachable
+# from the analysis environment. Delete after diagnosis.
+name: Debug artifact dump
+on:
+  push:
+    branches: [claude/release-pipeline-logs-ig26ju]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: store-screenshots-ios
+          run-id: 31111596417
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: results
+
+      - name: File listing
+        run: find results -type f -exec ls -la {} \; | sort -k9
+
+      - name: Maestro logs (errors + tail)
+        run: |
+          find results -name maestro.log | sort | while read -r mlog; do
+            echo "::group::$mlog errors"
+            grep -inE "error|fail|exception|timed? ?out|crash" "$mlog" | tail -n 100 || true
+            echo "::endgroup::"
+            echo "::group::$mlog tail"
+            tail -n 150 "$mlog"
+            echo "::endgroup::"
+          done
+
+      - name: Commands and manifest
+        run: |
+          find results \( -name 'commands*.json' -o -name manifest.json \) | sort | while read -r cj; do
+            echo "::group::$cj"
+            jq -c '.. | objects | select((.status? // "") | test("FAIL|WARN")) ' "$cj" 2>/dev/null | tail -c 6000 || head -c 3000 "$cj"
+            echo "::endgroup::"
+          done
+
+      - name: View hierarchy visible texts
+        run: |
+          find results -path '*screen-hierarchy*' -name '*.json' | sort | while read -r hj; do
+            echo "::group::$hj"
+            jq -r '[.. | objects | select(.text? or .accessibilityText? or .resource-id? or .identifier?) | {t: (.text? // .accessibilityText? // ""), id: (.identifier? // ."resource-id"? // "")}] | .[] | "\(.id)|\(.t)"' "$hj" 2>/dev/null | grep -v '^|$' | sort -u | head -n 120 || true
+            echo "::endgroup::"
+          done
+
+      - name: Failure screenshots as base64 JPEG
+        run: |
+          find results -path '*.maestro*' -name '*.png' | grep -E '/screenshots/|/takeScreenshot/' | sort | while read -r png; do
+            out=$(mktemp --suffix=.jpg)
+            convert "$png" -resize 35% -quality 55 "$out" 2>/dev/null || cp "$png" "$out"
+            echo "=== BEGIN B64 $png ==="
+            base64 -w 3000 "$out"
+            echo "=== END B64 $png ==="
+          done
