@@ -307,11 +307,13 @@ appId: ${APP_ID}
       - swipe:
           start: "1%, 50%"
           end: "70%, 50%"
+# The hardware back key is swallowed here; the header's standard
+# "Navigate up" button pops reliably.
 - runFlow:
     when:
       platform: Android
     commands:
-      - back
+      - tapOn: "Navigate up"
 - extendedWaitUntil:
     visible:
       id: "dashboard-group-picker"
