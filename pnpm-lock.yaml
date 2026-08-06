@@ -41,8 +41,8 @@ catalogs:
       specifier: ^11.18.0
       version: 11.18.0
     '@types/node':
-      specifier: ^24.13.2
-      version: 24.13.2
+      specifier: ^24.13.3
+      version: 24.13.3
     ai:
       specifier: ^6.0.236
       version: 6.0.236
@@ -433,7 +433,7 @@ importers:
         version: 1.61.1
       '@types/node':
         specifier: 'catalog:'
-        version: 24.13.2
+        version: 24.13.3
       '@types/react':
         specifier: catalog:react19
         version: 19.2.17
@@ -911,7 +911,7 @@ importers:
         version: link:../typescript
       '@types/node':
         specifier: 'catalog:'
-        version: 24.13.2
+        version: 24.13.3
       eslint:
         specifier: 'catalog:'
         version: 10.6.0(jiti@2.7.0)(supports-color@8.1.1)
@@ -941,7 +941,7 @@ importers:
         version: link:../typescript
       '@types/node':
         specifier: 'catalog:'
-        version: 24.13.2
+        version: 24.13.3
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -969,7 +969,7 @@ importers:
         version: link:../typescript
       '@types/node':
         specifier: 'catalog:'
-        version: 24.13.2
+        version: 24.13.3
       eslint:
         specifier: 'catalog:'
         version: 10.6.0(jiti@2.7.0)(supports-color@8.1.1)
@@ -4472,8 +4472,8 @@ packages:
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
-  '@types/node@24.13.2':
-    resolution: {integrity: sha512-fRa09kZTgu8o71KFcDjUFuc7F+dEbZYZmkI0mg5YBTRs0yMKjYHsq/c0urDKeDb+D5qVgXOdFcuu+DZPKOITwA==}
+  '@types/node@24.13.3':
+    resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
 
   '@types/node@26.1.0':
     resolution: {integrity: sha512-O0A1G3xPGy4w7AgQdAQYUlQ+BKk2Oovw8eRpofyp5KdBZULnbe+WqaOVNrm705SHphCiG4XHsACrSmPu1f+Kgw==}
@@ -12580,7 +12580,7 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
-  '@types/node@24.13.2':
+  '@types/node@24.13.3':
     dependencies:
       undici-types: 7.18.2
 
