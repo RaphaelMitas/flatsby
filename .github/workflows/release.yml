@@ -451,6 +451,9 @@ jobs:
             mkdir -p store/screenshots/en-US
             cp results/screenshots/*.png store/screenshots/en-US/
           fi
+          # Without a Deliverfile, deliver prompts to set one up, which
+          # crashes non-interactive runs; an empty file satisfies it.
+          mkdir -p fastlane && touch fastlane/Deliverfile
           jq -n --arg kid "$ASC_API_KEY_ID" --arg iss "$ASC_API_ISSUER_ID" --arg key "$ASC_API_KEY_CONTENT" \
             '{key_id: $kid, issuer_id: $iss, key: $key, in_house: false}' > "$RUNNER_TEMP/asc_key.json"
 
@@ -523,6 +526,29 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # eas-cli evaluates app.config.ts, which needs the workspace installed.
+      - name: Setup
+        if: steps.guard.outputs.skip != 'true'
+        uses: ./tooling/github/setup
+
+      # supply attaches a changelog to one specific version code and cannot
+      # infer it from the track; EAS manages the remote versionCode, so ask it
+      # which one the just-submitted build carries.
+      - name: Resolve released Android version code
+        if: steps.guard.outputs.skip != 'true'
+        id: version
+        working-directory: apps/expo
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          CODE=$(pnpm dlx eas-cli@21.5.0 build:version:get --platform android --non-interactive --json | jq -r '.versionCode // empty')
+          if [ -z "$CODE" ]; then
+            echo "::error::Could not resolve the Android versionCode from EAS."
+            exit 1
+          fi
+          echo "versionCode $CODE"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+
       - uses: ruby/setup-ruby@v1
         if: steps.guard.outputs.skip != 'true'
         with:
@@ -548,14 +574,15 @@ jobs:
           mkdir -p store/metadata/android/en-US/images/phoneScreenshots
           mkdir -p store/metadata/android/en-US/changelogs
           cp results/screenshots/*.png store/metadata/android/en-US/images/phoneScreenshots/
-          # default.txt applies to whatever versionCode EAS assigned remotely,
-          # keeping Play's "What's New" in sync with the App Store text.
+          # default.txt keeps Play's "What's New" in sync with the App Store
+          # text; --version_code pins it to the release EAS just submitted.
           cp apps/expo/store/release-notes.txt store/metadata/android/en-US/changelogs/default.txt
           fastlane supply \
             --package_name com.flatcove.app \
             --json_key "$RUNNER_TEMP/play_key.json" \
             --metadata_path store/metadata/android \
             --track internal \
+            --version_code "${{ steps.version.outputs.code }}" \
             --skip_upload_apk true \
             --skip_upload_aab true \
             --skip_upload_metadata true \
