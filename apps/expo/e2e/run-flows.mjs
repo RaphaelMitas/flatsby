@@ -9,8 +9,15 @@
  * every remaining flow instantly ("Unknown error" at 0s).
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from "node:fs";
+import { basename, dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const e2eDir = dirname(fileURLToPath(import.meta.url));
@@ -54,6 +61,21 @@ function resolveTarget(target) {
   process.exit(1);
 }
 
+// Maestro ≥2 saves takeScreenshot output inside the debug bundle, not the
+// cwd; copy captures to e2e/results/screenshots/ before the bundle is deleted.
+function collectTakeScreenshots(debugDir) {
+  if (!existsSync(debugDir)) return;
+  const screenshotsDir = join(resultsDir, "screenshots");
+  for (const rel of readdirSync(debugDir, { recursive: true })) {
+    if (!rel.endsWith(".png")) continue;
+    if (!rel.split(sep).includes("takeScreenshot")) continue;
+    const src = join(debugDir, rel);
+    if (!statSync(src, { throwIfNoEntry: false })?.isFile()) continue;
+    mkdirSync(screenshotsDir, { recursive: true });
+    copyFileSync(src, join(screenshotsDir, basename(rel)));
+  }
+}
+
 function runFlow(file, tag) {
   const debugDir = join(resultsDir, `debug-${tag}`);
   console.log(`\n> maestro test ${relative(e2eDir, file)}`);
@@ -78,7 +100,8 @@ function runFlow(file, tag) {
     { stdio: "inherit" },
   );
   if (error) throw error;
-  // Screenshots and hierarchy dumps are only worth keeping for failures.
+  collectTakeScreenshots(debugDir);
+  // Step screenshots and hierarchy dumps are only worth keeping for failures.
   if (status === 0) rmSync(debugDir, { recursive: true, force: true });
   return status ?? 1;
 }
