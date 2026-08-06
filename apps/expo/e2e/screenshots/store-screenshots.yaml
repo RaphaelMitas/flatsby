@@ -204,4 +204,25 @@ appId: ${APP_ID}
           visible: "4 items left"
           timeout: 10000
 - waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/04-shopping-lists
+
+# Pop back to the Home root: the stats dashboard (the overview is pushed on
+# top of it). Then pull-to-refresh so the stats include the seeded data.
+- swipe:
+    start: "1%, 50%"
+    end: "70%, 50%"
+- extendedWaitUntil:
+    visible:
+      id: "dashboard-group-picker"
+    timeout: 15000
+- retry:
+    maxRetries: 2
+    commands:
+      - swipe:
+          start: "50%, 40%"
+          end: "50%, 85%"
+      - extendedWaitUntil:
+          visible: "€142.69"
+          timeout: 10000
+- waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/01-home
