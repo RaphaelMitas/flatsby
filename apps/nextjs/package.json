@@ -35,7 +35,7 @@
     "autumn-js": "catalog:",
     "better-auth": "catalog:better-auth",
     "geist": "^1.7.2",
-    "jose": "^6.2.3",
+    "jose": "^6.2.8",
     "next": "catalog:",
     "prop-types": "^15.8.1",
     "react": "catalog:react19",
