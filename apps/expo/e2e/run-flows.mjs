@@ -106,25 +106,37 @@ function runFlow(file, tag) {
   return status ?? 1;
 }
 
-// Otherwise the shard's first flow pays the cold Vercel function + DB inside
-// its login wait, the main source of first-attempt bootstrap flakes.
+// Otherwise the first flow pays the cold Vercel function + DB inside its own
+// waits, the main source of first-attempt flakes. Each route is its own
+// Vercel function, so the tRPC route the flows' mutations go through needs
+// warming separately from the e2e session route (any response status warms).
 async function warmUpApi() {
-  const started = Date.now();
-  try {
-    const res = await fetch(
-      `${apiUrl.replace(/\/+$/, "")}/api/e2e/create-session`,
-      {
-        method: "POST",
-        headers: {
-          "x-vercel-protection-bypass": process.env.VERCEL_BYPASS_SECRET ?? "",
-        },
+  const base = apiUrl.replace(/\/+$/, "");
+  const headers = {
+    "x-vercel-protection-bypass": process.env.VERCEL_BYPASS_SECRET ?? "",
+  };
+  const warm = async (label, path, init) => {
+    const started = Date.now();
+    try {
+      const res = await fetch(base + path, {
+        ...init,
+        headers,
         signal: AbortSignal.timeout(60000),
-      },
-    );
-    console.log(`API warm-up: HTTP ${res.status} in ${Date.now() - started}ms`);
-  } catch (error) {
-    console.warn(`API warm-up failed after ${Date.now() - started}ms:`, error);
-  }
+      });
+      console.log(
+        `API warm-up (${label}): HTTP ${res.status} in ${Date.now() - started}ms`,
+      );
+    } catch (error) {
+      console.warn(
+        `API warm-up (${label}) failed after ${Date.now() - started}ms:`,
+        error,
+      );
+    }
+  };
+  await Promise.all([
+    warm("create-session", "/api/e2e/create-session", { method: "POST" }),
+    warm("trpc", "/api/trpc/user.getCurrentUser"),
+  ]);
 }
 
 const targets = process.argv.slice(2);
