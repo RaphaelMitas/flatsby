@@ -5,6 +5,7 @@ name: Debug artifact dump
 on:
   push:
     branches: [claude/release-pipeline-logs-ig26ju]
+  pull_request:
 permissions:
   actions: read
   contents: read
