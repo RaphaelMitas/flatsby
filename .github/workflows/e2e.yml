@@ -272,12 +272,15 @@ jobs:
             --predicate 'processImagePath CONTAINS "Flatsby" OR senderImagePath CONTAINS "Flatsby"' \
             > e2e/results/diagnostics/sim-log.txt 2>/dev/null || true
 
+      # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
+      # which upload-artifact drops by default.
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: maestro-results-${{ matrix.shard }}
           path: apps/expo/e2e/results/
+          include-hidden-files: true
           retention-days: 7
 
   e2e-android-build:
@@ -442,10 +445,13 @@ jobs:
           E2E_API_URL: ${{ github.event.deployment_status.target_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
+      # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
+      # which upload-artifact drops by default.
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: maestro-android-results-${{ matrix.shard }}
           path: apps/expo/e2e/results/
+          include-hidden-files: true
           retention-days: 7

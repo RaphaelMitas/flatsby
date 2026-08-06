@@ -259,12 +259,15 @@ jobs:
           E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
+      # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
+      # which upload-artifact drops by default.
       - name: Upload results artifact
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: store-screenshots-ios
           path: apps/expo/e2e/results/
+          include-hidden-files: true
           retention-days: 30
 
       - name: Attach screenshots to GitHub release
@@ -371,12 +374,15 @@ jobs:
           E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
+      # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
+      # which upload-artifact drops by default.
       - name: Upload results artifact
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: store-screenshots-android
           path: apps/expo/e2e/results/
+          include-hidden-files: true
           retention-days: 30
 
       - name: Attach screenshots to GitHub release
@@ -491,9 +497,11 @@ jobs:
           exit 1
 
   # Uploads the captured screenshots and the release notes to the Play Store
-  # listing (en-US). The binary itself already went to the production track
-  # via EAS auto-submit; needing eas-build-submit ensures the release exists
-  # before its "What's New" text is set.
+  # listing (en-US). The binary itself already went to the internal track via
+  # EAS auto-submit (eas.json; production access still pending — supply's
+  # --track must match or the changelog attach finds no release); needing
+  # eas-build-submit ensures the release exists before its "What's New" text
+  # is set.
   publish-android:
     needs: [check, eas-build-submit, screenshots-android]
     if: >-
@@ -547,7 +555,7 @@ jobs:
             --package_name com.flatcove.app \
             --json_key "$RUNNER_TEMP/play_key.json" \
             --metadata_path store/metadata/android \
-            --track production \
+            --track internal \
             --skip_upload_apk true \
             --skip_upload_aab true \
             --skip_upload_metadata true \
