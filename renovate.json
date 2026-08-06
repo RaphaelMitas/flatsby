@@ -117,10 +117,11 @@
       "matchPackageNames": ["/^@react-native-vector-icons//"]
     },
     {
-      "description": "Group Better Auth",
+      "description": "Group Better Auth. 1.6.24-1.6.26 break client plugin types (expoClient not assignable to BetterAuthClientPlugin, https://github.com/better-auth/better-auth/issues/10515) – drop the exclusion once a fixed release ships",
       "groupName": "better-auth",
       "matchPackageNames": ["/^@better-auth//", "better-auth"],
-      "ignoreUnstable": false
+      "ignoreUnstable": false,
+      "allowedVersions": "!/^1\\.6\\.2[4-6]$/"
     },
     {
       "description": "Group RevenueCat",
