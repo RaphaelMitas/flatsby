@@ -269,13 +269,22 @@ appId: ${APP_ID}
     visible: "Paper Towels"
     timeout: 15000
 
-# Dismiss the item-entry keyboard: the list uses
-# keyboardDismissMode="on-drag" (ShoppingList.tsx), so a drag on the list
-# area above the keyboard clears it. (hideKeyboard is flaky on iOS, and the
-# item-detail modal is invisible to Maestro's hierarchy.)
-- swipe:
-    start: "50%, 45%"
-    end: "50%, 25%"
+# Dismiss the item-entry keyboard. iOS: keyboardDismissMode="on-drag"
+# (ShoppingList.tsx), since hideKeyboard is flaky there and the item-detail
+# modal is invisible to Maestro's hierarchy. Android: the drag doesn't
+# dismiss and the keyboard survives tab switches, but hideKeyboard works.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          start: "50%, 45%"
+          end: "50%, 25%"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/02-shopping-list
 
