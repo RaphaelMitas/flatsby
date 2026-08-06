@@ -61,12 +61,8 @@ function resolveTarget(target) {
   process.exit(1);
 }
 
-// Maestro ≥2 writes takeScreenshot output into the flow's artifact bundle
-// (<debug-output>/…/<flow>/takeScreenshot/<path>.png) instead of resolving the
-// path against the invocation cwd, so named captures would vanish with the
-// debug dir on success. Copy them out to e2e/results/screenshots/, where the
-// store-screenshot jobs expect them. Older Maestro versions write that
-// destination directly and produce no bundle entries, making this a no-op.
+// Maestro ≥2 saves takeScreenshot output inside the debug bundle, not the
+// cwd; copy captures to e2e/results/screenshots/ before the bundle is deleted.
 function collectTakeScreenshots(debugDir) {
   if (!existsSync(debugDir)) return;
   const screenshotsDir = join(resultsDir, "screenshots");
