@@ -44,6 +44,53 @@ appId: ${APP_ID}
       id: "shopping-list-create-button"
     timeout: 15000
 
+# Mint two more e2e users server-side with presentable identities and add
+# them as members (group settings live in the Settings tab), so expenses
+# split across three people.
+- evalScript: "${output.bypass = typeof VERCEL_BYPASS_SECRET !== 'undefined' ? VERCEL_BYPASS_SECRET : ''}"
+- evalScript: "${output.memberA = json(http.post(E2E_API_URL + '/api/e2e/create-session?name=Anna%20Keller&email=anna%40flatsby.test', { headers: { 'x-vercel-protection-bypass': output.bypass } }).body).email}"
+- evalScript: "${output.memberB = json(http.post(E2E_API_URL + '/api/e2e/create-session?name=Tom%20Baker&email=tom%40flatsby.test', { headers: { 'x-vercel-protection-bypass': output.bypass } }).body).email}"
+- tapOn:
+    id: "shopping-lists-group-settings"
+- extendedWaitUntil:
+    visible:
+      id: "group-settings-members"
+    timeout: 15000
+- tapOn:
+    id: "group-settings-members"
+- extendedWaitUntil:
+    visible:
+      id: "group-add-member-email"
+    timeout: 15000
+- tapOn:
+    id: "group-add-member-email"
+- inputText: "${output.memberA}"
+# Tap a neutral text to dismiss the keyboard (hideKeyboard is flaky on iOS)
+- tapOn: "Manage Members"
+- tapOn:
+    id: "group-add-member-button"
+- extendedWaitUntil:
+    visible: "Anna Keller"
+    timeout: 15000
+- tapOn:
+    id: "group-add-member-email"
+- inputText: "${output.memberB}"
+- tapOn: "Manage Members"
+- tapOn:
+    id: "group-add-member-button"
+- extendedWaitUntil:
+    visible: "Tom Baker"
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/05-add-member
+
+# Back to the group's Home tab.
+- tapOn: "Home"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 15000
+
 # Create the shopping list now (its card should appear in the Home
 # screenshot) but stay out of it until the end. Inlined rather than via the
 # create-shopping-list subflow, which would re-select the fixture group.
@@ -70,21 +117,63 @@ appId: ${APP_ID}
     visible:
       id: "expense-heading"
     timeout: 15000
-- runFlow:
-    file: ../subflows/create-expense.yaml
-    env:
-      AMOUNT: "84.20"
-      DESCRIPTION: "Weekly shopping"
+# First expense inline instead of via the subflow, so Step 2 — the split
+# across all three members — can be captured mid-form.
+- tapOn:
+    id: "expense-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-amount"
+- inputText: "84.20"
+- tapOn:
+    id: "expense-form-description"
+- inputText: "Weekly shopping"
+- tapOn: "Amount & Details"
+- tapOn:
+    id: "expense-form-category"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "picker-item-groceries"
+    timeout: 20000
+- tapOn:
+    id: "picker-item-groceries"
+- waitForAnimationToEnd
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "Anna Keller"
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/04-expense-split
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    visible: "Weekly shopping"
+    timeout: 20000
 - runFlow:
     file: ../subflows/create-expense.yaml
     env:
       AMOUNT: "39.99"
       DESCRIPTION: "Internet bill"
+      CATEGORY: "internet"
 - runFlow:
     file: ../subflows/create-expense.yaml
     env:
       AMOUNT: "18.50"
       DESCRIPTION: "Cleaning supplies"
+      CATEGORY: "home-goods"
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/03-expenses
 
@@ -204,7 +293,7 @@ appId: ${APP_ID}
           visible: "4 items left"
           timeout: 10000
 - waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/04-shopping-lists
+- takeScreenshot: e2e/results/screenshots/06-shopping-lists
 
 # Pop back to the Home root: the stats dashboard (the overview is pushed on
 # top of it). Then pull-to-refresh so the stats include the seeded data.

@@ -231,10 +231,11 @@ jobs:
           xcrun simctl spawn "$UDID" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
-      - name: Clean up status bar for screenshots
+      - name: Clean up status bar and set dark mode for screenshots
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
+          xcrun simctl ui "$UDID" appearance dark
           xcrun simctl status_bar "$UDID" override \
             --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
             --cellularMode active --cellularBars 4 \
@@ -356,6 +357,7 @@ jobs:
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -dns-server 8.8.8.8
           disable-animations: true
           script: |
+            adb shell cmd uimode night yes
             adb shell settings put global sysui_demo_allowed 1
             adb shell am broadcast -a com.android.systemui.demo -e command enter
             adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941

@@ -2,6 +2,8 @@ appId: ${APP_ID}
 ---
 # Shared subflow: from the Expenses tab, creates an equal-split expense with
 # amount ${AMOUNT} (decimal string) and description ${DESCRIPTION}.
+# Optionally set ${CATEGORY} to an expense subcategory id (e.g. "groceries",
+# "internet") to pick it in the category sheet; omitted = AI auto-detect.
 - tapOn:
     id: "expense-add-button"
 - extendedWaitUntil:
@@ -16,6 +18,32 @@ appId: ${APP_ID}
 - inputText: ${DESCRIPTION}
 # Tap a neutral text to dismiss the keyboard (hideKeyboard is flaky on iOS)
 - tapOn: "Amount & Details"
+- runFlow:
+    when:
+      true: ${typeof CATEGORY !== 'undefined' && CATEGORY !== ''}
+    commands:
+      - tapOn:
+          id: "expense-form-category"
+      - waitForAnimationToEnd
+      # The sheet opens at half height, and scrollUntilVisible swipes the
+      # screen center — above the sheet — so scroll by swiping inside the
+      # sheet itself (the first drag also expands it to full height).
+      - retry:
+          maxRetries: 8
+          commands:
+            - runFlow:
+                when:
+                  notVisible:
+                    id: "picker-item-${CATEGORY}"
+                commands:
+                  - swipe:
+                      start: "50%, 80%"
+                      end: "50%, 25%"
+            - assertVisible:
+                id: "picker-item-${CATEGORY}"
+      - tapOn:
+          id: "picker-item-${CATEGORY}"
+      - waitForAnimationToEnd
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:

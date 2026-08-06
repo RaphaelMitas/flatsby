@@ -1,4 +1,5 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, RefreshControl, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
@@ -39,7 +40,6 @@ export function ExpenseListPanel({
     hasNextPage,
     isFetchingNextPage,
     refetch,
-    isRefetching,
   } = useInfiniteQuery(
     trpc.expense.getGroupExpenses.infiniteQueryOptions(
       { groupId: selectedGroupId ?? -1, limit: PAGE_SIZE.expenses },
@@ -49,6 +49,12 @@ export function ExpenseListPanel({
       },
     ),
   );
+
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    void refetch().finally(() => setRefreshing(false));
+  }, [refetch]);
 
   if (!groupData.success) {
     return handleApiError({
@@ -131,7 +137,7 @@ export function ExpenseListPanel({
         <FlashList
           data={allExpenses}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
           }
           ItemSeparatorComponent={() => <View className="h-3" />}
           renderItem={({ item }) => (
