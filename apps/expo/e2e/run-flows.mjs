@@ -9,8 +9,15 @@
  * every remaining flow instantly ("Unknown error" at 0s).
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from "node:fs";
+import { basename, dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const e2eDir = dirname(fileURLToPath(import.meta.url));
@@ -54,6 +61,26 @@ function resolveTarget(target) {
   process.exit(1);
 }
 
+// Maestro ≥2 writes takeScreenshot output into the flow's artifact bundle
+// (<debug-output>/…/<flow>/takeScreenshot/<path>.png) instead of resolving the
+// path against the invocation cwd, so named captures would vanish with the
+// debug dir on success. Copy them out to e2e/results/screenshots/, where the
+// store-screenshot jobs expect them. Older Maestro versions write that
+// destination directly and produce no bundle entries, making this a no-op.
+function collectTakeScreenshots(debugDir) {
+  if (!existsSync(debugDir)) return;
+  const screenshotsDir = join(resultsDir, "screenshots");
+  for (const entry of readdirSync(debugDir, { recursive: true })) {
+    const rel = String(entry);
+    if (!rel.endsWith(".png")) continue;
+    if (!rel.split(sep).includes("takeScreenshot")) continue;
+    const src = join(debugDir, rel);
+    if (!statSync(src).isFile()) continue;
+    mkdirSync(screenshotsDir, { recursive: true });
+    copyFileSync(src, join(screenshotsDir, basename(rel)));
+  }
+}
+
 function runFlow(file, tag) {
   const debugDir = join(resultsDir, `debug-${tag}`);
   console.log(`\n> maestro test ${relative(e2eDir, file)}`);
@@ -78,7 +105,8 @@ function runFlow(file, tag) {
     { stdio: "inherit" },
   );
   if (error) throw error;
-  // Screenshots and hierarchy dumps are only worth keeping for failures.
+  collectTakeScreenshots(debugDir);
+  // Step screenshots and hierarchy dumps are only worth keeping for failures.
   if (status === 0) rmSync(debugDir, { recursive: true, force: true });
   return status ?? 1;
 }
