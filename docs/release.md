@@ -19,8 +19,11 @@ lands on main, `.github/workflows/release.yml` takes over:
    release with generated notes.
 2. **Build + submit** - runs `eas build --platform all --profile production
 --auto-submit` and waits for build + submission (iOS: App Store Connect,
-   ascAppId `6747908544`; Android: straight to the **Play production
-   track**). Progress: https://expo.dev/accounts/flatsby/projects/flatsby/builds
+   ascAppId `6747908544`; Android: the Play **internal track** until Google
+   grants production access - flip `track` to `"production"` in
+   `apps/expo/eas.json` once approved, since a Play-side submission failure
+   would also block `publish-ios`).
+   Progress: https://expo.dev/accounts/flatsby/projects/flatsby/builds
 3. **Store screenshots** - builds e2e simulator/emulator binaries, runs the
    Maestro flow `apps/expo/e2e/screenshots/store-screenshots.yaml` on an
    iPhone Pro Max simulator and a Pixel 7 emulator (clean 9:41 status bar),
