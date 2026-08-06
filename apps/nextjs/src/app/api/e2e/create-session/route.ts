@@ -73,6 +73,13 @@ export async function POST(request: Request) {
       .update(users)
       .set({ name, createdAt: now, updatedAt: now })
       .where(eq(users.id, userId));
+    // Deactivate memberships left over from previous runs; otherwise the
+    // dashboard fills up with stale groups (splits reference memberships, so
+    // rows can't be deleted here).
+    await db
+      .update(groupMembers)
+      .set({ isActive: false })
+      .where(eq(groupMembers.userId, userId));
   } else {
     await db.insert(users).values({
       id: userId,

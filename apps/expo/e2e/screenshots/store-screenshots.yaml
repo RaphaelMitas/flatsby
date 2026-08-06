@@ -11,7 +11,11 @@ appId: ${APP_ID}
 # seeding, because the item-entry keyboard covers the tab bar and relaunching
 # mid-flow leaves Maestro's iOS hierarchy stale (the screen renders but no
 # selector ever matches).
-- runFlow: ../subflows/e2e-login.yaml
+- runFlow:
+    file: ../subflows/e2e-login.yaml
+    env:
+      E2E_USER_NAME: "Alex Rivera"
+      E2E_USER_EMAIL: "alex@flatsby.test"
 
 # The e2e fixture group has a generated name ("E2E Test Group 3f2a...");
 # create a real-looking one for the screenshots.
@@ -48,8 +52,8 @@ appId: ${APP_ID}
 # them as members (group settings live in the Settings tab), so expenses
 # split across three people.
 - evalScript: "${output.bypass = typeof VERCEL_BYPASS_SECRET !== 'undefined' ? VERCEL_BYPASS_SECRET : ''}"
-- evalScript: "${output.memberA = json(http.post(E2E_API_URL + '/api/e2e/create-session?name=Anna%20Keller&email=anna%40flatsby.test', { headers: { 'x-vercel-protection-bypass': output.bypass } }).body).email}"
-- evalScript: "${output.memberB = json(http.post(E2E_API_URL + '/api/e2e/create-session?name=Tom%20Baker&email=tom%40flatsby.test', { headers: { 'x-vercel-protection-bypass': output.bypass } }).body).email}"
+- evalScript: "${output.memberA = json(http.post(E2E_API_URL + '/api/e2e/create-session?name=Anna%20Keller&email=anna%40flatsby.test', { headers: { 'x-vercel-protection-bypass': output.bypass }, body: '{}' }).body).email}"
+- evalScript: "${output.memberB = json(http.post(E2E_API_URL + '/api/e2e/create-session?name=Tom%20Baker&email=tom%40flatsby.test', { headers: { 'x-vercel-protection-bypass': output.bypass }, body: '{}' }).body).email}"
 - tapOn:
     id: "shopping-lists-group-settings"
 - extendedWaitUntil:
@@ -69,8 +73,10 @@ appId: ${APP_ID}
 - tapOn: "Manage Members"
 - tapOn:
     id: "group-add-member-button"
+# Member rows merge into one accessibility element, so their names never
+# match; the count header is the reliable success signal.
 - extendedWaitUntil:
-    visible: "Anna Keller"
+    visible: "Members (2)"
     timeout: 15000
 - tapOn:
     id: "group-add-member-email"
@@ -79,7 +85,7 @@ appId: ${APP_ID}
 - tapOn:
     id: "group-add-member-button"
 - extendedWaitUntil:
-    visible: "Tom Baker"
+    visible: "Members (3)"
     timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/05-add-member
@@ -146,9 +152,6 @@ appId: ${APP_ID}
     id: "expense-form-next"
 - extendedWaitUntil:
     visible: "Step 2 of 3"
-    timeout: 15000
-- extendedWaitUntil:
-    visible: "Anna Keller"
     timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/04-expense-split
@@ -297,9 +300,18 @@ appId: ${APP_ID}
 
 # Pop back to the Home root: the stats dashboard (the overview is pushed on
 # top of it). Then pull-to-refresh so the stats include the seeded data.
-- swipe:
-    start: "1%, 50%"
-    end: "70%, 50%"
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          start: "1%, 50%"
+          end: "70%, 50%"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - back
 - extendedWaitUntil:
     visible:
       id: "dashboard-group-picker"
