@@ -19,6 +19,9 @@ const e2eDir = dirname(fileURLToPath(import.meta.url));
 const appSrcDir = resolve(e2eDir, "../src");
 const flowsDir = join(e2eDir, "flows");
 const subflowsDir = join(e2eDir, "subflows");
+// Store-screenshot flows live outside flows/ so the e2e suite skips them,
+// but they follow the same rules.
+const screenshotsDir = join(e2eDir, "screenshots");
 
 const errors = [];
 
@@ -192,7 +195,9 @@ function validateCommands(file, commands, { isSubflow }) {
   }
 }
 
-const flowFiles = walk(flowsDir).filter((f) => !f.endsWith("config.yaml"));
+const flowFiles = [...walk(flowsDir), ...walk(screenshotsDir)].filter(
+  (f) => !f.endsWith("config.yaml"),
+);
 const subflowFiles = walk(subflowsDir);
 
 for (const file of flowFiles) {

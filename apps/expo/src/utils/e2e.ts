@@ -97,6 +97,8 @@ function parseE2ESession(value: unknown): E2ESession {
 export async function setupE2ESession(options: {
   apiUrl: string;
   bypassSecret: string;
+  name?: string;
+  email?: string;
 }): Promise<E2ESession> {
   const apiUrl = options.apiUrl.replace(/\/+$/, "");
   SecureStore.setItem(API_URL_KEY, apiUrl);
@@ -104,7 +106,12 @@ export async function setupE2ESession(options: {
     SecureStore.setItem(BYPASS_SECRET_KEY, options.bypassSecret);
   }
 
-  const response = await fetch(`${apiUrl}/api/e2e/create-session`, {
+  const query = new URLSearchParams();
+  if (options.name) query.set("name", options.name);
+  if (options.email) query.set("email", options.email);
+  const suffix = query.size > 0 ? `?${query.toString()}` : "";
+
+  const response = await fetch(`${apiUrl}/api/e2e/create-session${suffix}`, {
     method: "POST",
     headers: options.bypassSecret
       ? { "x-vercel-protection-bypass": options.bypassSecret }

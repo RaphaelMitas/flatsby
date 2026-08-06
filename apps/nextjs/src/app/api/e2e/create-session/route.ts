@@ -29,8 +29,14 @@ const E2E_EMAIL_DOMAIN = "flatsby.test";
  * from each other regardless of worker count.
  *
  * Guarded to only work outside production.
+ *
+ * `?name=` and `?email=` override the user's display name and address (the
+ * store-screenshot flow mints extra members with presentable identities).
+ * Custom emails are confined to the e2e domain so the cleanup sweep still
+ * owns them, and collide onto the existing row so reruns within the sweep
+ * window keep working.
  */
-export async function POST() {
+export async function POST(request: Request) {
   if (!env.E2E_TESTING) {
     return NextResponse.json(
       { error: "E2E testing is not enabled" },
@@ -38,31 +44,68 @@ export async function POST() {
     );
   }
 
+  const searchParams = new URL(request.url).searchParams;
+  const nameParam = searchParams.get("name")?.trim();
+  const name = nameParam ? nameParam.slice(0, 64) : "E2E Test User";
+  const emailParam = searchParams.get("email")?.trim().toLowerCase();
+
   const now = new Date();
-  const userId = `e2e-${randomUUID()}`;
-  const email = `${userId}@${E2E_EMAIL_DOMAIN}`;
+  let userId = `e2e-${randomUUID()}`;
 
-  await db.insert(users).values({
-    id: userId,
-    name: "E2E Test User",
-    email,
-    emailVerified: true,
-    createdAt: now,
-    updatedAt: now,
-    termsAcceptedAt: now,
-    termsVersion: "1.1",
-    privacyAcceptedAt: now,
-    privacyVersion: "1.1",
-  });
+  const customEmail =
+    emailParam?.endsWith(`@${E2E_EMAIL_DOMAIN}`) && emailParam.length <= 128
+      ? emailParam
+      : undefined;
+  const email = customEmail ?? `${userId}@${E2E_EMAIL_DOMAIN}`;
 
-  await db.insert(accounts).values({
-    id: `e2e-account-${userId}`,
-    accountId: `e2e-google-${userId}`,
-    providerId: "google",
-    userId,
-    createdAt: now,
-    updatedAt: now,
-  });
+  const existingUser = customEmail
+    ? await db.query.users.findFirst({
+        columns: { id: true },
+        where: eq(users.email, customEmail),
+      })
+    : undefined;
+
+  if (existingUser) {
+    userId = existingUser.id;
+    // Refresh createdAt so a concurrent suite's stale-sweep can't delete the
+    // user mid-flow.
+    await db
+      .update(users)
+      .set({ name, createdAt: now, updatedAt: now })
+      .where(eq(users.id, userId));
+    // Deactivate memberships left over from previous runs; otherwise the
+    // dashboard fills up with stale groups (splits reference memberships, so
+    // rows can't be deleted here).
+    await db
+      .update(groupMembers)
+      .set({ isActive: false })
+      .where(eq(groupMembers.userId, userId));
+  } else {
+    await db.insert(users).values({
+      id: userId,
+      name,
+      email,
+      emailVerified: true,
+      createdAt: now,
+      updatedAt: now,
+      termsAcceptedAt: now,
+      termsVersion: "1.1",
+      privacyAcceptedAt: now,
+      privacyVersion: "1.1",
+    });
+  }
+
+  await db
+    .insert(accounts)
+    .values({
+      id: `e2e-account-${userId}`,
+      accountId: `e2e-google-${userId}`,
+      providerId: "google",
+      userId,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoNothing();
 
   const [group] = await db
     .insert(groups)
