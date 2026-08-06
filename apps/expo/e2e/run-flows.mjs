@@ -70,12 +70,11 @@ function resolveTarget(target) {
 function collectTakeScreenshots(debugDir) {
   if (!existsSync(debugDir)) return;
   const screenshotsDir = join(resultsDir, "screenshots");
-  for (const entry of readdirSync(debugDir, { recursive: true })) {
-    const rel = String(entry);
+  for (const rel of readdirSync(debugDir, { recursive: true })) {
     if (!rel.endsWith(".png")) continue;
     if (!rel.split(sep).includes("takeScreenshot")) continue;
     const src = join(debugDir, rel);
-    if (!statSync(src).isFile()) continue;
+    if (!statSync(src, { throwIfNoEntry: false })?.isFile()) continue;
     mkdirSync(screenshotsDir, { recursive: true });
     copyFileSync(src, join(screenshotsDir, basename(rel)));
   }
