@@ -16,9 +16,10 @@ appId: ${APP_ID}
       - tapOn: "Cancel"
 # clearState alone leaves the iOS Keychain intact, where expo-secure-store
 # keeps the previous flow's session — clear it so every flow starts logged out.
-# The post-clearState relaunch can stall on the springboard for minutes.
+# The post-clearState relaunch can stall for minutes on a black screen before
+# the first frame; maxRetries is at Maestro's cap of 3.
 - retry:
-    maxRetries: 2
+    maxRetries: 3
     commands:
       - launchApp:
           clearState: true
