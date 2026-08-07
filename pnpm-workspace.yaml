@@ -34,8 +34,8 @@ auditConfig:
     - GHSA-f88m-g3jw-g9cj
 
 catalog:
-  "@ai-sdk/provider": ^3.0.14
-  "@ai-sdk/react": ^3.0.245
+  "@ai-sdk/provider": ^4.0.0
+  "@ai-sdk/react": ^4.0.0
   "@eslint/js": ^10.0.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.3.1
@@ -45,7 +45,7 @@ catalog:
   "@trpc/tanstack-react-query": ^11.18.0
   "@turbo/gen": ^2.10.0
   "@types/node": ^24.13.3
-  ai: ^6.0.243
+  ai: ^7.0.0
   autumn-js: ^1.2.49
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^10.5.0
@@ -64,8 +64,8 @@ catalogs:
   react19:
     "@types/react": ~19.2.0
     "@types/react-dom": ~19.2.0
-    react: 19.2.0
-    react-dom: 19.2.0
+    react: 19.2.8
+    react-dom: 19.2.8
 
 linkWorkspacePackages: true
 
