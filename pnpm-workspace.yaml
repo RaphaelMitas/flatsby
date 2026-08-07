@@ -34,8 +34,8 @@ auditConfig:
     - GHSA-f88m-g3jw-g9cj
 
 catalog:
-  "@ai-sdk/provider": ^4.0.0
-  "@ai-sdk/react": ^4.0.0
+  "@ai-sdk/provider": ^4.0.6
+  "@ai-sdk/react": ^4.0.58
   "@eslint/js": ^10.0.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.3.1
@@ -45,7 +45,7 @@ catalog:
   "@trpc/tanstack-react-query": ^11.18.0
   "@turbo/gen": ^2.10.0
   "@types/node": ^24.13.3
-  ai: ^7.0.0
+  ai: ^7.0.55
   autumn-js: ^1.2.49
   babel-plugin-react-compiler: ^1.0.0
   eslint: ^10.5.0
