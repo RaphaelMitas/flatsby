@@ -22,7 +22,7 @@ env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
 
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -34,19 +34,8 @@ jobs:
         shell: bash
         run: cp .env.example .env
 
-      - name: Lint
-        run: pnpm lint && pnpm lint:ws
-
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Format
-        run: pnpm format
+      - name: Check
+        run: pnpm check && pnpm lint:ws
 
   audit:
     runs-on: ubuntu-latest

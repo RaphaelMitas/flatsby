@@ -8,7 +8,7 @@
 
 ### Checklist
 
-- [ ] Follows coding standards and passes `pnpm lint` and `pnpm typecheck`
+- [ ] Follows coding standards and passes `pnpm check` and `pnpm typecheck`
 - [ ] Tests added/updated if applicable
 - [ ] Docs updated (README/CHANGELOG) if applicable
 

@@ -198,11 +198,10 @@ pnpm db:push          # Push Drizzle schema changes to database
 pnpm db:studio        # Open Drizzle Studio database browser
 
 # Code Quality
-pnpm lint             # Run Biome lint across all packages
+pnpm check            # Biome lint + Prettier format check across all packages
 pnpm lint:fix         # Fix Biome lint errors automatically
 pnpm lint:ws          # Check workspace dependencies with sherif
 pnpm typecheck        # Run TypeScript type checking
-pnpm format           # Check code formatting with Prettier
 pnpm format:fix       # Fix code formatting with Prettier
 
 # UI Components
@@ -356,7 +355,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 1. **Fork the repository**
 2. **Create a feature branch:** `git checkout -b feature/amazing-feature`
 3. **Make your changes** following our coding standards
-4. **Run tests and linting:** `pnpm lint && pnpm typecheck`
+4. **Run tests and linting:** `pnpm check && pnpm typecheck`
 5. **Commit your changes:** `git commit -m 'Add amazing feature'`
 6. **Push to the branch:** `git push origin feature/amazing-feature`
 7. **Open a Pull Request**
