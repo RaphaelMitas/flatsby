@@ -76,7 +76,10 @@ function collectTakeScreenshots(debugDir) {
   }
 }
 
-function runFlow(file, tag) {
+async function runFlow(file, tag) {
+  // Per attempt, not once per job: retries can start minutes later, after the
+  // deployment's functions have scaled back down.
+  await warmUpApi();
   const debugDir = join(resultsDir, `debug-${tag}`);
   console.log(`\n> maestro test ${relative(e2eDir, file)}`);
   const { status, error } = spawnSync(
@@ -143,9 +146,11 @@ const targets = process.argv.slice(2);
 const files = (targets.length ? targets : ["."]).flatMap(resolveTarget);
 
 mkdirSync(resultsDir, { recursive: true });
-await warmUpApi();
 
-const failed = files.filter((file, i) => runFlow(file, i) !== 0);
+const failed = [];
+for (const [i, file] of files.entries()) {
+  if ((await runFlow(file, i)) !== 0) failed.push(file);
+}
 if (failed.length === 0) process.exit(0);
 
 if (failed.length > MAX_RERUN_FLOWS) {
@@ -157,8 +162,9 @@ if (failed.length > MAX_RERUN_FLOWS) {
 
 const names = failed.map((f) => relative(e2eDir, f)).join(", ");
 console.log(`\nRerunning ${failed.length} flow file(s) once: ${names}`);
-const stillFailing = failed.filter(
-  (file, i) => runFlow(file, `retry-${i}`) !== 0,
-);
+const stillFailing = [];
+for (const [i, file] of failed.entries()) {
+  if ((await runFlow(file, `retry-${i}`)) !== 0) stillFailing.push(file);
+}
 if (stillFailing.length > 0) process.exit(1);
 console.log("All failed flows passed on rerun.");
