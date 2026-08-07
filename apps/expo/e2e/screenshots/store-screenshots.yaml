@@ -111,6 +111,34 @@ appId: ${APP_ID}
 - inputText: "Groceries"
 - tapOn:
     id: "shopping-list-create-submit"
+# The create mutation can fail transiently; the app rolls the optimistic card
+# back and alerts. Tolerate one silent miss, dismiss the alert, and redo.
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-dashboard-link"
+    timeout: 45000
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: "shopping-list-dashboard-link"
+    commands:
+      - runFlow:
+          when:
+            visible: "OK"
+          commands:
+            - tapOn: "OK"
+      - tapOn:
+          id: "shopping-list-create-button"
+      - extendedWaitUntil:
+          visible:
+            id: "shopping-list-create-input"
+          timeout: 45000
+      - tapOn:
+          id: "shopping-list-create-input"
+      - inputText: "Groceries"
+      - tapOn:
+          id: "shopping-list-create-submit"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-dashboard-link"
