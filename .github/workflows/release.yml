@@ -259,6 +259,56 @@ jobs:
           E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
+      # App Store review refuses the submission without at least one 13"
+      # iPad screenshot (the app supports tablets), so a minimal iPad flow
+      # runs after the iPhone captures on its own simulator.
+      - name: Boot iPad simulator
+        id: ipad
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          xcrun simctl shutdown "$UDID" || true
+          pick() {
+            xcrun simctl list devices available --json | jq -r --arg re "$1" '
+              [.devices | to_entries[] | select(.key | test("iOS")) | .value[]
+                | select(.name | test($re))
+                | {udid, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
+              | sort_by(.n) | last // {} | .udid // empty'
+          }
+          UDID_IPAD=$(pick "^iPad Pro")
+          [ -z "$UDID_IPAD" ] && UDID_IPAD=$(pick "^iPad")
+          if [ -z "$UDID_IPAD" ]; then
+            echo "::error::No iPad simulator available on this image"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          xcrun simctl erase "$UDID_IPAD"
+          xcrun simctl boot "$UDID_IPAD"
+          xcrun simctl bootstatus "$UDID_IPAD"
+          xcrun simctl spawn "$UDID_IPAD" defaults write com.apple.Accessibility ReduceMotionEnabled 1
+          xcrun simctl spawn "$UDID_IPAD" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
+          xcrun simctl ui "$UDID_IPAD" appearance dark
+          xcrun simctl status_bar "$UDID_IPAD" override \
+            --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
+            --batteryState charged --batteryLevel 100
+          echo "udid=$UDID_IPAD" >> "$GITHUB_OUTPUT"
+
+      - name: Install and pre-warm app on iPad
+        env:
+          UDID: ${{ steps.ipad.outputs.udid }}
+        run: |
+          xcrun simctl install "$UDID" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
+          xcrun simctl launch "$UDID" com.flatcove.app.v2 || true
+          sleep 15
+          xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
+
+      - name: Capture iPad store screenshots
+        working-directory: apps/expo
+        run: node e2e/run-flows.mjs ../screenshots/store-screenshots-ipad
+        env:
+          E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
+          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
       # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
       # which upload-artifact drops by default.
       - name: Upload results artifact
@@ -488,8 +538,11 @@ jobs:
               exit 0
             fi
             # Only "binary not ready yet" errors are worth waiting out; auth
-            # or metadata failures would burn the full hour otherwise.
-            if ! grep -qiE "processing|couldn'?t find build|no build|build.*not.*(found|ready)" deliver.log; then
+            # or metadata failures would burn the full hour otherwise. Bare
+            # "processing" is off-limits: benign lines ("Waiting for all the
+            # screenshots to finish being processed") match it, which turned
+            # a deterministic review rejection into 12 futile retries.
+            if ! grep -qiE "couldn'?t find build|could not find build|no build|build.*not.*(found|ready)|timed? ?out.*(build|processing)" deliver.log; then
               echo "::error::deliver failed with a non-processing error; aborting (see log above)."
               exit 1
             fi
