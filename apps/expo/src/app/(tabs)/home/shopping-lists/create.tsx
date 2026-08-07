@@ -1,6 +1,6 @@
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
-import { Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -22,6 +22,7 @@ export default function CreateShoppingList() {
 
   const onCreateShoppingListError = (
     previousLists: ApiResult<ShoppingListSummary[]> | undefined,
+    message?: string,
   ) => {
     queryClient.setQueryData(
       trpc.shoppingList.getShoppingLists.queryKey({
@@ -29,6 +30,7 @@ export default function CreateShoppingList() {
       }),
       previousLists,
     );
+    Alert.alert("Error", message ?? "Failed to create shopping list");
   };
 
   const createShoppingListMutation = useMutation(
@@ -78,7 +80,7 @@ export default function CreateShoppingList() {
       },
       onSuccess: (data, variables, context) => {
         if (!data.success) {
-          onCreateShoppingListError(context.previousLists);
+          onCreateShoppingListError(context.previousLists, data.error.message);
           return;
         }
 
