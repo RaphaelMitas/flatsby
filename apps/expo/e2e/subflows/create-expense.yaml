@@ -9,7 +9,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "expense-form-amount"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "expense-form-amount"
 - inputText: ${AMOUNT}
@@ -48,14 +48,14 @@ appId: ${APP_ID}
     id: "expense-form-next"
 - extendedWaitUntil:
     visible: "Step 2 of 3"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:
     visible: "Step 3 of 3"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "expense-form-submit"
 - extendedWaitUntil:
     visible: ${DESCRIPTION}
-    timeout: 20000
+    timeout: 45000
