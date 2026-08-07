@@ -33,7 +33,7 @@ pnpm -F @flatsby/ui dev
 
 ## Development Tips
 
-- Follow the existing TypeScript, ESLint, Prettier configs
+- Follow the existing TypeScript, Biome, Prettier configs
 - Use descriptive names and small PRs where possible
 
 ## Links

@@ -51,7 +51,7 @@ export function CurrencyInput({
     // Allow only the first decimal separator
     const parts = cleaned.split(".");
     if (parts.length > 2) {
-      return parts[0] + "." + parts.slice(1).join("");
+      return `${parts[0]}.${parts.slice(1).join("")}`;
     }
     return cleaned;
   };

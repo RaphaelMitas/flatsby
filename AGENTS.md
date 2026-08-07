@@ -11,7 +11,7 @@ See `README.md` for full project documentation.
 ```bash
 pnpm dev              # Start all apps with watch mode
 pnpm dev:next         # Next.js only
-pnpm lint             # ESLint across all packages
+pnpm lint             # Biome lint across all packages
 pnpm lint:fix
 pnpm typecheck
 pnpm format           # Check Prettier formatting

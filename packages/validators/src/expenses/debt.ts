@@ -28,10 +28,12 @@ export function calculateDebts(
   // Initialize balances for all members and currencies
   for (const expense of expenses) {
     currencies.add(expense.currency);
+    // biome-ignore lint/suspicious/noAssignInExpressions: initialize-and-read in one step
     const payerBalances = (memberBalances[expense.paidByGroupMemberId] ??= {});
     payerBalances[expense.currency] ??= 0;
 
     for (const split of expense.expenseSplits) {
+      // biome-ignore lint/suspicious/noAssignInExpressions: initialize-and-read in one step
       const splitterBalances = (memberBalances[split.groupMemberId] ??= {});
       splitterBalances[expense.currency] ??= 0;
     }

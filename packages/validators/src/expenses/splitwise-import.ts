@@ -225,7 +225,7 @@ export function transformSplitwiseRows(
     }
 
     const cost = parseFloat(row.Cost);
-    if (isNaN(cost) || cost <= 0) {
+    if (Number.isNaN(cost) || cost <= 0) {
       skipped.push({ row: rowNum, reason: `Invalid cost: ${row.Cost}` });
       continue;
     }
@@ -233,7 +233,7 @@ export function transformSplitwiseRows(
     const personAmounts: { name: string; amount: number }[] = [];
     for (const name of Object.keys(config.memberMapping)) {
       const val = parseFloat(row[name] ?? "0");
-      if (!isNaN(val) && val !== 0) {
+      if (!Number.isNaN(val) && val !== 0) {
         personAmounts.push({ name, amount: val });
       }
     }

@@ -26,7 +26,7 @@ function useCountUp(target: number, duration = 500) {
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
+      const eased = 1 - (1 - progress) ** 3;
       const current = Math.round(startValue + (target - startValue) * eased);
 
       setValue(current);

@@ -1138,7 +1138,6 @@ export const PromptInputSpeechButton = ({
       ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
     ) {
       const SpeechRecognition =
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         window.SpeechRecognition || window.webkitSpeechRecognition;
       const speechRecognition = new SpeechRecognition();
 

@@ -19,7 +19,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "lint": "biome lint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
@@ -35,13 +35,12 @@
     }
   },
   "devDependencies": {
-    "@flatsby/eslint-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
     "@types/papaparse": "^5.5.2",
     "@types/react": "catalog:react19",
     "ai": "catalog:",
-    "eslint": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:react19",
     "typescript": "catalog:"

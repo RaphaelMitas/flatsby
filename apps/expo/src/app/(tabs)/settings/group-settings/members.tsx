@@ -157,10 +157,10 @@ export default function MembersScreen() {
 
         return { previousGroup };
       },
-      onError: (error, variables, context) => {
+      onError: (_error, _variables, context) => {
         onUpdateMemberRoleError(context?.previousGroup);
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (!data.success) {
           onUpdateMemberRoleError(context.previousGroup);
           return;

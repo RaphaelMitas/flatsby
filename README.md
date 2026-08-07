@@ -65,7 +65,7 @@ This is a modern full-stack TypeScript monorepo built with the T3 stack and enha
 
 - **Turborepo** - High-performance build system
 - **pnpm** - Fast, disk space efficient package manager
-- **ESLint & Prettier** - Code formatting and linting
+- **Biome & Prettier** - Linting and code formatting
 - **TypeScript** - Static type checking
 
 ### **Deployment & Infrastructure**
@@ -93,7 +93,6 @@ flatsby/
 │   ├── ui/                     # Shared UI components
 │   └── validators/             # Shared validation schemas
 └── tooling/                    # Shared development configuration
-    ├── eslint/                 # ESLint configurations
     ├── prettier/               # Prettier configuration
     ├── tailwind/               # Tailwind CSS configuration
     └── typescript/             # TypeScript configurations
@@ -199,8 +198,8 @@ pnpm db:push          # Push Drizzle schema changes to database
 pnpm db:studio        # Open Drizzle Studio database browser
 
 # Code Quality
-pnpm lint             # Run ESLint across all packages
-pnpm lint:fix         # Fix ESLint errors automatically
+pnpm lint             # Run Biome lint across all packages
+pnpm lint:fix         # Fix Biome lint errors automatically
 pnpm lint:ws          # Check workspace dependencies with sherif
 pnpm typecheck        # Run TypeScript type checking
 pnpm format           # Check code formatting with Prettier
@@ -251,7 +250,7 @@ This creates a new package with:
 
 - Proper `package.json` configuration
 - TypeScript setup
-- ESLint and Prettier configuration
+- Biome and Prettier configuration
 - Basic file structure
 
 ### Authentication Setup
@@ -365,7 +364,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 ### Code Standards
 
 - Follow TypeScript best practices
-- Use ESLint and Prettier configurations
+- Use Biome and Prettier configurations
 - Write meaningful commit messages
 - Add tests for new features
 - Update documentation as needed

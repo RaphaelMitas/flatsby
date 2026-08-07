@@ -24,7 +24,7 @@
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "generate": "pnpm with-env drizzle-kit generate",
-    "lint": "eslint",
+    "lint": "biome lint",
     "migrate": "pnpm with-env drizzle-kit migrate",
     "push": "pnpm with-env drizzle-kit push",
     "studio": "pnpm with-env drizzle-kit studio",
@@ -41,13 +41,12 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@flatsby/eslint-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
     "@types/ws": "^8.18.1",
     "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.10",
-    "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },

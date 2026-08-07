@@ -4,13 +4,11 @@ import { styled } from "nativewind";
 
 // Configure styled for SVG components to work with NativeWind
 // In NativeWind v5, cssInterop is replaced with styled
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 export const StyledSvg = styled(Svg, {
   className: "style",
 });
 
 // @ts-expect-error - NativeWind styled() produces overly complex union type with Icon component
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 export const StyledIcon = styled(Icon, {
   className: "style",
 });

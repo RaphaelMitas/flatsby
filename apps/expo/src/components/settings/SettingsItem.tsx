@@ -64,7 +64,7 @@ export const SettingsItem = ({
           className="text-muted-foreground"
         />
       ) : (
-        <>{rightContent}</>
+        rightContent
       )}
     </Pressable>
   );

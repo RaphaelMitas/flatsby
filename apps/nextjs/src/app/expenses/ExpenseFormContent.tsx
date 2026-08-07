@@ -171,7 +171,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                       <Select
                         value={field.value.toString()}
                         onValueChange={(value) =>
-                          field.onChange(parseInt(value))
+                          field.onChange(parseInt(value, 10))
                         }
                       >
                         <FormControl>
@@ -425,8 +425,10 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                   {isEditMode ? "Updating..." : "Creating..."}
                 </>
+              ) : isEditMode ? (
+                "Update Expense"
               ) : (
-                <>{isEditMode ? "Update Expense" : "Create Expense"}</>
+                "Create Expense"
               )}
             </Button>
           )}
