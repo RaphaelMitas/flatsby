@@ -29,6 +29,7 @@ import {
   updateShoppingListSchema,
 } from "@flatsby/validators/shopping-list";
 
+import type { TracingOptions } from "../utils/model-provider";
 import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
@@ -44,9 +45,10 @@ import {
   trackAIUsage,
 } from "../utils/autumn";
 import {
+  captureGeneration,
   CHEAP_AI_MODEL,
   CHEAP_AI_PROVIDER_OPTIONS,
-  createTracedModel,
+  getGatewayModel,
 } from "../utils/model-provider";
 
 export const shoppingList = createTRPCRouter({
@@ -977,20 +979,30 @@ const createItemCategorizer = (ctx: CategorizeContext) => {
       return "other"; // Fallback if no credits
     }
 
-    try {
-      const model = createTracedModel(CHEAP_AI_MODEL, {
-        distinctId: ctx.distinctId,
-        traceId: crypto.randomUUID(),
-        feature: "categorize-item",
-      });
+    const tracing: TracingOptions = {
+      distinctId: ctx.distinctId,
+      traceId: crypto.randomUUID(),
+      feature: "categorize-item",
+    };
+    const startTime = Date.now();
 
+    try {
       const response = await generateObject({
-        model,
+        model: getGatewayModel(CHEAP_AI_MODEL),
         providerOptions: CHEAP_AI_PROVIDER_OPTIONS,
         schema: z.object({
           category: categoryIdSchema,
         }),
         prompt: `Tell me the most appropriate category for this item: ${itemName}`,
+      });
+
+      captureGeneration({
+        tracing,
+        model: CHEAP_AI_MODEL,
+        input: itemName,
+        output: response.object,
+        usage: response.usage,
+        latencySeconds: (Date.now() - startTime) / 1000,
       });
 
       // Track credits after successful AI call
@@ -1002,6 +1014,14 @@ const createItemCategorizer = (ctx: CategorizeContext) => {
 
       return response.object.category;
     } catch (error) {
+      captureGeneration({
+        tracing,
+        model: CHEAP_AI_MODEL,
+        input: itemName,
+        output: null,
+        error,
+        latencySeconds: (Date.now() - startTime) / 1000,
+      });
       console.error("Error categorizing item:", error);
     }
     return "other";

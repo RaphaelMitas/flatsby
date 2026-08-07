@@ -1,5 +1,5 @@
-import type { ModelMessage, Tool } from "ai";
-import { withTracing } from "@posthog/ai";
+import type { LanguageModelUsage, ModelMessage, Tool } from "ai";
+import { captureAiGeneration } from "@posthog/ai";
 import { gateway, generateText, stepCountIs, streamText } from "ai";
 
 import { DEFAULT_CHAT_MODEL } from "@flatsby/validators/models";
@@ -35,6 +35,10 @@ export function getDefaultModel() {
   return DEFAULT_CHAT_MODEL;
 }
 
+export function getGatewayModel(modelName: string) {
+  return gateway(modelName);
+}
+
 export type TracingFeature =
   "chat" | "title-generation" | "categorize-item" | "categorize-expense";
 
@@ -56,14 +60,51 @@ export interface StreamChatWithToolsOptions extends StreamChatOptions {
   maxSteps?: number;
 }
 
-export function createTracedModel(modelName: string, tracing?: TracingOptions) {
-  const baseModel = gateway(modelName);
-  if (!posthog || !tracing) return baseModel;
-  return withTracing(baseModel, posthog, {
-    posthogDistinctId: tracing.distinctId,
-    posthogTraceId: tracing.traceId,
-    posthogPrivacyMode: true,
-    posthogProperties: { feature: tracing.feature },
+interface CaptureGenerationArgs {
+  tracing: TracingOptions | undefined;
+  model: string;
+  input: unknown;
+  output: unknown;
+  latencySeconds: number;
+  usage?: LanguageModelUsage;
+  error?: unknown;
+}
+
+// @posthog/ai's withTracing wrapper does not support the LanguageModelV4
+// interface used by AI SDK 7 gateway models, so generations are captured
+// through its lower-level captureAiGeneration primitive instead.
+export function captureGeneration({
+  tracing,
+  model,
+  input,
+  output,
+  latencySeconds,
+  usage,
+  error,
+}: CaptureGenerationArgs) {
+  if (!posthog || !tracing) return;
+  void captureAiGeneration(posthog, {
+    distinctId: tracing.distinctId,
+    traceId: tracing.traceId,
+    provider: "gateway",
+    model,
+    input,
+    output,
+    latency: latencySeconds,
+    privacyMode: true,
+    properties: { feature: tracing.feature, $ai_framework: "vercel" },
+    ...(usage
+      ? {
+          usage: {
+            inputTokens: usage.inputTokens,
+            outputTokens: usage.outputTokens,
+            reasoningTokens: usage.outputTokenDetails.reasoningTokens,
+            cacheReadInputTokens: usage.inputTokenDetails.cacheReadTokens,
+            cacheCreationInputTokens: usage.inputTokenDetails.cacheWriteTokens,
+          },
+        }
+      : {}),
+    ...(error !== undefined ? { error } : {}),
   });
 }
 
@@ -72,12 +113,33 @@ export function streamChatCompletion(
   options: StreamChatOptions = {},
 ) {
   const modelName = options.model ?? DEFAULT_CHAT_MODEL;
-  const model = createTracedModel(modelName, options.tracing);
+  const startTime = Date.now();
 
   const result = streamText({
-    model,
+    model: gateway(modelName),
     messages,
+    allowSystemInMessages: true,
     providerOptions: options.providerOptions ?? CHAT_PROVIDER_OPTIONS,
+    onEnd: (event) => {
+      captureGeneration({
+        tracing: options.tracing,
+        model: modelName,
+        input: messages,
+        output: event.text,
+        usage: event.usage,
+        latencySeconds: (Date.now() - startTime) / 1000,
+      });
+    },
+    onError: ({ error }) => {
+      captureGeneration({
+        tracing: options.tracing,
+        model: modelName,
+        input: messages,
+        output: null,
+        error,
+        latencySeconds: (Date.now() - startTime) / 1000,
+      });
+    },
   });
 
   return {
@@ -97,15 +159,36 @@ export function streamChatWithTools(
 ) {
   const modelName = options.model ?? DEFAULT_CHAT_MODEL;
   const maxSteps = options.maxSteps ?? 5;
-  const model = createTracedModel(modelName, options.tracing);
+  const startTime = Date.now();
 
   const result = streamText({
-    model,
+    model: gateway(modelName),
     system: options.systemPrompt,
     messages,
+    allowSystemInMessages: true,
     tools: options.tools,
     stopWhen: stepCountIs(maxSteps),
     providerOptions: options.providerOptions ?? CHAT_PROVIDER_OPTIONS,
+    onEnd: (event) => {
+      captureGeneration({
+        tracing: options.tracing,
+        model: modelName,
+        input: messages,
+        output: event.text,
+        usage: event.usage,
+        latencySeconds: (Date.now() - startTime) / 1000,
+      });
+    },
+    onError: ({ error }) => {
+      captureGeneration({
+        tracing: options.tracing,
+        model: modelName,
+        input: messages,
+        output: null,
+        error,
+        latencySeconds: (Date.now() - startTime) / 1000,
+      });
+    },
   });
 
   return {
@@ -122,25 +205,39 @@ export async function generateConversationTitle(
   userMessage: string,
   tracing?: TracingOptions,
 ): Promise<string> {
-  const model = createTracedModel(TITLE_GENERATION_MODEL, tracing);
+  const startTime = Date.now();
+  const systemPrompt =
+    "Generate a short, concise title (max 6 words) for a conversation that starts with the following message. Return only the title, no quotes or punctuation at the end.";
 
-  const result = await generateText({
-    model,
-    providerOptions: CHEAP_AI_PROVIDER_OPTIONS,
-    messages: [
-      {
-        role: "system",
-        content:
-          "Generate a short, concise title (max 6 words) for a conversation that starts with the following message. Return only the title, no quotes or punctuation at the end.",
-      },
-      {
-        role: "user",
-        content: userMessage,
-      },
-    ],
-  });
+  try {
+    const result = await generateText({
+      model: gateway(TITLE_GENERATION_MODEL),
+      providerOptions: CHEAP_AI_PROVIDER_OPTIONS,
+      system: systemPrompt,
+      prompt: userMessage,
+    });
 
-  // Clean up and truncate the title
-  const title = result.text.trim().slice(0, 100);
-  return title || "New Chat";
+    captureGeneration({
+      tracing,
+      model: TITLE_GENERATION_MODEL,
+      input: userMessage,
+      output: result.text,
+      usage: result.usage,
+      latencySeconds: (Date.now() - startTime) / 1000,
+    });
+
+    // Clean up and truncate the title
+    const title = result.text.trim().slice(0, 100);
+    return title || "New Chat";
+  } catch (error) {
+    captureGeneration({
+      tracing,
+      model: TITLE_GENERATION_MODEL,
+      input: userMessage,
+      output: null,
+      error,
+      latencySeconds: (Date.now() - startTime) / 1000,
+    });
+    throw error;
+  }
 }
