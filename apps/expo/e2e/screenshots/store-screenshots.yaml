@@ -24,7 +24,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "group-create-name-input"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "group-create-name-input"
 - inputText: "Sunset Villa"
@@ -32,7 +32,7 @@ appId: ${APP_ID}
     id: "group-create-submit"
 - extendedWaitUntil:
     visible: "Sunset Villa"
-    timeout: 15000
+    timeout: 45000
 
 # Select it (second card; the e2e fixture group is first). The name check
 # guards the positional index: the fixture group's screen would pass the
@@ -42,11 +42,11 @@ appId: ${APP_ID}
     index: 1
 - extendedWaitUntil:
     visible: "Sunset Villa"
-    timeout: 15000
+    timeout: 45000
 - extendedWaitUntil:
     visible:
       id: "shopping-list-create-button"
-    timeout: 15000
+    timeout: 45000
 
 # Mint two more e2e users server-side with presentable identities and add
 # them as members (group settings live in the Settings tab), so expenses
@@ -59,13 +59,13 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "group-settings-members"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "group-settings-members"
 - extendedWaitUntil:
     visible:
       id: "group-add-member-email"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "group-add-member-email"
 - inputText: "${output.memberA}"
@@ -77,7 +77,7 @@ appId: ${APP_ID}
 # match; the count header is the reliable success signal.
 - extendedWaitUntil:
     visible: "Members (2)"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "group-add-member-email"
 - inputText: "${output.memberB}"
@@ -86,7 +86,7 @@ appId: ${APP_ID}
     id: "group-add-member-button"
 - extendedWaitUntil:
     visible: "Members (3)"
-    timeout: 15000
+    timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/05-add-member
 
@@ -95,7 +95,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "shopping-list-create-button"
-    timeout: 15000
+    timeout: 45000
 
 # Create the shopping list now (its card should appear in the Home
 # screenshot) but stay out of it until the end. Inlined rather than via the
@@ -105,7 +105,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "shopping-list-create-input"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "shopping-list-create-input"
 - inputText: "Groceries"
@@ -114,7 +114,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "shopping-list-dashboard-link"
-    timeout: 15000
+    timeout: 45000
 
 # Seed expenses. Descriptions must not collide with tab titles ("Groceries",
 # "Expenses", "Home") — Maestro taps by full-text match on the tab bar.
@@ -122,7 +122,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "expense-heading"
-    timeout: 15000
+    timeout: 45000
 # First expense inline instead of via the subflow, so Step 2 — the split
 # across all three members — can be captured mid-form.
 - tapOn:
@@ -130,7 +130,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "expense-form-amount"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "expense-form-amount"
 - inputText: "84.20"
@@ -152,14 +152,14 @@ appId: ${APP_ID}
     id: "expense-form-next"
 - extendedWaitUntil:
     visible: "Step 2 of 3"
-    timeout: 15000
+    timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/04-expense-split
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:
     visible: "Step 3 of 3"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "expense-form-submit"
 - extendedWaitUntil:
@@ -185,7 +185,7 @@ appId: ${APP_ID}
 - tapOn: "Home"
 - extendedWaitUntil:
     visible: "Sunset Villa"
-    timeout: 15000
+    timeout: 45000
 
 # Into the seeded list. The "Shopping lists" card only exists on the group
 # dashboard variant; on the lists overview the link is directly visible.
@@ -197,13 +197,13 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "shopping-list-dashboard-link"
-    timeout: 15000
+    timeout: 45000
 - tapOn:
     id: "shopping-list-dashboard-link"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-item-input"
-    timeout: 15000
+    timeout: 45000
 
 # Seed items with categories so the list looks lived-in.
 - tapOn:
@@ -222,7 +222,7 @@ appId: ${APP_ID}
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
     visible: "Apples"
-    timeout: 15000
+    timeout: 45000
 
 - tapOn:
     id: "shopping-list-item-input"
@@ -240,7 +240,7 @@ appId: ${APP_ID}
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
     visible: "Oat Milk"
-    timeout: 15000
+    timeout: 45000
 
 - tapOn:
     id: "shopping-list-item-input"
@@ -258,7 +258,7 @@ appId: ${APP_ID}
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
     visible: "Sourdough Bread"
-    timeout: 15000
+    timeout: 45000
 
 - tapOn:
     id: "shopping-list-item-input"
@@ -267,7 +267,7 @@ appId: ${APP_ID}
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
     visible: "Paper Towels"
-    timeout: 15000
+    timeout: 45000
 
 # Dismiss the item-entry keyboard. iOS: keyboardDismissMode="on-drag"
 # (ShoppingList.tsx), since hideKeyboard is flaky there and the item-detail
@@ -294,7 +294,7 @@ appId: ${APP_ID}
 - tapOn: "Home"
 - extendedWaitUntil:
     visible: "Sunset Villa"
-    timeout: 15000
+    timeout: 45000
 - retry:
     maxRetries: 2
     commands:
@@ -303,7 +303,7 @@ appId: ${APP_ID}
           end: "50%, 80%"
       - extendedWaitUntil:
           visible: "4 items left"
-          timeout: 10000
+          timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/06-shopping-lists
 
@@ -326,7 +326,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "dashboard-group-picker"
-    timeout: 15000
+    timeout: 45000
 - retry:
     maxRetries: 2
     commands:
@@ -335,6 +335,6 @@ appId: ${APP_ID}
           end: "50%, 85%"
       - extendedWaitUntil:
           visible: "€142.69"
-          timeout: 10000
+          timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/01-home
