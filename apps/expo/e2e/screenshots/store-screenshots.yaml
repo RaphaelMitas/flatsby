@@ -184,8 +184,13 @@ appId: ${APP_ID}
 
 # Members screen (reached from the overview's group-settings button); the
 # three seeded members are a read, confirmed by the count header's id.
+# The Home tab normally comes back on the group's overview — the list detail
+# lives in its own tab — but a stray back press while leaving the expense
+# form can pop the Home stack to its root (Android, run 31277406593
+# attempt 1). Re-enter through the dashboard's nav link in that case rather
+# than spending the whole flow rerun on it.
 - retry:
-    maxRetries: 1
+    maxRetries: 2
     commands:
       - runFlow:
           file: ../subflows/tap-tab.yaml
@@ -193,6 +198,16 @@ appId: ${APP_ID}
             TAB_ID: "tab-home"
             TAB_LABEL: "Home"
             TAB_X: "12%"
+      - runFlow:
+          when:
+            visible:
+              id: "dashboard-shopping-lists-link"
+          commands:
+            - runFlow:
+                file: ../subflows/tap-until.yaml
+                env:
+                  TARGET_ID: "dashboard-shopping-lists-link"
+                  MARKER_ID: "shopping-lists-group-settings"
       - extendedWaitUntil:
           visible:
             id: "shopping-lists-group-settings"
