@@ -8,7 +8,8 @@ appId: ${APP_ID}
     visible:
       id: "shopping-list-create-button"
     timeout: 15000
-- tapOn: "Expenses"
+- tapOn:
+    id: "tab-expenses"
 - extendedWaitUntil:
     visible:
       id: "expense-heading"

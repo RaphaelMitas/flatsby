@@ -311,7 +311,10 @@ export default function MembersScreen() {
       {/* Members List */}
       <View className="bg-background flex-1">
         <View className="flex-row items-center justify-between px-4 py-3">
-          <Text className="text-foreground text-base font-medium">
+          <Text
+            testID={`group-members-count-${group.data.groupMembers.length}`}
+            className="text-foreground text-base font-medium"
+          >
             Members ({group.data.groupMembers.length})
           </Text>
         </View>
