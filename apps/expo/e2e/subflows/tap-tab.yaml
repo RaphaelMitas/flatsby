@@ -7,7 +7,8 @@ appId: ${APP_ID}
 # otherwise tap the tab's fixed slot in the 4-tab bottom bar. The caller's
 # post-switch wait verifies the tab actually changed.
 #
-# env: TAB_ID (e.g. tab-home), TAB_X (slot center, e.g. "12.5%")
+# env: TAB_ID (e.g. tab-home), TAB_X (slot center as an integer percent,
+# e.g. "12%" — Maestro's point parser is picky about formats)
 - runFlow:
     when:
       visible:

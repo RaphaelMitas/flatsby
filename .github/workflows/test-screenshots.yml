@@ -206,6 +206,22 @@ jobs:
           E2E_API_URL: ${{ steps.shots.outputs.url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
+      - name: Dump Maestro debug output
+        if: failure()
+        working-directory: apps/expo
+        run: |
+          shopt -s nullglob
+          for d in e2e/results/debug-*/; do
+            echo "::group::${d} errors"
+            grep -rhoE "(Failed to|Element not found|Assertion is false|Exception|ERROR|Invalid)[^\"]*" "$d" 2>/dev/null | sort | uniq -c | sort -rn | head -30
+            echo "::endgroup::"
+            for log in "$d"maestro.log "$d"*/maestro.log; do
+              echo "::group::${log} (tail)"
+              tail -n 300 "$log"
+              echo "::endgroup::"
+            done
+          done
+
       - name: Upload results artifact
         if: always()
         uses: actions/upload-artifact@v7

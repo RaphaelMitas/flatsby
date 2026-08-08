@@ -101,7 +101,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-home"
-      TAB_X: "12.5%"
+      TAB_X: "12%"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-create-button"
@@ -160,7 +160,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-expenses"
-      TAB_X: "62.5%"
+      TAB_X: "62%"
 - extendedWaitUntil:
     visible:
       id: "expense-heading"
@@ -233,7 +233,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-home"
-      TAB_X: "12.5%"
+      TAB_X: "12%"
 - extendedWaitUntil:
     visible:
       id: "shopping-lists-group-name"
@@ -352,7 +352,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-home"
-      TAB_X: "12.5%"
+      TAB_X: "12%"
 - extendedWaitUntil:
     visible:
       id: "shopping-lists-group-name"
