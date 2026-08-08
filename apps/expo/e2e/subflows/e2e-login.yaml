@@ -24,12 +24,13 @@ appId: ${APP_ID}
       - launchApp:
           clearState: true
           clearKeychain: true
-      # A healthy boot reaches the login screen in ~10s; a black screen at
-      # 30s is a hung launch, and relaunching beats waiting on it.
+      # 60s, not less: with 30s caps, runs 31252993233 and 31253444377
+      # exhausted every launch attempt — a cold post-clearState boot on a CI
+      # simulator regularly needs more than 30s to first frame.
       - extendedWaitUntil:
           visible:
             id: "login-screen"
-          timeout: 30000
+          timeout: 60000
 # Optional E2E_USER_NAME / E2E_USER_EMAIL override the minted identity (the
 # store-screenshot flow wants a presentable admin).
 - evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + '&bypass=' + encodeURIComponent(typeof VERCEL_BYPASS_SECRET !== 'undefined' ? VERCEL_BYPASS_SECRET : '') + (typeof E2E_USER_NAME !== 'undefined' ? '&name=' + encodeURIComponent(E2E_USER_NAME) : '') + (typeof E2E_USER_EMAIL !== 'undefined' ? '&email=' + encodeURIComponent(E2E_USER_EMAIL) : '')}"

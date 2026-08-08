@@ -210,14 +210,17 @@ jobs:
         if: failure()
         working-directory: apps/expo
         run: |
-          shopt -s nullglob
+          echo "::group::debug bundle contents"
+          find e2e/results -type f -exec ls -la {} + 2>/dev/null || true
+          echo "::endgroup::"
           for d in e2e/results/debug-*/; do
-            echo "::group::${d} errors"
-            grep -rhoE "(Failed to|Element not found|Assertion is false|Exception|ERROR|Invalid)[^\"]*" "$d" 2>/dev/null | sort | uniq -c | sort -rn | head -30
+            [ -d "$d" ] || continue
+            echo "::group::${d} flow errors"
+            grep -rhoE "(Element not found|Assertion is false|AssertionFailure|Invalid point)[^\"]*" "$d" 2>/dev/null | sort | uniq -c | sort -rn | head -20 || true
             echo "::endgroup::"
-            for log in "$d"maestro.log "$d"*/maestro.log; do
+            find "$d" -name "*.log" | while read -r log; do
               echo "::group::${log} (tail)"
-              tail -n 300 "$log"
+              tail -n 300 "$log" || true
               echo "::endgroup::"
             done
           done
