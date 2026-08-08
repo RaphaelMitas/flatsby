@@ -1,0 +1,85 @@
+appId: ${APP_ID}
+---
+# iPad companion to store-screenshots.yaml: App Store review requires at
+# least one 13" iPad screenshot because the app supports tablets. Kept to
+# id-driven taps only — the tablet layout (split view) differs enough that
+# the phone flow's gesture tricks aren't safe here.
+- runFlow:
+    file: ../subflows/e2e-login.yaml
+    env:
+      E2E_USER_NAME: "Alex Rivera"
+      E2E_USER_EMAIL: "alex@flatsby.test"
+
+- tapOn:
+    id: "group-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-create-name-input"
+    timeout: 45000
+- tapOn:
+    id: "group-create-name-input"
+- inputText: "Sunset Villa"
+- tapOn:
+    id: "group-create-submit"
+- extendedWaitUntil:
+    visible: "Sunset Villa"
+    timeout: 45000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/ipad-02-groups
+
+# Second card; the e2e fixture group is first.
+- tapOn:
+    id: "group-select-button"
+    index: 1
+- extendedWaitUntil:
+    visible: "Sunset Villa"
+    timeout: 45000
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 45000
+
+- tapOn:
+    id: "shopping-list-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-input"
+    timeout: 45000
+- tapOn:
+    id: "shopping-list-create-input"
+- inputText: "Groceries"
+- tapOn:
+    id: "shopping-list-create-submit"
+# Same tolerate-one-silent-miss dance as the phone flow.
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-dashboard-link"
+    timeout: 45000
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: "shopping-list-dashboard-link"
+    commands:
+      - runFlow:
+          when:
+            visible: "OK"
+          commands:
+            - tapOn: "OK"
+      - tapOn:
+          id: "shopping-list-create-button"
+      - extendedWaitUntil:
+          visible:
+            id: "shopping-list-create-input"
+          timeout: 45000
+      - tapOn:
+          id: "shopping-list-create-input"
+      - inputText: "Groceries"
+      - tapOn:
+          id: "shopping-list-create-submit"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-dashboard-link"
+    timeout: 45000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/ipad-01-shopping-lists
