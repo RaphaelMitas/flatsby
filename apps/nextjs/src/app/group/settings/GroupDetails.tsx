@@ -87,33 +87,31 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
           <div className="grid gap-2">
             <Label htmlFor="name">Group Name</Label>
             <div className="flex flex-col items-center gap-4 md:flex-row">
-              <>
-                <Input
-                  id="name"
-                  data-testid="group-name-input"
-                  placeholder="Enter group name"
-                  value={name}
-                  maxLength={256}
-                  disabled={!isAdmin}
-                  onChange={(event) => setName(event.target.value)}
-                />
-                <Button
-                  className="w-full min-w-[150px] md:w-fit"
-                  data-testid="group-name-save"
-                  disabled={groupNameMutation.isPending || !isAdmin}
-                  onClick={() =>
-                    groupNameMutation.mutate({ id: groupId, name: name || "" })
-                  }
-                >
-                  {groupNameMutation.isPending ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                  ) : !isAdmin ? (
-                    "not an admin"
-                  ) : (
-                    "Save"
-                  )}
-                </Button>
-              </>
+              <Input
+                id="name"
+                data-testid="group-name-input"
+                placeholder="Enter group name"
+                value={name}
+                maxLength={256}
+                disabled={!isAdmin}
+                onChange={(event) => setName(event.target.value)}
+              />
+              <Button
+                className="w-full min-w-[150px] md:w-fit"
+                data-testid="group-name-save"
+                disabled={groupNameMutation.isPending || !isAdmin}
+                onClick={() =>
+                  groupNameMutation.mutate({ id: groupId, name: name || "" })
+                }
+              >
+                {groupNameMutation.isPending ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : !isAdmin ? (
+                  "not an admin"
+                ) : (
+                  "Save"
+                )}
+              </Button>
             </div>
             {(groupNameMutation.isError ||
               groupNameMutation.data?.success === false) && (
@@ -133,12 +131,10 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
               </Alert>
             )}
             {groupNameMutation.isSuccess && groupNameMutation.data.success && (
-              <>
-                <Alert variant="success">
-                  <CircleCheckBig className="h-4 w-4" />
-                  <AlertTitle>Name changed successfully!</AlertTitle>
-                </Alert>
-              </>
+              <Alert variant="success">
+                <CircleCheckBig className="h-4 w-4" />
+                <AlertTitle>Name changed successfully!</AlertTitle>
+              </Alert>
             )}
           </div>
           <div className="grid gap-2">

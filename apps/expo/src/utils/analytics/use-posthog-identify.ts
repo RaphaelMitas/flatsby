@@ -17,6 +17,5 @@ export function usePostHogIdentify() {
       name: session.data.user.name,
     });
     // only run once
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 }

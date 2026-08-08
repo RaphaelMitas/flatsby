@@ -94,7 +94,7 @@ function DashboardContent() {
           router.push("/(tabs)/home/create-group");
           return;
         }
-        const groupId = parseInt(item.id);
+        const groupId = parseInt(item.id, 10);
         if (groupId !== selectedGroupId) {
           setSelectedGroup(groupId, item.title);
           void queryClient.invalidateQueries();

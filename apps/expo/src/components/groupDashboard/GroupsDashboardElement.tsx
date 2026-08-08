@@ -79,7 +79,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
 
         return { previousGroups };
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (!data.success) {
           onDeleteGroupError(context.previousGroups);
           return;
@@ -89,7 +89,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
           trpc.group.getUserGroups.queryOptions(),
         );
       },
-      onError: (error, variables, context) => {
+      onError: (_error, _variables, context) => {
         onDeleteGroupError(context?.previousGroups);
       },
     }),

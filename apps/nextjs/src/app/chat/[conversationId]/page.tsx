@@ -69,7 +69,6 @@ export default async function ChatConversationPage({
             input: tc.input,
             output: tc.output,
           });
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         } else if (tc.name === "showUI") {
           parts.push({
             type: "tool-showUI",

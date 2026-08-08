@@ -58,7 +58,7 @@ export default function GroupSettingsIndex() {
 
         return { previousGroups };
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (!data.success) {
           onDeleteGroupError(context.previousGroups);
           return;
@@ -68,7 +68,7 @@ export default function GroupSettingsIndex() {
           trpc.group.getUserGroups.queryOptions(),
         );
       },
-      onError: (error, variables, context) => {
+      onError: (_error, _variables, context) => {
         onDeleteGroupError(context?.previousGroups);
       },
     }),

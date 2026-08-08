@@ -10,7 +10,7 @@ import { useShoppingStore } from "~/utils/shopping-store";
 export default function EditExpensePage() {
   const { selectedGroupId } = useShoppingStore();
   const params = useLocalSearchParams<{ expenseId: string }>();
-  const expenseId = parseInt(params.expenseId);
+  const expenseId = parseInt(params.expenseId, 10);
 
   if (!selectedGroupId) {
     return (

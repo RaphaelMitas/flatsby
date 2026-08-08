@@ -295,8 +295,6 @@ export const toTRPCError = (error: ApiError): TRPCError => {
         code: "INTERNAL_SERVER_ERROR",
         message: error.message,
       });
-
-    case "InternalServerError":
     default:
       captureError({
         error,

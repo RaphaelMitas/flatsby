@@ -171,7 +171,6 @@ const PricingTableContext = createContext<{
 export const usePricingTableContext = (componentName: string) => {
   const context = useContext(PricingTableContext);
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (context === undefined) {
     throw new Error(`${componentName} must be used within <PricingTable />`);
   }
@@ -201,7 +200,7 @@ export const PricingTableContainer = ({
   }
 
   if (plans.length === 0) {
-    return <></>;
+    return null;
   }
 
   return (

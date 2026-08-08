@@ -65,7 +65,7 @@ This is a modern full-stack TypeScript monorepo built with the T3 stack and enha
 
 - **Turborepo** - High-performance build system
 - **pnpm** - Fast, disk space efficient package manager
-- **ESLint & Prettier** - Code formatting and linting
+- **Biome & Prettier** - Linting and code formatting
 - **TypeScript** - Static type checking
 
 ### **Deployment & Infrastructure**
@@ -93,7 +93,6 @@ flatsby/
 │   ├── ui/                     # Shared UI components
 │   └── validators/             # Shared validation schemas
 └── tooling/                    # Shared development configuration
-    ├── eslint/                 # ESLint configurations
     ├── prettier/               # Prettier configuration
     ├── tailwind/               # Tailwind CSS configuration
     └── typescript/             # TypeScript configurations
@@ -199,12 +198,10 @@ pnpm db:push          # Push Drizzle schema changes to database
 pnpm db:studio        # Open Drizzle Studio database browser
 
 # Code Quality
-pnpm lint             # Run ESLint across all packages
-pnpm lint:fix         # Fix ESLint errors automatically
+pnpm check            # Biome check + Prettier format check across all packages
+pnpm check:fix        # Fix Biome lint errors and Prettier formatting
 pnpm lint:ws          # Check workspace dependencies with sherif
 pnpm typecheck        # Run TypeScript type checking
-pnpm format           # Check code formatting with Prettier
-pnpm format:fix       # Fix code formatting with Prettier
 
 # UI Components
 pnpm ui-add           # Add new shadcn/ui components
@@ -251,7 +248,7 @@ This creates a new package with:
 
 - Proper `package.json` configuration
 - TypeScript setup
-- ESLint and Prettier configuration
+- Biome and Prettier configuration
 - Basic file structure
 
 ### Authentication Setup
@@ -357,7 +354,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 1. **Fork the repository**
 2. **Create a feature branch:** `git checkout -b feature/amazing-feature`
 3. **Make your changes** following our coding standards
-4. **Run tests and linting:** `pnpm lint && pnpm typecheck`
+4. **Run tests and linting:** `pnpm check && pnpm typecheck`
 5. **Commit your changes:** `git commit -m 'Add amazing feature'`
 6. **Push to the branch:** `git push origin feature/amazing-feature`
 7. **Open a Pull Request**
@@ -365,7 +362,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 ### Code Standards
 
 - Follow TypeScript best practices
-- Use ESLint and Prettier configurations
+- Use Biome and Prettier configurations
 - Write meaningful commit messages
 - Add tests for new features
 - Update documentation as needed

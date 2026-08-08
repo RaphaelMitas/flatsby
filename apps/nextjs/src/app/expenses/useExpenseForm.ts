@@ -5,7 +5,10 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import type { SplitMethod } from "@flatsby/validators/expenses/types";
+import type {
+  ExpenseSplit,
+  SplitMethod,
+} from "@flatsby/validators/expenses/types";
 import { useCallback, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -353,7 +356,7 @@ export function useExpenseForm({
   }, [form, categorizeExpenseMutation]);
 
   const onSubmit = (values: ExpenseValues) => {
-    let splits;
+    let splits: ExpenseSplit[];
 
     if (values.splitMethod === "equal") {
       const memberIds = values.splits.map((s) => s.groupMemberId);

@@ -174,10 +174,10 @@ export const useUpdateShoppingListItemMutation = ({
 
         return { previousData };
       },
-      onError: (err, variables, context) => {
+      onError: (_err, _variables, context) => {
         onMutateShoppingListItemError(context?.previousData);
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
           onMutateShoppingListItemError(context.previousData);
           return;

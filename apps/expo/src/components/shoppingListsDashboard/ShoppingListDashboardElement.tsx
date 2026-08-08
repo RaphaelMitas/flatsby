@@ -104,7 +104,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
 
         return { previousLists };
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
           onMutateShoppingListError(context.previousLists);
           return;
@@ -116,7 +116,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
           }),
         );
       },
-      onError: (error, variables, context) => {
+      onError: (_error, _variables, context) => {
         onMutateShoppingListError(context?.previousLists);
       },
     }),
@@ -159,7 +159,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
 
         return { previousLists };
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
           onMutateShoppingListError(context.previousLists);
           return;
@@ -171,7 +171,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
           }),
         );
       },
-      onError: (error, variables, context) => {
+      onError: (_error, _variables, context) => {
         onMutateShoppingListError(context?.previousLists);
       },
     }),

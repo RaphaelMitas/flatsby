@@ -75,10 +75,10 @@ export default function CreateShoppingList() {
 
         return { previousLists };
       },
-      onError: (error, variables, context) => {
+      onError: (_error, _variables, context) => {
         onCreateShoppingListError(context?.previousLists);
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (!data.success) {
           onCreateShoppingListError(context.previousLists, data.error.message);
           return;

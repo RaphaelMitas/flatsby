@@ -18,9 +18,8 @@
       "outputs": [".cache/.prettiercache"],
       "outputLogs": "new-only"
     },
-    "lint": {
-      "dependsOn": ["^topo", "^build"],
-      "outputs": [".cache/.eslintcache"]
+    "check": {
+      "dependsOn": ["^topo"]
     },
     "typecheck": {
       "dependsOn": ["^topo", "^build"],

@@ -33,7 +33,7 @@ export function GroupHeader() {
       return;
     }
 
-    const id = parseInt(value);
+    const id = parseInt(value, 10);
     if (id === currentGroup.id) return;
     setIsSwitching(true);
     await switchGroup(id);

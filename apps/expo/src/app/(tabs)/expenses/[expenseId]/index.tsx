@@ -6,7 +6,7 @@ import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function ExpenseDetailPage() {
   const params = useLocalSearchParams<{ expenseId: string }>();
-  const expenseId = params.expenseId ? parseInt(params.expenseId) : null;
+  const expenseId = params.expenseId ? parseInt(params.expenseId, 10) : null;
   const { selectedGroupId } = useShoppingStore();
 
   if (!expenseId) {

@@ -82,7 +82,7 @@ export const DbUtils = {
    * Ensure it's not the last admin being removed
    */
   ensureNotLastAdmin: (
-    targetMemberId: number,
+    _targetMemberId: number,
     targetRole: Role,
     newRole: Role,
     allMembers: Pick<GroupMember, "id" | "role">[],

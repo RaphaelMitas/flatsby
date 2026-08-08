@@ -18,7 +18,7 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "check": "biome check",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "ui-add": "pnpm dlx shadcn@latest add"
   },
@@ -68,12 +68,11 @@
     "use-stick-to-bottom": "^1.1.6"
   },
   "devDependencies": {
-    "@flatsby/eslint-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tailwind-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
     "@types/react": "catalog:react19",
-    "eslint": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:react19",
     "typescript": "catalog:",

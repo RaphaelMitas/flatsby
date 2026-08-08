@@ -49,6 +49,7 @@ export const useSwipeActions = ({
 
   const renderRightActions = useCallback(
     (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
+      // biome-ignore lint/complexity/noUselessFragments: ReanimatedSwipeable requires a ReactElement, null is not assignable
       if (!rightAction) return <></>;
 
       return (
@@ -73,6 +74,7 @@ export const useSwipeActions = ({
 
   const renderLeftActions = useCallback(
     (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
+      // biome-ignore lint/complexity/noUselessFragments: ReanimatedSwipeable requires a ReactElement, null is not assignable
       if (!leftAction) return <></>;
 
       return (

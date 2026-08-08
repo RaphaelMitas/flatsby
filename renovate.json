@@ -58,7 +58,7 @@
     {
       "description": "Group Next.js",
       "groupName": "nextjs",
-      "matchPackageNames": ["next", "eslint-config-next", "@next/env"]
+      "matchPackageNames": ["next", "@next/env"]
     },
     {
       "description": "Group tRPC",
@@ -92,13 +92,9 @@
       "matchPackageNames": ["/^@tanstack//"]
     },
     {
-      "description": "Group ESLint",
-      "groupName": "eslint",
-      "matchPackageNames": [
-        "/^eslint/",
-        "/^@eslint//",
-        "/^@typescript-eslint//"
-      ]
+      "description": "Group Biome",
+      "groupName": "biome",
+      "matchPackageNames": ["/^@biomejs//"]
     },
     {
       "description": "Group PostHog",
