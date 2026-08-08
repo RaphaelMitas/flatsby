@@ -1,0 +1,24 @@
+appId: ${APP_ID}
+---
+# Act-verify-repeat: tap TARGET_ID until MARKER_ID is visible. A Maestro tap
+# can silently miss — coordinates come from a hierarchy snapshot, and if the
+# layout shifts (keyboard dismissal, list settling) before the synthetic touch
+# lands, XCUITest still reports success. Flows used to spend a full 45s wait
+# discovering that nothing happened; here a missed tap costs one 15s round,
+# and the tap is skipped once the target screen is already up.
+#
+# env: TARGET_ID (button to tap), MARKER_ID (element that proves the effect)
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            notVisible:
+              id: ${MARKER_ID}
+          commands:
+            - tapOn:
+                id: ${TARGET_ID}
+      - extendedWaitUntil:
+          visible:
+            id: ${MARKER_ID}
+          timeout: 15000

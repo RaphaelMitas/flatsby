@@ -20,6 +20,7 @@ export default function E2ELoginScreen() {
     bypass?: string;
     name?: string;
     email?: string;
+    seed?: string;
   }>();
   const [state, setState] = useState<E2ELoginState>({ status: "pending" });
 
@@ -27,10 +28,11 @@ export default function E2ELoginScreen() {
   const bypass = typeof params.bypass === "string" ? params.bypass : "";
   const name = typeof params.name === "string" ? params.name : undefined;
   const email = typeof params.email === "string" ? params.email : undefined;
+  const seed = typeof params.seed === "string" ? params.seed : undefined;
 
   useEffect(() => {
     if (!isE2ETestingEnabled() || !apiUrl) return;
-    setupE2ESession({ apiUrl, bypassSecret: bypass, name, email })
+    setupE2ESession({ apiUrl, bypassSecret: bypass, name, email, seed })
       .then((session) => {
         setState({ status: "done", email: session.email });
       })
@@ -40,7 +42,7 @@ export default function E2ELoginScreen() {
           message: error instanceof Error ? error.message : String(error),
         });
       });
-  }, [apiUrl, bypass, name, email]);
+  }, [apiUrl, bypass, name, email, seed]);
 
   if (!isE2ETestingEnabled()) {
     return <Redirect href="/" />;
