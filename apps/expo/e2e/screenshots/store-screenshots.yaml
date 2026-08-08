@@ -152,11 +152,35 @@ appId: ${APP_ID}
             id: "expense-form-step"
             text: "Step 1 of 3"
           timeout: 15000
+# On Step 1 the footer has no back button (expense-form-back renders only on
+# later steps) — the way out is the navigation header's back on iOS and the
+# hardware back on Android.
 - runFlow:
-    file: ../subflows/tap-until.yaml
-    env:
-      TARGET_ID: "expense-form-back"
-      MARKER_ID: "expense-heading"
+    when:
+      platform: iOS
+    commands:
+      - runFlow:
+          file: ../subflows/tap-until.yaml
+          env:
+            TARGET_ID: "BackButton"
+            MARKER_ID: "expense-heading"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - retry:
+          maxRetries: 2
+          commands:
+            - runFlow:
+                when:
+                  notVisible:
+                    id: "expense-heading"
+                commands:
+                  - back
+            - extendedWaitUntil:
+                visible:
+                  id: "expense-heading"
+                timeout: 15000
 
 # Members screen (reached from the overview's group-settings button); the
 # three seeded members are a read, confirmed by the count header's id.
