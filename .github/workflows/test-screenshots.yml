@@ -1,72 +1,34 @@
-name: Release
-
-# Every push to main checks whether the app version in app.config.ts already
-# has a tag. When it doesn't (i.e. a release PR from `pnpm release` just
-# landed), this workflow tags the commit, creates a GitHub release, kicks off
-# EAS production builds with store auto-submit, and captures store
-# screenshots. workflow_dispatch re-runs the release for the current version
-# even if the tag already exists (e.g. after a failed run).
+# Temporary pre-merge test rig: runs the release workflow's screenshot jobs
+# (iPhone + iPad and Android captures) against the branch's preview
+# deployment, without touching tags, releases, store listings, or EAS build
+# credits. Delete before merging.
+name: Test store screenshots
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
-
+    branches: [claude/release-pipeline-logs-ig26ju]
 permissions:
-  contents: write
-
-concurrency:
-  group: release
-  cancel-in-progress: false
+  contents: read
+  actions: read
+  deployments: read
 
 env:
   FORCE_COLOR: 3
 
 jobs:
-  check:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      is-release: ${{ steps.decide.outputs.is-release }}
-      tag: ${{ steps.decide.outputs.tag }}
-      screenshot-url: ${{ steps.shots.outputs.url }}
+  screenshots-ios:
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      MAESTRO_CLI_NO_ANALYTICS: "1"
+      MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
       - uses: actions/checkout@v7
 
-      - name: Decide whether this push is a release
-        id: decide
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=$(sed -n 's/.*version: "\([0-9][0-9.]*\)".*/\1/p' apps/expo/app.config.ts | head -1)
-          if [ -z "$VERSION" ]; then
-            echo "::error::Could not parse version from apps/expo/app.config.ts"
-            exit 1
-          fi
-          TAG="v$VERSION"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          if [ -n "$(git ls-remote --tags origin "refs/tags/$TAG")" ]; then
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-              echo "Tag $TAG exists; re-running release on manual dispatch."
-              echo "is-release=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "Tag $TAG already exists; not a release push."
-              echo "is-release=false" >> "$GITHUB_OUTPUT"
-            fi
-            exit 0
-          fi
-          git tag "$TAG"
-          git push origin "$TAG"
-          echo "is-release=true" >> "$GITHUB_OUTPUT"
+      - name: Setup
+        uses: ./tooling/github/setup
 
-      # The screenshot flow signs in through /api/e2e/create-session, which
-      # only preview deployments expose (E2E_TESTING=true). Vercel registers
-      # previews as GitHub deployments, so the newest successful one — usually
-      # the release branch's own preview — is discoverable without a Vercel
-      # token. E2E_SCREENSHOT_API_URL (repo variable) overrides if set.
       - name: Resolve screenshot API URL
         id: shots
-        if: steps.decide.outputs.is-release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OVERRIDE: ${{ vars.E2E_SCREENSHOT_API_URL }}
@@ -80,62 +42,11 @@ jobs:
             done
           fi
           if [ -z "$URL" ]; then
-            echo "::warning::No successful preview deployment found and E2E_SCREENSHOT_API_URL is unset; skipping store screenshots."
-          else
-            echo "Screenshot API: $URL"
-          fi
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
-
-      - name: Create GitHub release
-        if: steps.decide.outputs.is-release == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.decide.outputs.tag }}
-        run: gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --title "$TAG" --generate-notes
-
-  eas-build-submit:
-    needs: check
-    if: needs.check.outputs.is-release == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      # Waits for the EAS builds and store submissions to finish (they run on
-      # EAS servers; progress lives at expo.dev) so publish-ios knows the
-      # binary has reached App Store Connect before submitting for review.
-      # Android goes straight to the Play production track (eas.json).
-      - name: Build and submit to stores via EAS
-        working-directory: apps/expo
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EXPO_NO_CAPABILITY_SYNC: "1"
-        run: |
-          if [ -z "$EXPO_TOKEN" ]; then
-            echo "::error::EXPO_TOKEN secret is not set. Create a robot token for the flatsby org at https://expo.dev/settings/access-tokens and add it as a repo secret."
+            echo "::error::No successful preview deployment found"
             exit 1
           fi
-          pnpm dlx eas-cli@21.5.0 build --platform all --profile production --auto-submit --non-interactive
-
-  # Simulator build + Maestro screenshot flow; mirrors e2e.yml's iOS jobs but
-  # runs build and capture in one job (no shard fan-out) on a Pro Max-sized
-  # simulator for App Store dimensions.
-  screenshots-ios:
-    needs: check
-    if: needs.check.outputs.is-release == 'true' && needs.check.outputs.screenshot-url != ''
-    runs-on: macos-26
-    timeout-minutes: 60
-    env:
-      MAESTRO_CLI_NO_ANALYTICS: "1"
-      MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup
-        uses: ./tooling/github/setup
+          echo "Screenshot API: $URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       - name: Select Xcode
         run: |
@@ -256,7 +167,7 @@ jobs:
           mkdir -p e2e/results/screenshots
           node e2e/run-flows.mjs ../screenshots/store-screenshots
         env:
-          E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
+          E2E_API_URL: ${{ steps.shots.outputs.url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       # App Store review refuses the submission without at least one 13"
@@ -306,7 +217,7 @@ jobs:
         working-directory: apps/expo
         run: node e2e/run-flows.mjs ../screenshots/store-screenshots-ipad
         env:
-          E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
+          E2E_API_URL: ${{ steps.shots.outputs.url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       # Failures must be diagnosable from the job log alone: print the debug
@@ -357,23 +268,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: store-screenshots-ios
+          name: test-store-screenshots-ios
           path: apps/expo/e2e/results/
           include-hidden-files: true
           retention-days: 30
 
-      - name: Attach screenshots to GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.check.outputs.tag }}
-        run: |
-          cd apps/expo/e2e/results/screenshots
-          zip -r "$RUNNER_TEMP/flatsby-$TAG-ios-screenshots.zip" .
-          gh release upload "$TAG" "$RUNNER_TEMP/flatsby-$TAG-ios-screenshots.zip" --clobber
-
   screenshots-android:
-    needs: check
-    if: needs.check.outputs.is-release == 'true' && needs.check.outputs.screenshot-url != ''
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -384,6 +284,27 @@ jobs:
 
       - name: Setup
         uses: ./tooling/github/setup
+
+      - name: Resolve screenshot API URL
+        id: shots
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OVERRIDE: ${{ vars.E2E_SCREENSHOT_API_URL }}
+        run: |
+          URL="$OVERRIDE"
+          if [ -z "$URL" ]; then
+            for id in $(gh api "repos/${{ github.repository }}/deployments?environment=Preview&per_page=30" --jq '.[].id'); do
+              URL=$(gh api "repos/${{ github.repository }}/deployments/$id/statuses" \
+                --jq '[.[] | select(.state == "success")][0] | (.environment_url // .target_url) // empty')
+              [ -n "$URL" ] && break
+            done
+          fi
+          if [ -z "$URL" ]; then
+            echo "::error::No successful preview deployment found"
+            exit 1
+          fi
+          echo "Screenshot API: $URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-java@v5
         with:
@@ -463,7 +384,7 @@ jobs:
             bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/apps/expo/android/app/build/outputs/apk/release/app-release.apk" ../screenshots/store-screenshots
         env:
           E2E_PLATFORM: android
-          E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
+          E2E_API_URL: ${{ steps.shots.outputs.url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       # A JS fatal appears in the captured device logs with its message and
@@ -491,222 +412,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: store-screenshots-android
+          name: test-store-screenshots-android
           path: apps/expo/e2e/results/
           include-hidden-files: true
           retention-days: 30
-
-      - name: Attach screenshots to GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.check.outputs.tag }}
-        run: |
-          cd apps/expo/e2e/results/screenshots
-          zip -r "$RUNNER_TEMP/flatsby-$TAG-android-screenshots.zip" .
-          gh release upload "$TAG" "$RUNNER_TEMP/flatsby-$TAG-android-screenshots.zip" --clobber
-
-  # Uploads the captured screenshots to the App Store listing (en-US), sets
-  # the release notes from apps/expo/store/release-notes.txt, and submits the
-  # EAS-delivered build for review with automatic release. Runs even if the
-  # screenshot job was skipped (submits with the existing listing assets).
-  # Runs whatever the screenshot job did: store listings keep their last
-  # uploaded assets, so a failed capture must not block the review
-  # submission — fresh screenshots ride along only when the job succeeded.
-  publish-ios:
-    needs: [check, eas-build-submit, screenshots-ios]
-    if: >-
-      always() && needs.check.outputs.is-release == 'true' &&
-      needs.eas-build-submit.result == 'success'
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@v7
-
-      # secrets are unavailable in job-level `if`, so the job guards itself.
-      - name: Check App Store Connect API secrets
-        id: guard
-        env:
-          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
-          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
-          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
-        run: |
-          if [ -z "$ASC_API_KEY_ID" ] || [ -z "$ASC_API_ISSUER_ID" ] || [ -z "$ASC_API_KEY_CONTENT" ]; then
-            echo "::warning::ASC_API_KEY_ID / ASC_API_ISSUER_ID / ASC_API_KEY_CONTENT secrets are not set; skipping App Store listing update + review submission. The build is in TestFlight; screenshots are on the GitHub release."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - uses: ruby/setup-ruby@v1
-        if: steps.guard.outputs.skip != 'true'
-        with:
-          ruby-version: "3.3"
-
-      - name: Install fastlane
-        if: steps.guard.outputs.skip != 'true'
-        run: gem install fastlane -N
-
-      - name: Download screenshots
-        if: steps.guard.outputs.skip != 'true' && needs.screenshots-ios.result == 'success'
-        uses: actions/download-artifact@v8
-        with:
-          name: store-screenshots-ios
-          path: results
-
-      - name: Arrange deliver inputs
-        if: steps.guard.outputs.skip != 'true'
-        env:
-          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
-          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
-          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
-        run: |
-          mkdir -p store/metadata/en-US
-          cp apps/expo/store/release-notes.txt store/metadata/en-US/release_notes.txt
-          if compgen -G "results/screenshots/*.png" > /dev/null; then
-            mkdir -p store/screenshots/en-US
-            cp results/screenshots/*.png store/screenshots/en-US/
-          fi
-          # Without a Deliverfile, deliver prompts to set one up, which
-          # crashes non-interactive runs; an empty file satisfies it.
-          mkdir -p fastlane && touch fastlane/Deliverfile
-          jq -n --arg kid "$ASC_API_KEY_ID" --arg iss "$ASC_API_ISSUER_ID" --arg key "$ASC_API_KEY_CONTENT" \
-            '{key_id: $kid, issuer_id: $iss, key: $key, in_house: false}' > "$RUNNER_TEMP/asc_key.json"
-
-      # The binary lands in App Store Connect when EAS submission finishes,
-      # then Apple processes it for a while; retry until it is attachable.
-      - name: Update listing and submit for review
-        if: steps.guard.outputs.skip != 'true'
-        env:
-          TAG: ${{ needs.check.outputs.tag }}
-        run: |
-          VERSION="${TAG#v}"
-          ARGS=(
-            --app_identifier com.flatcove.app.v2
-            --app_version "$VERSION"
-            --api_key_path "$RUNNER_TEMP/asc_key.json"
-            --metadata_path store/metadata
-            --skip_binary_upload true
-            --submit_for_review true
-            --automatic_release true
-            --run_precheck_before_submit false
-            --precheck_include_in_app_purchases false
-            --submission_information '{"add_id_info_uses_idfa": false}'
-            --force true
-          )
-          if [ -d store/screenshots/en-US ]; then
-            ARGS+=(--screenshots_path store/screenshots --overwrite_screenshots true)
-          fi
-          set -o pipefail
-          for attempt in $(seq 1 12); do
-            if fastlane deliver "${ARGS[@]}" 2>&1 | tee deliver.log; then
-              echo "Submitted $VERSION for review."
-              exit 0
-            fi
-            # Only "binary not ready yet" errors are worth waiting out; auth
-            # or metadata failures would burn the full hour otherwise. Bare
-            # "processing" is off-limits: benign lines ("Waiting for all the
-            # screenshots to finish being processed") match it, which turned
-            # a deterministic review rejection into 12 futile retries.
-            if ! grep -qiE "couldn'?t find build|could not find build|no build|build.*not.*(found|ready)|timed? ?out.*(build|processing)" deliver.log; then
-              echo "::error::deliver failed with a non-processing error; aborting (see log above)."
-              exit 1
-            fi
-            echo "deliver attempt $attempt failed (build still processing); retrying in 5 minutes"
-            sleep 300
-          done
-          echo "::error::Could not submit $VERSION for review after 12 attempts."
-          exit 1
-
-  # Uploads the captured screenshots and the release notes to the Play Store
-  # listing (en-US). The binary itself already went to the internal track via
-  # EAS auto-submit (eas.json; production access still pending — supply's
-  # --track must match or the changelog attach finds no release); needing
-  # eas-build-submit ensures the release exists before its "What's New" text
-  # is set.
-  # Like publish-ios, independent of the screenshot job's outcome: the
-  # changelog always goes up, fresh screenshots only when captured.
-  publish-android:
-    needs: [check, eas-build-submit, screenshots-android]
-    if: >-
-      always() && needs.check.outputs.is-release == 'true' &&
-      needs.eas-build-submit.result == 'success'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Check Play service account secret
-        id: guard
-        env:
-          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
-            echo "::warning::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is not set; skipping Play listing screenshot upload. Screenshots are on the GitHub release."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      # eas-cli evaluates app.config.ts, which needs the workspace installed.
-      - name: Setup
-        if: steps.guard.outputs.skip != 'true'
-        uses: ./tooling/github/setup
-
-      # supply attaches a changelog to one specific version code and cannot
-      # infer it from the track; EAS manages the remote versionCode, so ask it
-      # which one the just-submitted build carries.
-      - name: Resolve released Android version code
-        if: steps.guard.outputs.skip != 'true'
-        id: version
-        working-directory: apps/expo
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          CODE=$(pnpm dlx eas-cli@21.5.0 build:version:get --platform android --non-interactive --json | jq -r '.versionCode // empty')
-          if [ -z "$CODE" ]; then
-            echo "::error::Could not resolve the Android versionCode from EAS."
-            exit 1
-          fi
-          echo "versionCode $CODE"
-          echo "code=$CODE" >> "$GITHUB_OUTPUT"
-
-      - uses: ruby/setup-ruby@v1
-        if: steps.guard.outputs.skip != 'true'
-        with:
-          ruby-version: "3.3"
-
-      - name: Install fastlane
-        if: steps.guard.outputs.skip != 'true'
-        run: gem install fastlane -N
-
-      - name: Download screenshots
-        if: steps.guard.outputs.skip != 'true' && needs.screenshots-android.result == 'success'
-        uses: actions/download-artifact@v8
-        with:
-          name: store-screenshots-android
-          path: results
-
-      - name: Update Play listing
-        if: steps.guard.outputs.skip != 'true'
-        env:
-          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/play_key.json"
-          mkdir -p store/metadata/android/en-US/changelogs
-          # default.txt keeps Play's "What's New" in sync with the App Store
-          # text; --version_code pins it to the release EAS just submitted.
-          cp apps/expo/store/release-notes.txt store/metadata/android/en-US/changelogs/default.txt
-          SKIP_SCREENSHOTS=true
-          if compgen -G "results/screenshots/*.png" > /dev/null; then
-            mkdir -p store/metadata/android/en-US/images/phoneScreenshots
-            cp results/screenshots/*.png store/metadata/android/en-US/images/phoneScreenshots/
-            SKIP_SCREENSHOTS=false
-          fi
-          fastlane supply \
-            --package_name com.flatcove.app \
-            --json_key "$RUNNER_TEMP/play_key.json" \
-            --metadata_path store/metadata/android \
-            --track internal \
-            --version_code "${{ steps.version.outputs.code }}" \
-            --skip_upload_apk true \
-            --skip_upload_aab true \
-            --skip_upload_metadata true \
-            --skip_upload_changelogs false \
-            --skip_upload_images true \
-            --skip_upload_screenshots "$SKIP_SCREENSHOTS"
