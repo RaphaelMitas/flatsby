@@ -1,47 +1,38 @@
 appId: ${APP_ID}
 ---
-# Store screenshot flow: logs in via the e2e session endpoint, seeds a
-# presentable group with expenses and a shopping list, then captures the
-# screens used for App Store / Play Store listings into
-# e2e/results/screenshots/. Run via `node e2e/run-flows.mjs
-# ../screenshots/store-screenshots` (outside flows/ so the regular e2e suite
-# never picks it up).
+# Store screenshot flow. All content — the "Sunset Villa" group, its three
+# members, the stocked "Groceries" list, and the split expenses — is seeded
+# server-side by the e2e create-session endpoint (`seed=store`), so this flow
+# performs no mutations: it logs in, navigates, and captures. Runtime
+# mutations were the pipeline's chronic flake: a Maestro tap that silently
+# misses a button (stale coordinates after a layout shift) leaves state
+# missing and the flow waiting on UI that will never appear. Reads don't have
+# that failure mode — the data exists before the app's first query, and
+# query retries cover transient fetch errors.
 #
-# Ordering matters: expenses and the Home screenshot come before item
-# seeding, because the item-entry keyboard covers the tab bar and relaunching
-# mid-flow leaves Maestro's iOS hierarchy stale (the screen renders but no
-# selector ever matches).
+# Navigation taps go through tap-until.yaml (act-verify-repeat) or
+# tap-tab.yaml (id -> label -> position) so a missed tap costs seconds, not
+# the run. Run via `node e2e/run-flows.mjs ../screenshots/store-screenshots`.
 - runFlow:
     file: ../subflows/e2e-login.yaml
     env:
       E2E_USER_NAME: "Alex Rivera"
       E2E_USER_EMAIL: "alex@flatsby.test"
+      E2E_SEED: "store"
 
-# The e2e fixture group has a generated name ("E2E Test Group 3f2a...");
-# create a real-looking one for the screenshots.
-- tapOn:
-    id: "group-create-button"
-- extendedWaitUntil:
-    visible:
-      id: "group-create-name-input"
-    timeout: 45000
-- tapOn:
-    id: "group-create-name-input"
-- inputText: "Sunset Villa"
-- tapOn:
-    id: "group-create-submit"
+# The dashboard's only group card is the seeded one.
 - extendedWaitUntil:
     visible:
       id: "group-card-name"
       text: "Sunset Villa"
     timeout: 45000
 
-# Select it (second card; the e2e fixture group is first). The name check
-# guards the positional index: the fixture group's screen would pass the
-# create-button wait too.
-- tapOn:
-    id: "group-select-button"
-    index: 1
+# Into the group: the shopping-lists overview with the seeded list card.
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "group-select-button"
+      MARKER_ID: "shopping-list-create-button"
 - extendedWaitUntil:
     visible:
       id: "shopping-lists-group-name"
@@ -49,46 +40,147 @@ appId: ${APP_ID}
     timeout: 45000
 - extendedWaitUntil:
     visible:
-      id: "shopping-list-create-button"
+      id: "shopping-list-dashboard-link"
     timeout: 45000
+- extendedWaitUntil:
+    visible: "4 items left"
+    timeout: 45000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/06-shopping-lists
 
-# Mint two more e2e users server-side with presentable identities and add
-# them as members (group settings live in the Settings tab), so expenses
-# split across three people.
-- evalScript: "${output.bypass = typeof VERCEL_BYPASS_SECRET !== 'undefined' ? VERCEL_BYPASS_SECRET : ''}"
-- evalScript: "${output.memberA = json(http.post(E2E_API_URL + '/api/e2e/create-session?name=Anna%20Keller&email=anna%40flatsby.test', { headers: { 'x-vercel-protection-bypass': output.bypass }, body: '{}' }).body).email}"
-- evalScript: "${output.memberB = json(http.post(E2E_API_URL + '/api/e2e/create-session?name=Tom%20Baker&email=tom%40flatsby.test', { headers: { 'x-vercel-protection-bypass': output.bypass }, body: '{}' }).body).email}"
-- tapOn:
-    id: "shopping-lists-group-settings"
+# Into the seeded list; items are reads, identified by their checkbox ids.
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-list-dashboard-link"
+      MARKER_ID: "shopping-list-item-input"
 - extendedWaitUntil:
     visible:
-      id: "group-settings-members"
+      id: "shopping-list-item-checkbox-Apples"
     timeout: 45000
-- tapOn:
-    id: "group-settings-members"
 - extendedWaitUntil:
     visible:
-      id: "group-add-member-email"
+      id: "shopping-list-item-checkbox-Paper Towels"
     timeout: 45000
-- tapOn:
-    id: "group-add-member-email"
-- inputText: "${output.memberA}"
-# Tap a neutral text to dismiss the keyboard (hideKeyboard is flaky on iOS)
-- tapOn: "Manage Members"
-- tapOn:
-    id: "group-add-member-button"
-# Member rows merge into one accessibility element, so their names never
-# match; the count header's dynamic testID is the reliable success signal.
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/02-shopping-list
+
+# Expenses tab with the three seeded expenses.
+- retry:
+    maxRetries: 1
+    commands:
+      - runFlow:
+          file: ../subflows/tap-tab.yaml
+          env:
+            TAB_ID: "tab-expenses"
+            TAB_LABEL: "Expenses"
+            TAB_X: "62%"
+      - extendedWaitUntil:
+          visible:
+            id: "expense-heading"
+          timeout: 20000
 - extendedWaitUntil:
     visible:
-      id: "group-members-count-2"
+      id: "expense-card-Weekly shopping"
     timeout: 45000
+- extendedWaitUntil:
+    visible:
+      id: "expense-card-Cleaning supplies"
+    timeout: 45000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/03-expenses
+
+# The split screenshot needs the form mid-flight: fill Step 1 locally, walk
+# to Step 2 (the three-way split), capture, then back out without submitting.
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "expense-add-button"
+      MARKER_ID: "expense-form-amount"
 - tapOn:
-    id: "group-add-member-email"
-- inputText: "${output.memberB}"
-- tapOn: "Manage Members"
+    id: "expense-form-amount"
+- inputText: "64.30"
 - tapOn:
-    id: "group-add-member-button"
+    id: "expense-form-description"
+- inputText: "Ski trip fund"
+# Tap a neutral heading to dismiss the keyboard (hideKeyboard is flaky on iOS)
+- tapOn: "Amount & Details"
+- waitForAnimationToEnd
+- tapOn:
+    id: "expense-form-category"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "picker-item-activities"
+    timeout: 20000
+- tapOn:
+    id: "picker-item-activities"
+- waitForAnimationToEnd
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "expense-form-next"
+          commands:
+            - tapOn:
+                id: "expense-form-next"
+      - extendedWaitUntil:
+          visible:
+            id: "expense-form-step"
+            text: "Step 2 of 3"
+          timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/04-expense-split
+
+# Back out: Step 2 -> Step 1 -> closed.
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "expense-form-back"
+          commands:
+            - tapOn:
+                id: "expense-form-back"
+      - extendedWaitUntil:
+          visible:
+            id: "expense-form-step"
+            text: "Step 1 of 3"
+          timeout: 15000
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "expense-form-back"
+      MARKER_ID: "expense-heading"
+
+# Members screen (reached from the overview's group-settings button); the
+# three seeded members are a read, confirmed by the count header's id.
+- retry:
+    maxRetries: 1
+    commands:
+      - runFlow:
+          file: ../subflows/tap-tab.yaml
+          env:
+            TAB_ID: "tab-home"
+            TAB_LABEL: "Home"
+            TAB_X: "12%"
+      - extendedWaitUntil:
+          visible:
+            id: "shopping-lists-group-settings"
+          timeout: 20000
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-lists-group-settings"
+      MARKER_ID: "group-settings-members"
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "group-settings-members"
+      MARKER_ID: "group-add-member-email"
 - extendedWaitUntil:
     visible:
       id: "group-members-count-3"
@@ -96,286 +188,22 @@ appId: ${APP_ID}
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/05-add-member
 
-# Back to the group's Home tab.
-- runFlow:
-    file: ../subflows/tap-tab.yaml
-    env:
-      TAB_ID: "tab-home"
-      TAB_LABEL: "Home"
-      TAB_X: "12%"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-create-button"
-    timeout: 45000
-
-# Create the shopping list now (its card should appear in the Home
-# screenshot) but stay out of it until the end. Inlined rather than via the
-# create-shopping-list subflow, which would re-select the fixture group.
-- tapOn:
-    id: "shopping-list-create-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-create-input"
-    timeout: 45000
-- tapOn:
-    id: "shopping-list-create-input"
-- inputText: "Groceries"
-- tapOn:
-    id: "shopping-list-create-submit"
-# The create mutation can fail transiently; the app rolls the optimistic card
-# back and alerts. Tolerate one silent miss, dismiss the alert, and redo.
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-dashboard-link"
-    timeout: 45000
-    optional: true
-- runFlow:
-    when:
-      notVisible:
-        id: "shopping-list-dashboard-link"
+# Home root: the stats dashboard with the seeded totals. The overview screen
+# is pushed on top of it, so pop back after switching tabs.
+- retry:
+    maxRetries: 1
     commands:
       - runFlow:
-          when:
-            visible: "OK"
-          commands:
-            - tapOn: "OK"
-      - tapOn:
-          id: "shopping-list-create-button"
+          file: ../subflows/tap-tab.yaml
+          env:
+            TAB_ID: "tab-home"
+            TAB_LABEL: "Home"
+            TAB_X: "12%"
       - extendedWaitUntil:
           visible:
-            id: "shopping-list-create-input"
-          timeout: 45000
-      - tapOn:
-          id: "shopping-list-create-input"
-      - inputText: "Groceries"
-      - tapOn:
-          id: "shopping-list-create-submit"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-dashboard-link"
-    timeout: 45000
-
-# Seed expenses. Descriptions must stay unique on screen — later waits match
-# them by full text ("Weekly shopping").
-- runFlow:
-    file: ../subflows/tap-tab.yaml
-    env:
-      TAB_ID: "tab-expenses"
-      TAB_LABEL: "Expenses"
-      TAB_X: "62%"
-- extendedWaitUntil:
-    visible:
-      id: "expense-heading"
-    timeout: 45000
-# First expense inline instead of via the subflow, so Step 2 — the split
-# across all three members — can be captured mid-form.
-- tapOn:
-    id: "expense-add-button"
-- extendedWaitUntil:
-    visible:
-      id: "expense-form-amount"
-    timeout: 45000
-- tapOn:
-    id: "expense-form-amount"
-- inputText: "84.20"
-- tapOn:
-    id: "expense-form-description"
-- inputText: "Weekly shopping"
-- tapOn: "Amount & Details"
-- tapOn:
-    id: "expense-form-category"
-- waitForAnimationToEnd
-- extendedWaitUntil:
-    visible:
-      id: "picker-item-groceries"
-    timeout: 20000
-- tapOn:
-    id: "picker-item-groceries"
-- waitForAnimationToEnd
-- tapOn:
-    id: "expense-form-next"
-- extendedWaitUntil:
-    visible:
-      id: "expense-form-step"
-      text: "Step 2 of 3"
-    timeout: 45000
-- waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/04-expense-split
-- tapOn:
-    id: "expense-form-next"
-- extendedWaitUntil:
-    visible:
-      id: "expense-form-step"
-      text: "Step 3 of 3"
-    timeout: 45000
-- tapOn:
-    id: "expense-form-submit"
-- extendedWaitUntil:
-    visible:
-      id: "expense-card-Weekly shopping"
-    timeout: 20000
-- runFlow:
-    file: ../subflows/create-expense.yaml
-    env:
-      AMOUNT: "39.99"
-      DESCRIPTION: "Internet bill"
-      CATEGORY: "internet"
-- runFlow:
-    file: ../subflows/create-expense.yaml
-    env:
-      AMOUNT: "18.50"
-      DESCRIPTION: "Cleaning supplies"
-      CATEGORY: "home-goods"
-- waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/03-expenses
-
-# Back to Home, then into the list; the Home screenshot happens at the end,
-# once the list is populated.
-- runFlow:
-    file: ../subflows/tap-tab.yaml
-    env:
-      TAB_ID: "tab-home"
-      TAB_LABEL: "Home"
-      TAB_X: "12%"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-lists-group-name"
-      text: "Sunset Villa"
-    timeout: 45000
-
-# Into the seeded list. The "Shopping lists" card only exists on the group
-# dashboard variant; on the lists overview the link is directly visible.
-- runFlow:
-    when:
-      visible: "Shopping lists"
-    commands:
-      - tapOn: "Shopping lists"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-dashboard-link"
-    timeout: 45000
-- tapOn:
-    id: "shopping-list-dashboard-link"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-item-input"
-    timeout: 45000
-
-# Seed items with categories so the list looks lived-in.
-- tapOn:
-    id: "shopping-list-item-input"
-- inputText: "Apples"
-- tapOn:
-    id: "shopping-list-category-picker"
-- waitForAnimationToEnd
-- extendedWaitUntil:
-    visible:
-      id: "picker-item-produce"
-    timeout: 20000
-- tapOn:
-    id: "picker-item-produce"
-- tapOn:
-    id: "shopping-list-add-item-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-item-checkbox-Apples"
-    timeout: 45000
-
-- tapOn:
-    id: "shopping-list-item-input"
-- inputText: "Oat Milk"
-- tapOn:
-    id: "shopping-list-category-picker"
-- waitForAnimationToEnd
-- extendedWaitUntil:
-    visible:
-      id: "picker-item-dairy"
-    timeout: 20000
-- tapOn:
-    id: "picker-item-dairy"
-- tapOn:
-    id: "shopping-list-add-item-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-item-checkbox-Oat Milk"
-    timeout: 45000
-
-- tapOn:
-    id: "shopping-list-item-input"
-- inputText: "Sourdough Bread"
-- tapOn:
-    id: "shopping-list-category-picker"
-- waitForAnimationToEnd
-- extendedWaitUntil:
-    visible:
-      id: "picker-item-bakery"
-    timeout: 20000
-- tapOn:
-    id: "picker-item-bakery"
-- tapOn:
-    id: "shopping-list-add-item-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-item-checkbox-Sourdough Bread"
-    timeout: 45000
-
-- tapOn:
-    id: "shopping-list-item-input"
-- inputText: "Paper Towels"
-- tapOn:
-    id: "shopping-list-add-item-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-item-checkbox-Paper Towels"
-    timeout: 45000
-
-# Dismiss the item-entry keyboard. iOS: keyboardDismissMode="on-drag"
-# (ShoppingList.tsx), since hideKeyboard is flaky there and the item-detail
-# modal is invisible to Maestro's hierarchy. Android: the drag doesn't
-# dismiss and the keyboard survives tab switches, but hideKeyboard works.
-- runFlow:
-    when:
-      platform: iOS
-    commands:
-      - swipe:
-          start: "50%, 45%"
-          end: "50%, 25%"
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
-- waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/02-shopping-list
-
-# Home tab again, now showing the populated list card. The card's item
-# count is cached from the pre-seeding visit, so pull-to-refresh
-# (RefreshControl in ShoppingListsDashboard) before capturing.
-- runFlow:
-    file: ../subflows/tap-tab.yaml
-    env:
-      TAB_ID: "tab-home"
-      TAB_LABEL: "Home"
-      TAB_X: "12%"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-lists-group-name"
-      text: "Sunset Villa"
-    timeout: 45000
-- retry:
-    maxRetries: 2
-    commands:
-      - swipe:
-          start: "50%, 30%"
-          end: "50%, 80%"
-      - extendedWaitUntil:
-          visible: "4 items left"
-          timeout: 15000
-- waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/06-shopping-lists
-
-# Pop back to the Home root: the stats dashboard (the overview is pushed on
-# top of it). Then pull-to-refresh so the stats include the seeded data.
+            id: "shopping-lists-group-name"
+            text: "Sunset Villa"
+          timeout: 20000
 - runFlow:
     when:
       platform: iOS

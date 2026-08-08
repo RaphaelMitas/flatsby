@@ -99,6 +99,7 @@ export async function setupE2ESession(options: {
   bypassSecret: string;
   name?: string;
   email?: string;
+  seed?: string;
 }): Promise<E2ESession> {
   const apiUrl = options.apiUrl.replace(/\/+$/, "");
   SecureStore.setItem(API_URL_KEY, apiUrl);
@@ -109,6 +110,7 @@ export async function setupE2ESession(options: {
   const query = new URLSearchParams();
   if (options.name) query.set("name", options.name);
   if (options.email) query.set("email", options.email);
+  if (options.seed) query.set("seed", options.seed);
   const suffix = query.size > 0 ? `?${query.toString()}` : "";
 
   // The endpoint sits on a fresh preview deployment; the first request from

@@ -36,26 +36,9 @@ const E2E_EMAIL_DOMAIN = "flatsby.test";
  * owns them, and collide onto the existing row so reruns within the sweep
  * window keep working.
  */
-export async function POST(request: Request) {
-  if (!env.E2E_TESTING) {
-    return NextResponse.json(
-      { error: "E2E testing is not enabled" },
-      { status: 403 },
-    );
-  }
-
-  const searchParams = new URL(request.url).searchParams;
-  const nameParam = searchParams.get("name")?.trim();
-  const name = nameParam ? nameParam.slice(0, 64) : "E2E Test User";
-  const emailParam = searchParams.get("email")?.trim().toLowerCase();
-
+async function upsertE2EUser(name: string, customEmail?: string) {
   const now = new Date();
   let userId = `e2e-${randomUUID()}`;
-
-  const customEmail =
-    emailParam?.endsWith(`@${E2E_EMAIL_DOMAIN}`) && emailParam.length <= 128
-      ? emailParam
-      : undefined;
   const email = customEmail ?? `${userId}@${E2E_EMAIL_DOMAIN}`;
 
   const existingUser = customEmail
@@ -107,24 +90,194 @@ export async function POST(request: Request) {
     })
     .onConflictDoNothing();
 
+  return { userId, email };
+}
+
+function thirds(totalCents: number): [number, number, number] {
+  const base = Math.floor(totalCents / 3);
+  return [totalCents - 2 * base, base, base];
+}
+
+/**
+ * Seeds the full store-screenshot scenario server-side: the "Sunset Villa"
+ * group with three members, a stocked shopping list, and split expenses. The
+ * screenshot flow then only logs in, navigates, and captures — it performs no
+ * mutations, because a Maestro tap that silently misses a button would leave
+ * state missing and the flow waiting on UI that never appears.
+ */
+async function seedStoreScenario(adminUserId: string) {
   const [group] = await db
     .insert(groups)
-    .values({ name: `E2E Test Group ${userId.slice(0, 12)}` })
+    .values({ name: "Sunset Villa" })
     .returning();
+  if (!group) throw new Error("Failed to create seeded group");
 
-  if (!group) {
+  const anna = await upsertE2EUser("Anna Keller", `anna@${E2E_EMAIL_DOMAIN}`);
+  const tom = await upsertE2EUser("Tom Baker", `tom@${E2E_EMAIL_DOMAIN}`);
+
+  const memberRows = await db
+    .insert(groupMembers)
+    .values([
+      { groupId: group.id, userId: adminUserId, role: "admin", isActive: true },
+      {
+        groupId: group.id,
+        userId: anna.userId,
+        role: "member",
+        isActive: true,
+      },
+      { groupId: group.id, userId: tom.userId, role: "member", isActive: true },
+    ])
+    .returning({ id: groupMembers.id });
+  const [alexMember, annaMember, tomMember] = memberRows;
+  if (!alexMember || !annaMember || !tomMember) {
+    throw new Error("Failed to create seeded memberships");
+  }
+
+  const [list] = await db
+    .insert(shoppingLists)
+    .values({ groupId: group.id, name: "Groceries" })
+    .returning();
+  if (!list) throw new Error("Failed to create seeded shopping list");
+
+  await db.insert(shoppingListItems).values([
+    {
+      shoppingListId: list.id,
+      name: "Apples",
+      categoryId: "produce",
+      createdByGroupMemberId: annaMember.id,
+      completed: false,
+    },
+    {
+      shoppingListId: list.id,
+      name: "Oat Milk",
+      categoryId: "dairy",
+      createdByGroupMemberId: tomMember.id,
+      completed: false,
+    },
+    {
+      shoppingListId: list.id,
+      name: "Sourdough Bread",
+      categoryId: "bakery",
+      createdByGroupMemberId: alexMember.id,
+      completed: false,
+    },
+    {
+      shoppingListId: list.id,
+      name: "Paper Towels",
+      categoryId: "household",
+      createdByGroupMemberId: annaMember.id,
+      completed: false,
+    },
+  ]);
+
+  const dayMs = 24 * 60 * 60 * 1000;
+  const seedExpenses = [
+    {
+      description: "Weekly shopping",
+      amountInCents: 8420,
+      category: "food-drinks",
+      subcategory: "groceries",
+      paidBy: alexMember.id,
+      expenseDate: new Date(),
+    },
+    {
+      description: "Internet bill",
+      amountInCents: 3999,
+      category: "utilities",
+      subcategory: "internet",
+      paidBy: annaMember.id,
+      expenseDate: new Date(Date.now() - dayMs),
+    },
+    {
+      description: "Cleaning supplies",
+      amountInCents: 1850,
+      category: "shopping",
+      subcategory: "home-goods",
+      paidBy: tomMember.id,
+      expenseDate: new Date(Date.now() - 3 * dayMs),
+    },
+  ];
+  for (const seed of seedExpenses) {
+    const [expense] = await db
+      .insert(expenses)
+      .values({
+        groupId: group.id,
+        paidByGroupMemberId: seed.paidBy,
+        amountInCents: seed.amountInCents,
+        currency: "EUR",
+        description: seed.description,
+        category: seed.category,
+        subcategory: seed.subcategory,
+        expenseDate: seed.expenseDate,
+        createdByGroupMemberId: seed.paidBy,
+        splitMethod: "equal",
+      })
+      .returning({ id: expenses.id });
+    if (!expense) throw new Error("Failed to create seeded expense");
+    const [payerShare, ...otherShares] = thirds(seed.amountInCents);
+    const otherMembers = [alexMember.id, annaMember.id, tomMember.id].filter(
+      (id) => id !== seed.paidBy,
+    );
+    await db.insert(expenseSplits).values([
+      {
+        expenseId: expense.id,
+        groupMemberId: seed.paidBy,
+        amountInCents: payerShare,
+      },
+      ...otherMembers.map((groupMemberId, i) => ({
+        expenseId: expense.id,
+        groupMemberId,
+        amountInCents: otherShares[i] ?? 0,
+      })),
+    ]);
+  }
+
+  return group;
+}
+
+export async function POST(request: Request) {
+  if (!env.E2E_TESTING) {
     return NextResponse.json(
-      { error: "Failed to create test group" },
-      { status: 500 },
+      { error: "E2E testing is not enabled" },
+      { status: 403 },
     );
   }
 
-  await db.insert(groupMembers).values({
-    groupId: group.id,
-    userId,
-    role: "admin",
-    isActive: true,
-  });
+  const searchParams = new URL(request.url).searchParams;
+  const nameParam = searchParams.get("name")?.trim();
+  const name = nameParam ? nameParam.slice(0, 64) : "E2E Test User";
+  const emailParam = searchParams.get("email")?.trim().toLowerCase();
+  const seedStore = searchParams.get("seed") === "store";
+
+  const customEmail =
+    emailParam?.endsWith(`@${E2E_EMAIL_DOMAIN}`) && emailParam.length <= 128
+      ? emailParam
+      : undefined;
+
+  const { userId, email } = await upsertE2EUser(name, customEmail);
+
+  let group: { id: number };
+  if (seedStore) {
+    group = await seedStoreScenario(userId);
+  } else {
+    const [fixtureGroup] = await db
+      .insert(groups)
+      .values({ name: `E2E Test Group ${userId.slice(0, 12)}` })
+      .returning();
+    if (!fixtureGroup) {
+      return NextResponse.json(
+        { error: "Failed to create test group" },
+        { status: 500 },
+      );
+    }
+    await db.insert(groupMembers).values({
+      groupId: fixtureGroup.id,
+      userId,
+      role: "admin",
+      isActive: true,
+    });
+    group = fixtureGroup;
+  }
 
   await db
     .update(users)
