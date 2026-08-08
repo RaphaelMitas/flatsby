@@ -23,21 +23,11 @@ auditConfig:
     # still depends on xcode ^3.0.1 as of 57.x. Reached via the direct dependency
     # @react-native-vector-icons/lucide@13.1.2 (also latest).
     - GHSA-w5hq-g745-h8pq
-    # postcss <8.5.10 / <=8.5.11 / <=8.5.17 / <=8.5.22 - next@16.2.x depends on
-    # exactly 8.4.31, so no range update can reach a patched release. The workspace's
-    # own postcss (tooling/tailwind, Expo Metro, Tailwind) is on 8.5.24 and unaffected.
-    - GHSA-qx2v-qp2m-jg93
-    - GHSA-6g55-p6wh-862q
-    - GHSA-r28c-9q8g-f849
-    - GHSA-fxqj-rqcc-2cmp
-    # sharp <0.35.0 - next@16.2.x pins sharp ^0.34.5; libvips CVEs fixed in 0.35.0.
-    - GHSA-f88m-g3jw-g9cj
-    # image-size <=2.0.2 - react-native (via @react-native/community-cli-plugin)
-    # pins ^1.x and the advisories' patched range (>=2.0.3) is not even published
-    # yet. Reached via expo>@expo/cli>react-native. Drop when react-native moves
-    # to a patched major or 2.0.3+ ships and parents accept it.
-    - GHSA-5p2g-fcmc-qvqq
+    # image-size <=2.0.2 - no patched release exists yet: the advisories name 2.0.3
+    # but npm's latest is 2.0.2. metro (0.83.7 here, 0.87.0 latest) also depends on
+    # ^1.0.2, so the fix needs both an upstream release and a metro range bump.
     - GHSA-w3rx-r6r6-pgpr
+    - GHSA-5p2g-fcmc-qvqq
 
 catalog:
   "@ai-sdk/provider": ^4.0.6
@@ -54,7 +44,7 @@ catalog:
   ai: ^7.0.55
   autumn-js: ^1.2.49
   babel-plugin-react-compiler: ^1.0.0
-  next: ^16.2.11
+  next: ^16.3.0
   prettier: ^3.9.6
   superjson: ^2.2.6
   tailwindcss: ^4.3.1
