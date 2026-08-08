@@ -97,8 +97,11 @@ appId: ${APP_ID}
 - takeScreenshot: e2e/results/screenshots/05-add-member
 
 # Back to the group's Home tab.
-- tapOn:
-    id: "tab-home"
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_X: "12.5%"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-create-button"
@@ -153,8 +156,11 @@ appId: ${APP_ID}
 
 # Seed expenses. Descriptions must stay unique on screen — later waits match
 # them by full text ("Weekly shopping").
-- tapOn:
-    id: "tab-expenses"
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-expenses"
+      TAB_X: "62.5%"
 - extendedWaitUntil:
     visible:
       id: "expense-heading"
@@ -223,8 +229,11 @@ appId: ${APP_ID}
 
 # Back to Home, then into the list; the Home screenshot happens at the end,
 # once the list is populated.
-- tapOn:
-    id: "tab-home"
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_X: "12.5%"
 - extendedWaitUntil:
     visible:
       id: "shopping-lists-group-name"
@@ -339,8 +348,11 @@ appId: ${APP_ID}
 # Home tab again, now showing the populated list card. The card's item
 # count is cached from the pre-seeding visit, so pull-to-refresh
 # (RefreshControl in ShoppingListsDashboard) before capturing.
-- tapOn:
-    id: "tab-home"
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_X: "12.5%"
 - extendedWaitUntil:
     visible:
       id: "shopping-lists-group-name"

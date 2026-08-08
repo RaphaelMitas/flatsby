@@ -1,0 +1,24 @@
+appId: ${APP_ID}
+---
+# Switch to a bottom tab. The native tab bar (react-native-bottom-tabs) sets
+# tabBarButtonTestID -> accessibilityIdentifier, but the SwiftUI tab bar does
+# not reliably expose it to Maestro's hierarchy (run 31252036515 failed both
+# attempts on "Id matching regex: tab-home"). Prefer the id when it exists,
+# otherwise tap the tab's fixed slot in the 4-tab bottom bar. The caller's
+# post-switch wait verifies the tab actually changed.
+#
+# env: TAB_ID (e.g. tab-home), TAB_X (slot center, e.g. "12.5%")
+- runFlow:
+    when:
+      visible:
+        id: ${TAB_ID}
+    commands:
+      - tapOn:
+          id: ${TAB_ID}
+- runFlow:
+    when:
+      notVisible:
+        id: ${TAB_ID}
+    commands:
+      - tapOn:
+          point: "${TAB_X}, 95%"

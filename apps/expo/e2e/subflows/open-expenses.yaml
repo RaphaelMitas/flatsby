@@ -8,8 +8,11 @@ appId: ${APP_ID}
     visible:
       id: "shopping-list-create-button"
     timeout: 15000
-- tapOn:
-    id: "tab-expenses"
+- runFlow:
+    file: tap-tab.yaml
+    env:
+      TAB_ID: "tab-expenses"
+      TAB_X: "62.5%"
 - extendedWaitUntil:
     visible:
       id: "expense-heading"
