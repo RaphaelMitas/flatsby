@@ -156,6 +156,7 @@ export function ExpenseCard({
         }}
       >
         <Pressable
+          testID={`expense-card-${expense.description}`}
           accessible={e2eAccessibilityOverride()}
           onPress={handleCardPress}
           disabled={isOptimistic}

@@ -22,7 +22,9 @@ appId: ${APP_ID}
 - tapOn:
     id: "group-create-submit"
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "group-card-name"
+      text: "Sunset Villa"
     timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/ipad-02-groups
@@ -32,7 +34,9 @@ appId: ${APP_ID}
     id: "group-select-button"
     index: 1
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "shopping-lists-group-name"
+      text: "Sunset Villa"
     timeout: 45000
 - extendedWaitUntil:
     visible:

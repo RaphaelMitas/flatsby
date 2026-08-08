@@ -152,6 +152,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
             <View className="flex-1 flex-row items-center justify-between">
               <View className="flex-1">
                 <Text
+                  testID="group-card-name"
                   className={cn(
                     "text-primary text-lg font-semibold",
                     isSelected && "text-primary-foreground",

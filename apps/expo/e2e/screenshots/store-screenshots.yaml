@@ -31,7 +31,9 @@ appId: ${APP_ID}
 - tapOn:
     id: "group-create-submit"
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "group-card-name"
+      text: "Sunset Villa"
     timeout: 45000
 
 # Select it (second card; the e2e fixture group is first). The name check
@@ -41,7 +43,9 @@ appId: ${APP_ID}
     id: "group-select-button"
     index: 1
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "shopping-lists-group-name"
+      text: "Sunset Villa"
     timeout: 45000
 - extendedWaitUntil:
     visible:
@@ -183,19 +187,24 @@ appId: ${APP_ID}
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:
-    visible: "Step 2 of 3"
+    visible:
+      id: "expense-form-step"
+      text: "Step 2 of 3"
     timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/04-expense-split
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:
-    visible: "Step 3 of 3"
+    visible:
+      id: "expense-form-step"
+      text: "Step 3 of 3"
     timeout: 45000
 - tapOn:
     id: "expense-form-submit"
 - extendedWaitUntil:
-    visible: "Weekly shopping"
+    visible:
+      id: "expense-card-Weekly shopping"
     timeout: 20000
 - runFlow:
     file: ../subflows/create-expense.yaml
@@ -217,7 +226,9 @@ appId: ${APP_ID}
 - tapOn:
     id: "tab-home"
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "shopping-lists-group-name"
+      text: "Sunset Villa"
     timeout: 45000
 
 # Into the seeded list. The "Shopping lists" card only exists on the group
@@ -254,7 +265,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
-    visible: "Apples"
+    visible:
+      id: "shopping-list-item-checkbox-Apples"
     timeout: 45000
 
 - tapOn:
@@ -272,7 +284,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
-    visible: "Oat Milk"
+    visible:
+      id: "shopping-list-item-checkbox-Oat Milk"
     timeout: 45000
 
 - tapOn:
@@ -290,7 +303,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
-    visible: "Sourdough Bread"
+    visible:
+      id: "shopping-list-item-checkbox-Sourdough Bread"
     timeout: 45000
 
 - tapOn:
@@ -299,7 +313,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
-    visible: "Paper Towels"
+    visible:
+      id: "shopping-list-item-checkbox-Paper Towels"
     timeout: 45000
 
 # Dismiss the item-entry keyboard. iOS: keyboardDismissMode="on-drag"
@@ -327,7 +342,9 @@ appId: ${APP_ID}
 - tapOn:
     id: "tab-home"
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "shopping-lists-group-name"
+      text: "Sunset Villa"
     timeout: 45000
 - retry:
     maxRetries: 2
