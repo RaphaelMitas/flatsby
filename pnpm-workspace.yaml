@@ -32,6 +32,12 @@ auditConfig:
     - GHSA-fxqj-rqcc-2cmp
     # sharp <0.35.0 - next@16.2.x pins sharp ^0.34.5; libvips CVEs fixed in 0.35.0.
     - GHSA-f88m-g3jw-g9cj
+    # image-size <=2.0.2 - react-native (via @react-native/community-cli-plugin)
+    # pins ^1.x and the advisories' patched range (>=2.0.3) is not even published
+    # yet. Reached via expo>@expo/cli>react-native. Drop when react-native moves
+    # to a patched major or 2.0.3+ ships and parents accept it.
+    - GHSA-5p2g-fcmc-qvqq
+    - GHSA-w3rx-r6r6-pgpr
 
 catalog:
   "@ai-sdk/provider": ^4.0.6
