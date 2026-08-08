@@ -29,15 +29,8 @@ jobs:
           # deployment_status runs carry secrets; never gate on fork PRs.
           PR_JSON=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number,headRefName,isCrossRepository --jq '[.[] | select(.isCrossRepository == false)][0]')
           if [[ -n "$PR_JSON" && "$PR_JSON" != "null" ]]; then
-            BRANCH=$(echo "$PR_JSON" | jq -r '.headRefName')
-            # TEMP: skip e2e while iterating on the screenshot rig;
-            # remove together with test-screenshots.yml before merge.
-            if [[ "$BRANCH" == "claude/release-pipeline-logs-ig26ju" ]]; then
-              echo "has-pr=false" >> "$GITHUB_OUTPUT"
-            else
-              echo "has-pr=true" >> "$GITHUB_OUTPUT"
-              echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
-            fi
+            echo "has-pr=true" >> "$GITHUB_OUTPUT"
+            echo "branch=$(echo "$PR_JSON" | jq -r '.headRefName')" >> "$GITHUB_OUTPUT"
           else
             echo "has-pr=false" >> "$GITHUB_OUTPUT"
           fi
