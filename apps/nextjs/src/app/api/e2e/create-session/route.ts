@@ -112,12 +112,16 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
     .returning();
   if (!group) throw new Error("Failed to create seeded group");
 
-  // The member identities carry the admin email's plus-tag (alex+ios@... ->
-  // anna+ios@...): the iOS and Android screenshot jobs seed in parallel
+  // The member identities carry the admin email's platform tag (alex-ios@...
+  // -> anna-ios@...): the iOS and Android screenshot jobs seed in parallel
   // against the same database, and shared fixed identities race — each
-  // upsert deactivates the other platform's memberships mid-capture.
-  const tagMatch = /\+([^@]+)@/.exec(adminEmail);
-  const tag = tagMatch ? `+${tagMatch[1]}` : "";
+  // upsert deactivates the other platform's memberships mid-capture. The tag
+  // is hyphenated, not plus-addressed: a "+" in the deep link's query string
+  // decodes to a space in the app's route params, which seeded an admin
+  // email with a space — every procedure returning it then failed its own
+  // output validation (runs 31273748894 and 31276180622).
+  const tagMatch = /-(ios|android)@/i.exec(adminEmail);
+  const tag = tagMatch ? `-${tagMatch[1].toLowerCase()}` : "";
   const anna = await upsertE2EUser(
     "Anna Keller",
     `anna${tag}@${E2E_EMAIL_DOMAIN}`,
@@ -258,8 +262,12 @@ export async function POST(request: Request) {
   const emailParam = searchParams.get("email")?.trim().toLowerCase();
   const seedStore = searchParams.get("seed") === "store";
 
+  // Reject anything that is not a plain mailbox at the e2e domain — a
+  // malformed override (e.g. a "+" decoded to a space upstream) would
+  // otherwise seed a user whose email fails tRPC output validation and
+  // break every screen that renders it.
   const customEmail =
-    emailParam?.endsWith(`@${E2E_EMAIL_DOMAIN}`) && emailParam.length <= 128
+    emailParam && /^[a-z0-9._-]+@flatsby\.test$/.test(emailParam)
       ? emailParam
       : undefined;
 
