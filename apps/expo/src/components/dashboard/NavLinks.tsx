@@ -10,13 +10,14 @@ interface NavLinkItemProps {
   href: Href;
   iconName: IconProps["name"];
   label: string;
+  testID?: string;
 }
 
-function NavLinkItem({ href, iconName, label }: NavLinkItemProps) {
+function NavLinkItem({ href, iconName, label, testID }: NavLinkItemProps) {
   const router = useRouter();
 
   return (
-    <Pressable onPress={() => router.push(href)}>
+    <Pressable testID={testID} onPress={() => router.push(href)}>
       <Card>
         <CardContent className="flex-row items-center justify-between p-4">
           <View className="flex-row items-center gap-3">
@@ -34,6 +35,7 @@ export function NavLinks() {
   return (
     <View className="gap-4">
       <NavLinkItem
+        testID="dashboard-shopping-lists-link"
         href="/(tabs)/home/shopping-lists"
         iconName="shopping-cart"
         label="Shopping lists"

@@ -33,11 +33,11 @@ appId: ${APP_ID}
           timeout: 60000
 # Optional E2E_USER_NAME / E2E_USER_EMAIL override the minted identity (the
 # store-screenshot flow wants a presentable admin).
-# Seeded runs tag the user email with the platform (alex+ios@...): the iOS
+# Seeded runs tag the user email with the platform (alex-ios@...): the iOS
 # and Android screenshot jobs run in parallel against the same database, and
 # untagged fixed identities race — each seed deactivates the other
 # platform's memberships mid-capture (release run 31267306819).
-- evalScript: "${output.e2eEmail = typeof E2E_USER_EMAIL !== 'undefined' ? (typeof E2E_SEED !== 'undefined' ? E2E_USER_EMAIL.replace('@', '+' + maestro.platform.toLowerCase() + '@') : E2E_USER_EMAIL) : undefined}"
+- evalScript: "${output.e2eEmail = typeof E2E_USER_EMAIL !== 'undefined' ? (typeof E2E_SEED !== 'undefined' ? E2E_USER_EMAIL.replace('@', '-' + maestro.platform.toLowerCase() + '@') : E2E_USER_EMAIL) : undefined}"
 - evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + '&bypass=' + encodeURIComponent(typeof VERCEL_BYPASS_SECRET !== 'undefined' ? VERCEL_BYPASS_SECRET : '') + (typeof E2E_USER_NAME !== 'undefined' ? '&name=' + encodeURIComponent(E2E_USER_NAME) : '') + (output.e2eEmail ? '&email=' + encodeURIComponent(output.e2eEmail) : '') + (typeof E2E_SEED !== 'undefined' ? '&seed=' + encodeURIComponent(E2E_SEED) : '')}"
 # openLink sits inside the retry: if session setup errors out, the e2e-login
 # screen parks in its error state (run 31255356976, iPad), and only re-firing

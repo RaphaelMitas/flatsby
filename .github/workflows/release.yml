@@ -315,6 +315,8 @@ jobs:
       - name: Dump Maestro debug output
         if: failure()
         working-directory: apps/expo
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
         run: |
           echo "::group::debug bundle contents"
           find e2e/results -type f -exec ls -la {} + 2>/dev/null || true
