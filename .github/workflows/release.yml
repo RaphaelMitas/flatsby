@@ -336,6 +336,18 @@ jobs:
               echo "::endgroup::"
             done
           done
+          # On AppCrash, the why lives in the crash report and the simulator
+          # log, not in Maestro's output.
+          find "$HOME/Library/Logs/DiagnosticReports" -name "Flatsby*.ips" 2>/dev/null | while read -r r; do
+            echo "::group::crash report ${r}"
+            head -c 30000 "$r" || true
+            echo "::endgroup::"
+          done
+          find e2e/results -name "device-simulator.log" 2>/dev/null | while read -r sl; do
+            echo "::group::${sl} (crash context)"
+            grep -n -m 8 -B 2 -A 30 -E "Exception Type|Terminating app|Fatal error|CRASHING|jetsam|memorystatus" "$sl" 2>/dev/null | head -350 || true
+            echo "::endgroup::"
+          done
 
       # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
       # which upload-artifact drops by default.
