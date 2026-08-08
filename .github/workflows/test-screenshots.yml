@@ -218,7 +218,13 @@ jobs:
             echo "::group::${d} flow errors"
             grep -rhoE "(Element not found|Assertion is false|AssertionFailure|Invalid point)[^\"]*" "$d" 2>/dev/null | sort | uniq -c | sort -rn | head -20 || true
             echo "::endgroup::"
-            find "$d" -name "*.log" | while read -r log; do
+            find "$d" -path "*screen-hierarchy*" -name "*.json" | while read -r h; do
+              echo "::group::${h} (element census)"
+              grep -oE '"(resource-id|resourceId|text|title|label|accessibilityText)": *"[^"]{1,60}"' "$h" \
+                | sort | uniq -c | sort -rn | head -80 || true
+              echo "::endgroup::"
+            done
+            find "$d" -name "maestro.log" | while read -r log; do
               echo "::group::${log} (tail)"
               tail -n 300 "$log" || true
               echo "::endgroup::"

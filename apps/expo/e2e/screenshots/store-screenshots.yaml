@@ -101,6 +101,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
       TAB_X: "12%"
 - extendedWaitUntil:
     visible:
@@ -160,6 +161,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-expenses"
+      TAB_LABEL: "Expenses"
       TAB_X: "62%"
 - extendedWaitUntil:
     visible:
@@ -233,6 +235,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
       TAB_X: "12%"
 - extendedWaitUntil:
     visible:
@@ -352,6 +355,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
       TAB_X: "12%"
 - extendedWaitUntil:
     visible:

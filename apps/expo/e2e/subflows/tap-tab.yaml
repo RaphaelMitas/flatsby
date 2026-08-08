@@ -1,14 +1,16 @@
 appId: ${APP_ID}
 ---
 # Switch to a bottom tab. The native tab bar (react-native-bottom-tabs) sets
-# tabBarButtonTestID -> accessibilityIdentifier, but the SwiftUI tab bar does
-# not reliably expose it to Maestro's hierarchy (run 31252036515 failed both
-# attempts on "Id matching regex: tab-home"). Prefer the id when it exists,
-# otherwise tap the tab's fixed slot in the 4-tab bottom bar. The caller's
-# post-switch wait verifies the tab actually changed.
+# tabBarButtonTestID -> accessibilityIdentifier, but the SwiftUI tab bar
+# exposes it to Maestro's hierarchy inconsistently (run 31252036515 failed on
+# "Id matching regex: tab-home"; run 31252348033 resolved the same id fine).
+# Positional taps alone are no safer: at 95% height they miss the iOS 26
+# floating tab bar (run 31254443153). So: id, then label text — the approach
+# every green run used — then the tab's slot position as a last resort. The
+# caller's post-switch wait verifies the tab actually changed.
 #
-# env: TAB_ID (e.g. tab-home), TAB_X (slot center as an integer percent,
-# e.g. "12%" — Maestro's point parser is picky about formats)
+# env: TAB_ID (e.g. tab-home), TAB_LABEL (e.g. Home), TAB_X (slot center as
+# an integer percent, e.g. "12%")
 - runFlow:
     when:
       visible:
@@ -21,5 +23,14 @@ appId: ${APP_ID}
       notVisible:
         id: ${TAB_ID}
     commands:
-      - tapOn:
-          point: "${TAB_X}, 95%"
+      - runFlow:
+          when:
+            visible: ${TAB_LABEL}
+          commands:
+            - tapOn: ${TAB_LABEL}
+      - runFlow:
+          when:
+            notVisible: ${TAB_LABEL}
+          commands:
+            - tapOn:
+                point: "${TAB_X}, 95%"
