@@ -105,15 +105,24 @@ function thirds(totalCents: number): [number, number, number] {
  * mutations, because a Maestro tap that silently misses a button would leave
  * state missing and the flow waiting on UI that never appears.
  */
-async function seedStoreScenario(adminUserId: string) {
+async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   const [group] = await db
     .insert(groups)
     .values({ name: "Sunset Villa" })
     .returning();
   if (!group) throw new Error("Failed to create seeded group");
 
-  const anna = await upsertE2EUser("Anna Keller", `anna@${E2E_EMAIL_DOMAIN}`);
-  const tom = await upsertE2EUser("Tom Baker", `tom@${E2E_EMAIL_DOMAIN}`);
+  // The member identities carry the admin email's plus-tag (alex+ios@... ->
+  // anna+ios@...): the iOS and Android screenshot jobs seed in parallel
+  // against the same database, and shared fixed identities race — each
+  // upsert deactivates the other platform's memberships mid-capture.
+  const tagMatch = /\+([^@]+)@/.exec(adminEmail);
+  const tag = tagMatch ? `+${tagMatch[1]}` : "";
+  const anna = await upsertE2EUser(
+    "Anna Keller",
+    `anna${tag}@${E2E_EMAIL_DOMAIN}`,
+  );
+  const tom = await upsertE2EUser("Tom Baker", `tom${tag}@${E2E_EMAIL_DOMAIN}`);
 
   const memberRows = await db
     .insert(groupMembers)
@@ -258,7 +267,7 @@ export async function POST(request: Request) {
 
   let group: { id: number };
   if (seedStore) {
-    group = await seedStoreScenario(userId);
+    group = await seedStoreScenario(userId, email);
   } else {
     const [fixtureGroup] = await db
       .insert(groups)

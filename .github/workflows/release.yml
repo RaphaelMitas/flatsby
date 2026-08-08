@@ -309,6 +309,34 @@ jobs:
           E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
+      # Failures must be diagnosable from the job log alone: print the debug
+      # bundle's error lines, an element census of each captured failure-screen
+      # hierarchy, and the maestro.log tails.
+      - name: Dump Maestro debug output
+        if: failure()
+        working-directory: apps/expo
+        run: |
+          echo "::group::debug bundle contents"
+          find e2e/results -type f -exec ls -la {} + 2>/dev/null || true
+          echo "::endgroup::"
+          for d in e2e/results/debug-*/; do
+            [ -d "$d" ] || continue
+            echo "::group::${d} flow errors"
+            grep -rhoE "(Element not found|Assertion is false|AssertionFailure|Invalid point)[^\"]*" "$d" 2>/dev/null | sort | uniq -c | sort -rn | head -20 || true
+            echo "::endgroup::"
+            find "$d" -path "*screen-hierarchy*" -name "*.json" | while read -r h; do
+              echo "::group::${h} (element census)"
+              grep -oE '"(resource-id|resourceId|text|title|label|accessibilityText)" *: *"[^"]{1,60}"' "$h" \
+                | sort | uniq -c | sort -rn | head -80 || true
+              echo "::endgroup::"
+            done
+            find "$d" -name "maestro.log" | while read -r log; do
+              echo "::group::${log} (tail)"
+              tail -n 300 "$log" || true
+              echo "::endgroup::"
+            done
+          done
+
       # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
       # which upload-artifact drops by default.
       - name: Upload results artifact
