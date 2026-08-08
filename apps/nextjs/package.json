@@ -8,7 +8,7 @@
     "clean": "git clean -xdf .cache .next .turbo node_modules",
     "dev": "pnpm with-env next dev",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "check": "biome check",
     "start": "pnpm with-env next start",
     "test:e2e": "pnpm with-env playwright test",
     "test:e2e:fast": "PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-18} pnpm with-env playwright test",
@@ -46,7 +46,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@flatsby/eslint-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tailwind-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
@@ -56,7 +56,6 @@
     "@types/react-dom": "catalog:react19",
     "babel-plugin-react-compiler": "catalog:",
     "dotenv-cli": "^11.0.0",
-    "eslint": "catalog:",
     "jiti": "^2.7.0",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",

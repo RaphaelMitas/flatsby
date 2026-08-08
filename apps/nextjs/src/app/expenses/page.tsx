@@ -34,7 +34,7 @@ export default async function ExpensesPage(props: {
   // Prefetch selected expense if present
   if (searchParams.selected) {
     const expenseId = parseInt(searchParams.selected, 10);
-    if (!isNaN(expenseId)) {
+    if (!Number.isNaN(expenseId)) {
       prefetch(trpc.expense.getExpense.queryOptions({ expenseId }));
     }
   }

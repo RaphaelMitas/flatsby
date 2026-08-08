@@ -38,7 +38,7 @@ export function SidebarShoppingListSwitcher() {
   const isShoppingListDashboard = pathname === "/shopping-list";
   const shoppingListMatch = /\/shopping-list\/(\d+)/.exec(pathname);
   const currentShoppingListId = shoppingListMatch?.[1]
-    ? parseInt(shoppingListMatch[1])
+    ? parseInt(shoppingListMatch[1], 10)
     : null;
 
   if (!currentGroup) {

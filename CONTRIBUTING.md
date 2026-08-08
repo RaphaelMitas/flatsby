@@ -7,7 +7,7 @@ Thanks for your interest in contributing! This repo is open to collaborate in th
 - Install prerequisites per `package.json#engines`
 - Install deps: `pnpm i`
 - Prepare env: copy `.env.example` to `.env` and adjust
-- Useful scripts: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm build`
+- Useful scripts: `pnpm dev`, `pnpm check`, `pnpm typecheck`, `pnpm build`
 
 ## Branching & PRs
 
@@ -20,7 +20,7 @@ This project uses [GitHub Flow](https://docs.github.com/en/get-started/using-git
 
 ## Testing & Linting
 
-- Ensure `pnpm lint` and `pnpm typecheck` are clean
+- Ensure `pnpm check` and `pnpm typecheck` are clean
 - Add or update tests when changing behavior
 
 ## Packages
@@ -33,7 +33,7 @@ pnpm -F @flatsby/ui dev
 
 ## Development Tips
 
-- Follow the existing TypeScript, ESLint, Prettier configs
+- Follow the existing TypeScript, Biome, Prettier configs
 - Use descriptive names and small PRs where possible
 
 ## Links

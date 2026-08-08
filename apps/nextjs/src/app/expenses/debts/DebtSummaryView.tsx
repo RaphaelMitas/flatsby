@@ -146,6 +146,7 @@ export function DebtSummaryView() {
                                 {formattedAmount}
                               </span>
                               <button
+                                type="button"
                                 onClick={() =>
                                   setSelectedDebt({
                                     fromGroupMemberId: debt.fromGroupMemberId,

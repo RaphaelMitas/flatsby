@@ -20,14 +20,16 @@ export default function SettlePage() {
   const { selectedGroupId } = useShoppingStore();
 
   const fromGroupMemberId = params.fromGroupMemberId
-    ? parseInt(params.fromGroupMemberId)
+    ? parseInt(params.fromGroupMemberId, 10)
     : undefined;
   const toGroupMemberId = params.toGroupMemberId
-    ? parseInt(params.toGroupMemberId)
+    ? parseInt(params.toGroupMemberId, 10)
     : undefined;
   const currency = params.currency;
-  const amount = params.amount ? parseInt(params.amount) : undefined;
-  const expenseId = params.expenseId ? parseInt(params.expenseId) : undefined;
+  const amount = params.amount ? parseInt(params.amount, 10) : undefined;
+  const expenseId = params.expenseId
+    ? parseInt(params.expenseId, 10)
+    : undefined;
 
   if (!selectedGroupId) {
     return (
@@ -127,7 +129,7 @@ function SettlePageInner({
   fromGroupMemberId,
   toGroupMemberId,
   currency,
-  amount: amount,
+  amount,
   onClose,
 }: {
   groupId: number;

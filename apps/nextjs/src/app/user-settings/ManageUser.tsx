@@ -138,12 +138,10 @@ const UserDetails = () => {
               </Alert>
             )}
             {isSuccess && (
-              <>
-                <Alert variant="success">
-                  <CircleCheckBig className="h-4 w-4" />
-                  <AlertTitle>Name changed successfully!</AlertTitle>
-                </Alert>
-              </>
+              <Alert variant="success">
+                <CircleCheckBig className="h-4 w-4" />
+                <AlertTitle>Name changed successfully!</AlertTitle>
+              </Alert>
             )}
           </div>
           <div className="grid gap-2">

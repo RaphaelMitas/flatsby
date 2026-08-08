@@ -441,7 +441,7 @@ export function SettlementForm({
                         field.value ? field.value.toString() : undefined
                       }
                       onSelect={(item) => {
-                        field.onChange(parseInt(item.id));
+                        field.onChange(parseInt(item.id, 10));
                       }}
                       triggerTitle={
                         groupMembers.find((m) => m.id === field.value)?.user
@@ -465,7 +465,7 @@ export function SettlementForm({
                         field.value ? field.value.toString() : undefined
                       }
                       onSelect={(item) => {
-                        field.onChange(parseInt(item.id));
+                        field.onChange(parseInt(item.id, 10));
                       }}
                       triggerTitle={
                         groupMembers.find((m) => m.id === field.value)?.user

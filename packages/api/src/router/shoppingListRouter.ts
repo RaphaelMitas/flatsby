@@ -510,7 +510,7 @@ export const shoppingList = createTRPCRouter({
                   ),
                   (items) => {
                     // Handle pagination
-                    let nextOffset: number | undefined = undefined;
+                    let nextOffset: number | undefined;
 
                     if (items.length > input.limit) {
                       items.pop();

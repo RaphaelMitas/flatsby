@@ -92,7 +92,7 @@ export function ExpenseDetailView({
 
         return { previousData };
       },
-      onError: (error, _variables, context) => {
+      onError: (_error, _variables, context) => {
         if (context?.previousData) {
           queryClient.setQueryData(expenseListQueryKey, context.previousData);
         }

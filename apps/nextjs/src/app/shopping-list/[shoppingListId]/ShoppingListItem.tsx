@@ -6,7 +6,7 @@ import "react-swipeable-list/dist/styles.css";
 
 import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
-import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
+import type { ShoppingListItem as ShoppingListItemData } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash } from "lucide-react";
 import {
@@ -35,7 +35,7 @@ import { useShoppingListInvalidation } from "./useShoppingListInvalidation";
 export interface ShoppingListItemProps {
   groupId: number;
   shoppingListId: number;
-  item: ShoppingListItem;
+  item: ShoppingListItemData;
   groupMembers: {
     id: number;
     user: {
@@ -202,10 +202,10 @@ const ShoppingListItem = ({
         );
         return { previousItems };
       },
-      onError: (err, variables, context) => {
+      onError: (_err, _variables, context) => {
         onMutateShoppingListItemError(context?.previousItems);
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
           onMutateShoppingListItemError(context.previousItems);
           return;
@@ -264,7 +264,7 @@ const ShoppingListItem = ({
         );
         return { previousItems };
       },
-      onError: (err, newTodo, context) => {
+      onError: (_err, _newTodo, context) => {
         queryClient.setQueryData(
           trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
             groupId,

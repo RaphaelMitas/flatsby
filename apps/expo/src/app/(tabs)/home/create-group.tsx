@@ -55,10 +55,10 @@ export default function CreateGroup() {
 
         return { previousGroups };
       },
-      onError: (error, variables, context) => {
+      onError: (_error, _variables, context) => {
         onCreateGroupError(context?.previousGroups);
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (!data.success) {
           onCreateGroupError(context.previousGroups);
           return;

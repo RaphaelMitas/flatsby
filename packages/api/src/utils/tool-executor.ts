@@ -475,7 +475,7 @@ async function handleShoppingListItemCreate(
 
 async function handleShoppingListItemUpdate(
   ctx: ExecutorContext,
-  groupId: number,
+  _groupId: number,
   input: ShoppingListItemUpdateInput,
 ): Promise<ModifyDataOutput> {
   const { caller } = ctx;
@@ -693,7 +693,7 @@ async function handleExpenseUpdate(
   const outputCurrency = data.currency ?? expense.currency;
   // Use ternary to distinguish between undefined (not provided) and null/string (provided value)
   const outputDescription =
-    data.description !== undefined ? data.description : expense.description; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
+    data.description !== undefined ? data.description : expense.description;
   const outputSplits = data.splits ?? expense.expenseSplits;
 
   return handleApiResult(result, "update", "expense", () => ({

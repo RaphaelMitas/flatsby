@@ -77,7 +77,7 @@ export default function GroupDetailsScreen() {
         );
         return { previousGroup };
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (!data.success) {
           onUpdateGroupNameError(data.error.message, context.previousGroup);
           return;
@@ -97,7 +97,7 @@ export default function GroupDetailsScreen() {
           setShowSuccessMessage(false);
         }, 3000);
       },
-      onError: (err, variables, context) => {
+      onError: (err, _variables, context) => {
         onUpdateGroupNameError(err.message, context?.previousGroup);
       },
     }),

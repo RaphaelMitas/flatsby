@@ -13,7 +13,7 @@ export default async function ShoppingListDetailPage({
   params,
 }: ShoppingListDetailPageProps) {
   const { shoppingListId: shoppingListIdStr } = await params;
-  const shoppingListId = parseInt(shoppingListIdStr);
+  const shoppingListId = parseInt(shoppingListIdStr, 10);
 
   // Get current group from user's lastGroupUsed
   const userWithGroups = await caller.user.getCurrentUserWithGroups();

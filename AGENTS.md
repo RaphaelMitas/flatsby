@@ -11,11 +11,9 @@ See `README.md` for full project documentation.
 ```bash
 pnpm dev              # Start all apps with watch mode
 pnpm dev:next         # Next.js only
-pnpm lint             # ESLint across all packages
-pnpm lint:fix
+pnpm check            # Biome check + Prettier format check across all packages
+pnpm check:fix        # Fix Biome lint errors and Prettier formatting
 pnpm typecheck
-pnpm format           # Check Prettier formatting
-pnpm format:fix
 pnpm db:generate      # Generate migration from schema changes
 pnpm db:migrate       # Apply pending migrations
 pnpm db:push          # Push Drizzle schema changes (local dev only)
@@ -87,7 +85,7 @@ Validators are shared Zod schemas in `packages/validators/` using `zod/v4`.
 
 ### Environment variables
 
-Copy `.env.example` to `.env` at the repo root. The Next.js app loads it via `dotenv -e ../../.env`. All required env vars are validated at startup by `@t3-oss/env-nextjs` schemas in `apps/nextjs/src/env.ts`, `packages/auth/env.ts`, and `packages/db/env.ts`. Validation is skipped when `CI=true` or during `pnpm lint`.
+Copy `.env.example` to `.env` at the repo root. The Next.js app loads it via `dotenv -e ../../.env`. All required env vars are validated at startup by `@t3-oss/env-nextjs` schemas in `apps/nextjs/src/env.ts`, `packages/auth/env.ts`, and `packages/db/env.ts`. Validation is skipped when `CI=true` or during lint runs.
 
 For local dev without real credentials, populate `.env` with placeholder strings. The dev server will start and render pages, but OAuth login and database operations will fail without real `DATABASE_URL` and OAuth provider credentials.
 
@@ -105,7 +103,7 @@ pnpm install
 Expo checks (no extra setup after `pnpm install`):
 
 ```bash
-pnpm -F @flatsby/expo lint
+pnpm -F @flatsby/expo check
 pnpm -F @flatsby/expo typecheck
 ```
 

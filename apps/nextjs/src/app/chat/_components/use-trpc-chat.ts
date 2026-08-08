@@ -73,7 +73,6 @@ export function useTRPCChat({
   }, [currentGroup?.id]);
 
   const transport = useMemo(() => {
-    // eslint-disable-next-line react-hooks/refs
     return createTRPCChatTransport({
       sendMutation: async (mutationInput) =>
         await sendMutation.mutateAsync(mutationInput),

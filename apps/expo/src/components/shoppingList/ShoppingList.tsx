@@ -252,10 +252,10 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         );
         return { previousItems };
       },
-      onError: (err, variables, context) => {
+      onError: (_err, _variables, context) => {
         onMutateShoppingListItemError(context?.previousItems);
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
           onMutateShoppingListItemError(context.previousItems);
           return;
