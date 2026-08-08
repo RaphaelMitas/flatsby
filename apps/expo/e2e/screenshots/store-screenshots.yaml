@@ -109,12 +109,14 @@ appId: ${APP_ID}
 - tapOn:
     id: "expense-form-category"
 - waitForAnimationToEnd
+# The picker sheet is virtualized: only the top rows exist in the hierarchy
+# (run 31262997827's element census), so pick from the visible first group.
 - extendedWaitUntil:
     visible:
-      id: "picker-item-activities"
+      id: "picker-item-groceries"
     timeout: 20000
 - tapOn:
-    id: "picker-item-activities"
+    id: "picker-item-groceries"
 - waitForAnimationToEnd
 - retry:
     maxRetries: 2
