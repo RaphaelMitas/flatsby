@@ -102,6 +102,7 @@ export default function TabLayout() {
         name="home"
         options={{
           title: "Home",
+          tabBarButtonTestID: "tab-home",
           tabBarIcon: () =>
             isSpringEffectsEnabled ? springHomeIcon : houseIcon,
         }}
@@ -110,6 +111,7 @@ export default function TabLayout() {
         name="shoppingList"
         options={{
           title: selectedShoppingListName ?? "Shopping List",
+          tabBarButtonTestID: "tab-shopping-list",
           tabBarIcon: () =>
             isSpringEffectsEnabled ? springCartIcon : shoppingBasketIcon,
           tabBarItemHidden: !selectedShoppingListId,
@@ -119,6 +121,7 @@ export default function TabLayout() {
         name="expenses"
         options={{
           title: "Expenses",
+          tabBarButtonTestID: "tab-expenses",
           tabBarIcon: () => walletIcon,
           tabBarItemHidden: !selectedGroupId,
         }}
@@ -127,6 +130,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: "Settings",
+          tabBarButtonTestID: "tab-settings",
           tabBarIcon: () => settingsIcon,
         }}
       />

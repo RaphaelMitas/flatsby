@@ -31,7 +31,9 @@ appId: ${APP_ID}
 - tapOn:
     id: "group-create-submit"
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "group-card-name"
+      text: "Sunset Villa"
     timeout: 45000
 
 # Select it (second card; the e2e fixture group is first). The name check
@@ -41,7 +43,9 @@ appId: ${APP_ID}
     id: "group-select-button"
     index: 1
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "shopping-lists-group-name"
+      text: "Sunset Villa"
     timeout: 45000
 - extendedWaitUntil:
     visible:
@@ -74,9 +78,10 @@ appId: ${APP_ID}
 - tapOn:
     id: "group-add-member-button"
 # Member rows merge into one accessibility element, so their names never
-# match; the count header is the reliable success signal.
+# match; the count header's dynamic testID is the reliable success signal.
 - extendedWaitUntil:
-    visible: "Members (2)"
+    visible:
+      id: "group-members-count-2"
     timeout: 45000
 - tapOn:
     id: "group-add-member-email"
@@ -85,13 +90,19 @@ appId: ${APP_ID}
 - tapOn:
     id: "group-add-member-button"
 - extendedWaitUntil:
-    visible: "Members (3)"
+    visible:
+      id: "group-members-count-3"
     timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/05-add-member
 
 # Back to the group's Home tab.
-- tapOn: "Home"
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
+      TAB_X: "12%"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-create-button"
@@ -144,9 +155,14 @@ appId: ${APP_ID}
       id: "shopping-list-dashboard-link"
     timeout: 45000
 
-# Seed expenses. Descriptions must not collide with tab titles ("Groceries",
-# "Expenses", "Home") — Maestro taps by full-text match on the tab bar.
-- tapOn: "Expenses"
+# Seed expenses. Descriptions must stay unique on screen — later waits match
+# them by full text ("Weekly shopping").
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-expenses"
+      TAB_LABEL: "Expenses"
+      TAB_X: "62%"
 - extendedWaitUntil:
     visible:
       id: "expense-heading"
@@ -179,19 +195,24 @@ appId: ${APP_ID}
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:
-    visible: "Step 2 of 3"
+    visible:
+      id: "expense-form-step"
+      text: "Step 2 of 3"
     timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/04-expense-split
 - tapOn:
     id: "expense-form-next"
 - extendedWaitUntil:
-    visible: "Step 3 of 3"
+    visible:
+      id: "expense-form-step"
+      text: "Step 3 of 3"
     timeout: 45000
 - tapOn:
     id: "expense-form-submit"
 - extendedWaitUntil:
-    visible: "Weekly shopping"
+    visible:
+      id: "expense-card-Weekly shopping"
     timeout: 20000
 - runFlow:
     file: ../subflows/create-expense.yaml
@@ -210,9 +231,16 @@ appId: ${APP_ID}
 
 # Back to Home, then into the list; the Home screenshot happens at the end,
 # once the list is populated.
-- tapOn: "Home"
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
+      TAB_X: "12%"
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "shopping-lists-group-name"
+      text: "Sunset Villa"
     timeout: 45000
 
 # Into the seeded list. The "Shopping lists" card only exists on the group
@@ -249,7 +277,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
-    visible: "Apples"
+    visible:
+      id: "shopping-list-item-checkbox-Apples"
     timeout: 45000
 
 - tapOn:
@@ -267,7 +296,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
-    visible: "Oat Milk"
+    visible:
+      id: "shopping-list-item-checkbox-Oat Milk"
     timeout: 45000
 
 - tapOn:
@@ -285,7 +315,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
-    visible: "Sourdough Bread"
+    visible:
+      id: "shopping-list-item-checkbox-Sourdough Bread"
     timeout: 45000
 
 - tapOn:
@@ -294,7 +325,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
-    visible: "Paper Towels"
+    visible:
+      id: "shopping-list-item-checkbox-Paper Towels"
     timeout: 45000
 
 # Dismiss the item-entry keyboard. iOS: keyboardDismissMode="on-drag"
@@ -319,9 +351,16 @@ appId: ${APP_ID}
 # Home tab again, now showing the populated list card. The card's item
 # count is cached from the pre-seeding visit, so pull-to-refresh
 # (RefreshControl in ShoppingListsDashboard) before capturing.
-- tapOn: "Home"
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
+      TAB_X: "12%"
 - extendedWaitUntil:
-    visible: "Sunset Villa"
+    visible:
+      id: "shopping-lists-group-name"
+      text: "Sunset Villa"
     timeout: 45000
 - retry:
     maxRetries: 2

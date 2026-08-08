@@ -52,6 +52,10 @@ function collectTestIDs() {
     for (const m of src.matchAll(/testID=\{?["'`]([^"'`}]+)["'`]\}?/g)) {
       ids.add(m[1]);
     }
+    // navigator-option testIDs, e.g. tabBarButtonTestID: "tab-home"
+    for (const m of src.matchAll(/TestID:\s*["'`]([^"'`]+)["'`]/g)) {
+      ids.add(m[1]);
+    }
     // template-literal testIDs, e.g. testID={`foo-${bar}`}
     for (const m of src.matchAll(/testID=\{`([^`]*)\$\{[^}]+\}[^`]*`\}/g)) {
       dynamicPrefixes.add(m[1]);

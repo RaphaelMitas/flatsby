@@ -448,12 +448,14 @@ jobs:
   # the release notes from apps/expo/store/release-notes.txt, and submits the
   # EAS-delivered build for review with automatic release. Runs even if the
   # screenshot job was skipped (submits with the existing listing assets).
+  # Runs whatever the screenshot job did: store listings keep their last
+  # uploaded assets, so a failed capture must not block the review
+  # submission — fresh screenshots ride along only when the job succeeded.
   publish-ios:
     needs: [check, eas-build-submit, screenshots-ios]
     if: >-
       always() && needs.check.outputs.is-release == 'true' &&
-      needs.eas-build-submit.result == 'success' &&
-      contains(fromJSON('["success", "skipped"]'), needs.screenshots-ios.result)
+      needs.eas-build-submit.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -558,12 +560,13 @@ jobs:
   # --track must match or the changelog attach finds no release); needing
   # eas-build-submit ensures the release exists before its "What's New" text
   # is set.
+  # Like publish-ios, independent of the screenshot job's outcome: the
+  # changelog always goes up, fresh screenshots only when captured.
   publish-android:
     needs: [check, eas-build-submit, screenshots-android]
     if: >-
-      needs.check.outputs.is-release == 'true' &&
-      needs.eas-build-submit.result == 'success' &&
-      needs.screenshots-android.result == 'success'
+      always() && needs.check.outputs.is-release == 'true' &&
+      needs.eas-build-submit.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -612,24 +615,28 @@ jobs:
         run: gem install fastlane -N
 
       - name: Download screenshots
-        if: steps.guard.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true' && needs.screenshots-android.result == 'success'
         uses: actions/download-artifact@v8
         with:
           name: store-screenshots-android
           path: results
 
-      - name: Upload screenshots to Play listing
+      - name: Update Play listing
         if: steps.guard.outputs.skip != 'true'
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/play_key.json"
-          mkdir -p store/metadata/android/en-US/images/phoneScreenshots
           mkdir -p store/metadata/android/en-US/changelogs
-          cp results/screenshots/*.png store/metadata/android/en-US/images/phoneScreenshots/
           # default.txt keeps Play's "What's New" in sync with the App Store
           # text; --version_code pins it to the release EAS just submitted.
           cp apps/expo/store/release-notes.txt store/metadata/android/en-US/changelogs/default.txt
+          SKIP_SCREENSHOTS=true
+          if compgen -G "results/screenshots/*.png" > /dev/null; then
+            mkdir -p store/metadata/android/en-US/images/phoneScreenshots
+            cp results/screenshots/*.png store/metadata/android/en-US/images/phoneScreenshots/
+            SKIP_SCREENSHOTS=false
+          fi
           fastlane supply \
             --package_name com.flatcove.app \
             --json_key "$RUNNER_TEMP/play_key.json" \
@@ -641,4 +648,4 @@ jobs:
             --skip_upload_metadata true \
             --skip_upload_changelogs false \
             --skip_upload_images true \
-            --skip_upload_screenshots false
+            --skip_upload_screenshots "$SKIP_SCREENSHOTS"

@@ -111,17 +111,33 @@ export async function setupE2ESession(options: {
   if (options.email) query.set("email", options.email);
   const suffix = query.size > 0 ? `?${query.toString()}` : "";
 
-  const response = await fetch(`${apiUrl}/api/e2e/create-session${suffix}`, {
-    method: "POST",
-    headers: options.bypassSecret
-      ? { "x-vercel-protection-bypass": options.bypassSecret }
-      : {},
-  });
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `create-session failed: ${response.status} ${body.slice(0, 300)}`,
-    );
+  // The endpoint sits on a fresh preview deployment; the first request from
+  // the simulator can fail or stall transiently, which would otherwise park
+  // the e2e-login screen in its error state for the whole test run.
+  let response: Response | undefined;
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 2000 * attempt));
+    try {
+      response = await fetch(`${apiUrl}/api/e2e/create-session${suffix}`, {
+        method: "POST",
+        headers: options.bypassSecret
+          ? { "x-vercel-protection-bypass": options.bypassSecret }
+          : {},
+      });
+      if (response.ok) break;
+      const body = await response.text();
+      lastError = new Error(
+        `create-session failed: ${response.status} ${body.slice(0, 300)}`,
+      );
+      response = undefined;
+    } catch (error) {
+      lastError = error;
+      response = undefined;
+    }
+  }
+  if (!response) {
+    throw lastError instanceof Error ? lastError : new Error(String(lastError));
   }
 
   const session = parseE2ESession(await response.json());

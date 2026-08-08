@@ -74,6 +74,7 @@ function ShoppingListsDashboardInner() {
         {/* Header */}
         <View className="flex flex-row items-center justify-between">
           <Text
+            testID="shopping-lists-group-name"
             className="text-foreground flex-1 text-3xl font-bold"
             numberOfLines={1}
           >
