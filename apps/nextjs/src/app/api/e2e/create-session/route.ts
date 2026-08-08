@@ -120,8 +120,8 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   // decodes to a space in the app's route params, which seeded an admin
   // email with a space — every procedure returning it then failed its own
   // output validation (runs 31273748894 and 31276180622).
-  const tagMatch = /-(ios|android)@/i.exec(adminEmail);
-  const tag = tagMatch ? `-${tagMatch[1].toLowerCase()}` : "";
+  const platformTag = /-(ios|android)@/i.exec(adminEmail)?.[1];
+  const tag = platformTag ? `-${platformTag.toLowerCase()}` : "";
   const anna = await upsertE2EUser(
     "Anna Keller",
     `anna${tag}@${E2E_EMAIL_DOMAIN}`,
