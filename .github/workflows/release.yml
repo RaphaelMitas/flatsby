@@ -464,6 +464,25 @@ jobs:
           E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
+      # A JS fatal appears in the captured device logs with its message and
+      # stack — the most readable source for a crash the iOS release bundle
+      # only reports as a minified abort.
+      - name: Dump Maestro debug output
+        if: failure()
+        working-directory: apps/expo
+        run: |
+          for d in e2e/results/debug-*/; do
+            [ -d "$d" ] || continue
+            echo "::group::${d} flow errors"
+            grep -rhoE "(Element not found|Assertion is false|AssertionFailure)[^\"]*" "$d" 2>/dev/null | sort | uniq -c | sort -rn | head -20 || true
+            echo "::endgroup::"
+            find "$d" -name "*.log" -size -5M | while read -r log; do
+              echo "::group::${log} (fatals)"
+              grep -n -m 6 -B 2 -A 40 -E "FATAL EXCEPTION|JavascriptException|Unhandled JS|ReactNativeJS.*Error" "$log" 2>/dev/null | head -400 || true
+              echo "::endgroup::"
+            done
+          done
+
       # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
       # which upload-artifact drops by default.
       - name: Upload results artifact
