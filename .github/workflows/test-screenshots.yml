@@ -220,7 +220,7 @@ jobs:
             echo "::endgroup::"
             find "$d" -path "*screen-hierarchy*" -name "*.json" | while read -r h; do
               echo "::group::${h} (element census)"
-              grep -oE '"(resource-id|resourceId|text|title|label|accessibilityText)": *"[^"]{1,60}"' "$h" \
+              grep -oE '"(resource-id|resourceId|text|title|label|accessibilityText)" *: *"[^"]{1,60}"' "$h" \
                 | sort | uniq -c | sort -rn | head -80 || true
               echo "::endgroup::"
             done
