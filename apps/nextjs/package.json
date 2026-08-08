@@ -8,7 +8,7 @@
     "clean": "git clean -xdf .cache .next .turbo node_modules",
     "dev": "pnpm with-env next dev",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "biome lint",
+    "check": "biome check",
     "start": "pnpm with-env next start",
     "test:e2e": "pnpm with-env playwright test",
     "test:e2e:fast": "PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-18} pnpm with-env playwright test",

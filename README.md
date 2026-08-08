@@ -198,11 +198,10 @@ pnpm db:push          # Push Drizzle schema changes to database
 pnpm db:studio        # Open Drizzle Studio database browser
 
 # Code Quality
-pnpm check            # Biome lint + Prettier format check across all packages
-pnpm lint:fix         # Fix Biome lint errors automatically
+pnpm check            # Biome check + Prettier format check across all packages
+pnpm check:fix        # Fix Biome lint errors and Prettier formatting
 pnpm lint:ws          # Check workspace dependencies with sherif
 pnpm typecheck        # Run TypeScript type checking
-pnpm format:fix       # Fix code formatting with Prettier
 
 # UI Components
 pnpm ui-add           # Add new shadcn/ui components

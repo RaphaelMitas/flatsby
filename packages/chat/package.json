@@ -19,7 +19,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "biome lint",
+    "check": "biome check",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {

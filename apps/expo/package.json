@@ -19,7 +19,7 @@
     "eas:update": "eas update --environment development",
     "eas:update:prod": "eas update --environment production",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
-    "lint": "biome lint",
+    "check": "biome check",
     "typecheck": "tsc --noEmit",
     "test:e2e": "maestro test -e APP_ID=com.flatcove.app.v2 e2e/flows/",
     "test:e2e:android": "maestro test -e APP_ID=com.flatcove.app e2e/flows/",

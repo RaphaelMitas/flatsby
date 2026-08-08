@@ -18,7 +18,7 @@
       "outputs": [".cache/.prettiercache"],
       "outputLogs": "new-only"
     },
-    "lint": {
+    "check": {
       "dependsOn": ["^topo"]
     },
     "typecheck": {

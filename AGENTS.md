@@ -11,10 +11,9 @@ See `README.md` for full project documentation.
 ```bash
 pnpm dev              # Start all apps with watch mode
 pnpm dev:next         # Next.js only
-pnpm check            # Biome lint + Prettier format check across all packages
-pnpm lint:fix         # Fix Biome lint errors automatically
+pnpm check            # Biome check + Prettier format check across all packages
+pnpm check:fix        # Fix Biome lint errors and Prettier formatting
 pnpm typecheck
-pnpm format:fix       # Fix Prettier formatting
 pnpm db:generate      # Generate migration from schema changes
 pnpm db:migrate       # Apply pending migrations
 pnpm db:push          # Push Drizzle schema changes (local dev only)
@@ -104,7 +103,7 @@ pnpm install
 Expo checks (no extra setup after `pnpm install`):
 
 ```bash
-pnpm -F @flatsby/expo lint
+pnpm -F @flatsby/expo check
 pnpm -F @flatsby/expo typecheck
 ```
 
