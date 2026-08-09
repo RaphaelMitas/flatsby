@@ -83,8 +83,6 @@ overrides:
   # call transform() without a visitor, so they stay on current lightningcss.
   # Renovate is blocked from bumping this key in renovate.json.
   react-native-css>lightningcss: 1.30.1
-  # @istanbuljs/load-nyc-config (via react-native > babel-jest) pins js-yaml 3.x.
-  js-yaml: 4.3.1
 
 publicHoistPattern:
   - "@ianvs/prettier-plugin-sort-imports"
