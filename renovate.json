@@ -126,7 +126,7 @@
       "allowedVersions": "!/^1\\.6\\.2[4-6]$/"
     },
     {
-      "description": "Lightning CSS is pinned for react-native-css only, via the scoped `react-native-css>lightningcss` override in pnpm-workspace.yaml. Every release after 1.30.1 breaks its Metro transformer with \"failed to deserialize; expected an object-like struct named Specifier\", failing both native E2E builds (parcel-bundler/lightningcss#1065, #1081 – both open). Other consumers resolve lightningcss transitively and are not held back – re-enable once the upstream bug is fixed",
+      "description": "lightningcss > 1.30.1 breaks the react-native-css Metro transformer and fails both native E2E builds (parcel-bundler/lightningcss#1065). Pinned for react-native-css and @expo/metro-config in pnpm-workspace.yaml – re-enable once upstream is fixed",
       "matchPackageNames": ["lightningcss", "/^lightningcss-/"],
       "enabled": false
     },
