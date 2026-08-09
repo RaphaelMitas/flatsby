@@ -73,7 +73,16 @@ overrides:
   # constants removed in 0.29.x during Next/Turbopack builds.
   kysely: 0.29.4
   # NativeWind v5 / Lightning CSS deserialization regression workaround.
-  lightningcss: 1.33.0
+  # Every lightningcss release after 1.30.1 (verified 1.30.2 – 1.33.0) throws
+  # "failed to deserialize; expected an object-like struct named Specifier,
+  # found ()" whenever a JS visitor is combined with a var() custom property,
+  # which is exactly what the react-native-css Metro transformer does. The bug
+  # is in the compiled Rust napi bridge, so it cannot be patched from JS.
+  # Upstream: parcel-bundler/lightningcss#1065 and #1081, both still open.
+  # Scoped to react-native-css only: @tailwindcss/node and @expo/metro-config
+  # call transform() without a visitor, so they stay on current lightningcss.
+  # Renovate is blocked from bumping this key in renovate.json.
+  react-native-css>lightningcss: 1.30.1
   # @istanbuljs/load-nyc-config (via react-native > babel-jest) pins js-yaml 3.x.
   js-yaml: 4.3.1
 
