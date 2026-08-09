@@ -73,7 +73,7 @@ overrides:
   # constants removed in 0.29.x during Next/Turbopack builds.
   kysely: 0.29.4
   # NativeWind v5 / Lightning CSS deserialization regression workaround.
-  lightningcss: 1.30.1
+  lightningcss: 1.33.0
   # @istanbuljs/load-nyc-config (via react-native > babel-jest) pins js-yaml 3.x.
   js-yaml: 4.3.1
 

@@ -40,7 +40,7 @@
     "prop-types": "^15.8.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-intersection-observer": "^10.0.3",
+    "react-intersection-observer": "^10.1.0",
     "react-swipeable-list": "^1.10.0",
     "superjson": "catalog:",
     "zod": "catalog:"
