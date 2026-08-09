@@ -34,7 +34,7 @@ catalog:
   "@ai-sdk/react": ^4.0.61
   "@biomejs/biome": 2.5.7
   "@t3-oss/env-nextjs": ^0.13.11
-  "@tailwindcss/postcss": ^4.3.1
+  "@tailwindcss/postcss": ^4.3.3
   "@tanstack/react-query": ^5.101.4
   "@trpc/client": ^11.18.0
   "@trpc/server": ^11.18.0
@@ -47,7 +47,7 @@ catalog:
   next: ^16.3.0
   prettier: ^3.9.6
   superjson: ^2.2.6
-  tailwindcss: ^4.3.1
+  tailwindcss: ^4.3.3
   turbo: ^2.10.0
   typescript: ^6.0.3
   zod: ^4.4.3
