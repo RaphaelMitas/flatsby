@@ -131,7 +131,7 @@ importers:
         version: 5.2.14(22374dea5a4ea8eafa1044158337cf00)
       '@hookform/resolvers':
         specifier: ^5.7.1
-        version: 5.7.1(@sinclair/typebox@0.27.10)(@standard-schema/spec@1.1.0)(effect@3.21.4)(react-hook-form@7.80.0(react@19.2.8))(zod@4.4.3)
+        version: 5.7.1(@sinclair/typebox@0.27.10)(@standard-schema/spec@1.1.0)(effect@3.22.1)(react-hook-form@7.80.0(react@19.2.8))(zod@4.4.3)
       '@react-native-async-storage/async-storage':
         specifier: ^2.2.0
         version: 2.2.0(react-native@0.83.6(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))
@@ -486,8 +486,8 @@ importers:
         specifier: 'catalog:'
         version: 7.0.58(zod@4.4.3)
       effect:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.1
+        version: 3.22.1
       posthog-node:
         specifier: ^5.38.5
         version: 5.39.4
@@ -662,7 +662,7 @@ importers:
         version: link:../validators
       '@hookform/resolvers':
         specifier: ^5.7.1
-        version: 5.7.1(@sinclair/typebox@0.27.10)(@standard-schema/spec@1.1.0)(effect@3.21.4)(react-hook-form@7.80.0(react@19.2.8))(zod@4.4.3)
+        version: 5.7.1(@sinclair/typebox@0.27.10)(@standard-schema/spec@1.1.0)(effect@3.22.1)(react-hook-form@7.80.0(react@19.2.8))(zod@4.4.3)
       '@radix-ui/react-accordion':
         specifier: ^1.2.20
         version: 1.2.20(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -5587,8 +5587,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@3.21.4:
-    resolution: {integrity: sha512-B89v/xSgPbl1J2Ai2u18jxq3odpFauU1rC6/eSs4FeNHi72kwKdJp12VGigvRV2lK+kRnx+OOz41XV8guZd4gQ==}
+  effect@3.22.1:
+    resolution: {integrity: sha512-TNoXushmPOBAjJlthF5d2QwnX2xBPEtcNJr5XKNKbRLbDvBcOYkXlYDfvGfSA0zriwLFuCll5MDtNMAdZL17PQ==}
 
   electron-to-chromium@1.5.387:
     resolution: {integrity: sha512-TaxwufTFDufvPEoXdhwVrA3UdFWBeWGkYoJ1K8ldF1xe6gKfth6iRNS5lTQ5JPNOHdGQm8PT1QYKUqFLCiUefQ==}
@@ -10231,14 +10231,14 @@ snapshots:
       react: 19.2.8
       react-native: 0.83.6(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1)
 
-  '@hookform/resolvers@5.7.1(@sinclair/typebox@0.27.10)(@standard-schema/spec@1.1.0)(effect@3.21.4)(react-hook-form@7.80.0(react@19.2.8))(zod@4.4.3)':
+  '@hookform/resolvers@5.7.1(@sinclair/typebox@0.27.10)(@standard-schema/spec@1.1.0)(effect@3.22.1)(react-hook-form@7.80.0(react@19.2.8))(zod@4.4.3)':
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.80.0(react@19.2.8)
     optionalDependencies:
       '@sinclair/typebox': 0.27.10
       '@standard-schema/spec': 1.1.0
-      effect: 3.21.4
+      effect: 3.22.1
       zod: 4.4.3
 
   '@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.9.6)(supports-color@8.1.1)':
@@ -13356,7 +13356,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  effect@3.21.4:
+  effect@3.22.1:
     dependencies:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
