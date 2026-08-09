@@ -106,6 +106,7 @@ export function ExpenseListPanel({
           />
           {isLargeScreen && (
             <Button
+              testID="expense-add-button"
               title="Add"
               size="md"
               icon="plus"

@@ -576,6 +576,8 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         env:
           TAG: ${{ needs.check.outputs.tag }}
+          # sync_screenshots is gated behind this env var in deliver.
+          DELIVER_SYNC_SCREENSHOTS: "true"
         run: |
           VERSION="${TAG#v}"
           ARGS=(
@@ -592,7 +594,13 @@ jobs:
             --force true
           )
           if [ -d store/screenshots/en-US ]; then
-            ARGS+=(--screenshots_path store/screenshots --overwrite_screenshots true)
+            # sync, not overwrite: deliver verifies uploads before App Store
+            # Connect has indexed them, declares them missing and uploads a
+            # second copy (run 31280124106 doubled every screenshot and then
+            # hit the 10-per-device cap). Sync compares checksums, so it
+            # uploads only what is actually absent and deletes what is no
+            # longer captured — including the existing duplicates.
+            ARGS+=(--screenshots_path store/screenshots --sync_screenshots true)
           fi
           set -o pipefail
           for attempt in $(seq 1 12); do

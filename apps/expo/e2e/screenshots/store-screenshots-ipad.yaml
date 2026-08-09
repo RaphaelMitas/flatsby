@@ -1,10 +1,12 @@
 appId: ${APP_ID}
 ---
-# iPad store screenshots: App Store review requires at least one 13" iPad
-# capture (APP_IPAD_PRO_3GEN_129). Same server-side seeding as the phone
-# flow — login, navigate, capture; no mutations. Deliberately minimal: the
-# tablet layout differs from the phone's, and review needs only the two
-# shots.
+# iPad store screenshots: the same six screens as the phone flow, captured on
+# a 13" iPad Pro so the listing carries a full tablet set (App Store review
+# also requires at least one APP_IPAD_PRO_3GEN_129 shot). Content is seeded
+# server-side by create-session (`seed=store`), so this flow only logs in,
+# navigates, and captures — see store-screenshots.yaml for why mutations were
+# removed. The tablet layout differs (expenses render as a split view), but
+# every element is reached by the same testIDs.
 - runFlow:
     file: ../subflows/e2e-login.yaml
     env:
@@ -17,9 +19,8 @@ appId: ${APP_ID}
       id: "group-card-name"
       text: "Sunset Villa"
     timeout: 45000
-- waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/ipad-02-groups
 
+# Into the group: the shopping-lists overview with the seeded list card.
 - runFlow:
     file: ../subflows/tap-until.yaml
     env:
@@ -34,5 +35,198 @@ appId: ${APP_ID}
     visible:
       id: "shopping-list-dashboard-link"
     timeout: 45000
+- extendedWaitUntil:
+    visible: "4 items left"
+    timeout: 45000
 - waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/ipad-01-shopping-lists
+- takeScreenshot: e2e/results/screenshots/ipad-06-shopping-lists
+
+# The seeded list with its categorised items.
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-list-dashboard-link"
+      MARKER_ID: "shopping-list-item-input"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-item-checkbox-Apples"
+    timeout: 45000
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-item-checkbox-Paper Towels"
+    timeout: 45000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/ipad-02-shopping-list
+
+# Expenses. On a tablet this is a split view: the list on the left, a detail
+# panel on the right, with the add button in the header rather than a FAB —
+# same testIDs either way.
+- retry:
+    maxRetries: 1
+    commands:
+      - runFlow:
+          file: ../subflows/tap-tab.yaml
+          env:
+            TAB_ID: "tab-expenses"
+            TAB_LABEL: "Expenses"
+            TAB_X: "59%"
+      - extendedWaitUntil:
+          visible:
+            id: "expense-heading"
+          timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: "expense-card-Weekly shopping"
+    timeout: 45000
+- extendedWaitUntil:
+    visible:
+      id: "expense-card-Cleaning supplies"
+    timeout: 45000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/ipad-03-expenses
+
+# The split step of the expense form, captured mid-flight and backed out of
+# without submitting.
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "expense-add-button"
+      MARKER_ID: "expense-form-amount"
+- tapOn:
+    id: "expense-form-amount"
+- inputText: "64.30"
+- tapOn:
+    id: "expense-form-description"
+- inputText: "Ski trip fund"
+# Tap a neutral heading to dismiss the keyboard (hideKeyboard is flaky on iOS)
+- tapOn: "Amount & Details"
+- waitForAnimationToEnd
+- tapOn:
+    id: "expense-form-category"
+- waitForAnimationToEnd
+# The picker sheet is virtualized: only the top rows exist in the hierarchy,
+# so pick from the visible first group.
+- extendedWaitUntil:
+    visible:
+      id: "picker-item-groceries"
+    timeout: 20000
+- tapOn:
+    id: "picker-item-groceries"
+- waitForAnimationToEnd
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "expense-form-next"
+          commands:
+            - tapOn:
+                id: "expense-form-next"
+      - extendedWaitUntil:
+          visible:
+            id: "expense-form-step"
+            text: "Step 2 of 3"
+          timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/ipad-04-expense-split
+
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "expense-form-back"
+          commands:
+            - tapOn:
+                id: "expense-form-back"
+      - extendedWaitUntil:
+          visible:
+            id: "expense-form-step"
+            text: "Step 1 of 3"
+          timeout: 15000
+# Step 1 has no footer back button; the navigation header's does the job.
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "BackButton"
+      MARKER_ID: "expense-heading"
+
+# Members screen, reached from the overview's group-settings button. If a
+# stray back popped the Home stack to its root, re-enter via the dashboard's
+# nav link rather than losing the round.
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          file: ../subflows/tap-tab.yaml
+          env:
+            TAB_ID: "tab-home"
+            TAB_LABEL: "Home"
+            TAB_X: "41%"
+      - runFlow:
+          when:
+            visible:
+              id: "dashboard-shopping-lists-link"
+          commands:
+            - runFlow:
+                file: ../subflows/tap-until.yaml
+                env:
+                  TARGET_ID: "dashboard-shopping-lists-link"
+                  MARKER_ID: "shopping-lists-group-settings"
+      - extendedWaitUntil:
+          visible:
+            id: "shopping-lists-group-settings"
+          timeout: 20000
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-lists-group-settings"
+      MARKER_ID: "group-settings-members"
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "group-settings-members"
+      MARKER_ID: "group-add-member-email"
+- extendedWaitUntil:
+    visible:
+      id: "group-members-count-3"
+    timeout: 45000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/ipad-05-add-member
+
+# Home root: the stats dashboard with the seeded totals, one pop below the
+# overview.
+- retry:
+    maxRetries: 1
+    commands:
+      - runFlow:
+          file: ../subflows/tap-tab.yaml
+          env:
+            TAB_ID: "tab-home"
+            TAB_LABEL: "Home"
+            TAB_X: "41%"
+      - extendedWaitUntil:
+          visible:
+            id: "shopping-lists-group-name"
+            text: "Sunset Villa"
+          timeout: 20000
+- swipe:
+    start: "1%, 50%"
+    end: "70%, 50%"
+- extendedWaitUntil:
+    visible:
+      id: "dashboard-group-picker"
+    timeout: 45000
+- retry:
+    maxRetries: 2
+    commands:
+      - swipe:
+          start: "50%, 40%"
+          end: "50%, 85%"
+      - extendedWaitUntil:
+          visible: "€142.69"
+          timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/ipad-01-home
