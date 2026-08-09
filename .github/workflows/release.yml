@@ -5,11 +5,18 @@ name: Release
 # landed), this workflow tags the commit, creates a GitHub release, kicks off
 # EAS production builds with store auto-submit, and captures store
 # screenshots. workflow_dispatch re-runs the release for the current version
-# even if the tag already exists (e.g. after a failed run).
+# even if the tag already exists (e.g. after a failed run) — with
+# skip_eas_build when only the publish half failed, so a listing fix does not
+# spend another pair of EAS builds on a binary the stores already have.
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      skip_eas_build:
+        description: "Skip the EAS build+submit (the binary is already in the stores; only re-capture screenshots and re-publish the listings)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -95,7 +102,7 @@ jobs:
 
   eas-build-submit:
     needs: check
-    if: needs.check.outputs.is-release == 'true'
+    if: needs.check.outputs.is-release == 'true' && !inputs.skip_eas_build
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -516,7 +523,7 @@ jobs:
     needs: [check, eas-build-submit, screenshots-ios]
     if: >-
       always() && needs.check.outputs.is-release == 'true' &&
-      needs.eas-build-submit.result == 'success'
+      (needs.eas-build-submit.result == 'success' || inputs.skip_eas_build)
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -576,8 +583,12 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         env:
           TAG: ${{ needs.check.outputs.tag }}
-          # sync_screenshots is gated behind this env var in deliver.
-          DELIVER_SYNC_SCREENSHOTS: "true"
+          # sync_screenshots is still beta-gated behind this feature switch
+          # (fastlane/lib/fastlane/features.rb), and deliver only checks it
+          # once it reaches the screenshot upload — so run 31301599106 got
+          # all the way through the metadata upload before aborting. Anything
+          # but "0"/"no"/"false"/"off" counts as enabled.
+          FASTLANE_ENABLE_BETA_DELIVER_SYNC_SCREENSHOTS: "true"
         run: |
           VERSION="${TAG#v}"
           ARGS=(
@@ -635,7 +646,7 @@ jobs:
     needs: [check, eas-build-submit, screenshots-android]
     if: >-
       always() && needs.check.outputs.is-release == 'true' &&
-      needs.eas-build-submit.result == 'success'
+      (needs.eas-build-submit.result == 'success' || inputs.skip_eas_build)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
