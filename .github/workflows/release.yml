@@ -642,6 +642,46 @@ jobs:
           echo "::error::Could not submit $VERSION for review after 12 attempts."
           exit 1
 
+      # deliver decides a screenshot failed by watching it leave UPLOAD_COMPLETE
+      # without reaching COMPLETE, then deletes and re-uploads it — but it never
+      # prints why Apple rejected it, so run 31307140259 looped four times in 40
+      # seconds over "failures of processing screenshots" with no reason given.
+      # The reason is on the asset itself (assetDeliveryState.errors), so read it
+      # straight from App Store Connect once deliver has given up.
+      - name: Report screenshot processing errors
+        if: failure() && steps.guard.outputs.skip != 'true'
+        run: |
+          ruby -e '
+            require "spaceship"
+            Spaceship::ConnectAPI.token =
+              Spaceship::ConnectAPI::Token.from_json_file(ENV["ASC_KEY_PATH"])
+            app = Spaceship::ConnectAPI::App.find("com.flatcove.app.v2")
+            version = app.get_edit_app_store_version(
+              platform: Spaceship::ConnectAPI::Platform::IOS
+            )
+            if version.nil?
+              puts "No editable version; nothing to inspect."
+            else
+              version.get_app_store_version_localizations.each do |loc|
+                loc.get_app_screenshot_sets.each do |set|
+                  (set.app_screenshots || []).each do |shot|
+                    state = shot.asset_delivery_state || {}
+                    puts format(
+                      "%-6s %-26s %-32s %-16s %s",
+                      loc.locale,
+                      set.screenshot_display_type,
+                      shot.file_name,
+                      state["state"],
+                      (state["errors"] || []).inspect
+                    )
+                  end
+                end
+              end
+            end
+          ' || echo "::warning::Could not read screenshot states from App Store Connect."
+        env:
+          ASC_KEY_PATH: ${{ runner.temp }}/asc_key.json
+
   # Uploads the captured screenshots and the release notes to the Play Store
   # listing (en-US). The binary itself already went to the internal track via
   # EAS auto-submit (eas.json; production access still pending — supply's
