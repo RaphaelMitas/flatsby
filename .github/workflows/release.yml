@@ -603,6 +603,14 @@ jobs:
             --precheck_include_in_app_purchases false
             --submission_information '{"add_id_info_uses_idfa": false}'
             --force true
+            # A version that is already waiting for review is frozen against
+            # screenshot deletion ("Can't Delete Screenshot After Submit for
+            # review", run 31305498115): run 31280124106 submitted 0.6.25 with
+            # the duplicates, so every later re-run was locked out of cleaning
+            # them up. This cancels the pending submission first — a no-op when
+            # nothing is in review — which costs the place in Apple's queue but
+            # is the only way to correct a listing after submitting it.
+            --reject_if_possible true
           )
           if [ -d store/screenshots/en-US ]; then
             # sync, not overwrite: deliver verifies uploads before App Store
