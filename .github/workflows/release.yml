@@ -577,6 +577,55 @@ jobs:
           jq -n --arg kid "$ASC_API_KEY_ID" --arg iss "$ASC_API_ISSUER_ID" --arg key "$ASC_API_KEY_CONTENT" \
             '{key_id: $kid, issuer_id: $iss, key: $key, in_house: false}' > "$RUNNER_TEMP/asc_key.json"
 
+      # deliver's sync only returns once the asset count on App Store Connect
+      # equals the number of captured files. It reconciles a mismatch by
+      # deleting the assets it considers failing — and a duplicate is not
+      # failing, it is COMPLETE and matches a captured file's checksum. So a
+      # listing holding two copies of one screenshot can never reconcile:
+      # run 31309017476 uploaded nothing, deleted nothing, and still crashed
+      # with "failures of processing screenshots" against 15 assets for 12
+      # files. Duplicates arrive when a previous sync gave up mid-flight
+      # (31307140259 re-uploaded four times while Apple was still processing),
+      # so prune them here — sync cannot dig itself out of this one.
+      - name: Prune duplicate screenshots
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          ruby -e '
+            require "spaceship"
+            Spaceship::ConnectAPI.token =
+              Spaceship::ConnectAPI::Token.from_json_file(ENV["ASC_KEY_PATH"])
+            app = Spaceship::ConnectAPI::App.find("com.flatcove.app.v2")
+            version = app.get_edit_app_store_version(
+              platform: Spaceship::ConnectAPI::Platform::IOS
+            )
+            if version.nil?
+              puts "No editable version; nothing to prune."
+            else
+              pruned = 0
+              version.get_app_store_version_localizations.each do |loc|
+                loc.get_app_screenshot_sets.each do |set|
+                  seen = {}
+                  (set.app_screenshots || []).each do |shot|
+                    if seen[shot.file_name]
+                      begin
+                        shot.delete!
+                        pruned += 1
+                        puts "Pruned duplicate #{loc.locale} #{set.screenshot_display_type} #{shot.file_name}"
+                      rescue StandardError => e
+                        puts "::warning::Could not prune #{shot.file_name}: #{e.message}"
+                      end
+                    else
+                      seen[shot.file_name] = true
+                    end
+                  end
+                end
+              end
+              puts "Pruned #{pruned} duplicate screenshot(s)."
+            end
+          ' || echo "::warning::Duplicate prune failed; deliver may still reconcile."
+        env:
+          ASC_KEY_PATH: ${{ runner.temp }}/asc_key.json
+
       # The binary lands in App Store Connect when EAS submission finishes,
       # then Apple processes it for a while; retry until it is attachable.
       - name: Update listing and submit for review
