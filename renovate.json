@@ -7,15 +7,21 @@
     "group:expoMonorepo"
   ],
   "baseBranchPatterns": ["main"],
+  "prConcurrentLimit": 2,
   "minimumReleaseAge": "1 day",
   "rangeStrategy": "bump",
   "labels": ["dependencies"],
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
+    "description": "One bundled PR for all security fixes. Renovate exempts vulnerability alerts from prConcurrentLimit, so this ships even when the 2-PR budget is full; minimumReleaseAge is cleared so fixes are not held for a day",
     "enabled": true,
     "groupName": "security-fixes",
+    "groupSlug": "security-fixes",
     "labels": ["dependencies", "security"],
-    "prCreation": "immediate"
+    "prCreation": "immediate",
+    "minimumReleaseAge": null,
+    "dependencyDashboardApproval": false,
+    "schedule": []
   },
   "lockFileMaintenance": {
     "enabled": true,
@@ -123,6 +129,13 @@
       "description": "Group RevenueCat",
       "groupName": "revenuecat",
       "matchPackageNames": ["/^react-native-purchases/"]
+    },
+    {
+      "description": "Bundle every minor/patch/digest bump into a single PR. Must stay last so it overrides the per-library groups above, which then only apply to majors",
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch",
+      "matchPackageNames": ["*"],
+      "matchUpdateTypes": ["minor", "patch", "digest"]
     }
   ]
 }
