@@ -54,8 +54,11 @@ catalog:
 
 catalogs:
   better-auth:
-    "@better-auth/expo": 1.6.27
-    better-auth: 1.6.27
+    # 1.6.24+ breaks the Expo client plugin types: expoClient no longer satisfies
+    # BetterAuthClientPlugin and authClient.getCookie loses its type.
+    # https://github.com/better-auth/better-auth/issues/10767
+    "@better-auth/expo": 1.6.23
+    better-auth: 1.6.23
   react19:
     "@types/react": ~19.2.0
     "@types/react-dom": ~19.2.0
@@ -69,9 +72,6 @@ minimumReleaseAge: 1440
 nodeLinker: hoisted
 
 overrides:
-  # Better Auth 1.6.12's SQLite dialect bundle imports Kysely migration
-  # constants removed in 0.29.x during Next/Turbopack builds.
-  kysely: 0.29.5
   # lightningcss > 1.30.1 breaks the react-native-css Metro transformer with
   # "failed to deserialize ... named Specifier" (parcel-bundler/lightningcss#1065).
   # nodeLinker is hoisted, so metro-config must be pinned too or it wins the
