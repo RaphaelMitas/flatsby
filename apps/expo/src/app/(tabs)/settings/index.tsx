@@ -7,6 +7,7 @@ import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
 
+import type { Theme } from "~/lib/ui/theme";
 import { SettingsHeader } from "~/components/settings/SettingsHeader";
 import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
@@ -48,7 +49,7 @@ export default function SettingsIndex() {
     }
   };
 
-  const getThemeDisplayName = (theme: "light" | "dark" | "system" | null) => {
+  const getThemeDisplayName = (theme: Theme | null) => {
     switch (theme) {
       case "dark":
         return "Dark";
