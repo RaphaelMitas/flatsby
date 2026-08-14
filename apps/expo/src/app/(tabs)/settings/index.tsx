@@ -7,6 +7,7 @@ import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
 
+import type { Theme } from "~/lib/ui/theme";
 import { SettingsHeader } from "~/components/settings/SettingsHeader";
 import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
@@ -15,7 +16,6 @@ import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
-import type { Theme } from "~/lib/ui/theme";
 import { useTheme } from "~/lib/ui/theme";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
