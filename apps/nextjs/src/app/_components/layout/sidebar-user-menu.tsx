@@ -4,12 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomer } from "autumn-js/react";
-import { ChevronsUpDown, Flower2, LogOut, Settings } from "lucide-react";
+import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -23,14 +22,12 @@ import {
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { getCurrentSubscription } from "@flatsby/validators/billing";
 
-import { useSpringEffects } from "~/app/_components/layout/springTheme/use-spring-effects";
 import { signOutAndRedirect } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
 
 export function SidebarUserMenu() {
   const { isMobile } = useSidebar();
   const router = useRouter();
-  const { isEnabled, setEnabled } = useSpringEffects();
   const trpc = useTRPC();
   const { data: customer } = useCustomer({
     expand: ["subscriptions.plan"],
@@ -84,21 +81,12 @@ export function SidebarUserMenu() {
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link href="/user-settings" className="cursor-pointer">
-                  <Settings className="mr-2 size-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setEnabled((prev) => !prev)}
-                className="cursor-pointer"
-              >
-                <Flower2 className="mr-2 size-4" />
-                Spring Effects {isEnabled ? "(On)" : "(Off)"}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+            <DropdownMenuItem asChild>
+              <Link href="/user-settings" className="cursor-pointer">
+                <Settings className="mr-2 size-4" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOutAndRedirect(router)}>
               <LogOut className="mr-2 size-4" />
