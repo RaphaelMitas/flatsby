@@ -42,7 +42,7 @@ catalog:
   "@turbo/gen": ^2.10.9
   "@types/node": ^24.13.3
   ai: ^7.0.64
-  autumn-js: ^1.2.52
+  autumn-js: ^1.2.53
   babel-plugin-react-compiler: ^1.0.0
   next: ^16.3.0
   prettier: ^3.9.6
