@@ -87,6 +87,7 @@ export default function TabLayout() {
       backgroundColor={getColor("background")}
       indicatorColor={getColor("muted")}
       rippleColor={getColor("primary")}
+      tabBarRespectsIMEInsets
     >
       <NativeTabs.Trigger name="home" testID="tab-home">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
