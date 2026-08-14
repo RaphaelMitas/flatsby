@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { KeyboardStickyViewProps } from "react-native-keyboard-controller";
-import { Platform } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -17,14 +16,14 @@ export function AppKeyboardStickyView({
   className,
   ...props
 }: AppKeyboardStickyViewProps) {
-  const safeAreaInsets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
 
   return (
     <KeyboardStickyView
-      offset={{
-        opened: Platform.OS === "android" ? safeAreaInsets.bottom : 0,
-        closed: 0,
-      }}
+      // translateY is keyboardHeight + offset, so a positive opened pushes the
+      // form back down. The keyboard covers the tab bar, so give back the
+      // bottom inset SafeAreaView reserves for it.
+      offset={{ opened: insets.bottom, closed: 0 }}
       className={className}
       {...props}
     >
