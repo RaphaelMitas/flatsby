@@ -31,7 +31,7 @@ auditConfig:
 
 catalog:
   "@ai-sdk/provider": ^4.0.7
-  "@ai-sdk/react": ^4.0.67
+  "@ai-sdk/react": ^4.0.68
   "@biomejs/biome": 2.5.8
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.3.3
@@ -41,7 +41,7 @@ catalog:
   "@trpc/tanstack-react-query": ^11.18.0
   "@turbo/gen": ^2.10.9
   "@types/node": ^24.13.3
-  ai: ^7.0.64
+  ai: ^7.0.65
   autumn-js: ^1.2.53
   babel-plugin-react-compiler: ^1.0.0
   next: ^16.3.0
