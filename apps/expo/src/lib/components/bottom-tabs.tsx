@@ -5,7 +5,7 @@ import type {
 import type {
   ParamListBase,
   TabNavigationState,
-} from "@react-navigation/native";
+} from "expo-router/react-navigation";
 import { withLayoutContext } from "expo-router";
 import { createNativeBottomTabNavigator } from "@bottom-tabs/react-navigation";
 
