@@ -15,6 +15,7 @@ import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
+import type { Theme } from "~/lib/ui/theme";
 import { useTheme } from "~/lib/ui/theme";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
@@ -48,7 +49,7 @@ export default function SettingsIndex() {
     }
   };
 
-  const getThemeDisplayName = (theme: "light" | "dark" | "system" | null) => {
+  const getThemeDisplayName = (theme: Theme | null) => {
     switch (theme) {
       case "dark":
         return "Dark";
