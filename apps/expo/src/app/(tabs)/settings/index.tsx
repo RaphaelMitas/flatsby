@@ -15,7 +15,6 @@ import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
-import { useSpringEffects } from "~/lib/ui/spring-effects";
 import { useTheme } from "~/lib/ui/theme";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
@@ -24,10 +23,6 @@ import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function SettingsIndex() {
   const { storedTheme, setTheme } = useTheme();
-  const {
-    isEnabled: isSpringEffectsEnabled,
-    setEnabled: setSpringEffectsEnabled,
-  } = useSpringEffects();
   const posthog = usePostHog();
   const [isAnalyticsEnabled, setIsAnalyticsEnabled] = useState(
     () => !posthog.optedOut,
@@ -139,18 +134,6 @@ export default function SettingsIndex() {
               onPress={() => swipeableRef.current?.openRight()}
             />
           </ReanimatedSwipeable>
-          <SettingsItem
-            title="Spring Effects"
-            subtitle={isSpringEffectsEnabled ? "Enabled" : "Disabled"}
-            iconName="flower-2"
-            onPress={() => setSpringEffectsEnabled(!isSpringEffectsEnabled)}
-            rightContent={
-              <Checkbox
-                checked={isSpringEffectsEnabled}
-                onCheckedChange={setSpringEffectsEnabled}
-              />
-            }
-          />
         </SettingsSection>
         <SettingsSection title="Groups">
           <Link href="/settings/manage-groups" asChild>

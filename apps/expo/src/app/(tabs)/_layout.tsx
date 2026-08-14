@@ -5,7 +5,6 @@ import LucideIcon from "@react-native-vector-icons/lucide";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { Tabs } from "~/lib/components/bottom-tabs";
-import { useSpringEffects } from "~/lib/ui/spring-effects";
 import { useThemeColors } from "~/lib/utils";
 import { usePostHogIdentify } from "~/utils/analytics/use-posthog-identify";
 import { prefetch, trpc } from "~/utils/api";
@@ -16,16 +15,12 @@ const houseIcon = LucideIcon.getImageSourceSync("house", 20);
 const shoppingBasketIcon = LucideIcon.getImageSourceSync("shopping-basket", 20);
 const walletIcon = LucideIcon.getImageSourceSync("wallet", 20);
 const settingsIcon = LucideIcon.getImageSourceSync("settings", 20);
-// spring themed icons
-const springHomeIcon = LucideIcon.getImageSourceSync("flower-2", 20);
-const springCartIcon = LucideIcon.getImageSourceSync("cherry", 20);
 
 export default function TabLayout() {
   const session = useSession();
   const { selectedGroupId, selectedShoppingListId, selectedShoppingListName } =
     useShoppingStore();
   const { getColor } = useThemeColors();
-  const { isEnabled: isSpringEffectsEnabled } = useSpringEffects();
 
   usePostHogIdentify();
 
@@ -103,8 +98,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarButtonTestID: "tab-home",
-          tabBarIcon: () =>
-            isSpringEffectsEnabled ? springHomeIcon : houseIcon,
+          tabBarIcon: () => houseIcon,
         }}
       />
       <Tabs.Screen
@@ -112,8 +106,7 @@ export default function TabLayout() {
         options={{
           title: selectedShoppingListName ?? "Shopping List",
           tabBarButtonTestID: "tab-shopping-list",
-          tabBarIcon: () =>
-            isSpringEffectsEnabled ? springCartIcon : shoppingBasketIcon,
+          tabBarIcon: () => shoppingBasketIcon,
           tabBarItemHidden: !selectedShoppingListId,
         }}
       />
