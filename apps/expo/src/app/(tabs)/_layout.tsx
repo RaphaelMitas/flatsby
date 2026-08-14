@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { Redirect } from "expo-router";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
-import { Tabs } from "~/lib/components/bottom-tabs";
 import { useThemeColors } from "~/lib/utils";
 import { usePostHogIdentify } from "~/utils/analytics/use-posthog-identify";
 import { prefetch, trpc } from "~/utils/api";
@@ -82,51 +82,41 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs
-      initialRouteName="home"
-      screenOptions={{
-        tabBarActiveTintColor: getColor("primary"),
-      }}
-      tabBarStyle={{
-        backgroundColor: getColor("background"),
-      }}
-      activeIndicatorColor={getColor("muted")}
+    <NativeTabs
+      tintColor={getColor("primary")}
+      backgroundColor={getColor("background")}
+      indicatorColor={getColor("muted")}
       rippleColor={getColor("primary")}
     >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: "Home",
-          tabBarButtonTestID: "tab-home",
-          tabBarIcon: () => houseIcon,
-        }}
-      />
-      <Tabs.Screen
+      <NativeTabs.Trigger name="home" testID="tab-home">
+        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon src={houseIcon} renderingMode="template" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger
         name="shoppingList"
-        options={{
-          title: selectedShoppingListName ?? "Shopping List",
-          tabBarButtonTestID: "tab-shopping-list",
-          tabBarIcon: () => shoppingBasketIcon,
-          tabBarItemHidden: !selectedShoppingListId,
-        }}
-      />
-      <Tabs.Screen
+        testID="tab-shopping-list"
+        hidden={!selectedShoppingListId}
+      >
+        <NativeTabs.Trigger.Label>
+          {selectedShoppingListName ?? "Shopping List"}
+        </NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          src={shoppingBasketIcon}
+          renderingMode="template"
+        />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger
         name="expenses"
-        options={{
-          title: "Expenses",
-          tabBarButtonTestID: "tab-expenses",
-          tabBarIcon: () => walletIcon,
-          tabBarItemHidden: !selectedGroupId,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: "Settings",
-          tabBarButtonTestID: "tab-settings",
-          tabBarIcon: () => settingsIcon,
-        }}
-      />
-    </Tabs>
+        testID="tab-expenses"
+        hidden={!selectedGroupId}
+      >
+        <NativeTabs.Trigger.Label>Expenses</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon src={walletIcon} renderingMode="template" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="settings" testID="tab-settings">
+        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon src={settingsIcon} renderingMode="template" />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

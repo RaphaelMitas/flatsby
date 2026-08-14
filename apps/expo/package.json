@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@better-auth/expo": "catalog:better-auth",
-    "@bottom-tabs/react-navigation": "^1.4.0",
     "@expo/metro-runtime": "~57.0.9",
     "@flatsby/validators": "workspace:*",
     "@gorhom/bottom-sheet": "^5.2.14",
@@ -71,7 +70,6 @@
     "react-dom": "catalog:react19",
     "react-hook-form": "^7.85.0",
     "react-native": "~0.86.2",
-    "react-native-bottom-tabs": "^1.4.0",
     "react-native-css": "3.0.7",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-gifted-charts": "^1.4.78",
