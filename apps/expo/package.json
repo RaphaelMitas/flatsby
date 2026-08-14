@@ -27,7 +27,6 @@
     "test:e2e:validate": "node e2e/validate-flows.mjs"
   },
   "dependencies": {
-    "@babel/traverse--for-generate-function-map": "npm:@babel/traverse@^8.0.4",
     "@better-auth/expo": "catalog:better-auth",
     "@bottom-tabs/react-navigation": "^1.4.0",
     "@expo/metro-runtime": "~57.0.9",
