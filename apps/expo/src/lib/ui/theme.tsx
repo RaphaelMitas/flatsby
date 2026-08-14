@@ -1,15 +1,12 @@
 //Theme Provider nativewind
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { Appearance, useColorScheme as useRNColorScheme } from "react-native";
+import { Appearance } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface ThemeContextType {
-  theme: "light" | "dark";
   setTheme: (newTheme: "light" | "dark" | "system") => void;
-  toggleTheme: () => void;
   storedTheme: "light" | "dark" | "system" | null;
-  isInitialized: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -26,22 +23,12 @@ export function ThemeProvider({
   children,
   defaultTheme = "system",
 }: ThemeProviderProps) {
-  const systemColorScheme = useRNColorScheme();
   const [storedTheme, setStoredTheme] = useState<
     "light" | "dark" | "system" | null
   >(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Helper to apply color scheme to appearance
   const applyColorScheme = (theme: "light" | "dark" | "system") => {
-    if (theme !== "system") {
-      // Only override for explicit dark/light. For "system", the native
-      // default already follows the system preference. Calling
-      // setColorScheme("unspecified") triggers an RN 0.83 bug (#54959)
-      // where useColorScheme() returns "unspecified" instead of the
-      // actual system value.
-      Appearance.setColorScheme(theme);
-    }
+    Appearance.setColorScheme(theme === "system" ? "unspecified" : theme);
   };
 
   // Restore theme preference from storage on mount
@@ -65,17 +52,11 @@ export function ThemeProvider({
         console.error("Error restoring theme from storage:", error);
         setStoredTheme(defaultTheme);
         applyColorScheme(defaultTheme);
-      } finally {
-        setIsInitialized(true);
       }
     };
 
     void restoreThemeFromStorage();
   }, [defaultTheme]);
-
-  // Determine the actual theme being used
-  const theme = systemColorScheme === "dark" ? "dark" : "light";
-  const isDark = theme === "dark";
 
   const saveThemeToStorage = async (newTheme: "light" | "dark" | "system") => {
     try {
@@ -85,26 +66,13 @@ export function ThemeProvider({
     }
   };
 
-  const toggleTheme = () => {
-    const newTheme = isDark ? "light" : "dark";
-    applyColorScheme(newTheme);
-    setStoredTheme(newTheme);
-    void saveThemeToStorage(newTheme);
-  };
-
   const setTheme = (newTheme: "light" | "dark" | "system") => {
     applyColorScheme(newTheme);
     setStoredTheme(newTheme);
     void saveThemeToStorage(newTheme);
   };
 
-  const value: ThemeContextType = {
-    theme,
-    setTheme,
-    toggleTheme,
-    storedTheme,
-    isInitialized,
-  };
+  const value: ThemeContextType = { storedTheme, setTheme };
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
