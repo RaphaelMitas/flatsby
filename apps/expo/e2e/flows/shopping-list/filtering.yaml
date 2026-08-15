@@ -14,6 +14,11 @@ tags:
 - tapOn:
     id: "shopping-list-item-input"
 - inputText: "Carrots"
+# The add form is translated above the keyboard, and Android reports the
+# untranslated bounds, so a tap by id lands where the control used to be.
+# Dismissing first collapses the translation; the suggestions stay on screen
+# because they follow the typed text, not the keyboard.
+- hideKeyboard
 - tapOn:
     id: "shopping-list-category-picker"
 - waitForAnimationToEnd
@@ -33,6 +38,7 @@ tags:
 - tapOn:
     id: "shopping-list-item-input"
 - inputText: "Cheese"
+- hideKeyboard
 - tapOn:
     id: "shopping-list-category-picker"
 - waitForAnimationToEnd

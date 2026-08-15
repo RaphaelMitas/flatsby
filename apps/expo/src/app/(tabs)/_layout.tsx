@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { useKeyboardState } from "react-native-keyboard-controller";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
@@ -21,6 +22,7 @@ export default function TabLayout() {
   const { selectedGroupId, selectedShoppingListId, selectedShoppingListName } =
     useShoppingStore();
   const { getColor } = useThemeColors();
+  const keyboardVisible = useKeyboardState((state) => state.isVisible);
 
   usePostHogIdentify();
 
@@ -83,11 +85,11 @@ export default function TabLayout() {
 
   return (
     <NativeTabs
+      hidden={keyboardVisible}
       tintColor={getColor("primary")}
       backgroundColor={getColor("background")}
       indicatorColor={getColor("muted")}
       rippleColor={getColor("primary")}
-      tabBarRespectsIMEInsets
     >
       <NativeTabs.Trigger name="home" testID="tab-home">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>

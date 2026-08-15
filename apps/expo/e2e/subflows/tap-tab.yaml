@@ -11,6 +11,10 @@ appId: ${APP_ID}
 #
 # env: TAB_ID (e.g. tab-home), TAB_LABEL (e.g. Home), TAB_X (slot center as
 # an integer percent, e.g. "12%")
+#
+# The tab bar hides while the keyboard is open, so there is nothing to tap
+# until it is dismissed. No-op when no keyboard is up.
+- hideKeyboard
 - runFlow:
     when:
       visible:
