@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useKeyboardState } from "react-native-keyboard-controller";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
@@ -21,6 +22,7 @@ export default function TabLayout() {
   const { selectedGroupId, selectedShoppingListId, selectedShoppingListName } =
     useShoppingStore();
   const { getColor } = useThemeColors();
+  const keyboardVisible = useKeyboardState((state) => state.isVisible);
 
   usePostHogIdentify();
 
@@ -83,11 +85,13 @@ export default function TabLayout() {
 
   return (
     <NativeTabs
+      // Expo cannot report the tab bar height, so nothing can compensate for
+      // it when the keyboard covers it. Hide it while typing instead.
+      hidden={keyboardVisible}
       tintColor={getColor("primary")}
       backgroundColor={getColor("background")}
       indicatorColor={getColor("muted")}
       rippleColor={getColor("primary")}
-      tabBarRespectsIMEInsets
     >
       <NativeTabs.Trigger name="home" testID="tab-home">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
