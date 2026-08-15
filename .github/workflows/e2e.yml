@@ -15,9 +15,9 @@ concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
 
-# The stack needs repo secrets to run, which fork PRs never get: the entry
-# jobs are gated on the PR coming from this repo, and the shards inherit that
-# through `needs`.
+# A run costs five macOS runners and five emulators, so it stays off fork PRs
+# as it did before: the entry jobs are gated on the PR coming from this repo,
+# and the shards inherit that through `needs`.
 jobs:
   e2e-web:
     if: github.event.pull_request.head.repo.full_name == github.repository
@@ -34,9 +34,6 @@ jobs:
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
-        with:
-          autumn-secret-key: ${{ secrets.AUTUMN_SECRET_KEY }}
-          ai-gateway-api-key: ${{ secrets.AI_GATEWAY_API_KEY }}
 
       - name: Run Playwright tests
         run: pnpm turbo run test:e2e --filter=@flatsby/nextjs
@@ -238,9 +235,6 @@ jobs:
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
-        with:
-          autumn-secret-key: ${{ secrets.AUTUMN_SECRET_KEY }}
-          ai-gateway-api-key: ${{ secrets.AI_GATEWAY_API_KEY }}
 
       # The simulator shares the host's network stack, so localhost is the
       # runner's own server.
@@ -404,9 +398,6 @@ jobs:
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
-        with:
-          autumn-secret-key: ${{ secrets.AUTUMN_SECRET_KEY }}
-          ai-gateway-api-key: ${{ secrets.AI_GATEWAY_API_KEY }}
 
       # The runner executes every `script` line as a separate `sh -c`, so the
       # install / pre-warm / run / logcat sequence lives in one script file.

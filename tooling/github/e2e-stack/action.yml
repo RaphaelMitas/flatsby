@@ -1,16 +1,6 @@
 name: "E2E stack"
 description: "Postgres, schema and the web app, all running on the runner"
 
-inputs:
-  autumn-secret-key:
-    description: "Autumn key. Billing lookups fall back to the free plan without it, AI procedures fail."
-    required: false
-    default: ""
-  ai-gateway-api-key:
-    description: "AI gateway key, used by the AI-backed procedures."
-    required: false
-    default: ""
-
 runs:
   using: composite
   steps:
@@ -21,12 +11,11 @@ runs:
     # schema push somewhere real, and turbo hashes the environment rather than
     # the file (E2E_TESTING and the auth base URL both change the build).
     # The OAuth credentials are never exercised — no flow signs in through a
-    # provider — but better-auth rejects an undefined clientId at init.
+    # provider — but better-auth rejects an undefined clientId at init. No
+    # Autumn key by design: every AI procedure checks credits first, so the
+    # check failing is what keeps the suite from ever calling a model.
     - name: Write the stack's configuration
       shell: bash
-      env:
-        AUTUMN_SECRET_KEY: ${{ inputs.autumn-secret-key }}
-        AI_GATEWAY_API_KEY: ${{ inputs.ai-gateway-api-key }}
       run: |
         cat > "$GITHUB_WORKSPACE/.env" <<EOF
         DATABASE_URL=postgres://postgres:postgres@localhost:5433/flatsby
@@ -43,8 +32,6 @@ runs:
         APPLE_PRIVATE_KEY=e2e
         APPLE_BUNDLE_ID=com.flatcove.app.v2
         APPLE_SERVICE_ID=e2e
-        AUTUMN_SECRET_KEY=$AUTUMN_SECRET_KEY
-        AI_GATEWAY_API_KEY=$AI_GATEWAY_API_KEY
         EOF
         cat "$GITHUB_WORKSPACE/.env" >> "$GITHUB_ENV"
 

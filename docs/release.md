@@ -51,10 +51,6 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   token for the `flatsby` EAS org (https://expo.dev/settings/access-tokens).
   iOS submission also needs App Store Connect API credentials stored on EAS -
   already the case if `eas submit -p ios` has ever run interactively.
-- **`AUTUMN_SECRET_KEY` / `AI_GATEWAY_API_KEY`** (repo secrets, optional, not
-  set yet): passed to the web app the screenshot jobs run on the runner (see
-  `tooling/github/e2e-stack`). Without them billing shows the free plan and AI
-  categorization falls back to "other", which no flow asserts against.
 - **`ASC_API_KEY_ID` / `ASC_API_ISSUER_ID` / `ASC_API_KEY_CONTENT`** (repo
   secrets, required for the App Store listing update + review submission):
   an App Store Connect API key with the App Manager role (App Store Connect
@@ -71,6 +67,9 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
 - Store screenshots are taken from an `E2E_TESTING=true` build (that build
   exposes the e2e-login deep link); the store binary itself comes from EAS
   and never contains e2e code.
+- The screenshot jobs run their own web app (`tooling/github/e2e-stack`) with
+  no Autumn key, so nothing they do can spend AI credits: every AI procedure
+  checks credits first and falls back when the check fails.
 - Marketing version comes from `app.config.ts`; build numbers auto-increment
   remotely on EAS (`appVersionSource: "remote"`).
 - Listing uploads assume the `en-US` locale and only touch the provided

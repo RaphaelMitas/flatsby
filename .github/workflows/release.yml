@@ -231,9 +231,6 @@ jobs:
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
-        with:
-          autumn-secret-key: ${{ secrets.AUTUMN_SECRET_KEY }}
-          ai-gateway-api-key: ${{ secrets.AI_GATEWAY_API_KEY }}
 
       - name: Capture store screenshots
         working-directory: apps/expo
@@ -423,9 +420,6 @@ jobs:
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
-        with:
-          autumn-secret-key: ${{ secrets.AUTUMN_SECRET_KEY }}
-          ai-gateway-api-key: ${{ secrets.AI_GATEWAY_API_KEY }}
 
       # Demo mode pins a clean status bar (fixed clock, full battery, no
       # notification icons) before the flow runs; each script line is its own
