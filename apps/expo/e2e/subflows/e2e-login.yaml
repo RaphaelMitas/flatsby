@@ -4,8 +4,7 @@ appId: ${APP_ID}
 # app authenticated. Mirrors the web suite's fixtures/auth.ts.
 #
 # Requires env vars (passed via `maestro test -e`):
-#   E2E_API_URL            - the deployment to test against
-#   VERCEL_BYPASS_SECRET   - Vercel protection bypass secret (optional)
+#   E2E_API_URL            - the server to test against
 # A failed flow can leave the "Open in Flatsby?" confirmation on the
 # springboard, which blocks launchApp for every flow after it. (iOS only:
 # Android opens scheme links directly, so the conditionals never fire there.)
@@ -38,7 +37,7 @@ appId: ${APP_ID}
 # untagged fixed identities race — each seed deactivates the other
 # platform's memberships mid-capture (release run 31267306819).
 - evalScript: "${output.e2eEmail = typeof E2E_USER_EMAIL !== 'undefined' ? (typeof E2E_SEED !== 'undefined' ? E2E_USER_EMAIL.replace('@', '-' + maestro.platform.toLowerCase() + '@') : E2E_USER_EMAIL) : undefined}"
-- evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + '&bypass=' + encodeURIComponent(typeof VERCEL_BYPASS_SECRET !== 'undefined' ? VERCEL_BYPASS_SECRET : '') + (typeof E2E_USER_NAME !== 'undefined' ? '&name=' + encodeURIComponent(E2E_USER_NAME) : '') + (output.e2eEmail ? '&email=' + encodeURIComponent(output.e2eEmail) : '') + (typeof E2E_SEED !== 'undefined' ? '&seed=' + encodeURIComponent(E2E_SEED) : '')}"
+- evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + (typeof E2E_USER_NAME !== 'undefined' ? '&name=' + encodeURIComponent(E2E_USER_NAME) : '') + (output.e2eEmail ? '&email=' + encodeURIComponent(output.e2eEmail) : '') + (typeof E2E_SEED !== 'undefined' ? '&seed=' + encodeURIComponent(E2E_SEED) : '')}"
 # openLink sits inside the retry: if session setup errors out, the e2e-login
 # screen parks in its error state (run 31255356976, iPad), and only re-firing
 # the link restarts it — re-waiting alone never recovers. iOS also sometimes

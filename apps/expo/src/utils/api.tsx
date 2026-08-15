@@ -15,7 +15,6 @@ import superjson from "superjson";
 
 import { authClient } from "./auth/auth-client";
 import { getBaseUrl } from "./base-url";
-import { getE2EBypassHeaders } from "./e2e";
 
 function isUnauthorizedError(error: unknown): boolean {
   if (!(error instanceof TRPCClientError)) return false;
@@ -63,10 +62,6 @@ function getHeaders() {
   const cookies = authClient.getCookie();
   if (cookies) {
     headers.set("Cookie", cookies);
-  }
-
-  for (const [key, value] of Object.entries(getE2EBypassHeaders())) {
-    headers.set(key, value);
   }
   return headers;
 }

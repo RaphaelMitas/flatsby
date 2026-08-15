@@ -51,8 +51,6 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   token for the `flatsby` EAS org (https://expo.dev/settings/access-tokens).
   iOS submission also needs App Store Connect API credentials stored on EAS -
   already the case if `eas submit -p ios` has ever run interactively.
-- **`VERCEL_AUTOMATION_BYPASS_SECRET`** (repo secret): already configured for
-  the e2e suite; reused to reach protected preview deployments.
 - **`ASC_API_KEY_ID` / `ASC_API_ISSUER_ID` / `ASC_API_KEY_CONTENT`** (repo
   secrets, required for the App Store listing update + review submission):
   an App Store Connect API key with the App Manager role (App Store Connect
@@ -63,18 +61,15 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   listing screenshot upload): the same service-account JSON EAS uses for
   Play submissions. Until set, `publish-android` skips with a warning (the
   binary still reaches the production track via EAS).
-- **`E2E_SCREENSHOT_API_URL`** (repo _variable_, optional): the screenshot
-  flow signs in through `/api/e2e/create-session`, which needs a deployment
-  with `E2E_TESTING=true` (production refuses). By default the workflow
-  auto-resolves the newest successful Vercel preview deployment - usually the
-  release branch's own preview. Set this variable to pin a specific URL
-  instead. Screenshots are skipped (with a warning) only if neither exists.
 
 ## Notes
 
 - Store screenshots are taken from an `E2E_TESTING=true` build (that build
   exposes the e2e-login deep link); the store binary itself comes from EAS
   and never contains e2e code.
+- The screenshot jobs run their own web app (`tooling/github/e2e-stack`) with
+  no Autumn key, so nothing they do can spend AI credits: every AI procedure
+  checks credits first and falls back when the check fails.
 - Marketing version comes from `app.config.ts`; build numbers auto-increment
   remotely on EAS (`appVersionSource: "remote"`).
 - Listing uploads assume the `en-US` locale and only touch the provided
@@ -84,9 +79,9 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   version goes live on both stores (after Apple review) without further
   approval. Review the diff and release notes before merging.
 - The screenshot flow lives outside `apps/expo/e2e/flows/`, so the regular
-  e2e suite never runs it. Run it locally against a preview deployment with:
+  e2e suite never runs it. Run it locally against `pnpm dev:next` with:
 
   ```bash
   cd apps/expo
-  E2E_API_URL=https://<preview>.vercel.app node e2e/run-flows.mjs ../screenshots/store-screenshots
+  E2E_API_URL=http://localhost:3000 node e2e/run-flows.mjs ../screenshots/store-screenshots
   ```

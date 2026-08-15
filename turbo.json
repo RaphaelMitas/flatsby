@@ -64,6 +64,7 @@
     "APPLE_BUNDLE_ID",
     "APPLE_SERVICE_ID",
     "BETTER_AUTH_URL",
+    "NEXT_PUBLIC_BETTER_AUTH_BASE_URL",
     "DATABASE_URL",
     "DB_WSPROXY_PORT",
     "E2E_TESTING",
@@ -80,7 +81,6 @@
     "VERCEL_ENV",
     "VERCEL_URL",
     "npm_lifecycle_event",
-    "BASE_URL",
-    "VERCEL_AUTOMATION_BYPASS_SECRET"
+    "BASE_URL"
   ]
 }

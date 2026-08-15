@@ -1,7 +1,7 @@
 name: E2E Tests
 
 on:
-  deployment_status:
+  pull_request:
 
 env:
   FORCE_COLOR: 3
@@ -11,38 +11,18 @@ env:
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
 
-jobs:
-  check-pr:
-    if: >-
-      github.event.deployment_status.state == 'success' &&
-      github.event.deployment_status.environment == 'Preview'
-    runs-on: ubuntu-latest
-    outputs:
-      has-pr: ${{ steps.check.outputs.has-pr }}
-      branch: ${{ steps.check.outputs.branch }}
-    steps:
-      - name: Check for associated PR
-        id: check
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # deployment_status runs carry secrets; never gate on fork PRs.
-          PR_JSON=$(gh pr list --repo "${{ github.repository }}" --search "${{ github.event.deployment.sha }}" --state open --json number,headRefName,isCrossRepository --jq '[.[] | select(.isCrossRepository == false)][0]')
-          if [[ -n "$PR_JSON" && "$PR_JSON" != "null" ]]; then
-            echo "has-pr=true" >> "$GITHUB_OUTPUT"
-            echo "branch=$(echo "$PR_JSON" | jq -r '.headRefName')" >> "$GITHUB_OUTPUT"
-          else
-            echo "has-pr=false" >> "$GITHUB_OUTPUT"
-          fi
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
 
+# A run costs five macOS runners and five emulators, so it stays off fork PRs
+# as it did before: the entry jobs are gated on the PR coming from this repo,
+# and the shards inherit that through `needs`.
+jobs:
   e2e-web:
-    needs: check-pr
-    if: needs.check-pr.outputs.has-pr == 'true'
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    concurrency:
-      group: e2e-web-${{ needs.check-pr.outputs.branch }}
-      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
 
@@ -52,11 +32,17 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --filter @flatsby/nextjs exec playwright install --with-deps chromium
 
+      - name: Start E2E stack
+        uses: ./tooling/github/e2e-stack
+
       - name: Run Playwright tests
         run: pnpm turbo run test:e2e --filter=@flatsby/nextjs
         env:
-          BASE_URL: ${{ github.event.deployment_status.target_url }}
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          BASE_URL: http://localhost:3000
+
+      - name: Dump stack logs
+        if: failure()
+        run: tail -n 200 "$RUNNER_TEMP"/web.log "$RUNNER_TEMP"/wsproxy.log
 
       - name: Upload test report
         if: failure()
@@ -75,13 +61,9 @@ jobs:
           retention-days: 7
 
   e2e-ios-build:
-    needs: check-pr
-    if: needs.check-pr.outputs.has-pr == 'true'
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: macos-26
     timeout-minutes: 45
-    concurrency:
-      group: e2e-ios-build-${{ needs.check-pr.outputs.branch }}
-      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
 
@@ -108,8 +90,9 @@ jobs:
             echo "CCACHE_MAXSIZE=3G"
           } >> "$GITHUB_ENV"
 
-      # actions/cache rejects deployment_status runs ("not tied to a branch or
-      # tag ref"); artifacts work, so the pool travels as one.
+      # actions/cache scopes entries to the branch that wrote them, so PRs
+      # would never share a pool and release.yml on main could not read one;
+      # artifacts are visible repo-wide, so the pool travels as one.
       - name: Restore ccache from artifact
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -176,7 +159,7 @@ jobs:
           retention-days: 1
 
   e2e-ios:
-    needs: [check-pr, e2e-ios-build]
+    needs: e2e-ios-build
     runs-on: macos-26
     timeout-minutes: 45
     strategy:
@@ -195,9 +178,6 @@ jobs:
             areas: shopping-list/management shopping-list/suggestions
           - shard: expenses
             areas: expenses
-    concurrency:
-      group: e2e-ios-${{ needs.check-pr.outputs.branch }}-${{ matrix.shard }}
-      cancel-in-progress: true
     env:
       MAESTRO_VERSION: "2.3.0"
       MAESTRO_CLI_NO_ANALYTICS: "1"
@@ -205,9 +185,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: ".nvmrc"
+      - name: Setup
+        uses: ./tooling/github/setup
 
       - name: Install Maestro
         run: |
@@ -254,20 +233,25 @@ jobs:
           sleep 15
           xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
 
+      - name: Start E2E stack
+        uses: ./tooling/github/e2e-stack
+
+      # The simulator shares the host's network stack, so localhost is the
+      # runner's own server.
       - name: Run Maestro tests
         working-directory: apps/expo
         run: node e2e/run-flows.mjs ${{ matrix.areas }}
         env:
-          E2E_API_URL: ${{ github.event.deployment_status.target_url }}
-          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          E2E_API_URL: http://localhost:3000
 
-      - name: Collect crash reports & simulator logs
+      - name: Collect crash reports, simulator and server logs
         if: always()
         working-directory: apps/expo
         run: |
           mkdir -p e2e/results/diagnostics
           cp -f ~/Library/Logs/DiagnosticReports/*.crash e2e/results/diagnostics/ 2>/dev/null || true
           cp -f ~/Library/Logs/DiagnosticReports/*.ips e2e/results/diagnostics/ 2>/dev/null || true
+          cp -f "$RUNNER_TEMP"/web.log "$RUNNER_TEMP"/wsproxy.log e2e/results/diagnostics/ 2>/dev/null || true
           xcrun simctl spawn "${{ steps.sim.outputs.udid }}" log show --style compact --last 30m \
             --predicate 'processImagePath CONTAINS "Flatsby" OR senderImagePath CONTAINS "Flatsby"' \
             > e2e/results/diagnostics/sim-log.txt 2>/dev/null || true
@@ -284,13 +268,9 @@ jobs:
           retention-days: 7
 
   e2e-android-build:
-    needs: check-pr
-    if: needs.check-pr.outputs.has-pr == 'true'
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    concurrency:
-      group: e2e-android-build-${{ needs.check-pr.outputs.branch }}
-      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
 
@@ -302,8 +282,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # actions/cache rejects deployment_status runs ("not tied to a branch or
-      # tag ref"); artifacts work, same as the iOS ccache pool.
+      # Artifact pool rather than actions/cache, same as the iOS ccache.
       - name: Restore Gradle cache from artifact
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -365,7 +344,7 @@ jobs:
           retention-days: 1
 
   e2e-android:
-    needs: [check-pr, e2e-android-build]
+    needs: e2e-android-build
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -384,9 +363,6 @@ jobs:
             areas: shopping-list/management shopping-list/suggestions
           - shard: expenses
             areas: expenses
-    concurrency:
-      group: e2e-android-${{ needs.check-pr.outputs.branch }}-${{ matrix.shard }}
-      cancel-in-progress: true
     env:
       MAESTRO_VERSION: "2.3.0"
       MAESTRO_CLI_NO_ANALYTICS: "1"
@@ -394,9 +370,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: ".nvmrc"
+      - name: Setup
+        uses: ./tooling/github/setup
 
       - uses: actions/setup-java@v5
         with:
@@ -421,6 +396,9 @@ jobs:
         with:
           name: android-e2e-app
 
+      - name: Start E2E stack
+        uses: ./tooling/github/e2e-stack
+
       # The runner executes every `script` line as a separate `sh -c`, so the
       # install / pre-warm / run / logcat sequence lives in one script file.
       - name: Run Maestro tests
@@ -435,15 +413,19 @@ jobs:
           cores: 3
           # -dns-server: the hosted runner resolves via systemd-resolved on
           # 127.0.0.53, which the emulator guest can't reach — DNS lookups in
-          # the app then hang instead of resolving, and the session check
-          # blocks the first screen past every flow's wait.
+          # the app then hang instead of resolving.
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -dns-server 8.8.8.8
           disable-animations: true
           script: bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/app-release.apk" ${{ matrix.areas }}
         env:
           E2E_PLATFORM: android
-          E2E_API_URL: ${{ github.event.deployment_status.target_url }}
-          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          E2E_API_URL: http://localhost:3000
+
+      - name: Collect stack logs
+        if: always()
+        run: |
+          mkdir -p apps/expo/e2e/results/diagnostics
+          cp -f "$RUNNER_TEMP"/web.log "$RUNNER_TEMP"/wsproxy.log apps/expo/e2e/results/diagnostics/ || true
 
       # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
       # which upload-artifact drops by default.
