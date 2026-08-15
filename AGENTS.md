@@ -90,7 +90,9 @@ it leaks one household's data to another.
 means changing the optimistic update too.
 - **E2E flows.** `apps/expo/e2e/flows/` covers account, auth, expenses, group, home,  
 shopping-list, and smoke. A feature change in one of those areas usually needs its  
-flow updated.
+flow updated. Every e2e job runs its own Postgres and web app on the runner
+(`tooling/github/e2e-stack`) and talks to `http://localhost:3000`, so nothing in the
+suite depends on a deployment.
 
 ## Where things live
 
@@ -131,8 +133,8 @@ them, do not assume them, and do not write them down anywhere else.
 A few things that will surprise you:
 
 - `pnpm db:push` is marked interactive in `turbo.json` and fails in a headless shell.
-Run `drizzle-kit push --force` from `packages/db` via `pnpm with-env` instead. Push
-is local dev only, real changes get a generated migration.
+Run `pnpm -F @flatsby/db push --force` instead, which skips turbo. Push is for local
+dev and the CI e2e database, real changes get a generated migration.
 - Env vars load from a repo-root `.env` via `dotenv`. Exporting them in your shell is
 not enough. `@t3-oss/env-nextjs` validates them at startup and skips validation when
 `CI=true`.

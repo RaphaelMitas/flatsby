@@ -10,14 +10,13 @@ type E2ELoginState =
   | { status: "error"; message: string };
 
 /**
- * Test-only deep link target (`flatsby://e2e-login?apiUrl=...&bypass=...`).
+ * Test-only deep link target (`flatsby://e2e-login?apiUrl=...`).
  * Creates an isolated test user + session via the web app's e2e endpoint and
  * stores it for the next app launch. Inert outside e2e builds.
  */
 export default function E2ELoginScreen() {
   const params = useLocalSearchParams<{
     apiUrl?: string;
-    bypass?: string;
     name?: string;
     email?: string;
     seed?: string;
@@ -25,14 +24,13 @@ export default function E2ELoginScreen() {
   const [state, setState] = useState<E2ELoginState>({ status: "pending" });
 
   const apiUrl = typeof params.apiUrl === "string" ? params.apiUrl : "";
-  const bypass = typeof params.bypass === "string" ? params.bypass : "";
   const name = typeof params.name === "string" ? params.name : undefined;
   const email = typeof params.email === "string" ? params.email : undefined;
   const seed = typeof params.seed === "string" ? params.seed : undefined;
 
   useEffect(() => {
     if (!isE2ETestingEnabled() || !apiUrl) return;
-    setupE2ESession({ apiUrl, bypassSecret: bypass, name, email, seed })
+    setupE2ESession({ apiUrl, name, email, seed })
       .then((session) => {
         setState({ status: "done", email: session.email });
       })
@@ -42,7 +40,7 @@ export default function E2ELoginScreen() {
           message: error instanceof Error ? error.message : String(error),
         });
       });
-  }, [apiUrl, bypass, name, email, seed]);
+  }, [apiUrl, name, email, seed]);
 
   if (!isE2ETestingEnabled()) {
     return <Redirect href="/" />;

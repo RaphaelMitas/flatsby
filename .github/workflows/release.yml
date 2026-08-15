@@ -36,7 +36,6 @@ jobs:
     outputs:
       is-release: ${{ steps.decide.outputs.is-release }}
       tag: ${{ steps.decide.outputs.tag }}
-      screenshot-url: ${{ steps.shots.outputs.url }}
     steps:
       - uses: actions/checkout@v7
 
@@ -65,33 +64,6 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
           echo "is-release=true" >> "$GITHUB_OUTPUT"
-
-      # The screenshot flow signs in through /api/e2e/create-session, which
-      # only preview deployments expose (E2E_TESTING=true). Vercel registers
-      # previews as GitHub deployments, so the newest successful one — usually
-      # the release branch's own preview — is discoverable without a Vercel
-      # token. E2E_SCREENSHOT_API_URL (repo variable) overrides if set.
-      - name: Resolve screenshot API URL
-        id: shots
-        if: steps.decide.outputs.is-release == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OVERRIDE: ${{ vars.E2E_SCREENSHOT_API_URL }}
-        run: |
-          URL="$OVERRIDE"
-          if [ -z "$URL" ]; then
-            for id in $(gh api "repos/${{ github.repository }}/deployments?environment=Preview&per_page=30" --jq '.[].id'); do
-              URL=$(gh api "repos/${{ github.repository }}/deployments/$id/statuses" \
-                --jq '[.[] | select(.state == "success")][0] | (.environment_url // .target_url) // empty')
-              [ -n "$URL" ] && break
-            done
-          fi
-          if [ -z "$URL" ]; then
-            echo "::warning::No successful preview deployment found and E2E_SCREENSHOT_API_URL is unset; skipping store screenshots."
-          else
-            echo "Screenshot API: $URL"
-          fi
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub release
         if: steps.decide.outputs.is-release == 'true'
@@ -132,7 +104,7 @@ jobs:
   # simulator for App Store dimensions.
   screenshots-ios:
     needs: check
-    if: needs.check.outputs.is-release == 'true' && needs.check.outputs.screenshot-url != ''
+    if: needs.check.outputs.is-release == 'true'
     runs-on: macos-26
     timeout-minutes: 60
     env:
@@ -160,8 +132,8 @@ jobs:
             echo "CCACHE_MAXSIZE=3G"
           } >> "$GITHUB_ENV"
 
-      # Shares the ccache artifact pool with e2e.yml (which can't use
-      # actions/cache on deployment_status runs), so release builds start warm.
+      # Shares the ccache artifact pool with e2e.yml, so release builds start
+      # warm.
       - name: Restore ccache from artifact
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -257,14 +229,19 @@ jobs:
           sleep 15
           xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
 
+      - name: Start E2E stack
+        uses: ./tooling/github/e2e-stack
+        with:
+          autumn-secret-key: ${{ secrets.AUTUMN_SECRET_KEY }}
+          ai-gateway-api-key: ${{ secrets.AI_GATEWAY_API_KEY }}
+
       - name: Capture store screenshots
         working-directory: apps/expo
         run: |
           mkdir -p e2e/results/screenshots
           node e2e/run-flows.mjs ../screenshots/store-screenshots
         env:
-          E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
-          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          E2E_API_URL: http://localhost:3000
 
       # App Store review refuses the submission without at least one 13"
       # iPad screenshot (the app supports tablets), so a minimal iPad flow
@@ -313,8 +290,7 @@ jobs:
         working-directory: apps/expo
         run: node e2e/run-flows.mjs ../screenshots/store-screenshots-ipad
         env:
-          E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
-          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          E2E_API_URL: http://localhost:3000
 
       # Failures must be diagnosable from the job log alone: print the debug
       # bundle's error lines, an element census of each captured failure-screen
@@ -380,7 +356,7 @@ jobs:
 
   screenshots-android:
     needs: check
-    if: needs.check.outputs.is-release == 'true' && needs.check.outputs.screenshot-url != ''
+    if: needs.check.outputs.is-release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -445,6 +421,12 @@ jobs:
           curl -fsSL https://get.maestro.mobile.dev | bash
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
 
+      - name: Start E2E stack
+        uses: ./tooling/github/e2e-stack
+        with:
+          autumn-secret-key: ${{ secrets.AUTUMN_SECRET_KEY }}
+          ai-gateway-api-key: ${{ secrets.AI_GATEWAY_API_KEY }}
+
       # Demo mode pins a clean status bar (fixed clock, full battery, no
       # notification icons) before the flow runs; each script line is its own
       # `sh -c`, which is fine for independent adb commands.
@@ -470,8 +452,7 @@ jobs:
             bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/apps/expo/android/app/build/outputs/apk/release/app-release.apk" ../screenshots/store-screenshots
         env:
           E2E_PLATFORM: android
-          E2E_API_URL: ${{ needs.check.outputs.screenshot-url }}
-          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          E2E_API_URL: http://localhost:3000
 
       # A JS fatal appears in the captured device logs with its message and
       # stack — the most readable source for a crash the iOS release bundle

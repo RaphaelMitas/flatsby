@@ -17,6 +17,10 @@ shift
 # "login-screen not visible".
 adb shell settings put global hide_error_dialogs 1 || true
 
+# The API server runs on the runner, not in the guest: localhost:3000 inside
+# the emulator has to come back out to the host.
+adb reverse tcp:3000 tcp:3000
+
 adb install "$apk"
 # The first launch pays JIT/dex warm-up, which stalls past the first flow's
 # wait if it happens inside Maestro.

@@ -1,0 +1,116 @@
+name: "E2E stack"
+description: "Postgres, schema and the web app, all running on the runner"
+
+inputs:
+  autumn-secret-key:
+    description: "Autumn key. Billing lookups fall back to the free plan without it, AI procedures fail."
+    required: false
+    default: ""
+  ai-gateway-api-key:
+    description: "AI gateway key, used by the AI-backed procedures."
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    # dotenv (`pnpm with-env`) is how every script in the repo gets its
+    # config, so the whole stack is configured through one generated file.
+    # The OAuth credentials are never exercised — no flow signs in through a
+    # provider — but better-auth rejects an undefined clientId at init.
+    - name: Write .env
+      shell: bash
+      env:
+        AUTUMN_SECRET_KEY: ${{ inputs.autumn-secret-key }}
+        AI_GATEWAY_API_KEY: ${{ inputs.ai-gateway-api-key }}
+      run: |
+        cat > "$GITHUB_WORKSPACE/.env" <<EOF
+        DATABASE_URL=postgres://postgres:postgres@localhost:5433/flatsby
+        DB_WSPROXY_PORT=5434
+        PORT=3000
+        BETTER_AUTH_URL=http://localhost:3000
+        NEXT_PUBLIC_BETTER_AUTH_BASE_URL=http://localhost:3000
+        BETTER_AUTH_SECRET=e2e-runner-secret
+        E2E_TESTING=true
+        GOOGLE_CLIENT_ID=e2e
+        GOOGLE_CLIENT_SECRET=e2e
+        APPLE_KEY_ID=e2e
+        APPLE_TEAM_ID=e2e
+        APPLE_PRIVATE_KEY=e2e
+        APPLE_BUNDLE_ID=com.flatcove.app.v2
+        APPLE_SERVICE_ID=e2e
+        AUTUMN_SECRET_KEY=$AUTUMN_SECRET_KEY
+        AI_GATEWAY_API_KEY=$AI_GATEWAY_API_KEY
+        EOF
+
+    # Ephemeral and per job: every job gets a pristine schema, so shards never
+    # see each other's rows. Linux runners have Docker, macOS runners do not.
+    - name: Start Postgres
+      shell: bash
+      env:
+        HOMEBREW_NO_AUTO_UPDATE: "1"
+        HOMEBREW_NO_INSTALL_CLEANUP: "1"
+        # Postgres refuses to start ("postmaster became multithreaded during
+        # startup") when the shell's locale settings are incomplete, which is
+        # the state a GitHub runner leaves them in.
+        LC_ALL: C
+        LANG: C
+      run: |
+        set -euo pipefail
+        if [ "$RUNNER_OS" = "macOS" ]; then
+          brew install postgresql@17
+          PG_BIN="$(brew --prefix postgresql@17)/bin"
+          "$PG_BIN/initdb" -D "$RUNNER_TEMP/pgdata" -U postgres --auth=trust \
+            --encoding=UTF8 --locale=C
+          "$PG_BIN/pg_ctl" -D "$RUNNER_TEMP/pgdata" -l "$RUNNER_TEMP/postgres.log" \
+            -o "-p 5433" -w start
+          "$PG_BIN/createdb" -h 127.0.0.1 -p 5433 -U postgres flatsby
+        else
+          docker run -d --name e2e-postgres -p 5433:5432 \
+            -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=flatsby postgres:17-alpine
+          for _ in $(seq 60); do
+            docker exec e2e-postgres pg_isready -q -U postgres -d flatsby && break
+            sleep 1
+          done
+        fi
+
+    # Push, not migrate: migration 0000 is a no-op baseline (the schema
+    # predates the migration folder), so `drizzle-kit migrate` leaves an empty
+    # database empty. Push builds the PR's schema straight from src/schema.ts,
+    # which is what the suite should run against anyway.
+    - name: Create schema
+      shell: bash
+      run: pnpm -F @flatsby/db push --force
+
+    # @neondatabase/serverless speaks Postgres over websockets, which a plain
+    # Postgres does not; packages/db/src/client.ts routes localhost URLs here.
+    - name: Start database websocket proxy
+      shell: bash
+      run: |
+        nohup node "$GITHUB_WORKSPACE/scripts/local-db-wsproxy.mjs" \
+          > "$RUNNER_TEMP/wsproxy.log" 2>&1 &
+
+    # Both values are baked into the output (data-testid attributes survive
+    # only under E2E_TESTING, the auth base URL ends up in the client bundle)
+    # and turbo hashes the environment, not the generated .env — without them
+    # a cache entry from an ordinary build would be restored here.
+    - name: Build web app
+      shell: bash
+      env:
+        E2E_TESTING: "true"
+        NEXT_PUBLIC_BETTER_AUTH_BASE_URL: http://localhost:3000
+      run: pnpm turbo run build --filter=@flatsby/nextjs
+
+    # A GET on the session route answers 405 without touching the database,
+    # which is enough to pay the route's module init (db pool, better-auth)
+    # here instead of inside the first flow's wait.
+    - name: Start web app
+      shell: bash
+      run: |
+        nohup pnpm -F @flatsby/nextjs start > "$RUNNER_TEMP/web.log" 2>&1 &
+        for _ in $(seq 60); do
+          curl -fsSL -o /dev/null http://localhost:3000/ && break
+          sleep 2
+        done
+        curl -fsSL -o /dev/null http://localhost:3000/
+        curl -s -o /dev/null http://localhost:3000/api/e2e/create-session
