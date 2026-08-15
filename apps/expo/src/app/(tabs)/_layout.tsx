@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { useKeyboardState } from "react-native-keyboard-controller";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
@@ -85,7 +86,11 @@ export default function TabLayout() {
 
   return (
     <NativeTabs
-      hidden={keyboardVisible}
+      // Android stacks the tab bar on top of the keyboard, and Expo cannot
+      // report its height, so nothing downstream can compensate for it. Hide it
+      // while typing. iOS already lets the keyboard cover the bar, and hiding it
+      // there breaks the keyboard in the delete dialog and the add-item form.
+      hidden={Platform.OS === "android" && keyboardVisible}
       tintColor={getColor("primary")}
       backgroundColor={getColor("background")}
       indicatorColor={getColor("muted")}
