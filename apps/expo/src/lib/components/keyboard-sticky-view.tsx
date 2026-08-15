@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { KeyboardStickyViewProps } from "react-native-keyboard-controller";
-import { Platform } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -21,12 +20,9 @@ export function AppKeyboardStickyView({
 
   return (
     <KeyboardStickyView
-      // Android resizes the window instead, via tabBarRespectsIMEInsets, so
-      // translating too would move the form twice and throw it up the screen.
-      enabled={Platform.OS === "ios"}
       // translateY is keyboardHeight + offset, so a positive opened pushes the
-      // form back down. The keyboard covers the tab bar, so give back the
-      // bottom inset SafeAreaView reserves for it.
+      // form back down, cancelling the bottom inset SafeAreaView reserves. The
+      // tab bar hides while typing, so that inset is only the home indicator.
       offset={{ opened: insets.bottom, closed: 0 }}
       className={className}
       {...props}
