@@ -6,13 +6,12 @@ import * as SecureStore from "expo-secure-store";
  * profile (E2E_TESTING=true baked into `extra.e2eTesting` via app.config.ts).
  *
  * The Maestro test runner opens the `flatsby://e2e-login` deep link with the
- * preview deployment URL and Vercel bypass secret. That route stores them
- * here and injects a signed session cookie, then the app is relaunched so
- * that module-init consumers (auth client, tRPC links) pick up the override.
+ * URL of the server under test. That route stores it here and injects a
+ * signed session cookie, then the app is relaunched so that module-init
+ * consumers (auth client, tRPC links) pick up the override.
  */
 
 const API_URL_KEY = "e2e_api_url";
-const BYPASS_SECRET_KEY = "e2e_bypass_secret";
 
 /** Matches the @better-auth/expo client: `${storagePrefix}_cookie`. */
 const AUTH_COOKIE_STORAGE_KEY = "flatsby_cookie";
@@ -36,13 +35,6 @@ export function getE2EApiUrlOverride(): string | null {
  */
 export function e2eAccessibilityOverride(): false | undefined {
   return isE2ETestingEnabled() ? false : undefined;
-}
-
-export function getE2EBypassHeaders(): Record<string, string> {
-  if (!isE2ETestingEnabled()) return {};
-  const secret = SecureStore.getItem(BYPASS_SECRET_KEY);
-  if (!secret) return {};
-  return { "x-vercel-protection-bypass": secret };
 }
 
 interface E2ESessionCookie {
@@ -92,20 +84,16 @@ function parseE2ESession(value: unknown): E2ESession {
 /**
  * Calls the web app's e2e create-session endpoint and stores the returned
  * session cookies in the exact format the @better-auth/expo client reads,
- * plus the API URL + bypass secret for subsequent requests.
+ * plus the API URL for subsequent requests.
  */
 export async function setupE2ESession(options: {
   apiUrl: string;
-  bypassSecret: string;
   name?: string;
   email?: string;
   seed?: string;
 }): Promise<E2ESession> {
   const apiUrl = options.apiUrl.replace(/\/+$/, "");
   SecureStore.setItem(API_URL_KEY, apiUrl);
-  if (options.bypassSecret) {
-    SecureStore.setItem(BYPASS_SECRET_KEY, options.bypassSecret);
-  }
 
   const query = new URLSearchParams();
   if (options.name) query.set("name", options.name);
@@ -113,9 +101,9 @@ export async function setupE2ESession(options: {
   if (options.seed) query.set("seed", options.seed);
   const suffix = query.size > 0 ? `?${query.toString()}` : "";
 
-  // The endpoint sits on a fresh preview deployment; the first request from
-  // the simulator can fail or stall transiently, which would otherwise park
-  // the e2e-login screen in its error state for the whole test run.
+  // The first request out of a freshly booted simulator or emulator can fail
+  // or stall transiently, which would otherwise park the e2e-login screen in
+  // its error state for the whole test run.
   let response: Response | undefined;
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -123,9 +111,6 @@ export async function setupE2ESession(options: {
     try {
       response = await fetch(`${apiUrl}/api/e2e/create-session${suffix}`, {
         method: "POST",
-        headers: options.bypassSecret
-          ? { "x-vercel-protection-bypass": options.bypassSecret }
-          : {},
       });
       if (response.ok) break;
       const body = await response.text();

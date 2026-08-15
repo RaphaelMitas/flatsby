@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * CI Maestro runner: `node e2e/run-flows.mjs [dir-or-flow ...]`, no args for
- * the whole suite. Needs E2E_API_URL, optionally VERCEL_BYPASS_SECRET.
- * E2E_PLATFORM selects the app id ("ios" default, or "android").
+ * the whole suite. Needs E2E_API_URL. E2E_PLATFORM selects the app id ("ios"
+ * default, or "android").
  *
  * One maestro invocation per flow, because the XCTest driver occasionally
  * crashes mid-batch on hosted runners and a shared invocation then fails
@@ -76,10 +76,7 @@ function collectTakeScreenshots(debugDir) {
   }
 }
 
-async function runFlow(file, tag) {
-  // Per attempt, not once per job: retries can start minutes later, after the
-  // deployment's functions have scaled back down.
-  await warmUpApi();
+function runFlow(file, tag) {
   const debugDir = join(resultsDir, `debug-${tag}`);
   console.log(`\n> maestro test ${relative(e2eDir, file)}`);
   const { status, error } = spawnSync(
@@ -90,8 +87,6 @@ async function runFlow(file, tag) {
       `APP_ID=${appId}`,
       "-e",
       `E2E_API_URL=${apiUrl}`,
-      "-e",
-      `VERCEL_BYPASS_SECRET=${process.env.VERCEL_BYPASS_SECRET ?? ""}`,
       "--format",
       "junit",
       "--output",
@@ -109,39 +104,6 @@ async function runFlow(file, tag) {
   return status ?? 1;
 }
 
-// Otherwise the first flow pays the cold Vercel function + DB inside its own
-// waits, the main source of first-attempt flakes. Each route is its own
-// Vercel function, so the tRPC route the flows' mutations go through needs
-// warming separately from the e2e session route (any response status warms).
-async function warmUpApi() {
-  const base = apiUrl.replace(/\/+$/, "");
-  const headers = {
-    "x-vercel-protection-bypass": process.env.VERCEL_BYPASS_SECRET ?? "",
-  };
-  const warm = async (label, path, init) => {
-    const started = Date.now();
-    try {
-      const res = await fetch(base + path, {
-        ...init,
-        headers,
-        signal: AbortSignal.timeout(60000),
-      });
-      console.log(
-        `API warm-up (${label}): HTTP ${res.status} in ${Date.now() - started}ms`,
-      );
-    } catch (error) {
-      console.warn(
-        `API warm-up (${label}) failed after ${Date.now() - started}ms:`,
-        error,
-      );
-    }
-  };
-  await Promise.all([
-    warm("create-session", "/api/e2e/create-session", { method: "POST" }),
-    warm("trpc", "/api/trpc/user.getCurrentUser"),
-  ]);
-}
-
 const targets = process.argv.slice(2);
 const files = (targets.length ? targets : ["."]).flatMap(resolveTarget);
 
@@ -149,7 +111,7 @@ mkdirSync(resultsDir, { recursive: true });
 
 const failed = [];
 for (const [i, file] of files.entries()) {
-  if ((await runFlow(file, i)) !== 0) failed.push(file);
+  if (runFlow(file, i) !== 0) failed.push(file);
 }
 if (failed.length === 0) process.exit(0);
 
@@ -164,7 +126,7 @@ const names = failed.map((f) => relative(e2eDir, f)).join(", ");
 console.log(`\nRerunning ${failed.length} flow file(s) once: ${names}`);
 const stillFailing = [];
 for (const [i, file] of failed.entries()) {
-  if ((await runFlow(file, `retry-${i}`)) !== 0) stillFailing.push(file);
+  if (runFlow(file, `retry-${i}`) !== 0) stillFailing.push(file);
 }
 if (stillFailing.length > 0) process.exit(1);
 console.log("All failed flows passed on rerun.");

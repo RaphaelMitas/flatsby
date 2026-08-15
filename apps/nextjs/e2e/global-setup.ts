@@ -1,7 +1,5 @@
 import type { FullConfig } from "@playwright/test";
 
-import { fetchWithVercelBypass } from "./helpers/vercel";
-
 /**
  * Runs once before the suite: sweeps stale E2E test data (users, groups, and
  * related rows older than one hour) left behind by previous runs. Fresh data
@@ -15,7 +13,7 @@ export default async function globalSetup(config: FullConfig) {
   const url = `${baseURL}/api/e2e/create-session`;
 
   try {
-    const res = await fetchWithVercelBypass(url, { method: "DELETE" });
+    const res = await fetch(url, { method: "DELETE" });
 
     if (!res.ok) {
       console.warn(

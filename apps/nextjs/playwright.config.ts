@@ -1,10 +1,10 @@
 import os from "node:os";
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = process.env.CI ? 3000 : 3100;
+// Only used for the dev server this config starts when BASE_URL is unset; CI
+// runs its own server and passes BASE_URL.
+const PORT = 3100;
 const baseURL = process.env.BASE_URL ?? `http://localhost:${PORT}`;
-
-const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 // Every test gets its own isolated user + group (see e2e/fixtures/auth.ts),
 // so any worker count is safe. Override with PLAYWRIGHT_WORKERS.
@@ -30,14 +30,6 @@ export default defineConfig({
     screenshot: "only-on-failure",
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
-    ...(bypassSecret
-      ? {
-          extraHTTPHeaders: {
-            "x-vercel-protection-bypass": bypassSecret,
-            "x-vercel-set-bypass-cookie": "samesitenone",
-          },
-        }
-      : {}),
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   // Only start a local dev server when no BASE_URL is provided

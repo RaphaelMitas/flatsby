@@ -1,5 +1,7 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+const isE2E = process.env.E2E_TESTING === "true";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Flatsby",
@@ -19,7 +21,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       dark: "./assets/ios-dark.png",
       tinted: "./assets/ios-tinted.png",
     },
-    infoPlist: { ITSAppUsesNonExemptEncryption: false },
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+      // The e2e suite talks to a plain-HTTP server on the runner, which App
+      // Transport Security blocks in a Release build.
+      ...(isE2E && {
+        NSAppTransportSecurity: {
+          NSAllowsLocalNetworking: true,
+          NSExceptionDomains: {
+            localhost: { NSExceptionAllowsInsecureHTTPLoads: true },
+          },
+        },
+      }),
+    },
     privacyManifests: {
       NSPrivacyCollectedDataTypes: [
         {
@@ -82,7 +96,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "f7e9d15f-497c-4f4e-ac97-f59a14638cdd",
     },
-    e2eTesting: process.env.E2E_TESTING === "true",
+    e2eTesting: isE2E,
   },
   experiments: {
     tsconfigPaths: true,
@@ -93,7 +107,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     url: "https://u.expo.dev/f7e9d15f-497c-4f4e-ac97-f59a14638cdd",
     // Bare prebuild + xcodebuild has no EAS channel headers, so every launch
     // would hit the update server and 400.
-    enabled: process.env.E2E_TESTING !== "true",
+    enabled: !isE2E,
   },
   runtimeVersion: {
     policy: "appVersion",
@@ -117,9 +131,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "expo-build-properties",
       {
-        ios: {
-          ccacheEnabled: process.env.E2E_TESTING === "true",
-        },
+        ios: { ccacheEnabled: isE2E },
+        // Same reason as the iOS ATS exception: the e2e server is HTTP.
+        ...(isE2E && { android: { usesCleartextTraffic: true } }),
       },
     ],
     ["expo-font", { fonts: ["./assets/fonts/lucide.ttf"] }],
