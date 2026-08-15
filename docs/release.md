@@ -51,10 +51,10 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   token for the `flatsby` EAS org (https://expo.dev/settings/access-tokens).
   iOS submission also needs App Store Connect API credentials stored on EAS -
   already the case if `eas submit -p ios` has ever run interactively.
-- **`AUTUMN_SECRET_KEY` / `AI_GATEWAY_API_KEY`** (repo secrets): passed to the
-  web app the screenshot jobs run on the runner (see
-  `tooling/github/e2e-stack`). Billing lookups fall back to the free plan
-  without the Autumn key.
+- **`AUTUMN_SECRET_KEY` / `AI_GATEWAY_API_KEY`** (repo secrets, optional, not
+  set yet): passed to the web app the screenshot jobs run on the runner (see
+  `tooling/github/e2e-stack`). Without them billing shows the free plan and AI
+  categorization falls back to "other", which no flow asserts against.
 - **`ASC_API_KEY_ID` / `ASC_API_ISSUER_ID` / `ASC_API_KEY_CONTENT`** (repo
   secrets, required for the App Store listing update + review submission):
   an App Store Connect API key with the App Manager role (App Store Connect
@@ -65,6 +65,7 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   listing screenshot upload): the same service-account JSON EAS uses for
   Play submissions. Until set, `publish-android` skips with a warning (the
   binary still reaches the production track via EAS).
+
 ## Notes
 
 - Store screenshots are taken from an `E2E_TESTING=true` build (that build

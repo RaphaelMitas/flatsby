@@ -43,9 +43,9 @@ jobs:
         env:
           BASE_URL: http://localhost:3000
 
-      - name: Dump web app log
+      - name: Dump stack logs
         if: failure()
-        run: tail -n 200 "$RUNNER_TEMP/web.log"
+        run: tail -n 200 "$RUNNER_TEMP"/web.log "$RUNNER_TEMP"/wsproxy.log
 
       - name: Upload test report
         if: failure()
@@ -257,7 +257,7 @@ jobs:
           mkdir -p e2e/results/diagnostics
           cp -f ~/Library/Logs/DiagnosticReports/*.crash e2e/results/diagnostics/ 2>/dev/null || true
           cp -f ~/Library/Logs/DiagnosticReports/*.ips e2e/results/diagnostics/ 2>/dev/null || true
-          cp -f "$RUNNER_TEMP/web.log" e2e/results/diagnostics/ 2>/dev/null || true
+          cp -f "$RUNNER_TEMP"/web.log "$RUNNER_TEMP"/wsproxy.log e2e/results/diagnostics/ 2>/dev/null || true
           xcrun simctl spawn "${{ steps.sim.outputs.udid }}" log show --style compact --last 30m \
             --predicate 'processImagePath CONTAINS "Flatsby" OR senderImagePath CONTAINS "Flatsby"' \
             > e2e/results/diagnostics/sim-log.txt 2>/dev/null || true
@@ -410,8 +410,6 @@ jobs:
 
       # The runner executes every `script` line as a separate `sh -c`, so the
       # install / pre-warm / run / logcat sequence lives in one script file.
-      # The guest reaches the runner's server through `adb reverse`, set up
-      # there once the emulator is up.
       - name: Run Maestro tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -432,11 +430,11 @@ jobs:
           E2E_PLATFORM: android
           E2E_API_URL: http://localhost:3000
 
-      - name: Collect server log
+      - name: Collect stack logs
         if: always()
         run: |
           mkdir -p apps/expo/e2e/results/diagnostics
-          cp -f "$RUNNER_TEMP/web.log" apps/expo/e2e/results/diagnostics/ || true
+          cp -f "$RUNNER_TEMP"/web.log "$RUNNER_TEMP"/wsproxy.log apps/expo/e2e/results/diagnostics/ || true
 
       # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
       # which upload-artifact drops by default.

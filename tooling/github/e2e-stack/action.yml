@@ -15,10 +15,14 @@ runs:
   using: composite
   steps:
     # dotenv (`pnpm with-env`) is how every script in the repo gets its
-    # config, so the whole stack is configured through one generated file.
+    # config, so the whole stack is configured through one generated file. It
+    # goes into the environment too: dotenv never overrides an already-set
+    # variable, so this is what keeps an ambient DATABASE_URL from taking the
+    # schema push somewhere real, and turbo hashes the environment rather than
+    # the file (E2E_TESTING and the auth base URL both change the build).
     # The OAuth credentials are never exercised — no flow signs in through a
     # provider — but better-auth rejects an undefined clientId at init.
-    - name: Write .env
+    - name: Write the stack's configuration
       shell: bash
       env:
         AUTUMN_SECRET_KEY: ${{ inputs.autumn-secret-key }}
@@ -42,6 +46,7 @@ runs:
         AUTUMN_SECRET_KEY=$AUTUMN_SECRET_KEY
         AI_GATEWAY_API_KEY=$AI_GATEWAY_API_KEY
         EOF
+        cat "$GITHUB_WORKSPACE/.env" >> "$GITHUB_ENV"
 
     # Ephemeral and per job: every job gets a pristine schema, so shards never
     # see each other's rows. Linux runners have Docker, macOS runners do not.
@@ -68,10 +73,15 @@ runs:
         else
           docker run -d --name e2e-postgres -p 5433:5432 \
             -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=flatsby postgres:17-alpine
+          # Over TCP, not the socket: the entrypoint runs a socket-only server
+          # while it creates the database, so a socket probe reports ready on a
+          # server that is about to shut down and restart.
+          ready="pg_isready -h 127.0.0.1 -p 5432 -U postgres -d flatsby"
           for _ in $(seq 60); do
-            docker exec e2e-postgres pg_isready -q -U postgres -d flatsby && break
+            docker exec e2e-postgres $ready -q && break
             sleep 1
           done
+          docker exec e2e-postgres $ready
         fi
 
     # Push, not migrate: migration 0000 is a no-op baseline (the schema
@@ -90,20 +100,14 @@ runs:
         nohup node "$GITHUB_WORKSPACE/scripts/local-db-wsproxy.mjs" \
           > "$RUNNER_TEMP/wsproxy.log" 2>&1 &
 
-    # Both values are baked into the output (data-testid attributes survive
-    # only under E2E_TESTING, the auth base URL ends up in the client bundle)
-    # and turbo hashes the environment, not the generated .env — without them
-    # a cache entry from an ordinary build would be restored here.
     - name: Build web app
       shell: bash
-      env:
-        E2E_TESTING: "true"
-        NEXT_PUBLIC_BETTER_AUTH_BASE_URL: http://localhost:3000
       run: pnpm turbo run build --filter=@flatsby/nextjs
 
-    # A GET on the session route answers 405 without touching the database,
-    # which is enough to pay the route's module init (db pool, better-auth)
-    # here instead of inside the first flow's wait.
+    # Minting one throwaway session is the readiness check: it is the only
+    # probe that proves the whole chain (app, proxy, database) works, and it
+    # pays the route's module init here instead of inside the first flow's
+    # wait. Nothing asserts on it — every test mints its own.
     - name: Start web app
       shell: bash
       run: |
@@ -113,4 +117,4 @@ runs:
           sleep 2
         done
         curl -fsSL -o /dev/null http://localhost:3000/
-        curl -s -o /dev/null http://localhost:3000/api/e2e/create-session
+        curl -fsS -X POST -o /dev/null http://localhost:3000/api/e2e/create-session
