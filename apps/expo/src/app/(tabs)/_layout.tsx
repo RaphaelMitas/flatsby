@@ -1,7 +1,7 @@
 import { useEffect } from "react";
+import { useKeyboardState } from "react-native-keyboard-controller";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
-import { useKeyboardState } from "react-native-keyboard-controller";
 import LucideIcon from "@react-native-vector-icons/lucide";
 
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
