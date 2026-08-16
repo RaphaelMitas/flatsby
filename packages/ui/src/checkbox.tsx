@@ -1,56 +1,42 @@
 "use client";
 
-import * as React from "react";
+import type { ComponentPropsWithoutRef, ElementRef } from "react";
+import { forwardRef, useState } from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 
 import { cn } from "@flatsby/ui";
 
-// Must match the check-ripple keyframe in tooling/tailwind/theme.css.
-const RIPPLE_DURATION_MS = 550;
-
-const Checkbox = React.forwardRef<
-  React.ElementRef<typeof CheckboxPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
->(({ className, checked, onCheckedChange, ...props }, ref) => {
-  const [flash, setFlash] = React.useState(false);
-  const wasChecked = React.useRef(checked === true);
-
-  // Already-checked items must not ripple on mount.
-  React.useEffect(() => {
-    if (checked === undefined) return;
-    if (checked === true && !wasChecked.current) setFlash(true);
-    if (checked !== true) setFlash(false);
-    wasChecked.current = checked === true;
-  }, [checked]);
-
-  React.useEffect(() => {
-    if (!flash) return;
-    const timeout = setTimeout(() => setFlash(false), RIPPLE_DURATION_MS);
-    return () => clearTimeout(timeout);
-  }, [flash]);
+const Checkbox = forwardRef<
+  ElementRef<typeof CheckboxPrimitive.Root>,
+  ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
+>(({ className, onCheckedChange, ...props }, ref) => {
+  const [rippling, setRippling] = useState(false);
 
   return (
     <CheckboxPrimitive.Root
       ref={ref}
-      checked={checked}
-      onCheckedChange={(next) => {
-        if (next === true) setFlash(true);
-        onCheckedChange?.(next);
+      onCheckedChange={(checked) => {
+        // Unticking clears it, so the ring never outlives the tick it belongs
+        // to and a re-tick inside the window gets a fresh span to animate.
+        setRippling(checked === true);
+        onCheckedChange?.(checked);
       }}
       className={cn(
-        "peer border-primary focus-visible:ring-ring data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground relative h-4 w-4 shrink-0 rounded-sm border shadow transition duration-150 focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-90",
+        "peer group/checkbox border-primary focus-visible:ring-ring data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground relative h-4 w-4 shrink-0 rounded-sm border shadow transition duration-150 focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-90",
         className,
       )}
       {...props}
     >
-      {flash && (
+      {rippling && (
         <span
           aria-hidden
+          onAnimationEnd={() => setRippling(false)}
           className="border-primary motion-safe:animate-check-ripple pointer-events-none absolute -inset-px rounded-sm border opacity-0"
         />
       )}
       <CheckboxPrimitive.Indicator
-        className={cn("flex items-center justify-center text-current")}
+        forceMount
+        className="flex items-center justify-center text-current"
       >
         <svg
           aria-hidden="true"
@@ -62,13 +48,12 @@ const Checkbox = React.forwardRef<
           strokeLinejoin="round"
           className="h-3.5 w-3.5"
         >
+          {/* Transitioned rather than keyframed, so a list of already
+              completed items draws nothing on mount. */}
           <path
             d="M20 6 9 17l-5-5"
             pathLength={1}
-            className={cn(
-              "[stroke-dasharray:1] [stroke-dashoffset:0]",
-              flash && "motion-safe:animate-check-draw",
-            )}
+            className="[stroke-dasharray:1] [stroke-dashoffset:1] group-data-[state=checked]/checkbox:[stroke-dashoffset:0] motion-safe:transition-[stroke-dashoffset] motion-safe:duration-[250ms] motion-safe:ease-[cubic-bezier(0.65,0,0.35,1)]"
           />
         </svg>
       </CheckboxPrimitive.Indicator>

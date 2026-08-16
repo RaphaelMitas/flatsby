@@ -1,6 +1,7 @@
 "use client";
 
-import * as React from "react";
+import type { ComponentRef } from "react";
+import { forwardRef, useEffect } from "react";
 import { Pressable } from "react-native";
 import Animated, {
   Easing,
@@ -22,10 +23,7 @@ interface CheckboxProps {
   testID?: string;
 }
 
-const Checkbox = React.forwardRef<
-  React.ComponentRef<typeof Pressable>,
-  CheckboxProps
->(
+const Checkbox = forwardRef<ComponentRef<typeof Pressable>, CheckboxProps>(
   (
     { className, checked = false, onCheckedChange, disabled, ...props },
     ref,
@@ -36,7 +34,7 @@ const Checkbox = React.forwardRef<
     // 1 is the resting, finished state, so an untouched checkbox has no ring.
     const ripple = useSharedValue(1);
 
-    React.useEffect(() => {
+    useEffect(() => {
       fill.value = withSpring(checked ? 1 : 0, {
         damping: 15,
         stiffness: 260,
@@ -78,6 +76,7 @@ const Checkbox = React.forwardRef<
       transform: [{ scale: fill.value }],
     }));
 
+    // The pop spring is intentionally unclamped, so it undershoots past 0 on uncheck.
     const popStyle = useAnimatedStyle(() => ({
       opacity: Math.max(0, pop.value),
       transform: [{ scale: Math.max(0, pop.value) }],

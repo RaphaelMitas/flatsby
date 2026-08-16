@@ -58,12 +58,10 @@ test.describe("Shopping List Items", () => {
 
     await purchasedItem.getByRole("checkbox").click();
 
-    await expect(
-      authPage
-        .getByText("Purchased Items")
-        .locator("+ div")
-        .getByText(itemName),
-    ).not.toBeVisible({ timeout: 10000 });
+    // It was the only purchased item, so the whole section goes with it.
+    await expect(authPage.getByText("Purchased Items")).not.toBeVisible({
+      timeout: 10000,
+    });
 
     const restoredItem = await getShoppingListItemLocator(authPage, itemName);
     await expect(restoredItem.getByRole("checkbox")).not.toBeChecked({

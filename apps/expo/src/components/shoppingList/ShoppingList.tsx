@@ -116,11 +116,11 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       ? categoryCountsData.data.total
       : undefined;
 
-  // Transform data for FlashList
+  // Item ids carry no checked/unchecked prefix, so ticking a row reorders it
+  // instead of remounting it and killing the tick animation.
   const flashListData = useMemo((): ListItem[] => {
     const data: ListItem[] = [];
 
-    // Add unchecked sections
     uncheckedSections.forEach((section) => {
       data.push({
         type: "header",
@@ -132,7 +132,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       });
     });
 
-    // Add checked sections
     if (checkedSections.length > 0) {
       data.push({
         type: "header",
@@ -152,12 +151,10 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       });
     }
 
-    // Add loading indicator
     if (isFetchingNextPage) {
       data.push({ type: "loading", id: "loading-indicator" });
     }
 
-    // Add end of list message or empty state
     if (allItems.length === 0) {
       data.push({ type: "empty", id: "empty-state" });
     } else if (!hasNextPage) {

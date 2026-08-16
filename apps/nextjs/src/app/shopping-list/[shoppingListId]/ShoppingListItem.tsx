@@ -365,20 +365,17 @@ const ShoppingListItem = ({
             />
           ) : (
             <>
-              <div
-                className={cn(
-                  "-m-2 flex items-center justify-center p-6",
-                  !item.isPending && "cursor-pointer",
-                )}
-                onClick={() =>
-                  !item.isPending && handleCheckboxChange(!item.completed)
-                }
-              >
+              <div className="-m-2 flex items-center justify-center p-6">
                 <Checkbox
                   checked={item.completed}
                   disabled={item.isPending}
-                  // Dimming while pending would land on top of the tick animation.
-                  className="md:group-hover:bg-primary-foreground md:group-hover:text-primary disabled:opacity-100"
+                  onCheckedChange={(checked) =>
+                    handleCheckboxChange(checked === true)
+                  }
+                  // The ::before is the real 64px hit target, so pressing the
+                  // padding still presses the control and animates it.
+                  // Dimming while pending would land on top of that animation.
+                  className="md:group-hover:bg-primary-foreground md:group-hover:text-primary cursor-pointer before:absolute before:-inset-y-6 before:-right-4 before:-left-6 before:content-[''] disabled:cursor-not-allowed disabled:opacity-100"
                 />
               </div>
               <Popover>

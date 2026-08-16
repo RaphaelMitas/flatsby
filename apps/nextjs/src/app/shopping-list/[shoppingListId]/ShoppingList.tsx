@@ -236,8 +236,8 @@ const ShoppingListInner = ({
     });
   };
 
-  // One flat keyed list, mirroring the Expo FlashList: an item moving into
-  // Purchased is then a reorder, not a remount into a different parent.
+  // One flat keyed list, so ticking a row reorders it instead of remounting it
+  // under a different parent and killing the tick animation.
   const rows: (
     | { type: "header"; id: string; title: string; spaced?: boolean }
     | { type: "item"; id: string; item: ShoppingListItemType }
