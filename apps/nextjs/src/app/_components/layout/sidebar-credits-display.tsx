@@ -18,16 +18,19 @@ export function SidebarCreditsDisplay() {
   const isCollapsed = state === "collapsed";
 
   const creditsBalance = customer?.balances.credits;
-  const balance = creditsBalance?.remaining ?? 0;
-  const usage = creditsBalance?.usage ?? 0;
+
+  // A failed load would otherwise render "0 credits remaining", which reads
+  // as a spent account rather than a missing one.
+  if (isLoading || !creditsBalance) {
+    return null;
+  }
+
+  const balance = creditsBalance.remaining ?? 0;
+  const usage = creditsBalance.usage ?? 0;
 
   const totalAllowance = usage + balance;
   const usagePercentage =
     totalAllowance === 0 ? 0 : (usage / totalAllowance) * 100;
-
-  if (isLoading) {
-    return null;
-  }
 
   return (
     <SidebarMenuItem>

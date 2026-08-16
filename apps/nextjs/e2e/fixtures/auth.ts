@@ -41,7 +41,10 @@ export async function createAuthSession(
     throw new Error(`E2E session failed: ${response.status()} ${body}`);
   }
 
-  return (await response.json()) as SessionData;
+  const session = (await response.json()) as SessionData;
+  await page.context().addCookies(toPlaywrightCookies(session.cookies));
+
+  return session;
 }
 
 function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
@@ -51,7 +54,7 @@ function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
   return "Lax";
 }
 
-export function toPlaywrightCookies(cookies: TestCookie[]) {
+function toPlaywrightCookies(cookies: TestCookie[]) {
   return cookies.map((cookie) => ({
     name: cookie.name,
     value: cookie.value,
@@ -73,10 +76,8 @@ export function toPlaywrightCookies(cookies: TestCookie[]) {
  * can run with any number of parallel workers without polluting each other.
  */
 export const test = base.extend<{ authPage: Page; testUser: TestUser }>({
-  testUser: async ({ page, context, baseURL }, use) => {
+  testUser: async ({ page, baseURL }, use) => {
     const session = await createAuthSession(page, baseURL);
-
-    await context.addCookies(toPlaywrightCookies(session.cookies));
 
     await use({
       userId: session.userId,

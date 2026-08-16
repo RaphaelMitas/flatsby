@@ -31,6 +31,7 @@ carry categories and who added them.
 <p align="center">
   <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-shopping-list.png" alt="Shopping list on web" width="600">
   <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/02-shopping-list.png" alt="Shopping list on iOS" width="150">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/06-shopping-lists.png" alt="A group's shopping lists on iOS" width="150">
 </p>
 
 ## Expenses and settling up
@@ -40,6 +41,7 @@ running balance per flatmate. Settlements clear debts between two people.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-expenses.png" alt="Expenses on web" width="600">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/03-expenses.png" alt="Expenses on iOS" width="150">
   <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/04-expense-split.png" alt="Splitting an expense on iOS" width="150">
 </p>
 
@@ -59,9 +61,7 @@ A group is your household. Invite flatmates by email, manage roles, and keep
 every list and expense scoped to the people who share the flat.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/06-shopping-lists.png" alt="Group overview on iOS" width="150">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/05-add-member.png" alt="Members on iOS" width="150">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/03-expenses.png" alt="Expenses on iOS" width="150">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/05-add-member.png" alt="Managing members on iOS" width="150">
 </p>
 
 ## Tech
@@ -101,7 +101,8 @@ pnpm dev               # web + mobile in watch mode, or pnpm dev:next for web on
 ```
 
 Before committing: `pnpm check` and `pnpm typecheck`. Working conventions
-for this repo live in [AGENTS.md](./AGENTS.md).
+for this repo live in [AGENTS.md](./AGENTS.md), and how to propose a change
+in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 Releases are fully automated: merging a release PR tags the version, builds
 both apps, submits them to the stores, and recaptures every screenshot in

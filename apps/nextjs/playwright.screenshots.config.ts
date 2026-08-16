@@ -1,8 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // README screenshot capture, run by the release workflow. Not part of the
-// regular e2e suite (playwright.config.ts ignores e2e/screenshots): one
-// worker, one seeded session, deterministic dark-mode captures.
+// regular e2e suite (playwright.config.ts ignores e2e/screenshots).
 const PORT = 3100;
 const baseURL = process.env.BASE_URL ?? `http://localhost:${PORT}`;
 

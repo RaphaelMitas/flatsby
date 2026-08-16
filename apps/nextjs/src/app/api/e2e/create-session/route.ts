@@ -293,6 +293,10 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
     },
     output: { rendered: true },
   };
+  // Both rows would otherwise share one transaction timestamp, and the
+  // conversation is ordered by createdAt with no tiebreaker, so the answer
+  // could render above the question.
+  const askedAt = new Date();
   await db.insert(chatMessages).values([
     {
       id: `${conversation.id}-user`,
@@ -300,11 +304,13 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
       role: "user",
       content: "How is our spending looking this month?",
       status: "complete",
+      createdAt: askedAt,
     },
     {
       id: `${conversation.id}-assistant`,
       conversationId: conversation.id,
       role: "assistant",
+      createdAt: new Date(askedAt.getTime() + 1000),
       content:
         "Sunset Villa spent **€142.69** this month across three expenses. " +
         "Food & drinks was the biggest chunk at €84.20, followed by " +

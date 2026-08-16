@@ -523,9 +523,7 @@ jobs:
   # Publishes the README's images: the iPhone captures plus the web captures,
   # under stable filenames, as a single-commit orphan `assets` branch that
   # README.md embeds via raw.githubusercontent URLs. Force-pushing keeps the
-  # branch at one commit so the repo never grows release over release. Runs
-  # when either capture succeeded; a failed platform keeps its previous
-  # images (seeded from the branch's current state).
+  # branch at one commit so the repo never grows release over release.
   publish-readme-assets:
     needs: [check, screenshots-ios, screenshots-web]
     if: >-
@@ -555,20 +553,32 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.check.outputs.tag }}
         run: |
+          set -euo pipefail
           PUBLISH="$RUNNER_TEMP/publish"
           mkdir -p "$PUBLISH"
-          # Start from the branch's current images so a platform whose
-          # capture failed this release keeps its previous screenshots.
-          if git fetch origin assets 2>/dev/null; then
+          # Start from the branch's current images so a platform whose capture
+          # failed this release keeps its previous screenshots. A failed fetch
+          # has to abort: the force-push below would otherwise publish an empty
+          # tree, dropping the other platform's images with no history to
+          # recover them from.
+          if git ls-remote --exit-code origin assets > /dev/null; then
+            git fetch --depth 1 origin assets
             git archive FETCH_HEAD | tar -x -C "$PUBLISH"
           fi
-          if compgen -G "ios-results/screenshots/[0-9]*.png" > /dev/null; then
+          # Replace each directory wholesale, so a renamed or dropped capture
+          # doesn't leave last release's file behind alongside this one's.
+          shopt -s nullglob
+          ios=(ios-results/screenshots/[0-9]*.png)
+          web=(web-results/readme-screenshots/*.png)
+          if (( ${#ios[@]} )); then
+            rm -rf "$PUBLISH/ios"
             mkdir -p "$PUBLISH/ios"
-            cp ios-results/screenshots/[0-9]*.png "$PUBLISH/ios/"
+            cp "${ios[@]}" "$PUBLISH/ios/"
           fi
-          if compgen -G "web-results/readme-screenshots/*.png" > /dev/null; then
+          if (( ${#web[@]} )); then
+            rm -rf "$PUBLISH/web"
             mkdir -p "$PUBLISH/web"
-            cp web-results/readme-screenshots/*.png "$PUBLISH/web/"
+            cp "${web[@]}" "$PUBLISH/web/"
           fi
           cd "$PUBLISH"
           git init -q -b assets

@@ -1,13 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { createAuthSession, toPlaywrightCookies } from "../fixtures/auth";
+import { createAuthSession } from "../fixtures/auth";
 
 // README screenshot flow, the web counterpart of the mobile store-screenshot
 // Maestro flow: everything on screen comes from the server-side `seed=store`
-// scenario ("Sunset Villa", the stocked Groceries list, the split expenses,
-// the canned chat conversation), so the captures are reads only and identical
-// on every run. Output lands in test-results/readme-screenshots/, which the
-// release workflow publishes to the `assets` branch the README embeds.
+// scenario, so the captures are reads only and identical on every run.
+// The release workflow globs this path to publish the `assets` branch the
+// README embeds, so renaming it silently breaks the publish job.
 const OUT = "test-results/readme-screenshots";
 
 async function settle(page: import("@playwright/test").Page) {
@@ -20,13 +19,12 @@ async function settle(page: import("@playwright/test").Page) {
   });
 }
 
-test("captures README screenshots", async ({ page, context, baseURL }) => {
+test("captures README screenshots", async ({ page, baseURL }) => {
   const session = await createAuthSession(page, baseURL, {
     seed: "store",
     name: "Alex Rivera",
     email: "alex-web@flatsby.test",
   });
-  await context.addCookies(toPlaywrightCookies(session.cookies));
 
   await page.goto("/home");
   await expect(page.getByText("Sunset Villa").first()).toBeVisible();
@@ -52,7 +50,13 @@ test("captures README screenshots", async ({ page, context, baseURL }) => {
     throw new Error("seed=store did not return a conversationId");
   }
   await page.goto(`/chat/${session.conversationId}`);
-  await expect(page.getByText("Spending by category")).toBeVisible();
+  const question = page.getByText("How is our spending looking this month?");
+  const chart = page.getByText("Spending by category");
+  await expect(question).toBeVisible();
+  await expect(chart).toBeVisible();
+  const questionBox = await question.boundingBox();
+  const chartBox = await chart.boundingBox();
+  expect(questionBox?.y ?? 0).toBeLessThan(chartBox?.y ?? 0);
   // Recharts animates the pie in; capture the settled state.
   await page.waitForTimeout(1800);
   await settle(page);
