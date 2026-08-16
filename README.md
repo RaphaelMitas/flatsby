@@ -12,8 +12,12 @@
 
 <br><br>
 
-<img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-home.png" alt="Flatsby dashboard on web" width="600">
-<img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/01-home.png" alt="Flatsby home on iOS" width="150">
+<p>
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-home.png" alt="Flatsby dashboard on web" width="760">
+</p>
+<p>
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/01-home.png" alt="Flatsby home on iOS" width="200">
+</p>
 
 </div>
 
@@ -29,9 +33,11 @@ supermarket, it disappears from your phone before they reach the till. Items
 carry categories and who added them.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-shopping-list.png" alt="Shopping list on web" width="600">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/02-shopping-list.png" alt="Shopping list on iOS" width="150">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/06-shopping-lists.png" alt="A group's shopping lists on iOS" width="150">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-shopping-list.png" alt="Shopping list on web" width="760">
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/02-shopping-list.png" alt="Shopping list on iOS" width="200">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/06-shopping-lists.png" alt="A group's shopping lists on iOS" width="200">
 </p>
 
 ## Expenses and settling up
@@ -40,9 +46,11 @@ Log what you paid, split it equally or by exact amounts, and Flatsby keeps a
 running balance per flatmate. Settlements clear debts between two people.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-expenses.png" alt="Expenses on web" width="600">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/03-expenses.png" alt="Expenses on iOS" width="150">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/04-expense-split.png" alt="Splitting an expense on iOS" width="150">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-expenses.png" alt="Expenses on web" width="760">
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/03-expenses.png" alt="Expenses on iOS" width="200">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/04-expense-split.png" alt="Splitting an expense on iOS" width="200">
 </p>
 
 ## AI assistant
@@ -52,7 +60,7 @@ and expenses, answers with charts and tables, and can add items or expenses
 for you.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-chat.png" alt="AI chat with spending chart on web" width="600">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-chat.png" alt="AI chat with spending chart on web" width="760">
 </p>
 
 ## Groups
@@ -61,7 +69,7 @@ A group is your household. Invite flatmates by email, manage roles, and keep
 every list and expense scoped to the people who share the flat.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/05-add-member.png" alt="Managing members on iOS" width="150">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/05-add-member.png" alt="Managing members on iOS" width="200">
 </p>
 
 ## Tech
