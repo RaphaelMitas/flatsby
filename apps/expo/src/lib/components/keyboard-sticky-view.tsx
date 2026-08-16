@@ -21,8 +21,8 @@ export function AppKeyboardStickyView({
   return (
     <KeyboardStickyView
       // translateY is keyboardHeight + offset, so a positive opened pushes the
-      // form back down, cancelling the bottom inset SafeAreaView reserves. The
-      // tab bar hides while typing, so that inset is only the home indicator.
+      // form back down, cancelling the bottom inset SafeAreaView reserves for
+      // the tab bar the keyboard now covers.
       offset={{ opened: insets.bottom, closed: 0 }}
       className={className}
       {...props}

@@ -17,8 +17,13 @@ tags:
 # The add form is translated above the keyboard, and Android reports the
 # untranslated bounds, so a tap by id lands where the control used to be.
 # Dismissing first collapses the translation; the suggestions stay on screen
-# because they follow the typed text, not the keyboard.
-- hideKeyboard
+# because they follow the typed text, not the keyboard. iOS reports the real
+# bounds and its hideKeyboard is flaky, so keep this off that platform.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
 - tapOn:
     id: "shopping-list-category-picker"
 - waitForAnimationToEnd
@@ -44,7 +49,11 @@ tags:
     timeout: 20000
 
 # Tapping the suggestion fills the input
-- hideKeyboard
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
 - tapOn:
     id: "shopping-list-suggestion"
 - assertVisible:
