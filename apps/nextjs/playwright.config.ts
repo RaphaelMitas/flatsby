@@ -14,6 +14,8 @@ const workers = process.env.PLAYWRIGHT_WORKERS
 
 export default defineConfig({
   testDir: "./e2e",
+  // README screenshot capture has its own config (playwright.screenshots.config.ts)
+  testIgnore: "**/e2e/screenshots/**",
   globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

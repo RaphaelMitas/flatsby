@@ -1,392 +1,113 @@
+<div align="center">
+
 # Flatsby
 
-**Manage your daily life with your flatmates.**
+**Shared shopping lists, split expenses, settled debts. Household management for people living together.**
 
-Flatsby is a collaborative shopping list and household management application designed for people living together. Whether you're sharing a flat, house, or just managing household tasks with others, Flatsby helps you stay organized and in sync.
+[**flatsby.com**](https://www.flatsby.com)
 
-## ✨ Features
+<a href="https://apps.apple.com/app/id6747908544">
+  <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="44">
+</a>
 
-### 🛒 **Collaborative Shopping Lists**
+<br><br>
 
-- Create and manage shared shopping lists with your flatmates
-- Add items with categories for better organization
-- Real-time synchronization across all devices
-- Mark items as completed with contributor tracking
-- Separate view for purchased vs. unpurchased items
+<img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-home.png" alt="Flatsby dashboard on web" width="600">
+<img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/01-home.png" alt="Flatsby home on iOS" width="150">
 
-### 👥 **Group Management**
+</div>
 
-- Create household groups for your flat or living situation
-- Invite flatmates via secure authentication
-- Role-based permissions for group management
-- Profile management and settings
+Flatsby is one household in one place: everyone sees the same lists, the same
+expenses, and the same balances, live on web, iOS, and Android. The
+screenshots on this page are captured automatically from the real app on
+every release.
 
-### 📱 **Cross-Platform Experience**
+## Shopping lists
 
-- Native mobile app (iOS & Android) built with React Native/Expo
-- Progressive web application for desktop and mobile browsers
-- Seamless synchronization across all platforms
-- Optimized UI for each platform
+Lists sync in real time. When a flatmate checks off the milk in the
+supermarket, it disappears from your phone before they reach the till. Items
+carry categories and who added them.
 
-### 🔐 **Secure Authentication**
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-shopping-list.png" alt="Shopping list on web" width="600">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/02-shopping-list.png" alt="Shopping list on iOS" width="150">
+</p>
 
-- OAuth integration (Google, Apple)
-- Secure session management
-- Privacy-focused design
+## Expenses and settling up
 
-## 🛠 Tech Stack
+Log what you paid, split it equally or by exact amounts, and Flatsby keeps a
+running balance per flatmate. Settlements clear debts between two people.
 
-This is a modern full-stack TypeScript monorepo built with the T3 stack and enhanced for mobile development:
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-expenses.png" alt="Expenses on web" width="600">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/04-expense-split.png" alt="Splitting an expense on iOS" width="150">
+</p>
 
-### **Frontend**
+## AI assistant
 
-- **Next.js 15** - React-based web framework with React 19
-- **Expo/React Native** - Cross-platform mobile development
-- **TypeScript** - Type-safe development across the stack
-- **Tailwind CSS** - Utility-first CSS framework
-- **NativeWind** - Tailwind CSS for React Native
-- **Expo Router** - File-based routing for mobile navigation
+Ask about your household in plain language. The assistant reads your lists
+and expenses, answers with charts and tables, and can add items or expenses
+for you.
 
-### **Backend & API**
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-chat.png" alt="AI chat with spending chart on web" width="600">
+</p>
 
-- **tRPC v11** - End-to-end typesafe APIs
-- **Drizzle ORM** - Type-safe database toolkit
-- **PostgreSQL** - Primary database (Neon)
-- **Better Auth** - Modern authentication system
+## Groups
 
-### **UI & Design**
+A group is your household. Invite flatmates by email, manage roles, and keep
+every list and expense scoped to the people who share the flat.
 
-- **shadcn/ui** - Re-usable component library
-- **Radix UI** - Unstyled, accessible UI primitives
-- **Lucide Icons** - Beautiful, customizable icons
-- **Dark/Light Theme** - System-aware theme switching
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/06-shopping-lists.png" alt="Group overview on iOS" width="150">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/05-add-member.png" alt="Members on iOS" width="150">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/03-expenses.png" alt="Expenses on iOS" width="150">
+</p>
 
-### **Development & Tooling**
+## Tech
 
-- **Turborepo** - High-performance build system
-- **pnpm** - Fast, disk space efficient package manager
-- **Biome & Prettier** - Linting and code formatting
-- **TypeScript** - Static type checking
+TypeScript monorepo. The tRPC API lives inside the Next.js app, so the web
+app is also the backend for both clients.
 
-### **Deployment & Infrastructure**
-
-- **Vercel** - Web app deployment and hosting
-- **Expo Application Services** - Mobile app building and distribution
-- **Neon** - Serverless PostgreSQL database
-
-## 📁 Project Structure
+- **Web**: Next.js, React, Tailwind, shadcn/ui, deployed on Vercel
+- **Mobile**: Expo / React Native, NativeWind, Expo Router, built with EAS
+- **API**: tRPC with shared Zod validators
+- **Data**: PostgreSQL (Neon) via Drizzle ORM
+- **Auth**: Better Auth (Google and Apple sign-in)
+- **Tooling**: Turborepo, pnpm, Biome
 
 ```text
-flatsby/
-├── apps/
-│   ├── expo/                    # React Native mobile app
-│   │   ├── src/app/            # File-based routing (Expo Router)
-│   │   ├── src/components/     # Reusable UI components
-│   │   └── src/utils/          # Utilities and API clients
-│   └── nextjs/                 # Next.js web application
-│       ├── src/app/            # App router pages and components
-│       └── src/trpc/           # tRPC client configuration
-├── packages/
-│   ├── api/                    # tRPC API definitions and routers
-│   ├── auth/                   # Authentication configuration
-│   ├── db/                     # Database schema and client
-│   ├── ui/                     # Shared UI components
-│   └── validators/             # Shared validation schemas
-└── tooling/                    # Shared development configuration
-    ├── prettier/               # Prettier configuration
-    ├── tailwind/               # Tailwind CSS configuration
-    └── typescript/             # TypeScript configurations
+apps/expo        Expo app, iOS and Android
+apps/nextjs      Next.js web app, and the tRPC API
+packages/api     tRPC routers, procedures, group access helpers
+packages/auth    Better Auth config, shared by both clients
+packages/db      Drizzle schema and migrations
+packages/chat    AI chat feature
+packages/ui      Shared web components, shadcn based
+packages/validators  Shared Zod schemas
+tooling/         Shared configs and the GitHub Actions setup
 ```
 
-## 🚀 Quick Start
+## Development
 
-### Prerequisites
-
-- **Node.js 18+** (check `package.json#engines` for exact requirements)
-- **pnpm** (recommended package manager)
-- **PostgreSQL database** (Neon recommended)
-
-### 1. Clone and Setup
+Node and pnpm versions come from `.nvmrc` and the `packageManager` field in
+`package.json`.
 
 ```bash
-# Clone the repository
-git clone <your-repo-url>
-cd flatsby
-
-# Install dependencies
 pnpm install
-
-# Configure environment variables
-cp .env.example .env
+cp .env.example .env   # then fill in the values
+pnpm db:migrate
+pnpm dev               # web + mobile in watch mode, or pnpm dev:next for web only
 ```
 
-### 2. Environment Configuration
+Before committing: `pnpm check` and `pnpm typecheck`. Working conventions
+for this repo live in [AGENTS.md](./AGENTS.md).
 
-Update your `.env` file with the following required variables:
+Releases are fully automated: merging a release PR tags the version, builds
+both apps, submits them to the stores, and recaptures every screenshot in
+this README from the released code.
 
-```env
-# Database
-DATABASE_URL="postgresql://..."
+## License
 
-# Authentication
-AUTH_SECRET="your-auth-secret"
-AUTH_GOOGLE_ID="your-google-oauth-id"
-AUTH_GOOGLE_SECRET="your-google-oauth-secret"
-AUTH_APPLE_ID="your-apple-service-id"
-AUTH_APPLE_SECRET="your-apple-private-key"
-
-# App URLs
-NEXTAUTH_URL="http://localhost:3000"
-```
-
-### 3. Database Setup
-
-```bash
-# Push database schema
-pnpm db:push
-
-# Note: db:seed script may not be available - check package.json
-```
-
-### 4. Start Development Servers
-
-```bash
-# Start all development servers (web + mobile)
-pnpm dev
-```
-
-This will start:
-
-- Next.js web app at `http://localhost:3000`
-- Expo development server for mobile
-
-```bash
-# Or start only the Next.js web application
-pnpm dev:next
-```
-
-### 5. Mobile Development Setup
-
-#### Physical Device (Recommended)
-
-1. **Install Expo Go** app on your iOS or Android device
-2. **Start the dev server**: `pnpm dev`
-3. **Scan the QR code** shown in the terminal with your device
-4. Your app will load directly on your physical device
-
-#### Simulators/Emulators (Optional)
-
-- **iOS**: Install Xcode for iOS Simulator access
-- **Android**: Install Android Studio for Android Emulator access
-
-The Expo CLI will guide you through platform-specific setup when you run `pnpm dev`.
-
-## 🔧 Development
-
-### Scripts
-
-```bash
-# Development
-pnpm dev              # Start all apps in development mode (watch mode)
-pnpm dev:next         # Start only Next.js web app in watch mode
-
-# Building
-pnpm build            # Build all apps for production
-
-# Database
-pnpm db:push          # Push Drizzle schema changes to database
-pnpm db:studio        # Open Drizzle Studio database browser
-
-# Code Quality
-pnpm check            # Biome check + Prettier format check across all packages
-pnpm check:fix        # Fix Biome lint errors and Prettier formatting
-pnpm lint:ws          # Check workspace dependencies with sherif
-pnpm typecheck        # Run TypeScript type checking
-
-# UI Components
-pnpm ui-add           # Add new shadcn/ui components
-
-# Package Management
-pnpm clean            # Clean git-ignored files in node_modules
-pnpm clean:workspaces # Clean all workspace build artifacts
-```
-
-### Working with the Monorepo
-
-This project uses Turborepo for efficient monorepo management:
-
-```bash
-# Run commands in specific workspaces
-pnpm -F @flatsby/nextjs dev     # Run Next.js web app only
-pnpm -F @flatsby/expo start    # Run Expo mobile app only
-pnpm -F @flatsby/ui build      # Build UI package only
-
-# Add dependencies to specific packages
-pnpm -F @flatsby/nextjs add lodash
-pnpm -F @flatsby/expo add react-native-xyz
-```
-
-### Adding UI Components
-
-Add new shadcn/ui components using the interactive CLI:
-
-```bash
-pnpm ui:add
-```
-
-This will prompt you to select components and automatically install them in the appropriate packages.
-
-### Creating New Packages
-
-Generate new packages with proper tooling configuration:
-
-```bash
-pnpm turbo gen init
-```
-
-This creates a new package with:
-
-- Proper `package.json` configuration
-- TypeScript setup
-- Biome and Prettier configuration
-- Basic file structure
-
-### Authentication Setup
-
-The application uses Better Auth with OAuth providers. For local development:
-
-1. **Set up OAuth providers:**
-   - Google: Create OAuth credentials in Google Cloud Console
-   - Apple: Set up Sign in with Apple in Apple Developer Console
-
-2. **Configure environment variables** as shown in the Quick Start section
-
-3. **For production deployment**, consider using an auth proxy for stable OAuth callbacks
-
-## 🚀 Deployment
-
-### Web Application (Next.js)
-
-#### Deploy to Vercel (Recommended)
-
-1. **Connect your repository** to Vercel
-2. **Configure build settings:**
-   - Framework Preset: Next.js
-   - Root Directory: `apps/nextjs`
-   - Build Command: `cd ../.. && pnpm build:web`
-   - Install Command: `cd ../.. && pnpm install`
-
-3. **Set environment variables** in Vercel dashboard:
-
-   ```env
-   DATABASE_URL=your_database_url
-   AUTH_SECRET=your_auth_secret
-   AUTH_GOOGLE_ID=your_google_id
-   AUTH_GOOGLE_SECRET=your_google_secret
-   AUTH_APPLE_ID=your_apple_id
-   AUTH_APPLE_SECRET=your_apple_secret
-   NEXTAUTH_URL=https://your-domain.vercel.app
-   ```
-
-4. **Deploy** - Vercel will automatically build and deploy your app
-
-#### Alternative Deployment Options
-
-- **Docker**: Use the included Dockerfile
-- **Self-hosted**: Any Node.js hosting provider
-- **Railway**: Railway.app with automatic deployments
-
-### Mobile Application (Expo)
-
-#### Prerequisites
-
-1. **Create Expo account** at [expo.dev](https://expo.dev)
-2. **Install EAS CLI:**
-   ```bash
-   pnpm add -g eas-cli
-   eas login
-   ```
-
-#### Configure for Deployment
-
-1. **Update app configuration** in `apps/expo/app.config.ts`:
-   - Set your own `name`, `slug`, and `owner`
-   - Update bundle identifiers for iOS and Android
-
-2. **Configure EAS Build:**
-   ```bash
-   cd apps/expo
-   eas build:configure
-   ```
-
-#### Build and Submit
-
-```bash
-# Build for iOS
-eas build --platform ios --profile production
-
-# Build for Android
-eas build --platform android --profile production
-
-# Submit to app stores
-eas submit --platform ios --latest
-eas submit --platform android --latest
-```
-
-### Database Setup
-
-#### Production Database (Neon)
-
-1. **Create a Neon project** at [neon.tech](https://neon.tech)
-2. **Copy the database URL** from your Neon dashboard
-3. **Update environment variables** in your deployment platform
-4. **Run database migrations:**
-   ```bash
-   pnpm db:push
-   ```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
-
-### Quick Contribution Steps
-
-1. **Fork the repository**
-2. **Create a feature branch:** `git checkout -b feature/amazing-feature`
-3. **Make your changes** following our coding standards
-4. **Run tests and linting:** `pnpm check && pnpm typecheck`
-5. **Commit your changes:** `git commit -m 'Add amazing feature'`
-6. **Push to the branch:** `git push origin feature/amazing-feature`
-7. **Open a Pull Request**
-
-### Code Standards
-
-- Follow TypeScript best practices
-- Use Biome and Prettier configurations
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
-
-## 📚 Learning Resources
-
-- **T3 Stack Documentation**: [create.t3.gg](https://create.t3.gg/)
-- **Expo Documentation**: [docs.expo.dev](https://docs.expo.dev/)
-- **Next.js Documentation**: [nextjs.org/docs](https://nextjs.org/docs)
-- **tRPC Documentation**: [trpc.io](https://trpc.io/)
-- **Drizzle ORM**: [orm.drizzle.team](https://orm.drizzle.team/)
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built on the amazing [T3 Stack](https://create.t3.gg/)
-- Inspired by the [create-t3-turbo](https://github.com/t3-oss/create-t3-turbo) template
-- UI components from [shadcn/ui](https://ui.shadcn.com/)
-
----
-
-**Happy coding! 🎉**
-
-For questions or support, please open an issue or contact the maintainers.
+MIT, see [LICENSE](./LICENSE). Built on the [T3 Stack](https://create.t3.gg/)
+and [create-t3-turbo](https://github.com/t3-oss/create-t3-turbo).

@@ -1,10 +1,13 @@
 import { randomUUID } from "node:crypto";
+import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import { NextResponse } from "next/server";
 import { and, eq, inArray, like, lt, or } from "drizzle-orm";
 
 import { db } from "@flatsby/db/client";
 import {
   accounts,
+  chatMessages,
+  conversations,
   expenses,
   expenseSplits,
   groupMembers,
@@ -14,6 +17,8 @@ import {
   shoppingLists,
   users,
 } from "@flatsby/db/schema";
+import { CURRENT_AI_CONSENT_VERSION } from "@flatsby/validators/ai-consent";
+import { DEFAULT_CHAT_MODEL } from "@flatsby/validators/models";
 
 import { auth } from "~/auth/server";
 import { env } from "~/env";
@@ -245,7 +250,72 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
     ]);
   }
 
-  return group;
+  // A canned conversation so screenshots show the AI answering with a chart
+  // without any model call. Consent must be current or the gate covers the
+  // screen.
+  await db
+    .update(users)
+    .set({
+      aiConsentAcceptedAt: new Date(),
+      aiConsentVersion: CURRENT_AI_CONSENT_VERSION,
+    })
+    .where(eq(users.id, adminUserId));
+
+  // Reruns reuse the user (retries, the local sweep window), and each seed
+  // would stack another copy of the conversation into the sidebar and the
+  // dashboard's message count; messages cascade with the conversation.
+  await db.delete(conversations).where(eq(conversations.userId, adminUserId));
+
+  const [conversation] = await db
+    .insert(conversations)
+    .values({
+      userId: adminUserId,
+      title: "Spending overview",
+      model: DEFAULT_CHAT_MODEL,
+    })
+    .returning({ id: conversations.id });
+  if (!conversation) throw new Error("Failed to create seeded conversation");
+
+  const chartToolCall: PersistedToolCall = {
+    id: `${conversation.id}-chart`,
+    name: "showUI",
+    input: {
+      component: "chart",
+      config: {
+        title: "Spending by category",
+        chartType: "pie",
+        data: [
+          { label: "Food & Drinks", value: 84.2 },
+          { label: "Utilities", value: 39.99 },
+          { label: "Shopping", value: 18.5 },
+        ],
+      },
+    },
+    output: { rendered: true },
+  };
+  await db.insert(chatMessages).values([
+    {
+      id: `${conversation.id}-user`,
+      conversationId: conversation.id,
+      role: "user",
+      content: "How is our spending looking this month?",
+      status: "complete",
+    },
+    {
+      id: `${conversation.id}-assistant`,
+      conversationId: conversation.id,
+      role: "assistant",
+      content:
+        "Sunset Villa spent **€142.69** this month across three expenses. " +
+        "Food & drinks was the biggest chunk at €84.20, followed by " +
+        "utilities at €39.99 and shopping at €18.50. Here's the breakdown:",
+      status: "complete",
+      model: DEFAULT_CHAT_MODEL,
+      toolCalls: [chartToolCall],
+    },
+  ]);
+
+  return { group, conversationId: conversation.id };
 }
 
 export async function POST(request: Request) {
@@ -274,8 +344,11 @@ export async function POST(request: Request) {
   const { userId, email } = await upsertE2EUser(name, customEmail);
 
   let group: { id: number };
+  let conversationId: string | undefined;
   if (seedStore) {
-    group = await seedStoreScenario(userId, email);
+    const seeded = await seedStoreScenario(userId, email);
+    group = seeded.group;
+    conversationId = seeded.conversationId;
   } else {
     const [fixtureGroup] = await db
       .insert(groups)
@@ -337,6 +410,7 @@ export async function POST(request: Request) {
     userId,
     email,
     groupId: group.id,
+    ...(conversationId ? { conversationId } : {}),
     cookies: result.cookies,
     ok: true,
   });

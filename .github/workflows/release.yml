@@ -487,6 +487,97 @@ jobs:
           zip -r "$RUNNER_TEMP/flatsby-$TAG-android-screenshots.zip" .
           gh release upload "$TAG" "$RUNNER_TEMP/flatsby-$TAG-android-screenshots.zip" --clobber
 
+  # Web captures for the README: Playwright against the same e2e stack and
+  # the same seed=store data the mobile flows use, so web and app screenshots
+  # show the same household.
+  screenshots-web:
+    needs: check
+    if: needs.check.outputs.is-release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @flatsby/nextjs exec playwright install --with-deps chromium
+
+      - name: Start E2E stack
+        uses: ./tooling/github/e2e-stack
+
+      - name: Capture web screenshots
+        run: pnpm --filter @flatsby/nextjs test:screenshots
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Upload results artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: readme-screenshots-web
+          path: apps/nextjs/test-results/
+          retention-days: 30
+
+  # Publishes the README's images: the iPhone captures plus the web captures,
+  # under stable filenames, as a single-commit orphan `assets` branch that
+  # README.md embeds via raw.githubusercontent URLs. Force-pushing keeps the
+  # branch at one commit so the repo never grows release over release. Runs
+  # when either capture succeeded; a failed platform keeps its previous
+  # images (seeded from the branch's current state).
+  publish-readme-assets:
+    needs: [check, screenshots-ios, screenshots-web]
+    if: >-
+      always() && needs.check.outputs.is-release == 'true' &&
+      (needs.screenshots-ios.result == 'success' || needs.screenshots-web.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download iOS screenshots
+        if: needs.screenshots-ios.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          name: store-screenshots-ios
+          path: ios-results
+
+      - name: Download web screenshots
+        if: needs.screenshots-web.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          name: readme-screenshots-web
+          path: web-results
+
+      - name: Push assets branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          PUBLISH="$RUNNER_TEMP/publish"
+          mkdir -p "$PUBLISH"
+          # Start from the branch's current images so a platform whose
+          # capture failed this release keeps its previous screenshots.
+          if git fetch origin assets 2>/dev/null; then
+            git archive FETCH_HEAD | tar -x -C "$PUBLISH"
+          fi
+          if compgen -G "ios-results/screenshots/[0-9]*.png" > /dev/null; then
+            mkdir -p "$PUBLISH/ios"
+            cp ios-results/screenshots/[0-9]*.png "$PUBLISH/ios/"
+          fi
+          if compgen -G "web-results/readme-screenshots/*.png" > /dev/null; then
+            mkdir -p "$PUBLISH/web"
+            cp web-results/readme-screenshots/*.png "$PUBLISH/web/"
+          fi
+          cd "$PUBLISH"
+          git init -q -b assets
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "README screenshots for $TAG"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" assets
+
   # Uploads the captured screenshots to the App Store listing (en-US), sets
   # the release notes from apps/expo/store/release-notes.txt, and submits the
   # EAS-delivered build for review with automatic release. Runs even if the

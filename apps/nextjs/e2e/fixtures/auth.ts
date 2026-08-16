@@ -19,18 +19,23 @@ export interface TestUser {
 }
 
 interface SessionData extends TestUser {
+  conversationId?: string;
   cookies: TestCookie[];
 }
 
-async function createAuthSession(
+export async function createAuthSession(
   page: Page,
   baseURL: string | undefined,
+  params?: Record<string, string>,
 ): Promise<SessionData> {
   if (!baseURL) {
     throw new Error("baseURL is required for E2E testing");
   }
 
-  const response = await page.request.post(`${baseURL}/api/e2e/create-session`);
+  const query = params ? `?${new URLSearchParams(params).toString()}` : "";
+  const response = await page.request.post(
+    `${baseURL}/api/e2e/create-session${query}`,
+  );
   if (!response.ok()) {
     const body = await response.text();
     throw new Error(`E2E session failed: ${response.status()} ${body}`);
@@ -46,6 +51,19 @@ function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
   return "Lax";
 }
 
+export function toPlaywrightCookies(cookies: TestCookie[]) {
+  return cookies.map((cookie) => ({
+    name: cookie.name,
+    value: cookie.value,
+    domain: cookie.domain,
+    path: cookie.path,
+    httpOnly: cookie.httpOnly,
+    secure: cookie.secure,
+    sameSite: normalizeSameSite(cookie.sameSite),
+    ...(cookie.expires ? { expires: cookie.expires } : {}),
+  }));
+}
+
 /**
  * Authenticated test fixture.
  *
@@ -58,18 +76,7 @@ export const test = base.extend<{ authPage: Page; testUser: TestUser }>({
   testUser: async ({ page, context, baseURL }, use) => {
     const session = await createAuthSession(page, baseURL);
 
-    const playwrightCookies = session.cookies.map((cookie) => ({
-      name: cookie.name,
-      value: cookie.value,
-      domain: cookie.domain,
-      path: cookie.path,
-      httpOnly: cookie.httpOnly,
-      secure: cookie.secure,
-      sameSite: normalizeSameSite(cookie.sameSite),
-      ...(cookie.expires ? { expires: cookie.expires } : {}),
-    }));
-
-    await context.addCookies(playwrightCookies);
+    await context.addCookies(toPlaywrightCookies(session.cookies));
 
     await use({
       userId: session.userId,
