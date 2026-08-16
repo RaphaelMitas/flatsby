@@ -19,24 +19,32 @@ export interface TestUser {
 }
 
 interface SessionData extends TestUser {
+  conversationId?: string;
   cookies: TestCookie[];
 }
 
-async function createAuthSession(
+export async function createAuthSession(
   page: Page,
   baseURL: string | undefined,
+  params?: Record<string, string>,
 ): Promise<SessionData> {
   if (!baseURL) {
     throw new Error("baseURL is required for E2E testing");
   }
 
-  const response = await page.request.post(`${baseURL}/api/e2e/create-session`);
+  const query = params ? `?${new URLSearchParams(params).toString()}` : "";
+  const response = await page.request.post(
+    `${baseURL}/api/e2e/create-session${query}`,
+  );
   if (!response.ok()) {
     const body = await response.text();
     throw new Error(`E2E session failed: ${response.status()} ${body}`);
   }
 
-  return (await response.json()) as SessionData;
+  const session = (await response.json()) as SessionData;
+  await page.context().addCookies(toPlaywrightCookies(session.cookies));
+
+  return session;
 }
 
 function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
@@ -44,6 +52,19 @@ function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
   if (lower === "strict") return "Strict";
   if (lower === "none") return "None";
   return "Lax";
+}
+
+function toPlaywrightCookies(cookies: TestCookie[]) {
+  return cookies.map((cookie) => ({
+    name: cookie.name,
+    value: cookie.value,
+    domain: cookie.domain,
+    path: cookie.path,
+    httpOnly: cookie.httpOnly,
+    secure: cookie.secure,
+    sameSite: normalizeSameSite(cookie.sameSite),
+    ...(cookie.expires ? { expires: cookie.expires } : {}),
+  }));
 }
 
 /**
@@ -55,21 +76,8 @@ function normalizeSameSite(sameSite: string): "Strict" | "Lax" | "None" {
  * can run with any number of parallel workers without polluting each other.
  */
 export const test = base.extend<{ authPage: Page; testUser: TestUser }>({
-  testUser: async ({ page, context, baseURL }, use) => {
+  testUser: async ({ page, baseURL }, use) => {
     const session = await createAuthSession(page, baseURL);
-
-    const playwrightCookies = session.cookies.map((cookie) => ({
-      name: cookie.name,
-      value: cookie.value,
-      domain: cookie.domain,
-      path: cookie.path,
-      httpOnly: cookie.httpOnly,
-      secure: cookie.secure,
-      sameSite: normalizeSameSite(cookie.sameSite),
-      ...(cookie.expires ? { expires: cookie.expires } : {}),
-    }));
-
-    await context.addCookies(playwrightCookies);
 
     await use({
       userId: session.userId,
