@@ -338,14 +338,20 @@ const ShoppingListItem = ({
   return (
     <SwipeableList>
       <SwipeableListItem
-        leadingActions={!showEditForm ? editActions() : null}
-        trailingActions={!showEditForm ? deleteActions() : null}
+        leadingActions={!showEditForm && !item.isPending ? editActions() : null}
+        trailingActions={
+          !showEditForm && !item.isPending ? deleteActions() : null
+        }
       >
         <div
           id={`list-item-${item.id}`}
           data-testid={`shopping-list-item-${item.id}`}
           key={item.id}
-          className="group bg-muted md:hover:bg-primary hover:text-primary-foreground flex w-full items-center rounded-lg pr-4"
+          className={cn(
+            "group bg-muted flex w-full items-center rounded-lg pr-4",
+            !item.isPending &&
+              "md:hover:bg-primary hover:text-primary-foreground",
+          )}
         >
           {showEditForm ? (
             <ShoppingListItemEditForm
@@ -360,12 +366,19 @@ const ShoppingListItem = ({
           ) : (
             <>
               <div
-                className="-m-2 flex cursor-pointer items-center justify-center p-6"
-                onClick={() => handleCheckboxChange(!item.completed)}
+                className={cn(
+                  "-m-2 flex items-center justify-center p-6",
+                  !item.isPending && "cursor-pointer",
+                )}
+                onClick={() =>
+                  !item.isPending && handleCheckboxChange(!item.completed)
+                }
               >
                 <Checkbox
                   checked={item.completed}
-                  className="md:group-hover:bg-primary-foreground md:group-hover:text-primary"
+                  disabled={item.isPending}
+                  // Dimming while pending would land on top of the tick animation.
+                  className="md:group-hover:bg-primary-foreground md:group-hover:text-primary disabled:opacity-100"
                 />
               </div>
               <Popover>
@@ -422,16 +435,32 @@ const ShoppingListItem = ({
               </Popover>
               <div className="ml-2 hidden gap-2 md:flex">
                 <Pencil
-                  data-testid={`shopping-list-item-edit-${item.id}`}
+                  data-testid={
+                    item.isPending
+                      ? undefined
+                      : `shopping-list-item-edit-${item.id}`
+                  }
                   size={24}
-                  className="md:group-hover:text-primary-foreground md:group-hover:hover:text-info min-w-max cursor-pointer"
-                  onClick={() => setShowEditForm(true)}
+                  className={cn(
+                    "md:group-hover:text-primary-foreground md:group-hover:hover:text-info min-w-max",
+                    item.isPending ? "opacity-50" : "cursor-pointer",
+                  )}
+                  onClick={
+                    item.isPending ? undefined : () => setShowEditForm(true)
+                  }
                 />
                 <Trash
-                  data-testid={`shopping-list-item-delete-${item.id}`}
+                  data-testid={
+                    item.isPending
+                      ? undefined
+                      : `shopping-list-item-delete-${item.id}`
+                  }
                   size={24}
-                  className="md:group-hover:text-primary-foreground md:group-hover:hover:text-error min-w-max cursor-pointer"
-                  onClick={handleDeleteItem}
+                  className={cn(
+                    "md:group-hover:text-primary-foreground md:group-hover:hover:text-error min-w-max",
+                    item.isPending ? "opacity-50" : "cursor-pointer",
+                  )}
+                  onClick={item.isPending ? undefined : handleDeleteItem}
                 />
               </div>
             </>

@@ -5,6 +5,7 @@ import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 
 import { cn } from "@flatsby/ui";
 
+// Must match the check-ripple keyframe in tooling/tailwind/theme.css.
 const RIPPLE_DURATION_MS = 550;
 
 const Checkbox = React.forwardRef<
@@ -14,8 +15,7 @@ const Checkbox = React.forwardRef<
   const [flash, setFlash] = React.useState(false);
   const wasChecked = React.useRef(checked === true);
 
-  // Only a transition into checked animates, so a list of already completed
-  // items does not ripple on mount.
+  // Already-checked items must not ripple on mount.
   React.useEffect(() => {
     if (checked === undefined) return;
     if (checked === true && !wasChecked.current) setFlash(true);

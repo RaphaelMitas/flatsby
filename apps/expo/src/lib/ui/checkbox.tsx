@@ -31,15 +31,22 @@ const Checkbox = React.forwardRef<
     ref,
   ) => {
     const fill = useSharedValue(checked ? 1 : 0);
+    const pop = useSharedValue(checked ? 1 : 0);
     const scale = useSharedValue(1);
-    const ripple = useSharedValue(0);
+    // 1 is the resting, finished state, so an untouched checkbox has no ring.
+    const ripple = useSharedValue(1);
 
     React.useEffect(() => {
       fill.value = withSpring(checked ? 1 : 0, {
-        damping: 13,
+        damping: 15,
         stiffness: 260,
+        overshootClamping: true,
       });
-    }, [checked, fill]);
+      pop.value = withSpring(checked ? 1 : 0, {
+        damping: 11,
+        stiffness: 300,
+      });
+    }, [checked, fill, pop]);
 
     const handlePress = () => {
       if (disabled || !onCheckedChange) {
@@ -71,6 +78,11 @@ const Checkbox = React.forwardRef<
       transform: [{ scale: fill.value }],
     }));
 
+    const popStyle = useAnimatedStyle(() => ({
+      opacity: Math.max(0, pop.value),
+      transform: [{ scale: Math.max(0, pop.value) }],
+    }));
+
     const rippleStyle = useAnimatedStyle(() => ({
       opacity: (1 - ripple.value) * 0.5,
       transform: [{ scale: 1 + ripple.value * 1.1 }],
@@ -92,8 +104,7 @@ const Checkbox = React.forwardRef<
         <Animated.View
           style={boxStyle}
           className={cn(
-            "border-primary h-6 w-6 shrink-0 overflow-hidden rounded-full border shadow",
-            disabled && "opacity-50",
+            "border-primary h-6 w-6 shrink-0 rounded-full border shadow",
             className,
           )}
         >
@@ -102,7 +113,7 @@ const Checkbox = React.forwardRef<
             className="bg-primary absolute inset-0 rounded-full"
           />
           <Animated.View
-            style={fillStyle}
+            style={popStyle}
             className="flex-1 items-center justify-center"
           >
             <Icon name="check" size={16} color="primary-foreground" />

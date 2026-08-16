@@ -128,7 +128,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         id: `unchecked-header-${section.title}`,
       });
       section.items.forEach((item) => {
-        data.push({ type: "item", item, id: `unchecked-item-${item.id}` });
+        data.push({ type: "item", item, id: `item-${item.id}` });
       });
     });
 
@@ -147,7 +147,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
           id: `checked-header-${index}-${section.title}`,
         });
         section.items.forEach((item) => {
-          data.push({ type: "item", item, id: `checked-item-${item.id}` });
+          data.push({ type: "item", item, id: `item-${item.id}` });
         });
       });
     }
