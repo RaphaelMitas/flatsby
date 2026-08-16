@@ -117,8 +117,10 @@ export const useThemedScreenOptions = () => {
       backgroundColor: getColor("background"),
     },
     headerTintColor: getColor("foreground"),
+    // Not transparent: NativeTabs screens sit on a native container that keeps
+    // the system appearance, so anything see-through leaks light in dark mode.
     contentStyle: {
-      backgroundColor: "transparent",
+      backgroundColor: getColor("background"),
     },
   };
 };

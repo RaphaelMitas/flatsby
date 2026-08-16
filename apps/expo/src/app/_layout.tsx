@@ -37,6 +37,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PostHogProvider
         apiKey={posthogApiKey || "phc-e2e-disabled"}
+        // expo-router never exposes a NavigationContainer, so PostHog's screen
+        // autocapture cannot read navigation state. ScreenTracker does it instead.
+        autocapture={{ captureScreens: false }}
         options={{
           disabled: e2eTesting,
           host: "https://eu.i.posthog.com",

@@ -1,7 +1,7 @@
 appId: ${APP_ID}
 ---
-# Switch to a bottom tab. The native tab bar (react-native-bottom-tabs) sets
-# tabBarButtonTestID -> accessibilityIdentifier, but the SwiftUI tab bar
+# Switch to a bottom tab. The native tab bar (expo-router NativeTabs) sets
+# the trigger testID -> accessibilityIdentifier, but the SwiftUI tab bar
 # exposes it to Maestro's hierarchy inconsistently (run 31252036515 failed on
 # "Id matching regex: tab-home"; run 31252348033 resolved the same id fine).
 # Positional taps alone are no safer: at 95% height they miss the iOS 26
@@ -11,6 +11,15 @@ appId: ${APP_ID}
 #
 # env: TAB_ID (e.g. tab-home), TAB_LABEL (e.g. Home), TAB_X (slot center as
 # an integer percent, e.g. "12%")
+#
+# Android hides the tab bar while the keyboard is open, so there is nothing to
+# tap until it is dismissed. iOS keeps its bar, and hideKeyboard fails outright
+# there in some states, so keep this off that platform.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
 - runFlow:
     when:
       visible:

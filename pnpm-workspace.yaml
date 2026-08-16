@@ -24,7 +24,7 @@ auditConfig:
     # @react-native-vector-icons/lucide@13.1.2 (also latest).
     - GHSA-w5hq-g745-h8pq
     # image-size <=2.0.2 - no patched release exists yet: the advisories name 2.0.3
-    # but npm's latest is 2.0.2. metro (0.83.7 here, 0.87.0 latest) also depends on
+    # but npm's latest is 2.0.2. metro (0.84.4 here, 0.87.0 latest) also depends on
     # ^1.0.2, so the fix needs both an upstream release and a metro range bump.
     - GHSA-w3rx-r6r6-pgpr
     - GHSA-5p2g-fcmc-qvqq
@@ -72,11 +72,12 @@ minimumReleaseAge: 1440
 nodeLinker: hoisted
 
 overrides:
-  # lightningcss > 1.30.1 breaks the react-native-css Metro transformer with
-  # "failed to deserialize ... named Specifier" (parcel-bundler/lightningcss#1065).
-  # nodeLinker is hoisted, so metro-config must be pinned too or it wins the
-  # hoist and Metro loads it anyway. @tailwindcss/node is Next-only, left alone.
-  react-native-css>lightningcss: 1.30.1
+  # lightningcss > 1.30.1 breaks the CSS transform Metro loads via
+  # @expo/metro-config with "failed to deserialize ... named Specifier"
+  # (parcel-bundler/lightningcss#1065). Only this copy matters: with it pinned
+  # the hoisted root sits on 1.32.0 and both platforms still bundle, so the
+  # react-native-css pin that used to sit here was dead weight.
+  # @tailwindcss/node is Next-only, left alone.
   '@expo/metro-config>lightningcss': 1.30.1
 
 publicHoistPattern:

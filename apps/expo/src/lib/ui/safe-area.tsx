@@ -1,24 +1,26 @@
 import type { ComponentProps } from "react";
 import { Platform } from "react-native";
-import { useBottomTabBarHeight } from "react-native-bottom-tabs";
-import { SafeAreaView as RNCSafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView as RNCSafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 export const SafeAreaView = ({
   children,
   edges = ["top"],
   ...props
 }: Omit<ComponentProps<typeof RNCSafeAreaView>, "className">) => {
-  const tabBarHeight = useBottomTabBarHeight();
-  const isIphone = Platform.OS === "ios" && !Platform.isPad;
-  const isIpad = Platform.OS === "ios" && Platform.isPad;
+  // iOS floats the tab bar over the content. NativeTabs gives each screen its
+  // own SafeAreaProvider, so the bottom inset already covers it. Android's tab
+  // bar takes layout space instead, so padding there would double up.
+  const insets = useSafeAreaInsets();
 
   return (
     <RNCSafeAreaView
       {...props}
       style={{
         flex: 1,
-        paddingTop: isIpad ? tabBarHeight : 0,
-        paddingBottom: isIphone ? tabBarHeight : 0,
+        paddingBottom: Platform.OS === "ios" ? insets.bottom : 0,
       }}
       edges={edges}
     >
