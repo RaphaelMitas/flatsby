@@ -1,7 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 import { cn } from "../utils";
 import Icon from "./custom/icons/Icon";
@@ -22,34 +30,84 @@ const Checkbox = React.forwardRef<
     { className, checked = false, onCheckedChange, disabled, ...props },
     ref,
   ) => {
+    const fill = useSharedValue(checked ? 1 : 0);
+    const scale = useSharedValue(1);
+    const ripple = useSharedValue(0);
+
+    React.useEffect(() => {
+      fill.value = withSpring(checked ? 1 : 0, {
+        damping: 13,
+        stiffness: 260,
+      });
+    }, [checked, fill]);
+
     const handlePress = () => {
-      if (!disabled && onCheckedChange) {
-        onCheckedChange(!checked);
+      if (disabled || !onCheckedChange) {
+        return;
       }
+
+      scale.value = withSequence(
+        withTiming(0.85, { duration: 90 }),
+        withSpring(1, { damping: 9, stiffness: 320 }),
+      );
+
+      if (!checked) {
+        ripple.value = 0;
+        ripple.value = withTiming(1, {
+          duration: 550,
+          easing: Easing.out(Easing.quad),
+        });
+      }
+
+      onCheckedChange(!checked);
     };
+
+    const boxStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }],
+    }));
+
+    const fillStyle = useAnimatedStyle(() => ({
+      opacity: fill.value,
+      transform: [{ scale: fill.value }],
+    }));
+
+    const rippleStyle = useAnimatedStyle(() => ({
+      opacity: (1 - ripple.value) * 0.5,
+      transform: [{ scale: 1 + ripple.value * 1.1 }],
+    }));
 
     return (
       <Pressable
         ref={ref}
-        className="p-4"
+        className="items-center justify-center p-4"
         onPress={handlePress}
         disabled={disabled}
         {...props}
       >
-        <View
+        <Animated.View
+          pointerEvents="none"
+          style={rippleStyle}
+          className="border-primary absolute h-6 w-6 rounded-full border-2"
+        />
+        <Animated.View
+          style={boxStyle}
           className={cn(
-            "border-primary focus-visible:ring-ring h-6 w-6 shrink-0 rounded-full border shadow focus-visible:ring-1 focus-visible:outline-none",
-            checked && "bg-primary",
-            disabled && "cursor-not-allowed opacity-50",
+            "border-primary h-6 w-6 shrink-0 overflow-hidden rounded-full border shadow",
+            disabled && "opacity-50",
             className,
           )}
         >
-          <View className="flex-1 items-center justify-center">
-            {checked && (
-              <Icon name="check" size={16} color="primary-foreground" />
-            )}
-          </View>
-        </View>
+          <Animated.View
+            style={fillStyle}
+            className="bg-primary absolute inset-0 rounded-full"
+          />
+          <Animated.View
+            style={fillStyle}
+            className="flex-1 items-center justify-center"
+          >
+            <Icon name="check" size={16} color="primary-foreground" />
+          </Animated.View>
+        </Animated.View>
       </Pressable>
     );
   },
