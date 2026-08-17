@@ -1,19 +1,19 @@
-"use client";
-
 import type { ComponentRef } from "react";
-import { forwardRef, useEffect } from "react";
+import { forwardRef } from "react";
 import { Pressable } from "react-native";
 import Animated, {
   Easing,
+  useAnimatedProps,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withSequence,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { Path, Svg } from "react-native-svg";
 
-import { cn } from "../utils";
-import Icon from "./custom/icons/Icon";
+import { cn, useThemeColors } from "../utils";
 
 interface CheckboxProps {
   checked?: boolean;
@@ -23,52 +23,58 @@ interface CheckboxProps {
   testID?: string;
 }
 
+// Geometric length of lucide's check path; react-native-svg has no pathLength
+// to normalise it away.
+const CHECK_LENGTH = 22.63;
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
 const Checkbox = forwardRef<ComponentRef<typeof Pressable>, CheckboxProps>(
   (
     { className, checked = false, onCheckedChange, disabled, ...props },
     ref,
   ) => {
-    const fill = useSharedValue(checked ? 1 : 0);
-    const pop = useSharedValue(checked ? 1 : 0);
-    const scale = useSharedValue(1);
+    const { getColor } = useThemeColors();
+    const squish = useSharedValue(1);
     // 1 is the resting, finished state, so an untouched checkbox has no ring.
     const ripple = useSharedValue(1);
 
-    useEffect(() => {
-      fill.value = withSpring(checked ? 1 : 0, {
+    const fill = useDerivedValue(() =>
+      withSpring(checked ? 1 : 0, {
         damping: 15,
         stiffness: 260,
         overshootClamping: true,
-      });
-      pop.value = withSpring(checked ? 1 : 0, {
-        damping: 11,
-        stiffness: 300,
-      });
-    }, [checked, fill, pop]);
+      }),
+    );
+
+    const draw = useDerivedValue(() =>
+      checked
+        ? withTiming(0, { duration: 250 })
+        : withTiming(CHECK_LENGTH, { duration: 0 }),
+    );
 
     const handlePress = () => {
       if (disabled || !onCheckedChange) {
         return;
       }
 
-      scale.value = withSequence(
+      squish.value = withSequence(
         withTiming(0.85, { duration: 90 }),
         withSpring(1, { damping: 9, stiffness: 320 }),
       );
 
       if (!checked) {
-        ripple.value = 0;
-        ripple.value = withTiming(1, {
-          duration: 550,
-          easing: Easing.out(Easing.quad),
-        });
+        ripple.value = withSequence(
+          withTiming(0, { duration: 0 }),
+          withTiming(1, { duration: 550, easing: Easing.out(Easing.quad) }),
+        );
       }
 
       onCheckedChange(!checked);
     };
 
-    const boxStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: scale.value }],
+    const squishStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: squish.value }],
     }));
 
     const fillStyle = useAnimatedStyle(() => ({
@@ -76,15 +82,13 @@ const Checkbox = forwardRef<ComponentRef<typeof Pressable>, CheckboxProps>(
       transform: [{ scale: fill.value }],
     }));
 
-    // The pop spring is intentionally unclamped, so it undershoots past 0 on uncheck.
-    const popStyle = useAnimatedStyle(() => ({
-      opacity: Math.max(0, pop.value),
-      transform: [{ scale: Math.max(0, pop.value) }],
-    }));
-
     const rippleStyle = useAnimatedStyle(() => ({
       opacity: (1 - ripple.value) * 0.5,
       transform: [{ scale: 1 + ripple.value * 1.1 }],
+    }));
+
+    const drawProps = useAnimatedProps(() => ({
+      strokeDashoffset: draw.value,
     }));
 
     return (
@@ -101,9 +105,9 @@ const Checkbox = forwardRef<ComponentRef<typeof Pressable>, CheckboxProps>(
           className="border-primary absolute h-6 w-6 rounded-full border-2"
         />
         <Animated.View
-          style={boxStyle}
+          style={squishStyle}
           className={cn(
-            "border-primary h-6 w-6 shrink-0 rounded-full border shadow",
+            "border-primary h-6 w-6 shrink-0 items-center justify-center rounded-full border shadow",
             className,
           )}
         >
@@ -111,12 +115,17 @@ const Checkbox = forwardRef<ComponentRef<typeof Pressable>, CheckboxProps>(
             style={fillStyle}
             className="bg-primary absolute inset-0 rounded-full"
           />
-          <Animated.View
-            style={popStyle}
-            className="flex-1 items-center justify-center"
-          >
-            <Icon name="check" size={16} color="primary-foreground" />
-          </Animated.View>
+          <Svg viewBox="0 0 24 24" width={16} height={16} fill="none">
+            <AnimatedPath
+              d="M20 6 9 17l-5-5"
+              stroke={getColor("primary-foreground")}
+              strokeWidth={4}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray={CHECK_LENGTH}
+              animatedProps={drawProps}
+            />
+          </Svg>
         </Animated.View>
       </Pressable>
     );
