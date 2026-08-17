@@ -30,11 +30,7 @@ export function ShoppingItemDisplay({
   return (
     <Card>
       <CardContent
-        className={cn(
-          "flex-row items-center gap-2 py-0 pr-3 pl-0",
-          disabled && "opacity-70",
-          className,
-        )}
+        className={cn("flex-row items-center gap-2 py-0 pr-3 pl-0", className)}
       >
         <Checkbox
           testID={checkboxTestID}

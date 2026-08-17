@@ -46,73 +46,6 @@ export interface ShoppingListItemProps {
   }[];
 }
 
-interface OptimisticShoppingListItemProps {
-  id: number;
-  name: string;
-  completed: boolean;
-  categoryId: CategoryIdWithAiAutoSelect | null;
-  showCheckbox?: boolean;
-  showActions?: boolean;
-}
-
-export const OptimisticShoppingListItem = ({
-  id,
-  name,
-  completed,
-  categoryId,
-  showCheckbox = true,
-  showActions = true,
-}: OptimisticShoppingListItemProps) => {
-  const categoryData = categoryId ? getCategoryData(categoryId) : undefined;
-
-  return (
-    <div
-      id={`list-item-${id}`}
-      data-testid={`shopping-list-item-${id}`}
-      key={id}
-      className="bg-muted flex w-full items-center rounded-lg pr-4"
-    >
-      {showCheckbox && (
-        <div className="-m-2 flex cursor-pointer items-center justify-center p-6">
-          <Checkbox checked={completed} disabled={true} />
-        </div>
-      )}
-      <div
-        className={cn("flex flex-1 justify-between gap-2 truncate p-3", {
-          "pl-0": showCheckbox,
-          "pr-0 pl-4": !showCheckbox,
-        })}
-      >
-        <div
-          className={cn(
-            "flex-1 truncate text-left text-sm font-medium",
-            completed && "text-muted-foreground line-through",
-          )}
-        >
-          {name}
-        </div>
-        {categoryData && (
-          <div
-            className={cn(
-              "line-clamp-2 flex items-center gap-2 text-xs",
-              categoryData.colorClasses.base,
-            )}
-          >
-            <categoryData.icon size={20} />
-            <span>{categoryData.name}</span>
-          </div>
-        )}
-      </div>
-      {showActions && (
-        <div className="ml-2 hidden gap-2 md:flex">
-          <Pencil size={24} className="min-w-max opacity-50" />
-          <Trash size={24} className="min-w-max opacity-50" />
-        </div>
-      )}
-    </div>
-  );
-};
-
 const ShoppingListItem = ({
   groupId,
   shoppingListId,
@@ -338,14 +271,20 @@ const ShoppingListItem = ({
   return (
     <SwipeableList>
       <SwipeableListItem
-        leadingActions={!showEditForm ? editActions() : null}
-        trailingActions={!showEditForm ? deleteActions() : null}
+        leadingActions={!showEditForm && !item.isPending ? editActions() : null}
+        trailingActions={
+          !showEditForm && !item.isPending ? deleteActions() : null
+        }
       >
         <div
           id={`list-item-${item.id}`}
           data-testid={`shopping-list-item-${item.id}`}
           key={item.id}
-          className="group bg-muted md:hover:bg-primary hover:text-primary-foreground flex w-full items-center rounded-lg pr-4"
+          className={cn(
+            "group bg-muted flex w-full items-center rounded-lg pr-4",
+            !item.isPending &&
+              "md:hover:bg-primary hover:text-primary-foreground",
+          )}
         >
           {showEditForm ? (
             <ShoppingListItemEditForm
@@ -359,13 +298,17 @@ const ShoppingListItem = ({
             />
           ) : (
             <>
-              <div
-                className="-m-2 flex cursor-pointer items-center justify-center p-6"
-                onClick={() => handleCheckboxChange(!item.completed)}
-              >
+              <div className="-m-2 flex items-center justify-center p-6">
                 <Checkbox
                   checked={item.completed}
-                  className="md:group-hover:bg-primary-foreground md:group-hover:text-primary"
+                  disabled={item.isPending}
+                  onCheckedChange={(checked) =>
+                    handleCheckboxChange(checked === true)
+                  }
+                  // The ::before is the real 64px hit target, so pressing the
+                  // padding still presses the control and animates it.
+                  // Dimming while pending would land on top of that animation.
+                  className="md:group-hover:bg-primary-foreground md:group-hover:text-primary cursor-pointer before:absolute before:-inset-y-6 before:-right-4 before:-left-6 before:content-[''] disabled:cursor-not-allowed disabled:opacity-100"
                 />
               </div>
               <Popover>
@@ -422,16 +365,32 @@ const ShoppingListItem = ({
               </Popover>
               <div className="ml-2 hidden gap-2 md:flex">
                 <Pencil
-                  data-testid={`shopping-list-item-edit-${item.id}`}
+                  data-testid={
+                    item.isPending
+                      ? undefined
+                      : `shopping-list-item-edit-${item.id}`
+                  }
                   size={24}
-                  className="md:group-hover:text-primary-foreground md:group-hover:hover:text-info min-w-max cursor-pointer"
-                  onClick={() => setShowEditForm(true)}
+                  className={cn(
+                    "md:group-hover:text-primary-foreground md:group-hover:hover:text-info min-w-max",
+                    item.isPending ? "opacity-50" : "cursor-pointer",
+                  )}
+                  onClick={
+                    item.isPending ? undefined : () => setShowEditForm(true)
+                  }
                 />
                 <Trash
-                  data-testid={`shopping-list-item-delete-${item.id}`}
+                  data-testid={
+                    item.isPending
+                      ? undefined
+                      : `shopping-list-item-delete-${item.id}`
+                  }
                   size={24}
-                  className="md:group-hover:text-primary-foreground md:group-hover:hover:text-error min-w-max cursor-pointer"
-                  onClick={handleDeleteItem}
+                  className={cn(
+                    "md:group-hover:text-primary-foreground md:group-hover:hover:text-error min-w-max",
+                    item.isPending ? "opacity-50" : "cursor-pointer",
+                  )}
+                  onClick={item.isPending ? undefined : handleDeleteItem}
                 />
               </div>
             </>

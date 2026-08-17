@@ -17,15 +17,14 @@ import {
 } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 
+import { cn } from "@flatsby/ui";
 import { CategoryFilter, CategoryFilterSidebar } from "@flatsby/ui/categories";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import ShoppingListItem, {
-  OptimisticShoppingListItem,
-} from "./ShoppingListItem";
+import ShoppingListItem from "./ShoppingListItem";
 import { ShoppingListItemAddForm } from "./ShoppingListItemAddForm";
 import { groupShoppingList } from "./ShoppingListUtils";
 import { useShoppingListInvalidation } from "./useShoppingListInvalidation";
@@ -237,31 +236,42 @@ const ShoppingListInner = ({
     });
   };
 
-  const getShoppingListItem = (item: ShoppingListItemType) => {
-    if (item.isPending)
-      return (
-        <OptimisticShoppingListItem
-          key={item.id}
-          id={item.id}
-          name={item.name}
-          completed={item.completed}
-          categoryId={item.categoryId}
-        />
-      );
-    return (
-      <ShoppingListItem
-        key={item.id}
-        groupId={groupId}
-        shoppingListId={shoppingListId}
-        item={item}
-        groupMembers={shoppingList?.group.groupMembers ?? []}
-      />
-    );
-  };
+  // One flat keyed list, so ticking a row reorders it instead of remounting it
+  // under a different parent and killing the tick animation.
+  const rows: (
+    | { type: "header"; id: string; title: string; spaced?: boolean }
+    | { type: "item"; id: string; item: ShoppingListItemType }
+  )[] = [];
 
-  const getShoppingList = (list: ShoppingListItemType[]) => {
-    return <>{list.map(getShoppingListItem)}</>;
-  };
+  uncheckedSections.forEach((section) => {
+    rows.push({
+      type: "header",
+      id: `unchecked-header-${section.title}`,
+      title: section.title,
+    });
+    section.items.forEach((item) => {
+      rows.push({ type: "item", id: `item-${item.id}`, item });
+    });
+  });
+
+  if (checkedSections.length > 0) {
+    rows.push({
+      type: "header",
+      id: "purchased-items-header",
+      title: "Purchased Items",
+      spaced: true,
+    });
+    checkedSections.forEach((section, index) => {
+      rows.push({
+        type: "header",
+        id: `checked-header-${index}-${section.title}`,
+        title: section.title,
+      });
+      section.items.forEach((item) => {
+        rows.push({ type: "item", id: `item-${item.id}`, item });
+      });
+    });
+  }
 
   return (
     <div className="flex min-h-0 flex-1">
@@ -294,32 +304,27 @@ const ShoppingListInner = ({
 
         <div className="min-h-0 flex-1 overflow-auto">
           <div className="space-y-2 px-4 pt-4">
-            {uncheckedSections.map((section) => (
-              <div
-                className="space-y-2"
-                key={`unchecked-section-${section.title}`}
-              >
-                <div className="text-muted-foreground text-center text-sm">
-                  {section.title}
+            {rows.map((row) =>
+              row.type === "header" ? (
+                <div
+                  key={row.id}
+                  className={cn(
+                    "text-muted-foreground text-center text-sm",
+                    row.spaced && "pt-4",
+                  )}
+                >
+                  {row.title}
                 </div>
-                {getShoppingList(section.items)}
-              </div>
-            ))}
-
-            {checkedSections.length > 0 && (
-              <div className="text-muted-foreground mt-4 text-center text-sm">
-                Purchased Items
-              </div>
+              ) : (
+                <ShoppingListItem
+                  key={row.id}
+                  groupId={groupId}
+                  shoppingListId={shoppingListId}
+                  item={row.item}
+                  groupMembers={shoppingList?.group.groupMembers ?? []}
+                />
+              ),
             )}
-
-            {checkedSections.map((section, index) => (
-              <div className="space-y-2" key={`checked-section-${index}`}>
-                <div className="text-muted-foreground text-center text-sm">
-                  {section.title}
-                </div>
-                {getShoppingList(section.items)}
-              </div>
-            ))}
 
             {hasNextPage && (
               <InView

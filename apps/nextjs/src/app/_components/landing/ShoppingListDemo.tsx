@@ -1,6 +1,6 @@
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 
-import { OptimisticShoppingListItem } from "~/app/shopping-list/[shoppingListId]/ShoppingListItem";
+import { ShoppingListItemDisplay } from "~/app/_components/ShoppingListItemDisplay";
 
 interface DemoItem {
   id: number;
@@ -20,13 +20,11 @@ export function ShoppingListDemo() {
   return (
     <div className="flex flex-col gap-2">
       {demoItems.map((item) => (
-        <OptimisticShoppingListItem
+        <ShoppingListItemDisplay
           key={item.id}
-          id={item.id}
           name={item.name}
           completed={item.completed}
           categoryId={item.categoryId}
-          showActions={false}
         />
       ))}
     </div>
