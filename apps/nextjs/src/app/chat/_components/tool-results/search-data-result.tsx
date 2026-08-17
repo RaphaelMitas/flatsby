@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
-import { OptimisticShoppingListItem } from "~/app/shopping-list/[shoppingListId]/ShoppingListItem";
+import { ShoppingListItemDisplay } from "~/app/_components/ShoppingListItemDisplay";
 
 interface SearchDataResultProps {
   output: SearchDataOutput;
@@ -80,14 +80,12 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
           </CardHeader>
           <CardContent className="max-h-64 space-y-2 overflow-y-auto pt-0">
             {data.items.map((item) => (
-              <OptimisticShoppingListItem
+              <ShoppingListItemDisplay
                 key={item.id}
-                id={item.id}
                 name={item.name}
                 completed={item.completed}
                 categoryId={item.categoryId}
                 showCheckbox={false}
-                showActions={false}
               />
             ))}
           </CardContent>
