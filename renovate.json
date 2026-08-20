@@ -122,7 +122,6 @@
       "description": "Group Better Auth. 1.6.24-1.6.27 break client plugin types (expoClient not assignable to BetterAuthClientPlugin, https://github.com/better-auth/better-auth/issues/10767) – the Expo typecheck fails while web stays green, so extend this range if the next release is still broken, and drop the exclusion once a fixed one ships",
       "groupName": "better-auth",
       "matchPackageNames": ["/^@better-auth//", "better-auth"],
-      "ignoreUnstable": false,
       "allowedVersions": "!/^1\\.6\\.2[4-7]$/"
     },
     {
