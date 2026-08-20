@@ -5,8 +5,8 @@ import Link from "next/link";
 
 import { Button } from "@flatsby/ui/button";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
+import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import GoogleIcon from "@flatsby/ui/custom/icons/GoogleIcon";
-import HomeIcon from "@flatsby/ui/custom/icons/HomeIcon";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
 import { signIn } from "~/auth/client";
@@ -18,7 +18,7 @@ const Login = () => {
     <div className="bg-background flex h-screen w-full items-center justify-center">
       <div className="bg-muted flex flex-col gap-6 rounded-lg p-8">
         <div className="flex flex-col items-center justify-center gap-4 text-center">
-          <HomeIcon className="text-primary h-20 w-fit self-center" />
+          <FlatsbyCat className="h-20 w-auto self-center" />
           <h1 className="text-4xl font-bold" data-testid="auth-login-title">
             Flatsby
           </h1>
