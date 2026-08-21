@@ -14,6 +14,7 @@ export function cn(...inputs: ClassValue[]) {
 const lightColors = {
   background: "hsl(0, 0%, 100%)",
   foreground: "hsl(240, 10%, 3.9%)",
+  "cat-detail": "hsl(0, 0%, 84.7%)",
   card: "hsl(0, 0%, 100%)",
   "card-foreground": "hsl(240, 10%, 3.9%)",
   popover: "hsl(0, 0%, 100%)",
@@ -51,6 +52,7 @@ const lightColors = {
 const darkColors = {
   background: "hsl(240, 10%, 3.9%)",
   foreground: "hsl(0, 0%, 98%)",
+  "cat-detail": "hsl(240, 5.5%, 28.6%)",
   card: "hsl(240, 10%, 3.9%)",
   "card-foreground": "hsl(0, 0%, 98%)",
   popover: "hsl(240, 10%, 3.9%)",
