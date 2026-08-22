@@ -31,26 +31,26 @@ auditConfig:
 
 catalog:
   "@ai-sdk/provider": ^4.0.7
-  "@ai-sdk/react": ^4.0.69
-  "@biomejs/biome": 2.5.8
-  "@hookform/resolvers": ^5.9.0
+  "@ai-sdk/react": ^4.0.79
+  "@biomejs/biome": 2.5.10
+  "@hookform/resolvers": ^5.9.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.3.3
   "@tanstack/react-query": ^5.101.4
   "@trpc/client": ^11.18.0
   "@trpc/server": ^11.18.0
   "@trpc/tanstack-react-query": ^11.18.0
-  "@turbo/gen": ^2.10.10
+  "@turbo/gen": ^2.10.11
   "@types/node": ^24.13.3
-  ai: ^7.0.66
+  ai: ^7.0.76
   autumn-js: ^1.2.53
   babel-plugin-react-compiler: ^1.0.0
-  next: ^16.3.1
+  next: ^16.3.2
   prettier: ^3.9.6
   react-hook-form: ^7.85.0
   superjson: ^2.2.6
   tailwindcss: ^4.3.3
-  turbo: ^2.10.10
+  turbo: ^2.10.11
   typescript: ^7.0.2
   zod: ^4.4.3
 
@@ -59,8 +59,8 @@ catalogs:
     # 1.6.24+ breaks the Expo client plugin types: expoClient no longer satisfies
     # BetterAuthClientPlugin and authClient.getCookie loses its type.
     # https://github.com/better-auth/better-auth/issues/10767
-    "@better-auth/expo": 1.6.29
-    better-auth: 1.6.29
+    "@better-auth/expo": 1.7.1
+    better-auth: 1.7.1
   react19:
     "@types/react": ~19.2.0
     "@types/react-dom": ~19.2.0
