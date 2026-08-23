@@ -71,7 +71,7 @@ export default function FlatsbyCat({
           <G className="fc-eye fc-eye--right">
             <G className="fc-eye-open">
               <Ellipse cx={14.5} cy={13.5} rx={14.5} ry={13.5} fill={detail} />
-              <Circle cx={18.5} cy={12.5} r={3.5} fill="black" />
+              <Circle cx={18.5} cy={12.5} r={3.5} fill={color} />
             </G>
           </G>
         </G>
@@ -79,7 +79,7 @@ export default function FlatsbyCat({
           <G className="fc-eye fc-eye--left">
             <G className="fc-eye-open">
               <Ellipse cx={14.5} cy={13.5} rx={14.5} ry={13.5} fill={detail} />
-              <Circle cx={18.5} cy={12.5} r={3.5} fill="black" />
+              <Circle cx={18.5} cy={12.5} r={3.5} fill={color} />
             </G>
           </G>
         </G>
