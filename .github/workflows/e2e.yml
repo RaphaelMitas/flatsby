@@ -282,23 +282,6 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # Artifact pool rather than actions/cache, same as the iOS ccache.
-      - name: Restore Gradle cache from artifact
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ART_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=gradle-android&per_page=5" \
-            --jq '[.artifacts[] | select(.expired == false)][0].id // empty')
-          if [ -z "$ART_ID" ]; then
-            echo "No Gradle cache artifact available; building cold"
-            exit 0
-          fi
-          gh api "repos/${{ github.repository }}/actions/artifacts/$ART_ID/zip" > /tmp/gradle.zip \
-            && unzip -q -o /tmp/gradle.zip -d /tmp/gradle-artifact \
-            && tar -xzf /tmp/gradle-artifact/gradle-cache.tar.gz -C "$HOME" \
-            && echo "Restored Gradle cache from artifact $ART_ID" \
-            || echo "Gradle cache artifact $ART_ID unusable; building cold"
-
       - name: Prebuild Android project
         working-directory: apps/expo
         run: pnpm expo prebuild --platform android --no-install
@@ -325,16 +308,6 @@ jobs:
             -x lintVitalRelease -x lintVitalAnalyzeRelease -x lintVitalReportRelease
         env:
           E2E_TESTING: "true"
-
-      - name: Pack Gradle cache for next run
-        run: tar -C "$HOME" -czf gradle-cache.tar.gz .gradle/caches .gradle/wrapper
-
-      - name: Upload Gradle cache artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: gradle-android
-          path: gradle-cache.tar.gz
-          retention-days: 3
 
       - name: Upload app artifact
         uses: actions/upload-artifact@v7
