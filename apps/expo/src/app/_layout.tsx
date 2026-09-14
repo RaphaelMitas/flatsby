@@ -28,26 +28,26 @@ import { ShoppingStoreProvider } from "~/utils/shopping-store";
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 export default function RootLayout() {
-  const e2eTesting = isE2ETestingEnabled();
+  const posthogDisabled = isE2ETestingEnabled() || __DEV__;
   const posthogApiKey = String(process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "");
-  if (!posthogApiKey && !e2eTesting)
+  if (!posthogApiKey && !posthogDisabled)
     throw new Error("EXPO_PUBLIC_POSTHOG_API_KEY is not set");
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PostHogProvider
-        apiKey={posthogApiKey || "phc-e2e-disabled"}
+        apiKey={posthogApiKey || "phc-disabled"}
         // expo-router never exposes a NavigationContainer, so PostHog's screen
         // autocapture cannot read navigation state. ScreenTracker does it instead.
         autocapture={{ captureScreens: false }}
         options={{
-          disabled: e2eTesting,
+          disabled: posthogDisabled,
           host: "https://eu.i.posthog.com",
           errorTracking: {
             autocapture: {
               uncaughtExceptions: true,
               unhandledRejections: true,
-              console: ["error", "warn"],
+              console: ["error"],
             },
           },
         }}

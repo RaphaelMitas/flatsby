@@ -9,11 +9,12 @@ import { PostHog } from "posthog-node";
 
 const apiKey = process.env.POSTHOG_API_KEY;
 
-export const posthog = apiKey
-  ? new PostHog(apiKey, {
-      host: "https://eu.i.posthog.com",
-    })
-  : null;
+export const posthog =
+  apiKey && process.env.NODE_ENV === "production"
+    ? new PostHog(apiKey, {
+        host: "https://eu.i.posthog.com",
+      })
+    : null;
 
 // Campaign params that PostHog tracks (sync with posthog-js)
 const CAMPAIGN_PARAMS = [

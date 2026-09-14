@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { getHTTPStatusCodeFromError } from "@trpc/server/http";
 
 import { appRouter, captureError, createTRPCContext } from "@flatsby/api";
 
@@ -36,6 +37,7 @@ const handler = async (req: NextRequest) => {
         signal: req.signal,
       }),
     onError({ error, path, ctx }) {
+      if (getHTTPStatusCodeFromError(error) < 500) return;
       captureError({
         error: error.cause ?? error,
         operation: `trpc.${path}`,
