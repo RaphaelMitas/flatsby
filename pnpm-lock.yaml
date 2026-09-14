@@ -227,8 +227,8 @@ importers:
         specifier: ~57.0.2
         version: 57.0.2(expo@57.0.12)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))
       nativewind:
-        specifier: 5.0.0-preview.4
-        version: 5.0.0-preview.4(react-native-css@3.0.7(@expo/metro-config@57.0.8(expo@57.0.12)(supports-color@8.1.1)(typescript@7.0.2))(lightningcss@1.32.0)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(tailwindcss@4.3.3)
+        specifier: 5.0.0-rc.0
+        version: 5.0.0-rc.0(react-native-css@3.0.7(@expo/metro-config@57.0.8(expo@57.0.12)(supports-color@8.1.1)(typescript@7.0.2))(lightningcss@1.32.0)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(tailwindcss@4.3.3)
       posthog-react-native:
         specifier: ^4.71.0
         version: 4.71.0(d8c49548fe72589579ed3a267b15b986)
@@ -6105,11 +6105,11 @@ packages:
     resolution: {integrity: sha512-i0tloweeudshAEuddpDxcg9Ik6pkPfVsHIgKyf143JrgG7/MOh0+q7BypdLXZPoOP7fOYt1eTcwGkyiVmhJFkA==}
     engines: {node: ^20.0.0 || >=22.0.0}
 
-  nativewind@5.0.0-preview.4:
-    resolution: {integrity: sha512-eLsFGczxIsWADoD18EbEyt01aWgw4uP1/t/O7JIsp/OEbSgVYVobW97e2DDTOxxiiqSu0RexC1KSo5d7tes9uQ==}
+  nativewind@5.0.0-rc.0:
+    resolution: {integrity: sha512-CrESAPb428+EVNvGhUaMfbNllyk6lOnX1ZlVlNktCeae/4mIbb6x4SxN62Rg3cLHNRrRLYZEPYGmqkZ8fVIRZQ==}
     engines: {node: '>=20'}
     peerDependencies:
-      react-native-css: ^3.0.1
+      react-native-css: 3.1.0-rc.0
       tailwindcss: '>4.1.11'
 
   negotiator@0.6.3:
@@ -8018,7 +8018,7 @@ snapshots:
       jose: 6.2.9
       kysely: 0.29.5
       nanostores: 1.4.0
-      zod: 4.6.2
+      zod: 4.6.4
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
 
@@ -8032,7 +8032,7 @@ snapshots:
       jose: 6.2.12
       kysely: 0.29.5
       nanostores: 1.4.0
-      zod: 4.6.2
+      zod: 4.6.4
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
 
@@ -8046,7 +8046,7 @@ snapshots:
       jose: 6.2.9
       kysely: 0.29.5
       nanostores: 1.4.0
-      zod: 4.6.2
+      zod: 4.6.4
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
 
@@ -12946,7 +12946,7 @@ snapshots:
 
   nanostores@1.4.0: {}
 
-  nativewind@5.0.0-preview.4(react-native-css@3.0.7(@expo/metro-config@57.0.8(expo@57.0.12)(supports-color@8.1.1)(typescript@7.0.2))(lightningcss@1.32.0)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(tailwindcss@4.3.3):
+  nativewind@5.0.0-rc.0(react-native-css@3.0.7(@expo/metro-config@57.0.8(expo@57.0.12)(supports-color@8.1.1)(typescript@7.0.2))(lightningcss@1.32.0)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(tailwindcss@4.3.3):
     dependencies:
       react-native-css: 3.0.7(@expo/metro-config@57.0.8(expo@57.0.12)(supports-color@8.1.1)(typescript@7.0.2))(lightningcss@1.32.0)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1)
       tailwindcss: 4.3.3
