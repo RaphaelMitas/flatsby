@@ -1,3 +1,1 @@
-• Ticking things off feels better.
-• Removed the floating petals, so every screen runs smoother.
-• Fixed a crash when opening a shopping list, the theme sticking after you switch back to System, and lists silently failing to create.
+Bug fixes and improvements.
