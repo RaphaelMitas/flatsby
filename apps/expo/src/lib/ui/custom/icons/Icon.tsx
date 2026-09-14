@@ -5,7 +5,7 @@ import type { ColorName } from "~/lib/utils";
 import { StyledIcon } from "~/lib/nativewind-setup";
 import { cn, useThemeColors } from "~/lib/utils";
 import AppleIcon from "./AppleIcon";
-import FlatsbyIcon from "./FlatsbyIcon";
+import FlatsbyCat from "./FlatsbyCat";
 import GoogleIcon from "./GoogleIcon";
 
 export interface IconProps {
@@ -31,7 +31,7 @@ const Icon = ({ name, color, size, className }: IconProps) => {
     return <AppleIcon size={size} color={colorValue} className={className} />;
   }
   if (name === "flatsby") {
-    return <FlatsbyIcon size={size} color={colorValue} className={className} />;
+    return <FlatsbyCat size={size} color={colorValue} className={className} />;
   }
   return (
     <StyledIcon

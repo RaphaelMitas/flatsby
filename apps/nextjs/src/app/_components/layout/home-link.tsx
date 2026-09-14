@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 
-import HomeIcon from "@flatsby/ui/custom/icons/HomeIcon";
+import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 
 export function HomeLink() {
   return (
     <Link className="flex items-center gap-2" href="/home">
-      <HomeIcon className="text-primary h-6 w-10" />
+      <FlatsbyCat />
       <span className="hidden text-lg font-bold md:block">Flatsby</span>
     </Link>
   );

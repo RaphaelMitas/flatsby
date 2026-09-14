@@ -1,0 +1,164 @@
+/*
+ * Flatsby cat mark. Body rides `currentColor` (driven by `text-primary`),
+ * the grey feature set (eyeballs, nose, monocle) rides `--cat-detail`,
+ * which the theme flips for dark mode. All motion is in SVG user units so
+ * the same mark works at 24px, 80px and 160px.
+ */
+.flatsby-cat {
+  display: block;
+}
+
+.flatsby-cat .fc-body {
+  fill: currentColor;
+}
+
+.flatsby-cat .fc-detail {
+  fill: var(--cat-detail);
+}
+
+.flatsby-cat .fc-detail-stroke {
+  fill: none;
+  stroke: var(--cat-detail);
+}
+
+/* idle set — the head stays put, the parts move (only with .fc-animated) */
+.fc-animated .fc-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fc-blink 4.5s linear infinite;
+}
+.fc-animated .fc-pupil {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fc-look 5s linear infinite;
+}
+.fc-animated .fc-whiskers {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  animation: fc-twitch 6.3s ease-in-out infinite;
+}
+.fc-animated .fc-whiskers--left {
+  animation-duration: 5.7s;
+  animation-direction: reverse;
+}
+.fc-animated .fc-monocle {
+  transform-box: view-box;
+  transform-origin: 170px 92.5px;
+  animation: fc-swing 7s ease-in-out infinite;
+}
+
+@keyframes fc-blink {
+  0%,
+  91%,
+  100% {
+    transform: scaleY(1);
+  }
+  93.5% {
+    transform: scaleY(0.06);
+  }
+  96% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes fc-look {
+  0%,
+  30% {
+    transform: translateX(0);
+  }
+  40%,
+  55% {
+    transform: translateX(4px);
+  }
+  70%,
+  85% {
+    transform: translateX(-3.5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fc-twitch {
+  0%,
+  78%,
+  100% {
+    transform: rotate(0deg);
+  }
+  84% {
+    transform: rotate(2.5deg);
+  }
+  90% {
+    transform: rotate(-1.5deg);
+  }
+  95% {
+    transform: rotate(0.8deg);
+  }
+}
+
+@keyframes fc-swing {
+  0%,
+  80%,
+  100% {
+    transform: rotate(0deg);
+  }
+  86% {
+    transform: rotate(2deg);
+  }
+  92% {
+    transform: rotate(-1.2deg);
+  }
+  96% {
+    transform: rotate(0.5deg);
+  }
+}
+
+/* hop — .fc-hopping on the root, replayed on hover/click */
+.fc-hopping .fc-rig {
+  animation: fc-hop 0.45s ease-out;
+}
+
+/* excited expression — .fc-excited on the root, held while hovered */
+.flatsby-cat .fc-eye-open {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+.flatsby-cat .fc-whiskers-up {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  transition: transform 0.3s ease;
+}
+.fc-excited .fc-eye-open {
+  transform: scale(1.08);
+}
+.fc-excited .fc-whiskers-up {
+  transform: rotate(-5deg);
+}
+
+@keyframes fc-hop {
+  0% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4px);
+  }
+  70%,
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-animated .fc-eye,
+  .fc-animated .fc-pupil,
+  .fc-animated .fc-whiskers,
+  .fc-animated .fc-monocle,
+  .fc-hopping .fc-rig {
+    animation: none;
+  }
+  .flatsby-cat .fc-eye-open,
+  .flatsby-cat .fc-whiskers-up {
+    transition: none;
+  }
+}

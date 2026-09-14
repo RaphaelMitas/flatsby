@@ -1,14 +1,14 @@
 import Link from "next/link";
 
 import { Button } from "@flatsby/ui/button";
-import HomeIcon from "@flatsby/ui/custom/icons/HomeIcon";
+import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 
 export function LandingHeader() {
   return (
     <header className="border-b">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <Link href="/" className="flex items-center gap-2">
-          <HomeIcon className="text-primary h-6 w-10" />
+          <FlatsbyCat />
           <span className="text-xl font-semibold">Flatsby</span>
         </Link>
         <nav className="flex gap-2">
