@@ -36,7 +36,7 @@ auditConfig:
 
 catalog:
   "@ai-sdk/provider": ^4.0.14
-  "@ai-sdk/react": ^4.0.102
+  "@ai-sdk/react": ^4.0.103
   "@biomejs/biome": 2.5.13
   "@hookform/resolvers": ^5.9.1
   "@t3-oss/env-nextjs": ^0.13.11
@@ -45,9 +45,9 @@ catalog:
   "@trpc/client": ^11.18.0
   "@trpc/server": ^11.18.0
   "@trpc/tanstack-react-query": ^11.18.0
-  "@turbo/gen": ^2.10.12
+  "@turbo/gen": ^2.10.13
   "@types/node": ^24.13.4
-  ai: ^7.0.99
+  ai: ^7.0.100
   autumn-js: ^1.3.1
   babel-plugin-react-compiler: ^1.0.0
   next: ^16.3.5
@@ -55,7 +55,7 @@ catalog:
   react-hook-form: ^7.88.0
   superjson: ^2.2.6
   tailwindcss: ^4.3.3
-  turbo: ^2.10.12
+  turbo: ^2.10.13
   typescript: ^7.0.2
   zod: ^4.6.5
 
