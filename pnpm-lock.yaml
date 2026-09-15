@@ -466,8 +466,8 @@ importers:
         specifier: workspace:*
         version: link:../validators
       '@posthog/ai':
-        specifier: 8.11.0
-        version: 8.11.0(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.1)
+        specifier: 8.11.1
+        version: 8.11.1(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.2)
       '@tanstack/react-pacer':
         specifier: '*'
         version: 0.22.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -484,8 +484,8 @@ importers:
         specifier: ^3.22.2
         version: 3.22.2
       posthog-node:
-        specifier: ^5.52.1
-        version: 5.52.1
+        specifier: ^5.52.2
+        version: 5.52.2
       react:
         specifier: catalog:react19
         version: 19.2.8
@@ -2557,8 +2557,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  '@posthog/ai@8.11.0':
-    resolution: {integrity: sha512-9vptNSMQLef6Lzbbp7erY4i0XVAn98+X/kxFsG6k0xR6qamj+7CRX3yJnvWXV0a41yocuBcLNhY/p+ZqM5GZeA==}
+  '@posthog/ai@8.11.1':
+    resolution: {integrity: sha512-tKR/H8RElupSHLipGbgz0x+1ICP/zFd+O6xpll6F7ZFKPwP0SGUur5QWbqesPxYwUCbkN0olmd37/UJc3pVYbw==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       '@ai-sdk/provider': ^2.0.0 || ^3.0.0 || ^4.0.0
@@ -2596,9 +2596,6 @@ packages:
         optional: true
       openai:
         optional: true
-
-  '@posthog/core@1.53.2':
-    resolution: {integrity: sha512-Knx8442G2LyPVIzLvhcBX/TIdeHpZhrYrtZou3Uw8FWfbr9gQtQeOZDCog3MWcDxJ+4vAnMAAOzf5cYpc7Gxyw==}
 
   '@posthog/core@1.53.3':
     resolution: {integrity: sha512-ioBDeZtsFZej4vfX2bGGBud3DNCvSlmUUdk2KtQWOlpGytbdirMHVxG2iAFkxqemiukqcvf/Do6BtZb5hp9MYw==}
@@ -6356,8 +6353,8 @@ packages:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
 
-  posthog-node@5.52.1:
-    resolution: {integrity: sha512-Xt0xazhAR1Bf2DEnPPZETkWx19jckKeMkJ4qMMTv1xuyKSNjy8AXREEkiuDbJWWr3k6KpgoYH6sURWBROpRKlA==}
+  posthog-node@5.52.2:
+    resolution: {integrity: sha512-era2ptMcl8nQBT1apUMeoagLSgU1IfR5IwW4v0gudjzkV7IZbr+slG7I4IPiEG0WmsqrLjKnYz/t75vdveTbFA==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -9105,20 +9102,16 @@ snapshots:
     dependencies:
       playwright: 1.63.0
 
-  '@posthog/ai@8.11.0(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.1)':
+  '@posthog/ai@8.11.1(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.2)':
     dependencies:
-      '@posthog/core': 1.53.2
-      posthog-node: 5.52.1
+      '@posthog/core': 1.53.3
+      posthog-node: 5.52.2
       uuid: 11.1.1
       zod: 4.6.5
     optionalDependencies:
       '@ai-sdk/provider': 4.0.14
       '@google/genai': 1.52.0(supports-color@8.1.1)
       '@opentelemetry/api': 1.9.1
-
-  '@posthog/core@1.53.2':
-    dependencies:
-      '@posthog/types': 1.411.1
 
   '@posthog/core@1.53.3':
     dependencies:
@@ -13226,9 +13219,9 @@ snapshots:
     dependencies:
       xtend: 4.0.2
 
-  posthog-node@5.52.1:
+  posthog-node@5.52.2:
     dependencies:
-      '@posthog/core': 1.53.2
+      '@posthog/core': 1.53.3
 
   posthog-react-native@4.72.0(d8c49548fe72589579ed3a267b15b986):
     dependencies:
