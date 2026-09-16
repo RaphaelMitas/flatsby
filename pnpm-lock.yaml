@@ -230,8 +230,8 @@ importers:
         specifier: 5.0.0-rc.0
         version: 5.0.0-rc.0(react-native-css@3.0.7(@expo/metro-config@57.0.8(expo@57.0.12)(supports-color@8.1.1)(typescript@7.0.2))(lightningcss@1.32.0)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(tailwindcss@4.3.3)
       posthog-react-native:
-        specifier: ^4.73.1
-        version: 4.73.1(d8c49548fe72589579ed3a267b15b986)
+        specifier: ^4.73.3
+        version: 4.73.3(d8c49548fe72589579ed3a267b15b986)
       react:
         specifier: catalog:react19
         version: 19.2.8
@@ -467,7 +467,7 @@ importers:
         version: link:../validators
       '@posthog/ai':
         specifier: 8.12.1
-        version: 8.12.1(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.3)
+        version: 8.12.1(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)
       '@tanstack/react-pacer':
         specifier: '*'
         version: 0.22.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -484,8 +484,8 @@ importers:
         specifier: ^3.22.2
         version: 3.22.2
       posthog-node:
-        specifier: ^5.52.3
-        version: 5.52.3
+        specifier: ^5.52.4
+        version: 5.52.4
       react:
         specifier: catalog:react19
         version: 19.2.8
@@ -2600,8 +2600,14 @@ packages:
   '@posthog/core@1.54.1':
     resolution: {integrity: sha512-UvpnMylZ25ncVGi1jJjZlrN09VOdwYy34t1fh61T6aNZhtRA5aIwLIvaD6nOftOhi8d/DBCZi43wTjzhVlMotw==}
 
+  '@posthog/core@1.54.2':
+    resolution: {integrity: sha512-p0NuMjiZkploKG/aASj4nw4QDuhF87SIFWkelaFRrr3G0Myb7KWWUZot2hm5qXpPx7zKozVZJrJkGzC2kGBqbg==}
+
   '@posthog/types@1.412.0':
     resolution: {integrity: sha512-EP+lSTnEmftW/slhGXsuGcYAygO4oho3hjWqObP+GeceZ+6qcwK9qZwVRqJjsiZAl0xLPy5s0U0SZqGKayFyeQ==}
+
+  '@posthog/types@1.412.1':
+    resolution: {integrity: sha512-FxXsb9YOOME8bJI5K09qKeSvLjnZQ2dPV7wZpI7a8sERQtXkAuhBcPB/balCnVE7TYwhgtHj5NQss9BgQ5bAfQ==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -6344,8 +6350,8 @@ packages:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
 
-  posthog-node@5.52.3:
-    resolution: {integrity: sha512-eRmstlXCltl9VxKTOghckk2HvnLkYSAbqW+1fAbIeQKTXcf9jK6ns2MKM9Mcb8AzUMoR3QpNNeWAgGEXtSmVgQ==}
+  posthog-node@5.52.4:
+    resolution: {integrity: sha512-P3p4OouGQfw/ouv+Px4gcVWLNwYsFB4JPyksYmxv7QRX4niwp1/C9XjQSUyl0nt+KoQnK14zFDfONHWVthwKDA==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -6353,8 +6359,8 @@ packages:
       rxjs:
         optional: true
 
-  posthog-react-native@4.73.1:
-    resolution: {integrity: sha512-sYnLdu9bGhHSxXuxyA8I5qfGggrs43NvyYARRIsC7NlY2t1EMV7XjJkDkaTSmYAElcr/0yjJd1hfHr6B7k2+TQ==}
+  posthog-react-native@4.73.3:
+    resolution: {integrity: sha512-cvrt5nHKZWx8jBRZd0nf4ZOPbfozoUH9RxQ0W5xF7x/iCzMedeBLcbMFBOuYeHtF+09lA7SrKxt/+UzOJfBgUQ==}
     hasBin: true
     peerDependencies:
       '@posthog/react-native-plugin': '>= 2.4.3'
@@ -9003,10 +9009,10 @@ snapshots:
     dependencies:
       playwright: 1.63.0
 
-  '@posthog/ai@8.12.1(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.3)':
+  '@posthog/ai@8.12.1(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)':
     dependencies:
       '@posthog/core': 1.54.1
-      posthog-node: 5.52.3
+      posthog-node: 5.52.4
       uuid: 11.1.1
       zod: 4.6.5
     optionalDependencies:
@@ -9018,7 +9024,13 @@ snapshots:
     dependencies:
       '@posthog/types': 1.412.0
 
+  '@posthog/core@1.54.2':
+    dependencies:
+      '@posthog/types': 1.412.0
+
   '@posthog/types@1.412.0': {}
+
+  '@posthog/types@1.412.1': {}
 
   '@protobufjs/aspromise@1.1.2':
     optional: true
@@ -13105,14 +13117,14 @@ snapshots:
     dependencies:
       xtend: 4.0.2
 
-  posthog-node@5.52.3:
+  posthog-node@5.52.4:
     dependencies:
-      '@posthog/core': 1.54.1
+      '@posthog/core': 1.54.2
 
-  posthog-react-native@4.73.1(d8c49548fe72589579ed3a267b15b986):
+  posthog-react-native@4.73.3(d8c49548fe72589579ed3a267b15b986):
     dependencies:
-      '@posthog/core': 1.54.1
-      '@posthog/types': 1.412.0
+      '@posthog/core': 1.54.2
+      '@posthog/types': 1.412.1
     optionalDependencies:
       '@react-native-async-storage/async-storage': 2.2.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))
       '@react-navigation/native': 7.3.7(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
