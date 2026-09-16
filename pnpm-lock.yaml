@@ -14,11 +14,11 @@ catalogs:
       version: 1.7.5
   default:
     '@ai-sdk/provider':
-      specifier: ^4.0.14
-      version: 4.0.14
+      specifier: ^4.0.15
+      version: 4.0.15
     '@ai-sdk/react':
-      specifier: ^4.0.104
-      version: 4.0.104
+      specifier: ^4.0.105
+      version: 4.0.105
     '@biomejs/biome':
       specifier: 2.5.13
       version: 2.5.13
@@ -47,8 +47,8 @@ catalogs:
       specifier: ^24.13.4
       version: 24.13.4
     ai:
-      specifier: ^7.0.101
-      version: 7.0.101
+      specifier: ^7.0.102
+      version: 7.0.102
     autumn-js:
       specifier: ^1.3.2
       version: 1.3.2
@@ -230,8 +230,8 @@ importers:
         specifier: 5.0.0-rc.0
         version: 5.0.0-rc.0(react-native-css@3.0.7(@expo/metro-config@57.0.8(expo@57.0.12)(supports-color@8.1.1)(typescript@7.0.2))(lightningcss@1.32.0)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(tailwindcss@4.3.3)
       posthog-react-native:
-        specifier: ^4.73.3
-        version: 4.73.3(d8c49548fe72589579ed3a267b15b986)
+        specifier: ^4.74.0
+        version: 4.74.0(d8c49548fe72589579ed3a267b15b986)
       react:
         specifier: catalog:react19
         version: 19.2.8
@@ -325,7 +325,7 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: 'catalog:'
-        version: 4.0.104(react@19.2.8)(zod@4.6.5)
+        version: 4.0.105(react@19.2.8)(zod@4.6.5)
       '@better-auth/expo':
         specifier: catalog:better-auth
         version: 1.7.5(c16f40ecb0de1d25a656054d11b65f20)
@@ -367,7 +367,7 @@ importers:
         version: 11.18.0(@tanstack/react-query@5.102.8(react@19.2.8))(@trpc/client@11.18.0(@trpc/server@11.18.0(typescript@7.0.2))(typescript@7.0.2))(@trpc/server@11.18.0(typescript@7.0.2))(react@19.2.8)(typescript@7.0.2)
       ai:
         specifier: 'catalog:'
-        version: 7.0.101(zod@4.6.5)
+        version: 7.0.102(zod@4.6.5)
       autumn-js:
         specifier: 'catalog:'
         version: 1.3.2(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
@@ -455,7 +455,7 @@ importers:
     dependencies:
       '@ai-sdk/provider':
         specifier: 'catalog:'
-        version: 4.0.14
+        version: 4.0.15
       '@flatsby/auth':
         specifier: workspace:*
         version: link:../auth
@@ -467,7 +467,7 @@ importers:
         version: link:../validators
       '@posthog/ai':
         specifier: 8.12.1
-        version: 8.12.1(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)
+        version: 8.12.1(@ai-sdk/provider@4.0.15)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)
       '@tanstack/react-pacer':
         specifier: '*'
         version: 0.22.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -479,7 +479,7 @@ importers:
         version: 11.18.0(typescript@7.0.2)
       ai:
         specifier: 'catalog:'
-        version: 7.0.101(zod@4.6.5)
+        version: 7.0.102(zod@4.6.5)
       effect:
         specifier: ^3.22.2
         version: 3.22.2
@@ -525,7 +525,7 @@ importers:
         version: 0.13.11(typescript@7.0.2)(zod@4.6.5)
       ai:
         specifier: 'catalog:'
-        version: 7.0.101(zod@4.6.5)
+        version: 7.0.102(zod@4.6.5)
       autumn-js:
         specifier: 'catalog:'
         version: 1.3.2(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
@@ -568,7 +568,7 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: 'catalog:'
-        version: 4.0.104(react@19.2.8)(zod@4.6.5)
+        version: 4.0.105(react@19.2.8)(zod@4.6.5)
       '@flatsby/validators':
         specifier: workspace:*
         version: link:../validators
@@ -577,7 +577,7 @@ importers:
         version: 5.102.8(react@19.2.8)
       ai:
         specifier: 'catalog:'
-        version: 7.0.101(zod@4.6.5)
+        version: 7.0.102(zod@4.6.5)
       react:
         specifier: catalog:react19
         version: 19.2.8
@@ -654,7 +654,7 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: 'catalog:'
-        version: 4.0.104(react@19.2.8)(zod@4.6.5)
+        version: 4.0.105(react@19.2.8)(zod@4.6.5)
       '@flatsby/validators':
         specifier: workspace:*
         version: link:../validators
@@ -720,7 +720,7 @@ importers:
         version: 12.11.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       ai:
         specifier: 'catalog:'
-        version: 7.0.101(zod@4.6.5)
+        version: 7.0.102(zod@4.6.5)
       autumn-js:
         specifier: 'catalog:'
         version: 1.3.2(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
@@ -836,7 +836,7 @@ importers:
         version: 19.2.17
       ai:
         specifier: 'catalog:'
-        version: 7.0.101(zod@4.6.5)
+        version: 7.0.102(zod@4.6.5)
       prettier:
         specifier: 'catalog:'
         version: 3.9.6
@@ -909,30 +909,30 @@ packages:
   '@adobe/css-tools@4.5.0':
     resolution: {integrity: sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q==}
 
-  '@ai-sdk/gateway@4.0.81':
-    resolution: {integrity: sha512-9TdKEg2l/qfaK7L4gC1FkrHNBrEXQjZSV3DvkRLCXkOSJTzojmarCn19ROWBbrlHqFVbW7OSOwQqz1n7ku9HQA==}
+  '@ai-sdk/gateway@4.0.82':
+    resolution: {integrity: sha512-WbRChvbJY2zf0qBxFu6UENi0p69fPzP7lKViNTIp3gr76w9bLUFvV5fTXS5uGPqDOkzlTIuAkqWxYNayEBSn6Q==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/mcp@2.0.49':
-    resolution: {integrity: sha512-dD8//65te2C5B4UzPNHGLR7CStR5IvY7o7kXz0YYtPQs+aCdXc7Jb3fuvZcovShfP1KGvPIMTfXhp6Uz+UghJQ==}
+  '@ai-sdk/mcp@2.0.50':
+    resolution: {integrity: sha512-BDqmZydzhxjkhuUNEEgNa05XjL81EGpt6KkRJCVZdZkPzZvSnmILhf0vmV6dW2WbOUXUCnpJEuqDg3xZp2df5g==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.40':
-    resolution: {integrity: sha512-zsXPwSAQ9mRJ2hvyITaLOYUyuGrBmzFhJXOg4mllGmla1PfNxZcm4GwqMiV2xQaDgcgBMdUGxXkp9xekZZNIkg==}
+  '@ai-sdk/provider-utils@5.0.41':
+    resolution: {integrity: sha512-hSosMII5k33z0buaZ6dugH/g8yIJjPQBILuQvr4ThdiMJxrkiZxFWTgIkvKsT6Dk493JbsnGz5W/q88Y5bR7WA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider@4.0.14':
-    resolution: {integrity: sha512-yukP2tbcQQErG5gLCMBGvpvb/rM3D3KlTKG6eKKOdNHLHqtNNDEeBxdYrY/JL+O76B2ig5dXY19H/f1HFSvRiQ==}
+  '@ai-sdk/provider@4.0.15':
+    resolution: {integrity: sha512-LIDCrT8xgWVMiVUV13+v9FXPJ8B5uX/5ByEMXxp9Sspr2SyB1PwMSCPshZoI/t+4AgxyZCFEVutdaigCnqje3w==}
     engines: {node: '>=22'}
 
-  '@ai-sdk/react@4.0.104':
-    resolution: {integrity: sha512-YRtg1qkNCG+nsDVcMzKJKRaqPKn/i6XsuaZU1CQ70EdVVW9JqF0WPUaRpCMAboQ5aGdbNxP9vBgAwErrqHj9Mw==}
+  '@ai-sdk/react@4.0.105':
+    resolution: {integrity: sha512-T4Y/vWatLjNNpJCGtwsP+UKarISrvVH78DjtB1FHOVvj+aHv17zhw4uyATEhIYGVhVZZM1cxWilWRxzLSm97Ig==}
     engines: {node: '>=22'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
@@ -2603,9 +2603,6 @@ packages:
   '@posthog/core@1.54.2':
     resolution: {integrity: sha512-p0NuMjiZkploKG/aASj4nw4QDuhF87SIFWkelaFRrr3G0Myb7KWWUZot2hm5qXpPx7zKozVZJrJkGzC2kGBqbg==}
 
-  '@posthog/types@1.412.0':
-    resolution: {integrity: sha512-EP+lSTnEmftW/slhGXsuGcYAygO4oho3hjWqObP+GeceZ+6qcwK9qZwVRqJjsiZAl0xLPy5s0U0SZqGKayFyeQ==}
-
   '@posthog/types@1.412.1':
     resolution: {integrity: sha512-FxXsb9YOOME8bJI5K09qKeSvLjnZQ2dPV7wZpI7a8sERQtXkAuhBcPB/balCnVE7TYwhgtHj5NQss9BgQ5bAfQ==}
 
@@ -4158,8 +4155,8 @@ packages:
     engines: {node: '>=18.18'}
     hasBin: true
 
-  ai@7.0.101:
-    resolution: {integrity: sha512-EOhih2g2Gu6TJdnkBojXORtNT6oZ6J4YeVeJhZXFO384ONLdXpPa+VPH183IMpSB8SkswQHTYRRoZ1tt+9Jt3Q==}
+  ai@7.0.102:
+    resolution: {integrity: sha512-zYpEoHm3+T+KGGlP7aLGhrEVCbJdTxb7eoxvGBB+BjSrHnt55+uQ/sHUO69xUly1LB2RoDpHD3o521HSzs+h8g==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -6359,11 +6356,11 @@ packages:
       rxjs:
         optional: true
 
-  posthog-react-native@4.73.3:
-    resolution: {integrity: sha512-cvrt5nHKZWx8jBRZd0nf4ZOPbfozoUH9RxQ0W5xF7x/iCzMedeBLcbMFBOuYeHtF+09lA7SrKxt/+UzOJfBgUQ==}
+  posthog-react-native@4.74.0:
+    resolution: {integrity: sha512-/PFymRopn33VeShsoTqTeF0cQLBkJSqtac06dOo5TkaE8RZoETKmtLNsP/G9uio8zhZnKKfglY1l27NgQqmfZA==}
     hasBin: true
     peerDependencies:
-      '@posthog/react-native-plugin': '>= 2.4.3'
+      '@posthog/react-native-plugin': '>= 2.9.3'
       '@react-native-async-storage/async-storage': '>=1.0.0'
       '@react-navigation/native': '>= 5.0.0'
       expo-application: '>= 4.0.0'
@@ -7479,40 +7476,40 @@ snapshots:
 
   '@adobe/css-tools@4.5.0': {}
 
-  '@ai-sdk/gateway@4.0.81(zod@4.6.5)':
+  '@ai-sdk/gateway@4.0.82(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.15
+      '@ai-sdk/provider-utils': 5.0.41(zod@4.6.5)
       '@vercel/oidc': 3.2.0
       zod: 4.6.5
 
-  '@ai-sdk/mcp@2.0.49(zod@4.6.5)':
+  '@ai-sdk/mcp@2.0.50(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.15
+      '@ai-sdk/provider-utils': 5.0.41(zod@4.6.5)
       cross-spawn: 7.0.6
       pkce-challenge: 5.0.1
       zod: 4.6.5
 
-  '@ai-sdk/provider-utils@5.0.40(zod@4.6.5)':
+  '@ai-sdk/provider-utils@5.0.41(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/provider': 4.0.14
+      '@ai-sdk/provider': 4.0.15
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.0
       undici: 7.29.0
       zod: 4.6.5
 
-  '@ai-sdk/provider@4.0.14':
+  '@ai-sdk/provider@4.0.15':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@4.0.104(react@19.2.8)(zod@4.6.5)':
+  '@ai-sdk/react@4.0.105(react@19.2.8)(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/mcp': 2.0.49(zod@4.6.5)
-      '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
-      ai: 7.0.101(zod@4.6.5)
+      '@ai-sdk/mcp': 2.0.50(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.15
+      '@ai-sdk/provider-utils': 5.0.41(zod@4.6.5)
+      ai: 7.0.102(zod@4.6.5)
       react: 19.2.8
       swr: 2.4.2(react@19.2.8)
       throttleit: 2.1.0
@@ -9009,26 +9006,24 @@ snapshots:
     dependencies:
       playwright: 1.63.0
 
-  '@posthog/ai@8.12.1(@ai-sdk/provider@4.0.14)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)':
+  '@posthog/ai@8.12.1(@ai-sdk/provider@4.0.15)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)':
     dependencies:
       '@posthog/core': 1.54.1
       posthog-node: 5.52.4
       uuid: 11.1.1
       zod: 4.6.5
     optionalDependencies:
-      '@ai-sdk/provider': 4.0.14
+      '@ai-sdk/provider': 4.0.15
       '@google/genai': 1.52.0(supports-color@8.1.1)
       '@opentelemetry/api': 1.9.1
 
   '@posthog/core@1.54.1':
     dependencies:
-      '@posthog/types': 1.412.0
+      '@posthog/types': 1.412.1
 
   '@posthog/core@1.54.2':
     dependencies:
-      '@posthog/types': 1.412.0
-
-  '@posthog/types@1.412.0': {}
+      '@posthog/types': 1.412.1
 
   '@posthog/types@1.412.1': {}
 
@@ -10580,11 +10575,11 @@ snapshots:
 
   agent-cli-detector@0.1.5: {}
 
-  ai@7.0.101(zod@4.6.5):
+  ai@7.0.102(zod@4.6.5):
     dependencies:
-      '@ai-sdk/gateway': 4.0.81(zod@4.6.5)
-      '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      '@ai-sdk/gateway': 4.0.82(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.15
+      '@ai-sdk/provider-utils': 5.0.41(zod@4.6.5)
       zod: 4.6.5
 
   anser@1.4.10: {}
@@ -13121,7 +13116,7 @@ snapshots:
     dependencies:
       '@posthog/core': 1.54.2
 
-  posthog-react-native@4.73.3(d8c49548fe72589579ed3a267b15b986):
+  posthog-react-native@4.74.0(d8c49548fe72589579ed3a267b15b986):
     dependencies:
       '@posthog/core': 1.54.2
       '@posthog/types': 1.412.1
