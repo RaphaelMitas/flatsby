@@ -50,8 +50,8 @@ catalogs:
       specifier: ^7.0.105
       version: 7.0.105
     autumn-js:
-      specifier: ^1.3.2
-      version: 1.3.2
+      specifier: ^1.3.3
+      version: 1.3.3
     babel-plugin-react-compiler:
       specifier: ^1.0.0
       version: 1.0.0
@@ -230,8 +230,8 @@ importers:
         specifier: 5.0.0-rc.0
         version: 5.0.0-rc.0(react-native-css@3.0.7(@expo/metro-config@57.0.8(expo@57.0.12)(supports-color@8.1.1)(typescript@7.0.2))(lightningcss@1.32.0)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(tailwindcss@4.3.3)
       posthog-react-native:
-        specifier: ^4.74.0
-        version: 4.74.0(d8c49548fe72589579ed3a267b15b986)
+        specifier: ^4.74.2
+        version: 4.74.2(d8c49548fe72589579ed3a267b15b986)
       react:
         specifier: catalog:react19
         version: 19.2.8
@@ -257,11 +257,11 @@ importers:
         specifier: 1.22.5
         version: 1.22.5(react-native-reanimated@4.5.3(react-native-worklets@0.10.4(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
       react-native-purchases:
-        specifier: 10.9.1
-        version: 10.9.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
+        specifier: 10.10.0
+        version: 10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
       react-native-purchases-ui:
-        specifier: 10.9.1
-        version: 10.9.1(react-native-purchases@10.9.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
+        specifier: 10.10.0
+        version: 10.10.0(react-native-purchases@10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
       react-native-reanimated:
         specifier: ~4.5.1
         version: 4.5.3(react-native-worklets@0.10.4(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
@@ -370,7 +370,7 @@ importers:
         version: 7.0.105(zod@4.6.5)
       autumn-js:
         specifier: 'catalog:'
-        version: 1.3.2(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       better-auth:
         specifier: catalog:better-auth
         version: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -466,8 +466,8 @@ importers:
         specifier: workspace:*
         version: link:../validators
       '@posthog/ai':
-        specifier: 8.12.1
-        version: 8.12.1(@ai-sdk/provider@4.0.17)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)
+        specifier: 8.13.0
+        version: 8.13.0(@ai-sdk/provider@4.0.17)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)
       '@tanstack/react-pacer':
         specifier: '*'
         version: 0.22.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -528,7 +528,7 @@ importers:
         version: 7.0.105(zod@4.6.5)
       autumn-js:
         specifier: 'catalog:'
-        version: 1.3.2(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       better-auth:
         specifier: catalog:better-auth
         version: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -723,7 +723,7 @@ importers:
         version: 7.0.105(zod@4.6.5)
       autumn-js:
         specifier: 'catalog:'
-        version: 1.3.2(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -2554,8 +2554,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  '@posthog/ai@8.12.1':
-    resolution: {integrity: sha512-CkfsFtfHPoHGCeXGWlSM6QuK6tUYtRUXpQc67Z7p9BalMBYIDkgQgMzSMoo2ziXvqWxgVvR9CNzCdQ6NN7ic3A==}
+  '@posthog/ai@8.13.0':
+    resolution: {integrity: sha512-yHg7b8zBm2b2b9o9q/FNqczNU4QQPvLzqzSubS6ERSzZz3UAQc8jDI5acTI68G86870P6ECRA/M4WtjVm21Eew==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       '@ai-sdk/provider': ^2.0.0 || ^3.0.0 || ^4.0.0
@@ -2597,11 +2597,11 @@ packages:
       openai:
         optional: true
 
-  '@posthog/core@1.54.1':
-    resolution: {integrity: sha512-UvpnMylZ25ncVGi1jJjZlrN09VOdwYy34t1fh61T6aNZhtRA5aIwLIvaD6nOftOhi8d/DBCZi43wTjzhVlMotw==}
-
   '@posthog/core@1.54.2':
     resolution: {integrity: sha512-p0NuMjiZkploKG/aASj4nw4QDuhF87SIFWkelaFRrr3G0Myb7KWWUZot2hm5qXpPx7zKozVZJrJkGzC2kGBqbg==}
+
+  '@posthog/core@1.54.4':
+    resolution: {integrity: sha512-Y5SWMUqeiq4R7h1ZflP0iGlqq1SSMNnFHz0XIUAXxuPDyOaZu1UVTefc2qCPRWPR3nQ9bx3LeQEBu9tw8fNHvg==}
 
   '@posthog/types@1.412.1':
     resolution: {integrity: sha512-FxXsb9YOOME8bJI5K09qKeSvLjnZQ2dPV7wZpI7a8sERQtXkAuhBcPB/balCnVE7TYwhgtHj5NQss9BgQ5bAfQ==}
@@ -3537,14 +3537,14 @@ packages:
       react-redux:
         optional: true
 
-  '@revenuecat/purchases-js-hybrid-mappings@18.37.0':
-    resolution: {integrity: sha512-RI6WeoDTR1fPl8/Kt7AOcqncuYs49fyxDj9xp3ltAFHwiKdOCywHVCAIojKogOiTFI4eEM39KtnlSgnJLQjE9g==}
+  '@revenuecat/purchases-js-hybrid-mappings@19.0.0':
+    resolution: {integrity: sha512-M4fFeftK6/3gimhaLPyVEXw6hGSqry0e63anJhvaBurl92Of0dUONPmoFOp3heYKs/BUaw3mRosyG64KO7JI7A==}
 
-  '@revenuecat/purchases-js@1.59.0':
-    resolution: {integrity: sha512-hmLTx1PhAiT+nnkRkD3AMREMdB+3xm0HoRlkdVJkS6YtjqyKZY36OYt1rOOMkFU+YZ9ZNmug/RvSYhzD8YhqiQ==}
+  '@revenuecat/purchases-js@1.60.1':
+    resolution: {integrity: sha512-FmwLF525G30y8sLtVQIdk8m5fx1aGo7c54jDT+qpvSWb/cOgnwVWxppU/PU9UygNsDQhltzS+jlOvlemLfNJew==}
 
-  '@revenuecat/purchases-typescript-internal@18.37.0':
-    resolution: {integrity: sha512-pn4tg+MYUI6oPMv8hmt9NLFB17pRgusmqhcBtqM9HtACEYeSGWUFLHN20VUQm2iSnA3i1YH5AHo/1QTa3eQY1Q==}
+  '@revenuecat/purchases-typescript-internal@19.0.0':
+    resolution: {integrity: sha512-ae7E+6z2Ikk44l7c5SwQ513EC3uA/Lu7TVsHzsACyOiHrIIqAfKblmpvbVyhorvsFLO22Rb53b8+17xq7DuZtQ==}
 
   '@shikijs/core@4.4.3':
     resolution: {integrity: sha512-QCR4q2ZO/ILJEuwiBMel4wdcTDb1JGwfjKTxPDF6x8ixOaluPrVqIn06C99AcRPhmYlBR56d/Fb+GN58GzExpg==}
@@ -4214,8 +4214,8 @@ packages:
   asap@2.0.6:
     resolution: {integrity: sha512-BSHWgDSAiKs50o2Re8ppvp3seVHXSRM44cdSsT9FfNEUUZLOGWVCsiWaRPWM1Znn+mqZ1OfVZ3z3DWEzSp7hRA==}
 
-  autumn-js@1.3.2:
-    resolution: {integrity: sha512-G6qGYzubkjWwdZlTKYk/UdkjpGcUVEItSOxN4fiTnYC3NEcv9HC1WEWgfFl6ELGEyzlSVC82FWgkYBAvBPUKhQ==}
+  autumn-js@1.3.3:
+    resolution: {integrity: sha512-k2ChpS62W+b1FlPOmy4hVj/kNJL45GwI80CEwfOM8gn3q84p7L1VdHJ+8XLYMzoWRsByRuJjzoz9FD1xloAEiA==}
     peerDependencies:
       better-auth: ^1.6.0
       better-call: ^1.0.12
@@ -6356,8 +6356,8 @@ packages:
       rxjs:
         optional: true
 
-  posthog-react-native@4.74.0:
-    resolution: {integrity: sha512-/PFymRopn33VeShsoTqTeF0cQLBkJSqtac06dOo5TkaE8RZoETKmtLNsP/G9uio8zhZnKKfglY1l27NgQqmfZA==}
+  posthog-react-native@4.74.2:
+    resolution: {integrity: sha512-8WK2PeeyffBekBTsXIvw1+Quh8qQOJQPQ7ETn3Wiz8XodeGWT9S3Ntb/0jMRHGuZ3O8as3zEoE2xCSt2+Kudug==}
     hasBin: true
     peerDependencies:
       '@posthog/react-native-plugin': '>= 2.9.3'
@@ -6631,19 +6631,19 @@ packages:
       react-native: '*'
       react-native-reanimated: '>=3.0.0'
 
-  react-native-purchases-ui@10.9.1:
-    resolution: {integrity: sha512-2QNvEKhYXybk1U7WGw67Wvk75YI7BWH4c9AIZ9QaW3ez/4pdOw3MytqUdUjlsHr4MLt7X7msUcRvcvpalndnjQ==}
+  react-native-purchases-ui@10.10.0:
+    resolution: {integrity: sha512-5kTfxv5SXNvPBGHsUZHLvjQqDf+qEcG90irJIEf5UN6fHjxihzldTOYF+Bx/xCkF40wRjGgIz2pz6noCZ4iFvg==}
     peerDependencies:
       react: '*'
       react-native: '>= 0.73.0'
-      react-native-purchases: 10.9.1
+      react-native-purchases: 10.10.0
       react-native-web: '*'
     peerDependenciesMeta:
       react-native-web:
         optional: true
 
-  react-native-purchases@10.9.1:
-    resolution: {integrity: sha512-Xkg5tWY59QULqlH+9aUBK6PU4kLEOaEReFfhVW8svRwuiQagWzqiaHdnz5soPhBISDBRqNuO7i8U20HV16GyGw==}
+  react-native-purchases@10.10.0:
+    resolution: {integrity: sha512-Nrlw+k2BZWN8uiXoaMyfY5CU8EXmev+UzuHOzAOanwUA+5uATS5uFh6qDm1A4/LIngmBxMrDsp7I47XqcLTBYQ==}
     peerDependencies:
       react: '>= 16.6.3'
       react-native: '>= 0.73.0'
@@ -9006,9 +9006,9 @@ snapshots:
     dependencies:
       playwright: 1.63.0
 
-  '@posthog/ai@8.12.1(@ai-sdk/provider@4.0.17)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)':
+  '@posthog/ai@8.13.0(@ai-sdk/provider@4.0.17)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.52.4)':
     dependencies:
-      '@posthog/core': 1.54.1
+      '@posthog/core': 1.54.4
       posthog-node: 5.52.4
       uuid: 11.1.1
       zod: 4.6.5
@@ -9017,11 +9017,11 @@ snapshots:
       '@google/genai': 1.52.0(supports-color@8.1.1)
       '@opentelemetry/api': 1.9.1
 
-  '@posthog/core@1.54.1':
+  '@posthog/core@1.54.2':
     dependencies:
       '@posthog/types': 1.412.1
 
-  '@posthog/core@1.54.2':
+  '@posthog/core@1.54.4':
     dependencies:
       '@posthog/types': 1.412.1
 
@@ -10070,13 +10070,13 @@ snapshots:
       react: 19.2.8
       react-redux: 9.3.0(@types/react@19.2.17)(react@19.2.8)(redux@5.0.1)
 
-  '@revenuecat/purchases-js-hybrid-mappings@18.37.0':
+  '@revenuecat/purchases-js-hybrid-mappings@19.0.0':
     dependencies:
-      '@revenuecat/purchases-js': 1.59.0
+      '@revenuecat/purchases-js': 1.60.1
 
-  '@revenuecat/purchases-js@1.59.0': {}
+  '@revenuecat/purchases-js@1.60.1': {}
 
-  '@revenuecat/purchases-typescript-internal@18.37.0': {}
+  '@revenuecat/purchases-typescript-internal@19.0.0': {}
 
   '@shikijs/core@4.4.3':
     dependencies:
@@ -10622,7 +10622,7 @@ snapshots:
 
   asap@2.0.6: {}
 
-  autumn-js@1.3.2(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  autumn-js@1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
     dependencies:
       query-string: 9.5.1
       rou3: 0.6.3
@@ -10633,7 +10633,7 @@ snapshots:
       next: 16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
 
-  autumn-js@1.3.2(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  autumn-js@1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
     dependencies:
       query-string: 9.5.1
       rou3: 0.6.3
@@ -13116,9 +13116,9 @@ snapshots:
     dependencies:
       '@posthog/core': 1.54.2
 
-  posthog-react-native@4.74.0(d8c49548fe72589579ed3a267b15b986):
+  posthog-react-native@4.74.2(d8c49548fe72589579ed3a267b15b986):
     dependencies:
-      '@posthog/core': 1.54.2
+      '@posthog/core': 1.54.4
       '@posthog/types': 1.412.1
     optionalDependencies:
       '@react-native-async-storage/async-storage': 2.2.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))
@@ -13369,17 +13369,17 @@ snapshots:
       react-native-is-edge-to-edge: 1.3.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
       react-native-reanimated: 4.5.3(react-native-worklets@0.10.4(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
 
-  react-native-purchases-ui@10.9.1(react-native-purchases@10.9.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
+  react-native-purchases-ui@10.10.0(react-native-purchases@10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
     dependencies:
-      '@revenuecat/purchases-typescript-internal': 18.37.0
+      '@revenuecat/purchases-typescript-internal': 19.0.0
       react: 19.2.8
       react-native: 0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1)
-      react-native-purchases: 10.9.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
+      react-native-purchases: 10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
 
-  react-native-purchases@10.9.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
+  react-native-purchases@10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
     dependencies:
-      '@revenuecat/purchases-js-hybrid-mappings': 18.37.0
-      '@revenuecat/purchases-typescript-internal': 18.37.0
+      '@revenuecat/purchases-js-hybrid-mappings': 19.0.0
+      '@revenuecat/purchases-typescript-internal': 19.0.0
       react: 19.2.8
       react-native: 0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1)
 
