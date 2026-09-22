@@ -32,8 +32,8 @@ catalogs:
       specifier: ^4.3.3
       version: 4.3.3
     '@tanstack/react-query':
-      specifier: ^5.103.1
-      version: 5.103.1
+      specifier: ^5.103.2
+      version: 5.103.2
     '@trpc/client':
       specifier: ^11.19.0
       version: 11.19.0
@@ -117,7 +117,7 @@ importers:
     dependencies:
       '@better-auth/expo':
         specifier: catalog:better-auth
-        version: 1.7.5(7674ee504858a46814fee3eff617c142)
+        version: 1.7.5(d5b9ebe360e6dc8bfb17e0ba14b0bd93)
       '@expo/metro-runtime':
         specifier: ~57.0.9
         version: 57.0.9(@expo/log-box@57.0.2)(expo@57.0.12)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
@@ -153,7 +153,7 @@ importers:
         version: 0.23.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.103.1(react@19.2.8)
+        version: 5.103.2(react@19.2.8)
       '@trpc/client':
         specifier: 'catalog:'
         version: 11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2)
@@ -162,10 +162,10 @@ importers:
         version: 11.19.0(typescript@7.0.2)
       '@trpc/tanstack-react-query':
         specifier: 'catalog:'
-        version: 11.19.0(@tanstack/react-query@5.103.1(react@19.2.8))(@trpc/client@11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2))(@trpc/server@11.19.0(typescript@7.0.2))(react@19.2.8)(typescript@7.0.2)
+        version: 11.19.0(@tanstack/react-query@5.103.2(react@19.2.8))(@trpc/client@11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2))(@trpc/server@11.19.0(typescript@7.0.2))(react@19.2.8)(typescript@7.0.2)
       better-auth:
         specifier: catalog:better-auth
-        version: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       expo:
         specifier: ~57.0.12
         version: 57.0.12(@babel/core@7.29.7(supports-color@8.1.1))(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.9)(expo-router@57.0.12)(react-dom@19.2.8(react@19.2.8))(react-native-worklets@0.10.4(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1)(typescript@7.0.2)
@@ -257,11 +257,11 @@ importers:
         specifier: 1.22.5
         version: 1.22.5(react-native-reanimated@4.5.3(react-native-worklets@0.10.4(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
       react-native-purchases:
-        specifier: 10.10.0
-        version: 10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
+        specifier: 10.10.1
+        version: 10.10.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
       react-native-purchases-ui:
-        specifier: 10.10.0
-        version: 10.10.0(react-native-purchases@10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
+        specifier: 10.10.1
+        version: 10.10.1(react-native-purchases@10.10.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
       react-native-reanimated:
         specifier: ~4.5.1
         version: 4.5.3(react-native-worklets@0.10.4(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
@@ -328,7 +328,7 @@ importers:
         version: 4.0.110(react@19.2.8)(zod@4.6.5)
       '@better-auth/expo':
         specifier: catalog:better-auth
-        version: 1.7.5(c510703c827f57a977b44a9d96342149)
+        version: 1.7.5(c77fc5fd1182bcbde848423f17b656db)
       '@flatsby/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -355,7 +355,7 @@ importers:
         version: 0.23.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.103.1(react@19.2.8)
+        version: 5.103.2(react@19.2.8)
       '@trpc/client':
         specifier: 'catalog:'
         version: 11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2)
@@ -364,16 +364,16 @@ importers:
         version: 11.19.0(typescript@7.0.2)
       '@trpc/tanstack-react-query':
         specifier: 'catalog:'
-        version: 11.19.0(@tanstack/react-query@5.103.1(react@19.2.8))(@trpc/client@11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2))(@trpc/server@11.19.0(typescript@7.0.2))(react@19.2.8)(typescript@7.0.2)
+        version: 11.19.0(@tanstack/react-query@5.103.2(react@19.2.8))(@trpc/client@11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2))(@trpc/server@11.19.0(typescript@7.0.2))(react@19.2.8)(typescript@7.0.2)
       ai:
         specifier: 'catalog:'
         version: 7.0.107(zod@4.6.5)
       autumn-js:
         specifier: 'catalog:'
-        version: 1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       better-auth:
         specifier: catalog:better-auth
-        version: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       geist:
         specifier: ^1.7.2
         version: 1.7.2(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
@@ -473,7 +473,7 @@ importers:
         version: 0.22.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.103.1(react@19.2.8)
+        version: 5.103.2(react@19.2.8)
       '@trpc/server':
         specifier: 'catalog:'
         version: 11.19.0(typescript@7.0.2)
@@ -516,7 +516,7 @@ importers:
     dependencies:
       '@better-auth/expo':
         specifier: catalog:better-auth
-        version: 1.7.5(7674ee504858a46814fee3eff617c142)
+        version: 1.7.5(d5b9ebe360e6dc8bfb17e0ba14b0bd93)
       '@flatsby/db':
         specifier: workspace:*
         version: link:../db
@@ -528,10 +528,10 @@ importers:
         version: 7.0.107(zod@4.6.5)
       autumn-js:
         specifier: 'catalog:'
-        version: 1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       better-auth:
         specifier: catalog:better-auth
-        version: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next:
         specifier: 'catalog:'
         version: 16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -574,7 +574,7 @@ importers:
         version: link:../validators
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.103.1(react@19.2.8)
+        version: 5.103.2(react@19.2.8)
       ai:
         specifier: 'catalog:'
         version: 7.0.107(zod@4.6.5)
@@ -610,11 +610,11 @@ importers:
         specifier: 'catalog:'
         version: 0.13.11(typescript@7.0.2)(zod@4.6.5)
       drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
+        specifier: ^0.45.3
+        version: 0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
       drizzle-zod:
         specifier: ^0.8.3
-        version: 0.8.3(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(zod@4.6.5)
+        version: 0.8.3(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(zod@4.6.5)
       ws:
         specifier: ^8.21.3
         version: 8.21.3
@@ -638,8 +638,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       drizzle-kit:
-        specifier: ^0.31.10
-        version: 0.31.10
+        specifier: ^0.31.11
+        version: 0.31.11
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -723,7 +723,7 @@ importers:
         version: 7.0.107(zod@4.6.5)
       autumn-js:
         specifier: 'catalog:'
-        version: 1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -3546,14 +3546,14 @@ packages:
       react-redux:
         optional: true
 
-  '@revenuecat/purchases-js-hybrid-mappings@19.0.0':
-    resolution: {integrity: sha512-M4fFeftK6/3gimhaLPyVEXw6hGSqry0e63anJhvaBurl92Of0dUONPmoFOp3heYKs/BUaw3mRosyG64KO7JI7A==}
+  '@revenuecat/purchases-js-hybrid-mappings@19.2.0':
+    resolution: {integrity: sha512-PZyW5sVMjPrPArWHieocKsUSxVPC70dVOrCD/Gq2NDKlYd+eA5+W58ZizCHBvpQ6UaRfzoMewCRhlFZVNfnxag==}
 
-  '@revenuecat/purchases-js@1.60.1':
-    resolution: {integrity: sha512-FmwLF525G30y8sLtVQIdk8m5fx1aGo7c54jDT+qpvSWb/cOgnwVWxppU/PU9UygNsDQhltzS+jlOvlemLfNJew==}
+  '@revenuecat/purchases-js@1.63.1':
+    resolution: {integrity: sha512-0PoyNVM7bsuqqbJaAS51hi/3T60RmsmlPsoLJ90LceqwvdyDFz/elYVr3aA/TOtDmbXluJ20HSRChOFuH/GLkw==}
 
-  '@revenuecat/purchases-typescript-internal@19.0.0':
-    resolution: {integrity: sha512-ae7E+6z2Ikk44l7c5SwQ513EC3uA/Lu7TVsHzsACyOiHrIIqAfKblmpvbVyhorvsFLO22Rb53b8+17xq7DuZtQ==}
+  '@revenuecat/purchases-typescript-internal@19.2.0':
+    resolution: {integrity: sha512-Ha3KoMVoMFwzBiOsCkH/TUJwMNZFRDB8A218mb3p13IwbAj1wCGIYjJB/dpTPSf2TXxSHwbEn9OU84u4ngJ7mg==}
 
   '@shikijs/core@4.4.3':
     resolution: {integrity: sha512-QCR4q2ZO/ILJEuwiBMel4wdcTDb1JGwfjKTxPDF6x8ixOaluPrVqIn06C99AcRPhmYlBR56d/Fb+GN58GzExpg==}
@@ -3752,8 +3752,8 @@ packages:
     resolution: {integrity: sha512-Zq23KOn30tFiA6ZYWihs5x++ttHkOIcnIIjRrJq05tGrYx9+iHsmVaj8jb7UJVemEI+JRWGzJ9C+50YV4nRz0w==}
     engines: {node: '>=18'}
 
-  '@tanstack/query-core@5.103.1':
-    resolution: {integrity: sha512-rms8HqTGp6zA00dM+cUQ2eBcgzNJefuu5CAMB37i/6MiGT1zulPOytCFu2a0qjLqVR2n1jENPj9woqFQNuCzWA==}
+  '@tanstack/query-core@5.103.2':
+    resolution: {integrity: sha512-I8DkFXls5jXLqtm8+QpOhEmG07hIblhSZFzafg9wHsMSEvMzULy9hK17wU1T/ahfhMbtITJhbxutwwCoihkR7A==}
 
   '@tanstack/react-pacer@0.22.1':
     resolution: {integrity: sha512-CenQqK0GluSPIrnsG1yuD7w5uMSQ/4lI9AcGEFxBrRd66r260boWcYRIsS5+eHtXb238FoZYhKmJPGlhRzmHRw==}
@@ -3769,8 +3769,8 @@ packages:
       react: '>=16.8'
       react-dom: '>=16.8'
 
-  '@tanstack/react-query@5.103.1':
-    resolution: {integrity: sha512-rmAPPApNEK17VXRJhtE1rja53n23VV5w30C0saCgJhhX+EpdUnVqMGV/s5nnzV43X75KTHKzuoiuxSzGTBIkag==}
+  '@tanstack/react-query@5.103.2':
+    resolution: {integrity: sha512-B+fWiYZBc+0uUD5zDZAeLw9dKj7XEsdnuu6zRZ+no6LNKpeE3P3bJ+N6HINjcIlWR6fW3vUoTneEaGa2V6ehqw==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -4771,12 +4771,12 @@ packages:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
-  drizzle-kit@0.31.10:
-    resolution: {integrity: sha512-7OZcmQUrdGI+DUNNsKBn1aW8qSoKuTH7d0mYgSP8bAzdFzKoovxEFnoGQp2dVs82EOJeYycqRtciopszwUf8bw==}
+  drizzle-kit@0.31.11:
+    resolution: {integrity: sha512-YCYqxTLIB2OCqf6w9/Vef13baBVbwQIPcbT4Y56AfO6B9ajZhDhD8Jkveg/hJvT/iuMloKD/IYYkyMMNhr7Kqg==}
     hasBin: true
 
-  drizzle-orm@0.45.2:
-    resolution: {integrity: sha512-kY0BSaTNYWnoDMVoyY8uxmyHjpJW1geOmBMdSSicKo9CIIWkSxMIj2rkeSR51b8KAPB7m+qysjuHme5nKP+E5Q==}
+  drizzle-orm@0.45.3:
+    resolution: {integrity: sha512-CAloER21cDdcgZ1OmjrZX82EeRNsdP+y0onX/eyoYDaYzki/adrAa91lzM5jWh7zZPK4qUbw/6LGv9J+A+uizA==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -4784,6 +4784,7 @@ packages:
       '@libsql/client': '>=0.10.0'
       '@libsql/client-wasm': '>=0.10.0'
       '@neondatabase/serverless': '>=0.10.0'
+      '@netlify/db': '>=0.4.0'
       '@op-engineering/op-sqlite': '>=2'
       '@opentelemetry/api': ^1.4.1
       '@planetscale/database': '>=1.13'
@@ -4819,6 +4820,8 @@ packages:
       '@libsql/client-wasm':
         optional: true
       '@neondatabase/serverless':
+        optional: true
+      '@netlify/db':
         optional: true
       '@op-engineering/op-sqlite':
         optional: true
@@ -6640,19 +6643,19 @@ packages:
       react-native: '*'
       react-native-reanimated: '>=3.0.0'
 
-  react-native-purchases-ui@10.10.0:
-    resolution: {integrity: sha512-5kTfxv5SXNvPBGHsUZHLvjQqDf+qEcG90irJIEf5UN6fHjxihzldTOYF+Bx/xCkF40wRjGgIz2pz6noCZ4iFvg==}
+  react-native-purchases-ui@10.10.1:
+    resolution: {integrity: sha512-UMb0eKKUehHLdR1K4TEtHE4dpN/3v5UZ5/I4kNYMjBgsyQrizxvKYanHDD7bJ1w8A3YR4C4errhDBN0BNPolfQ==}
     peerDependencies:
       react: '*'
       react-native: '>= 0.73.0'
-      react-native-purchases: 10.10.0
+      react-native-purchases: 10.10.1
       react-native-web: '*'
     peerDependenciesMeta:
       react-native-web:
         optional: true
 
-  react-native-purchases@10.10.0:
-    resolution: {integrity: sha512-Nrlw+k2BZWN8uiXoaMyfY5CU8EXmev+UzuHOzAOanwUA+5uATS5uFh6qDm1A4/LIngmBxMrDsp7I47XqcLTBYQ==}
+  react-native-purchases@10.10.1:
+    resolution: {integrity: sha512-rE2mrvV3K3CSFmgdR1t3YwSw5SpIniupTCcbPoJ6zTHpjigL7WRtLh2DYEaY+jiZWoiCr1DV+EgGx7tGh9qb0A==}
     peerDependencies:
       react: '>= 16.6.3'
       react-native: '>= 0.73.0'
@@ -8025,18 +8028,18 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
 
-  '@better-auth/drizzle-adapter@1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))':
+  '@better-auth/drizzle-adapter@1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))':
     dependencies:
       '@better-auth/core': 1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0)
       '@better-auth/utils': 0.4.2
     optionalDependencies:
-      drizzle-orm: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
+      drizzle-orm: 0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
 
-  '@better-auth/expo@1.7.5(7674ee504858a46814fee3eff617c142)':
+  '@better-auth/expo@1.7.5(c77fc5fd1182bcbde848423f17b656db)':
     dependencies:
       '@better-auth/core': 1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0)
       '@better-fetch/fetch': 1.3.2
-      better-auth: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      better-auth: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       better-call: 1.4.0(zod@4.6.5)
       zod: 4.6.5
     optionalDependencies:
@@ -8046,11 +8049,11 @@ snapshots:
       expo-secure-store: 57.0.1(expo@57.0.12)
       expo-web-browser: 57.0.2(expo@57.0.12)(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))
 
-  '@better-auth/expo@1.7.5(c510703c827f57a977b44a9d96342149)':
+  '@better-auth/expo@1.7.5(d5b9ebe360e6dc8bfb17e0ba14b0bd93)':
     dependencies:
       '@better-auth/core': 1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0)
       '@better-fetch/fetch': 1.3.2
-      better-auth: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      better-auth: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       better-call: 1.4.0(zod@4.6.5)
       zod: 4.6.5
     optionalDependencies:
@@ -10087,13 +10090,13 @@ snapshots:
       react: 19.2.8
       react-redux: 9.3.0(@types/react@19.2.17)(react@19.2.8)(redux@5.0.1)
 
-  '@revenuecat/purchases-js-hybrid-mappings@19.0.0':
+  '@revenuecat/purchases-js-hybrid-mappings@19.2.0':
     dependencies:
-      '@revenuecat/purchases-js': 1.60.1
+      '@revenuecat/purchases-js': 1.63.1
 
-  '@revenuecat/purchases-js@1.60.1': {}
+  '@revenuecat/purchases-js@1.63.1': {}
 
-  '@revenuecat/purchases-typescript-internal@19.0.0': {}
+  '@revenuecat/purchases-typescript-internal@19.2.0': {}
 
   '@shikijs/core@4.4.3':
     dependencies:
@@ -10248,7 +10251,7 @@ snapshots:
       '@tanstack/devtools-event-client': 0.5.0
       '@tanstack/store': 0.11.1
 
-  '@tanstack/query-core@5.103.1': {}
+  '@tanstack/query-core@5.103.2': {}
 
   '@tanstack/react-pacer@0.22.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
@@ -10264,9 +10267,9 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@tanstack/react-query@5.103.1(react@19.2.8)':
+  '@tanstack/react-query@5.103.2(react@19.2.8)':
     dependencies:
-      '@tanstack/query-core': 5.103.1
+      '@tanstack/query-core': 5.103.2
       react: 19.2.8
 
   '@tanstack/react-store@0.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
@@ -10335,9 +10338,9 @@ snapshots:
     dependencies:
       typescript: 7.0.2
 
-  '@trpc/tanstack-react-query@11.19.0(@tanstack/react-query@5.103.1(react@19.2.8))(@trpc/client@11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2))(@trpc/server@11.19.0(typescript@7.0.2))(react@19.2.8)(typescript@7.0.2)':
+  '@trpc/tanstack-react-query@11.19.0(@tanstack/react-query@5.103.2(react@19.2.8))(@trpc/client@11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2))(@trpc/server@11.19.0(typescript@7.0.2))(react@19.2.8)(typescript@7.0.2)':
     dependencies:
-      '@tanstack/react-query': 5.103.1(react@19.2.8)
+      '@tanstack/react-query': 5.103.2(react@19.2.8)
       '@trpc/client': 11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2)
       '@trpc/server': 11.19.0(typescript@7.0.2)
       react: 19.2.8
@@ -10639,24 +10642,24 @@ snapshots:
 
   asap@2.0.6: {}
 
-  autumn-js@1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  autumn-js@1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
     dependencies:
       query-string: 9.5.1
       rou3: 0.6.3
       zod: 4.6.5
     optionalDependencies:
-      better-auth: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      better-auth: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       better-call: 1.4.0(zod@4.6.5)
       next: 16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
 
-  autumn-js@1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  autumn-js@1.3.3(better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(better-call@1.4.0(zod@4.6.5))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
     dependencies:
       query-string: 9.5.1
       rou3: 0.6.3
       zod: 4.6.5
     optionalDependencies:
-      better-auth: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      better-auth: 1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       better-call: 1.4.0(zod@4.6.5)
       next: 16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
@@ -10765,10 +10768,10 @@ snapshots:
 
   baseline-browser-mapping@2.11.21: {}
 
-  better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@better-auth/core': 1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0)
-      '@better-auth/drizzle-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))
+      '@better-auth/drizzle-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))
       '@better-auth/kysely-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(kysely@0.29.5)
       '@better-auth/memory-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
       '@better-auth/mongo-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
@@ -10785,8 +10788,8 @@ snapshots:
       nanostores: 1.4.0
       zod: 4.6.5
     optionalDependencies:
-      drizzle-kit: 0.31.10
-      drizzle-orm: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
+      drizzle-kit: 0.31.11
+      drizzle-orm: 0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
       next: 16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.13.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       pg: 8.23.0
       react: 19.2.8
@@ -10794,10 +10797,10 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  better-auth@1.7.5(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(next@16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@better-auth/core': 1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0)
-      '@better-auth/drizzle-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))
+      '@better-auth/drizzle-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))
       '@better-auth/kysely-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(kysely@0.29.5)
       '@better-auth/memory-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
       '@better-auth/mongo-adapter': 1.7.5(@better-auth/core@1.7.5(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
@@ -10814,8 +10817,8 @@ snapshots:
       nanostores: 1.4.0
       zod: 4.6.5
     optionalDependencies:
-      drizzle-kit: 0.31.10
-      drizzle-orm: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
+      drizzle-kit: 0.31.11
+      drizzle-orm: 0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
       next: 16.3.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@26.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       pg: 8.23.0
       react: 19.2.8
@@ -11222,23 +11225,23 @@ snapshots:
 
   dotenv@17.4.2: {}
 
-  drizzle-kit@0.31.10:
+  drizzle-kit@0.31.11:
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
       esbuild: 0.25.12
       tsx: 4.23.0
 
-  drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0):
+  drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0):
     optionalDependencies:
       '@neondatabase/serverless': 1.1.0
       '@opentelemetry/api': 1.9.1
       kysely: 0.29.5
       pg: 8.23.0
 
-  drizzle-zod@0.8.3(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(zod@4.6.5):
+  drizzle-zod@0.8.3(drizzle-orm@0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0))(zod@4.6.5):
     dependencies:
-      drizzle-orm: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
+      drizzle-orm: 0.45.3(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(kysely@0.29.5)(pg@8.23.0)
       zod: 4.6.5
 
   ecdsa-sig-formatter@1.0.11:
@@ -13386,17 +13389,17 @@ snapshots:
       react-native-is-edge-to-edge: 1.3.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
       react-native-reanimated: 4.5.3(react-native-worklets@0.10.4(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
 
-  react-native-purchases-ui@10.10.0(react-native-purchases@10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
+  react-native-purchases-ui@10.10.1(react-native-purchases@10.10.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
     dependencies:
-      '@revenuecat/purchases-typescript-internal': 19.0.0
+      '@revenuecat/purchases-typescript-internal': 19.2.0
       react: 19.2.8
       react-native: 0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1)
-      react-native-purchases: 10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
+      react-native-purchases: 10.10.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
 
-  react-native-purchases@10.10.0(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
+  react-native-purchases@10.10.1(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
     dependencies:
-      '@revenuecat/purchases-js-hybrid-mappings': 19.0.0
-      '@revenuecat/purchases-typescript-internal': 19.0.0
+      '@revenuecat/purchases-js-hybrid-mappings': 19.2.0
+      '@revenuecat/purchases-typescript-internal': 19.2.0
       react: 19.2.8
       react-native: 0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1)
 
