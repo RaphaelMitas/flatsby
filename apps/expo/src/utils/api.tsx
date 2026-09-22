@@ -55,11 +55,11 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
 /**
  * Get headers for tRPC requests
  */
-function getHeaders() {
+async function getHeaders() {
   const headers = new Map<string, string>();
   headers.set("x-trpc-source", "expo-react");
 
-  const cookies = authClient.getCookie();
+  const cookies = await authClient.getCookie();
   if (cookies) {
     headers.set("Cookie", cookies);
   }
