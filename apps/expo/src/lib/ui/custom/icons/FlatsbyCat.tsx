@@ -27,6 +27,13 @@ const NOSE =
 const MONOCLE_ARM =
   "M168,95.4965041 L171.361956,95.4965041 C169.120652,111.491567 168,124.726362 168,135.200889 C168,141.689962 167.785487,150.50107 168.752141,161.046309 C168.976279,163.49143 168.77469,168.27439 168,170.383588 C166.02141,175.770567 162.461345,182.701099 161.699756,183.223645 C160.639978,183.950785 159.719423,183.223645 159.719423,181.912725 C159.719423,180.601804 163.154363,176.152597 165.180978,170.383588 C166.341343,167.080468 166.341343,164.62622 166.187597,161.046309 C165.680933,149.248816 165,141.076311 165,134.047091 C165,122.875033 166,110.024837 168,95.4965041 Z";
 
+const WHISKER_SIDES = [
+  "translate(176.411, 116.7557)",
+  "translate(26, 136.4965) scale(-1, 1) translate(-26, -136.4965) translate(0, 117.4965)",
+];
+
+const EYE_SIDES = ["translate(130, 79.4965)", "translate(73, 79.4965)"];
+
 export default function FlatsbyCat({
   className,
   color,
@@ -44,66 +51,41 @@ export default function FlatsbyCat({
       width={size}
       height={size}
     >
-      <G>
-        <G transform="translate(176.411, 116.7557)">
-          <G className="fc-whiskers fc-whiskers--right">
-            <G className="fc-whiskers-up">
-              {WHISKERS.map((w) => (
-                <Path key={w.d} d={w.d} transform={w.transform} />
-              ))}
-            </G>
-          </G>
+      {WHISKER_SIDES.map((transform) => (
+        <G key={transform} transform={transform}>
+          {WHISKERS.map((w) => (
+            <Path key={w.d} d={w.d} transform={w.transform} />
+          ))}
         </G>
-        <G transform="translate(26, 136.4965) scale(-1, 1) translate(-26, -136.4965) translate(0, 117.4965)">
-          <G className="fc-whiskers fc-whiskers--left">
-            <G className="fc-whiskers-up">
-              {WHISKERS.map((w) => (
-                <Path key={w.d} d={w.d} transform={w.transform} />
-              ))}
-            </G>
-          </G>
+      ))}
+      <Path
+        d={HEAD}
+        transform="translate(111.8505, 127.0969) scale(1, -1) translate(-111.8505, -127.0969)"
+      />
+      {EYE_SIDES.map((transform) => (
+        <G key={transform} transform={transform}>
+          <Ellipse cx={14.5} cy={13.5} rx={14.5} ry={13.5} fill={detail} />
+          <Circle cx={18.5} cy={12.5} r={3.5} fill={color} />
         </G>
-        <Path
-          d={HEAD}
-          transform="translate(111.8505, 127.0969) scale(1, -1) translate(-111.8505, -127.0969)"
-        />
-        <G transform="translate(130, 79.4965)">
-          <G className="fc-eye fc-eye--right">
-            <G className="fc-eye-open">
-              <Ellipse cx={14.5} cy={13.5} rx={14.5} ry={13.5} fill={detail} />
-              <Circle cx={18.5} cy={12.5} r={3.5} fill={color} />
-            </G>
-          </G>
-        </G>
-        <G transform="translate(73, 79.4965)">
-          <G className="fc-eye fc-eye--left">
-            <G className="fc-eye-open">
-              <Ellipse cx={14.5} cy={13.5} rx={14.5} ry={13.5} fill={detail} />
-              <Circle cx={18.5} cy={12.5} r={3.5} fill={color} />
-            </G>
-          </G>
-        </G>
-        <Path d={NOSE} fill={detail} />
-        <G className="fc-monocle">
-          <Circle
-            cx={144}
-            cy={93.4965041}
-            r={20}
-            fill="none"
-            stroke={detail}
-            strokeWidth={4}
-          />
-          <Path d={MONOCLE_ARM} fill={detail} />
-          <Circle
-            cx={170}
-            cy={92.4965041}
-            r={3.5}
-            fill="none"
-            stroke={detail}
-            strokeWidth={1}
-          />
-        </G>
-      </G>
+      ))}
+      <Path d={NOSE} fill={detail} />
+      <Circle
+        cx={144}
+        cy={93.4965041}
+        r={20}
+        fill="none"
+        stroke={detail}
+        strokeWidth={4}
+      />
+      <Path d={MONOCLE_ARM} fill={detail} />
+      <Circle
+        cx={170}
+        cy={92.4965041}
+        r={3.5}
+        fill="none"
+        stroke={detail}
+        strokeWidth={1}
+      />
     </Svg>
   );
 }
