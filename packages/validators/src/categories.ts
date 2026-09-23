@@ -47,3 +47,35 @@ export const categoryCountsSchema = z.object({
   counts: z.record(categoryIdSchema, z.number().optional()),
   total: z.number(),
 });
+
+export const categoryNames: Record<CategoryIdWithAiAutoSelect, string> = {
+  "ai-auto-select": "AI Auto Select",
+  produce: "Produce",
+  "meat-seafood": "Meat & Fish",
+  dairy: "Dairy",
+  bakery: "Bakery",
+  "frozen-foods": "Frozen Foods",
+  beverages: "Beverages",
+  snacks: "Snacks",
+  pantry: "Pantry",
+  "personal-care": "Personal Care",
+  household: "Household",
+  other: "Other",
+};
+
+export const categoryDescriptions: Record<CategoryIdWithAiAutoSelect, string> =
+  {
+    "ai-auto-select":
+      "AI will select the most appropriate category for the item",
+    produce: "Fruits, vegetables, fresh herbs",
+    "meat-seafood": "Beef, chicken, pork, fish, seafood",
+    dairy: "Milk, cheese, yogurt, eggs",
+    bakery: "Bread, cakes, pastries, muffins",
+    "frozen-foods": "Frozen dinners, pizza, ice cream",
+    beverages: "Coffee, tea, soda, juice, water",
+    snacks: "Chips, crackers, nuts, candy, chocolate",
+    pantry: "Pasta, rice, cereal, soups, vegetables, sauces",
+    "personal-care": "Soap, lotions, deodorant, toothpaste, floss",
+    household: "Paper towels, tissues, cleaners, supplies",
+    other: "Other",
+  };

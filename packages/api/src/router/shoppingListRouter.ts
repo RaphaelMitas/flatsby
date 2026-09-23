@@ -1,6 +1,4 @@
-import crypto from "node:crypto";
 import type { CategoryId } from "@flatsby/validators/categories";
-import { generateObject } from "ai";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
@@ -14,7 +12,10 @@ import {
 } from "@flatsby/db/schema";
 import {
   categoryCountsSchema,
+  categoryDescriptions,
+  categoryIds,
   categoryIdSchema,
+  categoryNames,
   isCategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 import {
@@ -29,7 +30,6 @@ import {
   updateShoppingListSchema,
 } from "@flatsby/validators/shopping-list";
 
-import type { TracingOptions } from "../utils/model-provider";
 import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
@@ -39,17 +39,7 @@ import {
   safeDbOperation,
   ValidationUtils,
 } from "../utils";
-import {
-  checkCredits,
-  extractGatewayMetadata,
-  trackAIUsage,
-} from "../utils/autumn";
-import {
-  captureGeneration,
-  CHEAP_AI_MODEL,
-  CHEAP_AI_PROVIDER_OPTIONS,
-  getGatewayModel,
-} from "../utils/model-provider";
+import { classify } from "../utils/classify";
 
 export const shoppingList = createTRPCRouter({
   getShoppingListName: protectedProcedure
@@ -646,10 +636,7 @@ export const shoppingList = createTRPCRouter({
                       input.categoryId === "ai-auto-select"
                         ? AIUtils.categorizeItemSafely(
                             validName,
-                            createItemCategorizer({
-                              customerId: ctx.session.user.id,
-                              distinctId: ctx.session.user.id,
-                            }),
+                            itemCategorizer(ctx.session.user.id),
                           )
                         : Effect.succeed(input.categoryId),
                       (categoryId) =>
@@ -751,10 +738,7 @@ export const shoppingList = createTRPCRouter({
                           input.categoryId === "ai-auto-select"
                             ? AIUtils.categorizeItemSafely(
                                 validName,
-                                createItemCategorizer({
-                                  customerId: ctx.session.user.id,
-                                  distinctId: ctx.session.user.id,
-                                }),
+                                itemCategorizer(ctx.session.user.id),
                               )
                             : Effect.succeed(input.categoryId),
                           (categoryId) =>
@@ -965,65 +949,16 @@ export const shoppingList = createTRPCRouter({
     }),
 });
 
-interface CategorizeContext {
-  customerId: string;
-  distinctId: string;
-}
-
-const createItemCategorizer = (ctx: CategorizeContext) => {
-  return async (itemName: string): Promise<CategoryId> => {
-    const { allowed } = await checkCredits({
-      customerId: ctx.customerId,
-    });
-    if (!allowed) {
-      return "other"; // Fallback if no credits
-    }
-
-    const tracing: TracingOptions = {
-      distinctId: ctx.distinctId,
-      traceId: crypto.randomUUID(),
-      feature: "categorize-item",
-    };
-    const startTime = Date.now();
-
-    try {
-      const response = await generateObject({
-        model: getGatewayModel(CHEAP_AI_MODEL),
-        providerOptions: CHEAP_AI_PROVIDER_OPTIONS,
-        schema: z.object({
-          category: categoryIdSchema,
-        }),
-        prompt: `Tell me the most appropriate category for this item: ${itemName}`,
-      });
-
-      captureGeneration({
-        tracing,
-        model: CHEAP_AI_MODEL,
-        input: itemName,
-        output: response.object,
-        usage: response.usage,
-        latencySeconds: (Date.now() - startTime) / 1000,
-      });
-
-      // Track credits after successful AI call
-      const gateway = extractGatewayMetadata(response.providerMetadata);
-      await trackAIUsage({
-        customerId: ctx.customerId,
-        cost: gateway?.cost,
-      });
-
-      return response.object.category;
-    } catch (error) {
-      captureGeneration({
-        tracing,
-        model: CHEAP_AI_MODEL,
-        input: itemName,
-        output: null,
-        error,
-        latencySeconds: (Date.now() - startTime) / 1000,
-      });
-      console.error("Error categorizing item:", error);
-    }
-    return "other";
-  };
-};
+const itemCategorizer = (userId: string) => (itemName: string) =>
+  classify({
+    userId,
+    feature: "categorize-item",
+    instructions:
+      "Which grocery category does this shopping list item belong to?",
+    options: categoryIds.map((id) => ({
+      id,
+      description: `${categoryNames[id]}: ${categoryDescriptions[id]}`,
+    })),
+    input: itemName,
+    fallback: "other",
+  });
