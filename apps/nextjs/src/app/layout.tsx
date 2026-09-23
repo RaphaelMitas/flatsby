@@ -17,6 +17,17 @@ export const metadata: Metadata = {
   description: "Flat Companion",
   icons: [
     {
+      rel: "icon",
+      type: "image/svg+xml",
+      url: "/icons/flatsby-cat.svg",
+    },
+    {
+      rel: "icon",
+      type: "image/x-icon",
+      sizes: "48x48",
+      url: "/favicon.ico",
+    },
+    {
       rel: "apple-touch-icon",
       sizes: "180x180",
       url: "/apple-touch-icon.png",
