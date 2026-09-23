@@ -10,7 +10,7 @@ type ProviderOptions = NonNullable<
   Parameters<typeof streamText>[0]["providerOptions"]
 >;
 
-export const CHEAP_AI_MODEL = "openai/gpt-5.4-nano";
+const CHEAP_AI_MODEL = "openai/gpt-5.4-nano";
 
 const CHAT_PROVIDER_OPTIONS = {
   openai: {
@@ -23,7 +23,7 @@ const CHAT_PROVIDER_OPTIONS = {
   },
 } as const satisfies ProviderOptions;
 
-export const CHEAP_AI_PROVIDER_OPTIONS = {
+const CHEAP_AI_PROVIDER_OPTIONS = {
   openai: {
     reasoningEffort: "none",
   },
@@ -33,10 +33,6 @@ const TITLE_GENERATION_MODEL = CHEAP_AI_MODEL;
 
 export function getDefaultModel() {
   return DEFAULT_CHAT_MODEL;
-}
-
-export function getGatewayModel(modelName: string) {
-  return gateway(modelName);
 }
 
 export type TracingFeature =
@@ -60,13 +56,20 @@ export interface StreamChatWithToolsOptions extends StreamChatOptions {
   maxSteps?: number;
 }
 
+interface GenerationUsage {
+  inputTokens: number | undefined;
+  outputTokens: number | undefined;
+  inputTokenDetails?: LanguageModelUsage["inputTokenDetails"];
+  outputTokenDetails?: LanguageModelUsage["outputTokenDetails"];
+}
+
 interface CaptureGenerationArgs {
   tracing: TracingOptions | undefined;
   model: string;
   input: unknown;
   output: unknown;
   latencySeconds: number;
-  usage?: LanguageModelUsage;
+  usage?: GenerationUsage;
   error?: unknown;
 }
 
@@ -98,9 +101,9 @@ export function captureGeneration({
           usage: {
             inputTokens: usage.inputTokens,
             outputTokens: usage.outputTokens,
-            reasoningTokens: usage.outputTokenDetails.reasoningTokens,
-            cacheReadInputTokens: usage.inputTokenDetails.cacheReadTokens,
-            cacheCreationInputTokens: usage.inputTokenDetails.cacheWriteTokens,
+            reasoningTokens: usage.outputTokenDetails?.reasoningTokens,
+            cacheReadInputTokens: usage.inputTokenDetails?.cacheReadTokens,
+            cacheCreationInputTokens: usage.inputTokenDetails?.cacheWriteTokens,
           },
         }
       : {}),

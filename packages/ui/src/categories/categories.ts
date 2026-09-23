@@ -15,14 +15,13 @@ import {
   WandSparkles,
 } from "lucide-react";
 
-import { cn } from "..";
+import {
+  categoryDescriptions,
+  categoryIds,
+  categoryNames,
+} from "@flatsby/validators/categories";
 
-interface Category {
-  id: CategoryIdWithAiAutoSelect;
-  name: string;
-  icon: LucideIcon;
-  description: string;
-}
+import { cn } from "..";
 
 export const getCategoryColorClasses = (categoryId: string) => ({
   base: cn(
@@ -68,80 +67,32 @@ export const getCategoryColorClasses = (categoryId: string) => ({
   ),
 });
 
-const categories: Category[] = [
-  {
-    id: "ai-auto-select",
-    name: "AI Auto Select",
-    icon: WandSparkles,
-    description: "AI will select the most appropriate category for the item",
-  },
-  {
-    id: "produce",
-    name: "Produce",
-    icon: Carrot,
-    description: "Fruits, vegetables, fresh herbs",
-  },
-  {
-    id: "meat-seafood",
-    name: "Meat & Fish",
-    icon: Beef,
-    description: "Beef, chicken, pork, fish, seafood",
-  },
-  {
-    id: "dairy",
-    name: "Dairy",
-    icon: Milk,
-    description: "Milk, cheese, yogurt, eggs",
-  },
-  {
-    id: "bakery",
-    name: "Bakery",
-    icon: CakeSlice,
-    description: "Bread, cakes, pastries, muffins",
-  },
-  {
-    id: "frozen-foods",
-    name: "Frozen Foods",
-    icon: Snowflake,
-    description: "Frozen dinners, pizza, ice cream",
-  },
-  {
-    id: "beverages",
-    name: "Beverages",
-    icon: CupSoda,
-    description: "Coffee, tea, soda, juice, water",
-  },
-  {
-    id: "snacks",
-    name: "Snacks",
-    icon: Cookie,
-    description: "Chips, crackers, nuts, candy, chocolate",
-  },
-  {
-    id: "pantry",
-    name: "Pantry",
-    icon: Package,
-    description: "Pasta, rice, cereal, soups, vegetables, sauces",
-  },
-  {
-    id: "personal-care",
-    name: "Personal Care",
-    icon: Bath,
-    description: "Soap, lotions, deodorant, toothpaste, floss",
-  },
-  {
-    id: "household",
-    name: "Household",
-    icon: Home,
-    description: "Paper towels, tissues, cleaners, supplies",
-  },
-  {
-    id: "other",
-    name: "Other",
-    icon: CircleOff,
-    description: "Other",
-  },
+const categoryIcons: Record<CategoryIdWithAiAutoSelect, LucideIcon> = {
+  "ai-auto-select": WandSparkles,
+  produce: Carrot,
+  "meat-seafood": Beef,
+  dairy: Milk,
+  bakery: CakeSlice,
+  "frozen-foods": Snowflake,
+  beverages: CupSoda,
+  snacks: Cookie,
+  pantry: Package,
+  "personal-care": Bath,
+  household: Home,
+  other: CircleOff,
+};
+
+const pickerOrder: readonly CategoryIdWithAiAutoSelect[] = [
+  "ai-auto-select",
+  ...categoryIds,
 ];
+
+const categories = pickerOrder.map((id) => ({
+  id,
+  name: categoryNames[id],
+  icon: categoryIcons[id],
+  description: categoryDescriptions[id],
+}));
 
 const categoryMapping = categories.map((category) => {
   const colors = getCategoryColorClasses(category.id);

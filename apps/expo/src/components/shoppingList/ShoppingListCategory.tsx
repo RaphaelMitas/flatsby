@@ -7,7 +7,11 @@ import type React from "react";
 import { useMemo } from "react";
 import { View } from "react-native";
 
-import { categorysIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import {
+  categoryDescriptions,
+  categoryNames,
+  categorysIdWithAiAutoSelect,
+} from "@flatsby/validators/categories";
 import {
   categoryBgColorMap,
   categoryBorderColorMap,
@@ -25,84 +29,58 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 const iconSize = 20 as const;
 
 interface CategoryConfig {
-  name: string;
   colorKey: CategoryColorKey;
   iconName: IconProps["name"];
-  description: string;
 }
 
 const CATEGORY_CONFIG: Record<CategoryIdWithAiAutoSelect, CategoryConfig> = {
   "ai-auto-select": {
-    name: "AI Auto Select",
     colorKey: "primary",
     iconName: "wand-sparkles",
-    description: "AI will select the most appropriate category for the item",
   },
   produce: {
-    name: "Produce",
     colorKey: "green",
     iconName: "carrot",
-    description: "Fruits, vegetables, fresh herbs",
   },
   "meat-seafood": {
-    name: "Meat & Fish",
     colorKey: "red",
     iconName: "beef",
-    description: "Beef, chicken, pork, fish, seafood",
   },
   dairy: {
-    name: "Dairy",
     colorKey: "blue",
     iconName: "milk",
-    description: "Milk, cheese, yogurt, eggs",
   },
   bakery: {
-    name: "Bakery",
     colorKey: "orange",
     iconName: "cake-slice",
-    description: "Bread, cakes, pastries, muffins",
   },
   "frozen-foods": {
-    name: "Frozen Foods",
     colorKey: "cyan",
     iconName: "snowflake",
-    description: "Frozen dinners, pizza, ice cream",
   },
   beverages: {
-    name: "Beverages",
     colorKey: "purple",
     iconName: "cup-soda",
-    description: "Coffee, tea, soda, juice, water",
   },
   snacks: {
-    name: "Snacks",
     colorKey: "yellow",
     iconName: "cookie",
-    description: "Chips, crackers, nuts, candy, chocolate",
   },
   pantry: {
-    name: "Pantry",
     colorKey: "orange",
     iconName: "package",
-    description: "Pasta, rice, cereal, soups, vegetables, sauces",
   },
   "personal-care": {
-    name: "Personal Care",
     colorKey: "pink",
     iconName: "bath",
-    description: "Soap, lotions, deodorant, toothpaste, floss",
   },
   household: {
-    name: "Household",
     colorKey: "gray",
     iconName: "house",
-    description: "Paper towels, tissues, cleaners, supplies",
   },
   other: {
-    name: "Other",
     colorKey: "zinc",
     iconName: "circle-off",
-    description: "Other",
   },
 };
 
@@ -119,13 +97,13 @@ export const getCategoryData = ({
   const borderColor = categoryBorderColorMap[config.colorKey];
 
   return {
-    name: config.name,
+    name: categoryNames[categoryId],
     color,
     bgColor,
     borderColor,
     colorKey: config.colorKey,
     icon: <Icon name={config.iconName} size={iconSize} className={color} />,
-    description: config.description,
+    description: categoryDescriptions[categoryId],
   };
 };
 
