@@ -17,28 +17,30 @@ export const metadata: Metadata = {
   description: "Flat Companion",
   icons: [
     {
+      rel: "icon",
+      type: "image/png",
+      sizes: "96x96",
+      url: "/favicon-96x96.png",
+    },
+    {
+      rel: "icon",
+      type: "image/svg+xml",
+      url: "/favicon.svg",
+    },
+    {
+      rel: "shortcut icon",
+      url: "/favicon.ico",
+    },
+    {
       rel: "apple-touch-icon",
       sizes: "180x180",
       url: "/apple-touch-icon.png",
-    },
-    {
-      rel: "icon",
-      type: "image/png",
-      sizes: "32x32",
-      url: "/favicon-32x32.png",
-    },
-    {
-      rel: "icon",
-      type: "image/png",
-      sizes: "16x16",
-      url: "/favicon-16x16.png",
     },
   ],
   manifest: "/site.webmanifest",
   robots: "noindex,nofollow",
   other: {
-    "msapplication-TileColor": "#fff",
-    "theme-color": "#000",
+    "apple-mobile-web-app-title": "Flatsby",
   },
 };
 
