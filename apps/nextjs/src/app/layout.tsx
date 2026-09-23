@@ -41,7 +41,6 @@ export const metadata: Metadata = {
   robots: "noindex,nofollow",
   other: {
     "apple-mobile-web-app-title": "Flatsby",
-    "theme-color": "#000",
   },
 };
 
