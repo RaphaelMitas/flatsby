@@ -886,20 +886,8 @@ export const expenseRouter = createTRPCRouter({
     .input(z.object({ description: z.string().min(1).max(512) }))
     .mutation(async ({ input, ctx }) => {
       return withErrorHandlingAsResult(
-        Effect.orElse(
-          Effect.tryPromise({
-            try: () =>
-              categorizeExpenseDescription(
-                ctx.session.user.id,
-                input.description,
-              ),
-            catch: () => new Error("AI categorization failed"),
-          }),
-          () =>
-            Effect.succeed({
-              group: "other" as const,
-              subcategory: "other" as const,
-            }),
+        Effect.promise(() =>
+          categorizeExpenseDescription(ctx.session.user.id, input.description),
         ),
       );
     }),

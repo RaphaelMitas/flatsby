@@ -33,7 +33,6 @@ import {
 import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
-  AIUtils,
   DbUtils,
   GroupUtils,
   safeDbOperation,
@@ -634,9 +633,8 @@ export const shoppingList = createTRPCRouter({
                     Effect.flatMap(
                       // Determine category ID (with AI if needed)
                       input.categoryId === "ai-auto-select"
-                        ? AIUtils.categorizeItemSafely(
-                            validName,
-                            itemCategorizer(ctx.session.user.id),
+                        ? Effect.promise(() =>
+                            categorizeItem(ctx.session.user.id, validName),
                           )
                         : Effect.succeed(input.categoryId),
                       (categoryId) =>
@@ -736,9 +734,8 @@ export const shoppingList = createTRPCRouter({
                         Effect.flatMap(
                           // Determine category ID (with AI if needed)
                           input.categoryId === "ai-auto-select"
-                            ? AIUtils.categorizeItemSafely(
-                                validName,
-                                itemCategorizer(ctx.session.user.id),
+                            ? Effect.promise(() =>
+                                categorizeItem(ctx.session.user.id, validName),
                               )
                             : Effect.succeed(input.categoryId),
                           (categoryId) =>
@@ -949,16 +946,18 @@ export const shoppingList = createTRPCRouter({
     }),
 });
 
-const itemCategorizer = (userId: string) => (itemName: string) =>
+const itemCategoryOptions = categoryIds.map((id) => ({
+  id,
+  description: `${categoryNames[id]}: ${categoryDescriptions[id]}`,
+}));
+
+const categorizeItem = (userId: string, itemName: string) =>
   classify({
     userId,
     feature: "categorize-item",
     instructions:
       "Which grocery category does this shopping list item belong to?",
-    options: categoryIds.map((id) => ({
-      id,
-      description: `${categoryNames[id]}: ${categoryDescriptions[id]}`,
-    })),
+    options: itemCategoryOptions,
     input: itemName,
     fallback: "other",
   });

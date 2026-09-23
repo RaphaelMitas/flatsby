@@ -246,27 +246,6 @@ export const OperationUtils = {
 };
 
 /**
- * AI and categorization utilities
- */
-export const AIUtils = {
-  /**
-   * Categorize item with AI and fallback to "other"
-   */
-  categorizeItemSafely: <T extends string>(
-    itemName: string,
-    categorizeFn: (name: string) => Promise<T>,
-  ): Effect.Effect<T, never> => {
-    return Effect.orElse(
-      Effect.tryPromise({
-        try: () => categorizeFn(itemName),
-        catch: () => new Error("AI categorization failed"),
-      }),
-      () => Effect.succeed("other" as T),
-    );
-  },
-};
-
-/**
  * Group membership and access control utilities
  */
 export const GroupUtils = {

@@ -56,13 +56,20 @@ export interface StreamChatWithToolsOptions extends StreamChatOptions {
   maxSteps?: number;
 }
 
+interface GenerationUsage {
+  inputTokens: number | undefined;
+  outputTokens: number | undefined;
+  inputTokenDetails?: LanguageModelUsage["inputTokenDetails"];
+  outputTokenDetails?: LanguageModelUsage["outputTokenDetails"];
+}
+
 interface CaptureGenerationArgs {
   tracing: TracingOptions | undefined;
   model: string;
   input: unknown;
   output: unknown;
   latencySeconds: number;
-  usage?: LanguageModelUsage;
+  usage?: GenerationUsage;
   error?: unknown;
 }
 
@@ -94,9 +101,9 @@ export function captureGeneration({
           usage: {
             inputTokens: usage.inputTokens,
             outputTokens: usage.outputTokens,
-            reasoningTokens: usage.outputTokenDetails.reasoningTokens,
-            cacheReadInputTokens: usage.inputTokenDetails.cacheReadTokens,
-            cacheCreationInputTokens: usage.inputTokenDetails.cacheWriteTokens,
+            reasoningTokens: usage.outputTokenDetails?.reasoningTokens,
+            cacheReadInputTokens: usage.inputTokenDetails?.cacheReadTokens,
+            cacheCreationInputTokens: usage.inputTokenDetails?.cacheWriteTokens,
           },
         }
       : {}),

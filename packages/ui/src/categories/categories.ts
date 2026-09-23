@@ -17,8 +17,8 @@ import {
 
 import {
   categoryDescriptions,
+  categoryIds,
   categoryNames,
-  categorysIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 
 import { cn } from "..";
@@ -82,7 +82,12 @@ const categoryIcons: Record<CategoryIdWithAiAutoSelect, LucideIcon> = {
   other: CircleOff,
 };
 
-const categories = categorysIdWithAiAutoSelect.map((id) => ({
+const pickerOrder: readonly CategoryIdWithAiAutoSelect[] = [
+  "ai-auto-select",
+  ...categoryIds,
+];
+
+const categories = pickerOrder.map((id) => ({
   id,
   name: categoryNames[id],
   icon: categoryIcons[id],

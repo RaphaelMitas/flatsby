@@ -6,11 +6,7 @@ import { captureError } from "../lib/posthog";
 import { checkCredits, extractGatewayMetadata, trackAIUsage } from "./autumn";
 import { captureGeneration } from "./model-provider";
 
-export const CLASSIFICATION_MODEL = "typesafe-ai/jev";
-
-// Below this probability Jev is guessing between neighbours, and "other" is
-// the safer answer than a confident-looking wrong category.
-const MIN_PROBABILITY = 0.4;
+const CLASSIFICATION_MODEL = "typesafe-ai/jev";
 
 interface ClassifyOptions<K extends string> {
   userId: string;
@@ -29,9 +25,6 @@ export async function classify<K extends string>({
   input,
   fallback,
 }: ClassifyOptions<K>): Promise<K> {
-  const { allowed } = await checkCredits({ customerId: userId });
-  if (!allowed) return fallback;
-
   const tracing = {
     distinctId: userId,
     traceId: crypto.randomUUID(),
@@ -42,6 +35,9 @@ export async function classify<K extends string>({
   const isOption = (value: string): value is K => ids.has(value);
 
   try {
+    const { allowed } = await checkCredits({ customerId: userId });
+    if (!allowed) return fallback;
+
     const result = await evaluate({
       model: gateway.evaluationModel(CLASSIFICATION_MODEL),
       state: input,
@@ -64,6 +60,7 @@ export async function classify<K extends string>({
       model: CLASSIFICATION_MODEL,
       input,
       output: { choice: answer.choice, probability },
+      usage: result.usage,
       latencySeconds: (Date.now() - startTime) / 1000,
     });
 
@@ -80,9 +77,7 @@ export async function classify<K extends string>({
       });
     }
 
-    if (isOption(answer.choice) && probability >= MIN_PROBABILITY) {
-      return answer.choice;
-    }
+    if (isOption(answer.choice)) return answer.choice;
   } catch (error) {
     captureGeneration({
       tracing,
