@@ -62,7 +62,7 @@ jobs:
 
   e2e-ios-build:
     if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
@@ -76,7 +76,7 @@ jobs:
 
       - name: Select Xcode
         run: |
-          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_27*.app | sort -V | tail -1)"
           xcodebuild -version
 
       # CCACHE_BINARY has to be a real env var: React Native's ccache-clang.sh
@@ -160,7 +160,7 @@ jobs:
 
   e2e-ios:
     needs: e2e-ios-build
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 45
     strategy:
       fail-fast: false

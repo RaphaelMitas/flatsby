@@ -131,7 +131,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "expo-build-properties",
       {
-        ios: { ccacheEnabled: isE2E },
+        ios: { ccacheEnabled: isE2E, enableSceneSupport: true },
         // Same reason as the iOS ATS exception: the e2e server is HTTP.
         ...(isE2E && { android: { usesCleartextTraffic: true } }),
       },

@@ -105,7 +105,7 @@ jobs:
   screenshots-ios:
     needs: check
     if: needs.check.outputs.is-release == 'true'
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 60
     env:
       MAESTRO_CLI_NO_ANALYTICS: "1"
@@ -118,7 +118,7 @@ jobs:
 
       - name: Select Xcode
         run: |
-          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_27*.app | sort -V | tail -1)"
           xcodebuild -version
 
       # CCACHE_BINARY has to be a real env var: React Native's ccache-clang.sh
