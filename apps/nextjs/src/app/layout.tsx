@@ -18,13 +18,17 @@ export const metadata: Metadata = {
   icons: [
     {
       rel: "icon",
-      type: "image/svg+xml",
-      url: "/icons/flatsby-cat.svg",
+      type: "image/png",
+      sizes: "96x96",
+      url: "/favicon-96x96.png",
     },
     {
       rel: "icon",
-      type: "image/x-icon",
-      sizes: "48x48",
+      type: "image/svg+xml",
+      url: "/favicon.svg",
+    },
+    {
+      rel: "shortcut icon",
       url: "/favicon.ico",
     },
     {
@@ -32,23 +36,11 @@ export const metadata: Metadata = {
       sizes: "180x180",
       url: "/apple-touch-icon.png",
     },
-    {
-      rel: "icon",
-      type: "image/png",
-      sizes: "32x32",
-      url: "/favicon-32x32.png",
-    },
-    {
-      rel: "icon",
-      type: "image/png",
-      sizes: "16x16",
-      url: "/favicon-16x16.png",
-    },
   ],
   manifest: "/site.webmanifest",
   robots: "noindex,nofollow",
   other: {
-    "msapplication-TileColor": "#fff",
+    "apple-mobile-web-app-title": "Flatsby",
     "theme-color": "#000",
   },
 };
