@@ -59,8 +59,8 @@ catalogs:
       specifier: ^16.3.6
       version: 16.3.6
     prettier:
-      specifier: ^3.9.8
-      version: 3.9.8
+      specifier: ^3.9.9
+      version: 3.9.9
     react-hook-form:
       specifier: ^7.88.0
       version: 7.88.0
@@ -105,7 +105,7 @@ importers:
         version: link:tooling/prettier
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       turbo:
         specifier: 'catalog:'
         version: 2.11.3
@@ -310,7 +310,7 @@ importers:
         version: 10.1.0
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.3
@@ -440,7 +440,7 @@ importers:
         version: 2.7.0
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.3
@@ -507,7 +507,7 @@ importers:
         version: link:../../tooling/typescript
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -559,7 +559,7 @@ importers:
         version: 19.2.17
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -593,7 +593,7 @@ importers:
         version: link:../../tooling/typescript
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -645,7 +645,7 @@ importers:
         version: 8.23.0
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -799,7 +799,7 @@ importers:
         version: 19.2.17
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       react:
         specifier: catalog:react19
         version: 19.2.8
@@ -839,7 +839,7 @@ importers:
         version: 7.0.111(zod@4.6.5)
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       react:
         specifier: catalog:react19
         version: 19.2.8
@@ -853,13 +853,13 @@ importers:
     dependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.7.1
-        version: 4.7.1(prettier@3.9.8)(supports-color@8.1.1)
+        version: 4.7.1(prettier@3.9.9)(supports-color@8.1.1)
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       prettier-plugin-tailwindcss:
         specifier: ^0.8.1
-        version: 0.8.1(@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.9.8)(supports-color@8.1.1))(prettier@3.9.8)
+        version: 0.8.1(@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.9.9)(supports-color@8.1.1))(prettier@3.9.9)
     devDependencies:
       '@flatsby/tsconfig':
         specifier: workspace:*
@@ -897,7 +897,7 @@ importers:
         version: 24.13.6
       prettier:
         specifier: 'catalog:'
-        version: 3.9.8
+        version: 3.9.9
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -6409,8 +6409,8 @@ packages:
       prettier-plugin-svelte:
         optional: true
 
-  prettier@3.9.8:
-    resolution: {integrity: sha512-WRFq3Wn3WId7LLROfMLdH7xaFr2jR62wU8nLO6rQUOLOxNZUviyJQs1M0iIhLexSFy+L+w0ch66wtoO2jRjG0A==}
+  prettier@3.9.9:
+    resolution: {integrity: sha512-Z/CJHIkdujO/OtN7nXUii0Rf3VT5SRuhjBA82Xvu2XhBUgX3nhP67T0LHceBdQLex7OOFGTox+Q5Yg8Jk2Qivg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -8744,13 +8744,13 @@ snapshots:
       effect: 3.22.2
       zod: 4.6.5
 
-  '@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.9.8)(supports-color@8.1.1)':
+  '@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.9.9)(supports-color@8.1.1)':
     dependencies:
       '@babel/generator': 7.29.7
       '@babel/parser': 7.29.7
       '@babel/traverse': 7.29.7(supports-color@8.1.1)
       '@babel/types': 7.29.7
-      prettier: 3.9.8
+      prettier: 3.9.9
       semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
@@ -13013,13 +13013,13 @@ snapshots:
       react-native-safe-area-context: 5.7.0(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
       react-native-svg: 15.15.5(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
 
-  prettier-plugin-tailwindcss@0.8.1(@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.9.8)(supports-color@8.1.1))(prettier@3.9.8):
+  prettier-plugin-tailwindcss@0.8.1(@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.9.9)(supports-color@8.1.1))(prettier@3.9.9):
     dependencies:
-      prettier: 3.9.8
+      prettier: 3.9.9
     optionalDependencies:
-      '@ianvs/prettier-plugin-sort-imports': 4.7.1(prettier@3.9.8)(supports-color@8.1.1)
+      '@ianvs/prettier-plugin-sort-imports': 4.7.1(prettier@3.9.9)(supports-color@8.1.1)
 
-  prettier@3.9.8: {}
+  prettier@3.9.9: {}
 
   pretty-format@29.7.0:
     dependencies:
