@@ -19,6 +19,7 @@ export const expenseSplitSchema = z.object({
   groupMemberId: z.number(),
   amountInCents: z.number().int(),
   percentage: z.number().int().min(0).max(10000).nullable(),
+  shares: z.number().int().min(1).nullish(),
 });
 
 export const splitMethodSchema = z.enum(SPLIT_METHODS);

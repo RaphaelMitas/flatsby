@@ -59,13 +59,46 @@ export function distributePercentageAmounts(
   splits: { groupMemberId: number; percentage: number }[],
   totalAmountCents: number,
 ): ExpenseSplit[] {
-  if (splits.length === 0) return [];
-
   // Calculate raw amounts (may have fractional cents)
-  const rawAmounts = splits.map(
-    (s) => (s.percentage / 10000) * totalAmountCents,
+  const amounts = roundByLargestRemainder(
+    splits.map((s) => (s.percentage / 10000) * totalAmountCents),
+    totalAmountCents,
   );
 
+  return splits.map((split, i) => ({
+    groupMemberId: split.groupMemberId,
+    amountInCents: amounts[i] ?? 0,
+    percentage: split.percentage,
+  }));
+}
+
+/**
+ * Distribute an amount by share counts: shares 2 and 1 split it two thirds and one third
+ */
+export function distributeShareAmounts(
+  splits: { groupMemberId: number; shares: number }[],
+  totalAmountCents: number,
+): ExpenseSplit[] {
+  const totalShares = splits.reduce((sum, s) => sum + s.shares, 0);
+  const amounts = roundByLargestRemainder(
+    splits.map((s) =>
+      totalShares > 0 ? (s.shares / totalShares) * totalAmountCents : 0,
+    ),
+    totalShares > 0 ? totalAmountCents : 0,
+  );
+
+  return splits.map((split, i) => ({
+    groupMemberId: split.groupMemberId,
+    amountInCents: amounts[i] ?? 0,
+    percentage: null,
+    shares: split.shares,
+  }));
+}
+
+function roundByLargestRemainder(
+  rawAmounts: number[],
+  totalAmountCents: number,
+): number[] {
   // Floor all amounts
   const flooredAmounts = rawAmounts.map((a) => Math.floor(a));
   const currentSum = flooredAmounts.reduce((a, b) => a + b, 0);
@@ -82,22 +115,13 @@ export function distributePercentageAmounts(
   for (const { index } of indexed) {
     if (remainder <= 0) break;
     if (flooredAmounts[index] === undefined)
-      throw new Error(`Invalid index in distributePercentageAmounts: ${index}`);
+      throw new Error(`Invalid index in roundByLargestRemainder: ${index}`);
 
     flooredAmounts[index]++;
     remainder--;
   }
 
-  return splits.map((split, i) => {
-    if (flooredAmounts[i] === undefined)
-      throw new Error(`Invalid index in distributePercentageAmounts: ${i}`);
-
-    return {
-      groupMemberId: split.groupMemberId,
-      amountInCents: flooredAmounts[i],
-      percentage: split.percentage,
-    };
-  });
+  return flooredAmounts;
 }
 
 /**

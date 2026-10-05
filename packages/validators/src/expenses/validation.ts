@@ -16,7 +16,7 @@ import { formatCurrencyFromCents } from "./formatting";
  *
  * @param params.splits - Array of split objects with groupMemberId and amounts in cents
  * @param params.totalAmountCents - Total expense amount in cents
- * @param params.method - Split method: "equal", "percentage", "custom", or "settlement"
+ * @param params.method - Split method: "equal", "percentage", "shares", "custom", or "settlement"
  * @returns Object with isValid boolean and error message if invalid
  */
 export function validateSplits({
@@ -28,6 +28,7 @@ export function validateSplits({
     groupMemberId: number;
     amountInCents?: number;
     percentage: number | null;
+    shares?: number | null;
   }[];
   totalAmountCents: number;
   method: SplitMethod;
@@ -125,7 +126,14 @@ export function validateSplits({
     return { isValid: true };
   }
 
-  // Custom splits
+  if (
+    method === "shares" &&
+    splits.some((s) => !Number.isInteger(s.shares) || (s.shares ?? 0) < 1)
+  ) {
+    return { isValid: false, error: "Each person needs at least one share" };
+  }
+
+  // Custom and share splits
   const totalSplitCents = splits.reduce(
     (sum, split) => sum + (split.amountInCents ?? 0),
     0,

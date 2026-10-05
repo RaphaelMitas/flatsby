@@ -60,6 +60,43 @@ test.describe("Expense Creation", () => {
     ).toBeVisible();
   });
 
+  test("creates an expense with shares split", async ({ authPage }) => {
+    await authPage.goto("/expenses");
+    await openExpenseForm(authPage, {
+      amount: "90.00",
+      description: "Groceries split by shares",
+      categoryId: "groceries",
+    });
+
+    await authPage.getByTestId("expense-form-next").click();
+    await expect(authPage.getByTestId("expense-form-step")).toContainText(
+      "Step 2/3",
+    );
+
+    await authPage.getByTestId("split-method-shares").click();
+
+    const splitDetailsCard = authPage.getByTestId("split-details-card");
+    const incrementButtons = splitDetailsCard.getByTestId(
+      /^split-member-shares-increment-/,
+    );
+    await incrementButtons.first().click();
+    await expect(
+      splitDetailsCard.getByTestId(/^split-member-shares-\d+$/).first(),
+    ).toHaveValue("2");
+
+    await authPage.getByTestId("expense-form-next").click();
+    await expect(authPage.getByTestId("expense-form-step")).toContainText(
+      "Step 3/3",
+    );
+
+    await authPage.getByTestId("expense-form-submit").click();
+
+    await expect(authPage.getByText("€90.00").first()).toBeVisible();
+    await expect(
+      authPage.getByText("Groceries split by shares").first(),
+    ).toBeVisible();
+  });
+
   test("creates an expense with custom amount split", async ({ authPage }) => {
     await authPage.goto("/expenses");
     await openExpenseForm(authPage, {

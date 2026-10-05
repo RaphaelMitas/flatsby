@@ -180,6 +180,7 @@ export const expenseRouter = createTRPCRouter({
                                   groupMemberId: split.groupMemberId,
                                   amountInCents: split.amountInCents,
                                   percentage: split.percentage,
+                                  shares: split.shares,
                                 })),
                               );
 
@@ -325,6 +326,7 @@ export const expenseRouter = createTRPCRouter({
                                 groupMemberId: split.groupMemberId,
                                 amountInCents: split.amountInCents,
                                 percentage: split.percentage,
+                                shares: split.shares,
                               })),
                             );
                           }
@@ -852,6 +854,7 @@ export const expenseRouter = createTRPCRouter({
                         groupMemberId: number;
                         amountInCents: number;
                         percentage: number | null;
+                        shares?: number | null;
                       }[] = [];
 
                       for (let i = 0; i < input.expenses.length; i++) {
@@ -864,6 +867,7 @@ export const expenseRouter = createTRPCRouter({
                             groupMemberId: split.groupMemberId,
                             amountInCents: split.amountInCents,
                             percentage: split.percentage,
+                            shares: split.shares,
                           });
                         }
                       }

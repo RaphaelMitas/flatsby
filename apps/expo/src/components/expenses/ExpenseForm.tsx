@@ -3,10 +3,7 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import type {
-  ExpenseSplit,
-  SplitMethod,
-} from "@flatsby/validators/expenses/types";
+import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -21,13 +18,10 @@ import {
   getSubcategoryGroup,
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
-import {
-  calculateEvenPercentageBasisPoints,
-  distributeEqualAmounts,
-  distributePercentageAmounts,
-} from "@flatsby/validators/expenses/distribution";
+import { distributeEqualAmounts } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
+import { splitsForTotal } from "@flatsby/validators/expenses/split-editing";
 import {
   CURRENCY_CODES,
   isCurrencyCode,
@@ -159,6 +153,7 @@ export function ExpenseForm({
   const initialSplitMethod: SplitMethod =
     expense?.splitMethod === "equal" ||
     expense?.splitMethod === "percentage" ||
+    expense?.splitMethod === "shares" ||
     expense?.splitMethod === "custom"
       ? expense.splitMethod
       : "equal";
@@ -183,6 +178,7 @@ export function ExpenseForm({
           groupMemberId: split.groupMemberId,
           amountInCents: split.amountInCents,
           percentage: split.percentage,
+          shares: split.shares,
         })) ?? [],
     },
   });
@@ -272,6 +268,7 @@ export function ExpenseForm({
                 groupMemberId: split.groupMemberId,
                 amountInCents: split.amountInCents,
                 percentage: split.percentage,
+                shares: split.shares ?? null,
                 groupMember: member
                   ? {
                       id: member.id,
@@ -378,6 +375,7 @@ export function ExpenseForm({
                     );
                     const splits = {
                       ...split,
+                      shares: split.shares ?? null,
                       id: Date.now() + index,
                       createdAt: new Date(),
                       expenseId: expense.id,
@@ -457,27 +455,14 @@ export function ExpenseForm({
   }, [form, categorizeExpenseMutation]);
 
   const onSubmit = (values: ExpenseValues) => {
-    let splits: ExpenseSplit[];
-
-    if (values.splitMethod === "equal") {
-      const memberIds = values.splits.map((s) => s.groupMemberId);
-      splits = distributeEqualAmounts(memberIds, values.amountInCents);
-    } else if (values.splitMethod === "percentage") {
-      const splitsWithPercentages = values.splits.map((s) => ({
-        groupMemberId: s.groupMemberId,
-        percentage: s.percentage ?? 0,
-      }));
-      splits = distributePercentageAmounts(
-        splitsWithPercentages,
-        values.amountInCents,
-      );
-    } else {
-      splits = values.splits.map((split) => ({
-        groupMemberId: split.groupMemberId,
-        amountInCents: split.amountInCents,
-        percentage: null,
-      }));
-    }
+    const splits =
+      values.splitMethod === "settlement"
+        ? values.splits
+        : splitsForTotal(
+            values.splitMethod,
+            values.splits,
+            values.amountInCents,
+          );
 
     if (isEditMode) {
       updateExpenseMutation.mutate({
@@ -533,42 +518,11 @@ export function ExpenseForm({
           const memberIds = group.groupMembers.map((m) => m.id);
           const initialSplits = distributeEqualAmounts(memberIds, amountCents);
           form.setValue("splits", initialSplits);
-        } else if (splitMethod === "equal") {
-          const memberIds = currentSplits.map((s) => s.groupMemberId);
-          const updatedSplits = distributeEqualAmounts(memberIds, amountCents);
-          form.setValue("splits", updatedSplits);
-        } else if (splitMethod === "percentage") {
-          const hasPercentages = currentSplits.some(
-            (s) => s.percentage && s.percentage > 0,
+        } else if (splitMethod !== "settlement") {
+          form.setValue(
+            "splits",
+            splitsForTotal(splitMethod, currentSplits, amountCents),
           );
-
-          if (hasPercentages) {
-            const splitsWithPercentages = currentSplits.map((s) => ({
-              groupMemberId: s.groupMemberId,
-              percentage: s.percentage ?? 0,
-            }));
-            const updatedSplits = distributePercentageAmounts(
-              splitsWithPercentages,
-              amountCents,
-            );
-            form.setValue("splits", updatedSplits);
-          } else {
-            const memberIds = currentSplits.map((s) => s.groupMemberId);
-            const percentages = calculateEvenPercentageBasisPoints(
-              memberIds.length,
-            );
-            const splitsWithPercentages = memberIds.map(
-              (groupMemberId, index) => ({
-                groupMemberId,
-                percentage: percentages[index] ?? 0,
-              }),
-            );
-            const updatedSplits = distributePercentageAmounts(
-              splitsWithPercentages,
-              amountCents,
-            );
-            form.setValue("splits", updatedSplits);
-          }
         }
       }
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));

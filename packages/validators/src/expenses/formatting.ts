@@ -87,3 +87,32 @@ export function formatExpenseDateLong(
     day: "numeric",
   });
 }
+
+/**
+ * Label for one member's portion of an expense
+ * @returns "2 of 3 shares" for share splits, otherwise the percentage (e.g., "66.7%")
+ */
+export function formatSplitPortion({
+  split,
+  expense,
+}: {
+  split: { amountInCents: number; shares?: number | null };
+  expense: {
+    amountInCents: number;
+    splitMethod: string;
+    expenseSplits: { shares?: number | null }[];
+  };
+}): string {
+  if (expense.splitMethod === "shares") {
+    const totalShares = expense.expenseSplits.reduce(
+      (sum, s) => sum + (s.shares ?? 0),
+      0,
+    );
+    return `${split.shares ?? 0} of ${totalShares} ${totalShares === 1 ? "share" : "shares"}`;
+  }
+  const percentage =
+    expense.amountInCents === 0
+      ? 0
+      : (split.amountInCents / expense.amountInCents) * 100;
+  return `${percentage.toFixed(1)}%`;
+}

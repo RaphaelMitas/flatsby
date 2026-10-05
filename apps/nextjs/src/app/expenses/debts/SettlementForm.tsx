@@ -176,6 +176,7 @@ export function SettlementForm({
               groupMemberId: split.groupMemberId,
               amountInCents: split.amountInCents,
               percentage: split.percentage,
+              shares: null,
               groupMember: splitMember
                 ? {
                     id: splitMember.id,

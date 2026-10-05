@@ -19,6 +19,7 @@ import { Separator } from "@flatsby/ui/separator";
 import {
   formatCurrencyFromCents,
   formatExpenseDateLong,
+  formatSplitPortion,
 } from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseDetailContentProps {
@@ -188,8 +189,7 @@ export function ExpenseDetailContent({
                   cents: split.amountInCents,
                   currency: expense.currency,
                 });
-                const percentage =
-                  (split.amountInCents / expense.amountInCents) * 100;
+                const portion = formatSplitPortion({ split, expense });
 
                 return (
                   <div key={split.id}>
@@ -207,7 +207,7 @@ export function ExpenseDetailContent({
                         <div>
                           <p className="font-medium">{member.user.name}</p>
                           <p className="text-muted-foreground text-xs">
-                            {percentage.toFixed(1)}%
+                            {portion}
                           </p>
                         </div>
                       </div>
