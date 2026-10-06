@@ -8,6 +8,7 @@ import type {
   SplitValidationResult,
   StrictValidationResult,
 } from "./types";
+import { distributeShareAmounts } from "./distribution";
 import { formatCurrencyFromCents } from "./formatting";
 
 /**
@@ -161,7 +162,11 @@ export function validateSplits({
  */
 export function validateExpenseSplitsStrict(
   expenseAmountInCents: number,
-  splits: { amountInCents: number }[],
+  splits: {
+    groupMemberId: number;
+    amountInCents: number;
+    shares?: number | null;
+  }[],
   splitMethod: SplitMethod,
 ): StrictValidationResult {
   // Settlement validation
@@ -205,6 +210,28 @@ export function validateExpenseSplitsStrict(
       error: `split amounts (${totalSplitAmount} cents) must sum to expense amount (${expenseAmountInCents} cents)`,
       userMessage: "The split amounts don't match the total expense amount",
     };
+  }
+
+  if (splitMethod === "shares") {
+    const expected = distributeShareAmounts(
+      splits.map((s) => ({
+        groupMemberId: s.groupMemberId,
+        shares: s.shares ?? 0,
+      })),
+      expenseAmountInCents,
+    );
+    if (
+      splits.some(
+        (s, i) =>
+          (s.shares ?? 0) < 1 || s.amountInCents !== expected[i]?.amountInCents,
+      )
+    ) {
+      return {
+        valid: false,
+        error: "share split amounts must follow the share counts",
+        userMessage: "The split amounts don't match the shares",
+      };
+    }
   }
 
   return { valid: true };

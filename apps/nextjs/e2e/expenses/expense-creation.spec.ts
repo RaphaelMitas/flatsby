@@ -1,6 +1,7 @@
 import { expect, test } from "../fixtures/auth";
 import {
   createEqualSplitExpense,
+  openExpenseDetail,
   openExpenseForm,
   submitEqualSplitExpense,
 } from "../helpers/expenses";
@@ -95,6 +96,14 @@ test.describe("Expense Creation", () => {
     await expect(
       authPage.getByText("Groceries split by shares").first(),
     ).toBeVisible();
+
+    await expect(authPage.getByTestId("expense-form-title")).not.toBeVisible({
+      timeout: 15000,
+    });
+    await openExpenseDetail(authPage, "Groceries split by shares");
+    await expect(authPage.getByTestId("expense-split-details")).toContainText(
+      "2 of 2 shares",
+    );
   });
 
   test("creates an expense with custom amount split", async ({ authPage }) => {

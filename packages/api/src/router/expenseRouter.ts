@@ -37,7 +37,7 @@ import { classify } from "../utils/classify";
  */
 function validateExpenseSplitsEffect(
   expenseAmountInCents: number,
-  splits: { amountInCents: number }[],
+  splits: Parameters<typeof validateExpenseSplitsStrict>[1],
   splitMethod: SplitMethod,
 ): Effect.Effect<void, ApiError> {
   const result = validateExpenseSplitsStrict(

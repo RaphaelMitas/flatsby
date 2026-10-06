@@ -20,13 +20,7 @@ import {
 import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import {
-  splitsForMethod,
-  splitsWithMemberToggled,
-  splitsWithPercentage,
-  splitsWithShares,
-} from "@flatsby/validators/expenses/split-editing";
-import { validateSplits } from "@flatsby/validators/expenses/validation";
+import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import { CurrencyInput } from "~/components/CurrencyInput";
 
@@ -60,73 +54,35 @@ export function SplitEditor({
 }: SplitEditorProps) {
   const splits = useWatch({ control: form.control, name: "splits" });
   const selectedMemberIds = splits.map((s) => s.groupMemberId);
-  const setSplits = (next: ExpenseValues["splits"]) =>
-    form.setValue("splits", next, { shouldValidate: true });
-
-  const handleSplitMethodChange = (newMethod: EditableSplitMethod) => {
-    setSplits(
-      splitsForMethod(newMethod, form.getValues("splits"), totalAmountCents),
-    );
-    onSplitMethodChange(newMethod);
-  };
-
-  const toggleMember = (memberId: number) =>
-    setSplits(
-      splitsWithMemberToggled(
-        splitMethod,
-        form.getValues("splits"),
-        memberId,
-        totalAmountCents,
-      ),
-    );
-
-  const setPercentage = (index: number, basisPoints: number) =>
-    setSplits(
-      splitsWithPercentage(
-        form.getValues("splits"),
-        index,
-        basisPoints,
-        totalAmountCents,
-      ),
-    );
-
-  const setShares = (index: number, shares: number) =>
-    setSplits(
-      splitsWithShares(
-        form.getValues("splits"),
-        index,
-        shares,
-        totalAmountCents,
-      ),
-    );
-
-  const setAmount = (index: number, amountInCents: number) =>
-    setSplits(
-      form
-        .getValues("splits")
-        .map((s, i) => (i === index ? { ...s, amountInCents } : s)),
-    );
-
-  const validation = validateSplits({
+  const {
+    validation,
+    totalSplitCents,
+    totalShares,
+    changeMethod,
+    toggleMember,
+    setPercentage,
+    setShares,
+    setAmount,
+  } = splitEditor({
     splits,
-    totalAmountCents,
+    getSplits: () => form.getValues("splits"),
+    setSplits: (next) =>
+      form.setValue("splits", next, { shouldValidate: true }),
     method: splitMethod,
+    onMethodChange: onSplitMethodChange,
+    totalAmountCents,
   });
-
-  const totalSplitCents = splits.reduce((sum, s) => sum + s.amountInCents, 0);
-  const totalShares = splits.reduce((sum, s) => sum + (s.shares ?? 0), 0);
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {SPLIT_METHOD_OPTIONS.map(({ method, label, Icon }) => (
           <Button
             key={method}
             type="button"
             variant={splitMethod === method ? "default" : "outline"}
             size="sm"
-            onClick={() => handleSplitMethodChange(method)}
-            className="flex-1"
+            onClick={() => changeMethod(method)}
             data-testid={`split-method-${method}`}
           >
             <Icon className="mr-2 h-4 w-4" />
@@ -255,7 +211,10 @@ export function SplitEditor({
                         min={1}
                         value={shares === 0 ? "" : shares}
                         onChange={(e) =>
-                          setShares(index, Number.parseInt(e.target.value) || 0)
+                          setShares(
+                            index,
+                            Number.parseInt(e.target.value, 10) || 0,
+                          )
                         }
                         className="w-16 text-center"
                         data-testid={`split-member-shares-${split.groupMemberId}`}

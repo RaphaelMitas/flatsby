@@ -132,3 +132,9 @@ tags:
 - extendedWaitUntil:
     visible: "Shares groceries"
     timeout: 20000
+- tapOn: "Shares groceries"
+- extendedWaitUntil:
+    visible:
+      id: "expense-split-details"
+    timeout: 15000
+- assertVisible: "2 of 2 shares"

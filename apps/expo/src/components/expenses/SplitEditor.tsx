@@ -6,13 +6,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { useWatch } from "react-hook-form";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import {
-  splitsForMethod,
-  splitsWithMemberToggled,
-  splitsWithPercentage,
-  splitsWithShares,
-} from "@flatsby/validators/expenses/split-editing";
-import { validateSplits } from "@flatsby/validators/expenses/validation";
+import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
@@ -58,65 +52,28 @@ export function SplitEditor({
 }: SplitEditorProps) {
   const splits = useWatch({ control: form.control, name: "splits" });
   const selectedMemberIds = splits.map((s) => s.groupMemberId);
-  const setSplits = (next: ExpenseValues["splits"]) =>
-    form.setValue("splits", next, { shouldValidate: true });
-
-  const handleSplitMethodChange = (newMethod: EditableSplitMethod) => {
-    setSplits(
-      splitsForMethod(newMethod, form.getValues("splits"), totalAmountCents),
-    );
-    onSplitMethodChange(newMethod);
-  };
-
-  const toggleMember = (memberId: number) =>
-    setSplits(
-      splitsWithMemberToggled(
-        splitMethod,
-        form.getValues("splits"),
-        memberId,
-        totalAmountCents,
-      ),
-    );
-
-  const setPercentage = (index: number, basisPoints: number) =>
-    setSplits(
-      splitsWithPercentage(
-        form.getValues("splits"),
-        index,
-        basisPoints,
-        totalAmountCents,
-      ),
-    );
-
-  const setShares = (index: number, shares: number) =>
-    setSplits(
-      splitsWithShares(
-        form.getValues("splits"),
-        index,
-        shares,
-        totalAmountCents,
-      ),
-    );
-
-  const setAmount = (index: number, amountInCents: number) =>
-    setSplits(
-      form
-        .getValues("splits")
-        .map((s, i) => (i === index ? { ...s, amountInCents } : s)),
-    );
-
-  const validation = validateSplits({
+  const {
+    validation,
+    totalSplitCents,
+    totalShares,
+    changeMethod,
+    toggleMember,
+    setPercentage,
+    setShares,
+    setAmount,
+  } = splitEditor({
     splits,
-    totalAmountCents,
+    getSplits: () => form.getValues("splits"),
+    setSplits: (next) =>
+      form.setValue("splits", next, { shouldValidate: true }),
     method: splitMethod,
+    onMethodChange: onSplitMethodChange,
+    totalAmountCents,
   });
-
-  const totalSplitCents = splits.reduce((sum, s) => sum + s.amountInCents, 0);
-  const totalShares = splits.reduce((sum, s) => sum + (s.shares ?? 0), 0);
 
   return (
     <View className="gap-4">
-      <View className="flex-row gap-2">
+      <View className="flex-row flex-wrap gap-2">
         {SPLIT_METHOD_OPTIONS.map(({ method, label, icon }) => (
           <Button
             key={method}
@@ -124,9 +81,9 @@ export function SplitEditor({
             title={label}
             variant={splitMethod === method ? "primary" : "outline"}
             size="sm"
-            onPress={() => handleSplitMethodChange(method)}
+            onPress={() => changeMethod(method)}
             icon={icon}
-            className="flex-1"
+            className="grow basis-[40%]"
             numberOfLines={1}
           />
         ))}
@@ -250,7 +207,7 @@ export function SplitEditor({
                         keyboardType="number-pad"
                         value={shares === 0 ? "" : String(shares)}
                         onChangeText={(text) =>
-                          setShares(index, Number.parseInt(text) || 0)
+                          setShares(index, Number.parseInt(text, 10) || 0)
                         }
                         className="w-16 text-center"
                       />

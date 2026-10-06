@@ -10,6 +10,8 @@ import {
   distributePercentageAmounts,
   distributeShareAmounts,
 } from "./distribution";
+import { MAX_SHARES } from "./types";
+import { validateSplits } from "./validation";
 
 export type EditableSplitMethod = Exclude<SplitMethod, "settlement">;
 
@@ -69,10 +71,7 @@ export function splitsForMethod(
   splits: ExpenseSplit[],
   totalAmountCents: number,
 ): ExpenseSplit[] {
-  const memberIds = splits.map((s) => s.groupMemberId);
   switch (method) {
-    case "equal":
-      return distributeEqualAmounts(memberIds, totalAmountCents);
     case "percentage":
       return distributePercentageAmounts(
         derivePercentagesFromAmounts(splits, totalAmountCents),
@@ -80,15 +79,16 @@ export function splitsForMethod(
       );
     case "shares":
       return distributeShareAmounts(
-        memberIds.map((groupMemberId) => ({ groupMemberId, shares: 1 })),
+        splits.map((s) => ({ groupMemberId: s.groupMemberId, shares: 1 })),
         totalAmountCents,
       );
+    case "equal":
     case "custom":
-      return splits;
+      return splitsForTotal(method, splits, totalAmountCents);
   }
 }
 
-export function splitsWithMemberToggled(
+function splitsWithMemberToggled(
   method: EditableSplitMethod,
   splits: ExpenseSplit[],
   memberId: number,
@@ -101,51 +101,67 @@ export function splitsWithMemberToggled(
         { groupMemberId: memberId, amountInCents: 0, percentage: null },
       ];
   if (next.length === 0) return [];
-
-  switch (method) {
-    case "equal":
-      return distributeEqualAmounts(
+  return method === "percentage"
+    ? evenPercentages(
         next.map((s) => s.groupMemberId),
         totalAmountCents,
-      );
-    case "percentage":
-      return evenPercentages(
-        next.map((s) => s.groupMemberId),
-        totalAmountCents,
-      );
-    case "shares":
-      return splitsForTotal("shares", next, totalAmountCents);
-    case "custom":
-      return next;
-  }
+      )
+    : splitsForTotal(method, next, totalAmountCents);
 }
 
-export function splitsWithPercentage(
-  splits: ExpenseSplit[],
-  index: number,
-  basisPoints: number,
-  totalAmountCents: number,
-): ExpenseSplit[] {
-  return distributePercentageAmounts(
-    splits.map((s, i) => ({
-      groupMemberId: s.groupMemberId,
-      percentage: i === index ? basisPoints : (s.percentage ?? 0),
-    })),
-    totalAmountCents,
-  );
-}
+export function splitEditor({
+  splits,
+  getSplits,
+  setSplits,
+  method,
+  onMethodChange,
+  totalAmountCents,
+}: {
+  splits: ExpenseSplit[];
+  getSplits: () => ExpenseSplit[];
+  setSplits: (splits: ExpenseSplit[]) => void;
+  method: EditableSplitMethod;
+  onMethodChange: (method: EditableSplitMethod) => void;
+  totalAmountCents: number;
+}) {
+  const update = (fn: (current: ExpenseSplit[]) => ExpenseSplit[]) =>
+    setSplits(fn(getSplits()));
+  const replaceAt = (index: number, patch: Partial<ExpenseSplit>) =>
+    getSplits().map((s, i) => (i === index ? { ...s, ...patch } : s));
 
-export function splitsWithShares(
-  splits: ExpenseSplit[],
-  index: number,
-  shares: number,
-  totalAmountCents: number,
-): ExpenseSplit[] {
-  return distributeShareAmounts(
-    splits.map((s, i) => ({
-      groupMemberId: s.groupMemberId,
-      shares: i === index ? shares : (s.shares ?? 1),
-    })),
-    totalAmountCents,
-  );
+  return {
+    validation: validateSplits({ splits, totalAmountCents, method }),
+    totalSplitCents: splits.reduce((sum, s) => sum + s.amountInCents, 0),
+    totalShares: splits.reduce((sum, s) => sum + (s.shares ?? 0), 0),
+    changeMethod: (next: EditableSplitMethod) => {
+      update((current) => splitsForMethod(next, current, totalAmountCents));
+      onMethodChange(next);
+    },
+    toggleMember: (memberId: number) =>
+      update((current) =>
+        splitsWithMemberToggled(method, current, memberId, totalAmountCents),
+      ),
+    setPercentage: (index: number, percentage: number) =>
+      setSplits(
+        distributePercentageAmounts(
+          replaceAt(index, { percentage }).map((s) => ({
+            groupMemberId: s.groupMemberId,
+            percentage: s.percentage ?? 0,
+          })),
+          totalAmountCents,
+        ),
+      ),
+    setShares: (index: number, shares: number) =>
+      setSplits(
+        splitsForTotal(
+          "shares",
+          replaceAt(index, {
+            shares: Math.min(Math.max(shares, 0), MAX_SHARES),
+          }),
+          totalAmountCents,
+        ),
+      ),
+    setAmount: (index: number, amountInCents: number) =>
+      setSplits(replaceAt(index, { amountInCents })),
+  };
 }

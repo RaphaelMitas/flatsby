@@ -8,7 +8,7 @@ import {
   expenseCategoryGroupSchema,
   expenseSubcategoryIdSchema,
 } from "./categories";
-import { CURRENCY_CODES, SPLIT_METHODS } from "./types";
+import { CURRENCY_CODES, MAX_SHARES, SPLIT_METHODS } from "./types";
 import { validateSplits } from "./validation";
 
 /**
@@ -19,7 +19,7 @@ export const expenseSplitSchema = z.object({
   groupMemberId: z.number(),
   amountInCents: z.number().int(),
   percentage: z.number().int().min(0).max(10000).nullable(),
-  shares: z.number().int().min(1).nullish(),
+  shares: z.number().int().min(1).max(MAX_SHARES).nullish(),
 });
 
 export const splitMethodSchema = z.enum(SPLIT_METHODS);

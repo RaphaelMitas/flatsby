@@ -88,10 +88,6 @@ export function formatExpenseDateLong(
   });
 }
 
-/**
- * Label for one member's portion of an expense
- * @returns "2 of 3 shares" for share splits, otherwise the percentage (e.g., "66.7%")
- */
 export function formatSplitPortion({
   split,
   expense,

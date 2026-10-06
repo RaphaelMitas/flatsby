@@ -72,9 +72,6 @@ export function distributePercentageAmounts(
   }));
 }
 
-/**
- * Distribute an amount by share counts: shares 2 and 1 split it two thirds and one third
- */
 export function distributeShareAmounts(
   splits: { groupMemberId: number; shares: number }[],
   totalAmountCents: number,
