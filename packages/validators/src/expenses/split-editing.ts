@@ -53,7 +53,7 @@ export function splitsForTotal(
   }
 }
 
-// Blank members aren't part of the expense, so they're dropped instead of saved at 0
+// Blank percentage and custom members aren't part of the expense, so they're dropped instead of saved at 0
 export function finalizeSplits(
   method: SplitMethod,
   splits: ExpenseSplit[],
@@ -140,7 +140,8 @@ export function splitEditor({
       ),
     setPercentage: (index: number, percentage: number) =>
       setSplits(
-        distributePercentageAmounts(
+        splitsForTotal(
+          "percentage",
           replaceAt(index, { percentage }),
           totalAmountCents,
         ),

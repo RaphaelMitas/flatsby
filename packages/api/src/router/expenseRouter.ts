@@ -227,12 +227,12 @@ export const expenseRouter = createTRPCRouter({
             const splitMethod =
               input.splitMethod ?? splitMethodSchema.parse(expense.splitMethod);
             const amountInCents = input.amountInCents ?? expense.amountInCents;
-            const reshareStored =
+            const resplitStored =
               splitMethod === "shares" &&
               (input.splitMethod !== undefined ||
                 input.amountInCents !== undefined);
             const sourceSplits =
-              input.splits ?? (reshareStored ? expense.expenseSplits : null);
+              input.splits ?? (resplitStored ? expense.expenseSplits : null);
             const splits =
               sourceSplits &&
               splitsForStorage(splitMethod, sourceSplits, amountInCents);
@@ -294,40 +294,44 @@ export const expenseRouter = createTRPCRouter({
                             .for("update");
                           if (!locked) throw new Error("Expense was deleted");
 
-                          let splitsToWrite = splits;
-                          if (reshareStored && !input.splits) {
-                            const lockedMethod =
-                              input.splitMethod ??
-                              splitMethodSchema.parse(locked.splitMethod);
-                            const stored =
-                              await trx.query.expenseSplits.findMany({
-                                where: eq(
-                                  expenseSplits.expenseId,
-                                  input.expenseId,
-                                ),
-                              });
-                            const lockedAmount =
-                              input.amountInCents ?? locked.amountInCents;
-                            splitsToWrite =
-                              lockedMethod === "shares"
-                                ? splitsForStorage(
-                                    lockedMethod,
-                                    stored,
-                                    lockedAmount,
-                                  )
-                                : null;
-                            if (
-                              splitsToWrite &&
-                              !validateExpenseSplitsStrict(
-                                lockedAmount,
-                                splitsToWrite,
-                                lockedMethod,
-                              ).valid
-                            ) {
-                              throw new Error(
-                                "Expense splits changed during the update",
-                              );
-                            }
+                          const lockedMethod =
+                            input.splitMethod ??
+                            splitMethodSchema.parse(locked.splitMethod);
+                          const lockedAmount =
+                            input.amountInCents ?? locked.amountInCents;
+                          const resplitStored =
+                            !input.splits &&
+                            lockedMethod === "shares" &&
+                            (input.splitMethod !== undefined ||
+                              input.amountInCents !== undefined);
+                          const sourceSplits =
+                            input.splits ??
+                            (resplitStored
+                              ? await trx.query.expenseSplits.findMany({
+                                  where: eq(
+                                    expenseSplits.expenseId,
+                                    input.expenseId,
+                                  ),
+                                })
+                              : null);
+                          const splitsToWrite =
+                            sourceSplits &&
+                            splitsForStorage(
+                              lockedMethod,
+                              sourceSplits,
+                              lockedAmount,
+                            );
+                          if (
+                            splitsToWrite &&
+                            !validateExpenseSplitsStrict(
+                              lockedAmount,
+                              splitsToWrite,
+                              lockedMethod,
+                            ).valid
+                          ) {
+                            throw new Error(
+                              "Expense changed during the update",
+                            );
                           }
 
                           const updateData: Partial<
