@@ -36,10 +36,12 @@ export const createTRPCContext = async (opts: {
   authApi: Auth["api"];
   headers: Headers;
   session: Awaited<ReturnType<Auth["api"]["getSession"]>>;
+  authMs: number;
   db: typeof db;
   signal?: AbortSignal;
 }> => {
   const authApi = opts.auth.api;
+  const authStart = Date.now();
   const session = await authApi.getSession({
     headers: opts.headers,
   });
@@ -47,6 +49,7 @@ export const createTRPCContext = async (opts: {
     authApi,
     headers: opts.headers,
     session,
+    authMs: Date.now() - authStart,
     db,
     signal: opts.signal,
   };
@@ -85,55 +88,47 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 export const createTRPCRouter = t.router;
 
 /**
- * Middleware for timing procedure execution and adding an articifial delay in development.
+ * Middleware for timing procedure execution and adding an artificial delay in development.
  *
- * You can remove this if you don't like it, but it can help catch unwanted waterfalls by simulating
- * network latency that would occur in production but not in local development.
+ * The delay helps catch unwanted waterfalls by simulating network latency that would occur in
+ * production but not in local development. In production, mutation timings are attached to the
+ * mutation's analytics event.
  */
-const timingMiddleware = t.middleware(async ({ next, path }) => {
-  const start = Date.now();
-
+const timingMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
   if (t._config.isDev) {
     // artificial delay in dev 100-500ms
     const waitMs = Math.floor(Math.random() * 400) + 100;
     await new Promise((resolve) => setTimeout(resolve, waitMs));
   }
 
+  const start = Date.now();
   const result = await next();
+  const durationMs = Date.now() - start;
 
-  const end = Date.now();
   if (t._config.isDev) {
-    console.log(`[TRPC] ${path} took ${end - start}ms to execute`);
+    console.log(`[TRPC] ${path} took ${durationMs}ms to execute`);
   }
 
-  return result;
-});
-
-const analyticsMutationMiddleware = t.middleware(
-  async ({ ctx, next, path, type }) => {
-    if (
-      !posthog ||
-      !ctx.session?.user.id ||
-      type !== "mutation" ||
-      path.startsWith("analytics.")
-    ) {
-      return next();
-    }
-
-    const result = await next();
-
+  if (
+    posthog &&
+    ctx.session?.user.id &&
+    type === "mutation" &&
+    !path.startsWith("analytics.")
+  ) {
     void captureEvent({
       distinctId: ctx.session.user.id,
       event: path,
       headers: ctx.headers,
       additionalProperties: {
         procedure: path,
+        durationMs,
+        authMs: ctx.authMs,
       },
     });
+  }
 
-    return result;
-  },
-);
+  return result;
+});
 
 /**
  * Public (unauthed) procedure
@@ -142,9 +137,7 @@ const analyticsMutationMiddleware = t.middleware(
  * tRPC API. It does not guarantee that a user querying is authorized, but you
  * can still access user session data if they are logged in
  */
-export const publicProcedure = t.procedure
-  .use(timingMiddleware)
-  .use(analyticsMutationMiddleware);
+export const publicProcedure = t.procedure.use(timingMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -156,7 +149,6 @@ export const publicProcedure = t.procedure
  */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
-  .use(analyticsMutationMiddleware)
   .use(({ ctx, next }) => {
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
