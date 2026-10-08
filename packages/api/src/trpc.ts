@@ -115,9 +115,8 @@ const timingMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
       headers: ctx.headers,
       additionalProperties: {
         procedure: path,
-        ok: isStream ? undefined : result.ok,
-        durationMs: isStream ? undefined : durationMs,
         authMs: ctx.authMs,
+        ...(!isStream && { ok: result.ok, durationMs }),
       },
     });
   }
