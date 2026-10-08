@@ -40,30 +40,31 @@ export function distributeEqualAmounts(
   }));
 }
 
+export function emptySplit(groupMemberId: number): ExpenseSplit {
+  return { groupMemberId, amountInCents: 0, percentage: null };
+}
+
 /**
- * Distribute an amount based on percentages (in basis points)
- * Uses largest remainder method to distribute rounding errors fairly
- *
- * @param splits - Array of splits with groupMemberId and percentage (basis points)
- * @param totalAmountCents - Total amount in cents (integer)
- * @returns Array of ExpenseSplit with amounts that sum exactly to totalAmountCents
- *
- * @example
- * distributePercentageAmounts(
- *   [{ groupMemberId: 1, percentage: 3333 }, { groupMemberId: 2, percentage: 3333 }, { groupMemberId: 3, percentage: 3334 }],
- *   100
- * )
- * // Correctly handles rounding to ensure sum equals 100
+ * Distribute an amount based on percentages (in basis points) using the largest remainder method.
+ * Amounts only sum to totalAmountCents once the percentages total 100%; partial input stays floored.
  */
 export function distributePercentageAmounts(
-  splits: { groupMemberId: number; percentage: number }[],
+  splits: Pick<ExpenseSplit, "groupMemberId" | "percentage">[],
   totalAmountCents: number,
 ): ExpenseSplit[] {
-  // Calculate raw amounts (may have fractional cents)
-  const amounts = roundByLargestRemainder(
-    splits.map((s) => (s.percentage / 10000) * totalAmountCents),
-    totalAmountCents,
+  const totalBasisPoints = splits.reduce(
+    (sum, s) => sum + (s.percentage ?? 0),
+    0,
   );
+  // Tolerance matches validateSplits; scaling by the entered total lets 99.99% still sum exactly
+  const isComplete = Math.abs(totalBasisPoints - 10000) <= 1;
+  const basis = isComplete ? totalBasisPoints : 10000;
+  const rawAmounts = splits.map(
+    (s) => ((s.percentage ?? 0) / basis) * totalAmountCents,
+  );
+  const amounts = isComplete
+    ? roundByLargestRemainder(rawAmounts, totalAmountCents)
+    : rawAmounts.map((a) => Math.floor(a));
 
   return splits.map((split, i) => ({
     groupMemberId: split.groupMemberId,
@@ -96,7 +97,6 @@ function roundByLargestRemainder(
   rawAmounts: number[],
   totalAmountCents: number,
 ): number[] {
-  // Floor all amounts
   const flooredAmounts = rawAmounts.map((a) => Math.floor(a));
   const currentSum = flooredAmounts.reduce((a, b) => a + b, 0);
   let remainder = totalAmountCents - currentSum;
@@ -108,7 +108,6 @@ function roundByLargestRemainder(
   }));
   indexed.sort((a, b) => b.fractionalPart - a.fractionalPart);
 
-  // Distribute remainder to entries with largest fractional parts
   for (const { index } of indexed) {
     if (remainder <= 0) break;
     if (flooredAmounts[index] === undefined)
@@ -119,83 +118,4 @@ function roundByLargestRemainder(
   }
 
   return flooredAmounts;
-}
-
-/**
- * Calculate even percentage distribution for a number of members
- * Returns percentages in basis points (100% = 10000) with remainder distributed round-robin
- *
- * @param memberCount - Number of members to split between
- * @returns Array of basis points for each member (sums to 10000)
- */
-export function calculateEvenPercentageBasisPoints(
-  memberCount: number,
-): number[] {
-  if (memberCount <= 0) return [];
-
-  const basePercentage = Math.floor(10000 / memberCount);
-  let remainingBasisPoints = 10000 - basePercentage * memberCount;
-
-  const percentages: number[] = [];
-  for (let i = 0; i < memberCount; i++) {
-    // Distribute remainder round-robin
-    const extra = remainingBasisPoints > 0 ? 1 : 0;
-    percentages.push(basePercentage + extra);
-    if (remainingBasisPoints > 0) remainingBasisPoints--;
-  }
-
-  return percentages;
-}
-
-/**
- * Convert percentage in basis points to amount in cents
- * Note: This function is for display/calculation purposes only.
- * For actual distribution, use distributePercentageAmounts to avoid rounding issues.
- *
- * @param totalAmountCents - Total amount in cents
- * @param percentageBasisPoints - Percentage in basis points (100% = 10000)
- * @returns Amount in cents (rounded)
- */
-export function percentageToAmountCents(
-  totalAmountCents: number,
-  percentageBasisPoints: number,
-): number {
-  return Math.round((percentageBasisPoints / 10000) * totalAmountCents);
-}
-
-/**
- * Derive percentages from current amounts
- * Used when switching split methods to preserve the current distribution
- *
- * @param splits - Array of splits with groupMemberId and amountInCents
- * @param totalAmountCents - Total amount in cents
- * @returns Array with groupMemberId and percentage in basis points
- *
- * @example
- * derivePercentagesFromAmounts(
- *   [{ groupMemberId: 1, amountInCents: 30 }, { groupMemberId: 2, amountInCents: 70 }],
- *   100
- * )
- * // Returns: [
- * //   { groupMemberId: 1, percentage: 3000 },
- * //   { groupMemberId: 2, percentage: 7000 }
- * // ]
- */
-export function derivePercentagesFromAmounts(
-  splits: { groupMemberId: number; amountInCents: number }[],
-  totalAmountCents: number,
-): { groupMemberId: number; percentage: number }[] {
-  if (totalAmountCents === 0) {
-    // Fallback to even distribution when total is zero
-    const evenPercentages = calculateEvenPercentageBasisPoints(splits.length);
-    return splits.map((s, i) => ({
-      groupMemberId: s.groupMemberId,
-      percentage: evenPercentages[i] ?? 0,
-    }));
-  }
-
-  return splits.map((s) => ({
-    groupMemberId: s.groupMemberId,
-    percentage: Math.round((s.amountInCents / totalAmountCents) * 10000),
-  }));
 }

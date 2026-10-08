@@ -4,51 +4,29 @@
 
 import type { ExpenseSplit, SplitMethod } from "./types";
 import {
-  calculateEvenPercentageBasisPoints,
-  derivePercentagesFromAmounts,
   distributeEqualAmounts,
   distributePercentageAmounts,
   distributeShareAmounts,
+  emptySplit,
 } from "./distribution";
 import { MAX_SHARES } from "./types";
 import { validateSplits } from "./validation";
 
 export type EditableSplitMethod = Exclude<SplitMethod, "settlement">;
 
-function evenPercentages(
-  memberIds: number[],
-  totalAmountCents: number,
-): ExpenseSplit[] {
-  const basisPoints = calculateEvenPercentageBasisPoints(memberIds.length);
-  return distributePercentageAmounts(
-    memberIds.map((groupMemberId, i) => ({
-      groupMemberId,
-      percentage: basisPoints[i] ?? 0,
-    })),
-    totalAmountCents,
-  );
-}
-
-/** Runs when the total changes and on submit, so it is the shape the API receives */
 export function splitsForTotal(
   method: EditableSplitMethod,
   splits: ExpenseSplit[],
   totalAmountCents: number,
 ): ExpenseSplit[] {
-  const memberIds = splits.map((s) => s.groupMemberId);
   switch (method) {
     case "equal":
-      return distributeEqualAmounts(memberIds, totalAmountCents);
+      return distributeEqualAmounts(
+        splits.map((s) => s.groupMemberId),
+        totalAmountCents,
+      );
     case "percentage":
-      return splits.some((s) => (s.percentage ?? 0) > 0)
-        ? distributePercentageAmounts(
-            splits.map((s) => ({
-              groupMemberId: s.groupMemberId,
-              percentage: s.percentage ?? 0,
-            })),
-            totalAmountCents,
-          )
-        : evenPercentages(memberIds, totalAmountCents);
+      return distributePercentageAmounts(splits, totalAmountCents);
     case "shares":
       return distributeShareAmounts(
         splits.map((s) => ({
@@ -66,26 +44,41 @@ export function splitsForTotal(
   }
 }
 
-export function splitsForMethod(
-  method: EditableSplitMethod,
+// Blank members aren't part of the expense, so they're dropped instead of saved at 0
+export function finalizeSplits(
+  method: SplitMethod,
   splits: ExpenseSplit[],
   totalAmountCents: number,
 ): ExpenseSplit[] {
-  switch (method) {
-    case "percentage":
-      return distributePercentageAmounts(
-        derivePercentagesFromAmounts(splits, totalAmountCents),
-        totalAmountCents,
-      );
-    case "shares":
-      return distributeShareAmounts(
-        splits.map((s) => ({ groupMemberId: s.groupMemberId, shares: 1 })),
-        totalAmountCents,
-      );
-    case "equal":
-    case "custom":
-      return splitsForTotal(method, splits, totalAmountCents);
+  if (method === "equal" || method === "shares") {
+    return splitsForTotal(method, splits, totalAmountCents);
   }
+  if (method === "percentage") {
+    return splitsForTotal(
+      method,
+      splits.filter((s) => s.percentage),
+      totalAmountCents,
+    );
+  }
+  return splitsForTotal(
+    "custom",
+    splits.filter((s) => s.amountInCents > 0),
+    totalAmountCents,
+  );
+}
+
+function splitsForMethod(
+  next: EditableSplitMethod,
+  current: EditableSplitMethod,
+  splits: ExpenseSplit[],
+  totalAmountCents: number,
+): ExpenseSplit[] {
+  if (next === current && next !== "equal") return splits;
+  return splitsForTotal(
+    next,
+    splits.map((s) => emptySplit(s.groupMemberId)),
+    totalAmountCents,
+  );
 }
 
 function splitsWithMemberToggled(
@@ -96,17 +89,10 @@ function splitsWithMemberToggled(
 ): ExpenseSplit[] {
   const next = splits.some((s) => s.groupMemberId === memberId)
     ? splits.filter((s) => s.groupMemberId !== memberId)
-    : [
-        ...splits,
-        { groupMemberId: memberId, amountInCents: 0, percentage: null },
-      ];
-  if (next.length === 0) return [];
-  return method === "percentage"
-    ? evenPercentages(
-        next.map((s) => s.groupMemberId),
-        totalAmountCents,
-      )
-    : splitsForTotal(method, next, totalAmountCents);
+    : [...splits, emptySplit(memberId)];
+  return method === "equal" || method === "shares"
+    ? splitsForTotal(method, next, totalAmountCents)
+    : next;
 }
 
 export function splitEditor({
@@ -134,7 +120,9 @@ export function splitEditor({
     totalSplitCents: splits.reduce((sum, s) => sum + s.amountInCents, 0),
     totalShares: splits.reduce((sum, s) => sum + (s.shares ?? 0), 0),
     changeMethod: (next: EditableSplitMethod) => {
-      update((current) => splitsForMethod(next, current, totalAmountCents));
+      update((current) =>
+        splitsForMethod(next, method, current, totalAmountCents),
+      );
       onMethodChange(next);
     },
     toggleMember: (memberId: number) =>
@@ -144,10 +132,7 @@ export function splitEditor({
     setPercentage: (index: number, percentage: number) =>
       setSplits(
         distributePercentageAmounts(
-          replaceAt(index, { percentage }).map((s) => ({
-            groupMemberId: s.groupMemberId,
-            percentage: s.percentage ?? 0,
-          })),
+          replaceAt(index, { percentage }),
           totalAmountCents,
         ),
       ),

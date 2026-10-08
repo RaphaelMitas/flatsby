@@ -18,10 +18,13 @@ import {
   getSubcategoryGroup,
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
-import { distributeEqualAmounts } from "@flatsby/validators/expenses/distribution";
+import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
-import { splitsForTotal } from "@flatsby/validators/expenses/split-editing";
+import {
+  finalizeSplits,
+  splitsForTotal,
+} from "@flatsby/validators/expenses/split-editing";
 import {
   CURRENCY_CODES,
   isCurrencyCode,
@@ -455,14 +458,11 @@ export function ExpenseForm({
   }, [form, categorizeExpenseMutation]);
 
   const onSubmit = (values: ExpenseValues) => {
-    const splits =
-      values.splitMethod === "settlement"
-        ? values.splits
-        : splitsForTotal(
-            values.splitMethod,
-            values.splits,
-            values.amountInCents,
-          );
+    const splits = finalizeSplits(
+      values.splitMethod,
+      values.splits,
+      values.amountInCents,
+    );
 
     if (isEditMode) {
       updateExpenseMutation.mutate({
@@ -514,14 +514,16 @@ export function ExpenseForm({
         const currentSplits = form.getValues("splits");
         const amountCents = form.getValues("amountInCents");
 
-        if (currentSplits.length === 0) {
-          const memberIds = group.groupMembers.map((m) => m.id);
-          const initialSplits = distributeEqualAmounts(memberIds, amountCents);
-          form.setValue("splits", initialSplits);
-        } else if (splitMethod !== "settlement") {
+        if (splitMethod !== "settlement") {
           form.setValue(
             "splits",
-            splitsForTotal(splitMethod, currentSplits, amountCents),
+            splitsForTotal(
+              splitMethod,
+              currentSplits.length > 0
+                ? currentSplits
+                : group.groupMembers.map((m) => emptySplit(m.id)),
+              amountCents,
+            ),
           );
         }
       }
@@ -545,6 +547,11 @@ export function ExpenseForm({
   const description = useWatch({ control: form.control, name: "description" });
   const subcategory = useWatch({ control: form.control, name: "subcategory" });
   const splits = useWatch({ control: form.control, name: "splits" });
+  const participantCount = finalizeSplits(
+    splitMethod,
+    splits,
+    amountInCents,
+  ).length;
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
   const categoryPickerValue =
@@ -780,8 +787,8 @@ export function ExpenseForm({
                     <View className="flex-row justify-between">
                       <Text className="text-muted-foreground">Split:</Text>
                       <Text className="text-foreground font-semibold">
-                        {splits.length}{" "}
-                        {splits.length === 1 ? "person" : "people"} (
+                        {participantCount}{" "}
+                        {participantCount === 1 ? "person" : "people"} (
                         {splitMethod})
                       </Text>
                     </View>

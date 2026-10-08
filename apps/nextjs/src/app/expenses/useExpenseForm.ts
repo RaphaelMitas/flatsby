@@ -16,9 +16,12 @@ import {
   coerceCategory,
   coerceSubcategory,
 } from "@flatsby/validators/expenses/categories";
-import { distributeEqualAmounts } from "@flatsby/validators/expenses/distribution";
+import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
-import { splitsForTotal } from "@flatsby/validators/expenses/split-editing";
+import {
+  finalizeSplits,
+  splitsForTotal,
+} from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 
 import { useTRPC } from "~/trpc/react";
@@ -354,14 +357,11 @@ export function useExpenseForm({
   }, [form, categorizeExpenseMutation]);
 
   const onSubmit = (values: ExpenseValues) => {
-    const splits =
-      values.splitMethod === "settlement"
-        ? values.splits
-        : splitsForTotal(
-            values.splitMethod,
-            values.splits,
-            values.amountInCents,
-          );
+    const splits = finalizeSplits(
+      values.splitMethod,
+      values.splits,
+      values.amountInCents,
+    );
 
     if (isEditMode) {
       updateExpenseMutation.mutate({
@@ -413,14 +413,16 @@ export function useExpenseForm({
         const currentSplits = form.getValues("splits");
         const amountCents = form.getValues("amountInCents");
 
-        if (currentSplits.length === 0) {
-          const memberIds = group.groupMembers.map((m) => m.id);
-          const initialSplits = distributeEqualAmounts(memberIds, amountCents);
-          form.setValue("splits", initialSplits);
-        } else if (splitMethod !== "settlement") {
+        if (splitMethod !== "settlement") {
           form.setValue(
             "splits",
-            splitsForTotal(splitMethod, currentSplits, amountCents),
+            splitsForTotal(
+              splitMethod,
+              currentSplits.length > 0
+                ? currentSplits
+                : group.groupMembers.map((m) => emptySplit(m.id)),
+              amountCents,
+            ),
           );
         }
       }

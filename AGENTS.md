@@ -125,6 +125,7 @@ pnpm db:studio
 pnpm ui-add                   # add shadcn components
 pnpm -F @flatsby/expo typecheck
 pnpm -F @flatsby/nextjs dev
+pnpm with-op <command>        # run any command with secrets from 1Password
 ```
 
 Node and pnpm versions come from `.nvmrc` and the root `packageManager` field. Read
@@ -135,10 +136,26 @@ A few things that will surprise you:
 - `pnpm db:push` is marked interactive in `turbo.json` and fails in a headless shell.
 Run `pnpm -F @flatsby/db push --force` instead, which skips turbo. Push is for local
 dev and the CI e2e database, real changes get a generated migration.
-- Env vars load from a repo-root `.env` via `dotenv`. Exporting them in your shell is
-not enough. `@t3-oss/env-nextjs` validates them at startup and skips validation when
-`CI=true`.
+- Env vars come from the 1Password Environment via `pnpm with-op <command>`, which
+works from any worktree, or from a repo-root `.env` via `dotenv`, which never
+overrides a variable already set. So under `with-op`, 1Password's `DATABASE_URL` wins
+over a worktree's own `.env`; check which database you are on before a push or
+migrate. `@t3-oss/env-nextjs` validates env vars at startup and skips validation
+when `CI=true`.
+- `with-op` needs the 1Password CLI beta (`1password-cli@beta`) with desktop app
+integration, and blocks on an unlock prompt only Ruffy can answer. If it hangs or
+says not signed in, ask rather than retry.
 - `pnpm install` runs `pnpm lint:ws` as a postinstall hook.
 - `pnpm dev:next` is `turbo watch dev`, so shared packages rebuild on change without  
 you restarting anything.
 
+<!-- BEGIN:turborepo-agent-rules -->
+
+# This is NOT the Turborepo you know
+
+Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
+
+Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
+
+This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
+<!-- END:turborepo-agent-rules -->
