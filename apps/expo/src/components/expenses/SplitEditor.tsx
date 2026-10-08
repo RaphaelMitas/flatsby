@@ -212,7 +212,8 @@ export function SplitEditor({
                         onChangeText={(text) =>
                           setShares(index, Number.parseInt(text, 10) || 0)
                         }
-                        className="w-16 text-center"
+                        textAlign="center"
+                        className="w-16 px-2"
                       />
                       <Button
                         testID={`split-member-shares-increment-${index}`}
