@@ -1,5 +1,5 @@
 // ============================================================================
-// Validation Utilities - Verify splits sum correctly
+// Validation Utilities - Check splits before saving
 // ============================================================================
 
 import type {
@@ -143,15 +143,7 @@ export function validateSplits({
   return { isValid: true };
 }
 
-/**
- * Strict validation for expense splits (server-side)
- * No tolerance for rounding - amounts must sum exactly
- *
- * @param expenseAmountInCents - Total expense amount in cents
- * @param splits - Array of splits with amountInCents
- * @param splitMethod - The split method used (settlement requires exactly 1 split)
- * @returns Validation result with error details if invalid
- */
+/** Server-side: no rounding tolerance, amounts must sum exactly */
 export function validateExpenseSplitsStrict(
   expenseAmountInCents: number,
   splits: { amountInCents: number; shares?: number | null }[],

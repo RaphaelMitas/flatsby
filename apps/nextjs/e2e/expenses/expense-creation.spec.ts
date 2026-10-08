@@ -1,6 +1,7 @@
 import { expect, test } from "../fixtures/auth";
 import {
   createEqualSplitExpense,
+  fillExpenseAmount,
   openExpenseDetail,
   openExpenseForm,
   submitEqualSplitExpense,
@@ -61,7 +62,9 @@ test.describe("Expense Creation", () => {
     ).toBeVisible();
   });
 
-  test("creates an expense with shares split", async ({ authPage }) => {
+  test("creates and edits an expense with shares split", async ({
+    authPage,
+  }) => {
     await authPage.goto("/expenses");
     await openExpenseForm(authPage, {
       amount: "90.00",
@@ -103,6 +106,34 @@ test.describe("Expense Creation", () => {
     await openExpenseDetail(authPage, "Groceries split by shares");
     await expect(authPage.getByTestId("expense-split-details")).toContainText(
       "2 of 2 shares",
+    );
+
+    // The created toast sits over the form's Next button until it expires
+    await expect(authPage.getByText("Expense created successfully")).toBeHidden(
+      { timeout: 10000 },
+    );
+    await authPage.getByTestId("expense-edit-button").click();
+    await expect(authPage.getByTestId("expense-form-title")).toContainText(
+      "Edit Expense",
+    );
+    await fillExpenseAmount(authPage, "60.00");
+    await authPage.getByTestId("expense-form-next").click();
+    await expect(
+      splitDetailsCard.getByTestId(/^split-member-shares-\d+$/).first(),
+    ).toHaveValue("2");
+    await expect(splitDetailsCard).toContainText("€60.00");
+
+    await authPage.getByTestId("expense-form-next").click();
+    await authPage.getByTestId("expense-form-submit").click();
+    await expect(authPage.getByTestId("expense-form-title")).not.toBeVisible({
+      timeout: 15000,
+    });
+    await openExpenseDetail(authPage, "Groceries split by shares");
+    await expect(authPage.getByTestId("expense-split-details")).toContainText(
+      "2 of 2 shares",
+    );
+    await expect(authPage.getByTestId("expense-split-details")).toContainText(
+      "€60.00",
     );
   });
 

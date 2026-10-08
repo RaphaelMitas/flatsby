@@ -47,7 +47,7 @@ const TOOLS_SYSTEM_PROMPT = `You have 3 tools to help users manage their househo
    - Entities: "shoppingListItem", "expense", "shoppingList", "group"
    - Use showUI confirmation before destructive delete operations
    - For expenses, specify paidByMemberId or currentUserPaid, and optionally custom splits
-   - For splits by parts (e.g. 2 parts to 1), set splitMethod "shares", give each split a shares count and send amountInCents 0; the server computes the amounts
+   - For splits by parts (e.g. 2 parts to 1), set splitMethod "shares", give each split a shares count and set each split's amountInCents to 0; the server computes the amounts
 
 3. **showUI** - Show interactive UI to the user
    - Components:

@@ -118,7 +118,6 @@ function roundByLargestRemainder(
   const currentSum = flooredAmounts.reduce((a, b) => a + b, 0);
   let remainder = totalAmountCents - currentSum;
 
-  // Sort by fractional part descending to distribute remainder fairly
   const indexed = rawAmounts.map((raw, i) => ({
     index: i,
     fractionalPart: raw - Math.floor(raw),

@@ -2,7 +2,11 @@ import type {
   ExpenseCategoryGroup,
   ExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
-import type { SplitMethod } from "@flatsby/validators/expenses/types";
+import type { UpdateExpenseInput } from "@flatsby/validators/expenses/schemas";
+import type {
+  ExpenseSplit,
+  SplitMethod,
+} from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
@@ -52,6 +56,26 @@ function validateExpenseSplitsEffect(
   }
 
   return fail.validation("splits", result.error, result.userMessage);
+}
+
+function planSplitUpdate(
+  input: Pick<UpdateExpenseInput, "splitMethod" | "amountInCents" | "splits">,
+  row: { splitMethod: string; amountInCents: number },
+) {
+  const method = input.splitMethod ?? splitMethodSchema.parse(row.splitMethod);
+  const amountInCents = input.amountInCents ?? row.amountInCents;
+  return {
+    method,
+    amountInCents,
+    needsStoredSplits:
+      !input.splits &&
+      method === "shares" &&
+      (input.splitMethod !== undefined || input.amountInCents !== undefined),
+    splitsFrom: (stored: ExpenseSplit[] | null) => {
+      const source = input.splits ?? stored;
+      return source && splitsForStorage(method, source, amountInCents);
+    },
+  };
 }
 
 function coerceCategory(
@@ -224,18 +248,10 @@ export const expenseRouter = createTRPCRouter({
             "expense",
           ),
           (expense) => {
-            const splitMethod =
-              input.splitMethod ?? splitMethodSchema.parse(expense.splitMethod);
-            const amountInCents = input.amountInCents ?? expense.amountInCents;
-            const resplitStored =
-              splitMethod === "shares" &&
-              (input.splitMethod !== undefined ||
-                input.amountInCents !== undefined);
-            const sourceSplits =
-              input.splits ?? (resplitStored ? expense.expenseSplits : null);
-            const splits =
-              sourceSplits &&
-              splitsForStorage(splitMethod, sourceSplits, amountInCents);
+            const plan = planSplitUpdate(input, expense);
+            const splits = plan.splitsFrom(
+              plan.needsStoredSplits ? expense.expenseSplits : null,
+            );
 
             return Effect.flatMap(
               DbUtils.ensureGroupMember(
@@ -247,9 +263,9 @@ export const expenseRouter = createTRPCRouter({
                 Effect.flatMap(
                   splits
                     ? validateExpenseSplitsEffect(
-                        amountInCents,
+                        plan.amountInCents,
                         splits,
-                        splitMethod,
+                        plan.method,
                       )
                     : Effect.succeed(undefined),
                   () =>
@@ -294,39 +310,23 @@ export const expenseRouter = createTRPCRouter({
                             .for("update");
                           if (!locked) throw new Error("Expense was deleted");
 
-                          const lockedMethod =
-                            input.splitMethod ??
-                            splitMethodSchema.parse(locked.splitMethod);
-                          const lockedAmount =
-                            input.amountInCents ?? locked.amountInCents;
-                          const resplitStored =
-                            !input.splits &&
-                            lockedMethod === "shares" &&
-                            (input.splitMethod !== undefined ||
-                              input.amountInCents !== undefined);
-                          const sourceSplits =
-                            input.splits ??
-                            (resplitStored
+                          const lockedPlan = planSplitUpdate(input, locked);
+                          const splitsToWrite = lockedPlan.splitsFrom(
+                            lockedPlan.needsStoredSplits
                               ? await trx.query.expenseSplits.findMany({
                                   where: eq(
                                     expenseSplits.expenseId,
                                     input.expenseId,
                                   ),
                                 })
-                              : null);
-                          const splitsToWrite =
-                            sourceSplits &&
-                            splitsForStorage(
-                              lockedMethod,
-                              sourceSplits,
-                              lockedAmount,
-                            );
+                              : null,
+                          );
                           if (
                             splitsToWrite &&
                             !validateExpenseSplitsStrict(
-                              lockedAmount,
+                              lockedPlan.amountInCents,
                               splitsToWrite,
-                              lockedMethod,
+                              lockedPlan.method,
                             ).valid
                           ) {
                             throw new Error(
@@ -368,6 +368,19 @@ export const expenseRouter = createTRPCRouter({
                               .update(expenses)
                               .set(updateData)
                               .where(eq(expenses.id, input.expenseId));
+                          }
+
+                          if (
+                            !splitsToWrite &&
+                            input.splitMethod !== undefined &&
+                            lockedPlan.method !== "shares"
+                          ) {
+                            await trx
+                              .update(expenseSplits)
+                              .set({ shares: null })
+                              .where(
+                                eq(expenseSplits.expenseId, input.expenseId),
+                              );
                           }
 
                           if (splitsToWrite) {
