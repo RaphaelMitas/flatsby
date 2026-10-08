@@ -13,7 +13,7 @@ import { z, ZodError } from "zod/v4";
 
 import { db } from "@flatsby/db/client";
 
-import { captureEvent, posthog } from "./lib/posthog";
+import { captureEvent } from "./lib/posthog";
 
 /**
  * 1. CONTEXT
@@ -87,16 +87,9 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
  */
 export const createTRPCRouter = t.router;
 
-/**
- * Middleware for timing procedure execution and adding an artificial delay in development.
- *
- * The delay helps catch unwanted waterfalls by simulating network latency that would occur in
- * production but not in local development. In production, mutation timings are attached to the
- * mutation's analytics event.
- */
 const timingMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
   if (t._config.isDev) {
-    // artificial delay in dev 100-500ms
+    // simulates production latency so request waterfalls show up locally
     const waitMs = Math.floor(Math.random() * 400) + 100;
     await new Promise((resolve) => setTimeout(resolve, waitMs));
   }
@@ -110,18 +103,20 @@ const timingMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
   }
 
   if (
-    posthog &&
     ctx.session?.user.id &&
     type === "mutation" &&
     !path.startsWith("analytics.")
   ) {
-    void captureEvent({
+    // a streaming procedure returns before its body runs, so its duration would read ~0ms
+    const isStream = result.ok && Symbol.asyncIterator in Object(result.data);
+    captureEvent({
       distinctId: ctx.session.user.id,
       event: path,
       headers: ctx.headers,
       additionalProperties: {
         procedure: path,
-        durationMs,
+        ok: result.ok,
+        durationMs: isStream ? undefined : durationMs,
         authMs: ctx.authMs,
       },
     });
