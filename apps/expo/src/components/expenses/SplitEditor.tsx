@@ -9,7 +9,6 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { useWatch } from "react-hook-form";
 
 import {
-  derivePercentagesFromAmounts,
   distributeEqualAmounts,
   distributePercentageAmounts,
 } from "@flatsby/validators/expenses/distribution";
@@ -54,22 +53,20 @@ export function SplitEditor({
   const handleSplitMethodChange = (
     newMethod: Exclude<SplitMethod, "settlement">,
   ) => {
-    const currentSplits = form.getValues("splits");
-    const memberIds = currentSplits.map((s) => s.groupMemberId);
+    const memberIds = form.getValues("splits").map((s) => s.groupMemberId);
 
-    if (newMethod === "equal" && memberIds.length > 0) {
-      const updatedSplits = distributeEqualAmounts(memberIds, totalAmountCents);
-      form.setValue("splits", updatedSplits, { shouldValidate: true });
-    } else if (newMethod === "percentage" && memberIds.length > 0) {
-      const splitsWithPercentages = derivePercentagesFromAmounts(
-        currentSplits,
-        totalAmountCents,
+    if (newMethod === "equal") {
+      form.setValue(
+        "splits",
+        distributeEqualAmounts(memberIds, totalAmountCents),
+        { shouldValidate: true },
       );
-      const updatedSplits = distributePercentageAmounts(
-        splitsWithPercentages,
-        totalAmountCents,
+    } else if (newMethod !== splitMethod) {
+      form.setValue(
+        "splits",
+        memberIds.map((groupMemberId) => emptySplit(groupMemberId)),
+        { shouldValidate: true },
       );
-      form.setValue("splits", updatedSplits, { shouldValidate: true });
     }
 
     onSplitMethodChange(newMethod);
@@ -77,70 +74,23 @@ export function SplitEditor({
 
   const toggleMember = (memberId: number) => {
     const currentSplits = form.getValues("splits");
-    const memberIndex = currentSplits.findIndex(
-      (s: { groupMemberId: number }) => s.groupMemberId === memberId,
-    );
+    const isSelected = currentSplits.some((s) => s.groupMemberId === memberId);
 
-    if (memberIndex >= 0) {
-      // Remove member
-      const newSplits: ExpenseSplit[] = currentSplits.filter(
-        (_: unknown, index: number) => index !== memberIndex,
+    if (splitMethod === "equal") {
+      const memberIds = currentSplits.map((s) => s.groupMemberId);
+      const updatedMemberIds = isSelected
+        ? memberIds.filter((id) => id !== memberId)
+        : [...memberIds, memberId];
+      form.setValue(
+        "splits",
+        distributeEqualAmounts(updatedMemberIds, totalAmountCents),
+        { shouldValidate: true },
       );
-
-      if (newSplits.length > 0) {
-        const remainingMemberIds = newSplits.map((s) => s.groupMemberId);
-        if (splitMethod === "equal") {
-          // Recalculate equal amounts with proper distribution
-          const updatedSplits = distributeEqualAmounts(
-            remainingMemberIds,
-            totalAmountCents,
-          );
-          form.setValue("splits", updatedSplits, { shouldValidate: true });
-        } else if (splitMethod === "percentage") {
-          // Recalculate percentages evenly
-          const updatedSplits = distributeEqualAmounts(
-            remainingMemberIds,
-            totalAmountCents,
-          );
-          form.setValue("splits", updatedSplits, { shouldValidate: true });
-        } else {
-          form.setValue("splits", newSplits, { shouldValidate: true });
-        }
-      } else {
-        form.setValue("splits", newSplits, { shouldValidate: true });
-      }
     } else {
-      // Add member
-      const allMemberIds = [
-        ...currentSplits.map((s) => s.groupMemberId),
-        memberId,
-      ];
-
-      if (splitMethod === "equal") {
-        // Recalculate all splits with proper distribution
-        const updatedSplits = distributeEqualAmounts(
-          allMemberIds,
-          totalAmountCents,
-        );
-        form.setValue("splits", updatedSplits, { shouldValidate: true });
-      } else if (splitMethod === "percentage") {
-        // Recalculate for all members including the new one
-        const updatedSplits = distributeEqualAmounts(
-          allMemberIds,
-          totalAmountCents,
-        );
-        form.setValue("splits", updatedSplits, { shouldValidate: true });
-      } else {
-        // Custom mode - add with zero amount
-        const newSplit: ExpenseSplit = {
-          groupMemberId: memberId,
-          amountInCents: 0,
-          percentage: null,
-        };
-        form.setValue("splits", [...currentSplits, newSplit], {
-          shouldValidate: true,
-        });
-      }
+      const updatedSplits = isSelected
+        ? currentSplits.filter((s) => s.groupMemberId !== memberId)
+        : [...currentSplits, emptySplit(memberId)];
+      form.setValue("splits", updatedSplits, { shouldValidate: true });
     }
   };
 
@@ -394,4 +344,8 @@ export function SplitEditor({
       )}
     </View>
   );
+}
+
+function emptySplit(groupMemberId: number): ExpenseSplit {
+  return { groupMemberId, amountInCents: 0, percentage: null };
 }

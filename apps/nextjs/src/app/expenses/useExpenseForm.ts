@@ -20,7 +20,6 @@ import {
   coerceSubcategory,
 } from "@flatsby/validators/expenses/categories";
 import {
-  calculateEvenPercentageBasisPoints,
   distributeEqualAmounts,
   distributePercentageAmounts,
 } from "@flatsby/validators/expenses/distribution";
@@ -436,38 +435,19 @@ export function useExpenseForm({
           const memberIds = currentSplits.map((s) => s.groupMemberId);
           const updatedSplits = distributeEqualAmounts(memberIds, amountCents);
           form.setValue("splits", updatedSplits);
-        } else if (splitMethod === "percentage") {
-          const hasPercentages = currentSplits.some(
-            (s) => s.percentage && s.percentage > 0,
+        } else if (
+          splitMethod === "percentage" &&
+          currentSplits.some((s) => s.percentage)
+        ) {
+          const splitsWithPercentages = currentSplits.map((s) => ({
+            groupMemberId: s.groupMemberId,
+            percentage: s.percentage ?? 0,
+          }));
+          const updatedSplits = distributePercentageAmounts(
+            splitsWithPercentages,
+            amountCents,
           );
-
-          if (hasPercentages) {
-            const splitsWithPercentages = currentSplits.map((s) => ({
-              groupMemberId: s.groupMemberId,
-              percentage: s.percentage ?? 0,
-            }));
-            const updatedSplits = distributePercentageAmounts(
-              splitsWithPercentages,
-              amountCents,
-            );
-            form.setValue("splits", updatedSplits);
-          } else {
-            const memberIds = currentSplits.map((s) => s.groupMemberId);
-            const percentages = calculateEvenPercentageBasisPoints(
-              memberIds.length,
-            );
-            const splitsWithPercentages = memberIds.map(
-              (groupMemberId, index) => ({
-                groupMemberId,
-                percentage: percentages[index] ?? 0,
-              }),
-            );
-            const updatedSplits = distributePercentageAmounts(
-              splitsWithPercentages,
-              amountCents,
-            );
-            form.setValue("splits", updatedSplits);
-          }
+          form.setValue("splits", updatedSplits);
         }
       }
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));

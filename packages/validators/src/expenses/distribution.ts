@@ -101,32 +101,6 @@ export function distributePercentageAmounts(
 }
 
 /**
- * Calculate even percentage distribution for a number of members
- * Returns percentages in basis points (100% = 10000) with remainder distributed round-robin
- *
- * @param memberCount - Number of members to split between
- * @returns Array of basis points for each member (sums to 10000)
- */
-export function calculateEvenPercentageBasisPoints(
-  memberCount: number,
-): number[] {
-  if (memberCount <= 0) return [];
-
-  const basePercentage = Math.floor(10000 / memberCount);
-  let remainingBasisPoints = 10000 - basePercentage * memberCount;
-
-  const percentages: number[] = [];
-  for (let i = 0; i < memberCount; i++) {
-    // Distribute remainder round-robin
-    const extra = remainingBasisPoints > 0 ? 1 : 0;
-    percentages.push(basePercentage + extra);
-    if (remainingBasisPoints > 0) remainingBasisPoints--;
-  }
-
-  return percentages;
-}
-
-/**
  * Convert percentage in basis points to amount in cents
  * Note: This function is for display/calculation purposes only.
  * For actual distribution, use distributePercentageAmounts to avoid rounding issues.
@@ -140,41 +114,4 @@ export function percentageToAmountCents(
   percentageBasisPoints: number,
 ): number {
   return Math.round((percentageBasisPoints / 10000) * totalAmountCents);
-}
-
-/**
- * Derive percentages from current amounts
- * Used when switching split methods to preserve the current distribution
- *
- * @param splits - Array of splits with groupMemberId and amountInCents
- * @param totalAmountCents - Total amount in cents
- * @returns Array with groupMemberId and percentage in basis points
- *
- * @example
- * derivePercentagesFromAmounts(
- *   [{ groupMemberId: 1, amountInCents: 30 }, { groupMemberId: 2, amountInCents: 70 }],
- *   100
- * )
- * // Returns: [
- * //   { groupMemberId: 1, percentage: 3000 },
- * //   { groupMemberId: 2, percentage: 7000 }
- * // ]
- */
-export function derivePercentagesFromAmounts(
-  splits: { groupMemberId: number; amountInCents: number }[],
-  totalAmountCents: number,
-): { groupMemberId: number; percentage: number }[] {
-  if (totalAmountCents === 0) {
-    // Fallback to even distribution when total is zero
-    const evenPercentages = calculateEvenPercentageBasisPoints(splits.length);
-    return splits.map((s, i) => ({
-      groupMemberId: s.groupMemberId,
-      percentage: evenPercentages[i] ?? 0,
-    }));
-  }
-
-  return splits.map((s) => ({
-    groupMemberId: s.groupMemberId,
-    percentage: Math.round((s.amountInCents / totalAmountCents) * 10000),
-  }));
 }
