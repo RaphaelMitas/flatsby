@@ -9,10 +9,17 @@ import {
   distributeShareAmounts,
   emptySplit,
 } from "./distribution";
+import { splitMethodSchema } from "./schemas";
 import { MAX_SHARES } from "./types";
 import { validateSplits } from "./validation";
 
 export type EditableSplitMethod = Exclude<SplitMethod, "settlement">;
+
+export function isEditableSplitMethod(
+  method: string | undefined,
+): method is EditableSplitMethod {
+  return splitMethodSchema.exclude(["settlement"]).safeParse(method).success;
+}
 
 export function splitsForTotal(
   method: EditableSplitMethod,

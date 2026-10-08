@@ -88,6 +88,10 @@ export function formatExpenseDateLong(
   });
 }
 
+export function formatShareCount(count: number): string {
+  return `${count} ${count === 1 ? "share" : "shares"}`;
+}
+
 export function formatSplitPortion({
   split,
   expense,
@@ -104,7 +108,7 @@ export function formatSplitPortion({
       (sum, s) => sum + (s.shares ?? 0),
       0,
     );
-    return `${split.shares ?? 0} of ${totalShares} ${totalShares === 1 ? "share" : "shares"}`;
+    return `${split.shares ?? 0} of ${formatShareCount(totalShares)}`;
   }
   const percentage =
     expense.amountInCents === 0

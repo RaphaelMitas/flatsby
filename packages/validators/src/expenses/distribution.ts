@@ -2,7 +2,7 @@
 // Distribution Algorithms - Split amounts in cents
 // ============================================================================
 
-import type { ExpenseSplit } from "./types";
+import type { ExpenseSplit, SplitMethod } from "./types";
 
 /**
  * Distribute an amount equally among members
@@ -91,6 +91,23 @@ export function distributeShareAmounts(
     percentage: null,
     shares: split.shares,
   }));
+}
+
+// The server derives share amounts from the counts, so callers never have to match its rounding
+export function splitsForStorage(
+  method: SplitMethod,
+  splits: ExpenseSplit[],
+  totalAmountCents: number,
+): ExpenseSplit[] {
+  return method === "shares"
+    ? distributeShareAmounts(
+        splits.map((s) => ({
+          groupMemberId: s.groupMemberId,
+          shares: s.shares ?? 0,
+        })),
+        totalAmountCents,
+      )
+    : splits.map((s) => ({ ...s, shares: null }));
 }
 
 function roundByLargestRemainder(

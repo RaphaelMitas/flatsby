@@ -23,6 +23,7 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
   finalizeSplits,
+  isEditableSplitMethod,
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
 import {
@@ -153,13 +154,11 @@ export function ExpenseForm({
     : undefined;
 
   // Determine the initial split method from the expense or default to "equal"
-  const initialSplitMethod: SplitMethod =
-    expense?.splitMethod === "equal" ||
-    expense?.splitMethod === "percentage" ||
-    expense?.splitMethod === "shares" ||
-    expense?.splitMethod === "custom"
-      ? expense.splitMethod
-      : "equal";
+  const initialSplitMethod: SplitMethod = isEditableSplitMethod(
+    expense?.splitMethod,
+  )
+    ? expense.splitMethod
+    : "equal";
 
   const form = useFormHook<ExpenseValues, ExpenseValues>({
     schema: expenseSchemaWithValidateSplits,

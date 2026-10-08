@@ -20,6 +20,7 @@ import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
   finalizeSplits,
+  isEditableSplitMethod,
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
@@ -57,13 +58,11 @@ export function useExpenseForm({
       })
     : undefined;
 
-  const initialSplitMethod: SplitMethod =
-    expense?.splitMethod === "equal" ||
-    expense?.splitMethod === "percentage" ||
-    expense?.splitMethod === "shares" ||
-    expense?.splitMethod === "custom"
-      ? expense.splitMethod
-      : "equal";
+  const initialSplitMethod: SplitMethod = isEditableSplitMethod(
+    expense?.splitMethod,
+  )
+    ? expense.splitMethod
+    : "equal";
 
   const form = useForm<ExpenseValues>({
     resolver: zodResolver(expenseSchemaWithValidateSplits),

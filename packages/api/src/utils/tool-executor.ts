@@ -31,7 +31,11 @@ import {
 } from "@flatsby/db/schema";
 import { categoryIdSchema } from "@flatsby/validators/categories";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
-import { currencyCodeSchema } from "@flatsby/validators/expenses/schemas";
+import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
+import {
+  currencyCodeSchema,
+  splitMethodSchema,
+} from "@flatsby/validators/expenses/schemas";
 
 import type { RouterCaller } from "../root";
 import type { Database } from "../types";
@@ -234,10 +238,12 @@ export async function executeSearchData(
             paidByMemberId: e.paidByGroupMemberId,
             paidByMemberName: e.paidByGroupMember.user.name,
             expenseDate: e.expenseDate,
+            splitMethod: splitMethodSchema.safeParse(e.splitMethod).data,
             splits: e.expenseSplits.map((s) => ({
               memberId: s.groupMemberId,
               memberName: s.groupMember.user.name,
               amountInCents: s.amountInCents,
+              shares: s.shares,
             })),
           })),
         },
@@ -577,7 +583,11 @@ async function handleExpenseCreate(
       currency: parseCurrency(data.currency),
       paidByMemberName:
         memberIdToName.get(data.paidByGroupMemberId) ?? "Unknown",
-      splits: data.splits.map((s) => ({
+      splits: splitsForStorage(
+        data.splitMethod,
+        data.splits,
+        data.amountInCents,
+      ).map((s) => ({
         memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
         amountInCents: s.amountInCents,
       })),
@@ -694,7 +704,11 @@ async function handleExpenseUpdate(
   // Use ternary to distinguish between undefined (not provided) and null/string (provided value)
   const outputDescription =
     data.description !== undefined ? data.description : expense.description;
-  const outputSplits = data.splits ?? expense.expenseSplits;
+  const outputSplitMethod =
+    data.splitMethod ?? splitMethodSchema.parse(expense.splitMethod);
+  const outputSplits = data.splits
+    ? splitsForStorage(outputSplitMethod, data.splits, outputAmount)
+    : expense.expenseSplits;
 
   return handleApiResult(result, "update", "expense", () => ({
     success: true,

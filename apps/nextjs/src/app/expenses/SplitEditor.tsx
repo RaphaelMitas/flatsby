@@ -19,7 +19,10 @@ import {
 } from "@flatsby/ui/card";
 import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  formatShareCount,
+} from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import { CurrencyInput } from "~/components/CurrencyInput";
@@ -75,20 +78,23 @@ export function SplitEditor({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2">
-        {SPLIT_METHOD_OPTIONS.map(({ method, label, Icon }) => (
-          <Button
-            key={method}
-            type="button"
-            variant={splitMethod === method ? "default" : "outline"}
-            size="sm"
-            onClick={() => changeMethod(method)}
-            data-testid={`split-method-${method}`}
-          >
-            <Icon className="mr-2 h-4 w-4" />
-            {label}
-          </Button>
-        ))}
+      <div className="@container">
+        <div className="grid grid-cols-2 gap-2 @md:flex">
+          {SPLIT_METHOD_OPTIONS.map(({ method, label, Icon }) => (
+            <Button
+              key={method}
+              type="button"
+              variant={splitMethod === method ? "default" : "outline"}
+              size="sm"
+              onClick={() => changeMethod(method)}
+              className="grow"
+              data-testid={`split-method-${method}`}
+            >
+              <Icon className="mr-2 h-4 w-4" />
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       <Card>
@@ -200,7 +206,7 @@ export function SplitEditor({
                         size="icon-sm"
                         onClick={() => setShares(index, shares - 1)}
                         disabled={shares <= 1}
-                        aria-label="Fewer shares"
+                        aria-label={`Fewer shares for ${memberName}`}
                         data-testid={`split-member-shares-decrement-${split.groupMemberId}`}
                       >
                         <Minus />
@@ -217,6 +223,7 @@ export function SplitEditor({
                           )
                         }
                         className="w-16 text-center"
+                        aria-label={`Shares for ${memberName}`}
                         data-testid={`split-member-shares-${split.groupMemberId}`}
                       />
                       <Button
@@ -224,14 +231,13 @@ export function SplitEditor({
                         variant="outline"
                         size="icon-sm"
                         onClick={() => setShares(index, shares + 1)}
-                        aria-label="More shares"
+                        aria-label={`More shares for ${memberName}`}
                         data-testid={`split-member-shares-increment-${split.groupMemberId}`}
                       >
                         <Plus />
                       </Button>
                       <span className="text-muted-foreground text-sm">
-                        of {totalShares}{" "}
-                        {totalShares === 1 ? "share" : "shares"}
+                        of {formatShareCount(totalShares)}
                       </span>
                     </div>
                   )}

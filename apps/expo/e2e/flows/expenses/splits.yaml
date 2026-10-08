@@ -130,8 +130,9 @@ tags:
 - tapOn:
     id: "expense-form-submit"
 - extendedWaitUntil:
-    visible: "Shares groceries"
-    timeout: 20000
+    visible:
+      id: "expense-card-Shares groceries"
+    timeout: 45000
 - tapOn: "Shares groceries"
 - extendedWaitUntil:
     visible:

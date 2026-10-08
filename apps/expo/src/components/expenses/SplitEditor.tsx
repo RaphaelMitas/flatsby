@@ -5,7 +5,10 @@ import type { UseFormReturn } from "react-hook-form";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useWatch } from "react-hook-form";
 
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  formatShareCount,
+} from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
@@ -200,7 +203,7 @@ export function SplitEditor({
                         icon="minus"
                         onPress={() => setShares(index, shares - 1)}
                         disabled={shares <= 1}
-                        accessibilityLabel="Fewer shares"
+                        accessibilityLabel={`Fewer shares for ${memberName}`}
                       />
                       <Input
                         testID={`split-member-shares-${index}`}
@@ -217,11 +220,10 @@ export function SplitEditor({
                         size="icon"
                         icon="plus"
                         onPress={() => setShares(index, shares + 1)}
-                        accessibilityLabel="More shares"
+                        accessibilityLabel={`More shares for ${memberName}`}
                       />
                       <Text className="text-muted-foreground text-sm">
-                        of {totalShares}{" "}
-                        {totalShares === 1 ? "share" : "shares"}
+                        of {formatShareCount(totalShares)}
                       </Text>
                     </View>
                   )}

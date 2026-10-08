@@ -16,6 +16,7 @@ import {
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
+import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
 import {
   createExpenseSchema,
   deleteExpenseSchema,
@@ -91,6 +92,11 @@ export const expenseRouter = createTRPCRouter({
   createExpense: protectedProcedure
     .input(createExpenseSchema)
     .mutation(async ({ ctx, input }) => {
+      const splits = splitsForStorage(
+        input.splitMethod,
+        input.splits,
+        input.amountInCents,
+      );
       return withErrorHandlingAsResult(
         Effect.flatMap(
           // Get group with access check
@@ -104,7 +110,7 @@ export const expenseRouter = createTRPCRouter({
               // Validate splits sum to expense amount
               validateExpenseSplitsEffect(
                 input.amountInCents,
-                input.splits,
+                splits,
                 input.splitMethod,
               ),
               () =>
@@ -125,7 +131,7 @@ export const expenseRouter = createTRPCRouter({
                     Effect.flatMap(
                       // Verify all split groupMemberIds are active members of the group
                       Effect.forEach(
-                        input.splits,
+                        splits,
                         (split) =>
                           DbUtils.findOneOrFail(
                             () =>
@@ -175,7 +181,7 @@ export const expenseRouter = createTRPCRouter({
                               }
 
                               await trx.insert(expenseSplits).values(
-                                input.splits.map((split) => ({
+                                splits.map((split) => ({
                                   expenseId: expense.id,
                                   groupMemberId: split.groupMemberId,
                                   amountInCents: split.amountInCents,
@@ -213,12 +219,26 @@ export const expenseRouter = createTRPCRouter({
                       },
                     },
                   },
+                  expenseSplits: true,
                 },
               }),
             "expense",
           ),
-          (expense) =>
-            Effect.flatMap(
+          (expense) => {
+            const splitMethod =
+              input.splitMethod ?? splitMethodSchema.parse(expense.splitMethod);
+            const amountInCents = input.amountInCents ?? expense.amountInCents;
+            const reshareStored =
+              splitMethod === "shares" &&
+              (input.splitMethod !== undefined ||
+                input.amountInCents !== undefined);
+            const sourceSplits =
+              input.splits ?? (reshareStored ? expense.expenseSplits : null);
+            const splits =
+              sourceSplits &&
+              splitsForStorage(splitMethod, sourceSplits, amountInCents);
+
+            return Effect.flatMap(
               DbUtils.ensureGroupMember(
                 ctx.session.user.id,
                 expense.group.groupMembers,
@@ -226,33 +246,24 @@ export const expenseRouter = createTRPCRouter({
               ),
               () =>
                 Effect.flatMap(
-                  // If updating splits, validate they sum correctly
-                  input.splits && input.amountInCents
+                  splits
                     ? validateExpenseSplitsEffect(
-                        input.amountInCents,
-                        input.splits,
-                        input.splitMethod ??
-                          splitMethodSchema.parse(expense.splitMethod),
+                        amountInCents,
+                        splits,
+                        splitMethod,
                       )
-                    : input.splits && !input.amountInCents
-                      ? validateExpenseSplitsEffect(
-                          expense.amountInCents,
-                          input.splits,
-                          input.splitMethod ??
-                            splitMethodSchema.parse(expense.splitMethod),
-                        )
-                      : Effect.succeed(undefined),
+                    : Effect.succeed(undefined),
                   () =>
                     Effect.flatMap(
                       // Verify group members if updating (must be active)
-                      input.paidByGroupMemberId || input.splits
+                      input.paidByGroupMemberId || splits
                         ? Effect.forEach(
                             [
                               ...(input.paidByGroupMemberId
                                 ? [{ groupMemberId: input.paidByGroupMemberId }]
                                 : []),
-                              ...(input.splits
-                                ? input.splits.map((s) => ({
+                              ...(splits
+                                ? splits.map((s) => ({
                                     groupMemberId: s.groupMemberId,
                                   }))
                                 : []),
@@ -310,8 +321,7 @@ export const expenseRouter = createTRPCRouter({
                               .where(eq(expenses.id, input.expenseId));
                           }
 
-                          // Update splits if provided
-                          if (input.splits) {
+                          if (splits) {
                             // Delete existing splits
                             await trx
                               .delete(expenseSplits)
@@ -321,7 +331,7 @@ export const expenseRouter = createTRPCRouter({
 
                             // Insert new splits
                             await trx.insert(expenseSplits).values(
-                              input.splits.map((split) => ({
+                              splits.map((split) => ({
                                 expenseId: input.expenseId,
                                 groupMemberId: split.groupMemberId,
                                 amountInCents: split.amountInCents,
@@ -335,7 +345,8 @@ export const expenseRouter = createTRPCRouter({
                         }, "update expense")(ctx.db),
                     ),
                 ),
-            ),
+            );
+          },
         ),
       );
     }),
@@ -854,7 +865,6 @@ export const expenseRouter = createTRPCRouter({
                         groupMemberId: number;
                         amountInCents: number;
                         percentage: number | null;
-                        shares?: number | null;
                       }[] = [];
 
                       for (let i = 0; i < input.expenses.length; i++) {
@@ -867,7 +877,6 @@ export const expenseRouter = createTRPCRouter({
                             groupMemberId: split.groupMemberId,
                             amountInCents: split.amountInCents,
                             percentage: split.percentage,
-                            shares: split.shares,
                           });
                         }
                       }
