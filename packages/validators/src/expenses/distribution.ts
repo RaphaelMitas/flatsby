@@ -40,6 +40,10 @@ export function distributeEqualAmounts(
   }));
 }
 
+export function emptySplit(groupMemberId: number): ExpenseSplit {
+  return { groupMemberId, amountInCents: 0, percentage: null };
+}
+
 /**
  * Distribute an amount based on percentages (in basis points)
  * Uses largest remainder method to distribute rounding errors fairly
@@ -69,7 +73,10 @@ export function distributePercentageAmounts(
   // Floor all amounts
   const flooredAmounts = rawAmounts.map((a) => Math.floor(a));
   const currentSum = flooredAmounts.reduce((a, b) => a + b, 0);
-  let remainder = totalAmountCents - currentSum;
+  const totalBasisPoints = splits.reduce((sum, s) => sum + s.percentage, 0);
+  // Partial input would hand every member a stray cent; tolerance matches validateSplits
+  let remainder =
+    Math.abs(totalBasisPoints - 10000) <= 1 ? totalAmountCents - currentSum : 0;
 
   // Sort by fractional part descending to distribute remainder fairly
   const indexed = rawAmounts.map((raw, i) => ({

@@ -22,6 +22,7 @@ import {
 import {
   distributeEqualAmounts,
   distributePercentageAmounts,
+  emptySplit,
 } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
@@ -361,20 +362,24 @@ export function useExpenseForm({
       const memberIds = values.splits.map((s) => s.groupMemberId);
       splits = distributeEqualAmounts(memberIds, values.amountInCents);
     } else if (values.splitMethod === "percentage") {
-      const splitsWithPercentages = values.splits.map((s) => ({
-        groupMemberId: s.groupMemberId,
-        percentage: s.percentage ?? 0,
-      }));
+      const splitsWithPercentages = values.splits
+        .filter((s) => s.percentage)
+        .map((s) => ({
+          groupMemberId: s.groupMemberId,
+          percentage: s.percentage ?? 0,
+        }));
       splits = distributePercentageAmounts(
         splitsWithPercentages,
         values.amountInCents,
       );
     } else {
-      splits = values.splits.map((split) => ({
-        groupMemberId: split.groupMemberId,
-        amountInCents: split.amountInCents,
-        percentage: null,
-      }));
+      splits = values.splits
+        .filter((split) => split.amountInCents > 0)
+        .map((split) => ({
+          groupMemberId: split.groupMemberId,
+          amountInCents: split.amountInCents,
+          percentage: null,
+        }));
     }
 
     if (isEditMode) {
@@ -429,16 +434,17 @@ export function useExpenseForm({
 
         if (currentSplits.length === 0) {
           const memberIds = group.groupMembers.map((m) => m.id);
-          const initialSplits = distributeEqualAmounts(memberIds, amountCents);
-          form.setValue("splits", initialSplits);
+          form.setValue(
+            "splits",
+            splitMethod === "equal"
+              ? distributeEqualAmounts(memberIds, amountCents)
+              : memberIds.map((groupMemberId) => emptySplit(groupMemberId)),
+          );
         } else if (splitMethod === "equal") {
           const memberIds = currentSplits.map((s) => s.groupMemberId);
           const updatedSplits = distributeEqualAmounts(memberIds, amountCents);
           form.setValue("splits", updatedSplits);
-        } else if (
-          splitMethod === "percentage" &&
-          currentSplits.some((s) => s.percentage)
-        ) {
+        } else if (splitMethod === "percentage") {
           const splitsWithPercentages = currentSplits.map((s) => ({
             groupMemberId: s.groupMemberId,
             percentage: s.percentage ?? 0,

@@ -11,6 +11,7 @@ import { useWatch } from "react-hook-form";
 import {
   distributeEqualAmounts,
   distributePercentageAmounts,
+  emptySplit,
 } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { validateSplits } from "@flatsby/validators/expenses/validation";
@@ -344,8 +345,4 @@ export function SplitEditor({
       )}
     </View>
   );
-}
-
-function emptySplit(groupMemberId: number): ExpenseSplit {
-  return { groupMemberId, amountInCents: 0, percentage: null };
 }
