@@ -125,7 +125,7 @@ pnpm db:studio
 pnpm ui-add                   # add shadcn components
 pnpm -F @flatsby/expo typecheck
 pnpm -F @flatsby/nextjs dev
-pnpm with-op pnpm dev:next   # web only, secrets from 1Password instead of .env
+pnpm with-op <command>        # run any command with secrets from 1Password
 ```
 
 Node and pnpm versions come from `.nvmrc` and the root `packageManager` field. Read
@@ -138,8 +138,13 @@ Run `pnpm -F @flatsby/db push --force` instead, which skips turbo. Push is for l
 dev and the CI e2e database, real changes get a generated migration.
 - Env vars come from the 1Password Environment via `pnpm with-op <command>`, which
 works from any worktree, or from a repo-root `.env` via `dotenv`, which never
-overrides a variable already set. `@t3-oss/env-nextjs` validates them at startup and
-skips validation when `CI=true`.
+overrides a variable already set. So under `with-op`, 1Password's `DATABASE_URL` wins
+over a worktree's own `.env`; check which database you are on before a push or
+migrate. `@t3-oss/env-nextjs` validates env vars at startup and skips validation
+when `CI=true`.
+- `with-op` needs the 1Password CLI beta (`1password-cli@beta`) with desktop app
+integration, and blocks on an unlock prompt only Ruffy can answer. If it hangs or
+says not signed in, ask rather than retry.
 - `pnpm install` runs `pnpm lint:ws` as a postinstall hook.
 - `pnpm dev:next` is `turbo watch dev`, so shared packages rebuild on change without  
 you restarting anything.
