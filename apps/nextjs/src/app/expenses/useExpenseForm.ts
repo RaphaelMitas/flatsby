@@ -5,10 +5,7 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import type {
-  ExpenseSplit,
-  SplitMethod,
-} from "@flatsby/validators/expenses/types";
+import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useCallback, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,9 +17,10 @@ import {
   coerceSubcategory,
 } from "@flatsby/validators/expenses/categories";
 import {
-  calculateEvenPercentageBasisPoints,
   distributeEqualAmounts,
   distributePercentageAmounts,
+  emptySplit,
+  finalizeSplits,
 } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
@@ -356,27 +354,11 @@ export function useExpenseForm({
   }, [form, categorizeExpenseMutation]);
 
   const onSubmit = (values: ExpenseValues) => {
-    let splits: ExpenseSplit[];
-
-    if (values.splitMethod === "equal") {
-      const memberIds = values.splits.map((s) => s.groupMemberId);
-      splits = distributeEqualAmounts(memberIds, values.amountInCents);
-    } else if (values.splitMethod === "percentage") {
-      const splitsWithPercentages = values.splits.map((s) => ({
-        groupMemberId: s.groupMemberId,
-        percentage: s.percentage ?? 0,
-      }));
-      splits = distributePercentageAmounts(
-        splitsWithPercentages,
-        values.amountInCents,
-      );
-    } else {
-      splits = values.splits.map((split) => ({
-        groupMemberId: split.groupMemberId,
-        amountInCents: split.amountInCents,
-        percentage: null,
-      }));
-    }
+    const splits = finalizeSplits(
+      values.splitMethod,
+      values.splits,
+      values.amountInCents,
+    );
 
     if (isEditMode) {
       updateExpenseMutation.mutate({
@@ -430,44 +412,22 @@ export function useExpenseForm({
 
         if (currentSplits.length === 0) {
           const memberIds = group.groupMembers.map((m) => m.id);
-          const initialSplits = distributeEqualAmounts(memberIds, amountCents);
-          form.setValue("splits", initialSplits);
+          form.setValue(
+            "splits",
+            splitMethod === "equal"
+              ? distributeEqualAmounts(memberIds, amountCents)
+              : memberIds.map((groupMemberId) => emptySplit(groupMemberId)),
+          );
         } else if (splitMethod === "equal") {
           const memberIds = currentSplits.map((s) => s.groupMemberId);
           const updatedSplits = distributeEqualAmounts(memberIds, amountCents);
           form.setValue("splits", updatedSplits);
         } else if (splitMethod === "percentage") {
-          const hasPercentages = currentSplits.some(
-            (s) => s.percentage && s.percentage > 0,
+          const updatedSplits = distributePercentageAmounts(
+            currentSplits,
+            amountCents,
           );
-
-          if (hasPercentages) {
-            const splitsWithPercentages = currentSplits.map((s) => ({
-              groupMemberId: s.groupMemberId,
-              percentage: s.percentage ?? 0,
-            }));
-            const updatedSplits = distributePercentageAmounts(
-              splitsWithPercentages,
-              amountCents,
-            );
-            form.setValue("splits", updatedSplits);
-          } else {
-            const memberIds = currentSplits.map((s) => s.groupMemberId);
-            const percentages = calculateEvenPercentageBasisPoints(
-              memberIds.length,
-            );
-            const splitsWithPercentages = memberIds.map(
-              (groupMemberId, index) => ({
-                groupMemberId,
-                percentage: percentages[index] ?? 0,
-              }),
-            );
-            const updatedSplits = distributePercentageAmounts(
-              splitsWithPercentages,
-              amountCents,
-            );
-            form.setValue("splits", updatedSplits);
-          }
+          form.setValue("splits", updatedSplits);
         }
       }
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
