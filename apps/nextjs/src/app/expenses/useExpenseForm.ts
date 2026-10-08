@@ -5,10 +5,7 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import type {
-  ExpenseSplit,
-  SplitMethod,
-} from "@flatsby/validators/expenses/types";
+import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useCallback, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,6 +20,7 @@ import {
   distributeEqualAmounts,
   distributePercentageAmounts,
   emptySplit,
+  finalizeSplits,
 } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
@@ -356,31 +354,11 @@ export function useExpenseForm({
   }, [form, categorizeExpenseMutation]);
 
   const onSubmit = (values: ExpenseValues) => {
-    let splits: ExpenseSplit[];
-
-    if (values.splitMethod === "equal") {
-      const memberIds = values.splits.map((s) => s.groupMemberId);
-      splits = distributeEqualAmounts(memberIds, values.amountInCents);
-    } else if (values.splitMethod === "percentage") {
-      const splitsWithPercentages = values.splits
-        .filter((s) => s.percentage)
-        .map((s) => ({
-          groupMemberId: s.groupMemberId,
-          percentage: s.percentage ?? 0,
-        }));
-      splits = distributePercentageAmounts(
-        splitsWithPercentages,
-        values.amountInCents,
-      );
-    } else {
-      splits = values.splits
-        .filter((split) => split.amountInCents > 0)
-        .map((split) => ({
-          groupMemberId: split.groupMemberId,
-          amountInCents: split.amountInCents,
-          percentage: null,
-        }));
-    }
+    const splits = finalizeSplits(
+      values.splitMethod,
+      values.splits,
+      values.amountInCents,
+    );
 
     if (isEditMode) {
       updateExpenseMutation.mutate({
@@ -445,12 +423,8 @@ export function useExpenseForm({
           const updatedSplits = distributeEqualAmounts(memberIds, amountCents);
           form.setValue("splits", updatedSplits);
         } else if (splitMethod === "percentage") {
-          const splitsWithPercentages = currentSplits.map((s) => ({
-            groupMemberId: s.groupMemberId,
-            percentage: s.percentage ?? 0,
-          }));
           const updatedSplits = distributePercentageAmounts(
-            splitsWithPercentages,
+            currentSplits,
             amountCents,
           );
           form.setValue("splits", updatedSplits);

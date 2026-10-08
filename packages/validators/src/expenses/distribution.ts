@@ -2,7 +2,7 @@
 // Distribution Algorithms - Split amounts in cents
 // ============================================================================
 
-import type { ExpenseSplit } from "./types";
+import type { ExpenseSplit, SplitMethod } from "./types";
 
 /**
  * Distribute an amount equally among members
@@ -45,38 +45,29 @@ export function emptySplit(groupMemberId: number): ExpenseSplit {
 }
 
 /**
- * Distribute an amount based on percentages (in basis points)
- * Uses largest remainder method to distribute rounding errors fairly
- *
- * @param splits - Array of splits with groupMemberId and percentage (basis points)
- * @param totalAmountCents - Total amount in cents (integer)
- * @returns Array of ExpenseSplit with amounts that sum exactly to totalAmountCents
- *
- * @example
- * distributePercentageAmounts(
- *   [{ groupMemberId: 1, percentage: 3333 }, { groupMemberId: 2, percentage: 3333 }, { groupMemberId: 3, percentage: 3334 }],
- *   100
- * )
- * // Correctly handles rounding to ensure sum equals 100
+ * Distribute an amount based on percentages (in basis points) using the largest remainder method.
+ * Amounts only sum to totalAmountCents once the percentages total 100%; partial input stays floored.
  */
 export function distributePercentageAmounts(
-  splits: { groupMemberId: number; percentage: number }[],
+  splits: Pick<ExpenseSplit, "groupMemberId" | "percentage">[],
   totalAmountCents: number,
 ): ExpenseSplit[] {
   if (splits.length === 0) return [];
 
-  // Calculate raw amounts (may have fractional cents)
-  const rawAmounts = splits.map(
-    (s) => (s.percentage / 10000) * totalAmountCents,
+  const totalBasisPoints = splits.reduce(
+    (sum, s) => sum + (s.percentage ?? 0),
+    0,
   );
+  // Tolerance matches validateSplits; scaling by the entered total lets 99.99% still sum exactly
+  const isComplete = Math.abs(totalBasisPoints - 10000) <= 1;
+  const basis = isComplete ? totalBasisPoints : 10000;
 
-  // Floor all amounts
+  const rawAmounts = splits.map(
+    (s) => ((s.percentage ?? 0) / basis) * totalAmountCents,
+  );
   const flooredAmounts = rawAmounts.map((a) => Math.floor(a));
   const currentSum = flooredAmounts.reduce((a, b) => a + b, 0);
-  const totalBasisPoints = splits.reduce((sum, s) => sum + s.percentage, 0);
-  // Partial input would hand every member a stray cent; tolerance matches validateSplits
-  let remainder =
-    Math.abs(totalBasisPoints - 10000) <= 1 ? totalAmountCents - currentSum : 0;
+  let remainder = isComplete ? totalAmountCents - currentSum : 0;
 
   // Sort by fractional part descending to distribute remainder fairly
   const indexed = rawAmounts.map((raw, i) => ({
@@ -85,7 +76,6 @@ export function distributePercentageAmounts(
   }));
   indexed.sort((a, b) => b.fractionalPart - a.fractionalPart);
 
-  // Distribute remainder to entries with largest fractional parts
   for (const { index } of indexed) {
     if (remainder <= 0) break;
     if (flooredAmounts[index] === undefined)
@@ -107,18 +97,25 @@ export function distributePercentageAmounts(
   });
 }
 
-/**
- * Convert percentage in basis points to amount in cents
- * Note: This function is for display/calculation purposes only.
- * For actual distribution, use distributePercentageAmounts to avoid rounding issues.
- *
- * @param totalAmountCents - Total amount in cents
- * @param percentageBasisPoints - Percentage in basis points (100% = 10000)
- * @returns Amount in cents (rounded)
- */
-export function percentageToAmountCents(
+// Blank members aren't part of the expense, so they're dropped instead of saved at 0
+export function finalizeSplits(
+  method: SplitMethod,
+  splits: ExpenseSplit[],
   totalAmountCents: number,
-  percentageBasisPoints: number,
-): number {
-  return Math.round((percentageBasisPoints / 10000) * totalAmountCents);
+): ExpenseSplit[] {
+  if (method === "equal") {
+    return distributeEqualAmounts(
+      splits.map((s) => s.groupMemberId),
+      totalAmountCents,
+    );
+  }
+  if (method === "percentage") {
+    return distributePercentageAmounts(
+      splits.filter((s) => s.percentage),
+      totalAmountCents,
+    );
+  }
+  return splits
+    .filter((s) => s.amountInCents > 0)
+    .map((s) => ({ ...s, percentage: null }));
 }

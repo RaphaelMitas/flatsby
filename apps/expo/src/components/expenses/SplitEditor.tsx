@@ -107,18 +107,11 @@ export function SplitEditor({
       );
       form.setValue("splits", updatedSplits, { shouldValidate: true });
     } else if (splitMethod === "percentage") {
-      // Update the percentage for this split
       const updatedSplits = currentSplits.map((s, i) =>
         i === index ? { ...s, percentage: value } : s,
       );
-
-      // Use distributePercentageAmounts to ensure amounts sum correctly
-      const splitsWithPercentages = updatedSplits.map((s) => ({
-        groupMemberId: s.groupMemberId,
-        percentage: s.percentage ?? 0,
-      }));
       const distributedSplits = distributePercentageAmounts(
-        splitsWithPercentages,
+        updatedSplits,
         totalAmountCents,
       );
       form.setValue("splits", distributedSplits, { shouldValidate: true });
