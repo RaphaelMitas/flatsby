@@ -10,15 +10,10 @@ import type {
 } from "./types";
 import { formatCurrencyFromCents } from "./formatting";
 
-/**
- * Validate expense splits based on split method
- * All methods now verify that amounts sum correctly to the total
- *
- * @param params.splits - Array of split objects with groupMemberId and amounts in cents
- * @param params.totalAmountCents - Total expense amount in cents
- * @param params.method - Split method: "equal", "percentage", "shares", "custom", or "settlement"
- * @returns Object with isValid boolean and error message if invalid
- */
+function hasMissingShares(splits: { shares?: number | null }[]): boolean {
+  return splits.some((s) => !Number.isInteger(s.shares) || (s.shares ?? 0) < 1);
+}
+
 export function validateSplits({
   splits,
   totalAmountCents,
@@ -126,20 +121,18 @@ export function validateSplits({
     return { isValid: true };
   }
 
-  if (
-    method === "shares" &&
-    splits.some((s) => !Number.isInteger(s.shares) || (s.shares ?? 0) < 1)
-  ) {
-    return { isValid: false, error: "Each person needs at least one share" };
+  // Share amounts are derived from the counts on save, so only the counts can be wrong
+  if (method === "shares") {
+    return hasMissingShares(splits)
+      ? { isValid: false, error: "Each person needs at least one share" }
+      : { isValid: true };
   }
 
-  // Custom and share splits
   const totalSplitCents = splits.reduce(
     (sum, split) => sum + (split.amountInCents ?? 0),
     0,
   );
 
-  // No tolerance for custom splits - must match exactly
   if (totalSplitCents !== totalAmountCents) {
     return {
       isValid: false,
@@ -193,10 +186,7 @@ export function validateExpenseSplitsStrict(
     };
   }
 
-  if (
-    splitMethod === "shares" &&
-    splits.some((s) => s.shares == null || s.shares < 1)
-  ) {
+  if (splitMethod === "shares" && hasMissingShares(splits)) {
     return {
       valid: false,
       error: "share splits need a share count of at least 1",

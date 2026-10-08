@@ -15,10 +15,12 @@ import { validateSplits } from "./validation";
 
 export type EditableSplitMethod = Exclude<SplitMethod, "settlement">;
 
-export function isEditableSplitMethod(
+export function editableSplitMethod(
   method: string | undefined,
-): method is EditableSplitMethod {
-  return splitMethodSchema.exclude(["settlement"]).safeParse(method).success;
+): EditableSplitMethod {
+  return (
+    splitMethodSchema.exclude(["settlement"]).safeParse(method).data ?? "equal"
+  );
 }
 
 export function splitsForTotal(

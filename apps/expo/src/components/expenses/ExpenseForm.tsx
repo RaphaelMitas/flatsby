@@ -3,7 +3,6 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -22,8 +21,8 @@ import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
+  editableSplitMethod,
   finalizeSplits,
-  isEditableSplitMethod,
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
 import {
@@ -153,12 +152,7 @@ export function ExpenseForm({
       })
     : undefined;
 
-  // Determine the initial split method from the expense or default to "equal"
-  const initialSplitMethod: SplitMethod = isEditableSplitMethod(
-    expense?.splitMethod,
-  )
-    ? expense.splitMethod
-    : "equal";
+  const initialSplitMethod = editableSplitMethod(expense?.splitMethod);
 
   const form = useFormHook<ExpenseValues, ExpenseValues>({
     schema: expenseSchemaWithValidateSplits,
@@ -734,9 +728,7 @@ export function ExpenseForm({
                         groupMembers={allMembers}
                         totalAmountCents={amountInCents}
                         currency={currency}
-                        splitMethod={
-                          splitMethod !== "settlement" ? splitMethod : "equal"
-                        }
+                        splitMethod={editableSplitMethod(splitMethod)}
                         onSplitMethodChange={(method) => {
                           field.onChange(method);
                         }}

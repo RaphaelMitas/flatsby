@@ -31,7 +31,6 @@ import {
 } from "@flatsby/db/schema";
 import { categoryIdSchema } from "@flatsby/validators/categories";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
-import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
 import {
   currencyCodeSchema,
   splitMethodSchema,
@@ -583,11 +582,7 @@ async function handleExpenseCreate(
       currency: parseCurrency(data.currency),
       paidByMemberName:
         memberIdToName.get(data.paidByGroupMemberId) ?? "Unknown",
-      splits: splitsForStorage(
-        data.splitMethod,
-        data.splits,
-        data.amountInCents,
-      ).map((s) => ({
+      splits: expense.splits.map((s) => ({
         memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
         amountInCents: s.amountInCents,
       })),
@@ -704,13 +699,8 @@ async function handleExpenseUpdate(
   // Use ternary to distinguish between undefined (not provided) and null/string (provided value)
   const outputDescription =
     data.description !== undefined ? data.description : expense.description;
-  const outputSplitMethod =
-    data.splitMethod ?? splitMethodSchema.parse(expense.splitMethod);
-  const outputSplits = data.splits
-    ? splitsForStorage(outputSplitMethod, data.splits, outputAmount)
-    : expense.expenseSplits;
 
-  return handleApiResult(result, "update", "expense", () => ({
+  return handleApiResult(result, "update", "expense", (updated) => ({
     success: true,
     action: "update",
     entity: "expense",
@@ -720,7 +710,7 @@ async function handleExpenseUpdate(
       amountInCents: outputAmount,
       currency: parseCurrency(outputCurrency),
       paidByMemberName: memberIdToName.get(outputPaidByMemberId) ?? "Unknown",
-      splits: outputSplits.map((s) => ({
+      splits: (updated.splits ?? expense.expenseSplits).map((s) => ({
         memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
         amountInCents: s.amountInCents,
       })),

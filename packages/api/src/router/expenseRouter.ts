@@ -107,7 +107,6 @@ export const expenseRouter = createTRPCRouter({
           ),
           () =>
             Effect.flatMap(
-              // Validate splits sum to expense amount
               validateExpenseSplitsEffect(
                 input.amountInCents,
                 splits,
@@ -190,7 +189,7 @@ export const expenseRouter = createTRPCRouter({
                                 })),
                               );
 
-                              return expense;
+                              return { ...expense, splits };
                             }, "create expense with splits")(ctx.db),
                         ),
                     ),
@@ -283,8 +282,54 @@ export const expenseRouter = createTRPCRouter({
                           )
                         : Effect.succeed(undefined),
                       () =>
-                        // Update expense and splits in transaction
                         DbUtils.transaction(async (trx) => {
+                          // Serializes edits so a re-split never starts from splits another edit replaced
+                          const [locked] = await trx
+                            .select({
+                              splitMethod: expenses.splitMethod,
+                              amountInCents: expenses.amountInCents,
+                            })
+                            .from(expenses)
+                            .where(eq(expenses.id, input.expenseId))
+                            .for("update");
+                          if (!locked) throw new Error("Expense was deleted");
+
+                          let splitsToWrite = splits;
+                          if (reshareStored && !input.splits) {
+                            const lockedMethod =
+                              input.splitMethod ??
+                              splitMethodSchema.parse(locked.splitMethod);
+                            const stored =
+                              await trx.query.expenseSplits.findMany({
+                                where: eq(
+                                  expenseSplits.expenseId,
+                                  input.expenseId,
+                                ),
+                              });
+                            const lockedAmount =
+                              input.amountInCents ?? locked.amountInCents;
+                            splitsToWrite =
+                              lockedMethod === "shares"
+                                ? splitsForStorage(
+                                    lockedMethod,
+                                    stored,
+                                    lockedAmount,
+                                  )
+                                : null;
+                            if (
+                              splitsToWrite &&
+                              !validateExpenseSplitsStrict(
+                                lockedAmount,
+                                splitsToWrite,
+                                lockedMethod,
+                              ).valid
+                            ) {
+                              throw new Error(
+                                "Expense splits changed during the update",
+                              );
+                            }
+                          }
+
                           const updateData: Partial<
                             typeof expenses.$inferInsert
                           > = {};
@@ -321,17 +366,15 @@ export const expenseRouter = createTRPCRouter({
                               .where(eq(expenses.id, input.expenseId));
                           }
 
-                          if (splits) {
-                            // Delete existing splits
+                          if (splitsToWrite) {
                             await trx
                               .delete(expenseSplits)
                               .where(
                                 eq(expenseSplits.expenseId, input.expenseId),
                               );
 
-                            // Insert new splits
                             await trx.insert(expenseSplits).values(
-                              splits.map((split) => ({
+                              splitsToWrite.map((split) => ({
                                 expenseId: input.expenseId,
                                 groupMemberId: split.groupMemberId,
                                 amountInCents: split.amountInCents,
@@ -341,7 +384,7 @@ export const expenseRouter = createTRPCRouter({
                             );
                           }
 
-                          return { success: true };
+                          return { success: true, splits: splitsToWrite };
                         }, "update expense")(ctx.db),
                     ),
                 ),

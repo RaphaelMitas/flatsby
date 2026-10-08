@@ -5,7 +5,6 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useCallback, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -19,8 +18,8 @@ import {
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
+  editableSplitMethod,
   finalizeSplits,
-  isEditableSplitMethod,
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
@@ -58,11 +57,7 @@ export function useExpenseForm({
       })
     : undefined;
 
-  const initialSplitMethod: SplitMethod = isEditableSplitMethod(
-    expense?.splitMethod,
-  )
-    ? expense.splitMethod
-    : "equal";
+  const initialSplitMethod = editableSplitMethod(expense?.splitMethod);
 
   const form = useForm<ExpenseValues>({
     resolver: zodResolver(expenseSchemaWithValidateSplits),

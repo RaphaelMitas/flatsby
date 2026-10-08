@@ -214,6 +214,7 @@ export function SplitEditor({
                         }
                         textAlign="center"
                         className="w-16 px-2"
+                        accessibilityLabel={`Shares for ${memberName}`}
                       />
                       <Button
                         testID={`split-member-shares-increment-${index}`}
