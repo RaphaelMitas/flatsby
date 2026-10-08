@@ -23,7 +23,8 @@
     "postinstall": "pnpm lint:ws",
     "release": "node scripts/release.mjs",
     "typecheck": "turbo run typecheck",
-    "ui-add": "pnpm dlx shadcn@latest add -c packages/ui"
+    "ui-add": "pnpm dlx shadcn@latest add -c packages/ui",
+    "with-op": "op run --no-masking --environment azz4y2ohqppyjg4f3cssxtxbia --"
   },
   "devDependencies": {
     "@flatsby/prettier-config": "workspace:*",

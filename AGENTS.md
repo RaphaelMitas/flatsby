@@ -125,6 +125,7 @@ pnpm db:studio
 pnpm ui-add                   # add shadcn components
 pnpm -F @flatsby/expo typecheck
 pnpm -F @flatsby/nextjs dev
+pnpm with-op pnpm dev:next   # web only, secrets from 1Password instead of .env
 ```
 
 Node and pnpm versions come from `.nvmrc` and the root `packageManager` field. Read
@@ -135,9 +136,10 @@ A few things that will surprise you:
 - `pnpm db:push` is marked interactive in `turbo.json` and fails in a headless shell.
 Run `pnpm -F @flatsby/db push --force` instead, which skips turbo. Push is for local
 dev and the CI e2e database, real changes get a generated migration.
-- Env vars load from a repo-root `.env` via `dotenv`. Exporting them in your shell is
-not enough. `@t3-oss/env-nextjs` validates them at startup and skips validation when
-`CI=true`.
+- Env vars come from the 1Password Environment via `pnpm with-op <command>`, which
+works from any worktree, or from a repo-root `.env` via `dotenv`, which never
+overrides a variable already set. `@t3-oss/env-nextjs` validates them at startup and
+skips validation when `CI=true`.
 - `pnpm install` runs `pnpm lint:ws` as a postinstall hook.
 - `pnpm dev:next` is `turbo watch dev`, so shared packages rebuild on change without  
 you restarting anything.
