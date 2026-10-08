@@ -107,7 +107,7 @@ const timingMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
     type === "mutation" &&
     !path.startsWith("analytics.")
   ) {
-    // a streaming procedure returns before its body runs, so its duration would read ~0ms
+    // a streaming procedure returns before its body runs, so its duration and outcome are unknown here
     const isStream = result.ok && Symbol.asyncIterator in Object(result.data);
     captureEvent({
       distinctId: ctx.session.user.id,
@@ -115,7 +115,7 @@ const timingMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
       headers: ctx.headers,
       additionalProperties: {
         procedure: path,
-        ok: result.ok,
+        ok: isStream ? undefined : result.ok,
         durationMs: isStream ? undefined : durationMs,
         authMs: ctx.authMs,
       },
