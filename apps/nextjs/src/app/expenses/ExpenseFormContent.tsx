@@ -41,6 +41,7 @@ import {
   getSubcategoryGroup,
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
+import { finalizeSplits } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 
@@ -77,6 +78,11 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     isCategorizing,
     onDescriptionBlur,
   } = formState;
+  const participantCount = finalizeSplits(
+    splitMethod,
+    splits,
+    amountInCents,
+  ).length;
 
   return (
     <Form {...form}>
@@ -356,8 +362,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Split:</span>
                   <span className="font-semibold">
-                    {splits.length} {splits.length === 1 ? "person" : "people"}{" "}
-                    ({splitMethod})
+                    {participantCount}{" "}
+                    {participantCount === 1 ? "person" : "people"} (
+                    {splitMethod})
                   </span>
                 </div>
               </CardContent>
