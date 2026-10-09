@@ -1,1 +1,4 @@
-Bug fixes and improvements.
+• Split by shares. Give each person a number of parts, like 2 for one and 1 for another, and Flatsby works out the amounts. No more typing 66.67%.
+• Halloween is here. The cat now lives on your home screen, and pulling to refresh shows it flying across a night sky on its broom. Tap the cat and see what happens.
+• Ask your flatmates to update too, so split by shares shows up correctly for everyone.
+• Small fixes and improvements.
