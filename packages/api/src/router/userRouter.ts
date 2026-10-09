@@ -15,7 +15,7 @@ import {
   users,
   verificationTokens,
 } from "@flatsby/db/schema";
-import { CURRENT_AI_CONSENT_VERSION } from "@flatsby/validators/ai-consent";
+import { requiresAIConsent } from "@flatsby/validators/ai-consent";
 import {
   getCurrentSubscription,
   PLAN_IDS,
@@ -456,9 +456,7 @@ export const userRouter = createTRPCRouter({
         },
       });
 
-      const hasConsent =
-        !!user?.aiConsentAcceptedAt &&
-        user.aiConsentVersion === CURRENT_AI_CONSENT_VERSION;
+      const hasConsent = !!user && !requiresAIConsent(user);
 
       return {
         hasConsent,
