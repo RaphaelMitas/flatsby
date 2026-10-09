@@ -6,6 +6,7 @@ import {
   FEATURES,
   GITHUB_URL,
   HOME_FAQ,
+  LEGAL_PAGES,
   PLAY_STORE_URL,
   SECTIONS,
   SITE_URL,
@@ -16,17 +17,25 @@ import { CONTENT_PAGES } from "./pages";
 
 const facts = FACTS.map((f) => `- ${f.label}: ${f.value}`).join("\n");
 
-const legalLinks = `- [Terms of service](${SITE_URL}/legal/terms)
-- [Privacy policy](${SITE_URL}/legal/privacy)
-- [Legal notice](${SITE_URL}/legal/legal-notice)`;
+const legalLinks = LEGAL_PAGES.map(
+  (page) => `- [${page.label}](${SITE_URL}${page.path})`,
+).join("\n");
 
 const pageLinks = CONTENT_PAGES.map(
   (page) =>
     `- [${page.headline}](${SITE_URL}/${page.slug}.md): ${page.description}`,
 ).join("\n");
 
-function faqMarkdown(items: readonly { question: string; answer: string }[]) {
-  return items.map((q) => `### ${q.question}\n\n${q.answer}`).join("\n\n");
+function questionsMarkdown(
+  items: readonly { question: string; answer: string }[],
+) {
+  return `## Questions\n\n${items.map((q) => `### ${q.question}\n\n${q.answer}`).join("\n\n")}`;
+}
+
+export function markdownResponse(body: string) {
+  return new Response(body, {
+    headers: { "Content-Type": "text/markdown; charset=utf-8" },
+  });
 }
 
 function sectionMarkdown(section: PageSection) {
@@ -94,9 +103,7 @@ ${STEPS.map((s, i) => `${i + 1}. ${s.title}. ${s.body}`).join("\n")}
 
 ${SECTIONS.map((s) => `## ${s.title}\n\n${s.body}`).join("\n\n")}
 
-## Questions
-
-${faqMarkdown(HOME_FAQ)}
+${questionsMarkdown(HOME_FAQ)}
 
 All questions: ${SITE_URL}/faq.md
 
@@ -126,7 +133,7 @@ export function contentPageMarkdown(page: ContentPageData) {
     page.intro,
     table?.join("\n"),
     ...page.sections.map(sectionMarkdown),
-    page.faq && `## Questions\n\n${faqMarkdown(page.faq)}`,
+    page.faq && questionsMarkdown(page.faq),
     `## More about Flatsby\n\n- [Home page](${SITE_URL}/index.md)\n${pageLinks}`,
   ]
     .filter(Boolean)

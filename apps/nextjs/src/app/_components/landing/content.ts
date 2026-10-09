@@ -1,4 +1,4 @@
-// Source for every marketing page, its JSON-LD, /llms.txt and the .md twins, which agents cross-check for contradictions.
+// Agents cross-check every page, the JSON-LD, llms.txt and the .md twins, so facts live here once.
 
 export const SITE_URL = "https://www.flatsby.com";
 export const APP_STORE_URL = "https://apps.apple.com/app/flatsby/id6747908544";
@@ -7,6 +7,19 @@ export const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.flatcove.app";
 export const GITHUB_URL = "https://github.com/RaphaelMitas/flatsby";
 export const UPDATED = "2026-10-09";
+
+export const PLANS = {
+  freeCredits: "5,000",
+  starter: { price: "$4.99", credits: "40,000" },
+  pro: { price: "$9.99", credits: "100,000" },
+  proAppStorePrice: "$7.99",
+};
+
+export const LEGAL_PAGES = [
+  { path: "/legal/terms", label: "Terms" },
+  { path: "/legal/privacy", label: "Privacy" },
+  { path: "/legal/legal-notice", label: "Legal notice" },
+] as const;
 
 export const TITLE = "Flatsby: shared shopping list and bill splitting app";
 export const DESCRIPTION =
@@ -27,7 +40,7 @@ export const FEATURES = [
   },
   {
     title: "AI assistant",
-    body: "Ask about your household in plain language. It reads your lists and expenses, answers with charts and tables, and can add items or expenses for you.",
+    body: "On the web, ask about your household in plain language. It reads your lists and expenses, answers with charts and tables, and can add items or expenses for you.",
   },
   {
     title: "Household groups",
@@ -54,7 +67,7 @@ export const SECTIONS = [
   {
     id: "splitwise",
     title: "Switching from Splitwise",
-    body: "Flatsby imports a Splitwise CSV export, so your history comes with you. In Splitwise, export the group as CSV. In Flatsby, open Group settings, Import expenses, and upload the file. Expenses and settlements land in your group.",
+    body: "Flatsby imports a Splitwise CSV export, so your history comes with you. In Splitwise, export the group as CSV. In Flatsby, open Group settings, Import expenses, pick the currency, match the Splitwise names to your flatmates and upload the file. The preview lists any rows it skips, such as other currencies or expenses with several payers, before anything is imported.",
   },
   {
     id: "about",
@@ -80,8 +93,7 @@ export const FACTS = [
   },
   {
     label: "Price",
-    value:
-      "Free. The AI assistant uses credits, and the Pro plan ($7.99 in the US App Store) adds more.",
+    value: `Free. AI features use monthly credits: ${PLANS.freeCredits} free, more on Starter (${PLANS.starter.price} a month) or Pro (${PLANS.pro.price} a month on the web, ${PLANS.proAppStorePrice} in the US App Store).`,
   },
   { label: "Sign in", value: "Google or Apple account." },
   {
@@ -103,8 +115,7 @@ export const FACTS = [
 export const FAQ = [
   {
     question: "Is Flatsby free?",
-    answer:
-      "Yes. Shopping lists, expenses, settlements and groups are free, with no member limit. The AI assistant runs on credits, and the Pro plan, $7.99 in the US App Store, adds more.",
+    answer: `Yes. Shopping lists, expenses, settlements and groups are free, with no member limit. The AI assistant and automatic categories use credits: ${PLANS.freeCredits} a month for free, ${PLANS.starter.credits} on Starter (${PLANS.starter.price} a month) and ${PLANS.pro.credits} on Pro (${PLANS.pro.price} a month on the web). On iPhone, Pro is ${PLANS.proAppStorePrice} a month in the US App Store.`,
   },
   {
     question: "Does Flatsby work on Android?",
@@ -114,7 +125,7 @@ export const FAQ = [
   {
     question: "Can I move my expenses over from Splitwise?",
     answer:
-      "Yes. Export your group from Splitwise as CSV, then upload it under Group settings, Import expenses. Flatsby imports the expenses and settlements into your group. Each expense keeps the exact amount every person owed, so percentage splits arrive as amounts.",
+      "Yes. Export your group from Splitwise as CSV, then upload it under Group settings, Import expenses. You pick the currency and match Splitwise names to your flatmates. Each expense keeps the exact amount every person owed, so percentage splits arrive as amounts. Rows in other currencies or with several payers are skipped, and the preview lists them first.",
   },
   {
     question: "How does Flatsby split an expense?",
@@ -134,7 +145,7 @@ export const FAQ = [
   {
     question: "Is the web app the same as the phone apps?",
     answer:
-      "Yes. Lists, expenses, settlements, the AI assistant and group settings all work in the browser, on iPhone and on Android.",
+      "Almost. Lists, expenses, settlements and group settings work on the web, iPhone and Android. The AI assistant is web only for now.",
   },
   {
     question: "Do shopping lists update in real time?",
@@ -144,12 +155,12 @@ export const FAQ = [
   {
     question: "What does the AI assistant do?",
     answer:
-      "You ask about your household in plain language. It reads your lists and expenses, answers with charts and tables, and can add items or expenses for you.",
+      "In the web app, you ask about your household in plain language. It reads your lists and expenses, answers with charts and tables, and can add items or expenses for you.",
   },
   {
     question: "Who can see my household's data?",
     answer:
-      "Inside Flatsby, only members of your group. The hosting, analytics and AI providers listed in the privacy policy process it to run the app. Two features send data to AI providers, OpenAI or Google through the Vercel AI Gateway: the AI assistant, which asks for consent first, and automatic categories, which send shopping item names. That data is used to generate the answer or category, not to train models. You can export all of your data or delete your account from your settings.",
+      "Inside Flatsby, only members of your group. The hosting, analytics and AI providers listed in the privacy policy process it to run the app. Two features send data through the Vercel AI Gateway. The AI assistant asks for consent first, uses OpenAI or Google models, and its data is not used to train them. Automatic categories send the names of shopping items and expenses to a classification model. You can export all of your data or delete your account from your settings.",
   },
   {
     question: "Is Flatsby open source?",

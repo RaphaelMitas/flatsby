@@ -1,4 +1,4 @@
-import { FAQ, pickFaq } from "./content";
+import { FAQ, pickFaq, PLANS } from "./content";
 
 const SCREENSHOT_BASE =
   "https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets";
@@ -82,7 +82,7 @@ export const CONTENT_PAGES = [
         heading: "How it works",
         paragraphs: [
           "Create as many lists as your household needs, for example one for groceries and one for the hardware store. Anyone in the group can add, edit or tick off items.",
-          "Each item has a category such as produce, dairy or bakery, so the list sorts itself the way a shop is laid out. When you add an item, Flatsby can suggest the category by sending the item name to an AI provider, and you can change it. Every item shows who added it.",
+          "Each item has a category such as produce, dairy or bakery, so the list sorts itself the way a shop is laid out. When you add an item, Flatsby can suggest the category by sending the item name to a classification model, and you can change it. This uses AI credits. Every item shows who added it.",
         ],
         image: SCREENSHOTS.iosList,
       },
@@ -159,10 +159,10 @@ export const CONTENT_PAGES = [
     slug: "features/ai-assistant",
     title: "AI assistant for your household | Flatsby",
     description:
-      "Ask about your shared lists and expenses in plain language. Get charts and tables, or have it add items and expenses for you.",
+      "Ask about your shared lists and expenses in plain language on the web. Get charts and tables, or have it add items and expenses for you.",
     headline: "Ask your household anything",
     intro:
-      "The assistant reads your group's shopping lists and expenses and answers in plain language, with charts and tables when numbers help.",
+      "The assistant reads your group's shopping lists and expenses and answers in plain language, with charts and tables when numbers help. It is in the web app; the iPhone and Android apps don't have it yet.",
     sections: [
       {
         heading: "What you can ask",
@@ -178,14 +178,14 @@ export const CONTENT_PAGES = [
         heading: "Your data and the AI providers",
         paragraphs: [
           "The assistant asks for your consent before it sends anything. Your messages, and the list items, expenses and member names a question needs, go to OpenAI or Google through the Vercel AI Gateway to generate the answer.",
-          "Automatic categories work without the assistant: when you add a shopping item, its name goes to the same providers so Flatsby can suggest a category.",
-          "Your email address, sign-in details and payment information are never shared. Data sent to the AI providers is used to generate the answer or category, not to train models. AI usage numbers such as the model and token counts, without your messages, go to PostHog for analytics.",
+          "Automatic categories are separate from the assistant: when you add a shopping item or an expense, its name goes through the same gateway to a classification model so Flatsby can suggest a category.",
+          "Your email address, sign-in details and payment information are never shared. Data sent for the assistant is used to generate the answer, not to train models. AI usage numbers such as the model and token counts, without your messages, go to PostHog for analytics.",
         ],
       },
       {
         heading: "Credits",
         paragraphs: [
-          "The assistant runs on credits. Everything else in Flatsby works without them. The Pro plan adds more credits.",
+          `The assistant and automatic categories use credits: ${PLANS.freeCredits} a month on the free plan, more on Starter and Pro. When credits run out, new items get the category Other until the next month. Lists, expenses and settling up never need credits.`,
         ],
       },
     ],
@@ -229,8 +229,10 @@ export const CONTENT_PAGES = [
         bullets: [
           "In Splitwise on the web, open the group and export it as a spreadsheet (CSV).",
           "In Flatsby, create your household group and add your flatmates.",
-          "Open Group settings, choose Import expenses, and upload the CSV.",
-          "Expenses and settlements appear in the group. Each imported expense keeps the exact amount every person owed. Percentage splits arrive as those amounts, not as percentages.",
+          "Open Group settings, choose Import expenses, pick the currency and upload the CSV.",
+          "Match each Splitwise name to a flatmate.",
+          "Check the preview. It lists rows it will skip, such as other currencies, expenses with several payers, or splits that don't add up.",
+          "Import. Each expense keeps the exact amount every person owed, so percentage splits arrive as amounts, not percentages.",
         ],
       },
     ],
@@ -242,29 +244,43 @@ export const CONTENT_PAGES = [
   },
   {
     slug: "pricing",
-    title: "Flatsby pricing: free, with an optional Pro plan",
-    description:
-      "Shopping lists, expenses, settlements and groups are free with no member limit and no ads. Pro adds AI assistant credits.",
+    title: "Flatsby pricing: free, with optional Starter and Pro plans",
+    description: `Shopping lists, expenses, settlements and groups are free with no member limit and no ads. Starter (${PLANS.starter.price}) and Pro (${PLANS.pro.price}) add AI credits.`,
     headline: "Free for the whole household",
     intro:
-      "Everything a shared flat needs is free: shopping lists, expenses, settling up and groups, with no member limit and no ads. You only pay if you want more AI assistant credits.",
+      "Everything a shared flat needs is free: shopping lists, expenses, settling up and groups, with no member limit and no ads. You only pay for more AI credits.",
     table: {
-      caption: "What is included in each plan",
-      head: ["", "Free", "Pro"],
+      caption: "Plans and monthly AI credits",
+      head: ["", "Free", "Starter", "Pro"],
       rows: [
-        ["Shared shopping lists", "Yes", "Yes"],
-        ["Expenses and settlements", "Yes", "Yes"],
-        ["Members per household", "No limit", "No limit"],
-        ["Ads", "None", "None"],
-        ["AI assistant", "Limited credits", "More credits"],
-        ["Price", "Free", "$7.99 in the US App Store"],
+        ["Shopping lists, expenses and settlements", "Yes", "Yes", "Yes"],
+        ["Members per household", "No limit", "No limit", "No limit"],
+        ["Ads", "None", "None", "None"],
+        [
+          "AI credits per month",
+          PLANS.freeCredits,
+          PLANS.starter.credits,
+          PLANS.pro.credits,
+        ],
+        [
+          "Price on the web",
+          "Free",
+          `${PLANS.starter.price} a month`,
+          `${PLANS.pro.price} a month`,
+        ],
       ],
     },
     sections: [
       {
-        heading: "Pro",
+        heading: "What credits are for",
         paragraphs: [
-          "Pro adds credits for the AI assistant. It costs $7.99 in the US App Store. Prices in other countries and on Google Play are shown in the store. On the web, you can see and change your plan under Billing after you sign in.",
+          "The AI assistant and automatic categories use credits. When they run out, the assistant pauses and new items get the category Other until the next month. Nothing else in Flatsby uses credits.",
+        ],
+      },
+      {
+        heading: "Where to buy",
+        paragraphs: [
+          `On the web, and from Android, open Billing after you sign in to choose Starter or Pro. On iPhone, Pro is an in-app purchase at ${PLANS.proAppStorePrice} a month in the US App Store.`,
         ],
       },
     ],
@@ -282,6 +298,10 @@ export const CONTENT_PAGES = [
     faq: FAQ,
   },
 ] as const satisfies readonly ContentPageData[];
+
+export function contentPageParams() {
+  return CONTENT_PAGES.map((page) => ({ slug: page.slug.split("/") }));
+}
 
 export function findContentPage(slug: string): ContentPageData | undefined {
   return CONTENT_PAGES.find((page) => page.slug === slug);

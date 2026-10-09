@@ -4,13 +4,7 @@ import { cn } from "@flatsby/ui";
 
 import type { Screenshot } from "./pages";
 
-export function ScreenshotImage({
-  shot,
-  className,
-}: {
-  shot: Screenshot;
-  className?: string;
-}) {
+export function ScreenshotImage({ shot }: { shot: Screenshot }) {
   const portrait = shot.height > shot.width;
   return (
     <Image
@@ -22,7 +16,6 @@ export function ScreenshotImage({
       className={cn(
         "mx-auto rounded-xl border shadow-sm",
         portrait ? "w-72" : "w-full",
-        className,
       )}
     />
   );

@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { Button } from "@flatsby/ui/button";
 
+import { LEGAL_PAGES } from "~/app/_components/landing/content";
+
 export const metadata: Metadata = { robots: "index,follow" };
 
 export default function LegalLayout({
@@ -16,21 +18,11 @@ export default function LegalLayout({
             Flatsby
           </Link>
           <nav className="flex gap-2">
-            <Link href="/legal/terms">
-              <Button variant="ghost" size="sm">
-                Terms
+            {LEGAL_PAGES.map((page) => (
+              <Button key={page.path} variant="ghost" size="sm" asChild>
+                <Link href={page.path}>{page.label}</Link>
               </Button>
-            </Link>
-            <Link href="/legal/privacy">
-              <Button variant="ghost" size="sm">
-                Privacy
-              </Button>
-            </Link>
-            <Link href="/legal/legal-notice">
-              <Button variant="ghost" size="sm">
-                Legal Notice
-              </Button>
-            </Link>
+            ))}
           </nav>
         </div>
       </header>

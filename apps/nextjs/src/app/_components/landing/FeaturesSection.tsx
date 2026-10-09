@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { Bot, ShoppingCart, Users, Wallet } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@flatsby/ui/avatar";
@@ -22,13 +23,11 @@ export function FeaturesSection() {
 
         <div className="flex flex-col gap-16 md:gap-24">
           <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
-            <div className="order-2 md:order-1">
-              <div className="text-primary bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                <ShoppingCart className="h-6 w-6" />
-              </div>
-              <h3 className="mb-3 text-2xl font-semibold">{lists.title}</h3>
-              <p className="text-muted-foreground">{lists.body}</p>
-            </div>
+            <FeatureText
+              className="order-2 md:order-1"
+              icon={ShoppingCart}
+              feature={lists}
+            />
             <div className="order-1 md:order-2">
               <ShoppingListDemo />
             </div>
@@ -37,22 +36,14 @@ export function FeaturesSection() {
             <div className="order-1">
               <ExpenseDemo />
             </div>
-            <div className="order-2">
-              <div className="text-primary bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                <Wallet className="h-6 w-6" />
-              </div>
-              <h3 className="mb-3 text-2xl font-semibold">{expenses.title}</h3>
-              <p className="text-muted-foreground">{expenses.body}</p>
-            </div>
+            <FeatureText className="order-2" icon={Wallet} feature={expenses} />
           </div>
           <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
-            <div className="order-2 md:order-1">
-              <div className="text-primary bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                <Bot className="h-6 w-6" />
-              </div>
-              <h3 className="mb-3 text-2xl font-semibold">{assistant.title}</h3>
-              <p className="text-muted-foreground">{assistant.body}</p>
-            </div>
+            <FeatureText
+              className="order-2 md:order-1"
+              icon={Bot}
+              feature={assistant}
+            />
             <div className="order-1 md:order-2">
               <ChatDemo />
             </div>
@@ -83,5 +74,25 @@ export function FeaturesSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function FeatureText({
+  className,
+  icon: Icon,
+  feature,
+}: {
+  className: string;
+  icon: LucideIcon;
+  feature: { title: string; body: string };
+}) {
+  return (
+    <div className={className}>
+      <div className="text-primary bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
+        <Icon className="h-6 w-6" />
+      </div>
+      <h3 className="mb-3 text-2xl font-semibold">{feature.title}</h3>
+      <p className="text-muted-foreground">{feature.body}</p>
+    </div>
   );
 }

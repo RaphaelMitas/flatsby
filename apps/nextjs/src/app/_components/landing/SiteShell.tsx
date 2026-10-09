@@ -3,7 +3,12 @@ import Link from "next/link";
 import { Button } from "@flatsby/ui/button";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 
-import { APP_STORE_URL, GITHUB_URL, PLAY_STORE_URL } from "./content";
+import {
+  APP_STORE_URL,
+  GITHUB_URL,
+  LEGAL_PAGES,
+  PLAY_STORE_URL,
+} from "./content";
 
 const NAV = [
   { href: "/features/shopping-lists", label: "Shopping lists" },
@@ -36,11 +41,7 @@ const FOOTER_GROUPS = [
   },
   {
     title: "Legal",
-    links: [
-      { href: "/legal/terms", label: "Terms" },
-      { href: "/legal/privacy", label: "Privacy" },
-      { href: "/legal/legal-notice", label: "Legal notice" },
-    ],
+    links: LEGAL_PAGES.map((page) => ({ href: page.path, label: page.label })),
   },
 ];
 

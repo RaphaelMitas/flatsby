@@ -10,27 +10,15 @@ import {
   TITLE,
 } from "./_components/landing/content";
 import { LandingPage } from "./_components/landing/LandingPage";
+import { marketingMetadata } from "./_components/landing/metadata";
 
 export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  robots: "index,follow",
-  alternates: {
-    canonical: "/",
-    types: { "text/markdown": "/index.md" },
-  },
-  openGraph: {
-    type: "website",
-    siteName: "Flatsby",
-    url: "/",
+  ...marketingMetadata({
     title: TITLE,
     description: DESCRIPTION,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
-  },
+    path: "/",
+    markdownPath: "/index.md",
+  }),
   itunes: { appId: APP_STORE_ID },
 };
 

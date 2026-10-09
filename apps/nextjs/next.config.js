@@ -30,7 +30,7 @@ const config = {
       ),
     ],
   },
-  // Every marketing page has a Markdown twin at <path>.md for AI agents.
+  // Markdown twins of the marketing pages, for AI agents.
   async rewrites() {
     return [
       { source: "/index.md", destination: "/md" },

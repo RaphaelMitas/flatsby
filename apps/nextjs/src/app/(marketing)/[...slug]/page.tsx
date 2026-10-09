@@ -2,16 +2,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ContentPage } from "~/app/_components/landing/ContentPage";
+import { marketingMetadata } from "~/app/_components/landing/metadata";
 import {
-  CONTENT_PAGES,
+  contentPageParams,
   findContentPage,
 } from "~/app/_components/landing/pages";
 
 export const dynamicParams = false;
 
-export function generateStaticParams() {
-  return CONTENT_PAGES.map((page) => ({ slug: page.slug.split("/") }));
-}
+export const generateStaticParams = contentPageParams;
 
 interface Props {
   params: Promise<{ slug: string[] }>;
@@ -20,30 +19,12 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = findContentPage((await params).slug.join("/"));
   if (!page) return {};
-  const path = `/${page.slug}`;
-  return {
+  return marketingMetadata({
     title: page.title,
     description: page.description,
-    robots: "index,follow",
-    alternates: {
-      canonical: path,
-      types: { "text/markdown": `${path}.md` },
-    },
-    openGraph: {
-      type: "website",
-      siteName: "Flatsby",
-      url: path,
-      title: page.title,
-      description: page.description,
-      images: "/opengraph-image",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: page.title,
-      description: page.description,
-      images: "/opengraph-image",
-    },
-  };
+    path: `/${page.slug}`,
+    markdownPath: `/${page.slug}.md`,
+  });
 }
 
 export default async function Page({ params }: Props) {
