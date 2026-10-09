@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Button } from "@flatsby/ui/button";
+
+export const metadata: Metadata = { robots: "index,follow" };
 
 export default function LegalLayout({
   children,

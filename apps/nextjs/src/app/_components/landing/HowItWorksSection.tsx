@@ -1,23 +1,14 @@
-import { ListChecks, Share2, UserPlus } from "lucide-react";
+import { Home, LogIn, UserPlus } from "lucide-react";
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@flatsby/ui/card";
 
+import { STEPS } from "./content";
+
+const [signIn, createGroup, addFlatmates] = STEPS;
 const steps = [
-  {
-    icon: UserPlus,
-    title: "Create your household",
-    description: "Sign up and create a group for your home in seconds.",
-  },
-  {
-    icon: Share2,
-    title: "Invite flatmates",
-    description: "Share a link with your roommates to join your household.",
-  },
-  {
-    icon: ListChecks,
-    title: "Start organizing",
-    description: "Add shopping lists, track expenses, and stay in sync.",
-  },
+  { ...signIn, icon: LogIn },
+  { ...createGroup, icon: Home },
+  { ...addFlatmates, icon: UserPlus },
 ];
 
 export function HowItWorksSection() {
@@ -38,7 +29,7 @@ export function HowItWorksSection() {
                   <step.icon className="h-5 w-5" />
                 </div>
                 <CardTitle className="text-lg">{step.title}</CardTitle>
-                <CardDescription>{step.description}</CardDescription>
+                <CardDescription>{step.body}</CardDescription>
               </CardHeader>
             </Card>
           ))}

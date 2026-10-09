@@ -1,21 +1,29 @@
+import type { Platform } from "./HeroSection";
+import { HOME_FAQ } from "./content";
 import { CTASection } from "./CTASection";
+import { FactsSection } from "./FactsSection";
+import { FaqSection } from "./FaqSection";
 import { FeaturesSection } from "./FeaturesSection";
-import { Footer } from "./Footer";
 import { HeroSection } from "./HeroSection";
 import { HowItWorksSection } from "./HowItWorksSection";
-import { LandingHeader } from "./LandingHeader";
+import { SCREENSHOTS } from "./pages";
+import { ScreenshotImage } from "./ScreenshotImage";
+import { SiteShell } from "./SiteShell";
+import { homeJsonLd, JsonLd } from "./structured-data";
 
-export function LandingPage({ isIOS }: { isIOS: boolean }) {
+export function LandingPage({ platform }: { platform: Platform }) {
   return (
-    <div className="bg-background h-screen overflow-auto">
-      <LandingHeader />
-      <main>
-        <HeroSection isIOS={isIOS} />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <CTASection />
-      </main>
-      <Footer />
-    </div>
+    <SiteShell>
+      <JsonLd graph={homeJsonLd(HOME_FAQ)} />
+      <HeroSection platform={platform} />
+      <div className="mx-auto max-w-5xl px-4">
+        <ScreenshotImage shot={SCREENSHOTS.webHome} />
+      </div>
+      <FeaturesSection />
+      <HowItWorksSection />
+      <FactsSection />
+      <FaqSection items={HOME_FAQ} showAllLink />
+      <CTASection />
+    </SiteShell>
   );
 }

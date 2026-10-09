@@ -23,6 +23,21 @@ const config = {
         : false,
   },
 
+  images: {
+    remotePatterns: [
+      new URL(
+        "https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/**",
+      ),
+    ],
+  },
+  // Every marketing page has a Markdown twin at <path>.md for AI agents.
+  async rewrites() {
+    return [
+      { source: "/index.md", destination: "/md" },
+      { source: "/:path(.+)\\.md", destination: "/md/:path" },
+    ];
+  },
+
   /** We already do linting and typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: true },
 };
