@@ -143,7 +143,6 @@ export function validateSplits({
   return { isValid: true };
 }
 
-/** Server-side: no rounding tolerance, amounts must sum exactly */
 export function validateExpenseSplitsStrict(
   expenseAmountInCents: number,
   splits: { amountInCents: number; shares?: number | null }[],

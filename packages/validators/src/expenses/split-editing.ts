@@ -1,5 +1,5 @@
 // ============================================================================
-// Split Editing - Pure transitions for the split editor on both clients
+// Split Editing - Pure split transitions for both clients and the server
 // ============================================================================
 
 import type { ExpenseSplit, SplitMethod } from "./types";
@@ -37,13 +37,7 @@ export function splitsForTotal(
     case "percentage":
       return distributePercentageAmounts(splits, totalAmountCents);
     case "shares":
-      return distributeShareAmounts(
-        splits.map((s) => ({
-          groupMemberId: s.groupMemberId,
-          shares: s.shares ?? 1,
-        })),
-        totalAmountCents,
-      );
+      return distributeShareAmounts(splits, totalAmountCents, 1);
     case "custom":
       return splits.map((s) => ({
         groupMemberId: s.groupMemberId,

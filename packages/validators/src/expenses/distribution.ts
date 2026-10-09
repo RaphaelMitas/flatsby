@@ -74,13 +74,15 @@ export function distributePercentageAmounts(
 }
 
 export function distributeShareAmounts(
-  splits: { groupMemberId: number; shares: number }[],
+  splits: Pick<ExpenseSplit, "groupMemberId" | "shares">[],
   totalAmountCents: number,
+  missingShares: number,
 ): ExpenseSplit[] {
-  const totalShares = splits.reduce((sum, s) => sum + s.shares, 0);
+  const counts = splits.map((s) => s.shares ?? missingShares);
+  const totalShares = counts.reduce((sum, count) => sum + count, 0);
   const amounts = roundByLargestRemainder(
-    splits.map((s) =>
-      totalShares > 0 ? (s.shares / totalShares) * totalAmountCents : 0,
+    counts.map((count) =>
+      totalShares > 0 ? (count / totalShares) * totalAmountCents : 0,
     ),
     totalShares > 0 ? totalAmountCents : 0,
   );
@@ -89,7 +91,7 @@ export function distributeShareAmounts(
     groupMemberId: split.groupMemberId,
     amountInCents: amounts[i] ?? 0,
     percentage: null,
-    shares: split.shares,
+    shares: counts[i],
   }));
 }
 
@@ -100,13 +102,7 @@ export function splitsForStorage(
   totalAmountCents: number,
 ): ExpenseSplit[] {
   return method === "shares"
-    ? distributeShareAmounts(
-        splits.map((s) => ({
-          groupMemberId: s.groupMemberId,
-          shares: s.shares ?? 0,
-        })),
-        totalAmountCents,
-      )
+    ? distributeShareAmounts(splits, totalAmountCents, 0)
     : splits.map((s) => ({ ...s, shares: null }));
 }
 

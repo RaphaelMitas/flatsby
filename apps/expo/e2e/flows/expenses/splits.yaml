@@ -168,7 +168,8 @@ tags:
 - tapOn:
     id: "expense-form-submit"
 - extendedWaitUntil:
-    visible: ".*60[.,]00.*"
+    notVisible:
+      id: "expense-form-submit"
     timeout: 20000
 # Relaunch so the detail view reads the saved expense, not the optimistic cache
 - launchApp
@@ -192,4 +193,7 @@ tags:
       id: "expense-split-details"
     timeout: 15000
 - assertVisible: "2 of 2 shares"
-- assertVisible: ".*60[.,]00.*"
+# The split row's amount, not the expense total in the header
+- assertVisible:
+    text: ".*60[.,]00.*"
+    rightOf: "2 of 2 shares"

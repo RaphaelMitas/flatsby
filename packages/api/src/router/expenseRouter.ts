@@ -2,11 +2,7 @@ import type {
   ExpenseCategoryGroup,
   ExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
-import type { UpdateExpenseInput } from "@flatsby/validators/expenses/schemas";
-import type {
-  ExpenseSplit,
-  SplitMethod,
-} from "@flatsby/validators/expenses/types";
+import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
@@ -27,6 +23,10 @@ import {
   splitMethodSchema,
   updateExpenseSchema,
 } from "@flatsby/validators/expenses/schemas";
+import {
+  editableSplitMethod,
+  splitsForTotal,
+} from "@flatsby/validators/expenses/split-editing";
 import { bulkCreateExpensesSchema } from "@flatsby/validators/expenses/splitwise-import";
 import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
 
@@ -56,26 +56,6 @@ function validateExpenseSplitsEffect(
   }
 
   return fail.validation("splits", result.error, result.userMessage);
-}
-
-function planSplitUpdate(
-  input: Pick<UpdateExpenseInput, "splitMethod" | "amountInCents" | "splits">,
-  row: { splitMethod: string; amountInCents: number },
-) {
-  const method = input.splitMethod ?? splitMethodSchema.parse(row.splitMethod);
-  const amountInCents = input.amountInCents ?? row.amountInCents;
-  return {
-    method,
-    amountInCents,
-    needsStoredSplits:
-      !input.splits &&
-      method === "shares" &&
-      (input.splitMethod !== undefined || input.amountInCents !== undefined),
-    splitsFrom: (stored: ExpenseSplit[] | null) => {
-      const source = input.splits ?? stored;
-      return source && splitsForStorage(method, source, amountInCents);
-    },
-  };
 }
 
 function coerceCategory(
@@ -242,18 +222,12 @@ export const expenseRouter = createTRPCRouter({
                       },
                     },
                   },
-                  expenseSplits: true,
                 },
               }),
             "expense",
           ),
-          (expense) => {
-            const plan = planSplitUpdate(input, expense);
-            const splits = plan.splitsFrom(
-              plan.needsStoredSplits ? expense.expenseSplits : null,
-            );
-
-            return Effect.flatMap(
+          (expense) =>
+            Effect.flatMap(
               DbUtils.ensureGroupMember(
                 ctx.session.user.id,
                 expense.group.groupMembers,
@@ -261,152 +235,146 @@ export const expenseRouter = createTRPCRouter({
               ),
               () =>
                 Effect.flatMap(
-                  splits
-                    ? validateExpenseSplitsEffect(
-                        plan.amountInCents,
-                        splits,
-                        plan.method,
+                  // Verify group members if updating (must be active)
+                  input.paidByGroupMemberId || input.splits
+                    ? Effect.forEach(
+                        [
+                          ...(input.paidByGroupMemberId
+                            ? [{ groupMemberId: input.paidByGroupMemberId }]
+                            : []),
+                          ...(input.splits ?? []),
+                        ],
+                        ({ groupMemberId }) =>
+                          DbUtils.findOneOrFail(
+                            () =>
+                              ctx.db.query.groupMembers.findFirst({
+                                where: and(
+                                  eq(groupMembers.id, groupMemberId),
+                                  eq(groupMembers.groupId, expense.groupId),
+                                ),
+                              }),
+                            "group member",
+                          ),
+                        { concurrency: "unbounded" },
                       )
                     : Effect.succeed(undefined),
                   () =>
                     Effect.flatMap(
-                      // Verify group members if updating (must be active)
-                      input.paidByGroupMemberId || splits
-                        ? Effect.forEach(
-                            [
-                              ...(input.paidByGroupMemberId
-                                ? [{ groupMemberId: input.paidByGroupMemberId }]
-                                : []),
-                              ...(splits
-                                ? splits.map((s) => ({
-                                    groupMemberId: s.groupMemberId,
-                                  }))
-                                : []),
-                            ],
-                            ({ groupMemberId }) =>
-                              DbUtils.findOneOrFail(
-                                () =>
-                                  ctx.db.query.groupMembers.findFirst({
-                                    where: and(
-                                      eq(groupMembers.id, groupMemberId),
-                                      eq(groupMembers.groupId, expense.groupId),
-                                    ),
-                                  }),
-                                "group member",
-                              ),
-                            { concurrency: "unbounded" },
-                          )
-                        : Effect.succeed(undefined),
-                      () =>
-                        DbUtils.transaction(async (trx) => {
-                          // Serializes edits so a re-split never starts from splits another edit replaced
-                          const [locked] = await trx
-                            .select({
-                              splitMethod: expenses.splitMethod,
-                              amountInCents: expenses.amountInCents,
-                            })
-                            .from(expenses)
-                            .where(eq(expenses.id, input.expenseId))
-                            .for("update");
-                          if (!locked) throw new Error("Expense was deleted");
+                      DbUtils.transaction(async (trx) => {
+                        // Serializes edits so a re-split never starts from splits another edit replaced
+                        const [locked] = await trx
+                          .select({
+                            splitMethod: expenses.splitMethod,
+                            amountInCents: expenses.amountInCents,
+                          })
+                          .from(expenses)
+                          .where(eq(expenses.id, input.expenseId))
+                          .for("update");
+                        if (!locked) throw new Error("Expense was deleted");
 
-                          const lockedPlan = planSplitUpdate(input, locked);
-                          const splitsToWrite = lockedPlan.splitsFrom(
-                            lockedPlan.needsStoredSplits
-                              ? await trx.query.expenseSplits.findMany({
+                        const method =
+                          input.splitMethod ??
+                          splitMethodSchema.parse(locked.splitMethod);
+                        const amountInCents =
+                          input.amountInCents ?? locked.amountInCents;
+                        // A new method or amount without splits re-splits the stored members, as the editors would
+                        const source =
+                          input.splits ??
+                          (input.splitMethod !== undefined ||
+                          input.amountInCents !== undefined
+                            ? splitsForTotal(
+                                editableSplitMethod(method),
+                                await trx.query.expenseSplits.findMany({
                                   where: eq(
                                     expenseSplits.expenseId,
                                     input.expenseId,
                                   ),
-                                })
-                              : null,
+                                }),
+                                amountInCents,
+                              )
+                            : null);
+                        const splitsToWrite =
+                          source &&
+                          splitsForStorage(method, source, amountInCents);
+                        const check =
+                          splitsToWrite &&
+                          validateExpenseSplitsStrict(
+                            amountInCents,
+                            splitsToWrite,
+                            method,
                           );
-                          if (
-                            splitsToWrite &&
-                            !validateExpenseSplitsStrict(
-                              lockedPlan.amountInCents,
-                              splitsToWrite,
-                              lockedPlan.method,
-                            ).valid
-                          ) {
-                            throw new Error(
-                              "Expense changed during the update",
+                        if (check && !check.valid) return { invalid: check };
+
+                        const updateData: Partial<
+                          typeof expenses.$inferInsert
+                        > = {};
+                        if (input.paidByGroupMemberId !== undefined) {
+                          updateData.paidByGroupMemberId =
+                            input.paidByGroupMemberId;
+                        }
+                        if (input.amountInCents !== undefined) {
+                          updateData.amountInCents = input.amountInCents;
+                        }
+                        if (input.currency !== undefined) {
+                          updateData.currency = input.currency;
+                        }
+                        if (input.description !== undefined) {
+                          updateData.description = input.description;
+                        }
+                        if (input.category !== undefined) {
+                          updateData.category = input.category;
+                        }
+                        if (input.subcategory !== undefined) {
+                          updateData.subcategory = input.subcategory;
+                        }
+                        if (input.expenseDate !== undefined) {
+                          updateData.expenseDate = input.expenseDate;
+                        }
+                        if (input.splitMethod !== undefined) {
+                          updateData.splitMethod = input.splitMethod;
+                        }
+
+                        if (Object.keys(updateData).length > 0) {
+                          await trx
+                            .update(expenses)
+                            .set(updateData)
+                            .where(eq(expenses.id, input.expenseId));
+                        }
+
+                        if (splitsToWrite) {
+                          await trx
+                            .delete(expenseSplits)
+                            .where(
+                              eq(expenseSplits.expenseId, input.expenseId),
                             );
-                          }
 
-                          const updateData: Partial<
-                            typeof expenses.$inferInsert
-                          > = {};
-                          if (input.paidByGroupMemberId !== undefined) {
-                            updateData.paidByGroupMemberId =
-                              input.paidByGroupMemberId;
-                          }
-                          if (input.amountInCents !== undefined) {
-                            updateData.amountInCents = input.amountInCents;
-                          }
-                          if (input.currency !== undefined) {
-                            updateData.currency = input.currency;
-                          }
-                          if (input.description !== undefined) {
-                            updateData.description = input.description;
-                          }
-                          if (input.category !== undefined) {
-                            updateData.category = input.category;
-                          }
-                          if (input.subcategory !== undefined) {
-                            updateData.subcategory = input.subcategory;
-                          }
-                          if (input.expenseDate !== undefined) {
-                            updateData.expenseDate = input.expenseDate;
-                          }
-                          if (input.splitMethod !== undefined) {
-                            updateData.splitMethod = input.splitMethod;
-                          }
+                          await trx.insert(expenseSplits).values(
+                            splitsToWrite.map((split) => ({
+                              expenseId: input.expenseId,
+                              groupMemberId: split.groupMemberId,
+                              amountInCents: split.amountInCents,
+                              percentage: split.percentage,
+                              shares: split.shares,
+                            })),
+                          );
+                        }
 
-                          if (Object.keys(updateData).length > 0) {
-                            await trx
-                              .update(expenses)
-                              .set(updateData)
-                              .where(eq(expenses.id, input.expenseId));
-                          }
-
-                          if (
-                            !splitsToWrite &&
-                            input.splitMethod !== undefined &&
-                            lockedPlan.method !== "shares"
-                          ) {
-                            await trx
-                              .update(expenseSplits)
-                              .set({ shares: null })
-                              .where(
-                                eq(expenseSplits.expenseId, input.expenseId),
-                              );
-                          }
-
-                          if (splitsToWrite) {
-                            await trx
-                              .delete(expenseSplits)
-                              .where(
-                                eq(expenseSplits.expenseId, input.expenseId),
-                              );
-
-                            await trx.insert(expenseSplits).values(
-                              splitsToWrite.map((split) => ({
-                                expenseId: input.expenseId,
-                                groupMemberId: split.groupMemberId,
-                                amountInCents: split.amountInCents,
-                                percentage: split.percentage,
-                                shares: split.shares,
-                              })),
-                            );
-                          }
-
-                          return { success: true, splits: splitsToWrite };
-                        }, "update expense")(ctx.db),
+                        return { splits: splitsToWrite };
+                      }, "update expense")(ctx.db),
+                      (result) =>
+                        result.invalid
+                          ? fail.validation(
+                              "splits",
+                              result.invalid.error,
+                              result.invalid.userMessage,
+                            )
+                          : Effect.succeed({
+                              success: true,
+                              splits: result.splits,
+                            }),
                     ),
                 ),
-            );
-          },
+            ),
         ),
       );
     }),
