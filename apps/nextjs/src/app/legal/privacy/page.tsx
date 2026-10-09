@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   description: "Privacy Policy for Flatsby",
 };
 
-const PRIVACY_VERSION = "1.1";
-const LAST_UPDATED = "March 2026";
+const PRIVACY_VERSION = "1.2";
+const LAST_UPDATED = "October 2026";
 
 function TableOfContents() {
   const items = [
@@ -139,10 +139,15 @@ export default function PrivacyPage() {
           </LegalParagraph>
           <LegalList>
             <li>
-              IP address (for session management only, not shared with
-              analytics)
+              IP address (for session management, and for counting visitors who
+              are not signed in as described below)
             </li>
-            <li>Page views and navigation patterns (anonymized)</li>
+            <li>
+              Page views and navigation patterns, linked to your account when
+              you are signed in. Visitors who are not signed in are counted with
+              a daily rotating, non-reversible identifier, and nothing is stored
+              on their device.
+            </li>
           </LegalList>
           <LegalParagraph>
             <strong>Mobile App:</strong>
@@ -240,8 +245,11 @@ export default function PrivacyPage() {
               <ul className="mt-2 ml-4 list-disc space-y-1">
                 <li>
                   <strong>Website:</strong> Analytics are processed on our
-                  servers before being sent to PostHog. Your IP address is not
-                  shared with PostHog.
+                  servers before being sent to PostHog. When you are signed in,
+                  your IP address is not shared with PostHog. When you are not
+                  signed in, PostHog uses your IP address and browser
+                  information only to compute the daily rotating identifier and
+                  does not store them.
                 </li>
                 <li>
                   <strong>Mobile App:</strong> The app connects directly to

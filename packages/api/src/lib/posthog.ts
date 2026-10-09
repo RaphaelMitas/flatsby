@@ -205,24 +205,31 @@ export function captureError({
   });
 }
 
+// PostHog hashes $ip, $host and $raw_user_agent with a daily salt, then strips them
+function cookielessProperties(headers: Headers) {
+  const ip = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return { $cookieless_mode: true, ...(ip && { $ip: ip }) };
+}
+
 export function captureEvent({
   distinctId,
   event,
   headers,
   additionalProperties,
 }: {
-  distinctId: string;
+  distinctId: string | undefined;
   event: string;
   headers: Headers;
   additionalProperties?: Record<string, unknown>;
 }) {
   if (!posthog) return;
   posthog.capture({
-    distinctId,
+    distinctId: distinctId ?? "$posthog_cookieless",
     event,
     properties: {
       ...buildPostHogProperties(headers),
       ...additionalProperties,
+      ...(!distinctId && cookielessProperties(headers)),
     },
   });
 }
