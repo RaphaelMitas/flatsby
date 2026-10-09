@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { and, desc, eq, isNull, lt } from "@flatsby/db";
 import { chatMessages, conversations, users } from "@flatsby/db/schema";
+import { requiresAIConsent } from "@flatsby/validators/ai-consent";
 import {
   CHAT_MESSAGE_LIMIT,
   conversationWithMessagesSchema,
@@ -324,6 +325,18 @@ export const chatRouter = createTRPCRouter({
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "Conversation not found",
+      });
+    }
+
+    const consent = await ctx.db.query.users.findFirst({
+      where: eq(users.id, ctx.session.user.id),
+      columns: { aiConsentAcceptedAt: true, aiConsentVersion: true },
+    });
+
+    if (!consent || requiresAIConsent(consent)) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Please accept AI data sharing before using the assistant.",
       });
     }
 
