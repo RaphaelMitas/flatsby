@@ -14,10 +14,13 @@ appId: ${APP_ID}
 #
 # Android hides the tab bar while the keyboard is open, so there is nothing to
 # tap until it is dismissed. iOS keeps its bar, and hideKeyboard fails outright
-# there in some states, so keep this off that platform.
+# there in some states, so keep this off that platform. Android's hideKeyboard
+# is a back press, so only send it while the bar is hidden: on a root screen
+# it closes the app.
 - runFlow:
     when:
       platform: Android
+      notVisible: ${TAB_LABEL}
     commands:
       - hideKeyboard
 - runFlow:
