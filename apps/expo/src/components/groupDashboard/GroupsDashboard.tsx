@@ -58,7 +58,7 @@ export function GroupsDashboard() {
           </Text>
         </View>
       )}
-      <PullToRefresh refreshing={isRefetching} onRefresh={refetch}>
+      <PullToRefresh refreshing={isRefetching} onRefresh={refetch} bleed={16}>
         {(refreshProps) => (
           <FlashList
             {...refreshProps}

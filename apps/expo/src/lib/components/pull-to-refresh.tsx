@@ -34,6 +34,8 @@ interface PullToRefreshProps {
   refreshing: boolean;
   onRefresh: () => Promise<unknown>;
   children: (listProps: ListRefreshProps) => ReactNode;
+  // Horizontal padding of the list's parent, so the scene runs edge to edge.
+  bleed?: number;
 }
 
 interface ScenePullProps extends PullToRefreshProps {
@@ -65,18 +67,20 @@ function SceneBackdrop({
   Scene,
   reveal,
   refreshing,
+  bleed = 0,
 }: {
   Scene: ComponentType<RefreshSceneProps>;
   reveal: SharedValue<number>;
   refreshing: boolean;
+  bleed?: number;
 }) {
   const style = useAnimatedStyle(() => ({ height: reveal.value }));
 
   return (
     <Animated.View
       pointerEvents="none"
-      style={style}
-      className="absolute inset-x-0 top-0 overflow-hidden"
+      style={[{ left: -bleed, right: -bleed }, style]}
+      className="absolute top-0 overflow-hidden"
     >
       <Scene refreshing={refreshing} />
     </Animated.View>
@@ -89,12 +93,18 @@ function BouncePull({
   refreshing,
   onRefresh,
   children,
+  bleed,
 }: ScenePullProps) {
   const reveal = useSharedValue(0);
 
   return (
     <View className="flex-1">
-      <SceneBackdrop Scene={Scene} reveal={reveal} refreshing={refreshing} />
+      <SceneBackdrop
+        Scene={Scene}
+        reveal={reveal}
+        refreshing={refreshing}
+        bleed={bleed}
+      />
       {children({
         refreshControl: (
           <RefreshControl
@@ -113,7 +123,7 @@ function BouncePull({
 }
 
 // Android lists don't overscroll, so the pull drags the list down itself.
-function DragPull({ Scene, onRefresh, children }: ScenePullProps) {
+function DragPull({ Scene, onRefresh, children, bleed }: ScenePullProps) {
   const reveal = useSharedValue(0);
   const atTop = useSharedValue(true);
   const touchStart = useSharedValue({ x: 0, y: 0 });
@@ -171,7 +181,12 @@ function DragPull({ Scene, onRefresh, children }: ScenePullProps) {
 
   return (
     <View className="flex-1">
-      <SceneBackdrop Scene={Scene} reveal={reveal} refreshing={pulled} />
+      <SceneBackdrop
+        Scene={Scene}
+        reveal={reveal}
+        refreshing={pulled}
+        bleed={bleed}
+      />
       <GestureDetector gesture={pull}>
         <Animated.View style={listStyle} className="flex-1">
           {children({

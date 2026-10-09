@@ -136,7 +136,11 @@ export function ExpenseListPanel({
           />
         </View>
       ) : (
-        <PullToRefresh refreshing={refreshing} onRefresh={handleRefresh}>
+        <PullToRefresh
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          bleed={16}
+        >
           {(refreshProps) => (
             <FlashList
               {...refreshProps}
