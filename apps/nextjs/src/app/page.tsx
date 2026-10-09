@@ -37,7 +37,10 @@ export default async function HomePage() {
 
   const userWithGroups = await caller.user.getCurrentUserWithGroups();
   if (!userWithGroups.success) {
-    return signOutAndRedirect();
+    if (userWithGroups.error.type === "UnauthorizedError") {
+      return signOutAndRedirect();
+    }
+    throw new Error(userWithGroups.error.message);
   }
 
   if (userWithGroups.data.groups.length > 0) {
