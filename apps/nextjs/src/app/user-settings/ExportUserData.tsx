@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@flatsby/ui/button";
+import { toast } from "@flatsby/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -14,6 +15,7 @@ export default function ExportUserData() {
   const { refetch } = useQuery({
     ...trpc.user.exportUserData.queryOptions(),
     enabled: false,
+    retry: false,
   });
 
   const handleExport = async () => {
@@ -33,6 +35,8 @@ export default function ExportUserData() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      } else {
+        toast.error("Couldn't export your data. Please try again.");
       }
     } finally {
       setIsExporting(false);

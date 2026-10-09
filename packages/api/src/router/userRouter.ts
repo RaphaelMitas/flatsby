@@ -505,18 +505,20 @@ export const userRouter = createTRPCRouter({
           try: async () => {
             const userId = ctx.session.user.id;
 
-            // Fetch user data
             const user = await ctx.db.query.users.findFirst({
               where: eq(users.id, userId),
               columns: {
                 id: true,
                 name: true,
                 email: true,
+                image: true,
                 createdAt: true,
                 termsAcceptedAt: true,
                 termsVersion: true,
                 privacyAcceptedAt: true,
                 privacyVersion: true,
+                aiConsentAcceptedAt: true,
+                aiConsentVersion: true,
               },
             });
 
@@ -524,8 +526,27 @@ export const userRouter = createTRPCRouter({
               throw new Error("User not found");
             }
 
+            const signInMethods = await ctx.db.query.accounts.findMany({
+              where: eq(accounts.userId, userId),
+              columns: { providerId: true, accountId: true, createdAt: true },
+            });
+
+            const userSessions = await ctx.db.query.sessions.findMany({
+              where: eq(sessions.userId, userId),
+              columns: {
+                createdAt: true,
+                expiresAt: true,
+                ipAddress: true,
+                userAgent: true,
+              },
+            });
+
+            // Removed or departed members keep an inactive row; they must not export that household.
             const userGroups = await ctx.db.query.groupMembers.findMany({
-              where: eq(groupMembers.userId, userId),
+              where: and(
+                eq(groupMembers.userId, userId),
+                eq(groupMembers.isActive, true),
+              ),
               columns: {
                 id: true,
                 role: true,
@@ -536,6 +557,12 @@ export const userRouter = createTRPCRouter({
                   columns: {
                     id: true,
                     name: true,
+                  },
+                  with: {
+                    groupMembers: {
+                      columns: { id: true, isActive: true },
+                      with: { user: { columns: { name: true } } },
+                    },
                   },
                 },
               },
@@ -562,6 +589,8 @@ export const userRouter = createTRPCRouter({
                           completed: true,
                           createdAt: true,
                           completedAt: true,
+                          createdByGroupMemberId: true,
+                          completedByGroupMemberId: true,
                         },
                       },
                     },
@@ -596,6 +625,7 @@ export const userRouter = createTRPCRouter({
                       splitMethod: true,
                       expenseDate: true,
                       paidByGroupMemberId: true,
+                      createdByGroupMemberId: true,
                     },
                     with: {
                       expenseSplits: {
@@ -618,6 +648,7 @@ export const userRouter = createTRPCRouter({
                 columns: {
                   id: true,
                   title: true,
+                  systemPrompt: true,
                   createdAt: true,
                 },
                 with: {
@@ -634,65 +665,33 @@ export const userRouter = createTRPCRouter({
             );
 
             return {
-              exportedAt: new Date().toISOString(),
-              user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                createdAt: user.createdAt.toISOString(),
-                termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
-                termsVersion: user.termsVersion ?? null,
-                privacyAcceptedAt:
-                  user.privacyAcceptedAt?.toISOString() ?? null,
-                privacyVersion: user.privacyVersion ?? null,
-              },
+              exportedAt: new Date(),
+              user,
+              signInMethods,
+              sessions: userSessions,
               groups: userGroups.map((g) => ({
                 id: g.group.id,
                 name: g.group.name,
                 memberId: g.id,
                 role: g.role,
-                joinedOn: g.joinedOn.toISOString(),
+                joinedOn: g.joinedOn,
+                members: g.group.groupMembers.map((m) => ({
+                  memberId: m.id,
+                  name: m.user.name,
+                  active: m.isActive,
+                })),
               })),
               shoppingLists: userShoppingLists.map((sl) => ({
                 id: sl.id,
                 name: sl.name,
                 groupId: sl.groupId,
-                items: sl.shoppingListItems.map((item) => ({
-                  id: item.id,
-                  name: item.name,
-                  categoryId: item.categoryId,
-                  completed: item.completed,
-                  createdAt: item.createdAt.toISOString(),
-                  completedAt: item.completedAt?.toISOString() ?? null,
-                })),
+                items: sl.shoppingListItems,
               })),
-              expenses: userExpenses.map((e) => ({
-                id: e.id,
-                groupId: e.groupId,
-                description: e.description,
-                amountInCents: e.amountInCents,
-                currency: e.currency,
-                category: e.category,
-                subcategory: e.subcategory,
-                splitMethod: e.splitMethod,
-                expenseDate: e.expenseDate.toISOString(),
-                paidByMemberId: e.paidByGroupMemberId,
-                splits: e.expenseSplits.map((split) => ({
-                  memberId: split.groupMemberId,
-                  amountInCents: split.amountInCents,
-                  percentage: split.percentage,
-                })),
+              expenses: userExpenses.map(({ expenseSplits, ...expense }) => ({
+                ...expense,
+                splits: expenseSplits,
               })),
-              conversations: userConversations.map((c) => ({
-                id: c.id,
-                title: c.title,
-                createdAt: c.createdAt.toISOString(),
-                messages: c.messages.map((m) => ({
-                  role: m.role,
-                  content: m.content,
-                  createdAt: m.createdAt.toISOString(),
-                })),
-              })),
+              conversations: userConversations,
             };
           },
           catch: (error) =>
