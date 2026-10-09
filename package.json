@@ -24,7 +24,8 @@
     "release": "node scripts/release.mjs",
     "typecheck": "turbo run typecheck",
     "ui-add": "pnpm dlx shadcn@latest add -c packages/ui",
-    "with-op": "op run --no-masking --environment azz4y2ohqppyjg4f3cssxtxbia --"
+    "op": "op run --no-masking --environment azz4y2ohqppyjg4f3cssxtxbia --",
+    "op-prod": "op run --no-masking --environment hwryn4byznprvfoes7jqfujbfu --"
   },
   "devDependencies": {
     "@flatsby/prettier-config": "workspace:*",
