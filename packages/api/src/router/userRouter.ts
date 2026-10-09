@@ -1,12 +1,12 @@
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, count, eq, inArray, isNull, ne } from "@flatsby/db";
+import { and, eq, inArray, isNull, ne, or } from "@flatsby/db";
 import {
   accounts,
-  chatMessages,
   conversations,
   expenses,
+  expenseSplits,
   groupMembers,
   groups,
   sessions,
@@ -524,10 +524,10 @@ export const userRouter = createTRPCRouter({
               throw new Error("User not found");
             }
 
-            // Fetch user's groups with membership info
             const userGroups = await ctx.db.query.groupMembers.findMany({
               where: eq(groupMembers.userId, userId),
               columns: {
+                id: true,
                 role: true,
                 joinedOn: true,
               },
@@ -541,10 +541,9 @@ export const userRouter = createTRPCRouter({
               },
             });
 
-            // Get group IDs the user belongs to
             const groupIds = userGroups.map((g) => g.group.id);
+            const memberIds = userGroups.map((g) => g.id);
 
-            // Fetch shopping lists from user's groups
             const userShoppingLists =
               groupIds.length > 0
                 ? await ctx.db.query.shoppingLists.findMany({
@@ -558,58 +557,81 @@ export const userRouter = createTRPCRouter({
                       shoppingListItems: {
                         columns: {
                           id: true,
+                          name: true,
+                          categoryId: true,
+                          completed: true,
+                          createdAt: true,
+                          completedAt: true,
                         },
                       },
                     },
                   })
                 : [];
 
-            // Fetch user's expenses (where they are the payer or creator)
-            const userGroupMemberIds = await ctx.db.query.groupMembers.findMany(
-              {
-                where: eq(groupMembers.userId, userId),
-                columns: {
-                  id: true,
-                },
-              },
-            );
-            const memberIds = userGroupMemberIds.map((m) => m.id);
-
+            // Settlements are expenses too, so this also covers them.
             const userExpenses =
               memberIds.length > 0
                 ? await ctx.db.query.expenses.findMany({
-                    where: inArray(expenses.paidByGroupMemberId, memberIds),
+                    where: or(
+                      inArray(expenses.paidByGroupMemberId, memberIds),
+                      inArray(expenses.createdByGroupMemberId, memberIds),
+                      inArray(
+                        expenses.id,
+                        ctx.db
+                          .select({ id: expenseSplits.expenseId })
+                          .from(expenseSplits)
+                          .where(
+                            inArray(expenseSplits.groupMemberId, memberIds),
+                          ),
+                      ),
+                    ),
                     columns: {
                       id: true,
+                      groupId: true,
                       description: true,
                       amountInCents: true,
                       currency: true,
+                      category: true,
+                      subcategory: true,
+                      splitMethod: true,
                       expenseDate: true,
-                      groupId: true,
+                      paidByGroupMemberId: true,
+                    },
+                    with: {
+                      expenseSplits: {
+                        columns: {
+                          groupMemberId: true,
+                          amountInCents: true,
+                          percentage: true,
+                        },
+                      },
                     },
                   })
                 : [];
 
-            // Fetch user's conversations with message counts
-            const userConversations = await ctx.db
-              .select({
-                id: conversations.id,
-                title: conversations.title,
-                createdAt: conversations.createdAt,
-                messageCount: count(chatMessages.id),
-              })
-              .from(conversations)
-              .leftJoin(
-                chatMessages,
-                eq(chatMessages.conversationId, conversations.id),
-              )
-              .where(
-                and(
+            const userConversations = await ctx.db.query.conversations.findMany(
+              {
+                where: and(
                   eq(conversations.userId, userId),
                   isNull(conversations.deletedAt),
                 ),
-              )
-              .groupBy(conversations.id);
+                columns: {
+                  id: true,
+                  title: true,
+                  createdAt: true,
+                },
+                with: {
+                  messages: {
+                    columns: {
+                      role: true,
+                      content: true,
+                      createdAt: true,
+                    },
+                    orderBy: (message, { asc }) => [asc(message.createdAt)],
+                  },
+                },
+              },
+            );
 
             return {
               exportedAt: new Date().toISOString(),
@@ -627,6 +649,7 @@ export const userRouter = createTRPCRouter({
               groups: userGroups.map((g) => ({
                 id: g.group.id,
                 name: g.group.name,
+                memberId: g.id,
                 role: g.role,
                 joinedOn: g.joinedOn.toISOString(),
               })),
@@ -634,21 +657,41 @@ export const userRouter = createTRPCRouter({
                 id: sl.id,
                 name: sl.name,
                 groupId: sl.groupId,
-                itemsCount: sl.shoppingListItems.length,
+                items: sl.shoppingListItems.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  categoryId: item.categoryId,
+                  completed: item.completed,
+                  createdAt: item.createdAt.toISOString(),
+                  completedAt: item.completedAt?.toISOString() ?? null,
+                })),
               })),
               expenses: userExpenses.map((e) => ({
                 id: e.id,
+                groupId: e.groupId,
                 description: e.description,
                 amountInCents: e.amountInCents,
                 currency: e.currency,
+                category: e.category,
+                subcategory: e.subcategory,
+                splitMethod: e.splitMethod,
                 expenseDate: e.expenseDate.toISOString(),
-                groupId: e.groupId,
+                paidByMemberId: e.paidByGroupMemberId,
+                splits: e.expenseSplits.map((split) => ({
+                  memberId: split.groupMemberId,
+                  amountInCents: split.amountInCents,
+                  percentage: split.percentage,
+                })),
               })),
               conversations: userConversations.map((c) => ({
                 id: c.id,
                 title: c.title,
                 createdAt: c.createdAt.toISOString(),
-                messageCount: c.messageCount,
+                messages: c.messages.map((m) => ({
+                  role: m.role,
+                  content: m.content,
+                  createdAt: m.createdAt.toISOString(),
+                })),
               })),
             };
           },

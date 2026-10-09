@@ -86,6 +86,7 @@ export const userDataExportSchema = z.object({
     z.object({
       id: z.number(),
       name: z.string(),
+      memberId: z.number(),
       role: z.string(),
       joinedOn: z.string(),
     }),
@@ -95,17 +96,37 @@ export const userDataExportSchema = z.object({
       id: z.number(),
       name: z.string(),
       groupId: z.number(),
-      itemsCount: z.number(),
+      items: z.array(
+        z.object({
+          id: z.number(),
+          name: z.string(),
+          categoryId: z.string(),
+          completed: z.boolean(),
+          createdAt: z.string(),
+          completedAt: z.string().nullable(),
+        }),
+      ),
     }),
   ),
   expenses: z.array(
     z.object({
       id: z.number(),
-      description: z.string().nullable(),
+      groupId: z.number(),
+      description: z.string(),
       amountInCents: z.number(),
       currency: z.string(),
+      category: z.string(),
+      subcategory: z.string(),
+      splitMethod: z.string(),
       expenseDate: z.string(),
-      groupId: z.number(),
+      paidByMemberId: z.number(),
+      splits: z.array(
+        z.object({
+          memberId: z.number(),
+          amountInCents: z.number(),
+          percentage: z.number().nullable(),
+        }),
+      ),
     }),
   ),
   conversations: z.array(
@@ -113,7 +134,13 @@ export const userDataExportSchema = z.object({
       id: z.string(),
       title: z.string().nullable(),
       createdAt: z.string(),
-      messageCount: z.number(),
+      messages: z.array(
+        z.object({
+          role: z.string(),
+          content: z.string(),
+          createdAt: z.string(),
+        }),
+      ),
     }),
   ),
 });
