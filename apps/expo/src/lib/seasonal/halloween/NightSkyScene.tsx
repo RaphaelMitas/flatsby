@@ -96,15 +96,15 @@ function BroomRider({ refreshing }: { refreshing: boolean }) {
         style={{ marginTop: -8 }}
       >
         <Line
-          x1={4}
+          x1={26}
           y1={8}
-          x2={64}
+          x2={86}
           y2={8}
           stroke="#a16207"
           strokeWidth={3}
           strokeLinecap="round"
         />
-        <Path d="M62 4 L88 0 L90 16 L62 12 Z" fill="#ca8a04" />
+        <Path d="M28 4 L2 0 L0 16 L28 12 Z" fill="#ca8a04" />
       </Svg>
     </Animated.View>
   );
