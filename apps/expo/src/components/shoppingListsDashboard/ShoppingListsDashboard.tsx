@@ -123,7 +123,7 @@ function ShoppingListsDashboardInner() {
           <PullToRefresh
             refreshing={isRefetching}
             onRefresh={refetch}
-            bleed={16}
+            parentPaddingX={16}
           >
             {(refreshProps) => (
               <FlashList

@@ -139,7 +139,7 @@ export function ExpenseListPanel({
         <PullToRefresh
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          bleed={16}
+          parentPaddingX={16}
         >
           {(refreshProps) => (
             <FlashList

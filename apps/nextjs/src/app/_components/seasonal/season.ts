@@ -1,12 +1,10 @@
 import type { ComponentType } from "react";
 
-import { Bats } from "./halloween/bats";
+import { halloween } from "./halloween/halloween";
 
-interface Season {
+export interface Season {
   TapReaction?: ComponentType;
 }
 
-// Everything seasonal hangs off this; set it to {} to ship the plain app.
-export const season: Season = {
-  TapReaction: Bats,
-};
+// Set to {} and drop the import to ship the plain app.
+export const season: Season = halloween;

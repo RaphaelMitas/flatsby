@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useIsFocused } from "expo-router";
 
 import { season } from "~/lib/seasonal/season";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
@@ -20,6 +20,7 @@ const HOP = 8;
 
 export function PeekingCat() {
   const { getColor } = useThemeColors();
+  const isFocused = useIsFocused();
   const rise = useSharedValue(PEEK);
   const hop = useSharedValue(0);
   const [taps, setTaps] = useState(0);
@@ -51,7 +52,11 @@ export function PeekingCat() {
       <View style={{ height: PEEK + HOP }} className="overflow-hidden">
         <Pressable onPress={handlePress} accessibilityLabel="Flatsby cat">
           <Animated.View style={[{ marginTop: HOP }, catStyle]}>
-            <FlatsbyCat size={CAT_SIZE} color={getColor("primary")} animated />
+            <FlatsbyCat
+              size={CAT_SIZE}
+              color={getColor("primary")}
+              animated={isFocused}
+            />
           </Animated.View>
         </Pressable>
       </View>

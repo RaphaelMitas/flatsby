@@ -7,12 +7,19 @@ import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 
 import { season } from "./seasonal/season";
 
-export function PeekingCat({ className }: { className?: string }) {
+export function PeekingCat({
+  className,
+  variant = "hero",
+}: {
+  className?: string;
+  variant?: "hero" | "home";
+}) {
   const [excited, setExcited] = useState(false);
   const [hops, setHops] = useState(0);
   const [taps, setTaps] = useState(0);
   const lastHop = useRef(0);
-  const TapReaction = season.TapReaction;
+  const isHome = variant === "home";
+  const TapReaction = isHome ? season.TapReaction : undefined;
 
   const playHop = useCallback(() => {
     const now = Date.now();
@@ -35,7 +42,13 @@ export function PeekingCat({ className }: { className?: string }) {
           setTaps((n) => n + 1);
         }}
       >
-        <div className="motion-safe:animate-in motion-safe:slide-in-from-bottom-full absolute inset-0 duration-700">
+        <div
+          className={cn(
+            "absolute inset-0",
+            isHome &&
+              "motion-safe:animate-in motion-safe:slide-in-from-bottom-full duration-700",
+          )}
+        >
           <FlatsbyCat
             key={hops}
             className={cn(

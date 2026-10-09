@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { View } from "react-native";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -38,7 +37,7 @@ function Bat({
       delay,
       withTiming(1, { duration: 900, easing: Easing.out(Easing.quad) }),
     );
-    flap.value = withRepeat(withTiming(0.4, { duration: 90 }), -1, true);
+    flap.value = withRepeat(withTiming(0.4, { duration: 90 }), 12, true);
     return () => cancelAnimation(flap);
   }, [delay, progress, flap]);
 
@@ -67,11 +66,7 @@ export function Bats() {
 
   if (reduceMotion) return null;
 
-  return (
-    <View pointerEvents="none">
-      {FLIGHTS.map((flight) => (
-        <Bat key={flight.dx} {...flight} color={getColor("foreground")} />
-      ))}
-    </View>
-  );
+  return FLIGHTS.map((flight) => (
+    <Bat key={flight.dx} {...flight} color={getColor("foreground")} />
+  ));
 }

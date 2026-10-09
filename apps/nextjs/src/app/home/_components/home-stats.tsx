@@ -68,6 +68,15 @@ function StatCard({ icon, value, format, label, colorClass }: StatCardProps) {
   );
 }
 
+function StatsHeader() {
+  return (
+    <div className="-mb-2 flex items-end justify-between pr-4">
+      <p className="text-muted-foreground mb-2 text-sm">Last 30 days</p>
+      <PeekingCat variant="home" className="h-8 w-16" />
+    </div>
+  );
+}
+
 function StatCardSkeleton() {
   return (
     <Card>
@@ -139,62 +148,64 @@ function HomeStatsInner() {
     formatCurrencyFromCents({ cents, currency });
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <StatCard
-        icon={<Wallet className="h-5 w-5" />}
-        value={spendingCents}
-        format={formatCurrency(spendingCurrency)}
-        label="spent"
-        colorClass="text-blue-500"
-      />
-      <StatCard
-        icon={<CheckCircle2 className="h-5 w-5" />}
-        value={itemsCompleted}
-        label="items"
-        colorClass="text-green-500"
-      />
-      <StatCard
-        icon={<MessageSquare className="h-5 w-5" />}
-        value={chatMessages}
-        label="messages"
-        colorClass="text-purple-500"
-      />
-      <StatCard
-        icon={<TrendingUp className="h-5 w-5" />}
-        value={balanceAmount}
-        format={formatCurrency(balanceCurrency)}
-        label={userBalance ? (isOwed ? "owed to you" : "you owe") : "balanced"}
-        colorClass={
-          userBalance
-            ? isOwed
-              ? "text-green-500"
-              : "text-red-500"
-            : "text-green-500"
-        }
-      />
+    <div className="space-y-2">
+      <StatsHeader />
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard
+          icon={<Wallet className="h-5 w-5" />}
+          value={spendingCents}
+          format={formatCurrency(spendingCurrency)}
+          label="spent"
+          colorClass="text-blue-500"
+        />
+        <StatCard
+          icon={<CheckCircle2 className="h-5 w-5" />}
+          value={itemsCompleted}
+          label="items"
+          colorClass="text-green-500"
+        />
+        <StatCard
+          icon={<MessageSquare className="h-5 w-5" />}
+          value={chatMessages}
+          label="messages"
+          colorClass="text-purple-500"
+        />
+        <StatCard
+          icon={<TrendingUp className="h-5 w-5" />}
+          value={balanceAmount}
+          format={formatCurrency(balanceCurrency)}
+          label={
+            userBalance ? (isOwed ? "owed to you" : "you owe") : "balanced"
+          }
+          colorClass={
+            userBalance
+              ? isOwed
+                ? "text-green-500"
+                : "text-red-500"
+              : "text-green-500"
+          }
+        />
+      </div>
     </div>
   );
 }
 
 export function HomeStats() {
   return (
-    <div className="space-y-2">
-      <div className="-mb-2 flex items-end justify-between pr-4">
-        <p className="text-muted-foreground mb-2 text-sm">Last 30 days</p>
-        <PeekingCat className="h-8 w-16" />
-      </div>
-      <Suspense
-        fallback={
+    <Suspense
+      fallback={
+        <div className="space-y-2">
+          <StatsHeader />
           <div className="grid grid-cols-2 gap-3">
             <StatCardSkeleton />
             <StatCardSkeleton />
             <StatCardSkeleton />
             <StatCardSkeleton />
           </div>
-        }
-      >
-        <HomeStatsInner />
-      </Suspense>
-    </div>
+        </div>
+      }
+    >
+      <HomeStatsInner />
+    </Suspense>
   );
 }
