@@ -52,8 +52,6 @@ export function distributePercentageAmounts(
   splits: Pick<ExpenseSplit, "groupMemberId" | "percentage">[],
   totalAmountCents: number,
 ): ExpenseSplit[] {
-  if (splits.length === 0) return [];
-
   const totalBasisPoints = splits.reduce(
     (sum, s) => sum + (s.percentage ?? 0),
     0,
@@ -61,15 +59,61 @@ export function distributePercentageAmounts(
   // Tolerance matches validateSplits; scaling by the entered total lets 99.99% still sum exactly
   const isComplete = Math.abs(totalBasisPoints - 10000) <= 1;
   const basis = isComplete ? totalBasisPoints : 10000;
-
   const rawAmounts = splits.map(
     (s) => ((s.percentage ?? 0) / basis) * totalAmountCents,
   );
+  const amounts = isComplete
+    ? roundByLargestRemainder(rawAmounts, totalAmountCents)
+    : rawAmounts.map((a) => Math.floor(a));
+
+  return splits.map((split, i) => ({
+    groupMemberId: split.groupMemberId,
+    amountInCents: amounts[i] ?? 0,
+    percentage: split.percentage,
+  }));
+}
+
+export function distributeShareAmounts(
+  splits: Pick<ExpenseSplit, "groupMemberId" | "shares">[],
+  totalAmountCents: number,
+  missingShares: number,
+): ExpenseSplit[] {
+  const counts = splits.map((s) => s.shares ?? missingShares);
+  const totalShares = counts.reduce((sum, count) => sum + count, 0);
+  const amounts = roundByLargestRemainder(
+    counts.map((count) =>
+      totalShares > 0 ? (count / totalShares) * totalAmountCents : 0,
+    ),
+    totalShares > 0 ? totalAmountCents : 0,
+  );
+
+  return splits.map((split, i) => ({
+    groupMemberId: split.groupMemberId,
+    amountInCents: amounts[i] ?? 0,
+    percentage: null,
+    shares: counts[i],
+  }));
+}
+
+// The server derives share amounts from the counts, so callers never have to match its rounding
+export function splitsForStorage(
+  method: SplitMethod,
+  splits: ExpenseSplit[],
+  totalAmountCents: number,
+): ExpenseSplit[] {
+  return method === "shares"
+    ? distributeShareAmounts(splits, totalAmountCents, 0)
+    : splits.map((s) => ({ ...s, shares: null }));
+}
+
+function roundByLargestRemainder(
+  rawAmounts: number[],
+  totalAmountCents: number,
+): number[] {
   const flooredAmounts = rawAmounts.map((a) => Math.floor(a));
   const currentSum = flooredAmounts.reduce((a, b) => a + b, 0);
-  let remainder = isComplete ? totalAmountCents - currentSum : 0;
+  let remainder = totalAmountCents - currentSum;
 
-  // Sort by fractional part descending to distribute remainder fairly
   const indexed = rawAmounts.map((raw, i) => ({
     index: i,
     fractionalPart: raw - Math.floor(raw),
@@ -79,43 +123,11 @@ export function distributePercentageAmounts(
   for (const { index } of indexed) {
     if (remainder <= 0) break;
     if (flooredAmounts[index] === undefined)
-      throw new Error(`Invalid index in distributePercentageAmounts: ${index}`);
+      throw new Error(`Invalid index in roundByLargestRemainder: ${index}`);
 
     flooredAmounts[index]++;
     remainder--;
   }
 
-  return splits.map((split, i) => {
-    if (flooredAmounts[i] === undefined)
-      throw new Error(`Invalid index in distributePercentageAmounts: ${i}`);
-
-    return {
-      groupMemberId: split.groupMemberId,
-      amountInCents: flooredAmounts[i],
-      percentage: split.percentage,
-    };
-  });
-}
-
-// Blank members aren't part of the expense, so they're dropped instead of saved at 0
-export function finalizeSplits(
-  method: SplitMethod,
-  splits: ExpenseSplit[],
-  totalAmountCents: number,
-): ExpenseSplit[] {
-  if (method === "equal") {
-    return distributeEqualAmounts(
-      splits.map((s) => s.groupMemberId),
-      totalAmountCents,
-    );
-  }
-  if (method === "percentage") {
-    return distributePercentageAmounts(
-      splits.filter((s) => s.percentage),
-      totalAmountCents,
-    );
-  }
-  return splits
-    .filter((s) => s.amountInCents > 0)
-    .map((s) => ({ ...s, percentage: null }));
+  return flooredAmounts;
 }

@@ -631,6 +631,7 @@ export const userRouter = createTRPCRouter({
                           groupMemberId: true,
                           amountInCents: true,
                           percentage: true,
+                          shares: true,
                         },
                       },
                     },

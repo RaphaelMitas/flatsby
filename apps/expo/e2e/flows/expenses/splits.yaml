@@ -2,7 +2,7 @@ appId: ${APP_ID}
 tags:
   - expenses
 ---
-# Mirrors the percentage and custom split cases from
+# Mirrors the percentage, shares and custom split cases from
 # apps/nextjs/e2e/expenses/expense-creation.spec.ts.
 - runFlow: ../../subflows/e2e-login.yaml
 - runFlow: ../../subflows/open-expenses.yaml
@@ -90,3 +90,110 @@ tags:
 - extendedWaitUntil:
     visible: "Custom utilities"
     timeout: 20000
+
+# --- Shares split ---
+- tapOn:
+    id: "expense-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-amount"
+- inputText: "90.00"
+- tapOn:
+    id: "expense-form-description"
+- inputText: "Shares groceries"
+- tapOn: "Amount & Details"
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- tapOn:
+    id: "split-method-shares"
+- extendedWaitUntil:
+    visible:
+      id: "split-member-shares-increment-0"
+    timeout: 10000
+- tapOn:
+    id: "split-member-shares-increment-0"
+- assertVisible:
+    id: "split-member-shares-0"
+    text: "2"
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- assertVisible: ".*90[.,]00.*"
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    visible:
+      id: "expense-card-Shares groceries"
+    timeout: 45000
+- tapOn: "Shares groceries"
+- extendedWaitUntil:
+    visible:
+      id: "expense-split-details"
+    timeout: 15000
+- assertVisible: "2 of 2 shares"
+
+# Edit: the stored counts load, and a new amount re-splits them
+- tapOn:
+    id: "expense-edit-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-amount"
+- eraseText
+- inputText: "60.00"
+- tapOn: "Amount & Details"
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- assertVisible:
+    id: "split-member-shares-0"
+    text: "2"
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    notVisible:
+      id: "expense-form-submit"
+    timeout: 20000
+# Relaunch so the detail view reads the saved expense, not the optimistic cache
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "dashboard-group-picker"
+    timeout: 60000
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-expenses"
+      TAB_LABEL: "Expenses"
+      TAB_X: "62%"
+- extendedWaitUntil:
+    visible:
+      id: "expense-heading"
+    timeout: 15000
+- tapOn: "Shares groceries"
+- extendedWaitUntil:
+    visible:
+      id: "expense-split-details"
+    timeout: 15000
+- assertVisible: "2 of 2 shares"
+# The split row's amount, not the expense total in the header
+- assertVisible:
+    text: ".*60[.,]00.*"
+    rightOf: "2 of 2 shares"
