@@ -8,11 +8,13 @@ import { cn } from "@flatsby/ui";
 import { Toaster } from "@flatsby/ui/toast";
 
 import { AnalyticsProvider } from "~/app/_components/analytics/AnalyticsProvider";
+import { SITE_URL } from "~/app/_components/landing/content";
 import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Flatsby",
   description: "Flat Companion",
   icons: [

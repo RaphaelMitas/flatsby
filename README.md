@@ -22,14 +22,14 @@
 </div>
 
 Flatsby is one household in one place: everyone sees the same lists, the same
-expenses, and the same balances, live on web, iOS, and Android. The
+expenses, and the same balances, on web, iOS, and Android. The
 screenshots on this page are captured automatically from the real app on
 every release.
 
 ## Shopping lists
 
-Lists sync in real time. When a flatmate checks off the milk in the
-supermarket, it disappears from your phone before they reach the till. Items
+Everyone in the household shares the same lists. When a flatmate checks off
+the milk in the supermarket, you see it the next time you open the list. Items
 carry categories and who added them.
 
 <p align="center">
