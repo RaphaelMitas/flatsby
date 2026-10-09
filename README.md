@@ -42,8 +42,9 @@ carry categories and who added them.
 
 ## Expenses and settling up
 
-Log what you paid, split it equally or by exact amounts, and Flatsby keeps a
-running balance per flatmate. Settlements clear debts between two people.
+Log what you paid, split it equally, by percentage, by shares or by exact
+amounts, and Flatsby keeps a running balance per flatmate. Settlements clear
+debts between two people.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-expenses.png" alt="Expenses on web" width="760">

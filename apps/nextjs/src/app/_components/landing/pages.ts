@@ -111,16 +111,17 @@ export const CONTENT_PAGES = [
     slug: "features/expenses",
     title: "Split bills and expenses with flatmates | Flatsby",
     description:
-      "Log shared costs, split them equally, by percentage or exact amounts, and see who owes whom. Settle up with fewer payments. Free.",
+      "Log shared costs, split them equally, by percentage, by shares or exact amounts, and see who owes whom. Settle up with fewer payments. Free.",
     headline: "Split bills with your flatmates without a spreadsheet",
     intro:
       "Log what you paid, choose how to split it, and Flatsby keeps a running balance for everyone in the household.",
     sections: [
       {
-        heading: "Three ways to split",
+        heading: "Four ways to split",
         bullets: [
           "Equally between everyone, or between the people you pick.",
           "By percentage, for example rent split 60/40 by room size.",
+          "By shares, for example 2 parts to 1 when one person uses twice as much.",
           "By exact amounts, when each person owes a specific sum.",
         ],
         paragraphs: [
@@ -208,7 +209,11 @@ export const CONTENT_PAGES = [
         ["Shared shopping lists", "Yes, on every device", "No"],
         ["Limit on new expenses per day (free)", "None", "Yes, Pro removes it"],
         ["Ads (free)", "None", "Yes, Pro is ad-free"],
-        ["Split equally, by percentage or exact amounts", "Yes", "Yes"],
+        [
+          "Split equally, by percentage, by shares or exact amounts",
+          "Yes",
+          "Yes",
+        ],
         ["Debt simplification", "Yes", "Yes"],
         ["Currency conversion", "No, balances per currency", "Pro"],
         ["Receipt scanning", "No", "Pro"],
