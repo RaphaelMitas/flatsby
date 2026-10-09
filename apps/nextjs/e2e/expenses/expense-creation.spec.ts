@@ -128,6 +128,8 @@ test.describe("Expense Creation", () => {
     await expect(authPage.getByTestId("expense-form-title")).not.toBeVisible({
       timeout: 15000,
     });
+    // Reload so the detail view reads the saved expense, not the optimistic cache
+    await authPage.reload();
     await openExpenseDetail(authPage, "Groceries split by shares");
     await expect(authPage.getByTestId("expense-split-details")).toContainText(
       "2 of 2 shares",

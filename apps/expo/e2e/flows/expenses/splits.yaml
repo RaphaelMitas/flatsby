@@ -139,3 +139,57 @@ tags:
       id: "expense-split-details"
     timeout: 15000
 - assertVisible: "2 of 2 shares"
+
+# Edit: the stored counts load, and a new amount re-splits them
+- tapOn:
+    id: "expense-edit-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-amount"
+- eraseText
+- inputText: "60.00"
+- tapOn: "Amount & Details"
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- assertVisible:
+    id: "split-member-shares-0"
+    text: "2"
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    visible: ".*60[.,]00.*"
+    timeout: 20000
+# Relaunch so the detail view reads the saved expense, not the optimistic cache
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "dashboard-group-picker"
+    timeout: 60000
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-expenses"
+      TAB_LABEL: "Expenses"
+      TAB_X: "62%"
+- extendedWaitUntil:
+    visible:
+      id: "expense-heading"
+    timeout: 15000
+- tapOn: "Shares groceries"
+- extendedWaitUntil:
+    visible:
+      id: "expense-split-details"
+    timeout: 15000
+- assertVisible: "2 of 2 shares"
+- assertVisible: ".*60[.,]00.*"
