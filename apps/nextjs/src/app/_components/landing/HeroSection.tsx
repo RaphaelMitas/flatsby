@@ -2,14 +2,41 @@
 
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
-import { Globe } from "lucide-react";
+import { Globe, Play } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 
-export function HeroSection({ isIOS }: { isIOS: boolean }) {
+import {
+  APP_STORE_URL,
+  HEADLINE,
+  PLAY_STORE_URL,
+  SUBHEADLINE,
+} from "./content";
+
+export type Platform = "ios" | "android" | "other";
+
+const WEB = { href: "/auth/login", label: "Open in Browser", icon: Globe };
+const APP_STORE = {
+  href: APP_STORE_URL,
+  label: "Download on the App Store",
+  icon: AppleIcon,
+};
+const PLAY_STORE = {
+  href: PLAY_STORE_URL,
+  label: "Get it on Google Play",
+  icon: Play,
+};
+
+function orderFor(platform: Platform) {
+  if (platform === "ios") return [APP_STORE, WEB, PLAY_STORE];
+  if (platform === "android") return [PLAY_STORE, WEB, APP_STORE];
+  return [WEB, APP_STORE, PLAY_STORE];
+}
+
+export function HeroSection({ platform }: { platform: Platform }) {
   const [excited, setExcited] = useState(false);
   const [hops, setHops] = useState(0);
   const lastHop = useRef(0);
@@ -46,62 +73,32 @@ export function HeroSection({ isIOS }: { isIOS: boolean }) {
           className="mb-4 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl"
           data-testid="hero-title"
         >
-          Household management, simplified.
+          {HEADLINE}
         </h1>
         <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-lg md:text-xl">
-          Share shopping lists, split expenses, and stay organized with your
-          flatmates.
+          {SUBHEADLINE}
         </p>
         <div className="flex w-full flex-col items-center gap-4">
-          {isIOS ? (
-            <>
-              <Button size="lg" className="w-full max-w-72" asChild>
-                <a
-                  href="https://apps.apple.com/de/app/flatsby/id6747908544?l=en-GB"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <AppleIcon className="text-primary-foreground h-5 w-5" />
-                  Download on the App Store
-                </a>
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full max-w-72"
-                asChild
+          {orderFor(platform).map((store, index) => (
+            <Button
+              key={store.href}
+              variant={index === 0 ? "default" : "outline"}
+              size="lg"
+              className="w-full max-w-72"
+              asChild
+            >
+              <Link
+                href={store.href}
+                {...(store.href.startsWith("http") && {
+                  target: "_blank",
+                  rel: "noopener noreferrer",
+                })}
               >
-                <Link href="/auth/login">
-                  <Globe className="h-5 w-5" />
-                  Open in Browser
-                </Link>
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button size="lg" className="w-full max-w-72" asChild>
-                <Link href="/auth/login">
-                  <Globe className="h-5 w-5" />
-                  Open in Browser
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full max-w-72"
-                asChild
-              >
-                <a
-                  href="https://apps.apple.com/de/app/flatsby/id6747908544"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <AppleIcon className="h-5 w-5" />
-                  Available on the App Store
-                </a>
-              </Button>
-            </>
-          )}
+                <store.icon className="h-5 w-5 text-current" />
+                {store.label}
+              </Link>
+            </Button>
+          ))}
         </div>
       </div>
     </section>
