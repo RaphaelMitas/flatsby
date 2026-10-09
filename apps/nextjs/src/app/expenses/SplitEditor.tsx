@@ -2,12 +2,10 @@
 
 import type { GroupWithAccess } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import type {
-  ExpenseSplit,
-  SplitMethod,
-} from "@flatsby/validators/expenses/types";
+import type { EditableSplitMethod } from "@flatsby/validators/expenses/split-editing";
+import type { LucideIcon } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
-import { DollarSign, Equal, Percent } from "lucide-react";
+import { Divide, DollarSign, Equal, Minus, Percent, Plus } from "lucide-react";
 import { useWatch } from "react-hook-form";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -19,31 +17,34 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@flatsby/ui/form";
+import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
-import { decimalToCents } from "@flatsby/validators/expenses/conversion";
 import {
-  distributeEqualAmounts,
-  distributePercentageAmounts,
-  emptySplit,
-} from "@flatsby/validators/expenses/distribution";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import { validateSplits } from "@flatsby/validators/expenses/validation";
+  formatCurrencyFromCents,
+  formatShareCount,
+} from "@flatsby/validators/expenses/formatting";
+import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import { CurrencyInput } from "~/components/CurrencyInput";
+
+const SPLIT_METHOD_OPTIONS = [
+  { method: "equal", label: "Equal", Icon: Equal },
+  { method: "percentage", label: "Percentage", Icon: Percent },
+  { method: "shares", label: "Shares", Icon: Divide },
+  { method: "custom", label: "Custom", Icon: DollarSign },
+] as const satisfies readonly {
+  method: EditableSplitMethod;
+  label: string;
+  Icon: LucideIcon;
+}[];
 
 interface SplitEditorProps {
   form: UseFormReturn<ExpenseValues>;
   groupMembers: GroupWithAccess["groupMembers"];
   totalAmountCents: number;
   currency: string;
-  splitMethod: Exclude<SplitMethod, "settlement">;
-  onSplitMethodChange: (method: Exclude<SplitMethod, "settlement">) => void;
+  splitMethod: EditableSplitMethod;
+  onSplitMethodChange: (method: EditableSplitMethod) => void;
 }
 
 export function SplitEditor({
@@ -55,127 +56,45 @@ export function SplitEditor({
   onSplitMethodChange,
 }: SplitEditorProps) {
   const splits = useWatch({ control: form.control, name: "splits" });
-  const selectedMemberIds = splits.map(
-    (s: { groupMemberId: number }) => s.groupMemberId,
-  );
-
-  const handleSplitMethodChange = (
-    newMethod: Exclude<SplitMethod, "settlement">,
-  ) => {
-    const memberIds = form.getValues("splits").map((s) => s.groupMemberId);
-
-    if (newMethod === "equal") {
-      form.setValue(
-        "splits",
-        distributeEqualAmounts(memberIds, totalAmountCents),
-        { shouldValidate: true },
-      );
-    } else if (newMethod !== splitMethod) {
-      form.setValue(
-        "splits",
-        memberIds.map((groupMemberId) => emptySplit(groupMemberId)),
-        { shouldValidate: true },
-      );
-    }
-
-    onSplitMethodChange(newMethod);
-  };
-
-  const toggleMember = (memberId: number) => {
-    const currentSplits = form.getValues("splits");
-    const isSelected = currentSplits.some((s) => s.groupMemberId === memberId);
-
-    if (splitMethod === "equal") {
-      const memberIds = currentSplits.map((s) => s.groupMemberId);
-      const updatedMemberIds = isSelected
-        ? memberIds.filter((id) => id !== memberId)
-        : [...memberIds, memberId];
-      form.setValue(
-        "splits",
-        distributeEqualAmounts(updatedMemberIds, totalAmountCents),
-        { shouldValidate: true },
-      );
-    } else {
-      const updatedSplits = isSelected
-        ? currentSplits.filter((s) => s.groupMemberId !== memberId)
-        : [...currentSplits, emptySplit(memberId)];
-      form.setValue("splits", updatedSplits, { shouldValidate: true });
-    }
-  };
-
-  const updateSplitAmount = (index: number, value: number) => {
-    const currentSplits: ExpenseSplit[] = form.getValues("splits");
-    const splitAtIndex = currentSplits[index];
-    if (!splitAtIndex) return;
-
-    if (splitMethod === "custom") {
-      // Value is already in cents when coming from CurrencyInput
-      const cents =
-        typeof value === "number"
-          ? value
-          : decimalToCents(parseFloat(value) || 0);
-      const updatedSplits = currentSplits.map((s, i) =>
-        i === index ? { ...s, amountInCents: cents } : s,
-      );
-      form.setValue("splits", updatedSplits, { shouldValidate: true });
-    } else if (splitMethod === "percentage") {
-      const updatedSplits = currentSplits.map((s, i) =>
-        i === index ? { ...s, percentage: value } : s,
-      );
-      const distributedSplits = distributePercentageAmounts(
-        updatedSplits,
-        totalAmountCents,
-      );
-      form.setValue("splits", distributedSplits, { shouldValidate: true });
-    }
-  };
-
-  const validation = validateSplits({
+  const selectedMemberIds = splits.map((s) => s.groupMemberId);
+  const {
+    validation,
+    totalSplitCents,
+    totalShares,
+    changeMethod,
+    toggleMember,
+    setPercentage,
+    setShares,
+    setAmount,
+  } = splitEditor({
     splits,
-    totalAmountCents,
+    getSplits: () => form.getValues("splits"),
+    setSplits: (next) =>
+      form.setValue("splits", next, { shouldValidate: true }),
     method: splitMethod,
+    onMethodChange: onSplitMethodChange,
+    totalAmountCents,
   });
-
-  const totalSplitCents = splits.reduce((sum: number, split: ExpenseSplit) => {
-    return sum + split.amountInCents;
-  }, 0);
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant={splitMethod === "equal" ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleSplitMethodChange("equal")}
-          className="flex-1"
-          data-testid="split-method-equal"
-        >
-          <Equal className="mr-2 h-4 w-4" />
-          Equal
-        </Button>
-        <Button
-          type="button"
-          variant={splitMethod === "percentage" ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleSplitMethodChange("percentage")}
-          className="flex-1"
-          data-testid="split-method-percentage"
-        >
-          <Percent className="mr-2 h-4 w-4" />
-          Percentage
-        </Button>
-        <Button
-          type="button"
-          variant={splitMethod === "custom" ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleSplitMethodChange("custom")}
-          className="flex-1"
-          data-testid="split-method-custom"
-        >
-          <DollarSign className="mr-2 h-4 w-4" />
-          Custom
-        </Button>
+      <div className="@container">
+        <div className="grid grid-cols-2 gap-2 @md:flex">
+          {SPLIT_METHOD_OPTIONS.map(({ method, label, Icon }) => (
+            <Button
+              key={method}
+              type="button"
+              variant={splitMethod === method ? "default" : "outline"}
+              size="sm"
+              onClick={() => changeMethod(method)}
+              className="grow"
+              data-testid={`split-method-${method}`}
+            >
+              <Icon className="mr-2 h-4 w-4" />
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       <Card>
@@ -225,17 +144,19 @@ export function SplitEditor({
               {splitMethod === "equal" && "Amounts are split equally"}
               {splitMethod === "percentage" &&
                 "Enter percentage for each person (must sum to 100%)"}
+              {splitMethod === "shares" &&
+                `Enter shares for each person (${totalShares} total)`}
               {splitMethod === "custom" &&
                 `Enter amounts (must sum to ${formatCurrencyFromCents({ cents: totalAmountCents, currency })})`}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {splits.map((split: ExpenseSplit, index: number) => {
+            {splits.map((split, index) => {
               const member = groupMembers.find(
                 (m) => m.id === split.groupMemberId,
               );
               const memberName = member?.user.name ?? "Unknown";
-              const splitAmountCents = split.amountInCents;
+              const shares = split.shares ?? 0;
 
               return (
                 <div key={split.groupMemberId} className="space-y-2">
@@ -254,72 +175,88 @@ export function SplitEditor({
                     </span>
                     <span className="text-sm font-semibold">
                       {formatCurrencyFromCents({
-                        cents: splitAmountCents,
+                        cents: split.amountInCents,
                         currency,
                       })}
                     </span>
                   </div>
 
                   {splitMethod === "percentage" && (
-                    <FormField
-                      control={form.control}
-                      name={`splits.${index}.percentage`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <div className="flex items-center gap-2">
-                              <CurrencyInput
-                                value={field.value ?? 0}
-                                onChange={(cents) => {
-                                  field.onChange(cents);
-                                  updateSplitAmount(index, cents);
-                                }}
-                                placeholder="0.00"
-                                min={0}
-                                max={10000}
-                                className="flex-1"
-                                data-testid={`split-member-amount-${split.groupMemberId}`}
-                              />
-                              <span className="text-muted-foreground text-sm">
-                                %
-                              </span>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="flex items-center gap-2">
+                      <CurrencyInput
+                        value={split.percentage ?? 0}
+                        onChange={(basisPoints) =>
+                          setPercentage(index, basisPoints)
+                        }
+                        placeholder="0.00"
+                        min={0}
+                        max={10000}
+                        className="flex-1"
+                        data-testid={`split-member-amount-${split.groupMemberId}`}
+                      />
+                      <span className="text-muted-foreground text-sm">%</span>
+                    </div>
+                  )}
+
+                  {splitMethod === "shares" && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => setShares(index, shares - 1)}
+                        disabled={shares <= 1}
+                        aria-label={`Fewer shares for ${memberName}`}
+                        data-testid={`split-member-shares-decrement-${split.groupMemberId}`}
+                      >
+                        <Minus />
+                      </Button>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        value={shares === 0 ? "" : shares}
+                        onChange={(e) =>
+                          setShares(
+                            index,
+                            Number.parseInt(e.target.value, 10) || 0,
+                          )
+                        }
+                        className="w-16 text-center"
+                        aria-label={`Shares for ${memberName}`}
+                        data-testid={`split-member-shares-${split.groupMemberId}`}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => setShares(index, shares + 1)}
+                        aria-label={`More shares for ${memberName}`}
+                        data-testid={`split-member-shares-increment-${split.groupMemberId}`}
+                      >
+                        <Plus />
+                      </Button>
+                      <span className="text-muted-foreground text-sm">
+                        of {formatShareCount(totalShares)}
+                      </span>
+                    </div>
                   )}
 
                   {splitMethod === "custom" && (
-                    <FormField
-                      control={form.control}
-                      name={`splits.${index}.amountInCents`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground text-sm">
-                                {currency}
-                              </span>
-                              <CurrencyInput
-                                value={field.value}
-                                onChange={(cents) => {
-                                  field.onChange(cents);
-                                  updateSplitAmount(index, cents);
-                                }}
-                                placeholder="0.00"
-                                min={0}
-                                max={totalAmountCents}
-                                className="flex-1"
-                                data-testid={`split-member-amount-${split.groupMemberId}`}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground text-sm">
+                        {currency}
+                      </span>
+                      <CurrencyInput
+                        value={split.amountInCents}
+                        onChange={(cents) => setAmount(index, cents)}
+                        placeholder="0.00"
+                        min={0}
+                        max={totalAmountCents}
+                        className="flex-1"
+                        data-testid={`split-member-amount-${split.groupMemberId}`}
+                      />
+                    </div>
                   )}
 
                   {index < splits.length - 1 && <Separator className="mt-2" />}

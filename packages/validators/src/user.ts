@@ -153,6 +153,7 @@ export const userDataExportSchema = z.object({
           groupMemberId: z.number(),
           amountInCents: z.number(),
           percentage: z.number().nullable(),
+          shares: z.number().nullable(),
         }),
       ),
     }),

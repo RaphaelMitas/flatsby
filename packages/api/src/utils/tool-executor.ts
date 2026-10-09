@@ -31,7 +31,10 @@ import {
 } from "@flatsby/db/schema";
 import { categoryIdSchema } from "@flatsby/validators/categories";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
-import { currencyCodeSchema } from "@flatsby/validators/expenses/schemas";
+import {
+  currencyCodeSchema,
+  splitMethodSchema,
+} from "@flatsby/validators/expenses/schemas";
 
 import type { RouterCaller } from "../root";
 import type { Database } from "../types";
@@ -234,10 +237,12 @@ export async function executeSearchData(
             paidByMemberId: e.paidByGroupMemberId,
             paidByMemberName: e.paidByGroupMember.user.name,
             expenseDate: e.expenseDate,
+            splitMethod: splitMethodSchema.safeParse(e.splitMethod).data,
             splits: e.expenseSplits.map((s) => ({
               memberId: s.groupMemberId,
               memberName: s.groupMember.user.name,
               amountInCents: s.amountInCents,
+              shares: s.shares,
             })),
           })),
         },
@@ -577,7 +582,7 @@ async function handleExpenseCreate(
       currency: parseCurrency(data.currency),
       paidByMemberName:
         memberIdToName.get(data.paidByGroupMemberId) ?? "Unknown",
-      splits: data.splits.map((s) => ({
+      splits: expense.splits.map((s) => ({
         memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
         amountInCents: s.amountInCents,
       })),
@@ -694,9 +699,8 @@ async function handleExpenseUpdate(
   // Use ternary to distinguish between undefined (not provided) and null/string (provided value)
   const outputDescription =
     data.description !== undefined ? data.description : expense.description;
-  const outputSplits = data.splits ?? expense.expenseSplits;
 
-  return handleApiResult(result, "update", "expense", () => ({
+  return handleApiResult(result, "update", "expense", (updated) => ({
     success: true,
     action: "update",
     entity: "expense",
@@ -706,7 +710,7 @@ async function handleExpenseUpdate(
       amountInCents: outputAmount,
       currency: parseCurrency(outputCurrency),
       paidByMemberName: memberIdToName.get(outputPaidByMemberId) ?? "Unknown",
-      splits: outputSplits.map((s) => ({
+      splits: (updated.splits ?? expense.expenseSplits).map((s) => ({
         memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
         amountInCents: s.amountInCents,
       })),

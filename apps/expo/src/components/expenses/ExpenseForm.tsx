@@ -3,7 +3,6 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -18,14 +17,14 @@ import {
   getSubcategoryGroup,
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
-import {
-  distributeEqualAmounts,
-  distributePercentageAmounts,
-  emptySplit,
-  finalizeSplits,
-} from "@flatsby/validators/expenses/distribution";
+import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
+import {
+  editableSplitMethod,
+  finalizeSplits,
+  splitsForTotal,
+} from "@flatsby/validators/expenses/split-editing";
 import {
   CURRENCY_CODES,
   isCurrencyCode,
@@ -153,13 +152,7 @@ export function ExpenseForm({
       })
     : undefined;
 
-  // Determine the initial split method from the expense or default to "equal"
-  const initialSplitMethod: SplitMethod =
-    expense?.splitMethod === "equal" ||
-    expense?.splitMethod === "percentage" ||
-    expense?.splitMethod === "custom"
-      ? expense.splitMethod
-      : "equal";
+  const initialSplitMethod = editableSplitMethod(expense?.splitMethod);
 
   const form = useFormHook<ExpenseValues, ExpenseValues>({
     schema: expenseSchemaWithValidateSplits,
@@ -181,6 +174,7 @@ export function ExpenseForm({
           groupMemberId: split.groupMemberId,
           amountInCents: split.amountInCents,
           percentage: split.percentage,
+          shares: split.shares,
         })) ?? [],
     },
   });
@@ -270,6 +264,7 @@ export function ExpenseForm({
                 groupMemberId: split.groupMemberId,
                 amountInCents: split.amountInCents,
                 percentage: split.percentage,
+                shares: split.shares ?? null,
                 groupMember: member
                   ? {
                       id: member.id,
@@ -376,6 +371,7 @@ export function ExpenseForm({
                     );
                     const splits = {
                       ...split,
+                      shares: split.shares ?? null,
                       id: Date.now() + index,
                       createdAt: new Date(),
                       expenseId: expense.id,
@@ -511,24 +507,17 @@ export function ExpenseForm({
         const currentSplits = form.getValues("splits");
         const amountCents = form.getValues("amountInCents");
 
-        if (currentSplits.length === 0) {
-          const memberIds = group.groupMembers.map((m) => m.id);
+        if (splitMethod !== "settlement") {
           form.setValue(
             "splits",
-            splitMethod === "equal"
-              ? distributeEqualAmounts(memberIds, amountCents)
-              : memberIds.map((groupMemberId) => emptySplit(groupMemberId)),
+            splitsForTotal(
+              splitMethod,
+              currentSplits.length > 0
+                ? currentSplits
+                : group.groupMembers.map((m) => emptySplit(m.id)),
+              amountCents,
+            ),
           );
-        } else if (splitMethod === "equal") {
-          const memberIds = currentSplits.map((s) => s.groupMemberId);
-          const updatedSplits = distributeEqualAmounts(memberIds, amountCents);
-          form.setValue("splits", updatedSplits);
-        } else if (splitMethod === "percentage") {
-          const updatedSplits = distributePercentageAmounts(
-            currentSplits,
-            amountCents,
-          );
-          form.setValue("splits", updatedSplits);
         }
       }
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
@@ -739,9 +728,7 @@ export function ExpenseForm({
                         groupMembers={allMembers}
                         totalAmountCents={amountInCents}
                         currency={currency}
-                        splitMethod={
-                          splitMethod !== "settlement" ? splitMethod : "equal"
-                        }
+                        splitMethod={editableSplitMethod(splitMethod)}
                         onSplitMethodChange={(method) => {
                           field.onChange(method);
                         }}

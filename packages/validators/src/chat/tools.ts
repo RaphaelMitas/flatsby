@@ -8,6 +8,7 @@ import {
   deleteExpenseSchema,
   expenseSchema,
   expenseSplitSchema,
+  splitMethodSchema,
 } from "../expenses/schemas";
 import {
   groupMemberSchema,
@@ -100,11 +101,13 @@ export const expenseInfoSchema = z.object({
   paidByMemberName: userNameSchema,
   // Use coerce.date() since dates are serialized as strings in JSON (chat message storage)
   expenseDate: z.coerce.date(),
+  splitMethod: splitMethodSchema.optional(),
   splits: z.array(
     z.object({
       memberId: groupMemberSchema.shape.id,
       memberName: userNameSchema,
       amountInCents: expenseSplitSchema.shape.amountInCents,
+      shares: expenseSplitSchema.shape.shares,
     }),
   ),
 });

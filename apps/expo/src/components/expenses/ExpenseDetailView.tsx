@@ -10,6 +10,7 @@ import {
 import {
   formatCurrencyFromCents,
   formatExpenseDateLong,
+  formatSplitPortion,
 } from "@flatsby/validators/expenses/formatting";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -294,8 +295,7 @@ export function ExpenseDetailView({
                       cents: split.amountInCents,
                       currency: expense.currency,
                     });
-                    const percentage =
-                      (split.amountInCents / expense.amountInCents) * 100;
+                    const portion = formatSplitPortion({ split, expense });
 
                     return (
                       <View key={split.id}>
@@ -314,7 +314,7 @@ export function ExpenseDetailView({
                                 {member.user.name}
                               </Text>
                               <Text className="text-muted-foreground text-xs">
-                                {percentage.toFixed(1)}%
+                                {portion}
                               </Text>
                             </View>
                           </View>

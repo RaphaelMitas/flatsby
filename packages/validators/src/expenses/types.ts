@@ -4,21 +4,21 @@
 export const SPLIT_METHODS = [
   "equal",
   "percentage",
+  "shares",
   "custom",
   "settlement",
 ] as const;
 
 export type SplitMethod = (typeof SPLIT_METHODS)[number];
 
-/**
- * Expense split with amount and optional percentage
- * - amountInCents: The actual amount in cents (always integer)
- * - percentage: Percentage in basis points (100% = 10000), nullable for equal/custom splits
- */
+export const MAX_SHARES = 1000;
+
+/** percentage is in basis points (100% = 10000) */
 export interface ExpenseSplit {
   groupMemberId: number;
   amountInCents: number;
   percentage: number | null;
+  shares?: number | null;
 }
 
 /**

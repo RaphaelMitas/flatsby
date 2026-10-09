@@ -1,5 +1,5 @@
 // ============================================================================
-// Validation Utilities - Verify splits sum correctly
+// Validation Utilities - Check splits before saving
 // ============================================================================
 
 import type {
@@ -10,15 +10,10 @@ import type {
 } from "./types";
 import { formatCurrencyFromCents } from "./formatting";
 
-/**
- * Validate expense splits based on split method
- * All methods now verify that amounts sum correctly to the total
- *
- * @param params.splits - Array of split objects with groupMemberId and amounts in cents
- * @param params.totalAmountCents - Total expense amount in cents
- * @param params.method - Split method: "equal", "percentage", "custom", or "settlement"
- * @returns Object with isValid boolean and error message if invalid
- */
+function hasMissingShares(splits: { shares?: number | null }[]): boolean {
+  return splits.some((s) => !Number.isInteger(s.shares) || (s.shares ?? 0) < 1);
+}
+
 export function validateSplits({
   splits,
   totalAmountCents,
@@ -28,6 +23,7 @@ export function validateSplits({
     groupMemberId: number;
     amountInCents?: number;
     percentage: number | null;
+    shares?: number | null;
   }[];
   totalAmountCents: number;
   method: SplitMethod;
@@ -125,13 +121,18 @@ export function validateSplits({
     return { isValid: true };
   }
 
-  // Custom splits
+  // Share amounts are derived from the counts on save, so only the counts can be wrong
+  if (method === "shares") {
+    return hasMissingShares(splits)
+      ? { isValid: false, error: "Each person needs at least one share" }
+      : { isValid: true };
+  }
+
   const totalSplitCents = splits.reduce(
     (sum, split) => sum + (split.amountInCents ?? 0),
     0,
   );
 
-  // No tolerance for custom splits - must match exactly
   if (totalSplitCents !== totalAmountCents) {
     return {
       isValid: false,
@@ -142,18 +143,9 @@ export function validateSplits({
   return { isValid: true };
 }
 
-/**
- * Strict validation for expense splits (server-side)
- * No tolerance for rounding - amounts must sum exactly
- *
- * @param expenseAmountInCents - Total expense amount in cents
- * @param splits - Array of splits with amountInCents
- * @param splitMethod - The split method used (settlement requires exactly 1 split)
- * @returns Validation result with error details if invalid
- */
 export function validateExpenseSplitsStrict(
   expenseAmountInCents: number,
-  splits: { amountInCents: number }[],
+  splits: { amountInCents: number; shares?: number | null }[],
   splitMethod: SplitMethod,
 ): StrictValidationResult {
   // Settlement validation
@@ -182,6 +174,14 @@ export function validateExpenseSplitsStrict(
       valid: false,
       error: "negative amount in splits",
       userMessage: "Split amounts cannot be negative",
+    };
+  }
+
+  if (splitMethod === "shares" && hasMissingShares(splits)) {
+    return {
+      valid: false,
+      error: "share splits need a share count of at least 1",
+      userMessage: "Each person needs at least one share",
     };
   }
 

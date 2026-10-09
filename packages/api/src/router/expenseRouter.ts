@@ -16,12 +16,17 @@ import {
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
+import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
 import {
   createExpenseSchema,
   deleteExpenseSchema,
   splitMethodSchema,
   updateExpenseSchema,
 } from "@flatsby/validators/expenses/schemas";
+import {
+  editableSplitMethod,
+  splitsForTotal,
+} from "@flatsby/validators/expenses/split-editing";
 import { bulkCreateExpensesSchema } from "@flatsby/validators/expenses/splitwise-import";
 import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
 
@@ -37,7 +42,7 @@ import { classify } from "../utils/classify";
  */
 function validateExpenseSplitsEffect(
   expenseAmountInCents: number,
-  splits: { amountInCents: number }[],
+  splits: Parameters<typeof validateExpenseSplitsStrict>[1],
   splitMethod: SplitMethod,
 ): Effect.Effect<void, ApiError> {
   const result = validateExpenseSplitsStrict(
@@ -91,6 +96,11 @@ export const expenseRouter = createTRPCRouter({
   createExpense: protectedProcedure
     .input(createExpenseSchema)
     .mutation(async ({ ctx, input }) => {
+      const splits = splitsForStorage(
+        input.splitMethod,
+        input.splits,
+        input.amountInCents,
+      );
       return withErrorHandlingAsResult(
         Effect.flatMap(
           // Get group with access check
@@ -101,10 +111,9 @@ export const expenseRouter = createTRPCRouter({
           ),
           () =>
             Effect.flatMap(
-              // Validate splits sum to expense amount
               validateExpenseSplitsEffect(
                 input.amountInCents,
-                input.splits,
+                splits,
                 input.splitMethod,
               ),
               () =>
@@ -125,7 +134,7 @@ export const expenseRouter = createTRPCRouter({
                     Effect.flatMap(
                       // Verify all split groupMemberIds are active members of the group
                       Effect.forEach(
-                        input.splits,
+                        splits,
                         (split) =>
                           DbUtils.findOneOrFail(
                             () =>
@@ -175,15 +184,16 @@ export const expenseRouter = createTRPCRouter({
                               }
 
                               await trx.insert(expenseSplits).values(
-                                input.splits.map((split) => ({
+                                splits.map((split) => ({
                                   expenseId: expense.id,
                                   groupMemberId: split.groupMemberId,
                                   amountInCents: split.amountInCents,
                                   percentage: split.percentage,
+                                  shares: split.shares,
                                 })),
                               );
 
-                              return expense;
+                              return { ...expense, splits };
                             }, "create expense with splits")(ctx.db),
                         ),
                     ),
@@ -225,112 +235,143 @@ export const expenseRouter = createTRPCRouter({
               ),
               () =>
                 Effect.flatMap(
-                  // If updating splits, validate they sum correctly
-                  input.splits && input.amountInCents
-                    ? validateExpenseSplitsEffect(
-                        input.amountInCents,
-                        input.splits,
-                        input.splitMethod ??
-                          splitMethodSchema.parse(expense.splitMethod),
+                  // Verify group members if updating (must be active)
+                  input.paidByGroupMemberId || input.splits
+                    ? Effect.forEach(
+                        [
+                          ...(input.paidByGroupMemberId
+                            ? [{ groupMemberId: input.paidByGroupMemberId }]
+                            : []),
+                          ...(input.splits ?? []),
+                        ],
+                        ({ groupMemberId }) =>
+                          DbUtils.findOneOrFail(
+                            () =>
+                              ctx.db.query.groupMembers.findFirst({
+                                where: and(
+                                  eq(groupMembers.id, groupMemberId),
+                                  eq(groupMembers.groupId, expense.groupId),
+                                ),
+                              }),
+                            "group member",
+                          ),
+                        { concurrency: "unbounded" },
                       )
-                    : input.splits && !input.amountInCents
-                      ? validateExpenseSplitsEffect(
-                          expense.amountInCents,
-                          input.splits,
-                          input.splitMethod ??
-                            splitMethodSchema.parse(expense.splitMethod),
-                        )
-                      : Effect.succeed(undefined),
+                    : Effect.succeed(undefined),
                   () =>
                     Effect.flatMap(
-                      // Verify group members if updating (must be active)
-                      input.paidByGroupMemberId || input.splits
-                        ? Effect.forEach(
-                            [
-                              ...(input.paidByGroupMemberId
-                                ? [{ groupMemberId: input.paidByGroupMemberId }]
-                                : []),
-                              ...(input.splits
-                                ? input.splits.map((s) => ({
-                                    groupMemberId: s.groupMemberId,
-                                  }))
-                                : []),
-                            ],
-                            ({ groupMemberId }) =>
-                              DbUtils.findOneOrFail(
-                                () =>
-                                  ctx.db.query.groupMembers.findFirst({
-                                    where: and(
-                                      eq(groupMembers.id, groupMemberId),
-                                      eq(groupMembers.groupId, expense.groupId),
-                                    ),
-                                  }),
-                                "group member",
-                              ),
-                            { concurrency: "unbounded" },
-                          )
-                        : Effect.succeed(undefined),
-                      () =>
-                        // Update expense and splits in transaction
-                        DbUtils.transaction(async (trx) => {
-                          const updateData: Partial<
-                            typeof expenses.$inferInsert
-                          > = {};
-                          if (input.paidByGroupMemberId !== undefined) {
-                            updateData.paidByGroupMemberId =
-                              input.paidByGroupMemberId;
-                          }
-                          if (input.amountInCents !== undefined) {
-                            updateData.amountInCents = input.amountInCents;
-                          }
-                          if (input.currency !== undefined) {
-                            updateData.currency = input.currency;
-                          }
-                          if (input.description !== undefined) {
-                            updateData.description = input.description;
-                          }
-                          if (input.category !== undefined) {
-                            updateData.category = input.category;
-                          }
-                          if (input.subcategory !== undefined) {
-                            updateData.subcategory = input.subcategory;
-                          }
-                          if (input.expenseDate !== undefined) {
-                            updateData.expenseDate = input.expenseDate;
-                          }
-                          if (input.splitMethod !== undefined) {
-                            updateData.splitMethod = input.splitMethod;
-                          }
+                      DbUtils.transaction(async (trx) => {
+                        // Serializes edits so a re-split never starts from splits another edit replaced
+                        const [locked] = await trx
+                          .select({
+                            splitMethod: expenses.splitMethod,
+                            amountInCents: expenses.amountInCents,
+                          })
+                          .from(expenses)
+                          .where(eq(expenses.id, input.expenseId))
+                          .for("update");
+                        if (!locked) throw new Error("Expense was deleted");
 
-                          if (Object.keys(updateData).length > 0) {
-                            await trx
-                              .update(expenses)
-                              .set(updateData)
-                              .where(eq(expenses.id, input.expenseId));
-                          }
+                        const method =
+                          input.splitMethod ??
+                          splitMethodSchema.parse(locked.splitMethod);
+                        const amountInCents =
+                          input.amountInCents ?? locked.amountInCents;
+                        // A new method or amount without splits re-splits the stored members, as the editors would
+                        const source =
+                          input.splits ??
+                          (input.splitMethod !== undefined ||
+                          input.amountInCents !== undefined
+                            ? splitsForTotal(
+                                editableSplitMethod(method),
+                                await trx.query.expenseSplits.findMany({
+                                  where: eq(
+                                    expenseSplits.expenseId,
+                                    input.expenseId,
+                                  ),
+                                }),
+                                amountInCents,
+                              )
+                            : null);
+                        const splitsToWrite =
+                          source &&
+                          splitsForStorage(method, source, amountInCents);
+                        const check =
+                          splitsToWrite &&
+                          validateExpenseSplitsStrict(
+                            amountInCents,
+                            splitsToWrite,
+                            method,
+                          );
+                        if (check && !check.valid) return { invalid: check };
 
-                          // Update splits if provided
-                          if (input.splits) {
-                            // Delete existing splits
-                            await trx
-                              .delete(expenseSplits)
-                              .where(
-                                eq(expenseSplits.expenseId, input.expenseId),
-                              );
+                        const updateData: Partial<
+                          typeof expenses.$inferInsert
+                        > = {};
+                        if (input.paidByGroupMemberId !== undefined) {
+                          updateData.paidByGroupMemberId =
+                            input.paidByGroupMemberId;
+                        }
+                        if (input.amountInCents !== undefined) {
+                          updateData.amountInCents = input.amountInCents;
+                        }
+                        if (input.currency !== undefined) {
+                          updateData.currency = input.currency;
+                        }
+                        if (input.description !== undefined) {
+                          updateData.description = input.description;
+                        }
+                        if (input.category !== undefined) {
+                          updateData.category = input.category;
+                        }
+                        if (input.subcategory !== undefined) {
+                          updateData.subcategory = input.subcategory;
+                        }
+                        if (input.expenseDate !== undefined) {
+                          updateData.expenseDate = input.expenseDate;
+                        }
+                        if (input.splitMethod !== undefined) {
+                          updateData.splitMethod = input.splitMethod;
+                        }
 
-                            // Insert new splits
-                            await trx.insert(expenseSplits).values(
-                              input.splits.map((split) => ({
-                                expenseId: input.expenseId,
-                                groupMemberId: split.groupMemberId,
-                                amountInCents: split.amountInCents,
-                                percentage: split.percentage,
-                              })),
+                        if (Object.keys(updateData).length > 0) {
+                          await trx
+                            .update(expenses)
+                            .set(updateData)
+                            .where(eq(expenses.id, input.expenseId));
+                        }
+
+                        if (splitsToWrite) {
+                          await trx
+                            .delete(expenseSplits)
+                            .where(
+                              eq(expenseSplits.expenseId, input.expenseId),
                             );
-                          }
 
-                          return { success: true };
-                        }, "update expense")(ctx.db),
+                          await trx.insert(expenseSplits).values(
+                            splitsToWrite.map((split) => ({
+                              expenseId: input.expenseId,
+                              groupMemberId: split.groupMemberId,
+                              amountInCents: split.amountInCents,
+                              percentage: split.percentage,
+                              shares: split.shares,
+                            })),
+                          );
+                        }
+
+                        return { splits: splitsToWrite };
+                      }, "update expense")(ctx.db),
+                      (result) =>
+                        result.invalid
+                          ? fail.validation(
+                              "splits",
+                              result.invalid.error,
+                              result.invalid.userMessage,
+                            )
+                          : Effect.succeed({
+                              success: true,
+                              splits: result.splits,
+                            }),
                     ),
                 ),
             ),

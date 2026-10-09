@@ -1,0 +1,1 @@
+ALTER TABLE "flat-cove_expense_splits" ADD COLUMN "shares" integer;

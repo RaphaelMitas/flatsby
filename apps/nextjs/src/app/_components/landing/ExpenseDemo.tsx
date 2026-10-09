@@ -50,6 +50,7 @@ const demoExpenses: ExpenseWithSplitsAndMembers[] = [
         amountInCents: 1500,
         createdAt: new Date("2025-01-28"),
         percentage: null,
+        shares: null,
         groupMember: {
           id: 1,
           groupId: 1,
@@ -66,6 +67,7 @@ const demoExpenses: ExpenseWithSplitsAndMembers[] = [
         amountInCents: 1500,
         createdAt: new Date("2025-01-28"),
         percentage: null,
+        shares: null,
         groupMember: {
           id: 2,
           groupId: 1,
@@ -82,6 +84,7 @@ const demoExpenses: ExpenseWithSplitsAndMembers[] = [
         amountInCents: 1500,
         createdAt: new Date("2025-01-28"),
         percentage: null,
+        shares: null,
         groupMember: {
           id: 3,
           groupId: 1,
@@ -138,6 +141,7 @@ const demoExpenses: ExpenseWithSplitsAndMembers[] = [
         amountInCents: 4000,
         createdAt: new Date("2025-01-25"),
         percentage: null,
+        shares: null,
         groupMember: {
           id: 1,
           groupId: 1,
@@ -154,6 +158,7 @@ const demoExpenses: ExpenseWithSplitsAndMembers[] = [
         amountInCents: 4000,
         createdAt: new Date("2025-01-25"),
         percentage: null,
+        shares: null,
         groupMember: {
           id: 2,
           groupId: 1,
@@ -170,6 +175,7 @@ const demoExpenses: ExpenseWithSplitsAndMembers[] = [
         amountInCents: 4000,
         createdAt: new Date("2025-01-25"),
         percentage: null,
+        shares: null,
         groupMember: {
           id: 3,
           groupId: 1,

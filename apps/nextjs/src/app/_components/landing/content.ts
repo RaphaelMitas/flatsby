@@ -23,11 +23,11 @@ export const LEGAL_PAGES = [
 
 export const TITLE = "Flatsby: shared shopping list and bill splitting app";
 export const DESCRIPTION =
-  "Free app for flatmates and roommates: one shared shopping list and bills split equally, by percentage or exact amounts. Web, iPhone and Android.";
+  "Free app for flatmates and roommates: one shared shopping list and bills split equally, by percentage, by shares or exact amounts. Web, iPhone and Android.";
 export const HEADLINE =
   "Shared shopping lists and bill splitting for flatmates";
 export const FREE_ON = "Free on web, iPhone and Android";
-export const SUBHEADLINE = `One shopping list for the whole household, expenses split equally, by percentage or exact amounts, and a running balance of who owes whom. ${FREE_ON}.`;
+export const SUBHEADLINE = `One shopping list for the whole household, expenses split equally, by percentage, by shares or exact amounts, and a running balance of who owes whom. ${FREE_ON}.`;
 
 export const FEATURES = [
   {
@@ -36,7 +36,7 @@ export const FEATURES = [
   },
   {
     title: "Expense splitting",
-    body: "Log what you paid and split it equally, by percentage or by exact amounts. Flatsby keeps a running balance per person and simplifies debts, so fewer payments settle everyone up.",
+    body: "Log what you paid and split it equally, by percentage, by shares or by exact amounts. Flatsby keeps a running balance per person and simplifies debts, so fewer payments settle everyone up.",
   },
   {
     title: "AI assistant",
@@ -98,7 +98,7 @@ export const FACTS = [
   { label: "Sign in", value: "Google or Apple account." },
   {
     label: "Splitting",
-    value: "Equal, percentage or exact amounts. EUR, USD and GBP.",
+    value: "Equal, percentage, shares or exact amounts. EUR, USD and GBP.",
   },
   { label: "Switching", value: "Imports a Splitwise CSV export." },
   { label: "Limits", value: "No member limit. No recurring expenses yet." },
@@ -130,7 +130,7 @@ export const FAQ = [
   {
     question: "How does Flatsby split an expense?",
     answer:
-      "Equally, by percentage, or by exact amounts per person. Expenses can be in EUR, USD or GBP, and Flatsby keeps a running balance per person for each currency.",
+      "Equally, by percentage, by shares (for example 2 parts to 1), or by exact amounts per person. Expenses can be in EUR, USD or GBP, and Flatsby keeps a running balance per person for each currency.",
   },
   {
     question: "Can I set up rent as a recurring expense?",

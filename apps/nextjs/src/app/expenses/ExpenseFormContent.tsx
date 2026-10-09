@@ -41,8 +41,11 @@ import {
   getSubcategoryGroup,
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
-import { finalizeSplits } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  editableSplitMethod,
+  finalizeSplits,
+} from "@flatsby/validators/expenses/split-editing";
 import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 
 import type { UseExpenseFormReturn } from "./useExpenseForm";
@@ -317,7 +320,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
               groupMembers={allMembers}
               totalAmountCents={amountInCents}
               currency={currency}
-              splitMethod={splitMethod !== "settlement" ? splitMethod : "equal"}
+              splitMethod={editableSplitMethod(splitMethod)}
               onSplitMethodChange={(method) => {
                 form.setValue("splitMethod", method);
               }}

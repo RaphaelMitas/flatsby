@@ -261,6 +261,7 @@ export const expenseSplits = createTable("expense_splits", {
     .references(() => groupMembers.id),
   amountInCents: integer("amount_in_cents").notNull(),
   percentage: integer("percentage"),
+  shares: integer("shares"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

@@ -22,6 +22,13 @@
       "when": 1781444016350,
       "tag": "0002_update_chat_model_default",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790335886523,
+      "tag": "0003_split_shares",
+      "breakpoints": true
     }
   ]
 }
