@@ -1,4 +1,4 @@
-// Agents cross-check every page, the JSON-LD, llms.txt and the .md twins, so facts live here once.
+// One source for every fact on the site, so the pages, JSON-LD and .md twins can't disagree.
 
 export const SITE_URL = "https://www.flatsby.com";
 export const APP_STORE_URL = "https://apps.apple.com/app/flatsby/id6747908544";
@@ -23,16 +23,16 @@ export const LEGAL_PAGES = [
 
 export const TITLE = "Flatsby: shared shopping list and bill splitting app";
 export const DESCRIPTION =
-  "Free app for flatmates and roommates: shared shopping lists that sync live and bills split equally, by percentage or exact amounts. Web, iPhone and Android.";
+  "Free app for flatmates and roommates: one shared shopping list and bills split equally, by percentage or exact amounts. Web, iPhone and Android.";
 export const HEADLINE =
   "Shared shopping lists and bill splitting for flatmates";
-export const SUBHEADLINE =
-  "Shopping lists that sync live, expenses split equally, by percentage or exact amounts, and a running balance of who owes whom. Free on web, iPhone and Android.";
+export const FREE_ON = "Free on web, iPhone and Android";
+export const SUBHEADLINE = `One shopping list for the whole household, expenses split equally, by percentage or exact amounts, and a running balance of who owes whom. ${FREE_ON}.`;
 
 export const FEATURES = [
   {
     title: "Shared shopping lists",
-    body: "Everyone in the household sees the same lists. When a flatmate ticks off an item in the shop, it is gone from everyone else's list too, on web and on the phone.",
+    body: "Everyone in the household works from the same lists on the web and on their phone. Whoever is in the shop ticks items off, and everyone else sees it the next time they open the list.",
   },
   {
     title: "Expense splitting",
@@ -120,7 +120,7 @@ export const FAQ = [
   {
     question: "Does Flatsby work on Android?",
     answer:
-      "Yes. Flatsby is in the Google Play Store, the App Store and on the web at flatsby.com. It is the same account and the same data on every device, and lists update live everywhere.",
+      "Yes. Flatsby is in the Google Play Store, the App Store and on the web at flatsby.com. It is the same account and the same data on every device.",
   },
   {
     question: "Can I move my expenses over from Splitwise?",
@@ -150,7 +150,7 @@ export const FAQ = [
   {
     question: "Do shopping lists update in real time?",
     answer:
-      "Yes. When a flatmate ticks off an item in the shop, it is gone from everyone else's list too, on web and on the phone.",
+      "Not instantly. Everyone shares the same lists, and a flatmate's changes show up when you open the list again or come back to the app or tab.",
   },
   {
     question: "What does the AI assistant do?",
@@ -169,6 +169,11 @@ export const FAQ = [
   },
 ] as const;
 
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 type FaqQuestion = (typeof FAQ)[number]["question"];
 
 export function pickFaq(...questions: FaqQuestion[]) {
@@ -183,5 +188,4 @@ export const HOME_FAQ = pickFaq(
   "Who can see my household's data?",
 );
 
-export const CTA_NOTE =
-  "Free on web, iPhone and Android. Sign in with Google or Apple.";
+export const CTA_NOTE = `${FREE_ON}. Sign in with Google or Apple.`;

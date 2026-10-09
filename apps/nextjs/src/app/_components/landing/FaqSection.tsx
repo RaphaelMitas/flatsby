@@ -1,10 +1,12 @@
 import Link from "next/link";
 
+import type { FaqItem } from "./content";
+
 export function FaqSection({
   items,
   showAllLink = false,
 }: {
-  items: readonly { question: string; answer: string }[];
+  items: readonly FaqItem[];
   showAllLink?: boolean;
 }) {
   return (

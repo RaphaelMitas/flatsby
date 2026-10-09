@@ -1,3 +1,4 @@
+import type { FaqItem } from "./content";
 import { FAQ, pickFaq, PLANS } from "./content";
 
 const SCREENSHOT_BASE =
@@ -65,7 +66,7 @@ export interface ContentPageData {
     head: readonly string[];
     rows: readonly (readonly string[])[];
   };
-  faq?: readonly { question: string; answer: string }[];
+  faq?: readonly FaqItem[];
 }
 
 export const CONTENT_PAGES = [
@@ -73,7 +74,7 @@ export const CONTENT_PAGES = [
     slug: "features/shopping-lists",
     title: "Shared shopping list app for flatmates | Flatsby",
     description:
-      "One shopping list for the whole flat. Items sync live on web, iPhone and Android, sorted by category, with who added them. Free.",
+      "One shopping list for the whole flat on web, iPhone and Android, sorted by category, with who added each item. Free.",
     headline: "A shared shopping list the whole flat can use",
     intro:
       "Everyone in your household adds to the same lists from their own phone or browser. Whoever is in the shop ticks things off, and the item is gone for everyone else too.",
@@ -82,14 +83,14 @@ export const CONTENT_PAGES = [
         heading: "How it works",
         paragraphs: [
           "Create as many lists as your household needs, for example one for groceries and one for the hardware store. Anyone in the group can add, edit or tick off items.",
-          "Each item has a category such as produce, dairy or bakery, so the list sorts itself the way a shop is laid out. When you add an item, Flatsby can suggest the category by sending the item name to a classification model, and you can change it. This uses AI credits. Every item shows who added it.",
+          "Each item has a category such as produce, dairy or bakery, so the list sorts itself the way a shop is laid out. When you add an item, Flatsby can suggest the category by sending the item name to a classification model, and you can change it. This uses AI credits.",
         ],
         image: SCREENSHOTS.iosList,
       },
       {
         heading: "The same list on every device",
         paragraphs: [
-          "Lists update live on the web, on iPhone and on Android. Tick off the milk on your phone and it disappears from your flatmate's laptop a moment later.",
+          "The same lists open on the web, on iPhone and on Android. Changes are not pushed live yet: a flatmate's edits show up when you open the list again or come back to the app or tab.",
         ],
         image: SCREENSHOTS.webLists,
       },
@@ -179,7 +180,7 @@ export const CONTENT_PAGES = [
         paragraphs: [
           "The assistant asks for your consent before it sends anything. Your messages, and the list items, expenses and member names a question needs, go to OpenAI or Google through the Vercel AI Gateway to generate the answer.",
           "Automatic categories are separate from the assistant: when you add a shopping item or an expense, its name goes through the same gateway to a classification model so Flatsby can suggest a category.",
-          "Your email address, sign-in details and payment information are never shared. Data sent for the assistant is used to generate the answer, not to train models. AI usage numbers such as the model and token counts, without your messages, go to PostHog for analytics.",
+          "Your email address and sign-in details are not sent to the AI providers. Data sent for the assistant is used to generate the answer, not to train models. AI usage numbers such as the model and token counts, without your messages, go to PostHog for analytics.",
         ],
       },
       {
@@ -204,7 +205,7 @@ export const CONTENT_PAGES = [
         "Flatsby and Splitwise compared. Splitwise details are from splitwise.com/pro, checked October 2026.",
       head: ["", "Flatsby", "Splitwise"],
       rows: [
-        ["Shared shopping lists", "Yes, live on every device", "No"],
+        ["Shared shopping lists", "Yes, on every device", "No"],
         ["Limit on new expenses per day (free)", "None", "Yes, Pro removes it"],
         ["Ads (free)", "None", "Yes, Pro is ad-free"],
         ["Split equally, by percentage or exact amounts", "Yes", "Yes"],
@@ -280,7 +281,7 @@ export const CONTENT_PAGES = [
       {
         heading: "Where to buy",
         paragraphs: [
-          `On the web, and from Android, open Billing after you sign in to choose Starter or Pro. On iPhone, Pro is an in-app purchase at ${PLANS.proAppStorePrice} a month in the US App Store.`,
+          `On the web, open Billing after you sign in to choose Starter or Pro. The Android app links to that page. On iPhone, Pro is an in-app purchase at ${PLANS.proAppStorePrice} a month in the US App Store.`,
         ],
       },
     ],
@@ -303,6 +304,8 @@ export function contentPageParams() {
   return CONTENT_PAGES.map((page) => ({ slug: page.slug.split("/") }));
 }
 
-export function findContentPage(slug: string): ContentPageData | undefined {
-  return CONTENT_PAGES.find((page) => page.slug === slug);
+export function findContentPage(
+  slug: readonly string[],
+): ContentPageData | undefined {
+  return CONTENT_PAGES.find((page) => page.slug === slug.join("/"));
 }

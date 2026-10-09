@@ -56,18 +56,14 @@ export function FeaturesSection() {
             <p className="text-muted-foreground mb-6">{groups.body}</p>
             <div className="flex justify-center">
               <div className="flex -space-x-3">
-                <Avatar className="border-background h-10 w-10 border-2">
-                  <AvatarFallback>AL</AvatarFallback>
-                </Avatar>
-                <Avatar className="border-background h-10 w-10 border-2">
-                  <AvatarFallback>SA</AvatarFallback>
-                </Avatar>
-                <Avatar className="border-background h-10 w-10 border-2">
-                  <AvatarFallback>JO</AvatarFallback>
-                </Avatar>
-                <Avatar className="border-background h-10 w-10 border-2">
-                  <AvatarFallback>+2</AvatarFallback>
-                </Avatar>
+                {["AL", "SA", "JO", "+2"].map((initials) => (
+                  <Avatar
+                    key={initials}
+                    className="border-background h-10 w-10 border-2"
+                  >
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                ))}
               </div>
             </div>
           </div>

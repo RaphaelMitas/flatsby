@@ -16,7 +16,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
-  const page = findContentPage((await params).slug.join("/"));
+  const page = findContentPage((await params).slug);
   if (!page) notFound();
-  return markdownResponse(contentPageMarkdown(page));
+  return markdownResponse(contentPageMarkdown(page), `/${page.slug}`);
 }

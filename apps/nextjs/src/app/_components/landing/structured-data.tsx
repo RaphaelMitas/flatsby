@@ -1,3 +1,4 @@
+import type { FaqItem } from "./content";
 import type { ContentPageData } from "./pages";
 import {
   APP_STORE_URL,
@@ -9,14 +10,9 @@ import {
   UPDATED,
 } from "./content";
 
-interface Faq {
-  question: string;
-  answer: string;
-}
-
 const ORG_ID = `${SITE_URL}/#org`;
 
-function faqPage(items: readonly Faq[]) {
+function faqPage(items: readonly FaqItem[]) {
   return {
     "@type": "FAQPage",
     mainEntity: items.map((item) => ({
@@ -27,7 +23,7 @@ function faqPage(items: readonly Faq[]) {
   };
 }
 
-export function homeJsonLd(faq: readonly Faq[]) {
+export function homeJsonLd(faq: readonly FaqItem[]) {
   return [
     {
       "@type": "Organization",
@@ -74,7 +70,7 @@ export function JsonLd({ graph }: { graph: object[] }) {
   return (
     <script
       type="application/ld+json"
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: static JSON-LD, "<" escaped per the Next.js JSON-LD guide
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: static JSON-LD with "<" escaped
       dangerouslySetInnerHTML={{
         __html: JSON.stringify({
           "@context": "https://schema.org",

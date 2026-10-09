@@ -6,5 +6,5 @@ import {
 export const dynamic = "force-static";
 
 export function GET() {
-  return markdownResponse(homeMarkdown());
+  return markdownResponse(homeMarkdown(), "");
 }

@@ -15,7 +15,7 @@ export default function robots(): MetadataRoute.Robots {
         "/expenses",
         "/group",
         "/home",
-        "/md/",
+        "/md",
         "/shopping-list",
         "/user-settings",
       ],

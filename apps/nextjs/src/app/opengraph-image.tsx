@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-import { HEADLINE } from "./_components/landing/content";
+import { FREE_ON, HEADLINE } from "./_components/landing/content";
 
 export const alt = "Flatsby: shared shopping lists and bill splitting";
 export const size = { width: 1200, height: 630 };
@@ -25,7 +25,7 @@ export default function Image() {
         {HEADLINE}
       </div>
       <div style={{ fontSize: 32, marginTop: 32, color: "#555" }}>
-        Free on web, iPhone and Android
+        {FREE_ON}
       </div>
     </div>,
     size,

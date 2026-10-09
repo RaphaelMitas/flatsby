@@ -1,3 +1,4 @@
+import type { FaqItem } from "./content";
 import type { ContentPageData, PageSection } from "./pages";
 import {
   APP_STORE_URL,
@@ -26,15 +27,16 @@ const pageLinks = CONTENT_PAGES.map(
     `- [${page.headline}](${SITE_URL}/${page.slug}.md): ${page.description}`,
 ).join("\n");
 
-function questionsMarkdown(
-  items: readonly { question: string; answer: string }[],
-) {
+function questionsMarkdown(items: readonly FaqItem[]) {
   return `## Questions\n\n${items.map((q) => `### ${q.question}\n\n${q.answer}`).join("\n\n")}`;
 }
 
-export function markdownResponse(body: string) {
+export function markdownResponse(body: string, htmlPath: string) {
   return new Response(body, {
-    headers: { "Content-Type": "text/markdown; charset=utf-8" },
+    headers: {
+      "Content-Type": "text/markdown; charset=utf-8",
+      Link: `<${SITE_URL}${htmlPath}>; rel="canonical"`,
+    },
   });
 }
 

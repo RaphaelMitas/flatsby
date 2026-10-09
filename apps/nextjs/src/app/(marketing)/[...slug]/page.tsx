@@ -17,7 +17,7 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const page = findContentPage((await params).slug.join("/"));
+  const page = findContentPage((await params).slug);
   if (!page) return {};
   return marketingMetadata({
     title: page.title,
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Page({ params }: Props) {
-  const page = findContentPage((await params).slug.join("/"));
+  const page = findContentPage((await params).slug);
   if (!page) notFound();
   return <ContentPage page={page} />;
 }

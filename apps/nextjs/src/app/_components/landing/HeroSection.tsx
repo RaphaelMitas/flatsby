@@ -87,7 +87,13 @@ export function HeroSection({ platform }: { platform: Platform }) {
               className="w-full max-w-72"
               asChild
             >
-              <Link href={store.href}>
+              <Link
+                href={store.href}
+                {...(store.href.startsWith("http") && {
+                  target: "_blank",
+                  rel: "noopener noreferrer",
+                })}
+              >
                 <store.icon className="h-5 w-5 text-current" />
                 {store.label}
               </Link>
