@@ -71,23 +71,49 @@ export type UpdateAIConsentInput = z.infer<typeof updateAIConsentInputSchema>;
  * Schema for GDPR user data export response
  */
 export const userDataExportSchema = z.object({
-  exportedAt: z.string(),
+  exportedAt: z.date(),
   user: z.object({
     id: z.string(),
     name: z.string(),
     email: z.string(),
-    createdAt: z.string(),
-    termsAcceptedAt: z.string().nullable(),
+    image: z.string().nullable(),
+    createdAt: z.date(),
+    termsAcceptedAt: z.date().nullable(),
     termsVersion: z.string().nullable(),
-    privacyAcceptedAt: z.string().nullable(),
+    privacyAcceptedAt: z.date().nullable(),
     privacyVersion: z.string().nullable(),
+    aiConsentAcceptedAt: z.date().nullable(),
+    aiConsentVersion: z.string().nullable(),
   }),
+  signInMethods: z.array(
+    z.object({
+      providerId: z.string(),
+      accountId: z.string(),
+      createdAt: z.date(),
+    }),
+  ),
+  sessions: z.array(
+    z.object({
+      createdAt: z.date(),
+      expiresAt: z.date(),
+      ipAddress: z.string().nullable(),
+      userAgent: z.string().nullable(),
+    }),
+  ),
   groups: z.array(
     z.object({
       id: z.number(),
       name: z.string(),
+      memberId: z.number(),
       role: z.string(),
-      joinedOn: z.string(),
+      joinedOn: z.date(),
+      members: z.array(
+        z.object({
+          memberId: z.number(),
+          name: z.string(),
+          active: z.boolean(),
+        }),
+      ),
     }),
   ),
   shoppingLists: z.array(
@@ -95,25 +121,55 @@ export const userDataExportSchema = z.object({
       id: z.number(),
       name: z.string(),
       groupId: z.number(),
-      itemsCount: z.number(),
+      items: z.array(
+        z.object({
+          id: z.number(),
+          name: z.string(),
+          categoryId: z.string(),
+          completed: z.boolean(),
+          createdAt: z.date(),
+          completedAt: z.date().nullable(),
+          createdByGroupMemberId: z.number().nullable(),
+          completedByGroupMemberId: z.number().nullable(),
+        }),
+      ),
     }),
   ),
   expenses: z.array(
     z.object({
       id: z.number(),
-      description: z.string().nullable(),
+      groupId: z.number(),
+      description: z.string(),
       amountInCents: z.number(),
       currency: z.string(),
-      expenseDate: z.string(),
-      groupId: z.number(),
+      category: z.string(),
+      subcategory: z.string(),
+      splitMethod: z.string(),
+      expenseDate: z.date(),
+      paidByGroupMemberId: z.number(),
+      createdByGroupMemberId: z.number(),
+      splits: z.array(
+        z.object({
+          groupMemberId: z.number(),
+          amountInCents: z.number(),
+          percentage: z.number().nullable(),
+        }),
+      ),
     }),
   ),
   conversations: z.array(
     z.object({
       id: z.string(),
       title: z.string().nullable(),
-      createdAt: z.string(),
-      messageCount: z.number(),
+      systemPrompt: z.string().nullable(),
+      createdAt: z.date(),
+      messages: z.array(
+        z.object({
+          role: z.string(),
+          content: z.string(),
+          createdAt: z.date(),
+        }),
+      ),
     }),
   ),
 });
