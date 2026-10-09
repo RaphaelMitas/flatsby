@@ -1,9 +1,10 @@
 import { Suspense } from "react";
-import { ActivityIndicator, RefreshControl, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { router, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
@@ -119,19 +120,25 @@ function ShoppingListsDashboardInner() {
             </Text>
           </View>
         ) : (
-          <FlashList
-            data={shoppingLists.data}
-            refreshControl={
-              <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-            }
-            ItemSeparatorComponent={() => <View className="h-4" />}
-            renderItem={({ item }) => (
-              <ShoppingListDashboardElement
-                shoppingList={item}
-                groupId={selectedGroupId ?? -1}
+          <PullToRefresh
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            parentPaddingX={16}
+          >
+            {(refreshProps) => (
+              <FlashList
+                {...refreshProps}
+                data={shoppingLists.data}
+                ItemSeparatorComponent={() => <View className="h-4" />}
+                renderItem={({ item }) => (
+                  <ShoppingListDashboardElement
+                    shoppingList={item}
+                    groupId={selectedGroupId ?? -1}
+                  />
+                )}
               />
             )}
-          />
+          </PullToRefresh>
         )}
       </View>
     </SafeAreaView>

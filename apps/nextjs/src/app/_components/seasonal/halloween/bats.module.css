@@ -1,0 +1,40 @@
+.bat {
+  position: absolute;
+  left: -14px;
+  top: -8px;
+  width: 28px;
+  opacity: 0;
+  animation: fly 900ms ease-out var(--delay, 0ms) forwards;
+}
+
+.bat svg {
+  display: block;
+  animation: flap 90ms ease-in-out infinite alternate;
+}
+
+@keyframes fly {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4);
+  }
+  15%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1);
+  }
+}
+
+@keyframes flap {
+  to {
+    transform: scaleY(0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bat {
+    display: none;
+  }
+}

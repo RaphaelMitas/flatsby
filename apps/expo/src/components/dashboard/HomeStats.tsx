@@ -8,6 +8,7 @@ import type { ColorName } from "~/lib/utils";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
+import { PeekingCat } from "./PeekingCat";
 
 function useCountUp(target: number, duration = 500) {
   const [value, setValue] = useState(0);
@@ -143,7 +144,10 @@ export function HomeStats({ groupId }: HomeStatsProps) {
 
   return (
     <View className="gap-2">
-      <Text className="text-muted-foreground text-sm">Last 30 days</Text>
+      <View className="-mb-2 flex-row items-end justify-between pr-4">
+        <Text className="text-muted-foreground mb-2 text-sm">Last 30 days</Text>
+        <PeekingCat />
+      </View>
       <View className="flex-row gap-3">
         <StatCard
           iconName="wallet"

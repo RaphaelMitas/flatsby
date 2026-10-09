@@ -9,6 +9,7 @@ import { Skeleton } from "@flatsby/ui/skeleton";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
+import { PeekingCat } from "~/app/_components/peeking-cat";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
 
@@ -64,6 +65,15 @@ function StatCard({ icon, value, format, label, colorClass }: StatCardProps) {
         <div className="text-muted-foreground text-xs">{label}</div>
       </CardContent>
     </Card>
+  );
+}
+
+function StatsHeader() {
+  return (
+    <div className="-mb-2 flex items-end justify-between pr-4">
+      <p className="text-muted-foreground mb-2 text-sm">Last 30 days</p>
+      <PeekingCat variant="home" className="h-8 w-16" />
+    </div>
   );
 }
 
@@ -139,7 +149,7 @@ function HomeStatsInner() {
 
   return (
     <div className="space-y-2">
-      <p className="text-muted-foreground text-sm">Last 30 days</p>
+      <StatsHeader />
       <div className="grid grid-cols-2 gap-3">
         <StatCard
           icon={<Wallet className="h-5 w-5" />}
@@ -185,7 +195,7 @@ export function HomeStats() {
     <Suspense
       fallback={
         <div className="space-y-2">
-          <p className="text-muted-foreground text-sm">Last 30 days</p>
+          <StatsHeader />
           <div className="grid grid-cols-2 gap-3">
             <StatCardSkeleton />
             <StatCardSkeleton />

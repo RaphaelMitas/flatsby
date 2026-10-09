@@ -1,7 +1,7 @@
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import type { GroupDebtSummary } from "@flatsby/validators/expenses/types";
 import { useCallback, useState } from "react";
-import { RefreshControl, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 
@@ -84,9 +84,8 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   return (
     <AppScrollView
       className="flex-1"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-      }
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
     >
       <View className="flex w-full flex-col gap-4 p-4">
         <View className="flex flex-row items-center justify-between">

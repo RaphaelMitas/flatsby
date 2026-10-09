@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, RefreshControl, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 
@@ -122,9 +122,8 @@ function DashboardContent() {
   return (
     <AppScrollView
       className="flex-1"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-      }
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
     >
       <View className="flex flex-col gap-6 p-2">
         <View className="flex flex-row items-center justify-between gap-2">

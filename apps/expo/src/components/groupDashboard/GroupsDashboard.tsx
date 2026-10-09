@@ -1,8 +1,9 @@
-import { RefreshControl, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
@@ -57,14 +58,20 @@ export function GroupsDashboard() {
           </Text>
         </View>
       )}
-      <FlashList
-        data={groups.data}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-        ItemSeparatorComponent={() => <View className="h-4" />}
-        renderItem={(item) => <GroupsDashboardElement group={item.item} />}
-      />
+      <PullToRefresh
+        refreshing={isRefetching}
+        onRefresh={refetch}
+        parentPaddingX={16}
+      >
+        {(refreshProps) => (
+          <FlashList
+            {...refreshProps}
+            data={groups.data}
+            ItemSeparatorComponent={() => <View className="h-4" />}
+            renderItem={(item) => <GroupsDashboardElement group={item.item} />}
+          />
+        )}
+      </PullToRefresh>
     </View>
   );
 }

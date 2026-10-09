@@ -5,7 +5,7 @@ import type {
 } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import { useCallback, useMemo, useState } from "react";
-import { RefreshControl, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import {
   keepPreviousData,
@@ -19,6 +19,7 @@ import {
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
+import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { trpc } from "~/utils/api";
 import { CategoryFilterPills } from "./CategoryFilter/CategoryFilterPills";
@@ -88,10 +89,10 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     ),
   );
 
-  const handleRefresh = useCallback(() => {
-    void refetchItems();
-    void refetchCategoryCounts();
-  }, [refetchItems, refetchCategoryCounts]);
+  const handleRefresh = useCallback(
+    () => Promise.all([refetchItems(), refetchCategoryCounts()]),
+    [refetchItems, refetchCategoryCounts],
+  );
 
   const isRefreshing = isRefetchingItems || isRefetchingCategoryCounts;
 
@@ -377,23 +378,22 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               />
             </View>
 
-            <FlashList
-              className="flex-1"
-              data={flashListData}
-              renderItem={renderItem}
-              getItemType={getItemType}
-              keyExtractor={(item) => item.id}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
+            <PullToRefresh refreshing={isRefreshing} onRefresh={handleRefresh}>
+              {(refreshProps) => (
+                <FlashList
+                  {...refreshProps}
+                  className="flex-1"
+                  data={flashListData}
+                  renderItem={renderItem}
+                  getItemType={getItemType}
+                  keyExtractor={(item) => item.id}
+                  onEndReached={handleLoadMore}
+                  onEndReachedThreshold={0.5}
+                  keyboardDismissMode="on-drag"
+                  keyboardShouldPersistTaps="handled"
                 />
-              }
-              onEndReached={handleLoadMore}
-              onEndReachedThreshold={0.5}
-              keyboardDismissMode="on-drag"
-              keyboardShouldPersistTaps="handled"
-            />
+              )}
+            </PullToRefresh>
             <AppKeyboardStickyView>
               <ShoppingListItemAddForm
                 onSubmit={handleSubmit}
