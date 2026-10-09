@@ -1,12 +1,13 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, RefreshControl, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
+import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { handleApiError } from "~/lib/utils";
@@ -53,7 +54,7 @@ export function ExpenseListPanel({
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    void refetch().finally(() => setRefreshing(false));
+    return refetch().finally(() => setRefreshing(false));
   }, [refetch]);
 
   if (!groupData.success) {
@@ -135,35 +136,37 @@ export function ExpenseListPanel({
           />
         </View>
       ) : (
-        <FlashList
-          data={allExpenses}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-          }
-          ItemSeparatorComponent={() => <View className="h-3" />}
-          renderItem={({ item }) => (
-            <ExpenseCard
-              expense={item}
-              groupId={selectedGroupId ?? -1}
-              isSelected={item.id === selectedExpenseId}
-              onSelect={() => onSelectExpense(item.id)}
-              onEdit={() => handleEdit(item)}
+        <PullToRefresh refreshing={refreshing} onRefresh={handleRefresh}>
+          {(refreshProps) => (
+            <FlashList
+              {...refreshProps}
+              data={allExpenses}
+              ItemSeparatorComponent={() => <View className="h-3" />}
+              renderItem={({ item }) => (
+                <ExpenseCard
+                  expense={item}
+                  groupId={selectedGroupId ?? -1}
+                  isSelected={item.id === selectedExpenseId}
+                  onSelect={() => onSelectExpense(item.id)}
+                  onEdit={() => handleEdit(item)}
+                />
+              )}
+              onEndReached={() => {
+                if (hasNextPage && !isFetchingNextPage) {
+                  void fetchNextPage();
+                }
+              }}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <View className="py-4">
+                    <ActivityIndicator size="small" />
+                  </View>
+                ) : null
+              }
             />
           )}
-          onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage) {
-              void fetchNextPage();
-            }
-          }}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <View className="py-4">
-                <ActivityIndicator size="small" />
-              </View>
-            ) : null
-          }
-        />
+        </PullToRefresh>
       )}
       {hasExpenses && !isLargeScreen && (
         <View className="absolute right-4 bottom-4">

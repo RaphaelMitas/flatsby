@@ -9,6 +9,7 @@ import { Skeleton } from "@flatsby/ui/skeleton";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
+import { PeekingCat } from "~/app/_components/peeking-cat";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
 
@@ -138,64 +139,62 @@ function HomeStatsInner() {
     formatCurrencyFromCents({ cents, currency });
 
   return (
-    <div className="space-y-2">
-      <p className="text-muted-foreground text-sm">Last 30 days</p>
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          icon={<Wallet className="h-5 w-5" />}
-          value={spendingCents}
-          format={formatCurrency(spendingCurrency)}
-          label="spent"
-          colorClass="text-blue-500"
-        />
-        <StatCard
-          icon={<CheckCircle2 className="h-5 w-5" />}
-          value={itemsCompleted}
-          label="items"
-          colorClass="text-green-500"
-        />
-        <StatCard
-          icon={<MessageSquare className="h-5 w-5" />}
-          value={chatMessages}
-          label="messages"
-          colorClass="text-purple-500"
-        />
-        <StatCard
-          icon={<TrendingUp className="h-5 w-5" />}
-          value={balanceAmount}
-          format={formatCurrency(balanceCurrency)}
-          label={
-            userBalance ? (isOwed ? "owed to you" : "you owe") : "balanced"
-          }
-          colorClass={
-            userBalance
-              ? isOwed
-                ? "text-green-500"
-                : "text-red-500"
-              : "text-green-500"
-          }
-        />
-      </div>
+    <div className="grid grid-cols-2 gap-3">
+      <StatCard
+        icon={<Wallet className="h-5 w-5" />}
+        value={spendingCents}
+        format={formatCurrency(spendingCurrency)}
+        label="spent"
+        colorClass="text-blue-500"
+      />
+      <StatCard
+        icon={<CheckCircle2 className="h-5 w-5" />}
+        value={itemsCompleted}
+        label="items"
+        colorClass="text-green-500"
+      />
+      <StatCard
+        icon={<MessageSquare className="h-5 w-5" />}
+        value={chatMessages}
+        label="messages"
+        colorClass="text-purple-500"
+      />
+      <StatCard
+        icon={<TrendingUp className="h-5 w-5" />}
+        value={balanceAmount}
+        format={formatCurrency(balanceCurrency)}
+        label={userBalance ? (isOwed ? "owed to you" : "you owe") : "balanced"}
+        colorClass={
+          userBalance
+            ? isOwed
+              ? "text-green-500"
+              : "text-red-500"
+            : "text-green-500"
+        }
+      />
     </div>
   );
 }
 
 export function HomeStats() {
   return (
-    <Suspense
-      fallback={
-        <div className="space-y-2">
-          <p className="text-muted-foreground text-sm">Last 30 days</p>
+    <div className="space-y-2">
+      <div className="-mb-2 flex items-end justify-between pr-4">
+        <p className="text-muted-foreground mb-2 text-sm">Last 30 days</p>
+        <PeekingCat className="h-8 w-16" />
+      </div>
+      <Suspense
+        fallback={
           <div className="grid grid-cols-2 gap-3">
             <StatCardSkeleton />
             <StatCardSkeleton />
             <StatCardSkeleton />
             <StatCardSkeleton />
           </div>
-        </div>
-      }
-    >
-      <HomeStatsInner />
-    </Suspense>
+        }
+      >
+        <HomeStatsInner />
+      </Suspense>
+    </div>
   );
 }

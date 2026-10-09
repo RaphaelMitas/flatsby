@@ -1,3 +1,15 @@
+import type { SharedValue } from "react-native-reanimated";
+import { useEffect } from "react";
+import Animated, {
+  cancelAnimation,
+  useAnimatedProps,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { Circle, Ellipse, G, Path, Svg } from "react-native-svg";
 
 import type { IconProps } from "./Icon";
@@ -34,13 +46,89 @@ const WHISKER_SIDES = [
 
 const EYE_SIDES = ["translate(130, 79.4965)", "translate(73, 79.4965)"];
 
+const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function Eye({
+  transform,
+  blink,
+  look,
+  color,
+  detail,
+}: {
+  transform: string;
+  blink: SharedValue<number>;
+  look: SharedValue<number>;
+  color?: string;
+  detail: string;
+}) {
+  const lidProps = useAnimatedProps(() => ({ ry: 13.5 * blink.value }));
+  const pupilProps = useAnimatedProps(() => ({
+    cx: 18.5 + look.value,
+    r: 3.5 * blink.value,
+  }));
+
+  return (
+    <G transform={transform}>
+      <AnimatedEllipse
+        cx={14.5}
+        cy={13.5}
+        rx={14.5}
+        ry={13.5}
+        fill={detail}
+        animatedProps={lidProps}
+      />
+      <AnimatedCircle
+        cx={18.5}
+        cy={12.5}
+        r={3.5}
+        fill={color}
+        animatedProps={pupilProps}
+      />
+    </G>
+  );
+}
+
 export default function FlatsbyCat({
   className,
   color,
+  detail: detailOverride,
   size,
-}: Omit<IconProps, "name" | "color"> & { color?: string }) {
+  animated = false,
+}: Omit<IconProps, "name" | "color"> & {
+  color?: string;
+  detail?: string;
+  animated?: boolean;
+}) {
   const { getColor } = useThemeColors();
-  const detail = getColor("cat-detail");
+  const detail = detailOverride ?? getColor("cat-detail");
+  const reduceMotion = useReducedMotion();
+  const blink = useSharedValue(1);
+  const look = useSharedValue(0);
+
+  // Same rhythm as the web cat's fc-blink and fc-look keyframes.
+  useEffect(() => {
+    if (!animated || reduceMotion) return;
+    blink.value = withRepeat(
+      withSequence(
+        withDelay(4100, withTiming(0.06, { duration: 110 })),
+        withTiming(1, { duration: 110 }),
+      ),
+      -1,
+    );
+    look.value = withRepeat(
+      withSequence(
+        withDelay(1500, withTiming(4, { duration: 500 })),
+        withDelay(750, withTiming(-3.5, { duration: 750 })),
+        withDelay(750, withTiming(0, { duration: 750 })),
+      ),
+      -1,
+    );
+    return () => {
+      cancelAnimation(blink);
+      cancelAnimation(look);
+    };
+  }, [animated, reduceMotion, blink, look]);
 
   return (
     <Svg
@@ -63,10 +151,14 @@ export default function FlatsbyCat({
         transform="translate(111.8505, 127.0969) scale(1, -1) translate(-111.8505, -127.0969)"
       />
       {EYE_SIDES.map((transform) => (
-        <G key={transform} transform={transform}>
-          <Ellipse cx={14.5} cy={13.5} rx={14.5} ry={13.5} fill={detail} />
-          <Circle cx={18.5} cy={12.5} r={3.5} fill={color} />
-        </G>
+        <Eye
+          key={transform}
+          transform={transform}
+          blink={blink}
+          look={look}
+          color={color}
+          detail={detail}
+        />
       ))}
       <Path d={NOSE} fill={detail} />
       <Circle
