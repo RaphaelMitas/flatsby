@@ -126,6 +126,29 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
               <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="What was this expense for?"
+                          {...field}
+                          data-testid="expense-form-description"
+                          onBlur={() => {
+                            field.onBlur();
+                            onDescriptionBlur();
+                          }}
+                          maxLength={512}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="amountInCents"
                   render={({ field }) => (
                     <FormItem>
@@ -199,29 +222,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="What was this expense for?"
-                          {...field}
-                          data-testid="expense-form-description"
-                          onBlur={() => {
-                            field.onBlur();
-                            onDescriptionBlur();
-                          }}
-                          maxLength={512}
-                        />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -338,6 +338,14 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
+                {description && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Description:</span>
+                    <span className="text-right font-semibold">
+                      {description}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount:</span>
                   <span className="font-semibold">
@@ -354,14 +362,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                       .name ?? "Unknown"}
                   </span>
                 </div>
-                {description && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Description:</span>
-                    <span className="text-right font-semibold">
-                      {description}
-                    </span>
-                  </div>
-                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Split:</span>
                   <span className="font-semibold">

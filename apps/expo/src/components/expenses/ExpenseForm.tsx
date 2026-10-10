@@ -603,6 +603,30 @@ export function ExpenseForm({
                   <CardContent className="gap-4">
                     <FormField
                       control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <View className="gap-2">
+                          <Label>Description</Label>
+                          <FormControl>
+                            <Input
+                              testID="expense-form-description"
+                              placeholder="What was this expense for?"
+                              value={field.value}
+                              onChangeText={field.onChange}
+                              onBlur={() => {
+                                field.onBlur();
+                                onDescriptionBlur();
+                              }}
+                              maxLength={512}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </View>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
                       name="amountInCents"
                       render={({ field }) => (
                         <View className="gap-2">
@@ -654,30 +678,6 @@ export function ExpenseForm({
                               )?.user.name ?? "Select who paid"
                             }
                           />
-                          <FormMessage />
-                        </View>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>Description</Label>
-                          <FormControl>
-                            <Input
-                              testID="expense-form-description"
-                              placeholder="What was this expense for?"
-                              value={field.value}
-                              onChangeText={field.onChange}
-                              onBlur={() => {
-                                field.onBlur();
-                                onDescriptionBlur();
-                              }}
-                              maxLength={512}
-                            />
-                          </FormControl>
                           <FormMessage />
                         </View>
                       )}
@@ -749,6 +749,16 @@ export function ExpenseForm({
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="gap-3">
+                    {description && (
+                      <View className="flex-row justify-between">
+                        <Text className="text-muted-foreground">
+                          Description:
+                        </Text>
+                        <Text className="text-foreground text-right font-semibold">
+                          {description}
+                        </Text>
+                      </View>
+                    )}
                     <View className="flex-row justify-between">
                       <Text className="text-muted-foreground">Amount:</Text>
                       <Text className="text-foreground font-semibold">
@@ -765,16 +775,6 @@ export function ExpenseForm({
                           ?.user.name ?? "Unknown"}
                       </Text>
                     </View>
-                    {description && (
-                      <View className="flex-row justify-between">
-                        <Text className="text-muted-foreground">
-                          Description:
-                        </Text>
-                        <Text className="text-foreground text-right font-semibold">
-                          {description}
-                        </Text>
-                      </View>
-                    )}
                     <View className="flex-row justify-between">
                       <Text className="text-muted-foreground">Split:</Text>
                       <Text className="text-foreground font-semibold">
