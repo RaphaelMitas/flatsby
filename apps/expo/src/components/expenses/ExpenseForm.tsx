@@ -434,7 +434,8 @@ export function ExpenseForm({
   const categorizeExpenseMutation = useMutation(
     trpcClient.expense.categorizeExpense.mutationOptions({
       onSuccess: (data) => {
-        if (data.success) {
+        // Don't overwrite a category the user picked while this was in flight
+        if (data.success && !form.getValues("subcategory")) {
           form.setValue("category", data.data.group);
           form.setValue("subcategory", data.data.subcategory);
         }
