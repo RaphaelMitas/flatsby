@@ -39,7 +39,6 @@ import {
 import {
   AI_AUTO_DETECT,
   getSubcategoryGroup,
-  isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
@@ -225,10 +224,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   control={form.control}
                   name="category"
                   render={() => {
-                    const pickerValue =
-                      subcategory && isExpenseSubcategoryId(subcategory)
-                        ? subcategory
-                        : AI_AUTO_DETECT;
+                    const pickerValue = subcategory ?? AI_AUTO_DETECT;
 
                     return (
                       <FormItem>

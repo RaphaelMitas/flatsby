@@ -15,7 +15,6 @@ import {
   coerceCategory,
   coerceSubcategory,
   getSubcategoryGroup,
-  isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
@@ -528,10 +527,7 @@ export function ExpenseForm({
   ).length;
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
-  const categoryPickerValue =
-    subcategory && isExpenseSubcategoryId(subcategory)
-      ? subcategory
-      : AI_AUTO_DETECT;
+  const categoryPickerValue = subcategory ?? AI_AUTO_DETECT;
 
   const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
     id: code,
