@@ -64,6 +64,17 @@ guard(
   "Local main is not in sync with origin/main; pull (or push) first.",
 );
 
+const releaseNotesLength = [
+  ...readFileSync(
+    join(repoRoot, "apps/expo/store/release-notes.txt"),
+    "utf8",
+  ).trim(),
+].length;
+guard(
+  releaseNotesLength <= 500,
+  `apps/expo/store/release-notes.txt is ${releaseNotesLength} characters; Play's "What's New" allows 500.`,
+);
+
 const config = readFileSync(configPath, "utf8");
 const versionMatch = /version: "(\d+)\.(\d+)\.(\d+)"/.exec(config);
 if (!versionMatch)

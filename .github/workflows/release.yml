@@ -86,7 +86,8 @@ jobs:
       # Waits for the EAS builds and store submissions to finish (they run on
       # EAS servers; progress lives at expo.dev) so publish-ios knows the
       # binary has reached App Store Connect before submitting for review.
-      # Android goes straight to the Play production track (eas.json).
+      # Android lands as a draft on the Play production track (eas.json);
+      # publish-android completes it once the release notes are attached.
       - name: Build and submit to stores via EAS
         working-directory: apps/expo
         env:
@@ -790,14 +791,12 @@ jobs:
         env:
           ASC_KEY_PATH: ${{ runner.temp }}/asc_key.json
 
-  # Uploads the captured screenshots and the release notes to the Play Store
-  # listing (en-US). The binary itself already went to the internal track via
-  # EAS auto-submit (eas.json; production access still pending — supply's
-  # --track must match or the changelog attach finds no release); needing
-  # eas-build-submit ensures the release exists before its "What's New" text
-  # is set.
-  # Like publish-ios, independent of the screenshot job's outcome: the
-  # changelog always goes up, fresh screenshots only when captured.
+  # The Play counterpart of publish-ios: EAS left the build as a draft on the
+  # production track, so attach the release notes and screenshots (en-US)
+  # and mark the release completed in one edit, which sends it to Google
+  # review and live without a manual step. Like publish-ios, independent of
+  # the screenshot job's outcome: the changelog always goes up, fresh
+  # screenshots only when captured.
   publish-android:
     needs: [check, eas-build-submit, screenshots-android]
     if: >-
@@ -873,15 +872,25 @@ jobs:
             cp results/screenshots/*.png store/metadata/android/en-US/images/phoneScreenshots/
             SKIP_SCREENSHOTS=false
           fi
-          fastlane supply \
-            --package_name com.flatcove.app \
-            --json_key "$RUNNER_TEMP/play_key.json" \
-            --metadata_path store/metadata/android \
-            --track internal \
-            --version_code "${{ steps.version.outputs.code }}" \
-            --skip_upload_apk true \
-            --skip_upload_aab true \
-            --skip_upload_metadata true \
-            --skip_upload_changelogs false \
-            --skip_upload_images true \
+          ARGS=(
+            --package_name com.flatcove.app
+            --json_key "$RUNNER_TEMP/play_key.json"
+            --metadata_path store/metadata/android
+            --track production
+            --version_code "${{ steps.version.outputs.code }}"
+            --skip_upload_apk true
+            --skip_upload_aab true
+            --skip_upload_metadata true
+            --skip_upload_changelogs false
+            --skip_upload_images true
             --skip_upload_screenshots "$SKIP_SCREENSHOTS"
+          )
+          set -o pipefail
+          # --rollout 1 is what flips the draft to completed, but supply only
+          # looks for draft or in-progress releases there. A re-run after the
+          # release was already completed would fail on it, so retry without
+          # and just refresh the notes and screenshots.
+          if ! fastlane supply "${ARGS[@]}" --rollout 1 2>&1 | tee supply.log; then
+            grep -q "Unable to find the requested release on track" supply.log || exit 1
+            fastlane supply "${ARGS[@]}"
+          fi
