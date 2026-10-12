@@ -92,16 +92,7 @@ export interface TransformConfig {
   memberMapping: Record<string, number>;
 }
 
-export interface TransformedExpense {
-  paidByGroupMemberId: number;
-  amountInCents: number;
-  currency: CurrencyCode;
-  description?: string;
-  subcategory?: ExpenseSubcategoryId;
-  expenseDate: Date;
-  splits: z.infer<typeof expenseSplitSchema>[];
-  splitMethod: "custom" | "settlement";
-}
+export type TransformedExpense = BulkCreateExpensesInput["expenses"][number];
 
 export interface SkippedRow {
   row: number;

@@ -55,21 +55,25 @@ function validateExpenseSplitsEffect(
   return fail.validation("splits", result.error, result.userMessage);
 }
 
-function coerceSubcategory(
-  raw: string,
-  ctx: { expenseId: number; userId: string },
-): ExpenseSubcategoryId {
-  if (isExpenseSubcategoryId(raw)) return raw;
-  captureError({
-    error: new Error(`Unknown expense subcategory: "${raw}"`),
-    operation: "coerce-expense-subcategory",
-    distinctId: ctx.userId,
-    additionalProperties: {
-      expenseId: ctx.expenseId,
-      rawValue: raw.slice(0, 100),
-    },
-  });
-  return "other";
+function withDerivedCategory<T extends { id: number; subcategory: string }>(
+  row: T,
+  userId: string,
+) {
+  let subcategory: ExpenseSubcategoryId = "other";
+  if (isExpenseSubcategoryId(row.subcategory)) {
+    subcategory = row.subcategory;
+  } else {
+    captureError({
+      error: new Error(`Unknown expense subcategory: "${row.subcategory}"`),
+      operation: "coerce-expense-subcategory",
+      distinctId: userId,
+      additionalProperties: {
+        expenseId: row.id,
+        rawValue: row.subcategory.slice(0, 100),
+      },
+    });
+  }
+  return { ...row, category: getSubcategoryGroup(subcategory), subcategory };
 }
 
 export const expenseRouter = createTRPCRouter({
@@ -511,17 +515,7 @@ export const expenseRouter = createTRPCRouter({
                       }),
                     "get expense",
                   ),
-                  (exp) => {
-                    const subcategory = coerceSubcategory(exp.subcategory, {
-                      expenseId: exp.id,
-                      userId: ctx.session.user.id,
-                    });
-                    return {
-                      ...exp,
-                      category: getSubcategoryGroup(subcategory),
-                      subcategory,
-                    };
-                  },
+                  (exp) => withDerivedCategory(exp, ctx.session.user.id),
                 ),
             ),
         ),
@@ -630,19 +624,10 @@ export const expenseRouter = createTRPCRouter({
                   ? { date: lastItem.expenseDate, id: lastItem.id }
                   : undefined;
 
-              const userId = ctx.session.user.id;
               return {
-                items: items.map((item) => {
-                  const subcategory = coerceSubcategory(item.subcategory, {
-                    expenseId: item.id,
-                    userId,
-                  });
-                  return {
-                    ...item,
-                    category: getSubcategoryGroup(subcategory),
-                    subcategory,
-                  };
-                }),
+                items: items.map((item) =>
+                  withDerivedCategory(item, ctx.session.user.id),
+                ),
                 nextCursor,
               };
             }, "fetch group expenses"),

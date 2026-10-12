@@ -17,7 +17,7 @@ import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 
 export interface ExpenseCategoryPickerProps extends Omit<
   BottomSheetPickerTriggerProps,
-  "items" | "title"
+  "items" | "title" | "triggerTitle" | "iconButton"
 > {
   value?: ExpenseSubcategoryId;
   onChange: (value: ExpenseSubcategoryId | undefined) => void;
@@ -27,7 +27,6 @@ export interface ExpenseCategoryPickerProps extends Omit<
 export function ExpenseCategoryPicker({
   value,
   onChange,
-  triggerTitle,
   autoDetect,
   ...props
 }: ExpenseCategoryPickerProps) {
@@ -53,16 +52,14 @@ export function ExpenseCategoryPicker({
     else if (isExpenseSubcategoryId(item.id)) onChange(item.id);
   };
 
-  const displayTitle =
-    triggerTitle ??
-    getExpenseCategoryData({ subcategoryId: value ?? AI_AUTO_DETECT }).name;
-
   return (
     <BottomSheetPickerTrigger
       items={categoryItems}
       selectedId={value ?? AI_AUTO_DETECT}
       onSelect={handleSelect}
-      triggerTitle={displayTitle}
+      triggerTitle={
+        getExpenseCategoryData({ subcategoryId: value ?? AI_AUTO_DETECT }).name
+      }
       {...props}
     />
   );
