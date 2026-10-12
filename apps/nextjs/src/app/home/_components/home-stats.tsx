@@ -15,14 +15,12 @@ import { useHandleApiError } from "~/utils";
 
 function useCountUp(target: number, duration = 500) {
   const [value, setValue] = useState(0);
-  const prevTarget = useRef(target);
+  const valueRef = useRef(0);
 
   useEffect(() => {
-    if (prevTarget.current === target && value === target) return;
-    prevTarget.current = target;
-
     const startTime = performance.now();
-    const startValue = value;
+    const startValue = valueRef.current;
+    let frame: number;
 
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime;
@@ -30,15 +28,17 @@ function useCountUp(target: number, duration = 500) {
       const eased = 1 - (1 - progress) ** 3;
       const current = Math.round(startValue + (target - startValue) * eased);
 
+      valueRef.current = current;
       setValue(current);
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        frame = requestAnimationFrame(animate);
       }
     };
 
-    requestAnimationFrame(animate);
-  }, [target, duration, value]);
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [target, duration]);
 
   return value;
 }
