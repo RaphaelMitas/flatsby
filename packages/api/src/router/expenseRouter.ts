@@ -326,11 +326,10 @@ export const expenseRouter = createTRPCRouter({
                         if (input.description !== undefined) {
                           updateData.description = input.description;
                         }
-                        if (input.category !== undefined) {
-                          updateData.category = input.category;
-                        }
                         if (input.subcategory !== undefined) {
                           updateData.subcategory = input.subcategory;
+                          updateData.category =
+                            getSubcategoryGroup(input.subcategory) ?? "other";
                         }
                         if (input.expenseDate !== undefined) {
                           updateData.expenseDate = input.expenseDate;

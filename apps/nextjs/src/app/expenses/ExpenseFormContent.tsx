@@ -223,32 +223,27 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 <FormField
                   control={form.control}
                   name="category"
-                  render={() => {
-                    const pickerValue = subcategory ?? AI_AUTO_DETECT;
-
-                    return (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <ExpenseCategorySelector
-                            value={pickerValue}
-                            autoDetect={!isEditMode}
-                            onChange={(subcategoryId) => {
-                              if (subcategoryId === AI_AUTO_DETECT) {
-                                form.setValue("category", undefined);
-                                form.setValue("subcategory", undefined);
-                              } else {
-                                const group =
-                                  getSubcategoryGroup(subcategoryId);
-                                form.setValue("category", group ?? "other");
-                                form.setValue("subcategory", subcategoryId);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    );
-                  }}
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <ExpenseCategorySelector
+                          value={subcategory}
+                          autoDetect={!isEditMode}
+                          onChange={(subcategoryId) => {
+                            if (subcategoryId === AI_AUTO_DETECT) {
+                              form.setValue("category", undefined);
+                              form.setValue("subcategory", undefined);
+                            } else {
+                              const group = getSubcategoryGroup(subcategoryId);
+                              form.setValue("category", group ?? "other");
+                              form.setValue("subcategory", subcategoryId);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
                 />
 
                 <FormField

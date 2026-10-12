@@ -24,14 +24,14 @@ interface ExpenseCategorySelectorProps {
   value?: ExpenseSubcategoryIdWithAuto;
   onChange?: (value: ExpenseSubcategoryIdWithAuto) => void;
   iconButton?: boolean;
-  autoDetect?: boolean;
+  autoDetect: boolean;
 }
 
 export function ExpenseCategorySelector({
   iconButton = false,
   value,
   onChange,
-  autoDetect = true,
+  autoDetect,
 }: ExpenseCategorySelectorProps) {
   const selectedData = getExpenseCategoryData(value ?? AI_AUTO_DETECT);
   const allItems = getAllExpenseCategoryItems().filter(

@@ -21,7 +21,7 @@ export interface ExpenseCategoryPickerProps extends Omit<
 > {
   value?: ExpenseSubcategoryIdWithAuto;
   onChange?: (value: ExpenseSubcategoryIdWithAuto) => void;
-  autoDetect?: boolean;
+  autoDetect: boolean;
 }
 
 export function ExpenseCategoryPicker({
@@ -29,7 +29,7 @@ export function ExpenseCategoryPicker({
   onChange,
   triggerTitle,
   iconButton = false,
-  autoDetect = true,
+  autoDetect,
   ...props
 }: ExpenseCategoryPickerProps) {
   const categoryItems = useMemo(() => {
