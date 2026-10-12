@@ -19,10 +19,8 @@ lands on main, `.github/workflows/release.yml` takes over:
    release with generated notes.
 2. **Build + submit** - runs `eas build --platform all --profile production
 --auto-submit` and waits for build + submission (iOS: App Store Connect,
-   ascAppId `6747908544`; Android: the Play **internal track** until Google
-   grants production access - flip `track` to `"production"` in
-   `apps/expo/eas.json` once approved, since a Play-side submission failure
-   would also block `publish-ios`).
+   ascAppId `6747908544`; Android: the Play internal track, which internal
+   testers get right away).
    Progress: https://expo.dev/accounts/flatsby/projects/flatsby/builds
 3. **Store screenshots** - builds e2e simulator/emulator binaries, runs the
    Maestro flow `apps/expo/e2e/screenshots/store-screenshots.yaml` on an
@@ -35,13 +33,17 @@ lands on main, `.github/workflows/release.yml` takes over:
    `apps/expo/store/release-notes.txt`, and submits the build for review
    with automatic release (retrying while Apple processes the binary).
    `publish-android` uploads the screenshots and the same release notes to
-   the Play listing (en-US). A tag push therefore publishes everything with
-   no manual step - edit `apps/expo/store/release-notes.txt` before cutting
-   a release.
+   the Play listing (en-US) and promotes the build from internal to
+   production, which sends it to Google review and then live at 100%
+   (managed publishing is off). Landing the release on main therefore
+   publishes everything with no manual step - edit
+   `apps/expo/store/release-notes.txt` before cutting a release, or in the
+   release PR; Play caps it at 500 characters and CI fails anything longer.
 
-Re-run a release for the current version (e.g. after a failed job) from the
-Actions tab via **Run workflow** on the Release workflow, or `gh workflow run
-release.yml`.
+If a job fails, use **Re-run failed jobs** on that run. **Run workflow** on
+the Release workflow (or `gh workflow run release.yml`) re-runs the whole
+release for the current version, including `publish-ios`, which pulls a
+pending iOS submission out of review to resubmit it.
 
 ## Required repo configuration
 
@@ -58,9 +60,9 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   contents of the downloaded `.p8` file. Until set, `publish-ios` skips with
   a warning and the build stays in TestFlight for manual submission.
 - **`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`** (repo secret, required for the Play
-  listing screenshot upload): the same service-account JSON EAS uses for
-  Play submissions. Until set, `publish-android` skips with a warning (the
-  binary still reaches the production track via EAS).
+  listing update and release): the same service-account JSON EAS uses for
+  Play submissions. Until set, `publish-android` skips with a warning and
+  the build stays on the internal track for manual promotion.
 
 ## Notes
 
@@ -76,7 +78,7 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   assets: iPhone 6.9" / Play phone screenshots are replaced, existing iPad
   screenshots and all other listing content stay untouched.
 - This is a fully automatic pipeline: once the release PR merges, the new
-  version goes live on both stores (after Apple review) without further
+  version goes live on both stores (after store review) without further
   approval. Review the diff and release notes before merging.
 - The screenshot flow lives outside `apps/expo/e2e/flows/`, so the regular
   e2e suite never runs it. Run it locally against `pnpm dev:next` with:
