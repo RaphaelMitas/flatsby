@@ -142,10 +142,13 @@ export const expenseRouter = createTRPCRouter({
                               ctx.session.user.id,
                             ),
                             Effect.promise(() =>
-                              categoryForNewExpense(ctx.session.user.id, input),
+                              subcategoryForNewExpense(
+                                ctx.session.user.id,
+                                input,
+                              ),
                             ),
                           ]),
-                          ([currentUserGroupMember, category]) =>
+                          ([currentUserGroupMember, subcategory]) =>
                             DbUtils.transaction(async (trx) => {
                               const expenseResult = await trx
                                 .insert(expenses)
@@ -156,8 +159,8 @@ export const expenseRouter = createTRPCRouter({
                                   amountInCents: input.amountInCents,
                                   currency: input.currency,
                                   description: input.description,
-                                  category: category.group,
-                                  subcategory: category.subcategory,
+                                  category: getSubcategoryGroup(subcategory),
+                                  subcategory,
                                   expenseDate: input.expenseDate,
                                   createdByGroupMemberId:
                                     currentUserGroupMember.id,
@@ -894,12 +897,12 @@ const expenseSubcategoryOptions = expenseSubcategories.map((sub) => ({
   description: `${expenseCategoryGroupLabels[sub.group]}: ${sub.label}`,
 }));
 
-const categoryForNewExpense = async (
+const subcategoryForNewExpense = async (
   userId: string,
   input: CreateExpenseInput,
 ) => {
   const description = input.description.trim();
-  const subcategory =
+  return (
     input.subcategory ??
     (!description || input.splitMethod === "settlement"
       ? "other"
@@ -911,6 +914,6 @@ const categoryForNewExpense = async (
           options: expenseSubcategoryOptions,
           input: description,
           fallback: "other",
-        }));
-  return { group: getSubcategoryGroup(subcategory), subcategory };
+        }))
+  );
 };
