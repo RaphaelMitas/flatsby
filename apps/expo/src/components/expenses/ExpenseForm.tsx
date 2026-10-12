@@ -3,7 +3,7 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -163,8 +163,8 @@ export function ExpenseForm({
       currency:
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
-      category: coerceCategory(expense?.category),
-      subcategory: coerceSubcategory(expense?.subcategory),
+      category: expense?.category,
+      subcategory: expense?.subcategory,
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),
@@ -431,26 +431,6 @@ export function ExpenseForm({
     }),
   );
 
-  const categorizeExpenseMutation = useMutation(
-    trpcClient.expense.categorizeExpense.mutationOptions({
-      onSuccess: (data) => {
-        // Don't overwrite a category the user picked while this was in flight
-        if (data.success && !form.getValues("subcategory")) {
-          form.setValue("category", data.data.group);
-          form.setValue("subcategory", data.data.subcategory);
-        }
-      },
-    }),
-  );
-
-  const onDescriptionBlur = useCallback(() => {
-    const desc = form.getValues("description");
-    const subcat = form.getValues("subcategory");
-    if (desc && desc.trim().length > 0 && !subcat) {
-      categorizeExpenseMutation.mutate({ description: desc.trim() });
-    }
-  }, [form, categorizeExpenseMutation]);
-
   const onSubmit = (values: ExpenseValues) => {
     const splits = finalizeSplits(
       values.splitMethod,
@@ -614,10 +594,7 @@ export function ExpenseForm({
                               placeholder="What was this expense for?"
                               value={field.value}
                               onChangeText={field.onChange}
-                              onBlur={() => {
-                                field.onBlur();
-                                onDescriptionBlur();
-                              }}
+                              onBlur={field.onBlur}
                               maxLength={512}
                             />
                           </FormControl>

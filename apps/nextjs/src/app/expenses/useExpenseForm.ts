@@ -5,7 +5,7 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
@@ -68,8 +68,8 @@ export function useExpenseForm({
       currency:
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
-      category: coerceCategory(expense?.category),
-      subcategory: coerceSubcategory(expense?.subcategory),
+      category: expense?.category,
+      subcategory: expense?.subcategory,
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),
@@ -329,28 +329,6 @@ export function useExpenseForm({
     }),
   );
 
-  const categorizeExpenseMutation = useMutation(
-    trpc.expense.categorizeExpense.mutationOptions({
-      onSuccess: (data) => {
-        // Don't overwrite a category the user picked while this was in flight
-        if (data.success && !form.getValues("subcategory")) {
-          form.setValue("category", data.data.group);
-          form.setValue("subcategory", data.data.subcategory);
-        }
-      },
-    }),
-  );
-
-  const isCategorizing = categorizeExpenseMutation.isPending;
-
-  const onDescriptionBlur = useCallback(() => {
-    const desc = form.getValues("description");
-    const subcat = form.getValues("subcategory");
-    if (desc && desc.trim().length > 0 && !subcat) {
-      categorizeExpenseMutation.mutate({ description: desc.trim() });
-    }
-  }, [form, categorizeExpenseMutation]);
-
   const onSubmit = (values: ExpenseValues) => {
     const splits = finalizeSplits(
       values.splitMethod,
@@ -467,8 +445,6 @@ export function useExpenseForm({
     handleBack,
     group,
     allMembers,
-    isCategorizing,
-    onDescriptionBlur,
   };
 }
 

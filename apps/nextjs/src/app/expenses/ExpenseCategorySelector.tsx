@@ -24,14 +24,12 @@ interface ExpenseCategorySelectorProps {
   value?: ExpenseSubcategoryIdWithAuto;
   onChange?: (value: ExpenseSubcategoryIdWithAuto) => void;
   iconButton?: boolean;
-  disabled?: boolean;
 }
 
 export function ExpenseCategorySelector({
   iconButton = false,
   value,
   onChange,
-  disabled,
 }: ExpenseCategorySelectorProps) {
   const selectedData = getExpenseCategoryData(value ?? AI_AUTO_DETECT);
   const allItems = getAllExpenseCategoryItems();
@@ -42,7 +40,6 @@ export function ExpenseCategorySelector({
         <Button
           variant="outline"
           role="combobox"
-          disabled={disabled}
           data-testid="expense-form-category"
           className={cn(
             "flex w-full items-center justify-between",

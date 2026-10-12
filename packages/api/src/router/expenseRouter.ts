@@ -151,13 +151,26 @@ export const expenseRouter = createTRPCRouter({
                       ),
                       () =>
                         Effect.flatMap(
-                          // Get current user's group member ID
-                          GroupUtils.getBasicMembership(
-                            ctx.db,
-                            input.groupId,
-                            ctx.session.user.id,
-                          ),
-                          (currentUserGroupMember) =>
+                          Effect.all([
+                            // Get current user's group member ID
+                            GroupUtils.getBasicMembership(
+                              ctx.db,
+                              input.groupId,
+                              ctx.session.user.id,
+                            ),
+                            input.subcategory || !input.description.trim()
+                              ? Effect.succeed({
+                                  group: input.category ?? "other",
+                                  subcategory: input.subcategory ?? "other",
+                                })
+                              : Effect.promise(() =>
+                                  categorizeExpenseDescription(
+                                    ctx.session.user.id,
+                                    input.description.trim(),
+                                  ),
+                                ),
+                          ]),
+                          ([currentUserGroupMember, category]) =>
                             // Create expense and splits in transaction
                             DbUtils.transaction(async (trx) => {
                               const expenseResult = await trx
@@ -169,8 +182,8 @@ export const expenseRouter = createTRPCRouter({
                                   amountInCents: input.amountInCents,
                                   currency: input.currency,
                                   description: input.description,
-                                  category: input.category ?? "other",
-                                  subcategory: input.subcategory ?? "other",
+                                  category: category.group,
+                                  subcategory: category.subcategory,
                                   expenseDate: input.expenseDate,
                                   createdByGroupMemberId:
                                     currentUserGroupMember.id,
@@ -919,16 +932,6 @@ export const expenseRouter = createTRPCRouter({
                 );
               },
             ),
-        ),
-      );
-    }),
-
-  categorizeExpense: protectedProcedure
-    .input(z.object({ description: z.string().min(1).max(512) }))
-    .mutation(async ({ input, ctx }) => {
-      return withErrorHandlingAsResult(
-        Effect.promise(() =>
-          categorizeExpenseDescription(ctx.session.user.id, input.description),
         ),
       );
     }),

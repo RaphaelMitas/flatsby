@@ -78,8 +78,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     handleBack,
     group,
     allMembers,
-    isCategorizing,
-    onDescriptionBlur,
   } = formState;
   const participantCount = finalizeSplits(
     splitMethod,
@@ -135,10 +133,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                           placeholder="What was this expense for?"
                           {...field}
                           data-testid="expense-form-description"
-                          onBlur={() => {
-                            field.onBlur();
-                            onDescriptionBlur();
-                          }}
                           maxLength={512}
                         />
                       </FormControl>
@@ -254,11 +248,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                                   form.setValue("subcategory", subcategoryId);
                                 }
                               }}
-                              disabled={isCategorizing}
                             />
-                            {isCategorizing && (
-                              <LoaderCircle className="text-muted-foreground h-4 w-4 animate-spin" />
-                            )}
                           </div>
                         </FormControl>
                       </FormItem>
