@@ -55,7 +55,6 @@ export default function TabLayout() {
     }
 
     if (selectedGroupId) {
-      void prefetch(trpc.user.getCurrentUserWithGroups.queryOptions());
       void prefetch(
         trpc.shoppingList.getShoppingLists.queryOptions({
           groupId: selectedGroupId,

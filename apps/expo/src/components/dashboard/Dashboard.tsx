@@ -62,28 +62,17 @@ function DashboardContent() {
   );
 
   const handleRefresh = useCallback(async () => {
-    if (!selectedGroupId) return;
     setRefreshing(true);
     await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: trpc.user.getCurrentUserWithGroups.queryKey(),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: trpc.group.getGroup.queryKey({ id: selectedGroupId }),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: trpc.expense.getDebtSummary.queryKey({
-          groupId: selectedGroupId,
-        }),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: trpc.stats.getHomeStats.queryKey({
-          groupId: selectedGroupId,
-        }),
-      }),
+      queryClient.invalidateQueries(
+        trpc.user.getCurrentUserWithGroups.pathFilter(),
+      ),
+      queryClient.invalidateQueries(trpc.group.getGroup.pathFilter()),
+      queryClient.invalidateQueries(trpc.expense.getDebtSummary.pathFilter()),
+      queryClient.invalidateQueries(trpc.stats.getHomeStats.pathFilter()),
     ]);
     setRefreshing(false);
-  }, [queryClient, selectedGroupId]);
+  }, [queryClient]);
 
   const CREATE_GROUP_ID = "__create_group__";
 

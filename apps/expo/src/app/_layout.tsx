@@ -131,6 +131,12 @@ const StackLayout = () => {
   const themedScreenOptions = useThemedScreenOptions();
   const { data, isPending } = useSession();
   const { hydrated } = useShoppingStore();
+  const userId = data?.user.id;
+
+  // Errors cached for a revoked session would sign the next login out again.
+  useEffect(() => {
+    if (!userId) queryClient.clear();
+  }, [userId]);
 
   // The Expo client restores a cached session into data while it revalidates.
   if ((isPending && !data) || !hydrated) {
