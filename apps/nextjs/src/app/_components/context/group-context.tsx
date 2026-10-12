@@ -25,7 +25,6 @@ interface GroupContextValue {
   currentGroup: Group | null;
   currentShoppingList: ShoppingList | null;
   groups: Group[];
-  isLoading: boolean;
 
   // Computed
   hasGroups: boolean;
@@ -43,7 +42,7 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   // Get user data with groups and last used
-  const { data: userWithGroups, isLoading } = useQuery(
+  const { data: userWithGroups } = useQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
 
@@ -115,7 +114,6 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
       currentGroup,
       currentShoppingList,
       groups,
-      isLoading,
       hasGroups: groups.length > 0,
       hasCurrentGroup: currentGroup !== null,
       switchGroup,
@@ -125,7 +123,6 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
       currentGroup,
       currentShoppingList,
       groups,
-      isLoading,
       switchGroup,
       switchShoppingList,
     ],

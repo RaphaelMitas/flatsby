@@ -2,6 +2,7 @@ import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { cache } from "react";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
@@ -24,7 +25,7 @@ const createContext = cache(async () => {
   });
 });
 
-const getQueryClient = cache(createQueryClient);
+export const getQueryClient = cache(createQueryClient);
 
 export const trpc = createTRPCOptionsProxy<AppRouter>({
   router: appRouter,
@@ -59,3 +60,12 @@ export const getCurrentUserWithGroups = () =>
   getQueryClient().fetchQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
+
+export async function getCurrentGroupId() {
+  const result = await getCurrentUserWithGroups();
+  const groupId = result.success
+    ? result.data.user?.lastGroupUsed?.id
+    : undefined;
+  if (!groupId) redirect("/group");
+  return groupId;
+}

@@ -1,5 +1,5 @@
 import {
-  getCurrentUserWithGroups,
+  getCurrentGroupId,
   HydrateClient,
   prefetch,
   trpc,
@@ -7,14 +7,8 @@ import {
 import { GroupSettingsContent } from "./GroupSettingsContent";
 
 export default async function GroupSettingsPage() {
-  const userWithGroups = await getCurrentUserWithGroups();
-  const groupId = userWithGroups.success
-    ? userWithGroups.data.user?.lastGroupUsed?.id
-    : undefined;
-
-  if (groupId) {
-    prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
-  }
+  const groupId = await getCurrentGroupId();
+  prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
 
   return (
     <HydrateClient>

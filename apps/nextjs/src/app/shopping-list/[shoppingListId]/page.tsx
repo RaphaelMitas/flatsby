@@ -5,6 +5,7 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import {
   caller,
   getCurrentUserWithGroups,
+  getQueryClient,
   HydrateClient,
   prefetch,
   trpc,
@@ -59,6 +60,9 @@ export default async function ShoppingListDetailPage({
       await caller.shoppingList.updateLastUsed({
         groupId,
         shoppingListId,
+      });
+      await getQueryClient().refetchQueries({
+        queryKey: trpc.user.getCurrentUserWithGroups.queryKey(),
       });
     } catch (error) {
       console.error(error);

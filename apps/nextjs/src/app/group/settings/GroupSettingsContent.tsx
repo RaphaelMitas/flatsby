@@ -13,15 +13,15 @@ import ManageMembers from "./ManageMembers";
 
 export function GroupSettingsContent() {
   const router = useRouter();
-  const { currentGroup, isLoading } = useGroupContext();
+  const { currentGroup } = useGroupContext();
 
   useEffect(() => {
-    if (!isLoading && !currentGroup) {
+    if (!currentGroup) {
       router.replace("/group");
     }
-  }, [isLoading, currentGroup, router]);
+  }, [currentGroup, router]);
 
-  if (isLoading || !currentGroup) {
+  if (!currentGroup) {
     return <GroupSettingsLoading />;
   }
 

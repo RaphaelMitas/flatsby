@@ -1,5 +1,5 @@
 import {
-  getCurrentUserWithGroups,
+  getCurrentGroupId,
   HydrateClient,
   prefetch,
   trpc,
@@ -7,13 +7,7 @@ import {
 import { DebtSummaryView } from "./DebtSummaryView";
 
 export default async function DebtsPage() {
-  const userWithGroups = await getCurrentUserWithGroups();
-
-  if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
-    return null;
-  }
-
-  const groupId = userWithGroups.data.user.lastGroupUsed.id;
+  const groupId = await getCurrentGroupId();
 
   // Prefetch debt summary and group data
   prefetch(trpc.expense.getDebtSummary.queryOptions({ groupId }));

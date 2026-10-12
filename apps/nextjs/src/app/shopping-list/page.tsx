@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation";
-
 import {
-  getCurrentUserWithGroups,
+  getCurrentGroupId,
   HydrateClient,
   prefetch,
   trpc,
@@ -9,14 +7,7 @@ import {
 import { ShoppingListDashboard } from "./ShoppingListDashboard";
 
 export default async function ShoppingListPage() {
-  // Get current group from user's lastGroupUsed
-  const userWithGroups = await getCurrentUserWithGroups();
-
-  if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
-    redirect("/group");
-  }
-
-  const groupId = userWithGroups.data.user.lastGroupUsed.id;
+  const groupId = await getCurrentGroupId();
 
   // Prefetch shopping lists for the current group
   prefetch(trpc.shoppingList.getShoppingLists.queryOptions({ groupId }));

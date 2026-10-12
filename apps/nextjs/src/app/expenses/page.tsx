@@ -4,7 +4,7 @@ import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import {
-  getCurrentUserWithGroups,
+  getCurrentGroupId,
   HydrateClient,
   prefetch,
   trpc,
@@ -15,13 +15,7 @@ export default async function ExpensesPage(props: {
   searchParams: Promise<{ selected?: string; action?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const userWithGroups = await getCurrentUserWithGroups();
-
-  if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
-    return null;
-  }
-
-  const groupId = userWithGroups.data.user.lastGroupUsed.id;
+  const groupId = await getCurrentGroupId();
 
   // Prefetch initial expenses and group data
   prefetch(
