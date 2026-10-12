@@ -70,7 +70,7 @@ function StatCard({ icon, value, format, label, colorClass }: StatCardProps) {
 
 function StatsHeader() {
   return (
-    <div className="-mb-2 flex items-end justify-between pr-4">
+    <div className="flex items-end justify-between pr-4">
       <p className="text-muted-foreground mb-2 text-sm">Last 30 days</p>
       <PeekingCat variant="home" className="h-8 w-16" />
     </div>
@@ -148,7 +148,7 @@ function HomeStatsInner() {
     formatCurrencyFromCents({ cents, currency });
 
   return (
-    <div className="space-y-2">
+    <div>
       <StatsHeader />
       <div className="grid grid-cols-2 gap-3">
         <StatCard
@@ -194,7 +194,7 @@ export function HomeStats() {
   return (
     <Suspense
       fallback={
-        <div className="space-y-2">
+        <div>
           <StatsHeader />
           <div className="grid grid-cols-2 gap-3">
             <StatCardSkeleton />
