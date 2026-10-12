@@ -10,6 +10,7 @@ import ReanimatedSwipeable, {
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { removeShoppingListItemFromCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { cn } from "~/lib/utils";
@@ -62,69 +63,28 @@ const ShoppingListItem = ({
     selectedCategory,
   });
 
+  const itemsQueryKey = trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
+    {
+      groupId,
+      shoppingListId,
+      limit: PAGE_SIZE.shoppingListItems,
+      categoryId: selectedCategory ?? undefined,
+    },
+  );
+
   const onMutateShoppingListItemError = (
     previousItems: ShoppingListInfiniteData | undefined,
   ) => {
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-        groupId,
-        shoppingListId,
-        limit: PAGE_SIZE.shoppingListItems,
-        categoryId: selectedCategory ?? undefined,
-      }),
-      previousItems,
-    );
+    queryClient.setQueryData(itemsQueryKey, previousItems);
   };
 
   const deleteShoppingListItemMutation = useMutation(
     trpc.shoppingList.deleteShoppingListItem.mutationOptions({
       onMutate: async ({ id }) => {
-        await queryClient.cancelQueries(
-          trpc.shoppingList.getShoppingListItems.queryOptions({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-        );
-
-        const previousItems = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-        );
-
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-          (old) => {
-            if (!old) return old;
-
-            const updatedPages = old.pages.map((page) => {
-              if (page.success === false) {
-                return page;
-              }
-              return {
-                ...page,
-                data: {
-                  ...page.data,
-                  items: page.data.items.filter((item) => item.id !== id),
-                },
-              };
-            });
-
-            return {
-              ...old,
-              pages: updatedPages,
-            };
-          },
+        await queryClient.cancelQueries({ queryKey: itemsQueryKey });
+        const previousItems = queryClient.getQueryData(itemsQueryKey);
+        queryClient.setQueryData(itemsQueryKey, (old) =>
+          removeShoppingListItemFromCache(old, id),
         );
         return { previousItems };
       },

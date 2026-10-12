@@ -3,6 +3,7 @@ import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { updateShoppingListItemInCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
@@ -99,79 +100,29 @@ export const useUpdateShoppingListItemMutation = ({
     shoppingListId,
   });
 
+  const itemsQueryKey = trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
+    {
+      groupId,
+      shoppingListId,
+      limit: PAGE_SIZE.shoppingListItems,
+      categoryId: selectedCategory ?? undefined,
+    },
+  );
+
   const onMutateShoppingListItemError = (
     previousItems: ShoppingListInfiniteData | undefined,
   ) => {
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-        groupId,
-        shoppingListId,
-        limit: PAGE_SIZE.shoppingListItems,
-        categoryId: selectedCategory ?? undefined,
-      }),
-      previousItems,
-    );
+    queryClient.setQueryData(itemsQueryKey, previousItems);
   };
 
   return useMutation(
     trpc.shoppingList.updateShoppingListItem.mutationOptions({
-      onMutate: async ({ id, categoryId, name, completed }) => {
-        await queryClient.cancelQueries({
-          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-        });
-
-        const previousData = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries({ queryKey: itemsQueryKey });
+        const previousData = queryClient.getQueryData(itemsQueryKey);
+        queryClient.setQueryData(itemsQueryKey, (oldData) =>
+          updateShoppingListItemInCache(oldData, variables),
         );
-
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-          (oldData) => {
-            if (!oldData) return oldData;
-
-            return {
-              ...oldData,
-              pages: oldData.pages.map((page) => {
-                if (page.success === false) return page;
-
-                return {
-                  ...page,
-                  data: {
-                    ...page.data,
-                    items: page.data.items.map((item: ShoppingListItem) =>
-                      item.id === id
-                        ? {
-                            ...item,
-                            name: name,
-                            categoryId: categoryId,
-                            completed: completed,
-                            completedAt: completed ? new Date() : null,
-                            isPending: true,
-                          }
-                        : item,
-                    ),
-                  },
-                };
-              }),
-            };
-          },
-        );
-
         return { previousData };
       },
       onError: (_err, _variables, context) => {

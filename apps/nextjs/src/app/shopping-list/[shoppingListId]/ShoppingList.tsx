@@ -322,6 +322,7 @@ const ShoppingListInner = ({
                   shoppingListId={shoppingListId}
                   item={row.item}
                   groupMembers={shoppingList?.group.groupMembers ?? []}
+                  selectedCategory={selectedCategory}
                 />
               ),
             )}
