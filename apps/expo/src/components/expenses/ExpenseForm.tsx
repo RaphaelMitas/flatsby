@@ -3,20 +3,14 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 
-import {
-  AI_AUTO_DETECT,
-  coerceCategory,
-  coerceSubcategory,
-  getSubcategoryGroup,
-  isExpenseSubcategoryId,
-} from "@flatsby/validators/expenses/categories";
+import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
@@ -163,8 +157,7 @@ export function ExpenseForm({
       currency:
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
-      category: coerceCategory(expense?.category),
-      subcategory: coerceSubcategory(expense?.subcategory),
+      subcategory: expense?.subcategory,
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),
@@ -221,8 +214,8 @@ export function ExpenseForm({
             amountInCents: input.amountInCents,
             currency: input.currency,
             description: input.description,
-            category: coerceCategory(input.category),
-            subcategory: coerceSubcategory(input.subcategory),
+            category: getSubcategoryGroup(input.subcategory),
+            subcategory: input.subcategory ?? "other",
             expenseDate: input.expenseDate,
             createdByGroupMemberId: currentMember.id,
             splitMethod: input.splitMethod,
@@ -357,10 +350,10 @@ export function ExpenseForm({
             data: {
               ...old.data,
               ...input,
-              category: coerceCategory(input.category ?? old.data.category),
-              subcategory: coerceSubcategory(
-                input.subcategory ?? old.data.subcategory,
-              ),
+              category: input.subcategory
+                ? getSubcategoryGroup(input.subcategory)
+                : old.data.category,
+              subcategory: input.subcategory ?? old.data.subcategory,
               expenseSplits: input.splits
                 ? input.splits.map((split, index) => {
                     const member = group.groupMembers.find(
@@ -431,25 +424,6 @@ export function ExpenseForm({
     }),
   );
 
-  const categorizeExpenseMutation = useMutation(
-    trpcClient.expense.categorizeExpense.mutationOptions({
-      onSuccess: (data) => {
-        if (data.success) {
-          form.setValue("category", data.data.group);
-          form.setValue("subcategory", data.data.subcategory);
-        }
-      },
-    }),
-  );
-
-  const onDescriptionBlur = useCallback(() => {
-    const desc = form.getValues("description");
-    const subcat = form.getValues("subcategory");
-    if (desc && desc.trim().length > 0 && !subcat) {
-      categorizeExpenseMutation.mutate({ description: desc.trim() });
-    }
-  }, [form, categorizeExpenseMutation]);
-
   const onSubmit = (values: ExpenseValues) => {
     const splits = finalizeSplits(
       values.splitMethod,
@@ -464,7 +438,6 @@ export function ExpenseForm({
         amountInCents: values.amountInCents,
         currency: values.currency,
         description: values.description,
-        category: values.category,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,
@@ -477,7 +450,6 @@ export function ExpenseForm({
         amountInCents: values.amountInCents,
         currency: values.currency,
         description: values.description,
-        category: values.category,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,
@@ -538,7 +510,6 @@ export function ExpenseForm({
     name: "paidByGroupMemberId",
   });
   const description = useWatch({ control: form.control, name: "description" });
-  const subcategory = useWatch({ control: form.control, name: "subcategory" });
   const splits = useWatch({ control: form.control, name: "splits" });
   const participantCount = finalizeSplits(
     splitMethod,
@@ -547,10 +518,6 @@ export function ExpenseForm({
   ).length;
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
-  const categoryPickerValue =
-    subcategory && isExpenseSubcategoryId(subcategory)
-      ? subcategory
-      : AI_AUTO_DETECT;
 
   const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
     id: code,
@@ -601,6 +568,27 @@ export function ExpenseForm({
                     <CardTitle>Amount & Details</CardTitle>
                   </CardHeader>
                   <CardContent className="gap-4">
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <View className="gap-2">
+                          <Label>Description</Label>
+                          <FormControl>
+                            <Input
+                              testID="expense-form-description"
+                              placeholder="What was this expense for?"
+                              value={field.value}
+                              onChangeText={field.onChange}
+                              onBlur={field.onBlur}
+                              maxLength={512}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </View>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="amountInCents"
@@ -661,45 +649,19 @@ export function ExpenseForm({
 
                     <FormField
                       control={form.control}
-                      name="description"
+                      name="subcategory"
                       render={({ field }) => (
                         <View className="gap-2">
-                          <Label>Description</Label>
-                          <FormControl>
-                            <Input
-                              testID="expense-form-description"
-                              placeholder="What was this expense for?"
-                              value={field.value}
-                              onChangeText={field.onChange}
-                              onBlur={() => {
-                                field.onBlur();
-                                onDescriptionBlur();
-                              }}
-                              maxLength={512}
-                            />
-                          </FormControl>
-                          <FormMessage />
+                          <Label>Category</Label>
+                          <ExpenseCategoryPicker
+                            testID="expense-form-category"
+                            value={field.value}
+                            autoDetect={!isEditMode}
+                            onChange={field.onChange}
+                          />
                         </View>
                       )}
                     />
-
-                    <View className="gap-2">
-                      <Label>Category</Label>
-                      <ExpenseCategoryPicker
-                        testID="expense-form-category"
-                        value={categoryPickerValue}
-                        onChange={(subcategoryId) => {
-                          if (subcategoryId === AI_AUTO_DETECT) {
-                            form.setValue("category", undefined);
-                            form.setValue("subcategory", undefined);
-                          } else {
-                            const group = getSubcategoryGroup(subcategoryId);
-                            form.setValue("category", group ?? "other");
-                            form.setValue("subcategory", subcategoryId);
-                          }
-                        }}
-                      />
-                    </View>
 
                     <FormField
                       control={form.control}
@@ -749,6 +711,16 @@ export function ExpenseForm({
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="gap-3">
+                    {description && (
+                      <View className="flex-row justify-between">
+                        <Text className="text-muted-foreground">
+                          Description:
+                        </Text>
+                        <Text className="text-foreground text-right font-semibold">
+                          {description}
+                        </Text>
+                      </View>
+                    )}
                     <View className="flex-row justify-between">
                       <Text className="text-muted-foreground">Amount:</Text>
                       <Text className="text-foreground font-semibold">
@@ -765,16 +737,6 @@ export function ExpenseForm({
                           ?.user.name ?? "Unknown"}
                       </Text>
                     </View>
-                    {description && (
-                      <View className="flex-row justify-between">
-                        <Text className="text-muted-foreground">
-                          Description:
-                        </Text>
-                        <Text className="text-foreground text-right font-semibold">
-                          {description}
-                        </Text>
-                      </View>
-                    )}
                     <View className="flex-row justify-between">
                       <Text className="text-muted-foreground">Split:</Text>
                       <Text className="text-foreground font-semibold">

@@ -1,4 +1,3 @@
-import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -10,6 +9,7 @@ import ReanimatedSwipeable, {
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { removeShoppingListItemFromCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { cn } from "~/lib/utils";
@@ -62,81 +62,36 @@ const ShoppingListItem = ({
     selectedCategory,
   });
 
-  const onMutateShoppingListItemError = (
-    previousItems: ShoppingListInfiniteData | undefined,
-  ) => {
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-        groupId,
-        shoppingListId,
-        limit: PAGE_SIZE.shoppingListItems,
-        categoryId: selectedCategory ?? undefined,
-      }),
-      previousItems,
-    );
-  };
+  const itemsQueryKey = trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
+    {
+      groupId,
+      shoppingListId,
+      limit: PAGE_SIZE.shoppingListItems,
+      categoryId: selectedCategory ?? undefined,
+    },
+  );
 
   const deleteShoppingListItemMutation = useMutation(
     trpc.shoppingList.deleteShoppingListItem.mutationOptions({
       onMutate: async ({ id }) => {
-        await queryClient.cancelQueries(
-          trpc.shoppingList.getShoppingListItems.queryOptions({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
+        await queryClient.cancelQueries({ queryKey: itemsQueryKey });
+        const previousItems = queryClient.getQueryData(itemsQueryKey);
+        queryClient.setQueryData(itemsQueryKey, (old) =>
+          removeShoppingListItemFromCache(old, id),
         );
-
-        const previousItems = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-        );
-
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-          (old) => {
-            if (!old) return old;
-
-            const updatedPages = old.pages.map((page) => {
-              if (page.success === false) {
-                return page;
-              }
-              return {
-                ...page,
-                data: {
-                  ...page.data,
-                  items: page.data.items.filter((item) => item.id !== id),
-                },
-              };
-            });
-
-            return {
-              ...old,
-              pages: updatedPages,
-            };
-          },
-        );
-        return { previousItems };
+        return { queryKey: itemsQueryKey, previousItems };
       },
       onError: (_err, _variables, context) => {
-        onMutateShoppingListItemError(context?.previousItems);
+        if (context) {
+          queryClient.setQueryData(context.queryKey, context.previousItems);
+        }
       },
       onSuccess: (data, _variables, context) => {
         if (!data.success) {
-          onMutateShoppingListItemError(context.previousItems);
-          return;
+          queryClient.setQueryData(context.queryKey, context.previousItems);
         }
-
+      },
+      onSettled: () => {
         invalidateAll();
       },
     }),
