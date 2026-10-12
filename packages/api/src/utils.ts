@@ -1,5 +1,7 @@
 import { Effect } from "effect";
 
+import { calculateDebts } from "@flatsby/validators/expenses/debt";
+
 import type { ApiError, NotFoundError } from "./errors";
 import type {
   Database,
@@ -377,6 +379,26 @@ export const GroupUtils = {
     );
   },
 };
+
+/**
+ * Debt summary for a group. Does not check access, callers must.
+ */
+export const fetchGroupDebtSummary = async (db: Database, groupId: number) =>
+  calculateDebts(
+    await db.query.expenses.findMany({
+      where: (expenses, { eq }) => eq(expenses.groupId, groupId),
+      columns: {
+        paidByGroupMemberId: true,
+        amountInCents: true,
+        currency: true,
+      },
+      with: {
+        expenseSplits: {
+          columns: { groupMemberId: true, amountInCents: true },
+        },
+      },
+    }),
+  );
 
 /**
  * Helper to migrate existing tRPC procedures

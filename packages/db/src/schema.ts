@@ -124,16 +124,23 @@ export const groups = createTable("groups", {
   profilePicture: text("profilePicture"),
 });
 
-export const groupMembers = createTable("group_members", {
-  id: serial("id").primaryKey(),
-  groupId: integer("groupId")
-    .notNull()
-    .references(() => groups.id),
-  userId: text("userId").notNull(),
-  role: groupMemberRoleEnum("role").notNull(),
-  joinedOn: timestamp("joinedOn").defaultNow().notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
-});
+export const groupMembers = createTable(
+  "group_members",
+  {
+    id: serial("id").primaryKey(),
+    groupId: integer("groupId")
+      .notNull()
+      .references(() => groups.id),
+    userId: text("userId").notNull(),
+    role: groupMemberRoleEnum("role").notNull(),
+    joinedOn: timestamp("joinedOn").defaultNow().notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+  },
+  (table) => [
+    index("group_members_group_user_idx").on(table.groupId, table.userId),
+    index("group_members_user_idx").on(table.userId),
+  ],
+);
 
 export const groupsRelations = relations(groups, ({ many }) => ({
   groupMembers: many(groupMembers),
@@ -168,16 +175,20 @@ export const groupMembersRelations = relations(
   }),
 );
 
-export const shoppingLists = createTable("shopping_lists", {
-  id: serial("id").primaryKey(),
-  groupId: integer("groupId")
-    .notNull()
-    .references(() => groups.id),
-  name: varchar("name", { length: 256 }).notNull(),
-  icon: text("icon"),
-  description: text("description"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+export const shoppingLists = createTable(
+  "shopping_lists",
+  {
+    id: serial("id").primaryKey(),
+    groupId: integer("groupId")
+      .notNull()
+      .references(() => groups.id),
+    name: varchar("name", { length: 256 }).notNull(),
+    icon: text("icon"),
+    description: text("description"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [index("shopping_lists_group_idx").on(table.groupId)],
+);
 
 export const shoppingListsRelations = relations(
   shoppingLists,
@@ -190,23 +201,35 @@ export const shoppingListsRelations = relations(
   }),
 );
 
-export const shoppingListItems = createTable("shopping_list_item", {
-  id: serial("id").primaryKey(),
-  shoppingListId: integer("shoppingListId")
-    .notNull()
-    .references(() => shoppingLists.id),
-  name: varchar("name", { length: 256 }).notNull(),
-  categoryId: varchar("categoryId", { length: 50 }).default("other").notNull(),
-  createdByGroupMemberId: integer("createdByGroupMemberId").references(
-    () => groupMembers.id,
-  ),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  completed: boolean("completed").notNull(),
-  completedByGroupMemberId: integer("completedByGroupMemberId").references(
-    () => groupMembers.id,
-  ),
-  completedAt: timestamp("completedAt"),
-});
+export const shoppingListItems = createTable(
+  "shopping_list_item",
+  {
+    id: serial("id").primaryKey(),
+    shoppingListId: integer("shoppingListId")
+      .notNull()
+      .references(() => shoppingLists.id),
+    name: varchar("name", { length: 256 }).notNull(),
+    categoryId: varchar("categoryId", { length: 50 })
+      .default("other")
+      .notNull(),
+    createdByGroupMemberId: integer("createdByGroupMemberId").references(
+      () => groupMembers.id,
+    ),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    completed: boolean("completed").notNull(),
+    completedByGroupMemberId: integer("completedByGroupMemberId").references(
+      () => groupMembers.id,
+    ),
+    completedAt: timestamp("completedAt"),
+  },
+  (table) => [
+    index("shopping_list_item_list_idx").on(
+      table.shoppingListId,
+      table.completedAt,
+      table.createdAt,
+    ),
+  ],
+);
 
 export const shoppingListItemsRelations = relations(
   shoppingListItems,
@@ -228,42 +251,57 @@ export const shoppingListItemsRelations = relations(
   }),
 );
 
-export const expenses = createTable("expenses", {
-  id: serial("id").primaryKey(),
-  groupId: integer("groupId")
-    .notNull()
-    .references(() => groups.id),
-  paidByGroupMemberId: integer("paidByGroupMemberId")
-    .notNull()
-    .references(() => groupMembers.id),
-  amountInCents: integer("amount_in_cents").notNull(),
-  currency: varchar("currency", { length: 3 }).notNull(),
-  description: varchar("description", { length: 512 }).notNull(),
-  category: varchar("category", { length: 100 }).notNull(),
-  subcategory: varchar("subcategory", { length: 100 }).notNull(),
-  expenseDate: timestamp("expenseDate").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  createdByGroupMemberId: integer("createdByGroupMemberId")
-    .notNull()
-    .references(() => groupMembers.id),
-  splitMethod: varchar("split_method", { length: 20 })
-    .default("equal")
-    .notNull(),
-});
+export const expenses = createTable(
+  "expenses",
+  {
+    id: serial("id").primaryKey(),
+    groupId: integer("groupId")
+      .notNull()
+      .references(() => groups.id),
+    paidByGroupMemberId: integer("paidByGroupMemberId")
+      .notNull()
+      .references(() => groupMembers.id),
+    amountInCents: integer("amount_in_cents").notNull(),
+    currency: varchar("currency", { length: 3 }).notNull(),
+    description: varchar("description", { length: 512 }).notNull(),
+    category: varchar("category", { length: 100 }).notNull(),
+    subcategory: varchar("subcategory", { length: 100 }).notNull(),
+    expenseDate: timestamp("expenseDate").defaultNow().notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    createdByGroupMemberId: integer("createdByGroupMemberId")
+      .notNull()
+      .references(() => groupMembers.id),
+    splitMethod: varchar("split_method", { length: 20 })
+      .default("equal")
+      .notNull(),
+  },
+  (table) => [
+    index("expenses_group_date_idx").on(
+      table.groupId,
+      table.expenseDate,
+      table.id,
+    ),
+    index("expenses_group_created_idx").on(table.groupId, table.createdAt),
+  ],
+);
 
-export const expenseSplits = createTable("expense_splits", {
-  id: serial("id").primaryKey(),
-  expenseId: integer("expenseId")
-    .notNull()
-    .references(() => expenses.id),
-  groupMemberId: integer("groupMemberId")
-    .notNull()
-    .references(() => groupMembers.id),
-  amountInCents: integer("amount_in_cents").notNull(),
-  percentage: integer("percentage"),
-  shares: integer("shares"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+export const expenseSplits = createTable(
+  "expense_splits",
+  {
+    id: serial("id").primaryKey(),
+    expenseId: integer("expenseId")
+      .notNull()
+      .references(() => expenses.id),
+    groupMemberId: integer("groupMemberId")
+      .notNull()
+      .references(() => groupMembers.id),
+    amountInCents: integer("amount_in_cents").notNull(),
+    percentage: integer("percentage"),
+    shares: integer("shares"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [index("expense_splits_expense_idx").on(table.expenseId)],
+);
 
 export const expensesRelations = relations(expenses, ({ many, one }) => ({
   group: one(groups, {
@@ -295,18 +333,24 @@ export const expenseSplitsRelations = relations(expenseSplits, ({ one }) => ({
 }));
 
 // Chat tables
-export const conversations = createTable("conversations", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  title: text("title"),
-  model: text("model").default("openai/gpt-5.4-mini"),
-  systemPrompt: text("system_prompt"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  deletedAt: timestamp("deleted_at", { mode: "date" }),
-});
+export const conversations = createTable(
+  "conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text("title"),
+    model: text("model").default("openai/gpt-5.4-mini"),
+    systemPrompt: text("system_prompt"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at", { mode: "date" }),
+  },
+  (table) => [
+    index("conversations_user_updated_idx").on(table.userId, table.updatedAt),
+  ],
+);
 
 export const conversationsRelations = relations(
   conversations,
