@@ -8,7 +8,7 @@ import { cn } from "@flatsby/ui";
 import { Toaster } from "@flatsby/ui/toast";
 
 import { AnalyticsProvider } from "~/app/_components/analytics/AnalyticsProvider";
-import { SITE_URL } from "~/app/_components/landing/content";
+import { APP_STORE_ID, SITE_URL } from "~/app/_components/landing/content";
 import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
       url: "/apple-touch-icon.png",
     },
   ],
-  manifest: "/site.webmanifest",
+  itunes: { appId: APP_STORE_ID },
   robots: "noindex,nofollow",
   other: {
     "apple-mobile-web-app-title": "Flatsby",
