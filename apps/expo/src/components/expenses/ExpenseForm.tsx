@@ -10,10 +10,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 
-import {
-  AI_AUTO_DETECT,
-  getSubcategoryGroup,
-} from "@flatsby/validators/expenses/categories";
+import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
@@ -513,7 +510,6 @@ export function ExpenseForm({
     name: "paidByGroupMemberId",
   });
   const description = useWatch({ control: form.control, name: "description" });
-  const subcategory = useWatch({ control: form.control, name: "subcategory" });
   const splits = useWatch({ control: form.control, name: "splits" });
   const participantCount = finalizeSplits(
     splitMethod,
@@ -651,22 +647,21 @@ export function ExpenseForm({
                       )}
                     />
 
-                    <View className="gap-2">
-                      <Label>Category</Label>
-                      <ExpenseCategoryPicker
-                        testID="expense-form-category"
-                        value={subcategory}
-                        autoDetect={!isEditMode}
-                        onChange={(subcategoryId) => {
-                          form.setValue(
-                            "subcategory",
-                            subcategoryId === AI_AUTO_DETECT
-                              ? undefined
-                              : subcategoryId,
-                          );
-                        }}
-                      />
-                    </View>
+                    <FormField
+                      control={form.control}
+                      name="subcategory"
+                      render={({ field }) => (
+                        <View className="gap-2">
+                          <Label>Category</Label>
+                          <ExpenseCategoryPicker
+                            testID="expense-form-category"
+                            value={field.value}
+                            autoDetect={!isEditMode}
+                            onChange={field.onChange}
+                          />
+                        </View>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}

@@ -36,7 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
-import { AI_AUTO_DETECT } from "@flatsby/validators/expenses/categories";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
   editableSplitMethod,
@@ -64,7 +63,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     currency,
     paidByGroupMemberId,
     description,
-    subcategory,
     splits,
     isPending,
     createExpenseMutation,
@@ -220,21 +218,14 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 <FormField
                   control={form.control}
                   name="subcategory"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
                       <FormControl>
                         <ExpenseCategorySelector
-                          value={subcategory}
+                          value={field.value}
                           autoDetect={!isEditMode}
-                          onChange={(subcategoryId) => {
-                            form.setValue(
-                              "subcategory",
-                              subcategoryId === AI_AUTO_DETECT
-                                ? undefined
-                                : subcategoryId,
-                            );
-                          }}
+                          onChange={field.onChange}
                         />
                       </FormControl>
                     </FormItem>

@@ -7,70 +7,67 @@ import { expenseSubcategories, expenseSubcategoryIdSchema } from "./categories";
 import { decimalToCents } from "./conversion";
 import { currencyCodeSchema, expenseSplitSchema } from "./schemas";
 
-/**
- * Maps Splitwise category strings to our subcategory IDs.
- * Case-insensitive lookup. Unmatched categories fall back to "other".
- */
-const SPLITWISE_CATEGORY_MAP: Record<string, ExpenseSubcategoryId> = {
-  // Food & Drinks
-  groceries: "groceries",
-  "food and drink": "other-food-drinks",
-  "dining out": "restaurant",
-  liquor: "bar",
-  // Transport
-  taxi: "taxi",
-  parking: "parking",
-  "gas/fuel": "gas",
-  car: "other-transport",
-  "bus/train": "public-transit",
-  // Shopping
-  clothing: "clothes",
-  electronics: "electronics",
-  "household supplies": "home-goods",
-  // Entertainment
-  movies: "movies",
-  games: "games",
-  sports: "sports",
-  music: "music",
-  "entertainment - other": "other-entertainment",
-  // Housing
-  rent: "rent",
-  mortgage: "rent",
-  maintenance: "maintenance",
-  furniture: "furniture",
-  "home - other": "other-housing",
-  // Utilities
-  electricity: "electric",
-  "heat/gas": "other-utilities",
-  water: "water",
-  "tv/phone/internet": "internet",
-  "utilities - other": "other-utilities",
-  // Health
-  insurance: "other-health",
-  "medical expenses": "doctor",
-  // Travel
-  hotel: "hotel",
-  plane: "flight",
-  // Subscriptions
-  services: "other-subscriptions",
-  // Education
-  education: "other-education",
-  // Gifts
-  gifts: "gift",
-  // Pets (map to other)
-  pets: "other",
-};
+const splitwiseSubcategoryByCategory = new Map<string, ExpenseSubcategoryId>(
+  Object.entries({
+    // Food & Drinks
+    groceries: "groceries",
+    "food and drink": "other-food-drinks",
+    "dining out": "restaurant",
+    liquor: "bar",
+    // Transport
+    taxi: "taxi",
+    parking: "parking",
+    "gas/fuel": "gas",
+    car: "other-transport",
+    "bus/train": "public-transit",
+    // Shopping
+    clothing: "clothes",
+    electronics: "electronics",
+    "household supplies": "home-goods",
+    // Entertainment
+    movies: "movies",
+    games: "games",
+    sports: "sports",
+    music: "music",
+    "entertainment - other": "other-entertainment",
+    // Housing
+    rent: "rent",
+    mortgage: "rent",
+    maintenance: "maintenance",
+    furniture: "furniture",
+    "home - other": "other-housing",
+    // Utilities
+    electricity: "electric",
+    "heat/gas": "other-utilities",
+    water: "water",
+    "tv/phone/internet": "internet",
+    "utilities - other": "other-utilities",
+    // Health
+    insurance: "other-health",
+    "medical expenses": "doctor",
+    // Travel
+    hotel: "hotel",
+    plane: "flight",
+    // Subscriptions
+    services: "other-subscriptions",
+    // Education
+    education: "other-education",
+    // Gifts
+    gifts: "gift",
+    // Pets
+    pets: "other",
+  }),
+);
 
-// Also build a reverse lookup from subcategory labels for fuzzy matching
-const subcategoryLabelMap = new Map<string, ExpenseSubcategoryId>(
+const subcategoryIdByLabel = new Map<string, ExpenseSubcategoryId>(
   expenseSubcategories.map((sub) => [sub.label.toLowerCase(), sub.id]),
 );
 
 function mapSplitwiseCategory(rawCategory: string): ExpenseSubcategoryId {
   const normalized = rawCategory.trim().toLowerCase();
   return (
-    SPLITWISE_CATEGORY_MAP[normalized] ??
-    subcategoryLabelMap.get(normalized) ??
+    splitwiseSubcategoryByCategory.get(normalized) ??
+    subcategoryIdByLabel.get(normalized) ??
     "other"
   );
 }

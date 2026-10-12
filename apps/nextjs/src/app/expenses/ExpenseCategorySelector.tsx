@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
+import type { ExpenseSubcategoryId } from "@flatsby/validators/expenses/categories";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
@@ -21,8 +21,8 @@ import {
 import { AI_AUTO_DETECT } from "@flatsby/validators/expenses/categories";
 
 interface ExpenseCategorySelectorProps {
-  value?: ExpenseSubcategoryIdWithAuto;
-  onChange?: (value: ExpenseSubcategoryIdWithAuto) => void;
+  value?: ExpenseSubcategoryId;
+  onChange: (value: ExpenseSubcategoryId | undefined) => void;
   autoDetect: boolean;
 }
 
@@ -63,7 +63,9 @@ export function ExpenseCategorySelector({
             <SheetClose asChild key={item.id} className="h-full">
               <Button
                 variant="ghost"
-                onClick={() => onChange?.(item.id)}
+                onClick={() =>
+                  onChange(item.id === AI_AUTO_DETECT ? undefined : item.id)
+                }
                 data-testid={`expense-category-option-${item.id}`}
                 className={cn(
                   "flex w-full items-center justify-start gap-4 px-4 py-3",

@@ -1,11 +1,11 @@
-import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
+import type { ExpenseSubcategoryId } from "@flatsby/validators/expenses/categories";
 import { useMemo } from "react";
 import { View } from "react-native";
 
 import {
   AI_AUTO_DETECT,
   expenseSubcategoryIdsWithAuto,
-  isExpenseSubcategoryIdWithAuto,
+  isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
 
 import type {
@@ -19,13 +19,13 @@ export interface ExpenseCategoryPickerProps extends Omit<
   BottomSheetPickerTriggerProps,
   "items" | "title"
 > {
-  value?: ExpenseSubcategoryIdWithAuto;
-  onChange?: (value: ExpenseSubcategoryIdWithAuto) => void;
+  value?: ExpenseSubcategoryId;
+  onChange: (value: ExpenseSubcategoryId | undefined) => void;
   autoDetect: boolean;
 }
 
 export function ExpenseCategoryPicker({
-  value = AI_AUTO_DETECT,
+  value,
   onChange,
   triggerTitle,
   autoDetect,
@@ -49,18 +49,18 @@ export function ExpenseCategoryPicker({
   }, [autoDetect]);
 
   const handleSelect = (item: BottomSheetPickerItem) => {
-    if (isExpenseSubcategoryIdWithAuto(item.id)) {
-      onChange?.(item.id);
-    }
+    if (item.id === AI_AUTO_DETECT) onChange(undefined);
+    else if (isExpenseSubcategoryId(item.id)) onChange(item.id);
   };
 
   const displayTitle =
-    triggerTitle ?? getExpenseCategoryData({ subcategoryId: value }).name;
+    triggerTitle ??
+    getExpenseCategoryData({ subcategoryId: value ?? AI_AUTO_DETECT }).name;
 
   return (
     <BottomSheetPickerTrigger
       items={categoryItems}
-      selectedId={value}
+      selectedId={value ?? AI_AUTO_DETECT}
       onSelect={handleSelect}
       triggerTitle={displayTitle}
       {...props}

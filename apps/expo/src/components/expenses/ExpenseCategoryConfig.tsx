@@ -1,7 +1,4 @@
-import type {
-  ExpenseCategoryGroup,
-  ExpenseSubcategoryIdWithAuto,
-} from "@flatsby/validators/expenses/categories";
+import type { ExpenseCategoryGroup } from "@flatsby/validators/expenses/categories";
 import type {
   CategoryColorKey,
   CategoryColorVariant,
@@ -12,7 +9,6 @@ import {
   expenseCategoryGroupColorKeys,
   expenseCategoryGroupLabels,
   expenseSubcategories,
-  expenseSubcategoryIdsWithAuto,
 } from "@flatsby/validators/expenses/categories";
 import {
   categoryBgColorMap,
@@ -95,7 +91,3 @@ export function getExpenseCategoryData({
     icon: <Icon name={entry.iconName} size={iconSize} className={color} />,
   };
 }
-
-export { AI_AUTO_DETECT, expenseSubcategoryIdsWithAuto };
-export type { ExpenseSubcategoryIdWithAuto };
-export type { CategoryColorKey, CategoryColorVariant };
