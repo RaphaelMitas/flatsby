@@ -22,7 +22,11 @@ export async function openExpenseForm(
   page: Page,
   options: { amount: string; description: string; categoryId: string },
 ) {
-  await page.getByTestId("expense-add-button").click();
+  // React's streamed server copy can linger hidden for a moment after hydration.
+  await page
+    .getByTestId("expense-add-button")
+    .filter({ visible: true })
+    .click();
   await fillExpenseAmount(page, options.amount);
   await ensurePaidBySelected(page);
   await page.getByTestId("expense-form-description").fill(options.description);

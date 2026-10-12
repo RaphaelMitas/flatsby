@@ -10,7 +10,6 @@ import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Input } from "@flatsby/ui/input";
 
-import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 
 /**
@@ -25,19 +24,14 @@ export function CreateGroup() {
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { currentGroup, switchGroup } = useGroupContext();
 
   const groupMutation = useMutation(
     trpc.group.createGroup.mutationOptions({
-      onSuccess: async (data) => {
+      onSuccess: (data) => {
         if (!data.success) {
           return;
         }
 
-        // Home redirects to /group until a current group is set.
-        if (!currentGroup) {
-          await switchGroup(data.data.groupId);
-        }
         void queryClient.invalidateQueries(
           trpc.user.getCurrentUserWithGroups.queryOptions(),
         );
