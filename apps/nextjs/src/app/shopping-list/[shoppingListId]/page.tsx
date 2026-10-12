@@ -24,7 +24,6 @@ export default async function ShoppingListDetailPage({
   const groupId = await getCurrentGroupId();
   const userWithGroups = await getCurrentUserWithGroups();
 
-  // Prefetch data
   prefetch(
     trpc.shoppingList.getShoppingList.queryOptions({
       groupId,
@@ -45,7 +44,6 @@ export default async function ShoppingListDetailPage({
     ),
   );
 
-  // Update last used shopping list only if it changed
   const currentShoppingListId = userWithGroups.success
     ? userWithGroups.data.user?.lastShoppingListUsed?.id
     : undefined;
