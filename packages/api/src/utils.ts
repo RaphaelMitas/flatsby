@@ -288,28 +288,6 @@ export const GroupUtils = {
   },
 
   /**
-   * Get user's basic membership info in a group
-   */
-  getBasicMembership: (
-    db: Database,
-    groupId: number,
-    userId: string,
-  ): Effect.Effect<GroupMember, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(
-              eq(members.userId, userId),
-              eq(members.groupId, groupId),
-              eq(members.isActive, true),
-            ),
-        }),
-      "group membership",
-    );
-  },
-
-  /**
    * Get user's role in a group
    */
   getUserRole: (
