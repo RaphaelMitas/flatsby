@@ -35,10 +35,10 @@ lands on main, `.github/workflows/release.yml` takes over:
    `publish-android` uploads the screenshots and the same release notes to
    the Play listing (en-US) and promotes the build from internal to
    production, which sends it to Google review and then live at 100%
-   (managed publishing is off). A tag push therefore publishes everything
-   with no manual step - edit `apps/expo/store/release-notes.txt` before
-   cutting a release, or in the release PR; Play caps it at 500 characters
-   and CI fails anything longer.
+   (managed publishing is off). Landing the release on main therefore
+   publishes everything with no manual step - edit
+   `apps/expo/store/release-notes.txt` before cutting a release, or in the
+   release PR; Play caps it at 500 characters and CI fails anything longer.
 
 If a job fails, use **Re-run failed jobs** on that run. **Run workflow** on
 the Release workflow (or `gh workflow run release.yml`) re-runs the whole

@@ -5,16 +5,17 @@ name: Release
 # landed), this workflow tags the commit, creates a GitHub release, kicks off
 # EAS production builds with store auto-submit, and captures store
 # screenshots. workflow_dispatch re-runs the release for the current version
-# even if the tag already exists (e.g. after a failed run) — with
-# skip_eas_build when only the publish half failed, so a listing fix does not
-# spend another pair of EAS builds on a binary the stores already have.
+# even if the tag already exists (e.g. after fixing the workflow or release
+# notes) — with skip_eas_build when only the publish half failed, so a
+# listing fix does not spend another pair of EAS builds on a binary the
+# stores already have.
 on:
   push:
     branches: [main]
   workflow_dispatch:
     inputs:
       skip_eas_build:
-        description: "Skip the EAS build+submit (the binary is already in the stores; only re-capture screenshots and re-publish the listings)"
+        description: "Skip the EAS build+submit (the binary is already in the stores; only re-capture screenshots and re-run publish-ios and publish-android)"
         type: boolean
         default: false
 
@@ -794,9 +795,8 @@ jobs:
   # The Play counterpart of publish-ios: promotes the build EAS put on the
   # internal track to production with the release notes and screenshots
   # (en-US) in one edit, which sends it to Google review and then live.
-  # Promoting is idempotent, so re-runs just refresh the notes. Like
-  # publish-ios, independent of the screenshot job's outcome: the changelog
-  # always goes up, fresh screenshots only when captured.
+  # Like publish-ios, independent of the screenshot job's outcome: the
+  # changelog always goes up, fresh screenshots only when captured.
   publish-android:
     needs: [check, eas-build-submit, screenshots-android]
     if: >-
@@ -822,9 +822,8 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         uses: ./tooling/github/setup
 
-      # Pinned to this release's version rather than the latest remote
-      # versionCode, so a build of another version can never be promoted.
-      # build:list is newest first, so a full re-run picks its rebuild.
+      # Pinned to this release's version so another version's build is never
+      # promoted; build:list is newest first, so a full re-run picks its rebuild.
       - name: Resolve released Android version code
         if: steps.guard.outputs.skip != 'true'
         id: version
