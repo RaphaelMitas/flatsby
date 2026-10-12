@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation";
-
 import {
-  getCurrentUserWithGroups,
+  getCurrentGroupId,
   HydrateClient,
   prefetch,
   trpc,
@@ -9,23 +7,7 @@ import {
 import { HomeContent } from "./_components/home-content";
 
 export default async function HomePage() {
-  const userDataResult = await getCurrentUserWithGroups();
-
-  if (!userDataResult.success) {
-    redirect("/auth/login");
-  }
-
-  const { user, groups } = userDataResult.data;
-
-  if (groups.length === 0) {
-    redirect("/group");
-  }
-
-  const groupId = user?.lastGroupUsed?.id ?? groups[0]?.id;
-
-  if (!groupId) {
-    redirect("/group");
-  }
+  const groupId = await getCurrentGroupId();
 
   prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
   prefetch(trpc.group.getUserGroups.queryOptions());

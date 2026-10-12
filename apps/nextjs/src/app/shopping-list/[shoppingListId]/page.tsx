@@ -1,9 +1,8 @@
-import { redirect } from "next/navigation";
-
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import {
   caller,
+  getCurrentGroupId,
   getCurrentUserWithGroups,
   getQueryClient,
   HydrateClient,
@@ -22,14 +21,8 @@ export default async function ShoppingListDetailPage({
   const { shoppingListId: shoppingListIdStr } = await params;
   const shoppingListId = parseInt(shoppingListIdStr, 10);
 
-  // Get current group from user's lastGroupUsed
+  const groupId = await getCurrentGroupId();
   const userWithGroups = await getCurrentUserWithGroups();
-
-  if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
-    redirect("/group");
-  }
-
-  const groupId = userWithGroups.data.user.lastGroupUsed.id;
 
   // Prefetch data
   prefetch(
@@ -53,8 +46,9 @@ export default async function ShoppingListDetailPage({
   );
 
   // Update last used shopping list only if it changed
-  const currentShoppingListId =
-    userWithGroups.data.user.lastShoppingListUsed?.id;
+  const currentShoppingListId = userWithGroups.success
+    ? userWithGroups.data.user?.lastShoppingListUsed?.id
+    : undefined;
   if (currentShoppingListId !== shoppingListId) {
     try {
       await caller.shoppingList.updateLastUsed({

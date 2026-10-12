@@ -41,7 +41,6 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  // Get user data with groups and last used
   const { data: userWithGroups } = useQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
