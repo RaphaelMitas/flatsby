@@ -62,10 +62,28 @@ function DashboardContent() {
   );
 
   const handleRefresh = useCallback(async () => {
+    if (!selectedGroupId) return;
     setRefreshing(true);
-    await queryClient.invalidateQueries();
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: trpc.user.getCurrentUserWithGroups.queryKey(),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: trpc.group.getGroup.queryKey({ id: selectedGroupId }),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: trpc.expense.getDebtSummary.queryKey({
+          groupId: selectedGroupId,
+        }),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: trpc.stats.getHomeStats.queryKey({
+          groupId: selectedGroupId,
+        }),
+      }),
+    ]);
     setRefreshing(false);
-  }, [queryClient]);
+  }, [queryClient, selectedGroupId]);
 
   const CREATE_GROUP_ID = "__create_group__";
 
@@ -97,19 +115,11 @@ function DashboardContent() {
         const groupId = parseInt(item.id, 10);
         if (groupId !== selectedGroupId) {
           setSelectedGroup(groupId, item.title);
-          void queryClient.invalidateQueries();
         }
       },
       snapPoints: ["40%"],
     });
-  }, [
-    openPicker,
-    groupItems,
-    selectedGroupId,
-    setSelectedGroup,
-    queryClient,
-    router,
-  ]);
+  }, [openPicker, groupItems, selectedGroupId, setSelectedGroup, router]);
 
   if (!selectedGroupId) {
     return null;
