@@ -23,7 +23,10 @@ import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { isE2ETestingEnabled } from "~/utils/e2e";
 import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
-import { ShoppingStoreProvider } from "~/utils/shopping-store";
+import {
+  ShoppingStoreProvider,
+  useShoppingStore,
+} from "~/utils/shopping-store";
 
 // This is the main layout of the app
 // It wraps your pages with the providers they need
@@ -126,9 +129,11 @@ function ScreenTracker() {
 
 const StackLayout = () => {
   const themedScreenOptions = useThemedScreenOptions();
-  const { isPending } = useSession();
+  const { data, isPending } = useSession();
+  const { hydrated } = useShoppingStore();
 
-  if (isPending) {
+  // The Expo client restores a cached session into data while it revalidates.
+  if ((isPending && !data) || !hydrated) {
     return <View className="bg-background flex-1" />;
   }
 
