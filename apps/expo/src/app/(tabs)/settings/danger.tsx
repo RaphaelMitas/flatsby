@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
@@ -19,7 +15,6 @@ import { signOut } from "~/utils/auth/auth-client";
 export default function DangerScreen() {
   const [confirmationInput, setConfirmationInput] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const queryClient = useQueryClient();
 
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
@@ -32,10 +27,7 @@ export default function DangerScreen() {
           return;
         }
 
-        // Clearing the cache first makes this screen's suspense queries
-        // re-suspend as the tab tree unwinds, which segfaults in SwiftUI.
         await signOut();
-        queryClient.clear();
       },
     }),
   );

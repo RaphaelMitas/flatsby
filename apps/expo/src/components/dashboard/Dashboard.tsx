@@ -63,7 +63,14 @@ function DashboardContent() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries();
+    await Promise.all([
+      queryClient.invalidateQueries(
+        trpc.user.getCurrentUserWithGroups.pathFilter(),
+      ),
+      queryClient.invalidateQueries(trpc.group.getGroup.pathFilter()),
+      queryClient.invalidateQueries(trpc.expense.getDebtSummary.pathFilter()),
+      queryClient.invalidateQueries(trpc.stats.getHomeStats.pathFilter()),
+    ]);
     setRefreshing(false);
   }, [queryClient]);
 
@@ -97,19 +104,11 @@ function DashboardContent() {
         const groupId = parseInt(item.id, 10);
         if (groupId !== selectedGroupId) {
           setSelectedGroup(groupId, item.title);
-          void queryClient.invalidateQueries();
         }
       },
       snapPoints: ["40%"],
     });
-  }, [
-    openPicker,
-    groupItems,
-    selectedGroupId,
-    setSelectedGroup,
-    queryClient,
-    router,
-  ]);
+  }, [openPicker, groupItems, selectedGroupId, setSelectedGroup, router]);
 
   if (!selectedGroupId) {
     return null;

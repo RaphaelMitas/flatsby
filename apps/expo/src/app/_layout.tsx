@@ -23,7 +23,10 @@ import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { isE2ETestingEnabled } from "~/utils/e2e";
 import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
-import { ShoppingStoreProvider } from "~/utils/shopping-store";
+import {
+  ShoppingStoreProvider,
+  useShoppingStore,
+} from "~/utils/shopping-store";
 
 // This is the main layout of the app
 // It wraps your pages with the providers they need
@@ -126,9 +129,19 @@ function ScreenTracker() {
 
 const StackLayout = () => {
   const themedScreenOptions = useThemedScreenOptions();
-  const { isPending } = useSession();
+  const { data, isPending } = useSession();
+  const { hydrated } = useShoppingStore();
+  const userId = data?.user.id;
 
-  if (isPending) {
+  // Cached errors from a revoked session would sign the next login out again.
+  // By now TabLayout's Redirect has unmounted the tabs; clearing under them
+  // re-suspends their queries and crashes SwiftUI.
+  useEffect(() => {
+    if (!userId) queryClient.clear();
+  }, [userId]);
+
+  // The Expo client restores a cached session into data while it revalidates.
+  if ((isPending && !data) || !hydrated) {
     return <View className="bg-background flex-1" />;
   }
 

@@ -21,6 +21,7 @@ interface PersistedState {
 }
 
 interface ShoppingStoreState extends PersistedState {
+  hydrated: boolean;
   setSelectedGroup: (groupId: number, groupName: string) => void;
   setSelectedShoppingList: (
     shoppingListId: number,
@@ -43,6 +44,7 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
   const [selectedShoppingListName, setSelectedShoppingListName] = useState<
     string | null
   >(null);
+  const [hydrated, setHydrated] = useState(false);
 
   const updateLastUsed = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions(),
@@ -66,7 +68,8 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
           setSelectedShoppingListName(parsed.selectedShoppingListName);
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setHydrated(true));
   }, []);
 
   const setSelectedShoppingList = useCallback(
@@ -146,6 +149,7 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
   return (
     <ShoppingStoreContext.Provider
       value={{
+        hydrated,
         selectedGroupId,
         selectedGroupName,
         selectedShoppingListId,

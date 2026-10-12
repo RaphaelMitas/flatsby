@@ -1,8 +1,8 @@
-import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { updateShoppingListItemInCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
@@ -99,90 +99,36 @@ export const useUpdateShoppingListItemMutation = ({
     shoppingListId,
   });
 
-  const onMutateShoppingListItemError = (
-    previousItems: ShoppingListInfiniteData | undefined,
-  ) => {
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-        groupId,
-        shoppingListId,
-        limit: PAGE_SIZE.shoppingListItems,
-        categoryId: selectedCategory ?? undefined,
-      }),
-      previousItems,
-    );
-  };
+  const itemsQueryKey = trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
+    {
+      groupId,
+      shoppingListId,
+      limit: PAGE_SIZE.shoppingListItems,
+      categoryId: selectedCategory ?? undefined,
+    },
+  );
 
   return useMutation(
     trpc.shoppingList.updateShoppingListItem.mutationOptions({
-      onMutate: async ({ id, categoryId, name, completed }) => {
-        await queryClient.cancelQueries({
-          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-        });
-
-        const previousData = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries({ queryKey: itemsQueryKey });
+        const previousItems = queryClient.getQueryData(itemsQueryKey);
+        queryClient.setQueryData(itemsQueryKey, (old) =>
+          updateShoppingListItemInCache(old, variables),
         );
-
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-          (oldData) => {
-            if (!oldData) return oldData;
-
-            return {
-              ...oldData,
-              pages: oldData.pages.map((page) => {
-                if (page.success === false) return page;
-
-                return {
-                  ...page,
-                  data: {
-                    ...page.data,
-                    items: page.data.items.map((item: ShoppingListItem) =>
-                      item.id === id
-                        ? {
-                            ...item,
-                            name: name,
-                            categoryId: categoryId,
-                            completed: completed,
-                            completedAt: completed ? new Date() : null,
-                            isPending: true,
-                          }
-                        : item,
-                    ),
-                  },
-                };
-              }),
-            };
-          },
-        );
-
-        return { previousData };
+        return { queryKey: itemsQueryKey, previousItems };
       },
       onError: (_err, _variables, context) => {
-        onMutateShoppingListItemError(context?.previousData);
+        if (context) {
+          queryClient.setQueryData(context.queryKey, context.previousItems);
+        }
       },
       onSuccess: (data, _variables, context) => {
         if (data.success === false) {
-          onMutateShoppingListItemError(context.previousData);
-          return;
+          queryClient.setQueryData(context.queryKey, context.previousItems);
         }
-
+      },
+      onSettled: () => {
         invalidateAll();
       },
     }),

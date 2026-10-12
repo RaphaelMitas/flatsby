@@ -75,11 +75,7 @@ export default function ImportExpensesScreen() {
   const handleImport = useCallback(() => {
     bulkCreateMutation.mutate({
       groupId,
-      expenses: wizard.expenses.map((exp) => ({
-        ...exp,
-        description: exp.description,
-        category: exp.category,
-      })),
+      expenses: wizard.expenses,
     });
   }, [bulkCreateMutation, groupId, wizard.expenses]);
 

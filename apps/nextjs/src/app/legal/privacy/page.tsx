@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   description: "Privacy Policy for Flatsby",
 };
 
-const PRIVACY_VERSION = "1.1";
-const LAST_UPDATED = "March 2026";
+const PRIVACY_VERSION = "1.2";
+const LAST_UPDATED = "October 2026";
 
 function TableOfContents() {
   const items = [
@@ -273,7 +273,10 @@ export default function PrivacyPage() {
             may be sent to AI providers:
           </LegalParagraph>
           <LegalList>
-            <li>Shopping list item names (for automatic category detection)</li>
+            <li>
+              Shopping list item names and expense descriptions (for automatic
+              category detection)
+            </li>
             <li>
               Chat messages and conversation history (when using the AI
               assistant)

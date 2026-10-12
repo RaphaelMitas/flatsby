@@ -1,10 +1,11 @@
-import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
+import type { ExpenseSubcategoryId } from "@flatsby/validators/expenses/categories";
 import { useMemo } from "react";
 import { View } from "react-native";
 
 import {
+  AI_AUTO_DETECT,
   expenseSubcategoryIdsWithAuto,
-  isExpenseSubcategoryIdWithAuto,
+  isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
 
 import type {
@@ -16,22 +17,23 @@ import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 
 export interface ExpenseCategoryPickerProps extends Omit<
   BottomSheetPickerTriggerProps,
-  "items" | "title"
+  "items" | "title" | "triggerTitle" | "iconButton"
 > {
-  value?: ExpenseSubcategoryIdWithAuto;
-  onChange?: (value: ExpenseSubcategoryIdWithAuto) => void;
+  value?: ExpenseSubcategoryId;
+  onChange: (value: ExpenseSubcategoryId | undefined) => void;
+  autoDetect: boolean;
 }
 
 export function ExpenseCategoryPicker({
   value,
   onChange,
-  triggerTitle,
-  iconButton = false,
+  autoDetect,
   ...props
 }: ExpenseCategoryPickerProps) {
   const categoryItems = useMemo(() => {
     const items: BottomSheetPickerItem[] = [];
     for (const subcategoryId of expenseSubcategoryIdsWithAuto) {
+      if (!autoDetect && subcategoryId === AI_AUTO_DETECT) continue;
       const data = getExpenseCategoryData({ subcategoryId });
       items.push({
         id: subcategoryId,
@@ -43,26 +45,21 @@ export function ExpenseCategoryPicker({
       });
     }
     return items;
-  }, []);
+  }, [autoDetect]);
 
   const handleSelect = (item: BottomSheetPickerItem) => {
-    if (isExpenseSubcategoryIdWithAuto(item.id)) {
-      onChange?.(item.id);
-    }
+    if (item.id === AI_AUTO_DETECT) onChange(undefined);
+    else if (isExpenseSubcategoryId(item.id)) onChange(item.id);
   };
-
-  const selectedData = value
-    ? getExpenseCategoryData({ subcategoryId: value })
-    : null;
-  const displayTitle = triggerTitle ?? selectedData?.name ?? "Select Category";
 
   return (
     <BottomSheetPickerTrigger
       items={categoryItems}
-      selectedId={value}
+      selectedId={value ?? AI_AUTO_DETECT}
       onSelect={handleSelect}
-      triggerTitle={displayTitle}
-      iconButton={iconButton}
+      triggerTitle={
+        getExpenseCategoryData({ subcategoryId: value ?? AI_AUTO_DETECT }).name
+      }
       {...props}
     />
   );
