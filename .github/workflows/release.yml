@@ -5,16 +5,17 @@ name: Release
 # landed), this workflow tags the commit, creates a GitHub release, kicks off
 # EAS production builds with store auto-submit, and captures store
 # screenshots. workflow_dispatch re-runs the release for the current version
-# even if the tag already exists (e.g. after a failed run) — with
-# skip_eas_build when only the publish half failed, so a listing fix does not
-# spend another pair of EAS builds on a binary the stores already have.
+# even if the tag already exists (e.g. after fixing the workflow or release
+# notes), with skip_eas_build when only the publish half failed, so a
+# listing fix does not spend another pair of EAS builds on a binary the
+# stores already have.
 on:
   push:
     branches: [main]
   workflow_dispatch:
     inputs:
       skip_eas_build:
-        description: "Skip the EAS build+submit (the binary is already in the stores; only re-capture screenshots and re-publish the listings)"
+        description: "Skip the EAS build+submit (the binary is already in the stores; only re-capture screenshots and re-run publish-ios and publish-android)"
         type: boolean
         default: false
 
@@ -86,7 +87,8 @@ jobs:
       # Waits for the EAS builds and store submissions to finish (they run on
       # EAS servers; progress lives at expo.dev) so publish-ios knows the
       # binary has reached App Store Connect before submitting for review.
-      # Android goes straight to the Play production track (eas.json).
+      # Android lands on the Play internal track (eas.json); publish-android
+      # promotes it to production.
       - name: Build and submit to stores via EAS
         working-directory: apps/expo
         env:
@@ -790,12 +792,9 @@ jobs:
         env:
           ASC_KEY_PATH: ${{ runner.temp }}/asc_key.json
 
-  # Uploads the captured screenshots and the release notes to the Play Store
-  # listing (en-US). The binary itself already went to the internal track via
-  # EAS auto-submit (eas.json; production access still pending — supply's
-  # --track must match or the changelog attach finds no release); needing
-  # eas-build-submit ensures the release exists before its "What's New" text
-  # is set.
+  # The Play counterpart of publish-ios: promotes the build EAS put on the
+  # internal track to production with the release notes and screenshots
+  # (en-US) in one edit, which sends it to Google review and then live.
   # Like publish-ios, independent of the screenshot job's outcome: the
   # changelog always goes up, fresh screenshots only when captured.
   publish-android:
@@ -814,7 +813,7 @@ jobs:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
-            echo "::warning::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is not set; skipping Play listing screenshot upload. Screenshots are on the GitHub release."
+            echo "::warning::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is not set; skipping the Play release. The build stays on the internal track; screenshots are on the GitHub release."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -823,17 +822,18 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         uses: ./tooling/github/setup
 
-      # supply attaches a changelog to one specific version code and cannot
-      # infer it from the track; EAS manages the remote versionCode, so ask it
-      # which one the just-submitted build carries.
+      # Pinned to this release's version so another version's build is never
+      # promoted; build:list is newest first, so a full re-run picks its rebuild.
       - name: Resolve released Android version code
         if: steps.guard.outputs.skip != 'true'
         id: version
         working-directory: apps/expo
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          TAG: ${{ needs.check.outputs.tag }}
         run: |
-          CODE=$(pnpm dlx eas-cli@21.5.0 build:version:get --platform android --non-interactive --json | jq -r '.versionCode // empty')
+          CODE=$(pnpm dlx eas-cli@21.5.0 build:list --platform android --build-profile production --status finished \
+            --app-version "${TAG#v}" --limit 1 --json --non-interactive | jq -r '.[0].appBuildVersion // empty')
           if [ -z "$CODE" ]; then
             echo "::error::Could not resolve the Android versionCode from EAS."
             exit 1
@@ -857,7 +857,7 @@ jobs:
           name: store-screenshots-android
           path: results
 
-      - name: Update Play listing
+      - name: Update Play listing and release
         if: steps.guard.outputs.skip != 'true'
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -873,12 +873,16 @@ jobs:
             cp results/screenshots/*.png store/metadata/android/en-US/images/phoneScreenshots/
             SKIP_SCREENSHOTS=false
           fi
+          # rescue_changes_not_sent_for_review would otherwise commit
+          # silently without sending the release to review.
           fastlane supply \
             --package_name com.flatcove.app \
             --json_key "$RUNNER_TEMP/play_key.json" \
             --metadata_path store/metadata/android \
             --track internal \
+            --track_promote_to production \
             --version_code "${{ steps.version.outputs.code }}" \
+            --rescue_changes_not_sent_for_review false \
             --skip_upload_apk true \
             --skip_upload_aab true \
             --skip_upload_metadata true \

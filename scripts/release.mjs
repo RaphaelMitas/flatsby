@@ -131,7 +131,7 @@ if (direct) {
     "2. run EAS production builds and submit them (iOS review + Play production)",
     "3. capture store screenshots and upload them to both store listings",
     "",
-    'Check apps/expo/store/release-notes.txt before merging - it becomes the App Store "What\'s New" text.',
+    'Check apps/expo/store/release-notes.txt before merging - it becomes the "What\'s New" text on both stores, and the release goes live on both after store review.',
   ].join("\n");
   console.log(
     run("gh", [
