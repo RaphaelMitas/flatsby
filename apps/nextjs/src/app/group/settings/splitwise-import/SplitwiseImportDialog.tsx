@@ -107,11 +107,7 @@ export function SplitwiseImportDialog({
   const handleImport = () => {
     bulkCreateMutation.mutate({
       groupId,
-      expenses: wizard.expenses.map((exp) => ({
-        ...exp,
-        description: exp.description,
-        category: exp.category,
-      })),
+      expenses: wizard.expenses,
     });
   };
 

@@ -28,7 +28,6 @@ export function ExpenseCategoryPicker({
   value = AI_AUTO_DETECT,
   onChange,
   triggerTitle,
-  iconButton = false,
   autoDetect,
   ...props
 }: ExpenseCategoryPickerProps) {
@@ -64,7 +63,6 @@ export function ExpenseCategoryPicker({
       selectedId={value}
       onSelect={handleSelect}
       triggerTitle={displayTitle}
-      iconButton={iconButton}
       {...props}
     />
   );

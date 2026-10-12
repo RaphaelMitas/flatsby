@@ -22,7 +22,6 @@ export const expenseCategoryGroups = [
 ] as const;
 
 export type ExpenseCategoryGroup = (typeof expenseCategoryGroups)[number];
-export const expenseCategoryGroupSchema = z.enum(expenseCategoryGroups);
 
 export const expenseCategoryGroupLabels: Record<ExpenseCategoryGroup, string> =
   {
@@ -329,10 +328,6 @@ const subcategoryIdSet = new Set<string>(expenseSubcategories.map((s) => s.id));
 const subcategoryIdWithAutoSet = new Set<string>(expenseSubcategoryIdsWithAuto);
 
 const categoryGroupSet = new Set<string>(expenseCategoryGroups);
-
-export function getSubcategoryConfig(subcategoryId: string) {
-  return subcategoryRecord[subcategoryId];
-}
 
 export function getSubcategoryGroup(
   subcategoryId: string | undefined,

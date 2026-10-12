@@ -23,12 +23,10 @@ import { AI_AUTO_DETECT } from "@flatsby/validators/expenses/categories";
 interface ExpenseCategorySelectorProps {
   value?: ExpenseSubcategoryIdWithAuto;
   onChange?: (value: ExpenseSubcategoryIdWithAuto) => void;
-  iconButton?: boolean;
   autoDetect: boolean;
 }
 
 export function ExpenseCategorySelector({
-  iconButton = false,
   value,
   onChange,
   autoDetect,
@@ -45,26 +43,15 @@ export function ExpenseCategorySelector({
           variant="outline"
           role="combobox"
           data-testid="expense-form-category"
-          className={cn(
-            "flex w-full items-center justify-between",
-            iconButton && "h-10 w-10 justify-center p-0",
-          )}
+          className="flex w-full items-center justify-between"
         >
           <span className="flex items-center">
             <selectedData.icon
-              className={cn(
-                "h-5 w-5",
-                selectedData.colorClasses.base,
-                !iconButton && "mr-2",
-              )}
+              className={cn("mr-2 h-5 w-5", selectedData.colorClasses.base)}
             />
-            {!iconButton && (
-              <span className="text-foreground">{selectedData.name}</span>
-            )}
+            <span className="text-foreground">{selectedData.name}</span>
           </span>
-          {!iconButton && (
-            <ChevronDown className="text-muted-foreground ml-2 h-5 w-5" />
-          )}
+          <ChevronDown className="text-muted-foreground ml-2 h-5 w-5" />
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[80vh]">

@@ -1,13 +1,9 @@
 import Papa from "papaparse";
 import { z } from "zod/v4";
 
-import type { ExpenseCategoryGroup, ExpenseSubcategoryId } from "./categories";
+import type { ExpenseSubcategoryId } from "./categories";
 import type { CurrencyCode } from "./types";
-import {
-  expenseCategoryGroupSchema,
-  expenseSubcategories,
-  expenseSubcategoryIdSchema,
-} from "./categories";
+import { expenseSubcategories, expenseSubcategoryIdSchema } from "./categories";
 import { decimalToCents } from "./conversion";
 import { currencyCodeSchema, expenseSplitSchema } from "./schemas";
 
@@ -15,97 +11,68 @@ import { currencyCodeSchema, expenseSplitSchema } from "./schemas";
  * Maps Splitwise category strings to our subcategory IDs.
  * Case-insensitive lookup. Unmatched categories fall back to "other".
  */
-const SPLITWISE_CATEGORY_MAP: Record<
-  string,
-  { group: ExpenseCategoryGroup; subcategory: ExpenseSubcategoryId }
-> = {
+const SPLITWISE_CATEGORY_MAP: Record<string, ExpenseSubcategoryId> = {
   // Food & Drinks
-  groceries: { group: "food-drinks", subcategory: "groceries" },
-  "food and drink": { group: "food-drinks", subcategory: "other-food-drinks" },
-  "dining out": { group: "food-drinks", subcategory: "restaurant" },
-  liquor: { group: "food-drinks", subcategory: "bar" },
+  groceries: "groceries",
+  "food and drink": "other-food-drinks",
+  "dining out": "restaurant",
+  liquor: "bar",
   // Transport
-  taxi: { group: "transport", subcategory: "taxi" },
-  parking: { group: "transport", subcategory: "parking" },
-  "gas/fuel": { group: "transport", subcategory: "gas" },
-  car: { group: "transport", subcategory: "other-transport" },
-  "bus/train": { group: "transport", subcategory: "public-transit" },
+  taxi: "taxi",
+  parking: "parking",
+  "gas/fuel": "gas",
+  car: "other-transport",
+  "bus/train": "public-transit",
   // Shopping
-  clothing: { group: "shopping", subcategory: "clothes" },
-  electronics: { group: "shopping", subcategory: "electronics" },
-  "household supplies": { group: "shopping", subcategory: "home-goods" },
+  clothing: "clothes",
+  electronics: "electronics",
+  "household supplies": "home-goods",
   // Entertainment
-  movies: { group: "entertainment", subcategory: "movies" },
-  games: { group: "entertainment", subcategory: "games" },
-  sports: { group: "entertainment", subcategory: "sports" },
-  music: { group: "entertainment", subcategory: "music" },
-  "entertainment - other": {
-    group: "entertainment",
-    subcategory: "other-entertainment",
-  },
+  movies: "movies",
+  games: "games",
+  sports: "sports",
+  music: "music",
+  "entertainment - other": "other-entertainment",
   // Housing
-  rent: { group: "housing", subcategory: "rent" },
-  mortgage: { group: "housing", subcategory: "rent" },
-  maintenance: { group: "housing", subcategory: "maintenance" },
-  furniture: { group: "housing", subcategory: "furniture" },
-  "home - other": { group: "housing", subcategory: "other-housing" },
+  rent: "rent",
+  mortgage: "rent",
+  maintenance: "maintenance",
+  furniture: "furniture",
+  "home - other": "other-housing",
   // Utilities
-  electricity: { group: "utilities", subcategory: "electric" },
-  "heat/gas": { group: "utilities", subcategory: "other-utilities" },
-  water: { group: "utilities", subcategory: "water" },
-  "tv/phone/internet": { group: "utilities", subcategory: "internet" },
-  "utilities - other": { group: "utilities", subcategory: "other-utilities" },
+  electricity: "electric",
+  "heat/gas": "other-utilities",
+  water: "water",
+  "tv/phone/internet": "internet",
+  "utilities - other": "other-utilities",
   // Health
-  insurance: { group: "health", subcategory: "other-health" },
-  "medical expenses": { group: "health", subcategory: "doctor" },
+  insurance: "other-health",
+  "medical expenses": "doctor",
   // Travel
-  hotel: { group: "travel", subcategory: "hotel" },
-  plane: { group: "travel", subcategory: "flight" },
+  hotel: "hotel",
+  plane: "flight",
   // Subscriptions
-  services: { group: "subscriptions", subcategory: "other-subscriptions" },
+  services: "other-subscriptions",
   // Education
-  education: { group: "education", subcategory: "other-education" },
+  education: "other-education",
   // Gifts
-  gifts: { group: "gifts", subcategory: "gift" },
+  gifts: "gift",
   // Pets (map to other)
-  pets: { group: "other", subcategory: "other" },
+  pets: "other",
 };
 
 // Also build a reverse lookup from subcategory labels for fuzzy matching
-const subcategoryLabelMap = new Map<
-  string,
-  { group: ExpenseCategoryGroup; subcategory: ExpenseSubcategoryId }
->();
-for (const sub of expenseSubcategories) {
-  subcategoryLabelMap.set(sub.label.toLowerCase(), {
-    group: sub.group,
-    subcategory: sub.id,
-  });
-}
+const subcategoryLabelMap = new Map<string, ExpenseSubcategoryId>(
+  expenseSubcategories.map((sub) => [sub.label.toLowerCase(), sub.id]),
+);
 
-function mapSplitwiseCategory(rawCategory: string): {
-  category: ExpenseCategoryGroup;
-  subcategory: ExpenseSubcategoryId;
-} {
+function mapSplitwiseCategory(rawCategory: string): ExpenseSubcategoryId {
   const normalized = rawCategory.trim().toLowerCase();
-
-  // Direct match in the Splitwise map
-  const directMatch = SPLITWISE_CATEGORY_MAP[normalized];
-  if (directMatch) {
-    return {
-      category: directMatch.group,
-      subcategory: directMatch.subcategory,
-    };
-  }
-
-  // Try matching against subcategory labels
-  const labelMatch = subcategoryLabelMap.get(normalized);
-  if (labelMatch) {
-    return { category: labelMatch.group, subcategory: labelMatch.subcategory };
-  }
-
-  // Fallback
-  return { category: "other", subcategory: "other" };
+  return (
+    SPLITWISE_CATEGORY_MAP[normalized] ??
+    subcategoryLabelMap.get(normalized) ??
+    "other"
+  );
 }
 
 interface SplitwiseRow {
@@ -133,7 +100,6 @@ export interface TransformedExpense {
   amountInCents: number;
   currency: CurrencyCode;
   description?: string;
-  category?: ExpenseCategoryGroup;
   subcategory?: ExpenseSubcategoryId;
   expenseDate: Date;
   splits: z.infer<typeof expenseSplitSchema>[];
@@ -266,14 +232,12 @@ export function transformSplitwiseRows(
 
       const amountInCents = decimalToCents(firstPayer.amount);
 
-      const settlementMapping = mapSplitwiseCategory(row.Category);
       expenses.push({
         paidByGroupMemberId: payerMemberId,
         amountInCents,
         currency: config.targetCurrency,
         description: row.Description,
-        category: settlementMapping.category,
-        subcategory: settlementMapping.subcategory,
+        subcategory: mapSplitwiseCategory(row.Category),
         expenseDate: parseSplitwiseDate(row.Date),
         splits: [
           {
@@ -346,14 +310,12 @@ export function transformSplitwiseRows(
       continue;
     }
 
-    const mapping = mapSplitwiseCategory(row.Category);
     expenses.push({
       paidByGroupMemberId: payerMemberId,
       amountInCents: totalCents,
       currency: config.targetCurrency,
       description: row.Description || "",
-      category: mapping.category,
-      subcategory: mapping.subcategory,
+      subcategory: mapSplitwiseCategory(row.Category),
       expenseDate: new Date(row.Date),
       splits,
       splitMethod: "custom",
@@ -372,7 +334,6 @@ export const bulkCreateExpensesSchema = z.object({
         amountInCents: z.number().int().min(1),
         currency: currencyCodeSchema,
         description: z.string().max(512).optional(),
-        category: expenseCategoryGroupSchema.optional(),
         subcategory: expenseSubcategoryIdSchema.optional(),
         expenseDate: z.date(),
         splits: z.array(expenseSplitSchema).min(1),
