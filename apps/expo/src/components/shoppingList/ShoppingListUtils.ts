@@ -1,4 +1,3 @@
-import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -109,31 +108,27 @@ export const useUpdateShoppingListItemMutation = ({
     },
   );
 
-  const onMutateShoppingListItemError = (
-    previousItems: ShoppingListInfiniteData | undefined,
-  ) => {
-    queryClient.setQueryData(itemsQueryKey, previousItems);
-  };
-
   return useMutation(
     trpc.shoppingList.updateShoppingListItem.mutationOptions({
       onMutate: async (variables) => {
         await queryClient.cancelQueries({ queryKey: itemsQueryKey });
-        const previousData = queryClient.getQueryData(itemsQueryKey);
-        queryClient.setQueryData(itemsQueryKey, (oldData) =>
-          updateShoppingListItemInCache(oldData, variables),
+        const previousItems = queryClient.getQueryData(itemsQueryKey);
+        queryClient.setQueryData(itemsQueryKey, (old) =>
+          updateShoppingListItemInCache(old, variables),
         );
-        return { previousData };
+        return { queryKey: itemsQueryKey, previousItems };
       },
       onError: (_err, _variables, context) => {
-        onMutateShoppingListItemError(context?.previousData);
+        if (context) {
+          queryClient.setQueryData(context.queryKey, context.previousItems);
+        }
       },
       onSuccess: (data, _variables, context) => {
         if (data.success === false) {
-          onMutateShoppingListItemError(context.previousData);
-          return;
+          queryClient.setQueryData(context.queryKey, context.previousItems);
         }
-
+      },
+      onSettled: () => {
         invalidateAll();
       },
     }),

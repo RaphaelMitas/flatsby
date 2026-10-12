@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import "react-swipeable-list/dist/styles.css";
 
-import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type {
   CategoryId,
   CategoryIdWithAiAutoSelect,
@@ -79,12 +78,6 @@ const ShoppingListItem = ({
     },
   );
 
-  const onMutateShoppingListItemError = (
-    previousItems: ShoppingListInfiniteData | undefined,
-  ) => {
-    queryClient.setQueryData(itemsQueryKey, previousItems);
-  };
-
   const updateShoppingListItemMutation = useMutation(
     trpc.shoppingList.updateShoppingListItem.mutationOptions({
       onMutate: async (variables) => {
@@ -93,17 +86,19 @@ const ShoppingListItem = ({
         queryClient.setQueryData(itemsQueryKey, (old) =>
           updateShoppingListItemInCache(old, variables),
         );
-        return { previousItems };
+        return { queryKey: itemsQueryKey, previousItems };
       },
       onError: (_err, _variables, context) => {
-        onMutateShoppingListItemError(context?.previousItems);
+        if (context) {
+          queryClient.setQueryData(context.queryKey, context.previousItems);
+        }
       },
       onSuccess: (data, _variables, context) => {
         if (data.success === false) {
-          onMutateShoppingListItemError(context.previousItems);
-          return;
+          queryClient.setQueryData(context.queryKey, context.previousItems);
         }
-
+      },
+      onSettled: () => {
         invalidateAll();
       },
     }),
@@ -117,10 +112,17 @@ const ShoppingListItem = ({
         queryClient.setQueryData(itemsQueryKey, (old) =>
           removeShoppingListItemFromCache(old, id),
         );
-        return { previousItems };
+        return { queryKey: itemsQueryKey, previousItems };
       },
       onError: (_err, _variables, context) => {
-        onMutateShoppingListItemError(context?.previousItems);
+        if (context) {
+          queryClient.setQueryData(context.queryKey, context.previousItems);
+        }
+      },
+      onSuccess: (data, _variables, context) => {
+        if (data.success === false) {
+          queryClient.setQueryData(context.queryKey, context.previousItems);
+        }
       },
       onSettled: () => {
         invalidateAll();

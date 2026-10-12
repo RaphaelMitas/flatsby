@@ -109,9 +109,6 @@ async function finalizeStream({
 }
 
 export const chatRouter = createTRPCRouter({
-  /**
-   * Get a conversation with all its messages
-   */
   getConversation: protectedProcedure
     .input(getConversationInputSchema)
     .output(conversationWithMessagesSchema)

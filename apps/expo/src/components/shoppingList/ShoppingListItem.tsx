@@ -1,4 +1,3 @@
-import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -72,12 +71,6 @@ const ShoppingListItem = ({
     },
   );
 
-  const onMutateShoppingListItemError = (
-    previousItems: ShoppingListInfiniteData | undefined,
-  ) => {
-    queryClient.setQueryData(itemsQueryKey, previousItems);
-  };
-
   const deleteShoppingListItemMutation = useMutation(
     trpc.shoppingList.deleteShoppingListItem.mutationOptions({
       onMutate: async ({ id }) => {
@@ -86,17 +79,19 @@ const ShoppingListItem = ({
         queryClient.setQueryData(itemsQueryKey, (old) =>
           removeShoppingListItemFromCache(old, id),
         );
-        return { previousItems };
+        return { queryKey: itemsQueryKey, previousItems };
       },
       onError: (_err, _variables, context) => {
-        onMutateShoppingListItemError(context?.previousItems);
+        if (context) {
+          queryClient.setQueryData(context.queryKey, context.previousItems);
+        }
       },
       onSuccess: (data, _variables, context) => {
         if (!data.success) {
-          onMutateShoppingListItemError(context.previousItems);
-          return;
+          queryClient.setQueryData(context.queryKey, context.previousItems);
         }
-
+      },
+      onSettled: () => {
         invalidateAll();
       },
     }),
