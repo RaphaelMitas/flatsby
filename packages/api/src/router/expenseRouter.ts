@@ -722,74 +722,67 @@ export const expenseRouter = createTRPCRouter({
                   ...expense.splits.map((split) => split.groupMemberId),
                 ]),
               ),
-              () => {
-                // Validate all splits
-                for (const expense of input.expenses) {
-                  const result = validateExpenseSplitsStrict(
-                    expense.amountInCents,
-                    expense.splits,
-                    expense.splitMethod,
-                  );
-                  if (!result.valid) {
-                    return fail.validation(
-                      "splits",
-                      result.error,
-                      result.userMessage,
-                    );
-                  }
-                }
+              () =>
+                Effect.flatMap(
+                  Effect.forEach(input.expenses, (expense) =>
+                    validateExpenseSplitsEffect(
+                      expense.amountInCents,
+                      expense.splits,
+                      expense.splitMethod,
+                    ),
+                  ),
+                  () =>
+                    DbUtils.transaction(async (trx) => {
+                      const createdExpenses = await trx
+                        .insert(expenses)
+                        .values(
+                          input.expenses.map((expense) => ({
+                            groupId: input.groupId,
+                            paidByGroupMemberId: expense.paidByGroupMemberId,
+                            amountInCents: expense.amountInCents,
+                            currency: expense.currency,
+                            description: expense.description ?? "",
+                            category: expense.category ?? "other",
+                            subcategory: expense.subcategory ?? "other",
+                            expenseDate: expense.expenseDate,
+                            createdByGroupMemberId: group.thisGroupMember.id,
+                            splitMethod: expense.splitMethod,
+                          })),
+                        )
+                        .returning({ id: expenses.id });
 
-                return DbUtils.transaction(async (trx) => {
-                  const createdExpenses = await trx
-                    .insert(expenses)
-                    .values(
-                      input.expenses.map((expense) => ({
-                        groupId: input.groupId,
-                        paidByGroupMemberId: expense.paidByGroupMemberId,
-                        amountInCents: expense.amountInCents,
-                        currency: expense.currency,
-                        description: expense.description ?? "",
-                        category: expense.category ?? "other",
-                        subcategory: expense.subcategory ?? "other",
-                        expenseDate: expense.expenseDate,
-                        createdByGroupMemberId: group.thisGroupMember.id,
-                        splitMethod: expense.splitMethod,
-                      })),
-                    )
-                    .returning({ id: expenses.id });
+                      if (createdExpenses.length !== input.expenses.length) {
+                        throw new Error("Failed to create all expenses");
+                      }
 
-                  if (createdExpenses.length !== input.expenses.length) {
-                    throw new Error("Failed to create all expenses");
-                  }
+                      const allSplits: {
+                        expenseId: number;
+                        groupMemberId: number;
+                        amountInCents: number;
+                        percentage: number | null;
+                      }[] = [];
 
-                  const allSplits: {
-                    expenseId: number;
-                    groupMemberId: number;
-                    amountInCents: number;
-                    percentage: number | null;
-                  }[] = [];
+                      for (let i = 0; i < input.expenses.length; i++) {
+                        const expense = input.expenses[i];
+                        const created = createdExpenses[i];
+                        if (!expense || !created) continue;
+                        for (const split of expense.splits) {
+                          allSplits.push({
+                            expenseId: created.id,
+                            groupMemberId: split.groupMemberId,
+                            amountInCents: split.amountInCents,
+                            percentage: split.percentage,
+                          });
+                        }
+                      }
 
-                  for (let i = 0; i < input.expenses.length; i++) {
-                    const expense = input.expenses[i];
-                    const created = createdExpenses[i];
-                    if (!expense || !created) continue;
-                    for (const split of expense.splits) {
-                      allSplits.push({
-                        expenseId: created.id,
-                        groupMemberId: split.groupMemberId,
-                        amountInCents: split.amountInCents,
-                        percentage: split.percentage,
-                      });
-                    }
-                  }
+                      if (allSplits.length > 0) {
+                        await trx.insert(expenseSplits).values(allSplits);
+                      }
 
-                  if (allSplits.length > 0) {
-                    await trx.insert(expenseSplits).values(allSplits);
-                  }
-
-                  return { importedCount: createdExpenses.length };
-                }, "bulk create expenses")(ctx.db);
-              },
+                      return { importedCount: createdExpenses.length };
+                    }, "bulk create expenses")(ctx.db),
+                ),
             ),
         ),
       );

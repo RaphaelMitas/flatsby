@@ -722,7 +722,6 @@ export const shoppingList = createTRPCRouter({
 
                   (groupMemberRes) =>
                     Effect.flatMap(
-                      // Determine category ID (with AI if needed)
                       input.categoryId === "ai-auto-select"
                         ? Effect.promise(() =>
                             categorizeItem(ctx.session.user.id, validName),
@@ -730,7 +729,6 @@ export const shoppingList = createTRPCRouter({
                         : Effect.succeed(input.categoryId),
                       (categoryId) =>
                         Effect.map(
-                          // Update shopping list item
                           safeDbOperation(() => {
                             const updateData: Partial<
                               typeof shoppingListItems.$inferInsert
@@ -740,7 +738,6 @@ export const shoppingList = createTRPCRouter({
                               completed: input.completed,
                             };
 
-                            // Handle completion status changes
                             if (
                               shoppingListItem.completed !== input.completed
                             ) {

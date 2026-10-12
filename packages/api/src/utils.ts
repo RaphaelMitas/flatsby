@@ -380,9 +380,7 @@ export const GroupUtils = {
   },
 };
 
-/**
- * Debt summary for a group. Does not check access, callers must.
- */
+/** Does not check group access, callers must. */
 export const fetchGroupDebtSummary = async (db: Database, groupId: number) =>
   calculateDebts(
     await db.query.expenses.findMany({
