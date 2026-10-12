@@ -2,6 +2,7 @@ import type {
   ExpenseCategoryGroup,
   ExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
+import type { CreateExpenseInput } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
@@ -152,23 +153,14 @@ export const expenseRouter = createTRPCRouter({
                       () =>
                         Effect.flatMap(
                           Effect.all([
-                            // Get current user's group member ID
                             GroupUtils.getBasicMembership(
                               ctx.db,
                               input.groupId,
                               ctx.session.user.id,
                             ),
-                            input.subcategory || !input.description.trim()
-                              ? Effect.succeed({
-                                  group: input.category ?? "other",
-                                  subcategory: input.subcategory ?? "other",
-                                })
-                              : Effect.promise(() =>
-                                  categorizeExpenseDescription(
-                                    ctx.session.user.id,
-                                    input.description.trim(),
-                                  ),
-                                ),
+                            Effect.promise(() =>
+                              categoryForNewExpense(ctx.session.user.id, input),
+                            ),
                           ]),
                           ([currentUserGroupMember, category]) =>
                             // Create expense and splits in transaction
@@ -942,13 +934,22 @@ const expenseSubcategoryOptions = expenseSubcategories.map((sub) => ({
   description: `${expenseCategoryGroupLabels[sub.group]}: ${sub.label}`,
 }));
 
-const categorizeExpenseDescription = async (
+const categoryForNewExpense = async (
   userId: string,
-  description: string,
-): Promise<{
-  group: ExpenseCategoryGroup;
-  subcategory: ExpenseSubcategoryId;
-}> => {
+  input: CreateExpenseInput,
+) => {
+  const description = input.description.trim();
+  if (
+    input.category ||
+    input.subcategory ||
+    !description ||
+    input.splitMethod === "settlement"
+  ) {
+    return {
+      group: input.category ?? "other",
+      subcategory: input.subcategory ?? "other",
+    };
+  }
   const subcategory = await classify({
     userId,
     feature: "categorize-expense",

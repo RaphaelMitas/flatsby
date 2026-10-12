@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { View } from "react-native";
 
 import {
+  AI_AUTO_DETECT,
   expenseSubcategoryIdsWithAuto,
   isExpenseSubcategoryIdWithAuto,
 } from "@flatsby/validators/expenses/categories";
@@ -20,6 +21,7 @@ export interface ExpenseCategoryPickerProps extends Omit<
 > {
   value?: ExpenseSubcategoryIdWithAuto;
   onChange?: (value: ExpenseSubcategoryIdWithAuto) => void;
+  autoDetect?: boolean;
 }
 
 export function ExpenseCategoryPicker({
@@ -27,11 +29,13 @@ export function ExpenseCategoryPicker({
   onChange,
   triggerTitle,
   iconButton = false,
+  autoDetect = true,
   ...props
 }: ExpenseCategoryPickerProps) {
   const categoryItems = useMemo(() => {
     const items: BottomSheetPickerItem[] = [];
     for (const subcategoryId of expenseSubcategoryIdsWithAuto) {
+      if (!autoDetect && subcategoryId === AI_AUTO_DETECT) continue;
       const data = getExpenseCategoryData({ subcategoryId });
       items.push({
         id: subcategoryId,
@@ -43,7 +47,7 @@ export function ExpenseCategoryPicker({
       });
     }
     return items;
-  }, []);
+  }, [autoDetect]);
 
   const handleSelect = (item: BottomSheetPickerItem) => {
     if (isExpenseSubcategoryIdWithAuto(item.id)) {

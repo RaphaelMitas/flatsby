@@ -666,6 +666,7 @@ export function ExpenseForm({
                       <ExpenseCategoryPicker
                         testID="expense-form-category"
                         value={categoryPickerValue}
+                        autoDetect={!isEditMode}
                         onChange={(subcategoryId) => {
                           if (subcategoryId === AI_AUTO_DETECT) {
                             form.setValue("category", undefined);

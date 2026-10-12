@@ -234,22 +234,21 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                       <FormItem>
                         <FormLabel>Category</FormLabel>
                         <FormControl>
-                          <div className="flex items-center gap-2">
-                            <ExpenseCategorySelector
-                              value={pickerValue}
-                              onChange={(subcategoryId) => {
-                                if (subcategoryId === AI_AUTO_DETECT) {
-                                  form.setValue("category", undefined);
-                                  form.setValue("subcategory", undefined);
-                                } else {
-                                  const group =
-                                    getSubcategoryGroup(subcategoryId);
-                                  form.setValue("category", group ?? "other");
-                                  form.setValue("subcategory", subcategoryId);
-                                }
-                              }}
-                            />
-                          </div>
+                          <ExpenseCategorySelector
+                            value={pickerValue}
+                            autoDetect={!isEditMode}
+                            onChange={(subcategoryId) => {
+                              if (subcategoryId === AI_AUTO_DETECT) {
+                                form.setValue("category", undefined);
+                                form.setValue("subcategory", undefined);
+                              } else {
+                                const group =
+                                  getSubcategoryGroup(subcategoryId);
+                                form.setValue("category", group ?? "other");
+                                form.setValue("subcategory", subcategoryId);
+                              }
+                            }}
+                          />
                         </FormControl>
                       </FormItem>
                     );
