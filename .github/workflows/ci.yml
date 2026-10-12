@@ -37,6 +37,16 @@ jobs:
       - name: Check
         run: pnpm check && pnpm lint:ws
 
+      - name: Release notes fit Play's 500 character limit
+        run: |
+          node -e '
+            const n = require("fs").readFileSync("apps/expo/store/release-notes.txt", "utf8").length;
+            if (n > 500) {
+              console.error(`apps/expo/store/release-notes.txt is ${n} characters; Play allows 500.`);
+              process.exit(1);
+            }
+          '
+
   audit:
     runs-on: ubuntu-latest
     steps:
