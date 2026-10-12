@@ -133,8 +133,8 @@ const StackLayout = () => {
   const { hydrated } = useShoppingStore();
   const userId = data?.user.id;
 
-  // Cached errors from a revoked session would sign the next login out again,
-  // and clearing under mounted tabs re-suspends them, which segfaults SwiftUI.
+  // Cached errors from a revoked session would sign the next login out again.
+  // Clearing under mounted tabs re-suspends their queries and crashes SwiftUI.
   useEffect(() => {
     if (!userId) queryClient.clear();
   }, [userId]);
