@@ -36,11 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
-import {
-  AI_AUTO_DETECT,
-  getSubcategoryGroup,
-  isExpenseSubcategoryId,
-} from "@flatsby/validators/expenses/categories";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
   editableSplitMethod,
@@ -68,7 +63,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     currency,
     paidByGroupMemberId,
     description,
-    subcategory,
     splits,
     isPending,
     createExpenseMutation,
@@ -78,8 +72,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     handleBack,
     group,
     allMembers,
-    isCategorizing,
-    onDescriptionBlur,
   } = formState;
   const participantCount = finalizeSplits(
     splitMethod,
@@ -124,6 +116,25 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 <CardTitle className="text-base">Amount & Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="What was this expense for?"
+                          {...field}
+                          data-testid="expense-form-description"
+                          maxLength={512}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="amountInCents"
@@ -206,64 +217,19 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
 
                 <FormField
                   control={form.control}
-                  name="description"
+                  name="subcategory"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Category</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="What was this expense for?"
-                          {...field}
-                          data-testid="expense-form-description"
-                          onBlur={() => {
-                            field.onBlur();
-                            onDescriptionBlur();
-                          }}
-                          maxLength={512}
+                        <ExpenseCategorySelector
+                          value={field.value}
+                          autoDetect={!isEditMode}
+                          onChange={field.onChange}
                         />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={() => {
-                    const pickerValue =
-                      subcategory && isExpenseSubcategoryId(subcategory)
-                        ? subcategory
-                        : AI_AUTO_DETECT;
-
-                    return (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center gap-2">
-                            <ExpenseCategorySelector
-                              value={pickerValue}
-                              onChange={(subcategoryId) => {
-                                if (subcategoryId === AI_AUTO_DETECT) {
-                                  form.setValue("category", undefined);
-                                  form.setValue("subcategory", undefined);
-                                } else {
-                                  const group =
-                                    getSubcategoryGroup(subcategoryId);
-                                  form.setValue("category", group ?? "other");
-                                  form.setValue("subcategory", subcategoryId);
-                                }
-                              }}
-                              disabled={isCategorizing}
-                            />
-                            {isCategorizing && (
-                              <LoaderCircle className="text-muted-foreground h-4 w-4 animate-spin" />
-                            )}
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    );
-                  }}
                 />
 
                 <FormField
@@ -338,6 +304,14 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
+                {description && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Description:</span>
+                    <span className="text-right font-semibold">
+                      {description}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount:</span>
                   <span className="font-semibold">
@@ -354,14 +328,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                       .name ?? "Unknown"}
                   </span>
                 </div>
-                {description && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Description:</span>
-                    <span className="text-right font-semibold">
-                      {description}
-                    </span>
-                  </div>
-                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Split:</span>
                   <span className="font-semibold">

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
+import type { ExpenseSubcategoryId } from "@flatsby/validators/expenses/categories";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
@@ -21,20 +21,20 @@ import {
 import { AI_AUTO_DETECT } from "@flatsby/validators/expenses/categories";
 
 interface ExpenseCategorySelectorProps {
-  value?: ExpenseSubcategoryIdWithAuto;
-  onChange?: (value: ExpenseSubcategoryIdWithAuto) => void;
-  iconButton?: boolean;
-  disabled?: boolean;
+  value?: ExpenseSubcategoryId;
+  onChange: (value: ExpenseSubcategoryId | undefined) => void;
+  autoDetect: boolean;
 }
 
 export function ExpenseCategorySelector({
-  iconButton = false,
   value,
   onChange,
-  disabled,
+  autoDetect,
 }: ExpenseCategorySelectorProps) {
   const selectedData = getExpenseCategoryData(value ?? AI_AUTO_DETECT);
-  const allItems = getAllExpenseCategoryItems();
+  const allItems = getAllExpenseCategoryItems().filter(
+    (item) => autoDetect || item.id !== AI_AUTO_DETECT,
+  );
 
   return (
     <Sheet>
@@ -42,28 +42,16 @@ export function ExpenseCategorySelector({
         <Button
           variant="outline"
           role="combobox"
-          disabled={disabled}
           data-testid="expense-form-category"
-          className={cn(
-            "flex w-full items-center justify-between",
-            iconButton && "h-10 w-10 justify-center p-0",
-          )}
+          className="flex w-full items-center justify-between"
         >
           <span className="flex items-center">
             <selectedData.icon
-              className={cn(
-                "h-5 w-5",
-                selectedData.colorClasses.base,
-                !iconButton && "mr-2",
-              )}
+              className={cn("mr-2 h-5 w-5", selectedData.colorClasses.base)}
             />
-            {!iconButton && (
-              <span className="text-foreground">{selectedData.name}</span>
-            )}
+            <span className="text-foreground">{selectedData.name}</span>
           </span>
-          {!iconButton && (
-            <ChevronDown className="text-muted-foreground ml-2 h-5 w-5" />
-          )}
+          <ChevronDown className="text-muted-foreground ml-2 h-5 w-5" />
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[80vh]">
@@ -75,7 +63,9 @@ export function ExpenseCategorySelector({
             <SheetClose asChild key={item.id} className="h-full">
               <Button
                 variant="ghost"
-                onClick={() => onChange?.(item.id)}
+                onClick={() =>
+                  onChange(item.id === AI_AUTO_DETECT ? undefined : item.id)
+                }
                 data-testid={`expense-category-option-${item.id}`}
                 className={cn(
                   "flex w-full items-center justify-start gap-4 px-4 py-3",

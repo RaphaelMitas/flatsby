@@ -22,7 +22,6 @@ export const expenseCategoryGroups = [
 ] as const;
 
 export type ExpenseCategoryGroup = (typeof expenseCategoryGroups)[number];
-export const expenseCategoryGroupSchema = z.enum(expenseCategoryGroups);
 
 export const expenseCategoryGroupLabels: Record<ExpenseCategoryGroup, string> =
   {
@@ -326,20 +325,12 @@ const subcategoryRecord: Record<string, (typeof expenseSubcategories)[number]> =
 
 const subcategoryIdSet = new Set<string>(expenseSubcategories.map((s) => s.id));
 
-const subcategoryIdWithAutoSet = new Set<string>(expenseSubcategoryIdsWithAuto);
-
 const categoryGroupSet = new Set<string>(expenseCategoryGroups);
 
-export function getSubcategoryConfig(subcategoryId: string) {
-  return subcategoryRecord[subcategoryId];
-}
-
 export function getSubcategoryGroup(
-  subcategoryId: string,
-): ExpenseCategoryGroup | undefined {
-  const config = subcategoryRecord[subcategoryId];
-  if (!config) return undefined;
-  return config.group satisfies ExpenseCategoryGroup;
+  subcategoryId: string | undefined,
+): ExpenseCategoryGroup {
+  return subcategoryRecord[subcategoryId ?? "other"]?.group ?? "other";
 }
 
 export function isExpenseSubcategoryId(
@@ -348,28 +339,8 @@ export function isExpenseSubcategoryId(
   return subcategoryIdSet.has(value);
 }
 
-export function isExpenseSubcategoryIdWithAuto(
-  value: string,
-): value is ExpenseSubcategoryIdWithAuto {
-  return subcategoryIdWithAutoSet.has(value);
-}
-
 export function isExpenseCategoryGroup(
   value: string,
 ): value is ExpenseCategoryGroup {
   return categoryGroupSet.has(value);
-}
-
-export function coerceCategory(
-  value: string | undefined | null,
-): ExpenseCategoryGroup {
-  if (value && isExpenseCategoryGroup(value)) return value;
-  return "other";
-}
-
-export function coerceSubcategory(
-  value: string | undefined | null,
-): ExpenseSubcategoryId {
-  if (value && isExpenseSubcategoryId(value)) return value;
-  return "other";
 }

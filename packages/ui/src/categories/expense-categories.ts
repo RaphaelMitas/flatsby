@@ -184,5 +184,3 @@ export function getExpenseCategoryData(
 export function getAllExpenseCategoryItems(): ExpenseCategoryDataItem[] {
   return Object.values(expenseCategoryDataRecord);
 }
-
-export { AI_AUTO_DETECT };
