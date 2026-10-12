@@ -22,7 +22,7 @@ export async function openExpenseForm(
   page: Page,
   options: { amount: string; description: string; categoryId: string },
 ) {
-  // React's streamed server copy can linger hidden for a moment after hydration.
+  // SSR renders the mobile layout; its streamed copy lingers hidden after the desktop swap.
   await page
     .getByTestId("expense-add-button")
     .filter({ visible: true })
