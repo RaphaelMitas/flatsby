@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AppLayout } from "~/app/_components/layout/app-layout";
 import { getSession } from "~/auth/server";
-import { caller } from "~/trpc/server";
+import { getCurrentUserWithGroups } from "~/trpc/server";
 
 interface ShoppingListLayoutProps {
   children: ReactNode;
@@ -18,7 +18,7 @@ export default async function ShoppingListLayout({
   }
 
   // Check if user has a group selected
-  const userWithGroups = await caller.user.getCurrentUserWithGroups();
+  const userWithGroups = await getCurrentUserWithGroups();
   if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
     redirect("/group");
   }

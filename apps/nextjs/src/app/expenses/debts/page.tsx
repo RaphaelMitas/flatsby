@@ -1,8 +1,13 @@
-import { caller, HydrateClient, prefetch, trpc } from "~/trpc/server";
+import {
+  getCurrentUserWithGroups,
+  HydrateClient,
+  prefetch,
+  trpc,
+} from "~/trpc/server";
 import { DebtSummaryView } from "./DebtSummaryView";
 
 export default async function DebtsPage() {
-  const userWithGroups = await caller.user.getCurrentUserWithGroups();
+  const userWithGroups = await getCurrentUserWithGroups();
 
   if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
     return null;

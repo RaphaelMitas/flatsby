@@ -1,10 +1,15 @@
 import { redirect } from "next/navigation";
 
-import { caller, HydrateClient, prefetch, trpc } from "~/trpc/server";
+import {
+  getCurrentUserWithGroups,
+  HydrateClient,
+  prefetch,
+  trpc,
+} from "~/trpc/server";
 import { HomeContent } from "./_components/home-content";
 
 export default async function HomePage() {
-  const userDataResult = await caller.user.getCurrentUserWithGroups();
+  const userDataResult = await getCurrentUserWithGroups();
 
   if (!userDataResult.success) {
     redirect("/auth/login");
@@ -24,7 +29,6 @@ export default async function HomePage() {
 
   prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
   prefetch(trpc.group.getUserGroups.queryOptions());
-  prefetch(trpc.user.getCurrentUserWithGroups.queryOptions());
   prefetch(trpc.expense.getDebtSummary.queryOptions({ groupId }));
   prefetch(trpc.stats.getHomeStats.queryOptions({ groupId }));
   prefetch(trpc.shoppingList.getShoppingLists.queryOptions({ groupId }));

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AppLayout } from "~/app/_components/layout/app-layout";
 import { getSession } from "~/auth/server";
-import { caller } from "~/trpc/server";
+import { getCurrentUserWithGroups } from "~/trpc/server";
 
 export default async function ExpensesLayout({
   children,
@@ -14,7 +14,7 @@ export default async function ExpensesLayout({
     redirect("/auth/login");
   }
 
-  const userWithGroups = await caller.user.getCurrentUserWithGroups();
+  const userWithGroups = await getCurrentUserWithGroups();
   if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
     redirect("/group");
   }

@@ -1,11 +1,16 @@
 import { redirect } from "next/navigation";
 
-import { caller, HydrateClient, prefetch, trpc } from "~/trpc/server";
+import {
+  getCurrentUserWithGroups,
+  HydrateClient,
+  prefetch,
+  trpc,
+} from "~/trpc/server";
 import { ShoppingListDashboard } from "./ShoppingListDashboard";
 
 export default async function ShoppingListPage() {
   // Get current group from user's lastGroupUsed
-  const userWithGroups = await caller.user.getCurrentUserWithGroups();
+  const userWithGroups = await getCurrentUserWithGroups();
 
   if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
     redirect("/group");

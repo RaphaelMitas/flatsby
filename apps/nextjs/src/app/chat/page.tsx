@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getSession } from "~/auth/server";
-import { caller } from "~/trpc/server";
+import { getCurrentUserWithGroups } from "~/trpc/server";
 import { ChatHeader } from "./_components/chat-header";
 import { NewChatInterface } from "./_components/new-chat-interface";
 
@@ -12,7 +12,7 @@ export default async function ChatPage() {
     redirect("/auth/login");
   }
 
-  const user = await caller.user.getCurrentUserWithGroups();
+  const user = await getCurrentUserWithGroups();
   const defaultModel = user.success
     ? user.data.user?.lastChatModelUsed
     : undefined;

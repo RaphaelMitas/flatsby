@@ -2,7 +2,13 @@ import { redirect } from "next/navigation";
 
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
-import { caller, HydrateClient, prefetch, trpc } from "~/trpc/server";
+import {
+  caller,
+  getCurrentUserWithGroups,
+  HydrateClient,
+  prefetch,
+  trpc,
+} from "~/trpc/server";
 import ShoppingList from "./ShoppingList";
 
 interface ShoppingListDetailPageProps {
@@ -16,7 +22,7 @@ export default async function ShoppingListDetailPage({
   const shoppingListId = parseInt(shoppingListIdStr, 10);
 
   // Get current group from user's lastGroupUsed
-  const userWithGroups = await caller.user.getCurrentUserWithGroups();
+  const userWithGroups = await getCurrentUserWithGroups();
 
   if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
     redirect("/group");

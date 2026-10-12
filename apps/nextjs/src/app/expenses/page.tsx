@@ -3,14 +3,19 @@ import { Suspense } from "react";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
-import { caller, HydrateClient, prefetch, trpc } from "~/trpc/server";
+import {
+  getCurrentUserWithGroups,
+  HydrateClient,
+  prefetch,
+  trpc,
+} from "~/trpc/server";
 import { ExpensesSplitView } from "./ExpensesSplitView";
 
 export default async function ExpensesPage(props: {
   searchParams: Promise<{ selected?: string; action?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const userWithGroups = await caller.user.getCurrentUserWithGroups();
+  const userWithGroups = await getCurrentUserWithGroups();
 
   if (!userWithGroups.success || !userWithGroups.data.user?.lastGroupUsed) {
     return null;
