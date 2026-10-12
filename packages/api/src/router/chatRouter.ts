@@ -109,9 +109,6 @@ async function finalizeStream({
 }
 
 export const chatRouter = createTRPCRouter({
-  /**
-   * Get a conversation with all its messages
-   */
   getConversation: protectedProcedure
     .input(getConversationInputSchema)
     .output(conversationWithMessagesSchema)
@@ -124,7 +121,7 @@ export const chatRouter = createTRPCRouter({
         ),
         with: {
           messages: {
-            orderBy: [chatMessages.createdAt],
+            orderBy: [desc(chatMessages.createdAt)],
             limit: CHAT_MESSAGE_LIMIT,
           },
         },
@@ -139,7 +136,7 @@ export const chatRouter = createTRPCRouter({
 
       return {
         ...conversation,
-        messages: conversation.messages.map((m) => ({
+        messages: conversation.messages.reverse().map((m) => ({
           ...m,
           role: messageRoleSchema.parse(m.role),
           status: messageStatusSchema.parse(m.status),
@@ -460,13 +457,6 @@ export const chatRouter = createTRPCRouter({
       ctx.db,
       input.conversationId,
     );
-
-    if (input.trigger === "submit-message") {
-      contextMessages.push({
-        role: "user",
-        content: input.message.content,
-      });
-    }
 
     let buffer = "";
     let lastFlush = Date.now();
