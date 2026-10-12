@@ -12,8 +12,6 @@ import { useWatch } from "react-hook-form";
 
 import {
   AI_AUTO_DETECT,
-  coerceCategory,
-  coerceSubcategory,
   getSubcategoryGroup,
 } from "@flatsby/validators/expenses/categories";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
@@ -162,7 +160,6 @@ export function ExpenseForm({
       currency:
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
-      category: expense?.category,
       subcategory: expense?.subcategory,
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
@@ -220,8 +217,8 @@ export function ExpenseForm({
             amountInCents: input.amountInCents,
             currency: input.currency,
             description: input.description,
-            category: coerceCategory(input.category),
-            subcategory: coerceSubcategory(input.subcategory),
+            category: getSubcategoryGroup(input.subcategory),
+            subcategory: input.subcategory ?? "other",
             expenseDate: input.expenseDate,
             createdByGroupMemberId: currentMember.id,
             splitMethod: input.splitMethod,
@@ -356,10 +353,10 @@ export function ExpenseForm({
             data: {
               ...old.data,
               ...input,
-              category: coerceCategory(input.category ?? old.data.category),
-              subcategory: coerceSubcategory(
-                input.subcategory ?? old.data.subcategory,
-              ),
+              category: input.subcategory
+                ? getSubcategoryGroup(input.subcategory)
+                : old.data.category,
+              subcategory: input.subcategory ?? old.data.subcategory,
               expenseSplits: input.splits
                 ? input.splits.map((split, index) => {
                     const member = group.groupMembers.find(
@@ -444,7 +441,6 @@ export function ExpenseForm({
         amountInCents: values.amountInCents,
         currency: values.currency,
         description: values.description,
-        category: values.category,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,
@@ -457,7 +453,6 @@ export function ExpenseForm({
         amountInCents: values.amountInCents,
         currency: values.currency,
         description: values.description,
-        category: values.category,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,
@@ -527,7 +522,6 @@ export function ExpenseForm({
   ).length;
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
-  const categoryPickerValue = subcategory ?? AI_AUTO_DETECT;
 
   const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
     id: code,
@@ -661,17 +655,15 @@ export function ExpenseForm({
                       <Label>Category</Label>
                       <ExpenseCategoryPicker
                         testID="expense-form-category"
-                        value={categoryPickerValue}
+                        value={subcategory}
                         autoDetect={!isEditMode}
                         onChange={(subcategoryId) => {
-                          if (subcategoryId === AI_AUTO_DETECT) {
-                            form.setValue("category", undefined);
-                            form.setValue("subcategory", undefined);
-                          } else {
-                            const group = getSubcategoryGroup(subcategoryId);
-                            form.setValue("category", group ?? "other");
-                            form.setValue("subcategory", subcategoryId);
-                          }
+                          form.setValue(
+                            "subcategory",
+                            subcategoryId === AI_AUTO_DETECT
+                              ? undefined
+                              : subcategoryId,
+                          );
                         }}
                       />
                     </View>

@@ -11,10 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 
 import { toast } from "@flatsby/ui/toast";
-import {
-  coerceCategory,
-  coerceSubcategory,
-} from "@flatsby/validators/expenses/categories";
+import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
@@ -68,7 +65,6 @@ export function useExpenseForm({
       currency:
         expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
       description: expense?.description ?? "",
-      category: expense?.category,
       subcategory: expense?.subcategory,
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
@@ -120,8 +116,8 @@ export function useExpenseForm({
             amountInCents: input.amountInCents,
             currency: input.currency,
             description: input.description,
-            category: coerceCategory(input.category),
-            subcategory: coerceSubcategory(input.subcategory),
+            category: getSubcategoryGroup(input.subcategory),
+            subcategory: input.subcategory ?? "other",
             expenseDate: input.expenseDate,
             createdByGroupMemberId: currentMember.id,
             splitMethod: input.splitMethod,
@@ -253,10 +249,10 @@ export function useExpenseForm({
             data: {
               ...old.data,
               ...input,
-              category: coerceCategory(input.category ?? old.data.category),
-              subcategory: coerceSubcategory(
-                input.subcategory ?? old.data.subcategory,
-              ),
+              category: input.subcategory
+                ? getSubcategoryGroup(input.subcategory)
+                : old.data.category,
+              subcategory: input.subcategory ?? old.data.subcategory,
               expenseSplits: input.splits
                 ? input.splits.map((split, index) => {
                     const member = group.groupMembers.find(
@@ -343,7 +339,6 @@ export function useExpenseForm({
         amountInCents: values.amountInCents,
         currency: values.currency,
         description: values.description,
-        category: values.category,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,
@@ -356,7 +351,6 @@ export function useExpenseForm({
         amountInCents: values.amountInCents,
         currency: values.currency,
         description: values.description,
-        category: values.category,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
         splits,

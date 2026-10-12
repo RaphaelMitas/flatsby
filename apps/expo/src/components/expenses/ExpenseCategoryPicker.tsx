@@ -25,7 +25,7 @@ export interface ExpenseCategoryPickerProps extends Omit<
 }
 
 export function ExpenseCategoryPicker({
-  value,
+  value = AI_AUTO_DETECT,
   onChange,
   triggerTitle,
   iconButton = false,
@@ -55,10 +55,8 @@ export function ExpenseCategoryPicker({
     }
   };
 
-  const selectedData = value
-    ? getExpenseCategoryData({ subcategoryId: value })
-    : null;
-  const displayTitle = triggerTitle ?? selectedData?.name ?? "Select Category";
+  const displayTitle =
+    triggerTitle ?? getExpenseCategoryData({ subcategoryId: value }).name;
 
   return (
     <BottomSheetPickerTrigger

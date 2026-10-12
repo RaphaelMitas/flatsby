@@ -4,10 +4,7 @@
 
 import { z } from "zod/v4";
 
-import {
-  expenseCategoryGroupSchema,
-  expenseSubcategoryIdSchema,
-} from "./categories";
+import { expenseSubcategoryIdSchema } from "./categories";
 import { CURRENCY_CODES, MAX_SHARES, SPLIT_METHODS } from "./types";
 import { validateSplits } from "./validation";
 
@@ -31,7 +28,6 @@ export const expenseSchema = z.object({
   amountInCents: z.number().int().min(1, "Amount must be greater than 0"),
   currency: currencyCodeSchema,
   description: z.string().max(512),
-  category: expenseCategoryGroupSchema.optional(),
   subcategory: expenseSubcategoryIdSchema.optional(),
   expenseDate: z.date(),
   splits: z

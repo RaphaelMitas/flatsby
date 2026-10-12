@@ -234,7 +234,7 @@ const shoppingListItemDeleteInputSchema = modifyDataInputSchemaFor(
 );
 
 const expenseCreateDataSchema = expenseSchema
-  .omit({ expenseDate: true, category: true })
+  .omit({ expenseDate: true })
   .extend({
     groupId: z.number(),
     expenseDateIsoString: z
@@ -244,7 +244,7 @@ const expenseCreateDataSchema = expenseSchema
   });
 
 const expenseUpdateDataSchema = expenseSchema
-  .omit({ expenseDate: true, category: true })
+  .omit({ expenseDate: true })
   .extend({
     expenseDateIsoString: z
       .string()

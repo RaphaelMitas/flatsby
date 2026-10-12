@@ -335,11 +335,9 @@ export function getSubcategoryConfig(subcategoryId: string) {
 }
 
 export function getSubcategoryGroup(
-  subcategoryId: string,
-): ExpenseCategoryGroup | undefined {
-  const config = subcategoryRecord[subcategoryId];
-  if (!config) return undefined;
-  return config.group satisfies ExpenseCategoryGroup;
+  subcategoryId: string | undefined,
+): ExpenseCategoryGroup {
+  return subcategoryRecord[subcategoryId ?? "other"]?.group ?? "other";
 }
 
 export function isExpenseSubcategoryId(
@@ -358,18 +356,4 @@ export function isExpenseCategoryGroup(
   value: string,
 ): value is ExpenseCategoryGroup {
   return categoryGroupSet.has(value);
-}
-
-export function coerceCategory(
-  value: string | undefined | null,
-): ExpenseCategoryGroup {
-  if (value && isExpenseCategoryGroup(value)) return value;
-  return "other";
-}
-
-export function coerceSubcategory(
-  value: string | undefined | null,
-): ExpenseSubcategoryId {
-  if (value && isExpenseSubcategoryId(value)) return value;
-  return "other";
 }

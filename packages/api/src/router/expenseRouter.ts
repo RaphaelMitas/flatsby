@@ -163,7 +163,6 @@ export const expenseRouter = createTRPCRouter({
                             ),
                           ]),
                           ([currentUserGroupMember, category]) =>
-                            // Create expense and splits in transaction
                             DbUtils.transaction(async (trx) => {
                               const expenseResult = await trx
                                 .insert(expenses)
@@ -328,8 +327,9 @@ export const expenseRouter = createTRPCRouter({
                         }
                         if (input.subcategory !== undefined) {
                           updateData.subcategory = input.subcategory;
-                          updateData.category =
-                            getSubcategoryGroup(input.subcategory) ?? "other";
+                          updateData.category = getSubcategoryGroup(
+                            input.subcategory,
+                          );
                         }
                         if (input.expenseDate !== undefined) {
                           updateData.expenseDate = input.expenseDate;
@@ -879,7 +879,7 @@ export const expenseRouter = createTRPCRouter({
                             amountInCents: expense.amountInCents,
                             currency: expense.currency,
                             description: expense.description ?? "",
-                            category: expense.category ?? "other",
+                            category: getSubcategoryGroup(expense.subcategory),
                             subcategory: expense.subcategory ?? "other",
                             expenseDate: expense.expenseDate,
                             createdByGroupMemberId: currentUserGroupMember.id,
@@ -951,5 +951,5 @@ const categoryForNewExpense = async (
           input: description,
           fallback: "other",
         }));
-  return { group: getSubcategoryGroup(subcategory) ?? "other", subcategory };
+  return { group: getSubcategoryGroup(subcategory), subcategory };
 };
