@@ -6,7 +6,7 @@ name: Release
 # EAS production builds with store auto-submit, and captures store
 # screenshots. workflow_dispatch re-runs the release for the current version
 # even if the tag already exists (e.g. after fixing the workflow or release
-# notes) — with skip_eas_build when only the publish half failed, so a
+# notes), with skip_eas_build when only the publish half failed, so a
 # listing fix does not spend another pair of EAS builds on a binary the
 # stores already have.
 on:
