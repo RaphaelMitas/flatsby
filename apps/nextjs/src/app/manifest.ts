@@ -1,10 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import {
-  APP_STORE_URL,
-  PLAY_STORE_ID,
-  PLAY_STORE_URL,
-} from "./_components/landing/content";
+import { PLAY_STORE_ID, PLAY_STORE_URL } from "./_components/landing/content";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -41,7 +37,6 @@ export default function manifest(): MetadataRoute.Manifest {
     prefer_related_applications: true,
     related_applications: [
       { platform: "play", url: PLAY_STORE_URL, id: PLAY_STORE_ID },
-      { platform: "itunes", url: APP_STORE_URL },
     ],
   };
 }
