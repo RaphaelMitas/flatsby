@@ -134,7 +134,8 @@ const StackLayout = () => {
   const userId = data?.user.id;
 
   // Cached errors from a revoked session would sign the next login out again.
-  // Clearing under mounted tabs re-suspends their queries and crashes SwiftUI.
+  // By now TabLayout's Redirect has unmounted the tabs; clearing under them
+  // re-suspends their queries and crashes SwiftUI.
   useEffect(() => {
     if (!userId) queryClient.clear();
   }, [userId]);
