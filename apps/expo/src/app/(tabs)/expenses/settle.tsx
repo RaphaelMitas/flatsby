@@ -1,6 +1,11 @@
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+} from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { SettlementForm } from "~/components/expenses/SettlementForm";
@@ -18,7 +23,12 @@ export default function SettlePage() {
     source?: string;
   }>();
   const router = useRouter();
+  const navigation = useNavigation();
   const { selectedGroupId } = useShoppingStore();
+  // a save resolving after the user swiped back must not pop the screen below
+  const close = () => {
+    if (navigation.isFocused()) router.back();
+  };
 
   const fromGroupMemberId = params.fromGroupMemberId
     ? parseInt(params.fromGroupMemberId, 10)
@@ -72,7 +82,7 @@ export default function SettlePage() {
           <SettlePageInnerEdit
             groupId={selectedGroupId}
             expenseId={expenseId}
-            onClose={() => router.back()}
+            onClose={close}
           />
         ) : (
           <SettlementForm
@@ -82,7 +92,7 @@ export default function SettlePage() {
             currency={currency}
             amount={amount}
             source={source}
-            onClose={() => router.back()}
+            onClose={close}
           />
         )}
       </Suspense>

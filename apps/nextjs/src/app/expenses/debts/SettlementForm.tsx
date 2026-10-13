@@ -338,7 +338,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const isPending = createSettlementMutation.isPending;
 
   return (
-    <Sheet open onOpenChange={onClose}>
+    <Sheet open onOpenChange={(open) => !open && !isPending && onClose()}>
       <SheetContent
         className="w-full sm:max-w-lg"
         data-testid="settlement-form"
