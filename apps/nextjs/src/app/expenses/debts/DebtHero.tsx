@@ -5,7 +5,7 @@ import { cn } from "@flatsby/ui";
 import { amountTone } from "./debtDisplay";
 
 export function DebtHero({ hero }: { hero: ReturnType<typeof debtHero> }) {
-  const { label, amounts, meta } = hero;
+  const { label, amounts } = hero;
 
   return (
     <div data-testid="debt-hero">
@@ -22,7 +22,6 @@ export function DebtHero({ hero }: { hero: ReturnType<typeof debtHero> }) {
           {text}
         </p>
       ))}
-      <p className="text-muted-foreground mt-1 text-sm">{meta}</p>
     </div>
   );
 }

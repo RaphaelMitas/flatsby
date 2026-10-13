@@ -6,7 +6,7 @@ import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
 import type { DebtEntry, GroupDebtSummary } from "./types";
 import { centsToDecimal } from "./conversion";
-import { debtsBetweenOthers, debtsFor } from "./debt";
+import { debtsBetweenOthers } from "./debt";
 
 /**
  * Format currency amount with currency symbol
@@ -153,35 +153,13 @@ function joinNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${last}`;
 }
 
-export function debtHero(
-  summary: GroupDebtSummary,
-  meId: number,
-  person: PersonLookup,
-) {
+export function debtHero(summary: GroupDebtSummary, meId: number) {
   const lines = Object.entries(summary.memberBalances[meId] ?? {})
     .filter(([, cents]) => cents !== 0)
     .map(([currency, cents]) => ({ currency, cents }));
   const mixed = new Set(lines.map(({ cents }) => Math.sign(cents))).size > 1;
   const first = lines[0];
   const fallbackCurrency = Object.keys(summary.currencies)[0] ?? "EUR";
-
-  const namesWhere = (sign: 1 | -1) =>
-    debtsFor(summary, meId, "direct")
-      .filter(({ amounts }) =>
-        amounts.some(({ amountInCents }) => amountInCents * sign > 0),
-      )
-      .map(({ groupMemberId }) => person(groupMemberId).name);
-  const owedBy = namesWhere(1);
-  const owing = namesWhere(-1);
-  const meta: string[] = [];
-  if (owedBy.length > 0) {
-    meta.push(
-      `${joinNames(owedBy)} ${owedBy.length === 1 ? "owes" : "owe"} you`,
-    );
-  }
-  if (owing.length > 0) {
-    meta.push(`${meta.length > 0 ? "you" : "You"} owe ${joinNames(owing)}`);
-  }
 
   return {
     label:
@@ -199,7 +177,6 @@ export function debtHero(
           : formatCurrencyFromCents({ cents: Math.abs(cents), currency }),
       }),
     ),
-    meta: meta.join(", ") || "You don't owe anyone and nobody owes you",
   };
 }
 

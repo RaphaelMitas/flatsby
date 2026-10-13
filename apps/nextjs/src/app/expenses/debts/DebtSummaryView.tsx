@@ -75,7 +75,7 @@ export function DebtSummaryView() {
 
       {hasDebts(summary) ? (
         <>
-          <DebtHero hero={debtHero(summary, meId, person)} />
+          <DebtHero hero={debtHero(summary, meId)} />
           <ModeSwitch kind={kind} onChange={setKind} />
           <Section title="Between you and">
             <DirectDebtsCard

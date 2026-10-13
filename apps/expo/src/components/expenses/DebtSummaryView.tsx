@@ -84,7 +84,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
       <View testID="debt-summary-title" className="w-full gap-2 p-4">
         {hasDebts(summary) ? (
           <>
-            <DebtHero hero={debtHero(summary, meId, person)} />
+            <DebtHero hero={debtHero(summary, meId)} />
             <ModeSwitch kind={kind} onChange={setKind} />
             <SectionLabel>Between you and</SectionLabel>
             <DirectDebts
@@ -195,7 +195,7 @@ function SectionLabel({ children }: { children: string }) {
 }
 
 function DebtHero({ hero }: { hero: ReturnType<typeof debtHero> }) {
-  const { label, amounts, meta } = hero;
+  const { label, amounts } = hero;
 
   return (
     <View testID="debt-hero" className="pt-4 pb-2">
@@ -217,7 +217,6 @@ function DebtHero({ hero }: { hero: ReturnType<typeof debtHero> }) {
           {text}
         </Text>
       ))}
-      <Text className="text-muted-foreground mt-0.5 text-sm">{meta}</Text>
     </View>
   );
 }

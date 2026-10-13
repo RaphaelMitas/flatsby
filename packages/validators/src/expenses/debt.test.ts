@@ -671,14 +671,12 @@ describe("allSquareMessage", () => {
 });
 
 describe("debtHero", () => {
-  const hero = (expenses: Expense[]) =>
-    debtHero(calculateDebts(expenses), YOU, person);
+  const hero = (expenses: Expense[]) => debtHero(calculateDebts(expenses), YOU);
 
   it("says you are owed when every currency is in your favour", () => {
     expect(hero([owes(MAX, YOU, 3050)])).toEqual({
       label: "Overall you are owed",
       amounts: [{ currency: "EUR", cents: 3050, text: "€30.50" }],
-      meta: "Max owes you",
     });
   });
 
@@ -686,7 +684,6 @@ describe("debtHero", () => {
     expect(hero([owes(YOU, LENA, 1200), owes(YOU, MAX, 800)])).toEqual({
       label: "Overall you owe",
       amounts: [{ currency: "EUR", cents: -2000, text: "€20.00" }],
-      meta: "You owe Lena and Max",
     });
   });
 
@@ -697,11 +694,10 @@ describe("debtHero", () => {
         { currency: "EUR", cents: 3050, text: "+€30.50" },
         { currency: "USD", cents: -1500, text: "-$15.00" },
       ],
-      meta: "Max owes you, you owe Max",
     });
   });
 
-  it("names everyone you owe, even when your total is positive", () => {
+  it("nets mixed directions into one total", () => {
     expect(
       hero([
         owes(SOPHIE, YOU, 6960),
@@ -711,7 +707,6 @@ describe("debtHero", () => {
     ).toMatchObject({
       label: "Overall you are owed",
       amounts: [{ currency: "EUR", cents: 8364, text: "€83.64" }],
-      meta: "Sophie and Max owe you, you owe Lena",
     });
   });
 
@@ -719,7 +714,6 @@ describe("debtHero", () => {
     expect(hero([owes(MAX, LENA, 500)])).toEqual({
       label: "Overall",
       amounts: [{ currency: "EUR", cents: 0, text: "€0.00" }],
-      meta: "You don't owe anyone and nobody owes you",
     });
   });
 });
