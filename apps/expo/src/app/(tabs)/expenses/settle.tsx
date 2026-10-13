@@ -27,17 +27,19 @@ export default function SettlePage() {
   const navigation = useNavigation();
   const route = useRoute();
   const { selectedGroupId } = useShoppingStore();
-  // a save can resolve after the user left: pop only this screen, if it's still there
+  // a save can resolve after the user left: never pop someone else's screen
   const close = () => {
     const stack = navigation.getState();
     const index = stack?.routes.findIndex(({ key }) => key === route.key) ?? -1;
-    if (index === 0) router.back();
-    if (stack && index > 0) {
+    if (!stack || index < 0) return;
+    if (index > 0) {
       navigation.dispatch({
         type: "GO_BACK",
         source: route.key,
         target: stack.key,
       });
+    } else if (navigation.isFocused()) {
+      router.back();
     }
   };
 
