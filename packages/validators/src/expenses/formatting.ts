@@ -213,11 +213,11 @@ export function allSquareMessage(
   const names = [
     ...new Set(
       debtsBetweenOthers(summary, meId, "direct").flatMap((debt) => [
-        person(debt.fromGroupMemberId).name,
-        person(debt.toGroupMemberId).name,
+        debt.fromGroupMemberId,
+        debt.toGroupMemberId,
       ]),
     ),
-  ];
+  ].map((id) => person(id).name);
   return `${joinNames(names)} still have open debts`;
 }
 
