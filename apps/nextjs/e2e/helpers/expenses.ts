@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { selectExpenseCategory } from "./categories";
+import { waitForHydration } from "./hydration";
 
 export async function ensurePaidBySelected(page: Page) {
   const paidByTrigger = page.getByTestId("expense-form-paid-by");
@@ -23,10 +24,11 @@ export async function openExpenseForm(
   options: { amount: string; description: string; categoryId: string },
 ) {
   // SSR renders the mobile layout; its streamed copy lingers hidden after the desktop swap.
-  await page
+  const addButton = page
     .getByTestId("expense-add-button")
-    .filter({ visible: true })
-    .click();
+    .filter({ visible: true });
+  await waitForHydration(addButton);
+  await addButton.click();
   await fillExpenseAmount(page, options.amount);
   await ensurePaidBySelected(page);
   await page.getByTestId("expense-form-description").fill(options.description);
