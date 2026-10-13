@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { DebtEntry, GroupDebtSummary } from "./types";
-import { applySettlement, calculateDebts } from "./debt";
+import { applySettlement, calculateDebts, directDebtsFor } from "./debt";
 
 const YOU = 1;
 const LENA = 2;
@@ -268,5 +268,29 @@ describe("applySettlement", () => {
     applySettlement(summary, debt(MAX, YOU, 4250));
 
     expect(summary).toEqual(before);
+  });
+});
+
+describe("directDebtsFor", () => {
+  it("groups a member's debts by person across currencies, largest first", () => {
+    const summary = calculateDebts([...scenario, owes(YOU, MAX, 1500, "USD")]);
+
+    expect(directDebtsFor(summary, YOU)).toEqual([
+      {
+        groupMemberId: MAX,
+        amounts: [
+          { currency: "EUR", amountInCents: 4250 },
+          { currency: "USD", amountInCents: -1500 },
+        ],
+      },
+      {
+        groupMemberId: LENA,
+        amounts: [{ currency: "EUR", amountInCents: -3000 }],
+      },
+      {
+        groupMemberId: SOPHIE,
+        amounts: [{ currency: "EUR", amountInCents: 1800 }],
+      },
+    ]);
   });
 });

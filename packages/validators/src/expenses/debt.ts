@@ -102,6 +102,41 @@ export function applySettlement(
   };
 }
 
+export interface CounterpartDebts {
+  groupMemberId: number;
+  /** Positive: they owe the member. Negative: the member owes them. */
+  amounts: { currency: string; amountInCents: number }[];
+}
+
+/** A member's direct debts grouped by the other person, largest first */
+export function directDebtsFor(
+  summary: GroupDebtSummary,
+  memberId: number,
+): CounterpartDebts[] {
+  const byCounterpart = new Map<number, CounterpartDebts>();
+  for (const { direct } of Object.values(summary.currencies)) {
+    for (const debt of direct) {
+      const owedToMember = debt.toGroupMemberId === memberId;
+      if (!owedToMember && debt.fromGroupMemberId !== memberId) continue;
+      const other = owedToMember
+        ? debt.fromGroupMemberId
+        : debt.toGroupMemberId;
+      const entry = byCounterpart.get(other) ?? {
+        groupMemberId: other,
+        amounts: [],
+      };
+      entry.amounts.push({
+        currency: debt.currency,
+        amountInCents: owedToMember ? debt.amountInCents : -debt.amountInCents,
+      });
+      byCounterpart.set(other, entry);
+    }
+  }
+  const largest = ({ amounts }: CounterpartDebts) =>
+    Math.max(...amounts.map(({ amountInCents }) => Math.abs(amountInCents)));
+  return [...byCounterpart.values()].sort((a, b) => largest(b) - largest(a));
+}
+
 function adjustBalance(
   memberBalances: MemberBalances,
   memberId: number,
