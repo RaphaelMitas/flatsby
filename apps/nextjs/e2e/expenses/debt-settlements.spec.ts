@@ -69,18 +69,29 @@ test.describe("Debt & Settlements", () => {
     await expect(sophie).toHaveCount(0);
   });
 
-  test("the settle plan clears EUR in three payments", async ({
+  test("shows the debts between others, actual and simplified", async ({
     page,
     baseURL,
   }) => {
     await openSeededDebts(page, baseURL);
 
-    const planSwitch = page.getByTestId("settle-plan-switch");
-    await waitForHydration(planSwitch);
-    await planSwitch.click();
+    const others = page.getByTestId("debt-others-row");
+    await expect(others).toHaveCount(3);
+    await expect(others.nth(0)).toContainText(/Max.*Lena.*€25\.00/);
+    await expect(others.nth(1)).toContainText(/Sophie.*Max.*€12\.00/);
+    await expect(others.nth(2)).toContainText(/Sophie.*Lena.*€8\.00/);
 
-    await expect(
-      page.getByTestId("settle-plan-EUR").getByTestId("settle-plan-step"),
-    ).toHaveCount(3);
+    const simplified = page.getByTestId("debt-mode-simplified");
+    await waitForHydration(simplified);
+    await simplified.click();
+
+    await expect(others).toHaveCount(2);
+    await expect(others.nth(0)).toContainText(/Max.*Lena.*€55\.50/);
+    await expect(others.nth(1)).toContainText(/Sophie.*Lena.*€7\.50/);
+
+    const mine = page.getByTestId("direct-debt-row");
+    await expect(mine).toHaveCount(2);
+    await expect(mine.nth(0)).toContainText(/Sophie.*pays you.*€30\.50/);
+    await expect(mine.nth(1)).toContainText(/Max.*you pay.*\$15\.00/);
   });
 });

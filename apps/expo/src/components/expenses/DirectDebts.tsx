@@ -1,9 +1,9 @@
-import type { CounterpartDebts } from "@flatsby/validators/expenses/debt";
-import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type {
-  DebtEntry,
-  SettleSource,
-} from "@flatsby/validators/expenses/types";
+  CounterpartDebts,
+  DebtKind,
+} from "@flatsby/validators/expenses/debt";
+import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
+import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
@@ -22,11 +22,12 @@ import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { MemberAvatar } from "./MemberAvatar";
 
-export type OnSettle = (debt: DebtEntry, source: SettleSource) => void;
+export type OnSettle = (debt: DebtEntry) => void;
 
 interface DirectDebtsProps {
   groupId: number;
   meId: number;
+  kind: DebtKind;
   counterparts: CounterpartDebts[];
   othersWithDebts: string;
   person: PersonLookup;
@@ -36,12 +37,14 @@ interface DirectDebtsProps {
 export function DirectDebts({
   groupId,
   meId,
+  kind,
   counterparts,
   othersWithDebts,
   person,
   onSettle,
 }: DirectDebtsProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const expandable = kind === "direct";
 
   if (counterparts.length === 0) {
     return (
@@ -54,7 +57,9 @@ export function DirectDebts({
             You're all square
           </Text>
           <Text className="text-muted-foreground text-sm">
-            {othersWithDebts}
+            {kind === "direct"
+              ? othersWithDebts
+              : "Nothing for you to pay or receive in the simplified plan"}
           </Text>
         </View>
       </Card>
@@ -71,13 +76,16 @@ export function DirectDebts({
           counterpart={counterpart}
           person={person}
           divided={index > 0}
-          expanded={expandedId === counterpart.groupMemberId}
-          onToggle={() =>
-            setExpandedId((current) =>
-              current === counterpart.groupMemberId
-                ? null
-                : counterpart.groupMemberId,
-            )
+          expanded={expandable && expandedId === counterpart.groupMemberId}
+          onToggle={
+            expandable
+              ? () =>
+                  setExpandedId((current) =>
+                    current === counterpart.groupMemberId
+                      ? null
+                      : counterpart.groupMemberId,
+                  )
+              : undefined
           }
           onSettle={onSettle}
         />
@@ -93,7 +101,7 @@ interface DirectDebtRowProps {
   person: PersonLookup;
   divided: boolean;
   expanded: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
   onSettle: OnSettle;
 }
 
@@ -116,7 +124,8 @@ function DirectDebtRow({
         <Pressable
           testID="debt-row-toggle"
           accessibilityRole="button"
-          accessibilityState={{ expanded }}
+          accessibilityState={onToggle && { expanded }}
+          disabled={!onToggle}
           onPress={onToggle}
           className="flex-1 flex-row items-center gap-3"
         >
@@ -129,11 +138,13 @@ function DirectDebtRow({
               >
                 {other.name}
               </Text>
-              <Icon
-                name={expanded ? "chevron-up" : "chevron-down"}
-                size={14}
-                color="muted-foreground"
-              />
+              {onToggle && (
+                <Icon
+                  name={expanded ? "chevron-up" : "chevron-down"}
+                  size={14}
+                  color="muted-foreground"
+                />
+              )}
             </View>
             <Text className="text-muted-foreground text-sm">
               {counterpart.direction}
@@ -160,7 +171,7 @@ function DirectDebtRow({
                 title="Settle"
                 size="sm"
                 variant="outline"
-                onPress={() => onSettle(debt, "direct")}
+                onPress={() => onSettle(debt)}
               />
             </View>
           ))}

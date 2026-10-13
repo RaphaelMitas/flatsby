@@ -1,8 +1,12 @@
 "use client";
 
-import type { CounterpartDebts } from "@flatsby/validators/expenses/debt";
+import type {
+  CounterpartDebts,
+  DebtKind,
+} from "@flatsby/validators/expenses/debt";
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type { PairActivityItem } from "@flatsby/validators/expenses/schemas";
+import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -19,28 +23,30 @@ import {
   formatSignedCents,
 } from "@flatsby/validators/expenses/formatting";
 
-import type { SettlementPrefill } from "./SettlementForm";
 import { useTRPC } from "~/trpc/react";
 import { amountTone } from "./debtDisplay";
 
 interface DirectDebtsCardProps {
   groupId: number;
   meId: number;
+  kind: DebtKind;
   debts: CounterpartDebts[];
   othersWithDebts: string;
   person: PersonLookup;
-  onSettle: (prefill: SettlementPrefill) => void;
+  onSettle: (debt: DebtEntry) => void;
 }
 
 export function DirectDebtsCard({
   groupId,
   meId,
+  kind,
   debts,
   othersWithDebts,
   person,
   onSettle,
 }: DirectDebtsCardProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const expandable = kind === "direct";
 
   if (debts.length === 0) {
     return (
@@ -53,7 +59,11 @@ export function DirectDebtsCard({
         </span>
         <div>
           <p className="font-semibold">You're all square</p>
-          <p className="text-muted-foreground text-sm">{othersWithDebts}</p>
+          <p className="text-muted-foreground text-sm">
+            {kind === "direct"
+              ? othersWithDebts
+              : "Nothing for you to pay or receive in the simplified plan"}
+          </p>
         </div>
       </Card>
     );
@@ -68,13 +78,16 @@ export function DirectDebtsCard({
           meId={meId}
           counterpart={counterpart}
           person={person}
-          expanded={expandedId === counterpart.groupMemberId}
-          onToggle={() =>
-            setExpandedId((id) =>
-              id === counterpart.groupMemberId
-                ? null
-                : counterpart.groupMemberId,
-            )
+          expanded={expandable && expandedId === counterpart.groupMemberId}
+          onToggle={
+            expandable
+              ? () =>
+                  setExpandedId((id) =>
+                    id === counterpart.groupMemberId
+                      ? null
+                      : counterpart.groupMemberId,
+                  )
+              : undefined
           }
           onSettle={onSettle}
         />
@@ -89,8 +102,8 @@ interface DirectDebtRowProps {
   counterpart: CounterpartDebts;
   person: PersonLookup;
   expanded: boolean;
-  onToggle: () => void;
-  onSettle: (prefill: SettlementPrefill) => void;
+  onToggle?: () => void;
+  onSettle: (debt: DebtEntry) => void;
 }
 
 function DirectDebtRow({
@@ -111,19 +124,22 @@ function DirectDebtRow({
         <button
           type="button"
           onClick={onToggle}
-          aria-expanded={expanded}
+          disabled={!onToggle}
+          aria-expanded={onToggle && expanded}
           className="flex min-w-0 flex-1 items-center gap-3 text-left"
         >
           <UserAvatar name={name} image={image} size="lg" />
           <div className="min-w-0">
             <div className="flex items-center gap-1 font-semibold">
               <span className="truncate">{name}</span>
-              <ChevronDown
-                className={cn(
-                  "text-muted-foreground size-4 shrink-0 transition-transform",
-                  expanded && "rotate-180",
-                )}
-              />
+              {onToggle && (
+                <ChevronDown
+                  className={cn(
+                    "text-muted-foreground size-4 shrink-0 transition-transform",
+                    expanded && "rotate-180",
+                  )}
+                />
+              )}
             </div>
             <p className="text-muted-foreground text-sm">{direction}</p>
           </div>
@@ -146,7 +162,7 @@ function DirectDebtRow({
                 variant="outline"
                 size="sm"
                 data-testid="direct-debt-settle"
-                onClick={() => onSettle({ source: "direct", debt })}
+                onClick={() => onSettle(debt)}
               >
                 Settle
               </Button>

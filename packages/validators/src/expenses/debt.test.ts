@@ -4,7 +4,8 @@ import type { DebtEntry, GroupDebtSummary } from "./types";
 import {
   applySettlement,
   calculateDebts,
-  directDebtsFor,
+  debtsBetweenOthers,
+  debtsFor,
   pairDebt,
 } from "./debt";
 
@@ -289,11 +290,11 @@ describe("applySettlement", () => {
   });
 });
 
-describe("directDebtsFor", () => {
-  it("groups a member's debts by person across currencies, largest first", () => {
-    const summary = calculateDebts([...scenario, owes(YOU, MAX, 1500, "USD")]);
+describe("debtsFor", () => {
+  const summary = calculateDebts([...scenario, owes(YOU, MAX, 1500, "USD")]);
 
-    expect(directDebtsFor(summary, YOU)).toEqual([
+  it("groups a member's debts by person across currencies, largest first", () => {
+    expect(debtsFor(summary, YOU, "direct")).toEqual([
       {
         groupMemberId: MAX,
         amounts: [
@@ -312,6 +313,37 @@ describe("directDebtsFor", () => {
         amounts: [{ amountInCents: 1800, debt: debt(SOPHIE, YOU, 1800) }],
         direction: "owes you",
       },
+    ]);
+  });
+
+  it("reads the simplified plan as payments", () => {
+    expect(debtsFor(summary, YOU, "simplified")).toEqual([
+      {
+        groupMemberId: SOPHIE,
+        amounts: [{ amountInCents: 3050, debt: debt(SOPHIE, YOU, 3050) }],
+        direction: "pays you",
+      },
+      {
+        groupMemberId: MAX,
+        amounts: [{ amountInCents: -1500, debt: debt(YOU, MAX, 1500, "USD") }],
+        direction: "you pay",
+      },
+    ]);
+  });
+});
+
+describe("debtsBetweenOthers", () => {
+  it("leaves out the member's own debts, largest first", () => {
+    const summary = calculateDebts([...scenario, owes(YOU, MAX, 1500, "USD")]);
+
+    expect(debtsBetweenOthers(summary, YOU, "direct")).toEqual([
+      debt(MAX, LENA, 2500),
+      debt(SOPHIE, MAX, 1200),
+      debt(SOPHIE, LENA, 800),
+    ]);
+    expect(debtsBetweenOthers(summary, YOU, "simplified")).toEqual([
+      debt(MAX, LENA, 5550),
+      debt(SOPHIE, LENA, 750),
     ]);
   });
 });

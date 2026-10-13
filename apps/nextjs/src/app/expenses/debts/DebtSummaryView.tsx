@@ -1,13 +1,20 @@
 "use client";
 
+import type { DebtKind } from "@flatsby/validators/expenses/debt";
+import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CheckCircle2, Plus } from "lucide-react";
 
+import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
-import { directDebtsFor, hasDebts } from "@flatsby/validators/expenses/debt";
+import {
+  debtsBetweenOthers,
+  debtsFor,
+  hasDebts,
+} from "@flatsby/validators/expenses/debt";
 import {
   debtHero,
   formatOthersWithDebts,
@@ -21,6 +28,7 @@ import { useHandleApiError } from "~/utils";
 import { DebtHero } from "./DebtHero";
 import { DirectDebtsCard } from "./DirectDebtsCard";
 import { GroupBalancesCard } from "./GroupBalancesCard";
+import { OtherDebtsCard } from "./OtherDebtsCard";
 import { SettlementForm } from "./SettlementForm";
 
 export function DebtSummaryView() {
@@ -30,6 +38,7 @@ export function DebtSummaryView() {
   const [settling, setSettling] = useState<SettlementPrefill | "blank" | null>(
     null,
   );
+  const [kind, setKind] = useState<DebtKind>("direct");
 
   const groupId = currentGroup?.id ?? 0;
 
@@ -50,7 +59,10 @@ export function DebtSummaryView() {
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId);
-  const directDebts = directDebtsFor(summary, meId);
+  const directDebts = debtsFor(summary, meId, "direct");
+  const others = debtsBetweenOthers(summary, meId, kind);
+  const settle = (debt: DebtEntry) =>
+    setSettling({ source: kind === "direct" ? "direct" : "plan", debt });
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -64,23 +76,33 @@ export function DebtSummaryView() {
       {hasDebts(summary) ? (
         <>
           <DebtHero hero={debtHero(summary, meId, directDebts, person)} />
+          <ModeSwitch kind={kind} onChange={setKind} />
           <Section title="Between you and">
             <DirectDebtsCard
               groupId={groupId}
               meId={meId}
-              debts={directDebts}
+              kind={kind}
+              debts={
+                kind === "direct"
+                  ? directDebts
+                  : debtsFor(summary, meId, "simplified")
+              }
               othersWithDebts={formatOthersWithDebts(summary, meId, person)}
               person={person}
-              onSettle={setSettling}
+              onSettle={settle}
             />
           </Section>
-          <Section title="Group balances">
-            <GroupBalancesCard
-              summary={summary}
-              meId={meId}
-              person={person}
-              onSettle={setSettling}
-            />
+          {others.length > 0 && (
+            <Section title="Between others">
+              <OtherDebtsCard
+                debts={others}
+                person={person}
+                onSettle={settle}
+              />
+            </Section>
+          )}
+          <Section title="Balances">
+            <GroupBalancesCard summary={summary} meId={meId} person={person} />
           </Section>
         </>
       ) : (
@@ -116,6 +138,44 @@ export function DebtSummaryView() {
           onClose={() => setSettling(null)}
         />
       )}
+    </div>
+  );
+}
+
+const modes = [
+  { kind: "direct", label: "Actual" },
+  { kind: "simplified", label: "Simplified" },
+] satisfies { kind: DebtKind; label: string }[];
+
+function ModeSwitch({
+  kind,
+  onChange,
+}: {
+  kind: DebtKind;
+  onChange: (kind: DebtKind) => void;
+}) {
+  return (
+    <div className="bg-muted flex rounded-lg p-1">
+      {modes.map((mode) => {
+        const selected = mode.kind === kind;
+        return (
+          <button
+            key={mode.kind}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onChange(mode.kind)}
+            data-testid={`debt-mode-${mode.label.toLowerCase()}`}
+            className={cn(
+              "flex-1 rounded-md py-1.5 text-sm font-medium transition-colors",
+              selected
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {mode.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

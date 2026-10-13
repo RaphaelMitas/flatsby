@@ -100,6 +100,8 @@ export function applySettlement(
   };
 }
 
+export type DebtKind = "direct" | "simplified";
+
 export interface CounterpartDebts {
   groupMemberId: number;
   /** Positive: they owe the member. Negative: the member owes them. */
@@ -107,13 +109,19 @@ export interface CounterpartDebts {
   direction: string;
 }
 
-export function directDebtsFor(
+const directionLabels = {
+  direct: { owed: "owes you", owing: "you owe" },
+  simplified: { owed: "pays you", owing: "you pay" },
+} satisfies Record<DebtKind, { owed: string; owing: string }>;
+
+export function debtsFor(
   summary: GroupDebtSummary,
   memberId: number,
+  kind: DebtKind,
 ): CounterpartDebts[] {
   const byCounterpart = new Map<number, CounterpartDebts["amounts"]>();
-  for (const { direct } of Object.values(summary.currencies)) {
-    for (const debt of direct) {
+  for (const entry of Object.values(summary.currencies)) {
+    for (const debt of entry[kind]) {
       const owedToMember = debt.toGroupMemberId === memberId;
       if (!owedToMember && debt.fromGroupMemberId !== memberId) continue;
       const other = owedToMember
@@ -129,18 +137,34 @@ export function directDebtsFor(
   }
   const largest = (amounts: CounterpartDebts["amounts"]) =>
     Math.max(...amounts.map(({ amountInCents }) => Math.abs(amountInCents)));
+  const { owed, owing } = directionLabels[kind];
   return [...byCounterpart]
     .sort(([, a], [, b]) => largest(b) - largest(a))
     .map(([groupMemberId, amounts]) => ({
       groupMemberId,
       amounts,
       direction: [
-        amounts.some(({ amountInCents }) => amountInCents > 0) && "owes you",
-        amounts.some(({ amountInCents }) => amountInCents < 0) && "you owe",
+        amounts.some(({ amountInCents }) => amountInCents > 0) && owed,
+        amounts.some(({ amountInCents }) => amountInCents < 0) && owing,
       ]
         .filter(Boolean)
         .join(" · "),
     }));
+}
+
+export function debtsBetweenOthers(
+  summary: GroupDebtSummary,
+  memberId: number,
+  kind: DebtKind,
+): DebtEntry[] {
+  return Object.values(summary.currencies).flatMap((entry) =>
+    entry[kind]
+      .filter(
+        ({ fromGroupMemberId, toGroupMemberId }) =>
+          fromGroupMemberId !== memberId && toGroupMemberId !== memberId,
+      )
+      .sort((a, b) => b.amountInCents - a.amountInCents),
+  );
 }
 
 /** Prefers the payer's own debt to the receiver over the reverse direction */
@@ -171,16 +195,12 @@ export function groupBalances(summary: GroupDebtSummary, meId: number) {
   const { memberBalances } = summary;
   const balances = Object.values(memberBalances);
   const memberIds = new Set([...Object.keys(memberBalances).map(Number), meId]);
-  const open = Object.values(summary.currencies).filter(({ currency }) =>
-    balances.some((byCurrency) => (byCurrency[currency] ?? 0) !== 0),
-  );
-  const paymentCount = open.reduce(
-    (sum, { simplified }) => sum + simplified.length,
-    0,
-  );
 
-  return {
-    currencies: open.map(({ currency, simplified }) => {
+  return Object.values(summary.currencies)
+    .filter(({ currency }) =>
+      balances.some((byCurrency) => (byCurrency[currency] ?? 0) !== 0),
+    )
+    .map(({ currency }) => {
       const rows = [...memberIds]
         .map((memberId) => ({
           memberId,
@@ -196,11 +216,8 @@ export function groupBalances(summary: GroupDebtSummary, meId: number) {
           ...row,
           percent: (Math.abs(row.cents) / scale) * 100,
         })),
-        steps: simplified,
       };
-    }),
-    paymentsLabel: `${paymentCount} ${paymentCount === 1 ? "payment clears" : "payments clear"} everyone`,
-  };
+    });
 }
 
 function adjustBalance(

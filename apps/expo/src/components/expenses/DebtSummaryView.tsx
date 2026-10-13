@@ -1,16 +1,21 @@
+import type { DebtKind } from "@flatsby/validators/expenses/debt";
+import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { directDebtsFor, hasDebts } from "@flatsby/validators/expenses/debt";
+import {
+  debtsBetweenOthers,
+  debtsFor,
+  hasDebts,
+} from "@flatsby/validators/expenses/debt";
 import {
   debtHero,
   formatOthersWithDebts,
   personLookup,
 } from "@flatsby/validators/expenses/formatting";
 
-import type { OnSettle } from "./DirectDebts";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -18,6 +23,7 @@ import { cn, handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { DirectDebts } from "./DirectDebts";
 import { GroupBalances } from "./GroupBalances";
+import { OtherDebts } from "./OtherDebts";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface DebtSummaryViewProps {
@@ -28,6 +34,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const router = useRouter();
   const { invalidateDebtSummary } = useInvalidateExpenses(groupId);
   const [refreshing, setRefreshing] = useState(false);
+  const [kind, setKind] = useState<DebtKind>("direct");
 
   const { data: debtData } = useSuspenseQuery(
     trpc.expense.getDebtSummary.queryOptions({ groupId }),
@@ -52,9 +59,10 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId);
-  const counterparts = directDebtsFor(summary, meId);
+  const counterparts = debtsFor(summary, meId, "direct");
+  const others = debtsBetweenOthers(summary, meId, kind);
 
-  const openSettle: OnSettle = (debt, source) =>
+  const openSettle = (debt: DebtEntry) =>
     router.push({
       pathname: "/(tabs)/expenses/settle",
       params: {
@@ -62,7 +70,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         toGroupMemberId: debt.toGroupMemberId.toString(),
         currency: debt.currency,
         amount: debt.amountInCents.toString(),
-        source,
+        source: kind === "direct" ? "direct" : "plan",
       },
     });
 
@@ -76,22 +84,33 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         {hasDebts(summary) ? (
           <>
             <DebtHero hero={debtHero(summary, meId, counterparts, person)} />
+            <ModeSwitch kind={kind} onChange={setKind} />
             <SectionLabel>Between you and</SectionLabel>
             <DirectDebts
               groupId={groupId}
               meId={meId}
-              counterparts={counterparts}
+              kind={kind}
+              counterparts={
+                kind === "direct"
+                  ? counterparts
+                  : debtsFor(summary, meId, "simplified")
+              }
               othersWithDebts={formatOthersWithDebts(summary, meId, person)}
               person={person}
               onSettle={openSettle}
             />
-            <SectionLabel>Group balances</SectionLabel>
-            <GroupBalances
-              summary={summary}
-              meId={meId}
-              person={person}
-              onSettle={openSettle}
-            />
+            {others.length > 0 && (
+              <>
+                <SectionLabel>Between others</SectionLabel>
+                <OtherDebts
+                  debts={others}
+                  person={person}
+                  onSettle={openSettle}
+                />
+              </>
+            )}
+            <SectionLabel>Balances</SectionLabel>
+            <GroupBalances summary={summary} meId={meId} person={person} />
           </>
         ) : (
           <Card testID="debt-summary-empty" className="mt-4 items-center p-6">
@@ -120,6 +139,49 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         </Pressable>
       </View>
     </AppScrollView>
+  );
+}
+
+const modes = [
+  { kind: "direct", label: "Actual" },
+  { kind: "simplified", label: "Simplified" },
+] satisfies { kind: DebtKind; label: string }[];
+
+function ModeSwitch({
+  kind,
+  onChange,
+}: {
+  kind: DebtKind;
+  onChange: (kind: DebtKind) => void;
+}) {
+  return (
+    <View className="bg-muted mt-2 flex-row rounded-lg p-1">
+      {modes.map((mode) => {
+        const selected = mode.kind === kind;
+        return (
+          <Pressable
+            key={mode.kind}
+            testID={`debt-mode-${mode.label.toLowerCase()}`}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            onPress={() => onChange(mode.kind)}
+            className={cn(
+              "flex-1 items-center rounded-md py-1.5",
+              selected && "bg-background shadow-sm",
+            )}
+          >
+            <Text
+              className={cn(
+                "text-sm font-medium",
+                selected ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {mode.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
