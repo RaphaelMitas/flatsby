@@ -4,6 +4,7 @@ import {
   Stack,
   useLocalSearchParams,
   useNavigation,
+  useRoute,
   useRouter,
 } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -24,10 +25,13 @@ export default function SettlePage() {
   }>();
   const router = useRouter();
   const navigation = useNavigation();
+  const route = useRoute();
   const { selectedGroupId } = useShoppingStore();
-  // a save resolving after the user swiped back must not pop the screen below
+  // a save can resolve after the user left: pop only this screen, if it's still there
   const close = () => {
-    if (navigation.isFocused()) router.back();
+    if (navigation.getState()?.routes.some(({ key }) => key === route.key)) {
+      navigation.goBack();
+    }
   };
 
   const fromGroupMemberId = params.fromGroupMemberId

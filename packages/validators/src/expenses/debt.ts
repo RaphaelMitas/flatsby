@@ -44,10 +44,12 @@ export function calculateDebts(
   const currencies: GroupDebtSummary["currencies"] = {};
   for (const [currency, graph] of graphs) {
     cancelCycles(graph);
+    const simplified = simplifyDebts(memberBalances, currency);
     currencies[currency] = {
       currency,
       direct: toEntries(graph, currency),
-      simplified: simplifyDebts(memberBalances, currency),
+      simplified,
+      debts: simplified,
     };
   }
 
@@ -82,6 +84,7 @@ export function applySettlement(
   }
   addDebt(graph, toGroupMemberId, fromGroupMemberId, amountInCents);
   cancelCycles(graph);
+  const simplified = simplifyDebts(memberBalances, currency);
 
   return {
     memberBalances,
@@ -90,7 +93,8 @@ export function applySettlement(
       [currency]: {
         currency,
         direct: toEntries(graph, currency),
-        simplified: simplifyDebts(memberBalances, currency),
+        simplified,
+        debts: simplified,
       },
     },
   };

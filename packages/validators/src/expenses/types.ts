@@ -50,6 +50,8 @@ export interface DebtSummary {
   currency: string;
   direct: DebtEntry[];
   simplified: DebtEntry[];
+  /** @deprecated same as simplified; app builds up to v0.10 read this field */
+  debts: DebtEntry[];
 }
 
 /** groupMemberId -> currency -> balance in cents */
