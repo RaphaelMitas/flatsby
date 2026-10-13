@@ -1,7 +1,13 @@
 "use client";
 
-import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
+import type {
+  ExpenseWithSplitsAndMembers,
+  GroupMemberWithUserInfo,
+} from "@flatsby/api";
+import type { DebtKind } from "@flatsby/validators/expenses/debt";
+import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type { SettlementFormValues } from "@flatsby/validators/expenses/schemas";
+import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -12,7 +18,6 @@ import { AlertCircle, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
 import {
   Form,
@@ -23,15 +28,31 @@ import {
   FormMessage,
 } from "@flatsby/ui/form";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@flatsby/ui/select";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@flatsby/ui/sheet";
 import { toast } from "@flatsby/ui/toast";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
+import { applySettlement, pairDebt } from "@flatsby/validators/expenses/debt";
+import {
+  formatCurrencyFromCents,
+  personLookup,
+  settleOutstandingLabel,
+} from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
-import { isCurrencyCode } from "@flatsby/validators/expenses/types";
+import {
+  CURRENCY_CODES,
+  isCurrencyCode,
+} from "@flatsby/validators/expenses/types";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { CurrencyInput } from "~/components/CurrencyInput";
@@ -39,57 +60,57 @@ import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
 import { useExpenseInvalidation } from "../useExpenseInvalidation";
 
-interface SettlementFormProps {
-  fromGroupMemberId: number;
-  toGroupMemberId: number;
-  currency: string;
-  amount: number | undefined;
-  expense?: ExpenseWithSplitsAndMembers;
-  onClose: () => void;
-  open: boolean;
+export interface SettlementPrefill {
+  debt: DebtEntry;
+  source: DebtKind;
 }
 
-export function SettlementForm({
-  fromGroupMemberId,
-  toGroupMemberId,
-  currency,
-  amount,
-  expense,
-  onClose,
-  open,
-}: SettlementFormProps) {
+interface SettlementFormProps {
+  prefill?: SettlementPrefill;
+  onClose: () => void;
+}
+
+export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
   const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id ?? 0;
-  const isEditMode = !!expense;
+  const isBlank = !prefill;
 
   // Get group members for display
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
+  const { data: debtData } = useSuspenseQuery(
+    trpc.expense.getDebtSummary.queryOptions({ groupId }),
+  );
+  const debtBetween = (from: number, to: number, currency?: string) =>
+    debtData.success ? pairDebt(debtData.data, from, to, currency) : undefined;
+
+  const meId = groupData.success ? groupData.data.thisGroupMember.id : 0;
+  const initial: DebtEntry = prefill?.debt ?? {
+    fromGroupMemberId: 0,
+    toGroupMemberId: 0,
+    currency: "EUR",
+    amountInCents: 0,
+  };
 
   const form = useForm<SettlementFormValues>({
     resolver: zodResolver(settlementFormSchema),
     defaultValues: {
-      amountInCents: expense?.amountInCents ?? amount ?? 0,
-      fromGroupMemberId: fromGroupMemberId,
-      toGroupMemberId: toGroupMemberId,
-      currency: isCurrencyCode(currency) ? currency : "EUR",
+      ...initial,
+      currency: isCurrencyCode(initial.currency) ? initial.currency : "EUR",
     },
   });
 
-  // Query key for expense list
-  const { expenseListQueryKey, invalidateList, invalidateDebtSummary } =
-    useExpenseInvalidation(groupId);
-
-  const expenseQueryKey = expense
-    ? trpc.expense.getExpense.queryKey({
-        expenseId: expense.id,
-      })
-    : undefined;
+  const {
+    expenseListQueryKey,
+    debtSummaryQueryKey,
+    invalidateList,
+    invalidateDebtSummary,
+  } = useExpenseInvalidation(groupId);
 
   // Get group data early for optimistic updates
   const membersForOptimistic = groupData.success
@@ -102,11 +123,27 @@ export function SettlementForm({
   const createSettlementMutation = useMutation(
     trpc.expense.createExpense.mutationOptions({
       onMutate: async (input) => {
-        // Cancel any outgoing queries
-        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
+        await Promise.all([
+          queryClient.cancelQueries({ queryKey: expenseListQueryKey }),
+          queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
+        ]);
 
-        // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);
+        const previousDebtSummary =
+          queryClient.getQueryData(debtSummaryQueryKey);
+
+        if (previousDebtSummary?.success) {
+          const optimistic: typeof previousDebtSummary = {
+            success: true,
+            data: applySettlement(previousDebtSummary.data, {
+              fromGroupMemberId: input.paidByGroupMemberId,
+              toGroupMemberId: input.splits[0]?.groupMemberId ?? 0,
+              currency: input.currency,
+              amountInCents: input.amountInCents,
+            }),
+          };
+          queryClient.setQueryData(debtSummaryQueryKey, optimistic);
+        }
 
         // Get the paidBy and toMember for the optimistic settlement
         const paidByMember = membersForOptimistic.find(
@@ -214,11 +251,15 @@ export function SettlementForm({
           return { ...old, pages: updatedPages };
         });
 
-        return { previousData };
+        return { previousData, previousDebtSummary };
       },
       onError: (error, _variables, context) => {
-        if (context?.previousData) {
+        if (context) {
           queryClient.setQueryData(expenseListQueryKey, context.previousData);
+          queryClient.setQueryData(
+            debtSummaryQueryKey,
+            context.previousDebtSummary,
+          );
         }
         toast.error("Failed to record settlement", {
           description: error.message,
@@ -226,9 +267,11 @@ export function SettlementForm({
       },
       onSuccess: (data, _variables, context) => {
         if (data.success === false) {
-          if (context.previousData) {
-            queryClient.setQueryData(expenseListQueryKey, context.previousData);
-          }
+          queryClient.setQueryData(expenseListQueryKey, context.previousData);
+          queryClient.setQueryData(
+            debtSummaryQueryKey,
+            context.previousDebtSummary,
+          );
           toast.error("Failed to record settlement", {
             description: data.error.message,
           });
@@ -236,180 +279,166 @@ export function SettlementForm({
         }
 
         toast.success("Settlement recorded successfully");
+        onClose();
+      },
+      onSettled: () => {
         void invalidateList();
         void invalidateDebtSummary();
-        onClose();
-        form.reset();
-      },
-    }),
-  );
-
-  const updateSettlementMutation = useMutation(
-    trpc.expense.updateExpense.mutationOptions({
-      onMutate: async (input) => {
-        if (!expense || !expenseQueryKey) return;
-        // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpc.expense.getExpense.queryOptions({
-            expenseId: expense.id,
-          }),
-        );
-
-        const previousData = queryClient.getQueryData(expenseQueryKey);
-
-        // Optimistically update the settlement in the list
-        queryClient.setQueryData(expenseQueryKey, (old) => {
-          if (!old || old.success === false) return old;
-
-          return {
-            success: true as const,
-            data: {
-              ...old.data,
-              ...input,
-              category: old.data.category,
-              subcategory: old.data.subcategory,
-            },
-          };
-        });
-
-        return { previousData };
-      },
-      onError: (error, _variables, context) => {
-        if (context?.previousData && expenseQueryKey) {
-          queryClient.setQueryData(expenseQueryKey, context.previousData);
-        }
-        toast.error("Failed to update settlement", {
-          description: error.message,
-        });
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          if (context?.previousData && expenseQueryKey) {
-            queryClient.setQueryData(expenseQueryKey, context.previousData);
-          }
-          toast.error("Failed to update settlement", {
-            description: data.error.message,
-          });
-          return;
-        }
-
-        toast.success("Settlement updated successfully");
-        void queryClient.invalidateQueries({
-          queryKey: expenseQueryKey,
-        });
-        void invalidateDebtSummary();
-        onClose();
       },
     }),
   );
 
   const onSubmit = (values: SettlementFormValues) => {
-    if (isEditMode) {
-      updateSettlementMutation.mutate({
-        expenseId: expense.id,
-        paidByGroupMemberId: fromGroupMemberId,
-        amountInCents: values.amountInCents,
-        currency: isCurrencyCode(currency) ? currency : "EUR",
-        expenseDate: expense.expenseDate,
-        splits: [
-          {
-            groupMemberId: toGroupMemberId,
-            amountInCents: values.amountInCents,
-            percentage: null,
-          },
-        ],
-        splitMethod: "settlement",
-      });
-    } else {
-      createSettlementMutation.mutate({
-        groupId,
-        paidByGroupMemberId: fromGroupMemberId,
-        amountInCents: values.amountInCents,
-        currency: isCurrencyCode(currency) ? currency : "EUR",
-        description: "Settlement",
-        expenseDate: new Date(),
-        splits: [
-          {
-            groupMemberId: toGroupMemberId,
-            amountInCents: values.amountInCents,
-            percentage: null,
-          },
-        ],
-        splitMethod: "settlement",
-      });
-    }
+    createSettlementMutation.mutate({
+      groupId,
+      paidByGroupMemberId: values.fromGroupMemberId,
+      amountInCents: values.amountInCents,
+      currency: values.currency,
+      description: "Settlement",
+      expenseDate: new Date(),
+      splits: [
+        {
+          groupMemberId: values.toGroupMemberId,
+          amountInCents: values.amountInCents,
+          percentage: null,
+        },
+      ],
+      splitMethod: "settlement",
+    });
   };
+
+  const fromGroupMemberId = form.watch("fromGroupMemberId");
+  const toGroupMemberId = form.watch("toGroupMemberId");
+  const currency = form.watch("currency");
 
   if (!groupData.success) {
     return handleApiError(groupData.error);
   }
 
   const groupMembers = groupData.data.groupMembers;
-  const fromMember = groupMembers.find((m) => m.id === fromGroupMemberId);
-  const toMember = groupMembers.find((m) => m.id === toGroupMemberId);
-  const fromName = fromMember?.user.name ?? "Unknown";
-  const toName = toMember?.user.name ?? "Unknown";
+  const person = personLookup(groupMembers, meId);
+  const fromMember = person(fromGroupMemberId);
+  const toMember = person(toGroupMemberId);
 
-  const isPending =
-    createSettlementMutation.isPending || updateSettlementMutation.isPending;
+  const selectPair = (from: number, to: number) => {
+    const options = { shouldValidate: form.formState.isSubmitted };
+    form.setValue("fromGroupMemberId", from, options);
+    form.setValue("toGroupMemberId", to, options);
+    const pairCurrency = debtBetween(from, to)?.currency;
+    if (pairCurrency && isCurrencyCode(pairCurrency)) {
+      form.setValue("currency", pairCurrency);
+    }
+  };
+
+  const outstanding =
+    prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
+
+  const isPending = createSettlementMutation.isPending;
 
   return (
-    <Sheet open={open} onOpenChange={onClose}>
+    <Sheet open onOpenChange={(open) => !open && !isPending && onClose()}>
       <SheetContent
         className="w-full sm:max-w-lg"
         data-testid="settlement-form"
       >
         <SheetHeader>
-          <SheetTitle>
-            {isEditMode ? "Edit Settlement" : "Settle Up"}
-          </SheetTitle>
+          <SheetTitle>Settle Up</SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="mt-6 space-y-6"
+            className="mt-6 space-y-6 px-4"
           >
-            {/* Settlement Info */}
             <div className="space-y-4">
-              <div className="bg-muted flex items-center justify-between rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage
-                      alt={fromName}
-                      src={fromMember?.user.image ?? undefined}
+              {isBlank ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="fromGroupMemberId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Paying</FormLabel>
+                        <MemberSelect
+                          value={field.value}
+                          members={groupMembers}
+                          person={person}
+                          placeholder="Who pays?"
+                          onChange={(from) =>
+                            selectPair(
+                              from,
+                              from === toGroupMemberId ? 0 : toGroupMemberId,
+                            )
+                          }
+                          testId="settlement-from-select"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="toGroupMemberId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Receiving</FormLabel>
+                        <MemberSelect
+                          value={field.value}
+                          members={groupMembers.filter(
+                            (member) => member.id !== fromGroupMemberId,
+                          )}
+                          person={person}
+                          placeholder="Who receives?"
+                          onChange={(to) => selectPair(fromGroupMemberId, to)}
+                          testId="settlement-to-select"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              ) : (
+                <div className="bg-muted flex items-center justify-between rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <UserAvatar
+                      name={fromMember.name}
+                      image={fromMember.image}
                     />
-                    <AvatarFallback>
-                      {fromName.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-muted-foreground text-sm">Paying</p>
-                    <p className="font-semibold">{fromName}</p>
+                    <div>
+                      <p className="text-muted-foreground text-sm">Paying</p>
+                      <p className="font-semibold">{fromMember.name}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-muted-foreground text-sm">Receiving</p>
+                    <p className="font-semibold">{toMember.name}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground text-sm">Receiving</p>
-                  <p className="font-semibold">{toName}</p>
-                </div>
-              </div>
+              )}
 
-              {amount && (
-                <div className="bg-muted rounded-lg p-4 text-center">
+              {outstanding && (
+                <div
+                  className="bg-muted rounded-lg p-4 text-center"
+                  data-testid="settlement-outstanding"
+                >
                   <p className="text-muted-foreground mb-1 text-sm">
-                    Outstanding debt
+                    {settleOutstandingLabel(
+                      prefill?.source ?? "direct",
+                      outstanding,
+                      meId,
+                      person,
+                    )}
                   </p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-2xl font-bold tabular-nums">
                     {formatCurrencyFromCents({
-                      cents: amount,
-                      currency,
+                      cents: outstanding.amountInCents,
+                      currency: outstanding.currency,
                     })}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Amount Input */}
             <FormField
               control={form.control}
               name="amountInCents"
@@ -418,13 +447,40 @@ export function SettlementForm({
                   <FormLabel>Settlement Amount</FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">{currency}</span>
+                      {isBlank ? (
+                        <Select
+                          value={currency}
+                          onValueChange={(value) => {
+                            if (isCurrencyCode(value)) {
+                              form.setValue("currency", value);
+                            }
+                          }}
+                        >
+                          <SelectTrigger
+                            className="w-24"
+                            data-testid="settlement-currency-select"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CURRENCY_CODES.map((code) => (
+                              <SelectItem key={code} value={code}>
+                                {code}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {currency}
+                        </span>
+                      )}
                       <CurrencyInput
                         value={field.value}
                         onChange={field.onChange}
                         placeholder="0.00"
                         min={1}
-                        max={amount}
+                        max={prefill?.debt.amountInCents}
                         className="flex-1"
                         data-testid="settlement-amount-input"
                       />
@@ -437,20 +493,15 @@ export function SettlementForm({
 
             {/* Error Display */}
             {(createSettlementMutation.isError ||
-              updateSettlementMutation.isError ||
-              createSettlementMutation.data?.success === false ||
-              updateSettlementMutation.data?.success === false) && (
+              createSettlementMutation.data?.success === false) && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
                   {createSettlementMutation.data?.success === false
                     ? createSettlementMutation.data.error.message
-                    : updateSettlementMutation.data?.success === false
-                      ? updateSettlementMutation.data.error.message
-                      : (createSettlementMutation.error?.message ??
-                        updateSettlementMutation.error?.message ??
-                        "An error occurred")}
+                    : (createSettlementMutation.error?.message ??
+                      "An error occurred")}
                 </AlertDescription>
               </Alert>
             )}
@@ -476,10 +527,8 @@ export function SettlementForm({
                 {isPending ? (
                   <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    {isEditMode ? "Updating..." : "Recording..."}
+                    Recording...
                   </>
-                ) : isEditMode ? (
-                  "Update Settlement"
                 ) : (
                   "Record Settlement"
                 )}
@@ -489,5 +538,49 @@ export function SettlementForm({
         </Form>
       </SheetContent>
     </Sheet>
+  );
+}
+
+interface MemberSelectProps {
+  value: number;
+  members: GroupMemberWithUserInfo[];
+  person: PersonLookup;
+  placeholder: string;
+  onChange: (groupMemberId: number) => void;
+  testId: string;
+}
+
+function MemberSelect({
+  value,
+  members,
+  person,
+  placeholder,
+  onChange,
+  testId,
+}: MemberSelectProps) {
+  return (
+    <Select
+      value={value ? String(value) : ""}
+      onValueChange={(next) => onChange(Number(next))}
+    >
+      <FormControl>
+        <SelectTrigger className="w-full" data-testid={testId}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+      </FormControl>
+      <SelectContent>
+        {members.map((member) => {
+          const { name, image } = person(member.id);
+          return (
+            <SelectItem key={member.id} value={String(member.id)}>
+              <div className="flex items-center gap-2">
+                <UserAvatar name={name} image={image} size="xs" />
+                {name}
+              </div>
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
   );
 }

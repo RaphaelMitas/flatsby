@@ -1,26 +1,31 @@
-import type { GroupMemberWithUserInfo } from "@flatsby/api";
-import type { GroupDebtSummary } from "@flatsby/validators/expenses/types";
+import type { DebtKind } from "@flatsby/validators/expenses/debt";
+import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { useCallback, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  debtsBetweenOthers,
+  debtsFor,
+  groupBalances,
+  hasDebts,
+} from "@flatsby/validators/expenses/debt";
+import {
+  allSquareMessage,
+  debtHero,
+  personLookup,
+} from "@flatsby/validators/expenses/formatting";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
-import { Button } from "~/lib/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/lib/ui/card";
+import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { Separator } from "~/lib/ui/separator";
-import { handleApiError } from "~/lib/utils";
+import { cn, handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { DirectDebts } from "./DirectDebts";
+import { GroupBalances } from "./GroupBalances";
+import { OtherDebts } from "./OtherDebts";
+import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface DebtSummaryViewProps {
   groupId: number;
@@ -28,58 +33,47 @@ interface DebtSummaryViewProps {
 
 export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const { invalidateDebtSummary } = useInvalidateExpenses(groupId);
   const [refreshing, setRefreshing] = useState(false);
+  const [kind, setKind] = useState<DebtKind>("direct");
 
-  // Get debt summary
   const { data: debtData } = useSuspenseQuery(
     trpc.expense.getDebtSummary.queryOptions({ groupId }),
   );
-
-  // Get group members for display
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries({
-      queryKey: trpc.expense.getDebtSummary.queryKey({ groupId }),
-    });
+    await invalidateDebtSummary();
     setRefreshing(false);
-  }, [queryClient, groupId]);
+  }, [invalidateDebtSummary]);
 
   if (!debtData.success) {
     return handleApiError({ router, error: debtData.error });
   }
-
   if (!groupData.success) {
     return handleApiError({ router, error: groupData.error });
   }
 
-  const debtSummary: GroupDebtSummary = debtData.data;
-  const groupMembers = groupData.data.groupMembers;
-  const currencies = Object.keys(debtSummary.currencies);
+  const summary = debtData.data;
+  const meId = groupData.data.thisGroupMember.id;
+  const person = personLookup(groupData.data.groupMembers, meId);
+  const others = debtsBetweenOthers(summary, meId, kind);
+  const balances = groupBalances(summary, meId);
 
-  // Create member lookup map
-  const memberMap = new Map<number, GroupMemberWithUserInfo>();
-  groupMembers.forEach((member) => {
-    memberMap.set(member.id, member);
-  });
-
-  const getMemberName = (memberId: number): string => {
-    return memberMap.get(memberId)?.user.name ?? "Unknown";
-  };
-
-  const getMemberImage = (memberId: number): string => {
-    return memberMap.get(memberId)?.user.image ?? "";
-  };
-
-  const hasAnyDebts = currencies.some((currency) =>
-    debtSummary.currencies[currency]
-      ? debtSummary.currencies[currency].debts.length > 0
-      : false,
-  );
+  const openSettle = (debt: DebtEntry) =>
+    router.push({
+      pathname: "/(tabs)/expenses/settle",
+      params: {
+        fromGroupMemberId: debt.fromGroupMemberId.toString(),
+        toGroupMemberId: debt.toGroupMemberId.toString(),
+        currency: debt.currency,
+        amount: debt.amountInCents.toString(),
+        source: kind,
+      },
+    });
 
   return (
     <AppScrollView
@@ -87,236 +81,142 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
       refreshing={refreshing}
       onRefresh={handleRefresh}
     >
-      <View className="flex w-full flex-col gap-4 p-4">
-        <View className="flex flex-row items-center justify-between">
-          <View>
-            <Text
-              testID="debt-summary-title"
-              className="text-foreground text-2xl font-bold tracking-tight"
-            >
-              Debt Summary
-            </Text>
-            <Text className="text-muted-foreground mt-1 text-sm">
-              Simplified view of who owes whom
-            </Text>
-          </View>
-          <Button
-            title="Add expenses"
-            size="md"
-            icon="arrow-right"
-            onPress={() => router.push("/(tabs)/expenses")}
-            className="mt-4"
-          />
-        </View>
-
-        {!hasAnyDebts ? (
-          <Card testID="debt-summary-empty">
-            <CardContent className="pt-6">
-              <View className="flex flex-row items-center justify-center gap-4 py-8">
-                <Icon name="circle-check" size={48} color="success" />
-                <View>
-                  <Text className="text-foreground text-lg font-semibold">
-                    All settled up!
-                  </Text>
-                  <Text className="text-muted-foreground text-sm">
-                    No outstanding debts in this group
-                  </Text>
-                </View>
-              </View>
-            </CardContent>
-          </Card>
-        ) : (
-          <View className="gap-6">
-            {currencies.map((currency) => {
-              const currencyDebts = debtSummary.currencies[currency];
-              if (!currencyDebts || currencyDebts.debts.length === 0) {
-                return null;
-              }
-
-              return (
-                <Card key={currency}>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{currency}</CardTitle>
-                    <CardDescription>
-                      {currencyDebts.debts.length}{" "}
-                      {currencyDebts.debts.length === 1 ? "debt" : "debts"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <View className="gap-3">
-                      {currencyDebts.debts.map((debt, index) => {
-                        const formattedAmount = formatCurrencyFromCents({
-                          cents: debt.amountInCents,
-                          currency,
-                        });
-
-                        return (
-                          <View
-                            key={`${debt.fromGroupMemberId}-${debt.toGroupMemberId}-${index}`}
-                          >
-                            <View className="flex-col items-center justify-between gap-2 p-2">
-                              <View className="flex min-w-0 flex-1 flex-row items-center gap-2">
-                                <View className="flex-row gap-2">
-                                  <Avatar className="mr-4 h-4 w-4">
-                                    <AvatarImage
-                                      src={getMemberImage(
-                                        debt.fromGroupMemberId,
-                                      )}
-                                    />
-                                    <AvatarFallback className="text-xs">
-                                      {getMemberName(debt.fromGroupMemberId)
-                                        .substring(0, 1)
-                                        .toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <Text
-                                    className="text-destructive shrink-0 text-sm font-medium"
-                                    numberOfLines={1}
-                                  >
-                                    {getMemberName(debt.fromGroupMemberId)}
-                                  </Text>
-                                </View>
-                                <Icon
-                                  name="arrow-right"
-                                  size={16}
-                                  color="muted-foreground"
-                                  className="flex-1 text-center"
-                                />
-                                <View className="flex-row items-center gap-2">
-                                  <Avatar className="mr-4 h-4 w-4">
-                                    <AvatarImage
-                                      src={getMemberImage(debt.toGroupMemberId)}
-                                    />
-                                    <AvatarFallback className="text-xs">
-                                      {getMemberName(debt.toGroupMemberId)
-                                        .substring(0, 1)
-                                        .toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <Text
-                                    className="text-success shrink-0 text-sm font-medium"
-                                    numberOfLines={1}
-                                  >
-                                    {getMemberName(debt.toGroupMemberId)}
-                                  </Text>
-                                </View>
-                              </View>
-                              <View className="flex-row items-center gap-3">
-                                <Text className="text-foreground flex-1 text-lg font-semibold">
-                                  {formattedAmount}
-                                </Text>
-                                <Button
-                                  testID="debt-settle-up-button"
-                                  title="Settle Up"
-                                  size="sm"
-                                  variant="outline"
-                                  onPress={() =>
-                                    router.push({
-                                      pathname: "/(tabs)/expenses/settle",
-                                      params: {
-                                        fromGroupMemberId:
-                                          debt.fromGroupMemberId.toString(),
-                                        toGroupMemberId:
-                                          debt.toGroupMemberId.toString(),
-                                        currency,
-                                        amount: debt.amountInCents.toString(),
-                                      },
-                                    })
-                                  }
-                                />
-                              </View>
-                            </View>
-                            {index < currencyDebts.debts.length - 1 && (
-                              <Separator className="mt-3" />
-                            )}
-                          </View>
-                        );
-                      })}
-                    </View>
-                  </CardContent>
-                </Card>
-              );
-            })}
-            <Button
-              title="Settle Up"
-              onPress={() => router.push("/(tabs)/expenses/settle")}
+      <View testID="debt-summary-title" className="w-full gap-2 p-4">
+        {hasDebts(summary) ? (
+          <>
+            <DebtHero hero={debtHero(summary, meId)} />
+            <ModeSwitch kind={kind} onChange={setKind} />
+            <SectionLabel>Between you and</SectionLabel>
+            <DirectDebts
+              groupId={groupId}
+              meId={meId}
+              kind={kind}
+              counterparts={debtsFor(summary, meId, kind)}
+              allSquare={allSquareMessage(summary, meId, kind, person)}
+              person={person}
+              onSettle={openSettle}
             />
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Member Balances</CardTitle>
-                <CardDescription>
-                  Net balance for each member by currency
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <View className="gap-4">
-                  {groupMembers.map((member) => {
-                    const balances =
-                      debtSummary.memberBalances[member.id] ?? {};
-                    const hasBalances = Object.keys(balances).length > 0;
-
-                    if (!hasBalances) return null;
-
-                    return (
-                      <View key={member.id}>
-                        <View className="mb-2 flex-row items-center gap-2">
-                          <Avatar className="mr-4 h-6 w-6">
-                            <AvatarImage src={member.user.image ?? undefined} />
-                            <AvatarFallback className="text-xs">
-                              {member.user.name.substring(0, 1).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <Text className="text-foreground font-medium">
-                            {member.user.name}
-                          </Text>
-                        </View>
-                        <View className="ml-4 gap-1">
-                          {Object.entries(balances).map(
-                            ([currency, balance]) => {
-                              const formattedBalance = formatCurrencyFromCents({
-                                cents: balance,
-                                currency,
-                              });
-                              const isPositive = balance > 0;
-                              const isZero = balance === 0;
-
-                              return (
-                                <View
-                                  key={currency}
-                                  className="flex-row items-center justify-between"
-                                >
-                                  <Text className="text-muted-foreground text-sm">
-                                    {currency}:
-                                  </Text>
-                                  <Text
-                                    className={`text-sm font-semibold ${
-                                      isZero
-                                        ? "text-muted-foreground"
-                                        : isPositive
-                                          ? "text-green-600"
-                                          : "text-red-600"
-                                    }`}
-                                  >
-                                    {isZero
-                                      ? formattedBalance
-                                      : isPositive
-                                        ? `+${formattedBalance}`
-                                        : formattedBalance}
-                                  </Text>
-                                </View>
-                              );
-                            },
-                          )}
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              </CardContent>
-            </Card>
-          </View>
+            {others.length > 0 && (
+              <>
+                <SectionLabel>Between others</SectionLabel>
+                <OtherDebts
+                  debts={others}
+                  person={person}
+                  onSettle={openSettle}
+                />
+              </>
+            )}
+            {balances.length > 0 && (
+              <>
+                <SectionLabel>Balances</SectionLabel>
+                <GroupBalances currencies={balances} person={person} />
+              </>
+            )}
+          </>
+        ) : (
+          <Card testID="debt-summary-empty" className="mt-4 items-center p-6">
+            <View className="bg-success/10 mb-3 h-16 w-16 items-center justify-center rounded-full">
+              <Icon name="check" size={30} color="success" />
+            </View>
+            <Text className="text-foreground text-lg font-semibold">
+              All settled up
+            </Text>
+            <Text className="text-muted-foreground text-center text-sm">
+              Nobody in {groupData.data.name} owes anything.
+            </Text>
+          </Card>
         )}
+
+        <Pressable
+          testID="debt-record-payment"
+          accessibilityRole="button"
+          onPress={() => router.push("/(tabs)/expenses/settle")}
+          className="mt-4 flex-row items-center justify-center gap-1.5 py-2"
+        >
+          <Icon name="plus" size={16} color="muted-foreground" />
+          <Text className="text-muted-foreground text-sm">
+            Record another payment
+          </Text>
+        </Pressable>
       </View>
     </AppScrollView>
+  );
+}
+
+const modes = [
+  { kind: "direct", label: "Actual" },
+  { kind: "simplified", label: "Simplified" },
+] satisfies { kind: DebtKind; label: string }[];
+
+function ModeSwitch({
+  kind,
+  onChange,
+}: {
+  kind: DebtKind;
+  onChange: (kind: DebtKind) => void;
+}) {
+  return (
+    <View className="bg-muted mt-2 flex-row rounded-lg p-1">
+      {modes.map((mode) => {
+        const selected = mode.kind === kind;
+        return (
+          <Pressable
+            key={mode.kind}
+            testID={`debt-mode-${mode.label.toLowerCase()}`}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            onPress={() => onChange(mode.kind)}
+            className={cn(
+              "flex-1 items-center rounded-lg py-1.5",
+              selected && "bg-background shadow-sm",
+            )}
+          >
+            <Text
+              className={cn(
+                "text-sm font-medium",
+                selected ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {mode.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text className="text-muted-foreground mx-1 mt-4 text-sm font-semibold">
+      {children}
+    </Text>
+  );
+}
+
+function DebtHero({ hero }: { hero: ReturnType<typeof debtHero> }) {
+  const { label, amounts } = hero;
+
+  return (
+    <View testID="debt-hero" className="pt-4 pb-2">
+      <Text className="text-muted-foreground text-sm">{label}</Text>
+      {amounts.map(({ currency, cents, text }) => (
+        <Text
+          key={currency}
+          testID="debt-hero-amount"
+          className={cn(
+            "font-bold tracking-tight",
+            amounts.length > 1 ? "text-3xl" : "text-4xl",
+            cents > 0
+              ? "text-success"
+              : cents < 0
+                ? "text-destructive"
+                : "text-foreground",
+          )}
+        >
+          {text}
+        </Text>
+      ))}
+    </View>
   );
 }

@@ -90,11 +90,43 @@ export const deleteExpenseSchema = z.object({
   expenseId: updateExpenseSchema.shape.expenseId,
 });
 
-export const settlementFormSchema = z.object({
-  amountInCents: z.number().min(1, "Amount must be greater than 0"),
-  fromGroupMemberId: z.number().min(1, "Please select who is paying"),
-  toGroupMemberId: z.number().min(1, "Please select who is receiving"),
-  currency: currencyCodeSchema,
-});
+export const settlementFormSchema = z
+  .object({
+    amountInCents: z.number().min(1, "Amount must be greater than 0"),
+    fromGroupMemberId: z.number().min(1, "Please select who is paying"),
+    toGroupMemberId: z.number().min(1, "Please select who is receiving"),
+    currency: currencyCodeSchema,
+  })
+  .refine((values) => values.fromGroupMemberId !== values.toGroupMemberId, {
+    path: ["toGroupMemberId"],
+    message: "Pick two different people",
+  });
 
 export type SettlementFormValues = z.infer<typeof settlementFormSchema>;
+
+export const getPairActivityInputSchema = z.object({
+  groupId: z.number(),
+  groupMemberIds: z
+    .tuple([z.number(), z.number()])
+    .refine(([a, b]) => a !== b, "Pick two different members"),
+  cursor: z.object({ date: z.date(), id: z.number() }).optional(),
+});
+
+export const pairActivityItemSchema = z.object({
+  id: z.number(),
+  description: z.string(),
+  expenseDate: z.date(),
+  currency: z.string(),
+  paidByGroupMemberId: z.number(),
+  amountInCents: z.number().int(),
+  /** The non-payer's split: what this expense moved between the two */
+  pairAmountInCents: z.number().int(),
+  isSettlement: z.boolean(),
+});
+
+export type PairActivityItem = z.infer<typeof pairActivityItemSchema>;
+
+export const pairActivitySchema = z.object({
+  items: z.array(pairActivityItemSchema),
+  nextCursor: z.object({ date: z.date(), id: z.number() }).optional(),
+});

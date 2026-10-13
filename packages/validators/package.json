@@ -20,7 +20,8 @@
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "check": "biome check",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "test": "vitest run"
   },
   "dependencies": {
     "papaparse": "^5.7.0",
@@ -43,7 +44,8 @@
     "ai": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:react19",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "prettier": "@flatsby/prettier-config"
 }

@@ -303,7 +303,7 @@ export async function executeSearchData(
       for (const [currency, summary] of Object.entries(
         debtSummary.currencies,
       )) {
-        for (const debt of summary.debts) {
+        for (const debt of summary.direct) {
           debtItems.push({
             fromMemberId: debt.fromGroupMemberId,
             fromMemberName:

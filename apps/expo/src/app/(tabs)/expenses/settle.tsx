@@ -1,6 +1,12 @@
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+  useRoute,
+  useRouter,
+} from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { SettlementForm } from "~/components/expenses/SettlementForm";
@@ -15,9 +21,27 @@ export default function SettlePage() {
     currency?: string;
     amount: string;
     expenseId?: string;
+    source?: string;
   }>();
   const router = useRouter();
+  const navigation = useNavigation();
+  const route = useRoute();
   const { selectedGroupId } = useShoppingStore();
+  // a save can resolve after the user left: never pop someone else's screen
+  const close = () => {
+    const stack = navigation.getState();
+    const index = stack?.routes.findIndex(({ key }) => key === route.key) ?? -1;
+    if (!stack || index < 0) return;
+    if (index > 0) {
+      navigation.dispatch({
+        type: "GO_BACK",
+        source: route.key,
+        target: stack.key,
+      });
+    } else if (navigation.isFocused()) {
+      router.back();
+    }
+  };
 
   const fromGroupMemberId = params.fromGroupMemberId
     ? parseInt(params.fromGroupMemberId, 10)
@@ -30,6 +54,10 @@ export default function SettlePage() {
   const expenseId = params.expenseId
     ? parseInt(params.expenseId, 10)
     : undefined;
+  const source =
+    params.source === "direct" || params.source === "simplified"
+      ? params.source
+      : undefined;
 
   if (!selectedGroupId) {
     return (
@@ -66,21 +94,18 @@ export default function SettlePage() {
         {expenseId ? (
           <SettlePageInnerEdit
             groupId={selectedGroupId}
-            fromGroupMemberId={fromGroupMemberId}
-            toGroupMemberId={toGroupMemberId}
-            currency={currency}
-            amount={amount}
             expenseId={expenseId}
-            onClose={() => router.back()}
+            onClose={close}
           />
         ) : (
-          <SettlePageInner
+          <SettlementForm
             groupId={selectedGroupId}
             fromGroupMemberId={fromGroupMemberId}
             toGroupMemberId={toGroupMemberId}
             currency={currency}
             amount={amount}
-            onClose={() => router.back()}
+            source={source}
+            onClose={close}
           />
         )}
       </Suspense>
@@ -90,18 +115,10 @@ export default function SettlePage() {
 
 function SettlePageInnerEdit({
   groupId,
-  fromGroupMemberId,
-  toGroupMemberId,
-  currency,
-  amount,
   expenseId,
   onClose,
 }: {
   groupId: number;
-  fromGroupMemberId?: number;
-  toGroupMemberId?: number;
-  currency?: string;
-  amount: number | undefined;
   expenseId: number;
   onClose: () => void;
 }) {
@@ -109,43 +126,10 @@ function SettlePageInnerEdit({
     trpc.expense.getExpense.queryOptions({ expenseId }),
   );
 
-  const expense = expenseData.success ? expenseData.data : undefined;
-
   return (
     <SettlementForm
       groupId={groupId}
-      fromGroupMemberId={fromGroupMemberId}
-      toGroupMemberId={toGroupMemberId}
-      currency={currency}
-      amount={amount}
-      expense={expense}
-      onClose={onClose}
-    />
-  );
-}
-
-function SettlePageInner({
-  groupId,
-  fromGroupMemberId,
-  toGroupMemberId,
-  currency,
-  amount,
-  onClose,
-}: {
-  groupId: number;
-  fromGroupMemberId?: number;
-  toGroupMemberId?: number;
-  currency?: string;
-  amount: number | undefined;
-  onClose: () => void;
-}) {
-  return (
-    <SettlementForm
-      groupId={groupId}
-      fromGroupMemberId={fromGroupMemberId}
-      toGroupMemberId={toGroupMemberId}
-      currency={currency}
-      amount={amount}
+      expense={expenseData.success ? expenseData.data : undefined}
       onClose={onClose}
     />
   );

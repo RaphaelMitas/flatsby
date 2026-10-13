@@ -4,7 +4,7 @@ import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, eq, inArray, lt, or } from "@flatsby/db";
+import { and, desc, eq, inArray, lt, or } from "@flatsby/db";
 import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
 import {
   expenseCategoryGroupLabels,
@@ -16,6 +16,8 @@ import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
 import {
   createExpenseSchema,
   deleteExpenseSchema,
+  getPairActivityInputSchema,
+  pairActivitySchema,
   splitMethodSchema,
   updateExpenseSchema,
 } from "@flatsby/validators/expenses/schemas";
@@ -27,7 +29,7 @@ import { bulkCreateExpensesSchema } from "@flatsby/validators/expenses/splitwise
 import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
 
 import type { ApiError } from "../errors";
-import { fail, withErrorHandlingAsResult } from "../errors";
+import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
 import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
@@ -69,6 +71,8 @@ function ensureActiveMembers(
   }
   return Effect.succeed(undefined);
 }
+
+const PAIR_ACTIVITY_PAGE = 5;
 
 function withDerivedCategory<T extends { id: number; subcategory: string }>(
   row: T,
@@ -627,6 +631,78 @@ export const expenseRouter = createTRPCRouter({
               () => fetchGroupDebtSummary(ctx.db, input.groupId),
               "fetch expenses for debt summary",
             ),
+        ),
+      );
+    }),
+
+  getPairActivity: protectedProcedure
+    .input(getPairActivityInputSchema)
+    .output(getApiResultZod(pairActivitySchema))
+    .query(async ({ ctx, input }) => {
+      const [a, b] = input.groupMemberIds;
+      return withErrorHandlingAsResult(
+        Effect.flatMap(
+          OperationUtils.getGroupWithAccess(
+            ctx.db,
+            input.groupId,
+            ctx.session.user.id,
+          ),
+          () =>
+            safeDbOperation(async () => {
+              const rows = await ctx.db
+                .select({
+                  id: expenses.id,
+                  description: expenses.description,
+                  expenseDate: expenses.expenseDate,
+                  currency: expenses.currency,
+                  paidByGroupMemberId: expenses.paidByGroupMemberId,
+                  amountInCents: expenses.amountInCents,
+                  pairAmountInCents: expenseSplits.amountInCents,
+                  splitMethod: expenses.splitMethod,
+                })
+                .from(expenses)
+                .innerJoin(
+                  expenseSplits,
+                  eq(expenseSplits.expenseId, expenses.id),
+                )
+                .where(
+                  and(
+                    eq(expenses.groupId, input.groupId),
+                    or(
+                      and(
+                        eq(expenses.paidByGroupMemberId, a),
+                        eq(expenseSplits.groupMemberId, b),
+                      ),
+                      and(
+                        eq(expenses.paidByGroupMemberId, b),
+                        eq(expenseSplits.groupMemberId, a),
+                      ),
+                    ),
+                    input.cursor &&
+                      or(
+                        lt(expenses.expenseDate, input.cursor.date),
+                        and(
+                          eq(expenses.expenseDate, input.cursor.date),
+                          lt(expenses.id, input.cursor.id),
+                        ),
+                      ),
+                  ),
+                )
+                .orderBy(desc(expenses.expenseDate), desc(expenses.id))
+                .limit(PAIR_ACTIVITY_PAGE + 1);
+              const items = rows.slice(0, PAIR_ACTIVITY_PAGE);
+              const last = items.at(-1);
+              return {
+                items: items.map(({ splitMethod, ...row }) => ({
+                  ...row,
+                  isSettlement: splitMethod === "settlement",
+                })),
+                nextCursor:
+                  rows.length > PAIR_ACTIVITY_PAGE && last
+                    ? { date: last.expenseDate, id: last.id }
+                    : undefined,
+              };
+            }, "fetch pair activity"),
         ),
       );
     }),

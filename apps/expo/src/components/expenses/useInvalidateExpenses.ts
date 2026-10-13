@@ -25,11 +25,17 @@ export function useInvalidateExpenses(groupId: number) {
     return queryClient.invalidateQueries({ queryKey: expenseListQueryKey });
   }, [queryClient, expenseListQueryKey]);
 
+  const debtSummaryQueryKey = useMemo(
+    () => trpc.expense.getDebtSummary.queryKey({ groupId }),
+    [groupId],
+  );
+
   const invalidateDebtSummary = useCallback(() => {
-    return queryClient.invalidateQueries(
-      trpc.expense.getDebtSummary.queryOptions({ groupId }),
-    );
-  }, [queryClient, groupId]);
+    return Promise.all([
+      queryClient.invalidateQueries({ queryKey: debtSummaryQueryKey }),
+      queryClient.invalidateQueries(trpc.expense.getPairActivity.pathFilter()),
+    ]);
+  }, [queryClient, debtSummaryQueryKey]);
 
   const invalidateExpense = useCallback(
     (expenseId: number) => {
@@ -53,6 +59,7 @@ export function useInvalidateExpenses(groupId: number) {
 
   return {
     expenseListQueryKey,
+    debtSummaryQueryKey,
     invalidateList,
     invalidateDebtSummary,
     invalidateExpense,

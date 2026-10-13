@@ -45,20 +45,24 @@ export interface DebtEntry {
   currency: string;
 }
 
-/**
- * Debt summary for a single currency
- */
+/** direct: each pair's net from their shared expenses; simplified: the greedy settle plan */
 export interface DebtSummary {
-  debts: DebtEntry[];
   currency: string;
+  direct: DebtEntry[];
+  simplified: DebtEntry[];
+  /** @deprecated same as simplified; app builds up to v0.10 read this field */
+  debts: DebtEntry[];
 }
+
+/** groupMemberId -> currency -> balance in cents */
+export type MemberBalances = Record<number, Record<string, number>>;
 
 /**
  * Group debt summary across all currencies
  */
 export interface GroupDebtSummary {
   currencies: Record<string, DebtSummary>;
-  memberBalances: Record<number, Record<string, number>>; // groupMemberId -> currency -> balance in cents
+  memberBalances: MemberBalances;
 }
 
 /**

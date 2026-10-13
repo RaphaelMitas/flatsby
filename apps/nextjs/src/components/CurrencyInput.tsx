@@ -134,10 +134,7 @@ export function CurrencyInput({
     setIsFocused(true);
     // Initialize raw input from current value
     if (value > 0) {
-      const decimal = centsToDecimal(value);
-      // Remove trailing zeros for easier editing (e.g., "12.30" → "12.3")
-      const decimalStr = decimal.toString();
-      setRawInput(decimalStr.replace(/\.?0+$/, "") || "0");
+      setRawInput(centsToDecimal(value).toString());
     } else {
       setRawInput("");
     }
