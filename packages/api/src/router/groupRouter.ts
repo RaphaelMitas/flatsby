@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import z from "zod/v4";
 
-import { alias, and, count, eq, inArray } from "@flatsby/db";
+import { alias, and, count, eq, inArray, isNull } from "@flatsby/db";
 import {
   expenses,
   groupMembers,
@@ -305,6 +305,16 @@ export const groupRouter = createTRPCRouter({
                   userId: ctx.session.user.id,
                   role: "admin",
                 });
+
+                await trx
+                  .update(users)
+                  .set({ lastGroupUsed: group.id })
+                  .where(
+                    and(
+                      eq(users.id, ctx.session.user.id),
+                      isNull(users.lastGroupUsed),
+                    ),
+                  );
 
                 return group.id;
               }, "create group and add admin member")(ctx.db),

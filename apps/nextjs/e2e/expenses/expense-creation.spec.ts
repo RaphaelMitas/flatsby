@@ -10,7 +10,9 @@ import {
 test.describe("Expense Creation", () => {
   test("creates an expense with equal split", async ({ authPage }) => {
     await authPage.goto("/expenses");
-    await expect(authPage.getByTestId("expense-heading")).toBeVisible();
+    await expect(
+      authPage.getByTestId("expense-heading").filter({ visible: true }),
+    ).toBeVisible();
 
     const description = "Groceries";
     await createEqualSplitExpense(authPage, {

@@ -2,16 +2,16 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { selectShoppingListCategory } from "./categories";
+import { waitForHydration } from "./hydration";
 
 export async function createShoppingList(
   page: Page,
   name = `E2E List ${Date.now()}`,
 ): Promise<number> {
   await page.goto("/shopping-list");
-  await page
-    .getByTestId("shopping-list-create-input")
-    .waitFor({ state: "visible", timeout: 15000 });
-  await page.getByTestId("shopping-list-create-input").fill(name);
+  const createInput = page.getByTestId("shopping-list-create-input");
+  await waitForHydration(createInput);
+  await createInput.fill(name);
   await page.getByTestId("shopping-list-create-button").click();
   await page.waitForURL(/\/shopping-list\/\d+/);
   await page

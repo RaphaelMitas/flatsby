@@ -18,32 +18,18 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSkeleton,
 } from "@flatsby/ui/sidebar";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 
 export function SidebarGroupSwitcher() {
   const pathname = usePathname();
-  const { currentGroup, groups, isLoading, switchGroup, hasCurrentGroup } =
+  const { currentGroup, groups, switchGroup, hasCurrentGroup } =
     useGroupContext();
 
   const isGroupPage = pathname === "/group";
   const isGroupSettingsPage = pathname === "/group/settings";
   const isGroupCreatePage = pathname === "/group/create";
-
-  if (isLoading) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupLabel>Groups</SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuSkeleton showIcon />
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
-    );
-  }
 
   return (
     <SidebarGroup>

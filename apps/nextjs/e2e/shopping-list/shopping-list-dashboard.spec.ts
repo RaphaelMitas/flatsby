@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../fixtures/auth";
+import { waitForHydration } from "../helpers/hydration";
 
 test.describe("Shopping List Dashboard", () => {
   test("displays existing shopping lists on the dashboard", async ({
@@ -29,7 +30,9 @@ test.describe("Shopping List Dashboard", () => {
 
     const listName = `Test List ${Date.now()}`;
 
-    await authPage.getByTestId("shopping-list-create-input").fill(listName);
+    const createInput = authPage.getByTestId("shopping-list-create-input");
+    await waitForHydration(createInput);
+    await createInput.fill(listName);
     await authPage.getByTestId("shopping-list-create-button").click();
 
     await authPage.waitForURL(/\/shopping-list\/\d+/);
