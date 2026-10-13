@@ -1,5 +1,7 @@
 import { Effect } from "effect";
 
+import { calculateDebts } from "@flatsby/validators/expenses/debt";
+
 import type { ApiError, NotFoundError } from "./errors";
 import type {
   Database,
@@ -286,28 +288,6 @@ export const GroupUtils = {
   },
 
   /**
-   * Get user's basic membership info in a group
-   */
-  getBasicMembership: (
-    db: Database,
-    groupId: number,
-    userId: string,
-  ): Effect.Effect<GroupMember, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(
-              eq(members.userId, userId),
-              eq(members.groupId, groupId),
-              eq(members.isActive, true),
-            ),
-        }),
-      "group membership",
-    );
-  },
-
-  /**
    * Get user's role in a group
    */
   getUserRole: (
@@ -377,6 +357,24 @@ export const GroupUtils = {
     );
   },
 };
+
+/** Does not check group access, callers must. */
+export const fetchGroupDebtSummary = async (db: Database, groupId: number) =>
+  calculateDebts(
+    await db.query.expenses.findMany({
+      where: (expenses, { eq }) => eq(expenses.groupId, groupId),
+      columns: {
+        paidByGroupMemberId: true,
+        amountInCents: true,
+        currency: true,
+      },
+      with: {
+        expenseSplits: {
+          columns: { groupMemberId: true, amountInCents: true },
+        },
+      },
+    }),
+  );
 
 /**
  * Helper to migrate existing tRPC procedures

@@ -722,64 +722,49 @@ export const shoppingList = createTRPCRouter({
 
                   (groupMemberRes) =>
                     Effect.flatMap(
-                      // Get current item state (for completion status comparison)
-                      safeDbOperation(
-                        () =>
-                          ctx.db.query.shoppingListItems.findFirst({
-                            where: eq(shoppingListItems.id, input.id),
-                          }),
-                        "get current item state",
-                      ),
-                      (currentItem) =>
-                        Effect.flatMap(
-                          // Determine category ID (with AI if needed)
-                          input.categoryId === "ai-auto-select"
-                            ? Effect.promise(() =>
-                                categorizeItem(ctx.session.user.id, validName),
-                              )
-                            : Effect.succeed(input.categoryId),
-                          (categoryId) =>
-                            Effect.map(
-                              // Update shopping list item
-                              safeDbOperation(() => {
-                                const updateData: Partial<
-                                  typeof shoppingListItems.$inferInsert
-                                > = {
-                                  name: validName,
-                                  categoryId: categoryId,
-                                  completed: input.completed,
-                                };
+                      input.categoryId === "ai-auto-select"
+                        ? Effect.promise(() =>
+                            categorizeItem(ctx.session.user.id, validName),
+                          )
+                        : Effect.succeed(input.categoryId),
+                      (categoryId) =>
+                        Effect.map(
+                          safeDbOperation(() => {
+                            const updateData: Partial<
+                              typeof shoppingListItems.$inferInsert
+                            > = {
+                              name: validName,
+                              categoryId: categoryId,
+                              completed: input.completed,
+                            };
 
-                                // Handle completion status changes
-                                if (
-                                  currentItem &&
-                                  currentItem.completed !== input.completed
-                                ) {
-                                  if (input.completed) {
-                                    updateData.completedByGroupMemberId =
-                                      groupMemberRes.id;
-                                    updateData.completedAt = new Date();
-                                  } else {
-                                    updateData.completedByGroupMemberId = null;
-                                    updateData.completedAt = null;
-                                  }
-                                }
+                            if (
+                              shoppingListItem.completed !== input.completed
+                            ) {
+                              if (input.completed) {
+                                updateData.completedByGroupMemberId =
+                                  groupMemberRes.id;
+                                updateData.completedAt = new Date();
+                              } else {
+                                updateData.completedByGroupMemberId = null;
+                                updateData.completedAt = null;
+                              }
+                            }
 
-                                return ctx.db
-                                  .update(shoppingListItems)
-                                  .set(updateData)
-                                  .where(eq(shoppingListItems.id, input.id))
-                                  .returning({ id: shoppingListItems.id });
-                              }, "update shopping list item"),
-                              (result) => {
-                                if (!result[0]) {
-                                  throw new Error(
-                                    "Failed to update shopping list item",
-                                  );
-                                }
-                                return result[0].id;
-                              },
-                            ),
+                            return ctx.db
+                              .update(shoppingListItems)
+                              .set(updateData)
+                              .where(eq(shoppingListItems.id, input.id))
+                              .returning({ id: shoppingListItems.id });
+                          }, "update shopping list item"),
+                          (result) => {
+                            if (!result[0]) {
+                              throw new Error(
+                                "Failed to update shopping list item",
+                              );
+                            }
+                            return result[0].id;
+                          },
                         ),
                     ),
                 ),

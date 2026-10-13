@@ -46,9 +46,6 @@ export default function ImportExpensesScreen() {
           void queryClient.invalidateQueries(
             trpc.expense.getGroupExpenses.queryOptions({ groupId }),
           );
-          void queryClient.invalidateQueries(
-            trpc.expense.getGroupDebts.queryOptions({ groupId }),
-          );
           void queryClient.invalidateQueries({
             queryKey: trpc.expense.getDebtSummary.queryKey(),
           });

@@ -30,7 +30,6 @@ import {
   shoppingLists,
 } from "@flatsby/db/schema";
 import { categoryIdSchema } from "@flatsby/validators/categories";
-import { calculateDebts } from "@flatsby/validators/expenses/debt";
 import {
   currencyCodeSchema,
   splitMethodSchema,
@@ -38,6 +37,7 @@ import {
 
 import type { RouterCaller } from "../root";
 import type { Database } from "../types";
+import { fetchGroupDebtSummary } from "../utils";
 import { handleApiResult } from "./tool-result-transformer";
 
 /**
@@ -277,34 +277,19 @@ export async function executeSearchData(
     }
 
     case "debts": {
-      const groupExpenses = await db.query.expenses.findMany({
-        where: eq(expenses.groupId, groupId),
-        with: {
-          expenseSplits: true,
-        },
-      });
-
-      const members = await db.query.groupMembers.findMany({
-        where: and(
-          eq(groupMembers.groupId, groupId),
-          eq(groupMembers.isActive, true),
-        ),
-        with: { user: { columns: { name: true } } },
-      });
+      const [debtSummary, members] = await Promise.all([
+        fetchGroupDebtSummary(db, groupId),
+        db.query.groupMembers.findMany({
+          where: and(
+            eq(groupMembers.groupId, groupId),
+            eq(groupMembers.isActive, true),
+          ),
+          columns: { id: true },
+          with: { user: { columns: { name: true } } },
+        }),
+      ]);
 
       const memberNameMap = new Map(members.map((m) => [m.id, m.user.name]));
-
-      const expensesForCalc = groupExpenses.map((e) => ({
-        paidByGroupMemberId: e.paidByGroupMemberId,
-        amountInCents: e.amountInCents,
-        currency: e.currency,
-        expenseSplits: e.expenseSplits.map((s) => ({
-          groupMemberId: s.groupMemberId,
-          amountInCents: s.amountInCents,
-        })),
-      }));
-
-      const debtSummary = calculateDebts(expensesForCalc);
 
       const debtItems: {
         fromMemberId: number;
