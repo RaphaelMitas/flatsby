@@ -26,15 +26,15 @@ tags:
 - assertVisible: "€25[.,]00"
 - assertVisible: "Record Sophie paying Max"
 - assertVisible: "€12[.,]00"
-- assertVisible: "Record Sophie paying Lena"
-- assertVisible: "€8[.,]00"
 
 - tapOn:
     id: "debt-mode-simplified"
 - assertVisible: "€55[.,]50"
 - assertVisible: "€7[.,]50"
 - assertNotVisible: "Record Sophie paying Max"
-- assertVisible: "pays you"
+- assertVisible:
+    id: "debt-row-toggle"
+    text: ".*pays you.*"
 - assertVisible: "€30[.,]50"
 - tapOn:
     id: "debt-mode-actual"

@@ -218,7 +218,7 @@ export function allSquareMessage(
       ]),
     ),
   ];
-  return `${joinNames(names)} ${names.length === 1 ? "still has" : "still have"} open debts`;
+  return `${joinNames(names)} still have open debts`;
 }
 
 export function describePairActivity(

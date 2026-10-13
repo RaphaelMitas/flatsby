@@ -28,21 +28,19 @@ export default function DebtsPage() {
   }
 
   return (
-    <Suspense
-      fallback={
-        <SafeAreaView edges={[]}>
+    <SafeAreaView edges={[]}>
+      <Suspense
+        fallback={
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" />
             <Text className="text-muted-foreground mt-4">
               Loading debt summary...
             </Text>
           </View>
-        </SafeAreaView>
-      }
-    >
-      <SafeAreaView edges={[]}>
+        }
+      >
         <DebtSummaryView groupId={selectedGroupId} />
-      </SafeAreaView>
-    </Suspense>
+      </Suspense>
+    </SafeAreaView>
   );
 }
