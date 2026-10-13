@@ -1,21 +1,12 @@
-import type { CounterpartDebts } from "@flatsby/validators/expenses/debt";
-import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { directDebtsFor, hasDebts } from "@flatsby/validators/expenses/debt";
 import {
-  directDebtsFor,
-  hasDebts,
-  heroBalances,
-  othersWithOpenDebts,
-} from "@flatsby/validators/expenses/debt";
-import {
-  formatCurrencyFromCents,
-  formatHeroAmount,
-  heroLabel,
-  heroMeta,
+  debtHero,
+  formatOthersWithDebts,
   personLookup,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -62,9 +53,6 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId);
   const counterparts = directDebtsFor(summary, meId);
-  const othersWithDebts = othersWithOpenDebts(summary, meId).map(
-    (id) => person(id).name,
-  );
 
   const openSettle: OnSettle = (debt, source) =>
     router.push({
@@ -94,18 +82,13 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
 
         {hasDebts(summary) ? (
           <>
-            <DebtHero
-              balances={summary.memberBalances[meId] ?? {}}
-              fallbackCurrency={Object.keys(summary.currencies)[0] ?? "EUR"}
-              counterparts={counterparts}
-              person={person}
-            />
+            <DebtHero hero={debtHero(summary, meId, counterparts, person)} />
             <SectionLabel>Between you and</SectionLabel>
             <DirectDebts
               groupId={groupId}
               meId={meId}
               counterparts={counterparts}
-              othersWithDebts={othersWithDebts}
+              othersWithDebts={formatOthersWithDebts(summary, meId, person)}
               person={person}
               onSettle={openSettle}
             />
@@ -155,50 +138,30 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
-interface DebtHeroProps {
-  balances: Record<string, number>;
-  fallbackCurrency: string;
-  counterparts: CounterpartDebts[];
-  person: PersonLookup;
-}
-
-function DebtHero({
-  balances,
-  fallbackCurrency,
-  counterparts,
-  person,
-}: DebtHeroProps) {
-  const hero = heroBalances(balances);
-  const { lines, mixed } = hero;
+function DebtHero({ hero }: { hero: ReturnType<typeof debtHero> }) {
+  const { label, amounts, meta } = hero;
 
   return (
     <View testID="debt-hero" className="pt-4 pb-2">
-      <Text className="text-muted-foreground text-sm">{heroLabel(hero)}</Text>
-      {lines.length === 0 ? (
+      <Text className="text-muted-foreground text-sm">{label}</Text>
+      {amounts.map(({ currency, cents, text }) => (
         <Text
+          key={currency}
           testID="debt-hero-amount"
-          className="text-foreground text-4xl font-bold tracking-tight"
+          className={cn(
+            "font-bold tracking-tight",
+            amounts.length > 1 ? "text-3xl" : "text-4xl",
+            cents > 0
+              ? "text-success"
+              : cents < 0
+                ? "text-destructive"
+                : "text-foreground",
+          )}
         >
-          {formatCurrencyFromCents({ cents: 0, currency: fallbackCurrency })}
+          {text}
         </Text>
-      ) : (
-        lines.map(({ currency, cents }) => (
-          <Text
-            key={currency}
-            testID="debt-hero-amount"
-            className={cn(
-              "font-bold tracking-tight",
-              lines.length > 1 ? "text-3xl" : "text-4xl",
-              cents > 0 ? "text-success" : "text-destructive",
-            )}
-          >
-            {formatHeroAmount(cents, currency, mixed)}
-          </Text>
-        ))
-      )}
-      <Text className="text-muted-foreground mt-0.5 text-sm">
-        {heroMeta(counterparts, person)}
-      </Text>
+      ))}
+      <Text className="text-muted-foreground mt-0.5 text-sm">{meta}</Text>
     </View>
   );
 }

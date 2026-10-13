@@ -14,14 +14,9 @@ import { Card } from "@flatsby/ui/card";
 import { Label } from "@flatsby/ui/label";
 import { Switch } from "@flatsby/ui/switch";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import {
-  balanceBars,
-  openCurrencies,
-  settlePlanStats,
-} from "@flatsby/validators/expenses/debt";
+import { groupBalances } from "@flatsby/validators/expenses/debt";
 import {
   formatCurrencyFromCents,
-  formatPlanPayments,
   formatSignedCents,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -43,19 +38,20 @@ export function GroupBalancesCard({
 }: GroupBalancesCardProps) {
   const [showPlan, setShowPlan] = useState(false);
 
-  const currencies = openCurrencies(summary);
-  const { savesPayments, paymentCount } = settlePlanStats(currencies);
+  const { currencies, savesPayments, paymentsLabel } = groupBalances(
+    summary,
+    meId,
+  );
 
   return (
     <Card className="p-4">
       <div className="flex flex-col gap-4">
-        {currencies.map(({ currency }) => (
+        {currencies.map(({ currency, rows }) => (
           <BalanceBars
             key={currency}
             currency={currency}
             showHeading={currencies.length > 1}
-            memberBalances={summary.memberBalances}
-            meId={meId}
+            rows={rows}
             person={person}
           />
         ))}
@@ -70,7 +66,7 @@ export function GroupBalancesCard({
             >
               <span className="font-semibold">Show settle plan</span>
               <span className="text-muted-foreground text-xs font-normal">
-                {formatPlanPayments(paymentCount)}
+                {paymentsLabel}
               </span>
             </Label>
             <Switch
@@ -81,12 +77,12 @@ export function GroupBalancesCard({
             />
           </div>
           {showPlan &&
-            currencies.map(({ currency, simplified }) => (
+            currencies.map(({ currency, steps }) => (
               <PlanSteps
                 key={currency}
                 currency={currency}
                 showHeading={currencies.length > 1}
-                steps={simplified}
+                steps={steps}
                 meId={meId}
                 person={person}
                 onSettle={onSettle}
@@ -101,28 +97,23 @@ export function GroupBalancesCard({
 interface BalanceBarsProps {
   currency: string;
   showHeading: boolean;
-  memberBalances: GroupDebtSummary["memberBalances"];
-  meId: number;
+  rows: ReturnType<typeof groupBalances>["currencies"][number]["rows"];
   person: PersonLookup;
 }
 
 function BalanceBars({
   currency,
   showHeading,
-  memberBalances,
-  meId,
+  rows,
   person,
 }: BalanceBarsProps) {
-  const { rows, scale } = balanceBars(memberBalances, currency, meId);
-
   return (
     <div>
       {showHeading && <p className="mb-1 font-semibold">{currency}</p>}
       <ul>
-        {rows.map(({ memberId, cents }) => {
+        {rows.map(({ memberId, isMe, cents, percent }) => {
           const { name, image } = person(memberId);
-          const isMe = memberId === meId;
-          const width = `${(Math.abs(cents) / scale) * 100}%`;
+          const width = `${percent}%`;
           return (
             <li
               key={memberId}

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { DebtEntry, GroupDebtSummary } from "./types";
-import { applySettlement, calculateDebts, directDebtsFor } from "./debt";
+import {
+  applySettlement,
+  calculateDebts,
+  directDebtsBetween,
+  directDebtsFor,
+} from "./debt";
 
 const YOU = 1;
 const LENA = 2;
@@ -295,15 +300,34 @@ describe("directDebtsFor", () => {
           { amountInCents: 4250, debt: debt(MAX, YOU, 4250) },
           { amountInCents: -1500, debt: debt(YOU, MAX, 1500, "USD") },
         ],
+        direction: "owes you · you owe",
       },
       {
         groupMemberId: LENA,
         amounts: [{ amountInCents: -3000, debt: debt(YOU, LENA, 3000) }],
+        direction: "you owe",
       },
       {
         groupMemberId: SOPHIE,
         amounts: [{ amountInCents: 1800, debt: debt(SOPHIE, YOU, 1800) }],
+        direction: "owes you",
       },
     ]);
+  });
+});
+
+describe("directDebtsBetween", () => {
+  it("puts the payer's own debt to the receiver first", () => {
+    const summary = calculateDebts([
+      owes(MAX, YOU, 1000, "EUR"),
+      owes(YOU, MAX, 1500, "USD"),
+    ]);
+
+    expect(directDebtsBetween(summary, YOU, MAX)[0]).toEqual(
+      debt(YOU, MAX, 1500, "USD"),
+    );
+    expect(directDebtsBetween(summary, MAX, YOU)[0]).toEqual(
+      debt(MAX, YOU, 1000),
+    );
   });
 });

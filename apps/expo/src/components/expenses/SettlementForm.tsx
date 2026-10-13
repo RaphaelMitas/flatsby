@@ -420,14 +420,11 @@ export function SettlementForm({
 
   const memberItems: BottomSheetPickerItem[] = groupMembers.map((member) => ({
     id: member.id.toString(),
-    title: member.user.name,
-    icon: (
-      <MemberAvatar
-        person={{ name: member.user.name, image: member.user.image }}
-        className="h-6 w-6"
-      />
-    ),
+    title: person(member.id).name,
+    icon: <MemberAvatar person={person(member.id)} className="h-6 w-6" />,
   }));
+  const memberTitle = (id: number, placeholder: string) =>
+    isMember(id) ? person(id).name : placeholder;
 
   // Create picker items for currency
   const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
@@ -487,13 +484,17 @@ export function SettlementForm({
                             field.value ? field.value.toString() : undefined
                           }
                           onSelect={(item) => {
-                            field.onChange(parseInt(item.id, 10));
+                            const payer = parseInt(item.id, 10);
+                            field.onChange(payer);
+                            if (payer === watchedToMemberId) {
+                              form.setValue("toGroupMemberId", -1);
+                            }
                             defaultCurrencyToPairDebt();
                           }}
-                          triggerTitle={
-                            groupMembers.find((m) => m.id === field.value)?.user
-                              .name ?? "Select who is paying"
-                          }
+                          triggerTitle={memberTitle(
+                            field.value,
+                            "Select who is paying",
+                          )}
                         />
                         <FormMessage />
                       </View>
@@ -507,7 +508,9 @@ export function SettlementForm({
                       <View className="gap-2">
                         <Label>Receiving</Label>
                         <BottomSheetPickerTrigger
-                          items={memberItems}
+                          items={memberItems.filter(
+                            (item) => item.id !== String(watchedFromMemberId),
+                          )}
                           selectedId={
                             field.value ? field.value.toString() : undefined
                           }
@@ -515,10 +518,10 @@ export function SettlementForm({
                             field.onChange(parseInt(item.id, 10));
                             defaultCurrencyToPairDebt();
                           }}
-                          triggerTitle={
-                            groupMembers.find((m) => m.id === field.value)?.user
-                              .name ?? "Select who is receiving"
-                          }
+                          triggerTitle={memberTitle(
+                            field.value,
+                            "Select who is receiving",
+                          )}
                         />
                         <FormMessage />
                       </View>

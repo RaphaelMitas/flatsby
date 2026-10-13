@@ -11,7 +11,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   describePairActivity,
   formatCurrencyFromCents,
-  formatOthersWithDebts,
   formatSignedCents,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -29,7 +28,7 @@ interface DirectDebtsProps {
   groupId: number;
   meId: number;
   counterparts: CounterpartDebts[];
-  othersWithDebts: string[];
+  othersWithDebts: string;
   person: PersonLookup;
   onSettle: OnSettle;
 }
@@ -55,7 +54,7 @@ export function DirectDebts({
             You're all square
           </Text>
           <Text className="text-muted-foreground text-sm">
-            {formatOthersWithDebts(othersWithDebts)}
+            {othersWithDebts}
           </Text>
         </View>
       </Card>
@@ -110,12 +109,6 @@ function DirectDebtRow({
 }: DirectDebtRowProps) {
   const otherId = counterpart.groupMemberId;
   const other = person(otherId);
-  const direction = [
-    counterpart.amounts.some((a) => a.amountInCents > 0) && "owes you",
-    counterpart.amounts.some((a) => a.amountInCents < 0) && "you owe",
-  ]
-    .filter(Boolean)
-    .join(" · ");
 
   return (
     <View testID="debt-row" className={cn(divided && "border-border border-t")}>
@@ -142,7 +135,9 @@ function DirectDebtRow({
                 color="muted-foreground"
               />
             </View>
-            <Text className="text-muted-foreground text-sm">{direction}</Text>
+            <Text className="text-muted-foreground text-sm">
+              {counterpart.direction}
+            </Text>
           </View>
         </Pressable>
         <View className="items-end gap-2">
@@ -204,7 +199,7 @@ function PairActivityList({
   );
 
   let message: string | undefined;
-  if (isError || data?.success === false) {
+  if (data?.success === false || (isError && !data)) {
     message = "Couldn't load recent activity";
   } else if (data?.data.items.length === 0) {
     message = "Nothing shared yet";

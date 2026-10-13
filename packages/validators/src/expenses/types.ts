@@ -45,10 +45,7 @@ export interface DebtEntry {
   currency: string;
 }
 
-/**
- * Debt summary for a single currency. `direct` is who owes whom per pair with
- * circular debts cancelled, `simplified` is the greedy settle plan.
- */
+/** direct: per-pair debts with cycles cancelled; simplified: the greedy settle plan */
 export interface DebtSummary {
   currency: string;
   direct: DebtEntry[];
@@ -79,5 +76,4 @@ export const isCurrencyCode = (code: string): code is CurrencyCode => {
   return CURRENCY_CODES.includes(code as CurrencyCode);
 };
 
-/** Which debt list a settlement was started from */
 export type SettleSource = "direct" | "plan";

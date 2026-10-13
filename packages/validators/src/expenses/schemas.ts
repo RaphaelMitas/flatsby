@@ -90,12 +90,17 @@ export const deleteExpenseSchema = z.object({
   expenseId: updateExpenseSchema.shape.expenseId,
 });
 
-export const settlementFormSchema = z.object({
-  amountInCents: z.number().min(1, "Amount must be greater than 0"),
-  fromGroupMemberId: z.number().min(1, "Please select who is paying"),
-  toGroupMemberId: z.number().min(1, "Please select who is receiving"),
-  currency: currencyCodeSchema,
-});
+export const settlementFormSchema = z
+  .object({
+    amountInCents: z.number().min(1, "Amount must be greater than 0"),
+    fromGroupMemberId: z.number().min(1, "Please select who is paying"),
+    toGroupMemberId: z.number().min(1, "Please select who is receiving"),
+    currency: currencyCodeSchema,
+  })
+  .refine((values) => values.fromGroupMemberId !== values.toGroupMemberId, {
+    path: ["toGroupMemberId"],
+    message: "Pick two different people",
+  });
 
 export type SettlementFormValues = z.infer<typeof settlementFormSchema>;
 

@@ -16,7 +16,6 @@ import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   describePairActivity,
   formatCurrencyFromCents,
-  formatOthersWithDebts,
   formatSignedCents,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -28,7 +27,7 @@ interface DirectDebtsCardProps {
   groupId: number;
   meId: number;
   debts: CounterpartDebts[];
-  othersWithDebts: string[];
+  othersWithDebts: string;
   person: PersonLookup;
   onSettle: (prefill: SettlementPrefill) => void;
 }
@@ -54,9 +53,7 @@ export function DirectDebtsCard({
         </span>
         <div>
           <p className="font-semibold">You're all square</p>
-          <p className="text-muted-foreground text-sm">
-            {formatOthersWithDebts(othersWithDebts)}
-          </p>
+          <p className="text-muted-foreground text-sm">{othersWithDebts}</p>
         </div>
       </Card>
     );
@@ -105,12 +102,8 @@ function DirectDebtRow({
   onToggle,
   onSettle,
 }: DirectDebtRowProps) {
-  const { groupMemberId, amounts } = counterpart;
+  const { groupMemberId, amounts, direction } = counterpart;
   const { name, image } = person(groupMemberId);
-  const directions = [
-    amounts.some(({ amountInCents }) => amountInCents > 0) && "owes you",
-    amounts.some(({ amountInCents }) => amountInCents < 0) && "you owe",
-  ].filter((direction) => direction !== false);
 
   return (
     <div data-testid="direct-debt-row">
@@ -132,9 +125,7 @@ function DirectDebtRow({
                 )}
               />
             </div>
-            <p className="text-muted-foreground text-sm">
-              {directions.join(" · ")}
-            </p>
+            <p className="text-muted-foreground text-sm">{direction}</p>
           </div>
         </button>
         <div className="flex flex-col items-end gap-2">
@@ -197,7 +188,7 @@ function PairActivityList({
   );
 
   let content: ReactNode;
-  if (isError || data?.success === false) {
+  if (data?.success === false || (isError && !data)) {
     content = <EmptyLine>Couldn't load recent activity</EmptyLine>;
   } else if (!data) {
     content = Array.from({ length: 2 }).map((_, i) => (

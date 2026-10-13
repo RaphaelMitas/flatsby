@@ -1,9 +1,4 @@
-import type {
-  DebtEntry,
-  DebtSummary,
-  GroupDebtSummary,
-  MemberBalances,
-} from "./types";
+import type { DebtEntry, GroupDebtSummary, MemberBalances } from "./types";
 
 /** debtor -> creditor -> cents, every amount positive */
 type DebtGraph = Map<number, Map<number, number>>;
@@ -105,14 +100,15 @@ export interface CounterpartDebts {
   groupMemberId: number;
   /** Positive: they owe the member. Negative: the member owes them. */
   amounts: { amountInCents: number; debt: DebtEntry }[];
+  direction: string;
 }
 
-/** A member's direct debts grouped by the other person, largest first */
+/** Largest first */
 export function directDebtsFor(
   summary: GroupDebtSummary,
   memberId: number,
 ): CounterpartDebts[] {
-  const byCounterpart = new Map<number, CounterpartDebts>();
+  const byCounterpart = new Map<number, CounterpartDebts["amounts"]>();
   for (const { direct } of Object.values(summary.currencies)) {
     for (const debt of direct) {
       const owedToMember = debt.toGroupMemberId === memberId;
@@ -120,34 +116,46 @@ export function directDebtsFor(
       const other = owedToMember
         ? debt.fromGroupMemberId
         : debt.toGroupMemberId;
-      const entry = byCounterpart.get(other) ?? {
-        groupMemberId: other,
-        amounts: [],
-      };
-      entry.amounts.push({
+      const amounts = byCounterpart.get(other) ?? [];
+      amounts.push({
         amountInCents: owedToMember ? debt.amountInCents : -debt.amountInCents,
         debt,
       });
-      byCounterpart.set(other, entry);
+      byCounterpart.set(other, amounts);
     }
   }
-  const largest = ({ amounts }: CounterpartDebts) =>
+  const largest = (amounts: CounterpartDebts["amounts"]) =>
     Math.max(...amounts.map(({ amountInCents }) => Math.abs(amountInCents)));
-  return [...byCounterpart.values()].sort((a, b) => largest(b) - largest(a));
+  return [...byCounterpart]
+    .sort(([, a], [, b]) => largest(b) - largest(a))
+    .map(([groupMemberId, amounts]) => ({
+      groupMemberId,
+      amounts,
+      direction: [
+        amounts.some(({ amountInCents }) => amountInCents > 0) && "owes you",
+        amounts.some(({ amountInCents }) => amountInCents < 0) && "you owe",
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    }));
 }
 
 export function directDebtsBetween(
   summary: GroupDebtSummary,
-  a: number,
-  b: number,
+  payer: number,
+  receiver: number,
 ): DebtEntry[] {
-  return Object.values(summary.currencies).flatMap(({ direct }) =>
+  const between = Object.values(summary.currencies).flatMap(({ direct }) =>
     direct.filter(
       (debt) =>
-        (debt.fromGroupMemberId === a && debt.toGroupMemberId === b) ||
-        (debt.fromGroupMemberId === b && debt.toGroupMemberId === a),
+        (debt.fromGroupMemberId === payer &&
+          debt.toGroupMemberId === receiver) ||
+        (debt.fromGroupMemberId === receiver && debt.toGroupMemberId === payer),
     ),
   );
+  const payerOwes = (debt: DebtEntry) =>
+    Number(debt.fromGroupMemberId === payer);
+  return between.sort((a, b) => payerOwes(b) - payerOwes(a));
 }
 
 export function hasDebts(summary: GroupDebtSummary): boolean {
@@ -156,63 +164,43 @@ export function hasDebts(summary: GroupDebtSummary): boolean {
   );
 }
 
-export function othersWithOpenDebts(
-  summary: GroupDebtSummary,
-  meId: number,
-): number[] {
-  return Object.entries(summary.memberBalances)
-    .filter(
-      ([id, balances]) =>
-        Number(id) !== meId &&
-        Object.values(balances).some((cents) => cents !== 0),
-    )
-    .map(([id]) => Number(id));
-}
-
-export function heroBalances(balances: Record<string, number>) {
-  const lines = Object.entries(balances)
-    .filter(([, cents]) => cents !== 0)
-    .map(([currency, cents]) => ({ currency, cents }));
-  return {
-    lines,
-    mixed: new Set(lines.map(({ cents }) => Math.sign(cents))).size > 1,
-  };
-}
-
-export function openCurrencies(summary: GroupDebtSummary): DebtSummary[] {
-  const balances = Object.values(summary.memberBalances);
-  return Object.values(summary.currencies).filter(({ currency }) =>
+export function groupBalances(summary: GroupDebtSummary, meId: number) {
+  const { memberBalances } = summary;
+  const balances = Object.values(memberBalances);
+  const memberIds = new Set([...Object.keys(memberBalances).map(Number), meId]);
+  const open = Object.values(summary.currencies).filter(({ currency }) =>
     balances.some((byCurrency) => (byCurrency[currency] ?? 0) !== 0),
   );
-}
+  const paymentCount = open.reduce(
+    (sum, { simplified }) => sum + simplified.length,
+    0,
+  );
 
-export function settlePlanStats(currencies: DebtSummary[]) {
   return {
-    savesPayments: currencies.some(
+    currencies: open.map(({ currency, simplified }) => {
+      const rows = [...memberIds]
+        .map((memberId) => ({
+          memberId,
+          isMe: memberId === meId,
+          cents: memberBalances[memberId]?.[currency] ?? 0,
+        }))
+        .filter(({ isMe, cents }) => cents !== 0 || isMe)
+        .sort((a, b) => b.cents - a.cents);
+      const scale = Math.max(...rows.map(({ cents }) => Math.abs(cents)), 1);
+      return {
+        currency,
+        rows: rows.map((row) => ({
+          ...row,
+          percent: (Math.abs(row.cents) / scale) * 100,
+        })),
+        steps: simplified,
+      };
+    }),
+    savesPayments: open.some(
       ({ direct, simplified }) => simplified.length < direct.length,
     ),
-    paymentCount: currencies.reduce(
-      (sum, { simplified }) => sum + simplified.length,
-      0,
-    ),
+    paymentsLabel: `${paymentCount} ${paymentCount === 1 ? "payment clears" : "payments clear"} everyone`,
   };
-}
-
-export function balanceBars(
-  memberBalances: MemberBalances,
-  currency: string,
-  meId: number,
-) {
-  const memberIds = new Set([...Object.keys(memberBalances).map(Number), meId]);
-  const rows = [...memberIds]
-    .map((memberId) => ({
-      memberId,
-      cents: memberBalances[memberId]?.[currency] ?? 0,
-    }))
-    .filter(({ memberId, cents }) => cents !== 0 || memberId === meId)
-    .sort((a, b) => b.cents - a.cents);
-  const scale = Math.max(...rows.map(({ cents }) => Math.abs(cents)), 1);
-  return { rows, scale };
 }
 
 function adjustBalance(

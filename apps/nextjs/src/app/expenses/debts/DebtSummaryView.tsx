@@ -7,12 +7,12 @@ import { CheckCircle2, Plus } from "lucide-react";
 
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
+import { directDebtsFor, hasDebts } from "@flatsby/validators/expenses/debt";
 import {
-  directDebtsFor,
-  hasDebts,
-  othersWithOpenDebts,
-} from "@flatsby/validators/expenses/debt";
-import { personLookup } from "@flatsby/validators/expenses/formatting";
+  debtHero,
+  formatOthersWithDebts,
+  personLookup,
+} from "@flatsby/validators/expenses/formatting";
 
 import type { SettlementPrefill } from "./SettlementForm";
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -50,11 +50,7 @@ export function DebtSummaryView() {
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId);
-  const currencies = Object.values(summary.currencies);
   const directDebts = directDebtsFor(summary, meId);
-  const othersWithDebts = othersWithOpenDebts(summary, meId).map(
-    (id) => person(id).name,
-  );
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -67,18 +63,13 @@ export function DebtSummaryView() {
 
       {hasDebts(summary) ? (
         <>
-          <DebtHero
-            balances={summary.memberBalances[meId] ?? {}}
-            fallbackCurrency={currencies[0]?.currency ?? "EUR"}
-            directDebts={directDebts}
-            person={person}
-          />
+          <DebtHero hero={debtHero(summary, meId, directDebts, person)} />
           <Section title="Between you and">
             <DirectDebtsCard
               groupId={groupId}
               meId={meId}
               debts={directDebts}
-              othersWithDebts={othersWithDebts}
+              othersWithDebts={formatOthersWithDebts(summary, meId, person)}
               person={person}
               onSettle={setSettling}
             />

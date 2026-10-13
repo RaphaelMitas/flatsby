@@ -2,9 +2,9 @@
 // Formatting Utilities - Currency and Date Display
 // ============================================================================
 
-import type { CounterpartDebts, heroBalances } from "./debt";
+import type { CounterpartDebts } from "./debt";
 import type { PairActivityItem } from "./schemas";
-import type { DebtEntry, SettleSource } from "./types";
+import type { DebtEntry, GroupDebtSummary, SettleSource } from "./types";
 import { centsToDecimal } from "./conversion";
 
 /**
@@ -146,35 +146,25 @@ export function formatSignedCents(cents: number, currency: string): string {
 }
 
 /** "Max", "Max and Sophie", "Lena, Max and Sophie" */
-export function joinNames(names: string[]): string {
+function joinNames(names: string[]): string {
   const last = names.at(-1);
   if (names.length < 2 || last === undefined) return last ?? "";
   return `${names.slice(0, -1).join(", ")} and ${last}`;
 }
 
-export function heroLabel({
-  lines,
-  mixed,
-}: ReturnType<typeof heroBalances>): string {
-  const first = lines[0];
-  if (!first || mixed) return "Overall";
-  return first.cents > 0 ? "Overall you are owed" : "Overall you owe";
-}
-
-export function formatHeroAmount(
-  cents: number,
-  currency: string,
-  mixed: boolean,
-): string {
-  return mixed
-    ? formatSignedCents(cents, currency)
-    : formatCurrencyFromCents({ cents: Math.abs(cents), currency });
-}
-
-export function heroMeta(
+export function debtHero(
+  summary: GroupDebtSummary,
+  meId: number,
   counterparts: CounterpartDebts[],
   person: PersonLookup,
-): string {
+) {
+  const lines = Object.entries(summary.memberBalances[meId] ?? {})
+    .filter(([, cents]) => cents !== 0)
+    .map(([currency, cents]) => ({ currency, cents }));
+  const mixed = new Set(lines.map(({ cents }) => Math.sign(cents))).size > 1;
+  const first = lines[0];
+  const fallbackCurrency = Object.keys(summary.currencies)[0] ?? "EUR";
+
   const namesWhere = (sign: 1 | -1) =>
     counterparts
       .filter(({ amounts }) =>
@@ -183,24 +173,49 @@ export function heroMeta(
       .map(({ groupMemberId }) => person(groupMemberId).name);
   const owedBy = namesWhere(1);
   const owing = namesWhere(-1);
-  const parts: string[] = [];
+  const meta: string[] = [];
   if (owedBy.length > 0) {
-    parts.push(
+    meta.push(
       `${joinNames(owedBy)} ${owedBy.length === 1 ? "owes" : "owe"} you`,
     );
   }
   if (owing.length > 0) {
-    parts.push(`${parts.length > 0 ? "you" : "You"} owe ${joinNames(owing)}`);
+    meta.push(`${meta.length > 0 ? "you" : "You"} owe ${joinNames(owing)}`);
   }
-  return parts.join(", ") || "You don't owe anyone and nobody owes you";
+
+  return {
+    label:
+      !first || mixed
+        ? "Overall"
+        : first.cents > 0
+          ? "Overall you are owed"
+          : "Overall you owe",
+    amounts: (first ? lines : [{ currency: fallbackCurrency, cents: 0 }]).map(
+      ({ currency, cents }) => ({
+        currency,
+        cents,
+        text: mixed
+          ? formatSignedCents(cents, currency)
+          : formatCurrencyFromCents({ cents: Math.abs(cents), currency }),
+      }),
+    ),
+    meta: meta.join(", ") || "You don't owe anyone and nobody owes you",
+  };
 }
 
-export function formatOthersWithDebts(names: string[]): string {
+export function formatOthersWithDebts(
+  summary: GroupDebtSummary,
+  meId: number,
+  person: PersonLookup,
+): string {
+  const names = Object.entries(summary.memberBalances)
+    .filter(
+      ([id, balances]) =>
+        Number(id) !== meId &&
+        Object.values(balances).some((cents) => cents !== 0),
+    )
+    .map(([id]) => person(Number(id)).name);
   return `${joinNames(names)} ${names.length === 1 ? "still has" : "still have"} open debts`;
-}
-
-export function formatPlanPayments(count: number): string {
-  return `${count} ${count === 1 ? "payment clears" : "payments clear"} everyone`;
 }
 
 export function describePairActivity(

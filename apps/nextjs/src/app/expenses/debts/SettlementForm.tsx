@@ -71,16 +71,14 @@ export interface SettlementPrefill {
 }
 
 interface SettlementFormProps {
-  /** Without a prefill or an expense the form starts blank, with pickers */
+  /** Without a prefill the form starts blank, with pickers */
   prefill?: SettlementPrefill;
-  expense?: ExpenseWithSplitsAndMembers;
   onClose: () => void;
   open: boolean;
 }
 
 export function SettlementForm({
   prefill,
-  expense,
   onClose,
   open,
 }: SettlementFormProps) {
@@ -90,8 +88,7 @@ export function SettlementForm({
   const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id ?? 0;
-  const isEditMode = !!expense;
-  const isBlank = !prefill && !expense;
+  const isBlank = !prefill;
 
   // Get group members for display
   const { data: groupData } = useSuspenseQuery(
@@ -104,19 +101,12 @@ export function SettlementForm({
     debtData.success ? directDebtsBetween(debtData.data, a, b) : [];
 
   const meId = groupData.success ? groupData.data.thisGroupMember.id : 0;
-  const initial: DebtEntry = expense
-    ? {
-        fromGroupMemberId: expense.paidByGroupMemberId,
-        toGroupMemberId: expense.expenseSplits[0]?.groupMemberId ?? 0,
-        currency: expense.currency,
-        amountInCents: expense.amountInCents,
-      }
-    : (prefill?.debt ?? {
-        fromGroupMemberId: 0,
-        toGroupMemberId: 0,
-        currency: "EUR",
-        amountInCents: 0,
-      });
+  const initial: DebtEntry = prefill?.debt ?? {
+    fromGroupMemberId: 0,
+    toGroupMemberId: 0,
+    currency: "EUR",
+    amountInCents: 0,
+  };
 
   const form = useForm<SettlementFormValues>({
     resolver: zodResolver(settlementFormSchema),
@@ -132,12 +122,6 @@ export function SettlementForm({
     invalidateList,
     invalidateDebtSummary,
   } = useExpenseInvalidation(groupId);
-
-  const expenseQueryKey = expense
-    ? trpc.expense.getExpense.queryKey({
-        expenseId: expense.id,
-      })
-    : undefined;
 
   // Get group data early for optimistic updates
   const membersForOptimistic = groupData.success
@@ -316,95 +300,23 @@ export function SettlementForm({
     }),
   );
 
-  const updateSettlementMutation = useMutation(
-    trpc.expense.updateExpense.mutationOptions({
-      onMutate: async (input) => {
-        if (!expense || !expenseQueryKey) return;
-        // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpc.expense.getExpense.queryOptions({
-            expenseId: expense.id,
-          }),
-        );
-
-        const previousData = queryClient.getQueryData(expenseQueryKey);
-
-        // Optimistically update the settlement in the list
-        queryClient.setQueryData(expenseQueryKey, (old) => {
-          if (!old || old.success === false) return old;
-
-          return {
-            success: true as const,
-            data: {
-              ...old.data,
-              ...input,
-              category: old.data.category,
-              subcategory: old.data.subcategory,
-            },
-          };
-        });
-
-        return { previousData };
-      },
-      onError: (error, _variables, context) => {
-        if (context?.previousData && expenseQueryKey) {
-          queryClient.setQueryData(expenseQueryKey, context.previousData);
-        }
-        toast.error("Failed to update settlement", {
-          description: error.message,
-        });
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          if (context?.previousData && expenseQueryKey) {
-            queryClient.setQueryData(expenseQueryKey, context.previousData);
-          }
-          toast.error("Failed to update settlement", {
-            description: data.error.message,
-          });
-          return;
-        }
-
-        toast.success("Settlement updated successfully");
-        void queryClient.invalidateQueries({
-          queryKey: expenseQueryKey,
-        });
-        void invalidateDebtSummary();
-        onClose();
-      },
-    }),
-  );
-
   const onSubmit = (values: SettlementFormValues) => {
-    const splits = [
-      {
-        groupMemberId: values.toGroupMemberId,
-        amountInCents: values.amountInCents,
-        percentage: null,
-      },
-    ];
-    if (isEditMode) {
-      updateSettlementMutation.mutate({
-        expenseId: expense.id,
-        paidByGroupMemberId: values.fromGroupMemberId,
-        amountInCents: values.amountInCents,
-        currency: values.currency,
-        expenseDate: expense.expenseDate,
-        splits,
-        splitMethod: "settlement",
-      });
-    } else {
-      createSettlementMutation.mutate({
-        groupId,
-        paidByGroupMemberId: values.fromGroupMemberId,
-        amountInCents: values.amountInCents,
-        currency: values.currency,
-        description: "Settlement",
-        expenseDate: new Date(),
-        splits,
-        splitMethod: "settlement",
-      });
-    }
+    createSettlementMutation.mutate({
+      groupId,
+      paidByGroupMemberId: values.fromGroupMemberId,
+      amountInCents: values.amountInCents,
+      currency: values.currency,
+      description: "Settlement",
+      expenseDate: new Date(),
+      splits: [
+        {
+          groupMemberId: values.toGroupMemberId,
+          amountInCents: values.amountInCents,
+          percentage: null,
+        },
+      ],
+      splitMethod: "settlement",
+    });
   };
 
   const fromGroupMemberId = form.watch("fromGroupMemberId");
@@ -437,8 +349,7 @@ export function SettlementForm({
         )
       : undefined);
 
-  const isPending =
-    createSettlementMutation.isPending || updateSettlementMutation.isPending;
+  const isPending = createSettlementMutation.isPending;
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
@@ -447,9 +358,7 @@ export function SettlementForm({
         data-testid="settlement-form"
       >
         <SheetHeader>
-          <SheetTitle>
-            {isEditMode ? "Edit Settlement" : "Settle Up"}
-          </SheetTitle>
+          <SheetTitle>Settle Up</SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
@@ -600,20 +509,15 @@ export function SettlementForm({
 
             {/* Error Display */}
             {(createSettlementMutation.isError ||
-              updateSettlementMutation.isError ||
-              createSettlementMutation.data?.success === false ||
-              updateSettlementMutation.data?.success === false) && (
+              createSettlementMutation.data?.success === false) && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
                   {createSettlementMutation.data?.success === false
                     ? createSettlementMutation.data.error.message
-                    : updateSettlementMutation.data?.success === false
-                      ? updateSettlementMutation.data.error.message
-                      : (createSettlementMutation.error?.message ??
-                        updateSettlementMutation.error?.message ??
-                        "An error occurred")}
+                    : (createSettlementMutation.error?.message ??
+                      "An error occurred")}
                 </AlertDescription>
               </Alert>
             )}
@@ -639,10 +543,8 @@ export function SettlementForm({
                 {isPending ? (
                   <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    {isEditMode ? "Updating..." : "Recording..."}
+                    Recording...
                   </>
-                ) : isEditMode ? (
-                  "Update Settlement"
                 ) : (
                   "Record Settlement"
                 )}

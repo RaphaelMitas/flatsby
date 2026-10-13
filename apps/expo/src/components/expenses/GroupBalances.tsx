@@ -1,20 +1,14 @@
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type {
-  DebtSummary,
+  DebtEntry,
   GroupDebtSummary,
-  MemberBalances,
 } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { Text, View } from "react-native";
 
-import {
-  balanceBars,
-  openCurrencies,
-  settlePlanStats,
-} from "@flatsby/validators/expenses/debt";
+import { groupBalances } from "@flatsby/validators/expenses/debt";
 import {
   formatCurrencyFromCents,
-  formatPlanPayments,
   formatSignedCents,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -41,19 +35,20 @@ export function GroupBalances({
 }: GroupBalancesProps) {
   const [showPlan, setShowPlan] = useState(false);
 
-  const currencies = openCurrencies(summary);
+  const { currencies, savesPayments, paymentsLabel } = groupBalances(
+    summary,
+    meId,
+  );
   const withHeading = currencies.length > 1;
-  const { savesPayments, paymentCount } = settlePlanStats(currencies);
 
   return (
     <Card className="p-4">
       <View className="gap-4">
-        {currencies.map(({ currency }) => (
+        {currencies.map(({ currency, rows }) => (
           <BalanceBars
             key={currency}
             currency={currency}
-            memberBalances={summary.memberBalances}
-            meId={meId}
+            rows={rows}
             person={person}
             withHeading={withHeading}
           />
@@ -67,7 +62,7 @@ export function GroupBalances({
                 Show settle plan
               </Text>
               <Text className="text-muted-foreground text-xs">
-                {formatPlanPayments(paymentCount)}
+                {paymentsLabel}
               </Text>
             </View>
             <Switch
@@ -77,10 +72,11 @@ export function GroupBalances({
             />
           </View>
           {showPlan &&
-            currencies.map((debts) => (
+            currencies.map(({ currency, steps }) => (
               <PlanSteps
-                key={debts.currency}
-                debts={debts}
+                key={currency}
+                currency={currency}
+                steps={steps}
                 meId={meId}
                 person={person}
                 withHeading={withHeading}
@@ -95,85 +91,78 @@ export function GroupBalances({
 
 interface BalanceBarsProps {
   currency: string;
-  memberBalances: MemberBalances;
-  meId: number;
+  rows: ReturnType<typeof groupBalances>["currencies"][number]["rows"];
   person: PersonLookup;
   withHeading: boolean;
 }
 
 function BalanceBars({
   currency,
-  memberBalances,
-  meId,
+  rows,
   person,
   withHeading,
 }: BalanceBarsProps) {
-  const { rows, scale } = balanceBars(memberBalances, currency, meId);
-
   return (
     <View>
       {withHeading && (
         <Text className="text-foreground mb-2 font-semibold">{currency}</Text>
       )}
-      {rows.map(({ memberId, cents }) => {
-        const isMe = memberId === meId;
-        const percent = (Math.abs(cents) / scale) * 100;
-        return (
-          <View key={memberId} className="flex-row items-center gap-2 py-1.5">
-            <MemberAvatar
-              person={person(memberId)}
-              className="h-6 w-6"
-              textClassName="text-xs"
-            />
-            <Text
-              className={cn(
-                "text-foreground w-16 text-sm",
-                isMe ? "font-bold" : "font-medium",
+      {rows.map(({ memberId, isMe, cents, percent }) => (
+        <View key={memberId} className="flex-row items-center gap-2 py-1.5">
+          <MemberAvatar
+            person={person(memberId)}
+            className="h-6 w-6"
+            textClassName="text-xs"
+          />
+          <Text
+            className={cn(
+              "text-foreground w-16 text-sm",
+              isMe ? "font-bold" : "font-medium",
+            )}
+            numberOfLines={1}
+          >
+            {person(memberId).name}
+          </Text>
+          <View className="h-5 flex-1 flex-row">
+            <View className="border-border flex-1 flex-row justify-end border-r">
+              {cents < 0 && (
+                <View
+                  className="bg-destructive/70 h-full rounded-l-md"
+                  style={{ width: `${percent}%` }}
+                />
               )}
-              numberOfLines={1}
-            >
-              {person(memberId).name}
-            </Text>
-            <View className="h-5 flex-1 flex-row">
-              <View className="border-border flex-1 flex-row justify-end border-r">
-                {cents < 0 && (
-                  <View
-                    className="bg-destructive/70 h-full rounded-l-md"
-                    style={{ width: `${percent}%` }}
-                  />
-                )}
-              </View>
-              <View className="flex-1 flex-row">
-                {cents > 0 && (
-                  <View
-                    className="bg-success/70 h-full rounded-r-md"
-                    style={{ width: `${percent}%` }}
-                  />
-                )}
-              </View>
             </View>
-            <Text
-              className={cn(
-                "w-20 text-right text-sm font-semibold",
-                cents > 0
-                  ? "text-success"
-                  : cents < 0
-                    ? "text-destructive"
-                    : "text-muted-foreground",
+            <View className="flex-1 flex-row">
+              {cents > 0 && (
+                <View
+                  className="bg-success/70 h-full rounded-r-md"
+                  style={{ width: `${percent}%` }}
+                />
               )}
-              numberOfLines={1}
-            >
-              {formatSignedCents(cents, currency)}
-            </Text>
+            </View>
           </View>
-        );
-      })}
+          <Text
+            className={cn(
+              "w-20 text-right text-sm font-semibold",
+              cents > 0
+                ? "text-success"
+                : cents < 0
+                  ? "text-destructive"
+                  : "text-muted-foreground",
+            )}
+            numberOfLines={1}
+          >
+            {formatSignedCents(cents, currency)}
+          </Text>
+        </View>
+      ))}
     </View>
   );
 }
 
 interface PlanStepsProps {
-  debts: DebtSummary;
+  currency: string;
+  steps: DebtEntry[];
   meId: number;
   person: PersonLookup;
   withHeading: boolean;
@@ -181,7 +170,8 @@ interface PlanStepsProps {
 }
 
 function PlanSteps({
-  debts,
+  currency,
+  steps,
   meId,
   person,
   withHeading,
@@ -191,10 +181,10 @@ function PlanSteps({
     <View className="mt-2">
       {withHeading && (
         <Text className="text-muted-foreground mt-2 text-xs font-semibold">
-          {debts.currency}
+          {currency}
         </Text>
       )}
-      {debts.simplified.map((debt, index) => {
+      {steps.map((debt, index) => {
         const mine =
           debt.fromGroupMemberId === meId || debt.toGroupMemberId === meId;
         const from = person(debt.fromGroupMemberId);
