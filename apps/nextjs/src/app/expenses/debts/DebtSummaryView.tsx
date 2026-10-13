@@ -7,9 +7,9 @@ import { useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CheckCircle2, Plus } from "lucide-react";
 
-import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import {
   debtsBetweenOthers,
   debtsFor,
@@ -153,28 +153,25 @@ function ModeSwitch({
   onChange: (kind: DebtKind) => void;
 }) {
   return (
-    <div className="bg-muted flex rounded-lg p-1">
-      {modes.map((mode) => {
-        const selected = mode.kind === kind;
-        return (
-          <button
+    <Tabs
+      value={kind}
+      onValueChange={(value) => {
+        const mode = modes.find((m) => m.kind === value);
+        if (mode) onChange(mode.kind);
+      }}
+    >
+      <TabsList className="w-full">
+        {modes.map((mode) => (
+          <TabsTrigger
             key={mode.kind}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onChange(mode.kind)}
+            value={mode.kind}
             data-testid={`debt-mode-${mode.label.toLowerCase()}`}
-            className={cn(
-              "flex-1 rounded-md py-1.5 text-sm font-medium transition-colors",
-              selected
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
           >
             {mode.label}
-          </button>
-        );
-      })}
-    </div>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 }
 
