@@ -14,10 +14,10 @@ import { Card } from "@flatsby/ui/card";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
+  describePairActivity,
   formatCurrencyFromCents,
-  formatExpenseDateShort,
+  formatOthersWithDebts,
   formatSignedCents,
-  joinNames,
 } from "@flatsby/validators/expenses/formatting";
 
 import type { SettlementPrefill } from "./SettlementForm";
@@ -55,9 +55,7 @@ export function DirectDebtsCard({
         <div>
           <p className="font-semibold">You're all square</p>
           <p className="text-muted-foreground text-sm">
-            {joinNames(othersWithDebts)}{" "}
-            {othersWithDebts.length === 1 ? "still has" : "still have"} open
-            debts
+            {formatOthersWithDebts(othersWithDebts)}
           </p>
         </div>
       </Card>
@@ -140,8 +138,8 @@ function DirectDebtRow({
           </div>
         </button>
         <div className="flex flex-col items-end gap-2">
-          {amounts.map(({ currency, amountInCents }) => (
-            <div key={currency} className="flex items-center gap-3">
+          {amounts.map(({ amountInCents, debt }) => (
+            <div key={debt.currency} className="flex items-center gap-3">
               <span
                 className={cn(
                   "font-semibold tabular-nums",
@@ -149,26 +147,15 @@ function DirectDebtRow({
                 )}
               >
                 {formatCurrencyFromCents({
-                  cents: Math.abs(amountInCents),
-                  currency,
+                  cents: debt.amountInCents,
+                  currency: debt.currency,
                 })}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 data-testid="direct-debt-settle"
-                onClick={() =>
-                  onSettle({
-                    source: "direct",
-                    debt: {
-                      fromGroupMemberId:
-                        amountInCents > 0 ? groupMemberId : meId,
-                      toGroupMemberId: amountInCents > 0 ? meId : groupMemberId,
-                      amountInCents: Math.abs(amountInCents),
-                      currency,
-                    },
-                  })
-                }
+                onClick={() => onSettle({ source: "direct", debt })}
               >
                 Settle
               </Button>
@@ -202,16 +189,17 @@ function PairActivityList({
   person,
 }: PairActivityListProps) {
   const trpc = useTRPC();
-  const { data } = useQuery(
+  const { data, isError } = useQuery(
     trpc.expense.getPairActivity.queryOptions({
       groupId,
       groupMemberIds: [meId, otherId],
-      limit: 3,
     }),
   );
 
   let content: ReactNode;
-  if (!data) {
+  if (isError || data?.success === false) {
+    content = <EmptyLine>Couldn't load recent activity</EmptyLine>;
+  } else if (!data) {
     content = Array.from({ length: 2 }).map((_, i) => (
       <li key={i} className="flex items-center gap-3 py-2">
         <Skeleton className="size-7 rounded-md" />
@@ -219,8 +207,6 @@ function PairActivityList({
         <Skeleton className="h-4 w-14" />
       </li>
     ));
-  } else if (!data.success) {
-    content = <EmptyLine>Couldn't load recent activity</EmptyLine>;
   } else if (data.data.items.length === 0) {
     content = <EmptyLine>Nothing shared yet</EmptyLine>;
   } else {
@@ -252,14 +238,7 @@ function PairActivityLine({
   meId: number;
   person: PersonLookup;
 }) {
-  const paidByMe = item.paidByGroupMemberId === meId;
-  const payer = person(item.paidByGroupMemberId).name;
-  const cents = paidByMe ? item.pairAmountInCents : -item.pairAmountInCents;
-  const date = formatExpenseDateShort(item.expenseDate);
-  const paid = formatCurrencyFromCents({
-    cents: item.amountInCents,
-    currency: item.currency,
-  });
+  const { cents, title, subtitle } = describePairActivity(item, meId, person);
 
   return (
     <li className="flex items-center gap-3 py-2 text-sm">
@@ -278,14 +257,8 @@ function PairActivityLine({
         )}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate">
-          {item.isSettlement ? `${payer} settled up` : item.description}
-        </p>
-        <p className="text-muted-foreground text-xs">
-          {item.isSettlement
-            ? date
-            : `${date} · ${paidByMe ? "you" : payer} paid ${paid}`}
-        </p>
+        <p className="truncate">{title}</p>
+        <p className="text-muted-foreground text-xs">{subtitle}</p>
       </div>
       <span
         className={cn(

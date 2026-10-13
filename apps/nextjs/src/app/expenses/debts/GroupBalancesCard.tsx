@@ -15,7 +15,13 @@ import { Label } from "@flatsby/ui/label";
 import { Switch } from "@flatsby/ui/switch";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
+  balanceBars,
+  openCurrencies,
+  settlePlanStats,
+} from "@flatsby/validators/expenses/debt";
+import {
   formatCurrencyFromCents,
+  formatPlanPayments,
   formatSignedCents,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -37,25 +43,17 @@ export function GroupBalancesCard({
 }: GroupBalancesCardProps) {
   const [showPlan, setShowPlan] = useState(false);
 
-  const openCurrencies = Object.values(summary.currencies).filter(
-    ({ direct }) => direct.length > 0,
-  );
-  const planSavesPayments = openCurrencies.some(
-    ({ direct, simplified }) => simplified.length < direct.length,
-  );
-  const paymentCount = openCurrencies.reduce(
-    (sum, { simplified }) => sum + simplified.length,
-    0,
-  );
+  const currencies = openCurrencies(summary);
+  const { savesPayments, paymentCount } = settlePlanStats(currencies);
 
   return (
     <Card className="p-4">
       <div className="flex flex-col gap-4">
-        {openCurrencies.map(({ currency }) => (
+        {currencies.map(({ currency }) => (
           <BalanceBars
             key={currency}
             currency={currency}
-            showHeading={openCurrencies.length > 1}
+            showHeading={currencies.length > 1}
             memberBalances={summary.memberBalances}
             meId={meId}
             person={person}
@@ -63,7 +61,7 @@ export function GroupBalancesCard({
         ))}
       </div>
 
-      {planSavesPayments && (
+      {savesPayments && (
         <>
           <div className="mt-3 flex items-center gap-3 border-t pt-4">
             <Label
@@ -72,9 +70,7 @@ export function GroupBalancesCard({
             >
               <span className="font-semibold">Show settle plan</span>
               <span className="text-muted-foreground text-xs font-normal">
-                {paymentCount}{" "}
-                {paymentCount === 1 ? "payment clears" : "payments clear"}{" "}
-                everyone
+                {formatPlanPayments(paymentCount)}
               </span>
             </Label>
             <Switch
@@ -85,11 +81,11 @@ export function GroupBalancesCard({
             />
           </div>
           {showPlan &&
-            openCurrencies.map(({ currency, simplified }) => (
+            currencies.map(({ currency, simplified }) => (
               <PlanSteps
                 key={currency}
                 currency={currency}
-                showHeading={openCurrencies.length > 1}
+                showHeading={currencies.length > 1}
                 steps={simplified}
                 meId={meId}
                 person={person}
@@ -117,15 +113,7 @@ function BalanceBars({
   meId,
   person,
 }: BalanceBarsProps) {
-  const memberIds = new Set([...Object.keys(memberBalances).map(Number), meId]);
-  const rows = [...memberIds]
-    .map((memberId) => ({
-      memberId,
-      cents: memberBalances[memberId]?.[currency] ?? 0,
-    }))
-    .filter(({ memberId, cents }) => cents !== 0 || memberId === meId)
-    .sort((a, b) => b.cents - a.cents);
-  const scale = Math.max(...rows.map(({ cents }) => Math.abs(cents)), 1);
+  const { rows, scale } = balanceBars(memberBalances, currency, meId);
 
   return (
     <div>

@@ -679,7 +679,7 @@ export const expenseRouter = createTRPCRouter({
                   ),
                 )
                 .orderBy(desc(expenses.expenseDate), desc(expenses.id))
-                .limit(input.limit);
+                .limit(3);
               return {
                 items: rows.map(({ splitMethod, ...row }) => ({
                   ...row,

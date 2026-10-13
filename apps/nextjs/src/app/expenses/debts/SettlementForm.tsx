@@ -6,7 +6,10 @@ import type {
 } from "@flatsby/api";
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type { SettlementFormValues } from "@flatsby/validators/expenses/schemas";
-import type { DebtEntry } from "@flatsby/validators/expenses/types";
+import type {
+  DebtEntry,
+  SettleSource,
+} from "@flatsby/validators/expenses/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -41,10 +44,14 @@ import {
 } from "@flatsby/ui/sheet";
 import { toast } from "@flatsby/ui/toast";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { applySettlement } from "@flatsby/validators/expenses/debt";
+import {
+  applySettlement,
+  directDebtsBetween,
+} from "@flatsby/validators/expenses/debt";
 import {
   formatCurrencyFromCents,
   personLookup,
+  settleOutstandingLabel,
 } from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
 import {
@@ -60,7 +67,7 @@ import { useExpenseInvalidation } from "../useExpenseInvalidation";
 
 export interface SettlementPrefill {
   debt: DebtEntry;
-  source: "direct" | "plan";
+  source: SettleSource;
 }
 
 interface SettlementFormProps {
@@ -93,13 +100,8 @@ export function SettlementForm({
   const { data: debtData } = useSuspenseQuery(
     trpc.expense.getDebtSummary.queryOptions({ groupId }),
   );
-  const directDebts = debtData.success
-    ? Object.values(debtData.data.currencies).flatMap(({ direct }) => direct)
-    : [];
-  const directDebtsBetween = (from: number, to: number) =>
-    directDebts.filter(
-      (debt) => debt.fromGroupMemberId === from && debt.toGroupMemberId === to,
-    );
+  const pairDebts = (a: number, b: number) =>
+    debtData.success ? directDebtsBetween(debtData.data, a, b) : [];
 
   const meId = groupData.success ? groupData.data.thisGroupMember.id : 0;
   const initial: DebtEntry = expense
@@ -110,9 +112,9 @@ export function SettlementForm({
         amountInCents: expense.amountInCents,
       }
     : (prefill?.debt ?? {
-        fromGroupMemberId: meId,
+        fromGroupMemberId: 0,
         toGroupMemberId: 0,
-        currency: directDebts[0]?.currency ?? "EUR",
+        currency: "EUR",
         amountInCents: 0,
       });
 
@@ -304,10 +306,12 @@ export function SettlementForm({
         }
 
         toast.success("Settlement recorded successfully");
-        void invalidateList();
-        void invalidateDebtSummary();
         onClose();
         form.reset();
+      },
+      onSettled: () => {
+        void invalidateList();
+        void invalidateDebtSummary();
       },
     }),
   );
@@ -419,38 +423,19 @@ export function SettlementForm({
   const selectPair = (from: number, to: number) => {
     form.setValue("fromGroupMemberId", from);
     form.setValue("toGroupMemberId", to);
-    const pairCurrency = directDebtsBetween(from, to)
+    const pairCurrency = pairDebts(from, to)
       .map((debt) => debt.currency)
       .find(isCurrencyCode);
     if (pairCurrency) form.setValue("currency", pairCurrency);
   };
 
-  const directLabel = (from: number, to: number) => {
-    if (from === meId) return `You owe ${person(to).name} directly`;
-    if (to === meId) return `${person(from).name} owes you directly`;
-    return `${person(from).name} owes ${person(to).name} directly`;
-  };
-
-  let outstanding: { label: string; amountInCents: number } | undefined;
-  if (prefill) {
-    outstanding = {
-      label:
-        prefill.source === "plan"
-          ? "Settle plan payment"
-          : directLabel(fromGroupMemberId, toGroupMemberId),
-      amountInCents: prefill.debt.amountInCents,
-    };
-  } else if (isBlank) {
-    const debt = directDebtsBetween(fromGroupMemberId, toGroupMemberId).find(
-      (d) => d.currency === currency,
-    );
-    if (debt) {
-      outstanding = {
-        label: directLabel(fromGroupMemberId, toGroupMemberId),
-        amountInCents: debt.amountInCents,
-      };
-    }
-  }
+  const outstanding =
+    prefill?.debt ??
+    (isBlank
+      ? pairDebts(fromGroupMemberId, toGroupMemberId).find(
+          (debt) => debt.currency === currency,
+        )
+      : undefined);
 
   const isPending =
     createSettlementMutation.isPending || updateSettlementMutation.isPending;
@@ -544,12 +529,17 @@ export function SettlementForm({
                   data-testid="settlement-outstanding"
                 >
                   <p className="text-muted-foreground mb-1 text-sm">
-                    {outstanding.label}
+                    {settleOutstandingLabel(
+                      prefill?.source ?? "direct",
+                      outstanding,
+                      meId,
+                      person,
+                    )}
                   </p>
                   <p className="text-2xl font-bold tabular-nums">
                     {formatCurrencyFromCents({
                       cents: outstanding.amountInCents,
-                      currency,
+                      currency: outstanding.currency,
                     })}
                   </p>
                 </div>

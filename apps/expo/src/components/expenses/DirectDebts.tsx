@@ -9,10 +9,10 @@ import { Pressable, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 
 import {
+  describePairActivity,
   formatCurrencyFromCents,
-  formatExpenseDateShort,
+  formatOthersWithDebts,
   formatSignedCents,
-  joinNames,
 } from "@flatsby/validators/expenses/formatting";
 
 import { Button } from "~/lib/ui/button";
@@ -55,9 +55,7 @@ export function DirectDebts({
             You're all square
           </Text>
           <Text className="text-muted-foreground text-sm">
-            {joinNames(othersWithDebts)}{" "}
-            {othersWithDebts.length === 1 ? "still has" : "still have"} open
-            debts
+            {formatOthersWithDebts(othersWithDebts)}
           </Text>
         </View>
       </Card>
@@ -148,8 +146,8 @@ function DirectDebtRow({
           </View>
         </Pressable>
         <View className="items-end gap-2">
-          {counterpart.amounts.map(({ currency, amountInCents }) => (
-            <View key={currency} className="flex-row items-center gap-3">
+          {counterpart.amounts.map(({ amountInCents, debt }) => (
+            <View key={debt.currency} className="flex-row items-center gap-3">
               <Text
                 className={cn(
                   "text-base font-semibold",
@@ -157,27 +155,17 @@ function DirectDebtRow({
                 )}
               >
                 {formatCurrencyFromCents({
-                  cents: Math.abs(amountInCents),
-                  currency,
+                  cents: debt.amountInCents,
+                  currency: debt.currency,
                 })}
               </Text>
               <Button
                 testID="debt-settle"
-                accessibilityLabel={`Settle ${currency} with ${other.name}`}
+                accessibilityLabel={`Settle ${debt.currency} with ${other.name}`}
                 title="Settle"
                 size="sm"
                 variant="outline"
-                onPress={() =>
-                  onSettle(
-                    {
-                      fromGroupMemberId: amountInCents > 0 ? otherId : meId,
-                      toGroupMemberId: amountInCents > 0 ? meId : otherId,
-                      currency,
-                      amountInCents: Math.abs(amountInCents),
-                    },
-                    "direct",
-                  )
-                }
+                onPress={() => onSettle(debt, "direct")}
               />
             </View>
           ))}
@@ -208,35 +196,36 @@ function PairActivityList({
   otherId,
   person,
 }: PairActivityListProps) {
-  const { data, isPending } = useQuery(
+  const { data, isError } = useQuery(
     trpc.expense.getPairActivity.queryOptions({
       groupId,
       groupMemberIds: [meId, otherId],
-      limit: 3,
     }),
   );
 
-  const items = data?.success ? data.data.items : [];
+  let message: string | undefined;
+  if (isError || data?.success === false) {
+    message = "Couldn't load recent activity";
+  } else if (data?.data.items.length === 0) {
+    message = "Nothing shared yet";
+  }
 
   return (
     <View testID="debt-row-activity" className="bg-muted/40 pr-4 pb-2 pl-16">
-      {isPending ? (
+      {message ? (
+        <Text className="text-muted-foreground py-2 text-sm">{message}</Text>
+      ) : !data?.success ? (
         <View className="gap-2 py-2">
           <Skeleton size="sm" width="xl" />
           <Skeleton size="sm" width="lg" />
         </View>
-      ) : items.length === 0 ? (
-        <Text className="text-muted-foreground py-2 text-sm">
-          Nothing shared recently
-        </Text>
       ) : (
-        items.map((item, index) => {
-          const payer = person(item.paidByGroupMemberId);
-          const youPaid = item.paidByGroupMemberId === meId;
-          const date = formatExpenseDateShort(item.expenseDate);
-          const amount = youPaid
-            ? item.pairAmountInCents
-            : -item.pairAmountInCents;
+        data.data.items.map((item, index) => {
+          const { cents, title, subtitle } = describePairActivity(
+            item,
+            meId,
+            person,
+          );
           return (
             <View
               key={item.id}
@@ -259,19 +248,10 @@ function PairActivityList({
               </View>
               <View className="flex-1">
                 <Text className="text-foreground text-sm" numberOfLines={1}>
-                  {item.isSettlement
-                    ? `${payer.name} settled up`
-                    : item.description}
+                  {title}
                 </Text>
                 <Text className="text-muted-foreground text-xs">
-                  {item.isSettlement
-                    ? date
-                    : `${date} · ${youPaid ? "you" : payer.name} paid ${formatCurrencyFromCents(
-                        {
-                          cents: item.amountInCents,
-                          currency: item.currency,
-                        },
-                      )}`}
+                  {subtitle}
                 </Text>
               </View>
               <Text
@@ -279,12 +259,12 @@ function PairActivityList({
                   "text-sm font-semibold",
                   item.isSettlement
                     ? "text-muted-foreground"
-                    : amount > 0
+                    : cents > 0
                       ? "text-success"
                       : "text-destructive",
                 )}
               >
-                {formatSignedCents(amount, item.currency)}
+                {formatSignedCents(cents, item.currency)}
               </Text>
             </View>
           );

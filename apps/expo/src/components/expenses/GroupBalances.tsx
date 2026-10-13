@@ -8,7 +8,13 @@ import { useState } from "react";
 import { Text, View } from "react-native";
 
 import {
+  balanceBars,
+  openCurrencies,
+  settlePlanStats,
+} from "@flatsby/validators/expenses/debt";
+import {
   formatCurrencyFromCents,
+  formatPlanPayments,
   formatSignedCents,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -35,17 +41,9 @@ export function GroupBalances({
 }: GroupBalancesProps) {
   const [showPlan, setShowPlan] = useState(false);
 
-  const currencies = Object.values(summary.currencies).filter(
-    (debts) => debts.simplified.length > 0,
-  );
+  const currencies = openCurrencies(summary);
   const withHeading = currencies.length > 1;
-  const paymentCount = currencies.reduce(
-    (count, debts) => count + debts.simplified.length,
-    0,
-  );
-  const planSavesPayments = currencies.some(
-    (debts) => debts.simplified.length < debts.direct.length,
-  );
+  const { savesPayments, paymentCount } = settlePlanStats(currencies);
 
   return (
     <Card className="p-4">
@@ -61,7 +59,7 @@ export function GroupBalances({
           />
         ))}
       </View>
-      {planSavesPayments && (
+      {savesPayments && (
         <>
           <View className="border-border mt-3 flex-row items-center gap-3 border-t pt-4">
             <View className="flex-1">
@@ -69,9 +67,7 @@ export function GroupBalances({
                 Show settle plan
               </Text>
               <Text className="text-muted-foreground text-xs">
-                {paymentCount === 1
-                  ? "1 payment clears everyone"
-                  : `${paymentCount} payments clear everyone`}
+                {formatPlanPayments(paymentCount)}
               </Text>
             </View>
             <Switch
@@ -112,15 +108,7 @@ function BalanceBars({
   person,
   withHeading,
 }: BalanceBarsProps) {
-  const memberIds = new Set([...Object.keys(memberBalances).map(Number), meId]);
-  const rows = [...memberIds]
-    .map((memberId) => ({
-      memberId,
-      cents: memberBalances[memberId]?.[currency] ?? 0,
-    }))
-    .filter(({ memberId, cents }) => cents !== 0 || memberId === meId)
-    .sort((a, b) => b.cents - a.cents);
-  const largest = Math.max(...rows.map(({ cents }) => Math.abs(cents)));
+  const { rows, scale } = balanceBars(memberBalances, currency, meId);
 
   return (
     <View>
@@ -129,7 +117,7 @@ function BalanceBars({
       )}
       {rows.map(({ memberId, cents }) => {
         const isMe = memberId === meId;
-        const percent = (Math.abs(cents) / largest) * 100;
+        const percent = (Math.abs(cents) / scale) * 100;
         return (
           <View key={memberId} className="flex-row items-center gap-2 py-1.5">
             <MemberAvatar

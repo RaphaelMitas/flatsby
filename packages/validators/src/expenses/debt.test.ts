@@ -8,7 +8,6 @@ const LENA = 2;
 const MAX = 3;
 const SOPHIE = 4;
 
-/** One expense where `creditor` paid and only `debtor` owes it */
 function owes(
   debtor: number,
   creditor: number,
@@ -263,6 +262,20 @@ describe("applySettlement", () => {
     expect(next.currencies.EUR).toEqual(summary.currencies.EUR);
   });
 
+  it("clears every direct debt once the whole plan is paid", () => {
+    const next = eur(summary).simplified.reduce(applySettlement, summary);
+
+    expect(eur(next).direct).toEqual([]);
+  });
+
+  it("matches the server after a plan step", () => {
+    const next = applySettlement(summary, debt(MAX, LENA, 5550));
+
+    expect(eur(next).direct).toEqual(
+      eur(calculateDebts([...scenario, owes(LENA, MAX, 5550)])).direct,
+    );
+  });
+
   it("leaves the input summary untouched", () => {
     const before = structuredClone(summary);
     applySettlement(summary, debt(MAX, YOU, 4250));
@@ -279,17 +292,17 @@ describe("directDebtsFor", () => {
       {
         groupMemberId: MAX,
         amounts: [
-          { currency: "EUR", amountInCents: 4250 },
-          { currency: "USD", amountInCents: -1500 },
+          { amountInCents: 4250, debt: debt(MAX, YOU, 4250) },
+          { amountInCents: -1500, debt: debt(YOU, MAX, 1500, "USD") },
         ],
       },
       {
         groupMemberId: LENA,
-        amounts: [{ currency: "EUR", amountInCents: -3000 }],
+        amounts: [{ amountInCents: -3000, debt: debt(YOU, LENA, 3000) }],
       },
       {
         groupMemberId: SOPHIE,
-        amounts: [{ currency: "EUR", amountInCents: 1800 }],
+        amounts: [{ amountInCents: 1800, debt: debt(SOPHIE, YOU, 1800) }],
       },
     ]);
   });

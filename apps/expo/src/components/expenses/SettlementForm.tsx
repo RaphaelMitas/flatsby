@@ -14,10 +14,14 @@ import {
 } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 
-import { applySettlement } from "@flatsby/validators/expenses/debt";
+import {
+  applySettlement,
+  directDebtsBetween,
+} from "@flatsby/validators/expenses/debt";
 import {
   formatCurrencyFromCents,
   personLookup,
+  settleOutstandingLabel,
 } from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
 import {
@@ -89,9 +93,10 @@ export function SettlementForm({
     defaultValues: {
       amountInCents: expense?.amountInCents ?? amount ?? 0,
       fromGroupMemberId:
-        fromGroupMemberId ?? expense?.expenseSplits[0]?.groupMemberId ?? -1,
+        fromGroupMemberId ?? expense?.paidByGroupMemberId ?? -1,
 
-      toGroupMemberId: toGroupMemberId ?? expense?.paidByGroupMemberId ?? -1,
+      toGroupMemberId:
+        toGroupMemberId ?? expense?.expenseSplits[0]?.groupMemberId ?? -1,
 
       currency: getDefaultCurrency(),
     },
@@ -110,38 +115,36 @@ export function SettlementForm({
   const watchedCurrency = useWatch({ control: form.control, name: "currency" });
 
   const isPrefilled = source !== undefined;
-  const debtSummaries = debtData.success
-    ? Object.values(debtData.data.currencies)
-    : [];
-  const directDebts = debtSummaries.flatMap((debts) => debts.direct);
-  const isPair = (debt: DebtEntry, fromId: number, toId: number) =>
-    debt.fromGroupMemberId === fromId && debt.toGroupMemberId === toId;
+  const pairDebts = (a: number, b: number) =>
+    debtData.success ? directDebtsBetween(debtData.data, a, b) : [];
 
-  const outstandingDebts = debtSummaries
-    .flatMap((debts) => (source === "plan" ? debts.simplified : debts.direct))
-    .filter(
-      (debt) =>
-        isPair(debt, watchedFromMemberId, watchedToMemberId) &&
-        (!isPrefilled || debt.currency === watchedCurrency),
-    );
+  const outstanding: DebtEntry | undefined =
+    isPrefilled && amount !== undefined
+      ? {
+          fromGroupMemberId: watchedFromMemberId,
+          toGroupMemberId: watchedToMemberId,
+          currency: watchedCurrency,
+          amountInCents: amount,
+        }
+      : pairDebts(watchedFromMemberId, watchedToMemberId).find(
+          (debt) => debt.currency === watchedCurrency,
+        );
 
   const defaultCurrencyToPairDebt = () => {
-    if (isEditMode || isPrefilled) return;
-    const { fromGroupMemberId: fromId, toGroupMemberId: toId } =
-      form.getValues();
-    const debt =
-      directDebts.find((d) => isPair(d, fromId, toId)) ??
-      directDebts.find((d) => isPair(d, toId, fromId));
-    if (debt && isCurrencyCode(debt.currency)) {
-      form.setValue("currency", debt.currency);
-    }
+    if (isEditMode) return;
+    const { fromGroupMemberId: a, toGroupMemberId: b } = form.getValues();
+    const pairCurrency = pairDebts(a, b)
+      .map((debt) => debt.currency)
+      .find(isCurrencyCode);
+    if (pairCurrency) form.setValue("currency", pairCurrency);
   };
 
-  const { expenseListQueryKey, invalidateList, invalidateDebtSummary } =
-    useInvalidateExpenses(groupId);
-  const debtSummaryQueryKey = trpc.expense.getDebtSummary.queryKey({
-    groupId,
-  });
+  const {
+    expenseListQueryKey,
+    debtSummaryQueryKey,
+    invalidateList,
+    invalidateDebtSummary,
+  } = useInvalidateExpenses(groupId);
 
   const expenseQueryKey = expense
     ? trpc.expense.getExpense.queryKey({
@@ -303,10 +306,12 @@ export function SettlementForm({
           return;
         }
 
-        void invalidateList();
-        void invalidateDebtSummary();
         onClose();
         form.reset();
+      },
+      onSettled: () => {
+        void invalidateList();
+        void invalidateDebtSummary();
       },
     }),
   );
@@ -412,18 +417,6 @@ export function SettlementForm({
           receiver: person(watchedToMemberId),
         }
       : undefined;
-
-  const outstandingLabel = () => {
-    if (source === "plan") return "Settle plan payment";
-    if (!pair) return "";
-    if (watchedToMemberId === meId) {
-      return `${pair.payer.name} owes you directly`;
-    }
-    if (watchedFromMemberId === meId) {
-      return `You owe ${pair.receiver.name} directly`;
-    }
-    return `${pair.payer.name} owes ${pair.receiver.name} directly`;
-  };
 
   const memberItems: BottomSheetPickerItem[] = groupMembers.map((member) => ({
     id: member.id.toString(),
@@ -534,23 +527,27 @@ export function SettlementForm({
                 </>
               )}
 
-              {outstandingDebts.map((debt) => (
+              {outstanding && (
                 <View
-                  key={debt.currency}
                   testID="settlement-outstanding"
                   className="bg-muted rounded-lg p-4"
                 >
                   <Text className="text-muted-foreground mb-1 text-center text-sm">
-                    {outstandingLabel()}
+                    {settleOutstandingLabel(
+                      source ?? "direct",
+                      outstanding,
+                      meId,
+                      person,
+                    )}
                   </Text>
                   <Text className="text-foreground text-center text-2xl font-bold">
                     {formatCurrencyFromCents({
-                      cents: debt.amountInCents,
-                      currency: debt.currency,
+                      cents: outstanding.amountInCents,
+                      currency: outstanding.currency,
                     })}
                   </Text>
                 </View>
-              ))}
+              )}
             </View>
 
             <View className="flex-row gap-4">
@@ -596,6 +593,7 @@ export function SettlementForm({
                         onChange={field.onChange}
                         placeholder="0.00"
                         min={1}
+                        max={isPrefilled ? amount : undefined}
                         className="flex-1"
                       />
                     </FormControl>

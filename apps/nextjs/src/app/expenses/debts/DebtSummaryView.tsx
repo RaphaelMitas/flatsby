@@ -7,7 +7,11 @@ import { CheckCircle2, Plus } from "lucide-react";
 
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
-import { directDebtsFor } from "@flatsby/validators/expenses/debt";
+import {
+  directDebtsFor,
+  hasDebts,
+  othersWithOpenDebts,
+} from "@flatsby/validators/expenses/debt";
 import { personLookup } from "@flatsby/validators/expenses/formatting";
 
 import type { SettlementPrefill } from "./SettlementForm";
@@ -47,15 +51,10 @@ export function DebtSummaryView() {
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId);
   const currencies = Object.values(summary.currencies);
-  const hasAnyDebts = currencies.some(({ direct }) => direct.length > 0);
   const directDebts = directDebtsFor(summary, meId);
-  const othersWithDebts = Object.entries(summary.memberBalances)
-    .filter(
-      ([id, balances]) =>
-        Number(id) !== meId &&
-        Object.values(balances).some((cents) => cents !== 0),
-    )
-    .map(([id]) => person(Number(id)).name);
+  const othersWithDebts = othersWithOpenDebts(summary, meId).map(
+    (id) => person(id).name,
+  );
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -66,7 +65,7 @@ export function DebtSummaryView() {
         Debts
       </h2>
 
-      {hasAnyDebts ? (
+      {hasDebts(summary) ? (
         <>
           <DebtHero
             balances={summary.memberBalances[meId] ?? {}}

@@ -1,14 +1,15 @@
-import type { DebtEntry, GroupDebtSummary, MemberBalances } from "./types";
+import type {
+  DebtEntry,
+  DebtSummary,
+  GroupDebtSummary,
+  MemberBalances,
+} from "./types";
 
 /** debtor -> creditor -> cents, every amount positive */
 type DebtGraph = Map<number, Map<number, number>>;
 
 const ascending = (a: number, b: number) => a - b;
 
-/**
- * Per currency: direct debts between each pair of members, with circular debts
- * cancelled, and the greedy simplified plan derived from member balances.
- */
 export function calculateDebts(
   expenses: {
     paidByGroupMemberId: number;
@@ -58,10 +59,7 @@ export function calculateDebts(
   return { currencies, memberBalances };
 }
 
-/**
- * Optimistically applies a settlement payment to a summary. Direct debts are
- * adjusted for the pair only; the next server fetch re-cancels cycles.
- */
+/** Optimistic estimate; the server recomputes direct debts from every expense */
 export function applySettlement(
   summary: GroupDebtSummary,
   settlement: DebtEntry,
@@ -88,6 +86,7 @@ export function applySettlement(
     );
   }
   addDebt(graph, toGroupMemberId, fromGroupMemberId, amountInCents);
+  cancelCycles(graph);
 
   return {
     memberBalances,
@@ -105,7 +104,7 @@ export function applySettlement(
 export interface CounterpartDebts {
   groupMemberId: number;
   /** Positive: they owe the member. Negative: the member owes them. */
-  amounts: { currency: string; amountInCents: number }[];
+  amounts: { amountInCents: number; debt: DebtEntry }[];
 }
 
 /** A member's direct debts grouped by the other person, largest first */
@@ -126,8 +125,8 @@ export function directDebtsFor(
         amounts: [],
       };
       entry.amounts.push({
-        currency: debt.currency,
         amountInCents: owedToMember ? debt.amountInCents : -debt.amountInCents,
+        debt,
       });
       byCounterpart.set(other, entry);
     }
@@ -135,6 +134,85 @@ export function directDebtsFor(
   const largest = ({ amounts }: CounterpartDebts) =>
     Math.max(...amounts.map(({ amountInCents }) => Math.abs(amountInCents)));
   return [...byCounterpart.values()].sort((a, b) => largest(b) - largest(a));
+}
+
+export function directDebtsBetween(
+  summary: GroupDebtSummary,
+  a: number,
+  b: number,
+): DebtEntry[] {
+  return Object.values(summary.currencies).flatMap(({ direct }) =>
+    direct.filter(
+      (debt) =>
+        (debt.fromGroupMemberId === a && debt.toGroupMemberId === b) ||
+        (debt.fromGroupMemberId === b && debt.toGroupMemberId === a),
+    ),
+  );
+}
+
+export function hasDebts(summary: GroupDebtSummary): boolean {
+  return Object.values(summary.currencies).some(
+    ({ direct }) => direct.length > 0,
+  );
+}
+
+export function othersWithOpenDebts(
+  summary: GroupDebtSummary,
+  meId: number,
+): number[] {
+  return Object.entries(summary.memberBalances)
+    .filter(
+      ([id, balances]) =>
+        Number(id) !== meId &&
+        Object.values(balances).some((cents) => cents !== 0),
+    )
+    .map(([id]) => Number(id));
+}
+
+export function heroBalances(balances: Record<string, number>) {
+  const lines = Object.entries(balances)
+    .filter(([, cents]) => cents !== 0)
+    .map(([currency, cents]) => ({ currency, cents }));
+  return {
+    lines,
+    mixed: new Set(lines.map(({ cents }) => Math.sign(cents))).size > 1,
+  };
+}
+
+export function openCurrencies(summary: GroupDebtSummary): DebtSummary[] {
+  const balances = Object.values(summary.memberBalances);
+  return Object.values(summary.currencies).filter(({ currency }) =>
+    balances.some((byCurrency) => (byCurrency[currency] ?? 0) !== 0),
+  );
+}
+
+export function settlePlanStats(currencies: DebtSummary[]) {
+  return {
+    savesPayments: currencies.some(
+      ({ direct, simplified }) => simplified.length < direct.length,
+    ),
+    paymentCount: currencies.reduce(
+      (sum, { simplified }) => sum + simplified.length,
+      0,
+    ),
+  };
+}
+
+export function balanceBars(
+  memberBalances: MemberBalances,
+  currency: string,
+  meId: number,
+) {
+  const memberIds = new Set([...Object.keys(memberBalances).map(Number), meId]);
+  const rows = [...memberIds]
+    .map((memberId) => ({
+      memberId,
+      cents: memberBalances[memberId]?.[currency] ?? 0,
+    }))
+    .filter(({ memberId, cents }) => cents !== 0 || memberId === meId)
+    .sort((a, b) => b.cents - a.cents);
+  const scale = Math.max(...rows.map(({ cents }) => Math.abs(cents)), 1);
+  return { rows, scale };
 }
 
 function adjustBalance(
@@ -193,10 +271,7 @@ function findCycle(graph: DebtGraph): number[] | undefined {
   return undefined;
 }
 
-/**
- * Removes circular debts (A owes B owes C owes A) by subtracting each cycle's
- * smallest edge along it. Balances are unchanged and no new pair appears.
- */
+/** Subtracting each cycle's smallest edge keeps balances intact and never adds a pair */
 function cancelCycles(graph: DebtGraph) {
   for (let cycle = findCycle(graph); cycle; cycle = findCycle(graph)) {
     const hops = cycle.map((from, i) => {
@@ -227,7 +302,6 @@ function toEntries(graph: DebtGraph, currency: string): DebtEntry[] {
     );
 }
 
-/** Greedy plan that settles every balance in few payments */
 export function simplifyDebts(
   memberBalances: MemberBalances,
   currency: string,

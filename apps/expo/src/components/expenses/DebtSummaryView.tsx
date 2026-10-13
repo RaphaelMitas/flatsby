@@ -5,11 +5,17 @@ import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { directDebtsFor } from "@flatsby/validators/expenses/debt";
+import {
+  directDebtsFor,
+  hasDebts,
+  heroBalances,
+  othersWithOpenDebts,
+} from "@flatsby/validators/expenses/debt";
 import {
   formatCurrencyFromCents,
-  formatSignedCents,
-  joinNames,
+  formatHeroAmount,
+  heroLabel,
+  heroMeta,
   personLookup,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -55,17 +61,10 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId);
-  const hasDebts = Object.values(summary.currencies).some(
-    (debts) => debts.direct.length > 0,
-  );
   const counterparts = directDebtsFor(summary, meId);
-  const othersWithDebts = Object.entries(summary.memberBalances)
-    .filter(
-      ([memberId, balances]) =>
-        Number(memberId) !== meId &&
-        Object.values(balances).some((cents) => cents !== 0),
-    )
-    .map(([memberId]) => person(Number(memberId)).name);
+  const othersWithDebts = othersWithOpenDebts(summary, meId).map(
+    (id) => person(id).name,
+  );
 
   const openSettle: OnSettle = (debt, source) =>
     router.push({
@@ -93,7 +92,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
           Debts
         </Text>
 
-        {hasDebts ? (
+        {hasDebts(summary) ? (
           <>
             <DebtHero
               balances={summary.memberBalances[meId] ?? {}}
@@ -169,36 +168,12 @@ function DebtHero({
   counterparts,
   person,
 }: DebtHeroProps) {
-  const lines = Object.entries(balances).filter(([, cents]) => cents !== 0);
-  const owed = lines.length > 0 && lines.every(([, cents]) => cents > 0);
-  const owing = lines.length > 0 && lines.every(([, cents]) => cents < 0);
-  const label = owed
-    ? "Overall you are owed"
-    : owing
-      ? "Overall you owe"
-      : "Overall";
-
-  const namesWhere = (sign: 1 | -1) =>
-    counterparts
-      .filter(({ amounts }) =>
-        amounts.some(({ amountInCents }) => amountInCents * sign > 0),
-      )
-      .map(({ groupMemberId }) => person(groupMemberId).name);
-  const owesYou = namesWhere(1);
-  const youOwe = namesWhere(-1);
-  const meta =
-    [
-      owesYou.length > 0 &&
-        `${joinNames(owesYou)} ${owesYou.length === 1 ? "owes" : "owe"} you`,
-      youOwe.length > 0 &&
-        `${owesYou.length > 0 ? "you" : "You"} owe ${joinNames(youOwe)}`,
-    ]
-      .filter(Boolean)
-      .join(", ") || "You don't owe anyone and nobody owes you";
+  const hero = heroBalances(balances);
+  const { lines, mixed } = hero;
 
   return (
     <View testID="debt-hero" className="pt-4 pb-2">
-      <Text className="text-muted-foreground text-sm">{label}</Text>
+      <Text className="text-muted-foreground text-sm">{heroLabel(hero)}</Text>
       {lines.length === 0 ? (
         <Text
           testID="debt-hero-amount"
@@ -207,7 +182,7 @@ function DebtHero({
           {formatCurrencyFromCents({ cents: 0, currency: fallbackCurrency })}
         </Text>
       ) : (
-        lines.map(([currency, cents]) => (
+        lines.map(({ currency, cents }) => (
           <Text
             key={currency}
             testID="debt-hero-amount"
@@ -217,13 +192,13 @@ function DebtHero({
               cents > 0 ? "text-success" : "text-destructive",
             )}
           >
-            {owed || owing
-              ? formatCurrencyFromCents({ cents: Math.abs(cents), currency })
-              : formatSignedCents(cents, currency)}
+            {formatHeroAmount(cents, currency, mixed)}
           </Text>
         ))
       )}
-      <Text className="text-muted-foreground mt-0.5 text-sm">{meta}</Text>
+      <Text className="text-muted-foreground mt-0.5 text-sm">
+        {heroMeta(counterparts, person)}
+      </Text>
     </View>
   );
 }

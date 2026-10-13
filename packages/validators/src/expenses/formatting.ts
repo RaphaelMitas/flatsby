@@ -2,6 +2,9 @@
 // Formatting Utilities - Currency and Date Display
 // ============================================================================
 
+import type { CounterpartDebts, heroBalances } from "./debt";
+import type { PairActivityItem } from "./schemas";
+import type { DebtEntry, SettleSource } from "./types";
 import { centsToDecimal } from "./conversion";
 
 /**
@@ -124,7 +127,6 @@ export interface DebtPerson {
 
 export type PersonLookup = (groupMemberId: number) => DebtPerson;
 
-/** Names group members for debt views, with the viewer shown as "You" */
 export function personLookup(
   members: { id: number; user: { name: string; image?: string | null } }[],
   meId: number,
@@ -148,4 +150,90 @@ export function joinNames(names: string[]): string {
   const last = names.at(-1);
   if (names.length < 2 || last === undefined) return last ?? "";
   return `${names.slice(0, -1).join(", ")} and ${last}`;
+}
+
+export function heroLabel({
+  lines,
+  mixed,
+}: ReturnType<typeof heroBalances>): string {
+  const first = lines[0];
+  if (!first || mixed) return "Overall";
+  return first.cents > 0 ? "Overall you are owed" : "Overall you owe";
+}
+
+export function formatHeroAmount(
+  cents: number,
+  currency: string,
+  mixed: boolean,
+): string {
+  return mixed
+    ? formatSignedCents(cents, currency)
+    : formatCurrencyFromCents({ cents: Math.abs(cents), currency });
+}
+
+export function heroMeta(
+  counterparts: CounterpartDebts[],
+  person: PersonLookup,
+): string {
+  const namesWhere = (sign: 1 | -1) =>
+    counterparts
+      .filter(({ amounts }) =>
+        amounts.some(({ amountInCents }) => amountInCents * sign > 0),
+      )
+      .map(({ groupMemberId }) => person(groupMemberId).name);
+  const owedBy = namesWhere(1);
+  const owing = namesWhere(-1);
+  const parts: string[] = [];
+  if (owedBy.length > 0) {
+    parts.push(
+      `${joinNames(owedBy)} ${owedBy.length === 1 ? "owes" : "owe"} you`,
+    );
+  }
+  if (owing.length > 0) {
+    parts.push(`${parts.length > 0 ? "you" : "You"} owe ${joinNames(owing)}`);
+  }
+  return parts.join(", ") || "You don't owe anyone and nobody owes you";
+}
+
+export function formatOthersWithDebts(names: string[]): string {
+  return `${joinNames(names)} ${names.length === 1 ? "still has" : "still have"} open debts`;
+}
+
+export function formatPlanPayments(count: number): string {
+  return `${count} ${count === 1 ? "payment clears" : "payments clear"} everyone`;
+}
+
+export function describePairActivity(
+  item: PairActivityItem,
+  meId: number,
+  person: PersonLookup,
+) {
+  const paidByMe = item.paidByGroupMemberId === meId;
+  const payer = person(item.paidByGroupMemberId).name;
+  const date = formatExpenseDateShort(item.expenseDate);
+  const paid = formatCurrencyFromCents({
+    cents: item.amountInCents,
+    currency: item.currency,
+  });
+  return {
+    cents: paidByMe ? item.pairAmountInCents : -item.pairAmountInCents,
+    title: item.isSettlement ? `${payer} settled up` : item.description,
+    subtitle: item.isSettlement
+      ? date
+      : `${date} · ${paidByMe ? "you" : payer} paid ${paid}`,
+  };
+}
+
+export function settleOutstandingLabel(
+  source: SettleSource,
+  debt: DebtEntry,
+  meId: number,
+  person: PersonLookup,
+): string {
+  if (source === "plan") return "Settle plan payment";
+  const from = person(debt.fromGroupMemberId).name;
+  const to = person(debt.toGroupMemberId).name;
+  if (debt.toGroupMemberId === meId) return `${from} owes you directly`;
+  if (debt.fromGroupMemberId === meId) return `You owe ${to} directly`;
+  return `${from} owes ${to} directly`;
 }

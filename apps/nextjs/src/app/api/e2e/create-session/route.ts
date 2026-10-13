@@ -324,11 +324,7 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   return { group, conversationId: conversation.id };
 }
 
-/**
- * Adds Lena, Max and Sophie to the user's fresh group, with one expense per
- * debt so the direct debts come out exactly as in the validators debt tests.
- * The extra members are minted per call, so parallel runs never share them.
- */
+/** Same EUR scenario as debt.test.ts, so the e2e direct debts match its assertions */
 async function seedDebtsScenario(groupId: number, you: number) {
   const seededUsers = await Promise.all(
     ["Lena", "Max", "Sophie"].map((name) => upsertE2EUser(name)),

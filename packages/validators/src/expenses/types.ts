@@ -47,7 +47,7 @@ export interface DebtEntry {
 
 /**
  * Debt summary for a single currency. `direct` is who owes whom per pair with
- * circular debts cancelled, `simplified` is the fewest-payments settle plan.
+ * circular debts cancelled, `simplified` is the greedy settle plan.
  */
 export interface DebtSummary {
   currency: string;

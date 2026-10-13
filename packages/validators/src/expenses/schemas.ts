@@ -104,7 +104,6 @@ export const getPairActivityInputSchema = z.object({
   groupMemberIds: z
     .tuple([z.number(), z.number()])
     .refine(([a, b]) => a !== b, "Pick two different members"),
-  limit: z.number().int().min(1).max(10).default(3),
 });
 
 export const pairActivityItemSchema = z.object({
@@ -124,5 +123,3 @@ export type PairActivityItem = z.infer<typeof pairActivityItemSchema>;
 export const pairActivitySchema = z.object({
   items: z.array(pairActivityItemSchema),
 });
-
-export type PairActivity = z.infer<typeof pairActivitySchema>;
