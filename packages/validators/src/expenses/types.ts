@@ -45,7 +45,7 @@ export interface DebtEntry {
   currency: string;
 }
 
-/** direct: per-pair debts with cycles cancelled; simplified: the greedy settle plan */
+/** direct: each pair's net from their shared expenses; simplified: the greedy settle plan */
 export interface DebtSummary {
   currency: string;
   direct: DebtEntry[];

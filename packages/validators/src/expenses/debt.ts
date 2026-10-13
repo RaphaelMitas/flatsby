@@ -3,8 +3,6 @@ import type { DebtEntry, GroupDebtSummary, MemberBalances } from "./types";
 /** debtor -> creditor -> cents, every amount positive */
 type DebtGraph = Map<number, Map<number, number>>;
 
-const ascending = (a: number, b: number) => a - b;
-
 export function calculateDebts(
   expenses: {
     paidByGroupMemberId: number;
@@ -43,7 +41,6 @@ export function calculateDebts(
 
   const currencies: GroupDebtSummary["currencies"] = {};
   for (const [currency, graph] of graphs) {
-    cancelCycles(graph);
     const simplified = simplifyDebts(memberBalances, currency);
     currencies[currency] = {
       currency,
@@ -56,7 +53,6 @@ export function calculateDebts(
   return { currencies, memberBalances };
 }
 
-/** Optimistic estimate; the server recomputes direct debts from every expense */
 export function applySettlement(
   summary: GroupDebtSummary,
   settlement: DebtEntry,
@@ -83,7 +79,6 @@ export function applySettlement(
     );
   }
   addDebt(graph, toGroupMemberId, fromGroupMemberId, amountInCents);
-  cancelCycles(graph);
   const simplified = simplifyDebts(memberBalances, currency);
 
   return {
@@ -247,47 +242,6 @@ function addDebt(graph: DebtGraph, from: number, to: number, amount: number) {
     (graph.get(from)?.get(to) ?? 0) - (graph.get(to)?.get(from) ?? 0) + amount;
   setDebt(graph, from, to, net);
   setDebt(graph, to, from, -net);
-}
-
-function findCycle(graph: DebtGraph): number[] | undefined {
-  const done = new Set<number>();
-  const path: number[] = [];
-
-  const visit = (member: number): number[] | undefined => {
-    path.push(member);
-    const creditors = [...(graph.get(member)?.keys() ?? [])].sort(ascending);
-    for (const creditor of creditors) {
-      const onPath = path.indexOf(creditor);
-      if (onPath !== -1) return path.slice(onPath);
-      if (done.has(creditor)) continue;
-      const cycle = visit(creditor);
-      if (cycle) return cycle;
-    }
-    path.pop();
-    done.add(member);
-    return undefined;
-  };
-
-  for (const member of [...graph.keys()].sort(ascending)) {
-    if (done.has(member)) continue;
-    const cycle = visit(member);
-    if (cycle) return cycle;
-  }
-  return undefined;
-}
-
-/** Subtracting each cycle's smallest edge keeps balances intact and never adds a pair */
-function cancelCycles(graph: DebtGraph) {
-  for (let cycle = findCycle(graph); cycle; cycle = findCycle(graph)) {
-    const hops = cycle.map((from, i) => {
-      const to = cycle[(i + 1) % cycle.length] ?? from;
-      return { from, to, amount: graph.get(from)?.get(to) ?? 0 };
-    });
-    const smallest = Math.min(...hops.map((hop) => hop.amount));
-    for (const { from, to, amount } of hops) {
-      setDebt(graph, from, to, amount - smallest);
-    }
-  }
 }
 
 function toEntries(graph: DebtGraph, currency: string): DebtEntry[] {
