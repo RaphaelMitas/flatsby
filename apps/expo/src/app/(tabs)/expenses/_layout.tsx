@@ -21,7 +21,14 @@ export default function ExpensesLayout() {
           headerBackTitle: "Back to Expenses",
         }}
       />
-      <Stack.Screen name="debts" />
+      <Stack.Screen
+        name="debts"
+        options={{
+          headerShown: true,
+          headerTitle: "Debts",
+          headerBackTitle: "Expenses",
+        }}
+      />
       <Stack.Screen
         name="settle"
         options={{

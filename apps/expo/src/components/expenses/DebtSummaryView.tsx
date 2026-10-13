@@ -72,14 +72,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
       refreshing={refreshing}
       onRefresh={handleRefresh}
     >
-      <View className="w-full gap-2 p-4">
-        <Text
-          testID="debt-summary-title"
-          className="text-foreground text-3xl font-bold tracking-tight"
-        >
-          Debts
-        </Text>
-
+      <View testID="debt-summary-title" className="w-full gap-2 p-4">
         {hasDebts(summary) ? (
           <>
             <DebtHero hero={debtHero(summary, meId, counterparts, person)} />

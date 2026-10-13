@@ -108,53 +108,50 @@ function BalanceBars({
         <Text className="text-foreground mb-2 font-semibold">{currency}</Text>
       )}
       {rows.map(({ memberId, isMe, cents, percent }) => (
-        <View key={memberId} className="flex-row items-center gap-2 py-1.5">
+        <View key={memberId} className="flex-row items-center gap-3 py-2">
           <MemberAvatar
             person={person(memberId)}
-            className="h-6 w-6"
+            className="h-7 w-7"
             textClassName="text-xs"
           />
-          <Text
-            className={cn(
-              "text-foreground w-16 text-sm",
-              isMe ? "font-bold" : "font-medium",
-            )}
-            numberOfLines={1}
-          >
-            {person(memberId).name}
-          </Text>
-          <View className="h-5 flex-1 flex-row">
-            <View className="border-border flex-1 flex-row justify-end border-r">
-              {cents < 0 && (
-                <View
-                  className="bg-destructive/70 h-full rounded-l-md"
-                  style={{ width: `${percent}%` }}
-                />
-              )}
+          <View className="flex-1 gap-2">
+            <View className="flex-row items-center justify-between gap-2">
+              <Text
+                className={cn(
+                  "text-foreground flex-1 text-sm",
+                  isMe ? "font-bold" : "font-medium",
+                )}
+                numberOfLines={1}
+              >
+                {person(memberId).name}
+              </Text>
+              <Text
+                className={cn(
+                  "text-sm",
+                  isMe ? "font-bold" : "font-semibold",
+                  cents > 0
+                    ? "text-success"
+                    : cents < 0
+                      ? "text-destructive"
+                      : "text-muted-foreground",
+                )}
+              >
+                {formatSignedCents(cents, currency)}
+              </Text>
             </View>
-            <View className="flex-1 flex-row">
-              {cents > 0 && (
-                <View
-                  className="bg-success/70 h-full rounded-r-md"
-                  style={{ width: `${percent}%` }}
-                />
-              )}
+            <View className="bg-muted relative h-1.5 rounded-full">
+              <View
+                className={cn(
+                  "absolute top-0 h-full rounded-full",
+                  cents > 0
+                    ? "bg-success left-1/2"
+                    : "bg-destructive right-1/2",
+                )}
+                style={{ width: `${percent / 2}%` }}
+              />
+              <View className="bg-muted-foreground/40 absolute top-0 left-1/2 h-full w-px" />
             </View>
           </View>
-          <Text
-            className={cn(
-              "w-20 text-right text-sm",
-              isMe ? "font-bold" : "font-semibold",
-              cents > 0
-                ? "text-success"
-                : cents < 0
-                  ? "text-destructive"
-                  : "text-muted-foreground",
-            )}
-            numberOfLines={1}
-          >
-            {formatSignedCents(cents, currency)}
-          </Text>
         </View>
       ))}
     </View>
@@ -197,9 +194,8 @@ function PlanSteps({
             key={`${debt.fromGroupMemberId}-${debt.toGroupMemberId}`}
             testID="debt-plan-step"
             className={cn(
-              "-mx-4 flex-row items-center gap-2 px-4 py-2.5",
+              "flex-row items-center gap-2 py-2.5",
               index > 0 && "border-border border-t",
-              mine && "bg-muted/50",
             )}
           >
             <View className="bg-muted h-6 w-6 items-center justify-center rounded-full">
@@ -235,8 +231,7 @@ function PlanSteps({
             <Button
               title={mine ? "Settle" : "Record"}
               size="sm"
-              variant={mine ? "outline" : "ghost"}
-              textClassName={mine ? undefined : "text-muted-foreground"}
+              variant={mine ? "primary" : "outline"}
               onPress={() => onSettle(debt, "plan")}
             />
           </View>

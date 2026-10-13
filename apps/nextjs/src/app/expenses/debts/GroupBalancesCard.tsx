@@ -113,49 +113,46 @@ function BalanceBars({
       <ul>
         {rows.map(({ memberId, isMe, cents, percent }) => {
           const { name, image } = person(memberId);
-          const width = `${percent}%`;
           return (
             <li
               key={memberId}
-              className="flex items-center gap-2 py-1.5 text-sm"
+              className="flex items-center gap-3 py-2 text-sm"
               data-testid="balance-row"
             >
               <UserAvatar name={name} image={image} size="sm" />
-              <span
-                className={cn(
-                  "w-16 truncate",
-                  isMe ? "font-bold" : "font-medium",
-                )}
-              >
-                {name}
-              </span>
-              <div className="flex h-5 flex-1">
-                <div className="flex flex-1 justify-end border-r-2">
-                  {cents < 0 && (
-                    <div
-                      className="bg-destructive/70 h-full rounded-l-md"
-                      style={{ width }}
-                    />
-                  )}
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className={cn(
+                      "truncate",
+                      isMe ? "font-bold" : "font-medium",
+                    )}
+                  >
+                    {name}
+                  </span>
+                  <span
+                    className={cn(
+                      "tabular-nums",
+                      isMe ? "font-bold" : "font-semibold",
+                      amountTone(cents),
+                    )}
+                  >
+                    {formatSignedCents(cents, currency)}
+                  </span>
                 </div>
-                <div className="flex flex-1">
-                  {cents > 0 && (
-                    <div
-                      className="bg-success/70 h-full rounded-r-md"
-                      style={{ width }}
-                    />
-                  )}
+                <div className="bg-muted relative h-1.5 rounded-full">
+                  <div
+                    className={cn(
+                      "absolute inset-y-0 rounded-full",
+                      cents > 0
+                        ? "bg-success left-1/2"
+                        : "bg-destructive right-1/2",
+                    )}
+                    style={{ width: `${percent / 2}%` }}
+                  />
+                  <div className="bg-muted-foreground/40 absolute inset-y-0 left-1/2 w-px" />
                 </div>
               </div>
-              <span
-                className={cn(
-                  "w-20 text-right tabular-nums",
-                  isMe ? "font-bold" : "font-semibold",
-                  amountTone(cents),
-                )}
-              >
-                {formatSignedCents(cents, currency)}
-              </span>
             </li>
           );
         })}
@@ -195,10 +192,7 @@ function PlanSteps({
           return (
             <li
               key={`${step.fromGroupMemberId}-${step.toGroupMemberId}`}
-              className={cn(
-                "flex items-center gap-3 py-2.5",
-                mine && "bg-muted/60 -mx-4 px-4",
-              )}
+              className="flex items-center gap-3 py-2.5"
               data-testid="settle-plan-step"
             >
               <span className="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
@@ -219,8 +213,7 @@ function PlanSteps({
               </span>
               <Button
                 size="sm"
-                variant={mine ? "outline" : "ghost"}
-                className={cn(!mine && "text-muted-foreground")}
+                variant={mine ? "default" : "outline"}
                 onClick={() => onSettle({ source: "plan", debt: step })}
               >
                 {mine ? "Settle" : "Record"}
