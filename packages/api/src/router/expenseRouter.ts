@@ -72,6 +72,8 @@ function ensureActiveMembers(
   return Effect.succeed(undefined);
 }
 
+const PAIR_ACTIVITY_PAGE = 5;
+
 function withDerivedCategory<T extends { id: number; subcategory: string }>(
   row: T,
   userId: string,
@@ -676,15 +678,29 @@ export const expenseRouter = createTRPCRouter({
                         eq(expenseSplits.groupMemberId, a),
                       ),
                     ),
+                    input.cursor &&
+                      or(
+                        lt(expenses.expenseDate, input.cursor.date),
+                        and(
+                          eq(expenses.expenseDate, input.cursor.date),
+                          lt(expenses.id, input.cursor.id),
+                        ),
+                      ),
                   ),
                 )
                 .orderBy(desc(expenses.expenseDate), desc(expenses.id))
-                .limit(3);
+                .limit(PAIR_ACTIVITY_PAGE + 1);
+              const items = rows.slice(0, PAIR_ACTIVITY_PAGE);
+              const last = items.at(-1);
               return {
-                items: rows.map(({ splitMethod, ...row }) => ({
+                items: items.map(({ splitMethod, ...row }) => ({
                   ...row,
                   isSettlement: splitMethod === "settlement",
                 })),
+                nextCursor:
+                  rows.length > PAIR_ACTIVITY_PAGE && last
+                    ? { date: last.expenseDate, id: last.id }
+                    : undefined,
               };
             }, "fetch pair activity"),
         ),

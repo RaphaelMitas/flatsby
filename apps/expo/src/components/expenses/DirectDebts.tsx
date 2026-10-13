@@ -6,7 +6,7 @@ import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import {
   describePairActivity,
@@ -202,31 +202,38 @@ function PairActivityList({
   otherId,
   person,
 }: PairActivityListProps) {
-  const { data, isError } = useQuery(
-    trpc.expense.getPairActivity.queryOptions({
-      groupId,
-      groupMemberIds: [meId, otherId],
-    }),
+  const { data, isError, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useInfiniteQuery(
+      trpc.expense.getPairActivity.infiniteQueryOptions(
+        { groupId, groupMemberIds: [meId, otherId] },
+        {
+          getNextPageParam: (lastPage) =>
+            lastPage.success ? lastPage.data.nextCursor : undefined,
+        },
+      ),
+    );
+  const items = data?.pages.flatMap((page) =>
+    page.success ? page.data.items : [],
   );
 
   let message: string | undefined;
-  if (data?.success === false || (isError && !data)) {
+  if (data?.pages[0]?.success === false || (isError && !data)) {
     message = "Couldn't load recent activity";
-  } else if (data?.data.items.length === 0) {
+  } else if (items?.length === 0) {
     message = "Nothing shared yet";
   }
 
   return (
-    <View testID="debt-row-activity" className="bg-muted/40 pr-4 pb-2 pl-16">
+    <View testID="debt-row-activity" className="bg-muted/40 px-4 pb-2">
       {message ? (
         <Text className="text-muted-foreground py-2 text-sm">{message}</Text>
-      ) : !data?.success ? (
+      ) : !items ? (
         <View className="gap-2 py-2">
           <Skeleton size="sm" width="xl" />
           <Skeleton size="sm" width="lg" />
         </View>
       ) : (
-        data.data.items.map((item, index) => {
+        items.map((item, index) => {
           const { cents, title, subtitle } = describePairActivity(
             item,
             meId,
@@ -240,18 +247,11 @@ function PairActivityList({
                 index > 0 && "border-border border-t border-dashed",
               )}
             >
-              <View
-                className={cn(
-                  "h-7 w-7 items-center justify-center rounded-lg",
-                  item.isSettlement ? "bg-success/10" : "bg-muted",
-                )}
-              >
-                <Icon
-                  name={item.isSettlement ? "check" : "receipt"}
-                  size={15}
-                  color={item.isSettlement ? "success" : "muted-foreground"}
-                />
-              </View>
+              <MemberAvatar
+                person={person(item.paidByGroupMemberId)}
+                className="h-7 w-7"
+                textClassName="text-xs"
+              />
               <View className="flex-1">
                 <Text className="text-foreground text-sm" numberOfLines={1}>
                   {title}
@@ -275,6 +275,16 @@ function PairActivityList({
             </View>
           );
         })
+      )}
+      {hasNextPage && (
+        <Button
+          testID="pair-activity-more"
+          title={isFetchingNextPage ? "Loading…" : "Show more"}
+          size="sm"
+          variant="ghost"
+          disabled={isFetchingNextPage}
+          onPress={() => void fetchNextPage()}
+        />
       )}
     </View>
   );

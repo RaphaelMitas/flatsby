@@ -9,8 +9,8 @@ import type { PairActivityItem } from "@flatsby/validators/expenses/schemas";
 import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Check, CheckCircle2, ChevronDown, Receipt } from "lucide-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Check, ChevronDown } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
@@ -196,39 +196,57 @@ function PairActivityList({
   person,
 }: PairActivityListProps) {
   const trpc = useTRPC();
-  const { data, isError } = useQuery(
-    trpc.expense.getPairActivity.queryOptions({
-      groupId,
-      groupMemberIds: [meId, otherId],
-    }),
+  const { data, isError, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useInfiniteQuery(
+      trpc.expense.getPairActivity.infiniteQueryOptions(
+        { groupId, groupMemberIds: [meId, otherId] },
+        {
+          getNextPageParam: (lastPage) =>
+            lastPage.success ? lastPage.data.nextCursor : undefined,
+        },
+      ),
+    );
+  const items = data?.pages.flatMap((page) =>
+    page.success ? page.data.items : [],
   );
 
   let content: ReactNode;
-  if (data?.success === false || (isError && !data)) {
+  if (data?.pages[0]?.success === false || (isError && !data)) {
     content = <EmptyLine>Couldn't load recent activity</EmptyLine>;
-  } else if (!data) {
+  } else if (!items) {
     content = Array.from({ length: 2 }).map((_, i) => (
       <li key={i} className="flex items-center gap-3 py-2">
-        <Skeleton className="size-7 rounded-md" />
+        <Skeleton className="size-7 rounded-full" />
         <Skeleton className="h-4 flex-1" />
         <Skeleton className="h-4 w-14" />
       </li>
     ));
-  } else if (data.data.items.length === 0) {
+  } else if (items.length === 0) {
     content = <EmptyLine>Nothing shared yet</EmptyLine>;
   } else {
-    content = data.data.items.map((item) => (
+    content = items.map((item) => (
       <PairActivityLine key={item.id} item={item} meId={meId} person={person} />
     ));
   }
 
   return (
-    <ul
-      className="bg-muted/40 divide-y divide-dashed border-t px-4 py-1 sm:pl-16"
-      data-testid="pair-activity"
-    >
-      {content}
-    </ul>
+    <div className="bg-muted/40 border-t px-4 py-1">
+      <ul className="divide-y divide-dashed" data-testid="pair-activity">
+        {content}
+      </ul>
+      {hasNextPage && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-1 w-full"
+          disabled={isFetchingNextPage}
+          onClick={() => void fetchNextPage()}
+          data-testid="pair-activity-more"
+        >
+          {isFetchingNextPage ? "Loading…" : "Show more"}
+        </Button>
+      )}
+    </div>
   );
 }
 
@@ -246,23 +264,11 @@ function PairActivityLine({
   person: PersonLookup;
 }) {
   const { cents, title, subtitle } = describePairActivity(item, meId, person);
+  const payer = person(item.paidByGroupMemberId);
 
   return (
     <li className="flex items-center gap-3 py-2 text-sm">
-      <span
-        className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-md",
-          item.isSettlement
-            ? "bg-success/15 text-success"
-            : "bg-muted text-muted-foreground",
-        )}
-      >
-        {item.isSettlement ? (
-          <CheckCircle2 className="size-4" />
-        ) : (
-          <Receipt className="size-4" />
-        )}
-      </span>
+      <UserAvatar name={payer.name} image={payer.image} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="truncate">{title}</p>
         <p className="text-muted-foreground text-xs">{subtitle}</p>
