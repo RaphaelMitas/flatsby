@@ -4,7 +4,7 @@ import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, eq, inArray, lt, or } from "@flatsby/db";
+import { and, count, desc, eq, inArray, lt, or } from "@flatsby/db";
 import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
 import {
   expenseCategoryGroupLabels,
@@ -16,6 +16,8 @@ import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
 import {
   createExpenseSchema,
   deleteExpenseSchema,
+  getPairActivityInputSchema,
+  pairActivitySchema,
   splitMethodSchema,
   updateExpenseSchema,
 } from "@flatsby/validators/expenses/schemas";
@@ -27,7 +29,7 @@ import { bulkCreateExpensesSchema } from "@flatsby/validators/expenses/splitwise
 import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
 
 import type { ApiError } from "../errors";
-import { fail, withErrorHandlingAsResult } from "../errors";
+import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
 import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
@@ -627,6 +629,74 @@ export const expenseRouter = createTRPCRouter({
               () => fetchGroupDebtSummary(ctx.db, input.groupId),
               "fetch expenses for debt summary",
             ),
+        ),
+      );
+    }),
+
+  getPairActivity: protectedProcedure
+    .input(getPairActivityInputSchema)
+    .output(getApiResultZod(pairActivitySchema))
+    .query(async ({ ctx, input }) => {
+      const [a, b] = input.groupMemberIds;
+      const betweenPair = and(
+        eq(expenses.groupId, input.groupId),
+        or(
+          and(
+            eq(expenses.paidByGroupMemberId, a),
+            eq(expenseSplits.groupMemberId, b),
+          ),
+          and(
+            eq(expenses.paidByGroupMemberId, b),
+            eq(expenseSplits.groupMemberId, a),
+          ),
+        ),
+      );
+      return withErrorHandlingAsResult(
+        Effect.flatMap(
+          OperationUtils.getGroupWithAccess(
+            ctx.db,
+            input.groupId,
+            ctx.session.user.id,
+          ),
+          () =>
+            safeDbOperation(async () => {
+              const [rows, [counted]] = await Promise.all([
+                ctx.db
+                  .select({
+                    id: expenses.id,
+                    description: expenses.description,
+                    expenseDate: expenses.expenseDate,
+                    currency: expenses.currency,
+                    paidByGroupMemberId: expenses.paidByGroupMemberId,
+                    amountInCents: expenses.amountInCents,
+                    pairAmountInCents: expenseSplits.amountInCents,
+                    splitMethod: expenses.splitMethod,
+                  })
+                  .from(expenses)
+                  .innerJoin(
+                    expenseSplits,
+                    eq(expenseSplits.expenseId, expenses.id),
+                  )
+                  .where(betweenPair)
+                  .orderBy(desc(expenses.expenseDate), desc(expenses.id))
+                  .limit(input.limit),
+                ctx.db
+                  .select({ total: count() })
+                  .from(expenses)
+                  .innerJoin(
+                    expenseSplits,
+                    eq(expenseSplits.expenseId, expenses.id),
+                  )
+                  .where(betweenPair),
+              ]);
+              return {
+                items: rows.map(({ splitMethod, ...row }) => ({
+                  ...row,
+                  isSettlement: splitMethod === "settlement",
+                })),
+                totalCount: counted?.total ?? 0,
+              };
+            }, "fetch pair activity"),
         ),
       );
     }),

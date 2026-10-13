@@ -77,7 +77,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
 
   const hasAnyDebts = currencies.some((currency) =>
     debtSummary.currencies[currency]
-      ? debtSummary.currencies[currency].debts.length > 0
+      ? debtSummary.currencies[currency].simplified.length > 0
       : false,
   );
 
@@ -129,7 +129,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
           <View className="gap-6">
             {currencies.map((currency) => {
               const currencyDebts = debtSummary.currencies[currency];
-              if (!currencyDebts || currencyDebts.debts.length === 0) {
+              if (!currencyDebts || currencyDebts.simplified.length === 0) {
                 return null;
               }
 
@@ -138,13 +138,13 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
                   <CardHeader>
                     <CardTitle className="text-lg">{currency}</CardTitle>
                     <CardDescription>
-                      {currencyDebts.debts.length}{" "}
-                      {currencyDebts.debts.length === 1 ? "debt" : "debts"}
+                      {currencyDebts.simplified.length}{" "}
+                      {currencyDebts.simplified.length === 1 ? "debt" : "debts"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <View className="gap-3">
-                      {currencyDebts.debts.map((debt, index) => {
+                      {currencyDebts.simplified.map((debt, index) => {
                         const formattedAmount = formatCurrencyFromCents({
                           cents: debt.amountInCents,
                           currency,
@@ -226,7 +226,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
                                 />
                               </View>
                             </View>
-                            {index < currencyDebts.debts.length - 1 && (
+                            {index < currencyDebts.simplified.length - 1 && (
                               <Separator className="mt-3" />
                             )}
                           </View>

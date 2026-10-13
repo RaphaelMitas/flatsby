@@ -98,3 +98,32 @@ export const settlementFormSchema = z.object({
 });
 
 export type SettlementFormValues = z.infer<typeof settlementFormSchema>;
+
+export const getPairActivityInputSchema = z.object({
+  groupId: z.number(),
+  groupMemberIds: z
+    .tuple([z.number(), z.number()])
+    .refine(([a, b]) => a !== b, "Pick two different members"),
+  limit: z.number().int().min(1).max(10).default(3),
+});
+
+export const pairActivityItemSchema = z.object({
+  id: z.number(),
+  description: z.string(),
+  expenseDate: z.date(),
+  currency: z.string(),
+  paidByGroupMemberId: z.number(),
+  amountInCents: z.number().int(),
+  /** The non-payer's split: what this expense moved between the two */
+  pairAmountInCents: z.number().int(),
+  isSettlement: z.boolean(),
+});
+
+export type PairActivityItem = z.infer<typeof pairActivityItemSchema>;
+
+export const pairActivitySchema = z.object({
+  items: z.array(pairActivityItemSchema),
+  totalCount: z.number().int(),
+});
+
+export type PairActivity = z.infer<typeof pairActivitySchema>;

@@ -46,19 +46,24 @@ export interface DebtEntry {
 }
 
 /**
- * Debt summary for a single currency
+ * Debt summary for a single currency. `direct` is who owes whom per pair with
+ * circular debts cancelled, `simplified` is the fewest-payments settle plan.
  */
 export interface DebtSummary {
-  debts: DebtEntry[];
   currency: string;
+  direct: DebtEntry[];
+  simplified: DebtEntry[];
 }
+
+/** groupMemberId -> currency -> balance in cents */
+export type MemberBalances = Record<number, Record<string, number>>;
 
 /**
  * Group debt summary across all currencies
  */
 export interface GroupDebtSummary {
   currencies: Record<string, DebtSummary>;
-  memberBalances: Record<number, Record<string, number>>; // groupMemberId -> currency -> balance in cents
+  memberBalances: MemberBalances;
 }
 
 /**

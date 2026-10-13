@@ -123,7 +123,7 @@ export function SettlementForm({
       for (const [currencyKey, currencyDebts] of Object.entries(
         debtSummary.currencies,
       )) {
-        const debt = currencyDebts.debts.find(
+        const debt = currencyDebts.simplified.find(
           (d) => d.fromGroupMemberId === fromId && d.toGroupMemberId === toId,
         );
 

@@ -1,15 +1,13 @@
-// ============================================================================
-// Debt Calculation Utilities
-// ============================================================================
+import type { DebtEntry, GroupDebtSummary, MemberBalances } from "./types";
 
-import type { DebtEntry, DebtSummary, GroupDebtSummary } from "./types";
+/** debtor -> creditor -> cents, every amount positive */
+type DebtGraph = Map<number, Map<number, number>>;
+
+const ascending = (a: number, b: number) => a - b;
 
 /**
- * Calculate debts from expenses and splits
- * Returns a summary with currency-grouped debts and member balances
- *
- * @param expenses - Array of expenses with splits
- * @returns GroupDebtSummary with debts and balances per currency
+ * Per currency: direct debts between each pair of members, with circular debts
+ * cancelled, and the greedy simplified plan derived from member balances.
  */
 export function calculateDebts(
   expenses: {
@@ -22,79 +20,183 @@ export function calculateDebts(
     }[];
   }[],
 ): GroupDebtSummary {
-  const memberBalances: Record<number, Record<string, number>> = {};
-  const currencies = new Set<string>();
+  const memberBalances: MemberBalances = {};
+  const graphs = new Map<string, DebtGraph>();
 
-  // Initialize balances for all members and currencies
   for (const expense of expenses) {
-    currencies.add(expense.currency);
-    // biome-ignore lint/suspicious/noAssignInExpressions: initialize-and-read in one step
-    const payerBalances = (memberBalances[expense.paidByGroupMemberId] ??= {});
-    payerBalances[expense.currency] ??= 0;
+    const { paidByGroupMemberId: payer, currency } = expense;
+    adjustBalance(memberBalances, payer, currency, expense.amountInCents);
 
-    for (const split of expense.expenseSplits) {
-      // biome-ignore lint/suspicious/noAssignInExpressions: initialize-and-read in one step
-      const splitterBalances = (memberBalances[split.groupMemberId] ??= {});
-      splitterBalances[expense.currency] ??= 0;
+    let graph = graphs.get(currency);
+    if (!graph) {
+      graph = new Map();
+      graphs.set(currency, graph);
     }
-  }
-
-  // Calculate net balances
-  for (const expense of expenses) {
-    const { paidByGroupMemberId, amountInCents, currency } = expense;
-    const payerBalances = memberBalances[paidByGroupMemberId];
-    if (payerBalances) {
-      // Payer gets credited (positive balance)
-      const currentBalance = payerBalances[currency];
-      if (currentBalance !== undefined) {
-        payerBalances[currency] = currentBalance + amountInCents;
-      } else {
-        payerBalances[currency] = amountInCents;
-      }
-    }
-
-    // Splitters get debited (negative balance)
     for (const split of expense.expenseSplits) {
-      const splitterBalances = memberBalances[split.groupMemberId];
-      if (splitterBalances) {
-        const currentBalance = splitterBalances[currency];
-        if (currentBalance !== undefined) {
-          splitterBalances[currency] = currentBalance - split.amountInCents;
-        } else {
-          splitterBalances[currency] = -split.amountInCents;
-        }
+      adjustBalance(
+        memberBalances,
+        split.groupMemberId,
+        currency,
+        -split.amountInCents,
+      );
+      if (split.groupMemberId !== payer) {
+        addDebt(graph, split.groupMemberId, payer, split.amountInCents);
       }
     }
   }
 
-  // Simplify debts for each currency
-  const currencyDebts: Record<string, DebtSummary> = {};
-  for (const currency of currencies) {
-    const debts = simplifyDebts(memberBalances, currency);
-    currencyDebts[currency] = {
-      debts,
+  const currencies: GroupDebtSummary["currencies"] = {};
+  for (const [currency, graph] of graphs) {
+    cancelCycles(graph);
+    currencies[currency] = {
       currency,
+      direct: toEntries(graph, currency),
+      simplified: simplifyDebts(memberBalances, currency),
     };
   }
 
-  return {
-    currencies: currencyDebts,
-    memberBalances,
-  };
+  return { currencies, memberBalances };
 }
 
 /**
- * Simplify debts using a greedy algorithm to minimize transactions
- *
- * @param memberBalances - Member balances per currency
- * @param currency - Currency to simplify debts for
- * @returns Array of simplified debt entries
+ * Optimistically applies a settlement payment to a summary. Direct debts are
+ * adjusted for the pair only; the next server fetch re-cancels cycles.
  */
+export function applySettlement(
+  summary: GroupDebtSummary,
+  settlement: DebtEntry,
+): GroupDebtSummary {
+  const { fromGroupMemberId, toGroupMemberId, currency, amountInCents } =
+    settlement;
+
+  const memberBalances: MemberBalances = Object.fromEntries(
+    Object.entries(summary.memberBalances).map(([id, balances]) => [
+      id,
+      { ...balances },
+    ]),
+  );
+  adjustBalance(memberBalances, fromGroupMemberId, currency, amountInCents);
+  adjustBalance(memberBalances, toGroupMemberId, currency, -amountInCents);
+
+  const graph: DebtGraph = new Map();
+  for (const debt of summary.currencies[currency]?.direct ?? []) {
+    addDebt(
+      graph,
+      debt.fromGroupMemberId,
+      debt.toGroupMemberId,
+      debt.amountInCents,
+    );
+  }
+  addDebt(graph, toGroupMemberId, fromGroupMemberId, amountInCents);
+
+  return {
+    memberBalances,
+    currencies: {
+      ...summary.currencies,
+      [currency]: {
+        currency,
+        direct: toEntries(graph, currency),
+        simplified: simplifyDebts(memberBalances, currency),
+      },
+    },
+  };
+}
+
+function adjustBalance(
+  memberBalances: MemberBalances,
+  memberId: number,
+  currency: string,
+  delta: number,
+) {
+  const balances = memberBalances[memberId] ?? {};
+  balances[currency] = (balances[currency] ?? 0) + delta;
+  memberBalances[memberId] = balances;
+}
+
+function setDebt(graph: DebtGraph, from: number, to: number, amount: number) {
+  if (amount <= 0) {
+    graph.get(from)?.delete(to);
+    return;
+  }
+  const creditors = graph.get(from) ?? new Map<number, number>();
+  creditors.set(to, amount);
+  graph.set(from, creditors);
+}
+
+/** Nets against the opposite direction, so a pair only ever has one edge */
+function addDebt(graph: DebtGraph, from: number, to: number, amount: number) {
+  const net =
+    (graph.get(from)?.get(to) ?? 0) - (graph.get(to)?.get(from) ?? 0) + amount;
+  setDebt(graph, from, to, net);
+  setDebt(graph, to, from, -net);
+}
+
+function findCycle(graph: DebtGraph): number[] | undefined {
+  const done = new Set<number>();
+  const path: number[] = [];
+
+  const visit = (member: number): number[] | undefined => {
+    path.push(member);
+    const creditors = [...(graph.get(member)?.keys() ?? [])].sort(ascending);
+    for (const creditor of creditors) {
+      const onPath = path.indexOf(creditor);
+      if (onPath !== -1) return path.slice(onPath);
+      if (done.has(creditor)) continue;
+      const cycle = visit(creditor);
+      if (cycle) return cycle;
+    }
+    path.pop();
+    done.add(member);
+    return undefined;
+  };
+
+  for (const member of [...graph.keys()].sort(ascending)) {
+    if (done.has(member)) continue;
+    const cycle = visit(member);
+    if (cycle) return cycle;
+  }
+  return undefined;
+}
+
+/**
+ * Removes circular debts (A owes B owes C owes A) by subtracting each cycle's
+ * smallest edge along it. Balances are unchanged and no new pair appears.
+ */
+function cancelCycles(graph: DebtGraph) {
+  for (let cycle = findCycle(graph); cycle; cycle = findCycle(graph)) {
+    const hops = cycle.map((from, i) => {
+      const to = cycle[(i + 1) % cycle.length] ?? from;
+      return { from, to, amount: graph.get(from)?.get(to) ?? 0 };
+    });
+    const smallest = Math.min(...hops.map((hop) => hop.amount));
+    for (const { from, to, amount } of hops) {
+      setDebt(graph, from, to, amount - smallest);
+    }
+  }
+}
+
+function toEntries(graph: DebtGraph, currency: string): DebtEntry[] {
+  return [...graph]
+    .flatMap(([from, creditors]) =>
+      [...creditors].map(([to, amountInCents]) => ({
+        fromGroupMemberId: from,
+        toGroupMemberId: to,
+        amountInCents,
+        currency,
+      })),
+    )
+    .sort(
+      (a, b) =>
+        a.fromGroupMemberId - b.fromGroupMemberId ||
+        a.toGroupMemberId - b.toGroupMemberId,
+    );
+}
+
+/** Greedy plan that settles every balance in few payments */
 export function simplifyDebts(
-  memberBalances: Record<number, Record<string, number>>,
+  memberBalances: MemberBalances,
   currency: string,
 ): DebtEntry[] {
-  // Get all members with non-zero balances for this currency
   const balances: { memberId: number; balance: number }[] = [];
   for (const [memberId, currencies] of Object.entries(memberBalances)) {
     const balance = currencies[currency] ?? 0;
@@ -103,7 +205,6 @@ export function simplifyDebts(
     }
   }
 
-  // Separate creditors (positive) and debtors (negative)
   const creditors = balances
     .filter((b) => b.balance > 0)
     .sort((a, b) => b.balance - a.balance);

@@ -324,6 +324,72 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   return { group, conversationId: conversation.id };
 }
 
+/**
+ * Adds Lena, Max and Sophie to the user's fresh group, with one expense per
+ * debt so the direct debts come out exactly as in the validators debt tests.
+ * The extra members are minted per call, so parallel runs never share them.
+ */
+async function seedDebtsScenario(groupId: number, you: number) {
+  const seededUsers = await Promise.all(
+    ["Lena", "Max", "Sophie"].map((name) => upsertE2EUser(name)),
+  );
+  const memberRows = await db
+    .insert(groupMembers)
+    .values(
+      seededUsers.map(({ userId }): typeof groupMembers.$inferInsert => ({
+        groupId,
+        userId,
+        role: "member",
+        isActive: true,
+      })),
+    )
+    .returning({ id: groupMembers.id });
+  const [lena, max, sophie] = memberRows.map((row) => row.id);
+  if (lena === undefined || max === undefined || sophie === undefined) {
+    throw new Error("Failed to create seeded memberships");
+  }
+
+  const debts = [
+    { debtor: max, creditor: you, cents: 4250, description: "Groceries" },
+    { debtor: sophie, creditor: you, cents: 1800, description: "Pizza" },
+    { debtor: you, creditor: lena, cents: 3000, description: "Internet" },
+    { debtor: max, creditor: lena, cents: 2500, description: "Cleaning" },
+    { debtor: sophie, creditor: max, cents: 1200, description: "Drinks" },
+    { debtor: sophie, creditor: lena, cents: 800, description: "Bakery" },
+    {
+      debtor: you,
+      creditor: max,
+      cents: 1500,
+      description: "Concert",
+      currency: "USD",
+    },
+  ];
+  const dayMs = 24 * 60 * 60 * 1000;
+  for (const [i, debt] of debts.entries()) {
+    const [expense] = await db
+      .insert(expenses)
+      .values({
+        groupId,
+        paidByGroupMemberId: debt.creditor,
+        amountInCents: debt.cents,
+        currency: debt.currency ?? "EUR",
+        description: debt.description,
+        category: "other",
+        subcategory: "other",
+        expenseDate: new Date(Date.now() - i * dayMs),
+        createdByGroupMemberId: debt.creditor,
+        splitMethod: "custom",
+      })
+      .returning({ id: expenses.id });
+    if (!expense) throw new Error("Failed to create seeded expense");
+    await db.insert(expenseSplits).values({
+      expenseId: expense.id,
+      groupMemberId: debt.debtor,
+      amountInCents: debt.cents,
+    });
+  }
+}
+
 export async function POST(request: Request) {
   if (!env.E2E_TESTING) {
     return NextResponse.json(
@@ -336,7 +402,7 @@ export async function POST(request: Request) {
   const nameParam = searchParams.get("name")?.trim();
   const name = nameParam ? nameParam.slice(0, 64) : "E2E Test User";
   const emailParam = searchParams.get("email")?.trim().toLowerCase();
-  const seedStore = searchParams.get("seed") === "store";
+  const seed = searchParams.get("seed");
 
   // Reject anything that is not a plain mailbox at the e2e domain — a
   // malformed override (e.g. a "+" decoded to a space upstream) would
@@ -351,7 +417,7 @@ export async function POST(request: Request) {
 
   let group: { id: number };
   let conversationId: string | undefined;
-  if (seedStore) {
+  if (seed === "store") {
     const seeded = await seedStoreScenario(userId, email);
     group = seeded.group;
     conversationId = seeded.conversationId;
@@ -366,12 +432,18 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
-    await db.insert(groupMembers).values({
-      groupId: fixtureGroup.id,
-      userId,
-      role: "admin",
-      isActive: true,
-    });
+    const [youMember] = await db
+      .insert(groupMembers)
+      .values({
+        groupId: fixtureGroup.id,
+        userId,
+        role: "admin",
+        isActive: true,
+      })
+      .returning({ id: groupMembers.id });
+    if (seed === "debts" && youMember) {
+      await seedDebtsScenario(fixtureGroup.id, youMember.id);
+    }
     group = fixtureGroup;
   }
 
