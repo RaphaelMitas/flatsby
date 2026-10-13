@@ -29,8 +29,13 @@ export default function SettlePage() {
   const { selectedGroupId } = useShoppingStore();
   // a save can resolve after the user left: pop only this screen, if it's still there
   const close = () => {
-    if (navigation.getState()?.routes.some(({ key }) => key === route.key)) {
-      navigation.goBack();
+    const stack = navigation.getState();
+    if (stack?.routes.some(({ key }) => key === route.key)) {
+      navigation.dispatch({
+        type: "GO_BACK",
+        source: route.key,
+        target: stack.key,
+      });
     }
   };
 
