@@ -77,5 +77,3 @@ export type CurrencyCode = (typeof CURRENCY_CODES)[number];
 export const isCurrencyCode = (code: string): code is CurrencyCode => {
   return CURRENCY_CODES.includes(code as CurrencyCode);
 };
-
-export type SettleSource = "direct" | "plan";

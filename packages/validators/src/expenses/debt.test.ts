@@ -8,7 +8,7 @@ import {
   debtsFor,
   pairDebt,
 } from "./debt";
-import { debtHero, personLookup } from "./formatting";
+import { allSquareMessage, debtHero, personLookup } from "./formatting";
 
 type Expense = Parameters<typeof calculateDebts>[0][number];
 
@@ -92,9 +92,10 @@ function referenceDirect(expenses: Expense[]) {
     if (net === 0) continue;
     const [currency = "", low, high] = key.split("|");
     const [from, to] = net > 0 ? [low, high] : [high, low];
-    (byCurrency[currency] ??= []).push(
+    byCurrency[currency] = [
+      ...(byCurrency[currency] ?? []),
       debt(Number(from), Number(to), Math.abs(net), currency),
-    );
+    ];
   }
   for (const debts of Object.values(byCurrency)) {
     debts.sort(
@@ -631,20 +632,47 @@ describe("pairDebt", () => {
   });
 });
 
+const person = personLookup(
+  [
+    { id: YOU, user: { name: "Ruffy" } },
+    { id: LENA, user: { name: "Lena" } },
+    { id: MAX, user: { name: "Max" } },
+    { id: SOPHIE, user: { name: "Sophie" } },
+  ],
+  YOU,
+);
+
+describe("allSquareMessage", () => {
+  it("names everyone in a cycle even though their balances are zero", () => {
+    const summary = calculateDebts([
+      owes(LENA, MAX, 500),
+      owes(MAX, SOPHIE, 500),
+      owes(SOPHIE, LENA, 500),
+    ]);
+
+    expect(allSquareMessage(summary, YOU, "direct", person)).toBe(
+      "Lena, Max and Sophie still have open debts",
+    );
+    expect(allSquareMessage(summary, YOU, "simplified", person)).toBe(
+      "Nothing for you to pay or receive",
+    );
+  });
+
+  it("names everyone along a chain", () => {
+    const summary = calculateDebts([
+      owes(LENA, MAX, 500),
+      owes(MAX, SOPHIE, 300),
+    ]);
+
+    expect(allSquareMessage(summary, YOU, "direct", person)).toBe(
+      "Lena, Max and Sophie still have open debts",
+    );
+  });
+});
+
 describe("debtHero", () => {
-  const person = personLookup(
-    [
-      { id: YOU, user: { name: "Ruffy" } },
-      { id: LENA, user: { name: "Lena" } },
-      { id: MAX, user: { name: "Max" } },
-      { id: SOPHIE, user: { name: "Sophie" } },
-    ],
-    YOU,
-  );
-  const hero = (expenses: Expense[]) => {
-    const summary = calculateDebts(expenses);
-    return debtHero(summary, YOU, debtsFor(summary, YOU, "direct"), person);
-  };
+  const hero = (expenses: Expense[]) =>
+    debtHero(calculateDebts(expenses), YOU, person);
 
   it("says you are owed when every currency is in your favour", () => {
     expect(hero([owes(MAX, YOU, 3050)])).toEqual({

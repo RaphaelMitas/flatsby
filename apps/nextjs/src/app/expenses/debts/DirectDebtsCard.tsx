@@ -31,7 +31,7 @@ interface DirectDebtsCardProps {
   meId: number;
   kind: DebtKind;
   debts: CounterpartDebts[];
-  othersWithDebts: string;
+  allSquare: string;
   person: PersonLookup;
   onSettle: (debt: DebtEntry) => void;
 }
@@ -41,7 +41,7 @@ export function DirectDebtsCard({
   meId,
   kind,
   debts,
-  othersWithDebts,
+  allSquare,
   person,
   onSettle,
 }: DirectDebtsCardProps) {
@@ -59,11 +59,7 @@ export function DirectDebtsCard({
         </span>
         <div>
           <p className="font-semibold">You're all square</p>
-          <p className="text-muted-foreground text-sm">
-            {kind === "direct"
-              ? othersWithDebts
-              : "Nothing for you to pay or receive in the simplified plan"}
-          </p>
+          <p className="text-muted-foreground text-sm">{allSquare}</p>
         </div>
       </Card>
     );
@@ -196,16 +192,22 @@ function PairActivityList({
   person,
 }: PairActivityListProps) {
   const trpc = useTRPC();
-  const { data, isError, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfiniteQuery(
-      trpc.expense.getPairActivity.infiniteQueryOptions(
-        { groupId, groupMemberIds: [meId, otherId] },
-        {
-          getNextPageParam: (lastPage) =>
-            lastPage.success ? lastPage.data.nextCursor : undefined,
-        },
-      ),
-    );
+  const {
+    data,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery(
+    trpc.expense.getPairActivity.infiniteQueryOptions(
+      { groupId, groupMemberIds: [meId, otherId] },
+      {
+        getNextPageParam: (lastPage) =>
+          lastPage.success ? lastPage.data.nextCursor : undefined,
+      },
+    ),
+  );
   const items = data?.pages.flatMap((page) =>
     page.success ? page.data.items : [],
   );
@@ -239,7 +241,7 @@ function PairActivityList({
           variant="ghost"
           size="sm"
           className="mb-1 w-full"
-          disabled={isFetchingNextPage}
+          disabled={isFetching}
           onClick={() => void fetchNextPage()}
           data-testid="pair-activity-more"
         >

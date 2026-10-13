@@ -55,7 +55,7 @@ export default function SettlePage() {
     ? parseInt(params.expenseId, 10)
     : undefined;
   const source =
-    params.source === "direct" || params.source === "plan"
+    params.source === "direct" || params.source === "simplified"
       ? params.source
       : undefined;
 

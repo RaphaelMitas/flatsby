@@ -1,10 +1,8 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
+import type { DebtKind } from "@flatsby/validators/expenses/debt";
 import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
 import type { SettlementFormValues } from "@flatsby/validators/expenses/schemas";
-import type {
-  DebtEntry,
-  SettleSource,
-} from "@flatsby/validators/expenses/types";
+import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { Text, View } from "react-native";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -49,7 +47,7 @@ interface SettlementFormProps {
   currency?: string;
   amount?: number;
   expense?: ExpenseWithSplitsAndMembers;
-  source?: SettleSource;
+  source?: DebtKind;
   onClose: () => void;
 }
 

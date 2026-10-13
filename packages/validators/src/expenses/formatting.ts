@@ -2,10 +2,11 @@
 // Formatting Utilities - Currency and Date Display
 // ============================================================================
 
-import type { CounterpartDebts } from "./debt";
+import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
-import type { DebtEntry, GroupDebtSummary, SettleSource } from "./types";
+import type { DebtEntry, GroupDebtSummary } from "./types";
 import { centsToDecimal } from "./conversion";
+import { debtsBetweenOthers, debtsFor } from "./debt";
 
 /**
  * Format currency amount with currency symbol
@@ -155,7 +156,6 @@ function joinNames(names: string[]): string {
 export function debtHero(
   summary: GroupDebtSummary,
   meId: number,
-  counterparts: CounterpartDebts[],
   person: PersonLookup,
 ) {
   const lines = Object.entries(summary.memberBalances[meId] ?? {})
@@ -166,7 +166,7 @@ export function debtHero(
   const fallbackCurrency = Object.keys(summary.currencies)[0] ?? "EUR";
 
   const namesWhere = (sign: 1 | -1) =>
-    counterparts
+    debtsFor(summary, meId, "direct")
       .filter(({ amounts }) =>
         amounts.some(({ amountInCents }) => amountInCents * sign > 0),
       )
@@ -203,18 +203,21 @@ export function debtHero(
   };
 }
 
-export function formatOthersWithDebts(
+export function allSquareMessage(
   summary: GroupDebtSummary,
   meId: number,
+  kind: DebtKind,
   person: PersonLookup,
 ): string {
-  const names = Object.entries(summary.memberBalances)
-    .filter(
-      ([id, balances]) =>
-        Number(id) !== meId &&
-        Object.values(balances).some((cents) => cents !== 0),
-    )
-    .map(([id]) => person(Number(id)).name);
+  if (kind === "simplified") return "Nothing for you to pay or receive";
+  const names = [
+    ...new Set(
+      debtsBetweenOthers(summary, meId, "direct").flatMap((debt) => [
+        person(debt.fromGroupMemberId).name,
+        person(debt.toGroupMemberId).name,
+      ]),
+    ),
+  ];
   return `${joinNames(names)} ${names.length === 1 ? "still has" : "still have"} open debts`;
 }
 
@@ -240,12 +243,12 @@ export function describePairActivity(
 }
 
 export function settleOutstandingLabel(
-  source: SettleSource,
+  source: DebtKind,
   debt: DebtEntry,
   meId: number,
   person: PersonLookup,
 ): string {
-  if (source === "plan") return "Settle plan payment";
+  if (source === "simplified") return "Simplified payment";
   const from = person(debt.fromGroupMemberId).name;
   const to = person(debt.toGroupMemberId).name;
   if (debt.toGroupMemberId === meId) return `${from} owes you directly`;

@@ -1,8 +1,7 @@
+import type { groupBalances } from "@flatsby/validators/expenses/debt";
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
-import type { GroupDebtSummary } from "@flatsby/validators/expenses/types";
 import { Text, View } from "react-native";
 
-import { groupBalances } from "@flatsby/validators/expenses/debt";
 import { formatSignedCents } from "@flatsby/validators/expenses/formatting";
 
 import { Card } from "~/lib/ui/card";
@@ -10,13 +9,11 @@ import { cn } from "~/lib/utils";
 import { MemberAvatar } from "./MemberAvatar";
 
 interface GroupBalancesProps {
-  summary: GroupDebtSummary;
-  meId: number;
+  currencies: ReturnType<typeof groupBalances>;
   person: PersonLookup;
 }
 
-export function GroupBalances({ summary, meId, person }: GroupBalancesProps) {
-  const currencies = groupBalances(summary, meId);
+export function GroupBalances({ currencies, person }: GroupBalancesProps) {
   const withHeading = currencies.length > 1;
 
   return (

@@ -29,7 +29,7 @@ interface DirectDebtsProps {
   meId: number;
   kind: DebtKind;
   counterparts: CounterpartDebts[];
-  othersWithDebts: string;
+  allSquare: string;
   person: PersonLookup;
   onSettle: OnSettle;
 }
@@ -39,7 +39,7 @@ export function DirectDebts({
   meId,
   kind,
   counterparts,
-  othersWithDebts,
+  allSquare,
   person,
   onSettle,
 }: DirectDebtsProps) {
@@ -56,11 +56,7 @@ export function DirectDebts({
           <Text className="text-foreground font-semibold">
             You're all square
           </Text>
-          <Text className="text-muted-foreground text-sm">
-            {kind === "direct"
-              ? othersWithDebts
-              : "Nothing for you to pay or receive in the simplified plan"}
-          </Text>
+          <Text className="text-muted-foreground text-sm">{allSquare}</Text>
         </View>
       </Card>
     );
@@ -202,16 +198,22 @@ function PairActivityList({
   otherId,
   person,
 }: PairActivityListProps) {
-  const { data, isError, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfiniteQuery(
-      trpc.expense.getPairActivity.infiniteQueryOptions(
-        { groupId, groupMemberIds: [meId, otherId] },
-        {
-          getNextPageParam: (lastPage) =>
-            lastPage.success ? lastPage.data.nextCursor : undefined,
-        },
-      ),
-    );
+  const {
+    data,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery(
+    trpc.expense.getPairActivity.infiniteQueryOptions(
+      { groupId, groupMemberIds: [meId, otherId] },
+      {
+        getNextPageParam: (lastPage) =>
+          lastPage.success ? lastPage.data.nextCursor : undefined,
+      },
+    ),
+  );
   const items = data?.pages.flatMap((page) =>
     page.success ? page.data.items : [],
   );
@@ -282,7 +284,7 @@ function PairActivityList({
           title={isFetchingNextPage ? "Loading…" : "Show more"}
           size="sm"
           variant="ghost"
-          disabled={isFetchingNextPage}
+          disabled={isFetching}
           onPress={() => void fetchNextPage()}
         />
       )}

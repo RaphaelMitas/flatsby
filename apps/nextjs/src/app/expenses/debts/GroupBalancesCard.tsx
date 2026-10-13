@@ -1,29 +1,24 @@
 "use client";
 
+import type { groupBalances } from "@flatsby/validators/expenses/debt";
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
-import type { GroupDebtSummary } from "@flatsby/validators/expenses/types";
 
 import { cn } from "@flatsby/ui";
 import { Card } from "@flatsby/ui/card";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { groupBalances } from "@flatsby/validators/expenses/debt";
 import { formatSignedCents } from "@flatsby/validators/expenses/formatting";
 
 import { amountTone } from "./debtDisplay";
 
 interface GroupBalancesCardProps {
-  summary: GroupDebtSummary;
-  meId: number;
+  currencies: ReturnType<typeof groupBalances>;
   person: PersonLookup;
 }
 
 export function GroupBalancesCard({
-  summary,
-  meId,
+  currencies,
   person,
 }: GroupBalancesCardProps) {
-  const currencies = groupBalances(summary, meId);
-
   return (
     <Card className="p-4">
       <div className="flex flex-col gap-4">

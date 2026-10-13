@@ -10,6 +10,7 @@ export default function DebtsLoading() {
         <Skeleton className="h-10 w-32" />
         <Skeleton className="h-4 w-56" />
       </div>
+      <Skeleton className="h-9 rounded-lg" />
 
       <div className="space-y-2">
         <Skeleton className="h-4 w-28" />
@@ -32,11 +33,15 @@ export default function DebtsLoading() {
         <Skeleton className="h-4 w-28" />
         <div className="space-y-3 rounded-xl border p-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={i} className="flex items-center gap-3">
               <Skeleton className="size-6 rounded-full" />
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-5 flex-1" />
-              <Skeleton className="h-4 w-20" />
+              <div className="flex flex-1 flex-col gap-2">
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-14" />
+                </div>
+                <Skeleton className="h-1.5 rounded-full" />
+              </div>
             </div>
           ))}
         </div>

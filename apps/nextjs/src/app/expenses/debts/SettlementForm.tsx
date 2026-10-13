@@ -4,12 +4,10 @@ import type {
   ExpenseWithSplitsAndMembers,
   GroupMemberWithUserInfo,
 } from "@flatsby/api";
+import type { DebtKind } from "@flatsby/validators/expenses/debt";
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type { SettlementFormValues } from "@flatsby/validators/expenses/schemas";
-import type {
-  DebtEntry,
-  SettleSource,
-} from "@flatsby/validators/expenses/types";
+import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -64,7 +62,7 @@ import { useExpenseInvalidation } from "../useExpenseInvalidation";
 
 export interface SettlementPrefill {
   debt: DebtEntry;
-  source: SettleSource;
+  source: DebtKind;
 }
 
 interface SettlementFormProps {

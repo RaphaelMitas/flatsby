@@ -13,11 +13,12 @@ import { Card } from "@flatsby/ui/card";
 import {
   debtsBetweenOthers,
   debtsFor,
+  groupBalances,
   hasDebts,
 } from "@flatsby/validators/expenses/debt";
 import {
+  allSquareMessage,
   debtHero,
-  formatOthersWithDebts,
   personLookup,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -59,10 +60,9 @@ export function DebtSummaryView() {
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId);
-  const directDebts = debtsFor(summary, meId, "direct");
   const others = debtsBetweenOthers(summary, meId, kind);
-  const settle = (debt: DebtEntry) =>
-    setSettling({ source: kind === "direct" ? "direct" : "plan", debt });
+  const balances = groupBalances(summary, meId);
+  const settle = (debt: DebtEntry) => setSettling({ source: kind, debt });
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -75,19 +75,15 @@ export function DebtSummaryView() {
 
       {hasDebts(summary) ? (
         <>
-          <DebtHero hero={debtHero(summary, meId, directDebts, person)} />
+          <DebtHero hero={debtHero(summary, meId, person)} />
           <ModeSwitch kind={kind} onChange={setKind} />
           <Section title="Between you and">
             <DirectDebtsCard
               groupId={groupId}
               meId={meId}
               kind={kind}
-              debts={
-                kind === "direct"
-                  ? directDebts
-                  : debtsFor(summary, meId, "simplified")
-              }
-              othersWithDebts={formatOthersWithDebts(summary, meId, person)}
+              debts={debtsFor(summary, meId, kind)}
+              allSquare={allSquareMessage(summary, meId, kind, person)}
               person={person}
               onSettle={settle}
             />
@@ -101,9 +97,11 @@ export function DebtSummaryView() {
               />
             </Section>
           )}
-          <Section title="Balances">
-            <GroupBalancesCard summary={summary} meId={meId} person={person} />
-          </Section>
+          {balances.length > 0 && (
+            <Section title="Balances">
+              <GroupBalancesCard currencies={balances} person={person} />
+            </Section>
+          )}
         </>
       ) : (
         <Card

@@ -8,11 +8,12 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   debtsBetweenOthers,
   debtsFor,
+  groupBalances,
   hasDebts,
 } from "@flatsby/validators/expenses/debt";
 import {
+  allSquareMessage,
   debtHero,
-  formatOthersWithDebts,
   personLookup,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -59,8 +60,8 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId);
-  const counterparts = debtsFor(summary, meId, "direct");
   const others = debtsBetweenOthers(summary, meId, kind);
+  const balances = groupBalances(summary, meId);
 
   const openSettle = (debt: DebtEntry) =>
     router.push({
@@ -70,7 +71,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         toGroupMemberId: debt.toGroupMemberId.toString(),
         currency: debt.currency,
         amount: debt.amountInCents.toString(),
-        source: kind === "direct" ? "direct" : "plan",
+        source: kind,
       },
     });
 
@@ -83,19 +84,15 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
       <View testID="debt-summary-title" className="w-full gap-2 p-4">
         {hasDebts(summary) ? (
           <>
-            <DebtHero hero={debtHero(summary, meId, counterparts, person)} />
+            <DebtHero hero={debtHero(summary, meId, person)} />
             <ModeSwitch kind={kind} onChange={setKind} />
             <SectionLabel>Between you and</SectionLabel>
             <DirectDebts
               groupId={groupId}
               meId={meId}
               kind={kind}
-              counterparts={
-                kind === "direct"
-                  ? counterparts
-                  : debtsFor(summary, meId, "simplified")
-              }
-              othersWithDebts={formatOthersWithDebts(summary, meId, person)}
+              counterparts={debtsFor(summary, meId, kind)}
+              allSquare={allSquareMessage(summary, meId, kind, person)}
               person={person}
               onSettle={openSettle}
             />
@@ -109,8 +106,12 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
                 />
               </>
             )}
-            <SectionLabel>Balances</SectionLabel>
-            <GroupBalances summary={summary} meId={meId} person={person} />
+            {balances.length > 0 && (
+              <>
+                <SectionLabel>Balances</SectionLabel>
+                <GroupBalances currencies={balances} person={person} />
+              </>
+            )}
           </>
         ) : (
           <Card testID="debt-summary-empty" className="mt-4 items-center p-6">
