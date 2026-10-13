@@ -44,10 +44,7 @@ import {
 } from "@flatsby/ui/sheet";
 import { toast } from "@flatsby/ui/toast";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import {
-  applySettlement,
-  directDebtsBetween,
-} from "@flatsby/validators/expenses/debt";
+import { applySettlement, pairDebt } from "@flatsby/validators/expenses/debt";
 import {
   formatCurrencyFromCents,
   personLookup,
@@ -71,17 +68,11 @@ export interface SettlementPrefill {
 }
 
 interface SettlementFormProps {
-  /** Without a prefill the form starts blank, with pickers */
   prefill?: SettlementPrefill;
   onClose: () => void;
-  open: boolean;
 }
 
-export function SettlementForm({
-  prefill,
-  onClose,
-  open,
-}: SettlementFormProps) {
+export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
@@ -97,8 +88,8 @@ export function SettlementForm({
   const { data: debtData } = useSuspenseQuery(
     trpc.expense.getDebtSummary.queryOptions({ groupId }),
   );
-  const pairDebts = (a: number, b: number) =>
-    debtData.success ? directDebtsBetween(debtData.data, a, b) : [];
+  const debtBetween = (from: number, to: number, currency?: string) =>
+    debtData.success ? pairDebt(debtData.data, from, to, currency) : undefined;
 
   const meId = groupData.success ? groupData.data.thisGroupMember.id : 0;
   const initial: DebtEntry = prefill?.debt ?? {
@@ -291,7 +282,6 @@ export function SettlementForm({
 
         toast.success("Settlement recorded successfully");
         onClose();
-        form.reset();
       },
       onSettled: () => {
         void invalidateList();
@@ -333,26 +323,22 @@ export function SettlementForm({
   const toMember = person(toGroupMemberId);
 
   const selectPair = (from: number, to: number) => {
-    form.setValue("fromGroupMemberId", from);
-    form.setValue("toGroupMemberId", to);
-    const pairCurrency = pairDebts(from, to)
-      .map((debt) => debt.currency)
-      .find(isCurrencyCode);
-    if (pairCurrency) form.setValue("currency", pairCurrency);
+    const options = { shouldValidate: form.formState.isSubmitted };
+    form.setValue("fromGroupMemberId", from, options);
+    form.setValue("toGroupMemberId", to, options);
+    const pairCurrency = debtBetween(from, to)?.currency;
+    if (pairCurrency && isCurrencyCode(pairCurrency)) {
+      form.setValue("currency", pairCurrency);
+    }
   };
 
   const outstanding =
-    prefill?.debt ??
-    (isBlank
-      ? pairDebts(fromGroupMemberId, toGroupMemberId).find(
-          (debt) => debt.currency === currency,
-        )
-      : undefined);
+    prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
 
   const isPending = createSettlementMutation.isPending;
 
   return (
-    <Sheet open={open} onOpenChange={onClose}>
+    <Sheet open onOpenChange={onClose}>
       <SheetContent
         className="w-full sm:max-w-lg"
         data-testid="settlement-form"

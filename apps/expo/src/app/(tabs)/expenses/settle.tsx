@@ -1,4 +1,3 @@
-import type { SettleSource } from "@flatsby/validators/expenses/types";
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -72,15 +71,11 @@ export default function SettlePage() {
         {expenseId ? (
           <SettlePageInnerEdit
             groupId={selectedGroupId}
-            fromGroupMemberId={fromGroupMemberId}
-            toGroupMemberId={toGroupMemberId}
-            currency={currency}
-            amount={amount}
             expenseId={expenseId}
             onClose={() => router.back()}
           />
         ) : (
-          <SettlePageInner
+          <SettlementForm
             groupId={selectedGroupId}
             fromGroupMemberId={fromGroupMemberId}
             toGroupMemberId={toGroupMemberId}
@@ -97,18 +92,10 @@ export default function SettlePage() {
 
 function SettlePageInnerEdit({
   groupId,
-  fromGroupMemberId,
-  toGroupMemberId,
-  currency,
-  amount,
   expenseId,
   onClose,
 }: {
   groupId: number;
-  fromGroupMemberId?: number;
-  toGroupMemberId?: number;
-  currency?: string;
-  amount: number | undefined;
   expenseId: number;
   onClose: () => void;
 }) {
@@ -116,46 +103,10 @@ function SettlePageInnerEdit({
     trpc.expense.getExpense.queryOptions({ expenseId }),
   );
 
-  const expense = expenseData.success ? expenseData.data : undefined;
-
   return (
     <SettlementForm
       groupId={groupId}
-      fromGroupMemberId={fromGroupMemberId}
-      toGroupMemberId={toGroupMemberId}
-      currency={currency}
-      amount={amount}
-      expense={expense}
-      onClose={onClose}
-    />
-  );
-}
-
-function SettlePageInner({
-  groupId,
-  fromGroupMemberId,
-  toGroupMemberId,
-  currency,
-  amount,
-  source,
-  onClose,
-}: {
-  groupId: number;
-  fromGroupMemberId?: number;
-  toGroupMemberId?: number;
-  currency?: string;
-  amount: number | undefined;
-  source?: SettleSource;
-  onClose: () => void;
-}) {
-  return (
-    <SettlementForm
-      groupId={groupId}
-      fromGroupMemberId={fromGroupMemberId}
-      toGroupMemberId={toGroupMemberId}
-      currency={currency}
-      amount={amount}
-      source={source}
+      expense={expenseData.success ? expenseData.data : undefined}
       onClose={onClose}
     />
   );

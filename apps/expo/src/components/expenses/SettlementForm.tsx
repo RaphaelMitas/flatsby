@@ -14,10 +14,7 @@ import {
 } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 
-import {
-  applySettlement,
-  directDebtsBetween,
-} from "@flatsby/validators/expenses/debt";
+import { applySettlement, pairDebt } from "@flatsby/validators/expenses/debt";
 import {
   formatCurrencyFromCents,
   personLookup,
@@ -50,7 +47,7 @@ interface SettlementFormProps {
   fromGroupMemberId?: number;
   toGroupMemberId?: number;
   currency?: string;
-  amount: number | undefined;
+  amount?: number;
   expense?: ExpenseWithSplitsAndMembers;
   source?: SettleSource;
   onClose: () => void;
@@ -115,8 +112,8 @@ export function SettlementForm({
   const watchedCurrency = useWatch({ control: form.control, name: "currency" });
 
   const isPrefilled = source !== undefined;
-  const pairDebts = (a: number, b: number) =>
-    debtData.success ? directDebtsBetween(debtData.data, a, b) : [];
+  const debtBetween = (from: number, to: number, currency?: string) =>
+    debtData.success ? pairDebt(debtData.data, from, to, currency) : undefined;
 
   const outstanding: DebtEntry | undefined =
     isPrefilled && amount !== undefined
@@ -126,17 +123,15 @@ export function SettlementForm({
           currency: watchedCurrency,
           amountInCents: amount,
         }
-      : pairDebts(watchedFromMemberId, watchedToMemberId).find(
-          (debt) => debt.currency === watchedCurrency,
-        );
+      : debtBetween(watchedFromMemberId, watchedToMemberId, watchedCurrency);
 
   const defaultCurrencyToPairDebt = () => {
     if (isEditMode) return;
     const { fromGroupMemberId: a, toGroupMemberId: b } = form.getValues();
-    const pairCurrency = pairDebts(a, b)
-      .map((debt) => debt.currency)
-      .find(isCurrencyCode);
-    if (pairCurrency) form.setValue("currency", pairCurrency);
+    const pairCurrency = debtBetween(a, b)?.currency;
+    if (pairCurrency && isCurrencyCode(pairCurrency)) {
+      form.setValue("currency", pairCurrency);
+    }
   };
 
   const {

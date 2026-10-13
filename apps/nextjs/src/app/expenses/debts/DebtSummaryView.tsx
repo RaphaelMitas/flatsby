@@ -114,7 +114,6 @@ export function DebtSummaryView() {
         <SettlementForm
           prefill={settling === "blank" ? undefined : settling}
           onClose={() => setSettling(null)}
-          open
         />
       )}
     </div>

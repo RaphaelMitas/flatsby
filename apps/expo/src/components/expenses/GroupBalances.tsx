@@ -143,7 +143,8 @@ function BalanceBars({
           </View>
           <Text
             className={cn(
-              "w-20 text-right text-sm font-semibold",
+              "w-20 text-right text-sm",
+              isMe ? "font-bold" : "font-semibold",
               cents > 0
                 ? "text-success"
                 : cents < 0
@@ -177,6 +178,8 @@ function PlanSteps({
   withHeading,
   onSettle,
 }: PlanStepsProps) {
+  if (steps.length === 0) return null;
+
   return (
     <View className="mt-2">
       {withHeading && (

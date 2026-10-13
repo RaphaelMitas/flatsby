@@ -103,7 +103,6 @@ export interface CounterpartDebts {
   direction: string;
 }
 
-/** Largest first */
 export function directDebtsFor(
   summary: GroupDebtSummary,
   memberId: number,
@@ -140,22 +139,22 @@ export function directDebtsFor(
     }));
 }
 
-export function directDebtsBetween(
+/** Prefers the payer's own debt to the receiver over the reverse direction */
+export function pairDebt(
   summary: GroupDebtSummary,
   payer: number,
   receiver: number,
-): DebtEntry[] {
-  const between = Object.values(summary.currencies).flatMap(({ direct }) =>
-    direct.filter(
-      (debt) =>
-        (debt.fromGroupMemberId === payer &&
-          debt.toGroupMemberId === receiver) ||
-        (debt.fromGroupMemberId === receiver && debt.toGroupMemberId === payer),
-    ),
-  );
-  const payerOwes = (debt: DebtEntry) =>
-    Number(debt.fromGroupMemberId === payer);
-  return between.sort((a, b) => payerOwes(b) - payerOwes(a));
+  currency?: string,
+): DebtEntry | undefined {
+  const between = Object.values(summary.currencies)
+    .filter((entry) => currency === undefined || entry.currency === currency)
+    .flatMap(({ direct }) => direct)
+    .filter(
+      ({ fromGroupMemberId: from, toGroupMemberId: to }) =>
+        (from === payer && to === receiver) ||
+        (from === receiver && to === payer),
+    );
+  return between.find((debt) => debt.fromGroupMemberId === payer) ?? between[0];
 }
 
 export function hasDebts(summary: GroupDebtSummary): boolean {

@@ -4,8 +4,8 @@ import type { DebtEntry, GroupDebtSummary } from "./types";
 import {
   applySettlement,
   calculateDebts,
-  directDebtsBetween,
   directDebtsFor,
+  pairDebt,
 } from "./debt";
 
 const YOU = 1;
@@ -316,18 +316,15 @@ describe("directDebtsFor", () => {
   });
 });
 
-describe("directDebtsBetween", () => {
-  it("puts the payer's own debt to the receiver first", () => {
+describe("pairDebt", () => {
+  it("prefers the payer's own debt to the receiver", () => {
     const summary = calculateDebts([
       owes(MAX, YOU, 1000, "EUR"),
       owes(YOU, MAX, 1500, "USD"),
     ]);
 
-    expect(directDebtsBetween(summary, YOU, MAX)[0]).toEqual(
-      debt(YOU, MAX, 1500, "USD"),
-    );
-    expect(directDebtsBetween(summary, MAX, YOU)[0]).toEqual(
-      debt(MAX, YOU, 1000),
-    );
+    expect(pairDebt(summary, YOU, MAX)).toEqual(debt(YOU, MAX, 1500, "USD"));
+    expect(pairDebt(summary, MAX, YOU)).toEqual(debt(MAX, YOU, 1000));
+    expect(pairDebt(summary, YOU, MAX, "EUR")).toEqual(debt(MAX, YOU, 1000));
   });
 });
