@@ -167,7 +167,7 @@ function ModeSwitch({
             accessibilityState={{ selected }}
             onPress={() => onChange(mode.kind)}
             className={cn(
-              "flex-1 items-center rounded-md py-1.5",
+              "flex-1 items-center rounded-lg py-1.5",
               selected && "bg-background shadow-sm",
             )}
           >
