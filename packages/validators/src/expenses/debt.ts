@@ -199,9 +199,6 @@ export function groupBalances(summary: GroupDebtSummary, meId: number) {
         steps: simplified,
       };
     }),
-    savesPayments: open.some(
-      ({ direct, simplified }) => simplified.length < direct.length,
-    ),
     paymentsLabel: `${paymentCount} ${paymentCount === 1 ? "payment clears" : "payments clear"} everyone`,
   };
 }

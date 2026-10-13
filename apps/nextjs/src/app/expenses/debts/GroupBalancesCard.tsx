@@ -38,10 +38,7 @@ export function GroupBalancesCard({
 }: GroupBalancesCardProps) {
   const [showPlan, setShowPlan] = useState(false);
 
-  const { currencies, savesPayments, paymentsLabel } = groupBalances(
-    summary,
-    meId,
-  );
+  const { currencies, paymentsLabel } = groupBalances(summary, meId);
 
   return (
     <Card className="p-4">
@@ -57,39 +54,35 @@ export function GroupBalancesCard({
         ))}
       </div>
 
-      {savesPayments && (
-        <>
-          <div className="mt-3 flex items-center gap-3 border-t pt-4">
-            <Label
-              htmlFor="settle-plan-switch"
-              className="flex flex-1 flex-col items-start gap-0.5"
-            >
-              <span className="font-semibold">Show settle plan</span>
-              <span className="text-muted-foreground text-xs font-normal">
-                {paymentsLabel}
-              </span>
-            </Label>
-            <Switch
-              id="settle-plan-switch"
-              checked={showPlan}
-              onCheckedChange={setShowPlan}
-              data-testid="settle-plan-switch"
-            />
-          </div>
-          {showPlan &&
-            currencies.map(({ currency, steps }) => (
-              <PlanSteps
-                key={currency}
-                currency={currency}
-                showHeading={currencies.length > 1}
-                steps={steps}
-                meId={meId}
-                person={person}
-                onSettle={onSettle}
-              />
-            ))}
-        </>
-      )}
+      <div className="mt-3 flex items-center gap-3 border-t pt-4">
+        <Label
+          htmlFor="settle-plan-switch"
+          className="flex flex-1 flex-col items-start gap-0.5"
+        >
+          <span className="font-semibold">Show settle plan</span>
+          <span className="text-muted-foreground text-xs font-normal">
+            {paymentsLabel}
+          </span>
+        </Label>
+        <Switch
+          id="settle-plan-switch"
+          checked={showPlan}
+          onCheckedChange={setShowPlan}
+          data-testid="settle-plan-switch"
+        />
+      </div>
+      {showPlan &&
+        currencies.map(({ currency, steps }) => (
+          <PlanSteps
+            key={currency}
+            currency={currency}
+            showHeading={currencies.length > 1}
+            steps={steps}
+            meId={meId}
+            person={person}
+            onSettle={onSettle}
+          />
+        ))}
     </Card>
   );
 }

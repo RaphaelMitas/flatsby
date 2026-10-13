@@ -35,10 +35,7 @@ export function GroupBalances({
 }: GroupBalancesProps) {
   const [showPlan, setShowPlan] = useState(false);
 
-  const { currencies, savesPayments, paymentsLabel } = groupBalances(
-    summary,
-    meId,
-  );
+  const { currencies, paymentsLabel } = groupBalances(summary, meId);
   const withHeading = currencies.length > 1;
 
   return (
@@ -54,37 +51,31 @@ export function GroupBalances({
           />
         ))}
       </View>
-      {savesPayments && (
-        <>
-          <View className="border-border mt-3 flex-row items-center gap-3 border-t pt-4">
-            <View className="flex-1">
-              <Text className="text-foreground font-semibold">
-                Show settle plan
-              </Text>
-              <Text className="text-muted-foreground text-xs">
-                {paymentsLabel}
-              </Text>
-            </View>
-            <Switch
-              testID="debt-plan-switch"
-              checked={showPlan}
-              onCheckedChange={setShowPlan}
-            />
-          </View>
-          {showPlan &&
-            currencies.map(({ currency, steps }) => (
-              <PlanSteps
-                key={currency}
-                currency={currency}
-                steps={steps}
-                meId={meId}
-                person={person}
-                withHeading={withHeading}
-                onSettle={onSettle}
-              />
-            ))}
-        </>
-      )}
+      <View className="border-border mt-3 flex-row items-center gap-3 border-t pt-4">
+        <View className="flex-1">
+          <Text className="text-foreground font-semibold">
+            Show settle plan
+          </Text>
+          <Text className="text-muted-foreground text-xs">{paymentsLabel}</Text>
+        </View>
+        <Switch
+          testID="debt-plan-switch"
+          checked={showPlan}
+          onCheckedChange={setShowPlan}
+        />
+      </View>
+      {showPlan &&
+        currencies.map(({ currency, steps }) => (
+          <PlanSteps
+            key={currency}
+            currency={currency}
+            steps={steps}
+            meId={meId}
+            person={person}
+            withHeading={withHeading}
+            onSettle={onSettle}
+          />
+        ))}
     </Card>
   );
 }
