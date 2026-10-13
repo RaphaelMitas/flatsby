@@ -1,4 +1,3 @@
-• Split by shares. Give each person a number of parts, like 2 for one and 1 for another, and Flatsby works out the amounts. No more typing 66.67%.
-• Halloween is here. The cat now lives on your home screen, and pulling to refresh shows it flying across a night sky on its broom. Tap the cat and see what happens.
-• Ask your flatmates to update too, so split by shares shows up correctly for everyone.
+• Adding an expense now starts with what it was for. Leave the category on auto-detect and Flatsby picks one for you when you save.
+• The app opens faster, and switching between groups is quicker.
 • Small fixes and improvements.
