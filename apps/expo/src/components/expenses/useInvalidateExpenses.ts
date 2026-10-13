@@ -26,9 +26,12 @@ export function useInvalidateExpenses(groupId: number) {
   }, [queryClient, expenseListQueryKey]);
 
   const invalidateDebtSummary = useCallback(() => {
-    return queryClient.invalidateQueries(
-      trpc.expense.getDebtSummary.queryOptions({ groupId }),
-    );
+    return Promise.all([
+      queryClient.invalidateQueries(
+        trpc.expense.getDebtSummary.queryOptions({ groupId }),
+      ),
+      queryClient.invalidateQueries(trpc.expense.getPairActivity.pathFilter()),
+    ]);
   }, [queryClient, groupId]);
 
   const invalidateExpense = useCallback(

@@ -1,0 +1,46 @@
+appId: ${APP_ID}
+tags:
+  - expenses
+---
+# Seeded group (E2E_SEED=debts): Max owes you EUR 42.50, Sophie EUR 18.00, you
+# owe Lena EUR 30.00 and Max USD 15.00. Settling Sophie in full drops her row.
+- runFlow:
+    file: ../../subflows/e2e-login.yaml
+    env:
+      E2E_SEED: "debts"
+- runFlow: ../../subflows/open-expenses.yaml
+
+- tapOn:
+    id: "expense-debt-overview-button"
+- extendedWaitUntil:
+    visible:
+      id: "debt-summary-title"
+    timeout: 15000
+- assertVisible:
+    id: "debt-hero-amount"
+    text: ".*€30[.,]50"
+- assertVisible: "Settle EUR with Max"
+- assertVisible: "Settle USD with Max"
+
+- tapOn: "Settle EUR with Sophie"
+- extendedWaitUntil:
+    visible:
+      id: "settlement-submit-button"
+    timeout: 15000
+- assertVisible: "Sophie owes you directly"
+- assertVisible:
+    id: "settlement-currency-locked"
+- tapOn:
+    id: "settlement-submit-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "debt-summary-title"
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible: "Settle EUR with Sophie"
+    timeout: 20000
+- assertVisible:
+    id: "debt-hero-amount"
+    text: ".*€12[.,]50"
+- assertVisible: "Settle EUR with Max"

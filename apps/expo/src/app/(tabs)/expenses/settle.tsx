@@ -1,3 +1,4 @@
+import type { SettleSource } from "@flatsby/validators/expenses/types";
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -15,6 +16,7 @@ export default function SettlePage() {
     currency?: string;
     amount: string;
     expenseId?: string;
+    source?: string;
   }>();
   const router = useRouter();
   const { selectedGroupId } = useShoppingStore();
@@ -30,6 +32,10 @@ export default function SettlePage() {
   const expenseId = params.expenseId
     ? parseInt(params.expenseId, 10)
     : undefined;
+  const source =
+    params.source === "direct" || params.source === "plan"
+      ? params.source
+      : undefined;
 
   if (!selectedGroupId) {
     return (
@@ -80,6 +86,7 @@ export default function SettlePage() {
             toGroupMemberId={toGroupMemberId}
             currency={currency}
             amount={amount}
+            source={source}
             onClose={() => router.back()}
           />
         )}
@@ -130,6 +137,7 @@ function SettlePageInner({
   toGroupMemberId,
   currency,
   amount,
+  source,
   onClose,
 }: {
   groupId: number;
@@ -137,6 +145,7 @@ function SettlePageInner({
   toGroupMemberId?: number;
   currency?: string;
   amount: number | undefined;
+  source?: SettleSource;
   onClose: () => void;
 }) {
   return (
@@ -146,6 +155,7 @@ function SettlePageInner({
       toGroupMemberId={toGroupMemberId}
       currency={currency}
       amount={amount}
+      source={source}
       onClose={onClose}
     />
   );

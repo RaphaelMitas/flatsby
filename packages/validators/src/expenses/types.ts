@@ -78,3 +78,6 @@ export type CurrencyCode = (typeof CURRENCY_CODES)[number];
 export const isCurrencyCode = (code: string): code is CurrencyCode => {
   return CURRENCY_CODES.includes(code as CurrencyCode);
 };
+
+/** Which debt list a settlement was started from */
+export type SettleSource = "direct" | "plan";

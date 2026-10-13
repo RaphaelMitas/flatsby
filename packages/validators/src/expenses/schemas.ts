@@ -123,7 +123,6 @@ export type PairActivityItem = z.infer<typeof pairActivityItemSchema>;
 
 export const pairActivitySchema = z.object({
   items: z.array(pairActivityItemSchema),
-  totalCount: z.number().int(),
 });
 
 export type PairActivity = z.infer<typeof pairActivitySchema>;

@@ -116,3 +116,36 @@ export function formatSplitPortion({
       : (split.amountInCents / expense.amountInCents) * 100;
   return `${percentage.toFixed(1)}%`;
 }
+
+export interface DebtPerson {
+  name: string;
+  image: string | null;
+}
+
+export type PersonLookup = (groupMemberId: number) => DebtPerson;
+
+/** Names group members for debt views, with the viewer shown as "You" */
+export function personLookup(
+  members: { id: number; user: { name: string; image?: string | null } }[],
+  meId: number,
+): PersonLookup {
+  const byId = new Map(members.map((member) => [member.id, member]));
+  return (groupMemberId) => {
+    const user = byId.get(groupMemberId)?.user;
+    return {
+      name: groupMemberId === meId ? "You" : (user?.name ?? "Unknown"),
+      image: user?.image ?? null,
+    };
+  };
+}
+
+export function formatSignedCents(cents: number, currency: string): string {
+  return `${cents > 0 ? "+" : ""}${formatCurrencyFromCents({ cents, currency })}`;
+}
+
+/** "Max", "Max and Sophie", "Lena, Max and Sophie" */
+export function joinNames(names: string[]): string {
+  const last = names.at(-1);
+  if (names.length < 2 || last === undefined) return last ?? "";
+  return `${names.slice(0, -1).join(", ")} and ${last}`;
+}

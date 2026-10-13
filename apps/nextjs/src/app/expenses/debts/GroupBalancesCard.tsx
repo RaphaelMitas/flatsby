@@ -1,0 +1,255 @@
+"use client";
+
+import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
+import type {
+  DebtEntry,
+  GroupDebtSummary,
+} from "@flatsby/validators/expenses/types";
+import { useState } from "react";
+import { ArrowRight } from "lucide-react";
+
+import { cn } from "@flatsby/ui";
+import { Button } from "@flatsby/ui/button";
+import { Card } from "@flatsby/ui/card";
+import { Label } from "@flatsby/ui/label";
+import { Switch } from "@flatsby/ui/switch";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
+import {
+  formatCurrencyFromCents,
+  formatSignedCents,
+} from "@flatsby/validators/expenses/formatting";
+
+import type { SettlementPrefill } from "./SettlementForm";
+import { amountTone } from "./debtDisplay";
+
+interface GroupBalancesCardProps {
+  summary: GroupDebtSummary;
+  meId: number;
+  person: PersonLookup;
+  onSettle: (prefill: SettlementPrefill) => void;
+}
+
+export function GroupBalancesCard({
+  summary,
+  meId,
+  person,
+  onSettle,
+}: GroupBalancesCardProps) {
+  const [showPlan, setShowPlan] = useState(false);
+
+  const openCurrencies = Object.values(summary.currencies).filter(
+    ({ direct }) => direct.length > 0,
+  );
+  const planSavesPayments = openCurrencies.some(
+    ({ direct, simplified }) => simplified.length < direct.length,
+  );
+  const paymentCount = openCurrencies.reduce(
+    (sum, { simplified }) => sum + simplified.length,
+    0,
+  );
+
+  return (
+    <Card className="p-4">
+      <div className="flex flex-col gap-4">
+        {openCurrencies.map(({ currency }) => (
+          <BalanceBars
+            key={currency}
+            currency={currency}
+            showHeading={openCurrencies.length > 1}
+            memberBalances={summary.memberBalances}
+            meId={meId}
+            person={person}
+          />
+        ))}
+      </div>
+
+      {planSavesPayments && (
+        <>
+          <div className="mt-3 flex items-center gap-3 border-t pt-4">
+            <Label
+              htmlFor="settle-plan-switch"
+              className="flex flex-1 flex-col items-start gap-0.5"
+            >
+              <span className="font-semibold">Show settle plan</span>
+              <span className="text-muted-foreground text-xs font-normal">
+                {paymentCount}{" "}
+                {paymentCount === 1 ? "payment clears" : "payments clear"}{" "}
+                everyone
+              </span>
+            </Label>
+            <Switch
+              id="settle-plan-switch"
+              checked={showPlan}
+              onCheckedChange={setShowPlan}
+              data-testid="settle-plan-switch"
+            />
+          </div>
+          {showPlan &&
+            openCurrencies.map(({ currency, simplified }) => (
+              <PlanSteps
+                key={currency}
+                currency={currency}
+                showHeading={openCurrencies.length > 1}
+                steps={simplified}
+                meId={meId}
+                person={person}
+                onSettle={onSettle}
+              />
+            ))}
+        </>
+      )}
+    </Card>
+  );
+}
+
+interface BalanceBarsProps {
+  currency: string;
+  showHeading: boolean;
+  memberBalances: GroupDebtSummary["memberBalances"];
+  meId: number;
+  person: PersonLookup;
+}
+
+function BalanceBars({
+  currency,
+  showHeading,
+  memberBalances,
+  meId,
+  person,
+}: BalanceBarsProps) {
+  const memberIds = new Set([...Object.keys(memberBalances).map(Number), meId]);
+  const rows = [...memberIds]
+    .map((memberId) => ({
+      memberId,
+      cents: memberBalances[memberId]?.[currency] ?? 0,
+    }))
+    .filter(({ memberId, cents }) => cents !== 0 || memberId === meId)
+    .sort((a, b) => b.cents - a.cents);
+  const scale = Math.max(...rows.map(({ cents }) => Math.abs(cents)), 1);
+
+  return (
+    <div>
+      {showHeading && <p className="mb-1 font-semibold">{currency}</p>}
+      <ul>
+        {rows.map(({ memberId, cents }) => {
+          const { name, image } = person(memberId);
+          const isMe = memberId === meId;
+          const width = `${(Math.abs(cents) / scale) * 100}%`;
+          return (
+            <li
+              key={memberId}
+              className="flex items-center gap-2 py-1.5 text-sm"
+              data-testid="balance-row"
+            >
+              <UserAvatar name={name} image={image} size="sm" />
+              <span
+                className={cn(
+                  "w-16 truncate",
+                  isMe ? "font-bold" : "font-medium",
+                )}
+              >
+                {name}
+              </span>
+              <div className="flex h-5 flex-1">
+                <div className="flex flex-1 justify-end border-r-2">
+                  {cents < 0 && (
+                    <div
+                      className="bg-destructive/70 h-full rounded-l-md"
+                      style={{ width }}
+                    />
+                  )}
+                </div>
+                <div className="flex flex-1">
+                  {cents > 0 && (
+                    <div
+                      className="bg-success/70 h-full rounded-r-md"
+                      style={{ width }}
+                    />
+                  )}
+                </div>
+              </div>
+              <span
+                className={cn(
+                  "w-20 text-right tabular-nums",
+                  isMe ? "font-bold" : "font-semibold",
+                  amountTone(cents),
+                )}
+              >
+                {formatSignedCents(cents, currency)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+interface PlanStepsProps {
+  currency: string;
+  showHeading: boolean;
+  steps: DebtEntry[];
+  meId: number;
+  person: PersonLookup;
+  onSettle: (prefill: SettlementPrefill) => void;
+}
+
+function PlanSteps({
+  currency,
+  showHeading,
+  steps,
+  meId,
+  person,
+  onSettle,
+}: PlanStepsProps) {
+  if (steps.length === 0) return null;
+
+  return (
+    <div className="mt-3" data-testid={`settle-plan-${currency}`}>
+      {showHeading && <p className="mb-1 font-semibold">{currency}</p>}
+      <ol className="divide-y">
+        {steps.map((step, index) => {
+          const mine =
+            step.fromGroupMemberId === meId || step.toGroupMemberId === meId;
+          const from = person(step.fromGroupMemberId);
+          const to = person(step.toGroupMemberId);
+          return (
+            <li
+              key={`${step.fromGroupMemberId}-${step.toGroupMemberId}`}
+              className={cn(
+                "flex items-center gap-3 py-2.5",
+                mine && "bg-muted/60 -mx-4 px-4",
+              )}
+              data-testid="settle-plan-step"
+            >
+              <span className="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+                {index + 1}
+              </span>
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-sm font-medium">
+                <UserAvatar name={from.name} image={from.image} size="xs" />
+                {from.name}
+                <ArrowRight className="text-muted-foreground size-4" />
+                <UserAvatar name={to.name} image={to.image} size="xs" />
+                {to.name}
+              </div>
+              <span className="font-semibold tabular-nums">
+                {formatCurrencyFromCents({
+                  cents: step.amountInCents,
+                  currency,
+                })}
+              </span>
+              <Button
+                size="sm"
+                variant={mine ? "outline" : "ghost"}
+                className={cn(!mine && "text-muted-foreground")}
+                onClick={() => onSettle({ source: "plan", debt: step })}
+              >
+                {mine ? "Settle" : "Record"}
+              </Button>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}

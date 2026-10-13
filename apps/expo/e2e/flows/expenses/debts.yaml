@@ -13,8 +13,9 @@ tags:
     visible:
       id: "debt-summary-title"
     timeout: 15000
-- assertVisible: "Simplified view of who owes whom"
 - assertVisible:
     id: "debt-summary-empty"
-- assertVisible: "All settled up!"
-- assertVisible: "No outstanding debts in this group"
+- assertVisible: "All settled up"
+- assertVisible: "Nobody in .* owes anything."
+- assertVisible:
+    id: "debt-record-payment"

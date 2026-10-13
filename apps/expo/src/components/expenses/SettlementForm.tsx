@@ -1,7 +1,10 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
+import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
 import type { SettlementFormValues } from "@flatsby/validators/expenses/schemas";
-import type { CurrencyCode } from "@flatsby/validators/expenses/types";
-import { useCallback } from "react";
+import type {
+  DebtEntry,
+  SettleSource,
+} from "@flatsby/validators/expenses/types";
 import { Text, View } from "react-native";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -11,7 +14,11 @@ import {
 } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import { applySettlement } from "@flatsby/validators/expenses/debt";
+import {
+  formatCurrencyFromCents,
+  personLookup,
+} from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
 import {
   CURRENCY_CODES,
@@ -21,16 +28,17 @@ import {
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import {
   BottomSheetPickerProvider,
   BottomSheetPickerTrigger,
 } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
+import Icon from "~/lib/ui/custom/icons/Icon";
 import { Form, FormControl, FormField, FormMessage } from "~/lib/ui/form";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
+import { MemberAvatar } from "./MemberAvatar";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface SettlementFormProps {
@@ -40,6 +48,7 @@ interface SettlementFormProps {
   currency?: string;
   amount: number | undefined;
   expense?: ExpenseWithSplitsAndMembers;
+  source?: SettleSource;
   onClose: () => void;
 }
 
@@ -50,6 +59,7 @@ export function SettlementForm({
   currency,
   amount,
   expense,
+  source,
   onClose,
 }: SettlementFormProps) {
   const queryClient = useQueryClient();
@@ -97,56 +107,41 @@ export function SettlementForm({
     name: "toGroupMemberId",
   });
 
-  // Calculate outstanding debt based on selected members
-  const getOutstandingDebt = useCallback(
-    (
-      fromId: number | undefined,
-      toId: number | undefined,
-    ): { amountInCents: number; currency: CurrencyCode }[] => {
-      if (
-        !fromId ||
-        !toId ||
-        fromId === -1 ||
-        toId === -1 ||
-        !debtData.success
-      ) {
-        return [];
-      }
+  const watchedCurrency = useWatch({ control: form.control, name: "currency" });
 
-      const debtSummary = debtData.data;
-      const outstandingDebts: {
-        amountInCents: number;
-        currency: CurrencyCode;
-      }[] = [];
+  const isPrefilled = source !== undefined;
+  const debtSummaries = debtData.success
+    ? Object.values(debtData.data.currencies)
+    : [];
+  const directDebts = debtSummaries.flatMap((debts) => debts.direct);
+  const isPair = (debt: DebtEntry, fromId: number, toId: number) =>
+    debt.fromGroupMemberId === fromId && debt.toGroupMemberId === toId;
 
-      // Look through all currencies to find the debt between these two members
-      for (const [currencyKey, currencyDebts] of Object.entries(
-        debtSummary.currencies,
-      )) {
-        const debt = currencyDebts.simplified.find(
-          (d) => d.fromGroupMemberId === fromId && d.toGroupMemberId === toId,
-        );
+  const outstandingDebts = debtSummaries
+    .flatMap((debts) => (source === "plan" ? debts.simplified : debts.direct))
+    .filter(
+      (debt) =>
+        isPair(debt, watchedFromMemberId, watchedToMemberId) &&
+        (!isPrefilled || debt.currency === watchedCurrency),
+    );
 
-        if (debt) {
-          outstandingDebts.push({
-            amountInCents: debt.amountInCents,
-            currency: isCurrencyCode(currencyKey) ? currencyKey : "EUR",
-          });
-        }
-      }
-
-      return outstandingDebts;
-    },
-    [debtData],
-  );
-
-  const currentOutstandingDebts = getOutstandingDebt(
-    watchedFromMemberId,
-    watchedToMemberId,
-  );
+  const defaultCurrencyToPairDebt = () => {
+    if (isEditMode || isPrefilled) return;
+    const { fromGroupMemberId: fromId, toGroupMemberId: toId } =
+      form.getValues();
+    const debt =
+      directDebts.find((d) => isPair(d, fromId, toId)) ??
+      directDebts.find((d) => isPair(d, toId, fromId));
+    if (debt && isCurrencyCode(debt.currency)) {
+      form.setValue("currency", debt.currency);
+    }
+  };
 
   const { expenseListQueryKey, invalidateList, invalidateDebtSummary } =
     useInvalidateExpenses(groupId);
+  const debtSummaryQueryKey = trpc.expense.getDebtSummary.queryKey({
+    groupId,
+  });
 
   const expenseQueryKey = expense
     ? trpc.expense.getExpense.queryKey({
@@ -164,11 +159,30 @@ export function SettlementForm({
   const createSettlementMutation = useMutation(
     trpc.expense.createExpense.mutationOptions({
       onMutate: async (input) => {
-        // Cancel any outgoing queries
-        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
+        await Promise.all([
+          queryClient.cancelQueries({ queryKey: expenseListQueryKey }),
+          queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
+        ]);
 
-        // Snapshot the previous value
         const previousData = queryClient.getQueryData(expenseListQueryKey);
+        const previousDebtSummary =
+          queryClient.getQueryData(debtSummaryQueryKey);
+
+        const receiverId = input.splits[0]?.groupMemberId;
+        if (receiverId !== undefined) {
+          queryClient.setQueryData(debtSummaryQueryKey, (old) => {
+            if (!old || old.success === false) return old;
+            return {
+              success: true as const,
+              data: applySettlement(old.data, {
+                fromGroupMemberId: input.paidByGroupMemberId,
+                toGroupMemberId: receiverId,
+                currency: input.currency,
+                amountInCents: input.amountInCents,
+              }),
+            };
+          });
+        }
 
         // Get the paidBy and toMember for the optimistic settlement
         const paidByMember = membersForOptimistic.find(
@@ -273,15 +287,19 @@ export function SettlementForm({
           return { ...old, pages: updatedPages };
         });
 
-        return { previousData };
+        return {
+          rollback: () => {
+            queryClient.setQueryData(expenseListQueryKey, previousData);
+            queryClient.setQueryData(debtSummaryQueryKey, previousDebtSummary);
+          },
+        };
       },
       onError: (_error, _variables, context) => {
-        if (context?.previousData) {
-          queryClient.setQueryData(expenseListQueryKey, context.previousData);
-        }
+        context?.rollback();
       },
-      onSuccess: (data) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
+          context.rollback();
           return;
         }
 
@@ -384,18 +402,37 @@ export function SettlementForm({
   }
 
   const groupMembers = groupData.data.groupMembers;
+  const meId = groupData.data.thisGroupMember.id;
+  const person = personLookup(groupMembers, meId);
+  const isMember = (id: number) => groupMembers.some((m) => m.id === id);
+  const pair =
+    isMember(watchedFromMemberId) && isMember(watchedToMemberId)
+      ? {
+          payer: person(watchedFromMemberId),
+          receiver: person(watchedToMemberId),
+        }
+      : undefined;
 
-  // Create picker items for members
+  const outstandingLabel = () => {
+    if (source === "plan") return "Settle plan payment";
+    if (!pair) return "";
+    if (watchedToMemberId === meId) {
+      return `${pair.payer.name} owes you directly`;
+    }
+    if (watchedFromMemberId === meId) {
+      return `You owe ${pair.receiver.name} directly`;
+    }
+    return `${pair.payer.name} owes ${pair.receiver.name} directly`;
+  };
+
   const memberItems: BottomSheetPickerItem[] = groupMembers.map((member) => ({
     id: member.id.toString(),
     title: member.user.name,
     icon: (
-      <Avatar className="h-6 w-6">
-        <AvatarImage src={member.user.image ?? undefined} />
-        <AvatarFallback>
-          {member.user.name.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <MemberAvatar
+        person={{ name: member.user.name, image: member.user.image }}
+        className="h-6 w-6"
+      />
     ),
   }));
 
@@ -428,70 +465,92 @@ export function SettlementForm({
       <AppScrollView className="flex-1" contentContainerClassName="p-4">
         <Form {...form}>
           <View className="gap-6">
-            {/* Settlement Info */}
             <View className="gap-4">
-              <FormField
-                control={form.control}
-                name="fromGroupMemberId"
-                render={({ field }) => (
-                  <View className="gap-2">
-                    <Label>Paying</Label>
-                    <BottomSheetPickerTrigger
-                      items={memberItems}
-                      selectedId={
-                        field.value ? field.value.toString() : undefined
-                      }
-                      onSelect={(item) => {
-                        field.onChange(parseInt(item.id, 10));
-                      }}
-                      triggerTitle={
-                        groupMembers.find((m) => m.id === field.value)?.user
-                          .name ?? "Select who is paying"
-                      }
+              {pair && (
+                <View className="flex-row items-center justify-center gap-4 pb-2">
+                  <PairMember person={pair.payer} />
+                  <View className="items-center">
+                    <Icon
+                      name="arrow-right"
+                      size={26}
+                      color="muted-foreground"
                     />
-                    <FormMessage />
+                    <Text className="text-muted-foreground text-xs">pays</Text>
                   </View>
-                )}
-              />
+                  <PairMember person={pair.receiver} />
+                </View>
+              )}
+              {!isPrefilled && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="fromGroupMemberId"
+                    render={({ field }) => (
+                      <View className="gap-2">
+                        <Label>Paying</Label>
+                        <BottomSheetPickerTrigger
+                          items={memberItems}
+                          selectedId={
+                            field.value ? field.value.toString() : undefined
+                          }
+                          onSelect={(item) => {
+                            field.onChange(parseInt(item.id, 10));
+                            defaultCurrencyToPairDebt();
+                          }}
+                          triggerTitle={
+                            groupMembers.find((m) => m.id === field.value)?.user
+                              .name ?? "Select who is paying"
+                          }
+                        />
+                        <FormMessage />
+                      </View>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="toGroupMemberId"
-                render={({ field }) => (
-                  <View className="gap-2">
-                    <Label>Receiving</Label>
-                    <BottomSheetPickerTrigger
-                      items={memberItems}
-                      selectedId={
-                        field.value ? field.value.toString() : undefined
-                      }
-                      onSelect={(item) => {
-                        field.onChange(parseInt(item.id, 10));
-                      }}
-                      triggerTitle={
-                        groupMembers.find((m) => m.id === field.value)?.user
-                          .name ?? "Select who is receiving"
-                      }
-                    />
-                    <FormMessage />
-                  </View>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="toGroupMemberId"
+                    render={({ field }) => (
+                      <View className="gap-2">
+                        <Label>Receiving</Label>
+                        <BottomSheetPickerTrigger
+                          items={memberItems}
+                          selectedId={
+                            field.value ? field.value.toString() : undefined
+                          }
+                          onSelect={(item) => {
+                            field.onChange(parseInt(item.id, 10));
+                            defaultCurrencyToPairDebt();
+                          }}
+                          triggerTitle={
+                            groupMembers.find((m) => m.id === field.value)?.user
+                              .name ?? "Select who is receiving"
+                          }
+                        />
+                        <FormMessage />
+                      </View>
+                    )}
+                  />
+                </>
+              )}
 
-              {currentOutstandingDebts.length > 0 &&
-                currentOutstandingDebts.map((debt) => (
-                  <View key={debt.currency} className="bg-muted rounded-lg p-4">
-                    <Text className="text-muted-foreground mb-1 text-center text-sm">
-                      Outstanding debt
-                    </Text>
-                    <Text className="text-foreground text-center text-2xl font-bold">
-                      {formatCurrencyFromCents({
-                        cents: debt.amountInCents,
-                        currency: debt.currency,
-                      })}
-                    </Text>
-                  </View>
-                ))}
+              {outstandingDebts.map((debt) => (
+                <View
+                  key={debt.currency}
+                  testID="settlement-outstanding"
+                  className="bg-muted rounded-lg p-4"
+                >
+                  <Text className="text-muted-foreground mb-1 text-center text-sm">
+                    {outstandingLabel()}
+                  </Text>
+                  <Text className="text-foreground text-center text-2xl font-bold">
+                    {formatCurrencyFromCents({
+                      cents: debt.amountInCents,
+                      currency: debt.currency,
+                    })}
+                  </Text>
+                </View>
+              ))}
             </View>
 
             <View className="flex-row gap-4">
@@ -502,14 +561,23 @@ export function SettlementForm({
                 render={({ field }) => (
                   <View className="gap-2">
                     <Label>Currency</Label>
-                    <BottomSheetPickerTrigger
-                      items={currencyItems}
-                      selectedId={field.value}
-                      onSelect={(item) => {
-                        field.onChange(item.id);
-                      }}
-                      triggerTitle={field.value}
-                    />
+                    {isPrefilled ? (
+                      <View
+                        testID="settlement-currency-locked"
+                        className="bg-muted h-12 justify-center rounded-lg px-4"
+                      >
+                        <Text className="text-foreground">{field.value}</Text>
+                      </View>
+                    ) : (
+                      <BottomSheetPickerTrigger
+                        items={currencyItems}
+                        selectedId={field.value}
+                        onSelect={(item) => {
+                          field.onChange(item.id);
+                        }}
+                        triggerTitle={field.value}
+                      />
+                    )}
                     <FormMessage />
                   </View>
                 )}
@@ -556,6 +624,7 @@ export function SettlementForm({
                 className="flex-1"
               />
               <Button
+                testID="settlement-submit-button"
                 title={
                   isPending
                     ? isEditMode
@@ -575,5 +644,18 @@ export function SettlementForm({
         </Form>
       </AppScrollView>
     </BottomSheetPickerProvider>
+  );
+}
+
+function PairMember({ person }: { person: DebtPerson }) {
+  return (
+    <View className="items-center gap-1.5">
+      <MemberAvatar
+        person={person}
+        className="h-14 w-14"
+        textClassName="text-lg"
+      />
+      <Text className="text-foreground text-sm font-medium">{person.name}</Text>
+    </View>
   );
 }

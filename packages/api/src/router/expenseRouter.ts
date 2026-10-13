@@ -4,7 +4,7 @@ import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, count, desc, eq, inArray, lt, or } from "@flatsby/db";
+import { and, desc, eq, inArray, lt, or } from "@flatsby/db";
 import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
 import {
   expenseCategoryGroupLabels,
@@ -638,19 +638,6 @@ export const expenseRouter = createTRPCRouter({
     .output(getApiResultZod(pairActivitySchema))
     .query(async ({ ctx, input }) => {
       const [a, b] = input.groupMemberIds;
-      const betweenPair = and(
-        eq(expenses.groupId, input.groupId),
-        or(
-          and(
-            eq(expenses.paidByGroupMemberId, a),
-            eq(expenseSplits.groupMemberId, b),
-          ),
-          and(
-            eq(expenses.paidByGroupMemberId, b),
-            eq(expenseSplits.groupMemberId, a),
-          ),
-        ),
-      );
       return withErrorHandlingAsResult(
         Effect.flatMap(
           OperationUtils.getGroupWithAccess(
@@ -660,41 +647,44 @@ export const expenseRouter = createTRPCRouter({
           ),
           () =>
             safeDbOperation(async () => {
-              const [rows, [counted]] = await Promise.all([
-                ctx.db
-                  .select({
-                    id: expenses.id,
-                    description: expenses.description,
-                    expenseDate: expenses.expenseDate,
-                    currency: expenses.currency,
-                    paidByGroupMemberId: expenses.paidByGroupMemberId,
-                    amountInCents: expenses.amountInCents,
-                    pairAmountInCents: expenseSplits.amountInCents,
-                    splitMethod: expenses.splitMethod,
-                  })
-                  .from(expenses)
-                  .innerJoin(
-                    expenseSplits,
-                    eq(expenseSplits.expenseId, expenses.id),
-                  )
-                  .where(betweenPair)
-                  .orderBy(desc(expenses.expenseDate), desc(expenses.id))
-                  .limit(input.limit),
-                ctx.db
-                  .select({ total: count() })
-                  .from(expenses)
-                  .innerJoin(
-                    expenseSplits,
-                    eq(expenseSplits.expenseId, expenses.id),
-                  )
-                  .where(betweenPair),
-              ]);
+              const rows = await ctx.db
+                .select({
+                  id: expenses.id,
+                  description: expenses.description,
+                  expenseDate: expenses.expenseDate,
+                  currency: expenses.currency,
+                  paidByGroupMemberId: expenses.paidByGroupMemberId,
+                  amountInCents: expenses.amountInCents,
+                  pairAmountInCents: expenseSplits.amountInCents,
+                  splitMethod: expenses.splitMethod,
+                })
+                .from(expenses)
+                .innerJoin(
+                  expenseSplits,
+                  eq(expenseSplits.expenseId, expenses.id),
+                )
+                .where(
+                  and(
+                    eq(expenses.groupId, input.groupId),
+                    or(
+                      and(
+                        eq(expenses.paidByGroupMemberId, a),
+                        eq(expenseSplits.groupMemberId, b),
+                      ),
+                      and(
+                        eq(expenses.paidByGroupMemberId, b),
+                        eq(expenseSplits.groupMemberId, a),
+                      ),
+                    ),
+                  ),
+                )
+                .orderBy(desc(expenses.expenseDate), desc(expenses.id))
+                .limit(input.limit);
               return {
                 items: rows.map(({ splitMethod, ...row }) => ({
                   ...row,
                   isSettlement: splitMethod === "settlement",
                 })),
-                totalCount: counted?.total ?? 0,
               };
             }, "fetch pair activity"),
         ),
