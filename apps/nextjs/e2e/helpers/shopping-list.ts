@@ -49,7 +49,9 @@ export async function addShoppingListItem(
     await page.getByTestId("shopping-list-add-item-button").click();
   }
 
-  await expect(page.getByText(name)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(name, { exact: true })).toBeVisible({
+    timeout: 10000,
+  });
 }
 
 export async function getShoppingListItemLocator(page: Page, itemName: string) {

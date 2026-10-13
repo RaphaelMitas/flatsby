@@ -12,7 +12,6 @@ import {
   getSubcategoryGroup,
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
-import { calculateDebts } from "@flatsby/validators/expenses/debt";
 import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
 import {
   createExpenseSchema,
@@ -31,7 +30,12 @@ import type { ApiError } from "../errors";
 import { fail, withErrorHandlingAsResult } from "../errors";
 import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, GroupUtils, OperationUtils, safeDbOperation } from "../utils";
+import {
+  DbUtils,
+  fetchGroupDebtSummary,
+  OperationUtils,
+  safeDbOperation,
+} from "../utils";
 import { classify } from "../utils/classify";
 
 /**
@@ -53,6 +57,17 @@ function validateExpenseSplitsEffect(
   }
 
   return fail.validation("splits", result.error, result.userMessage);
+}
+
+function ensureActiveMembers(
+  activeMembers: { id: number }[],
+  memberIds: Iterable<number>,
+): Effect.Effect<void, ApiError> {
+  const activeIds = new Set(activeMembers.map((m) => m.id));
+  for (const memberId of memberIds) {
+    if (!activeIds.has(memberId)) return fail.notFound("group member");
+  }
+  return Effect.succeed(undefined);
 }
 
 function withDerivedCategory<T extends { id: number; subcategory: string }>(
@@ -87,13 +102,12 @@ export const expenseRouter = createTRPCRouter({
       );
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Get group with access check
           OperationUtils.getGroupWithAccess(
             ctx.db,
             input.groupId,
             ctx.session.user.id,
           ),
-          () =>
+          (group) =>
             Effect.flatMap(
               validateExpenseSplitsEffect(
                 input.amountInCents,
@@ -102,90 +116,50 @@ export const expenseRouter = createTRPCRouter({
               ),
               () =>
                 Effect.flatMap(
-                  // Verify paidByGroupMemberId is an active member of the group
-                  DbUtils.findOneOrFail(
-                    () =>
-                      ctx.db.query.groupMembers.findFirst({
-                        where: and(
-                          eq(groupMembers.id, input.paidByGroupMemberId),
-                          eq(groupMembers.groupId, input.groupId),
-                          eq(groupMembers.isActive, true),
-                        ),
-                      }),
-                    "group member",
-                  ),
+                  ensureActiveMembers(group.groupMembers, [
+                    input.paidByGroupMemberId,
+                    ...splits.map((split) => split.groupMemberId),
+                  ]),
                   () =>
                     Effect.flatMap(
-                      // Verify all split groupMemberIds are active members of the group
-                      Effect.forEach(
-                        splits,
-                        (split) =>
-                          DbUtils.findOneOrFail(
-                            () =>
-                              ctx.db.query.groupMembers.findFirst({
-                                where: and(
-                                  eq(groupMembers.id, split.groupMemberId),
-                                  eq(groupMembers.groupId, input.groupId),
-                                  eq(groupMembers.isActive, true),
-                                ),
-                              }),
-                            "group member",
-                          ),
-                        { concurrency: "unbounded" },
+                      Effect.promise(() =>
+                        subcategoryForNewExpense(ctx.session.user.id, input),
                       ),
-                      () =>
-                        Effect.flatMap(
-                          Effect.all([
-                            GroupUtils.getBasicMembership(
-                              ctx.db,
-                              input.groupId,
-                              ctx.session.user.id,
-                            ),
-                            Effect.promise(() =>
-                              subcategoryForNewExpense(
-                                ctx.session.user.id,
-                                input,
-                              ),
-                            ),
-                          ]),
-                          ([currentUserGroupMember, subcategory]) =>
-                            DbUtils.transaction(async (trx) => {
-                              const expenseResult = await trx
-                                .insert(expenses)
-                                .values({
-                                  groupId: input.groupId,
-                                  paidByGroupMemberId:
-                                    input.paidByGroupMemberId,
-                                  amountInCents: input.amountInCents,
-                                  currency: input.currency,
-                                  description: input.description,
-                                  category: getSubcategoryGroup(subcategory),
-                                  subcategory,
-                                  expenseDate: input.expenseDate,
-                                  createdByGroupMemberId:
-                                    currentUserGroupMember.id,
-                                  splitMethod: input.splitMethod,
-                                })
-                                .returning();
+                      (subcategory) =>
+                        DbUtils.transaction(async (trx) => {
+                          const expenseResult = await trx
+                            .insert(expenses)
+                            .values({
+                              groupId: input.groupId,
+                              paidByGroupMemberId: input.paidByGroupMemberId,
+                              amountInCents: input.amountInCents,
+                              currency: input.currency,
+                              description: input.description,
+                              category: getSubcategoryGroup(subcategory),
+                              subcategory,
+                              expenseDate: input.expenseDate,
+                              createdByGroupMemberId: group.thisGroupMember.id,
+                              splitMethod: input.splitMethod,
+                            })
+                            .returning();
 
-                              const expense = expenseResult[0];
-                              if (!expense) {
-                                throw new Error("Failed to create expense");
-                              }
+                          const expense = expenseResult[0];
+                          if (!expense) {
+                            throw new Error("Failed to create expense");
+                          }
 
-                              await trx.insert(expenseSplits).values(
-                                splits.map((split) => ({
-                                  expenseId: expense.id,
-                                  groupMemberId: split.groupMemberId,
-                                  amountInCents: split.amountInCents,
-                                  percentage: split.percentage,
-                                  shares: split.shares,
-                                })),
-                              );
+                          await trx.insert(expenseSplits).values(
+                            splits.map((split) => ({
+                              expenseId: expense.id,
+                              groupMemberId: split.groupMemberId,
+                              amountInCents: split.amountInCents,
+                              percentage: split.percentage,
+                              shares: split.shares,
+                            })),
+                          );
 
-                              return { ...expense, splits };
-                            }, "create expense with splits")(ctx.db),
-                        ),
+                          return { ...expense, splits };
+                        }, "create expense with splits")(ctx.db),
                     ),
                 ),
             ),
@@ -638,94 +612,23 @@ export const expenseRouter = createTRPCRouter({
       );
     }),
 
-  getGroupDebts: protectedProcedure
-    .input(z.object({ groupId: z.number() }))
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        Effect.flatMap(
-          // Get group with access check
-          OperationUtils.getGroupWithAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            // Get all expenses for the group
-            safeDbOperation(
-              () =>
-                ctx.db.query.expenses.findMany({
-                  where: eq(expenses.groupId, input.groupId),
-                  with: {
-                    expenseSplits: {
-                      columns: {
-                        groupMemberId: true,
-                        amountInCents: true,
-                      },
-                    },
-                  },
-                  columns: {
-                    paidByGroupMemberId: true,
-                    amountInCents: true,
-                    currency: true,
-                  },
-                }),
-              "fetch expenses for debt calculation",
-            ),
-        ),
-      ).then((result) => {
-        if (!result.success) {
-          return result;
-        }
-
-        // Calculate debts using imported function
-        const debtSummary = calculateDebts(result.data);
-        return { success: true as const, data: debtSummary };
-      });
-    }),
-
   getDebtSummary: protectedProcedure
     .input(z.object({ groupId: z.number() }))
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
-          // Get group with access check
           OperationUtils.getGroupWithAccess(
             ctx.db,
             input.groupId,
             ctx.session.user.id,
           ),
           () =>
-            // Get all expenses and calculate summary
             safeDbOperation(
-              () =>
-                ctx.db.query.expenses.findMany({
-                  where: eq(expenses.groupId, input.groupId),
-                  with: {
-                    expenseSplits: {
-                      columns: {
-                        groupMemberId: true,
-                        amountInCents: true,
-                      },
-                    },
-                  },
-                  columns: {
-                    paidByGroupMemberId: true,
-                    amountInCents: true,
-                    currency: true,
-                  },
-                }),
+              () => fetchGroupDebtSummary(ctx.db, input.groupId),
               "fetch expenses for debt summary",
             ),
         ),
-      ).then((result) => {
-        if (!result.success) {
-          return result;
-        }
-
-        // Calculate debts using imported function
-        const debtSummary = calculateDebts(result.data);
-        return { success: true as const, data: debtSummary };
-      });
+      );
     }),
 
   deleteAllGroupExpenses: protectedProcedure
@@ -778,62 +681,26 @@ export const expenseRouter = createTRPCRouter({
             input.groupId,
             ctx.session.user.id,
           ),
-          () =>
+          (group) =>
             Effect.flatMap(
-              GroupUtils.getBasicMembership(
-                ctx.db,
-                input.groupId,
-                ctx.session.user.id,
+              ensureActiveMembers(
+                group.groupMembers,
+                input.expenses.flatMap((expense) => [
+                  expense.paidByGroupMemberId,
+                  ...expense.splits.map((split) => split.groupMemberId),
+                ]),
               ),
-              (currentUserGroupMember) => {
-                // Collect all referenced groupMemberIds
-                const allMemberIds = new Set<number>();
-                for (const expense of input.expenses) {
-                  allMemberIds.add(expense.paidByGroupMemberId);
-                  for (const split of expense.splits) {
-                    allMemberIds.add(split.groupMemberId);
-                  }
-                }
-
-                return Effect.flatMap(
-                  // Batch-verify all referenced members are active
-                  safeDbOperation(
-                    () =>
-                      ctx.db.query.groupMembers.findMany({
-                        where: and(
-                          inArray(groupMembers.id, [...allMemberIds]),
-                          eq(groupMembers.groupId, input.groupId),
-                          eq(groupMembers.isActive, true),
-                        ),
-                        columns: { id: true },
-                      }),
-                    "verify group members",
+              () =>
+                Effect.flatMap(
+                  Effect.forEach(input.expenses, (expense) =>
+                    validateExpenseSplitsEffect(
+                      expense.amountInCents,
+                      expense.splits,
+                      expense.splitMethod,
+                    ),
                   ),
-                  (activeMembers) => {
-                    const activeIds = new Set(activeMembers.map((m) => m.id));
-                    for (const memberId of allMemberIds) {
-                      if (!activeIds.has(memberId)) {
-                        return fail.notFound("group member");
-                      }
-                    }
-
-                    // Validate all splits
-                    for (const expense of input.expenses) {
-                      const result = validateExpenseSplitsStrict(
-                        expense.amountInCents,
-                        expense.splits,
-                        expense.splitMethod,
-                      );
-                      if (!result.valid) {
-                        return fail.validation(
-                          "splits",
-                          result.error,
-                          result.userMessage,
-                        );
-                      }
-                    }
-
-                    return DbUtils.transaction(async (trx) => {
+                  () =>
+                    DbUtils.transaction(async (trx) => {
                       const createdExpenses = await trx
                         .insert(expenses)
                         .values(
@@ -846,7 +713,7 @@ export const expenseRouter = createTRPCRouter({
                             category: getSubcategoryGroup(expense.subcategory),
                             subcategory: expense.subcategory ?? "other",
                             expenseDate: expense.expenseDate,
-                            createdByGroupMemberId: currentUserGroupMember.id,
+                            createdByGroupMemberId: group.thisGroupMember.id,
                             splitMethod: expense.splitMethod,
                           })),
                         )
@@ -882,10 +749,8 @@ export const expenseRouter = createTRPCRouter({
                       }
 
                       return { importedCount: createdExpenses.length };
-                    }, "bulk create expenses")(ctx.db);
-                  },
-                );
-              },
+                    }, "bulk create expenses")(ctx.db),
+                ),
             ),
         ),
       );

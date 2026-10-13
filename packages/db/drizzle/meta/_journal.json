@@ -29,6 +29,13 @@
       "when": 1790335886523,
       "tag": "0003_split_shares",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791823776432,
+      "tag": "0004_fk_and_sort_indexes",
+      "breakpoints": true
     }
   ]
 }
