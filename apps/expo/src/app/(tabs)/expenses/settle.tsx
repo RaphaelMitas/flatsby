@@ -30,7 +30,9 @@ export default function SettlePage() {
   // a save can resolve after the user left: pop only this screen, if it's still there
   const close = () => {
     const stack = navigation.getState();
-    if (stack?.routes.some(({ key }) => key === route.key)) {
+    const index = stack?.routes.findIndex(({ key }) => key === route.key) ?? -1;
+    if (index === 0) router.back();
+    if (stack && index > 0) {
       navigation.dispatch({
         type: "GO_BACK",
         source: route.key,
