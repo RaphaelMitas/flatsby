@@ -81,7 +81,7 @@ export function SettlementForm({
     if (expense?.currency && isCurrencyCode(expense.currency)) {
       return expense.currency;
     }
-    return "EUR";
+    return groupData.success ? groupData.data.currency : "EUR";
   };
 
   const form = useForm<SettlementFormValues>({
@@ -422,7 +422,6 @@ export function SettlementForm({
   const memberTitle = (id: number, placeholder: string) =>
     isMember(id) ? person(id).name : placeholder;
 
-  // Create picker items for currency
   const isPending =
     createSettlementMutation.isPending || updateSettlementMutation.isPending;
 

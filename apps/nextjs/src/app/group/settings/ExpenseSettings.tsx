@@ -150,11 +150,7 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
           <Button
             className="w-full md:w-fit md:min-w-40"
             data-testid="expense-settings-save"
-            disabled={
-              groupMutation.isPending ||
-              !isAdmin ||
-              Object.keys(changes).length === 0
-            }
+            disabled={!isEditable || Object.keys(changes).length === 0}
             onClick={() =>
               groupMutation.mutate(
                 { id: group.id, ...changes },
