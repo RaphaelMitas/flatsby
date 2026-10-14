@@ -1,31 +1,33 @@
+import { msg } from "@flatsby/i18n/message-key";
+
 export const CURRENT_AI_CONSENT_VERSION = "1.1";
 
 export const AI_DATA_DISCLOSURE = {
-  sharingStatement:
-    "This feature shares your data with third-party AI services.",
+  sharingStatement: msg("chat.consent.disclosure.sharingStatement"),
   providers: [
-    { name: "OpenAI", description: "Processes chat messages using GPT models" },
+    {
+      name: "OpenAI",
+      description: msg("chat.consent.disclosure.openaiDescription"),
+    },
     {
       name: "Google",
-      description: "Processes chat messages using Gemini models",
+      description: msg("chat.consent.disclosure.googleDescription"),
     },
   ],
-  gateway: "Vercel AI Gateway",
-  gatewayDescription: "Routes your data to the AI providers listed above",
+  gateway: "Vercel AI Gateway", // i18n-ignore
+  gatewayDescription: msg("chat.consent.disclosure.gatewayDescription"),
   dataShared: [
-    "Your chat messages and conversation history",
-    "Shopping list names and items (when you ask about shopping)",
-    "Expense descriptions and amounts (when you ask about expenses)",
-    "Group member names (when you ask about your household)",
+    msg("chat.consent.disclosure.dataShared.messages"),
+    msg("chat.consent.disclosure.dataShared.shoppingLists"),
+    msg("chat.consent.disclosure.dataShared.expenses"),
+    msg("chat.consent.disclosure.dataShared.members"),
   ],
   notShared: [
-    "Your email address or account credentials",
-    "Payment information",
+    msg("chat.consent.disclosure.notShared.credentials"),
+    msg("chat.consent.disclosure.notShared.payment"),
   ],
-  usage:
-    "Your data is shared solely to generate AI responses. It is not used to train AI models. Anonymous usage metrics (such as which model was used, token counts, and response time) are tracked for service improvement.",
-  permissionRequest:
-    "Do you consent to sharing your data with these third-party AI services?",
+  usage: msg("chat.consent.disclosure.usage"),
+  permissionRequest: msg("chat.consent.disclosure.permissionRequest"),
 };
 
 export function requiresAIConsent(user: {

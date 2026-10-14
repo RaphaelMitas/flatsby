@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Text, View } from "react-native";
 import { TRPCClientError } from "@trpc/client";
+import { useTranslations } from "use-intl";
 
 import { Dashboard } from "~/components/dashboard/Dashboard";
 import { Button } from "~/lib/ui/button";
@@ -14,6 +15,7 @@ export function ErrorBoundary({
   error: Error;
   retry: () => void;
 }) {
+  const t = useTranslations("home");
   const data: unknown = error instanceof TRPCClientError ? error.data : null;
   const isUnauthorized =
     typeof data === "object" &&
@@ -35,12 +37,17 @@ export function ErrorBoundary({
     <SafeAreaView>
       <View className="flex-1 items-center justify-center gap-4 p-8">
         <Text className="text-foreground text-center text-lg font-semibold">
-          Something went wrong
+          {t("somethingWentWrong")}
         </Text>
         <Text className="text-muted-foreground text-center text-sm">
           {error.message}
         </Text>
-        <Button title="Retry" onPress={retry} variant="primary" size="lg" />
+        <Button
+          title={t("retry")}
+          onPress={retry}
+          variant="primary"
+          size="lg"
+        />
       </View>
     </SafeAreaView>
   );

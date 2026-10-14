@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 import "react-swipeable-list/dist/styles.css";
 
@@ -60,6 +61,8 @@ const ShoppingListItem = ({
   groupMembers,
   selectedCategory,
 }: ShoppingListItemProps) => {
+  const t = useTranslations();
+  const locale = useLocale();
   const [showEditForm, setShowEditForm] = useState<boolean>(false);
   const categoryData = getCategoryData(item.categoryId);
   const trpc = useTRPC();
@@ -163,7 +166,7 @@ const ShoppingListItem = ({
     <LeadingActions>
       <SwipeAction onClick={() => setShowEditForm(true)}>
         <div className="bg-info text-info-foreground flex items-center rounded-lg p-4">
-          Edit
+          {t("common.edit")}
         </div>
       </SwipeAction>
     </LeadingActions>
@@ -179,7 +182,7 @@ const ShoppingListItem = ({
     <TrailingActions>
       <SwipeAction destructive={true} onClick={handleDeleteItem}>
         <div className="bg-error text-error-foreground flex items-center rounded-lg p-4">
-          Delete
+          {t("common.delete")}
         </div>
       </SwipeAction>
     </TrailingActions>
@@ -246,7 +249,7 @@ const ShoppingListItem = ({
                     )}
                   >
                     <categoryData.icon size={20} />
-                    <span>{categoryData.name}</span>
+                    <span>{t(categoryData.name)}</span>
                   </div>
                 </PopoverTrigger>
                 <PopoverContent
@@ -261,8 +264,21 @@ const ShoppingListItem = ({
                         </div>
                         <div className="text-muted-foreground line-clamp-2 flex gap-2 text-xs">
                           {item.completed
-                            ? `Done by ${completedByMember?.user.name ?? "unknown"} · ${item.completedAt?.toLocaleDateString() ?? ""}`
-                            : `Added by ${createdByMember?.user.name ?? "unknown"} · ${item.createdAt.toLocaleDateString()}`}
+                            ? t("shoppingList.item.doneBy", {
+                                name:
+                                  completedByMember?.user.name ??
+                                  t("shoppingList.item.unknownMember"),
+                                date:
+                                  item.completedAt?.toLocaleDateString(
+                                    locale,
+                                  ) ?? "",
+                              })
+                            : t("shoppingList.item.addedBy", {
+                                name:
+                                  createdByMember?.user.name ??
+                                  t("shoppingList.item.unknownMember"),
+                                date: item.createdAt.toLocaleDateString(locale),
+                              })}
                         </div>
                       </div>
 
@@ -274,7 +290,7 @@ const ShoppingListItem = ({
                         )}
                       >
                         <categoryData.icon size={20} />
-                        <span>{categoryData.name}</span>
+                        <span>{t(categoryData.name)}</span>
                       </div>
                     </div>
                   </PopoverClose>

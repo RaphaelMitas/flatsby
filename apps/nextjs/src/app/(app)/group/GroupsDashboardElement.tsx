@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 
 interface Props {
@@ -19,6 +21,7 @@ export function GroupsDashboardElement({
   onSelect,
   disabled,
 }: Props) {
+  const t = useTranslations("group");
   return (
     <button
       data-testid={`group-card-${groupId}`}
@@ -34,9 +37,7 @@ export function GroupsDashboardElement({
             {groupName}
           </h3>
           <p className="text-muted-foreground text-xs">
-            {memberCount === 1
-              ? `${memberCount} member`
-              : `${memberCount} members`}
+            {t("memberCount", { count: memberCount })}
           </p>
         </div>
       </div>

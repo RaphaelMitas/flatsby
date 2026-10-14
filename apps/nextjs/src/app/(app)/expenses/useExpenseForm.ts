@@ -8,6 +8,7 @@ import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 
 import { toast } from "@flatsby/ui/toast";
@@ -38,6 +39,7 @@ export function useExpenseForm({
   onSuccess,
 }: UseExpenseFormProps) {
   const trpc = useTRPC();
+  const t = useTranslations();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -137,7 +139,7 @@ export function useExpenseForm({
                   userId: "",
                   role: "member" as const,
                   joinedOn: new Date(),
-                  user: { email: "", name: "Unknown", image: null },
+                  user: { email: "", name: t("common.unknown"), image: null },
                 },
             createdByGroupMember: {
               id: currentMember.id,
@@ -174,7 +176,11 @@ export function useExpenseForm({
                       userId: "",
                       role: "member" as const,
                       joinedOn: new Date(),
-                      user: { email: "", name: "Unknown", image: null },
+                      user: {
+                        email: "",
+                        name: t("common.unknown"),
+                        image: null,
+                      },
                     },
               };
             }),
@@ -203,7 +209,7 @@ export function useExpenseForm({
         if (context?.previousData) {
           queryClient.setQueryData(expenseListQueryKey, context.previousData);
         }
-        toast.error("Failed to create expense", {
+        toast.error(t("expenses.createFailed"), {
           description: error.message,
         });
       },
@@ -212,13 +218,13 @@ export function useExpenseForm({
           if (context.previousData) {
             queryClient.setQueryData(expenseListQueryKey, context.previousData);
           }
-          toast.error("Failed to create expense", {
+          toast.error(t("expenses.createFailed"), {
             description: data.error.message,
           });
           return;
         }
 
-        toast.success("Expense created successfully");
+        toast.success(t("expenses.createSuccess"));
         invalidateAll();
         onSuccess?.(data.data.id);
         onClose();
@@ -283,7 +289,11 @@ export function useExpenseForm({
                               userId: "",
                               role: "member" as const,
                               joinedOn: new Date(),
-                              user: { email: "", name: "Unknown", image: null },
+                              user: {
+                                email: "",
+                                name: t("common.unknown"),
+                                image: null,
+                              },
                             },
                     };
                     return splits;
@@ -299,7 +309,7 @@ export function useExpenseForm({
         if (context?.previousData && expenseQueryKey) {
           queryClient.setQueryData(expenseQueryKey, context.previousData);
         }
-        toast.error("Failed to update expense", {
+        toast.error(t("expenses.updateFailed"), {
           description: error.message,
         });
       },
@@ -308,13 +318,13 @@ export function useExpenseForm({
           if (context?.previousData && expenseQueryKey) {
             queryClient.setQueryData(expenseQueryKey, context.previousData);
           }
-          toast.error("Failed to update expense", {
+          toast.error(t("expenses.updateFailed"), {
             description: data.error.message,
           });
           return;
         }
 
-        toast.success("Expense updated successfully");
+        toast.success(t("expenses.updateSuccess"));
         invalidateAll(expense?.id);
         if (expense) {
           onSuccess?.(expense.id);

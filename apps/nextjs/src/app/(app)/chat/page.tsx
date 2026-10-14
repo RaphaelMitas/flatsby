@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { getSession } from "~/auth/server";
 import { getCurrentUserWithGroups } from "~/trpc/server";
@@ -12,6 +13,7 @@ export default async function ChatPage() {
     redirect("/auth/login");
   }
 
+  const t = await getTranslations("navigation");
   const user = await getCurrentUserWithGroups();
   const defaultModel = user.success
     ? user.data.user?.lastChatModelUsed
@@ -19,7 +21,7 @@ export default async function ChatPage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <ChatHeader title="New Chat" />
+      <ChatHeader title={t("newChat")} />
       <div className="min-h-0 flex-1 overflow-hidden">
         <NewChatInterface defaultModel={defaultModel} />
       </div>

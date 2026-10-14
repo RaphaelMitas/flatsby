@@ -2,6 +2,7 @@ import type { RouterOutputs } from "@flatsby/api";
 import type { ChatUIMessage } from "@flatsby/validators/chat/tools";
 import { notFound, redirect } from "next/navigation";
 import { TRPCError } from "@trpc/server";
+import { getTranslations } from "next-intl/server";
 
 import { messageRoleSchema } from "@flatsby/validators/chat/messages";
 import { chatModelSchema } from "@flatsby/validators/models";
@@ -93,9 +94,11 @@ export default async function ChatConversationPage({
     };
   });
 
+  const t = await getTranslations("navigation");
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <ChatHeader title={conversation.title ?? "New Chat"} />
+      <ChatHeader title={conversation.title ?? t("newChat")} />
       <div className="min-h-0 flex-1 overflow-hidden">
         <ChatInterface
           conversationId={conversationId}

@@ -2,6 +2,7 @@
 
 import { useCustomer } from "autumn-js/react";
 import { ExternalLinkIcon } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import PricingTable from "@flatsby/ui/autumn/pricing-table";
 import { Button } from "@flatsby/ui/button";
@@ -27,8 +28,8 @@ function BillingContentSkeleton() {
   );
 }
 
-function formatDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString(undefined, {
+function formatDate(timestamp: number, locale: string) {
+  return new Date(timestamp).toLocaleDateString(locale, {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -42,6 +43,8 @@ function getUsageColor(percentage: number) {
 }
 
 export function BillingContent() {
+  const t = useTranslations("billing");
+  const locale = useLocale();
   const {
     data: customer,
     isLoading,
@@ -70,19 +73,21 @@ export function BillingContent() {
         <CardContent className="grid gap-6 pt-6 md:grid-cols-2">
           <div className="flex flex-col gap-2">
             <h2 className="text-2xl font-semibold tracking-tight">
-              {subscription?.plan?.name ?? "Free Plan"}
+              {subscription?.plan?.name ?? t("freePlan")}
             </h2>
             {isCanceled && subscription?.currentPeriodEnd ? (
               <p className="text-muted-foreground text-sm">
-                Active until {formatDate(subscription.currentPeriodEnd)}
+                {t("activeUntil", {
+                  date: formatDate(subscription.currentPeriodEnd, locale),
+                })}
               </p>
             ) : isApplePlan ? (
               <p className="text-muted-foreground text-sm">
-                Subscribed via App Store
+                {t("subscribedViaAppStore")}
               </p>
             ) : !isPaidPlan ? (
               <p className="text-muted-foreground text-sm">
-                Upgrade to unlock more credits and features
+                {t("upgradeHint")}
               </p>
             ) : null}
             {isPaidPlan &&
@@ -97,7 +102,7 @@ export function BillingContent() {
                     )
                   }
                 >
-                  Manage in App Store
+                  {t("manageInAppStore")}
                   <ExternalLinkIcon className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
@@ -108,7 +113,7 @@ export function BillingContent() {
                     await openCustomerPortal();
                   }}
                 >
-                  Manage Subscription
+                  {t("manageSubscription")}
                   <ExternalLinkIcon className="ml-2 h-4 w-4" />
                 </Button>
               ))}
@@ -116,10 +121,10 @@ export function BillingContent() {
 
           <div className="flex flex-col gap-3">
             <p className="text-muted-foreground text-sm font-medium">
-              Credits remaining
+              {t("creditsRemaining")}
             </p>
             <p className="text-3xl font-bold tabular-nums">
-              {formatCredits(remaining)}
+              {formatCredits(remaining, locale)}
             </p>
             <div className="bg-secondary h-2 w-full overflow-hidden rounded-full">
               <div
@@ -128,12 +133,14 @@ export function BillingContent() {
               />
             </div>
             <p className="text-muted-foreground text-sm">
-              {formatCredits(usage)} of {formatCredits(totalAllowance)} used
-              this period
+              {t("usedThisPeriod", {
+                used: formatCredits(usage, locale),
+                total: formatCredits(totalAllowance, locale),
+              })}
             </p>
             {remaining === 0 && (
               <p className="text-destructive text-sm font-medium">
-                You&apos;ve run out of credits. Upgrade to continue.
+                {t("outOfCredits")}
               </p>
             )}
           </div>
@@ -142,9 +149,9 @@ export function BillingContent() {
 
       <div className="grid gap-4">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Plans</h2>
+          <h2 className="text-xl font-semibold tracking-tight">{t("plans")}</h2>
           <p className="text-muted-foreground text-sm">
-            Choose the plan that best fits your needs
+            {t("plansDescription")}
           </p>
         </div>
         <Separator />

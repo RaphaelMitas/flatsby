@@ -11,6 +11,12 @@ export const localeNames: Record<Locale, string> = {
 
 export const localeCookie = "locale";
 
+// English keeps the unprefixed URLs it had before German existed.
+export function localePath(locale: Locale, path: string) {
+  if (locale === defaultLocale) return path;
+  return path === "/" ? `/${locale}` : `/${locale}${path}`;
+}
+
 export function isLocale(value: string): value is Locale {
   return locales.some((locale) => locale === value);
 }

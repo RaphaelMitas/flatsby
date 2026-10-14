@@ -13,6 +13,7 @@ import {
   LoaderCircle,
   Upload,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
@@ -43,7 +44,7 @@ import {
   TableRow,
 } from "@flatsby/ui/table";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { centsToDecimal } from "@flatsby/validators/expenses/conversion";
+import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
   CURRENCY_CODES,
   isCurrencyCode,
@@ -63,6 +64,7 @@ export function SplitwiseImportDialog({
   open,
   onOpenChange,
 }: SplitwiseImportDialogProps) {
+  const t = useTranslations("splitwiseImport");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const wizard = useSplitwiseImport();
@@ -124,24 +126,23 @@ export function SplitwiseImportDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import from Splitwise</DialogTitle>
-          <DialogDescription>
-            Upload a Splitwise CSV export to import expenses into this group.
-          </DialogDescription>
+          <DialogTitle>{t("importFromSplitwise")}</DialogTitle>
+          <DialogDescription>{t("dialogDescription")}</DialogDescription>
         </DialogHeader>
 
         {bulkCreateMutation.data?.success ? (
           <div className="space-y-4">
             <Alert variant="success">
               <CheckCircle2 className="h-4 w-4" />
-              <AlertTitle>Import complete</AlertTitle>
+              <AlertTitle>{t("importComplete")}</AlertTitle>
               <AlertDescription>
-                Successfully imported{" "}
-                {bulkCreateMutation.data.data.importedCount} expenses.
+                {t("importedCount", {
+                  count: bulkCreateMutation.data.data.importedCount,
+                })}
               </AlertDescription>
             </Alert>
             <DialogFooter>
-              <Button onClick={() => handleClose(false)}>Done</Button>
+              <Button onClick={() => handleClose(false)}>{t("done")}</Button>
             </DialogFooter>
           </div>
         ) : wizard.step === "file" ? (
@@ -178,6 +179,9 @@ function StepFile({
   wizard: WizardReturn;
   onFile: (file: File) => void;
 }) {
+  const t = useTranslations("splitwiseImport");
+  const tCommon = useTranslations("common");
+  const tRoot = useTranslations();
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -204,7 +208,7 @@ function StepFile({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>CSV File</Label>
+        <Label>{t("csvFile")}</Label>
         <div
           role="button"
           tabIndex={0}
@@ -231,13 +235,9 @@ function StepFile({
         >
           <Upload className="text-muted-foreground h-8 w-8" />
           {wizard.parsed ? (
-            <p className="text-sm font-medium">
-              File loaded. Click or drop to replace.
-            </p>
+            <p className="text-sm font-medium">{t("fileLoaded")}</p>
           ) : (
-            <p className="text-muted-foreground text-sm">
-              Drag &amp; drop your CSV file here, or click to browse
-            </p>
+            <p className="text-muted-foreground text-sm">{t("dropOrBrowse")}</p>
           )}
         </div>
         <Input
@@ -250,7 +250,7 @@ function StepFile({
       </div>
 
       <div className="space-y-2">
-        <Label>Currency to import</Label>
+        <Label>{t("currencyToImport")}</Label>
         <Select
           value={wizard.currency}
           onValueChange={(val) => {
@@ -272,16 +272,18 @@ function StepFile({
 
       {wizard.parsed && (
         <div className="text-muted-foreground text-sm">
-          Found {wizard.parsed.rows.length} rows and{" "}
-          {wizard.parsed.personNames.length} people:{" "}
-          {wizard.parsed.personNames.join(", ")}
+          {t("foundRowsAndPeople", {
+            rows: wizard.parsed.rows.length,
+            people: wizard.parsed.personNames.length,
+            names: wizard.parsed.personNames.join(", "),
+          })}
         </div>
       )}
 
       {wizard.parsed?.errors.map((err, i) => (
         <Alert key={i} variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{err}</AlertDescription>
+          <AlertDescription>{tRoot(err.key, err.values)}</AlertDescription>
         </Alert>
       ))}
 
@@ -290,7 +292,7 @@ function StepFile({
           disabled={!wizard.parsed || wizard.parsed.rows.length === 0}
           onClick={wizard.goToMapping}
         >
-          Next
+          {tCommon("next")}
         </Button>
       </DialogFooter>
     </div>
@@ -307,11 +309,11 @@ function StepMapping({
     user: { name: string | null; email: string; image?: string | null };
   }[];
 }) {
+  const t = useTranslations("splitwiseImport");
+  const tCommon = useTranslations("common");
   return (
     <div className="space-y-4">
-      <p className="text-muted-foreground text-sm">
-        Map each Splitwise person to a group member.
-      </p>
+      <p className="text-muted-foreground text-sm">{t("mapPeople")}</p>
 
       {wizard.parsed?.personNames.map((name) => (
         <div key={name} className="flex items-center gap-4">
@@ -323,7 +325,7 @@ function StepMapping({
             }
           >
             <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Select member" />
+              <SelectValue placeholder={t("selectMember")} />
             </SelectTrigger>
             <SelectContent>
               {members.map((m) => (
@@ -346,10 +348,10 @@ function StepMapping({
       <DialogFooter className="gap-2">
         <Button variant="outline" onClick={wizard.goBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          {tCommon("back")}
         </Button>
         <Button disabled={!wizard.allNamesMapped} onClick={wizard.goToPreview}>
-          Next
+          {tCommon("next")}
         </Button>
       </DialogFooter>
     </div>
@@ -357,11 +359,17 @@ function StepMapping({
 }
 
 function StepPreview({ wizard }: { wizard: WizardReturn }) {
+  const t = useTranslations("splitwiseImport");
+  const tCommon = useTranslations("common");
+  const tRoot = useTranslations();
+  const locale = useLocale();
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
-        {wizard.expenses.length} expenses to import
-        {wizard.skipped.length > 0 && `, ${wizard.skipped.length} rows skipped`}
+        {t("previewSummary", {
+          expenses: wizard.expenses.length,
+          skipped: wizard.skipped.length,
+        })}
       </p>
 
       {wizard.expenses.length > 0 && (
@@ -369,29 +377,32 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead>{tCommon("date")}</TableHead>
+                <TableHead>{t("description")}</TableHead>
+                <TableHead className="text-right">{t("amount")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {wizard.expenses.map((exp, i) => (
                 <TableRow key={i}>
                   <TableCell className="text-sm">
-                    {exp.expenseDate.toLocaleDateString()}
+                    {exp.expenseDate.toLocaleDateString(locale)}
                   </TableCell>
                   <TableCell className="max-w-48 truncate text-sm">
                     {exp.description}
                   </TableCell>
                   <TableCell className="text-right text-sm">
-                    {centsToDecimal(exp.amountInCents).toFixed(2)}{" "}
-                    {exp.currency}
+                    {formatCurrencyFromCents({
+                      cents: exp.amountInCents,
+                      currency: exp.currency,
+                      locale,
+                    })}
                   </TableCell>
                   <TableCell className="text-sm">
                     {exp.splitMethod === "settlement"
-                      ? "Settlement"
-                      : "Expense"}
+                      ? t("settlement")
+                      : t("expense")}
                   </TableCell>
                 </TableRow>
               ))}
@@ -403,12 +414,15 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
       {wizard.skipped.length > 0 && (
         <details className="space-y-2">
           <summary className="text-muted-foreground cursor-pointer text-sm">
-            {wizard.skipped.length} skipped rows
+            {t("skippedRows", { count: wizard.skipped.length })}
           </summary>
           <div className="max-h-32 overflow-y-auto rounded border p-2">
             {wizard.skipped.map((s, i) => (
               <div key={i} className="text-muted-foreground text-xs">
-                Row {s.row}: {s.reason}
+                {t("skippedRow", {
+                  row: s.row,
+                  reason: tRoot(s.reason.key, s.reason.values),
+                })}
               </div>
             ))}
           </div>
@@ -418,13 +432,13 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
       <DialogFooter className="gap-2">
         <Button variant="outline" onClick={wizard.goBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          {tCommon("back")}
         </Button>
         <Button
           disabled={wizard.expenses.length === 0}
           onClick={wizard.goToConfirm}
         >
-          Next
+          {tCommon("next")}
         </Button>
       </DialogFooter>
     </div>
@@ -442,21 +456,22 @@ function StepConfirm({
   isPending: boolean;
   error: string | null;
 }) {
+  const t = useTranslations("splitwiseImport");
+  const tCommon = useTranslations("common");
   return (
     <div className="space-y-4">
       <Alert>
         <Upload className="h-4 w-4" />
-        <AlertTitle>Ready to import</AlertTitle>
+        <AlertTitle>{t("readyToImport")}</AlertTitle>
         <AlertDescription>
-          {wizard.expenses.length} expenses will be created in this group. This
-          action cannot be easily undone.
+          {t("willBeCreated", { count: wizard.expenses.length })}
         </AlertDescription>
       </Alert>
 
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Import failed</AlertTitle>
+          <AlertTitle>{t("importFailed")}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -464,15 +479,15 @@ function StepConfirm({
       <DialogFooter className="gap-2">
         <Button variant="outline" onClick={wizard.goBack} disabled={isPending}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          {tCommon("back")}
         </Button>
         <Button onClick={onImport} disabled={isPending}>
           {isPending ? (
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
           ) : null}
           {isPending
-            ? "Importing..."
-            : `Import ${wizard.expenses.length} expenses`}
+            ? t("importing")
+            : t("importCount", { count: wizard.expenses.length })}
         </Button>
       </DialogFooter>
     </div>

@@ -6,6 +6,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessageSquareIcon, RefreshCwIcon } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import {
   Conversation,
@@ -67,6 +68,8 @@ const ChatMessageItem = memo(function ChatMessageItem({
   onUIResponse,
   onRegenerate,
 }: ChatMessageItemProps) {
+  const t = useTranslations("chat.conversation");
+  const locale = useLocale();
   const content = useMemo(() => getMessageContent(message), [message]);
   const messageModel = message.metadata?.model;
   const messageCost = message.metadata?.cost;
@@ -117,7 +120,9 @@ const ChatMessageItem = memo(function ChatMessageItem({
             {messageModel && getModelDisplayName(messageModel)}
             {messageModel && messageCost != null && " · "}
             {messageCost != null &&
-              `${formatCredits(costToCredits(messageCost))} credits`}
+              t("credits", {
+                credits: formatCredits(costToCredits(messageCost), locale),
+              })}
           </span>
         )}
         {CHAT_FEATURES.regenerateEnabled &&
@@ -125,7 +130,10 @@ const ChatMessageItem = memo(function ChatMessageItem({
           content &&
           !isLoading && (
             <MessageActions className="opacity-0 transition-opacity group-hover:opacity-100">
-              <MessageAction tooltip="Regenerate" onClick={handleRegenerate}>
+              <MessageAction
+                tooltip={t("regenerate")}
+                onClick={handleRegenerate}
+              >
                 <RefreshCwIcon className="size-4" />
               </MessageAction>
             </MessageActions>
@@ -140,6 +148,7 @@ export function ChatInterface({
   initialMessages = [],
   initialModel,
 }: ChatInterfaceProps) {
+  const t = useTranslations("chat.conversation");
   const { currentGroup } = useGroupContext();
   const {
     messages,
@@ -182,8 +191,8 @@ export function ChatInterface({
         <ConversationContent>
           {messages.length === 0 ? (
             <ConversationEmptyState
-              title="Start a conversation"
-              description="Ask me anything and I'll help you out"
+              title={t("emptyTitle")}
+              description={t("emptyDescription")}
               icon={<MessageSquareIcon className="size-8" />}
             />
           ) : (
@@ -206,10 +215,10 @@ export function ChatInterface({
       {isAtMessageLimit && (
         <div className="flex items-center justify-center gap-3 border-t py-3">
           <span className="text-muted-foreground text-sm">
-            Message limit reached ({CHAT_MESSAGE_LIMIT})
+            {t("limitReached", { limit: CHAT_MESSAGE_LIMIT })}
           </span>
           <Button asChild size="sm">
-            <Link href="/chat">Start new chat</Link>
+            <Link href="/chat">{t("startNewChat")}</Link>
           </Button>
         </div>
       )}

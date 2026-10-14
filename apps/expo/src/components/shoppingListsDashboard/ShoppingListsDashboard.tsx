@@ -3,6 +3,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { router, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
@@ -13,16 +14,17 @@ import { useShoppingStore } from "~/utils/shopping-store";
 import ShoppingListDashboardElement from "./ShoppingListDashboardElement";
 
 export function ShoppingListsDashboard() {
+  const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
 
   if (!selectedGroupId) {
     return (
       <View className="bg-background flex-1 items-center justify-center gap-4 p-4">
         <Text className="text-muted-foreground text-center text-lg font-semibold">
-          Select a group to view its shopping lists
+          {t("shoppingList.selectGroupToViewLists")}
         </Text>
         <Button
-          title="Manage Groups"
+          title={t("navigation.manageGroups")}
           variant="primary"
           size="lg"
           icon="arrow-left-right"
@@ -38,7 +40,7 @@ export function ShoppingListsDashboard() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" />
           <Text className="text-muted-foreground mt-4">
-            Loading shopping lists...
+            {t("shoppingList.loadingLists")}
           </Text>
         </View>
       }
@@ -49,6 +51,7 @@ export function ShoppingListsDashboard() {
 }
 
 function ShoppingListsDashboardInner() {
+  const t = useTranslations();
   const router = useRouter();
   const { selectedGroupId, selectedGroupName } = useShoppingStore();
 
@@ -83,7 +86,7 @@ function ShoppingListsDashboardInner() {
           </Text>
           <Button
             testID="shopping-lists-group-settings"
-            title="Group Settings"
+            title={t("navigation.groupSettings")}
             variant="outline"
             size="md"
             icon="settings"
@@ -98,7 +101,7 @@ function ShoppingListsDashboardInner() {
         {/* Create New List Button */}
         <Button
           testID="shopping-list-create-button"
-          title="Create Shopping List"
+          title={t("shoppingList.createShoppingList")}
           variant="primary"
           size="lg"
           icon="plus"
@@ -113,10 +116,10 @@ function ShoppingListsDashboardInner() {
         {shoppingLists.data.length === 0 ? (
           <View className="flex flex-col items-center justify-center gap-4">
             <Text className="text-foreground text-center text-lg font-semibold">
-              No shopping lists yet
+              {t("shoppingList.noListsYet")}
             </Text>
             <Text className="text-muted-foreground text-center text-sm">
-              Create your first shopping list to get started
+              {t("shoppingList.noListsHint")}
             </Text>
           </View>
         ) : (

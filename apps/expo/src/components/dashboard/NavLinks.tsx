@@ -1,6 +1,7 @@
 import type { Href } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslations } from "use-intl";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { Card, CardContent } from "~/lib/ui/card";
@@ -32,15 +33,20 @@ function NavLinkItem({ href, iconName, label, testID }: NavLinkItemProps) {
 }
 
 export function NavLinks() {
+  const t = useTranslations();
   return (
     <View className="gap-4">
       <NavLinkItem
         testID="dashboard-shopping-lists-link"
         href="/(tabs)/home/shopping-lists"
         iconName="shopping-cart"
-        label="Shopping lists"
+        label={t("home.shoppingLists")}
       />
-      <NavLinkItem href="/(tabs)/expenses" iconName="wallet" label="Expenses" />
+      <NavLinkItem
+        href="/(tabs)/expenses"
+        iconName="wallet"
+        label={t("navigation.expenses")}
+      />
     </View>
   );
 }

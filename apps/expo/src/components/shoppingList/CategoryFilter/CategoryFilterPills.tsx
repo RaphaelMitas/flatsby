@@ -1,5 +1,6 @@
 import type { CategoryId } from "@flatsby/validators/categories";
 import { ScrollView } from "react-native";
+import { useTranslations } from "use-intl";
 
 import { categoryIds } from "@flatsby/validators/categories";
 
@@ -19,6 +20,7 @@ export function CategoryFilterPills({
   selectedCategory,
   onSelectCategory,
 }: CategoryFilterPillsProps) {
+  const t = useTranslations("shoppingList.filter");
   if (total === 0) {
     return null;
   }
@@ -35,7 +37,7 @@ export function CategoryFilterPills({
         testID="category-filter-all"
         variant={selectedCategory ? "outline" : "default"}
         onPress={() => onSelectCategory(null)}
-        label="All"
+        label={t("all")}
         size="xl"
         count={total && total > 0 ? total : undefined}
       />

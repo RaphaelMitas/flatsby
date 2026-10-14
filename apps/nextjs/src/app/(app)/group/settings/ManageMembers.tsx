@@ -12,6 +12,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { AlertCircle, ChevronDown, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
@@ -44,6 +45,7 @@ interface ManageMembersProps {
 }
 
 const ManageMembers = ({ groupId }: ManageMembersProps) => {
+  const t = useTranslations();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const handleApiError = useHandleApiError();
@@ -101,11 +103,9 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
     <Card>
       <CardHeader>
         <CardTitle data-testid="group-manage-members-title">
-          Manage Members
+          {t("group.members.title")}
         </CardTitle>
-        <CardDescription>
-          Add new members and update their roles.
-        </CardDescription>
+        <CardDescription>{t("group.members.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
@@ -125,8 +125,8 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
                         data-testid="group-add-member-email"
                         placeholder={
                           isAdmin
-                            ? "Enter email"
-                            : "Only admins can add members"
+                            ? t("group.members.emailPlaceholderShort")
+                            : t("group.members.onlyAdminsCanAdd")
                         }
                         type="email"
                         disabled={!isAdmin || addGroupMemberMutation.isPending}
@@ -144,7 +144,9 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
                 disabled={!isAdmin || addGroupMemberMutation.isPending}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {addGroupMemberMutation.isPending ? "Adding..." : "Add member"}
+                {addGroupMemberMutation.isPending
+                  ? t("group.members.adding")
+                  : t("group.members.addMemberShort")}
               </Button>
             </form>
           </Form>
@@ -156,13 +158,14 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
                 <AlertTitle>
                   {addGroupMemberMutation.data?.success === false
                     ? addGroupMemberMutation.data.error.type
-                    : (addGroupMemberMutation.error?.data?.code ?? "Error")}
+                    : (addGroupMemberMutation.error?.data?.code ??
+                      t("common.error"))}
                 </AlertTitle>
                 <AlertDescription>
                   {addGroupMemberMutation.data?.success === false
                     ? addGroupMemberMutation.data.error.message
                     : (addGroupMemberMutation.error?.message ??
-                      "Unknown error during member addition")}
+                      t("group.members.addFailed"))}
                 </AlertDescription>
               </Alert>
             )}
@@ -191,6 +194,7 @@ const MemberCard = ({
   groupMember: GroupMemberWithUser;
   currentUserGroupMember: GroupMemberWithUser;
 }) => {
+  const t = useTranslations();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const isUserAdmin = groupMember.role === "admin";
@@ -240,7 +244,7 @@ const MemberCard = ({
         <div className="flex w-full max-w-[250px] items-center gap-4">
           <Avatar>
             <AvatarImage
-              alt="Member Avatar"
+              alt={t("group.members.avatarAlt")}
               src={groupMember.user.image ?? undefined}
             />
             <AvatarFallback>
@@ -253,7 +257,7 @@ const MemberCard = ({
                 {groupMember.user.name}
               </div>
               <div className="text-muted-foreground inline-block text-sm">
-                {isUserAdmin && "(admin)"}
+                {isUserAdmin && t("group.members.adminBadgeLowercase")}
               </div>
             </div>
             <div className="text-muted-foreground truncate text-sm">
@@ -273,7 +277,9 @@ const MemberCard = ({
                 {isCurrentUserAdmin && (
                   <>
                     <div className="text-sm font-semibold">
-                      {`Edit ${groupMember.user.name}'s role:`}
+                      {t("group.members.editRole", {
+                        name: groupMember.user.name ?? "",
+                      })}
                     </div>
                     <Select
                       defaultValue={groupMember.role}
@@ -285,11 +291,17 @@ const MemberCard = ({
                       }
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Role" />
+                        <SelectValue
+                          placeholder={t("group.members.selectRole")}
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="member">Member</SelectItem>
+                        <SelectItem value="admin">
+                          {t("group.members.roles.admin")}
+                        </SelectItem>
+                        <SelectItem value="member">
+                          {t("group.members.roles.member")}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </>
@@ -303,7 +315,9 @@ const MemberCard = ({
                     })
                   }
                 >
-                  {isCurrentUser ? "Leave Group" : "Remove"}
+                  {isCurrentUser
+                    ? t("group.members.leaveGroup")
+                    : t("common.remove")}
                 </Button>
               </div>
             </PopoverContent>
@@ -317,13 +331,14 @@ const MemberCard = ({
           <AlertTitle>
             {removeGroupMemberMutation.data?.success === false
               ? removeGroupMemberMutation.data.error.type
-              : (removeGroupMemberMutation.error?.data?.code ?? "Error")}
+              : (removeGroupMemberMutation.error?.data?.code ??
+                t("common.error"))}
           </AlertTitle>
           <AlertDescription>
             {removeGroupMemberMutation.data?.success === false
               ? removeGroupMemberMutation.data.error.message
               : (removeGroupMemberMutation.error?.message ??
-                "Unknown error during member removal")}
+                t("group.members.removeFailed"))}
           </AlertDescription>
         </Alert>
       )}
@@ -331,7 +346,7 @@ const MemberCard = ({
         removeGroupMemberMutation.data.success === true && (
           <Alert variant="success">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Member removed successfully!</AlertTitle>
+            <AlertTitle>{t("group.members.removed")}</AlertTitle>
           </Alert>
         )}
       {(updateMemberRoleMutation.isError ||
@@ -341,13 +356,14 @@ const MemberCard = ({
           <AlertTitle>
             {updateMemberRoleMutation.data?.success === false
               ? updateMemberRoleMutation.data.error.type
-              : (updateMemberRoleMutation.error?.data?.code ?? "Error")}
+              : (updateMemberRoleMutation.error?.data?.code ??
+                t("common.error"))}
           </AlertTitle>
           <AlertDescription>
             {updateMemberRoleMutation.data?.success === false
               ? updateMemberRoleMutation.data.error.message
               : (updateMemberRoleMutation.error?.message ??
-                "Unknown error during role update")}
+                t("group.members.roleUpdateFailed"))}
           </AlertDescription>
         </Alert>
       )}
@@ -355,7 +371,7 @@ const MemberCard = ({
         updateMemberRoleMutation.data.success === true && (
           <Alert variant="success">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Role updated successfully!</AlertTitle>
+            <AlertTitle>{t("group.members.roleUpdated")}</AlertTitle>
           </Alert>
         )}
     </div>

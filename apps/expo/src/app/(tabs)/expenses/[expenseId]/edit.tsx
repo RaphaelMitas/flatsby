@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { ExpenseForm } from "~/components/expenses/ExpenseForm";
 import { trpc } from "~/utils/api";
@@ -9,6 +10,7 @@ import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function EditExpensePage() {
   const { selectedGroupId } = useShoppingStore();
+  const t = useTranslations();
   const params = useLocalSearchParams<{ expenseId: string }>();
   const expenseId = parseInt(params.expenseId, 10);
 
@@ -16,7 +18,7 @@ export default function EditExpensePage() {
     return (
       <View className="flex-1 items-center justify-center p-4">
         <Text className="text-muted-foreground text-center">
-          No group selected. Please select a group first.
+          {t("common.noGroupSelectedHint")}
         </Text>
       </View>
     );
@@ -27,7 +29,7 @@ export default function EditExpensePage() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" />
           <Text className="text-muted-foreground mt-4">
-            Loading expense data...
+            {t("expenses.loadingExpenseData")}
           </Text>
         </View>
       }
@@ -47,6 +49,7 @@ function EditExpensePageInner({
   selectedGroupId: number;
   expenseId: number;
 }) {
+  const t = useTranslations();
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: selectedGroupId }),
   );
@@ -58,7 +61,7 @@ function EditExpensePageInner({
     return (
       <View className="flex-1 items-center justify-center p-4">
         <Text className="text-destructive text-center">
-          Failed to load group data
+          {t("expenses.failedToLoadGroup")}
         </Text>
       </View>
     );
@@ -68,7 +71,7 @@ function EditExpensePageInner({
     return (
       <View className="flex-1 items-center justify-center p-4">
         <Text className="text-destructive text-center">
-          Failed to load expense data
+          {t("expenses.failedToLoadExpense")}
         </Text>
       </View>
     );

@@ -32,7 +32,7 @@ export function ExpenseCard({
   isSelected,
   onSelect,
 }: ExpenseCardProps) {
-  const t = useTranslations("expenses");
+  const t = useTranslations();
   const locale = useLocale();
   const splitCount = expense.expenseSplits.length;
   const paidByName = expense.paidByGroupMember.user.name;
@@ -68,7 +68,7 @@ export function ExpenseCard({
                 {expense.splitMethod === "settlement" ? (
                   <Badge variant="secondary" className="gap-1.5 rounded-full">
                     <Handshake size={14} />
-                    {t("settlement")}
+                    {t("expenses.settlement")}
                   </Badge>
                 ) : (
                   <Badge
@@ -80,7 +80,7 @@ export function ExpenseCard({
                     )}
                   >
                     <categoryData.icon size={14} />
-                    {categoryData.name}
+                    {t(categoryData.name)}
                   </Badge>
                 )}
               </div>
@@ -124,7 +124,7 @@ export function ExpenseCard({
               <span className="truncate">
                 {expense.splitMethod === "settlement"
                   ? paidByName
-                  : t("paidBy", { name: paidByName })}
+                  : t("expenses.paidBy", { name: paidByName })}
               </span>
             </div>
 
@@ -132,7 +132,9 @@ export function ExpenseCard({
               {expense.splitMethod !== "settlement" && (
                 <>
                   <Users className="h-4 w-4" />
-                  <span>{t("splitBetween", { count: splitCount })}</span>
+                  <span>
+                    {t("expenses.splitBetween", { count: splitCount })}
+                  </span>
                   <span>·</span>
                 </>
               )}

@@ -88,7 +88,8 @@ const userFacingKeys = new Set([
   "tooltip",
 ]);
 
-const userFacingCalls = /^(toast(\.\w+)?|Alert\.alert|Alert\.prompt|confirm|alert)$/;
+const userFacingCalls =
+  /^(toast(\.\w+)?|Alert\.alert|Alert\.prompt|confirm|alert)$/;
 
 const brandNames = new Set(["Flatsby", "Splitwise", "Apple", "Google"]);
 
@@ -269,7 +270,11 @@ function scan(source: string): Finding[] {
     }
 
     for (const [key, child] of Object.entries(node)) {
-      if (key === "loc" || key === "leadingComments" || key === "trailingComments") {
+      if (
+        key === "loc" ||
+        key === "leadingComments" ||
+        key === "trailingComments"
+      ) {
         continue;
       }
       if (Array.isArray(child)) {

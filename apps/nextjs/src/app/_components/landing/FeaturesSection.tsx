@@ -1,24 +1,24 @@
 import type { LucideIcon } from "lucide-react";
 import { Bot, ShoppingCart, Users, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Avatar, AvatarFallback } from "@flatsby/ui/avatar";
 
 import { ChatDemo } from "./ChatDemo";
-import { FEATURES } from "./content";
 import { ExpenseDemo } from "./ExpenseDemo";
 import { ShoppingListDemo } from "./ShoppingListDemo";
 
 export function FeaturesSection() {
-  const [lists, expenses, assistant, groups] = FEATURES;
+  const t = useTranslations("marketing.features");
 
   return (
     <section id="features" className="px-4 py-16 md:py-24">
       <div className="mx-auto max-w-6xl">
         <h2 className="mb-4 text-center text-3xl font-bold md:text-4xl">
-          Everything you need to run your household
+          {t("heading")}
         </h2>
         <p className="text-muted-foreground mb-12 text-center text-sm">
-          The lists, expenses and chat below are examples.
+          {t("examples")}
         </p>
 
         <div className="flex flex-col gap-16 md:gap-24">
@@ -26,7 +26,8 @@ export function FeaturesSection() {
             <FeatureText
               className="order-2 md:order-1"
               icon={ShoppingCart}
-              feature={lists}
+              title={t("lists.title")}
+              body={t("lists.body")}
             />
             <div className="order-1 md:order-2">
               <ShoppingListDemo />
@@ -36,13 +37,19 @@ export function FeaturesSection() {
             <div className="order-1">
               <ExpenseDemo />
             </div>
-            <FeatureText className="order-2" icon={Wallet} feature={expenses} />
+            <FeatureText
+              className="order-2"
+              icon={Wallet}
+              title={t("expenses.title")}
+              body={t("expenses.body")}
+            />
           </div>
           <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
             <FeatureText
               className="order-2 md:order-1"
               icon={Bot}
-              feature={assistant}
+              title={t("assistant.title")}
+              body={t("assistant.body")}
             />
             <div className="order-1 md:order-2">
               <ChatDemo />
@@ -52,8 +59,8 @@ export function FeaturesSection() {
             <div className="text-primary bg-primary/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
               <Users className="h-6 w-6" />
             </div>
-            <h3 className="mb-3 text-2xl font-semibold">{groups.title}</h3>
-            <p className="text-muted-foreground mb-6">{groups.body}</p>
+            <h3 className="mb-3 text-2xl font-semibold">{t("groups.title")}</h3>
+            <p className="text-muted-foreground mb-6">{t("groups.body")}</p>
             <div className="flex justify-center">
               <div className="flex -space-x-3">
                 {["AL", "SA", "JO", "+2"].map((initials) => (
@@ -76,19 +83,21 @@ export function FeaturesSection() {
 function FeatureText({
   className,
   icon: Icon,
-  feature,
+  title,
+  body,
 }: {
   className: string;
   icon: LucideIcon;
-  feature: { title: string; body: string };
+  title: string;
+  body: string;
 }) {
   return (
     <div className={className}>
       <div className="text-primary bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
         <Icon className="h-6 w-6" />
       </div>
-      <h3 className="mb-3 text-2xl font-semibold">{feature.title}</h3>
-      <p className="text-muted-foreground">{feature.body}</p>
+      <h3 className="mb-3 text-2xl font-semibold">{title}</h3>
+      <p className="text-muted-foreground">{body}</p>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { LoaderCircle, TriangleAlertIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -24,6 +25,7 @@ import { signOutAndRedirect } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
 
 export default function DeleteUser() {
+  const t = useTranslations();
   const [userNameInput, setUserNameInput] = useState("");
   const [deleteUserOpen, setDeleteUserOpen] = useState(false);
   const trpc = useTRPC();
@@ -52,20 +54,21 @@ export default function DeleteUser() {
   return (
     <Card className="w-full">
       <CardHeader className="w-full">
-        <CardTitle>Delete User</CardTitle>
-        <CardDescription>This action cannot be undone.</CardDescription>
+        <CardTitle>{t("settings.danger.deleteUser")}</CardTitle>
+        <CardDescription>{t("settings.danger.cannotBeUndone")}</CardDescription>
       </CardHeader>
       <CardContent className="w-full">
         <div className="space-y-4">
           <Alert variant="destructive">
             <TriangleAlertIcon className="h-4 w-4" />
             <AlertTitle data-testid="delete-user-danger-zone-title">
-              Danger Zone
+              {t("navigation.dangerZone")}
             </AlertTitle>
             <AlertDescription>
-              Deleting this user will permanently remove it and all its data.
-              Please type your email <strong>{user.email}</strong> below to
-              confirm. This action cannot be undone.
+              {t.rich("settings.danger.deleteUserWarning", {
+                email: user.email,
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </AlertDescription>
           </Alert>
           <div className="space-y-2">
@@ -75,7 +78,7 @@ export default function DeleteUser() {
                   <Input
                     id="delete-user-name-input"
                     data-testid="delete-user-email-input"
-                    placeholder="Enter user name"
+                    placeholder={t("settings.profile.userNamePlaceholder")}
                     maxLength={256}
                     value={userNameInput}
                     onChange={(e) => setUserNameInput(e.target.value)}
@@ -85,7 +88,7 @@ export default function DeleteUser() {
                     data-testid="delete-user-cancel-button"
                     onClick={() => setDeleteUserOpen(false)}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                 </>
               )}
@@ -108,7 +111,7 @@ export default function DeleteUser() {
                 {deleteUserMutation.isPending ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Delete User"
+                  t("settings.danger.deleteUser")
                 )}
               </Button>
             </div>
@@ -116,13 +119,13 @@ export default function DeleteUser() {
               (deleteUserMutation.data &&
                 !deleteUserMutation.data.success)) && (
               <Alert variant="destructive" className="w-full">
-                <AlertTitle>Deletion Failed</AlertTitle>
+                <AlertTitle>{t("settings.danger.deletionFailed")}</AlertTitle>
                 <AlertDescription>
                   {deleteUserMutation.isError
                     ? deleteUserMutation.error.message
                     : !deleteUserMutation.data.success
                       ? deleteUserMutation.data.error.message
-                      : "An unknown error occurred"}
+                      : t("settings.danger.unknownError")}
                 </AlertDescription>
               </Alert>
             )}

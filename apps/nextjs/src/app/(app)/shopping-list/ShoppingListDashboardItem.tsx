@@ -7,6 +7,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
 import {
@@ -46,6 +47,7 @@ interface ShoppingListDashboardItemProps {
 export function ShoppingListDashboardItem({
   list,
 }: ShoppingListDashboardItemProps) {
+  const t = useTranslations();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const trpc = useTRPC();
@@ -72,7 +74,9 @@ export function ShoppingListDashboardItem({
         previousLists,
       );
     }
-    toast.error("Error deleting list", { description: errorMessage });
+    toast.error(t("shoppingList.delete.failed"), {
+      description: errorMessage,
+    });
   };
 
   const deleteMutation = useMutation(
@@ -135,7 +139,9 @@ export function ShoppingListDashboardItem({
         previousLists,
       );
     }
-    toast.error("Error renaming shopping list", { description: errorMessage });
+    toast.error(t("shoppingList.renameFailed"), {
+      description: errorMessage,
+    });
   };
 
   const renameMutation = useMutation(
@@ -179,7 +185,7 @@ export function ShoppingListDashboardItem({
           return;
         }
 
-        toast.success("Shopping list renamed successfully");
+        toast.success(t("shoppingList.renamed"));
         if (context.groupId) {
           void queryClient.invalidateQueries(
             trpc.shoppingList.getShoppingLists.queryOptions({
@@ -198,7 +204,7 @@ export function ShoppingListDashboardItem({
         handleRenameError(
           context?.groupId,
           context?.previousLists,
-          errorMessage.length > 0 ? errorMessage : "Unknown error",
+          errorMessage.length > 0 ? errorMessage : t("common.unknownError"),
         );
       },
     }),
@@ -255,7 +261,7 @@ export function ShoppingListDashboardItem({
                       {...field}
                       data-testid="shopping-list-rename-input"
                       autoFocus
-                      placeholder="Enter shopping list name"
+                      placeholder={t("shoppingList.namePlaceholder")}
                       onKeyDown={(e) => {
                         if (e.key === "Escape") {
                           handleCancelRename();
@@ -273,14 +279,14 @@ export function ShoppingListDashboardItem({
                 variant="ghost"
                 onClick={handleCancelRename}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 type="submit"
                 data-testid="shopping-list-rename-save"
                 disabled={renameMutation.isPending}
               >
-                Save
+                {t("common.save")}
               </Button>
             </div>
           </form>
@@ -306,7 +312,7 @@ export function ShoppingListDashboardItem({
             )}
           </Link>
           <div className="text-muted-foreground self-start text-sm sm:self-center">
-            {list.uncheckedItemLength} items left
+            {t("shoppingList.itemsLeft", { count: list.uncheckedItemLength })}
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -314,7 +320,7 @@ export function ShoppingListDashboardItem({
             data-testid={`shopping-list-dashboard-rename-${list.id}`}
             className="md:group-hover:text-primary-foreground md:group-hover:hover:text-info cursor-pointer rounded p-2 transition-colors"
             onClick={handleEditClick}
-            title="Rename shopping list"
+            title={t("shoppingList.renameTooltip")}
           >
             <Pencil size={24} />
           </div>
@@ -325,7 +331,7 @@ export function ShoppingListDashboardItem({
               e.stopPropagation();
               setShowDeleteDialog(true);
             }}
-            title="Delete shopping list"
+            title={t("shoppingList.delete.tooltip")}
           >
             <Trash size={24} />
           </div>
@@ -334,19 +340,20 @@ export function ShoppingListDashboardItem({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent data-testid="shopping-list-delete-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Shopping List</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("shoppingList.delete.title")}
+            </AlertDialogTitle>
             <AlertDialogDescription className="wrap-break-word break-all">
-              Are you sure you want to delete &quot;{list.name}&quot;? This
-              action cannot be undone.
+              {t("shoppingList.delete.descriptionShort", { name: list.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className={buttonVariants({ variant: "destructive" })}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

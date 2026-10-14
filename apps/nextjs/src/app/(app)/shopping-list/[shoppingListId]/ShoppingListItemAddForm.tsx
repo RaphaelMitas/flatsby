@@ -2,6 +2,7 @@
 
 import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import { useRef } from "react";
+import { useTranslations } from "next-intl";
 import { useWatch } from "react-hook-form";
 
 import { useShoppingListSuggestions } from "@flatsby/api/hooks/useShoppingListSuggestions";
@@ -25,6 +26,7 @@ export const ShoppingListItemAddForm = ({
   onSubmit,
   groupId,
 }: ShoppingListItemAddFormProps) => {
+  const t = useTranslations("shoppingList.item");
   const trpc = useTRPC();
   const inputRef = useRef<HTMLInputElement>(null);
   const form = useForm<
@@ -109,7 +111,7 @@ export const ShoppingListItemAddForm = ({
           type="submit"
           className={`md:block ${form.getFieldState("name").isDirty ? "block" : "hidden"}`}
         >
-          Add Item
+          {t("addItem")}
         </Button>
       </form>
     </Form>

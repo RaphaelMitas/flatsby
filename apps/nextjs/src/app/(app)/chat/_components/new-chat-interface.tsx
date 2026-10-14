@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageSquareIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   Conversation,
@@ -23,6 +24,7 @@ interface NewChatInterfaceProps {
 }
 
 export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
+  const t = useTranslations("chat.conversation");
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -71,8 +73,8 @@ export function NewChatInterface({ defaultModel }: NewChatInterfaceProps) {
       <Conversation className="min-h-0 flex-1">
         <ConversationContent>
           <ConversationEmptyState
-            title="Start a conversation"
-            description="Ask me anything and I'll help you out"
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
             icon={<MessageSquareIcon className="size-8" />}
           />
         </ConversationContent>

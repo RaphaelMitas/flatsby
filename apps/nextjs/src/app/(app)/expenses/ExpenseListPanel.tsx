@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Plus, Receipt } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { InView } from "react-intersection-observer";
 
 import { Button } from "@flatsby/ui/button";
@@ -27,6 +28,7 @@ export function ExpenseListPanel({
   onCreateExpense,
 }: ExpenseListPanelProps) {
   const trpc = useTRPC();
+  const t = useTranslations();
   const { currentGroup } = useGroupContext();
   const handleApiError = useHandleApiError();
 
@@ -73,7 +75,7 @@ export function ExpenseListPanel({
           data-testid="expense-heading"
           className="text-xl font-bold tracking-tight"
         >
-          Expenses
+          {t("navigation.expenses")}
         </h2>
         <div className="flex items-center gap-2">
           <Button
@@ -84,7 +86,7 @@ export function ExpenseListPanel({
           >
             <Link href="/expenses/debts">
               <Receipt className="mr-2 h-4 w-4" />
-              Debts
+              {t("navigation.debts")}
             </Link>
           </Button>
           <Button
@@ -93,7 +95,7 @@ export function ExpenseListPanel({
             data-testid="expense-add-button"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add
+            {t("expenses.add")}
           </Button>
         </div>
       </div>
@@ -105,9 +107,11 @@ export function ExpenseListPanel({
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
               <Receipt className="text-muted-foreground h-12 w-12" />
               <div>
-                <p className="text-lg font-semibold">No expenses yet</p>
+                <p className="text-lg font-semibold">
+                  {t("expenses.emptyTitle")}
+                </p>
                 <p className="text-muted-foreground text-sm">
-                  Start tracking expenses by adding your first one
+                  {t("expenses.emptyHint")}
                 </p>
               </div>
               <Button
@@ -115,7 +119,7 @@ export function ExpenseListPanel({
                 data-testid="expense-empty-add-button"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Add Expense
+                {t("expenses.addExpense")}
               </Button>
             </div>
           ) : (

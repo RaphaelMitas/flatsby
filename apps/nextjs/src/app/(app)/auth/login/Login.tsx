@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
+import { localePath } from "@flatsby/i18n/locale";
 import { Button } from "@flatsby/ui/button";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
@@ -12,6 +14,8 @@ import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { signIn } from "~/auth/client";
 
 const Login = () => {
+  const t = useTranslations();
+  const locale = useLocale();
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
 
   return (
@@ -26,7 +30,7 @@ const Login = () => {
             className="text-muted-foreground text-sm"
             data-testid="auth-login-tagline"
           >
-            Manage your daily life with your flatmates.
+            {t("auth.login.tagline")}
           </p>
         </div>
         <div className="flex w-80 flex-col gap-6">
@@ -46,12 +50,13 @@ const Login = () => {
           >
             {loading === "google" ? (
               <>
-                <LoadingSpinner className="mr-2" /> Signing in with Google
+                <LoadingSpinner className="mr-2" />{" "}
+                {t("auth.login.signingInWithGoogle")}
               </>
             ) : (
               <>
                 <GoogleIcon className="text-primary-foreground mr-2 h-5 w-5" />{" "}
-                Sign in with Google
+                {t("auth.login.signInWithGoogle")}
               </>
             )}
           </Button>
@@ -71,42 +76,47 @@ const Login = () => {
           >
             {loading === "apple" ? (
               <>
-                <LoadingSpinner className="mr-2" /> Signing in with Apple
+                <LoadingSpinner className="mr-2" />{" "}
+                {t("auth.login.signingInWithApple")}
               </>
             ) : (
               <>
                 <AppleIcon className="text-primary-foreground mr-2 h-5 w-5" />{" "}
-                Sign in with Apple
+                {t("auth.login.signInWithApple")}
               </>
             )}
           </Button>
         </div>
         <div className="text-muted-foreground text-center text-xs">
           <p>
-            By signing in, you agree to our{" "}
-            <Link
-              href="/legal/terms"
-              className="hover:text-foreground underline"
-              data-testid="auth-login-terms-link"
-            >
-              Terms
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/legal/privacy"
-              className="hover:text-foreground underline"
-              data-testid="auth-login-privacy-link"
-            >
-              Privacy Policy
-            </Link>
+            {t.rich("auth.login.agreement", {
+              terms: (chunks) => (
+                <Link
+                  href={localePath(locale, "/legal/terms")}
+                  className="hover:text-foreground underline"
+                  data-testid="auth-login-terms-link"
+                >
+                  {chunks}
+                </Link>
+              ),
+              privacy: (chunks) => (
+                <Link
+                  href={localePath(locale, "/legal/privacy")}
+                  className="hover:text-foreground underline"
+                  data-testid="auth-login-privacy-link"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
           <p className="mt-2">
             <Link
-              href="/legal/legal-notice"
+              href={localePath(locale, "/legal/legal-notice")}
               className="hover:text-foreground underline"
               data-testid="auth-login-legal-notice-link"
             >
-              Legal Notice
+              {t("navigation.legalNotice")}
             </Link>
           </p>
         </div>

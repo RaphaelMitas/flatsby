@@ -10,12 +10,12 @@ import type { ZodType } from "zod/v4";
 import * as React from "react";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { Slot } from "radix-ui";
-import { useTranslations } from "use-intl";
 import {
   useForm as __useForm,
   Controller,
   useFormContext,
 } from "react-hook-form";
+import { useTranslations } from "use-intl";
 
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { cn } from "@flatsby/ui";

@@ -1,6 +1,7 @@
 "use client";
 
 import { redirect } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import DangerZone from "./DangerZone";
@@ -9,6 +10,7 @@ import ImportExpenses from "./ImportExpenses";
 import ManageMembers from "./ManageMembers";
 
 export function GroupSettingsContent() {
+  const t = useTranslations("navigation");
   const { currentGroup } = useGroupContext();
 
   if (!currentGroup) {
@@ -25,7 +27,7 @@ export function GroupSettingsContent() {
             className="text-center text-3xl font-semibold"
             data-testid="group-settings-title"
           >
-            Group Settings
+            {t("groupSettings")}
           </h1>
         </div>
         <div className="grid gap-6"></div>

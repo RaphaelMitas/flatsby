@@ -41,14 +41,19 @@ export function costToCredits(cost: string | number | undefined): number {
 /**
  * Format credits for display
  */
-export function formatCredits(credits: number): string {
+export function formatCredits(credits: number, locale: string): string {
+  const oneDecimal = (value: number) =>
+    value.toLocaleString(locale, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
   if (credits >= 1_000_000) {
-    return `${(credits / 1_000_000).toFixed(1)}M`;
+    return `${oneDecimal(credits / 1_000_000)}M`;
   }
   if (credits >= 1_000) {
-    return `${(credits / 1_000).toFixed(1)}K`;
+    return `${oneDecimal(credits / 1_000)}K`;
   }
-  return credits.toLocaleString();
+  return credits.toLocaleString(locale);
 }
 
 /**

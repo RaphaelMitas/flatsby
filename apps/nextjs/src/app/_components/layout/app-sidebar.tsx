@@ -15,7 +15,9 @@ import {
   TrashIcon,
   Wallet,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
+import { localePath } from "@flatsby/i18n/locale";
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +43,8 @@ import { SidebarThemeToggle } from "./sidebar-theme-toggle";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 
 export function AppSidebar() {
+  const t = useTranslations();
+  const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
   const trpc = useTRPC();
@@ -134,18 +138,18 @@ export function AppSidebar() {
 
         {hasCurrentGroup && (
           <SidebarGroup>
-            <SidebarGroupLabel>Expenses</SidebarGroupLabel>
+            <SidebarGroupLabel>{t("navigation.expenses")}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
                     isActive={isExpensesPage && !isDebtsPage}
-                    tooltip="Expenses"
+                    tooltip={t("navigation.expenses")}
                   >
                     <Link href="/expenses">
                       <Receipt />
-                      <span>All Expenses</span>
+                      <span>{t("navigation.allExpenses")}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -153,11 +157,11 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={isDebtsPage}
-                    tooltip="Debts"
+                    tooltip={t("navigation.debts")}
                   >
                     <Link href="/expenses/debts">
                       <Wallet />
-                      <span>Debts</span>
+                      <span>{t("navigation.debts")}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -167,14 +171,14 @@ export function AppSidebar() {
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Chat</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("navigation.chat")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="New Chat">
+                <SidebarMenuButton asChild tooltip={t("navigation.newChat")}>
                   <Link href="/chat">
                     <PlusIcon />
-                    <span>New Chat</span>
+                    <span>{t("navigation.newChat")}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -191,7 +195,7 @@ export function AppSidebar() {
               ) : conversations?.pages[0]?.items.length === 0 ? (
                 <SidebarMenuItem>
                   <div className="text-muted-foreground px-2 py-1 text-sm">
-                    No conversations yet
+                    {t("navigation.noConversations")}
                   </div>
                 </SidebarMenuItem>
               ) : (
@@ -203,12 +207,14 @@ export function AppSidebar() {
                         <SidebarMenuButton
                           asChild
                           isActive={conversation.id === currentConversationId}
-                          tooltip={conversation.title ?? "New Chat"}
+                          tooltip={
+                            conversation.title ?? t("navigation.newChat")
+                          }
                         >
                           <Link href={`/chat/${conversation.id}`}>
                             <MessageSquareIcon />
                             <span className="truncate">
-                              {conversation.title ?? "New Chat"}
+                              {conversation.title ?? t("navigation.newChat")}
                             </span>
                           </Link>
                         </SidebarMenuButton>
@@ -222,7 +228,7 @@ export function AppSidebar() {
                           disabled={deleteConversation.isPending}
                         >
                           <TrashIcon />
-                          <span className="sr-only">Delete</span>
+                          <span className="sr-only">{t("common.delete")}</span>
                         </SidebarMenuAction>
                       </SidebarMenuItem>
                     ))}
@@ -231,13 +237,13 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         onClick={() => fetchNextPage()}
                         disabled={isFetchingNextPage}
-                        tooltip="Load more"
+                        tooltip={t("navigation.loadMore")}
                       >
                         {isFetchingNextPage ? (
                           <LoaderIcon className="animate-spin" />
                         ) : (
                           <span className="text-muted-foreground">
-                            Load more...
+                            {t("navigation.loadMoreEllipsis")}
                           </span>
                         )}
                       </SidebarMenuButton>
@@ -259,14 +265,23 @@ export function AppSidebar() {
           <SidebarUserMenu />
         </SidebarMenu>
         <div className="text-muted-foreground flex flex-wrap justify-center gap-x-3 gap-y-1 px-2 py-2 text-xs group-data-[collapsible=icon]:hidden">
-          <Link href="/legal/legal-notice" className="hover:underline">
-            Legal Notice
+          <Link
+            href={localePath(locale, "/legal/legal-notice")}
+            className="hover:underline"
+          >
+            {t("navigation.legalNotice")}
           </Link>
-          <Link href="/legal/privacy" className="hover:underline">
-            Privacy
+          <Link
+            href={localePath(locale, "/legal/privacy")}
+            className="hover:underline"
+          >
+            {t("navigation.privacy")}
           </Link>
-          <Link href="/legal/terms" className="hover:underline">
-            Terms
+          <Link
+            href={localePath(locale, "/legal/terms")}
+            className="hover:underline"
+          >
+            {t("navigation.terms")}
           </Link>
         </div>
       </SidebarFooter>

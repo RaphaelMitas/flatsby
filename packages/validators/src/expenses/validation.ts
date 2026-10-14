@@ -2,13 +2,25 @@
 // Validation Utilities - Check splits before saving
 // ============================================================================
 
+import { msg } from "@flatsby/i18n/message-key";
+
 import type {
   ExpenseSplit,
   SplitMethod,
   SplitValidationResult,
   StrictValidationResult,
 } from "./types";
-import { formatCurrencyFromCents } from "./formatting";
+import { centsToDecimal } from "./conversion";
+
+function splitSumError(totalCents: number, currentCents: number) {
+  return {
+    key: msg("expenses.validation.splitAmountsMustSum"),
+    values: {
+      total: centsToDecimal(totalCents),
+      current: centsToDecimal(currentCents),
+    },
+  };
+}
 
 function hasMissingShares(splits: { shares?: number | null }[]): boolean {
   return splits.some((s) => !Number.isInteger(s.shares) || (s.shares ?? 0) < 1);
@@ -30,19 +42,28 @@ export function validateSplits({
 }): SplitValidationResult {
   // Basic validation
   if (splits.length === 0) {
-    return { isValid: false, error: "At least one person must be included" };
+    return {
+      isValid: false,
+      error: { key: msg("expenses.validation.atLeastOnePerson") },
+    };
   }
 
   // Check for duplicate members
   const memberIds = splits.map((s) => s.groupMemberId);
   const uniqueMemberIds = new Set(memberIds);
   if (uniqueMemberIds.size !== memberIds.length) {
-    return { isValid: false, error: "Duplicate members are not allowed" };
+    return {
+      isValid: false,
+      error: { key: msg("expenses.validation.duplicateMembers") },
+    };
   }
 
   // Check for negative amounts
   if (splits.some((s) => (s.amountInCents ?? 0) < 0)) {
-    return { isValid: false, error: "Negative amounts are not allowed" };
+    return {
+      isValid: false,
+      error: { key: msg("expenses.validation.negativeAmounts") },
+    };
   }
 
   // Settlement validation - must have exactly one recipient
@@ -50,7 +71,7 @@ export function validateSplits({
     if (splits.length !== 1) {
       return {
         isValid: false,
-        error: "Settlement must have exactly one recipient",
+        error: { key: msg("expenses.validation.settlementOneRecipient") },
       };
     }
 
@@ -62,7 +83,10 @@ export function validateSplits({
     if (totalSplitCents !== totalAmountCents) {
       return {
         isValid: false,
-        error: `Split amount must equal ${formatCurrencyFromCents({ cents: totalAmountCents, currency: "EUR" })}`,
+        error: {
+          key: msg("expenses.validation.splitAmountMustEqual"),
+          values: { total: centsToDecimal(totalAmountCents) },
+        },
       };
     }
 
@@ -82,7 +106,7 @@ export function validateSplits({
     if (totalSplitCents > 0 && totalSplitCents !== totalAmountCents) {
       return {
         isValid: false,
-        error: `Split amounts must sum to ${formatCurrencyFromCents({ cents: totalAmountCents, currency: "EUR" })} (currently ${formatCurrencyFromCents({ cents: totalSplitCents, currency: "EUR" })})`,
+        error: splitSumError(totalAmountCents, totalSplitCents),
       };
     }
 
@@ -98,10 +122,12 @@ export function validateSplits({
 
     // Allow tolerance of 1 basis point for rounding
     if (Math.abs(totalBasisPoints - 10000) > 1) {
-      const percentDisplay = (totalBasisPoints / 100).toFixed(2);
       return {
         isValid: false,
-        error: `Percentages must sum to 100% (currently ${percentDisplay}%)`,
+        error: {
+          key: msg("expenses.validation.percentagesMustSum"),
+          values: { percent: totalBasisPoints / 100 },
+        },
       };
     }
 
@@ -114,7 +140,7 @@ export function validateSplits({
     if (totalSplitCents > 0 && totalSplitCents !== totalAmountCents) {
       return {
         isValid: false,
-        error: `Split amounts must sum to ${formatCurrencyFromCents({ cents: totalAmountCents, currency: "EUR" })} (currently ${formatCurrencyFromCents({ cents: totalSplitCents, currency: "EUR" })})`,
+        error: splitSumError(totalAmountCents, totalSplitCents),
       };
     }
 
@@ -124,7 +150,10 @@ export function validateSplits({
   // Share amounts are derived from the counts on save, so only the counts can be wrong
   if (method === "shares") {
     return hasMissingShares(splits)
-      ? { isValid: false, error: "Each person needs at least one share" }
+      ? {
+          isValid: false,
+          error: { key: msg("expenses.validation.eachPersonNeedsShare") },
+        }
       : { isValid: true };
   }
 
@@ -136,7 +165,7 @@ export function validateSplits({
   if (totalSplitCents !== totalAmountCents) {
     return {
       isValid: false,
-      error: `Split amounts must sum to ${formatCurrencyFromCents({ cents: totalAmountCents, currency: "EUR" })} (currently ${formatCurrencyFromCents({ cents: totalSplitCents, currency: "EUR" })})`,
+      error: splitSumError(totalAmountCents, totalSplitCents),
     };
   }
 
@@ -154,7 +183,7 @@ export function validateExpenseSplitsStrict(
       return {
         valid: false,
         error: "settlement splits must be exactly 1",
-        userMessage: "Settlement must have exactly one recipient",
+        userMessage: msg("expenses.validation.settlementOneRecipient"),
       };
     }
   }
@@ -164,7 +193,7 @@ export function validateExpenseSplitsStrict(
     return {
       valid: false,
       error: "splits array is empty",
-      userMessage: "At least one person must be included in the split",
+      userMessage: msg("expenses.validation.atLeastOnePersonInSplit"),
     };
   }
 
@@ -173,7 +202,7 @@ export function validateExpenseSplitsStrict(
     return {
       valid: false,
       error: "negative amount in splits",
-      userMessage: "Split amounts cannot be negative",
+      userMessage: msg("expenses.validation.negativeSplitAmounts"),
     };
   }
 
@@ -181,7 +210,7 @@ export function validateExpenseSplitsStrict(
     return {
       valid: false,
       error: "share splits need a share count of at least 1",
-      userMessage: "Each person needs at least one share",
+      userMessage: msg("expenses.validation.eachPersonNeedsShare"),
     };
   }
 
@@ -194,8 +223,9 @@ export function validateExpenseSplitsStrict(
   if (totalSplitAmount !== expenseAmountInCents) {
     return {
       valid: false,
+      // i18n-ignore: developer detail, the user sees userMessage
       error: `split amounts (${totalSplitAmount} cents) must sum to expense amount (${expenseAmountInCents} cents)`,
-      userMessage: "The split amounts don't match the total expense amount",
+      userMessage: msg("expenses.validation.splitAmountsMismatch"),
     };
   }
 
@@ -214,7 +244,7 @@ export function validateUniqueMemberIds(
   if (uniqueIds.size !== memberIds.length) {
     return {
       isValid: false,
-      error: "Each member can only appear once in the split",
+      error: { key: msg("expenses.validation.memberOnce") },
     };
   }
 

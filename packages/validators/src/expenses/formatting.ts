@@ -2,6 +2,8 @@
 // Formatting Utilities - Currency and Date Display
 // ============================================================================
 
+import type { Translate } from "@flatsby/i18n/message-key";
+
 import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
 import type { DebtEntry, GroupDebtSummary } from "./types";
@@ -12,17 +14,17 @@ import { debtsBetweenOthers } from "./debt";
  * Format currency amount with currency symbol
  * @param params.amountDecimal - Amount in decimal (not cents)
  * @param params.currency - ISO 4217 currency code (e.g., "USD", "EUR")
- * @param params.locale - Locale to use for formatting (default: "en-US")
+ * @param params.locale - Locale to use for formatting
  * @returns Formatted string (e.g., "$10.50" or "€10.50")
  */
 export function formatCurrency({
   amountDecimal,
   currency,
-  locale = "en-US",
+  locale,
 }: {
   amountDecimal: number;
   currency: string;
-  locale?: Intl.LocalesArgument;
+  locale: Intl.LocalesArgument;
 }): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -36,7 +38,7 @@ export function formatCurrency({
  * Format currency amount from cents
  * @param params.cents - Amount in cents
  * @param params.currency - ISO 4217 currency code
- * @param params.locale - Locale to use for formatting (default: "en-US")
+ * @param params.locale - Locale to use for formatting
  * @returns Formatted string
  */
 export function formatCurrencyFromCents({
@@ -46,7 +48,7 @@ export function formatCurrencyFromCents({
 }: {
   cents: number;
   currency: string;
-  locale?: Intl.LocalesArgument;
+  locale: Intl.LocalesArgument;
 }): string {
   return formatCurrency({
     amountDecimal: centsToDecimal(cents),
@@ -59,12 +61,12 @@ export function formatCurrencyFromCents({
  * Format an expense date for list and card views
  * The year is omitted for expenses in the current year to keep rows compact.
  * @param date - Date the expense was incurred
- * @param locale - Locale to use for formatting (default: "en-US")
+ * @param locale - Locale to use for formatting
  * @returns Formatted string (e.g., "Mar 4" or "Mar 4, 2024")
  */
 export function formatExpenseDateShort(
   date: Date,
-  locale: Intl.LocalesArgument = "en-US",
+  locale: Intl.LocalesArgument,
 ): string {
   return date.toLocaleDateString(locale, {
     month: "short",
@@ -77,12 +79,12 @@ export function formatExpenseDateShort(
 /**
  * Format an expense date for detail views
  * @param date - Date the expense was incurred
- * @param locale - Locale to use for formatting (default: "en-US")
+ * @param locale - Locale to use for formatting
  * @returns Formatted string (e.g., "Monday, March 4, 2024")
  */
 export function formatExpenseDateLong(
   date: Date,
-  locale: Intl.LocalesArgument = "en-US",
+  locale: Intl.LocalesArgument,
 ): string {
   return date.toLocaleDateString(locale, {
     weekday: "long",
@@ -92,13 +94,11 @@ export function formatExpenseDateLong(
   });
 }
 
-export function formatShareCount(count: number): string {
-  return `${count} ${count === 1 ? "share" : "shares"}`;
-}
-
 export function formatSplitPortion({
   split,
   expense,
+  t,
+  locale,
 }: {
   split: { amountInCents: number; shares?: number | null };
   expense: {
@@ -106,19 +106,28 @@ export function formatSplitPortion({
     splitMethod: string;
     expenseSplits: { shares?: number | null }[];
   };
+  t: Translate;
+  locale: Intl.LocalesArgument;
 }): string {
   if (expense.splitMethod === "shares") {
     const totalShares = expense.expenseSplits.reduce(
       (sum, s) => sum + (s.shares ?? 0),
       0,
     );
-    return `${split.shares ?? 0} of ${formatShareCount(totalShares)}`;
+    return t("expenses.sharesOfTotal", {
+      shares: split.shares ?? 0,
+      count: totalShares,
+    });
   }
-  const percentage =
+  const fraction =
     expense.amountInCents === 0
       ? 0
-      : (split.amountInCents / expense.amountInCents) * 100;
-  return `${percentage.toFixed(1)}%`;
+      : split.amountInCents / expense.amountInCents;
+  return new Intl.NumberFormat(locale, {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(fraction);
 }
 
 export interface DebtPerson {
@@ -131,29 +140,42 @@ export type PersonLookup = (groupMemberId: number) => DebtPerson;
 export function personLookup(
   members: { id: number; user: { name: string; image?: string | null } }[],
   meId: number,
+  t: Translate,
 ): PersonLookup {
   const byId = new Map(members.map((member) => [member.id, member]));
   return (groupMemberId) => {
     const user = byId.get(groupMemberId)?.user;
     return {
-      name: groupMemberId === meId ? "You" : (user?.name ?? "Unknown"),
+      name:
+        groupMemberId === meId
+          ? t("debts.you")
+          : (user?.name ?? t("common.unknown")),
       image: user?.image ?? null,
     };
   };
 }
 
-export function formatSignedCents(cents: number, currency: string): string {
-  return `${cents > 0 ? "+" : ""}${formatCurrencyFromCents({ cents, currency })}`;
+export function formatSignedCents(
+  cents: number,
+  currency: string,
+  locale: Intl.LocalesArgument,
+): string {
+  return `${cents > 0 ? "+" : ""}${formatCurrencyFromCents({ cents, currency, locale })}`;
 }
 
 /** "Max", "Max and Sophie", "Lena, Max and Sophie" */
-function joinNames(names: string[]): string {
+function joinNames(names: string[], t: Translate): string {
   const last = names.at(-1);
   if (names.length < 2 || last === undefined) return last ?? "";
-  return `${names.slice(0, -1).join(", ")} and ${last}`;
+  return t("debts.nameList", { names: names.slice(0, -1).join(", "), last });
 }
 
-export function debtHero(summary: GroupDebtSummary, meId: number) {
+export function debtHero(
+  summary: GroupDebtSummary,
+  meId: number,
+  t: Translate,
+  locale: Intl.LocalesArgument,
+) {
   const lines = Object.entries(summary.memberBalances[meId] ?? {})
     .filter(([, cents]) => cents !== 0)
     .map(([currency, cents]) => ({ currency, cents }));
@@ -164,17 +186,21 @@ export function debtHero(summary: GroupDebtSummary, meId: number) {
   return {
     label:
       !first || mixed
-        ? "Overall"
+        ? t("debts.overall")
         : first.cents > 0
-          ? "Overall you are owed"
-          : "Overall you owe",
+          ? t("debts.overallOwed")
+          : t("debts.overallOwe"),
     amounts: (first ? lines : [{ currency: fallbackCurrency, cents: 0 }]).map(
       ({ currency, cents }) => ({
         currency,
         cents,
         text: mixed
-          ? formatSignedCents(cents, currency)
-          : formatCurrencyFromCents({ cents: Math.abs(cents), currency }),
+          ? formatSignedCents(cents, currency, locale)
+          : formatCurrencyFromCents({
+              cents: Math.abs(cents),
+              currency,
+              locale,
+            }),
       }),
     ),
   };
@@ -185,8 +211,9 @@ export function allSquareMessage(
   meId: number,
   kind: DebtKind,
   person: PersonLookup,
+  t: Translate,
 ): string {
-  if (kind === "simplified") return "Nothing for you to pay or receive";
+  if (kind === "simplified") return t("debts.nothingToSettle");
   const names = [
     ...new Set(
       debtsBetweenOthers(summary, meId, "direct").flatMap((debt) => [
@@ -195,27 +222,34 @@ export function allSquareMessage(
       ]),
     ),
   ].map((id) => person(id).name);
-  return `${joinNames(names)} still have open debts`;
+  return t("debts.othersStillOwe", { names: joinNames(names, t) });
 }
 
 export function describePairActivity(
   item: PairActivityItem,
   meId: number,
   person: PersonLookup,
+  t: Translate,
+  locale: Intl.LocalesArgument,
 ) {
   const paidByMe = item.paidByGroupMemberId === meId;
   const payer = person(item.paidByGroupMemberId).name;
-  const date = formatExpenseDateShort(item.expenseDate);
-  const paid = formatCurrencyFromCents({
+  const date = formatExpenseDateShort(item.expenseDate, locale);
+  const amount = formatCurrencyFromCents({
     cents: item.amountInCents,
     currency: item.currency,
+    locale,
   });
   return {
     cents: paidByMe ? item.pairAmountInCents : -item.pairAmountInCents,
-    title: item.isSettlement ? `${payer} settled up` : item.description,
+    title: item.isSettlement
+      ? t("debts.settledUp", { name: payer })
+      : item.description,
     subtitle: item.isSettlement
       ? date
-      : `${date} · ${paidByMe ? "you" : payer} paid ${paid}`,
+      : paidByMe
+        ? t("debts.youPaidOn", { date, amount })
+        : t("debts.otherPaidOn", { date, name: payer, amount }),
   };
 }
 
@@ -224,11 +258,16 @@ export function settleOutstandingLabel(
   debt: DebtEntry,
   meId: number,
   person: PersonLookup,
+  t: Translate,
 ): string {
-  if (source === "simplified") return "Simplified payment";
+  if (source === "simplified") return t("debts.simplifiedPayment");
   const from = person(debt.fromGroupMemberId).name;
   const to = person(debt.toGroupMemberId).name;
-  if (debt.toGroupMemberId === meId) return `${from} owes you directly`;
-  if (debt.fromGroupMemberId === meId) return `You owe ${to} directly`;
-  return `${from} owes ${to} directly`;
+  if (debt.toGroupMemberId === meId) {
+    return t("debts.owesYouDirectly", { name: from });
+  }
+  if (debt.fromGroupMemberId === meId) {
+    return t("debts.youOweDirectly", { name: to });
+  }
+  return t("debts.owesDirectly", { from, to });
 }

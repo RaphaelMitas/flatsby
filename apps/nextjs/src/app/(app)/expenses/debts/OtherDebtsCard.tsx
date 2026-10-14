@@ -3,6 +3,7 @@
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { ArrowRight } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
@@ -20,6 +21,8 @@ export function OtherDebtsCard({
   person,
   onSettle,
 }: OtherDebtsCardProps) {
+  const t = useTranslations("debts");
+  const locale = useLocale();
   return (
     <Card className="divide-y px-4">
       {debts.map((debt) => {
@@ -42,6 +45,7 @@ export function OtherDebtsCard({
               {formatCurrencyFromCents({
                 cents: debt.amountInCents,
                 currency: debt.currency,
+                locale,
               })}
             </span>
             <Button
@@ -50,7 +54,7 @@ export function OtherDebtsCard({
               data-testid="debt-others-record"
               onClick={() => onSettle(debt)}
             >
-              Record
+              {t("record")}
             </Button>
           </div>
         );

@@ -5,6 +5,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { createContext, memo, useContext, useMemo } from "react";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { BrainIcon, ChevronDownIcon, DotIcon } from "lucide-react";
+import { useTranslations } from "use-intl";
 
 import { cn } from "@flatsby/ui";
 
@@ -79,6 +80,7 @@ export type ChainOfThoughtHeaderProps = ComponentProps<
 
 export const ChainOfThoughtHeader = memo(
   ({ className, children, ...props }: ChainOfThoughtHeaderProps) => {
+    const t = useTranslations("chat.elements");
     const { isOpen, setIsOpen } = useChainOfThought();
 
     return (
@@ -92,7 +94,7 @@ export const ChainOfThoughtHeader = memo(
         >
           <BrainIcon className="size-4" />
           <span className="flex-1 text-left">
-            {children ?? "Chain of Thought"}
+            {children ?? t("chainOfThought")}
           </span>
           <ChevronDownIcon
             className={cn(

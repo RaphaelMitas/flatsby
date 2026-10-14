@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -20,6 +21,7 @@ import { useTRPC } from "~/trpc/react";
  * @module CreateGroup
  * */
 export function CreateGroup() {
+  const t = useTranslations();
   const [groupName, setGroupName] = useState("");
   const router = useRouter();
   const trpc = useTRPC();
@@ -45,9 +47,9 @@ export function CreateGroup() {
       <div className="bg-muted mx-auto max-w-md rounded-lg p-8 shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold" data-testid="group-create-title">
-            Create a Group
+            {t("group.create.title")}
           </h1>
-          <p className="mt-2">Enter a name for your new group.</p>
+          <p className="mt-2">{t("group.create.description")}</p>
         </div>
         <form
           className="space-y-4"
@@ -61,13 +63,13 @@ export function CreateGroup() {
               className="text-muted-foreground mb-2 block text-sm font-medium"
               htmlFor="groupName"
             >
-              Group Name
+              {t("group.nameLabel")}
             </label>
             <Input
               id="groupName"
               data-testid="group-create-name-input"
               maxLength={256}
-              placeholder="Enter group name"
+              placeholder={t("group.namePlaceholder")}
               onChange={(event) => {
                 setGroupName(event.target.value);
               }}
@@ -91,7 +93,11 @@ export function CreateGroup() {
             data-testid="group-create-submit"
             disabled={groupMutation.isPending}
           >
-            {groupMutation.isPending ? <LoadingSpinner /> : "Create Group"}
+            {groupMutation.isPending ? (
+              <LoadingSpinner />
+            ) : (
+              t("navigation.createGroup")
+            )}
           </Button>
         </form>
       </div>

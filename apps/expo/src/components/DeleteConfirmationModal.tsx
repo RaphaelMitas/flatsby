@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useForm, useWatch } from "react-hook-form";
+import { useTranslations } from "use-intl";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -37,11 +38,12 @@ const DeleteConfirmationModal: React.FC<Props> = ({
   onClose,
   onConfirm,
   itemName,
-  title = "Delete Item",
+  title,
   description,
   confirmationLabel,
   needsConfirmationInput = false,
 }) => {
+  const t = useTranslations("common");
   const form = useForm<DeleteFormValues>({
     defaultValues: {
       confirmationInput: "",
@@ -66,8 +68,12 @@ const DeleteConfirmationModal: React.FC<Props> = ({
     form.reset();
   }, [onClose, form]);
 
-  const defaultDescription = `Are you sure you want to delete "${itemName}"? This action cannot be undone and will permanently remove all data associated with this item.`;
-  const defaultConfirmationLabel = `To confirm deletion, please type the item name: ${itemName}`;
+  const defaultDescription = t("deleteConfirmation.description", {
+    name: itemName,
+  });
+  const defaultConfirmationLabel = t("deleteConfirmation.label", {
+    name: itemName,
+  });
 
   return (
     <Modal
@@ -88,7 +94,7 @@ const DeleteConfirmationModal: React.FC<Props> = ({
           <View className="mb-4 flex-row items-center gap-3">
             <Icon name="triangle-alert" size={24} color="destructive" />
             <Text className="text-foreground text-lg font-semibold">
-              {title}
+              {title ?? t("deleteConfirmation.title")}
             </Text>
           </View>
 
@@ -100,7 +106,7 @@ const DeleteConfirmationModal: React.FC<Props> = ({
             {needsConfirmationInput && (
               <View className="mb-6 gap-2">
                 <Text className="text-foreground text-sm font-medium">
-                  Confirmation Required
+                  {t("deleteConfirmation.required")}
                 </Text>
                 <Label className="text-muted-foreground mb-2 text-sm">
                   {confirmationLabel ?? defaultConfirmationLabel}
@@ -113,7 +119,7 @@ const DeleteConfirmationModal: React.FC<Props> = ({
                       <Input
                         {...field}
                         testID="delete-confirmation-input"
-                        placeholder="Enter item name"
+                        placeholder={t("deleteConfirmation.placeholder")}
                         className="w-full"
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -134,14 +140,14 @@ const DeleteConfirmationModal: React.FC<Props> = ({
             <View className="flex-row gap-3">
               <Button
                 testID="delete-confirmation-cancel"
-                title="Cancel"
+                title={t("cancel")}
                 variant="outline"
                 className="flex-1"
                 onPress={handleClose}
               />
               <Button
                 testID="delete-confirmation-confirm"
-                title="Delete"
+                title={t("delete")}
                 variant="destructive"
                 className="flex-1"
                 icon="trash-2"

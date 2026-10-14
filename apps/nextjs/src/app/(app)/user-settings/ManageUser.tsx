@@ -13,8 +13,10 @@ import {
   LoaderCircle,
   Upload,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
+import { translateIfKey } from "@flatsby/i18n/message-key";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import {
@@ -33,6 +35,7 @@ import { updateUserNameFormSchema } from "@flatsby/validators/user";
 import { useTRPC } from "~/trpc/react";
 
 const UserDetails = () => {
+  const t = useTranslations();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -88,15 +91,15 @@ const UserDetails = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>User Details</CardTitle>
+        <CardTitle>{t("settings.profile.userDetails")}</CardTitle>
         <CardDescription>
-          Update your user&apos;s name and profile picture.
+          {t("settings.profile.userDetailsDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
           <div className="grid gap-2">
-            <Label htmlFor="name">User Name</Label>
+            <Label htmlFor="name">{t("settings.profile.userName")}</Label>
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(handleSubmit)}
@@ -110,7 +113,7 @@ const UserDetails = () => {
                       <Input
                         {...field}
                         className="w-full"
-                        placeholder="Enter user name"
+                        placeholder={t("settings.profile.userNamePlaceholder")}
                       />
                     </FormControl>
                   )}
@@ -123,7 +126,7 @@ const UserDetails = () => {
                   {form.formState.isSubmitting ? (
                     <LoaderCircle className="h-4 w-4 animate-spin" />
                   ) : (
-                    "Save"
+                    t("common.save")
                   )}
                 </Button>
               </form>
@@ -131,28 +134,32 @@ const UserDetails = () => {
             {form.formState.errors.name && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
+                <AlertTitle>{t("common.error")}</AlertTitle>
                 <AlertDescription>
-                  {form.formState.errors.name.message}
+                  {translateIfKey(t, form.formState.errors.name.message ?? "")}
                 </AlertDescription>
               </Alert>
             )}
             {isSuccess && (
               <Alert variant="success">
                 <CircleCheckBig className="h-4 w-4" />
-                <AlertTitle>Name changed successfully!</AlertTitle>
+                <AlertTitle>{t("settings.profile.nameChanged")}</AlertTitle>
               </Alert>
             )}
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="profile-picture">Profile Picture</Label>
+            <Label htmlFor="profile-picture">
+              {t("settings.profile.profilePicture")}
+            </Label>
             <div className="flex items-center gap-4">
               <UserAvatar name={user.name} image={user.image} size="2xl" />
               <Button disabled variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
-                Upload New
+                {t("settings.profile.uploadNew")}
               </Button>
-              <div className="text-muted-foreground">feature coming soon!</div>
+              <div className="text-muted-foreground">
+                {t("settings.profile.featureComingSoon")}
+              </div>
             </div>
           </div>
         </div>

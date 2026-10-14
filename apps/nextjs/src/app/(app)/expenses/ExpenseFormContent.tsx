@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { de } from "date-fns/locale";
 import {
   AlertCircle,
   ArrowLeft,
@@ -8,6 +9,7 @@ import {
   CalendarIcon,
   LoaderCircle,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -53,6 +55,8 @@ interface ExpenseFormContentProps {
 }
 
 export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
+  const t = useTranslations();
+  const locale = useLocale();
   const {
     form,
     currentStep,
@@ -90,11 +94,14 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
             data-testid="expense-form-title"
             className="text-lg font-semibold"
           >
-            {isEditMode ? "Edit Expense" : "Add Expense"}
+            {isEditMode ? t("expenses.editExpense") : t("expenses.addExpense")}
           </h2>
           <div className="text-muted-foreground flex items-center gap-4 text-sm">
             <span data-testid="expense-form-step">
-              Step {currentStep}/{totalSteps}
+              {t("expenses.stepShort", {
+                step: currentStep,
+                total: totalSteps,
+              })}
             </span>
             <div className="flex gap-1">
               {Array.from({ length: totalSteps }).map((_, i) => (
@@ -113,7 +120,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Amount & Details</CardTitle>
+                <CardTitle className="text-base">
+                  {t("expenses.amountAndDetails")}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -121,10 +130,10 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>{t("expenses.description")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="What was this expense for?"
+                          placeholder={t("expenses.descriptionPlaceholder")}
                           {...field}
                           data-testid="expense-form-description"
                           maxLength={512}
@@ -140,7 +149,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   name="amountInCents"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount</FormLabel>
+                      <FormLabel>{t("expenses.amount")}</FormLabel>
                       <FormControl>
                         <div className="flex items-center gap-2">
                           <FormField
@@ -187,7 +196,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   name="paidByGroupMemberId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Paid By</FormLabel>
+                      <FormLabel>{t("expenses.paidByField")}</FormLabel>
                       <Select
                         value={field.value.toString()}
                         onValueChange={(value) =>
@@ -196,7 +205,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                       >
                         <FormControl>
                           <SelectTrigger data-testid="expense-form-paid-by">
-                            <SelectValue placeholder="Select who paid" />
+                            <SelectValue
+                              placeholder={t("expenses.selectPayer")}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -220,7 +231,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   name="subcategory"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel>{t("common.category")}</FormLabel>
                       <FormControl>
                         <ExpenseCategorySelector
                           value={field.value}
@@ -237,7 +248,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   name="expenseDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel>{t("common.date")}</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -246,7 +257,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                               className="w-full justify-start text-left font-normal"
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
-                              {format(field.value, "PPP")}
+                              {format(field.value, "PPP", {
+                                locale: locale === "de" ? de : undefined,
+                              })}
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
@@ -298,42 +311,52 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Review</CardTitle>
-                <CardDescription>
-                  Review your expense before submitting
-                </CardDescription>
+                <CardTitle className="text-base">
+                  {t("expenses.review")}
+                </CardTitle>
+                <CardDescription>{t("expenses.reviewHint")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {description && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Description:</span>
+                    <span className="text-muted-foreground">
+                      {t("expenses.descriptionLabel")}
+                    </span>
                     <span className="text-right font-semibold">
                       {description}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Amount:</span>
+                  <span className="text-muted-foreground">
+                    {t("expenses.amountLabel")}
+                  </span>
                   <span className="font-semibold">
                     {formatCurrencyFromCents({
                       cents: amountInCents,
                       currency: currency,
+                      locale,
                     })}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Paid By:</span>
+                  <span className="text-muted-foreground">
+                    {t("expenses.paidByFieldLabel")}
+                  </span>
                   <span className="font-semibold">
                     {allMembers.find((m) => m.id === paidByGroupMemberId)?.user
-                      .name ?? "Unknown"}
+                      .name ?? t("common.unknown")}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Split:</span>
+                  <span className="text-muted-foreground">
+                    {t("expenses.splitLabel")}
+                  </span>
                   <span className="font-semibold">
-                    {participantCount}{" "}
-                    {participantCount === 1 ? "person" : "people"} (
-                    {splitMethod})
+                    {t("expenses.reviewSplit", {
+                      count: participantCount,
+                      method: splitMethod,
+                    })}
                   </span>
                 </div>
               </CardContent>
@@ -347,7 +370,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
           updateExpenseMutation.data?.success === false) && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>{t("common.error")}</AlertTitle>
             <AlertDescription>
               {createExpenseMutation.data?.success === false
                 ? createExpenseMutation.data.error.message
@@ -355,7 +378,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   ? updateExpenseMutation.data.error.message
                   : (createExpenseMutation.error?.message ??
                     updateExpenseMutation.error?.message ??
-                    "An error occurred")}
+                    t("expenses.genericError"))}
             </AlertDescription>
           </Alert>
         )}
@@ -371,7 +394,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
               data-testid="expense-form-back"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              {t("common.back")}
             </Button>
           )}
           {currentStep < totalSteps ? (
@@ -386,7 +409,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
               className="flex-1"
               data-testid="expense-form-next"
             >
-              Next
+              {t("common.next")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
@@ -399,12 +422,12 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
               {isPending ? (
                 <>
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  {isEditMode ? "Updating..." : "Creating..."}
+                  {isEditMode ? t("common.updating") : t("common.creating")}
                 </>
               ) : isEditMode ? (
-                "Update Expense"
+                t("expenses.updateExpense")
               ) : (
-                "Create Expense"
+                t("expenses.createExpense")
               )}
             </Button>
           )}

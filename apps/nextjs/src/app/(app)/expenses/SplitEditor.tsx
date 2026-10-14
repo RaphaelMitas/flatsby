@@ -6,6 +6,7 @@ import type { EditableSplitMethod } from "@flatsby/validators/expenses/split-edi
 import type { LucideIcon } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { Divide, DollarSign, Equal, Minus, Percent, Plus } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useWatch } from "react-hook-form";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -19,22 +20,18 @@ import {
 } from "@flatsby/ui/card";
 import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
-import {
-  formatCurrencyFromCents,
-  formatShareCount,
-} from "@flatsby/validators/expenses/formatting";
+import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import { CurrencyInput } from "~/components/CurrencyInput";
 
 const SPLIT_METHOD_OPTIONS = [
-  { method: "equal", label: "Equal", Icon: Equal },
-  { method: "percentage", label: "Percentage", Icon: Percent },
-  { method: "shares", label: "Shares", Icon: Divide },
-  { method: "custom", label: "Custom", Icon: DollarSign },
+  { method: "equal", Icon: Equal },
+  { method: "percentage", Icon: Percent },
+  { method: "shares", Icon: Divide },
+  { method: "custom", Icon: DollarSign },
 ] as const satisfies readonly {
   method: EditableSplitMethod;
-  label: string;
   Icon: LucideIcon;
 }[];
 
@@ -55,6 +52,8 @@ export function SplitEditor({
   splitMethod,
   onSplitMethodChange,
 }: SplitEditorProps) {
+  const t = useTranslations();
+  const locale = useLocale();
   const splits = useWatch({ control: form.control, name: "splits" });
   const selectedMemberIds = splits.map((s) => s.groupMemberId);
   const {
@@ -80,7 +79,7 @@ export function SplitEditor({
     <div className="space-y-4">
       <div className="@container">
         <div className="grid grid-cols-2 gap-2 @md:flex">
-          {SPLIT_METHOD_OPTIONS.map(({ method, label, Icon }) => (
+          {SPLIT_METHOD_OPTIONS.map(({ method, Icon }) => (
             <Button
               key={method}
               type="button"
@@ -91,7 +90,7 @@ export function SplitEditor({
               data-testid={`split-method-${method}`}
             >
               <Icon className="mr-2 h-4 w-4" />
-              {label}
+              {t(`expenses.splitMethods.${method}`)}
             </Button>
           ))}
         </div>
@@ -99,10 +98,10 @@ export function SplitEditor({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Select People</CardTitle>
-          <CardDescription>
-            Choose who should be included in this expense
-          </CardDescription>
+          <CardTitle className="text-base">
+            {t("expenses.selectPeople")}
+          </CardTitle>
+          <CardDescription>{t("expenses.selectPeopleHint")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -139,15 +138,23 @@ export function SplitEditor({
       {splits.length > 0 && (
         <Card data-testid="split-details-card">
           <CardHeader>
-            <CardTitle className="text-base">Split Details</CardTitle>
+            <CardTitle className="text-base">
+              {t("expenses.splitDetails")}
+            </CardTitle>
             <CardDescription>
-              {splitMethod === "equal" && "Amounts are split equally"}
+              {splitMethod === "equal" && t("expenses.splitHintEqual")}
               {splitMethod === "percentage" &&
-                "Enter percentage for each person (must sum to 100%)"}
+                t("expenses.splitHintPercentage")}
               {splitMethod === "shares" &&
-                `Enter shares for each person (${totalShares} total)`}
+                t("expenses.splitHintShares", { count: totalShares })}
               {splitMethod === "custom" &&
-                `Enter amounts (must sum to ${formatCurrencyFromCents({ cents: totalAmountCents, currency })})`}
+                t("expenses.splitHintCustom", {
+                  amount: formatCurrencyFromCents({
+                    cents: totalAmountCents,
+                    currency,
+                    locale,
+                  }),
+                })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -155,7 +162,7 @@ export function SplitEditor({
               const member = groupMembers.find(
                 (m) => m.id === split.groupMemberId,
               );
-              const memberName = member?.user.name ?? "Unknown";
+              const memberName = member?.user.name ?? t("common.unknown");
               const shares = split.shares ?? 0;
 
               return (
@@ -177,6 +184,7 @@ export function SplitEditor({
                       {formatCurrencyFromCents({
                         cents: split.amountInCents,
                         currency,
+                        locale,
                       })}
                     </span>
                   </div>
@@ -206,7 +214,9 @@ export function SplitEditor({
                         size="icon-sm"
                         onClick={() => setShares(index, shares - 1)}
                         disabled={shares <= 1}
-                        aria-label={`Fewer shares for ${memberName}`}
+                        aria-label={t("expenses.fewerSharesFor", {
+                          name: memberName,
+                        })}
                         data-testid={`split-member-shares-decrement-${split.groupMemberId}`}
                       >
                         <Minus />
@@ -223,7 +233,9 @@ export function SplitEditor({
                           )
                         }
                         className="w-16 text-center"
-                        aria-label={`Shares for ${memberName}`}
+                        aria-label={t("expenses.sharesFor", {
+                          name: memberName,
+                        })}
                         data-testid={`split-member-shares-${split.groupMemberId}`}
                       />
                       <Button
@@ -231,13 +243,15 @@ export function SplitEditor({
                         variant="outline"
                         size="icon-sm"
                         onClick={() => setShares(index, shares + 1)}
-                        aria-label={`More shares for ${memberName}`}
+                        aria-label={t("expenses.moreSharesFor", {
+                          name: memberName,
+                        })}
                         data-testid={`split-member-shares-increment-${split.groupMemberId}`}
                       >
                         <Plus />
                       </Button>
                       <span className="text-muted-foreground text-sm">
-                        of {formatShareCount(totalShares)}
+                        {t("expenses.ofShares", { count: totalShares })}
                       </span>
                     </div>
                   )}
@@ -270,15 +284,23 @@ export function SplitEditor({
       {splits.length > 0 && (
         <div className="text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Total:</span>
+            <span className="text-muted-foreground">
+              {t("expenses.totalLabel")}
+            </span>
             <span
               className={`font-semibold ${validation.isValid ? "" : "text-destructive"}`}
             >
-              {formatCurrencyFromCents({ cents: totalSplitCents, currency })}
+              {formatCurrencyFromCents({
+                cents: totalSplitCents,
+                currency,
+                locale,
+              })}
             </span>
           </div>
           {!validation.isValid && validation.error && (
-            <p className="text-destructive mt-1 text-xs">{validation.error}</p>
+            <p className="text-destructive mt-1 text-xs">
+              {t(validation.error.key, validation.error.values)}
+            </p>
           )}
         </div>
       )}

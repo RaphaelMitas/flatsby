@@ -2,6 +2,7 @@
 
 import type { groupBalances } from "@flatsby/validators/expenses/debt";
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
+import { useLocale } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Card } from "@flatsby/ui/card";
@@ -49,6 +50,7 @@ function BalanceBars({
   rows,
   person,
 }: BalanceBarsProps) {
+  const locale = useLocale();
   return (
     <div>
       {showHeading && <p className="mb-1 font-semibold">{currency}</p>}
@@ -79,7 +81,7 @@ function BalanceBars({
                       amountTone(cents),
                     )}
                   >
-                    {formatSignedCents(cents, currency)}
+                    {formatSignedCents(cents, currency, locale)}
                   </span>
                 </div>
                 <div className="bg-muted relative h-1.5 rounded-full">

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { translatorFor } from "@flatsby/i18n/translator";
+
 import type { DebtEntry, GroupDebtSummary } from "./types";
 import {
   applySettlement,
@@ -11,6 +13,8 @@ import {
 import { allSquareMessage, debtHero, personLookup } from "./formatting";
 
 type Expense = Parameters<typeof calculateDebts>[0][number];
+
+const t = translatorFor("en");
 
 const YOU = 1;
 const LENA = 2;
@@ -544,7 +548,7 @@ describe("debtsFor", () => {
   const summary = calculateDebts([...scenario, owes(YOU, MAX, 1500, "USD")]);
 
   it("groups a member's debts by person across currencies, largest first", () => {
-    expect(debtsFor(summary, YOU, "direct")).toEqual([
+    expect(debtsFor(summary, YOU, "direct", t)).toEqual([
       {
         groupMemberId: MAX,
         amounts: [
@@ -567,7 +571,7 @@ describe("debtsFor", () => {
   });
 
   it("reads the simplified plan as payments", () => {
-    expect(debtsFor(summary, YOU, "simplified")).toEqual([
+    expect(debtsFor(summary, YOU, "simplified", t)).toEqual([
       {
         groupMemberId: SOPHIE,
         amounts: [{ amountInCents: 3050, debt: debt(SOPHIE, YOU, 3050) }],
@@ -589,7 +593,7 @@ describe("debtsFor", () => {
       const me = members[0] ?? 1;
 
       for (const kind of ["direct", "simplified"] as const) {
-        const mine = debtsFor(group, me, kind).flatMap(({ amounts }) =>
+        const mine = debtsFor(group, me, kind, t).flatMap(({ amounts }) =>
           amounts.map(({ debt: entry }) => entry),
         );
         const others = debtsBetweenOthers(group, me, kind);
@@ -640,6 +644,7 @@ const person = personLookup(
     { id: SOPHIE, user: { name: "Sophie" } },
   ],
   YOU,
+  t,
 );
 
 describe("allSquareMessage", () => {
@@ -650,10 +655,10 @@ describe("allSquareMessage", () => {
       owes(SOPHIE, LENA, 500),
     ]);
 
-    expect(allSquareMessage(summary, YOU, "direct", person)).toBe(
+    expect(allSquareMessage(summary, YOU, "direct", person, t)).toBe(
       "Lena, Max and Sophie still have open debts",
     );
-    expect(allSquareMessage(summary, YOU, "simplified", person)).toBe(
+    expect(allSquareMessage(summary, YOU, "simplified", person, t)).toBe(
       "Nothing for you to pay or receive",
     );
   });
@@ -664,14 +669,15 @@ describe("allSquareMessage", () => {
       owes(MAX, SOPHIE, 300),
     ]);
 
-    expect(allSquareMessage(summary, YOU, "direct", person)).toBe(
+    expect(allSquareMessage(summary, YOU, "direct", person, t)).toBe(
       "Lena, Max and Sophie still have open debts",
     );
   });
 });
 
 describe("debtHero", () => {
-  const hero = (expenses: Expense[]) => debtHero(calculateDebts(expenses), YOU);
+  const hero = (expenses: Expense[]) =>
+    debtHero(calculateDebts(expenses), YOU, t, "en");
 
   it("says you are owed when every currency is in your favour", () => {
     expect(hero([owes(MAX, YOU, 3050)])).toEqual({

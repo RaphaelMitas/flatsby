@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 
@@ -11,6 +12,7 @@ import { useHandleApiError } from "~/utils";
 import { GroupsDashboardElement } from "./GroupsDashboardElement";
 
 export function GroupsDashboard() {
+  const t = useTranslations();
   const trpc = useTRPC();
   const router = useRouter();
   const handleApiError = useHandleApiError();
@@ -43,28 +45,28 @@ export function GroupsDashboard() {
             className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl"
             data-testid="group-dashboard-title"
           >
-            Your Groups
+            {t("group.dashboard.title")}
           </h2>
           <Link
             className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors focus-visible:ring-1 focus-visible:ring-gray-950 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 md:hover:bg-gray-900/90 dark:bg-gray-50 dark:text-gray-900 dark:focus-visible:ring-gray-300 md:dark:hover:bg-gray-50/90"
             href="group/create"
             data-testid="group-create-link"
           >
-            Create Group
+            {t("navigation.createGroup")}
           </Link>
         </div>
 
         {status === "success" && groups.data.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-4">
             <div className="text-center text-lg font-semibold">
-              You are not a member of any groups.
+              {t("group.dashboard.notAMember")}
             </div>
             <Button asChild className="mx-auto grid max-w-6xl gap-2">
               <Link
                 href="/group/create"
                 data-testid="group-empty-create-button"
               >
-                Create a Group
+                {t("group.create.title")}
               </Link>
             </Button>
           </div>

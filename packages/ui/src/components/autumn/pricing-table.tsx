@@ -1,7 +1,9 @@
+import type { Messages } from "@flatsby/i18n/messages";
 import React, { createContext, useContext, useState } from "react";
 import { useCustomer, useListPlans } from "autumn-js/react";
 import { CheckIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "use-intl";
 
 import { cn } from "@flatsby/ui";
 import { getCurrentSubscription, PLAN_IDS } from "@flatsby/validators/billing";
@@ -23,6 +25,7 @@ import { Switch } from "../../switch";
 type Plan = NonNullable<ReturnType<typeof useListPlans>["data"]>[number];
 
 export default function PricingTable() {
+  const t = useTranslations("billing.pricing");
   const {
     data: customer,
     attach,
@@ -49,7 +52,7 @@ export default function PricingTable() {
   }
 
   if (error) {
-    return <div> Something went wrong...</div>;
+    return <div> {t("error")}</div>;
   }
 
   const currentPlanId = getCurrentSubscription(
@@ -115,11 +118,7 @@ export default function PricingTable() {
                 key={index}
                 planId={plan.id}
                 isRecommended={plan.id === recommendedPlanId}
-                disclaimer={
-                  isApplePlan
-                    ? "To cancel, go to App Store subscriptions"
-                    : undefined
-                }
+                disclaimer={isApplePlan ? t("appleCancelHint") : undefined}
                 buttonProps={{
                   disabled: isApplePlan || eligibility?.attachAction === "none",
 
@@ -141,7 +140,7 @@ export default function PricingTable() {
                       }
                       await Promise.all([refetchCustomer(), refetchPlans()]);
                     } catch {
-                      toast.error("Failed to update plan. Please try again.");
+                      toast.error(t("updateFailed"));
                     }
                   },
                 }}
@@ -253,6 +252,7 @@ export const PricingCard = ({
   buttonProps,
 }: PricingCardProps) => {
   const { plans, showFeatures } = usePricingTableContext("PricingCard");
+  const t = useTranslations("billing");
 
   const plan = plans.find((p) => p.id === planId);
 
@@ -260,12 +260,12 @@ export const PricingCard = ({
     throw new Error(`Plan with id ${planId} not found`);
   }
 
-  const { buttonText } = getPricingTableContent(plan);
+  const buttonText = t(`pricing.${getPricingButtonKey(plan)}`);
 
   const isFree = plan.autoEnable || plan.price === null;
   const mainPriceDisplay = isFree
     ? {
-        primaryText: "Free",
+        primaryText: t("free"),
       }
     : plan.price?.display;
 
@@ -281,7 +281,7 @@ export const PricingCard = ({
     >
       {isRecommended && (
         <Badge className="hover:bg-primary absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1">
-          Recommended
+          {t("pricing.recommended")}
         </Badge>
       )}
       <CardHeader className="pb-4">
@@ -316,7 +316,7 @@ export const PricingCard = ({
       )}
       <CardFooter className="mt-auto flex-col items-stretch">
         <PricingCardButton recommended={isRecommended} {...buttonProps}>
-          {buttonText}
+          <p>{buttonText}</p>
         </PricingCardButton>
         {disclaimer && (
           <p className="text-muted-foreground mt-2 text-center text-xs">
@@ -429,15 +429,16 @@ export const AnnualSwitch = ({
   isAnnualToggle: boolean;
   setIsAnnualToggle: (isAnnual: boolean) => void;
 }) => {
+  const t = useTranslations("billing.pricing");
   return (
     <div className="mb-6 flex items-center space-x-2">
-      <span className="text-muted-foreground text-sm">Monthly</span>
+      <span className="text-muted-foreground text-sm">{t("monthly")}</span>
       <Switch
         id="annual-billing"
         checked={isAnnualToggle}
         onCheckedChange={setIsAnnualToggle}
       />
-      <span className="text-muted-foreground text-sm">Annual</span>
+      <span className="text-muted-foreground text-sm">{t("annual")}</span>
     </div>
   );
 };
@@ -472,30 +473,24 @@ const PricingCardSkeleton = () => {
   );
 };
 
-function getPricingTableContent(plan: Plan) {
+function getPricingButtonKey(plan: Plan): keyof Messages["billing"]["pricing"] {
   const { status, attachAction } = plan.customerEligibility ?? {};
   const hasTrial = plan.freeTrial !== undefined;
   const isOneOff = plan.price?.interval === "one_off";
 
-  if (hasTrial) {
-    return { buttonText: <p>Start Free Trial</p> };
-  }
-  if (status === "scheduled") {
-    return { buttonText: <p>Plan Scheduled</p> };
-  }
-  if (status === "active" && attachAction === "none") {
-    return { buttonText: <p>Current Plan</p> };
-  }
+  if (hasTrial) return "startFreeTrial";
+  if (status === "scheduled") return "planScheduled";
+  if (status === "active" && attachAction === "none") return "currentPlan";
 
   switch (attachAction) {
     case "purchase":
     case "activate":
-      return { buttonText: <p>{isOneOff ? "Purchase" : "Get started"}</p> };
+      return isOneOff ? "purchase" : "getStartedLower";
     case "upgrade":
-      return { buttonText: <p>Upgrade</p> };
+      return "upgrade";
     case "downgrade":
-      return { buttonText: <p>Downgrade</p> };
+      return "downgrade";
     default:
-      return { buttonText: <p>Get Started</p> };
+      return "getStarted";
   }
 }

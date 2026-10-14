@@ -2,6 +2,7 @@
 
 import type { QuizChoice } from "@flatsby/validators/chat/tools";
 import { Check, HelpCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
@@ -23,6 +24,8 @@ export function UIQuiz({
   hasResponded = false,
   previousResponse,
 }: UIQuizProps) {
+  const t = useTranslations("chat.toolResults.ui");
+
   // Show read-only state if already responded
   if (hasResponded && previousResponse) {
     const selectedLabel = choices.find((c) => c.id === previousResponse)?.label;
@@ -38,7 +41,7 @@ export function UIQuiz({
         <CardContent className="pt-0">
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <Check className="size-4 text-green-500" />
-            Answered: {selectedLabel}
+            {t("answered", { answer: selectedLabel ?? "" })}
           </div>
         </CardContent>
       </Card>

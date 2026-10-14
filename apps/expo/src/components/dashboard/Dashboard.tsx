@@ -2,6 +2,7 @@ import { Suspense, useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import {
@@ -19,6 +20,7 @@ import { NavLinks } from "./NavLinks";
 import { QuickActions } from "./QuickActions";
 
 export function Dashboard() {
+  const t = useTranslations("home");
   const { selectedGroupId } = useShoppingStore();
 
   if (!selectedGroupId) {
@@ -31,7 +33,7 @@ export function Dashboard() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" />
           <Text className="text-muted-foreground mt-4">
-            Loading dashboard...
+            {t("loadingDashboard")}
           </Text>
         </View>
       }
@@ -50,6 +52,7 @@ function DashboardWithGroup() {
 }
 
 function DashboardContent() {
+  const t = useTranslations();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { openPicker } = useBottomSheetPicker();
@@ -86,11 +89,11 @@ function DashboardContent() {
       ...groups,
       {
         id: CREATE_GROUP_ID,
-        title: "Create group",
+        title: t("home.createGroup"),
         icon: <Icon name="plus" size={20} color="muted-foreground" />,
       },
     ];
-  }, [userWithGroups]);
+  }, [userWithGroups, t]);
 
   const handleOpenGroupPicker = useCallback(() => {
     openPicker({
@@ -131,12 +134,12 @@ function DashboardContent() {
             className="flex-1"
             onPress={handleOpenGroupPicker}
             variant="outline"
-            title={selectedGroupName ?? "select group"}
+            title={selectedGroupName ?? t("home.selectGroup")}
             icon="chevron-down"
           />
           <Button
             testID="dashboard-group-settings"
-            title="Group Settings"
+            title={t("navigation.groupSettings")}
             variant="outline"
             icon="settings"
             onPress={() =>

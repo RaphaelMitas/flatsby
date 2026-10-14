@@ -15,6 +15,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { InView } from "react-intersection-observer";
 
 import { cn } from "@flatsby/ui";
@@ -66,6 +67,7 @@ const ShoppingListInner = ({
   shoppingListId: number;
   shoppingListData: RouterOutputs["shoppingList"]["getShoppingList"];
 }) => {
+  const t = useTranslations("shoppingList");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
@@ -237,8 +239,8 @@ const ShoppingListInner = ({
   uncheckedSections.forEach((section) => {
     rows.push({
       type: "header",
-      id: `unchecked-header-${section.title}`,
-      title: section.title,
+      id: `unchecked-header-${section.key}`,
+      title: t(`sections.${section.key}`),
     });
     section.items.forEach((item) => {
       rows.push({ type: "item", id: `item-${item.id}`, item });
@@ -249,14 +251,14 @@ const ShoppingListInner = ({
     rows.push({
       type: "header",
       id: "purchased-items-header",
-      title: "Purchased Items",
+      title: t("purchasedItems"),
       spaced: true,
     });
     checkedSections.forEach((section, index) => {
       rows.push({
         type: "header",
-        id: `checked-header-${index}-${section.title}`,
-        title: section.title,
+        id: `checked-header-${index}-${section.key}`,
+        title: t(`sections.${section.key}`),
       });
       section.items.forEach((item) => {
         rows.push({ type: "item", id: `item-${item.id}`, item });
@@ -336,7 +338,7 @@ const ShoppingListInner = ({
             )}
             {!hasNextPage && allItems.length > 0 && (
               <div className="text-muted-foreground py-4 text-center text-sm">
-                No more items to load
+                {t("noMoreItems")}
               </div>
             )}
           </div>

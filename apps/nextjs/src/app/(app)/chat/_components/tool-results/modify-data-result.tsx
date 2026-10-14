@@ -3,6 +3,7 @@
 import type { ModifyDataOutput } from "@flatsby/validators/chat/tools";
 import Link from "next/link";
 import { AlertCircle, Pencil, Plus, Trash2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
@@ -12,6 +13,9 @@ interface ModifyDataResultProps {
 }
 
 export function ModifyDataResult({ output }: ModifyDataResultProps) {
+  const t = useTranslations("chat.toolResults");
+  const locale = useLocale();
+
   if (!output.success) {
     return (
       <div className="my-2 flex items-center gap-2 text-sm">
@@ -27,12 +31,6 @@ export function ModifyDataResult({ output }: ModifyDataResultProps) {
     delete: Trash2,
   }[output.action];
 
-  const actionLabel = {
-    create: "Created",
-    update: "Updated",
-    delete: "Deleted",
-  }[output.action];
-
   switch (output.entity) {
     case "shoppingListItem":
       return (
@@ -41,9 +39,9 @@ export function ModifyDataResult({ output }: ModifyDataResultProps) {
             className={`size-4 ${output.action === "delete" ? "text-red-500" : "text-green-500"}`}
           />
           <span>
-            {actionLabel} "{output.result.name}"
+            {t(`modify.item.${output.action}`, { name: output.result.name })}
             {output.action === "update" &&
-              (output.result.completed ? " (checked off)" : " (unchecked)")}
+              ` ${t(output.result.completed ? "modify.checkedOff" : "modify.unchecked")}`}
           </span>
         </div>
       );
@@ -56,29 +54,30 @@ export function ModifyDataResult({ output }: ModifyDataResultProps) {
               <ActionIcon
                 className={`size-4 ${output.action === "delete" ? "text-red-500" : "text-green-500"}`}
               />
-              {actionLabel} expense
+              {t(`modify.expense.${output.action}`)}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="font-medium">
-                  {output.result.description ?? "Expense"}
+                  {output.result.description ?? t("expenseFallback")}
                 </span>
                 <span className="font-medium">
                   {formatCurrencyFromCents({
                     cents: output.result.amountInCents,
                     currency: output.result.currency,
+                    locale,
                   })}
                 </span>
               </div>
               <div className="text-muted-foreground text-sm">
-                Paid by {output.result.paidByMemberName}
+                {t("paidBy", { name: output.result.paidByMemberName })}
               </div>
               {output.result.splits.length > 0 && (
                 <div className="mt-2 space-y-1">
                   <div className="text-muted-foreground text-xs">
-                    Split among:
+                    {t("modify.splitAmong")}
                   </div>
                   {output.result.splits.map((split, i) => (
                     <div
@@ -90,6 +89,7 @@ export function ModifyDataResult({ output }: ModifyDataResultProps) {
                         {formatCurrencyFromCents({
                           cents: split.amountInCents,
                           currency: output.result.currency,
+                          locale,
                         })}
                       </span>
                     </div>
@@ -108,17 +108,20 @@ export function ModifyDataResult({ output }: ModifyDataResultProps) {
             className={`size-4 ${output.action === "delete" ? "text-red-500" : "text-green-500"}`}
           />
           <span>
-            {actionLabel} shopping list{" "}
-            {output.action !== "delete" ? (
-              <Link
-                href={`/shopping-list/${output.result.id}`}
-                className="font-medium hover:underline"
-              >
-                "{output.result.name}"
-              </Link>
-            ) : (
-              <span className="font-medium">"{output.result.name}"</span>
-            )}
+            {t.rich(`modify.shoppingList.${output.action}`, {
+              listName: output.result.name,
+              name: (chunks) =>
+                output.action !== "delete" ? (
+                  <Link
+                    href={`/shopping-list/${output.result.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {chunks}
+                  </Link>
+                ) : (
+                  <span className="font-medium">{chunks}</span>
+                ),
+            })}
           </span>
         </div>
       );
@@ -130,7 +133,7 @@ export function ModifyDataResult({ output }: ModifyDataResultProps) {
             className={`size-4 ${output.action === "delete" ? "text-red-500" : "text-green-500"}`}
           />
           <span>
-            {actionLabel} group "{output.result.name}"
+            {t(`modify.group.${output.action}`, { name: output.result.name })}
           </span>
         </div>
       );

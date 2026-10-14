@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { usePostHog } from "posthog-react-native";
 
+import { getScreenName } from "~/utils/analytics/screen-names";
 import { queryClient } from "~/utils/api";
 
 import "../styles.css";
@@ -39,28 +40,28 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PostHogProvider
-        apiKey={posthogApiKey || "phc-disabled"}
-        // expo-router never exposes a NavigationContainer, so PostHog's screen
-        // autocapture cannot read navigation state. ScreenTracker does it instead.
-        autocapture={{ captureScreens: false }}
-        options={{
-          disabled: posthogDisabled,
-          host: "https://eu.i.posthog.com",
-          errorTracking: {
-            autocapture: {
-              uncaughtExceptions: true,
-              unhandledRejections: true,
-              console: ["error"],
+      <IntlProvider>
+        <PostHogProvider
+          apiKey={posthogApiKey || "phc-disabled"}
+          // expo-router never exposes a NavigationContainer, so PostHog's screen
+          // autocapture cannot read navigation state. ScreenTracker does it instead.
+          autocapture={{ captureScreens: false }}
+          options={{
+            disabled: posthogDisabled,
+            host: "https://eu.i.posthog.com",
+            errorTracking: {
+              autocapture: {
+                uncaughtExceptions: true,
+                unhandledRejections: true,
+                console: ["error"],
+              },
             },
-          },
-        }}
-      >
-        <KeyboardProvider>
-          <SafeAreaProvider>
-            <BottomSheetModalProvider>
-              <ThemeProvider>
-                <IntlProvider>
+          }}
+        >
+          <KeyboardProvider>
+            <SafeAreaProvider>
+              <BottomSheetModalProvider>
+                <ThemeProvider>
                   <QueryClientProvider client={queryClient}>
                     <RevenueCatProvider>
                       <ShoppingStoreProvider>
@@ -73,48 +74,14 @@ export default function RootLayout() {
                       </ShoppingStoreProvider>
                     </RevenueCatProvider>
                   </QueryClientProvider>
-                </IntlProvider>
-              </ThemeProvider>
-            </BottomSheetModalProvider>
-          </SafeAreaProvider>
-        </KeyboardProvider>
-      </PostHogProvider>
+                </ThemeProvider>
+              </BottomSheetModalProvider>
+            </SafeAreaProvider>
+          </KeyboardProvider>
+        </PostHogProvider>
+      </IntlProvider>
     </GestureHandlerRootView>
   );
-}
-
-function getScreenName(segments: string[]): string {
-  const filtered = segments.filter((s) => !s.startsWith("("));
-  const key = filtered.join("/");
-
-  const names: Record<string, string> = {
-    home: "Home",
-    "home/create-group": "Create Group",
-    "settings/group-settings": "Group Settings",
-    "settings/group-settings/members": "Group Members",
-    "settings/group-settings/member-actions": "Member Actions",
-    "settings/group-settings/group-details": "Group Details",
-    "home/shopping-lists": "Shopping Lists",
-    "home/shopping-lists/create": "Create Shopping List",
-    shoppingList: "Shopping List",
-    "shoppingList/edit-item": "Edit Shopping Item",
-    expenses: "Expenses",
-    "expenses/create": "Create Expense",
-    "expenses/debts": "Debts",
-    "expenses/settle": "Settle Debts",
-    settings: "Settings",
-    "settings/account": "Account Settings",
-    "settings/profile": "Profile",
-    "settings/manage-groups": "Manage Groups",
-    "settings/danger": "Danger Zone",
-    "auth/login": "Login",
-  };
-
-  if (key.includes("[expenseId]")) {
-    if (key.endsWith("/edit")) return "Edit Expense";
-    return "Expense Detail";
-  }
-  return names[key] ?? filtered.join(" > ");
 }
 
 function ScreenTracker() {

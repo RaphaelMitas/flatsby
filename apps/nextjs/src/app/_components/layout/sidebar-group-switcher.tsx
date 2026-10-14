@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Check, ChevronDown, Plus, Settings, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ import { useGroupContext } from "~/app/_components/context/group-context";
 
 export function SidebarGroupSwitcher() {
   const pathname = usePathname();
+  const t = useTranslations("navigation");
   const { currentGroup, groups, switchGroup, hasCurrentGroup } =
     useGroupContext();
 
@@ -33,7 +35,7 @@ export function SidebarGroupSwitcher() {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Groups</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("groups")}</SidebarGroupLabel>
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
@@ -41,13 +43,13 @@ export function SidebarGroupSwitcher() {
               <SidebarMenuButton>
                 <Users />
                 <span className="truncate">
-                  {currentGroup?.name ?? "Select Group"}
+                  {currentGroup?.name ?? t("selectGroup")}
                 </span>
                 <ChevronDown className="ml-auto" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
-              <DropdownMenuLabel>Groups</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("groups")}</DropdownMenuLabel>
               {groups.map((group) => (
                 <DropdownMenuItem
                   key={group.id}
@@ -65,7 +67,7 @@ export function SidebarGroupSwitcher() {
               <DropdownMenuItem asChild>
                 <Link href="/group">
                   <Users className="mr-2 size-4" />
-                  <span>All Groups</span>
+                  <span>{t("allGroups")}</span>
                   {isGroupPage && <Check className="ml-auto size-4" />}
                 </Link>
               </DropdownMenuItem>
@@ -73,7 +75,7 @@ export function SidebarGroupSwitcher() {
               <DropdownMenuItem asChild>
                 <Link href="/group/create">
                   <Plus className="mr-2 size-4" />
-                  <span>Create Group</span>
+                  <span>{t("createGroup")}</span>
                   {isGroupCreatePage && <Check className="ml-auto size-4" />}
                 </Link>
               </DropdownMenuItem>
@@ -84,7 +86,7 @@ export function SidebarGroupSwitcher() {
                   <DropdownMenuItem asChild>
                     <Link href="/group/settings">
                       <Settings className="mr-2 size-4" />
-                      <span>Group Settings</span>
+                      <span>{t("groupSettings")}</span>
                       {isGroupSettingsPage && (
                         <Check className="ml-auto size-4" />
                       )}

@@ -2,6 +2,7 @@
 
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import { Calendar, Edit, Handshake, Trash2, Users } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -35,14 +36,17 @@ export function ExpenseDetailContent({
   onDelete,
   isDeleting,
 }: ExpenseDetailContentProps) {
+  const t = useTranslations();
+  const locale = useLocale();
   const categoryData = getExpenseCategoryData(expense.subcategory);
 
   const formattedAmount = formatCurrencyFromCents({
     cents: expense.amountInCents,
     currency: expense.currency,
+    locale,
   });
   const expenseDate = new Date(expense.expenseDate);
-  const formattedDate = formatExpenseDateLong(expenseDate);
+  const formattedDate = formatExpenseDateLong(expenseDate, locale);
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -57,7 +61,7 @@ export function ExpenseDetailContent({
               disabled={isDeleting}
             >
               <Edit className="mr-2 h-4 w-4" />
-              Edit
+              {t("common.edit")}
             </Button>
           )}
           {onDelete && (
@@ -68,7 +72,7 @@ export function ExpenseDetailContent({
               disabled={isDeleting}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              {t("common.delete")}
             </Button>
           )}
         </div>
@@ -89,7 +93,7 @@ export function ExpenseDetailContent({
             {expense.splitMethod === "settlement" && (
               <Badge variant="secondary" className="gap-1.5 rounded-full">
                 <Handshake size={14} />
-                Settlement
+                {t("expenses.settlement")}
               </Badge>
             )}
           </div>
@@ -111,7 +115,9 @@ export function ExpenseDetailContent({
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-muted-foreground text-sm">From</p>
+                <p className="text-muted-foreground text-sm">
+                  {t("expenses.from")}
+                </p>
                 <p className="font-semibold">
                   {expense.expenseSplits[0].groupMember.user.name}
                 </p>
@@ -133,7 +139,9 @@ export function ExpenseDetailContent({
             </Avatar>
             <div>
               <p className="text-muted-foreground text-sm">
-                {expense.splitMethod === "settlement" ? "To" : "Paid by"}
+                {expense.splitMethod === "settlement"
+                  ? t("expenses.to")
+                  : t("expenses.paidByLabel")}
               </p>
               <p className="font-semibold">
                 {expense.paidByGroupMember.user.name}
@@ -146,14 +154,18 @@ export function ExpenseDetailContent({
           <div className="flex items-center gap-3">
             <Calendar className="text-muted-foreground h-5 w-5" />
             <div>
-              <p className="text-muted-foreground text-sm">Date</p>
+              <p className="text-muted-foreground text-sm">
+                {t("common.date")}
+              </p>
               <p className="font-semibold">{formattedDate}</p>
             </div>
           </div>
 
           <Separator />
           <div>
-            <p className="text-muted-foreground mb-1.5 text-sm">Category</p>
+            <p className="text-muted-foreground mb-1.5 text-sm">
+              {t("common.category")}
+            </p>
             <Badge
               className={cn(
                 "w-fit gap-1.5 rounded-full",
@@ -163,7 +175,7 @@ export function ExpenseDetailContent({
               )}
             >
               <categoryData.icon size={14} />
-              {categoryData.name}
+              {t(categoryData.name)}
             </Badge>
           </div>
         </CardContent>
@@ -175,10 +187,12 @@ export function ExpenseDetailContent({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Split Details
+              {t("expenses.splitDetails")}
             </CardTitle>
             <CardDescription>
-              {`Split between ${expense.expenseSplits.length} ${expense.expenseSplits.length === 1 ? "person" : "people"}`}
+              {t("expenses.splitBetween", {
+                count: expense.expenseSplits.length,
+              })}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -188,8 +202,14 @@ export function ExpenseDetailContent({
                 const splitAmount = formatCurrencyFromCents({
                   cents: split.amountInCents,
                   currency: expense.currency,
+                  locale,
                 });
-                const portion = formatSplitPortion({ split, expense });
+                const portion = formatSplitPortion({
+                  split,
+                  expense,
+                  t,
+                  locale,
+                });
 
                 return (
                   <div key={split.id}>
@@ -240,7 +260,9 @@ export function ExpenseDetailContent({
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-muted-foreground text-sm">Created by</p>
+              <p className="text-muted-foreground text-sm">
+                {t("expenses.createdBy")}
+              </p>
               <p className="text-sm font-medium">
                 {expense.createdByGroupMember.user.name}
               </p>

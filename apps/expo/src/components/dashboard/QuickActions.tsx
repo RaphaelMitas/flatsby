@@ -1,21 +1,23 @@
 import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslations } from "use-intl";
 
 import { Button } from "~/lib/ui/button";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export function QuickActions() {
+  const t = useTranslations("home.quickActions");
   const router = useRouter();
   const { selectedShoppingListName } = useShoppingStore();
 
   return (
     <View className="gap-2">
-      <Text className="text-muted-foreground text-sm">Quick actions</Text>
+      <Text className="text-muted-foreground text-sm">{t("title")}</Text>
       <View className="flex-row gap-2">
         <Button
           variant="outline"
           icon="shopping-cart"
-          title={selectedShoppingListName ?? "Shop"}
+          title={selectedShoppingListName ?? t("shop")}
           className="min-w-0 flex-1"
           numberOfLines={1}
           textClassName="shrink"
@@ -31,7 +33,7 @@ export function QuickActions() {
         <Button
           variant="outline"
           icon="plus"
-          title="Expense"
+          title={t("expense")}
           className="flex-1"
           onPress={() =>
             router.push("/(tabs)/expenses/create", { withAnchor: true })

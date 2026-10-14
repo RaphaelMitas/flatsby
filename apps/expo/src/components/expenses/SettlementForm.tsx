@@ -14,6 +14,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
+import { useLocale, useTranslations } from "use-intl";
 
 import { applySettlement, pairDebt } from "@flatsby/validators/expenses/debt";
 import {
@@ -64,6 +65,8 @@ export function SettlementForm({
   source,
   onClose,
 }: SettlementFormProps) {
+  const t = useTranslations();
+  const locale = useLocale();
   const queryClient = useQueryClient();
 
   const isEditMode = !!expense;
@@ -223,7 +226,7 @@ export function SettlementForm({
                   userId: "",
                   role: "member" as const,
                   joinedOn: new Date(),
-                  user: { email: "", name: "Unknown", image: null },
+                  user: { email: "", name: t("common.unknown"), image: null },
                 },
             createdByGroupMember: currentMember
               ? {
@@ -240,7 +243,7 @@ export function SettlementForm({
                   userId: "",
                   role: "member" as const,
                   joinedOn: new Date(),
-                  user: { email: "", name: "Unknown", image: null },
+                  user: { email: "", name: t("common.unknown"), image: null },
                 },
             expenseSplits: input.splits.map((split, index) => ({
               id: Date.now() + index,
@@ -265,7 +268,7 @@ export function SettlementForm({
                     userId: "",
                     role: "member" as const,
                     joinedOn: new Date(),
-                    user: { email: "", name: "Unknown", image: null },
+                    user: { email: "", name: t("common.unknown"), image: null },
                   },
             })),
           };
@@ -384,6 +387,7 @@ export function SettlementForm({
         paidByGroupMemberId: values.fromGroupMemberId,
         amountInCents: values.amountInCents,
         currency: values.currency,
+        // i18n-ignore: stored on the expense and shown to every member
         description: "Settlement",
         expenseDate: new Date(),
         splits: [
@@ -404,7 +408,7 @@ export function SettlementForm({
 
   const groupMembers = groupData.data.groupMembers;
   const meId = groupData.data.thisGroupMember.id;
-  const person = personLookup(groupMembers, meId);
+  const person = personLookup(groupMembers, meId, t);
   const isMember = (id: number) => groupMembers.some((m) => m.id === id);
   const pair =
     isMember(watchedFromMemberId) && isMember(watchedToMemberId)
@@ -444,7 +448,7 @@ export function SettlementForm({
         ? updateSettlementMutation.data.error.message
         : (createSettlementMutation.error?.message ??
           updateSettlementMutation.error?.message ??
-          "An error occurred");
+          t("expenses.genericError"));
 
   return (
     <BottomSheetPickerProvider>
@@ -461,7 +465,9 @@ export function SettlementForm({
                       size={26}
                       color="muted-foreground"
                     />
-                    <Text className="text-muted-foreground text-xs">pays</Text>
+                    <Text className="text-muted-foreground text-xs">
+                      {t("debts.pays")}
+                    </Text>
                   </View>
                   <PairMember person={pair.receiver} />
                 </View>
@@ -473,7 +479,7 @@ export function SettlementForm({
                     name="fromGroupMemberId"
                     render={({ field }) => (
                       <View className="gap-2">
-                        <Label>Paying</Label>
+                        <Label>{t("debts.paying")}</Label>
                         <BottomSheetPickerTrigger
                           items={memberItems}
                           selectedId={
@@ -489,7 +495,7 @@ export function SettlementForm({
                           }}
                           triggerTitle={memberTitle(
                             field.value,
-                            "Select who is paying",
+                            t("debts.selectPayer"),
                           )}
                         />
                         <FormMessage />
@@ -502,7 +508,7 @@ export function SettlementForm({
                     name="toGroupMemberId"
                     render={({ field }) => (
                       <View className="gap-2">
-                        <Label>Receiving</Label>
+                        <Label>{t("debts.receiving")}</Label>
                         <BottomSheetPickerTrigger
                           items={memberItems.filter(
                             (item) => item.id !== String(watchedFromMemberId),
@@ -516,7 +522,7 @@ export function SettlementForm({
                           }}
                           triggerTitle={memberTitle(
                             field.value,
-                            "Select who is receiving",
+                            t("debts.selectRecipient"),
                           )}
                         />
                         <FormMessage />
@@ -537,12 +543,14 @@ export function SettlementForm({
                       outstanding,
                       meId,
                       person,
+                      t,
                     )}
                   </Text>
                   <Text className="text-foreground text-center text-2xl font-bold">
                     {formatCurrencyFromCents({
                       cents: outstanding.amountInCents,
                       currency: outstanding.currency,
+                      locale,
                     })}
                   </Text>
                 </View>
@@ -556,7 +564,7 @@ export function SettlementForm({
                 name="currency"
                 render={({ field }) => (
                   <View className="gap-2">
-                    <Label>Currency</Label>
+                    <Label>{t("debts.currency")}</Label>
                     {isPrefilled ? (
                       <View
                         testID="settlement-currency-locked"
@@ -585,7 +593,7 @@ export function SettlementForm({
                 name="amountInCents"
                 render={({ field }) => (
                   <View className="flex-1 gap-2">
-                    <Label>Settlement Amount</Label>
+                    <Label>{t("debts.settlementAmount")}</Label>
                     <FormControl>
                       <CurrencyInput
                         value={field.value}
@@ -604,7 +612,9 @@ export function SettlementForm({
             {/* Error Display */}
             {hasError && (
               <Alert variant="destructive">
-                <AlertTitle variant="destructive">Error</AlertTitle>
+                <AlertTitle variant="destructive">
+                  {t("common.error")}
+                </AlertTitle>
                 <AlertDescription variant="destructive">
                   {errorMessage}
                 </AlertDescription>
@@ -614,7 +624,7 @@ export function SettlementForm({
             {/* Submit Button */}
             <View className="border-border flex-row gap-2 border-t pt-4">
               <Button
-                title="Cancel"
+                title={t("common.cancel")}
                 variant="outline"
                 onPress={onClose}
                 disabled={isPending}
@@ -625,11 +635,11 @@ export function SettlementForm({
                 title={
                   isPending
                     ? isEditMode
-                      ? "Updating..."
-                      : "Recording..."
+                      ? t("common.updating")
+                      : t("debts.recording")
                     : isEditMode
-                      ? "Update Settlement"
-                      : "Record Settlement"
+                      ? t("debts.updateSettlement")
+                      : t("debts.recordSettlement")
                 }
                 onPress={form.handleSubmit(onSubmit)}
                 disabled={isPending}

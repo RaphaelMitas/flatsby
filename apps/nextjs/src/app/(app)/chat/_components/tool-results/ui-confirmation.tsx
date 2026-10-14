@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Check, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
@@ -21,8 +22,8 @@ interface UIConfirmationProps {
 export function UIConfirmation({
   title,
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   disabled = false,
   onConfirm,
@@ -30,6 +31,8 @@ export function UIConfirmation({
   hasResponded = false,
   wasConfirmed,
 }: UIConfirmationProps) {
+  const t = useTranslations();
+
   // Show read-only state if already responded
   if (hasResponded && wasConfirmed !== undefined) {
     return (
@@ -48,12 +51,12 @@ export function UIConfirmation({
             {wasConfirmed ? (
               <>
                 <Check className="size-4 text-green-500" />
-                <span>Confirmed</span>
+                <span>{t("chat.toolResults.ui.confirmed")}</span>
               </>
             ) : (
               <>
                 <X className="size-4 text-red-500" />
-                <span>Cancelled</span>
+                <span>{t("chat.toolResults.ui.cancelled")}</span>
               </>
             )}
           </div>
@@ -79,7 +82,7 @@ export function UIConfirmation({
             disabled={disabled}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmLabel ?? t("chat.toolResults.ui.confirm")}
           </Button>
           <Button
             variant="outline"
@@ -87,7 +90,7 @@ export function UIConfirmation({
             disabled={disabled}
             onClick={onCancel}
           >
-            {cancelLabel}
+            {cancelLabel ?? t("common.cancel")}
           </Button>
         </div>
       </CardContent>

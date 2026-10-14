@@ -8,7 +8,9 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
+import { translateIfKey } from "@flatsby/i18n/message-key";
 import { groupFormSchema } from "@flatsby/validators/group";
 
 import { ProfileSection } from "~/components/ProfileSection";
@@ -23,6 +25,7 @@ import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function GroupDetailsScreen() {
+  const t = useTranslations();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { selectedGroupId } = useShoppingStore();
@@ -131,7 +134,7 @@ export default function GroupDetailsScreen() {
       {/* Group Profile Section */}
       <ProfileSection
         name={group.data.name}
-        subtitle={`${memberCount} member${memberCount !== 1 ? "s" : ""}`}
+        subtitle={t("group.memberCount", { count: memberCount })}
         fallbackText={group.data.name.substring(0, 2).toUpperCase()}
         showChangePhoto={isAdmin}
         disabled={true}
@@ -140,13 +143,13 @@ export default function GroupDetailsScreen() {
       {/* Group Name Edit Section */}
       <View className="bg-card gap-4 rounded-lg p-4">
         <Text className="text-foreground mb-4 text-lg font-semibold">
-          Group Details
+          {t("group.settings.details")}
         </Text>
 
         {!isAdmin && (
           <View className="bg-muted mb-4 rounded-lg p-3">
             <Text className="text-muted-foreground text-sm">
-              Only group administrators can edit group details.
+              {t("group.details.adminOnly")}
             </Text>
           </View>
         )}
@@ -155,7 +158,7 @@ export default function GroupDetailsScreen() {
           <View className="gap-4">
             <View>
               <Label htmlFor="name" className="mb-2">
-                Group Name
+                {t("group.nameLabel")}
               </Label>
               <FormField
                 name="name"
@@ -167,7 +170,7 @@ export default function GroupDetailsScreen() {
                       value={field.value}
                       onChangeText={field.onChange}
                       onBlur={field.onBlur}
-                      placeholder="Enter group name"
+                      placeholder={t("group.namePlaceholder")}
                       className="w-full"
                       error={!!form.formState.errors.name}
                       maxLength={256}
@@ -184,10 +187,10 @@ export default function GroupDetailsScreen() {
               disabled={form.formState.isSubmitting || !isAdmin}
               title={
                 form.formState.isSubmitting
-                  ? "Saving..."
+                  ? t("common.saving")
                   : !isAdmin
-                    ? "Not an admin"
-                    : "Save Changes"
+                    ? t("group.details.notAdmin")
+                    : t("group.details.saveChanges")
               }
               onPress={form.handleSubmit(handleSubmit)}
               className="w-full"
@@ -199,8 +202,11 @@ export default function GroupDetailsScreen() {
         {form.formState.errors.name && (
           <TimedAlert
             variant="destructive"
-            title="Error"
-            description={form.formState.errors.name.message}
+            title={t("common.error")}
+            description={translateIfKey(
+              t,
+              form.formState.errors.name.message ?? "",
+            )}
           />
         )}
 
@@ -208,8 +214,8 @@ export default function GroupDetailsScreen() {
         {showSuccessMessage && (
           <TimedAlert
             variant="success"
-            title="Success!"
-            description="Group name has been updated successfully."
+            title={t("group.details.success")}
+            description={t("group.details.nameUpdated")}
           />
         )}
       </View>

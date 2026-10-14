@@ -1,5 +1,6 @@
 import type { EditShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import { Form, FormControl, FormField, useForm } from "@flatsby/ui/form";
@@ -19,6 +20,7 @@ export const ShoppingListItemEditForm = ({
   onSubmit,
   onCancel,
 }: ShoppingListItemEditFormProps) => {
+  const t = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
     schema: editShoppingListItemFormSchema,
@@ -77,7 +79,7 @@ export const ShoppingListItemEditForm = ({
                 onCancel();
               }}
             >
-              cancel
+              {t("shoppingList.item.cancelLowercase")}
             </Button>
             <Button
               data-testid="shopping-list-item-edit-save"
@@ -85,7 +87,7 @@ export const ShoppingListItemEditForm = ({
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? t("common.saving") : t("common.save")}
             </Button>
           </div>
         </div>

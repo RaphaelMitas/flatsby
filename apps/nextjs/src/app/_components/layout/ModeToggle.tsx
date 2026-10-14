@@ -1,6 +1,7 @@
 "use client";
 
 import { Moon, Sun, SunMoon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
 import { Button } from "@flatsby/ui/button";
@@ -13,6 +14,7 @@ import {
 
 export function ModeToggle() {
   const { setTheme, theme } = useTheme();
+  const t = useTranslations("settings.theme");
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -24,8 +26,12 @@ export function ModeToggle() {
           ) : (
             <SunMoon className="text-primary mr-2 h-4 w-4" />
           )}
-          {theme === "dark" ? "Dark" : theme === "light" ? "Light" : "System"}
-          <span className="sr-only">Toggle theme</span>
+          {theme === "dark"
+            ? t("dark")
+            : theme === "light"
+              ? t("light")
+              : t("system")}
+          <span className="sr-only">{t("toggle")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -34,21 +40,21 @@ export function ModeToggle() {
           className={`w-56 cursor-pointer py-3`}
         >
           <SunMoon className="mr-2 h-4 w-4" />
-          System
+          {t("system")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("light")}
           className={`w-56 cursor-pointer py-3`}
         >
           <Sun className="mr-2 h-4 w-4" />
-          Light
+          {t("light")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("dark")}
           className={`w-56 cursor-pointer py-3`}
         >
           <Moon className="mr-2 h-4 w-4" />
-          Dark
+          {t("dark")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

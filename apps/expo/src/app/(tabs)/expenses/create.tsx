@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { ExpenseForm } from "~/components/expenses/ExpenseForm";
 import { trpc } from "~/utils/api";
@@ -8,12 +9,13 @@ import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function CreateExpense() {
   const { selectedGroupId } = useShoppingStore();
+  const t = useTranslations();
 
   if (!selectedGroupId) {
     return (
       <View className="flex-1 items-center justify-center p-4">
         <Text className="text-muted-foreground text-center">
-          No group selected. Please select a group first.
+          {t("common.noGroupSelectedHint")}
         </Text>
       </View>
     );
@@ -25,7 +27,7 @@ export default function CreateExpense() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" />
           <Text className="text-muted-foreground mt-4">
-            Loading group data...
+            {t("expenses.loadingGroupData")}
           </Text>
         </View>
       }
@@ -36,6 +38,7 @@ export default function CreateExpense() {
 }
 
 function CreateExpenseInner({ selectedGroupId }: { selectedGroupId: number }) {
+  const t = useTranslations();
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: selectedGroupId }),
   );
@@ -44,7 +47,7 @@ function CreateExpenseInner({ selectedGroupId }: { selectedGroupId: number }) {
     return (
       <View className="flex-1 items-center justify-center p-4">
         <Text className="text-destructive text-center">
-          Failed to load group data
+          {t("expenses.failedToLoadGroup")}
         </Text>
       </View>
     );

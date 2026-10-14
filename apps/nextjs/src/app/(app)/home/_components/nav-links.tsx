@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight, ShoppingCart, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@flatsby/ui/card";
 
@@ -28,17 +29,18 @@ function NavLinkItem({ href, icon, label }: NavLinkItemProps) {
 }
 
 export function NavLinks() {
+  const t = useTranslations();
   return (
     <div className="flex flex-col gap-4">
       <NavLinkItem
         href="/shopping-list"
         icon={<ShoppingCart className="h-5 w-5" />}
-        label="Shopping lists"
+        label={t("home.shoppingLists")}
       />
       <NavLinkItem
         href="/expenses"
         icon={<Wallet className="h-5 w-5" />}
-        label="Expenses"
+        label={t("navigation.expenses")}
       />
     </div>
   );

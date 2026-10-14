@@ -42,27 +42,27 @@ export const CHAT_MODELS: readonly ChatModelDefinition[] = [
   },
   {
     id: "google/gemini-3.1-flash-lite",
-    name: "Gemini 3.1 Flash Lite",
+    name: "Gemini 3.1 Flash Lite", // i18n-ignore
     provider: "google",
     supportsTools: true,
     pricing: { input: 0.25, output: 1.5 },
   },
   {
     id: "google/gemini-3-flash",
-    name: "Gemini 3 Flash",
+    name: "Gemini 3 Flash", // i18n-ignore
     provider: "google",
     supportsTools: true,
     pricing: { input: 0.5, output: 3.0 },
   },
 ];
 
-export function getModelTier(modelId: string): "Fast" | "Balanced" | "Premium" {
+export function getModelTier(modelId: string): "fast" | "balanced" | "premium" {
   const model = CHAT_MODELS.find((m) => m.id === modelId);
-  if (!model) return "Fast";
+  if (!model) return "fast";
   const avgCost = (model.pricing.input + model.pricing.output) / 2;
-  if (avgCost < 2) return "Fast";
-  if (avgCost < 12) return "Balanced";
-  return "Premium";
+  if (avgCost < 2) return "fast";
+  if (avgCost < 12) return "balanced";
+  return "premium";
 }
 
 export function modelSupportsTools(modelId: string): boolean {

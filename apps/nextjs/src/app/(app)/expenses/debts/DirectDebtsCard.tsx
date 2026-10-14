@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Check, ChevronDown } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
@@ -45,6 +46,7 @@ export function DirectDebtsCard({
   person,
   onSettle,
 }: DirectDebtsCardProps) {
+  const t = useTranslations("debts");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const expandable = kind === "direct";
 
@@ -58,7 +60,7 @@ export function DirectDebtsCard({
           <Check className="size-5" />
         </span>
         <div>
-          <p className="font-semibold">You're all square</p>
+          <p className="font-semibold">{t("allSquare")}</p>
           <p className="text-muted-foreground text-sm">{allSquare}</p>
         </div>
       </Card>
@@ -111,6 +113,8 @@ function DirectDebtRow({
   onToggle,
   onSettle,
 }: DirectDebtRowProps) {
+  const t = useTranslations("debts");
+  const locale = useLocale();
   const { groupMemberId, amounts, direction } = counterpart;
   const { name, image } = person(groupMemberId);
 
@@ -152,6 +156,7 @@ function DirectDebtRow({
                 {formatCurrencyFromCents({
                   cents: debt.amountInCents,
                   currency: debt.currency,
+                  locale,
                 })}
               </span>
               <Button
@@ -160,7 +165,7 @@ function DirectDebtRow({
                 data-testid="direct-debt-settle"
                 onClick={() => onSettle(debt)}
               >
-                Settle
+                {t("settle")}
               </Button>
             </div>
           ))}
@@ -192,6 +197,7 @@ function PairActivityList({
   person,
 }: PairActivityListProps) {
   const trpc = useTRPC();
+  const t = useTranslations("debts");
   const {
     data,
     isError,
@@ -214,7 +220,7 @@ function PairActivityList({
 
   let content: ReactNode;
   if (data?.pages[0]?.success === false || (isError && !data)) {
-    content = <EmptyLine>Couldn't load recent activity</EmptyLine>;
+    content = <EmptyLine>{t("activityLoadFailed")}</EmptyLine>;
   } else if (!items) {
     content = Array.from({ length: 2 }).map((_, i) => (
       <li key={i} className="flex items-center gap-3 py-2">
@@ -224,7 +230,7 @@ function PairActivityList({
       </li>
     ));
   } else if (items.length === 0) {
-    content = <EmptyLine>Nothing shared yet</EmptyLine>;
+    content = <EmptyLine>{t("nothingShared")}</EmptyLine>;
   } else {
     content = items.map((item) => (
       <PairActivityLine key={item.id} item={item} meId={meId} person={person} />
@@ -245,7 +251,7 @@ function PairActivityList({
           onClick={() => void fetchNextPage()}
           data-testid="pair-activity-more"
         >
-          {isFetchingNextPage ? "Loading…" : "Show more"}
+          {isFetchingNextPage ? t("loadingMore") : t("showMore")}
         </Button>
       )}
     </div>
@@ -265,7 +271,15 @@ function PairActivityLine({
   meId: number;
   person: PersonLookup;
 }) {
-  const { cents, title, subtitle } = describePairActivity(item, meId, person);
+  const t = useTranslations();
+  const locale = useLocale();
+  const { cents, title, subtitle } = describePairActivity(
+    item,
+    meId,
+    person,
+    t,
+    locale,
+  );
   const payer = person(item.paidByGroupMemberId);
 
   return (
@@ -281,7 +295,7 @@ function PairActivityLine({
           item.isSettlement ? "text-muted-foreground" : amountTone(cents),
         )}
       >
-        {formatSignedCents(cents, item.currency)}
+        {formatSignedCents(cents, item.currency, locale)}
       </span>
     </li>
   );

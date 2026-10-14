@@ -6,7 +6,9 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
+import { translateIfKey } from "@flatsby/i18n/message-key";
 import { updateUserNameFormSchema } from "@flatsby/validators/user";
 
 import { ProfileSection } from "~/components/ProfileSection";
@@ -26,6 +28,7 @@ import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 
 export default function ProfileScreen() {
+  const t = useTranslations();
   const queryClient = useQueryClient();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
@@ -90,15 +93,17 @@ export default function ProfileScreen() {
         {/* Name Edit Section */}
         <Card className="gap-4">
           <CardHeader>
-            <CardTitle>Display Name</CardTitle>
-            <CardDescription>Update your display name.</CardDescription>
+            <CardTitle>{t("settings.profile.displayName")}</CardTitle>
+            <CardDescription>
+              {t("settings.profile.displayNameDescription")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <View className="gap-4">
                 <View>
                   <Label htmlFor="name" className="mb-2">
-                    User Name
+                    {t("settings.profile.userName")}
                   </Label>
                   <FormField
                     name="name"
@@ -109,7 +114,7 @@ export default function ProfileScreen() {
                           value={field.value}
                           onChangeText={field.onChange}
                           onBlur={field.onBlur}
-                          placeholder="Enter your name"
+                          placeholder={t("settings.profile.namePlaceholder")}
                           className="w-full"
                           error={!!form.formState.errors.name}
                         />
@@ -122,7 +127,9 @@ export default function ProfileScreen() {
                   icon={form.formState.isSubmitting ? "loader" : "save"}
                   disabled={form.formState.isSubmitting}
                   title={
-                    form.formState.isSubmitting ? "Saving..." : "Save Changes"
+                    form.formState.isSubmitting
+                      ? t("common.saving")
+                      : t("settings.profile.saveChanges")
                   }
                   onPress={form.handleSubmit(handleSubmit)}
                   className="w-full"
@@ -134,8 +141,11 @@ export default function ProfileScreen() {
             {form.formState.errors.name && (
               <TimedAlert
                 variant="destructive"
-                title="Error"
-                description={form.formState.errors.name.message}
+                title={t("common.error")}
+                description={translateIfKey(
+                  t,
+                  form.formState.errors.name.message ?? "",
+                )}
               />
             )}
 
@@ -143,8 +153,8 @@ export default function ProfileScreen() {
             {showSuccessMessage && (
               <TimedAlert
                 variant="success"
-                title="Success!"
-                description="Your name has been updated successfully."
+                title={t("settings.profile.success")}
+                description={t("settings.profile.nameUpdated")}
               />
             )}
           </CardContent>

@@ -1,5 +1,6 @@
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import { ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
@@ -25,6 +26,7 @@ export function CategorySelector({
   value,
   onChange,
 }: CategorySelectorProps) {
+  const t = useTranslations();
   const selectedCategory =
     categories.find((c) => c.id === value) ?? categories[0];
 
@@ -52,7 +54,9 @@ export function CategorySelector({
               />
             )}
             {!iconButton && (
-              <span className="text-foreground">{selectedCategory?.name}</span>
+              <span className="text-foreground">
+                {selectedCategory && t(selectedCategory.name)}
+              </span>
             )}
           </span>
           {!iconButton && (
@@ -63,7 +67,7 @@ export function CategorySelector({
       <SheetContent side="bottom" className="h-[80vh]">
         <SheetHeader>
           <SheetTitle data-testid="category-selector-title">
-            Select Category
+            {t("common.selectCategory")}
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="mt-4 h-[calc(80vh-6rem)]">
@@ -85,9 +89,9 @@ export function CategorySelector({
                   )}
                 />
                 <div className="flex flex-col text-left">
-                  <div className="font-medium">{category.name}</div>
+                  <div className="font-medium">{t(category.name)}</div>
                   <div className="text-muted-foreground text-sm">
-                    {category.description}
+                    {t(category.description)}
                   </div>
                 </div>
               </Button>

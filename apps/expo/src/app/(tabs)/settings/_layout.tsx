@@ -1,38 +1,40 @@
 import { Stack } from "expo-router";
+import { useTranslations } from "use-intl";
 
 import { useThemeColors, useThemedScreenOptions } from "~/lib/utils";
 
 export default function SettingsLayout() {
   const themedScreenOptions = useThemedScreenOptions();
   const { getColor } = useThemeColors();
+  const t = useTranslations();
 
   return (
     <Stack screenOptions={themedScreenOptions}>
       <Stack.Screen
         name="index"
         options={{
-          title: "Settings",
+          title: t("navigation.settings"),
           headerShown: false,
         }}
       />
       <Stack.Screen
         name="account"
         options={{
-          title: "Account",
+          title: t("navigation.account"),
           headerBackTitle: "",
         }}
       />
       <Stack.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("navigation.profile"),
           headerBackTitle: "",
         }}
       />
       <Stack.Screen
         name="danger"
         options={{
-          title: "Danger Zone",
+          title: t("navigation.dangerZone"),
           headerBackTitle: "",
           headerTintColor: getColor("destructive"),
         }}
@@ -40,7 +42,7 @@ export default function SettingsLayout() {
       <Stack.Screen
         name="credits"
         options={{
-          title: "Buy Credits",
+          title: t("settings.items.buyCredits"),
           headerBackTitle: "",
           presentation: "modal",
         }}
@@ -48,28 +50,28 @@ export default function SettingsLayout() {
       <Stack.Screen
         name="group-settings/index"
         options={{
-          title: "Group Settings",
+          title: t("navigation.groupSettings"),
           headerBackTitle: "",
         }}
       />
       <Stack.Screen
         name="group-settings/members"
         options={{
-          title: "Members",
+          title: t("navigation.members"),
           headerBackTitle: "",
         }}
       />
       <Stack.Screen
         name="group-settings/group-details"
         options={{
-          title: "Group Details",
+          title: t("navigation.groupDetails"),
           headerBackTitle: "",
         }}
       />
       <Stack.Screen
         name="group-settings/member-actions"
         options={{
-          title: "Member Actions",
+          title: t("navigation.memberActions"),
           presentation: "modal",
           headerShown: true,
         }}
@@ -77,7 +79,7 @@ export default function SettingsLayout() {
       <Stack.Screen
         name="group-settings/import-expenses"
         options={{
-          title: "Import Expenses",
+          title: t("splitwiseImport.importExpenses"),
           headerBackTitle: "",
         }}
       />

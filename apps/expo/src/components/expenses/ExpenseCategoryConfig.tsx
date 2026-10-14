@@ -1,4 +1,3 @@
-import type { ExpenseCategoryGroup } from "@flatsby/validators/expenses/categories";
 import type {
   CategoryColorKey,
   CategoryColorVariant,
@@ -7,7 +6,7 @@ import type {
 import {
   AI_AUTO_DETECT,
   expenseCategoryGroupColorKeys,
-  expenseCategoryGroupLabels,
+  expenseCategoryLabelKeys,
   expenseSubcategories,
 } from "@flatsby/validators/expenses/categories";
 import {
@@ -23,45 +22,28 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 const iconSize = 14;
 
 interface SubcategoryEntry {
-  name: string;
-  description: string;
   iconName: IconProps["name"];
-  groupId: ExpenseCategoryGroup | "auto";
-  groupName: string;
   colorKey: CategoryColorKey;
 }
 
 const otherEntry: SubcategoryEntry = {
-  name: "Other",
-  description: "Other",
   iconName: "circle-help",
-  groupId: "other",
-  groupName: "Other",
   colorKey: "zinc",
 };
 
 const subcategoryRecord: Record<string, SubcategoryEntry> = {
   [AI_AUTO_DETECT]: {
-    name: "AI Auto Detect",
-    description: "AI will detect the category from the description",
     iconName: "wand-sparkles",
-    groupId: "auto",
-    groupName: "Auto",
     colorKey: "primary",
   },
 };
 
 for (const sub of expenseSubcategories) {
-  const groupLabel = expenseCategoryGroupLabels[sub.group];
   const rawColorKey = expenseCategoryGroupColorKeys[sub.group];
 
   if (isCategoryColorKey(rawColorKey)) {
     subcategoryRecord[sub.id] = {
-      name: sub.label,
-      description: groupLabel,
       iconName: sub.icon,
-      groupId: sub.group,
-      groupName: groupLabel,
       colorKey: rawColorKey,
     };
   }
@@ -81,9 +63,7 @@ export function getExpenseCategoryData({
   const borderColor = categoryBorderColorMap[entry.colorKey];
 
   return {
-    name: entry.name,
-    description: entry.description,
-    groupName: entry.groupName,
+    ...expenseCategoryLabelKeys(subcategoryId),
     color,
     bgColor,
     borderColor,

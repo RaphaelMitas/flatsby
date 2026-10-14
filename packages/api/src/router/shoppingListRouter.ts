@@ -10,12 +10,11 @@ import {
   shoppingLists,
   users,
 } from "@flatsby/db/schema";
+import { messages } from "@flatsby/i18n/messages";
 import {
   categoryCountsSchema,
-  categoryDescriptions,
   categoryIds,
   categoryIdSchema,
-  categoryNames,
   isCategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 import {
@@ -50,6 +49,7 @@ export const shoppingList = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Verify user is member of group
           GroupUtils.requireMemberAccess(
@@ -71,7 +71,7 @@ export const shoppingList = createTRPCRouter({
                       name: true,
                     },
                   }),
-                "shopping list",
+                "shoppingList",
               ),
               (shoppingList) => shoppingList.name,
             ),
@@ -87,6 +87,7 @@ export const shoppingList = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Verify group membership and fetch shopping lists
           GroupUtils.requireMemberAccess(
@@ -122,7 +123,7 @@ export const shoppingList = createTRPCRouter({
                       },
                     },
                   }),
-                "get shopping lists",
+                "group",
               ),
               (group) => {
                 // Transform shopping lists with unchecked item counts
@@ -149,9 +150,10 @@ export const shoppingList = createTRPCRouter({
     .input(createShoppingListSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Validate input name
-          ValidationUtils.notEmpty(input.name, "Shopping list name"),
+          ValidationUtils.notEmpty(input.name, "shoppingListName"),
           (validName) =>
             Effect.flatMap(
               // Check if user is member of group
@@ -236,6 +238,7 @@ export const shoppingList = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Verify group membership and get current member info
           GroupUtils.getUserMembership(
@@ -279,7 +282,7 @@ export const shoppingList = createTRPCRouter({
                       },
                     },
                   }),
-                "shopping list",
+                "shoppingList",
               ),
               (shoppingList) => ({
                 shoppingList,
@@ -295,6 +298,7 @@ export const shoppingList = createTRPCRouter({
     .output(getApiResultZod(z.object({ success: z.boolean() })))
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Verify user is member of group
           GroupUtils.requireMemberAccess(
@@ -316,7 +320,7 @@ export const shoppingList = createTRPCRouter({
                       id: true,
                     },
                   }),
-                "shopping list",
+                "shoppingList",
               ),
               () =>
                 // Delete shopping list and all items in transaction
@@ -358,9 +362,10 @@ export const shoppingList = createTRPCRouter({
     .input(updateShoppingListSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Validate input name
-          ValidationUtils.notEmpty(input.name, "Shopping list name"),
+          ValidationUtils.notEmpty(input.name, "shoppingListName"),
           (validName) =>
             Effect.flatMap(
               // Get shopping list with group information and verify user access
@@ -381,14 +386,14 @@ export const shoppingList = createTRPCRouter({
                       },
                     },
                   }),
-                "shopping list",
+                "shoppingList",
               ),
               (shoppingList) =>
                 Effect.flatMap(
                   DbUtils.ensureGroupMember(
                     ctx.session.user.id,
                     shoppingList.group.groupMembers,
-                    "You are not a member of this group",
+                    "errors.notGroupMember",
                   ),
                   () =>
                     Effect.map(
@@ -434,6 +439,7 @@ export const shoppingList = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Verify user is member of group
           GroupUtils.requireMemberAccess(
@@ -455,7 +461,7 @@ export const shoppingList = createTRPCRouter({
                       id: true,
                     },
                   }),
-                "shopping list",
+                "shoppingList",
               ),
               () =>
                 // Fetch shopping list items with pagination
@@ -535,6 +541,7 @@ export const shoppingList = createTRPCRouter({
     .output(getApiResultZod(categoryCountsSchema))
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Verify user is member of group
           GroupUtils.requireMemberAccess(
@@ -556,7 +563,7 @@ export const shoppingList = createTRPCRouter({
                       id: true,
                     },
                   }),
-                "shopping list",
+                "shoppingList",
               ),
               () =>
                 // Get category counts for unchecked items
@@ -602,9 +609,10 @@ export const shoppingList = createTRPCRouter({
     .input(createShoppingListItemSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Validate input name
-          ValidationUtils.notEmpty(input.name, "Shopping list item name"),
+          ValidationUtils.notEmpty(input.name, "shoppingListItemName"),
           (validName) =>
             Effect.flatMap(
               // Verify user is member of group
@@ -627,7 +635,7 @@ export const shoppingList = createTRPCRouter({
                           id: true,
                         },
                       }),
-                    "shopping list",
+                    "shoppingList",
                   ),
                   () =>
                     Effect.flatMap(
@@ -675,9 +683,10 @@ export const shoppingList = createTRPCRouter({
     .input(updateShoppingListItemSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Validate input name
-          ValidationUtils.notEmpty(input.name, "Shopping list item name"),
+          ValidationUtils.notEmpty(input.name, "shoppingListItemName"),
           (validName) =>
             Effect.flatMap(
               // Find shopping list item with group membership verification
@@ -705,7 +714,7 @@ export const shoppingList = createTRPCRouter({
                       },
                     },
                   }),
-                "shopping list item",
+                "shoppingListItem",
               ),
               (shoppingListItem) =>
                 Effect.flatMap(
@@ -714,11 +723,7 @@ export const shoppingList = createTRPCRouter({
                     ? Effect.succeed(
                         shoppingListItem.shoppingList.group.groupMembers[0],
                       )
-                    : fail.forbidden(
-                        "update items in this",
-                        "shopping list",
-                        "You are not a member of this group",
-                      ),
+                    : fail.forbidden("errors.notGroupMember"),
 
                   (groupMemberRes) =>
                     Effect.flatMap(
@@ -777,6 +782,7 @@ export const shoppingList = createTRPCRouter({
     .input(deleteShoppingListItemSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Find shopping list item with group membership verification
           DbUtils.findOneOrFail(
@@ -803,7 +809,7 @@ export const shoppingList = createTRPCRouter({
                   },
                 },
               }),
-            "shopping list item",
+            "shoppingListItem",
           ),
           (shoppingListItem) =>
             Effect.flatMap(
@@ -811,7 +817,7 @@ export const shoppingList = createTRPCRouter({
               DbUtils.ensureGroupMember(
                 ctx.session.user.id,
                 shoppingListItem.shoppingList.group.groupMembers,
-                "You are not a member of this group",
+                "errors.notGroupMember",
               ),
               () =>
                 // Delete shopping list item
@@ -845,6 +851,7 @@ export const shoppingList = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.map(
           // Update user's last used preferences
           safeDbOperation(() => {
@@ -887,6 +894,7 @@ export const shoppingList = createTRPCRouter({
       const escaped = input.query.replace(/%/g, "\\%").replace(/_/g, "\\_");
 
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           GroupUtils.requireMemberAccess(
             ctx.db,
@@ -931,9 +939,10 @@ export const shoppingList = createTRPCRouter({
     }),
 });
 
+const { names, descriptions } = messages.en.shoppingCategories;
 const itemCategoryOptions = categoryIds.map((id) => ({
   id,
-  description: `${categoryNames[id]}: ${categoryDescriptions[id]}`,
+  description: `${names[id]}: ${descriptions[id]}`,
 }));
 
 const categorizeItem = (userId: string, itemName: string) =>
@@ -941,7 +950,7 @@ const categorizeItem = (userId: string, itemName: string) =>
     userId,
     feature: "categorize-item",
     instructions:
-      "Which grocery category does this shopping list item belong to?",
+      "Which grocery category does this shopping list item belong to?", // i18n-ignore: model prompt
     options: itemCategoryOptions,
     input: itemName,
     fallback: "other",

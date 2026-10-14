@@ -1,6 +1,7 @@
 import type { ExpenseSubcategoryId } from "@flatsby/validators/expenses/categories";
 import { useMemo } from "react";
 import { View } from "react-native";
+import { useTranslations } from "use-intl";
 
 import {
   AI_AUTO_DETECT,
@@ -30,6 +31,7 @@ export function ExpenseCategoryPicker({
   autoDetect,
   ...props
 }: ExpenseCategoryPickerProps) {
+  const t = useTranslations();
   const categoryItems = useMemo(() => {
     const items: BottomSheetPickerItem[] = [];
     for (const subcategoryId of expenseSubcategoryIdsWithAuto) {
@@ -37,15 +39,15 @@ export function ExpenseCategoryPicker({
       const data = getExpenseCategoryData({ subcategoryId });
       items.push({
         id: subcategoryId,
-        title: data.name,
-        description: data.description,
+        title: t(data.name),
+        description: t(data.description),
         icon: (
           <View className="flex items-center justify-center">{data.icon}</View>
         ),
       });
     }
     return items;
-  }, [autoDetect]);
+  }, [autoDetect, t]);
 
   const handleSelect = (item: BottomSheetPickerItem) => {
     if (item.id === AI_AUTO_DETECT) onChange(undefined);
@@ -57,9 +59,9 @@ export function ExpenseCategoryPicker({
       items={categoryItems}
       selectedId={value ?? AI_AUTO_DETECT}
       onSelect={handleSelect}
-      triggerTitle={
-        getExpenseCategoryData({ subcategoryId: value ?? AI_AUTO_DETECT }).name
-      }
+      triggerTitle={t(
+        getExpenseCategoryData({ subcategoryId: value ?? AI_AUTO_DETECT }).name,
+      )}
       {...props}
     />
   );

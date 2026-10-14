@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Settings } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   Select,
@@ -19,6 +20,7 @@ import { useGroupContext } from "~/app/_components/context/group-context";
 const CREATE_GROUP_VALUE = "__create_group__";
 
 export function GroupHeader() {
+  const t = useTranslations("home");
   const router = useRouter();
   const { currentGroup, groups, switchGroup } = useGroupContext();
   const [isSwitching, setIsSwitching] = useState(false);
@@ -60,7 +62,7 @@ export function GroupHeader() {
           <SelectItem value={CREATE_GROUP_VALUE}>
             <span className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Create group
+              {t("createGroup")}
             </span>
           </SelectItem>
         </SelectContent>

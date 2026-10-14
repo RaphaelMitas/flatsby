@@ -8,12 +8,14 @@ import {
   Receipt,
   ShoppingCartIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 
 export function BottomNavigation() {
+  const t = useTranslations("navigation");
   const pathname = usePathname();
   const { hasCurrentGroup } = useGroupContext();
 
@@ -40,7 +42,7 @@ export function BottomNavigation() {
           prefetch={false}
         >
           <HomeIcon className="h-6 w-6" />
-          <span className="text-xs">Home</span>
+          <span className="text-xs">{t("home")}</span>
         </Link>
         <Link
           href={hasCurrentGroup ? "/shopping-list" : "/group"}
@@ -51,7 +53,7 @@ export function BottomNavigation() {
           prefetch={false}
         >
           <ShoppingCartIcon className="h-6 w-6" />
-          <span className="text-xs">Shopping</span>
+          <span className="text-xs">{t("shopping")}</span>
         </Link>
         <Link
           href={hasCurrentGroup ? "/expenses" : "/group"}
@@ -62,7 +64,7 @@ export function BottomNavigation() {
           prefetch={false}
         >
           <Receipt className="h-6 w-6" />
-          <span className="text-xs">Expenses</span>
+          <span className="text-xs">{t("expenses")}</span>
         </Link>
         <Link
           href="/chat"
@@ -73,7 +75,7 @@ export function BottomNavigation() {
           prefetch={false}
         >
           <MessageSquareIcon className="h-6 w-6" />
-          <span className="text-xs">Chat</span>
+          <span className="text-xs">{t("chat")}</span>
         </Link>
       </nav>
     </div>

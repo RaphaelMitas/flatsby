@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 interface LegalSectionProps {
   id?: string;
   children: React.ReactNode;
@@ -84,5 +86,69 @@ export function LegalLink({
     >
       {children}
     </a>
+  );
+}
+
+export function LegalTableOfContents({
+  title,
+  items,
+}: {
+  title: string;
+  items: readonly { id: string; label: string }[];
+}) {
+  return (
+    <nav className="bg-muted/50 mb-10 rounded-lg p-4">
+      <h3 className="mb-3 text-sm font-semibold">{title}</h3>
+      <ol className="text-muted-foreground list-inside list-decimal space-y-1.5 text-sm">
+        {items.map((item) => (
+          <li key={item.id}>
+            <a
+              href={`#${item.id}`}
+              className="hover:text-foreground underline-offset-4 hover:underline"
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
+export function strong(chunks: React.ReactNode) {
+  return <strong>{chunks}</strong>;
+}
+
+export function LegalItems<Key extends string>({
+  keys,
+  render,
+}: {
+  keys: readonly Key[];
+  render: (key: Key) => React.ReactNode;
+}) {
+  return (
+    <LegalList>
+      {keys.map((key) => (
+        <li key={key}>{render(key)}</li>
+      ))}
+    </LegalList>
+  );
+}
+
+export function OperatorAddress({ lines }: { lines: readonly string[] }) {
+  return (
+    <LegalAddress>
+      {/* i18n-ignore */}
+      Raphael Mitas
+      <br />
+      {/* i18n-ignore */}
+      Weiterstädter Str. 65
+      {lines.map((line) => (
+        <Fragment key={line}>
+          <br />
+          {line}
+        </Fragment>
+      ))}
+    </LegalAddress>
   );
 }

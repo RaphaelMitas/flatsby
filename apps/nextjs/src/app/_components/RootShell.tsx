@@ -16,6 +16,8 @@ import "~/app/globals.css";
 export const rootMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "Flatsby",
+  // i18n-ignore: noindex meta description, never shown in the app
+  // i18n-ignore
   description: "Flat Companion",
   icons: [
     {

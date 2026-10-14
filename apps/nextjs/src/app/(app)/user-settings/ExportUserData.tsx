@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import { toast } from "@flatsby/ui/toast";
@@ -10,6 +11,7 @@ import { useTRPC } from "~/trpc/react";
 
 export default function ExportUserData() {
   const trpc = useTRPC();
+  const t = useTranslations("settings.page");
   const [isExporting, setIsExporting] = useState(false);
 
   const { refetch } = useQuery({
@@ -36,7 +38,7 @@ export default function ExportUserData() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } else {
-        toast.error("Couldn't export your data. Please try again.");
+        toast.error(t("exportFailed"));
       }
     } finally {
       setIsExporting(false);
@@ -45,7 +47,7 @@ export default function ExportUserData() {
 
   return (
     <Button onClick={handleExport} disabled={isExporting} variant="outline">
-      {isExporting ? "Exporting..." : "Export My Data"}
+      {isExporting ? t("exporting") : t("exportData")}
     </Button>
   );
 }

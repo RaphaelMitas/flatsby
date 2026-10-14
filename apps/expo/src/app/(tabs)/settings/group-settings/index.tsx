@@ -6,6 +6,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import DeleteConfirmationModal from "~/components/DeleteConfirmationModal";
 import { SettingsHeader } from "~/components/settings/SettingsHeader";
@@ -18,6 +19,7 @@ import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function GroupSettingsIndex() {
+  const t = useTranslations();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { selectedGroupId, clearSelectedGroup } = useShoppingStore();
@@ -98,49 +100,49 @@ export default function GroupSettingsIndex() {
           <Link href="/(tabs)/settings/group-settings/group-details" asChild>
             <SettingsItem
               testID="group-settings-details"
-              title="Group Details"
-              subtitle="Edit your group details"
+              title={t("group.settings.details")}
+              subtitle={t("group.settings.detailsSubtitle")}
               iconName="settings"
             />
           </Link>
           <Link href="/(tabs)/settings/group-settings/members" asChild>
             <SettingsItem
               testID="group-settings-members"
-              title="Members"
-              subtitle="Manage your group members"
+              title={t("group.settings.members")}
+              subtitle={t("group.settings.membersSubtitle")}
               iconName="users"
             />
           </Link>
           <Link href="/(tabs)/home/shopping-lists" asChild>
             <SettingsItem
-              title="Select Shopping List"
-              subtitle="Select, create, and edit shopping lists"
+              title={t("group.settings.selectShoppingList")}
+              subtitle={t("group.settings.selectShoppingListSubtitle")}
               iconName="shopping-cart"
             />
           </Link>
           <Link href="/(tabs)/settings/group-settings/import-expenses" asChild>
             <SettingsItem
-              title="Import Expenses"
-              subtitle="Import from Splitwise CSV"
+              title={t("group.settings.importExpenses")}
+              subtitle={t("group.settings.importExpensesSubtitle")}
               iconName="upload"
             />
           </Link>
         </SettingsSection>
 
-        <SettingsSection title="Change Group">
+        <SettingsSection title={t("group.settings.changeGroup")}>
           <Link href="/settings/manage-groups" asChild>
             <SettingsItem
-              title="Change Group"
-              subtitle="Change selected group or create a new one"
+              title={t("group.settings.changeGroup")}
+              subtitle={t("group.settings.changeGroupSubtitle")}
               iconName="arrow-left-right"
             />
           </Link>
         </SettingsSection>
-        <SettingsSection title="Danger Zone">
+        <SettingsSection title={t("navigation.dangerZone")}>
           <SettingsItem
             testID="group-settings-delete"
-            title="Delete Group"
-            subtitle="Permanently delete this group"
+            title={t("group.delete.title")}
+            subtitle={t("group.delete.subtitle")}
             iconName="trash-2"
             onPress={() => setShowDeleteModal(true)}
             variant="destructive"
@@ -153,9 +155,11 @@ export default function GroupSettingsIndex() {
         onClose={handleCloseModal}
         onConfirm={handleDeleteGroup}
         itemName={group.data.name}
-        title="Delete Group"
-        description={`Are you sure you want to delete "${group.data.name}"? This action cannot be undone and will permanently remove all data associated with this group.`}
-        confirmationLabel={`To confirm deletion, please type the group name: ${group.data.name}`}
+        title={t("group.delete.title")}
+        description={t("group.delete.description", { name: group.data.name })}
+        confirmationLabel={t("group.delete.confirmationLabel", {
+          name: group.data.name,
+        })}
         needsConfirmationInput
       />
     </SafeAreaView>

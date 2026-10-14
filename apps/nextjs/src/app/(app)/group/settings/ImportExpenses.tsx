@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2, Upload } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   AlertDialog,
@@ -37,6 +38,8 @@ export default function ImportExpenses({
   groupId,
   groupName,
 }: ImportExpensesProps) {
+  const t = useTranslations("splitwiseImport");
+  const tCommon = useTranslations("common");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmName, setConfirmName] = useState("");
@@ -59,15 +62,13 @@ export default function ImportExpenses({
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Import Expenses</CardTitle>
-          <CardDescription>
-            Import expense history from other apps.
-          </CardDescription>
+          <CardTitle>{t("importExpenses")}</CardTitle>
+          <CardDescription>{t("importExpensesDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="flex gap-2">
           <Button variant="outline" onClick={() => setDialogOpen(true)}>
             <Upload className="mr-2 h-4 w-4" />
-            Import from Splitwise
+            {t("importFromSplitwise")}
           </Button>
 
           <AlertDialog
@@ -83,22 +84,21 @@ export default function ImportExpenses({
                 disabled={deleteAllMutation.isPending}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                {deleteAllMutation.isPending ? "Deleting..." : "Reset Expenses"}
+                {deleteAllMutation.isPending
+                  ? tCommon("deleting")
+                  : t("resetExpenses")}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete all expenses?</AlertDialogTitle>
+                <AlertDialogTitle>{t("deleteAllTitle")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete all expenses and settlements in{" "}
-                  <span className="font-semibold">{groupName}</span>. This
-                  action cannot be undone.
+                  {t.rich("deleteAllDescription", { groupName, group: bold })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="space-y-2">
                 <Label htmlFor="confirm-group-name">
-                  Type <span className="font-semibold">{groupName}</span> to
-                  confirm
+                  {t.rich("typeToConfirm", { groupName, group: bold })}
                 </Label>
                 <Input
                   id="confirm-group-name"
@@ -108,7 +108,7 @@ export default function ImportExpenses({
                 />
               </div>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
                 <Button
                   variant="destructive"
                   disabled={confirmName !== groupName}
@@ -117,7 +117,7 @@ export default function ImportExpenses({
                     setDeleteDialogOpen(false);
                   }}
                 >
-                  Delete all
+                  {t("deleteAll")}
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -132,4 +132,8 @@ export default function ImportExpenses({
       />
     </>
   );
+}
+
+function bold(chunks: React.ReactNode) {
+  return <span className="font-semibold">{chunks}</span>;
 }

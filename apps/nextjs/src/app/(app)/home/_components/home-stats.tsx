@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CheckCircle2, MessageSquare, TrendingUp, Wallet } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@flatsby/ui/card";
 import { Skeleton } from "@flatsby/ui/skeleton";
@@ -69,9 +70,10 @@ function StatCard({ icon, value, format, label, colorClass }: StatCardProps) {
 }
 
 function StatsHeader() {
+  const t = useTranslations("home.stats");
   return (
     <div className="flex items-end justify-between pr-4">
-      <p className="text-muted-foreground mb-2 text-sm">Last 30 days</p>
+      <p className="text-muted-foreground mb-2 text-sm">{t("last30Days")}</p>
       <PeekingCat variant="home" className="h-8 w-16" />
     </div>
   );
@@ -90,6 +92,8 @@ function StatCardSkeleton() {
 }
 
 function HomeStatsInner() {
+  const t = useTranslations("home.stats");
+  const locale = useLocale();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
   const handleApiError = useHandleApiError();
@@ -145,7 +149,7 @@ function HomeStatsInner() {
   const isOwed = userBalance ? userBalance.amount > 0 : false;
 
   const formatCurrency = (currency: string) => (cents: number) =>
-    formatCurrencyFromCents({ cents, currency });
+    formatCurrencyFromCents({ cents, currency, locale });
 
   return (
     <div>
@@ -155,19 +159,19 @@ function HomeStatsInner() {
           icon={<Wallet className="h-5 w-5" />}
           value={spendingCents}
           format={formatCurrency(spendingCurrency)}
-          label="spent"
+          label={t("spent")}
           colorClass="text-blue-500"
         />
         <StatCard
           icon={<CheckCircle2 className="h-5 w-5" />}
           value={itemsCompleted}
-          label="items"
+          label={t("items")}
           colorClass="text-green-500"
         />
         <StatCard
           icon={<MessageSquare className="h-5 w-5" />}
           value={chatMessages}
-          label="messages"
+          label={t("messages")}
           colorClass="text-purple-500"
         />
         <StatCard
@@ -175,7 +179,11 @@ function HomeStatsInner() {
           value={balanceAmount}
           format={formatCurrency(balanceCurrency)}
           label={
-            userBalance ? (isOwed ? "owed to you" : "you owe") : "balanced"
+            userBalance
+              ? isOwed
+                ? t("owedToYou")
+                : t("youOwe")
+              : t("balanced")
           }
           colorClass={
             userBalance

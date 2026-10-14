@@ -18,6 +18,7 @@ const config = {
     "@flatsby/validators",
   ],
   reactCompiler: true,
+  experimental: { globalNotFound: true },
   compiler: {
     reactRemoveProperties:
       process.env.E2E_TESTING !== "true"

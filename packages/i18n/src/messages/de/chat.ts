@@ -1,3 +1,181 @@
 import type { Messages } from "../../messages";
 
-export const chat = {} satisfies Messages["chat"];
+export const chat = {
+  consent: {
+    title: "Datenweitergabe an KI-Drittanbieter",
+    sharedWith: "Deine Daten werden weitergegeben an",
+    via: "über {gateway}: {description}",
+    dataShared: "An Dritte weitergegebene Daten",
+    notShared: "NICHT weitergegebene Daten",
+    howUsed: "Wie deine Daten verwendet werden",
+    accept: "Ja, ich stimme zu",
+    decline: "Nein, nicht weitergeben",
+    privacyPolicy: "Vollständige Datenschutzerklärung ansehen",
+    disclosure: {
+      sharingStatement:
+        "Diese Funktion gibt deine Daten an KI-Dienste von Drittanbietern weiter.",
+      openaiDescription: "Verarbeitet Chatnachrichten mit GPT-Modellen",
+      googleDescription: "Verarbeitet Chatnachrichten mit Gemini-Modellen",
+      gatewayDescription:
+        "Leitet deine Daten an die oben genannten KI-Anbieter weiter",
+      dataShared: {
+        messages: "Deine Chatnachrichten und dein Unterhaltungsverlauf",
+        shoppingLists:
+          "Namen und Artikel deiner Einkaufslisten (wenn du nach Einkäufen fragst)",
+        expenses:
+          "Beschreibungen und Beträge von Ausgaben (wenn du nach Ausgaben fragst)",
+        members:
+          "Namen der Gruppenmitglieder (wenn du nach deinem Haushalt fragst)",
+      },
+      notShared: {
+        credentials: "Deine E-Mail-Adresse oder Zugangsdaten",
+        payment: "Zahlungsinformationen",
+      },
+      usage:
+        "Deine Daten werden ausschließlich weitergegeben, um KI-Antworten zu erzeugen. Sie werden nicht zum Training von KI-Modellen verwendet. Anonyme Nutzungsmetriken (etwa welches Modell verwendet wurde, Tokenanzahl und Antwortzeit) werden erfasst, um den Dienst zu verbessern.",
+      permissionRequest:
+        "Bist du damit einverstanden, dass deine Daten an diese KI-Drittanbieter weitergegeben werden?",
+    },
+  },
+  conversation: {
+    emptyTitle: "Starte eine Unterhaltung",
+    emptyDescription: "Frag mich, was du willst, und ich helfe dir weiter",
+    credits: "{credits} Credits",
+    regenerate: "Neu generieren",
+    limitReached: "Nachrichtenlimit erreicht ({limit})",
+    startNewChat: "Neuen Chat starten",
+  },
+  footer: {
+    toolsBannerTitle: "Wähle eine Gruppe, um KI-Werkzeuge zu aktivieren",
+    toolsBannerDescription:
+      "Mit Werkzeugen kann die KI deine Einkaufslisten und Ausgaben verwalten",
+    dismiss: "ausblenden",
+    placeholder: "Schreib deine Nachricht...",
+  },
+  modelSelector: {
+    selectModel: "Modell auswählen",
+    searchModels: "Modelle suchen...",
+    noModels: "Keine Modelle gefunden.",
+    tools: "Werkzeuge",
+    flatsbyTools: "Flatsby-Werkzeuge",
+    flatsbyToolsDescription: "Einkaufslisten, Ausgaben & mehr",
+    selectGroupForTools: "Wähle eine Gruppe, um Werkzeuge zu aktivieren",
+    tier: {
+      fast: "Schnell",
+      balanced: "Ausgewogen",
+      premium: "Premium",
+    },
+  },
+  toolResults: {
+    expenseFallback: "Ausgabe",
+    paidBy: "Bezahlt von {name}",
+    modify: {
+      item: {
+        create: "„{name}“ hinzugefügt",
+        update: "„{name}“ aktualisiert",
+        delete: "„{name}“ gelöscht",
+      },
+      checkedOff: "(abgehakt)",
+      unchecked: "(nicht abgehakt)",
+      expense: {
+        create: "Ausgabe erstellt",
+        update: "Ausgabe aktualisiert",
+        delete: "Ausgabe gelöscht",
+      },
+      splitAmong: "Aufgeteilt auf:",
+      shoppingList: {
+        create: "Einkaufsliste <name>„{listName}“</name> erstellt",
+        update: "Einkaufsliste <name>„{listName}“</name> aktualisiert",
+        delete: "Einkaufsliste <name>„{listName}“</name> gelöscht",
+      },
+      group: {
+        create: "Gruppe „{name}“ erstellt",
+        update: "Gruppe „{name}“ aktualisiert",
+        delete: "Gruppe „{name}“ gelöscht",
+      },
+    },
+    search: {
+      shoppingLists: "Einkaufslisten",
+      listCount: "({count, plural, one {# Liste} other {# Listen}})",
+      itemCount: "{count} Artikel",
+      itemCountParens: "({count} Artikel)",
+      recentExpenses: "Letzte Ausgaben",
+      expenseCount: "({count, plural, one {# Ausgabe} other {# Ausgaben}})",
+      groupMembers: "Gruppenmitglieder",
+      memberCountParens:
+        "({count, plural, one {# Mitglied} other {# Mitglieder}})",
+      you: "(du)",
+      role: {
+        admin: "Admin",
+        member: "Mitglied",
+      },
+      debtsIn: "Schulden in {group}",
+      settledUp: "Alles ausgeglichen!",
+      groupInfo: "Gruppeninfo",
+      memberCount: "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+      youreAdmin: "(du bist Admin)",
+    },
+    ui: {
+      confirm: "Bestätigen",
+      confirmed: "Bestätigt",
+      cancelled: "Abgebrochen",
+      answered: "Beantwortet: {answer}",
+      selected: "Ausgewählt: {labels}",
+      confirmSelection: "Auswahl bestätigen",
+    },
+  },
+  elements: {
+    toolStatus: {
+      pending: "Ausstehend",
+      running: "Läuft",
+      awaitingApproval: "Wartet auf Freigabe",
+      responded: "Beantwortet",
+      completed: "Abgeschlossen",
+      denied: "Abgelehnt",
+    },
+    parameters: "Parameter",
+    result: "Ergebnis",
+    thinking: "Denkt nach...",
+    thoughtFewSeconds: "Hat ein paar Sekunden nachgedacht",
+    thoughtFor:
+      "Hat {duration, plural, one {# Sekunde} other {# Sekunden}} nachgedacht",
+    usedSources: "{count, plural, one {# Quelle} other {# Quellen}} verwendet",
+    contextUsage: "Kontextnutzung des Modells",
+    totalCost: "Gesamtkosten",
+    input: "Eingabe",
+    output: "Ausgabe",
+    reasoning: "Denkprozess",
+    cache: "Cache",
+    previousBranch: "Vorherige Variante",
+    nextBranch: "Nächste Variante",
+    branchPage: "{current} von {total}",
+    image: "Bild",
+    attachment: "Anhang",
+    attachmentAlt: "Anhang",
+    attachmentPreviewAlt: "Vorschau des Anhangs",
+    removeAttachment: "Anhang entfernen",
+    providerLogo: "{provider}-Logo",
+    modelSelector: "Modellauswahl",
+    openIn: "In {app} öffnen",
+    openInChat: "Im Chat öffnen",
+    togglePlan: "Plan ein- oder ausklappen",
+    submit: "Senden",
+    uploadFiles: "Dateien hochladen",
+    addPhotosOrFiles: "Fotos oder Dateien hinzufügen",
+    promptPlaceholder: "Was möchtest du wissen?",
+    fileErrors: {
+      accept: "Keine der Dateien hat einen erlaubten Dateityp.",
+      maxFileSize: "Alle Dateien überschreiten die maximale Größe.",
+      maxFiles: "Zu viele Dateien. Einige wurden nicht hinzugefügt.",
+    },
+    enterUrl: "URL eingeben...",
+    preview: "Vorschau",
+    console: "Konsole",
+    noConsoleOutput: "Keine Konsolenausgabe",
+    chainOfThought: "Gedankengang",
+    loader: "Ladeanzeige",
+    previous: "Zurück",
+    emptyTitle: "Noch keine Nachrichten",
+    emptyDescription: "Starte eine Unterhaltung, um hier Nachrichten zu sehen",
+  },
+} satisfies Messages["chat"];

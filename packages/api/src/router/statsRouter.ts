@@ -30,6 +30,7 @@ export const statsRouter = createTRPCRouter({
     .input(homeStatsInputSchema)
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           OperationUtils.getGroupWithAccess(
             ctx.db,

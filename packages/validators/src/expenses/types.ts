@@ -1,6 +1,8 @@
 // ============================================================================
 // Types for Expense Distribution and Validation
 // ============================================================================
+import type { MessageKey } from "@flatsby/i18n/message-key";
+
 export const SPLIT_METHODS = [
   "equal",
   "percentage",
@@ -26,14 +28,14 @@ export interface ExpenseSplit {
  */
 export interface SplitValidationResult {
   isValid: boolean;
-  error?: string;
+  error?: { key: MessageKey; values?: Record<string, number> };
 }
 
 /**
  * Strict validation result with user-friendly message
  */
 export type StrictValidationResult =
-  { valid: true } | { valid: false; error: string; userMessage: string };
+  { valid: true } | { valid: false; error: string; userMessage: MessageKey };
 
 /**
  * Debt entry between two members

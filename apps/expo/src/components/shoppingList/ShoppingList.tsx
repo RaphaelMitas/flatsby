@@ -15,6 +15,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
@@ -42,6 +43,7 @@ type ListItem =
   | { type: "end"; id: string };
 
 const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
+  const t = useTranslations("shoppingList");
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
     null,
@@ -125,8 +127,8 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     uncheckedSections.forEach((section) => {
       data.push({
         type: "header",
-        title: section.title,
-        id: `unchecked-header-${section.title}`,
+        title: t(`sections.${section.key}`),
+        id: `unchecked-header-${section.key}`,
       });
       section.items.forEach((item) => {
         data.push({ type: "item", item, id: `item-${item.id}` });
@@ -136,15 +138,15 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     if (checkedSections.length > 0) {
       data.push({
         type: "header",
-        title: "Purchased Items",
+        title: t("purchasedItems"),
         id: "purchased-items-header",
       });
 
       checkedSections.forEach((section, index) => {
         data.push({
           type: "header",
-          title: section.title,
-          id: `checked-header-${index}-${section.title}`,
+          title: t(`sections.${section.key}`),
+          id: `checked-header-${index}-${section.key}`,
         });
         section.items.forEach((item) => {
           data.push({ type: "item", item, id: `item-${item.id}` });
@@ -164,6 +166,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
 
     return data;
   }, [
+    t,
     uncheckedSections,
     checkedSections,
     isFetchingNextPage,
@@ -311,7 +314,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         return (
           <View className="py-4">
             <Text className="text-muted-foreground text-center">
-              Loading more items...
+              {t("loadingMoreItems")}
             </Text>
           </View>
         );
@@ -320,7 +323,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         return (
           <View className="px-4 py-8">
             <Text className="text-muted-foreground text-center">
-              No items in this shopping list yet. Add your first item below!
+              {t("emptyList")}
             </Text>
           </View>
         );
@@ -329,7 +332,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         return (
           <View className="py-4">
             <Text className="text-muted-foreground text-center text-sm">
-              No more items to load
+              {t("noMoreItems")}
             </Text>
           </View>
         );

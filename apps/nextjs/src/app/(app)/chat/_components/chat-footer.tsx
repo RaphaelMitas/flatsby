@@ -5,6 +5,7 @@ import type { ChatModel } from "@flatsby/validators/models";
 import type { FormEvent } from "react";
 import { memo, useState } from "react";
 import { InfoIcon, XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   PromptInput,
@@ -87,6 +88,7 @@ const _ChatFooter = ({
   bannerDismissed: boolean;
   setBannerDismissed: (dismissed: boolean) => void;
 }) => {
+  const t = useTranslations("chat.footer");
   const isLoading = status === "submitted" || status === "streaming";
   const showToolsBanner = !hasGroup && !bannerDismissed;
 
@@ -114,9 +116,9 @@ const _ChatFooter = ({
             <InfoIcon className="size-4" />
             <div className="flex items-start justify-between">
               <div>
-                <AlertTitle>Select a group to enable AI tools</AlertTitle>
+                <AlertTitle>{t("toolsBannerTitle")}</AlertTitle>
                 <AlertDescription>
-                  Tools let AI manage your shopping lists and expenses
+                  {t("toolsBannerDescription")}
                 </AlertDescription>
               </div>
               <Button
@@ -124,7 +126,7 @@ const _ChatFooter = ({
                 size="sm"
                 onClick={() => setBannerDismissed(true)}
               >
-                <XIcon className="size-4" /> dismiss
+                <XIcon className="size-4" /> {t("dismiss")}
               </Button>
             </div>
           </Alert>
@@ -133,7 +135,7 @@ const _ChatFooter = ({
           <PromptInputTextarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
+            placeholder={t("placeholder")}
             disabled={disabled || isLoading}
           />
           <PromptInputFooter>

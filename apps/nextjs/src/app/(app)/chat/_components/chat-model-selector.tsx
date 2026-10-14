@@ -3,6 +3,7 @@
 import type { ChatModel } from "@flatsby/validators/models";
 import { useMemo, useState } from "react";
 import { CheckIcon, InfoIcon, WrenchIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import {
@@ -24,11 +25,9 @@ import { Label } from "@flatsby/ui/label";
 import { Switch } from "@flatsby/ui/switch";
 import { CHAT_MODELS, getModelTier } from "@flatsby/validators/models";
 
-export function getModelDisplayName(
-  modelId: string | null | undefined,
-): string {
+export function getModelDisplayName(modelId: ChatModel): string {
   const model = CHAT_MODELS.find((m) => m.id === modelId);
-  return model?.name ?? modelId ?? "Unknown Model";
+  return model?.name ?? modelId;
 }
 
 export function getModelProvider(
@@ -55,6 +54,7 @@ export function ChatModelSelector({
   disabled,
   hasGroup = false,
 }: ChatModelSelectorProps) {
+  const t = useTranslations("chat.modelSelector");
   const [open, setOpen] = useState(false);
 
   const selectedModelData = CHAT_MODELS.find((m) => m.id === currentModel);
@@ -76,7 +76,7 @@ export function ChatModelSelector({
             <ModelSelectorLogo provider={selectedModelData.provider} />
           )}
           <ModelSelectorName>
-            {selectedModelData?.name ?? "Select Model"}
+            {selectedModelData?.name ?? t("selectModel")}
           </ModelSelectorName>
           {toolsEnabled && (
             <WrenchIcon className="text-muted-foreground size-3" />
@@ -84,9 +84,9 @@ export function ChatModelSelector({
         </Button>
       </ModelSelectorTrigger>
       <ModelSelectorContent>
-        <ModelSelectorInput placeholder="Search models..." />
+        <ModelSelectorInput placeholder={t("searchModels")} />
         <ModelSelectorList>
-          <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
+          <ModelSelectorEmpty>{t("noModels")}</ModelSelectorEmpty>
           {providers.map((provider) => (
             <ModelSelectorGroup heading={provider} key={provider}>
               {CHAT_MODELS.filter((model) => model.provider === provider).map(
@@ -103,10 +103,10 @@ export function ChatModelSelector({
                     <ModelSelectorName>
                       {model.name}
                       <Badge className="ml-2 text-xs" variant="secondary">
-                        {getModelTier(model.id)}
+                        {t(`tier.${getModelTier(model.id)}`)}
                       </Badge>
                       <Badge className="ml-1 text-xs" variant="outline">
-                        Tools
+                        {t("tools")}
                       </Badge>
                     </ModelSelectorName>
 
@@ -126,10 +126,10 @@ export function ChatModelSelector({
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="tools-toggle" className="text-sm font-medium">
-                    Flatsby Tools
+                    {t("flatsbyTools")}
                   </Label>
                   <p className="text-muted-foreground text-xs">
-                    Shopping lists, expenses & more
+                    {t("flatsbyToolsDescription")}
                   </p>
                 </div>
                 <Switch
@@ -144,7 +144,7 @@ export function ChatModelSelector({
             ) : (
               <div className="text-muted-foreground flex items-center gap-2">
                 <InfoIcon className="size-4" />
-                <span className="text-sm">Select a group to enable tools</span>
+                <span className="text-sm">{t("selectGroupForTools")}</span>
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@
 import type { SelectorOption } from "@flatsby/validators/chat/tools";
 import { useState } from "react";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
@@ -26,6 +27,7 @@ export function UISelector({
   hasResponded = false,
   previousResponse,
 }: UISelectorProps) {
+  const t = useTranslations("chat.toolResults.ui");
   const [selected, setSelected] = useState<Set<string>>(
     new Set(previousResponse ?? []),
   );
@@ -70,7 +72,7 @@ export function UISelector({
         <CardContent className={title ? "pt-0" : ""}>
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <Check className="size-4 text-green-500" />
-            Selected: {selectedLabels}
+            {t("selected", { labels: selectedLabels })}
           </div>
         </CardContent>
       </Card>
@@ -113,7 +115,7 @@ export function UISelector({
             disabled={disabled}
             onClick={handleSubmitMulti}
           >
-            Confirm selection
+            {t("confirmSelection")}
           </Button>
         )}
       </CardContent>

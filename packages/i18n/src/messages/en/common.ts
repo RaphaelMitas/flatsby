@@ -21,4 +21,15 @@ export const common = {
   unknown: "Unknown",
   unknownError: "Unknown error",
   updating: "Updating...",
+  select: "Select",
+  previousSlide: "Previous slide",
+  nextSlide: "Next slide",
+  deleteConfirmation: {
+    title: "Delete Item",
+    description:
+      'Are you sure you want to delete "{name}"? This action cannot be undone and will permanently remove all data associated with this item.',
+    label: "To confirm deletion, please type the item name: {name}",
+    required: "Confirmation Required",
+    placeholder: "Enter item name",
+  },
 };

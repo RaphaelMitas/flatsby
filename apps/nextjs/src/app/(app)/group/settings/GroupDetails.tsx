@@ -12,6 +12,7 @@ import {
   LoaderCircle,
   Upload,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -34,6 +35,7 @@ interface GroupDetailsProps {
 }
 
 const GroupDetails = ({ groupId }: GroupDetailsProps) => {
+  const t = useTranslations();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const handleApiError = useHandleApiError();
@@ -77,20 +79,18 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Group Details</CardTitle>
-        <CardDescription>
-          Update your group&apos;s name and profile picture.
-        </CardDescription>
+        <CardTitle>{t("group.settings.details")}</CardTitle>
+        <CardDescription>{t("group.details.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
           <div className="grid gap-2">
-            <Label htmlFor="name">Group Name</Label>
+            <Label htmlFor="name">{t("group.nameLabel")}</Label>
             <div className="flex flex-col items-center gap-4 md:flex-row">
               <Input
                 id="name"
                 data-testid="group-name-input"
-                placeholder="Enter group name"
+                placeholder={t("group.namePlaceholder")}
                 value={name}
                 maxLength={256}
                 disabled={!isAdmin}
@@ -107,9 +107,9 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
                 {groupNameMutation.isPending ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : !isAdmin ? (
-                  "not an admin"
+                  t("group.details.notAdminLowercase")
                 ) : (
-                  "Save"
+                  t("common.save")
                 )}
               </Button>
             </div>
@@ -120,37 +120,42 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
                 <AlertTitle>
                   {groupNameMutation.data?.success === false
                     ? groupNameMutation.data.error.type
-                    : (groupNameMutation.error?.data?.code ?? "Unknown error")}
+                    : (groupNameMutation.error?.data?.code ??
+                      t("common.unknownError"))}
                 </AlertTitle>
                 <AlertDescription>
                   {groupNameMutation.data?.success === false
                     ? groupNameMutation.data.error.message
                     : (groupNameMutation.error?.message ??
-                      "unknown error during name change")}
+                      t("group.details.renameFailed"))}
                 </AlertDescription>
               </Alert>
             )}
             {groupNameMutation.isSuccess && groupNameMutation.data.success && (
               <Alert variant="success">
                 <CircleCheckBig className="h-4 w-4" />
-                <AlertTitle>Name changed successfully!</AlertTitle>
+                <AlertTitle>{t("group.details.nameChanged")}</AlertTitle>
               </Alert>
             )}
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="profile-picture">Profile Picture</Label>
+            <Label htmlFor="profile-picture">
+              {t("group.details.profilePicture")}
+            </Label>
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage alt="Group Avatar" />
+                <AvatarImage alt={t("group.avatarAlt")} />
                 <AvatarFallback>
                   {group.data.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <Button disabled variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
-                Upload New
+                {t("group.details.uploadNew")}
               </Button>
-              <div className="text-muted-foreground">feature coming soon!</div>
+              <div className="text-muted-foreground">
+                {t("group.details.comingSoon")}
+              </div>
             </div>
           </div>
         </div>

@@ -1,12 +1,14 @@
 "use client";
 
 import { Moon, Sun, SunMoon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
 import { SidebarMenuButton } from "@flatsby/ui/sidebar";
 
 export function SidebarThemeToggle() {
   const { setTheme, theme } = useTheme();
+  const t = useTranslations("settings.theme");
 
   const cycleTheme = () => {
     if (theme === "system") {
@@ -25,13 +27,16 @@ export function SidebarThemeToggle() {
   };
 
   const getLabel = () => {
-    if (theme === "dark") return "Dark";
-    if (theme === "light") return "Light";
-    return "System";
+    if (theme === "dark") return t("dark");
+    if (theme === "light") return t("light");
+    return t("system");
   };
 
   return (
-    <SidebarMenuButton onClick={cycleTheme} tooltip={`Theme: ${getLabel()}`}>
+    <SidebarMenuButton
+      onClick={cycleTheme}
+      tooltip={t("current", { theme: getLabel() })}
+    >
       {getIcon()}
       <span>{getLabel()}</span>
     </SidebarMenuButton>

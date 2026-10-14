@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { and, desc, eq, isNull, lt } from "@flatsby/db";
 import { chatMessages, conversations, users } from "@flatsby/db/schema";
-import { translatorFor } from "@flatsby/i18n/translator";
+import { msg } from "@flatsby/i18n/message-key";
 import { requiresAIConsent } from "@flatsby/validators/ai-consent";
 import {
   CHAT_MESSAGE_LIMIT,
@@ -131,7 +131,7 @@ export const chatRouter = createTRPCRouter({
       if (!conversation) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Conversation not found",
+          message: msg("errors.conversationNotFound"),
         });
       }
 
@@ -205,7 +205,7 @@ export const chatRouter = createTRPCRouter({
       if (!conversation) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create conversation",
+          message: msg("errors.createConversationFailed"),
         });
       }
 
@@ -233,7 +233,7 @@ export const chatRouter = createTRPCRouter({
       if (!conversation) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Conversation not found",
+          message: msg("errors.conversationNotFound"),
         });
       }
 
@@ -267,7 +267,7 @@ export const chatRouter = createTRPCRouter({
       if (!conversation) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Conversation not found",
+          message: msg("errors.conversationNotFound"),
         });
       }
 
@@ -322,7 +322,7 @@ export const chatRouter = createTRPCRouter({
     if (!conversation) {
       throw new TRPCError({
         code: "NOT_FOUND",
-        message: "Conversation not found",
+        message: msg("errors.conversationNotFound"),
       });
     }
 
@@ -334,7 +334,7 @@ export const chatRouter = createTRPCRouter({
     if (!consent || requiresAIConsent(consent)) {
       throw new TRPCError({
         code: "FORBIDDEN",
-        message: translatorFor(ctx.locale)("errors.aiConsentRequired"),
+        message: msg("errors.aiConsentRequired"),
       });
     }
 
@@ -345,8 +345,7 @@ export const chatRouter = createTRPCRouter({
     if (!allowed) {
       throw new TRPCError({
         code: "FORBIDDEN",
-        message:
-          "You've run out of credits. Please upgrade your plan to continue.",
+        message: msg("errors.outOfCredits"),
       });
     }
 
@@ -400,7 +399,7 @@ export const chatRouter = createTRPCRouter({
       if (!assistantMessage) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create assistant message",
+          message: msg("errors.createAssistantMessageFailed"),
         });
       }
 
@@ -426,7 +425,7 @@ export const chatRouter = createTRPCRouter({
       if (!input.messageId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "messageId is required for regeneration",
+          message: "messageId is required for regeneration", // i18n-ignore: only a client bug reaches this
         });
       }
 
@@ -447,7 +446,7 @@ export const chatRouter = createTRPCRouter({
       if (updateResult.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Message not found in this conversation",
+          message: msg("errors.messageNotInConversation"),
         });
       }
 
@@ -457,6 +456,7 @@ export const chatRouter = createTRPCRouter({
     const contextMessages = await buildContextMessages(
       ctx.db,
       input.conversationId,
+      ctx.locale,
     );
 
     let buffer = "";
@@ -654,7 +654,7 @@ export const chatRouter = createTRPCRouter({
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message:
-          error instanceof Error ? error.message : "Failed to stream response",
+          error instanceof Error ? error.message : msg("errors.streamFailed"),
         cause: error,
       });
     } finally {
@@ -694,14 +694,14 @@ export const chatRouter = createTRPCRouter({
         if (!message) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Message not found",
+            message: msg("errors.messageNotFound"),
           });
         }
 
         if (message.conversation.userId !== ctx.session.user.id) {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: "Not authorized",
+            message: msg("errors.notAuthorized"),
           });
         }
 
@@ -710,7 +710,7 @@ export const chatRouter = createTRPCRouter({
         if (!toolCalls) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Message has no tool calls",
+            message: "Message has no tool calls", // i18n-ignore: only a client bug reaches this
           });
         }
 

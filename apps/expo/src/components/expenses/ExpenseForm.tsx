@@ -9,6 +9,7 @@ import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
+import { useLocale, useTranslations } from "use-intl";
 
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
@@ -63,9 +64,11 @@ function DatePickerField({
   value: Date;
   onChange: (date: Date) => void;
 }) {
+  const t = useTranslations();
+  const locale = useLocale();
   const [showPicker, setShowPicker] = useState(false);
   const { colorScheme } = useThemeColors();
-  const formattedDate = value.toLocaleDateString("en-US", {
+  const formattedDate = value.toLocaleDateString(locale, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -74,7 +77,7 @@ function DatePickerField({
   if (Platform.OS === "ios") {
     return (
       <View className="gap-2">
-        <Label>Date</Label>
+        <Label>{t("common.date")}</Label>
         <DateTimePicker
           value={value}
           mode="date"
@@ -91,7 +94,7 @@ function DatePickerField({
 
   return (
     <View className="gap-2">
-      <Label>Date</Label>
+      <Label>{t("common.date")}</Label>
       <Pressable
         onPress={() => setShowPicker(true)}
         className="border-input bg-background flex h-12 flex-row items-center rounded-lg border px-3"
@@ -129,6 +132,8 @@ export function ExpenseForm({
   onSuccess,
 }: ExpenseFormProps) {
   const router = useRouter();
+  const t = useTranslations();
+  const locale = useLocale();
   const trpcClient = trpc;
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
@@ -236,7 +241,7 @@ export function ExpenseForm({
                   userId: "",
                   role: "member" as const,
                   joinedOn: new Date(),
-                  user: { email: "", name: "Unknown", image: null },
+                  user: { email: "", name: t("common.unknown"), image: null },
                 },
             createdByGroupMember: {
               id: currentMember.id,
@@ -273,7 +278,11 @@ export function ExpenseForm({
                       userId: "",
                       role: "member" as const,
                       joinedOn: new Date(),
-                      user: { email: "", name: "Unknown", image: null },
+                      user: {
+                        email: "",
+                        name: t("common.unknown"),
+                        image: null,
+                      },
                     },
               };
             }),
@@ -302,14 +311,14 @@ export function ExpenseForm({
         if (context?.previousData) {
           queryClient.setQueryData(expenseListQueryKey, context.previousData);
         }
-        Alert.alert("Error", "Failed to create expense");
+        Alert.alert(t("common.error"), t("expenses.createFailed"));
       },
       onSuccess: (data, _variables, context) => {
         if (data.success === false) {
           if (context.previousData) {
             queryClient.setQueryData(expenseListQueryKey, context.previousData);
           }
-          Alert.alert("Error", data.error.message);
+          Alert.alert(t("common.error"), data.error.message);
           return;
         }
 
@@ -385,7 +394,11 @@ export function ExpenseForm({
                               userId: "",
                               role: "member" as const,
                               joinedOn: new Date(),
-                              user: { email: "", name: "Unknown", image: null },
+                              user: {
+                                email: "",
+                                name: t("common.unknown"),
+                                image: null,
+                              },
                             },
                     };
                     return splits;
@@ -401,14 +414,14 @@ export function ExpenseForm({
         if (context?.previousData && expenseQueryKey) {
           queryClient.setQueryData(expenseQueryKey, context.previousData);
         }
-        Alert.alert("Error", "Failed to update expense");
+        Alert.alert(t("common.error"), t("expenses.updateFailed"));
       },
       onSuccess: (data, _variables, context) => {
         if (data.success === false) {
           if (context?.previousData && expenseQueryKey) {
             queryClient.setQueryData(expenseQueryKey, context.previousData);
           }
-          Alert.alert("Error", data.error.message);
+          Alert.alert(t("common.error"), data.error.message);
           return;
         }
 
@@ -545,7 +558,7 @@ export function ExpenseForm({
             testID="expense-form-step"
             className="text-muted-foreground text-sm"
           >
-            Step {currentStep} of {totalSteps}
+            {t("expenses.stepOf", { step: currentStep, total: totalSteps })}
           </Text>
           <View className="flex-row gap-1">
             {Array.from({ length: totalSteps }).map((_, i) => (
@@ -565,7 +578,7 @@ export function ExpenseForm({
               <View className="gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Amount & Details</CardTitle>
+                    <CardTitle>{t("expenses.amountAndDetails")}</CardTitle>
                   </CardHeader>
                   <CardContent className="gap-4">
                     <FormField
@@ -573,11 +586,11 @@ export function ExpenseForm({
                       name="description"
                       render={({ field }) => (
                         <View className="gap-2">
-                          <Label>Description</Label>
+                          <Label>{t("expenses.description")}</Label>
                           <FormControl>
                             <Input
                               testID="expense-form-description"
-                              placeholder="What was this expense for?"
+                              placeholder={t("expenses.descriptionPlaceholder")}
                               value={field.value}
                               onChangeText={field.onChange}
                               onBlur={field.onBlur}
@@ -594,7 +607,7 @@ export function ExpenseForm({
                       name="amountInCents"
                       render={({ field }) => (
                         <View className="gap-2">
-                          <Label>Amount</Label>
+                          <Label>{t("expenses.amount")}</Label>
                           <View className="flex-row items-center gap-2">
                             <FormField
                               control={form.control}
@@ -629,7 +642,7 @@ export function ExpenseForm({
                       name="paidByGroupMemberId"
                       render={({ field }) => (
                         <View className="gap-2">
-                          <Label>Paid By</Label>
+                          <Label>{t("expenses.paidByField")}</Label>
                           <BottomSheetPickerTrigger
                             items={paidByItems}
                             selectedId={field.value.toString()}
@@ -639,7 +652,7 @@ export function ExpenseForm({
                             triggerTitle={
                               group.groupMembers.find(
                                 (m) => m.id === field.value,
-                              )?.user.name ?? "Select who paid"
+                              )?.user.name ?? t("expenses.selectPayer")
                             }
                           />
                           <FormMessage />
@@ -652,7 +665,7 @@ export function ExpenseForm({
                       name="subcategory"
                       render={({ field }) => (
                         <View className="gap-2">
-                          <Label>Category</Label>
+                          <Label>{t("common.category")}</Label>
                           <ExpenseCategoryPicker
                             testID="expense-form-category"
                             value={field.value}
@@ -705,16 +718,16 @@ export function ExpenseForm({
               <View className="gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Review</CardTitle>
+                    <CardTitle>{t("expenses.review")}</CardTitle>
                     <CardDescription>
-                      Review your expense before submitting
+                      {t("expenses.reviewHint")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="gap-3">
                     {description && (
                       <View className="flex-row justify-between">
                         <Text className="text-muted-foreground">
-                          Description:
+                          {t("expenses.descriptionLabel")}
                         </Text>
                         <Text className="text-foreground text-right font-semibold">
                           {description}
@@ -722,27 +735,35 @@ export function ExpenseForm({
                       </View>
                     )}
                     <View className="flex-row justify-between">
-                      <Text className="text-muted-foreground">Amount:</Text>
+                      <Text className="text-muted-foreground">
+                        {t("expenses.amountLabel")}
+                      </Text>
                       <Text className="text-foreground font-semibold">
                         {formatCurrencyFromCents({
                           cents: amountInCents,
                           currency: currency,
+                          locale,
                         })}
                       </Text>
                     </View>
                     <View className="flex-row justify-between">
-                      <Text className="text-muted-foreground">Paid By:</Text>
+                      <Text className="text-muted-foreground">
+                        {t("expenses.paidByFieldLabel")}
+                      </Text>
                       <Text className="text-foreground font-semibold">
                         {allMembers.find((m) => m.id === paidByGroupMemberId)
-                          ?.user.name ?? "Unknown"}
+                          ?.user.name ?? t("common.unknown")}
                       </Text>
                     </View>
                     <View className="flex-row justify-between">
-                      <Text className="text-muted-foreground">Split:</Text>
+                      <Text className="text-muted-foreground">
+                        {t("expenses.splitLabel")}
+                      </Text>
                       <Text className="text-foreground font-semibold">
-                        {participantCount}{" "}
-                        {participantCount === 1 ? "person" : "people"} (
-                        {splitMethod})
+                        {t("expenses.reviewSplit", {
+                          count: participantCount,
+                          method: splitMethod,
+                        })}
                       </Text>
                     </View>
                   </CardContent>
@@ -754,7 +775,7 @@ export function ExpenseForm({
             {currentStep > 1 && (
               <Button
                 testID="expense-form-back"
-                title="Back"
+                title={t("common.back")}
                 variant="outline"
                 onPress={handleBack}
                 disabled={isPending}
@@ -765,7 +786,7 @@ export function ExpenseForm({
             {currentStep < totalSteps ? (
               <Button
                 testID="expense-form-next"
-                title="Next"
+                title={t("common.next")}
                 onPress={handleNext}
                 disabled={isPending || amountInCents <= 0}
                 icon="arrow-right"
@@ -777,11 +798,11 @@ export function ExpenseForm({
                 title={
                   isPending
                     ? isEditMode
-                      ? "Updating..."
-                      : "Creating..."
+                      ? t("common.updating")
+                      : t("common.creating")
                     : isEditMode
-                      ? "Update Expense"
-                      : "Create Expense"
+                      ? t("expenses.updateExpense")
+                      : t("expenses.createExpense")
                 }
                 disabled={isPending}
                 icon={isPending ? "loader" : undefined}

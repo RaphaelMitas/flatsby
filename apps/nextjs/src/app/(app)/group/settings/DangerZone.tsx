@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { LoaderCircle, TriangleAlertIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -25,6 +26,7 @@ interface DangerZoneProps {
 }
 
 export default function DangerZone({ groupId }: DangerZoneProps) {
+  const t = useTranslations();
   const [groupNameInput, setGroupNameInput] = useState("");
   const router = useRouter();
   const trpc = useTRPC();
@@ -50,28 +52,25 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
   return (
     <Card className="w-full">
       <CardHeader className="w-full">
-        <CardTitle>Delete Group</CardTitle>
-        <CardDescription>This action cannot be undone.</CardDescription>
+        <CardTitle>{t("group.delete.title")}</CardTitle>
+        <CardDescription>{t("group.delete.cannotBeUndone")}</CardDescription>
       </CardHeader>
       <CardContent className="w-full">
         <div className="space-y-4">
           <Alert variant="destructive">
             <TriangleAlertIcon className="h-4 w-4" />
             <AlertTitle data-testid="group-danger-zone-title">
-              Danger Zone
+              {t("navigation.dangerZone")}
             </AlertTitle>
-            <AlertDescription>
-              Deleting this group will permanently remove it and all its data.
-              Please type the name of the group below to confirm.
-            </AlertDescription>
+            <AlertDescription>{t("group.delete.warning")}</AlertDescription>
           </Alert>
           <div className="space-y-2">
-            <Label htmlFor="group-name">Group Name</Label>
+            <Label htmlFor="group-name">{t("group.nameLabel")}</Label>
             <div className="flex flex-col gap-4 md:flex-row">
               <Input
                 id="delete-group-name-input"
                 data-testid="group-delete-name-input"
-                placeholder="Enter group name"
+                placeholder={t("group.namePlaceholder")}
                 maxLength={256}
                 value={groupNameInput}
                 disabled={!isAdmin}
@@ -89,11 +88,11 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
                 onClick={() => deleteGroupMutation.mutate({ id: groupId })}
               >
                 {!isAdmin ? (
-                  "not an admin"
+                  t("group.details.notAdminLowercase")
                 ) : deleteGroupMutation.isPending ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Delete Group"
+                  t("group.delete.title")
                 )}
               </Button>
             </div>
@@ -104,13 +103,13 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
                   {deleteGroupMutation.data?.success === false
                     ? deleteGroupMutation.data.error.type
                     : (deleteGroupMutation.error?.data?.code ??
-                      "Unknown error")}
+                      t("common.unknownError"))}
                 </AlertTitle>
                 <AlertDescription>
                   {deleteGroupMutation.data?.success === false
                     ? deleteGroupMutation.data.error.message
                     : (deleteGroupMutation.error?.message ??
-                      "unknown error during group deletion")}
+                      t("group.delete.failed"))}
                 </AlertDescription>
               </Alert>
             )}

@@ -1,5 +1,7 @@
 import { z } from "zod/v4";
 
+import { msg } from "@flatsby/i18n/message-key";
+
 import { currencyCodeSchema } from "./expenses/schemas";
 import {
   shoppingListItemNameSchema,
@@ -10,10 +12,10 @@ import { userEmailSchema, userImageSchema, userNameSchema } from "./user";
 export const groupNameSchema = z
   .string()
   .min(1, {
-    message: "Group name is required",
+    message: msg("group.validation.nameRequired"),
   })
   .max(256, {
-    message: "Group name cannot be longer than 256 characters",
+    message: msg("group.validation.nameTooLong"),
   });
 
 export const groupSchema = z.object({
@@ -37,7 +39,7 @@ export const groupMemberRoleSchema = z.enum(["admin", "member"]);
 export type GroupMemberRole = z.infer<typeof groupMemberRoleSchema>;
 
 export const groupMemberEmailSchema = z.email({
-  message: "Please enter a valid email address",
+  message: msg("group.validation.invalidEmail"),
 });
 
 export const groupMemberSchema = z.object({

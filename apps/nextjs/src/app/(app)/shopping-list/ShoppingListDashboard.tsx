@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -33,6 +34,7 @@ interface ShoppingListDashboardProps {
 export const ShoppingListDashboard = ({
   limit,
 }: ShoppingListDashboardProps) => {
+  const t = useTranslations();
   const router = useRouter();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
@@ -74,9 +76,9 @@ export const ShoppingListDashboard = ({
   if (!groupId) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-8">
-        <p className="text-muted-foreground">No group selected</p>
+        <p className="text-muted-foreground">{t("common.noGroupSelected")}</p>
         <Button asChild>
-          <Link href="/group">Select a group</Link>
+          <Link href="/group">{t("shoppingList.selectAGroup")}</Link>
         </Button>
       </div>
     );
@@ -100,7 +102,7 @@ export const ShoppingListDashboard = ({
       {isLimitedView && (
         <Button variant="outline" asChild>
           <Link href="/shopping-list">
-            Go to shopping lists
+            {t("shoppingList.goToShoppingLists")}
             <ArrowRight className="ml-1 inline h-4 w-4" />
           </Link>
         </Button>
@@ -123,7 +125,7 @@ export const ShoppingListDashboard = ({
                       <Input
                         data-testid="shopping-list-create-input"
                         disabled={createNewListMutation.isPending}
-                        placeholder="add new list"
+                        placeholder={t("shoppingList.create.inputPlaceholder")}
                         {...field}
                         maxLength={
                           shoppingListFormSchema.shape.name.maxLength ??
@@ -146,7 +148,7 @@ export const ShoppingListDashboard = ({
                 {createNewListMutation.isPending ? (
                   <LoadingSpinner />
                 ) : (
-                  "Create List"
+                  t("shoppingList.create.createList")
                 )}
               </Button>
             </form>
@@ -158,13 +160,14 @@ export const ShoppingListDashboard = ({
               <AlertTitle>
                 {createNewListMutation.data?.success === false
                   ? createNewListMutation.data.error.type
-                  : (createNewListMutation.error?.data?.code ?? "Error")}
+                  : (createNewListMutation.error?.data?.code ??
+                    t("common.error"))}
               </AlertTitle>
               <AlertDescription>
                 {createNewListMutation.data?.success === false
                   ? createNewListMutation.data.error.message
                   : (createNewListMutation.error?.message ??
-                    "unknown error during creation of shopping list")}
+                    t("shoppingList.create.failed"))}
               </AlertDescription>
             </Alert>
           )}

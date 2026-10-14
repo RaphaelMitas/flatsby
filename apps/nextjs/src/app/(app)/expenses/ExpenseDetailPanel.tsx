@@ -7,6 +7,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { Receipt } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   AlertDialog,
@@ -46,6 +47,7 @@ export function ExpenseDetailPanel({
   onEditExpense,
 }: ExpenseDetailPanelProps) {
   const trpc = useTRPC();
+  const t = useTranslations();
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
   const handleApiError = useHandleApiError();
@@ -93,7 +95,7 @@ export function ExpenseDetailPanel({
         if (context?.previousData) {
           queryClient.setQueryData(expenseListQueryKey, context.previousData);
         }
-        toast.error("Failed to delete expense", {
+        toast.error(t("expenses.deleteFailed"), {
           description: error.message,
         });
       },
@@ -102,13 +104,13 @@ export function ExpenseDetailPanel({
           if (context.previousData) {
             queryClient.setQueryData(expenseListQueryKey, context.previousData);
           }
-          toast.error("Failed to delete expense", {
+          toast.error(t("expenses.deleteFailed"), {
             description: data.error.message,
           });
           return;
         }
 
-        toast.success("Expense deleted successfully");
+        toast.success(t("expenses.deleteSuccess"));
         invalidateAll();
         onBack();
       },
@@ -157,9 +159,9 @@ export function ExpenseDetailPanel({
     <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
       <Receipt className="text-muted-foreground h-16 w-16" />
       <div>
-        <p className="text-lg font-semibold">Select an expense</p>
+        <p className="text-lg font-semibold">{t("expenses.selectExpense")}</p>
         <p className="text-muted-foreground text-sm">
-          Choose an expense from the list to view details
+          {t("expenses.selectExpenseHint")}
         </p>
       </div>
     </div>
@@ -197,6 +199,7 @@ function ExpenseDetailPanelContent({
   onSelectExpense,
 }: ExpenseDetailPanelContentProps) {
   const trpc = useTRPC();
+  const t = useTranslations();
   const handleApiError = useHandleApiError();
 
   const { data: expenseData } = useSuspenseQuery(
@@ -239,21 +242,20 @@ function ExpenseDetailPanelContent({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent data-testid="expense-delete-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+            <AlertDialogTitle>{t("expenses.deleteExpense")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this expense? This action cannot
-              be undone.
+              {t("expenses.deleteExpenseConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               data-testid="expense-delete-confirm-button"
             >
-              {isDeleting ? <LoadingSpinner /> : "Delete"}
+              {isDeleting ? <LoadingSpinner /> : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

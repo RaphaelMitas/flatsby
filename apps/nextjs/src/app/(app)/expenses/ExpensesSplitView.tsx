@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
@@ -28,6 +29,7 @@ export function ExpensesSplitView() {
   } = useExpenseSelection();
 
   const router = useRouter();
+  const t = useTranslations("common");
   const isLargeScreen = useMediaQuery("lg");
   const hasSelection = selectedExpenseId !== null || action === "create";
 
@@ -63,7 +65,7 @@ export function ExpensesSplitView() {
               <div className="border-b p-2 lg:hidden">
                 <Button variant="ghost" onClick={() => router.back()}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
+                  {t("back")}
                 </Button>
               </div>
               <div className="min-h-0 flex-1">

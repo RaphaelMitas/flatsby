@@ -3,9 +3,13 @@ import type { SharedValue } from "react-native-reanimated";
 import { useCallback, useRef, useState } from "react";
 import { Linking, Platform, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import * as Application from "expo-application";
 import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
+import { useLocale, useTranslations } from "use-intl";
+
+import { localeNames, localePath } from "@flatsby/i18n/locale";
 
 import type { Theme } from "~/lib/ui/theme";
 import { SettingsHeader } from "~/components/settings/SettingsHeader";
@@ -22,7 +26,22 @@ import { signOut } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
 
+function openLanguageSettings() {
+  if (Platform.OS === "android" && Application.applicationId) {
+    void Linking.sendIntent("android.settings.APP_LOCALE_SETTINGS", [
+      {
+        key: "android.provider.extra.APP_PACKAGE",
+        value: Application.applicationId,
+      },
+    ]).catch(() => Linking.openSettings());
+    return;
+  }
+  void Linking.openSettings();
+}
+
 export default function SettingsIndex() {
+  const t = useTranslations();
+  const locale = useLocale();
   const { storedTheme, setTheme } = useTheme();
   const posthog = usePostHog();
   const [isAnalyticsEnabled, setIsAnalyticsEnabled] = useState(
@@ -52,13 +71,11 @@ export default function SettingsIndex() {
   const getThemeDisplayName = (theme: Theme | null) => {
     switch (theme) {
       case "dark":
-        return "Dark";
+        return t("settings.theme.dark");
       case "light":
-        return "Light";
-      case "system":
-        return "System";
+        return t("settings.theme.light");
       default:
-        return "System";
+        return t("settings.theme.system");
     }
   };
 
@@ -67,7 +84,7 @@ export default function SettingsIndex() {
       return (
         <View className="h-full w-full flex-row gap-2 p-2">
           <Button
-            title="System"
+            title={t("settings.theme.system")}
             icon="sun-moon"
             className="flex-1"
             variant={storedTheme === "system" ? "primary" : "outline"}
@@ -77,7 +94,7 @@ export default function SettingsIndex() {
             }}
           />
           <Button
-            title="Light"
+            title={t("settings.theme.light")}
             icon="sun"
             className="flex-1"
             variant={storedTheme === "light" ? "primary" : "outline"}
@@ -87,7 +104,7 @@ export default function SettingsIndex() {
             }}
           />
           <Button
-            title="Dark"
+            title={t("settings.theme.dark")}
             icon="moon"
             className="flex-1"
             variant={storedTheme === "dark" ? "primary" : "outline"}
@@ -99,28 +116,28 @@ export default function SettingsIndex() {
         </View>
       );
     },
-    [storedTheme, setTheme],
+    [storedTheme, setTheme, t],
   );
 
   return (
     <SafeAreaView>
-      <Stack.Screen options={{ title: "Settings" }} />
+      <Stack.Screen options={{ title: t("navigation.settings") }} />
       <AppScrollView>
         <SettingsHeader title={user.name} />
 
-        <SettingsSection title="Usage">
+        <SettingsSection title={t("settings.sections.usage")}>
           <UsageDisplay />
           {Platform.OS === "ios" && (
             <Link href="/settings/credits" asChild>
               <SettingsItem
-                title="Buy Credits"
-                subtitle="Purchase credits via In-App Purchase"
+                title={t("settings.items.buyCredits")}
+                subtitle={t("settings.items.buyCreditsSubtitle")}
                 iconName="credit-card"
               />
             </Link>
           )}
         </SettingsSection>
-        <SettingsSection title="Appearance">
+        <SettingsSection title={t("settings.sections.appearance")}>
           <ReanimatedSwipeable
             ref={swipeableRef}
             friction={2}
@@ -129,46 +146,58 @@ export default function SettingsIndex() {
             renderRightActions={renderRightActions}
           >
             <SettingsItem
-              title="Theme"
-              subtitle={`Currently using ${getThemeDisplayName(storedTheme)} theme`}
+              title={t("settings.items.theme")}
+              subtitle={t("settings.items.themeSubtitle", {
+                theme: getThemeDisplayName(storedTheme),
+              })}
               iconName="palette"
               onPress={() => swipeableRef.current?.openRight()}
             />
           </ReanimatedSwipeable>
+          <SettingsItem
+            title={t("settings.language.title")}
+            subtitle={localeNames[locale]}
+            iconName="languages"
+            onPress={openLanguageSettings}
+          />
         </SettingsSection>
-        <SettingsSection title="Groups">
+        <SettingsSection title={t("settings.sections.groups")}>
           <Link href="/settings/manage-groups" asChild>
             <SettingsItem
-              title="Change Group"
-              subtitle="Change selected group or create a new one"
+              title={t("settings.items.changeGroup")}
+              subtitle={t("settings.items.changeGroupSubtitle")}
               iconName="arrow-left-right"
             />
           </Link>
           <Link href="/settings/group-settings" asChild>
             <SettingsItem
-              title="Group Settings"
-              subtitle="Manage members and group details"
+              title={t("navigation.groupSettings")}
+              subtitle={t("settings.items.groupSettingsSubtitle")}
               iconName="users"
             />
           </Link>
         </SettingsSection>
-        <SettingsSection title="Account">
+        <SettingsSection title={t("settings.sections.account")}>
           <Link href="/settings/profile" asChild>
             <SettingsItem
-              title="Profile"
-              subtitle="Edit your name and profile picture"
+              title={t("navigation.profile")}
+              subtitle={t("settings.items.profileSubtitle")}
               iconName="user"
             />
           </Link>
           <SettingsItem
-            title="Manage Account"
-            subtitle="Manage your account settings on the web"
+            title={t("settings.items.manageAccount")}
+            subtitle={t("settings.items.manageAccountSubtitle")}
             iconName="settings"
             onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
           />
           <SettingsItem
-            title="Share Analytics"
-            subtitle={isAnalyticsEnabled ? "Enabled" : "Disabled"}
+            title={t("settings.items.shareAnalytics")}
+            subtitle={
+              isAnalyticsEnabled
+                ? t("settings.items.enabled")
+                : t("settings.items.disabled")
+            }
             iconName="activity"
             onPress={() => handleAnalyticsToggle(!isAnalyticsEnabled)}
             rightContent={
@@ -179,47 +208,57 @@ export default function SettingsIndex() {
             }
           />
           <SettingsItem
-            title="Logout"
-            subtitle="Sign out of your account"
+            title={t("settings.items.logout")}
+            subtitle={t("settings.items.logoutSubtitle")}
             iconName="log-out"
             onPress={handleLogout}
           />
         </SettingsSection>
-        <SettingsSection title="Danger Zone">
+        <SettingsSection title={t("navigation.dangerZone")}>
           <Link href="/settings/danger" asChild>
             <SettingsItem
               testID="settings-delete-account"
-              title="Delete Account"
-              subtitle="Permanently delete your account"
+              title={t("settings.items.deleteAccount")}
+              subtitle={t("settings.items.deleteAccountSubtitle")}
               iconName="trash-2"
               variant="destructive"
             />
           </Link>
         </SettingsSection>
-        <SettingsSection title="Legal" className="pb-4">
+        <SettingsSection title={t("settings.sections.legal")} className="pb-4">
           <SettingsItem
-            title="Terms of Service"
-            subtitle="View our terms of service"
+            title={t("navigation.termsOfService")}
+            subtitle={t("settings.items.termsSubtitle")}
             iconName="file-text"
-            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/terms`)}
-          />
-          <SettingsItem
-            title="Privacy Policy"
-            subtitle="View our privacy policy"
-            iconName="shield"
-            onPress={() => Linking.openURL(`${getBaseUrl()}/legal/privacy`)}
-          />
-          <SettingsItem
-            title="Legal Notice"
-            subtitle="Legal notice (German law)"
-            iconName="info"
             onPress={() =>
-              Linking.openURL(`${getBaseUrl()}/legal/legal-notice`)
+              Linking.openURL(
+                `${getBaseUrl()}${localePath(locale, "/legal/terms")}`,
+              )
             }
           />
           <SettingsItem
-            title="Export My Data"
-            subtitle="Download your personal data (GDPR)"
+            title={t("navigation.privacyPolicy")}
+            subtitle={t("settings.items.privacySubtitle")}
+            iconName="shield"
+            onPress={() =>
+              Linking.openURL(
+                `${getBaseUrl()}${localePath(locale, "/legal/privacy")}`,
+              )
+            }
+          />
+          <SettingsItem
+            title={t("navigation.legalNotice")}
+            subtitle={t("settings.items.legalNoticeSubtitle")}
+            iconName="info"
+            onPress={() =>
+              Linking.openURL(
+                `${getBaseUrl()}${localePath(locale, "/legal/legal-notice")}`,
+              )
+            }
+          />
+          <SettingsItem
+            title={t("settings.items.exportData")}
+            subtitle={t("settings.items.exportDataSubtitle")}
             iconName="download"
             onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
           />

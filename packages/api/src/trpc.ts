@@ -13,7 +13,9 @@ import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
 import { db } from "@flatsby/db/client";
-import { localeFromHeaders } from "@flatsby/i18n/locale";
+import { defaultLocale, localeFromHeaders } from "@flatsby/i18n/locale";
+import { translateIfKey } from "@flatsby/i18n/message-key";
+import { translatorFor } from "@flatsby/i18n/translator";
 
 import { captureEvent } from "./lib/posthog";
 
@@ -66,16 +68,24 @@ export const createTRPCContext = async (opts: {
  */
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  errorFormatter: ({ shape, error }) => ({
-    ...shape,
-    data: {
-      ...shape.data,
-      zodError:
-        error.cause instanceof ZodError
-          ? z.flattenError(error.cause as ZodError<Record<string, unknown>>)
-          : null,
-    },
-  }),
+  // Errors keep catalog keys server-side so error reporting groups across languages.
+  errorFormatter: ({ shape, error, ctx }) => {
+    const translate = translatorFor(ctx?.locale ?? defaultLocale);
+    return {
+      ...shape,
+      message: translateIfKey(translate, shape.message),
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError
+            ? z.flattenError(
+                error.cause as ZodError<Record<string, unknown>>,
+                (issue) => translateIfKey(translate, issue.message),
+              )
+            : null,
+      },
+    };
+  },
 });
 
 /**

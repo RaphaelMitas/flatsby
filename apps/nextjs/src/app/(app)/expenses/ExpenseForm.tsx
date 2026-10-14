@@ -4,6 +4,7 @@ import type {
   ExpenseWithSplitsAndMembers,
   GroupWithAccess,
 } from "@flatsby/api";
+import { useTranslations } from "next-intl";
 
 import {
   Sheet,
@@ -28,6 +29,7 @@ export function ExpenseForm({
   onClose,
   open,
 }: ExpenseFormProps) {
+  const t = useTranslations("expenses");
   const formState = useExpenseForm({ group, expense, onClose });
 
   return (
@@ -35,7 +37,7 @@ export function ExpenseForm({
       <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle className="text-xl">
-            {formState.isEditMode ? "Edit Expense" : "Add Expense"}
+            {formState.isEditMode ? t("editExpense") : t("addExpense")}
           </SheetTitle>
         </SheetHeader>
         <div className="mt-6">

@@ -11,6 +11,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
@@ -22,6 +23,9 @@ interface SearchDataResultProps {
 }
 
 export function SearchDataResult({ output }: SearchDataResultProps) {
+  const t = useTranslations("chat.toolResults");
+  const locale = useLocale();
+
   if (!output.success) {
     return (
       <div className="my-2 flex items-center gap-2 text-sm">
@@ -40,9 +44,9 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <List className="size-4" />
-              Shopping Lists
+              {t("search.shoppingLists")}
               <span className="text-muted-foreground font-normal">
-                ({metadata.count} lists)
+                {t("search.listCount", { count: metadata.count })}
               </span>
             </CardTitle>
           </CardHeader>
@@ -56,7 +60,9 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
                   >
                     <span className="font-medium">{list.name}</span>
                     <span className="text-muted-foreground text-sm">
-                      {list.uncheckedItemCount} items
+                      {t("search.itemCount", {
+                        count: list.uncheckedItemCount,
+                      })}
                     </span>
                   </Link>
                 </li>
@@ -74,7 +80,7 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
               <List className="size-4" />
               {data.listName}
               <span className="text-muted-foreground font-normal">
-                ({metadata.count} items)
+                {t("search.itemCountParens", { count: metadata.count })}
               </span>
             </CardTitle>
           </CardHeader>
@@ -98,9 +104,9 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Wallet className="size-4" />
-              Recent Expenses
+              {t("search.recentExpenses")}
               <span className="text-muted-foreground font-normal">
-                ({metadata.count} expenses)
+                {t("search.expenseCount", { count: metadata.count })}
               </span>
             </CardTitle>
           </CardHeader>
@@ -112,17 +118,18 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">
-                    {expense.description ?? "Expense"}
+                    {expense.description ?? t("expenseFallback")}
                   </span>
                   <span className="font-medium">
                     {formatCurrencyFromCents({
                       cents: expense.amountInCents,
                       currency: expense.currency,
+                      locale,
                     })}
                   </span>
                 </div>
                 <div className="text-muted-foreground mt-1 text-sm">
-                  Paid by {expense.paidByMemberName}
+                  {t("paidBy", { name: expense.paidByMemberName })}
                 </div>
               </div>
             ))}
@@ -136,9 +143,9 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Users className="size-4" />
-              Group Members
+              {t("search.groupMembers")}
               <span className="text-muted-foreground font-normal">
-                ({metadata.count} members)
+                {t("search.memberCountParens", { count: metadata.count })}
               </span>
             </CardTitle>
           </CardHeader>
@@ -169,13 +176,13 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
                       {member.name}
                       {member.isCurrentUser && (
                         <span className="text-muted-foreground ml-1 text-sm">
-                          (you)
+                          {t("search.you")}
                         </span>
                       )}
                     </span>
                   </div>
                   <span className="text-muted-foreground text-sm capitalize">
-                    {member.role}
+                    {t(`search.role.${member.role}`)}
                   </span>
                 </li>
               ))}
@@ -190,14 +197,14 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Wallet className="size-4" />
-              Debts in {metadata.groupName}
+              {t("search.debtsIn", { group: metadata.groupName })}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             {data.items.length === 0 ? (
               <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <CheckCircle2 className="size-4 text-green-500" />
-                All settled up!
+                {t("search.settledUp")}
               </div>
             ) : (
               <ul className="space-y-1">
@@ -210,6 +217,7 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
                       {formatCurrencyFromCents({
                         cents: debt.amountInCents,
                         currency: debt.currency,
+                        locale,
                       })}
                     </span>
                   </li>
@@ -226,7 +234,7 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Users className="size-4" />
-              Group Info
+              {t("search.groupInfo")}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
@@ -234,8 +242,8 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
               <div key={group.id} className="space-y-1">
                 <div className="font-medium">{group.name}</div>
                 <div className="text-muted-foreground text-sm">
-                  {group.memberCount} members
-                  {group.isCurrentUserAdmin && " (you're admin)"}
+                  {t("search.memberCount", { count: group.memberCount })}
+                  {group.isCurrentUserAdmin && ` ${t("search.youreAdmin")}`}
                 </div>
               </div>
             ))}

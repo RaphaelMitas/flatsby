@@ -6,6 +6,7 @@ import type {
 import type { Tool } from "ai";
 import { tool, zodSchema } from "ai";
 
+import { translatorFor } from "@flatsby/i18n/translator";
 import {
   modifyDataInputSchema,
   modifyDataToolInputSchema,
@@ -94,6 +95,7 @@ export function createChatTools({
   groupId: number;
 }): Record<string, Tool> {
   const caller = createRouterCaller(ctx);
+  const t = translatorFor(ctx.locale);
 
   return {
     searchData: tool({
@@ -102,7 +104,7 @@ export function createChatTools({
       inputSchema: zodSchema(searchDataInputSchema),
       execute: async (input): Promise<SearchDataOutput> => {
         return executeSearchData(
-          { db: ctx.db, userId: ctx.session.user.id, caller },
+          { db: ctx.db, userId: ctx.session.user.id, caller, t },
           { ...input, groupId },
         );
       },
@@ -115,7 +117,7 @@ export function createChatTools({
       execute: async (input): Promise<ModifyDataOutput> => {
         const parsed = modifyDataInputSchema.parse(input);
         return executeModifyData(
-          { db: ctx.db, userId: ctx.session.user.id, caller },
+          { db: ctx.db, userId: ctx.session.user.id, caller, t },
           { ...parsed, groupId },
         );
       },

@@ -1,4 +1,7 @@
+import type { MessageKey } from "@flatsby/i18n/message-key";
 import { z } from "zod/v4";
+
+import { msg } from "@flatsby/i18n/message-key";
 
 import type { CategoryColorKey } from "./category-colors";
 
@@ -22,22 +25,6 @@ export const expenseCategoryGroups = [
 ] as const;
 
 export type ExpenseCategoryGroup = (typeof expenseCategoryGroups)[number];
-
-export const expenseCategoryGroupLabels: Record<ExpenseCategoryGroup, string> =
-  {
-    "food-drinks": "Food & Drinks",
-    transport: "Transport",
-    shopping: "Shopping",
-    entertainment: "Entertainment",
-    housing: "Housing",
-    utilities: "Utilities",
-    health: "Health",
-    travel: "Travel",
-    subscriptions: "Subscriptions",
-    education: "Education",
-    gifts: "Gifts",
-    other: "Other",
-  };
 
 /**
  * Maps each group to a color key matching the existing CATEGORY_COLORS palette
@@ -65,241 +52,211 @@ export const expenseCategoryGroupColorKeys: Record<
 // Subcategories (determines icon)
 // ============================================================================
 
-export const expenseSubcategories = [
+const subcategoryDefinitions = [
   // food-drinks
   {
     id: "restaurant",
     group: "food-drinks",
     icon: "utensils",
-    label: "Restaurant",
   },
-  { id: "coffee", group: "food-drinks", icon: "coffee", label: "Coffee" },
-  { id: "bar", group: "food-drinks", icon: "wine", label: "Bar" },
+  { id: "coffee", group: "food-drinks", icon: "coffee" },
+  { id: "bar", group: "food-drinks", icon: "wine" },
   {
     id: "groceries",
     group: "food-drinks",
     icon: "shopping-cart",
-    label: "Groceries",
   },
   {
     id: "fast-food",
     group: "food-drinks",
     icon: "pizza",
-    label: "Fast Food",
   },
   {
     id: "other-food-drinks",
     group: "food-drinks",
     icon: "circle-ellipsis",
-    label: "Other Food & Drinks",
   },
   // transport
   {
     id: "ride-sharing",
     group: "transport",
     icon: "car",
-    label: "Ride-sharing",
   },
   {
     id: "public-transit",
     group: "transport",
     icon: "train-front",
-    label: "Public Transit",
   },
-  { id: "gas", group: "transport", icon: "fuel", label: "Gas" },
+  { id: "gas", group: "transport", icon: "fuel" },
   {
     id: "parking",
     group: "transport",
     icon: "square-parking",
-    label: "Parking",
   },
   {
     id: "taxi",
     group: "transport",
     icon: "car-taxi-front",
-    label: "Taxi",
   },
   {
     id: "other-transport",
     group: "transport",
     icon: "circle-ellipsis",
-    label: "Other Transport",
   },
   // shopping
-  { id: "clothes", group: "shopping", icon: "shirt", label: "Clothes" },
+  { id: "clothes", group: "shopping", icon: "shirt" },
   {
     id: "electronics",
     group: "shopping",
     icon: "smartphone",
-    label: "Electronics",
   },
   {
     id: "home-goods",
     group: "shopping",
     icon: "lamp",
-    label: "Home Goods",
   },
   {
     id: "other-shopping",
     group: "shopping",
     icon: "circle-ellipsis",
-    label: "Other Shopping",
   },
   // entertainment
   {
     id: "movies",
     group: "entertainment",
     icon: "clapperboard",
-    label: "Movies",
   },
   {
     id: "games",
     group: "entertainment",
     icon: "gamepad-2",
-    label: "Games",
   },
   {
     id: "sports",
     group: "entertainment",
     icon: "dumbbell",
-    label: "Sports",
   },
   {
     id: "events",
     group: "entertainment",
     icon: "ticket",
-    label: "Events",
   },
-  { id: "music", group: "entertainment", icon: "music", label: "Music" },
+  { id: "music", group: "entertainment", icon: "music" },
   {
     id: "other-entertainment",
     group: "entertainment",
     icon: "circle-ellipsis",
-    label: "Other Entertainment",
   },
   // housing
-  { id: "rent", group: "housing", icon: "house", label: "Rent" },
+  { id: "rent", group: "housing", icon: "house" },
   {
     id: "maintenance",
     group: "housing",
     icon: "wrench",
-    label: "Maintenance",
   },
   {
     id: "furniture",
     group: "housing",
     icon: "armchair",
-    label: "Furniture",
   },
   {
     id: "other-housing",
     group: "housing",
     icon: "circle-ellipsis",
-    label: "Other Housing",
   },
   // utilities
-  { id: "electric", group: "utilities", icon: "zap", label: "Electric" },
-  { id: "water", group: "utilities", icon: "droplets", label: "Water" },
-  { id: "internet", group: "utilities", icon: "wifi", label: "Internet" },
-  { id: "phone", group: "utilities", icon: "phone", label: "Phone" },
+  { id: "electric", group: "utilities", icon: "zap" },
+  { id: "water", group: "utilities", icon: "droplets" },
+  { id: "internet", group: "utilities", icon: "wifi" },
+  { id: "phone", group: "utilities", icon: "phone" },
   {
     id: "other-utilities",
     group: "utilities",
     icon: "circle-ellipsis",
-    label: "Other Utilities",
   },
   // health
   {
     id: "doctor",
     group: "health",
     icon: "stethoscope",
-    label: "Doctor",
   },
-  { id: "pharmacy", group: "health", icon: "pill", label: "Pharmacy" },
-  { id: "gym", group: "health", icon: "dumbbell", label: "Gym" },
+  { id: "pharmacy", group: "health", icon: "pill" },
+  { id: "gym", group: "health", icon: "dumbbell" },
   {
     id: "other-health",
     group: "health",
     icon: "circle-ellipsis",
-    label: "Other Health",
   },
   // travel
-  { id: "hotel", group: "travel", icon: "bed", label: "Hotel" },
-  { id: "flight", group: "travel", icon: "plane", label: "Flight" },
+  { id: "hotel", group: "travel", icon: "bed" },
+  { id: "flight", group: "travel", icon: "plane" },
   {
     id: "activities",
     group: "travel",
     icon: "map-pin",
-    label: "Activities",
   },
   {
     id: "other-travel",
     group: "travel",
     icon: "circle-ellipsis",
-    label: "Other Travel",
   },
   // subscriptions
   {
     id: "streaming",
     group: "subscriptions",
     icon: "tv",
-    label: "Streaming",
   },
   {
     id: "software",
     group: "subscriptions",
     icon: "app-window",
-    label: "Software",
   },
   {
     id: "membership",
     group: "subscriptions",
     icon: "id-card",
-    label: "Membership",
   },
   {
     id: "other-subscriptions",
     group: "subscriptions",
     icon: "circle-ellipsis",
-    label: "Other Subscriptions",
   },
   // education
   {
     id: "courses",
     group: "education",
     icon: "graduation-cap",
-    label: "Courses",
   },
-  { id: "books", group: "education", icon: "book-open", label: "Books" },
+  { id: "books", group: "education", icon: "book-open" },
   {
     id: "other-education",
     group: "education",
     icon: "circle-ellipsis",
-    label: "Other Education",
   },
   // gifts
-  { id: "gift", group: "gifts", icon: "gift", label: "Gift" },
+  { id: "gift", group: "gifts", icon: "gift" },
   {
     id: "donation",
     group: "gifts",
     icon: "heart-handshake",
-    label: "Donation",
   },
   {
     id: "other-gifts",
     group: "gifts",
     icon: "circle-ellipsis",
-    label: "Other Gifts",
   },
   // other
-  { id: "other", group: "other", icon: "circle-help", label: "Other" },
+  { id: "other", group: "other", icon: "circle-help" },
 ] as const;
 
-export type ExpenseSubcategoryId = (typeof expenseSubcategories)[number]["id"];
+export type ExpenseSubcategoryId =
+  (typeof subcategoryDefinitions)[number]["id"];
+
+export const expenseSubcategories = subcategoryDefinitions;
 
 // Build the enum tuple at the type level for z.enum
-const firstSubId = expenseSubcategories[0].id;
-const restSubIds = expenseSubcategories.slice(1).map((s) => s.id);
+const firstSubId = subcategoryDefinitions[0].id;
+const restSubIds = subcategoryDefinitions.slice(1).map((s) => s.id);
 export const expenseSubcategoryIdSchema = z.enum([firstSubId, ...restSubIds]);
 
 // ============================================================================
@@ -343,4 +300,21 @@ export function isExpenseCategoryGroup(
   value: string,
 ): value is ExpenseCategoryGroup {
   return categoryGroupSet.has(value);
+}
+
+export function expenseCategoryLabelKeys(subcategoryId: string): {
+  name: MessageKey;
+  description: MessageKey;
+} {
+  if (subcategoryId === AI_AUTO_DETECT) {
+    return {
+      name: msg("expenseCategories.aiAutoDetect"),
+      description: msg("expenseCategories.aiAutoDetectDescription"),
+    };
+  }
+  const id = isExpenseSubcategoryId(subcategoryId) ? subcategoryId : "other";
+  return {
+    name: msg(`expenseCategories.subcategories.${id}`),
+    description: msg(`expenseCategories.groups.${getSubcategoryGroup(id)}`),
+  };
 }

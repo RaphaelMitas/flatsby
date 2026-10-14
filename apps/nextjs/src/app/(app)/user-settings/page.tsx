@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { isLocale, localeCookie } from "@flatsby/i18n/locale";
 import { Button } from "@flatsby/ui/button";
@@ -19,6 +20,7 @@ import ManageUser from "./ManageUser";
 
 export default async function Page() {
   prefetch(trpc.user.getCurrentUser.queryOptions());
+  const t = await getTranslations("settings.page");
   const preference = (await cookies()).get(localeCookie)?.value;
   return (
     <div className="flex flex-col p-4 md:pt-16">
@@ -28,7 +30,7 @@ export default async function Page() {
             className="text-3xl font-semibold"
             data-testid="account-settings-title"
           >
-            User Settings
+            {t("title")}
           </h1>
         </div>
         <ManageUser />
@@ -37,23 +39,19 @@ export default async function Page() {
         />
         <Card>
           <CardHeader>
-            <CardTitle>Billing & Subscription</CardTitle>
-            <CardDescription>
-              Manage your subscription and payment methods
-            </CardDescription>
+            <CardTitle>{t("billingTitle")}</CardTitle>
+            <CardDescription>{t("billingDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/billing">
-              <Button>Manage Billing</Button>
+              <Button>{t("manageBilling")}</Button>
             </Link>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Your Data</CardTitle>
-            <CardDescription>
-              Download a copy of your personal data (GDPR Article 20)
-            </CardDescription>
+            <CardTitle>{t("dataTitle")}</CardTitle>
+            <CardDescription>{t("dataDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ExportUserData />

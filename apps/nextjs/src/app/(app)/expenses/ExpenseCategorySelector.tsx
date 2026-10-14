@@ -2,6 +2,7 @@
 
 import type { ExpenseSubcategoryId } from "@flatsby/validators/expenses/categories";
 import { ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
@@ -31,6 +32,7 @@ export function ExpenseCategorySelector({
   onChange,
   autoDetect,
 }: ExpenseCategorySelectorProps) {
+  const t = useTranslations();
   const selectedData = getExpenseCategoryData(value ?? AI_AUTO_DETECT);
   const allItems = getAllExpenseCategoryItems().filter(
     (item) => autoDetect || item.id !== AI_AUTO_DETECT,
@@ -49,14 +51,14 @@ export function ExpenseCategorySelector({
             <selectedData.icon
               className={cn("mr-2 h-5 w-5", selectedData.colorClasses.base)}
             />
-            <span className="text-foreground">{selectedData.name}</span>
+            <span className="text-foreground">{t(selectedData.name)}</span>
           </span>
           <ChevronDown className="text-muted-foreground ml-2 h-5 w-5" />
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[80vh]">
         <SheetHeader>
-          <SheetTitle>Select Category</SheetTitle>
+          <SheetTitle>{t("common.selectCategory")}</SheetTitle>
         </SheetHeader>
         <ScrollArea className="mt-4 h-[calc(80vh-6rem)]">
           {allItems.map((item) => (
@@ -83,9 +85,9 @@ export function ExpenseCategorySelector({
                   />
                 </div>
                 <div className="flex flex-col text-left">
-                  <div className="font-medium">{item.name}</div>
+                  <div className="font-medium">{t(item.name)}</div>
                   <div className="text-muted-foreground text-sm">
-                    {item.description}
+                    {t(item.description)}
                   </div>
                 </div>
               </Button>

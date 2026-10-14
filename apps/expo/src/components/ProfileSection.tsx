@@ -1,5 +1,6 @@
 import type React from "react";
 import { Text, View } from "react-native";
+import { useTranslations } from "use-intl";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
@@ -28,12 +29,13 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   showChangePhoto = true,
   disabled = true,
 }) => {
+  const t = useTranslations("settings.profile");
   return (
     <Card>
       <CardHeader>
         <View className="items-center">
           <Avatar>
-            <AvatarImage alt={`${name} Avatar`} />
+            <AvatarImage alt={t("avatarAlt", { name })} />
             <AvatarFallback className="text-muted-foreground text-xl">
               {fallbackText}
             </AvatarFallback>
@@ -49,12 +51,12 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
               disabled={disabled}
               variant="outline"
               icon="upload"
-              title="Change Photo"
+              title={t("changePhoto")}
               className="w-full"
               onPress={onChangePhoto}
             />
             <Text className="text-muted-foreground mt-2 text-xs">
-              Photo upload coming soon!
+              {t("photoComingSoon")}
             </Text>
           </>
         )}

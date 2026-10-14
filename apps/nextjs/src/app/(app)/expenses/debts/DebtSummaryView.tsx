@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CheckCircle2, Plus } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
@@ -34,6 +35,8 @@ import { SettlementForm } from "./SettlementForm";
 
 export function DebtSummaryView() {
   const trpc = useTRPC();
+  const t = useTranslations();
+  const locale = useLocale();
   const { currentGroup } = useGroupContext();
   const handleApiError = useHandleApiError();
   const [settling, setSettling] = useState<SettlementPrefill | "blank" | null>(
@@ -59,7 +62,7 @@ export function DebtSummaryView() {
 
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
-  const person = personLookup(groupData.data.groupMembers, meId);
+  const person = personLookup(groupData.data.groupMembers, meId, t);
   const others = debtsBetweenOthers(summary, meId, kind);
   const balances = groupBalances(summary, meId);
   const settle = (debt: DebtEntry) => setSettling({ source: kind, debt });
@@ -70,26 +73,26 @@ export function DebtSummaryView() {
         data-testid="debt-summary-title"
         className="text-2xl font-bold tracking-tight sm:text-3xl"
       >
-        Debts
+        {t("navigation.debts")}
       </h2>
 
       {hasDebts(summary) ? (
         <>
-          <DebtHero hero={debtHero(summary, meId)} />
+          <DebtHero hero={debtHero(summary, meId, t, locale)} />
           <ModeSwitch kind={kind} onChange={setKind} />
-          <Section title="Between you and">
+          <Section title={t("debts.betweenYouAnd")}>
             <DirectDebtsCard
               groupId={groupId}
               meId={meId}
               kind={kind}
-              debts={debtsFor(summary, meId, kind)}
-              allSquare={allSquareMessage(summary, meId, kind, person)}
+              debts={debtsFor(summary, meId, kind, t)}
+              allSquare={allSquareMessage(summary, meId, kind, person, t)}
               person={person}
               onSettle={settle}
             />
           </Section>
           {others.length > 0 && (
-            <Section title="Between others">
+            <Section title={t("debts.betweenOthers")}>
               <OtherDebtsCard
                 debts={others}
                 person={person}
@@ -98,7 +101,7 @@ export function DebtSummaryView() {
             </Section>
           )}
           {balances.length > 0 && (
-            <Section title="Balances">
+            <Section title={t("debts.balances")}>
               <GroupBalancesCard currencies={balances} person={person} />
             </Section>
           )}
@@ -112,9 +115,9 @@ export function DebtSummaryView() {
             <CheckCircle2 className="size-8" />
           </span>
           <div>
-            <p className="text-lg font-semibold">All settled up</p>
+            <p className="text-lg font-semibold">{t("debts.allSettledUp")}</p>
             <p className="text-muted-foreground text-sm">
-              Nobody in {groupData.data.name} owes anything.
+              {t("debts.nobodyOwes", { group: groupData.data.name })}
             </p>
           </div>
         </Card>
@@ -127,7 +130,7 @@ export function DebtSummaryView() {
         data-testid="record-payment-button"
       >
         <Plus />
-        Record another payment
+        {t("debts.recordAnotherPayment")}
       </Button>
 
       {settling && (
@@ -141,9 +144,9 @@ export function DebtSummaryView() {
 }
 
 const modes = [
-  { kind: "direct", label: "Actual" },
-  { kind: "simplified", label: "Simplified" },
-] satisfies { kind: DebtKind; label: string }[];
+  { kind: "direct", name: "actual" },
+  { kind: "simplified", name: "simplified" },
+] as const satisfies { kind: DebtKind; name: string }[];
 
 function ModeSwitch({
   kind,
@@ -152,6 +155,7 @@ function ModeSwitch({
   kind: DebtKind;
   onChange: (kind: DebtKind) => void;
 }) {
+  const t = useTranslations("debts.mode");
   return (
     <Tabs
       value={kind}
@@ -165,9 +169,9 @@ function ModeSwitch({
           <TabsTrigger
             key={mode.kind}
             value={mode.kind}
-            data-testid={`debt-mode-${mode.label.toLowerCase()}`}
+            data-testid={`debt-mode-${mode.name}`}
           >
-            {mode.label}
+            {t(mode.name)}
           </TabsTrigger>
         ))}
       </TabsList>

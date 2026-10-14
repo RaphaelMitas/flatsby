@@ -15,6 +15,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { AlertCircle, LoaderCircle } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
@@ -72,6 +73,8 @@ interface SettlementFormProps {
 
 export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const trpc = useTRPC();
+  const t = useTranslations();
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
   const handleApiError = useHandleApiError();
@@ -187,7 +190,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                   userId: "",
                   role: "member" as const,
                   joinedOn: new Date(),
-                  user: { email: "", name: "Unknown", image: null },
+                  user: { email: "", name: t("common.unknown"), image: null },
                 },
             createdByGroupMember: currentMember
               ? {
@@ -204,7 +207,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                   userId: "",
                   role: "member" as const,
                   joinedOn: new Date(),
-                  user: { email: "", name: "Unknown", image: null },
+                  user: { email: "", name: t("common.unknown"), image: null },
                 },
             expenseSplits: input.splits.map((split, index) => ({
               id: Date.now() + index,
@@ -229,7 +232,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                     userId: "",
                     role: "member" as const,
                     joinedOn: new Date(),
-                    user: { email: "", name: "Unknown", image: null },
+                    user: { email: "", name: t("common.unknown"), image: null },
                   },
             })),
             isPending: true,
@@ -261,7 +264,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
             context.previousDebtSummary,
           );
         }
-        toast.error("Failed to record settlement", {
+        toast.error(t("debts.recordFailed"), {
           description: error.message,
         });
       },
@@ -272,13 +275,13 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
             debtSummaryQueryKey,
             context.previousDebtSummary,
           );
-          toast.error("Failed to record settlement", {
+          toast.error(t("debts.recordFailed"), {
             description: data.error.message,
           });
           return;
         }
 
-        toast.success("Settlement recorded successfully");
+        toast.success(t("debts.recordSuccess"));
         onClose();
       },
       onSettled: () => {
@@ -294,6 +297,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
       paidByGroupMemberId: values.fromGroupMemberId,
       amountInCents: values.amountInCents,
       currency: values.currency,
+      // i18n-ignore: stored on the expense and shown to every member
       description: "Settlement",
       expenseDate: new Date(),
       splits: [
@@ -316,7 +320,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   }
 
   const groupMembers = groupData.data.groupMembers;
-  const person = personLookup(groupMembers, meId);
+  const person = personLookup(groupMembers, meId, t);
   const fromMember = person(fromGroupMemberId);
   const toMember = person(toGroupMemberId);
 
@@ -342,7 +346,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
         data-testid="settlement-form"
       >
         <SheetHeader>
-          <SheetTitle>Settle Up</SheetTitle>
+          <SheetTitle>{t("debts.settleUp")}</SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
@@ -358,12 +362,12 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                     name="fromGroupMemberId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Paying</FormLabel>
+                        <FormLabel>{t("debts.paying")}</FormLabel>
                         <MemberSelect
                           value={field.value}
                           members={groupMembers}
                           person={person}
-                          placeholder="Who pays?"
+                          placeholder={t("debts.whoPays")}
                           onChange={(from) =>
                             selectPair(
                               from,
@@ -381,14 +385,14 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                     name="toGroupMemberId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Receiving</FormLabel>
+                        <FormLabel>{t("debts.receiving")}</FormLabel>
                         <MemberSelect
                           value={field.value}
                           members={groupMembers.filter(
                             (member) => member.id !== fromGroupMemberId,
                           )}
                           person={person}
-                          placeholder="Who receives?"
+                          placeholder={t("debts.whoReceives")}
                           onChange={(to) => selectPair(fromGroupMemberId, to)}
                           testId="settlement-to-select"
                         />
@@ -405,12 +409,16 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                       image={fromMember.image}
                     />
                     <div>
-                      <p className="text-muted-foreground text-sm">Paying</p>
+                      <p className="text-muted-foreground text-sm">
+                        {t("debts.paying")}
+                      </p>
                       <p className="font-semibold">{fromMember.name}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-muted-foreground text-sm">Receiving</p>
+                    <p className="text-muted-foreground text-sm">
+                      {t("debts.receiving")}
+                    </p>
                     <p className="font-semibold">{toMember.name}</p>
                   </div>
                 </div>
@@ -427,12 +435,14 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                       outstanding,
                       meId,
                       person,
+                      t,
                     )}
                   </p>
                   <p className="text-2xl font-bold tabular-nums">
                     {formatCurrencyFromCents({
                       cents: outstanding.amountInCents,
                       currency: outstanding.currency,
+                      locale,
                     })}
                   </p>
                 </div>
@@ -444,7 +454,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               name="amountInCents"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Settlement Amount</FormLabel>
+                  <FormLabel>{t("debts.settlementAmount")}</FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
                       {isBlank ? (
@@ -496,12 +506,12 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               createSettlementMutation.data?.success === false) && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
+                <AlertTitle>{t("common.error")}</AlertTitle>
                 <AlertDescription>
                   {createSettlementMutation.data?.success === false
                     ? createSettlementMutation.data.error.message
                     : (createSettlementMutation.error?.message ??
-                      "An error occurred")}
+                      t("expenses.genericError"))}
                 </AlertDescription>
               </Alert>
             )}
@@ -516,7 +526,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                 className="flex-1"
                 data-testid="settlement-cancel-button"
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 type="submit"
@@ -527,10 +537,10 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                 {isPending ? (
                   <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    Recording...
+                    {t("debts.recording")}
                   </>
                 ) : (
-                  "Record Settlement"
+                  t("debts.recordSettlement")
                 )}
               </Button>
             </div>

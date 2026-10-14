@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import type { Translate } from "@flatsby/i18n/message-key";
 import type { CategoryId } from "@flatsby/validators/categories";
 import type {
   ExpenseCreateInput,
@@ -57,6 +58,7 @@ interface ExecutorContext {
   db: Database;
   userId: string;
   caller: RouterCaller;
+  t: Translate;
 }
 
 /**
@@ -85,7 +87,7 @@ export async function executeSearchData(
   ctx: ExecutorContext,
   input: SearchDataInput,
 ): Promise<SearchDataOutput> {
-  const { db, userId } = ctx;
+  const { db, userId, t } = ctx;
   const { query, groupId, filters } = input;
 
   // Security: Verify user is a member of the group
@@ -95,7 +97,7 @@ export async function executeSearchData(
       success: false,
       data: { type: "shoppingLists", items: [] },
       metadata: { count: 0, groupName: "" },
-      error: "Group not found or access denied",
+      error: t("errors.groupAccessDenied"),
     };
   }
 
@@ -110,7 +112,7 @@ export async function executeSearchData(
       success: false,
       data: { type: "shoppingLists", items: [] },
       metadata: { count: 0, groupName: "" },
-      error: "Group not found",
+      error: t("errors.groupNotFound"),
     };
   }
 
@@ -152,7 +154,7 @@ export async function executeSearchData(
           success: false,
           data: { type: "shoppingListItems", items: [], listName: "" },
           metadata: { count: 0, groupName },
-          error: "shoppingListId filter is required",
+          error: "shoppingListId filter is required", // i18n-ignore: tells the model which filter it forgot
         };
       }
 
@@ -169,7 +171,7 @@ export async function executeSearchData(
           success: false,
           data: { type: "shoppingListItems", items: [], listName: "" },
           metadata: { count: 0, groupName },
-          error: "Shopping list not found",
+          error: t("errors.shoppingListNotFound"),
         };
       }
 
@@ -307,9 +309,10 @@ export async function executeSearchData(
           debtItems.push({
             fromMemberId: debt.fromGroupMemberId,
             fromMemberName:
-              memberNameMap.get(debt.fromGroupMemberId) ?? "Unknown",
+              memberNameMap.get(debt.fromGroupMemberId) ?? t("common.unknown"),
             toMemberId: debt.toGroupMemberId,
-            toMemberName: memberNameMap.get(debt.toGroupMemberId) ?? "Unknown",
+            toMemberName:
+              memberNameMap.get(debt.toGroupMemberId) ?? t("common.unknown"),
             amountInCents: debt.amountInCents,
             currency: parseCurrency(currency),
           });
@@ -357,7 +360,7 @@ export async function executeSearchData(
         success: false,
         data: { type: "shoppingLists", items: [] },
         metadata: { count: 0, groupName },
-        error: `Unknown query type: ${exhaustiveCheck as string}`,
+        error: `Unknown query type: ${exhaustiveCheck as string}`, // i18n-ignore: unreachable
       };
     }
   }
@@ -378,13 +381,13 @@ export async function executeModifyData(
   ctx: ExecutorContext,
   input: ModifyDataInput,
 ): Promise<ModifyDataOutput> {
-  const { db, userId } = ctx;
+  const { db, userId, t } = ctx;
   const { action, entity, groupId } = input;
 
   // Security: Verify user is a member of the group
   const membership = await requireMemberAccess(db, groupId, userId);
   if (!membership) {
-    return errorOutput(action, entity, "Group not found or access denied");
+    return errorOutput(action, entity, t("errors.groupAccessDenied"));
   }
 
   // Admin-only operations check
@@ -393,11 +396,7 @@ export async function executeModifyData(
     (entity === "shoppingList" && (action === "create" || action === "delete"));
 
   if (requiresAdmin && membership.role !== "admin") {
-    return errorOutput(
-      action,
-      entity,
-      "Admin access required for this operation",
-    );
+    return errorOutput(action, entity, t("errors.adminAccessRequired"));
   }
 
   // Type narrowing by entity + action
@@ -506,7 +505,11 @@ async function handleShoppingListItemDelete(
   });
 
   if (!item) {
-    return errorOutput("delete", "shoppingListItem", "Item not found");
+    return errorOutput(
+      "delete",
+      "shoppingListItem",
+      ctx.t("errors.itemNotFound"),
+    );
   }
 
   // Call tRPC procedure (handles auth, group verification)
@@ -532,7 +535,7 @@ async function handleExpenseCreate(
   groupId: number,
   input: ExpenseCreateInput,
 ): Promise<ModifyDataOutput> {
-  const { db, caller } = ctx;
+  const { db, caller, t } = ctx;
   const { data } = input;
 
   // Get member names for output formatting
@@ -566,9 +569,9 @@ async function handleExpenseCreate(
       amountInCents: data.amountInCents,
       currency: parseCurrency(data.currency),
       paidByMemberName:
-        memberIdToName.get(data.paidByGroupMemberId) ?? "Unknown",
+        memberIdToName.get(data.paidByGroupMemberId) ?? t("common.unknown"),
       splits: expense.splits.map((s) => ({
-        memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
+        memberName: memberIdToName.get(s.groupMemberId) ?? t("common.unknown"),
         amountInCents: s.amountInCents,
       })),
     },
@@ -601,7 +604,7 @@ async function handleExpenseDelete(
   });
 
   if (!expense) {
-    return errorOutput("delete", "expense", "Expense not found");
+    return errorOutput("delete", "expense", ctx.t("errors.expenseNotFound"));
   }
 
   // Call tRPC procedure (handles transactions, auth, group verification)
@@ -632,7 +635,7 @@ async function handleExpenseUpdate(
   _groupId: number,
   input: ExpenseUpdateInput,
 ): Promise<ModifyDataOutput> {
-  const { db, caller } = ctx;
+  const { db, caller, t } = ctx;
   const { data } = input;
 
   // Get expense details and member names for output formatting
@@ -653,7 +656,7 @@ async function handleExpenseUpdate(
   });
 
   if (!expense) {
-    return errorOutput("update", "expense", "Expense not found");
+    return errorOutput("update", "expense", ctx.t("errors.expenseNotFound"));
   }
 
   // Get member names for output
@@ -694,9 +697,10 @@ async function handleExpenseUpdate(
       description: outputDescription,
       amountInCents: outputAmount,
       currency: parseCurrency(outputCurrency),
-      paidByMemberName: memberIdToName.get(outputPaidByMemberId) ?? "Unknown",
+      paidByMemberName:
+        memberIdToName.get(outputPaidByMemberId) ?? t("common.unknown"),
       splits: (updated.splits ?? expense.expenseSplits).map((s) => ({
-        memberName: memberIdToName.get(s.groupMemberId) ?? "Unknown",
+        memberName: memberIdToName.get(s.groupMemberId) ?? t("common.unknown"),
         amountInCents: s.amountInCents,
       })),
     },
@@ -770,7 +774,11 @@ async function handleShoppingListDelete(
   });
 
   if (!listToDelete) {
-    return errorOutput("delete", "shoppingList", "Shopping list not found");
+    return errorOutput(
+      "delete",
+      "shoppingList",
+      ctx.t("errors.shoppingListNotFound"),
+    );
   }
 
   // Call tRPC procedure (handles auth, group verification, transactions)

@@ -2,6 +2,7 @@
 
 import type { ShowUIInput, ShowUIOutput } from "@flatsby/validators/chat/tools";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { UIChart } from "./ui-chart";
 import { UIConfirmation } from "./ui-confirmation";
@@ -25,6 +26,7 @@ export function ShowUIResult({
   disabled = false,
   onUIResponse,
 }: ShowUIResultProps) {
+  const t = useTranslations("common");
   const { component, config } = input;
   const componentId = output.componentId ?? "unknown";
   const hasResponded = !output.awaitingInput;
@@ -35,7 +37,7 @@ export function ShowUIResult({
     return (
       <div className="my-2 flex items-center gap-2 text-sm">
         <Loader2 className="size-4 animate-spin" />
-        <span>Loading...</span>
+        <span>{t("loading")}</span>
       </div>
     );
   }

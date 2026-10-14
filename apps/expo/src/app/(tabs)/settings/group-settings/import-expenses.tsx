@@ -8,8 +8,9 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
-import { centsToDecimal } from "@flatsby/validators/expenses/conversion";
+import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImport";
 
@@ -28,6 +29,10 @@ import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function ImportExpensesScreen() {
+  const t = useTranslations("splitwiseImport");
+  const tCommon = useTranslations("common");
+  const tRoot = useTranslations();
+  const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { selectedGroupId } = useShoppingStore();
@@ -106,14 +111,15 @@ export default function ImportExpensesScreen() {
         <ScrollView className="m-4">
           <View className="items-center gap-4 py-8">
             <Text className="text-foreground text-xl font-semibold">
-              Import Complete
+              {t("importCompleteTitle")}
             </Text>
             <Text className="text-muted-foreground text-center text-base">
-              Successfully imported {bulkCreateMutation.data.data.importedCount}{" "}
-              expenses.
+              {t("importedCount", {
+                count: bulkCreateMutation.data.data.importedCount,
+              })}
             </Text>
             <Button
-              title="Done"
+              title={t("done")}
               onPress={() => router.back()}
               className="mt-4 w-full"
             />
@@ -128,20 +134,20 @@ export default function ImportExpensesScreen() {
       <SafeAreaView edges={isAndroid ? [] : ["bottom"]}>
         <ScrollView className="px-4">
           <Text className="text-foreground text-xl font-semibold">
-            Import from Splitwise
+            {t("importFromSplitwise")}
           </Text>
 
           {wizard.step === "file" && (
             <View className="gap-4">
               <Button
-                title={wizard.parsed ? "Change CSV File" : "Select CSV File"}
+                title={wizard.parsed ? t("changeCsvFile") : t("selectCsvFile")}
                 icon="file-text"
                 variant="outline"
                 onPress={handlePickFile}
               />
 
               <View className="gap-2">
-                <Label>Currency to import</Label>
+                <Label>{t("currencyToImport")}</Label>
                 <View className="flex-row flex-wrap gap-2">
                   {CURRENCY_CODES.map((code) => (
                     <Pressable
@@ -169,9 +175,11 @@ export default function ImportExpensesScreen() {
 
               {wizard.parsed && (
                 <Text className="text-muted-foreground text-sm">
-                  Found {wizard.parsed.rows.length} rows and{" "}
-                  {wizard.parsed.personNames.length} people:{" "}
-                  {wizard.parsed.personNames.join(", ")}
+                  {t("foundRowsAndPeople", {
+                    rows: wizard.parsed.rows.length,
+                    people: wizard.parsed.personNames.length,
+                    names: wizard.parsed.personNames.join(", "),
+                  })}
                 </Text>
               )}
 
@@ -179,13 +187,13 @@ export default function ImportExpensesScreen() {
                 <TimedAlert
                   key={i}
                   variant="destructive"
-                  title="Parse Error"
-                  description={err}
+                  title={t("parseErrorTitle")}
+                  description={tRoot(err.key, err.values)}
                 />
               ))}
 
               <Button
-                title="Next"
+                title={tCommon("next")}
                 disabled={!wizard.parsed || wizard.parsed.rows.length === 0}
                 onPress={wizard.goToMapping}
               />
@@ -195,7 +203,7 @@ export default function ImportExpensesScreen() {
           {wizard.step === "mapping" && (
             <View className="gap-4">
               <Text className="text-muted-foreground text-sm">
-                Map each Splitwise person to a group member.
+                {t("mapPeople")}
               </Text>
 
               {wizard.parsed?.personNames.map((name) => (
@@ -211,7 +219,7 @@ export default function ImportExpensesScreen() {
                     triggerTitle={
                       wizard.memberMapping[name] != null
                         ? undefined
-                        : "Select member"
+                        : t("selectMember")
                     }
                     onSelect={(item) =>
                       wizard.setMemberMapping(name, Number(item.id))
@@ -222,13 +230,13 @@ export default function ImportExpensesScreen() {
 
               <View className="flex-row gap-2">
                 <Button
-                  title="Back"
+                  title={tCommon("back")}
                   variant="outline"
                   onPress={wizard.goBack}
                   className="flex-1"
                 />
                 <Button
-                  title="Next"
+                  title={tCommon("next")}
                   disabled={!wizard.allNamesMapped}
                   onPress={wizard.goToPreview}
                   className="flex-1"
@@ -240,9 +248,10 @@ export default function ImportExpensesScreen() {
           {wizard.step === "preview" && (
             <View className="gap-4">
               <Text className="text-muted-foreground text-sm">
-                {wizard.expenses.length} expenses to import
-                {wizard.skipped.length > 0 &&
-                  `, ${wizard.skipped.length} rows skipped`}
+                {t("previewSummary", {
+                  expenses: wizard.expenses.length,
+                  skipped: wizard.skipped.length,
+                })}
               </Text>
 
               {wizard.expenses.slice(0, 50).map((exp, i) => (
@@ -255,33 +264,39 @@ export default function ImportExpensesScreen() {
                       {exp.description}
                     </Text>
                     <Text className="text-muted-foreground text-xs">
-                      {exp.expenseDate.toLocaleDateString()} -{" "}
+                      {exp.expenseDate.toLocaleDateString(locale)} -{" "}
                       {exp.splitMethod === "settlement"
-                        ? "Settlement"
-                        : "Expense"}
+                        ? t("settlement")
+                        : t("expense")}
                     </Text>
                   </View>
                   <Text className="text-foreground text-sm font-medium">
-                    {centsToDecimal(exp.amountInCents).toFixed(2)}{" "}
-                    {exp.currency}
+                    {formatCurrencyFromCents({
+                      cents: exp.amountInCents,
+                      currency: exp.currency,
+                      locale,
+                    })}
                   </Text>
                 </View>
               ))}
 
               {wizard.expenses.length > 50 && (
                 <Text className="text-muted-foreground text-center text-sm">
-                  ...and {wizard.expenses.length - 50} more
+                  {t("moreExpenses", { count: wizard.expenses.length - 50 })}
                 </Text>
               )}
 
               {wizard.skipped.length > 0 && (
                 <View className="bg-muted rounded-lg p-3">
                   <Text className="text-muted-foreground mb-1 text-sm font-medium">
-                    {wizard.skipped.length} skipped rows
+                    {t("skippedRows", { count: wizard.skipped.length })}
                   </Text>
                   {wizard.skipped.slice(0, 10).map((s, i) => (
                     <Text key={i} className="text-muted-foreground text-xs">
-                      Row {s.row}: {s.reason}
+                      {t("skippedRow", {
+                        row: s.row,
+                        reason: tRoot(s.reason.key, s.reason.values),
+                      })}
                     </Text>
                   ))}
                 </View>
@@ -289,13 +304,13 @@ export default function ImportExpensesScreen() {
 
               <View className="flex-row gap-2">
                 <Button
-                  title="Back"
+                  title={tCommon("back")}
                   variant="outline"
                   onPress={wizard.goBack}
                   className="flex-1"
                 />
                 <Button
-                  title="Next"
+                  title={tCommon("next")}
                   disabled={wizard.expenses.length === 0}
                   onPress={wizard.goToConfirm}
                   className="flex-1"
@@ -308,11 +323,10 @@ export default function ImportExpensesScreen() {
             <View className="gap-4">
               <View className="bg-muted rounded-lg p-4">
                 <Text className="text-foreground text-base font-medium">
-                  Ready to import
+                  {t("readyToImport")}
                 </Text>
                 <Text className="text-muted-foreground mt-1 text-sm">
-                  {wizard.expenses.length} expenses will be created in this
-                  group. This action cannot be easily undone.
+                  {t("willBeCreated", { count: wizard.expenses.length })}
                 </Text>
               </View>
 
@@ -320,18 +334,19 @@ export default function ImportExpensesScreen() {
                 bulkCreateMutation.data?.success === false) && (
                 <TimedAlert
                   variant="destructive"
-                  title="Import failed"
+                  title={t("importFailed")}
                   description={
                     bulkCreateMutation.data?.success === false
                       ? bulkCreateMutation.data.error.message
-                      : (bulkCreateMutation.error?.message ?? "Unknown error")
+                      : (bulkCreateMutation.error?.message ??
+                        tCommon("unknownError"))
                   }
                 />
               )}
 
               <View className="flex-row gap-2">
                 <Button
-                  title="Back"
+                  title={tCommon("back")}
                   variant="outline"
                   onPress={wizard.goBack}
                   disabled={bulkCreateMutation.isPending}
@@ -340,8 +355,8 @@ export default function ImportExpensesScreen() {
                 <Button
                   title={
                     bulkCreateMutation.isPending
-                      ? "Importing..."
-                      : `Import ${wizard.expenses.length}`
+                      ? t("importing")
+                      : t("importCountShort", { count: wizard.expenses.length })
                   }
                   icon={bulkCreateMutation.isPending ? "loader" : undefined}
                   onPress={handleImport}

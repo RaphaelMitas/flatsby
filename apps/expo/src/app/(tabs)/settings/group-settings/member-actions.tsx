@@ -5,6 +5,7 @@ import type {
 import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
@@ -25,6 +26,7 @@ export const setMemberActionCallbacks = (
 };
 
 export default function MemberActionsScreen() {
+  const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
   const { memberId } = useLocalSearchParams();
   const router = useRouter();
@@ -91,17 +93,17 @@ export default function MemberActionsScreen() {
       {isCurrentUserAdmin && (
         <View className="mb-6 gap-3">
           <Text className="text-foreground text-sm font-medium">
-            Change Role
+            {t("group.members.changeRole")}
           </Text>
           <View className="flex-row gap-2">
             <Button
-              title="Admin"
+              title={t("group.members.roles.admin")}
               variant={isUserAdmin ? "primary" : "outline"}
               className="flex-1"
               onPress={() => handleUpdateRole("admin")}
             />
             <Button
-              title="Member"
+              title={t("group.members.roles.member")}
               variant={!isUserAdmin ? "primary" : "outline"}
               className="flex-1"
               onPress={() => handleUpdateRole("member")}
@@ -111,17 +113,19 @@ export default function MemberActionsScreen() {
       )}
 
       <Text className="text-foreground mb-6 text-sm font-medium">
-        Manage Member
+        {t("group.members.manageMember")}
       </Text>
       <View className="flex-row gap-3">
         <Button
-          title="Cancel"
+          title={t("common.cancel")}
           variant="outline"
           className="flex-1"
           onPress={() => router.back()}
         />
         <Button
-          title={isCurrentUser ? "Leave Group" : "Remove"}
+          title={
+            isCurrentUser ? t("group.members.leaveGroup") : t("common.remove")
+          }
           variant="destructive"
           className="flex-1"
           icon="trash-2"

@@ -5,6 +5,7 @@ import type {
 import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
+import { useTranslations } from "use-intl";
 
 import { useShoppingListSuggestions } from "@flatsby/api/hooks/useShoppingListSuggestions";
 import { createShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
@@ -24,6 +25,7 @@ export const ShoppingListItemAddForm = ({
   onSubmit,
   groupId,
 }: ShoppingListItemAddFormProps) => {
+  const t = useTranslations("shoppingList.item");
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] =
     useState<CategoryIdWithAiAutoSelect>("ai-auto-select");
@@ -88,7 +90,7 @@ export const ShoppingListItemAddForm = ({
         <Input
           testID="shopping-list-item-input"
           className="flex-1"
-          placeholder="Add new item..."
+          placeholder={t("addPlaceholder")}
           value={name}
           onChangeText={setName}
           returnKeyType="send"
@@ -109,7 +111,7 @@ export const ShoppingListItemAddForm = ({
         {name.trim().length > 0 && (
           <Button
             testID="shopping-list-add-item-button"
-            title="Add"
+            title={t("add")}
             onPress={handleSubmit}
             disabled={isSubmitting}
             size="md"

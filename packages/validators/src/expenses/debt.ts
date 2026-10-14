@@ -1,3 +1,7 @@
+import type { MessageKey, Translate } from "@flatsby/i18n/message-key";
+
+import { msg } from "@flatsby/i18n/message-key";
+
 import type { DebtEntry, GroupDebtSummary, MemberBalances } from "./types";
 
 /** debtor -> creditor -> cents, every amount positive */
@@ -105,14 +109,15 @@ export interface CounterpartDebts {
 }
 
 const directionLabels = {
-  direct: { owed: "owes you", owing: "you owe" },
-  simplified: { owed: "pays you", owing: "you pay" },
-} satisfies Record<DebtKind, { owed: string; owing: string }>;
+  direct: { owed: msg("debts.owesYou"), owing: msg("debts.youOwe") },
+  simplified: { owed: msg("debts.paysYou"), owing: msg("debts.youPay") },
+} satisfies Record<DebtKind, { owed: MessageKey; owing: MessageKey }>;
 
 export function debtsFor(
   summary: GroupDebtSummary,
   memberId: number,
   kind: DebtKind,
+  t: Translate,
 ): CounterpartDebts[] {
   const byCounterpart = new Map<number, CounterpartDebts["amounts"]>();
   for (const entry of Object.values(summary.currencies)) {
@@ -139,8 +144,8 @@ export function debtsFor(
       groupMemberId,
       amounts,
       direction: [
-        amounts.some(({ amountInCents }) => amountInCents > 0) && owed,
-        amounts.some(({ amountInCents }) => amountInCents < 0) && owing,
+        amounts.some(({ amountInCents }) => amountInCents > 0) && t(owed),
+        amounts.some(({ amountInCents }) => amountInCents < 0) && t(owing),
       ]
         .filter(Boolean)
         .join(" · "),
