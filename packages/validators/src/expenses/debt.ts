@@ -1,24 +1,19 @@
+import type { ConvertibleExpense } from "./conversion";
 import type { DebtEntry, GroupDebtSummary, MemberBalances } from "./types";
+import { inLedgerCurrency } from "./conversion";
 
 /** debtor -> creditor -> cents, every amount positive */
 type DebtGraph = Map<number, Map<number, number>>;
 
 export function calculateDebts(
-  expenses: {
-    paidByGroupMemberId: number;
-    amountInCents: number;
-    currency: string;
-    expenseSplits: {
-      groupMemberId: number;
-      amountInCents: number;
-    }[];
-  }[],
+  expenses: (ConvertibleExpense & { paidByGroupMemberId: number })[],
 ): GroupDebtSummary {
   const memberBalances: MemberBalances = {};
   const graphs = new Map<string, DebtGraph>();
 
-  for (const expense of expenses) {
-    const { paidByGroupMemberId: payer, currency } = expense;
+  for (const { paidByGroupMemberId: payer, ...stored } of expenses) {
+    const expense = inLedgerCurrency(stored);
+    const { currency } = expense;
     adjustBalance(memberBalances, payer, currency, expense.amountInCents);
 
     let graph = graphs.get(currency);

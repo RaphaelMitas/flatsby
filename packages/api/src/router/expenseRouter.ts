@@ -12,9 +12,11 @@ import {
   getSubcategoryGroup,
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
+import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
 import {
   createExpenseSchema,
+  currencyCodeSchema,
   deleteExpenseSchema,
   getPairActivityInputSchema,
   pairActivitySchema,
@@ -30,7 +32,7 @@ import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/valida
 
 import type { ApiError } from "../errors";
 import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
-import { captureError } from "../lib/posthog";
+import { captureError, captureEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   DbUtils,
@@ -73,6 +75,29 @@ function ensureActiveMembers(
 }
 
 const PAIR_ACTIVITY_PAGE = 5;
+
+/** ECB reference rate via Frankfurter, null when it can't be fetched so the user types the amount */
+async function fetchExchangeRate(from: string, to: string, day: string) {
+  const today = new Date().toISOString().slice(0, 10);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(
+      `https://api.frankfurter.dev/v1/${day < today ? day : "latest"}?base=${from}&symbols=${to}`,
+      { signal: controller.signal },
+    );
+    if (!response.ok) return null;
+    const { date: rateDate, rates } = z
+      .object({ date: z.string(), rates: z.record(z.string(), z.number()) })
+      .parse(await response.json());
+    const rate = rates[to];
+    return rate === undefined ? null : { rate, date: rateDate };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 function withDerivedCategory<T extends { id: number; subcategory: string }>(
   row: T,
@@ -138,6 +163,10 @@ export const expenseRouter = createTRPCRouter({
                               paidByGroupMemberId: input.paidByGroupMemberId,
                               amountInCents: input.amountInCents,
                               currency: input.currency,
+                              convertedAmountInCents:
+                                input.convertedAmountInCents ?? null,
+                              convertedCurrency:
+                                input.convertedCurrency ?? null,
                               description: input.description,
                               category: getSubcategoryGroup(subcategory),
                               subcategory,
@@ -162,6 +191,18 @@ export const expenseRouter = createTRPCRouter({
                             })),
                           );
 
+                          if (input.currency !== group.currency) {
+                            captureEvent({
+                              distinctId: ctx.session.user.id,
+                              event: "foreign_expense_created",
+                              headers: ctx.headers,
+                              additionalProperties: {
+                                converted: input.convertedCurrency != null,
+                                currency: input.currency,
+                                groupCurrency: group.currency,
+                              },
+                            });
+                          }
                           return { ...expense, splits };
                         }, "create expense with splits")(ctx.db),
                     ),
@@ -234,6 +275,7 @@ export const expenseRouter = createTRPCRouter({
                           .select({
                             splitMethod: expenses.splitMethod,
                             amountInCents: expenses.amountInCents,
+                            currency: expenses.currency,
                           })
                           .from(expenses)
                           .where(eq(expenses.id, input.expenseId))
@@ -285,6 +327,28 @@ export const expenseRouter = createTRPCRouter({
                         }
                         if (input.currency !== undefined) {
                           updateData.currency = input.currency;
+                        }
+                        const currency = input.currency ?? locked.currency;
+                        if (
+                          input.convertedAmountInCents !== undefined ||
+                          input.convertedCurrency !== undefined
+                        ) {
+                          const converts =
+                            input.convertedCurrency != null &&
+                            input.convertedCurrency !== currency;
+                          updateData.convertedAmountInCents = converts
+                            ? input.convertedAmountInCents
+                            : null;
+                          updateData.convertedCurrency = converts
+                            ? input.convertedCurrency
+                            : null;
+                        } else if (
+                          amountInCents !== locked.amountInCents ||
+                          currency !== locked.currency
+                        ) {
+                          // App builds before conversion never send it, and a stale converted amount would count instead
+                          updateData.convertedAmountInCents = null;
+                          updateData.convertedCurrency = null;
                         }
                         if (input.description !== undefined) {
                           updateData.description = input.description;
@@ -635,6 +699,16 @@ export const expenseRouter = createTRPCRouter({
       );
     }),
 
+  getExchangeRate: protectedProcedure
+    .input(
+      z.object({
+        from: currencyCodeSchema,
+        to: currencyCodeSchema,
+        day: z.iso.date(),
+      }),
+    )
+    .query(({ input }) => fetchExchangeRate(input.from, input.to, input.day)),
+
   getPairActivity: protectedProcedure
     .input(getPairActivityInputSchema)
     .output(getApiResultZod(pairActivitySchema))
@@ -655,9 +729,11 @@ export const expenseRouter = createTRPCRouter({
                   description: expenses.description,
                   expenseDate: expenses.expenseDate,
                   currency: expenses.currency,
+                  convertedAmountInCents: expenses.convertedAmountInCents,
+                  convertedCurrency: expenses.convertedCurrency,
                   paidByGroupMemberId: expenses.paidByGroupMemberId,
                   amountInCents: expenses.amountInCents,
-                  pairAmountInCents: expenseSplits.amountInCents,
+                  pairMemberId: expenseSplits.groupMemberId,
                   splitMethod: expenses.splitMethod,
                 })
                 .from(expenses)
@@ -692,11 +768,40 @@ export const expenseRouter = createTRPCRouter({
                 .limit(PAIR_ACTIVITY_PAGE + 1);
               const items = rows.slice(0, PAIR_ACTIVITY_PAGE);
               const last = items.at(-1);
+              // A converted expense's pair share depends on every split's rounding
+              const splits =
+                items.length > 0
+                  ? await ctx.db.query.expenseSplits.findMany({
+                      where: inArray(
+                        expenseSplits.expenseId,
+                        items.map((row) => row.id),
+                      ),
+                      columns: {
+                        expenseId: true,
+                        groupMemberId: true,
+                        amountInCents: true,
+                      },
+                    })
+                  : [];
               return {
-                items: items.map(({ splitMethod, ...row }) => ({
-                  ...row,
-                  isSettlement: splitMethod === "settlement",
-                })),
+                items: items.map(({ splitMethod, pairMemberId, ...row }) => {
+                  const ledger = inLedgerCurrency({
+                    ...row,
+                    expenseSplits: splits.filter(
+                      (split) => split.expenseId === row.id,
+                    ),
+                  });
+                  return {
+                    ...row,
+                    amountInCents: ledger.amountInCents,
+                    currency: ledger.currency,
+                    pairAmountInCents:
+                      ledger.expenseSplits.find(
+                        (split) => split.groupMemberId === pairMemberId,
+                      )?.amountInCents ?? 0,
+                    isSettlement: splitMethod === "settlement",
+                  };
+                }),
                 nextCursor:
                   rows.length > PAIR_ACTIVITY_PAGE && last
                     ? { date: last.expenseDate, id: last.id }

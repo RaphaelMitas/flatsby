@@ -201,6 +201,8 @@ export function SettlementForm({
             paidByGroupMemberId: input.paidByGroupMemberId,
             amountInCents: input.amountInCents,
             currency: input.currency,
+            convertedAmountInCents: null,
+            convertedCurrency: null,
             description: input.description,
             category: "other",
             subcategory: "other",

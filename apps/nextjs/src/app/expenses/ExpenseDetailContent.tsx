@@ -17,10 +17,18 @@ import {
 import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
 import { Separator } from "@flatsby/ui/separator";
 import {
+  inLedgerCurrency,
+  rateBetween,
+} from "@flatsby/validators/expenses/conversion";
+import {
   formatCurrencyFromCents,
+  formatExpenseAmounts,
   formatExpenseDateLong,
+  formatRate,
   formatSplitPortion,
 } from "@flatsby/validators/expenses/formatting";
+
+import { RateSourceInfo } from "./RateSourceInfo";
 
 interface ExpenseDetailContentProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -37,10 +45,8 @@ export function ExpenseDetailContent({
 }: ExpenseDetailContentProps) {
   const categoryData = getExpenseCategoryData(expense.subcategory);
 
-  const formattedAmount = formatCurrencyFromCents({
-    cents: expense.amountInCents,
-    currency: expense.currency,
-  });
+  const { amount, paid } = formatExpenseAmounts(expense);
+  const ledger = inLedgerCurrency(expense);
   const expenseDate = new Date(expense.expenseDate);
   const formattedDate = formatExpenseDateLong(expenseDate);
 
@@ -79,7 +85,27 @@ export function ExpenseDetailContent({
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <CardTitle className="text-2xl">{formattedAmount}</CardTitle>
+              <CardTitle className="text-2xl">{amount}</CardTitle>
+              {expense.convertedAmountInCents !== null &&
+                expense.convertedCurrency !== null && (
+                  <div className="text-muted-foreground mt-1 text-sm">
+                    <p>
+                      {paid} ·{" "}
+                      {formatRate(
+                        expense.currency,
+                        expense.convertedCurrency,
+                        rateBetween(
+                          expense.amountInCents,
+                          expense.convertedAmountInCents,
+                        ),
+                      )}
+                    </p>
+                    <p className="flex items-center gap-1 text-xs">
+                      Converted when added
+                      <RateSourceInfo currency={expense.convertedCurrency} />
+                    </p>
+                  </div>
+                )}
               {expense.description && (
                 <CardDescription className="mt-2 text-base">
                   {expense.description}
@@ -189,6 +215,10 @@ export function ExpenseDetailContent({
                   cents: split.amountInCents,
                   currency: expense.currency,
                 });
+                const ledgerAmount = formatCurrencyFromCents({
+                  cents: ledger.expenseSplits[index]?.amountInCents ?? 0,
+                  currency: ledger.currency,
+                });
                 const portion = formatSplitPortion({ split, expense });
 
                 return (
@@ -211,7 +241,16 @@ export function ExpenseDetailContent({
                           </p>
                         </div>
                       </div>
-                      <p className="font-semibold">{splitAmount}</p>
+                      {paid === undefined ? (
+                        <p className="font-semibold">{splitAmount}</p>
+                      ) : (
+                        <div className="text-right">
+                          <p className="font-semibold">{ledgerAmount}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {splitAmount}
+                          </p>
+                        </div>
+                      )}
                     </div>
                     {index < expense.expenseSplits.length - 1 && (
                       <Separator className="mt-3" />

@@ -50,7 +50,7 @@ export default function GroupDetailsScreen() {
   };
 
   const updateGroupNameMutation = useMutation(
-    trpc.group.changeGroupName.mutationOptions({
+    trpc.group.updateGroup.mutationOptions({
       onMutate: (data) => {
         void queryClient.cancelQueries(
           trpc.group.getGroup.queryOptions({
@@ -71,7 +71,7 @@ export default function GroupDetailsScreen() {
             if (!old?.success) return old;
             return {
               success: true as const,
-              data: { ...old.data, name: data.name },
+              data: { ...old.data, name: data.name ?? old.data.name },
             };
           },
         );

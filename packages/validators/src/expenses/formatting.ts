@@ -2,6 +2,7 @@
 // Formatting Utilities - Currency and Date Display
 // ============================================================================
 
+import type { ConvertibleExpense } from "./conversion";
 import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
 import type { DebtEntry, GroupDebtSummary } from "./types";
@@ -53,6 +54,40 @@ export function formatCurrencyFromCents({
     currency,
     locale,
   });
+}
+
+/** The amount an expense counts as first, and what was actually paid when that differs */
+export function formatExpenseAmounts(
+  expense: Pick<
+    ConvertibleExpense,
+    | "amountInCents"
+    | "currency"
+    | "convertedAmountInCents"
+    | "convertedCurrency"
+  >,
+): { amount: string; paid?: string } {
+  const paid = formatCurrencyFromCents({
+    cents: expense.amountInCents,
+    currency: expense.currency,
+  });
+  if (
+    expense.convertedAmountInCents == null ||
+    expense.convertedCurrency == null
+  ) {
+    return { amount: paid };
+  }
+  return {
+    amount: formatCurrencyFromCents({
+      cents: expense.convertedAmountInCents,
+      currency: expense.convertedCurrency,
+    }),
+    paid,
+  };
+}
+
+/** e.g. "1 CHF = 1.0650 EUR" */
+export function formatRate(from: string, to: string, rate: number): string {
+  return `1 ${from} = ${rate.toFixed(4)} ${to}`;
 }
 
 /**
@@ -151,6 +186,13 @@ function joinNames(names: string[]): string {
   const last = names.at(-1);
   if (names.length < 2 || last === undefined) return last ?? "";
   return `${names.slice(0, -1).join(", ")} and ${last}`;
+}
+
+/** "EUR and CHF", with the group's currency first */
+export function listCurrencies(currencies: string[], first: string): string {
+  return joinNames(
+    [...currencies].sort((a, b) => Number(b === first) - Number(a === first)),
+  );
 }
 
 export function debtHero(summary: GroupDebtSummary, meId: number) {

@@ -26,6 +26,7 @@ import type { SettlementPrefill } from "./SettlementForm";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
+import { ConversionBanner } from "./ConversionBanner";
 import { DebtHero } from "./DebtHero";
 import { DirectDebtsCard } from "./DirectDebtsCard";
 import { GroupBalancesCard } from "./GroupBalancesCard";
@@ -63,6 +64,11 @@ export function DebtSummaryView() {
   const others = debtsBetweenOthers(summary, meId, kind);
   const balances = groupBalances(summary, meId);
   const settle = (debt: DebtEntry) => setSettling({ source: kind, debt });
+  const group = groupData.data;
+  const showConversionBanner =
+    group.thisGroupMember.role === "admin" &&
+    group.convertAutomatically === null &&
+    balances.length > 1;
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -72,6 +78,14 @@ export function DebtSummaryView() {
       >
         Debts
       </h2>
+
+      {showConversionBanner && (
+        <ConversionBanner
+          groupId={groupId}
+          groupCurrency={group.currency}
+          currencies={balances.map(({ currency }) => currency)}
+        />
+      )}
 
       {hasDebts(summary) ? (
         <>

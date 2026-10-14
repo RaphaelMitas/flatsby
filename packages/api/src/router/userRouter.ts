@@ -618,6 +618,8 @@ export const userRouter = createTRPCRouter({
                       description: true,
                       amountInCents: true,
                       currency: true,
+                      convertedAmountInCents: true,
+                      convertedCurrency: true,
                       category: true,
                       subcategory: true,
                       splitMethod: true,

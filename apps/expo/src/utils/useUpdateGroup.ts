@@ -1,0 +1,46 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { trpc } from "~/utils/api";
+
+export function useUpdateGroup(groupId: number) {
+  const queryClient = useQueryClient();
+  const groupQueryKey = trpc.group.getGroup.queryKey({ id: groupId });
+
+  return useMutation(
+    trpc.group.updateGroup.mutationOptions({
+      onMutate: async (input) => {
+        await queryClient.cancelQueries({ queryKey: groupQueryKey });
+        const previousGroup = queryClient.getQueryData(groupQueryKey);
+        queryClient.setQueryData(groupQueryKey, (old) => {
+          if (!old?.success) return old;
+          return {
+            success: true as const,
+            data: {
+              ...old.data,
+              name: input.name ?? old.data.name,
+              currency: input.currency ?? old.data.currency,
+              convertAutomatically:
+                input.convertAutomatically === undefined
+                  ? old.data.convertAutomatically
+                  : input.convertAutomatically,
+            },
+          };
+        });
+        return { previousGroup };
+      },
+      onSuccess: (data, _variables, context) => {
+        if (!data.success) {
+          queryClient.setQueryData(groupQueryKey, context.previousGroup);
+          return;
+        }
+        void queryClient.invalidateQueries({ queryKey: groupQueryKey });
+        void queryClient.invalidateQueries(
+          trpc.group.getUserGroups.queryOptions(),
+        );
+      },
+      onError: (_error, _variables, context) => {
+        queryClient.setQueryData(groupQueryKey, context?.previousGroup);
+      },
+    }),
+  );
+}

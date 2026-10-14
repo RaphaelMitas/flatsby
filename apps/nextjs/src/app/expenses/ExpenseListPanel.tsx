@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { Plus, Receipt } from "lucide-react";
+import { HandCoins, Plus, Wallet } from "lucide-react";
 import { InView } from "react-intersection-observer";
 
 import { Button } from "@flatsby/ui/button";
@@ -83,7 +83,7 @@ export function ExpenseListPanel({
             data-testid="expense-debts-link"
           >
             <Link href="/expenses/debts">
-              <Receipt className="mr-2 h-4 w-4" />
+              <HandCoins className="mr-2 h-4 w-4" />
               Debts
             </Link>
           </Button>
@@ -103,7 +103,7 @@ export function ExpenseListPanel({
         <div className="flex flex-col gap-3 p-4">
           {!hasExpenses ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-              <Receipt className="text-muted-foreground h-12 w-12" />
+              <Wallet className="text-muted-foreground h-12 w-12" />
               <div>
                 <p className="text-lg font-semibold">No expenses yet</p>
                 <p className="text-muted-foreground text-sm">
@@ -124,6 +124,11 @@ export function ExpenseListPanel({
                 <ExpenseCard
                   key={expense.id}
                   expense={expense}
+                  autoConvertTo={
+                    groupData.data.convertAutomatically
+                      ? groupData.data.currency
+                      : undefined
+                  }
                   isSelected={expense.id === selectedExpenseId}
                   onSelect={() => onSelectExpense(expense.id)}
                 />

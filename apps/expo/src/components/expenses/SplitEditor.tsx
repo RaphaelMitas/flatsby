@@ -5,6 +5,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useWatch } from "react-hook-form";
 
+import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import {
   formatCurrencyFromCents,
   formatShareCount,
@@ -41,6 +42,7 @@ interface SplitEditorProps {
   groupMembers: GroupWithAccess["groupMembers"];
   totalAmountCents: number;
   currency: string;
+  converted?: { amountInCents: number; currency: string };
   splitMethod: EditableSplitMethod;
   onSplitMethodChange: (method: EditableSplitMethod) => void;
 }
@@ -50,6 +52,7 @@ export function SplitEditor({
   groupMembers,
   totalAmountCents,
   currency,
+  converted,
   splitMethod,
   onSplitMethodChange,
 }: SplitEditorProps) {
@@ -73,6 +76,15 @@ export function SplitEditor({
     onMethodChange: onSplitMethodChange,
     totalAmountCents,
   });
+  const convertedSplits =
+    converted &&
+    inLedgerCurrency({
+      amountInCents: totalAmountCents,
+      currency,
+      convertedAmountInCents: converted.amountInCents,
+      convertedCurrency: converted.currency,
+      expenseSplits: splits,
+    }).expenseSplits;
 
   return (
     <View className="gap-4">
@@ -175,6 +187,14 @@ export function SplitEditor({
                         currency,
                       })}
                     </Text>
+                    {converted && (
+                      <Text className="text-muted-foreground text-sm">
+                        {formatCurrencyFromCents({
+                          cents: convertedSplits?.[index]?.amountInCents ?? 0,
+                          currency: converted.currency,
+                        })}
+                      </Text>
+                    )}
                   </View>
 
                   {splitMethod === "percentage" && (
@@ -265,6 +285,8 @@ export function SplitEditor({
               }`}
             >
               {formatCurrencyFromCents({ cents: totalSplitCents, currency })}
+              {converted &&
+                ` · ${formatCurrencyFromCents({ cents: converted.amountInCents, currency: converted.currency })}`}
             </Text>
           </View>
           {!validation.isValid && validation.error && (

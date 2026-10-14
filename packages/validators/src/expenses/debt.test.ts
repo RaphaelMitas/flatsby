@@ -236,6 +236,26 @@ describe("balances", () => {
     expect(summary.memberBalances[MAX]).toEqual({ EUR: -1000, USD: 1500 });
   });
 
+  it("counts a converted expense in the currency it was converted to, shares summing to its total", () => {
+    const summary = calculateDebts([
+      {
+        ...shared(YOU, { [YOU]: 3334, [LENA]: 3333, [MAX]: 3333 }, "CHF"),
+        convertedAmountInCents: 10650,
+        convertedCurrency: "EUR",
+      },
+    ]);
+
+    expect(summary.memberBalances).toEqual({
+      [YOU]: { EUR: 7099 },
+      [LENA]: { EUR: -3550 },
+      [MAX]: { EUR: -3549 },
+    });
+    expect(eur(summary).direct).toEqual([
+      debt(LENA, YOU, 3550),
+      debt(MAX, YOU, 3549),
+    ]);
+  });
+
   it.each(SEEDS)(
     "match the reference and sum to zero per currency (seed %i)",
     (seed) => {

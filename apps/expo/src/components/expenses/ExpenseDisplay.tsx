@@ -1,9 +1,6 @@
 import { Text, View } from "react-native";
 
-import {
-  formatCurrencyFromCents,
-  formatExpenseDateShort,
-} from "@flatsby/validators/expenses/formatting";
+import { formatExpenseDateShort } from "@flatsby/validators/expenses/formatting";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Badge } from "~/lib/ui/badge";
@@ -12,8 +9,8 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 
 export interface ExpenseDisplayProps {
-  amountInCents: number;
-  currency: string;
+  amounts: { amount: string; paid?: string };
+  isNotConverted?: boolean;
   description?: string | null;
   paidByName: string;
   paidByImage?: string | null;
@@ -27,8 +24,8 @@ export interface ExpenseDisplayProps {
 }
 
 export function ExpenseDisplay({
-  amountInCents,
-  currency,
+  amounts,
+  isNotConverted,
   description,
   paidByName,
   paidByImage,
@@ -40,11 +37,7 @@ export function ExpenseDisplay({
   fromImage,
   isSelected,
 }: ExpenseDisplayProps) {
-  const formattedAmount = formatCurrencyFromCents({
-    cents: amountInCents,
-    currency,
-  });
-
+  const subline = amounts.paid ?? (isNotConverted ? "not converted" : null);
   const formattedDate = formatExpenseDateShort(expenseDate);
 
   const isSettlement = splitMethod === "settlement";
@@ -53,9 +46,14 @@ export function ExpenseDisplay({
     <Card className={isSelected ? "border-primary border-2" : undefined}>
       <CardContent className="gap-3 p-4">
         <View className="flex-row flex-wrap items-center gap-2">
-          <Text className="text-foreground text-2xl font-bold">
-            {formattedAmount}
-          </Text>
+          <View>
+            <Text className="text-foreground text-2xl font-bold">
+              {amounts.amount}
+            </Text>
+            {subline && (
+              <Text className="text-muted-foreground text-sm">{subline}</Text>
+            )}
+          </View>
           {isSettlement ? (
             <Badge variant="secondary">
               <Icon name="handshake" size={12} color="secondary-foreground" />

@@ -53,3 +53,54 @@ tags:
     visible: "Team snacks"
     timeout: 20000
 - assertVisible: ".*25[.,]00.*"
+
+# A CHF expense converted to EUR by hand, so the test never depends on the fetched rate
+- tapOn:
+    id: "expense-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-amount"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-currency"
+- extendedWaitUntil:
+    visible:
+      id: "picker-item-CHF"
+    timeout: 20000
+- tapOn:
+    id: "picker-item-CHF"
+- tapOn:
+    id: "expense-form-amount"
+- inputText: "10.00"
+- tapOn:
+    id: "expense-form-description"
+- inputText: "Zurich dinner"
+- tapOn: "Amount & Details"
+- tapOn:
+    id: "expense-form-convert"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-converted-amount"
+    timeout: 10000
+- tapOn:
+    id: "expense-form-converted-amount"
+- eraseText
+- inputText: "9.00"
+- tapOn: "Amount & Details"
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 3"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    visible: "Zurich dinner"
+    timeout: 20000
+- assertVisible: "€9[.,]00"
+- assertVisible: "CHF.10[.,]00"

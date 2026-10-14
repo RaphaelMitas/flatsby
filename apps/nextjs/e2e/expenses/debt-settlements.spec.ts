@@ -44,6 +44,28 @@ test.describe("Debt & Settlements", () => {
     await expect(max.getByTestId("direct-debt-settle")).toHaveCount(2);
   });
 
+  test("keeping currencies separate dismisses the conversion banner", async ({
+    page,
+    baseURL,
+  }) => {
+    await openSeededDebts(page, baseURL);
+
+    const banner = page.getByTestId("currency-banner");
+    await expect(banner).toContainText("Debts are now in");
+    const keepSeparate = banner.getByTestId("currency-banner-keep-separate");
+    await waitForHydration(keepSeparate);
+    const saved = page.waitForResponse((response) =>
+      response.url().includes("group.updateGroup"),
+    );
+    await keepSeparate.click();
+    await expect(banner).toBeHidden();
+    await saved;
+
+    await page.reload();
+    await expect(page.getByTestId("debt-summary-title")).toBeVisible();
+    await expect(banner).toBeHidden();
+  });
+
   test("settling a direct debt in full removes the row", async ({
     page,
     baseURL,

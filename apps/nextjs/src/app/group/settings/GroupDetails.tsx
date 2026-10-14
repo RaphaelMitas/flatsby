@@ -52,7 +52,7 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
   }
 
   const groupNameMutation = useMutation(
-    trpc.group.changeGroupName.mutationOptions({
+    trpc.group.updateGroup.mutationOptions({
       onSuccess: (data) => {
         if (!data.success) {
           return;

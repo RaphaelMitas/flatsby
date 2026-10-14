@@ -180,6 +180,38 @@ test.describe("Expense Creation", () => {
     ).toBeVisible();
   });
 
+  test("converts a foreign expense at a typed amount", async ({ authPage }) => {
+    const description = "Dinner in Zurich";
+    await authPage.goto("/expenses");
+    await openExpenseForm(authPage, {
+      amount: "84.00",
+      description,
+      categoryId: "restaurant",
+    });
+
+    await authPage.getByTestId("expense-form-currency").click();
+    await authPage.getByRole("option", { name: "CHF" }).click();
+    await authPage.getByTestId("expense-form-convert").click();
+    // Typed by hand so the test never depends on the rate fetch
+    const convertedInput = authPage.getByTestId(
+      "expense-form-converted-amount",
+    );
+    await convertedInput.click();
+    await convertedInput.clear();
+    await convertedInput.pressSequentially("89.46");
+
+    await submitEqualSplitExpense(authPage);
+
+    const card = authPage
+      .getByTestId(/^expense-card-\d+$/)
+      .filter({ hasText: description })
+      .first();
+    await expect(card).toContainText("€89.46");
+    await expect(card.getByTestId("expense-card-paid-amount")).toHaveText(
+      "CHF 84.00",
+    );
+  });
+
   test("creates an expense with manual category selection", async ({
     authPage,
   }) => {

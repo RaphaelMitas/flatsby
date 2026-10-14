@@ -153,6 +153,12 @@ export function ExpenseListPanel({
                   isSelected={item.id === selectedExpenseId}
                   onSelect={() => onSelectExpense(item.id)}
                   onEdit={() => handleEdit(item)}
+                  isNotConverted={
+                    groupData.data.convertAutomatically === true &&
+                    item.splitMethod !== "settlement" &&
+                    item.convertedCurrency == null &&
+                    item.currency !== groupData.data.currency
+                  }
                 />
               )}
               onEndReached={() => {

@@ -1,0 +1,115 @@
+import { useState } from "react";
+
+import type { CurrencyCode } from "./types";
+import { convertCents, rateBetween } from "./conversion";
+import { formatExpenseDateShort, formatRate } from "./formatting";
+import { isCurrencyCode } from "./types";
+
+export interface ExchangeRateQuery {
+  data: { rate: number; date: string } | null | undefined;
+  isError: boolean;
+}
+
+function localDay(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * The expense form's "Convert to {group currency}" state. It converts at the fetched market rate
+ * until the user types a converted amount; a typed or stored rate only holds for its currencies and day.
+ */
+export function useExpenseConversion({
+  group,
+  expense,
+  currency,
+  amountInCents,
+  expenseDate,
+  useExchangeRate,
+}: {
+  group: { currency: CurrencyCode; convertAutomatically: boolean | null };
+  expense?: {
+    amountInCents: number;
+    convertedAmountInCents: number | null;
+    convertedCurrency: string | null;
+    splitMethod: string;
+  };
+  currency: CurrencyCode;
+  amountInCents: number;
+  expenseDate: Date;
+  useExchangeRate: (
+    input: { from: CurrencyCode; to: CurrencyCode; day: string },
+    enabled: boolean,
+  ) => ExchangeRateQuery;
+}) {
+  const targetCurrency =
+    expense?.convertedCurrency && isCurrencyCode(expense.convertedCurrency)
+      ? expense.convertedCurrency
+      : group.currency;
+  const [convert, setConvert] = useState(
+    expense
+      ? expense.convertedAmountInCents !== null
+      : group.convertAutomatically === true,
+  );
+  const isShown =
+    currency !== targetCurrency && expense?.splitMethod !== "settlement";
+  const isOn = isShown && convert;
+
+  const day = localDay(expenseDate);
+  const fetched = useExchangeRate(
+    { from: currency, to: targetCurrency, day },
+    isShown,
+  );
+
+  const rateKey = `${currency}>${targetCurrency}@${day}`;
+  const [ownRate, setOwnRate] = useState(
+    expense?.convertedAmountInCents == null
+      ? undefined
+      : {
+          rate: rateBetween(
+            expense.amountInCents,
+            expense.convertedAmountInCents,
+          ),
+          rateKey,
+        },
+  );
+  const isOwnRate = ownRate?.rateKey === rateKey;
+  const rate = isOwnRate ? ownRate.rate : fetched.data?.rate;
+
+  const convertedAmountInCents =
+    isOn && rate !== undefined && amountInCents > 0
+      ? convertCents(amountInCents, rate)
+      : null;
+  const source =
+    !isOwnRate && fetched.data
+      ? ` · ECB, ${formatExpenseDateShort(new Date(`${fetched.data.date}T00:00`))}`
+      : "";
+
+  return {
+    isShown,
+    isOn,
+    setOn: setConvert,
+    targetCurrency,
+    rateText:
+      rate === undefined
+        ? undefined
+        : `${formatRate(currency, targetCurrency, rate)}${source}`,
+    isOwnRate,
+    reset: () => setOwnRate(undefined),
+    isRateUnavailable:
+      rate === undefined && (fetched.data === null || fetched.isError),
+    setConvertedAmount: (cents: number) => {
+      if (amountInCents > 0 && cents > 0) {
+        setOwnRate({ rate: rateBetween(amountInCents, cents), rateKey });
+      }
+    },
+    fields: {
+      convertedAmountInCents,
+      convertedCurrency:
+        convertedAmountInCents === null ? null : targetCurrency,
+    },
+  };
+}
+
+export type ExpenseConversion = ReturnType<typeof useExpenseConversion>;

@@ -27,6 +27,12 @@ export const expenseSchema = z.object({
   paidByGroupMemberId: z.number().min(1, "Please select who paid"),
   amountInCents: z.number().int().min(1, "Amount must be greater than 0"),
   currency: currencyCodeSchema,
+  convertedAmountInCents: z
+    .number()
+    .int()
+    .min(1, "Amount must be greater than 0")
+    .nullish(),
+  convertedCurrency: currencyCodeSchema.nullish(),
   description: z.string().max(512),
   subcategory: expenseSubcategoryIdSchema.optional(),
   expenseDate: z.date(),
@@ -35,20 +41,43 @@ export const expenseSchema = z.object({
     .min(1, "At least one person must be included"),
   splitMethod: splitMethodSchema,
 });
-export const expenseSchemaWithValidateSplits = expenseSchema.refine(
-  (data) => {
-    const validation = validateSplits({
-      splits: data.splits,
-      totalAmountCents: data.amountInCents,
-      method: data.splitMethod,
-    });
-    return validation.isValid;
-  },
-  {
-    message: "Split amounts are invalid",
-    path: ["splits"],
-  },
-);
+function isCompleteConversion({
+  currency,
+  convertedAmountInCents,
+  convertedCurrency,
+}: Partial<
+  Pick<
+    z.infer<typeof expenseSchema>,
+    "currency" | "convertedAmountInCents" | "convertedCurrency"
+  >
+>) {
+  if ((convertedAmountInCents == null) !== (convertedCurrency == null)) {
+    return false;
+  }
+  return convertedCurrency == null || convertedCurrency !== currency;
+}
+
+const completeConversion = {
+  message: "Enter the converted amount",
+  path: ["convertedAmountInCents"],
+};
+
+export const expenseSchemaWithValidateSplits = expenseSchema
+  .refine(
+    (data) => {
+      const validation = validateSplits({
+        splits: data.splits,
+        totalAmountCents: data.amountInCents,
+        method: data.splitMethod,
+      });
+      return validation.isValid;
+    },
+    {
+      message: "Split amounts are invalid",
+      path: ["splits"],
+    },
+  )
+  .refine(isCompleteConversion, completeConversion);
 
 export type ExpenseValues = z.infer<typeof expenseSchemaWithValidateSplits>;
 
@@ -80,6 +109,7 @@ export const updateExpenseSchema = expenseSchema
       path: ["splits"],
     },
   )
+  .refine(isCompleteConversion, completeConversion)
   .safeExtend({
     expenseId: z.number(),
   });
