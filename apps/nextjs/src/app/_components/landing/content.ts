@@ -98,7 +98,7 @@ export const FACTS = [
   { label: "Sign in", value: "Google or Apple account." },
   {
     label: "Splitting",
-    value: "Equal, percentage, shares or exact amounts. EUR, USD and GBP.",
+    value: "Equal, percentage, shares or exact amounts. EUR, USD, GBP and CHF.",
   },
   { label: "Switching", value: "Imports a Splitwise CSV export." },
   { label: "Limits", value: "No member limit. No recurring expenses yet." },
@@ -130,7 +130,7 @@ export const FAQ = [
   {
     question: "How does Flatsby split an expense?",
     answer:
-      "Equally, by percentage, by shares (for example 2 parts to 1), or by exact amounts per person. Expenses can be in EUR, USD or GBP, and Flatsby keeps a running balance per person for each currency.",
+      "Equally, by percentage, by shares (for example 2 parts to 1), or by exact amounts per person. Expenses can be in EUR, USD, GBP or CHF, and Flatsby keeps a running balance per person for each currency.",
   },
   {
     question: "Can I set up rent as a recurring expense?",

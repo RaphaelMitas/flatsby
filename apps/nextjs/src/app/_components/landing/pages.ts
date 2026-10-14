@@ -140,7 +140,7 @@ export const CONTENT_PAGES = [
       {
         heading: "Currencies and categories",
         paragraphs: [
-          "Expenses can be in EUR, USD or GBP. Flatsby does not convert between currencies. It keeps a separate balance per currency instead.",
+          "Expenses can be in EUR, USD, GBP or CHF. Flatsby does not convert between currencies. It keeps a separate balance per currency instead.",
           "Every expense has a category, such as groceries, internet or home goods, so you can see where the money goes.",
         ],
       },
