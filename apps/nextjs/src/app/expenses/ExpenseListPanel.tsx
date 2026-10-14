@@ -8,6 +8,7 @@ import { InView } from "react-intersection-observer";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { ScrollArea } from "@flatsby/ui/scroll-area";
+import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -124,11 +125,7 @@ export function ExpenseListPanel({
                 <ExpenseCard
                   key={expense.id}
                   expense={expense}
-                  autoConvertTo={
-                    groupData.data.convertAutomatically
-                      ? groupData.data.currency
-                      : undefined
-                  }
+                  isNotConverted={isLeftUnconverted(expense, groupData.data)}
                   isSelected={expense.id === selectedExpenseId}
                   onSelect={() => onSelectExpense(expense.id)}
                 />

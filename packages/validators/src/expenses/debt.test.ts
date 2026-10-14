@@ -256,6 +256,26 @@ describe("balances", () => {
     ]);
   });
 
+  it("rounds a converted expense's shares the same whatever order the splits come in", () => {
+    const expense = {
+      ...shared(
+        YOU,
+        { [YOU]: 2500, [LENA]: 2500, [MAX]: 2500, [SOPHIE]: 2500 },
+        "CHF",
+      ),
+      convertedAmountInCents: 10001,
+      convertedCurrency: "EUR",
+    };
+    const reversed = {
+      ...expense,
+      expenseSplits: [...expense.expenseSplits].reverse(),
+    };
+
+    expect(calculateDebts([reversed]).memberBalances).toEqual(
+      calculateDebts([expense]).memberBalances,
+    );
+  });
+
   it.each(SEEDS)(
     "match the reference and sum to zero per currency (seed %i)",
     (seed) => {

@@ -40,6 +40,7 @@ export function ConversionField({
             <CurrencyInput
               value={conversion.fields.convertedAmountInCents ?? 0}
               onChange={conversion.setConvertedAmount}
+              disabled={!conversion.canEnterConverted}
               className="flex-1"
               data-testid="expense-form-converted-amount"
             />

@@ -10,6 +10,7 @@ import { CheckCircle2, Plus } from "lucide-react";
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
+import { undecidedDebtCurrencies } from "@flatsby/validators/expenses/conversion";
 import {
   debtsBetweenOthers,
   debtsFor,
@@ -65,10 +66,7 @@ export function DebtSummaryView() {
   const balances = groupBalances(summary, meId);
   const settle = (debt: DebtEntry) => setSettling({ source: kind, debt });
   const group = groupData.data;
-  const showConversionBanner =
-    group.thisGroupMember.role === "admin" &&
-    group.convertAutomatically === null &&
-    balances.length > 1;
+  const bannerCurrencies = undecidedDebtCurrencies(group, balances);
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -79,11 +77,11 @@ export function DebtSummaryView() {
         Debts
       </h2>
 
-      {showConversionBanner && (
+      {bannerCurrencies && (
         <ConversionBanner
           groupId={groupId}
           groupCurrency={group.currency}
-          currencies={balances.map(({ currency }) => currency)}
+          currencies={bannerCurrencies}
         />
       )}
 

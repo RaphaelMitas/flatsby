@@ -76,9 +76,15 @@ function ensureActiveMembers(
 
 const PAIR_ACTIVITY_PAGE = 5;
 
+// A past day's ECB rate never changes
+const pastRates = new Map<string, { rate: number; date: string }>();
+
 /** ECB reference rate via Frankfurter, null when it can't be fetched so the user types the amount */
 async function fetchExchangeRate(from: string, to: string, day: string) {
   const today = new Date().toISOString().slice(0, 10);
+  const key = `${from}>${to}@${day}`;
+  const cached = pastRates.get(key);
+  if (cached) return cached;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
   try {
@@ -91,7 +97,9 @@ async function fetchExchangeRate(from: string, to: string, day: string) {
       .object({ date: z.string(), rates: z.record(z.string(), z.number()) })
       .parse(await response.json());
     const rate = rates[to];
-    return rate === undefined ? null : { rate, date: rateDate };
+    if (rate === undefined) return null;
+    if (day < today) pastRates.set(key, { rate, date: rateDate });
+    return { rate, date: rateDate };
   } catch {
     return null;
   } finally {
@@ -129,6 +137,7 @@ export const expenseRouter = createTRPCRouter({
         input.splits,
         input.amountInCents,
       );
+      const isSettlement = input.splitMethod === "settlement";
       return withErrorHandlingAsResult(
         Effect.flatMap(
           OperationUtils.getGroupWithAccess(
@@ -163,10 +172,12 @@ export const expenseRouter = createTRPCRouter({
                               paidByGroupMemberId: input.paidByGroupMemberId,
                               amountInCents: input.amountInCents,
                               currency: input.currency,
-                              convertedAmountInCents:
-                                input.convertedAmountInCents ?? null,
-                              convertedCurrency:
-                                input.convertedCurrency ?? null,
+                              convertedAmountInCents: isSettlement
+                                ? null
+                                : (input.convertedAmountInCents ?? null),
+                              convertedCurrency: isSettlement
+                                ? null
+                                : (input.convertedCurrency ?? null),
                               description: input.description,
                               category: getSubcategoryGroup(subcategory),
                               subcategory,
@@ -191,7 +202,12 @@ export const expenseRouter = createTRPCRouter({
                             })),
                           );
 
-                          if (input.currency !== group.currency) {
+                          // Chat and app builds before conversion never send the field, so they'd all count as kept
+                          if (
+                            input.currency !== group.currency &&
+                            input.convertedCurrency !== undefined &&
+                            !isSettlement
+                          ) {
                             captureEvent({
                               distinctId: ctx.session.user.id,
                               event: "foreign_expense_created",
@@ -334,6 +350,7 @@ export const expenseRouter = createTRPCRouter({
                           input.convertedCurrency !== undefined
                         ) {
                           const converts =
+                            method !== "settlement" &&
                             input.convertedCurrency != null &&
                             input.convertedCurrency !== currency;
                           updateData.convertedAmountInCents = converts

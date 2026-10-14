@@ -6,7 +6,7 @@ import type { ConvertibleExpense } from "./conversion";
 import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
 import type { DebtEntry, GroupDebtSummary } from "./types";
-import { centsToDecimal } from "./conversion";
+import { centsToDecimal, rateBetween } from "./conversion";
 import { debtsBetweenOthers } from "./debt";
 
 /**
@@ -65,7 +65,7 @@ export function formatExpenseAmounts(
     | "convertedAmountInCents"
     | "convertedCurrency"
   >,
-): { amount: string; paid?: string } {
+): { amount: string; paid?: string; rate?: string } {
   const paid = formatCurrencyFromCents({
     cents: expense.amountInCents,
     currency: expense.currency,
@@ -82,10 +82,14 @@ export function formatExpenseAmounts(
       currency: expense.convertedCurrency,
     }),
     paid,
+    rate: formatRate(
+      expense.currency,
+      expense.convertedCurrency,
+      rateBetween(expense.amountInCents, expense.convertedAmountInCents),
+    ),
   };
 }
 
-/** e.g. "1 CHF = 1.0650 EUR" */
 export function formatRate(from: string, to: string, rate: number): string {
   return `1 ${from} = ${rate.toFixed(4)} ${to}`;
 }
@@ -188,7 +192,6 @@ function joinNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${last}`;
 }
 
-/** "EUR and CHF", with the group's currency first */
 export function listCurrencies(currencies: string[], first: string): string {
   return joinNames(
     [...currencies].sort((a, b) => Number(b === first) - Number(a === first)),

@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 
+import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
@@ -153,12 +154,7 @@ export function ExpenseListPanel({
                   isSelected={item.id === selectedExpenseId}
                   onSelect={() => onSelectExpense(item.id)}
                   onEdit={() => handleEdit(item)}
-                  isNotConverted={
-                    groupData.data.convertAutomatically === true &&
-                    item.splitMethod !== "settlement" &&
-                    item.convertedCurrency == null &&
-                    item.currency !== groupData.data.currency
-                  }
+                  isNotConverted={isLeftUnconverted(item, groupData.data)}
                 />
               )}
               onEndReached={() => {

@@ -737,15 +737,7 @@ export function ExpenseForm({
                         groupMembers={allMembers}
                         totalAmountCents={amountInCents}
                         currency={currency}
-                        converted={
-                          conversion.fields.convertedAmountInCents === null
-                            ? undefined
-                            : {
-                                amountInCents:
-                                  conversion.fields.convertedAmountInCents,
-                                currency: conversion.targetCurrency,
-                              }
-                        }
+                        conversion={conversion.fields}
                         splitMethod={editableSplitMethod(splitMethod)}
                         onSplitMethodChange={(method) => {
                           field.onChange(method);

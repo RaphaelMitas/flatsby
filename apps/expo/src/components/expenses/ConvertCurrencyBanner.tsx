@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
@@ -23,17 +23,21 @@ export function ConvertCurrencyBanner({
   const posthog = usePostHog();
   const updateGroup = useUpdateGroup(groupId);
 
+  const hasCapturedShown = useRef(false);
+
   useEffect(() => {
-    posthog.capture("currency_banner_shown");
-  }, [posthog]);
+    if (hasCapturedShown.current) return;
+    hasCapturedShown.current = true;
+    posthog.capture("currency_banner_shown", { groupId, currencies });
+  }, [posthog, groupId, currencies]);
 
   const keepSeparate = () => {
-    posthog.capture("currency_banner_keep_separate");
+    posthog.capture("currency_banner_keep_separate", { groupId });
     updateGroup.mutate({ id: groupId, convertAutomatically: false });
   };
 
   const turnOn = () => {
-    posthog.capture("currency_banner_turn_on");
+    posthog.capture("currency_banner_turn_on", { groupId });
     router.push({
       pathname: "/(tabs)/settings/group-settings/expenses",
       params: { highlight: "convert" },

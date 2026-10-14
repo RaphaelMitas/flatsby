@@ -22,26 +22,20 @@ import {
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
-  /** The group currency, when the group converts other currencies automatically */
-  autoConvertTo?: string;
+  isNotConverted?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
 }
 
 export function ExpenseCard({
   expense,
-  autoConvertTo,
+  isNotConverted,
   isSelected,
   onSelect,
 }: ExpenseCardProps) {
   const splitCount = expense.expenseSplits.length;
   const paidByName = expense.paidByGroupMember.user.name;
   const { amount, paid } = formatExpenseAmounts(expense);
-  const isNotConverted =
-    autoConvertTo !== undefined &&
-    expense.splitMethod !== "settlement" &&
-    expense.convertedCurrency === null &&
-    expense.currency !== autoConvertTo;
   const expenseDate = new Date(expense.expenseDate);
   const formattedDate = formatExpenseDateShort(expenseDate);
 

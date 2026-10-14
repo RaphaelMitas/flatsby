@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Info, X } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
@@ -10,7 +9,7 @@ import { Button } from "@flatsby/ui/button";
 import { listCurrencies } from "@flatsby/validators/expenses/formatting";
 
 import { useAnalytics } from "~/hooks/use-analytics";
-import { useTRPC } from "~/trpc/react";
+import { useUpdateGroup } from "~/hooks/use-update-group";
 
 export function ConversionBanner({
   groupId,
@@ -21,11 +20,8 @@ export function ConversionBanner({
   groupCurrency: string;
   currencies: string[];
 }) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const { capture } = useAnalytics();
   const hasCapturedShown = useRef(false);
-  const groupQuery = trpc.group.getGroup.queryOptions({ id: groupId });
 
   useEffect(() => {
     if (hasCapturedShown.current) return;
@@ -33,27 +29,7 @@ export function ConversionBanner({
     capture("currency_banner_shown", { groupId, currencies });
   }, [capture, groupId, currencies]);
 
-  const keepSeparateMutation = useMutation(
-    trpc.group.updateGroup.mutationOptions({
-      onMutate: async () => {
-        await queryClient.cancelQueries(groupQuery);
-        const previous = queryClient.getQueryData(groupQuery.queryKey);
-        queryClient.setQueryData(groupQuery.queryKey, (old) =>
-          old?.success
-            ? {
-                success: true as const,
-                data: { ...old.data, convertAutomatically: false },
-              }
-            : old,
-        );
-        return { previous };
-      },
-      onError: (_error, _input, context) => {
-        queryClient.setQueryData(groupQuery.queryKey, context?.previous);
-      },
-      onSettled: () => queryClient.invalidateQueries(groupQuery),
-    }),
-  );
+  const keepSeparateMutation = useUpdateGroup(groupId);
 
   const keepSeparate = () => {
     capture("currency_banner_keep_separate", { groupId });

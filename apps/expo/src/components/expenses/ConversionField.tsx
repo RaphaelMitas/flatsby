@@ -44,6 +44,7 @@ export function ConversionField({
                 <CurrencyInput
                   testID="expense-form-converted-amount"
                   value={conversion.fields.convertedAmountInCents ?? 0}
+                  disabled={!conversion.canEnterConverted}
                   onChange={(cents) => {
                     form.clearErrors("convertedAmountInCents");
                     conversion.setConvertedAmount(cents);

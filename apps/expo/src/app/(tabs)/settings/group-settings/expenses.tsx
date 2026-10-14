@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -50,14 +50,23 @@ export default function ExpenseSettingsScreen() {
   );
   const updateGroupMutation = useUpdateGroup(Number(selectedGroupId));
 
+  // Saving diffs against what this admin opened, so another admin's change in between isn't sent back
+  const [opened] = useState({
+    currency: group.success ? group.data.currency : "EUR",
+    convertAutomatically: group.success
+      ? group.data.convertAutomatically
+      : null,
+  });
   const form = useForm({
     schema: expenseSettingsSchema,
-    defaultValues: {
-      currency: group.success ? group.data.currency : "EUR",
-      convertAutomatically:
-        highlightConvert || (group.success && group.data.convertAutomatically),
-    },
+    defaultValues: opened,
   });
+
+  useEffect(() => {
+    if (highlightConvert) {
+      form.setValue("convertAutomatically", true, { shouldDirty: true });
+    }
+  }, [form, highlightConvert]);
   const currency = useWatch({ control: form.control, name: "currency" });
 
   if (!group.success) {
@@ -70,8 +79,8 @@ export default function ExpenseSettingsScreen() {
 
   const handleSubmit = form.handleSubmit((values) => {
     const changes = {
-      ...(values.currency !== saved.currency && { currency: values.currency }),
-      ...(values.convertAutomatically !== saved.convertAutomatically && {
+      ...(values.currency !== opened.currency && { currency: values.currency }),
+      ...(values.convertAutomatically !== opened.convertAutomatically && {
         convertAutomatically: values.convertAutomatically,
       }),
     };

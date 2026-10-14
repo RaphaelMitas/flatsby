@@ -38,7 +38,6 @@ export interface ConvertibleExpense {
   expenseSplits: { groupMemberId: number; amountInCents: number }[];
 }
 
-/** The amount, currency and splits an expense counts as in the debts */
 export function inLedgerCurrency({
   amountInCents,
   currency,
@@ -52,16 +51,56 @@ export function inLedgerCurrency({
   if (convertedAmountInCents == null || convertedCurrency == null) {
     return { amountInCents, currency, expenseSplits };
   }
+  // Leftover cents go by position, so rounding in member order keeps every screen on the same cent
+  const shares = distributeShareAmounts(
+    expenseSplits
+      .map((split) => ({
+        groupMemberId: split.groupMemberId,
+        shares: split.amountInCents,
+      }))
+      .sort((a, b) => a.groupMemberId - b.groupMemberId),
+    convertedAmountInCents,
+    0,
+  );
   return {
     amountInCents: convertedAmountInCents,
     currency: convertedCurrency,
-    expenseSplits: distributeShareAmounts(
-      expenseSplits.map((split) => ({
-        groupMemberId: split.groupMemberId,
-        shares: split.amountInCents,
-      })),
-      convertedAmountInCents,
-      0,
-    ),
+    expenseSplits: expenseSplits.map(({ groupMemberId }) => ({
+      groupMemberId,
+      amountInCents:
+        shares.find((share) => share.groupMemberId === groupMemberId)
+          ?.amountInCents ?? 0,
+    })),
   };
+}
+
+interface ConversionGroup {
+  currency: string;
+  convertAutomatically: boolean | null;
+}
+
+export function isLeftUnconverted(
+  expense: Pick<ConvertibleExpense, "currency" | "convertedCurrency"> & {
+    splitMethod: string;
+  },
+  group: ConversionGroup,
+): boolean {
+  return (
+    group.convertAutomatically === true &&
+    expense.splitMethod !== "settlement" &&
+    expense.convertedCurrency == null &&
+    expense.currency !== group.currency
+  );
+}
+
+/** The currencies the debts banner names, while no admin has decided on conversion yet */
+export function undecidedDebtCurrencies(
+  group: ConversionGroup & { thisGroupMember: { role: string } },
+  balances: { currency: string }[],
+): string[] | undefined {
+  return group.thisGroupMember.role === "admin" &&
+    group.convertAutomatically === null &&
+    balances.length > 1
+    ? balances.map(({ currency }) => currency)
+    : undefined;
 }

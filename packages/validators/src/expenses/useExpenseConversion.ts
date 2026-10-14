@@ -16,10 +16,7 @@ function localDay(date: Date): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-/**
- * The expense form's "Convert to {group currency}" state. It converts at the fetched market rate
- * until the user types a converted amount; a typed or stored rate only holds for its currencies and day.
- */
+// The fetched rate follows the expense day; a typed or stored rate holds until the currencies change
 export function useExpenseConversion({
   group,
   expense,
@@ -62,7 +59,7 @@ export function useExpenseConversion({
     isShown,
   );
 
-  const rateKey = `${currency}>${targetCurrency}@${day}`;
+  const rateKey = `${currency}>${targetCurrency}`;
   const [ownRate, setOwnRate] = useState(
     expense?.convertedAmountInCents == null
       ? undefined
@@ -97,6 +94,7 @@ export function useExpenseConversion({
         : `${formatRate(currency, targetCurrency, rate)}${source}`,
     isOwnRate,
     reset: () => setOwnRate(undefined),
+    canEnterConverted: amountInCents > 0,
     isRateUnavailable:
       rate === undefined && (fetched.data === null || fetched.isError),
     setConvertedAmount: (cents: number) => {

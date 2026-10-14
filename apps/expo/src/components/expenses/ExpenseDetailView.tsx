@@ -7,15 +7,11 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 
-import {
-  inLedgerCurrency,
-  rateBetween,
-} from "@flatsby/validators/expenses/conversion";
+import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import {
   formatCurrencyFromCents,
   formatExpenseAmounts,
   formatExpenseDateLong,
-  formatRate,
   formatSplitPortion,
 } from "@flatsby/validators/expenses/formatting";
 
@@ -186,18 +182,10 @@ export function ExpenseDetailView({
               <View className="flex-row items-start justify-between gap-4">
                 <View className="flex-1">
                   <CardTitle className="text-2xl">{amounts.amount}</CardTitle>
-                  {amounts.paid && expense.convertedAmountInCents != null && (
+                  {amounts.paid && amounts.rate && (
                     <View className="mt-1 gap-1">
                       <Text className="text-muted-foreground text-sm">
-                        {amounts.paid} ·{" "}
-                        {formatRate(
-                          expense.currency,
-                          ledger.currency,
-                          rateBetween(
-                            expense.amountInCents,
-                            expense.convertedAmountInCents,
-                          ),
-                        )}
+                        {amounts.paid} · {amounts.rate}
                       </Text>
                       <View className="flex-row items-center gap-1">
                         <Text className="text-muted-foreground text-xs">

@@ -4,15 +4,10 @@ import type { GroupWithAccess } from "@flatsby/api";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { AlertCircle, CircleCheckBig, LoaderCircle } from "lucide-react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { LoaderCircle } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
-import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -32,8 +27,10 @@ import {
 import { Switch } from "@flatsby/ui/switch";
 import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 
+import { useUpdateGroup } from "~/hooks/use-update-group";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
+import { UpdateGroupAlert } from "./UpdateGroupAlert";
 
 const ExpenseSettings = ({ groupId }: { groupId: number }) => {
   const trpc = useTRPC();
@@ -51,16 +48,18 @@ const ExpenseSettings = ({ groupId }: { groupId: number }) => {
 };
 
 function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const isAdmin = group.thisGroupMember.role === "admin";
-  const savedConvert = group.convertAutomatically === true;
   const highlightConvert =
     useSearchParams().get("highlight") === "convert" && isAdmin;
 
-  const [currency, setCurrency] = useState<CurrencyCode>(group.currency);
+  // Saving diffs against what this admin opened, so another admin's change in between isn't sent back
+  const [opened, setOpened] = useState({
+    currency: group.currency,
+    convertAutomatically: group.convertAutomatically === true,
+  });
+  const [currency, setCurrency] = useState<CurrencyCode>(opened.currency);
   const [convertAutomatically, setConvertAutomatically] = useState(
-    savedConvert || highlightConvert,
+    opened.convertAutomatically || highlightConvert,
   );
   const convertRowRef = useRef<HTMLDivElement>(null);
 
@@ -70,26 +69,11 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
     }
   }, [highlightConvert]);
 
-  const groupMutation = useMutation(
-    trpc.group.updateGroup.mutationOptions({
-      onSuccess: (data) => {
-        if (!data.success) {
-          return;
-        }
+  const groupMutation = useUpdateGroup(group.id);
 
-        void queryClient.invalidateQueries(
-          trpc.group.getGroup.queryOptions({ id: group.id }),
-        );
-        void queryClient.invalidateQueries(
-          trpc.user.getCurrentUserWithGroups.queryOptions(),
-        );
-      },
-    }),
-  );
-
-  const isConvertDirty = convertAutomatically !== savedConvert;
+  const isConvertDirty = convertAutomatically !== opened.convertAutomatically;
   const changes = {
-    ...(currency !== group.currency && { currency }),
+    ...(currency !== opened.currency && { currency }),
     ...(isConvertDirty && { convertAutomatically }),
   };
 
@@ -167,7 +151,18 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
               !isAdmin ||
               Object.keys(changes).length === 0
             }
-            onClick={() => groupMutation.mutate({ id: group.id, ...changes })}
+            onClick={() =>
+              groupMutation.mutate(
+                { id: group.id, ...changes },
+                {
+                  onSuccess: (data) => {
+                    if (data.success) {
+                      setOpened({ currency, convertAutomatically });
+                    }
+                  },
+                },
+              )
+            }
           >
             {groupMutation.isPending ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -177,28 +172,10 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
               "Save"
             )}
           </Button>
-          {(groupMutation.isError || groupMutation.data?.success === false) && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>
-                {groupMutation.data?.success === false
-                  ? groupMutation.data.error.type
-                  : (groupMutation.error?.data?.code ?? "Unknown error")}
-              </AlertTitle>
-              <AlertDescription>
-                {groupMutation.data?.success === false
-                  ? groupMutation.data.error.message
-                  : (groupMutation.error?.message ??
-                    "unknown error while saving")}
-              </AlertDescription>
-            </Alert>
-          )}
-          {groupMutation.isSuccess && groupMutation.data.success && (
-            <Alert variant="success">
-              <CircleCheckBig className="h-4 w-4" />
-              <AlertTitle>Expense settings saved</AlertTitle>
-            </Alert>
-          )}
+          <UpdateGroupAlert
+            mutation={groupMutation}
+            successTitle="Expense settings saved"
+          />
         </div>
       </CardContent>
     </Card>
