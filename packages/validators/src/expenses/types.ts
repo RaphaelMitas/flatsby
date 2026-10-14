@@ -68,7 +68,7 @@ export interface GroupDebtSummary {
 /**
  * Currency codes supported by the application
  */
-export const CURRENCY_CODES = ["EUR", "USD", "GBP"] as const;
+export const CURRENCY_CODES = ["EUR", "USD", "GBP", "CHF"] as const;
 export type CurrencyCode = (typeof CURRENCY_CODES)[number];
 
 /**

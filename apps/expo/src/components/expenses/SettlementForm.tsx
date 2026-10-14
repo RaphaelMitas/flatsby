@@ -2,7 +2,10 @@ import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import type { DebtKind } from "@flatsby/validators/expenses/debt";
 import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
 import type { SettlementFormValues } from "@flatsby/validators/expenses/schemas";
-import type { DebtEntry } from "@flatsby/validators/expenses/types";
+import type {
+  CurrencyCode,
+  DebtEntry,
+} from "@flatsby/validators/expenses/types";
 import { Text, View } from "react-native";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -73,7 +76,7 @@ export function SettlementForm({
     trpc.expense.getDebtSummary.queryOptions({ groupId }),
   );
 
-  const getDefaultCurrency = (): "EUR" | "USD" | "GBP" => {
+  const getDefaultCurrency = (): CurrencyCode => {
     if (currency && isCurrencyCode(currency)) {
       return currency;
     }
