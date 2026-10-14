@@ -1,0 +1,16 @@
+export const navigation = {
+  chat: "Chat",
+  createGroup: "Create Group",
+  dangerZone: "Danger Zone",
+  debts: "Debts",
+  expenses: "Expenses",
+  groupSettings: "Group Settings",
+  home: "Home",
+  legalNotice: "Legal Notice",
+  manageGroups: "Manage Groups",
+  newChat: "New Chat",
+  privacyPolicy: "Privacy Policy",
+  profile: "Profile",
+  settings: "Settings",
+  termsOfService: "Terms of Service",
+};

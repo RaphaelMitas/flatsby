@@ -686,6 +686,12 @@ importers:
         specifier: 'catalog:'
         version: 4.14.9(@types/react@19.2.17)(react@19.2.8)
     devDependencies:
+      '@babel/parser':
+        specifier: ^7.29.7
+        version: 7.29.7
+      '@babel/types':
+        specifier: ^7.29.7
+        version: 7.29.7
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.5.15
@@ -695,6 +701,9 @@ importers:
       '@flatsby/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
       prettier:
         specifier: 'catalog:'
         version: 3.9.9
@@ -703,13 +712,16 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 'catalog:'
-        version: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@26.1.0)(vite@8.3.4(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.1))
+        version: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.1))
 
   packages/ui:
     dependencies:
       '@ai-sdk/react':
         specifier: 'catalog:'
         version: 4.0.133(react@19.2.8)(zod@4.6.5)
+      '@flatsby/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@flatsby/validators':
         specifier: workspace:*
         version: link:../validators
@@ -833,6 +845,9 @@ importers:
       tokenlens:
         specifier: ^1.3.1
         version: 1.3.1
+      use-intl:
+        specifier: 'catalog:'
+        version: 4.14.9(@types/react@19.2.17)(react@19.2.8)
       use-stick-to-bottom:
         specifier: ^1.1.6
         version: 1.1.6(react@19.2.8)
@@ -867,6 +882,9 @@ importers:
 
   packages/validators:
     dependencies:
+      '@flatsby/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       papaparse:
         specifier: ^5.7.0
         version: 5.7.0
@@ -11458,7 +11476,7 @@ snapshots:
 
   '@types/papaparse@5.5.2':
     dependencies:
-      '@types/node': 26.1.0
+      '@types/node': 24.19.1
 
   '@types/react-dom@19.2.3(@types/react@19.2.17)':
     dependencies:
@@ -11483,7 +11501,7 @@ snapshots:
 
   '@types/ws@8.18.2':
     dependencies:
-      '@types/node': 26.1.0
+      '@types/node': 24.19.1
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -11563,7 +11581,6 @@ snapshots:
       magic-string: 1.4.3
     optionalDependencies:
       vite: 8.3.4(@types/node@24.19.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.1)
-    optional: true
 
   '@vitest/mocker@5.0.4(vite@8.3.4(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.1))':
     dependencies:
@@ -11940,7 +11957,7 @@ snapshots:
 
   chrome-launcher@0.15.2(supports-color@8.1.1):
     dependencies:
-      '@types/node': 26.1.0
+      '@types/node': 24.19.1
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2(supports-color@8.1.1)
@@ -11949,7 +11966,7 @@ snapshots:
 
   chromium-edge-launcher@0.3.0(supports-color@8.1.1):
     dependencies:
-      '@types/node': 26.1.0
+      '@types/node': 24.19.1
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2(supports-color@8.1.1)
@@ -15385,7 +15402,6 @@ snapshots:
       terser: 5.48.0
       tsx: 4.23.0
       yaml: 2.9.1
-    optional: true
 
   vite@8.3.4(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.1):
     dependencies:
@@ -15424,7 +15440,6 @@ snapshots:
       '@types/node': 24.19.1
     transitivePeerDependencies:
       - msw
-    optional: true
 
   vitest@5.0.4(@opentelemetry/api@1.9.1)(@types/node@26.1.0)(vite@8.3.4(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.1)):
     dependencies:

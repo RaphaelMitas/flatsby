@@ -1,0 +1,26 @@
+import type { Messages } from "../../messages";
+
+export const common = {
+  back: "Zurück",
+  cancel: "Abbrechen",
+  category: "Kategorie",
+  close: "Schließen",
+  creating: "Wird erstellt...",
+  date: "Datum",
+  delete: "Löschen",
+  deleting: "Wird gelöscht...",
+  edit: "Bearbeiten",
+  error: "Fehler",
+  loading: "Wird geladen...",
+  next: "Weiter",
+  noGroupSelected: "Keine Gruppe ausgewählt",
+  noGroupSelectedHint: "Keine Gruppe ausgewählt. Bitte wähle zuerst eine Gruppe aus.",
+  other: "Sonstiges",
+  remove: "Entfernen",
+  save: "Speichern",
+  saving: "Wird gespeichert...",
+  selectCategory: "Kategorie wählen",
+  unknown: "Unbekannt",
+  unknownError: "Unbekannter Fehler",
+  updating: "Wird aktualisiert...",
+} satisfies Messages["common"];

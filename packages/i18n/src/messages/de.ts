@@ -1,22 +1,39 @@
-import type { Messages } from "../messages";
+import { auth } from "./de/auth";
+import { billing } from "./de/billing";
+import { chat } from "./de/chat";
+import { common } from "./de/common";
+import { debts } from "./de/debts";
+import { errors } from "./de/errors";
+import { expenseCategories } from "./de/expenseCategories";
+import { expenses } from "./de/expenses";
+import { group } from "./de/group";
+import { home } from "./de/home";
+import { legal } from "./de/legal";
+import { marketing } from "./de/marketing";
+import { navigation } from "./de/navigation";
+import { notFound } from "./de/notFound";
+import { settings } from "./de/settings";
+import { shoppingCategories } from "./de/shoppingCategories";
+import { shoppingList } from "./de/shoppingList";
+import { splitwiseImport } from "./de/splitwiseImport";
 
 export const de = {
-  errors: {
-    aiConsentRequired:
-      "Bitte stimme der Datenweitergabe an die KI zu, bevor du den Assistenten nutzt.",
-  },
-  settings: {
-    language: {
-      title: "Sprache",
-      description:
-        "Wähle die Sprache, in der Flatsby in diesem Browser angezeigt wird.",
-      system: "Wie im Browser",
-    },
-  },
-  expenses: {
-    settlement: "Ausgleich",
-    paidBy: "Bezahlt von {name}",
-    splitBetween:
-      "Aufgeteilt auf {count, plural, one {# Person} other {# Personen}}",
-  },
-} satisfies Messages;
+  common,
+  navigation,
+  auth,
+  settings,
+  billing,
+  home,
+  group,
+  shoppingList,
+  shoppingCategories,
+  expenses,
+  expenseCategories,
+  debts,
+  splitwiseImport,
+  chat,
+  errors,
+  marketing,
+  legal,
+  notFound,
+};
