@@ -35,7 +35,10 @@ export const updateGroupSchema = groupSchema.pick({ name: true, id: true });
 export const updateGroupSettingsSchema = groupSchema
   .pick({ name: true, currency: true, convertAutomatically: true })
   .partial()
-  .extend({ id: groupSchema.shape.id });
+  .extend({
+    id: groupSchema.shape.id,
+    onlyIfUndecided: z.boolean().optional(),
+  });
 
 export const deleteGroupSchema = groupSchema.pick({ id: true });
 

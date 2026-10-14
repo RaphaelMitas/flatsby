@@ -51,7 +51,7 @@ export default function ExpenseSettingsScreen() {
   const updateGroupMutation = useUpdateGroup(Number(selectedGroupId));
 
   // Saving diffs against what this admin opened, so another admin's change in between isn't sent back
-  const [opened] = useState({
+  const [opened, setOpened] = useState({
     currency: group.success ? group.data.currency : "EUR",
     convertAutomatically: group.success
       ? group.data.convertAutomatically
@@ -67,7 +67,10 @@ export default function ExpenseSettingsScreen() {
       form.setValue("convertAutomatically", true, { shouldDirty: true });
     }
   }, [form, highlightConvert]);
-  const currency = useWatch({ control: form.control, name: "currency" });
+  const [currency, convertAutomatically] = useWatch({
+    control: form.control,
+    name: ["currency", "convertAutomatically"],
+  });
 
   if (!group.success) {
     return handleApiError({ router, error: group.error });
@@ -94,6 +97,7 @@ export default function ExpenseSettingsScreen() {
             form.setError("root", { message: data.error.message });
             return;
           }
+          setOpened(values);
           setShowSuccessMessage(true);
           setTimeout(() => {
             setShowSuccessMessage(false);
@@ -152,7 +156,9 @@ export default function ExpenseSettingsScreen() {
                   <View
                     className={cn(
                       "flex-row items-center gap-4 rounded-lg",
-                      highlightConvert && "border-primary border-2 p-3",
+                      highlightConvert &&
+                        convertAutomatically !== opened.convertAutomatically &&
+                        "border-primary border-2 p-3",
                     )}
                   >
                     <View className="flex-1 gap-1">

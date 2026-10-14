@@ -8,7 +8,11 @@ export function useUpdateGroup(groupId: number) {
 
   return useMutation(
     trpc.group.updateGroup.mutationOptions({
-      onMutate: async (input) => {
+      onMutate: async ({
+        id: _id,
+        onlyIfUndecided: _onlyIfUndecided,
+        ...settings
+      }) => {
         await queryClient.cancelQueries({ queryKey: groupQueryKey });
         const previousGroup = queryClient.getQueryData(groupQueryKey);
         queryClient.setQueryData(groupQueryKey, (old) => {
@@ -17,12 +21,7 @@ export function useUpdateGroup(groupId: number) {
             success: true as const,
             data: {
               ...old.data,
-              name: input.name ?? old.data.name,
-              currency: input.currency ?? old.data.currency,
-              convertAutomatically:
-                input.convertAutomatically === undefined
-                  ? old.data.convertAutomatically
-                  : input.convertAutomatically,
+              ...settings,
             },
           };
         });

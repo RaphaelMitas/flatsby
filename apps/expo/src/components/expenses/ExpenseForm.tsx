@@ -509,16 +509,6 @@ export function ExpenseForm({
     }
 
     const isValid = await form.trigger(fieldsToValidate);
-    if (
-      currentStep === 1 &&
-      conversion.isOn &&
-      conversion.fields.convertedAmountInCents === null
-    ) {
-      form.setError("convertedAmountInCents", {
-        message: "Enter the converted amount",
-      });
-      return;
-    }
     if (isValid) {
       if (currentStep === 1) {
         const currentSplits = form.getValues("splits");
@@ -666,7 +656,6 @@ export function ExpenseForm({
                     />
 
                     <ConversionField
-                      form={form}
                       currency={currency}
                       conversion={conversion}
                     />
@@ -836,7 +825,12 @@ export function ExpenseForm({
                 testID="expense-form-next"
                 title="Next"
                 onPress={handleNext}
-                disabled={isPending || amountInCents <= 0}
+                disabled={
+                  isPending ||
+                  amountInCents <= 0 ||
+                  (conversion.isOn &&
+                    conversion.fields.convertedAmountInCents === null)
+                }
                 icon="arrow-right"
                 className="flex-1"
               />

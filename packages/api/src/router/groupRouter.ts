@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import z from "zod/v4";
 
-import { alias, and, count, eq, inArray, isNull } from "@flatsby/db";
+import { alias, and, count, eq, inArray, isNull, sql } from "@flatsby/db";
 import {
   expenses,
   groupMembers,
@@ -40,7 +40,7 @@ import {
 
 const updateGroup = protectedProcedure
   .input(updateGroupSettingsSchema)
-  .mutation(async ({ ctx, input: { id, ...settings } }) => {
+  .mutation(async ({ ctx, input: { id, onlyIfUndecided, ...settings } }) => {
     return withErrorHandlingAsResult(
       Effect.flatMap(
         settings.name === undefined
@@ -55,7 +55,14 @@ const updateGroup = protectedProcedure
                   () =>
                     ctx.db
                       .update(groups)
-                      .set(settings)
+                      .set({
+                        ...settings,
+                        // The debts banner only settles an undecided group, so another admin's choice in between stands
+                        ...(onlyIfUndecided &&
+                          settings.convertAutomatically != null && {
+                            convertAutomatically: sql`coalesce(${groups.convertAutomatically}, ${settings.convertAutomatically})`,
+                          }),
+                      })
                       .where(eq(groups.id, id))
                       .returning({ id: groups.id }),
                   "update group",

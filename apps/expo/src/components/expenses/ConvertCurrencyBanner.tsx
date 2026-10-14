@@ -33,7 +33,11 @@ export function ConvertCurrencyBanner({
 
   const keepSeparate = () => {
     posthog.capture("currency_banner_keep_separate", { groupId });
-    updateGroup.mutate({ id: groupId, convertAutomatically: false });
+    updateGroup.mutate({
+      id: groupId,
+      convertAutomatically: false,
+      onlyIfUndecided: true,
+    });
   };
 
   const turnOn = () => {

@@ -76,20 +76,27 @@ function ensureActiveMembers(
 
 const PAIR_ACTIVITY_PAGE = 5;
 
-// A past day's ECB rate never changes
-const pastRates = new Map<string, { rate: number; date: string }>();
+// A past day's ECB rate never changes; "latest" moves once the ECB publishes the day's rate
+const LATEST_RATE_TTL_MS = 60 * 60 * 1000;
+const cachedRates = new Map<
+  string,
+  { rate: number; date: string; expiresAt: number }
+>();
 
-/** ECB reference rate via Frankfurter, null when it can't be fetched so the user types the amount */
+// null instead of throwing, so the form falls back to a typed amount
 async function fetchExchangeRate(from: string, to: string, day: string) {
   const today = new Date().toISOString().slice(0, 10);
-  const key = `${from}>${to}@${day}`;
-  const cached = pastRates.get(key);
-  if (cached) return cached;
+  const path = day < today ? day : "latest";
+  const key = `${from}>${to}@${path}`;
+  const cached = cachedRates.get(key);
+  if (cached && cached.expiresAt > Date.now()) {
+    return { rate: cached.rate, date: cached.date };
+  }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
   try {
     const response = await fetch(
-      `https://api.frankfurter.dev/v1/${day < today ? day : "latest"}?base=${from}&symbols=${to}`,
+      `https://api.frankfurter.dev/v1/${path}?base=${from}&symbols=${to}`,
       { signal: controller.signal },
     );
     if (!response.ok) return null;
@@ -98,7 +105,11 @@ async function fetchExchangeRate(from: string, to: string, day: string) {
       .parse(await response.json());
     const rate = rates[to];
     if (rate === undefined) return null;
-    if (day < today) pastRates.set(key, { rate, date: rateDate });
+    cachedRates.set(key, {
+      rate,
+      date: rateDate,
+      expiresAt: path === "latest" ? Date.now() + LATEST_RATE_TTL_MS : Infinity,
+    });
     return { rate, date: rateDate };
   } catch {
     return null;
@@ -164,63 +175,69 @@ export const expenseRouter = createTRPCRouter({
                         subcategoryForNewExpense(ctx.session.user.id, input),
                       ),
                       (subcategory) =>
-                        DbUtils.transaction(async (trx) => {
-                          const expenseResult = await trx
-                            .insert(expenses)
-                            .values({
-                              groupId: input.groupId,
-                              paidByGroupMemberId: input.paidByGroupMemberId,
-                              amountInCents: input.amountInCents,
-                              currency: input.currency,
-                              convertedAmountInCents: isSettlement
-                                ? null
-                                : (input.convertedAmountInCents ?? null),
-                              convertedCurrency: isSettlement
-                                ? null
-                                : (input.convertedCurrency ?? null),
-                              description: input.description,
-                              category: getSubcategoryGroup(subcategory),
-                              subcategory,
-                              expenseDate: input.expenseDate,
-                              createdByGroupMemberId: group.thisGroupMember.id,
-                              splitMethod: input.splitMethod,
-                            })
-                            .returning();
-
-                          const expense = expenseResult[0];
-                          if (!expense) {
-                            throw new Error("Failed to create expense");
-                          }
-
-                          await trx.insert(expenseSplits).values(
-                            splits.map((split) => ({
-                              expenseId: expense.id,
-                              groupMemberId: split.groupMemberId,
-                              amountInCents: split.amountInCents,
-                              percentage: split.percentage,
-                              shares: split.shares,
-                            })),
-                          );
-
-                          // Chat and app builds before conversion never send the field, so they'd all count as kept
-                          if (
-                            input.currency !== group.currency &&
-                            input.convertedCurrency !== undefined &&
-                            !isSettlement
-                          ) {
-                            captureEvent({
-                              distinctId: ctx.session.user.id,
-                              event: "foreign_expense_created",
-                              headers: ctx.headers,
-                              additionalProperties: {
-                                converted: input.convertedCurrency != null,
+                        Effect.tap(
+                          DbUtils.transaction(async (trx) => {
+                            const expenseResult = await trx
+                              .insert(expenses)
+                              .values({
+                                groupId: input.groupId,
+                                paidByGroupMemberId: input.paidByGroupMemberId,
+                                amountInCents: input.amountInCents,
                                 currency: input.currency,
-                                groupCurrency: group.currency,
-                              },
-                            });
-                          }
-                          return { ...expense, splits };
-                        }, "create expense with splits")(ctx.db),
+                                convertedAmountInCents: isSettlement
+                                  ? null
+                                  : (input.convertedAmountInCents ?? null),
+                                convertedCurrency: isSettlement
+                                  ? null
+                                  : (input.convertedCurrency ?? null),
+                                description: input.description,
+                                category: getSubcategoryGroup(subcategory),
+                                subcategory,
+                                expenseDate: input.expenseDate,
+                                createdByGroupMemberId:
+                                  group.thisGroupMember.id,
+                                splitMethod: input.splitMethod,
+                              })
+                              .returning();
+
+                            const expense = expenseResult[0];
+                            if (!expense) {
+                              throw new Error("Failed to create expense");
+                            }
+
+                            await trx.insert(expenseSplits).values(
+                              splits.map((split) => ({
+                                expenseId: expense.id,
+                                groupMemberId: split.groupMemberId,
+                                amountInCents: split.amountInCents,
+                                percentage: split.percentage,
+                                shares: split.shares,
+                              })),
+                            );
+
+                            return { ...expense, splits };
+                          }, "create expense with splits")(ctx.db),
+                          () =>
+                            Effect.sync(() => {
+                              // Chat and app builds before conversion never send the field, so they'd all count as kept
+                              if (
+                                input.currency !== group.currency &&
+                                input.convertedCurrency !== undefined &&
+                                !isSettlement
+                              ) {
+                                captureEvent({
+                                  distinctId: ctx.session.user.id,
+                                  event: "foreign_expense_created",
+                                  headers: ctx.headers,
+                                  additionalProperties: {
+                                    converted: input.convertedCurrency != null,
+                                    currency: input.currency,
+                                    groupCurrency: group.currency,
+                                  },
+                                });
+                              }
+                            }),
+                        ),
                     ),
                 ),
             ),
@@ -718,11 +735,14 @@ export const expenseRouter = createTRPCRouter({
 
   getExchangeRate: protectedProcedure
     .input(
-      z.object({
-        from: currencyCodeSchema,
-        to: currencyCodeSchema,
-        day: z.iso.date(),
-      }),
+      z
+        .object({
+          from: currencyCodeSchema,
+          to: currencyCodeSchema,
+          // The ECB series starts with the euro
+          day: z.iso.date().refine((day) => day >= "1999-01-04"),
+        })
+        .refine(({ from, to }) => from !== to),
     )
     .query(({ input }) => fetchExchangeRate(input.from, input.to, input.day)),
 

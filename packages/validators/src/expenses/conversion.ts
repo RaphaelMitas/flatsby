@@ -93,7 +93,6 @@ export function isLeftUnconverted(
   );
 }
 
-/** The currencies the debts banner names, while no admin has decided on conversion yet */
 export function undecidedDebtCurrencies(
   group: ConversionGroup & { thisGroupMember: { role: string } },
   balances: { currency: string }[],

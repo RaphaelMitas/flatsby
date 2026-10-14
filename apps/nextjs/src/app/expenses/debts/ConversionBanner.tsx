@@ -33,7 +33,11 @@ export function ConversionBanner({
 
   const keepSeparate = () => {
     capture("currency_banner_keep_separate", { groupId });
-    keepSeparateMutation.mutate({ id: groupId, convertAutomatically: false });
+    keepSeparateMutation.mutate({
+      id: groupId,
+      convertAutomatically: false,
+      onlyIfUndecided: true,
+    });
   };
 
   return (

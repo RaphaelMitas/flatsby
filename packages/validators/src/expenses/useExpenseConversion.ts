@@ -5,7 +5,7 @@ import { convertCents, rateBetween } from "./conversion";
 import { formatExpenseDateShort, formatRate } from "./formatting";
 import { isCurrencyCode } from "./types";
 
-export interface ExchangeRateQuery {
+interface ExchangeRateQuery {
   data: { rate: number; date: string } | null | undefined;
   isError: boolean;
 }
@@ -28,6 +28,7 @@ export function useExpenseConversion({
   group: { currency: CurrencyCode; convertAutomatically: boolean | null };
   expense?: {
     amountInCents: number;
+    currency: string;
     convertedAmountInCents: number | null;
     convertedCurrency: string | null;
     splitMethod: string;
@@ -44,8 +45,9 @@ export function useExpenseConversion({
     expense?.convertedCurrency && isCurrencyCode(expense.convertedCurrency)
       ? expense.convertedCurrency
       : group.currency;
+  // An expense saved in the group currency never had the choice, so it gets the group's default
   const [convert, setConvert] = useState(
-    expense
+    expense && expense.currency !== group.currency
       ? expense.convertedAmountInCents !== null
       : group.convertAutomatically === true,
   );

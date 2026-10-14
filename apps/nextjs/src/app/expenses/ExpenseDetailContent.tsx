@@ -82,14 +82,14 @@ export function ExpenseDetailContent({
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <CardTitle className="text-2xl">{amount}</CardTitle>
-              {rate && expense.convertedCurrency !== null && (
+              {rate && (
                 <div className="text-muted-foreground mt-1 text-sm">
                   <p>
                     {paid} · {rate}
                   </p>
                   <p className="flex items-center gap-1 text-xs">
                     Converted when added
-                    <RateSourceInfo currency={expense.convertedCurrency} />
+                    <RateSourceInfo currency={ledger.currency} />
                   </p>
                 </div>
               )}

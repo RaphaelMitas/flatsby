@@ -25,7 +25,10 @@ import {
   SelectValue,
 } from "@flatsby/ui/select";
 import { Switch } from "@flatsby/ui/switch";
-import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
+import {
+  CURRENCY_CODES,
+  isCurrencyCode,
+} from "@flatsby/validators/expenses/types";
 
 import { useUpdateGroup } from "~/hooks/use-update-group";
 import { useTRPC } from "~/trpc/react";
@@ -92,8 +95,7 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
             <Select
               value={currency}
               onValueChange={(value) => {
-                const code = CURRENCY_CODES.find((c) => c === value);
-                if (code) setCurrency(code);
+                if (isCurrencyCode(value)) setCurrency(value);
               }}
               disabled={!isAdmin}
             >
