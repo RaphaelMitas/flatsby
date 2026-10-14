@@ -61,6 +61,11 @@ tags:
     visible:
       id: "expense-form-amount"
     timeout: 15000
+# Description first: on Android, after the currency sheet closes, the first tap from one text field to another is dropped
+- tapOn:
+    id: "expense-form-description"
+- inputText: "Zurich dinner"
+- tapOn: "Amount & Details"
 - tapOn:
     id: "expense-form-currency"
 - extendedWaitUntil:
@@ -72,9 +77,6 @@ tags:
 - tapOn:
     id: "expense-form-amount"
 - inputText: "10.00"
-- tapOn:
-    id: "expense-form-description"
-- inputText: "Zurich dinner"
 - tapOn: "Amount & Details"
 - tapOn:
     id: "expense-form-convert"
