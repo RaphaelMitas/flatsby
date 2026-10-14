@@ -85,6 +85,7 @@
     "VERCEL_URL",
     "npm_lifecycle_event",
     "BASE_URL",
-    "COREPACK_HOME"
+    "COREPACK_HOME",
+    "ENABLE_EXPERIMENTAL_COREPACK"
   ]
 }
