@@ -50,9 +50,6 @@ export default function GroupDetailsScreen() {
             return;
           }
           setShowSuccessMessage(true);
-          setTimeout(() => {
-            setShowSuccessMessage(false);
-          }, 3000);
         },
         onError: (err) => {
           form.setError("name", { message: err.message });
@@ -152,6 +149,7 @@ export default function GroupDetailsScreen() {
             variant="success"
             title="Success!"
             description="Group name has been updated successfully."
+            onDismiss={() => setShowSuccessMessage(false)}
           />
         )}
       </View>

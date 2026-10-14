@@ -45,9 +45,11 @@ export function useExpenseConversion({
     expense?.convertedCurrency && isCurrencyCode(expense.convertedCurrency)
       ? expense.convertedCurrency
       : group.currency;
-  // An expense saved in the group currency never had the choice, so it gets the group's default
+  // A stored choice wins; an expense saved in the group currency never had one, so it gets the group's default
   const [convert, setConvert] = useState(
-    expense && expense.currency !== group.currency
+    expense &&
+      (expense.convertedAmountInCents !== null ||
+        expense.currency !== group.currency)
       ? expense.convertedAmountInCents !== null
       : group.convertAutomatically === true,
   );

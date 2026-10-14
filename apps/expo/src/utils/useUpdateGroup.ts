@@ -30,15 +30,16 @@ export function useUpdateGroup(groupId: number) {
       onSuccess: (data, _variables, context) => {
         if (!data.success) {
           queryClient.setQueryData(groupQueryKey, context.previousGroup);
-          return;
         }
+      },
+      onError: (_error, _variables, context) => {
+        queryClient.setQueryData(groupQueryKey, context?.previousGroup);
+      },
+      onSettled: () => {
         void queryClient.invalidateQueries({ queryKey: groupQueryKey });
         void queryClient.invalidateQueries(
           trpc.group.getUserGroups.queryOptions(),
         );
-      },
-      onError: (_error, _variables, context) => {
-        queryClient.setQueryData(groupQueryKey, context?.previousGroup);
       },
     }),
   );

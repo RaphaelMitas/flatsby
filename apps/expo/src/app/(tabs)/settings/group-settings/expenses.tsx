@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+import type { GroupWithAccess } from "@flatsby/api";
+import { useState } from "react";
 import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useWatch } from "react-hook-form";
 
 import {
   CURRENCY_CODES,
   isCurrencyCode,
 } from "@flatsby/validators/expenses/types";
-import { groupSchema } from "@flatsby/validators/group";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { TimedAlert } from "~/components/TimedAlert";
@@ -18,18 +17,12 @@ import {
   BottomSheetPickerTrigger,
 } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
-import { Form, FormField, useForm } from "~/lib/ui/form";
 import { Label } from "~/lib/ui/label";
 import { Switch } from "~/lib/ui/switch";
 import { cn, handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useUpdateGroup } from "~/utils/useUpdateGroup";
-
-const expenseSettingsSchema = groupSchema.pick({
-  currency: true,
-  convertAutomatically: true,
-});
 
 const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
   id: code,
@@ -39,76 +32,61 @@ const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
 export default function ExpenseSettingsScreen() {
   const router = useRouter();
   const { selectedGroupId } = useShoppingStore();
-  const { highlight } = useLocalSearchParams<{ highlight?: string }>();
-  const highlightConvert = highlight === "convert";
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({
       id: Number(selectedGroupId) || 0,
     }),
   );
-  const updateGroupMutation = useUpdateGroup(Number(selectedGroupId));
-
-  // Saving diffs against what this admin opened, so another admin's change in between isn't sent back
-  const [opened, setOpened] = useState({
-    currency: group.success ? group.data.currency : "EUR",
-    convertAutomatically: group.success
-      ? group.data.convertAutomatically
-      : null,
-  });
-  const form = useForm({
-    schema: expenseSettingsSchema,
-    defaultValues: opened,
-  });
-
-  useEffect(() => {
-    if (highlightConvert) {
-      form.setValue("convertAutomatically", true, { shouldDirty: true });
-    }
-  }, [form, highlightConvert]);
-  const [currency, convertAutomatically] = useWatch({
-    control: form.control,
-    name: ["currency", "convertAutomatically"],
-  });
 
   if (!group.success) {
     return handleApiError({ router, error: group.error });
   }
 
-  const saved = group.data;
-  const isAdmin = saved.thisGroupMember.role === "admin";
-  const isEditable = isAdmin && !form.formState.isSubmitting;
+  return <ExpenseSettingsForm key={group.data.id} group={group.data} />;
+}
 
-  const handleSubmit = form.handleSubmit((values) => {
-    const changes = {
-      ...(values.currency !== opened.currency && { currency: values.currency }),
-      ...(values.convertAutomatically !== opened.convertAutomatically && {
-        convertAutomatically: values.convertAutomatically,
-      }),
-    };
-    if (Object.keys(changes).length === 0) return;
+function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
+  const router = useRouter();
+  const { highlight } = useLocalSearchParams<{ highlight?: string }>();
+  const isAdmin = group.thisGroupMember.role === "admin";
+  const highlightConvert = highlight === "convert" && isAdmin;
+  const updateGroupMutation = useUpdateGroup(group.id);
+  const [result, setResult] = useState<"saved" | { error: string }>();
 
+  // Saving diffs against what this admin opened, so another admin's change in between isn't sent back
+  const [opened, setOpened] = useState({
+    currency: group.currency,
+    convertAutomatically: group.convertAutomatically === true,
+  });
+  const [currency, setCurrency] = useState(opened.currency);
+  const [convertAutomatically, setConvertAutomatically] = useState(
+    opened.convertAutomatically || highlightConvert,
+  );
+
+  const isConvertDirty = convertAutomatically !== opened.convertAutomatically;
+  const changes = {
+    ...(currency !== opened.currency && { currency }),
+    ...(isConvertDirty && { convertAutomatically }),
+  };
+  const isEditable = isAdmin && !updateGroupMutation.isPending;
+
+  const save = () =>
     updateGroupMutation.mutate(
-      { id: saved.id, ...changes },
+      { id: group.id, ...changes },
       {
         onSuccess: (data) => {
           if (!data.success) {
-            form.setError("root", { message: data.error.message });
+            setResult({ error: data.error.message });
             return;
           }
-          setOpened(values);
-          setShowSuccessMessage(true);
-          setTimeout(() => {
-            setShowSuccessMessage(false);
-          }, 3000);
+          setOpened({ currency, convertAutomatically });
+          router.setParams({ highlight: undefined });
+          setResult("saved");
         },
-        onError: (err) => {
-          form.setError("root", { message: err.message });
-        },
+        onError: (err) => setResult({ error: err.message }),
       },
     );
-  });
 
   return (
     <BottomSheetPickerProvider>
@@ -122,93 +100,80 @@ export default function ExpenseSettingsScreen() {
             </View>
           )}
 
-          <Form {...form}>
-            <View className="gap-4">
-              <View className="gap-2">
-                <Label>Group currency</Label>
-                <FormField
-                  name="currency"
-                  control={form.control}
-                  render={({ field }) => (
-                    <BottomSheetPickerTrigger
-                      testID="group-currency-picker"
-                      items={currencyItems}
-                      selectedId={field.value}
-                      onSelect={(item) => {
-                        if (isCurrencyCode(item.id)) field.onChange(item.id);
-                      }}
-                      triggerTitle={field.value}
-                      disabled={!isEditable}
-                    />
-                  )}
-                />
-                {currency !== saved.currency && (
-                  <Text className="text-warning text-sm">
-                    Expenses already converted stay in {saved.currency}.
-                  </Text>
-                )}
-              </View>
-
-              <FormField
-                name="convertAutomatically"
-                control={form.control}
-                render={({ field }) => (
-                  <View
-                    className={cn(
-                      "flex-row items-center gap-4 rounded-lg",
-                      highlightConvert &&
-                        convertAutomatically !== opened.convertAutomatically &&
-                        "border-primary border-2 p-3",
-                    )}
-                  >
-                    <View className="flex-1 gap-1">
-                      <Label>Convert automatically</Label>
-                      <Text className="text-muted-foreground text-sm">
-                        New expenses in other currencies are converted to{" "}
-                        {currency}. You can keep the original currency on any
-                        single expense. Existing expenses don't change.
-                      </Text>
-                    </View>
-                    <Switch
-                      testID="group-convert-switch"
-                      checked={field.value === true}
-                      onCheckedChange={field.onChange}
-                      disabled={!isEditable}
-                    />
-                  </View>
-                )}
-              />
-
-              <Button
-                testID="expense-settings-save"
-                icon={form.formState.isSubmitting ? "loader" : "save"}
+          <View className="gap-4">
+            <View className="gap-2">
+              <Label>Group currency</Label>
+              <BottomSheetPickerTrigger
+                testID="group-currency-picker"
+                items={currencyItems}
+                selectedId={currency}
+                onSelect={(item) => {
+                  if (isCurrencyCode(item.id)) setCurrency(item.id);
+                }}
+                triggerTitle={currency}
                 disabled={!isEditable}
-                title={
-                  form.formState.isSubmitting
-                    ? "Saving..."
-                    : !isAdmin
-                      ? "Not an admin"
-                      : "Save Changes"
-                }
-                onPress={handleSubmit}
-                className="w-full"
+              />
+              {currency !== group.currency && (
+                <Text className="text-warning text-sm">
+                  Expenses already converted stay in {group.currency}.
+                </Text>
+              )}
+            </View>
+
+            <View
+              className={cn(
+                "flex-row items-center gap-4 rounded-lg",
+                highlightConvert &&
+                  isConvertDirty &&
+                  "border-primary border-2 p-3",
+              )}
+            >
+              <View className="flex-1 gap-1">
+                <Label>Convert automatically</Label>
+                <Text className="text-muted-foreground text-sm">
+                  New expenses in other currencies are converted to {currency}.
+                  You can keep the original currency on any single expense.
+                  Existing expenses don't change.
+                </Text>
+              </View>
+              <Switch
+                testID="group-convert-switch"
+                checked={convertAutomatically}
+                onCheckedChange={setConvertAutomatically}
+                disabled={!isEditable}
               />
             </View>
-          </Form>
 
-          {form.formState.errors.root?.message && (
-            <TimedAlert
-              variant="destructive"
-              title="Error"
-              description={form.formState.errors.root.message}
+            <Button
+              testID="expense-settings-save"
+              icon={updateGroupMutation.isPending ? "loader" : "save"}
+              disabled={!isEditable || Object.keys(changes).length === 0}
+              title={
+                updateGroupMutation.isPending
+                  ? "Saving..."
+                  : !isAdmin
+                    ? "Not an admin"
+                    : "Save Changes"
+              }
+              onPress={save}
+              className="w-full"
             />
-          )}
+          </View>
 
-          {showSuccessMessage && (
+          {result === "saved" && (
             <TimedAlert
               variant="success"
               title="Success!"
               description="Expense settings have been updated."
+              onDismiss={() => setResult(undefined)}
+            />
+          )}
+          {typeof result === "object" && (
+            <TimedAlert
+              variant="destructive"
+              title="Error"
+              description={result.error}
+              onDismiss={() => setResult(undefined)}
             />
           )}
         </View>

@@ -78,20 +78,33 @@ const PAIR_ACTIVITY_PAGE = 5;
 
 // A past day's ECB rate never changes; "latest" moves once the ECB publishes the day's rate
 const LATEST_RATE_TTL_MS = 60 * 60 * 1000;
+const FAILED_RATE_TTL_MS = 60 * 1000;
 const cachedRates = new Map<
   string,
-  { rate: number; date: string; expiresAt: number }
+  { result: Promise<{ rate: number; date: string } | null>; expiresAt: number }
 >();
 
-// null instead of throwing, so the form falls back to a typed amount
-async function fetchExchangeRate(from: string, to: string, day: string) {
+// Concurrent requests share one fetch, and a failure is retried at most once a minute
+function fetchExchangeRate(from: string, to: string, day: string) {
   const today = new Date().toISOString().slice(0, 10);
   const path = day < today ? day : "latest";
   const key = `${from}>${to}@${path}`;
   const cached = cachedRates.get(key);
-  if (cached && cached.expiresAt > Date.now()) {
-    return { rate: cached.rate, date: cached.date };
-  }
+  if (cached && cached.expiresAt > Date.now()) return cached.result;
+
+  const entry = { result: requestRate(from, to, path), expiresAt: Infinity };
+  cachedRates.set(key, entry);
+  void entry.result.then((rate) => {
+    if (rate === null) entry.expiresAt = Date.now() + FAILED_RATE_TTL_MS;
+    else if (path === "latest") {
+      entry.expiresAt = Date.now() + LATEST_RATE_TTL_MS;
+    }
+  });
+  return entry.result;
+}
+
+// null instead of throwing, so the form falls back to a typed amount
+async function requestRate(from: string, to: string, path: string) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
   try {
@@ -100,17 +113,11 @@ async function fetchExchangeRate(from: string, to: string, day: string) {
       { signal: controller.signal },
     );
     if (!response.ok) return null;
-    const { date: rateDate, rates } = z
+    const { date, rates } = z
       .object({ date: z.string(), rates: z.record(z.string(), z.number()) })
       .parse(await response.json());
     const rate = rates[to];
-    if (rate === undefined) return null;
-    cachedRates.set(key, {
-      rate,
-      date: rateDate,
-      expiresAt: path === "latest" ? Date.now() + LATEST_RATE_TTL_MS : Infinity,
-    });
-    return { rate, date: rateDate };
+    return rate === undefined ? null : { rate, date };
   } catch {
     return null;
   } finally {
@@ -377,10 +384,11 @@ export const expenseRouter = createTRPCRouter({
                             ? input.convertedCurrency
                             : null;
                         } else if (
+                          method === "settlement" ||
                           amountInCents !== locked.amountInCents ||
                           currency !== locked.currency
                         ) {
-                          // App builds before conversion never send it, and a stale converted amount would count instead
+                          // App builds before conversion never send the converted fields, and a stale converted amount would count instead
                           updateData.convertedAmountInCents = null;
                           updateData.convertedCurrency = null;
                         }

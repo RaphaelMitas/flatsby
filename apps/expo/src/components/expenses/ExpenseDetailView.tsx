@@ -182,7 +182,7 @@ export function ExpenseDetailView({
               <View className="flex-row items-start justify-between gap-4">
                 <View className="flex-1">
                   <CardTitle className="text-2xl">{amounts.amount}</CardTitle>
-                  {amounts.paid && amounts.rate && (
+                  {amounts.rate && (
                     <View className="mt-1 gap-1">
                       <Text className="text-muted-foreground text-sm">
                         {amounts.paid} · {amounts.rate}

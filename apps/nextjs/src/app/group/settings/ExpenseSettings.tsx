@@ -3,7 +3,7 @@
 import type { GroupWithAccess } from "@flatsby/api";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 
@@ -51,6 +51,8 @@ const ExpenseSettings = ({ groupId }: { groupId: number }) => {
 };
 
 function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const isAdmin = group.thisGroupMember.role === "admin";
   const highlightConvert =
     useSearchParams().get("highlight") === "convert" && isAdmin;
@@ -160,6 +162,7 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
                   onSuccess: (data) => {
                     if (data.success) {
                       setOpened({ currency, convertAutomatically });
+                      router.replace(pathname);
                     }
                   },
                 },
