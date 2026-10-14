@@ -93,12 +93,8 @@
           "name": "flat-cove_account_user_id_flat-cove_user_id_fk",
           "tableFrom": "flat-cove_account",
           "tableTo": "flat-cove_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -205,12 +201,8 @@
           "name": "flat-cove_chat_messages_conversation_id_flat-cove_conversations_id_fk",
           "tableFrom": "flat-cove_chat_messages",
           "tableTo": "flat-cove_conversations",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["conversation_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -306,12 +298,8 @@
           "name": "flat-cove_conversations_user_id_flat-cove_user_id_fk",
           "tableFrom": "flat-cove_conversations",
           "tableTo": "flat-cove_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -392,12 +380,8 @@
           "name": "flat-cove_expense_splits_expenseId_flat-cove_expenses_id_fk",
           "tableFrom": "flat-cove_expense_splits",
           "tableTo": "flat-cove_expenses",
-          "columnsFrom": [
-            "expenseId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expenseId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -405,12 +389,8 @@
           "name": "flat-cove_expense_splits_groupMemberId_flat-cove_group_members_id_fk",
           "tableFrom": "flat-cove_expense_splits",
           "tableTo": "flat-cove_group_members",
-          "columnsFrom": [
-            "groupMemberId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["groupMemberId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -568,12 +548,8 @@
           "name": "flat-cove_expenses_groupId_flat-cove_groups_id_fk",
           "tableFrom": "flat-cove_expenses",
           "tableTo": "flat-cove_groups",
-          "columnsFrom": [
-            "groupId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["groupId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -581,12 +557,8 @@
           "name": "flat-cove_expenses_paidByGroupMemberId_flat-cove_group_members_id_fk",
           "tableFrom": "flat-cove_expenses",
           "tableTo": "flat-cove_group_members",
-          "columnsFrom": [
-            "paidByGroupMemberId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paidByGroupMemberId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -594,12 +566,8 @@
           "name": "flat-cove_expenses_createdByGroupMemberId_flat-cove_group_members_id_fk",
           "tableFrom": "flat-cove_expenses",
           "tableTo": "flat-cove_group_members",
-          "columnsFrom": [
-            "createdByGroupMemberId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["createdByGroupMemberId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -697,12 +665,8 @@
           "name": "flat-cove_group_members_groupId_flat-cove_groups_id_fk",
           "tableFrom": "flat-cove_group_members",
           "tableTo": "flat-cove_groups",
-          "columnsFrom": [
-            "groupId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["groupId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -823,12 +787,8 @@
           "name": "flat-cove_session_user_id_flat-cove_user_id_fk",
           "tableFrom": "flat-cove_session",
           "tableTo": "flat-cove_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -838,9 +798,7 @@
         "flat-cove_session_token_unique": {
           "name": "flat-cove_session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -942,12 +900,8 @@
           "name": "flat-cove_shopping_list_item_shoppingListId_flat-cove_shopping_lists_id_fk",
           "tableFrom": "flat-cove_shopping_list_item",
           "tableTo": "flat-cove_shopping_lists",
-          "columnsFrom": [
-            "shoppingListId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["shoppingListId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -955,12 +909,8 @@
           "name": "flat-cove_shopping_list_item_createdByGroupMemberId_flat-cove_group_members_id_fk",
           "tableFrom": "flat-cove_shopping_list_item",
           "tableTo": "flat-cove_group_members",
-          "columnsFrom": [
-            "createdByGroupMemberId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["createdByGroupMemberId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -968,12 +918,8 @@
           "name": "flat-cove_shopping_list_item_completedByGroupMemberId_flat-cove_group_members_id_fk",
           "tableFrom": "flat-cove_shopping_list_item",
           "tableTo": "flat-cove_group_members",
-          "columnsFrom": [
-            "completedByGroupMemberId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["completedByGroupMemberId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1048,12 +994,8 @@
           "name": "flat-cove_shopping_lists_groupId_flat-cove_groups_id_fk",
           "tableFrom": "flat-cove_shopping_lists",
           "tableTo": "flat-cove_groups",
-          "columnsFrom": [
-            "groupId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["groupId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1177,12 +1119,8 @@
           "name": "flat-cove_user_last_group_used_flat-cove_groups_id_fk",
           "tableFrom": "flat-cove_user",
           "tableTo": "flat-cove_groups",
-          "columnsFrom": [
-            "last_group_used"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["last_group_used"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1190,12 +1128,8 @@
           "name": "flat-cove_user_last_shopping_list_used_flat-cove_shopping_lists_id_fk",
           "tableFrom": "flat-cove_user",
           "tableTo": "flat-cove_shopping_lists",
-          "columnsFrom": [
-            "last_shopping_list_used"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["last_shopping_list_used"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1205,9 +1139,7 @@
         "flat-cove_user_email_unique": {
           "name": "flat-cove_user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1268,10 +1200,7 @@
     "public.group_member_role": {
       "name": "group_member_role",
       "schema": "public",
-      "values": [
-        "admin",
-        "member"
-      ]
+      "values": ["admin", "member"]
     }
   },
   "schemas": {},
