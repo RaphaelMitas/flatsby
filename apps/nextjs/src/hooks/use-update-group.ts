@@ -11,11 +11,7 @@ export function useUpdateGroup(groupId: number) {
 
   return useMutation(
     trpc.group.updateGroup.mutationOptions({
-      onMutate: async ({
-        id: _id,
-        onlyIfUndecided: _onlyIfUndecided,
-        ...settings
-      }) => {
+      onMutate: async ({ id: _id, ...settings }) => {
         await queryClient.cancelQueries(groupQuery);
         const previous = queryClient.getQueryData(groupQuery.queryKey);
         queryClient.setQueryData(groupQuery.queryKey, (old) =>

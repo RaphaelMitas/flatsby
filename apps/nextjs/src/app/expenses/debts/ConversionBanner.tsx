@@ -36,7 +36,6 @@ export function ConversionBanner({
     keepSeparateMutation.mutate({
       id: groupId,
       convertAutomatically: false,
-      onlyIfUndecided: true,
     });
   };
 

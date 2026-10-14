@@ -36,7 +36,6 @@ export function ConvertCurrencyBanner({
     updateGroup.mutate({
       id: groupId,
       convertAutomatically: false,
-      onlyIfUndecided: true,
     });
   };
 
