@@ -4,12 +4,9 @@ import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-import {
-  CURRENCY_CODES,
-  isCurrencyCode,
-} from "@flatsby/validators/expenses/types";
+import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 
-import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
+import { currencyItems } from "~/components/expenses/currencyItems";
 import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import {
@@ -23,11 +20,6 @@ import { cn, handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useUpdateGroup } from "~/utils/useUpdateGroup";
-
-const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
-  id: code,
-  title: code,
-}));
 
 export default function ExpenseSettingsScreen() {
   const router = useRouter();

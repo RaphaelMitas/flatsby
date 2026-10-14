@@ -20,10 +20,7 @@ import {
   finalizeSplits,
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
-import {
-  CURRENCY_CODES,
-  isCurrencyCode,
-} from "@flatsby/validators/expenses/types";
+import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
@@ -55,6 +52,7 @@ import { useThemeColors } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
+import { currencyItems } from "./currencyItems";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
 import { SplitEditor } from "./SplitEditor";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
@@ -548,11 +546,6 @@ export function ExpenseForm({
   ).length;
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
-
-  const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
-    id: code,
-    title: code,
-  }));
 
   const paidByItems: BottomSheetPickerItem[] = group.groupMembers.map(
     (member) => ({

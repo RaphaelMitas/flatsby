@@ -1,7 +1,6 @@
 "use client";
 
 import type { GroupWithAccess } from "@flatsby/api";
-import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -62,7 +61,7 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
     currency: group.currency,
     convertAutomatically: group.convertAutomatically === true,
   });
-  const [currency, setCurrency] = useState<CurrencyCode>(opened.currency);
+  const [currency, setCurrency] = useState(opened.currency);
   const [convertAutomatically, setConvertAutomatically] = useState(
     opened.convertAutomatically || highlightConvert,
   );
@@ -75,6 +74,7 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
   }, [highlightConvert]);
 
   const groupMutation = useUpdateGroup(group.id);
+  const isEditable = isAdmin && !groupMutation.isPending;
 
   const isConvertDirty = convertAutomatically !== opened.convertAutomatically;
   const changes = {
@@ -99,7 +99,7 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
               onValueChange={(value) => {
                 if (isCurrencyCode(value)) setCurrency(value);
               }}
-              disabled={!isAdmin}
+              disabled={!isEditable}
             >
               <SelectTrigger
                 id="group-currency"
@@ -143,7 +143,7 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
               id="convert-automatically"
               checked={convertAutomatically}
               onCheckedChange={setConvertAutomatically}
-              disabled={!isAdmin}
+              disabled={!isEditable}
               data-testid="group-convert-switch"
             />
           </div>

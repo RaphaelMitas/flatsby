@@ -23,15 +23,16 @@ export const splitMethodSchema = z.enum(SPLIT_METHODS);
 
 export const currencyCodeSchema = z.enum(CURRENCY_CODES);
 
+const amountInCentsSchema = z
+  .number()
+  .int()
+  .min(1, "Amount must be greater than 0");
+
 export const expenseSchema = z.object({
   paidByGroupMemberId: z.number().min(1, "Please select who paid"),
-  amountInCents: z.number().int().min(1, "Amount must be greater than 0"),
+  amountInCents: amountInCentsSchema,
   currency: currencyCodeSchema,
-  convertedAmountInCents: z
-    .number()
-    .int()
-    .min(1, "Amount must be greater than 0")
-    .nullish(),
+  convertedAmountInCents: amountInCentsSchema.nullish(),
   convertedCurrency: currencyCodeSchema.nullish(),
   description: z.string().max(512),
   subcategory: expenseSubcategoryIdSchema.optional(),
