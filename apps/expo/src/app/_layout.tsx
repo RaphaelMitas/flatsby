@@ -22,6 +22,7 @@ import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { isE2ETestingEnabled } from "~/utils/e2e";
+import { IntlProvider } from "~/utils/intl-provider";
 import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
 import {
   ShoppingStoreProvider,
@@ -59,18 +60,20 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <BottomSheetModalProvider>
               <ThemeProvider>
-                <QueryClientProvider client={queryClient}>
-                  <RevenueCatProvider>
-                    <ShoppingStoreProvider>
-                      {/**
+                <IntlProvider>
+                  <QueryClientProvider client={queryClient}>
+                    <RevenueCatProvider>
+                      <ShoppingStoreProvider>
+                        {/**
                        The Stack component displays the current page.
                        It also allows you to configure your screens
                       **/}
-                      <StackLayout />
-                      <StatusBar />
-                    </ShoppingStoreProvider>
-                  </RevenueCatProvider>
-                </QueryClientProvider>
+                        <StackLayout />
+                        <StatusBar />
+                      </ShoppingStoreProvider>
+                    </RevenueCatProvider>
+                  </QueryClientProvider>
+                </IntlProvider>
               </ThemeProvider>
             </BottomSheetModalProvider>
           </SafeAreaProvider>

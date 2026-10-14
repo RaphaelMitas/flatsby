@@ -11,7 +11,7 @@ import {
 } from "@flatsby/ui/ai-elements";
 import { Card } from "@flatsby/ui/card";
 
-import { ModifyDataResult } from "~/app/chat/_components/tool-results/modify-data-result";
+import { ModifyDataResult } from "~/app/(app)/chat/_components/tool-results/modify-data-result";
 
 interface DemoMessage {
   id: number;

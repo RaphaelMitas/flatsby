@@ -1,4 +1,5 @@
 import { Text, View } from "react-native";
+import { useLocale, useTranslations } from "use-intl";
 
 import {
   formatCurrencyFromCents,
@@ -40,12 +41,15 @@ export function ExpenseDisplay({
   fromImage,
   isSelected,
 }: ExpenseDisplayProps) {
+  const t = useTranslations("expenses");
+  const locale = useLocale();
   const formattedAmount = formatCurrencyFromCents({
     cents: amountInCents,
     currency,
+    locale,
   });
 
-  const formattedDate = formatExpenseDateShort(expenseDate);
+  const formattedDate = formatExpenseDateShort(expenseDate, locale);
 
   const isSettlement = splitMethod === "settlement";
 
@@ -60,7 +64,7 @@ export function ExpenseDisplay({
             <Badge variant="secondary">
               <Icon name="handshake" size={12} color="secondary-foreground" />
               <Text className="text-secondary-foreground text-xs font-medium">
-                Settlement
+                {t("settlement")}
               </Text>
             </Badge>
           ) : (
@@ -100,7 +104,7 @@ export function ExpenseDisplay({
               </AvatarFallback>
             </Avatar>
             <Text className="text-muted-foreground text-sm" numberOfLines={1}>
-              {isSettlement ? paidByName : `Paid by ${paidByName}`}
+              {isSettlement ? paidByName : t("paidBy", { name: paidByName })}
             </Text>
           </View>
 
@@ -109,8 +113,7 @@ export function ExpenseDisplay({
               <>
                 <Icon name="users" size={16} color="muted-foreground" />
                 <Text className="text-muted-foreground text-sm">
-                  Split between {splitCount}{" "}
-                  {splitCount === 1 ? "person" : "people"}
+                  {t("splitBetween", { count: splitCount })}
                 </Text>
                 <Text className="text-muted-foreground text-sm">·</Text>
               </>

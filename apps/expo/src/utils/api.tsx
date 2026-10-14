@@ -1,5 +1,6 @@
 import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
+import { getLocales } from "expo-localization";
 import { fetch as expoFetch } from "expo/fetch";
 import { QueryClient } from "@tanstack/react-query";
 import {
@@ -58,6 +59,12 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
 async function getHeaders() {
   const headers = new Map<string, string>();
   headers.set("x-trpc-source", "expo-react");
+  headers.set(
+    "Accept-Language",
+    getLocales()
+      .map((locale) => locale.languageTag)
+      .join(","),
+  );
 
   const cookies = await authClient.getCookie();
   if (cookies) {

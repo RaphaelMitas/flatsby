@@ -9,6 +9,7 @@ import {
   Handshake,
   Users,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -31,14 +32,17 @@ export function ExpenseCard({
   isSelected,
   onSelect,
 }: ExpenseCardProps) {
+  const t = useTranslations("expenses");
+  const locale = useLocale();
   const splitCount = expense.expenseSplits.length;
   const paidByName = expense.paidByGroupMember.user.name;
   const formattedAmount = formatCurrencyFromCents({
     cents: expense.amountInCents,
     currency: expense.currency,
+    locale,
   });
   const expenseDate = new Date(expense.expenseDate);
-  const formattedDate = formatExpenseDateShort(expenseDate);
+  const formattedDate = formatExpenseDateShort(expenseDate, locale);
 
   const settlementCounterparty =
     expense.splitMethod === "settlement" && expense.expenseSplits[0]
@@ -64,7 +68,7 @@ export function ExpenseCard({
                 {expense.splitMethod === "settlement" ? (
                   <Badge variant="secondary" className="gap-1.5 rounded-full">
                     <Handshake size={14} />
-                    Settlement
+                    {t("settlement")}
                   </Badge>
                 ) : (
                   <Badge
@@ -118,7 +122,9 @@ export function ExpenseCard({
                 </AvatarFallback>
               </Avatar>
               <span className="truncate">
-                {`${expense.splitMethod === "settlement" ? "" : "Paid by "}${paidByName}`}
+                {expense.splitMethod === "settlement"
+                  ? paidByName
+                  : t("paidBy", { name: paidByName })}
               </span>
             </div>
 
@@ -126,10 +132,7 @@ export function ExpenseCard({
               {expense.splitMethod !== "settlement" && (
                 <>
                   <Users className="h-4 w-4" />
-                  <span>
-                    Split between {splitCount}{" "}
-                    {splitCount === 1 ? "person" : "people"}
-                  </span>
+                  <span>{t("splitBetween", { count: splitCount })}</span>
                   <span>·</span>
                 </>
               )}

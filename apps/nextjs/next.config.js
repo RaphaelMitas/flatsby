@@ -1,4 +1,5 @@
 import { createJiti } from "jiti";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const jiti = createJiti(import.meta.url);
 
@@ -12,6 +13,7 @@ const config = {
     "@flatsby/api",
     "@flatsby/auth",
     "@flatsby/db",
+    "@flatsby/i18n",
     "@flatsby/ui",
     "@flatsby/validators",
   ],
@@ -42,4 +44,6 @@ const config = {
   typescript: { ignoreBuildErrors: true },
 };
 
-export default config;
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+export default withNextIntl(config);

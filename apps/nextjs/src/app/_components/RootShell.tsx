@@ -13,7 +13,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
 
-export const metadata: Metadata = {
+export const rootMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "Flatsby",
   description: "Flat Companion",
@@ -46,16 +46,16 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = {
+export const rootViewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "white" },
     { media: "(prefers-color-scheme: dark)", color: "black" },
   ],
 };
 
-export default function RootLayout(props: { children: React.ReactNode }) {
+export function RootShell(props: { lang: string; children: React.ReactNode }) {
   return (
-    <html className="h-full" lang="en" suppressHydrationWarning>
+    <html className="h-full" lang={props.lang} suppressHydrationWarning>
       <body
         className={cn(
           "bg-background h-full min-h-full overflow-hidden font-sans antialiased",

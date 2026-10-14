@@ -2,7 +2,7 @@
 
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 
-import { ExpenseCard } from "~/app/expenses/ExpenseCard";
+import { ExpenseCard } from "~/app/(app)/expenses/ExpenseCard";
 
 const demoExpenses: ExpenseWithSplitsAndMembers[] = [
   {

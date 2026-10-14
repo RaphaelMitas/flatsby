@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { DESCRIPTION, TITLE } from "~/app/_components/landing/content";
+import { LandingPage } from "~/app/_components/landing/LandingPage";
+import { marketingMetadata } from "~/app/_components/landing/metadata";
 import { getSession, signOutAndRedirect } from "~/auth/server";
 import { caller } from "~/trpc/server";
-import { DESCRIPTION, TITLE } from "./_components/landing/content";
-import { LandingPage } from "./_components/landing/LandingPage";
-import { marketingMetadata } from "./_components/landing/metadata";
 
 export const metadata: Metadata = marketingMetadata({
   title: TITLE,

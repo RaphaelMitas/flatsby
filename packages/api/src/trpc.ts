@@ -7,11 +7,13 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 import type { Auth } from "@flatsby/auth";
+import type { Locale } from "@flatsby/i18n/locale";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
 import { db } from "@flatsby/db/client";
+import { localeFromHeaders } from "@flatsby/i18n/locale";
 
 import { captureEvent } from "./lib/posthog";
 
@@ -38,6 +40,7 @@ export const createTRPCContext = async (opts: {
   session: Awaited<ReturnType<Auth["api"]["getSession"]>>;
   authMs: number;
   db: typeof db;
+  locale: Locale;
   signal?: AbortSignal;
 }> => {
   const authApi = opts.auth.api;
@@ -51,6 +54,7 @@ export const createTRPCContext = async (opts: {
     session,
     authMs: Date.now() - authStart,
     db,
+    locale: localeFromHeaders(opts.headers),
     signal: opts.signal,
   };
 };
