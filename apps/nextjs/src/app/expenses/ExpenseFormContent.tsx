@@ -410,9 +410,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 void handleNext();
               }}
               disabled={
-                isPending ||
-                amountInCents <= 0 ||
-                (conversion.isOn && convertedAmountInCents === null)
+                isPending || amountInCents <= 0 || conversion.isMissingConverted
               }
               className="flex-1"
               data-testid="expense-form-next"
@@ -423,7 +421,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
           ) : (
             <Button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || conversion.isMissingConverted}
               className="flex-1"
               data-testid="expense-form-submit"
             >

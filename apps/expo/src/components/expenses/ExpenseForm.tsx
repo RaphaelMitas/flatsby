@@ -828,8 +828,7 @@ export function ExpenseForm({
                 disabled={
                   isPending ||
                   amountInCents <= 0 ||
-                  (conversion.isOn &&
-                    conversion.fields.convertedAmountInCents === null)
+                  conversion.isMissingConverted
                 }
                 icon="arrow-right"
                 className="flex-1"
@@ -846,7 +845,7 @@ export function ExpenseForm({
                       ? "Update Expense"
                       : "Create Expense"
                 }
-                disabled={isPending}
+                disabled={isPending || conversion.isMissingConverted}
                 icon={isPending ? "loader" : undefined}
                 onPress={form.handleSubmit(onSubmit)}
                 className="flex-1"

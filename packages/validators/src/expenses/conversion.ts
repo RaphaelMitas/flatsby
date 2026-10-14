@@ -22,10 +22,6 @@ export function decimalToCents(decimal: number): number {
   return Math.round(decimal * 100);
 }
 
-export function convertCents(cents: number, rate: number): number {
-  return Math.round(cents * rate);
-}
-
 export function rateBetween(cents: number, convertedCents: number): number {
   return convertedCents / cents;
 }

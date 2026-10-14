@@ -81,7 +81,7 @@ const LATEST_RATE_TTL_MS = 60 * 60 * 1000;
 const FAILED_RATE_TTL_MS = 60 * 1000;
 const cachedRates = new Map<
   string,
-  { result: Promise<{ rate: number; date: string } | null>; expiresAt: number }
+  { result: Promise<{ rate: number; date: string }>; expiresAt: number }
 >();
 
 // Concurrent requests share one fetch, and a failure is retried at most once a minute
@@ -94,16 +94,17 @@ function fetchExchangeRate(from: string, to: string, day: string) {
 
   const entry = { result: requestRate(from, to, path), expiresAt: Infinity };
   cachedRates.set(key, entry);
-  void entry.result.then((rate) => {
-    if (rate === null) entry.expiresAt = Date.now() + FAILED_RATE_TTL_MS;
-    else if (path === "latest") {
-      entry.expiresAt = Date.now() + LATEST_RATE_TTL_MS;
-    }
-  });
+  void entry.result.then(
+    () => {
+      if (path === "latest") entry.expiresAt = Date.now() + LATEST_RATE_TTL_MS;
+    },
+    () => {
+      entry.expiresAt = Date.now() + FAILED_RATE_TTL_MS;
+    },
+  );
   return entry.result;
 }
 
-// null instead of throwing, so the form falls back to a typed amount
 async function requestRate(from: string, to: string, path: string) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
@@ -112,14 +113,15 @@ async function requestRate(from: string, to: string, path: string) {
       `https://api.frankfurter.dev/v1/${path}?base=${from}&symbols=${to}`,
       { signal: controller.signal },
     );
-    if (!response.ok) return null;
+    if (!response.ok) {
+      throw new Error(`Exchange rate request failed: ${response.status}`);
+    }
     const { date, rates } = z
       .object({ date: z.string(), rates: z.record(z.string(), z.number()) })
       .parse(await response.json());
     const rate = rates[to];
-    return rate === undefined ? null : { rate, date };
-  } catch {
-    return null;
+    if (rate === undefined) throw new Error(`No ${to} rate for ${from}`);
+    return { rate, date };
   } finally {
     clearTimeout(timeout);
   }

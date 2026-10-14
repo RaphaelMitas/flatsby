@@ -18,7 +18,6 @@ export function ConversionField({
 }) {
   if (!conversion.isShown) return null;
   const { targetCurrency } = conversion;
-  const caption = conversion.rateText;
 
   return (
     <div className="space-y-2">
@@ -45,10 +44,10 @@ export function ConversionField({
               data-testid="expense-form-converted-amount"
             />
           </div>
-          {caption ? (
+          {conversion.rateText ? (
             <div className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
               <span className="flex items-center gap-1">
-                {caption}
+                {conversion.rateText}
                 <RateSourceInfo currency={targetCurrency} />
               </span>
               {conversion.isOwnRate && (

@@ -1,12 +1,12 @@
 import { useState } from "react";
 
 import type { CurrencyCode } from "./types";
-import { convertCents, rateBetween } from "./conversion";
+import { rateBetween } from "./conversion";
 import { formatExpenseDateShort, formatRate } from "./formatting";
 import { isCurrencyCode } from "./types";
 
 interface ExchangeRateQuery {
-  data: { rate: number; date: string } | null | undefined;
+  data: { rate: number; date: string } | undefined;
   isError: boolean;
 }
 
@@ -80,7 +80,7 @@ export function useExpenseConversion({
 
   const convertedAmountInCents =
     isOn && rate !== undefined && amountInCents > 0
-      ? convertCents(amountInCents, rate)
+      ? Math.round(amountInCents * rate)
       : null;
   const source =
     !isOwnRate && fetched.data
@@ -99,8 +99,8 @@ export function useExpenseConversion({
     isOwnRate,
     reset: () => setOwnRate(undefined),
     canEnterConverted: amountInCents > 0,
-    isRateUnavailable:
-      rate === undefined && (fetched.data === null || fetched.isError),
+    isMissingConverted: isOn && convertedAmountInCents === null,
+    isRateUnavailable: rate === undefined && fetched.isError,
     setConvertedAmount: (cents: number) => {
       if (amountInCents > 0 && cents > 0) {
         setOwnRate({ rate: rateBetween(amountInCents, cents), rateKey });

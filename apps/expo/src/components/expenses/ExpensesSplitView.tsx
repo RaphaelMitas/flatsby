@@ -65,7 +65,7 @@ export function ExpensesSplitView() {
   if (!selectedGroupId) {
     return (
       <View className="flex-1 items-center justify-center gap-4 p-4">
-        <Icon name="receipt" size={48} color="muted-foreground" />
+        <Icon name="wallet" size={48} color="muted-foreground" />
         <Text className="text-muted-foreground text-center text-lg font-semibold">
           Select a group to view its expenses
         </Text>
