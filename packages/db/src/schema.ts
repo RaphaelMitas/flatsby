@@ -1,4 +1,5 @@
 import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
+import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { relations } from "drizzle-orm";
 import {
   boolean,
@@ -122,6 +123,12 @@ export const groups = createTable("groups", {
   name: varchar("name", { length: 256 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   profilePicture: text("profilePicture"),
+  currency: varchar("currency", { length: 3 })
+    .$type<CurrencyCode>()
+    .default("EUR")
+    .notNull(),
+  // null until an admin decides, which is what the debts banner asks about
+  convertAutomatically: boolean("convert_automatically"),
 });
 
 export const groupMembers = createTable(
@@ -263,6 +270,9 @@ export const expenses = createTable(
       .references(() => groupMembers.id),
     amountInCents: integer("amount_in_cents").notNull(),
     currency: varchar("currency", { length: 3 }).notNull(),
+    // Both set when the expense counts toward debts in another currency
+    convertedAmountInCents: integer("converted_amount_in_cents"),
+    convertedCurrency: varchar("converted_currency", { length: 3 }),
     description: varchar("description", { length: 512 }).notNull(),
     category: varchar("category", { length: 100 }).notNull(),
     subcategory: varchar("subcategory", { length: 100 }).notNull(),

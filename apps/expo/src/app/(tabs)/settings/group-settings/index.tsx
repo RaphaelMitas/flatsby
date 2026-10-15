@@ -111,6 +111,14 @@ export default function GroupSettingsIndex() {
               iconName="users"
             />
           </Link>
+          <Link href="/(tabs)/settings/group-settings/expenses" asChild>
+            <SettingsItem
+              testID="group-settings-expenses"
+              title="Expenses"
+              subtitle="Group currency and conversion"
+              iconName="wallet"
+            />
+          </Link>
           <Link href="/(tabs)/home/shopping-lists" asChild>
             <SettingsItem
               title="Select Shopping List"

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import DangerZone from "./DangerZone";
+import ExpenseSettings from "./ExpenseSettings";
 import GroupDetails from "./GroupDetails";
 import ImportExpenses from "./ImportExpenses";
 import ManageMembers from "./ManageMembers";
@@ -31,6 +32,7 @@ export function GroupSettingsContent() {
         <div className="grid gap-6"></div>
         <GroupDetails groupId={groupId} />
         <ManageMembers groupId={groupId} />
+        <ExpenseSettings groupId={groupId} />
         <ImportExpenses groupId={groupId} groupName={currentGroup.name} />
         <DangerZone groupId={groupId} />
       </div>

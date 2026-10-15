@@ -16,27 +16,26 @@ import { Badge } from "@flatsby/ui/badge";
 import { Card } from "@flatsby/ui/card";
 import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
 import {
-  formatCurrencyFromCents,
+  formatExpenseAmounts,
   formatExpenseDateShort,
 } from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
+  isNotConverted?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
 }
 
 export function ExpenseCard({
   expense,
+  isNotConverted,
   isSelected,
   onSelect,
 }: ExpenseCardProps) {
   const splitCount = expense.expenseSplits.length;
   const paidByName = expense.paidByGroupMember.user.name;
-  const formattedAmount = formatCurrencyFromCents({
-    cents: expense.amountInCents,
-    currency: expense.currency,
-  });
+  const { amount, paid } = formatExpenseAmounts(expense);
   const expenseDate = new Date(expense.expenseDate);
   const formattedDate = formatExpenseDateShort(expenseDate);
 
@@ -60,7 +59,7 @@ export function ExpenseCard({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-2xl font-bold">{formattedAmount}</span>
+                <span className="text-2xl font-bold">{amount}</span>
                 {expense.splitMethod === "settlement" ? (
                   <Badge variant="secondary" className="gap-1.5 rounded-full">
                     <Handshake size={14} />
@@ -80,6 +79,14 @@ export function ExpenseCard({
                   </Badge>
                 )}
               </div>
+              {(paid !== undefined || isNotConverted) && (
+                <p
+                  className="text-muted-foreground text-sm"
+                  data-testid="expense-card-paid-amount"
+                >
+                  {paid ?? "not converted"}
+                </p>
+              )}
               {expense.description && (
                 <p className="mt-1 line-clamp-2 text-lg font-medium">
                   {expense.description}

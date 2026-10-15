@@ -3,11 +3,12 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
+import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useMemo, useState } from "react";
 import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
@@ -19,10 +20,8 @@ import {
   finalizeSplits,
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
-import {
-  CURRENCY_CODES,
-  isCurrencyCode,
-} from "@flatsby/validators/expenses/types";
+import { isCurrencyCode } from "@flatsby/validators/expenses/types";
+import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -51,10 +50,24 @@ import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useThemeColors } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
+import { currencyItems } from "./currencyItems";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
 import { SplitEditor } from "./SplitEditor";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
+
+function useExchangeRate(
+  input: { from: CurrencyCode; to: CurrencyCode; day: string },
+  enabled: boolean,
+) {
+  return useQuery(
+    trpc.expense.getExchangeRate.queryOptions(input, {
+      enabled,
+      staleTime: Infinity,
+    }),
+  );
+}
 
 function DatePickerField({
   value,
@@ -155,7 +168,9 @@ export function ExpenseForm({
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,
       amountInCents: expense?.amountInCents ?? 0,
       currency:
-        expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
+        expense && isCurrencyCode(expense.currency)
+          ? expense.currency
+          : group.currency,
       description: expense?.description ?? "",
       subcategory: expense?.subcategory,
       expenseDate: expense?.expenseDate
@@ -172,6 +187,20 @@ export function ExpenseForm({
     },
   });
   const splitMethod = useWatch({ control: form.control, name: "splitMethod" });
+  const amountInCents = useWatch({
+    control: form.control,
+    name: "amountInCents",
+  });
+  const currency = useWatch({ control: form.control, name: "currency" });
+  const expenseDate = useWatch({ control: form.control, name: "expenseDate" });
+  const conversion = useExpenseConversion({
+    group,
+    expense,
+    currency,
+    amountInCents,
+    expenseDate,
+    useExchangeRate,
+  });
 
   const allMembers = useMemo(() => {
     if (!expense) return group.groupMembers;
@@ -213,6 +242,8 @@ export function ExpenseForm({
             paidByGroupMemberId: input.paidByGroupMemberId,
             amountInCents: input.amountInCents,
             currency: input.currency,
+            convertedAmountInCents: input.convertedAmountInCents ?? null,
+            convertedCurrency: input.convertedCurrency ?? null,
             description: input.description,
             category: getSubcategoryGroup(input.subcategory),
             subcategory: input.subcategory ?? "other",
@@ -437,6 +468,7 @@ export function ExpenseForm({
         paidByGroupMemberId: values.paidByGroupMemberId,
         amountInCents: values.amountInCents,
         currency: values.currency,
+        ...conversion.fields,
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
@@ -449,6 +481,7 @@ export function ExpenseForm({
         paidByGroupMemberId: values.paidByGroupMemberId,
         amountInCents: values.amountInCents,
         currency: values.currency,
+        ...conversion.fields,
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
@@ -500,11 +533,6 @@ export function ExpenseForm({
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const amountInCents = useWatch({
-    control: form.control,
-    name: "amountInCents",
-  });
-  const currency = useWatch({ control: form.control, name: "currency" });
   const paidByGroupMemberId = useWatch({
     control: form.control,
     name: "paidByGroupMemberId",
@@ -518,11 +546,6 @@ export function ExpenseForm({
   ).length;
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
-
-  const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
-    id: code,
-    title: code,
-  }));
 
   const paidByItems: BottomSheetPickerItem[] = group.groupMembers.map(
     (member) => ({
@@ -601,6 +624,7 @@ export function ExpenseForm({
                               name="currency"
                               render={({ field: currencyField }) => (
                                 <BottomSheetPickerTrigger
+                                  testID="expense-form-currency"
                                   items={currencyItems}
                                   selectedId={currencyField.value}
                                   onSelect={(item) => {
@@ -622,6 +646,11 @@ export function ExpenseForm({
                           <FormMessage />
                         </View>
                       )}
+                    />
+
+                    <ConversionField
+                      currency={currency}
+                      conversion={conversion}
                     />
 
                     <FormField
@@ -690,6 +719,7 @@ export function ExpenseForm({
                         groupMembers={allMembers}
                         totalAmountCents={amountInCents}
                         currency={currency}
+                        conversion={conversion.fields}
                         splitMethod={editableSplitMethod(splitMethod)}
                         onSplitMethodChange={(method) => {
                           field.onChange(method);
@@ -730,6 +760,27 @@ export function ExpenseForm({
                         })}
                       </Text>
                     </View>
+                    {conversion.fields.convertedAmountInCents !== null && (
+                      <>
+                        <View className="flex-row justify-between">
+                          <Text className="text-muted-foreground">
+                            In {conversion.targetCurrency}:
+                          </Text>
+                          <Text className="text-foreground font-semibold">
+                            {formatCurrencyFromCents({
+                              cents: conversion.fields.convertedAmountInCents,
+                              currency: conversion.targetCurrency,
+                            })}
+                          </Text>
+                        </View>
+                        <View className="flex-row justify-between gap-4">
+                          <Text className="text-muted-foreground">Rate:</Text>
+                          <Text className="text-foreground flex-1 text-right font-semibold">
+                            {conversion.rateText}
+                          </Text>
+                        </View>
+                      </>
+                    )}
                     <View className="flex-row justify-between">
                       <Text className="text-muted-foreground">Paid By:</Text>
                       <Text className="text-foreground font-semibold">
@@ -767,7 +818,11 @@ export function ExpenseForm({
                 testID="expense-form-next"
                 title="Next"
                 onPress={handleNext}
-                disabled={isPending || amountInCents <= 0}
+                disabled={
+                  isPending ||
+                  amountInCents <= 0 ||
+                  conversion.isMissingConverted
+                }
                 icon="arrow-right"
                 className="flex-1"
               />
@@ -783,7 +838,7 @@ export function ExpenseForm({
                       ? "Update Expense"
                       : "Create Expense"
                 }
-                disabled={isPending}
+                disabled={isPending || conversion.isMissingConverted}
                 icon={isPending ? "loader" : undefined}
                 onPress={form.handleSubmit(onSubmit)}
                 className="flex-1"

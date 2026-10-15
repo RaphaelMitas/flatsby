@@ -8,10 +8,10 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  HandCoins,
   LoaderIcon,
   MessageSquareIcon,
   PlusIcon,
-  Receipt,
   TrashIcon,
   Wallet,
 } from "lucide-react";
@@ -144,7 +144,7 @@ export function AppSidebar() {
                     tooltip="Expenses"
                   >
                     <Link href="/expenses">
-                      <Receipt />
+                      <Wallet />
                       <span>All Expenses</span>
                     </Link>
                   </SidebarMenuButton>
@@ -156,7 +156,7 @@ export function AppSidebar() {
                     tooltip="Debts"
                   >
                     <Link href="/expenses/debts">
-                      <Wallet />
+                      <HandCoins />
                       <span>Debts</span>
                     </Link>
                   </SidebarMenuButton>

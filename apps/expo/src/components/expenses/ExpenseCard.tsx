@@ -8,7 +8,7 @@ import ReanimatedSwipeable, {
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import { formatExpenseAmounts } from "@flatsby/validators/expenses/formatting";
 
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
@@ -24,6 +24,7 @@ interface ExpenseCardProps {
   onDelete?: () => void;
   isSelected?: boolean;
   onSelect?: () => void;
+  isNotConverted?: boolean;
 }
 
 export function ExpenseCard({
@@ -33,6 +34,7 @@ export function ExpenseCard({
   onDelete,
   isSelected,
   onSelect,
+  isNotConverted,
 }: ExpenseCardProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -92,10 +94,7 @@ export function ExpenseCard({
 
   const splitCount = expense.expenseSplits.length;
   const paidByName = expense.paidByGroupMember.user.name;
-  const formattedAmount = formatCurrencyFromCents({
-    cents: expense.amountInCents,
-    currency: expense.currency,
-  });
+  const amounts = formatExpenseAmounts(expense);
   const expenseDate = new Date(expense.expenseDate);
   const fromMember = expense.expenseSplits[0]?.groupMember;
 
@@ -162,8 +161,8 @@ export function ExpenseCard({
           disabled={isOptimistic}
         >
           <ExpenseDisplay
-            amountInCents={expense.amountInCents}
-            currency={expense.currency}
+            amounts={amounts}
+            isNotConverted={isNotConverted}
             description={expense.description}
             paidByName={paidByName}
             paidByImage={expense.paidByGroupMember.user.image}
@@ -182,7 +181,7 @@ export function ExpenseCard({
         visible={showDeleteModal}
         onClose={handleCloseModal}
         onConfirm={handleDelete}
-        itemName={expense.description || formattedAmount}
+        itemName={expense.description || amounts.amount}
         title="Delete Expense"
         description={`Are you sure you want to delete this ${expense.splitMethod === "settlement" ? "settlement" : "expense"}? This action cannot be undone.`}
       />

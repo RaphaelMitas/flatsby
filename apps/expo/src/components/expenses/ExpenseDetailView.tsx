@@ -7,8 +7,10 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 
+import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import {
   formatCurrencyFromCents,
+  formatExpenseAmounts,
   formatExpenseDateLong,
   formatSplitPortion,
 } from "@flatsby/validators/expenses/formatting";
@@ -30,6 +32,7 @@ import { Separator } from "~/lib/ui/separator";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
+import { RateInfoButton } from "./RateInfoButton";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface ExpenseDetailViewProps {
@@ -134,10 +137,8 @@ export function ExpenseDetailView({
 
   const expense = expenseData.data;
 
-  const formattedAmount = formatCurrencyFromCents({
-    cents: expense.amountInCents,
-    currency: expense.currency,
-  });
+  const amounts = formatExpenseAmounts(expense);
+  const ledger = inLedgerCurrency(expense);
   const expenseDate = new Date(expense.expenseDate);
   const formattedDate = formatExpenseDateLong(expenseDate);
 
@@ -180,7 +181,20 @@ export function ExpenseDetailView({
             <CardHeader>
               <View className="flex-row items-start justify-between gap-4">
                 <View className="flex-1">
-                  <CardTitle className="text-2xl">{formattedAmount}</CardTitle>
+                  <CardTitle className="text-2xl">{amounts.amount}</CardTitle>
+                  {amounts.rate && (
+                    <View className="mt-1 gap-1">
+                      <Text className="text-muted-foreground text-sm">
+                        {amounts.paid} · {amounts.rate}
+                      </Text>
+                      <View className="flex-row items-center gap-1">
+                        <Text className="text-muted-foreground text-xs">
+                          Converted when added
+                        </Text>
+                        <RateInfoButton targetCurrency={ledger.currency} />
+                      </View>
+                    </View>
+                  )}
                   {expense.description && (
                     <CardDescription className="mt-2 text-base">
                       {expense.description}
@@ -292,9 +306,15 @@ export function ExpenseDetailView({
                   {expense.expenseSplits.map((split, index) => {
                     const member = split.groupMember;
                     const splitAmount = formatCurrencyFromCents({
-                      cents: split.amountInCents,
-                      currency: expense.currency,
+                      cents: ledger.expenseSplits[index]?.amountInCents ?? 0,
+                      currency: ledger.currency,
                     });
+                    const paidSplitAmount =
+                      amounts.paid &&
+                      formatCurrencyFromCents({
+                        cents: split.amountInCents,
+                        currency: expense.currency,
+                      });
                     const portion = formatSplitPortion({ split, expense });
 
                     return (
@@ -318,9 +338,16 @@ export function ExpenseDetailView({
                               </Text>
                             </View>
                           </View>
-                          <Text className="text-foreground font-semibold">
-                            {splitAmount}
-                          </Text>
+                          <View className="items-end">
+                            <Text className="text-foreground font-semibold">
+                              {splitAmount}
+                            </Text>
+                            {paidSplitAmount && (
+                              <Text className="text-muted-foreground text-xs">
+                                {paidSplitAmount}
+                              </Text>
+                            )}
+                          </View>
                         </View>
                         {index < expense.expenseSplits.length - 1 && (
                           <Separator className="mt-3" />

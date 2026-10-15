@@ -1,19 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import {
-  AlertCircle,
-  CircleCheckBig,
-  LoaderCircle,
-  Upload,
-} from "lucide-react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { LoaderCircle, Upload } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
 import {
@@ -26,8 +16,10 @@ import {
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
 
+import { useUpdateGroup } from "~/hooks/use-update-group";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
+import { UpdateGroupAlert } from "./UpdateGroupAlert";
 
 interface GroupDetailsProps {
   groupId: number;
@@ -35,7 +27,6 @@ interface GroupDetailsProps {
 
 const GroupDetails = ({ groupId }: GroupDetailsProps) => {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const handleApiError = useHandleApiError();
 
   const { data: group } = useSuspenseQuery(
@@ -51,22 +42,7 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
     setPrevGroupId(groupId);
   }
 
-  const groupNameMutation = useMutation(
-    trpc.group.changeGroupName.mutationOptions({
-      onSuccess: (data) => {
-        if (!data.success) {
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.group.getGroup.queryOptions({ id: groupId }),
-        );
-        void queryClient.invalidateQueries(
-          trpc.user.getCurrentUserWithGroups.queryOptions(),
-        );
-      },
-    }),
-  );
+  const groupNameMutation = useUpdateGroup(groupId);
 
   if (!group.success) {
     return handleApiError(group.error);
@@ -113,29 +89,10 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
                 )}
               </Button>
             </div>
-            {(groupNameMutation.isError ||
-              groupNameMutation.data?.success === false) && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>
-                  {groupNameMutation.data?.success === false
-                    ? groupNameMutation.data.error.type
-                    : (groupNameMutation.error?.data?.code ?? "Unknown error")}
-                </AlertTitle>
-                <AlertDescription>
-                  {groupNameMutation.data?.success === false
-                    ? groupNameMutation.data.error.message
-                    : (groupNameMutation.error?.message ??
-                      "unknown error during name change")}
-                </AlertDescription>
-              </Alert>
-            )}
-            {groupNameMutation.isSuccess && groupNameMutation.data.success && (
-              <Alert variant="success">
-                <CircleCheckBig className="h-4 w-4" />
-                <AlertTitle>Name changed successfully!</AlertTitle>
-              </Alert>
-            )}
+            <UpdateGroupAlert
+              mutation={groupNameMutation}
+              successTitle="Name changed successfully!"
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="profile-picture">Profile Picture</Label>

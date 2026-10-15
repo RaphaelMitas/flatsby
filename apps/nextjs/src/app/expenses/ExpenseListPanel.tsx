@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { Plus, Receipt } from "lucide-react";
+import { HandCoins, Plus, Wallet } from "lucide-react";
 import { InView } from "react-intersection-observer";
 
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { ScrollArea } from "@flatsby/ui/scroll-area";
+import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -83,7 +84,7 @@ export function ExpenseListPanel({
             data-testid="expense-debts-link"
           >
             <Link href="/expenses/debts">
-              <Receipt className="mr-2 h-4 w-4" />
+              <HandCoins className="mr-2 h-4 w-4" />
               Debts
             </Link>
           </Button>
@@ -103,7 +104,7 @@ export function ExpenseListPanel({
         <div className="flex flex-col gap-3 p-4">
           {!hasExpenses ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-              <Receipt className="text-muted-foreground h-12 w-12" />
+              <Wallet className="text-muted-foreground h-12 w-12" />
               <div>
                 <p className="text-lg font-semibold">No expenses yet</p>
                 <p className="text-muted-foreground text-sm">
@@ -124,6 +125,7 @@ export function ExpenseListPanel({
                 <ExpenseCard
                   key={expense.id}
                   expense={expense}
+                  isNotConverted={isLeftUnconverted(expense, groupData.data)}
                   isSelected={expense.id === selectedExpenseId}
                   onSelect={() => onSelectExpense(expense.id)}
                 />

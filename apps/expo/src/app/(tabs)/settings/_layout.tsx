@@ -67,6 +67,13 @@ export default function SettingsLayout() {
         }}
       />
       <Stack.Screen
+        name="group-settings/expenses"
+        options={{
+          title: "Expenses",
+          headerBackTitle: "",
+        }}
+      />
+      <Stack.Screen
         name="group-settings/member-actions"
         options={{
           title: "Member Actions",

@@ -1,10 +1,12 @@
 import type { GroupWithAccess } from "@flatsby/api";
+import type { ConvertibleExpense } from "@flatsby/validators/expenses/conversion";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { EditableSplitMethod } from "@flatsby/validators/expenses/split-editing";
 import type { UseFormReturn } from "react-hook-form";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useWatch } from "react-hook-form";
 
+import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import {
   formatCurrencyFromCents,
   formatShareCount,
@@ -41,6 +43,10 @@ interface SplitEditorProps {
   groupMembers: GroupWithAccess["groupMembers"];
   totalAmountCents: number;
   currency: string;
+  conversion: Pick<
+    ConvertibleExpense,
+    "convertedAmountInCents" | "convertedCurrency"
+  >;
   splitMethod: EditableSplitMethod;
   onSplitMethodChange: (method: EditableSplitMethod) => void;
 }
@@ -50,6 +56,7 @@ export function SplitEditor({
   groupMembers,
   totalAmountCents,
   currency,
+  conversion,
   splitMethod,
   onSplitMethodChange,
 }: SplitEditorProps) {
@@ -73,6 +80,13 @@ export function SplitEditor({
     onMethodChange: onSplitMethodChange,
     totalAmountCents,
   });
+  const ledger = inLedgerCurrency({
+    amountInCents: totalAmountCents,
+    currency,
+    ...conversion,
+    expenseSplits: splits,
+  });
+  const isConverted = ledger.currency !== currency;
 
   return (
     <View className="gap-4">
@@ -175,6 +189,15 @@ export function SplitEditor({
                         currency,
                       })}
                     </Text>
+                    {isConverted && (
+                      <Text className="text-muted-foreground text-sm">
+                        {formatCurrencyFromCents({
+                          cents:
+                            ledger.expenseSplits[index]?.amountInCents ?? 0,
+                          currency: ledger.currency,
+                        })}
+                      </Text>
+                    )}
                   </View>
 
                   {splitMethod === "percentage" && (
@@ -265,6 +288,8 @@ export function SplitEditor({
               }`}
             >
               {formatCurrencyFromCents({ cents: totalSplitCents, currency })}
+              {isConverted &&
+                ` · ${formatCurrencyFromCents({ cents: ledger.amountInCents, currency: ledger.currency })}`}
             </Text>
           </View>
           {!validation.isValid && validation.error && (
