@@ -172,6 +172,7 @@ export function JoinInvite({
             )}
             <Button
               data-testid="join-invite-button"
+              className="h-auto whitespace-normal"
               disabled={join.isPending || openGroup.isPending}
               onClick={() => join.mutate({ code })}
             >
@@ -182,7 +183,7 @@ export function JoinInvite({
             </Button>
           </>
         ) : platform === "other" ? (
-          <Button asChild>
+          <Button asChild className="h-auto whitespace-normal">
             <Link href={signInHref}>
               {t("invite.join.signInToJoinGroup", { group: preview.groupName })}
             </Link>
@@ -237,8 +238,8 @@ function InstallApp({
         <p className="text-muted-foreground text-xs">
           {t("invite.join.afterInstall")}
         </p>
-        <div className="mt-1 flex items-center justify-center gap-2">
-          <span className="font-mono text-lg font-bold tracking-widest">
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+          <span className="font-mono text-lg font-bold tracking-widest whitespace-nowrap">
             {formatInviteCode(code)}
           </span>
           <CopyButton value={code} />

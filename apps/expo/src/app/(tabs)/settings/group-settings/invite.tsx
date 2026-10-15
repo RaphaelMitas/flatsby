@@ -14,6 +14,7 @@ import {
   inviteLink,
 } from "@flatsby/validators/invite";
 
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
@@ -49,7 +50,10 @@ export default function InviteScreen() {
   const link = inviteLink(getBaseUrl(), invite.data.code);
 
   return (
-    <View className="bg-background flex-1 items-center gap-4 p-6">
+    <AppScrollView
+      className="bg-background"
+      contentContainerClassName="items-center gap-4 p-6"
+    >
       <Text className="text-foreground text-center text-lg font-bold">
         {t("invite.title", { group: selectedGroupName ?? "" })}
       </Text>
@@ -106,6 +110,6 @@ export default function InviteScreen() {
           </Text>
         )}
       </View>
-    </View>
+    </AppScrollView>
   );
 }
