@@ -52,16 +52,11 @@ export default function SettingsIndex() {
     }
   };
 
-  const getThemeDisplayName = (theme: Theme | null) => {
-    switch (theme) {
-      case "dark":
-        return t("settings.theme.dark");
-      case "light":
-        return t("settings.theme.light");
-      default:
-        return t("settings.theme.system");
-    }
-  };
+  const themeLabels = {
+    system: t("settings.theme.system"),
+    light: t("settings.theme.light"),
+    dark: t("settings.theme.dark"),
+  } satisfies Record<Theme, string>;
 
   return (
     <SafeAreaView>
@@ -85,19 +80,15 @@ export default function SettingsIndex() {
           <SettingsChoiceItem
             title={t("settings.items.theme")}
             subtitle={t("settings.items.themeSubtitle", {
-              theme: getThemeDisplayName(storedTheme),
+              theme: themeLabels[storedTheme ?? "system"],
             })}
             iconName="palette"
             selected={storedTheme}
             onSelect={setTheme}
             choices={[
-              {
-                value: "system",
-                label: t("settings.theme.system"),
-                icon: "sun-moon",
-              },
-              { value: "light", label: t("settings.theme.light"), icon: "sun" },
-              { value: "dark", label: t("settings.theme.dark"), icon: "moon" },
+              { value: "system", label: themeLabels.system, icon: "sun-moon" },
+              { value: "light", label: themeLabels.light, icon: "sun" },
+              { value: "dark", label: themeLabels.dark, icon: "moon" },
             ]}
           />
           <SettingsChoiceItem

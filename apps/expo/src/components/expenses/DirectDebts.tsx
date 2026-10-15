@@ -168,7 +168,7 @@ function DirectDebtRow({
               </Text>
               <Button
                 testID="debt-settle"
-                accessibilityLabel={t("settleCurrencyWith", {
+                accessibilityLabel={t("recordCurrencyWith", {
                   currency: debt.currency,
                   name: other.name,
                 })}

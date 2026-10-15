@@ -14,21 +14,14 @@ import { ShoppingListDemo } from "./ShoppingListDemo";
 
 export function FeaturesSection() {
   const t = useTranslations("marketing.features");
-  const {
-    common,
-    expenses,
-    expenseCategories,
-    shoppingCategories,
-    chat,
-    marketing,
-  } = useMessages();
+  const { expenses, expenseCategories, shoppingCategories, chat, marketing } =
+    useMessages();
   // The demos reuse app components, which translate in the browser.
   const demoMessages = {
-    common,
     expenses,
     expenseCategories,
     shoppingCategories,
-    chat: { elements: chat.elements, toolResults: chat.toolResults },
+    chat: { toolResults: chat.toolResults },
     marketing: { demo: marketing.demo },
   };
 

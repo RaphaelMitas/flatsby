@@ -28,7 +28,7 @@ export const debts = {
   youOwe: "du schuldest",
   paysYou: "zahlt dir",
   youPay: "du zahlst",
-  settleCurrencyWith: "{currency} mit {name} ausgleichen",
+  recordCurrencyWith: "{currency}-Zahlung mit {name} erfassen",
   record: "Erfassen",
   recordPayment: "Zahlung von {from} an {to} erfassen",
   activityLoadFailed: "Letzte Aktivitäten konnten nicht geladen werden",
