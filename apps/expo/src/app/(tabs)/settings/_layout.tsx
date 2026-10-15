@@ -82,6 +82,14 @@ export default function SettingsLayout() {
         }}
       />
       <Stack.Screen
+        name="group-settings/invite"
+        options={{
+          title: "Invite",
+          presentation: "modal",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
         name="group-settings/import-expenses"
         options={{
           title: "Import Expenses",

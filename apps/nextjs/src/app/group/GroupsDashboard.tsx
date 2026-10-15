@@ -9,6 +9,7 @@ import { Button } from "@flatsby/ui/button";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
 import { GroupsDashboardElement } from "./GroupsDashboardElement";
+import { JoinWithCodeDialog } from "./JoinWithCodeDialog";
 
 export function GroupsDashboard() {
   const trpc = useTRPC();
@@ -45,13 +46,16 @@ export function GroupsDashboard() {
           >
             Your Groups
           </h2>
-          <Link
-            className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors focus-visible:ring-1 focus-visible:ring-gray-950 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 md:hover:bg-gray-900/90 dark:bg-gray-50 dark:text-gray-900 dark:focus-visible:ring-gray-300 md:dark:hover:bg-gray-50/90"
-            href="group/create"
-            data-testid="group-create-link"
-          >
-            Create Group
-          </Link>
+          <div className="flex items-center gap-2">
+            <JoinWithCodeDialog />
+            <Link
+              className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors focus-visible:ring-1 focus-visible:ring-gray-950 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 md:hover:bg-gray-900/90 dark:bg-gray-50 dark:text-gray-900 dark:focus-visible:ring-gray-300 md:dark:hover:bg-gray-50/90"
+              href="group/create"
+              data-testid="group-create-link"
+            >
+              Create Group
+            </Link>
+          </div>
         </div>
 
         {status === "success" && groups.data.length === 0 ? (

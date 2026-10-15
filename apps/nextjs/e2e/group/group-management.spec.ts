@@ -1,10 +1,23 @@
-import { expect, test } from "../fixtures/auth";
+import type { Page } from "@playwright/test";
+
+import { createAuthSession, expect, test } from "../fixtures/auth";
 import {
   createAndSelectGroup,
   deleteCurrentGroup,
   submitCreateGroupForm,
   uniqueGroupName,
 } from "../helpers/group";
+import { waitForHydration } from "../helpers/hydration";
+
+async function openInvite(page: Page) {
+  await page.goto("/group/settings");
+  const inviteButton = page.getByTestId("group-invite-button");
+  await waitForHydration(inviteButton);
+  await inviteButton.click();
+  const code = page.getByTestId("group-invite-code");
+  await expect(code).toHaveText(/^[0-9A-Z]{4}-[0-9A-Z]{4}$/);
+  return code.innerText();
+}
 
 test.describe("Group Management", () => {
   test("create group via UI", async ({ authPage }) => {
@@ -40,25 +53,47 @@ test.describe("Group Management", () => {
     await expect(authPage.getByTestId(`group-card-${groupId}`)).toBeVisible();
   });
 
-  test("add member by email form interaction", async ({ authPage }) => {
+  test("second user joins through the invite code", async ({
+    authPage,
+    browser,
+    baseURL,
+  }) => {
     const groupName = uniqueGroupName();
     await createAndSelectGroup(authPage, groupName);
+    const code = await openInvite(authPage);
+
+    const inviteePage = await (await browser.newContext()).newPage();
+    const invitee = await createAuthSession(inviteePage, baseURL);
+    await inviteePage.goto("/group");
+    const joinButton = inviteePage.getByTestId("group-join-with-code-button");
+    await waitForHydration(joinButton);
+    await joinButton.click();
+    await inviteePage
+      .getByTestId("group-join-code-input")
+      .fill(code.replace("-", ""));
+    await inviteePage.getByRole("button", { name: "Continue" }).click();
+
+    await expect(
+      inviteePage.getByTestId("join-invite-group-name"),
+    ).toContainText(groupName);
+    await inviteePage.getByTestId("join-invite-button").click();
+    await inviteePage.waitForURL("/home");
 
     await authPage.goto("/group/settings");
-    await expect(authPage.getByTestId("group-settings-title")).toBeVisible();
-    await expect(
-      authPage.getByTestId("group-manage-members-title"),
-    ).toBeVisible();
+    await expect(authPage.getByText(invitee.email)).toBeVisible();
+  });
 
-    const emailInput = authPage.getByTestId("group-add-member-email");
-    await expect(emailInput).toBeVisible();
-    await emailInput.fill("newuser@example.com");
+  test("reset link kills the old code", async ({ authPage }) => {
+    await createAndSelectGroup(authPage, uniqueGroupName());
+    const oldCode = await openInvite(authPage);
 
-    const addMemberButton = authPage.getByTestId("group-add-member-button");
-    await expect(addMemberButton).toBeVisible();
-    await addMemberButton.click();
+    await authPage.getByRole("button", { name: "Reset link" }).click();
+    await expect(authPage.getByTestId("group-invite-code")).not.toHaveText(
+      oldCode,
+    );
 
-    await expect(emailInput).toHaveValue("newuser@example.com");
+    await authPage.goto(`/join/${oldCode}`);
+    await expect(authPage.getByTestId("join-invite-expired")).toBeVisible();
   });
 
   test("change group name", async ({ authPage }) => {
@@ -85,7 +120,7 @@ test.describe("Group Management", () => {
 
   // TODO: Requires multi-user fixture
   // test("non-admin cannot change group name", () => {});
-  // test("non-admin cannot add members", () => {});
+  // test("non-admin cannot invite", () => {});
   // test("non-admin cannot remove other members", () => {});
 
   test("delete group", async ({ authPage }) => {

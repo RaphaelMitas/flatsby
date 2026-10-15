@@ -6,6 +6,7 @@ import { Globe, Play } from "lucide-react";
 import { Button } from "@flatsby/ui/button";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
 
+import type { Platform } from "./platform";
 import { PeekingCat } from "../peeking-cat";
 import {
   APP_STORE_URL,
@@ -13,8 +14,6 @@ import {
   PLAY_STORE_URL,
   SUBHEADLINE,
 } from "./content";
-
-export type Platform = "ios" | "android" | "other";
 
 const WEB = { href: "/auth/login", label: "Open in Browser", icon: Globe };
 const APP_STORE = {

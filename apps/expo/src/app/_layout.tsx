@@ -18,6 +18,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
 
+import { InstallReferrerInvite } from "~/components/InstallReferrerInvite";
 import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
@@ -148,6 +149,7 @@ const StackLayout = () => {
   return (
     <View className="bg-background flex-1">
       <ScreenTracker />
+      <InstallReferrerInvite />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -159,6 +161,7 @@ const StackLayout = () => {
           name="auth/login/index"
           options={{ headerShown: false }}
         />
+        <Stack.Screen name="join/[code]" options={{ presentation: "modal" }} />
       </Stack>
     </View>
   );

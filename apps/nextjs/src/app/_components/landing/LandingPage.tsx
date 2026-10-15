@@ -1,4 +1,4 @@
-import type { Platform } from "./HeroSection";
+import type { Platform } from "./platform";
 import { HOME_FAQ } from "./content";
 import { CTASection } from "./CTASection";
 import { FactsSection } from "./FactsSection";

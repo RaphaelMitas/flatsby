@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
-import { Stack } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
+
+import { safeRedirectPath } from "@flatsby/validators/invite";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -13,7 +15,8 @@ import { getBaseUrl } from "~/utils/base-url";
 const Login = () => {
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
 
-  const callbackURL = ExpoLinking.createURL("/");
+  const { next } = useLocalSearchParams<{ next?: string }>();
+  const callbackURL = ExpoLinking.createURL(safeRedirectPath(next));
 
   return (
     <View testID="login-screen" className="bg-background flex-1 px-6 py-8">

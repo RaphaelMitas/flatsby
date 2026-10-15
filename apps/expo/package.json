@@ -80,6 +80,7 @@
     "react-native-screens": "~4.26.0",
     "react-native-svg": "^15.15.5",
     "react-native-worklets": "~0.10.1",
+    "react-qr-code": "catalog:",
     "superjson": "catalog:",
     "tailwind-variants": "^3.3.1",
     "web-streams-polyfill": "^4.3.0"

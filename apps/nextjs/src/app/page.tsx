@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getSession, signOutAndRedirect } from "~/auth/server";
@@ -7,6 +6,7 @@ import { caller } from "~/trpc/server";
 import { DESCRIPTION, TITLE } from "./_components/landing/content";
 import { LandingPage } from "./_components/landing/LandingPage";
 import { marketingMetadata } from "./_components/landing/metadata";
+import { getPlatform } from "./_components/landing/platform";
 
 export const metadata: Metadata = marketingMetadata({
   title: TITLE,
@@ -19,13 +19,7 @@ export default async function HomePage() {
   const session = await getSession();
 
   if (!session?.user) {
-    const ua = (await headers()).get("user-agent") ?? "";
-    const platform = /iPhone|iPad|iPod/.test(ua)
-      ? "ios"
-      : /Android/.test(ua)
-        ? "android"
-        : "other";
-    return <LandingPage platform={platform} />;
+    return <LandingPage platform={await getPlatform()} />;
   }
 
   const userWithGroups = await caller.user.getCurrentUserWithGroups();

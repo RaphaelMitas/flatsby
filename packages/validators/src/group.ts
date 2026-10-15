@@ -85,9 +85,6 @@ export const addGroupMemberInputSchema = z.object({
 });
 export type AddGroupMemberInput = z.infer<typeof addGroupMemberInputSchema>;
 
-export const addMemberFormSchema = z.object({ email: groupMemberEmailSchema });
-export type AddMemberFormValues = z.infer<typeof addMemberFormSchema>;
-
 // Activity validators
 export const activityUserSchema = z.object({
   email: userEmailSchema,

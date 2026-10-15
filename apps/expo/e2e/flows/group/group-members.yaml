@@ -2,8 +2,8 @@ appId: ${APP_ID}
 tags:
   - group
 ---
-# Mirrors "add member by email form interaction" from
-# apps/nextjs/e2e/group/group-management.spec.ts.
+# Mirrors the invite tests in apps/nextjs/e2e/group/group-management.spec.ts.
+# The second-user join only runs on web: one device can't hold two sessions.
 - runFlow: ../../subflows/e2e-login.yaml
 
 # Select the fixture group to enter it
@@ -14,7 +14,7 @@ tags:
       id: "shopping-list-create-button"
     timeout: 15000
 
-# Open group settings -> members
+# Open group settings -> members -> invite
 - tapOn:
     id: "shopping-lists-group-settings"
 - extendedWaitUntil:
@@ -25,17 +25,27 @@ tags:
     id: "group-settings-members"
 - extendedWaitUntil:
     visible:
-      id: "group-add-member-email"
+      id: "group-invite-button"
     timeout: 15000
+- tapOn:
+    id: "group-invite-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-invite-code"
+    timeout: 15000
+- copyTextFrom:
+    id: "group-invite-code"
 
-# Fill the add-member form and submit; the email stays visible in the input
-# (the user does not exist, mirroring the web assertion).
-- tapOn:
-    id: "group-add-member-email"
-- inputText: "newuser@example.com"
-- tapOn: "Manage Members"
-- tapOn:
-    id: "group-add-member-button"
-- assertVisible:
-    id: "group-add-member-email"
-    text: "newuser@example.com"
+# The dashed code from the sheet opens the invite preview; the admin is
+# already a member, so it offers to open the group instead of joining.
+- openLink: flatsby://join/${maestro.copiedText}
+- runFlow:
+    when:
+      visible: "Open in .*Flatsby.*"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible:
+      id: "join-invite-group-name"
+    timeout: 15000
+- assertVisible: "Open group"

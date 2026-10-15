@@ -23,12 +23,7 @@ import {
 } from "@flatsby/validators/group";
 
 import type { GroupMember, GroupMemberWithGroupMinimal } from "../types";
-import {
-  Errors,
-  fail,
-  getApiResultZod,
-  withErrorHandlingAsResult,
-} from "../errors";
+import { Errors, getApiResultZod, withErrorHandlingAsResult } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   DbUtils,
@@ -358,6 +353,7 @@ export const groupRouter = createTRPCRouter({
       );
     }),
 
+  /** @deprecated app builds before group invites call this */
   addGroupMember: protectedProcedure
     .input(addGroupMemberInputSchema)
     .mutation(async ({ ctx, input }) => {
@@ -398,79 +394,7 @@ export const groupRouter = createTRPCRouter({
                     "user",
                   ),
                   (userToAdd) =>
-                    Effect.flatMap(
-                      // Check if user has any membership (active or inactive)
-                      safeDbOperation(
-                        () =>
-                          ctx.db.query.groupMembers.findFirst({
-                            where: and(
-                              eq(groupMembers.groupId, input.groupId),
-                              eq(groupMembers.userId, userToAdd.id),
-                            ),
-                          }),
-                        "check existing membership",
-                      ),
-                      (existingMembership) => {
-                        // If membership exists and is active, fail with conflict
-                        if (existingMembership?.isActive) {
-                          return fail.conflict(
-                            "membership",
-                            "already exists",
-                            "This user is already a member of the group",
-                          );
-                        }
-
-                        // If membership exists but is inactive, reactivate it
-                        if (
-                          existingMembership &&
-                          !existingMembership.isActive
-                        ) {
-                          return Effect.map(
-                            safeDbOperation(
-                              () =>
-                                ctx.db
-                                  .update(groupMembers)
-                                  .set({ isActive: true, role: "member" })
-                                  .where(
-                                    eq(groupMembers.id, existingMembership.id),
-                                  )
-                                  .returning({ id: groupMembers.id }),
-                              "reactivate group member",
-                            ),
-                            (result) => {
-                              if (!result[0]) {
-                                throw new Error(
-                                  "Failed to reactivate group member",
-                                );
-                              }
-                              return result[0].id;
-                            },
-                          );
-                        }
-
-                        // No existing membership, create new one
-                        return Effect.map(
-                          safeDbOperation(
-                            () =>
-                              ctx.db
-                                .insert(groupMembers)
-                                .values({
-                                  groupId: input.groupId,
-                                  userId: userToAdd.id,
-                                  role: "member",
-                                })
-                                .returning({ id: groupMembers.id }),
-                            "add group member",
-                          ),
-                          (result) => {
-                            if (!result[0]) {
-                              throw new Error("Failed to add new group member");
-                            }
-                            return result[0].id;
-                          },
-                        );
-                      },
-                    ),
+                    GroupUtils.addMember(ctx.db, input.groupId, userToAdd.id),
                 ),
             ),
         ),

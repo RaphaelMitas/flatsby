@@ -16,6 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: "com.flatcove.app.v2",
     supportsTablet: true,
+    associatedDomains: ["applinks:www.flatsby.com"],
     icon: {
       light: "./assets/ios-light.png",
       dark: "./assets/ios-dark.png",
@@ -85,6 +86,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.flatcove.app",
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        data: [
+          { scheme: "https", host: "www.flatsby.com", pathPrefix: "/join" },
+        ],
+        category: ["BROWSABLE", "DEFAULT"],
+      },
+    ],
     blockedPermissions: ["android.permission.READ_PHONE_STATE"],
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",

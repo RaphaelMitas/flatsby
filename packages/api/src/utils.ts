@@ -1,5 +1,7 @@
 import { Effect } from "effect";
 
+import { and, eq } from "@flatsby/db";
+import { groupMembers } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 
 import type { ApiError, NotFoundError } from "./errors";
@@ -356,6 +358,53 @@ export const GroupUtils = {
       "group membership",
     );
   },
+
+  /** Does not check the caller's right to add, callers must. */
+  addMember: (
+    db: Database,
+    groupId: number,
+    userId: string,
+  ): Effect.Effect<number, ApiError> =>
+    Effect.gen(function* () {
+      const existing = yield* safeDbOperation(
+        () =>
+          db.query.groupMembers.findFirst({
+            where: and(
+              eq(groupMembers.groupId, groupId),
+              eq(groupMembers.userId, userId),
+            ),
+          }),
+        "check existing membership",
+      );
+
+      if (existing?.isActive) {
+        return yield* fail.conflict(
+          "membership",
+          "already exists",
+          "This user is already a member of the group",
+        );
+      }
+
+      const [member] = yield* safeDbOperation(
+        () =>
+          existing
+            ? db
+                .update(groupMembers)
+                .set({ isActive: true, role: "member" })
+                .where(eq(groupMembers.id, existing.id))
+                .returning({ id: groupMembers.id })
+            : db
+                .insert(groupMembers)
+                .values({ groupId, userId, role: "member" })
+                .returning({ id: groupMembers.id }),
+        existing ? "reactivate group member" : "add group member",
+      );
+
+      if (!member) {
+        return yield* fail.internalServer("add group member");
+      }
+      return member.id;
+    }),
 };
 
 /** Does not check group access, callers must. */
