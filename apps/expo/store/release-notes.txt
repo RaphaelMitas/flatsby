@@ -1,3 +1,5 @@
-• Adding an expense now starts with what it was for. Leave the category on auto-detect and Flatsby picks one for you when you save.
-• The app opens faster, and switching between groups is quicker.
+• See who you actually owe. The debts page now lists each person you share expenses with, and you can settle up with them one by one.
+• Travelling? Convert foreign expenses into your group's currency as you add them, so the whole trip settles in one currency. Turn it on in group settings.
+• You can now track expenses in Swiss francs.
+• Ask your flatmates to update too, so converted expenses and Swiss francs work for everyone.
 • Small fixes and improvements.
