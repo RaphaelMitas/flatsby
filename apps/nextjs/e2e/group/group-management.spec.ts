@@ -22,11 +22,15 @@ async function joinAsNewUser(
 ) {
   const invitee = await newInvitee(browser, baseURL);
   await invitee.page.goto(`/join/${code}`);
-  const joinButton = invitee.page.getByTestId("join-invite-button");
+  await confirmJoin(invitee.page);
+  return invitee;
+}
+
+async function confirmJoin(page: Page) {
+  const joinButton = page.getByTestId("join-invite-button");
   await waitForHydration(joinButton);
   await joinButton.click();
-  await invitee.page.waitForURL("/home");
-  return invitee;
+  await page.waitForURL("/home");
 }
 
 async function openInvite(page: Page) {
@@ -98,8 +102,7 @@ test.describe("Group Management", () => {
     await expect(
       inviteePage.getByTestId("join-invite-group-name"),
     ).toContainText(groupName);
-    await inviteePage.getByTestId("join-invite-button").click();
-    await inviteePage.waitForURL("/home");
+    await confirmJoin(inviteePage);
 
     await authPage.goto("/group/settings");
     await expect(authPage.getByText(invitee.email)).toBeVisible();

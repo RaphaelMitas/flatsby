@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -33,10 +32,9 @@ export const InviteDialog = ({
   groupName: string;
 }) => {
   const t = useTranslations();
-  const [open, setOpen] = useState(false);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog>
       <DialogTrigger asChild>
         <Button data-testid="group-invite-button" className="w-full md:w-fit">
           <Plus className="mr-2 h-4 w-4" />
@@ -48,7 +46,7 @@ export const InviteDialog = ({
           <DialogTitle>{t("invite.title", { group: groupName })}</DialogTitle>
           <DialogDescription>{t("invite.anyoneCanJoin")}</DialogDescription>
         </DialogHeader>
-        {open && <InviteContent groupId={groupId} />}
+        <InviteContent groupId={groupId} />
       </DialogContent>
     </Dialog>
   );

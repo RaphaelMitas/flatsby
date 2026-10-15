@@ -31,7 +31,7 @@ export default function JoinGroupScreen() {
               <Text className="text-muted-foreground font-bold">–</Text>
             )}
             <View
-              className={`h-12 w-9 items-center justify-center rounded-lg border ${
+              className={`h-12 w-8 items-center justify-center rounded-lg border ${
                 i === code.length ? "border-foreground" : "border-border"
               } ${char ? "bg-muted" : ""}`}
             >

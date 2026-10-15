@@ -70,7 +70,7 @@ export function JoinWithCodeDialog({
                     <InputOTPSlot
                       key={i}
                       index={offset + i}
-                      className="font-mono"
+                      className="w-8 font-mono"
                     />
                   ))}
                 </InputOTPGroup>
