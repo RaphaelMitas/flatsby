@@ -163,11 +163,19 @@ export const groupRouter = createTRPCRouter({
                     // Perform the update
                     Effect.tryPromise({
                       try: () =>
-                        ctx.db
-                          .update(groupMembers)
-                          .set({ role: input.newRole })
-                          .where(eq(groupMembers.id, input.memberId))
-                          .returning({ id: groupMembers.id }),
+                        ctx.db.transaction(async (trx) => {
+                          await GroupUtils.lockGroup(trx, targetMember.groupId);
+                          const updated = await trx
+                            .update(groupMembers)
+                            .set({ role: input.newRole })
+                            .where(eq(groupMembers.id, input.memberId))
+                            .returning({ id: groupMembers.id });
+                          await GroupUtils.ensureAdminRemains(
+                            trx,
+                            targetMember.groupId,
+                          );
+                          return updated;
+                        }),
                       catch: (error) =>
                         Errors.database(
                           "update member role",
@@ -268,6 +276,27 @@ export const groupRouter = createTRPCRouter({
                                 trx,
                                 targetGroupMember.groupId,
                               );
+                              const actor =
+                                await trx.query.groupMembers.findFirst({
+                                  where: and(
+                                    eq(
+                                      groupMembers.id,
+                                      currentUserGroupMember.id,
+                                    ),
+                                    eq(groupMembers.isActive, true),
+                                  ),
+                                  columns: { role: true },
+                                });
+                              if (
+                                !actor ||
+                                (actor.role !== "admin" &&
+                                  currentUserGroupMember.id !==
+                                    targetGroupMember.id)
+                              ) {
+                                throw new Error(
+                                  "No longer allowed to remove this member",
+                                );
+                              }
 
                               // Clean up shopping list item references
                               await trx
@@ -298,7 +327,7 @@ export const groupRouter = createTRPCRouter({
                                   eq(groupMembers.id, targetGroupMember.id),
                                 );
 
-                              // Otherwise the removed member could rejoin with the live link, and it would name a departed inviter
+                              // Otherwise the removed member could rejoin with the live link
                               await trx
                                 .delete(groupInvites)
                                 .where(
@@ -307,6 +336,11 @@ export const groupRouter = createTRPCRouter({
                                     targetGroupMember.groupId,
                                   ),
                                 );
+
+                              await GroupUtils.ensureAdminRemains(
+                                trx,
+                                targetGroupMember.groupId,
+                              );
 
                               return { success: true };
                             }),
@@ -410,7 +444,21 @@ export const groupRouter = createTRPCRouter({
                     "user",
                   ),
                   (userToAdd) =>
-                    GroupUtils.addMember(ctx.db, input.groupId, userToAdd.id),
+                    GroupUtils.addMember(
+                      ctx.db,
+                      input.groupId,
+                      userToAdd.id,
+                      async (tx) =>
+                        (await tx.query.groupMembers.findFirst({
+                          where: GroupUtils.activeAdminWhere(
+                            input.groupId,
+                            ctx.session.user.id,
+                          ),
+                          columns: { id: true },
+                        }))
+                          ? undefined
+                          : Errors.forbidden("add members to this", "group"),
+                    ),
                 ),
             ),
         ),
@@ -432,6 +480,8 @@ export const groupRouter = createTRPCRouter({
             // Delete group and all related data in transaction
             Effect.map(
               DbUtils.transaction(async (trx) => {
+                await GroupUtils.lockGroup(trx, input.id);
+
                 // Step 1: Delete shopping list items
                 await trx
                   .delete(shoppingListItems)

@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
 import { and, eq, gt, lte } from "@flatsby/db";
-import { groupInvites, groupMembers } from "@flatsby/db/schema";
+import { groupInvites } from "@flatsby/db/schema";
 import { groupIdInputSchema } from "@flatsby/validators/group";
 import {
   DAY_MS,
@@ -12,7 +12,12 @@ import {
 } from "@flatsby/validators/invite";
 
 import type { Database } from "../types";
-import { fail, safeDbOperation, withErrorHandlingAsResult } from "../errors";
+import {
+  Errors,
+  fail,
+  safeDbOperation,
+  withErrorHandlingAsResult,
+} from "../errors";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { DbUtils, GroupUtils } from "../utils";
 
@@ -21,6 +26,9 @@ const generateCode = () =>
     crypto.getRandomValues(new Uint8Array(INVITE_CODE_LENGTH)),
     (byte) => INVITE_CODE_ALPHABET[byte % INVITE_CODE_ALPHABET.length],
   ).join("");
+
+const EXPIRED_INVITE =
+  "This invite has expired. Ask someone in the group for a new one.";
 
 const liveInviteWhere = (code: string) =>
   and(eq(groupInvites.code, code), gt(groupInvites.expiresAt, new Date()));
@@ -37,12 +45,7 @@ const issueInvite = (
         db.transaction(async (tx) => {
           await GroupUtils.lockGroup(tx, groupId);
           const admin = await tx.query.groupMembers.findFirst({
-            where: and(
-              eq(groupMembers.groupId, groupId),
-              eq(groupMembers.userId, userId),
-              eq(groupMembers.role, "admin"),
-              eq(groupMembers.isActive, true),
-            ),
+            where: GroupUtils.activeAdminWhere(groupId, userId),
             columns: { id: true },
           });
           if (!admin) return null;
@@ -103,7 +106,7 @@ const findLiveInvite = (db: Database, code: string) =>
         },
       }),
     "invite",
-    "This invite has expired. Ask someone in the group for a new one.",
+    EXPIRED_INVITE,
   );
 
 export const inviteRouter = createTRPCRouter({
@@ -159,10 +162,12 @@ export const inviteRouter = createTRPCRouter({
               group.id,
               ctx.session.user.id,
               async (tx) =>
-                !!(await tx.query.groupInvites.findFirst({
+                (await tx.query.groupInvites.findFirst({
                   where: liveInviteWhere(input.code),
                   columns: { groupId: true },
-                })),
+                }))
+                  ? undefined
+                  : Errors.notFound("invite", undefined, EXPIRED_INVITE),
             ),
             () => ({ groupId: group.id, groupName: group.name }),
           ),

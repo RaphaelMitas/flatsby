@@ -41,7 +41,7 @@ import {
 } from "../errors";
 import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, safeDbOperation } from "../utils";
+import { DbUtils, GroupUtils, safeDbOperation } from "../utils";
 import { autumn, checkCredits } from "../utils/autumn";
 
 export const userRouter = createTRPCRouter({
@@ -263,9 +263,12 @@ export const userRouter = createTRPCRouter({
             },
           });
 
-          // Process each group membership
-          for (const membership of userGroupMemberships) {
+          // Ascending group order keeps lock order consistent with other account deletions
+          for (const membership of [...userGroupMemberships].sort(
+            (a, b) => a.groupId - b.groupId,
+          )) {
             const { id: groupMemberId, groupId, role, group } = membership;
+            await GroupUtils.lockGroup(trx, groupId);
             const isAdmin = role === "admin";
 
             const otherMembers = group.groupMembers;

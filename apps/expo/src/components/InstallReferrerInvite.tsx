@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import * as Application from "expo-application";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
@@ -15,6 +15,7 @@ const HANDLED_KEY = "install_referrer_handled";
 // The web join page passes the invite code through the Play Store install referrer
 export function InstallReferrerInvite() {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (Platform.OS !== "android") return;
@@ -27,9 +28,12 @@ export function InstallReferrerInvite() {
       const code = inviteCodeSchema.safeParse(
         new URLSearchParams(referrer).get(INVITE_REFERRER_KEY) ?? "",
       );
-      if (code.success) router.push(invitePath(code.data));
+      // A link to the same invite may have opened the app already
+      if (code.success && pathname !== invitePath(code.data)) {
+        router.push(invitePath(code.data));
+      }
     })();
-  }, [router]);
+  }, [router, pathname]);
 
   return null;
 }

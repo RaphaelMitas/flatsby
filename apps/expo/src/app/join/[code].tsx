@@ -10,7 +10,10 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
-import { rememberPostLoginPath } from "~/utils/auth/post-login-path";
+import {
+  clearPostLoginPath,
+  rememberPostLoginPath,
+} from "~/utils/auth/post-login-path";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function JoinScreen() {
@@ -45,8 +48,11 @@ export default function JoinScreen() {
     }),
   );
 
-  const close = () =>
-    router.canGoBack() ? router.back() : router.replace("/");
+  const close = () => {
+    clearPostLoginPath();
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  };
 
   const invite = preview.data?.success ? preview.data.data : null;
   const expired =

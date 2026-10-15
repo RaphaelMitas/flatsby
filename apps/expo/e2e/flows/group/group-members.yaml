@@ -47,14 +47,17 @@ tags:
     timeout: 15000
 - assertVisible: "Open group"
 
-# e2e-login mints a fresh user, who joins through the copied code
+# e2e-login mints a fresh user, who joins by typing the copied code
 - runFlow: ../../subflows/e2e-login.yaml
-- openLink: flatsby://join/${maestro.copiedText}
-- runFlow:
-    when:
-      visible: "Open in .*Flatsby.*"
-    commands:
-      - tapOn: "Open"
+- tapOn:
+    id: "group-join-with-code-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-join-code-submit"
+    timeout: 15000
+- inputText: ${maestro.copiedText}
+- tapOn:
+    id: "group-join-code-submit"
 - extendedWaitUntil:
     visible:
       id: "join-invite-button"

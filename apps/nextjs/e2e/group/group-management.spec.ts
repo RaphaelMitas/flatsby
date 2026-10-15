@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Browser, Page } from "@playwright/test";
 
 import { createAuthSession, expect, test } from "../fixtures/auth";
 import {
@@ -8,6 +8,12 @@ import {
   uniqueGroupName,
 } from "../helpers/group";
 import { waitForHydration } from "../helpers/hydration";
+
+async function newInvitee(browser: Browser, baseURL: string | undefined) {
+  const page = await (await browser.newContext()).newPage();
+  const user = await createAuthSession(page, baseURL);
+  return { page, user };
+}
 
 async function openInvite(page: Page) {
   await page.goto("/group/settings");
@@ -62,8 +68,10 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, groupName);
     const code = await openInvite(authPage);
 
-    const inviteePage = await (await browser.newContext()).newPage();
-    const invitee = await createAuthSession(inviteePage, baseURL);
+    const { page: inviteePage, user: invitee } = await newInvitee(
+      browser,
+      baseURL,
+    );
     await inviteePage.goto("/group");
     const joinButton = inviteePage.getByTestId("group-join-with-code-button");
     await waitForHydration(joinButton);
@@ -81,6 +89,7 @@ test.describe("Group Management", () => {
 
     await authPage.goto("/group/settings");
     await expect(authPage.getByText(invitee.email)).toBeVisible();
+    await inviteePage.context().close();
   });
 
   test("removed member can't rejoin with the old code", async ({
@@ -91,8 +100,10 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, uniqueGroupName());
     const code = await openInvite(authPage);
 
-    const inviteePage = await (await browser.newContext()).newPage();
-    const invitee = await createAuthSession(inviteePage, baseURL);
+    const { page: inviteePage, user: invitee } = await newInvitee(
+      browser,
+      baseURL,
+    );
     await inviteePage.goto(`/join/${code}`);
     const joinButton = inviteePage.getByTestId("join-invite-button");
     await waitForHydration(joinButton);
@@ -111,6 +122,7 @@ test.describe("Group Management", () => {
 
     await inviteePage.goto(`/join/${code}`);
     await expect(inviteePage.getByTestId("join-invite-expired")).toBeVisible();
+    await inviteePage.context().close();
   });
 
   test("reset link kills the old code", async ({ authPage }) => {
