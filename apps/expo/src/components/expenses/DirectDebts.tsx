@@ -172,7 +172,7 @@ function DirectDebtRow({
                   currency: debt.currency,
                   name: other.name,
                 })}
-                title={t("settle")}
+                title={t("record")}
                 size="sm"
                 variant="outline"
                 onPress={() => onSettle(debt)}

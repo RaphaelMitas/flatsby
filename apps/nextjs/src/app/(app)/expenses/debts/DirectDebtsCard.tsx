@@ -165,7 +165,7 @@ function DirectDebtRow({
                 data-testid="direct-debt-settle"
                 onClick={() => onSettle(debt)}
               >
-                {t("settle")}
+                {t("record")}
               </Button>
             </div>
           ))}

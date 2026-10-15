@@ -28,7 +28,6 @@ export const debts = {
   youOwe: "du schuldest",
   paysYou: "zahlt dir",
   youPay: "du zahlst",
-  settle: "Ausgleichen",
   settleCurrencyWith: "{currency} mit {name} ausgleichen",
   record: "Erfassen",
   recordPayment: "Zahlung von {from} an {to} erfassen",

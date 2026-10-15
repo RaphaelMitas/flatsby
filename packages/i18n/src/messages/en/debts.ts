@@ -26,7 +26,6 @@ export const debts = {
   youOwe: "you owe",
   paysYou: "pays you",
   youPay: "you pay",
-  settle: "Settle",
   settleCurrencyWith: "Settle {currency} with {name}",
   record: "Record",
   recordPayment: "Record {from} paying {to}",
