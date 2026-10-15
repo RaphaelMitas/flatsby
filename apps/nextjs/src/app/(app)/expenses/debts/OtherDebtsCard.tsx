@@ -52,6 +52,7 @@ export function OtherDebtsCard({
               variant="outline"
               size="sm"
               data-testid="debt-others-record"
+              aria-label={t("recordPayment", { from: from.name, to: to.name })}
               onClick={() => onSettle(debt)}
             >
               {t("record")}

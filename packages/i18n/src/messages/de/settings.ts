@@ -5,7 +5,7 @@ export const settings = {
     title: "Sprache",
     description:
       "Wähle die Sprache, in der Flatsby in diesem Browser angezeigt wird.",
-    system: "Wie im Browser",
+    system: "System",
   },
   sections: {
     usage: "Nutzung",

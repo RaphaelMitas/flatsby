@@ -163,6 +163,10 @@ function DirectDebtRow({
                 variant="outline"
                 size="sm"
                 data-testid="direct-debt-settle"
+                aria-label={t("recordCurrencyWith", {
+                  currency: debt.currency,
+                  name,
+                })}
                 onClick={() => onSettle(debt)}
               >
                 {t("record")}

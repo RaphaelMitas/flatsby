@@ -100,7 +100,7 @@ export default function SettingsIndex() {
               setPreference(value === "system" ? null : value)
             }
             choices={[
-              { value: "system", label: t("settings.theme.system") },
+              { value: "system", label: t("settings.language.system") },
               ...locales.map((value) => ({ value, label: localeNames[value] })),
             ]}
           />

@@ -12,12 +12,12 @@ const PREFERENCE_KEY = "locale_preference";
 // Read synchronously so the first frame is already in the chosen language.
 let preference = readPreference();
 
-// An unreadable entry must not stop the app from starting.
 function readPreference() {
   try {
     const saved = SecureStore.getItem(PREFERENCE_KEY);
     return saved && isLocale(saved) ? saved : null;
   } catch {
+    // An unreadable entry must not stop the app from starting.
     return null;
   }
 }
@@ -46,7 +46,7 @@ export function IntlProvider(props: { children: React.ReactNode }) {
     try {
       SecureStore.setItem(PREFERENCE_KEY, next ?? "system");
     } catch {
-      // A failed save only means the next launch follows the device again.
+      // Only persistence is lost; this session already switched.
     }
   };
 
