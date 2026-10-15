@@ -15,6 +15,7 @@ import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImp
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { TimedAlert } from "~/components/TimedAlert";
+import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import {
   BottomSheetPickerProvider,
@@ -245,7 +246,7 @@ export default function ImportExpensesScreen() {
                   `, ${wizard.skipped.length} rows skipped`}
               </Text>
 
-              {wizard.expenses.slice(0, 50).map((exp, i) => (
+              {wizard.previewExpenses.map((exp, i) => (
                 <View
                   key={i}
                   className="border-border flex-row items-center justify-between border-b py-2"
@@ -268,9 +269,9 @@ export default function ImportExpensesScreen() {
                 </View>
               ))}
 
-              {wizard.expenses.length > 50 && (
+              {wizard.hiddenExpenseCount > 0 && (
                 <Text className="text-muted-foreground text-center text-sm">
-                  ...and {wizard.expenses.length - 50} more
+                  ...and {wizard.hiddenExpenseCount} more
                 </Text>
               )}
 
@@ -287,6 +288,15 @@ export default function ImportExpensesScreen() {
                 </View>
               )}
 
+              {wizard.tooLargeMessage && (
+                <Alert variant="destructive">
+                  <AlertTitle variant="destructive">
+                    Too large to import
+                  </AlertTitle>
+                  <AlertDescription>{wizard.tooLargeMessage}</AlertDescription>
+                </Alert>
+              )}
+
               <View className="flex-row gap-2">
                 <Button
                   title="Back"
@@ -296,7 +306,7 @@ export default function ImportExpensesScreen() {
                 />
                 <Button
                   title="Next"
-                  disabled={wizard.expenses.length === 0}
+                  disabled={!wizard.canConfirm}
                   onPress={wizard.goToConfirm}
                   className="flex-1"
                 />

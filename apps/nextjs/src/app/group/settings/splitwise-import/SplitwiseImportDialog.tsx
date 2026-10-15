@@ -376,7 +376,7 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {wizard.expenses.map((exp, i) => (
+              {wizard.previewExpenses.map((exp, i) => (
                 <TableRow key={i}>
                   <TableCell className="text-sm">
                     {exp.expenseDate.toLocaleDateString()}
@@ -400,6 +400,12 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
         </div>
       )}
 
+      {wizard.hiddenExpenseCount > 0 && (
+        <p className="text-muted-foreground text-center text-sm">
+          ...and {wizard.hiddenExpenseCount} more
+        </p>
+      )}
+
       {wizard.skipped.length > 0 && (
         <details className="space-y-2">
           <summary className="text-muted-foreground cursor-pointer text-sm">
@@ -415,15 +421,20 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
         </details>
       )}
 
+      {wizard.tooLargeMessage && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Too large to import</AlertTitle>
+          <AlertDescription>{wizard.tooLargeMessage}</AlertDescription>
+        </Alert>
+      )}
+
       <DialogFooter className="gap-2">
         <Button variant="outline" onClick={wizard.goBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button
-          disabled={wizard.expenses.length === 0}
-          onClick={wizard.goToConfirm}
-        >
+        <Button disabled={!wizard.canConfirm} onClick={wizard.goToConfirm}>
           Next
         </Button>
       </DialogFooter>
