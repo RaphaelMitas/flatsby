@@ -299,7 +299,7 @@ export const groupRouter = createTRPCRouter({
                                   eq(groupMembers.id, targetGroupMember.id),
                                 );
 
-                              // A removed member could rejoin with the live link; one who leaves may, unless it's theirs
+                              // Removal kills the live link so they can't rejoin; leaving only kills links the leaver created
                               await trx
                                 .delete(groupInvites)
                                 .where(

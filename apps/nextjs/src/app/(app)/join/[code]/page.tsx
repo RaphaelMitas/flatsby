@@ -30,7 +30,7 @@ export default async function JoinPage({
   }
 
   return (
-    <main className="bg-muted flex h-dvh items-center justify-center overflow-y-auto p-4">
+    <main className="bg-muted flex h-dvh overflow-y-auto p-4">
       {/* generateMetadata would stream this into <body>; React hoists it into <head> from here */}
       {parsed.success && (
         <meta
@@ -38,12 +38,14 @@ export default async function JoinPage({
           content={`app-id=${APP_STORE_ID}, app-argument=flatsby:/${invitePath(parsed.data)}`}
         />
       )}
-      <JoinInvite
-        code={parsed.data ?? ""}
-        preview={preview?.success ? preview.data : null}
-        signedIn={!!session?.user}
-        platform={platform}
-      />
+      <div className="m-auto flex w-full justify-center">
+        <JoinInvite
+          code={parsed.data ?? ""}
+          preview={preview?.success ? preview.data : null}
+          signedIn={!!session?.user}
+          platform={platform}
+        />
+      </div>
     </main>
   );
 }

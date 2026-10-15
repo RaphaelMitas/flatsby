@@ -4,15 +4,15 @@ import { msg } from "@flatsby/i18n/message-key";
 
 export const INVITE_CODE_LENGTH = 8;
 export const INVITE_CODE_GROUP = INVITE_CODE_LENGTH / 2;
-export const INVITE_TTL_DAYS = 7;
+const INVITE_TTL_DAYS = 7;
 export const INVITE_PATH = "/join";
 export const INVITE_REFERRER_KEY = "invite_code";
-export const DAY_MS = 86_400_000;
+const DAY_MS = 86_400_000;
 
 // Crockford base32: no I, L, O or U, so no look-alikes or accidental words
 export const INVITE_CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
-/** Also takes a pasted invite link; reads O as 0 and I/L as 1, drops anything else outside the alphabet. */
+/** Also takes a pasted invite link. */
 export const normalizeInviteCode = (raw: string) =>
   (raw.split(`${INVITE_PATH}/`).pop() ?? "")
     .toUpperCase()
@@ -44,6 +44,9 @@ export const inviteCodeSchema = z
   );
 
 export const inviteCodeInputSchema = z.object({ code: inviteCodeSchema });
+
+export const inviteExpiresAt = () =>
+  new Date(Date.now() + INVITE_TTL_DAYS * DAY_MS);
 
 export const inviteDaysLeft = (expiresAt: Date) =>
   Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / DAY_MS));

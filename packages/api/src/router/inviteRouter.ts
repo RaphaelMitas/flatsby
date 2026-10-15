@@ -4,11 +4,10 @@ import { and, eq, gt, lte } from "@flatsby/db";
 import { groupInvites } from "@flatsby/db/schema";
 import { groupIdInputSchema } from "@flatsby/validators/group";
 import {
-  DAY_MS,
   INVITE_CODE_ALPHABET,
   INVITE_CODE_LENGTH,
-  INVITE_TTL_DAYS,
   inviteCodeInputSchema,
+  inviteExpiresAt,
 } from "@flatsby/validators/invite";
 
 import type { Database } from "../types";
@@ -43,7 +42,7 @@ const issueInvite = (
         const invite = {
           code: generateCode(),
           createdByMemberId: admin.id,
-          expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * DAY_MS),
+          expiresAt: inviteExpiresAt(),
         };
         const [issued] = await tx
           .insert(groupInvites)
