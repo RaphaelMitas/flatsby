@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Settings } from "lucide-react";
+import { KeyRound, Plus, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -16,14 +16,18 @@ import {
 } from "@flatsby/ui/select";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
+import { JoinWithCodeDialog } from "~/app/(app)/group/JoinWithCodeDialog";
 
 const CREATE_GROUP_VALUE = "__create_group__";
+const JOIN_GROUP_VALUE = "__join_group__";
 
 export function GroupHeader() {
   const t = useTranslations("home");
+  const tInvite = useTranslations("invite.join");
   const router = useRouter();
   const { currentGroup, groups, switchGroup } = useGroupContext();
   const [isSwitching, setIsSwitching] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
 
   if (!currentGroup) {
     return null;
@@ -32,6 +36,10 @@ export function GroupHeader() {
   const handleValueChange = async (value: string) => {
     if (value === CREATE_GROUP_VALUE) {
       router.push("/group/create");
+      return;
+    }
+    if (value === JOIN_GROUP_VALUE) {
+      setJoinOpen(true);
       return;
     }
 
@@ -65,6 +73,12 @@ export function GroupHeader() {
               {t("createGroup")}
             </span>
           </SelectItem>
+          <SelectItem value={JOIN_GROUP_VALUE}>
+            <span className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4" />
+              {tInvite("withCode")}
+            </span>
+          </SelectItem>
         </SelectContent>
       </Select>
 
@@ -74,6 +88,7 @@ export function GroupHeader() {
       >
         <Settings className="h-4 w-4" />
       </Link>
+      <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
     </div>
   );
 }

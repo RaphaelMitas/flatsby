@@ -340,36 +340,31 @@ export const GroupUtils = {
     refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
   ): Effect.Effect<number, ApiError> =>
     Effect.flatMap(
-      safeDbOperation(
-        () =>
-          db.transaction(async (tx): Promise<number | ApiError> => {
-            await GroupUtils.lockGroup(tx, groupId);
-            const refused = await refusal?.(tx);
-            if (refused) return refused;
-            const existing = await tx.query.groupMembers.findFirst({
-              where: and(
-                eq(groupMembers.groupId, groupId),
-                eq(groupMembers.userId, userId),
-              ),
-              orderBy: desc(groupMembers.isActive),
-            });
-            if (existing?.isActive)
-              return Errors.conflict("errors.alreadyMember");
-            const [member] = existing
-              ? await tx
-                  .update(groupMembers)
-                  .set({ isActive: true, role: "member" })
-                  .where(eq(groupMembers.id, existing.id))
-                  .returning({ id: groupMembers.id })
-              : await tx
-                  .insert(groupMembers)
-                  .values({ groupId, userId, role: "member" })
-                  .returning({ id: groupMembers.id });
-            if (!member) throw new Error("Failed to add group member");
-            return member.id;
-          }),
-        "add group member",
-      ),
+      DbUtils.transaction(async (tx): Promise<number | ApiError> => {
+        await GroupUtils.lockGroup(tx, groupId);
+        const refused = await refusal?.(tx);
+        if (refused) return refused;
+        const existing = await tx.query.groupMembers.findFirst({
+          where: and(
+            eq(groupMembers.groupId, groupId),
+            eq(groupMembers.userId, userId),
+          ),
+          orderBy: desc(groupMembers.isActive),
+        });
+        if (existing?.isActive) return Errors.conflict("errors.alreadyMember");
+        const [member] = existing
+          ? await tx
+              .update(groupMembers)
+              .set({ isActive: true, role: "member" })
+              .where(eq(groupMembers.id, existing.id))
+              .returning({ id: groupMembers.id })
+          : await tx
+              .insert(groupMembers)
+              .values({ groupId, userId, role: "member" })
+              .returning({ id: groupMembers.id });
+        if (!member) throw new Error("Failed to add group member");
+        return member.id;
+      }, "add group member")(db),
       (result): Effect.Effect<number, ApiError> =>
         typeof result === "number"
           ? Effect.succeed(result)

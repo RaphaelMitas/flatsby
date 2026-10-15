@@ -77,6 +77,9 @@ export function JoinWithCodeDialog({
               </Fragment>
             ))}
           </InputOTP>
+          <p className="text-muted-foreground text-xs">
+            {t("invite.join.lookAlikes")}
+          </p>
           <Button
             type="submit"
             className="w-full"

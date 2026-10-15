@@ -12,12 +12,7 @@ import {
 } from "@flatsby/validators/invite";
 
 import type { Database } from "../types";
-import {
-  Errors,
-  fail,
-  safeDbOperation,
-  withErrorHandlingAsResult,
-} from "../errors";
+import { Errors, withErrorHandlingAsResult } from "../errors";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { DbUtils, GroupUtils } from "../utils";
 
@@ -36,47 +31,43 @@ const issueInvite = (
   userId: string,
   { onlyIfExpired }: { onlyIfExpired: boolean },
 ) =>
-  Effect.flatMap(
-    safeDbOperation(
-      () =>
-        db.transaction(async (tx) => {
-          await GroupUtils.lockGroup(tx, groupId);
-          const admin = await tx.query.groupMembers.findFirst({
-            where: GroupUtils.activeAdminWhere(groupId, userId),
-            columns: { id: true },
+  DbUtils.findOneOrFail(
+    () =>
+      db.transaction(async (tx) => {
+        await GroupUtils.lockGroup(tx, groupId);
+        const admin = await tx.query.groupMembers.findFirst({
+          where: GroupUtils.activeAdminWhere(groupId, userId),
+          columns: { id: true },
+        });
+        if (!admin) return undefined;
+        const invite = {
+          code: generateCode(),
+          createdByMemberId: admin.id,
+          expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * DAY_MS),
+        };
+        const [issued] = await tx
+          .insert(groupInvites)
+          .values({ groupId, ...invite })
+          .onConflictDoUpdate({
+            target: groupInvites.groupId,
+            set: invite,
+            setWhere: onlyIfExpired
+              ? lte(groupInvites.expiresAt, new Date())
+              : undefined,
+          })
+          .returning({
+            code: groupInvites.code,
+            expiresAt: groupInvites.expiresAt,
           });
-          if (!admin) return null;
-          const invite = {
-            code: generateCode(),
-            createdByMemberId: admin.id,
-            expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * DAY_MS),
-          };
-          const [issued] = await tx
-            .insert(groupInvites)
-            .values({ groupId, ...invite })
-            .onConflictDoUpdate({
-              target: groupInvites.groupId,
-              set: invite,
-              setWhere: onlyIfExpired
-                ? lte(groupInvites.expiresAt, new Date())
-                : undefined,
-            })
-            .returning({
-              code: groupInvites.code,
-              expiresAt: groupInvites.expiresAt,
-            });
-          return (
-            issued ??
-            (await tx.query.groupInvites.findFirst({
-              where: eq(groupInvites.groupId, groupId),
-              columns: { code: true, expiresAt: true },
-            }))
-          );
-        }),
-      "issue group invite",
-    ),
-    (invite) =>
-      invite ? Effect.succeed(invite) : fail.notFound("adminMembership"),
+        return (
+          issued ??
+          (await tx.query.groupInvites.findFirst({
+            where: eq(groupInvites.groupId, groupId),
+            columns: { code: true, expiresAt: true },
+          }))
+        );
+      }),
+    "adminMembership",
   );
 
 // Expired, reset and made-up codes all fail the same way, so a code reveals nothing.

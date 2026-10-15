@@ -93,9 +93,15 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
 
   return (
     <div className="flex flex-col gap-4">
+      <p className="text-muted-foreground text-center text-sm">
+        {t("invite.scanWithCamera")}
+      </p>
       <div className="mx-auto rounded-lg bg-white p-3">
         <QRCode value={link} size={160} />
       </div>
+      <p className="text-muted-foreground text-center text-xs">
+        {t("invite.orEnterCode")}
+      </p>
       <div
         data-testid="group-invite-code"
         className="text-center font-mono text-2xl font-bold tracking-widest"

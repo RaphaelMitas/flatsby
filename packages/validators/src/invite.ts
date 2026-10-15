@@ -12,7 +12,7 @@ export const DAY_MS = 86_400_000;
 // Crockford base32: no I, L, O or U, so no look-alikes or accidental words
 export const INVITE_CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
-/** Also takes a pasted invite link, and drops letters a code can't contain. */
+/** Also takes a pasted invite link; reads O as 0 and I/L as 1, drops anything else outside the alphabet. */
 export const normalizeInviteCode = (raw: string) =>
   (raw.split(`${INVITE_PATH}/`).pop() ?? "")
     .toUpperCase()

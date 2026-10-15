@@ -30,7 +30,7 @@ export default async function JoinPage({
   }
 
   return (
-    <main className="bg-muted flex min-h-dvh items-center justify-center p-4">
+    <main className="bg-muted flex h-dvh items-center justify-center overflow-y-auto p-4">
       {/* generateMetadata would stream this into <body>; React hoists it into <head> from here */}
       {parsed.success && (
         <meta
