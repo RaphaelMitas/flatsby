@@ -1,6 +1,6 @@
 import type { SwitchProps as RNSwitchProps } from "react-native";
 import * as React from "react";
-import { Switch as RNSwitch } from "react-native";
+import { Platform, Switch as RNSwitch } from "react-native";
 
 import { useThemeColors } from "../utils";
 
@@ -21,11 +21,12 @@ const Switch = React.forwardRef<RNSwitch, SwitchProps>(
         value={checked}
         onValueChange={onCheckedChange}
         disabled={disabled}
+        // iOS 26 always draws a white thumb, which vanishes on the dark-mode primary track
         trackColor={{
           false: getColor("input"),
-          true: getColor("primary"),
+          true: Platform.OS === "ios" ? undefined : getColor("primary"),
         }}
-        thumbColor={getColor("background")}
+        thumbColor={Platform.OS === "ios" ? undefined : getColor("background")}
         ios_backgroundColor={getColor("input")}
         {...props}
       />

@@ -807,7 +807,7 @@ async function handleGroupUpdate(
   const { data } = input;
 
   // Call tRPC procedure (handles auth)
-  const result = await caller.group.changeGroupName({
+  const result = await caller.group.updateGroup({
     id: groupId,
     name: data.name,
   });

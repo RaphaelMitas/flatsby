@@ -4,10 +4,11 @@
 
 import type { Translate } from "@flatsby/i18n/message-key";
 
+import type { ConvertibleExpense } from "./conversion";
 import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
 import type { DebtEntry, GroupDebtSummary } from "./types";
-import { centsToDecimal } from "./conversion";
+import { centsToDecimal, rateBetween } from "./conversion";
 import { debtsBetweenOthers } from "./debt";
 
 /**
@@ -55,6 +56,57 @@ export function formatCurrencyFromCents({
     currency,
     locale,
   });
+}
+
+/** The amount an expense counts as first, and what was actually paid when that differs */
+export function formatExpenseAmounts(
+  expense: Pick<
+    ConvertibleExpense,
+    | "amountInCents"
+    | "currency"
+    | "convertedAmountInCents"
+    | "convertedCurrency"
+  >,
+  locale: Intl.LocalesArgument,
+): { amount: string; paid?: string; rate?: string } {
+  const paid = formatCurrencyFromCents({
+    cents: expense.amountInCents,
+    currency: expense.currency,
+    locale,
+  });
+  if (
+    expense.convertedAmountInCents == null ||
+    expense.convertedCurrency == null
+  ) {
+    return { amount: paid };
+  }
+  return {
+    amount: formatCurrencyFromCents({
+      cents: expense.convertedAmountInCents,
+      currency: expense.convertedCurrency,
+      locale,
+    }),
+    paid,
+    rate: formatRate(
+      expense.currency,
+      expense.convertedCurrency,
+      rateBetween(expense.amountInCents, expense.convertedAmountInCents),
+      locale,
+    ),
+  };
+}
+
+export function formatRate(
+  from: string,
+  to: string,
+  rate: number,
+  locale: Intl.LocalesArgument,
+): string {
+  const formatted = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+  }).format(rate);
+  return `1 ${from} = ${formatted} ${to}`;
 }
 
 /**
@@ -168,6 +220,17 @@ function joinNames(names: string[], t: Translate): string {
   const last = names.at(-1);
   if (names.length < 2 || last === undefined) return last ?? "";
   return t("debts.nameList", { names: names.slice(0, -1).join(", "), last });
+}
+
+export function listCurrencies(
+  currencies: string[],
+  first: string,
+  t: Translate,
+): string {
+  return joinNames(
+    [...currencies].sort((a, b) => Number(b === first) - Number(a === first)),
+    t,
+  );
 }
 
 export function debtHero(

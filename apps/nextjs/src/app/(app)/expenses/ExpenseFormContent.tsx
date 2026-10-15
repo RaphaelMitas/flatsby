@@ -47,6 +47,7 @@ import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 
 import type { UseExpenseFormReturn } from "./useExpenseForm";
 import { CurrencyInput } from "~/components/CurrencyInput";
+import { ConversionField } from "./ConversionField";
 import { ExpenseCategorySelector } from "./ExpenseCategorySelector";
 import { SplitEditor } from "./SplitEditor";
 
@@ -76,7 +77,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     handleBack,
     group,
     allMembers,
+    conversion,
   } = formState;
+  const { convertedAmountInCents } = conversion.fields;
   const participantCount = finalizeSplits(
     splitMethod,
     splits,
@@ -191,6 +194,8 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   )}
                 />
 
+                <ConversionField currency={currency} conversion={conversion} />
+
                 <FormField
                   control={form.control}
                   name="paidByGroupMemberId"
@@ -299,6 +304,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
               groupMembers={allMembers}
               totalAmountCents={amountInCents}
               currency={currency}
+              conversion={conversion.fields}
               splitMethod={editableSplitMethod(splitMethod)}
               onSplitMethodChange={(method) => {
                 form.setValue("splitMethod", method);
@@ -339,6 +345,32 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                     })}
                   </span>
                 </div>
+                {convertedAmountInCents !== null && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t("expenses.conversion.inCurrencyLabel", {
+                          currency: conversion.targetCurrency,
+                        })}
+                      </span>
+                      <span className="font-semibold">
+                        {formatCurrencyFromCents({
+                          cents: convertedAmountInCents,
+                          currency: conversion.targetCurrency,
+                          locale,
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t("expenses.conversion.rate")}
+                      </span>
+                      <span className="font-semibold">
+                        {conversion.rateText}
+                      </span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
                     {t("expenses.paidByFieldLabel")}
@@ -405,7 +437,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 e.stopPropagation();
                 void handleNext();
               }}
-              disabled={isPending || amountInCents <= 0}
+              disabled={
+                isPending || amountInCents <= 0 || conversion.isMissingConverted
+              }
               className="flex-1"
               data-testid="expense-form-next"
             >
@@ -415,7 +449,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
           ) : (
             <Button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || conversion.isMissingConverted}
               className="flex-1"
               data-testid="expense-form-submit"
             >

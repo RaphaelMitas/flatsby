@@ -79,6 +79,7 @@ export const expenses = {
     "{shares} von {count, plural, one {# Anteil} other {# Anteilen}}",
   totalLabel: "Summe:",
   validation: {
+    convertedAmountRequired: "Gib den umgerechneten Betrag ein",
     selectPayer: "Bitte wähle, wer bezahlt hat",
     amountPositive: "Der Betrag muss größer als 0 sein",
     atLeastOnePerson: "Mindestens eine Person muss beteiligt sein",
@@ -103,5 +104,28 @@ export const expenses = {
     splitAmountsMismatch:
       "Die aufgeteilten Beträge stimmen nicht mit dem Gesamtbetrag überein",
     memberOnce: "Jedes Mitglied darf nur einmal in der Aufteilung vorkommen",
+  },
+  conversion: {
+    convertTo: "In {currency} umrechnen",
+    inCurrency: "In {currency}",
+    inCurrencyLabel: "In {currency}:",
+    rate: "Kurs:",
+    reset: "Zurücksetzen",
+    rateUnavailable:
+      "Kurs konnte nicht geladen werden, gib den Betrag in {currency} ein",
+    staysIn:
+      "Bleibt in {currency}. Wird getrennt von den Schulden in {target} ausgeglichen.",
+    convertedWhenAdded: "Beim Hinzufügen umgerechnet",
+    notConverted: "nicht umgerechnet",
+    rateSourceTitle: "Woher dieser Kurs kommt",
+    rateSourceBody:
+      "Referenzkurs der Europäischen Zentralbank für das Datum der Ausgabe, über Frankfurter. Er wird an Werktagen veröffentlicht, deshalb gilt für eine Ausgabe am Wochenende der Kurs vom Freitag.",
+    rateSourceOwnRate:
+      "Deine Karte oder Bank rechnet eventuell mit einem anderen Kurs. Gib ein, was du tatsächlich in {currency} bezahlt hast, und der Kurs passt sich an.",
+    bannerTitle: "Schulden laufen jetzt in {currencies}",
+    bannerBody:
+      "Schalte die automatische Umrechnung ein, dann zählen neue Ausgaben in anderen Währungen stattdessen zu den Schulden in {currency}.",
+    keepSeparate: "Getrennt lassen",
+    turnOn: "Einschalten",
   },
 } satisfies Messages["expenses"];

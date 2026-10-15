@@ -53,6 +53,9 @@ const triggerVariants = tv({
     iconButton: {
       true: "justify-center h-12 w-12 p-0",
     },
+    disabled: {
+      true: "opacity-50",
+    },
   },
 });
 
@@ -60,7 +63,7 @@ const triggerTextVariants = tv({
   base: "text-foreground",
 });
 
-const bottomSheetVariants = tv({
+export const bottomSheetVariants = tv({
   base: "bg-background border-2 border-muted rounded-t-3xl",
 });
 
@@ -256,6 +259,7 @@ export interface BottomSheetPickerTriggerProps {
   snapPoints?: string[];
   iconButton?: boolean;
   testID?: string;
+  disabled?: boolean;
 }
 
 export const BottomSheetPickerTrigger: React.FC<
@@ -269,6 +273,7 @@ export const BottomSheetPickerTrigger: React.FC<
   snapPoints,
   iconButton = false,
   testID,
+  disabled,
 }) => {
   const t = useTranslations("common");
   const { openPicker } = useBottomSheetPicker();
@@ -313,7 +318,8 @@ export const BottomSheetPickerTrigger: React.FC<
     <Pressable
       testID={testID}
       onPress={handleOpen}
-      className={triggerVariants()}
+      disabled={disabled}
+      className={triggerVariants({ disabled })}
     >
       {selectedItem?.icon}
       <Text className={triggerTextVariants()}>

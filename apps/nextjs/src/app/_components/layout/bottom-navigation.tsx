@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import {
   HomeIcon,
   MessageSquareIcon,
-  Receipt,
   ShoppingCartIcon,
+  Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -63,7 +63,7 @@ export function BottomNavigation() {
           )}
           prefetch={false}
         >
-          <Receipt className="h-6 w-6" />
+          <Wallet className="h-6 w-6" />
           <span className="text-xs">{t("expenses")}</span>
         </Link>
         <Link

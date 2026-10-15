@@ -23,10 +23,7 @@ import {
   settleOutstandingLabel,
 } from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
-import {
-  CURRENCY_CODES,
-  isCurrencyCode,
-} from "@flatsby/validators/expenses/types";
+import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -41,6 +38,7 @@ import { Form, FormControl, FormField, FormMessage } from "~/lib/ui/form";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
+import { currencyItems } from "./currencyItems";
 import { MemberAvatar } from "./MemberAvatar";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -86,7 +84,7 @@ export function SettlementForm({
     if (expense?.currency && isCurrencyCode(expense.currency)) {
       return expense.currency;
     }
-    return "EUR";
+    return groupData.success ? groupData.data.currency : "EUR";
   };
 
   const form = useForm<SettlementFormValues>({
@@ -204,6 +202,8 @@ export function SettlementForm({
             paidByGroupMemberId: input.paidByGroupMemberId,
             amountInCents: input.amountInCents,
             currency: input.currency,
+            convertedAmountInCents: null,
+            convertedCurrency: null,
             description: input.description,
             category: "other",
             subcategory: "other",
@@ -425,12 +425,6 @@ export function SettlementForm({
   }));
   const memberTitle = (id: number, placeholder: string) =>
     isMember(id) ? person(id).name : placeholder;
-
-  // Create picker items for currency
-  const currencyItems: BottomSheetPickerItem[] = CURRENCY_CODES.map((code) => ({
-    id: code,
-    title: code,
-  }));
 
   const isPending =
     createSettlementMutation.isPending || updateSettlementMutation.isPending;

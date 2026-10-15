@@ -21,6 +21,9 @@ function thirtyDaysAgo(): Date {
   return date;
 }
 
+const ledgerAmount = sql<number>`coalesce(${expenses.convertedAmountInCents}, ${expenses.amountInCents})`;
+const ledgerCurrency = sql<string>`coalesce(${expenses.convertedCurrency}, ${expenses.currency})`;
+
 const homeStatsInputSchema = z.object({
   groupId: z.number(),
 });
@@ -45,8 +48,8 @@ export const statsRouter = createTRPCRouter({
                 await Promise.all([
                   ctx.db
                     .select({
-                      total: sql<string>`coalesce(sum(${expenses.amountInCents}), 0)`,
-                      currency: expenses.currency,
+                      total: sql<string>`coalesce(sum(${ledgerAmount}), 0)`,
+                      currency: ledgerCurrency,
                     })
                     .from(expenses)
                     .where(
@@ -55,7 +58,7 @@ export const statsRouter = createTRPCRouter({
                         gte(expenses.expenseDate, cutoffDate),
                       ),
                     )
-                    .groupBy(expenses.currency),
+                    .groupBy(ledgerCurrency),
 
                   ctx.db
                     .select({

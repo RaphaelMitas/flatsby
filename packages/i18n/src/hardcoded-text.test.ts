@@ -117,6 +117,11 @@ function isTechnicalToken(text: string) {
   );
 }
 
+// "not an admin" reads as text; "flex gap-2" and "text-sm" do not.
+function isLowercasePhrase(text: string) {
+  return /^\p{Ll}+(\s+\p{Ll}[\p{Ll}']*)+[.!?]?$/u.test(text.trim());
+}
+
 // Stricter test for strings in positions that are often technical.
 function isSentence(text: string) {
   const trimmed = text.trim();
@@ -197,7 +202,8 @@ function scan(source: string): Finding[] {
     }
   };
 
-  const isUserText = (text: string) => !isTechnicalToken(text);
+  const isUserText = (text: string) =>
+    !isTechnicalToken(text) || isLowercasePhrase(text);
 
   const visit = (node: Node | null | undefined, parent?: Node) => {
     if (!node || typeof node !== "object") return;
@@ -314,6 +320,7 @@ describe("scan", () => {
         <View testID="row" className="flex gap-2">
           <Text accessibilityLabel="Edit item">Save</Text>
           {count > 1 && "Several"}
+          {isAdmin || "not an admin"}
           {/* i18n-ignore */}
           <Text>Debug only</Text>
         </View>
@@ -323,6 +330,7 @@ describe("scan", () => {
       "Edit item",
       "Save",
       "Several",
+      "not an admin",
     ]);
   });
 });

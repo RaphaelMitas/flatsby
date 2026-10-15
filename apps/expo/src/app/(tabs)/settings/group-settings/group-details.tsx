@@ -1,13 +1,8 @@
-import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 import type { GroupFormValues } from "@flatsby/validators/group";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { translateIfKey } from "@flatsby/i18n/message-key";
@@ -23,10 +18,10 @@ import { Label } from "~/lib/ui/label";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { useUpdateGroup } from "~/utils/useUpdateGroup";
 
 export default function GroupDetailsScreen() {
   const t = useTranslations();
-  const queryClient = useQueryClient();
   const router = useRouter();
   const { selectedGroupId } = useShoppingStore();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -37,74 +32,7 @@ export default function GroupDetailsScreen() {
     }),
   );
 
-  const onUpdateGroupNameError = (
-    errorMessage: string,
-    previousGroup: ApiResult<GroupWithAccess> | undefined,
-  ) => {
-    queryClient.setQueryData(
-      trpc.group.getGroup.queryKey({
-        id: Number(selectedGroupId),
-      }),
-      previousGroup,
-    );
-    form.setError("name", {
-      message: errorMessage,
-    });
-  };
-
-  const updateGroupNameMutation = useMutation(
-    trpc.group.changeGroupName.mutationOptions({
-      onMutate: (data) => {
-        void queryClient.cancelQueries(
-          trpc.group.getGroup.queryOptions({
-            id: Number(selectedGroupId),
-          }),
-        );
-        const previousGroup = queryClient.getQueryData(
-          trpc.group.getGroup.queryKey({
-            id: Number(selectedGroupId),
-          }),
-        );
-
-        queryClient.setQueryData(
-          trpc.group.getGroup.queryKey({
-            id: Number(selectedGroupId),
-          }),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              success: true as const,
-              data: { ...old.data, name: data.name },
-            };
-          },
-        );
-        return { previousGroup };
-      },
-      onSuccess: (data, _variables, context) => {
-        if (!data.success) {
-          onUpdateGroupNameError(data.error.message, context.previousGroup);
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.group.getGroup.queryOptions({
-            id: Number(selectedGroupId),
-          }),
-        );
-        void queryClient.invalidateQueries(
-          trpc.group.getUserGroups.queryOptions(),
-        );
-
-        setShowSuccessMessage(true);
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 3000);
-      },
-      onError: (err, _variables, context) => {
-        onUpdateGroupNameError(err.message, context?.previousGroup);
-      },
-    }),
-  );
+  const updateGroupMutation = useUpdateGroup(Number(selectedGroupId));
 
   const form = useForm({
     schema: groupFormSchema,
@@ -116,10 +44,21 @@ export default function GroupDetailsScreen() {
   const handleSubmit = (values: GroupFormValues) => {
     const newName = values.name;
     if (!newName) return;
-    updateGroupNameMutation.mutate({
-      id: Number(selectedGroupId),
-      name: newName,
-    });
+    updateGroupMutation.mutate(
+      { id: Number(selectedGroupId), name: newName },
+      {
+        onSuccess: (data) => {
+          if (!data.success) {
+            form.setError("name", { message: data.error.message });
+            return;
+          }
+          setShowSuccessMessage(true);
+        },
+        onError: (err) => {
+          form.setError("name", { message: err.message });
+        },
+      },
+    );
   };
 
   if (!group.success) {
@@ -216,6 +155,7 @@ export default function GroupDetailsScreen() {
             variant="success"
             title={t("group.details.success")}
             description={t("group.details.nameUpdated")}
+            onDismiss={() => setShowSuccessMessage(false)}
           />
         )}
       </View>

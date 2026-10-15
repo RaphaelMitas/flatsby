@@ -61,4 +61,7 @@ export const splitwiseImport = {
     noPayer: "No payer found",
     splitMismatch: "Split amounts don't match total (off by {diff} cents)",
   },
+  tooLargeTitle: "Too large to import",
+  tooLarge:
+    "This export is too large to import in one go. Split the CSV into smaller files, keeping the header row in each, and import them one after another.",
 };

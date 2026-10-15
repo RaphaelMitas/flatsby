@@ -1,6 +1,7 @@
 "use client";
 
 import type { GroupWithAccess } from "@flatsby/api";
+import type { ConvertibleExpense } from "@flatsby/validators/expenses/conversion";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { EditableSplitMethod } from "@flatsby/validators/expenses/split-editing";
 import type { LucideIcon } from "lucide-react";
@@ -20,6 +21,7 @@ import {
 } from "@flatsby/ui/card";
 import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
+import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
@@ -40,6 +42,10 @@ interface SplitEditorProps {
   groupMembers: GroupWithAccess["groupMembers"];
   totalAmountCents: number;
   currency: string;
+  conversion: Pick<
+    ConvertibleExpense,
+    "convertedAmountInCents" | "convertedCurrency"
+  >;
   splitMethod: EditableSplitMethod;
   onSplitMethodChange: (method: EditableSplitMethod) => void;
 }
@@ -49,12 +55,20 @@ export function SplitEditor({
   groupMembers,
   totalAmountCents,
   currency,
+  conversion,
   splitMethod,
   onSplitMethodChange,
 }: SplitEditorProps) {
   const t = useTranslations();
   const locale = useLocale();
   const splits = useWatch({ control: form.control, name: "splits" });
+  const ledger = inLedgerCurrency({
+    amountInCents: totalAmountCents,
+    currency,
+    ...conversion,
+    expenseSplits: splits,
+  });
+  const isConverted = ledger.currency !== currency;
   const selectedMemberIds = splits.map((s) => s.groupMemberId);
   const {
     validation,
@@ -187,6 +201,16 @@ export function SplitEditor({
                         locale,
                       })}
                     </span>
+                    {isConverted && (
+                      <span className="text-muted-foreground text-sm">
+                        {formatCurrencyFromCents({
+                          cents:
+                            ledger.expenseSplits[index]?.amountInCents ?? 0,
+                          currency: ledger.currency,
+                          locale,
+                        })}
+                      </span>
+                    )}
                   </div>
 
                   {splitMethod === "percentage" && (
@@ -295,6 +319,8 @@ export function SplitEditor({
                 currency,
                 locale,
               })}
+              {isConverted &&
+                ` · ${formatCurrencyFromCents({ cents: ledger.amountInCents, currency: ledger.currency, locale })}`}
             </span>
           </div>
           {!validation.isValid && validation.error && (

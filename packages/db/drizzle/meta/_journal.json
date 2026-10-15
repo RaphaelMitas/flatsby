@@ -36,6 +36,13 @@
       "when": 1791823776432,
       "tag": "0004_fk_and_sort_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791975057207,
+      "tag": "0005_group_currency",
+      "breakpoints": true
     }
   ]
 }

@@ -69,4 +69,7 @@ export const splitwiseImport = {
     splitMismatch:
       "Die Anteile ergeben nicht den Gesamtbetrag (Abweichung: {diff} Cent)",
   },
+  tooLargeTitle: "Zu groß für den Import",
+  tooLarge:
+    "Dieser Export ist zu groß, um ihn auf einmal zu importieren. Teile die CSV in kleinere Dateien auf, behalte in jeder die Kopfzeile und importiere sie nacheinander.",
 } satisfies Messages["splitwiseImport"];

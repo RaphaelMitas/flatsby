@@ -6,6 +6,7 @@ import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
@@ -155,6 +156,7 @@ export function ExpenseListPanel({
                   isSelected={item.id === selectedExpenseId}
                   onSelect={() => onSelectExpense(item.id)}
                   onEdit={() => handleEdit(item)}
+                  isNotConverted={isLeftUnconverted(item, groupData.data)}
                 />
               )}
               onEndReached={() => {

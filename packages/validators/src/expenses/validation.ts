@@ -192,6 +192,7 @@ export function validateExpenseSplitsStrict(
   if (splits.length === 0) {
     return {
       valid: false,
+      // i18n-ignore: developer detail, the user sees userMessage
       error: "splits array is empty",
       userMessage: msg("expenses.validation.atLeastOnePersonInSplit"),
     };
@@ -201,6 +202,7 @@ export function validateExpenseSplitsStrict(
   if (splits.some((s) => s.amountInCents < 0)) {
     return {
       valid: false,
+      // i18n-ignore: developer detail, the user sees userMessage
       error: "negative amount in splits",
       userMessage: msg("expenses.validation.negativeSplitAmounts"),
     };

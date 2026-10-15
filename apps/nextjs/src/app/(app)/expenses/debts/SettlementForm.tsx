@@ -93,10 +93,11 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     debtData.success ? pairDebt(debtData.data, from, to, currency) : undefined;
 
   const meId = groupData.success ? groupData.data.thisGroupMember.id : 0;
+  const groupCurrency = groupData.success ? groupData.data.currency : "EUR";
   const initial: DebtEntry = prefill?.debt ?? {
     fromGroupMemberId: 0,
     toGroupMemberId: 0,
-    currency: "EUR",
+    currency: groupCurrency,
     amountInCents: 0,
   };
 
@@ -104,7 +105,9 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     resolver: zodResolver(settlementFormSchema),
     defaultValues: {
       ...initial,
-      currency: isCurrencyCode(initial.currency) ? initial.currency : "EUR",
+      currency: isCurrencyCode(initial.currency)
+        ? initial.currency
+        : groupCurrency,
     },
   });
 
@@ -168,6 +171,8 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
             paidByGroupMemberId: input.paidByGroupMemberId,
             amountInCents: input.amountInCents,
             currency: input.currency,
+            convertedAmountInCents: null,
+            convertedCurrency: null,
             description: input.description,
             category: "other",
             subcategory: "other",

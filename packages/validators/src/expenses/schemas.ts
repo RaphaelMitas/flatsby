@@ -25,15 +25,19 @@ export const splitMethodSchema = z.enum(SPLIT_METHODS);
 
 export const currencyCodeSchema = z.enum(CURRENCY_CODES);
 
+const amountInCentsSchema = z
+  .number()
+  .int()
+  .min(1, msg("expenses.validation.amountPositive"));
+
 export const expenseSchema = z.object({
   paidByGroupMemberId: z
     .number()
     .min(1, msg("expenses.validation.selectPayer")),
-  amountInCents: z
-    .number()
-    .int()
-    .min(1, msg("expenses.validation.amountPositive")),
+  amountInCents: amountInCentsSchema,
   currency: currencyCodeSchema,
+  convertedAmountInCents: amountInCentsSchema.nullish(),
+  convertedCurrency: currencyCodeSchema.nullish(),
   description: z.string().max(512),
   subcategory: expenseSubcategoryIdSchema.optional(),
   expenseDate: z.date(),
@@ -42,20 +46,43 @@ export const expenseSchema = z.object({
     .min(1, msg("expenses.validation.atLeastOnePerson")),
   splitMethod: splitMethodSchema,
 });
-export const expenseSchemaWithValidateSplits = expenseSchema.refine(
-  (data) => {
-    const validation = validateSplits({
-      splits: data.splits,
-      totalAmountCents: data.amountInCents,
-      method: data.splitMethod,
-    });
-    return validation.isValid;
-  },
-  {
-    message: msg("expenses.validation.splitAmountsInvalid"),
-    path: ["splits"],
-  },
-);
+function isCompleteConversion({
+  currency,
+  convertedAmountInCents,
+  convertedCurrency,
+}: Partial<
+  Pick<
+    z.infer<typeof expenseSchema>,
+    "currency" | "convertedAmountInCents" | "convertedCurrency"
+  >
+>) {
+  if ((convertedAmountInCents == null) !== (convertedCurrency == null)) {
+    return false;
+  }
+  return convertedCurrency == null || convertedCurrency !== currency;
+}
+
+const completeConversion = {
+  message: msg("expenses.validation.convertedAmountRequired"),
+  path: ["convertedAmountInCents"],
+};
+
+export const expenseSchemaWithValidateSplits = expenseSchema
+  .refine(
+    (data) => {
+      const validation = validateSplits({
+        splits: data.splits,
+        totalAmountCents: data.amountInCents,
+        method: data.splitMethod,
+      });
+      return validation.isValid;
+    },
+    {
+      message: msg("expenses.validation.splitAmountsInvalid"),
+      path: ["splits"],
+    },
+  )
+  .refine(isCompleteConversion, completeConversion);
 
 export type ExpenseValues = z.infer<typeof expenseSchemaWithValidateSplits>;
 
@@ -87,6 +114,7 @@ export const updateExpenseSchema = expenseSchema
       path: ["splits"],
     },
   )
+  .refine(isCompleteConversion, completeConversion)
   .safeExtend({
     expenseId: z.number(),
   });

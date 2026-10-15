@@ -329,6 +329,8 @@ export const fetchGroupDebtSummary = async (db: Database, groupId: number) =>
         paidByGroupMemberId: true,
         amountInCents: true,
         currency: true,
+        convertedAmountInCents: true,
+        convertedCurrency: true,
       },
       with: {
         expenseSplits: {

@@ -89,4 +89,19 @@ export const group = {
     nameRequired: "Group name is required",
     nameTooLong: "Group name cannot be longer than 256 characters",
   },
+  expenseSettings: {
+    title: "Expenses",
+    subtitle: "Group currency and conversion",
+    description:
+      "The currency debts are kept in, and how other currencies are handled.",
+    adminOnly: "Only group administrators can edit expense settings.",
+    currency: "Group currency",
+    convertedStayIn: "Expenses already converted stay in {currency}.",
+    convertAutomatically: "Convert automatically",
+    convertAutomaticallyHint:
+      "New expenses in other currencies are converted to {currency}. You can keep the original currency on any single expense. Existing expenses don't change.",
+    saved: "Expense settings saved",
+    updated: "Expense settings have been updated.",
+    saveFailed: "unknown error while saving",
+  },
 };

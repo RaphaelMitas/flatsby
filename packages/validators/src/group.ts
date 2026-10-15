@@ -23,6 +23,8 @@ export const groupSchema = z.object({
   name: groupNameSchema,
   createdAt: z.date(),
   profilePicture: z.string().optional().nullable(),
+  currency: currencyCodeSchema,
+  convertAutomatically: z.boolean().nullable(),
 });
 
 export const groupFormSchema = groupSchema.pick({ name: true });
@@ -31,6 +33,11 @@ export type GroupFormValues = z.infer<typeof groupFormSchema>;
 export const createGroupSchema = groupSchema.pick({ name: true });
 
 export const updateGroupSchema = groupSchema.pick({ name: true, id: true });
+
+export const updateGroupSettingsSchema = groupSchema
+  .pick({ name: true, currency: true, convertAutomatically: true })
+  .partial()
+  .extend({ id: groupSchema.shape.id });
 
 export const deleteGroupSchema = groupSchema.pick({ id: true });
 

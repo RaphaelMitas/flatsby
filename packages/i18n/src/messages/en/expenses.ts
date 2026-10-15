@@ -74,6 +74,7 @@ export const expenses = {
   sharesOfTotal: "{shares} of {count, plural, one {# share} other {# shares}}",
   totalLabel: "Total:",
   validation: {
+    convertedAmountRequired: "Enter the converted amount",
     selectPayer: "Please select who paid",
     amountPositive: "Amount must be greater than 0",
     atLeastOnePerson: "At least one person must be included",
@@ -98,5 +99,26 @@ export const expenses = {
     splitAmountsMismatch:
       "The split amounts don't match the total expense amount",
     memberOnce: "Each member can only appear once in the split",
+  },
+  conversion: {
+    convertTo: "Convert to {currency}",
+    inCurrency: "In {currency}",
+    inCurrencyLabel: "In {currency}:",
+    rate: "Rate:",
+    reset: "Reset",
+    rateUnavailable: "Couldn't load a rate, enter the {currency} amount",
+    staysIn: "Stays in {currency}. Settled separately from {target} debts.",
+    convertedWhenAdded: "Converted when added",
+    notConverted: "not converted",
+    rateSourceTitle: "Where this rate comes from",
+    rateSourceBody:
+      "European Central Bank reference rate for the expense date, via Frankfurter. Published on working days, so a weekend expense uses Friday's rate.",
+    rateSourceOwnRate:
+      "Your card or bank may charge a different rate. Type what you actually paid in {currency} and the rate follows.",
+    bannerTitle: "Debts are now in {currencies}",
+    bannerBody:
+      "Turn on automatic conversion and new expenses in other currencies count toward {currency} debts instead.",
+    keepSeparate: "Keep separate",
+    turnOn: "Turn on",
   },
 };

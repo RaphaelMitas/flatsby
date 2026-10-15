@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type {
   ParsedSplitwiseResult,
@@ -6,9 +6,15 @@ import type {
   TransformedExpense,
 } from "./splitwise-import";
 import type { CurrencyCode } from "./types";
-import { parseSplitwiseCsv, transformSplitwiseRows } from "./splitwise-import";
+import {
+  exceedsImportLimit,
+  parseSplitwiseCsv,
+  transformSplitwiseRows,
+} from "./splitwise-import";
 
 type WizardStep = "file" | "mapping" | "preview" | "confirm";
+
+const PREVIEW_ROWS = 50;
 
 interface WizardState {
   step: WizardStep;
@@ -59,6 +65,13 @@ export function useSplitwiseImport() {
     state.parsed !== null &&
     state.parsed.personNames.length > 0 &&
     state.parsed.personNames.every((name) => state.memberMapping[name] != null);
+
+  const isTooLarge = useMemo(
+    () => exceedsImportLimit(state.expenses),
+    [state.expenses],
+  );
+
+  const canConfirm = state.expenses.length > 0 && !isTooLarge;
 
   const goToMapping = useCallback(() => {
     setState((s) => ({ ...s, step: "mapping" }));
@@ -115,6 +128,10 @@ export function useSplitwiseImport() {
     handleFileLoad,
     setMemberMapping,
     allNamesMapped,
+    isTooLarge,
+    canConfirm,
+    previewExpenses: state.expenses.slice(0, PREVIEW_ROWS),
+    hiddenExpenseCount: Math.max(0, state.expenses.length - PREVIEW_ROWS),
     goToMapping,
     goToPreview,
     goToConfirm,

@@ -113,6 +113,14 @@ export default function GroupSettingsIndex() {
               iconName="users"
             />
           </Link>
+          <Link href="/(tabs)/settings/group-settings/expenses" asChild>
+            <SettingsItem
+              testID="group-settings-expenses"
+              title={t("group.expenseSettings.title")}
+              subtitle={t("group.expenseSettings.subtitle")}
+              iconName="wallet"
+            />
+          </Link>
           <Link href="/(tabs)/home/shopping-lists" asChild>
             <SettingsItem
               title={t("group.settings.selectShoppingList")}

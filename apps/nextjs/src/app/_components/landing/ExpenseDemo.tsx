@@ -46,6 +46,8 @@ function demoExpense({
     description,
     amountInCents,
     currency: "EUR",
+    convertedAmountInCents: null,
+    convertedCurrency: null,
     splitMethod: "equal",
     expenseDate: createdAt,
     category,

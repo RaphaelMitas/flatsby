@@ -11,6 +11,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
+import { undecidedDebtCurrencies } from "@flatsby/validators/expenses/conversion";
 import {
   debtsBetweenOthers,
   debtsFor,
@@ -27,6 +28,7 @@ import type { SettlementPrefill } from "./SettlementForm";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
+import { ConversionBanner } from "./ConversionBanner";
 import { DebtHero } from "./DebtHero";
 import { DirectDebtsCard } from "./DirectDebtsCard";
 import { GroupBalancesCard } from "./GroupBalancesCard";
@@ -66,6 +68,8 @@ export function DebtSummaryView() {
   const others = debtsBetweenOthers(summary, meId, kind);
   const balances = groupBalances(summary, meId);
   const settle = (debt: DebtEntry) => setSettling({ source: kind, debt });
+  const group = groupData.data;
+  const bannerCurrencies = undecidedDebtCurrencies(group, balances);
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -75,6 +79,14 @@ export function DebtSummaryView() {
       >
         {t("navigation.debts")}
       </h2>
+
+      {bannerCurrencies && (
+        <ConversionBanner
+          groupId={groupId}
+          groupCurrency={group.currency}
+          currencies={bannerCurrencies}
+        />
+      )}
 
       {hasDebts(summary) ? (
         <>

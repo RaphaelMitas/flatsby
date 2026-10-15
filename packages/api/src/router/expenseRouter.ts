@@ -1,7 +1,7 @@
 import type { ExpenseSubcategoryId } from "@flatsby/validators/expenses/categories";
 import type { CreateExpenseInput } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { z } from "zod/v4";
 
 import { and, desc, eq, inArray, lt, or } from "@flatsby/db";
@@ -12,9 +12,11 @@ import {
   getSubcategoryGroup,
   isExpenseSubcategoryId,
 } from "@flatsby/validators/expenses/categories";
+import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
 import {
   createExpenseSchema,
+  currencyCodeSchema,
   deleteExpenseSchema,
   getPairActivityInputSchema,
   pairActivitySchema,
@@ -30,7 +32,7 @@ import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/valida
 
 import type { ApiError } from "../errors";
 import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
-import { captureError } from "../lib/posthog";
+import { captureError, captureEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   DbUtils,
@@ -73,6 +75,32 @@ function ensureActiveMembers(
 }
 
 const PAIR_ACTIVITY_PAGE = 5;
+// Keeps each insert under Postgres's 65535 bind-parameter limit.
+const BULK_INSERT_BATCH = 250;
+
+async function fetchExchangeRate(from: string, to: string, day: string) {
+  const today = new Date().toISOString().slice(0, 10);
+  const path = day < today ? day : "latest";
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(
+      `https://api.frankfurter.dev/v1/${path}?base=${from}&symbols=${to}`,
+      { signal: controller.signal },
+    );
+    if (!response.ok) {
+      throw new Error(`Exchange rate request failed: ${response.status}`);
+    }
+    const { date, rates } = z
+      .object({ date: z.string(), rates: z.record(z.string(), z.number()) })
+      .parse(await response.json());
+    const rate = rates[to];
+    if (rate === undefined) throw new Error(`No ${to} rate for ${from}`);
+    return { rate, date };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 function withDerivedCategory<T extends { id: number; subcategory: string }>(
   row: T,
@@ -104,6 +132,7 @@ export const expenseRouter = createTRPCRouter({
         input.splits,
         input.amountInCents,
       );
+      const isSettlement = input.splitMethod === "settlement";
       return withErrorHandlingAsResult(
         ctx.locale,
         Effect.flatMap(
@@ -131,40 +160,69 @@ export const expenseRouter = createTRPCRouter({
                         subcategoryForNewExpense(ctx.session.user.id, input),
                       ),
                       (subcategory) =>
-                        DbUtils.transaction(async (trx) => {
-                          const expenseResult = await trx
-                            .insert(expenses)
-                            .values({
-                              groupId: input.groupId,
-                              paidByGroupMemberId: input.paidByGroupMemberId,
-                              amountInCents: input.amountInCents,
-                              currency: input.currency,
-                              description: input.description,
-                              category: getSubcategoryGroup(subcategory),
-                              subcategory,
-                              expenseDate: input.expenseDate,
-                              createdByGroupMemberId: group.thisGroupMember.id,
-                              splitMethod: input.splitMethod,
-                            })
-                            .returning();
+                        Effect.tap(
+                          DbUtils.transaction(async (trx) => {
+                            const expenseResult = await trx
+                              .insert(expenses)
+                              .values({
+                                groupId: input.groupId,
+                                paidByGroupMemberId: input.paidByGroupMemberId,
+                                amountInCents: input.amountInCents,
+                                currency: input.currency,
+                                convertedAmountInCents: isSettlement
+                                  ? null
+                                  : (input.convertedAmountInCents ?? null),
+                                convertedCurrency: isSettlement
+                                  ? null
+                                  : (input.convertedCurrency ?? null),
+                                description: input.description,
+                                category: getSubcategoryGroup(subcategory),
+                                subcategory,
+                                expenseDate: input.expenseDate,
+                                createdByGroupMemberId:
+                                  group.thisGroupMember.id,
+                                splitMethod: input.splitMethod,
+                              })
+                              .returning();
 
-                          const expense = expenseResult[0];
-                          if (!expense) {
-                            throw new Error("Failed to create expense");
-                          }
+                            const expense = expenseResult[0];
+                            if (!expense) {
+                              throw new Error("Failed to create expense");
+                            }
 
-                          await trx.insert(expenseSplits).values(
-                            splits.map((split) => ({
-                              expenseId: expense.id,
-                              groupMemberId: split.groupMemberId,
-                              amountInCents: split.amountInCents,
-                              percentage: split.percentage,
-                              shares: split.shares,
-                            })),
-                          );
+                            await trx.insert(expenseSplits).values(
+                              splits.map((split) => ({
+                                expenseId: expense.id,
+                                groupMemberId: split.groupMemberId,
+                                amountInCents: split.amountInCents,
+                                percentage: split.percentage,
+                                shares: split.shares,
+                              })),
+                            );
 
-                          return { ...expense, splits };
-                        }, "create expense with splits")(ctx.db),
+                            return { ...expense, splits };
+                          }, "create expense with splits")(ctx.db),
+                          () =>
+                            Effect.sync(() => {
+                              // Chat and app builds before conversion never send the field, so they'd all count as kept
+                              if (
+                                input.currency !== group.currency &&
+                                input.convertedCurrency !== undefined &&
+                                !isSettlement
+                              ) {
+                                captureEvent({
+                                  distinctId: ctx.session.user.id,
+                                  event: "foreign_expense_created",
+                                  headers: ctx.headers,
+                                  additionalProperties: {
+                                    converted: input.convertedCurrency != null,
+                                    currency: input.currency,
+                                    groupCurrency: group.currency,
+                                  },
+                                });
+                              }
+                            }),
+                        ),
                     ),
                 ),
             ),
@@ -236,6 +294,7 @@ export const expenseRouter = createTRPCRouter({
                           .select({
                             splitMethod: expenses.splitMethod,
                             amountInCents: expenses.amountInCents,
+                            currency: expenses.currency,
                           })
                           .from(expenses)
                           .where(eq(expenses.id, input.expenseId))
@@ -287,6 +346,30 @@ export const expenseRouter = createTRPCRouter({
                         }
                         if (input.currency !== undefined) {
                           updateData.currency = input.currency;
+                        }
+                        const currency = input.currency ?? locked.currency;
+                        if (
+                          input.convertedAmountInCents !== undefined ||
+                          input.convertedCurrency !== undefined
+                        ) {
+                          const converts =
+                            method !== "settlement" &&
+                            input.convertedCurrency != null &&
+                            input.convertedCurrency !== currency;
+                          updateData.convertedAmountInCents = converts
+                            ? input.convertedAmountInCents
+                            : null;
+                          updateData.convertedCurrency = converts
+                            ? input.convertedCurrency
+                            : null;
+                        } else if (
+                          method === "settlement" ||
+                          amountInCents !== locked.amountInCents ||
+                          currency !== locked.currency
+                        ) {
+                          // App builds before conversion never send the converted fields, and a stale converted amount would count instead
+                          updateData.convertedAmountInCents = null;
+                          updateData.convertedCurrency = null;
                         }
                         if (input.description !== undefined) {
                           updateData.description = input.description;
@@ -637,6 +720,18 @@ export const expenseRouter = createTRPCRouter({
       );
     }),
 
+  getExchangeRate: protectedProcedure
+    .input(
+      z
+        .object({
+          from: currencyCodeSchema,
+          to: currencyCodeSchema,
+          day: z.iso.date(),
+        })
+        .refine(({ from, to }) => from !== to),
+    )
+    .query(({ input }) => fetchExchangeRate(input.from, input.to, input.day)),
+
   getPairActivity: protectedProcedure
     .input(getPairActivityInputSchema)
     .output(getApiResultZod(pairActivitySchema))
@@ -658,9 +753,11 @@ export const expenseRouter = createTRPCRouter({
                   description: expenses.description,
                   expenseDate: expenses.expenseDate,
                   currency: expenses.currency,
+                  convertedAmountInCents: expenses.convertedAmountInCents,
+                  convertedCurrency: expenses.convertedCurrency,
                   paidByGroupMemberId: expenses.paidByGroupMemberId,
                   amountInCents: expenses.amountInCents,
-                  pairAmountInCents: expenseSplits.amountInCents,
+                  pairMemberId: expenseSplits.groupMemberId,
                   splitMethod: expenses.splitMethod,
                 })
                 .from(expenses)
@@ -695,11 +792,40 @@ export const expenseRouter = createTRPCRouter({
                 .limit(PAIR_ACTIVITY_PAGE + 1);
               const items = rows.slice(0, PAIR_ACTIVITY_PAGE);
               const last = items.at(-1);
+              // A converted expense's pair share depends on every split's rounding
+              const splits =
+                items.length > 0
+                  ? await ctx.db.query.expenseSplits.findMany({
+                      where: inArray(
+                        expenseSplits.expenseId,
+                        items.map((row) => row.id),
+                      ),
+                      columns: {
+                        expenseId: true,
+                        groupMemberId: true,
+                        amountInCents: true,
+                      },
+                    })
+                  : [];
               return {
-                items: items.map(({ splitMethod, ...row }) => ({
-                  ...row,
-                  isSettlement: splitMethod === "settlement",
-                })),
+                items: items.map(({ splitMethod, pairMemberId, ...row }) => {
+                  const ledger = inLedgerCurrency({
+                    ...row,
+                    expenseSplits: splits.filter(
+                      (split) => split.expenseId === row.id,
+                    ),
+                  });
+                  return {
+                    ...row,
+                    amountInCents: ledger.amountInCents,
+                    currency: ledger.currency,
+                    pairAmountInCents:
+                      ledger.expenseSplits.find(
+                        (split) => split.groupMemberId === pairMemberId,
+                      )?.amountInCents ?? 0,
+                    isSettlement: splitMethod === "settlement",
+                  };
+                }),
                 nextCursor:
                   rows.length > PAIR_ACTIVITY_PAGE && last
                     ? { date: last.expenseDate, id: last.id }
@@ -782,54 +908,47 @@ export const expenseRouter = createTRPCRouter({
                   ),
                   () =>
                     DbUtils.transaction(async (trx) => {
-                      const createdExpenses = await trx
-                        .insert(expenses)
-                        .values(
-                          input.expenses.map((expense) => ({
-                            groupId: input.groupId,
-                            paidByGroupMemberId: expense.paidByGroupMemberId,
-                            amountInCents: expense.amountInCents,
-                            currency: expense.currency,
-                            description: expense.description ?? "",
-                            category: getSubcategoryGroup(expense.subcategory),
-                            subcategory: expense.subcategory ?? "other",
-                            expenseDate: expense.expenseDate,
-                            createdByGroupMemberId: group.thisGroupMember.id,
-                            splitMethod: expense.splitMethod,
-                          })),
-                        )
-                        .returning({ id: expenses.id });
+                      for (const batch of Arr.chunksOf(
+                        input.expenses,
+                        BULK_INSERT_BATCH,
+                      )) {
+                        const created = await trx
+                          .insert(expenses)
+                          .values(
+                            batch.map((expense) => ({
+                              groupId: input.groupId,
+                              paidByGroupMemberId: expense.paidByGroupMemberId,
+                              amountInCents: expense.amountInCents,
+                              currency: expense.currency,
+                              description: expense.description ?? "",
+                              category: getSubcategoryGroup(
+                                expense.subcategory,
+                              ),
+                              subcategory: expense.subcategory ?? "other",
+                              expenseDate: expense.expenseDate,
+                              createdByGroupMemberId: group.thisGroupMember.id,
+                              splitMethod: expense.splitMethod,
+                            })),
+                          )
+                          .returning({ id: expenses.id });
 
-                      if (createdExpenses.length !== input.expenses.length) {
-                        throw new Error("Failed to create all expenses");
-                      }
-
-                      const allSplits: {
-                        expenseId: number;
-                        groupMemberId: number;
-                        amountInCents: number;
-                        percentage: number | null;
-                      }[] = [];
-
-                      for (let i = 0; i < input.expenses.length; i++) {
-                        const expense = input.expenses[i];
-                        const created = createdExpenses[i];
-                        if (!expense || !created) continue;
-                        for (const split of expense.splits) {
-                          allSplits.push({
-                            expenseId: created.id,
-                            groupMemberId: split.groupMemberId,
-                            amountInCents: split.amountInCents,
-                            percentage: split.percentage,
-                          });
+                        if (created.length !== batch.length) {
+                          throw new Error("Failed to create all expenses");
                         }
+
+                        await trx.insert(expenseSplits).values(
+                          Arr.zip(batch, created).flatMap(([expense, { id }]) =>
+                            expense.splits.map((split) => ({
+                              expenseId: id,
+                              groupMemberId: split.groupMemberId,
+                              amountInCents: split.amountInCents,
+                              percentage: split.percentage,
+                            })),
+                          ),
+                        );
                       }
 
-                      if (allSplits.length > 0) {
-                        await trx.insert(expenseSplits).values(allSplits);
-                      }
-
-                      return { importedCount: createdExpenses.length };
+                      return { importedCount: input.expenses.length };
                     }, "bulk create expenses")(ctx.db),
                 ),
             ),

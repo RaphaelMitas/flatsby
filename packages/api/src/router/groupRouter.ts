@@ -18,7 +18,7 @@ import {
   getRecentActivityInputSchema,
   groupSchema,
   removeGroupMemberInputSchema,
-  updateGroupSchema,
+  updateGroupSettingsSchema,
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
 
@@ -37,6 +37,41 @@ import {
   safeDbOperation,
   ValidationUtils,
 } from "../utils";
+
+const updateGroup = protectedProcedure
+  .input(updateGroupSettingsSchema)
+  .mutation(async ({ ctx, input: { id, ...settings } }) => {
+    return withErrorHandlingAsResult(
+      ctx.locale,
+      Effect.flatMap(
+        settings.name === undefined
+          ? Effect.succeed(undefined)
+          : ValidationUtils.notEmpty(settings.name, "groupName"),
+        () =>
+          Effect.flatMap(
+            GroupUtils.requireAdminAccess(ctx.db, id, ctx.session.user.id),
+            () =>
+              Effect.map(
+                safeDbOperation(
+                  () =>
+                    ctx.db
+                      .update(groups)
+                      .set(settings)
+                      .where(eq(groups.id, id))
+                      .returning({ id: groups.id }),
+                  "update group",
+                ),
+                (result) => {
+                  if (!result[0]) {
+                    throw new Error("Group not found");
+                  }
+                  return { groupId: result[0].id };
+                },
+              ),
+          ),
+      ),
+    );
+  });
 
 export const groupRouter = createTRPCRouter({
   getUserGroups: protectedProcedure.query(async ({ ctx }) => {
@@ -439,45 +474,9 @@ export const groupRouter = createTRPCRouter({
       );
     }),
 
-  changeGroupName: protectedProcedure
-    .input(updateGroupSchema)
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Validate input name
-          ValidationUtils.notEmpty(input.name, "groupName"),
-          (validName) =>
-            Effect.flatMap(
-              // Check if user is admin of the group
-              GroupUtils.requireAdminAccess(
-                ctx.db,
-                input.id,
-                ctx.session.user.id,
-              ),
-              () =>
-                // Update group name
-                Effect.map(
-                  safeDbOperation(
-                    () =>
-                      ctx.db
-                        .update(groups)
-                        .set({ name: validName })
-                        .where(eq(groups.id, input.id))
-                        .returning({ id: groups.id }),
-                    "update group name",
-                  ),
-                  (result) => {
-                    if (!result[0]) {
-                      throw new Error("Group not found");
-                    }
-                    return { groupId: result[0].id };
-                  },
-                ),
-            ),
-        ),
-      );
-    }),
+  updateGroup,
+  /** @deprecated app builds before group currency call this */
+  changeGroupName: updateGroup,
 
   deleteGroup: protectedProcedure
     .input(deleteGroupSchema)
@@ -566,6 +565,8 @@ export const groupRouter = createTRPCRouter({
                     id: true,
                     amountInCents: true,
                     currency: true,
+                    convertedAmountInCents: true,
+                    convertedCurrency: true,
                     description: true,
                     createdAt: true,
                   },
@@ -642,8 +643,9 @@ export const groupRouter = createTRPCRouter({
                   user: expense.createdByGroupMember.user,
                   data: {
                     expenseId: expense.id,
-                    amountInCents: expense.amountInCents,
-                    currency: expense.currency,
+                    amountInCents:
+                      expense.convertedAmountInCents ?? expense.amountInCents,
+                    currency: expense.convertedCurrency ?? expense.currency,
                     description: expense.description,
                   },
                 }));

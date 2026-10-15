@@ -92,4 +92,20 @@ export const group = {
     nameRequired: "Gruppenname ist erforderlich",
     nameTooLong: "Der Gruppenname darf höchstens 256 Zeichen lang sein",
   },
+  expenseSettings: {
+    title: "Ausgaben",
+    subtitle: "Gruppenwährung und Umrechnung",
+    description:
+      "In welcher Währung Schulden geführt werden und wie andere Währungen behandelt werden.",
+    adminOnly:
+      "Nur Admins der Gruppe können die Ausgabeneinstellungen bearbeiten.",
+    currency: "Gruppenwährung",
+    convertedStayIn: "Bereits umgerechnete Ausgaben bleiben in {currency}.",
+    convertAutomatically: "Automatisch umrechnen",
+    convertAutomaticallyHint:
+      "Neue Ausgaben in anderen Währungen werden in {currency} umgerechnet. Bei einzelnen Ausgaben kannst du die ursprüngliche Währung behalten. Bestehende Ausgaben ändern sich nicht.",
+    saved: "Ausgabeneinstellungen gespeichert",
+    updated: "Die Ausgabeneinstellungen wurden aktualisiert.",
+    saveFailed: "Unbekannter Fehler beim Speichern",
+  },
 } satisfies Messages["group"];

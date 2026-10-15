@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
+import { undecidedDebtCurrencies } from "@flatsby/validators/expenses/conversion";
 import {
   debtsBetweenOthers,
   debtsFor,
@@ -23,6 +24,7 @@ import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { cn, handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { ConvertCurrencyBanner } from "./ConvertCurrencyBanner";
 import { DirectDebts } from "./DirectDebts";
 import { GroupBalances } from "./GroupBalances";
 import { OtherDebts } from "./OtherDebts";
@@ -65,6 +67,8 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const person = personLookup(groupData.data.groupMembers, meId, t);
   const others = debtsBetweenOthers(summary, meId, kind);
   const balances = groupBalances(summary, meId);
+  const group = groupData.data;
+  const bannerCurrencies = undecidedDebtCurrencies(group, balances);
 
   const openSettle = (debt: DebtEntry) =>
     router.push({
@@ -85,6 +89,13 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
       onRefresh={handleRefresh}
     >
       <View testID="debt-summary-title" className="w-full gap-2 p-4">
+        {bannerCurrencies && (
+          <ConvertCurrencyBanner
+            groupId={groupId}
+            groupCurrency={group.currency}
+            currencies={bannerCurrencies}
+          />
+        )}
         {hasDebts(summary) ? (
           <>
             <DebtHero hero={debtHero(summary, meId, t, locale)} />

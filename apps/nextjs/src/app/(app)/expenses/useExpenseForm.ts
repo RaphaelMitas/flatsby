@@ -5,10 +5,11 @@ import type {
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
+import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 
 import { toast } from "@flatsby/ui/toast";
@@ -21,6 +22,7 @@ import {
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
+import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
 
 import { useTRPC } from "~/trpc/react";
 import { useExpenseInvalidation } from "./useExpenseInvalidation";
@@ -32,6 +34,19 @@ interface UseExpenseFormProps {
   onSuccess?: (expenseId: number) => void;
 }
 
+function useExchangeRate(
+  input: { from: CurrencyCode; to: CurrencyCode; day: string },
+  enabled: boolean,
+) {
+  const trpc = useTRPC();
+  return useQuery(
+    trpc.expense.getExchangeRate.queryOptions(input, {
+      enabled,
+      staleTime: Infinity,
+    }),
+  );
+}
+
 export function useExpenseForm({
   group,
   expense,
@@ -40,6 +55,7 @@ export function useExpenseForm({
 }: UseExpenseFormProps) {
   const trpc = useTRPC();
   const t = useTranslations();
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -65,7 +81,9 @@ export function useExpenseForm({
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,
       amountInCents: expense?.amountInCents ?? 0,
       currency:
-        expense && isCurrencyCode(expense.currency) ? expense.currency : "EUR",
+        expense && isCurrencyCode(expense.currency)
+          ? expense.currency
+          : group.currency,
       description: expense?.description ?? "",
       subcategory: expense?.subcategory,
       expenseDate: expense?.expenseDate
@@ -94,6 +112,16 @@ export function useExpenseForm({
   });
   const description = useWatch({ control: form.control, name: "description" });
   const splits = useWatch({ control: form.control, name: "splits" });
+  const expenseDate = useWatch({ control: form.control, name: "expenseDate" });
+  const conversion = useExpenseConversion({
+    group,
+    expense,
+    currency,
+    amountInCents,
+    expenseDate,
+    useExchangeRate,
+    locale,
+  });
 
   const createExpenseMutation = useMutation(
     trpc.expense.createExpense.mutationOptions({
@@ -116,6 +144,8 @@ export function useExpenseForm({
             paidByGroupMemberId: input.paidByGroupMemberId,
             amountInCents: input.amountInCents,
             currency: input.currency,
+            convertedAmountInCents: input.convertedAmountInCents ?? null,
+            convertedCurrency: input.convertedCurrency ?? null,
             description: input.description,
             category: getSubcategoryGroup(input.subcategory),
             subcategory: input.subcategory ?? "other",
@@ -352,6 +382,7 @@ export function useExpenseForm({
         expenseDate: values.expenseDate,
         splits,
         splitMethod: values.splitMethod,
+        ...conversion.fields,
       });
     } else {
       createExpenseMutation.mutate({
@@ -364,6 +395,7 @@ export function useExpenseForm({
         expenseDate: values.expenseDate,
         splits,
         splitMethod: values.splitMethod,
+        ...conversion.fields,
       });
     }
   };
@@ -447,6 +479,7 @@ export function useExpenseForm({
     handleBack,
     group,
     allMembers,
+    conversion,
   };
 }
 
