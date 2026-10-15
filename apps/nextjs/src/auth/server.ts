@@ -23,6 +23,10 @@ export const auth = initAuth({
   appleTeamId: env.APPLE_TEAM_ID,
   appleKeyId: env.APPLE_KEY_ID,
   appleClientSecret: await makeAppleClientSecret(),
+  // Previews are opened on the branch alias as well as on VERCEL_URL, the base URL.
+  trustedOrigins: env.VERCEL_BRANCH_URL
+    ? [`https://${env.VERCEL_BRANCH_URL}`]
+    : [],
 });
 
 export const getSession = cache(async () =>

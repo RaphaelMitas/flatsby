@@ -21,6 +21,7 @@ export function initAuth(options: {
   appleTeamId: string;
   appleKeyId: string;
   appleClientSecret: string;
+  trustedOrigins: string[];
 }) {
   const config = {
     database: drizzleAdapter(db, { provider: "pg" }),
@@ -51,7 +52,7 @@ export function initAuth(options: {
         }),
       },
     },
-    trustedOrigins: ["flatsby://", "expo://"],
+    trustedOrigins: ["flatsby://", "expo://", ...options.trustedOrigins],
     user: { modelName: "users" },
     session: {
       modelName: "sessions",
