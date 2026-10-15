@@ -1,12 +1,13 @@
 import { Effect } from "effect";
 
-import { and, eq } from "@flatsby/db";
+import { and, desc, eq } from "@flatsby/db";
 import { groupMembers, groups } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 
 import type { ApiError, NotFoundError } from "./errors";
 import type {
   Database,
+  DbTransaction,
   GroupMember,
   GroupWithAccess,
   Role,
@@ -14,7 +15,7 @@ import type {
   TransactionOperation,
   User,
 } from "./types";
-import { Errors, fail, safeDbOperation, withErrorHandling } from "./errors";
+import { fail, safeDbOperation, withErrorHandling } from "./errors";
 
 /**
  * Database operation utilities
@@ -33,7 +34,7 @@ export const DbUtils = {
       (result) =>
         result
           ? Effect.succeed(result)
-          : Effect.fail(Errors.notFound(resource, undefined, userMessage)),
+          : fail.notFound(resource, undefined, userMessage),
     );
   },
 
@@ -363,52 +364,62 @@ export const GroupUtils = {
     );
   },
 
-  /** Does not check the caller's right to add, callers must. */
+  /** Serializes membership changes in a group; call it first inside the transaction. */
+  lockGroup: (tx: DbTransaction, groupId: number) =>
+    tx
+      .select({ id: groups.id })
+      .from(groups)
+      .where(eq(groups.id, groupId))
+      .for("update"),
+
+  /** Callers check the right to add; `allowed` runs under the group lock, so it sees concurrent removals. */
   addMember: (
     db: Database,
     groupId: number,
     userId: string,
+    allowed: (tx: DbTransaction) => Promise<boolean> = async () => true,
   ): Effect.Effect<number, ApiError> =>
     Effect.flatMap(
       safeDbOperation(
         () =>
-          db.transaction(async (tx) => {
-            // group_members has no unique (group, user), so concurrent joins would both insert
-            await tx
-              .select({ id: groups.id })
-              .from(groups)
-              .where(eq(groups.id, groupId))
-              .for("update");
-            const existing = await tx.query.groupMembers.findFirst({
-              where: and(
-                eq(groupMembers.groupId, groupId),
-                eq(groupMembers.userId, userId),
-              ),
-            });
-            if (existing?.isActive) return null;
-            const [member] = existing
-              ? await tx
-                  .update(groupMembers)
-                  .set({ isActive: true, role: "member" })
-                  .where(eq(groupMembers.id, existing.id))
-                  .returning({ id: groupMembers.id })
-              : await tx
-                  .insert(groupMembers)
-                  .values({ groupId, userId, role: "member" })
-                  .returning({ id: groupMembers.id });
-            if (!member) throw new Error("Failed to add group member");
-            return member.id;
-          }),
+          db.transaction(
+            async (tx): Promise<number | "forbidden" | "member"> => {
+              await GroupUtils.lockGroup(tx, groupId);
+              if (!(await allowed(tx))) return "forbidden";
+              const existing = await tx.query.groupMembers.findFirst({
+                where: and(
+                  eq(groupMembers.groupId, groupId),
+                  eq(groupMembers.userId, userId),
+                ),
+                orderBy: desc(groupMembers.isActive),
+              });
+              if (existing?.isActive) return "member";
+              const [member] = existing
+                ? await tx
+                    .update(groupMembers)
+                    .set({ isActive: true, role: "member" })
+                    .where(eq(groupMembers.id, existing.id))
+                    .returning({ id: groupMembers.id })
+                : await tx
+                    .insert(groupMembers)
+                    .values({ groupId, userId, role: "member" })
+                    .returning({ id: groupMembers.id });
+              if (!member) throw new Error("Failed to add group member");
+              return member.id;
+            },
+          ),
         "add group member",
       ),
-      (memberId) =>
-        memberId === null
-          ? fail.conflict(
-              "membership",
-              "already exists",
-              "This user is already a member of the group",
-            )
-          : Effect.succeed(memberId),
+      (result): Effect.Effect<number, ApiError> =>
+        result === "forbidden"
+          ? fail.forbidden("join", "group")
+          : result === "member"
+            ? fail.conflict(
+                "membership",
+                "already exists",
+                "This user is already a member of the group",
+              )
+            : Effect.succeed(result),
     ),
 };
 

@@ -2,7 +2,6 @@ appId: ${APP_ID}
 tags:
   - group
 ---
-# The second-user join is web only: one device can't hold two sessions.
 - runFlow: ../../subflows/e2e-login.yaml
 
 # Select the fixture group to enter it
@@ -47,3 +46,22 @@ tags:
       id: "join-invite-group-name"
     timeout: 15000
 - assertVisible: "Open group"
+
+# e2e-login mints a fresh user, who joins through the copied code
+- runFlow: ../../subflows/e2e-login.yaml
+- openLink: flatsby://join/${maestro.copiedText}
+- runFlow:
+    when:
+      visible: "Open in .*Flatsby.*"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible:
+      id: "join-invite-button"
+    timeout: 15000
+- tapOn:
+    id: "join-invite-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 20000

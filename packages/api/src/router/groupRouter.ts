@@ -264,6 +264,11 @@ export const groupRouter = createTRPCRouter({
                         Effect.tryPromise({
                           try: () =>
                             ctx.db.transaction(async (trx) => {
+                              await GroupUtils.lockGroup(
+                                trx,
+                                targetGroupMember.groupId,
+                              );
+
                               // Clean up shopping list item references
                               await trx
                                 .update(shoppingListItems)
@@ -293,20 +298,15 @@ export const groupRouter = createTRPCRouter({
                                   eq(groupMembers.id, targetGroupMember.id),
                                 );
 
-                              // A removed member could otherwise rejoin through the live invite
-                              if (
-                                targetGroupMember.id !==
-                                currentUserGroupMember.id
-                              ) {
-                                await trx
-                                  .delete(groupInvites)
-                                  .where(
-                                    eq(
-                                      groupInvites.groupId,
-                                      targetGroupMember.groupId,
-                                    ),
-                                  );
-                              }
+                              // Otherwise the removed member could rejoin with the live link, and it would name a departed inviter
+                              await trx
+                                .delete(groupInvites)
+                                .where(
+                                  eq(
+                                    groupInvites.groupId,
+                                    targetGroupMember.groupId,
+                                  ),
+                                );
 
                               return { success: true };
                             }),

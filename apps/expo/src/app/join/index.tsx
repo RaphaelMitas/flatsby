@@ -3,6 +3,7 @@ import { Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import {
+  INVITE_CODE_GROUP,
   INVITE_CODE_LENGTH,
   invitePath,
   normalizeInviteCode,
@@ -24,7 +25,7 @@ export default function JoinGroupScreen() {
       <View className="relative flex-row items-center justify-center gap-1">
         {slots.map((char, i) => (
           <View key={i} className="flex-row items-center gap-1">
-            {i === INVITE_CODE_LENGTH / 2 && (
+            {i === INVITE_CODE_GROUP && (
               <Text className="text-muted-foreground font-bold">–</Text>
             )}
             <View

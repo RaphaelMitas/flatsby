@@ -39,6 +39,8 @@ export const updateGroupSettingsSchema = groupSchema
 
 export const deleteGroupSchema = groupSchema.pick({ id: true });
 
+export const groupIdInputSchema = z.object({ groupId: groupSchema.shape.id });
+
 // Group Member validators
 export const groupMemberRoleSchema = z.enum(["admin", "member"]);
 export type GroupMemberRole = z.infer<typeof groupMemberRoleSchema>;

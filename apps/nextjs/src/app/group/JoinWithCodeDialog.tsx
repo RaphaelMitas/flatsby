@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@flatsby/ui/button";
@@ -19,12 +19,11 @@ import {
   InputOTPSlot,
 } from "@flatsby/ui/input-otp";
 import {
+  INVITE_CODE_GROUP,
   INVITE_CODE_LENGTH,
   invitePath,
   normalizeInviteCode,
 } from "@flatsby/validators/invite";
-
-const HALF = INVITE_CODE_LENGTH / 2;
 
 export function JoinWithCodeDialog() {
   const router = useRouter();
@@ -56,18 +55,23 @@ export function JoinWithCodeDialog() {
             value={code}
             onChange={(value) => setCode(normalizeInviteCode(value))}
             pasteTransformer={normalizeInviteCode}
+            inputMode="text"
+            autoCapitalize="characters"
           >
-            <InputOTPGroup>
-              {Array.from({ length: HALF }, (_, i) => (
-                <InputOTPSlot key={i} index={i} className="font-mono" />
-              ))}
-            </InputOTPGroup>
-            <InputOTPSeparator />
-            <InputOTPGroup>
-              {Array.from({ length: HALF }, (_, i) => (
-                <InputOTPSlot key={i} index={HALF + i} className="font-mono" />
-              ))}
-            </InputOTPGroup>
+            {[0, INVITE_CODE_GROUP].map((offset) => (
+              <Fragment key={offset}>
+                {offset > 0 && <InputOTPSeparator />}
+                <InputOTPGroup>
+                  {Array.from({ length: INVITE_CODE_GROUP }, (_, i) => (
+                    <InputOTPSlot
+                      key={i}
+                      index={offset + i}
+                      className="font-mono"
+                    />
+                  ))}
+                </InputOTPGroup>
+              </Fragment>
+            ))}
           </InputOTP>
           <Button
             type="submit"

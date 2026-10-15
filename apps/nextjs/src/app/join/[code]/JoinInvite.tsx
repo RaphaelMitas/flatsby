@@ -54,7 +54,7 @@ export function JoinInvite({
 
   const openGroup = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions({
-      onSuccess: () => {
+      onSettled: () => {
         void queryClient.invalidateQueries(
           trpc.group.getUserGroups.queryFilter(),
         );

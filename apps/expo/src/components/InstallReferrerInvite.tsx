@@ -12,7 +12,7 @@ import {
 
 const HANDLED_KEY = "install_referrer_handled";
 
-/** Opens the invite the web join page passed through the Play Store, once, on the first launch after install. */
+// The web join page passes the invite code through the Play Store install referrer
 export function InstallReferrerInvite() {
   const router = useRouter();
 

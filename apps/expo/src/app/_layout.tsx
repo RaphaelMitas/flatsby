@@ -161,6 +161,14 @@ const StackLayout = () => {
           name="auth/login/index"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="join/index"
+          options={{
+            title: "Join a Group",
+            presentation: "modal",
+            headerShown: true,
+          }}
+        />
         <Stack.Screen name="join/[code]" options={{ presentation: "modal" }} />
       </Stack>
     </View>

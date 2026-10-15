@@ -168,6 +168,11 @@ export default function MembersScreen() {
             id: Number(selectedGroupId) || 0,
           }),
         );
+        void queryClient.invalidateQueries(
+          trpc.invite.get.queryFilter({
+            groupId: Number(selectedGroupId) || 0,
+          }),
+        );
       },
     }),
   );

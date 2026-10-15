@@ -72,7 +72,7 @@ export function GroupsDashboard() {
                 title="Join with code"
                 variant="outline"
                 className="mt-4"
-                onPress={() => router.push("/(tabs)/home/join-group")}
+                onPress={() => router.push("/join")}
               />
             }
           />

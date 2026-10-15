@@ -34,7 +34,7 @@ export default function JoinScreen() {
       trpc.user.getCurrentUserWithGroups.queryFilter(),
     );
     setSelectedGroup(groupId, groupName);
-    router.replace("/(tabs)/home/shopping-lists");
+    router.dismissTo("/(tabs)/home/shopping-lists");
   };
 
   const join = useMutation(

@@ -206,8 +206,11 @@ export const Errors = {
  * Utility functions for working with Effects and errors
  */
 export const fail = {
-  notFound: (resource: string, userMessage?: string) =>
-    Effect.fail(Errors.notFound(resource, userMessage)),
+  notFound: (
+    resource: string,
+    identifier?: string | number,
+    userMessage?: string,
+  ) => Effect.fail(Errors.notFound(resource, identifier, userMessage)),
 
   forbidden: (action: string, resource?: string, userMessage?: string) =>
     Effect.fail(Errors.forbidden(action, resource, userMessage)),

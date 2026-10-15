@@ -29,14 +29,6 @@ export default function HomeLayout() {
         }}
       />
       <Stack.Screen
-        name="join-group"
-        options={{
-          title: "Join a Group",
-          presentation: "modal",
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
         name="shopping-lists"
         options={{
           headerShown: false,

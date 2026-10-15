@@ -8,9 +8,12 @@ import Login from "./Login";
 const LoginPage = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string | string[] }>;
 }) => {
-  const callbackURL = safeRedirectPath((await searchParams).next);
+  const { next } = await searchParams;
+  const callbackURL = safeRedirectPath(
+    typeof next === "string" ? next : undefined,
+  );
   const session = await getSession();
   if (session?.user) {
     redirect(callbackURL);

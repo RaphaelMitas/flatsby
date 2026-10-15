@@ -121,6 +121,9 @@ const MemberCard = ({
             id: groupMember.groupId,
           }),
         );
+        void queryClient.invalidateQueries(
+          trpc.invite.get.queryFilter({ groupId: groupMember.groupId }),
+        );
         if (groupMember.id === currentUserGroupMember.id) {
           void queryClient.invalidateQueries(
             trpc.group.getUserGroups.queryOptions(),

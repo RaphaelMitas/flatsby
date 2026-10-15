@@ -1,10 +1,10 @@
 import { Effect } from "effect";
 
 import { and, eq, gt, lte } from "@flatsby/db";
-import { groupInvites } from "@flatsby/db/schema";
+import { groupInvites, groupMembers } from "@flatsby/db/schema";
+import { groupIdInputSchema } from "@flatsby/validators/group";
 import {
   DAY_MS,
-  groupInviteInputSchema,
   INVITE_CODE_ALPHABET,
   INVITE_CODE_LENGTH,
   INVITE_TTL_DAYS,
@@ -12,7 +12,7 @@ import {
 } from "@flatsby/validators/invite";
 
 import type { Database } from "../types";
-import { safeDbOperation, withErrorHandlingAsResult } from "../errors";
+import { fail, safeDbOperation, withErrorHandlingAsResult } from "../errors";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { DbUtils, GroupUtils } from "../utils";
 
@@ -22,59 +22,70 @@ const generateCode = () =>
     (byte) => INVITE_CODE_ALPHABET[byte % INVITE_CODE_ALPHABET.length],
   ).join("");
 
+const liveInviteWhere = (code: string) =>
+  and(eq(groupInvites.code, code), gt(groupInvites.expiresAt, new Date()));
+
 const issueInvite = (
   db: Database,
   groupId: number,
-  createdByMemberId: number,
+  userId: string,
   { onlyIfExpired }: { onlyIfExpired: boolean },
-) => {
-  const invite = {
-    code: generateCode(),
-    createdByMemberId,
-    expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * DAY_MS),
-  };
-  return Effect.flatMap(
+) =>
+  Effect.flatMap(
     safeDbOperation(
       () =>
-        db
-          .insert(groupInvites)
-          .values({ groupId, ...invite })
-          .onConflictDoUpdate({
-            target: groupInvites.groupId,
-            set: invite,
-            setWhere: onlyIfExpired
-              ? lte(groupInvites.expiresAt, new Date())
-              : undefined,
-          })
-          .returning({
-            code: groupInvites.code,
-            expiresAt: groupInvites.expiresAt,
-          }),
+        db.transaction(async (tx) => {
+          await GroupUtils.lockGroup(tx, groupId);
+          const admin = await tx.query.groupMembers.findFirst({
+            where: and(
+              eq(groupMembers.groupId, groupId),
+              eq(groupMembers.userId, userId),
+              eq(groupMembers.role, "admin"),
+              eq(groupMembers.isActive, true),
+            ),
+            columns: { id: true },
+          });
+          if (!admin) return null;
+          const invite = {
+            code: generateCode(),
+            createdByMemberId: admin.id,
+            expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * DAY_MS),
+          };
+          const [issued] = await tx
+            .insert(groupInvites)
+            .values({ groupId, ...invite })
+            .onConflictDoUpdate({
+              target: groupInvites.groupId,
+              set: invite,
+              setWhere: onlyIfExpired
+                ? lte(groupInvites.expiresAt, new Date())
+                : undefined,
+            })
+            .returning({
+              code: groupInvites.code,
+              expiresAt: groupInvites.expiresAt,
+            });
+          return (
+            issued ??
+            (await tx.query.groupInvites.findFirst({
+              where: eq(groupInvites.groupId, groupId),
+              columns: { code: true, expiresAt: true },
+            })) ??
+            null
+          );
+        }),
       "issue group invite",
     ),
-    ([issued]) =>
-      issued
-        ? Effect.succeed(issued)
-        : DbUtils.findOneOrFail(
-            () =>
-              db.query.groupInvites.findFirst({
-                where: eq(groupInvites.groupId, groupId),
-                columns: { code: true, expiresAt: true },
-              }),
-            "group invite",
-          ),
+    (invite) =>
+      invite ? Effect.succeed(invite) : fail.notFound("admin membership"),
   );
-};
 
 // Expired, reset and made-up codes all fail the same way, so a code reveals nothing.
 const findLiveInvite = (db: Database, code: string) =>
   DbUtils.findOneOrFail(
     () =>
       db.query.groupInvites.findFirst({
-        where: and(
-          eq(groupInvites.code, code),
-          gt(groupInvites.expiresAt, new Date()),
-        ),
+        where: liveInviteWhere(code),
         with: {
           group: {
             columns: { id: true, name: true, profilePicture: true },
@@ -97,39 +108,21 @@ const findLiveInvite = (db: Database, code: string) =>
 
 export const inviteRouter = createTRPCRouter({
   // A query that writes: an admin opening the sheet after expiry should see a fresh code, not a dead one.
-  get: protectedProcedure
-    .input(groupInviteInputSchema)
-    .query(({ ctx, input }) =>
-      withErrorHandlingAsResult(
-        Effect.flatMap(
-          GroupUtils.requireAdminAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          (admin) =>
-            issueInvite(ctx.db, input.groupId, admin.id, {
-              onlyIfExpired: true,
-            }),
-        ),
-      ),
+  get: protectedProcedure.input(groupIdInputSchema).query(({ ctx, input }) =>
+    withErrorHandlingAsResult(
+      issueInvite(ctx.db, input.groupId, ctx.session.user.id, {
+        onlyIfExpired: true,
+      }),
     ),
+  ),
 
   reset: protectedProcedure
-    .input(groupInviteInputSchema)
+    .input(groupIdInputSchema)
     .mutation(({ ctx, input }) =>
       withErrorHandlingAsResult(
-        Effect.flatMap(
-          GroupUtils.requireAdminAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          (admin) =>
-            issueInvite(ctx.db, input.groupId, admin.id, {
-              onlyIfExpired: false,
-            }),
-        ),
+        issueInvite(ctx.db, input.groupId, ctx.session.user.id, {
+          onlyIfExpired: false,
+        }),
       ),
     ),
 
@@ -161,7 +154,16 @@ export const inviteRouter = createTRPCRouter({
       withErrorHandlingAsResult(
         Effect.flatMap(findLiveInvite(ctx.db, input.code), ({ group }) =>
           Effect.map(
-            GroupUtils.addMember(ctx.db, group.id, ctx.session.user.id),
+            GroupUtils.addMember(
+              ctx.db,
+              group.id,
+              ctx.session.user.id,
+              async (tx) =>
+                !!(await tx.query.groupInvites.findFirst({
+                  where: liveInviteWhere(input.code),
+                  columns: { groupId: true },
+                })),
+            ),
             () => ({ groupId: group.id, groupName: group.name }),
           ),
         ),
