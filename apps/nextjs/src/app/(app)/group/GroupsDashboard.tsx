@@ -50,7 +50,7 @@ export function GroupsDashboard() {
           >
             {t("group.dashboard.title")}
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               data-testid="group-join-with-code-button"
