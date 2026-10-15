@@ -1,53 +1,37 @@
-import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
-import type { SharedValue } from "react-native-reanimated";
-import { useCallback, useRef, useState } from "react";
-import { Linking, Platform, View } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import * as Application from "expo-application";
+import { useState } from "react";
+import { Linking, Platform } from "react-native";
 import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
-import { localeNames, localePath } from "@flatsby/i18n/locale";
+import { localeNames, localePath, locales } from "@flatsby/i18n/locale";
 
 import type { Theme } from "~/lib/ui/theme";
+import { SettingsChoiceItem } from "~/components/settings/SettingsChoiceItem";
 import { SettingsHeader } from "~/components/settings/SettingsHeader";
 import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { UsageDisplay } from "~/components/settings/UsageDisplay";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { Button } from "~/lib/ui/button";
 import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useTheme } from "~/lib/ui/theme";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
+import { useLocalePreference } from "~/utils/intl-provider";
 import { useShoppingStore } from "~/utils/shopping-store";
-
-function openLanguageSettings() {
-  if (Platform.OS === "android" && Application.applicationId) {
-    void Linking.sendIntent("android.settings.APP_LOCALE_SETTINGS", [
-      {
-        key: "android.provider.extra.APP_PACKAGE",
-        value: Application.applicationId,
-      },
-    ]).catch(() => Linking.openSettings());
-    return;
-  }
-  void Linking.openSettings();
-}
 
 export default function SettingsIndex() {
   const t = useTranslations();
   const locale = useLocale();
   const { storedTheme, setTheme } = useTheme();
+  const { preference, setPreference } = useLocalePreference();
   const posthog = usePostHog();
   const [isAnalyticsEnabled, setIsAnalyticsEnabled] = useState(
     () => !posthog.optedOut,
   );
-  const swipeableRef = useRef<SwipeableMethods>(null);
   const { clearSelectedGroup } = useShoppingStore();
 
   const { data: user } = useSuspenseQuery(
@@ -79,46 +63,6 @@ export default function SettingsIndex() {
     }
   };
 
-  const renderRightActions = useCallback(
-    (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
-      return (
-        <View className="h-full w-full flex-row gap-2 p-2">
-          <Button
-            title={t("settings.theme.system")}
-            icon="sun-moon"
-            className="flex-1"
-            variant={storedTheme === "system" ? "primary" : "outline"}
-            onPress={() => {
-              setTheme("system");
-              swipeableRef.current?.close();
-            }}
-          />
-          <Button
-            title={t("settings.theme.light")}
-            icon="sun"
-            className="flex-1"
-            variant={storedTheme === "light" ? "primary" : "outline"}
-            onPress={() => {
-              setTheme("light");
-              swipeableRef.current?.close();
-            }}
-          />
-          <Button
-            title={t("settings.theme.dark")}
-            icon="moon"
-            className="flex-1"
-            variant={storedTheme === "dark" ? "primary" : "outline"}
-            onPress={() => {
-              setTheme("dark");
-              swipeableRef.current?.close();
-            }}
-          />
-        </View>
-      );
-    },
-    [storedTheme, setTheme, t],
-  );
-
   return (
     <SafeAreaView>
       <Stack.Screen options={{ title: t("navigation.settings") }} />
@@ -138,27 +82,36 @@ export default function SettingsIndex() {
           )}
         </SettingsSection>
         <SettingsSection title={t("settings.sections.appearance")}>
-          <ReanimatedSwipeable
-            ref={swipeableRef}
-            friction={2}
-            leftThreshold={40}
-            rightThreshold={40}
-            renderRightActions={renderRightActions}
-          >
-            <SettingsItem
-              title={t("settings.items.theme")}
-              subtitle={t("settings.items.themeSubtitle", {
-                theme: getThemeDisplayName(storedTheme),
-              })}
-              iconName="palette"
-              onPress={() => swipeableRef.current?.openRight()}
-            />
-          </ReanimatedSwipeable>
-          <SettingsItem
+          <SettingsChoiceItem
+            title={t("settings.items.theme")}
+            subtitle={t("settings.items.themeSubtitle", {
+              theme: getThemeDisplayName(storedTheme),
+            })}
+            iconName="palette"
+            selected={storedTheme}
+            onSelect={setTheme}
+            choices={[
+              {
+                value: "system",
+                label: t("settings.theme.system"),
+                icon: "sun-moon",
+              },
+              { value: "light", label: t("settings.theme.light"), icon: "sun" },
+              { value: "dark", label: t("settings.theme.dark"), icon: "moon" },
+            ]}
+          />
+          <SettingsChoiceItem
             title={t("settings.language.title")}
             subtitle={localeNames[locale]}
             iconName="languages"
-            onPress={openLanguageSettings}
+            selected={preference ?? "system"}
+            onSelect={(value) =>
+              setPreference(value === "system" ? null : value)
+            }
+            choices={[
+              { value: "system", label: t("settings.theme.system") },
+              ...locales.map((value) => ({ value, label: localeNames[value] })),
+            ]}
           />
         </SettingsSection>
         <SettingsSection title={t("settings.sections.groups")}>
