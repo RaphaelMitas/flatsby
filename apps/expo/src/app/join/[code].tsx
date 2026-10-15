@@ -2,17 +2,16 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { INVITE_PATH, inviteCodeSchema } from "@flatsby/validators/invite";
+import { inviteCodeSchema, invitePath } from "@flatsby/validators/invite";
 
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
+import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
+import { rememberPostLoginPath } from "~/utils/auth/post-login-path";
 import { useShoppingStore } from "~/utils/shopping-store";
-
-const initials = (name: string) => name.substring(0, 2).toUpperCase();
 
 export default function JoinScreen() {
   const router = useRouter();
@@ -31,6 +30,9 @@ export default function JoinScreen() {
 
   const openGroup = (groupId: number, groupName: string) => {
     void queryClient.invalidateQueries(trpc.group.getUserGroups.queryFilter());
+    void queryClient.invalidateQueries(
+      trpc.user.getCurrentUserWithGroups.queryFilter(),
+    );
     setSelectedGroup(groupId, groupName);
     router.replace("/(tabs)/home/shopping-lists");
   };
@@ -47,6 +49,10 @@ export default function JoinScreen() {
     router.canGoBack() ? router.back() : router.replace("/");
 
   const invite = preview.data?.success ? preview.data.data : null;
+  const expired =
+    !parsed.success ||
+    (preview.data?.success === false &&
+      preview.data.error.type === "NotFoundError");
 
   return (
     <SafeAreaView>
@@ -57,6 +63,18 @@ export default function JoinScreen() {
 
         {parsed.success && preview.isPending ? (
           <ActivityIndicator className="flex-1" />
+        ) : !invite && !expired ? (
+          <View className="flex-1 justify-center gap-4">
+            <Text className="text-foreground text-center text-lg font-semibold">
+              Couldn't load this invite
+            </Text>
+            <Button
+              title="Try again"
+              variant="outline"
+              disabled={preview.isFetching}
+              onPress={() => void preview.refetch()}
+            />
+          </View>
         ) : !invite ? (
           <View
             testID="join-invite-expired"
@@ -72,10 +90,13 @@ export default function JoinScreen() {
         ) : (
           <>
             <View className="flex-1 items-center justify-center gap-3">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={invite.profilePicture ?? undefined} />
-                <AvatarFallback>{initials(invite.groupName)}</AvatarFallback>
-              </Avatar>
+              <MemberAvatar
+                person={{
+                  name: invite.groupName,
+                  image: invite.profilePicture,
+                }}
+                className="h-20 w-20"
+              />
               <Text className="text-muted-foreground text-sm">
                 {invite.invitedBy} invited you to
               </Text>
@@ -88,13 +109,11 @@ export default function JoinScreen() {
               <View className="flex-row items-center gap-2">
                 <View className="flex-row">
                   {invite.members.map((member, i) => (
-                    <Avatar
+                    <MemberAvatar
                       key={member.name}
+                      person={member}
                       className={`border-background h-8 w-8 border-2 ${i > 0 ? "-ml-2" : ""}`}
-                    >
-                      <AvatarImage src={member.image ?? undefined} />
-                      <AvatarFallback>{initials(member.name)}</AvatarFallback>
-                    </Avatar>
+                    />
                   ))}
                 </View>
                 <Text className="text-muted-foreground text-sm">
@@ -117,12 +136,10 @@ export default function JoinScreen() {
               {!session ? (
                 <Button
                   title={`Sign in to join ${invite.groupName}`}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/auth/login",
-                      params: { next: `${INVITE_PATH}/${code}` },
-                    })
-                  }
+                  onPress={() => {
+                    rememberPostLoginPath(invitePath(code));
+                    router.push("/auth/login");
+                  }}
                 />
               ) : invite.isMember ? (
                 <Button
@@ -133,7 +150,7 @@ export default function JoinScreen() {
                 <Button
                   testID="join-invite-button"
                   title={`Join ${invite.groupName}`}
-                  disabled={join.isPending}
+                  disabled={join.isPending || preview.isFetching}
                   icon={join.isPending ? "loader" : undefined}
                   onPress={() => join.mutate({ code })}
                 />

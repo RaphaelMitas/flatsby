@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { INVITE_PATH, inviteCodeSchema } from "@flatsby/validators/invite";
+import { inviteCodeSchema, invitePath } from "@flatsby/validators/invite";
 
 import { getSession } from "~/auth/server";
 import { caller } from "~/trpc/server";
@@ -26,13 +26,17 @@ export default async function JoinPage({
     getPlatform(),
   ]);
 
+  if (preview?.success === false && preview.error.type !== "NotFoundError") {
+    throw new Error(preview.error.message);
+  }
+
   return (
     <main className="bg-muted flex min-h-dvh items-center justify-center p-4">
       {/* generateMetadata would stream this into <body>; React hoists it into <head> from here */}
       {parsed.success && (
         <meta
           name="apple-itunes-app"
-          content={`app-id=${APP_STORE_ID}, app-argument=flatsby:/${INVITE_PATH}/${parsed.data}`}
+          content={`app-id=${APP_STORE_ID}, app-argument=flatsby:/${invitePath(parsed.data)}`}
         />
       )}
       <JoinInvite

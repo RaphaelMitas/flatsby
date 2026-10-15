@@ -5,9 +5,9 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
-  INVITE_PATH,
   INVITE_REFERRER_KEY,
   inviteCodeSchema,
+  invitePath,
 } from "@flatsby/validators/invite";
 
 const HANDLED_KEY = "install_referrer_handled";
@@ -25,9 +25,9 @@ export function InstallReferrerInvite() {
         () => "",
       );
       const code = inviteCodeSchema.safeParse(
-        new RegExp(`${INVITE_REFERRER_KEY}=([^&]+)`).exec(referrer)?.[1] ?? "",
+        new URLSearchParams(referrer).get(INVITE_REFERRER_KEY) ?? "",
       );
-      if (code.success) router.push(`${INVITE_PATH}/${code.data}`);
+      if (code.success) router.push(invitePath(code.data));
     })();
   }, [router]);
 

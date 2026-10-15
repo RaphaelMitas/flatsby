@@ -171,8 +171,7 @@ export const groupInvitesRelations = relations(groupInvites, ({ one }) => ({
   }),
 }));
 
-export const groupsRelations = relations(groups, ({ many, one }) => ({
-  invite: one(groupInvites),
+export const groupsRelations = relations(groups, ({ many }) => ({
   groupMembers: many(groupMembers),
   shoppingLists: many(shoppingLists),
   expenses: many(expenses),

@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
 import { and, eq } from "@flatsby/db";
-import { groupMembers } from "@flatsby/db/schema";
+import { groupMembers, groups } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 
 import type { ApiError, NotFoundError } from "./errors";
@@ -14,7 +14,7 @@ import type {
   TransactionOperation,
   User,
 } from "./types";
-import { fail, safeDbOperation, withErrorHandling } from "./errors";
+import { Errors, fail, safeDbOperation, withErrorHandling } from "./errors";
 
 /**
  * Database operation utilities
@@ -26,10 +26,14 @@ export const DbUtils = {
   findOneOrFail: <T>(
     operation: () => Promise<T | undefined>,
     resource: string,
+    userMessage?: string,
   ): Effect.Effect<T, ApiError> => {
     return Effect.flatMap(
       safeDbOperation(operation, `find ${resource}`),
-      (result) => (result ? Effect.succeed(result) : fail.notFound(resource)),
+      (result) =>
+        result
+          ? Effect.succeed(result)
+          : Effect.fail(Errors.notFound(resource, undefined, userMessage)),
     );
   },
 
@@ -365,46 +369,47 @@ export const GroupUtils = {
     groupId: number,
     userId: string,
   ): Effect.Effect<number, ApiError> =>
-    Effect.gen(function* () {
-      const existing = yield* safeDbOperation(
+    Effect.flatMap(
+      safeDbOperation(
         () =>
-          db.query.groupMembers.findFirst({
-            where: and(
-              eq(groupMembers.groupId, groupId),
-              eq(groupMembers.userId, userId),
-            ),
+          db.transaction(async (tx) => {
+            // group_members has no unique (group, user), so concurrent joins would both insert
+            await tx
+              .select({ id: groups.id })
+              .from(groups)
+              .where(eq(groups.id, groupId))
+              .for("update");
+            const existing = await tx.query.groupMembers.findFirst({
+              where: and(
+                eq(groupMembers.groupId, groupId),
+                eq(groupMembers.userId, userId),
+              ),
+            });
+            if (existing?.isActive) return null;
+            const [member] = existing
+              ? await tx
+                  .update(groupMembers)
+                  .set({ isActive: true, role: "member" })
+                  .where(eq(groupMembers.id, existing.id))
+                  .returning({ id: groupMembers.id })
+              : await tx
+                  .insert(groupMembers)
+                  .values({ groupId, userId, role: "member" })
+                  .returning({ id: groupMembers.id });
+            if (!member) throw new Error("Failed to add group member");
+            return member.id;
           }),
-        "check existing membership",
-      );
-
-      if (existing?.isActive) {
-        return yield* fail.conflict(
-          "membership",
-          "already exists",
-          "This user is already a member of the group",
-        );
-      }
-
-      const [member] = yield* safeDbOperation(
-        () =>
-          existing
-            ? db
-                .update(groupMembers)
-                .set({ isActive: true, role: "member" })
-                .where(eq(groupMembers.id, existing.id))
-                .returning({ id: groupMembers.id })
-            : db
-                .insert(groupMembers)
-                .values({ groupId, userId, role: "member" })
-                .returning({ id: groupMembers.id }),
-        existing ? "reactivate group member" : "add group member",
-      );
-
-      if (!member) {
-        return yield* fail.internalServer("add group member");
-      }
-      return member.id;
-    }),
+        "add group member",
+      ),
+      (memberId) =>
+        memberId === null
+          ? fail.conflict(
+              "membership",
+              "already exists",
+              "This user is already a member of the group",
+            )
+          : Effect.succeed(memberId),
+    ),
 };
 
 /** Does not check group access, callers must. */

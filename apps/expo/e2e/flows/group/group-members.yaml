@@ -2,8 +2,7 @@ appId: ${APP_ID}
 tags:
   - group
 ---
-# Mirrors the invite tests in apps/nextjs/e2e/group/group-management.spec.ts.
-# The second-user join only runs on web: one device can't hold two sessions.
+# The second-user join is web only: one device can't hold two sessions.
 - runFlow: ../../subflows/e2e-login.yaml
 
 # Select the fixture group to enter it
@@ -36,8 +35,7 @@ tags:
 - copyTextFrom:
     id: "group-invite-code"
 
-# The dashed code from the sheet opens the invite preview; the admin is
-# already a member, so it offers to open the group instead of joining.
+# The admin is already a member, so the preview offers "Open group", not join.
 - openLink: flatsby://join/${maestro.copiedText}
 - runFlow:
     when:

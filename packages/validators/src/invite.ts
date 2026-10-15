@@ -4,11 +4,12 @@ export const INVITE_CODE_LENGTH = 8;
 export const INVITE_TTL_DAYS = 7;
 export const INVITE_PATH = "/join";
 export const INVITE_REFERRER_KEY = "invite_code";
+export const DAY_MS = 86_400_000;
 
-// Crockford base32: no I, L, O or U, so nothing reads as another character
+// Crockford base32: no I, L, O or U, so no look-alikes or accidental words
 export const INVITE_CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
-/** Accepts a typed code in any case, with or without the dash, or a pasted invite link. */
+/** Also takes a pasted invite link, and reads the look-alikes O, I and L as 0, 1 and 1. */
 export const normalizeInviteCode = (raw: string) =>
   (raw.split(`${INVITE_PATH}/`).pop() ?? "")
     .toUpperCase()
@@ -20,8 +21,11 @@ export const normalizeInviteCode = (raw: string) =>
 export const formatInviteCode = (code: string) =>
   `${code.slice(0, 4)}-${code.slice(4)}`;
 
+export const invitePath = (code: string): `${typeof INVITE_PATH}/${string}` =>
+  `${INVITE_PATH}/${code}`;
+
 export const inviteLink = (baseUrl: string, code: string) =>
-  `${baseUrl}${INVITE_PATH}/${code}`;
+  `${baseUrl}${invitePath(code)}`;
 
 export const inviteCodeSchema = z
   .string()
@@ -43,10 +47,14 @@ export const inviteCodeInputSchema = z.object({ code: inviteCodeSchema });
 export const groupInviteInputSchema = z.object({ groupId: z.number() });
 
 export const inviteExpiryLabel = (expiresAt: Date) => {
-  const days = Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000);
+  const days = Math.ceil((expiresAt.getTime() - Date.now()) / DAY_MS);
   return days <= 1 ? "Expires within a day" : `Expires in ${days} days`;
 };
 
-// browsers treat "//host" and "/\host" as other origins
+// browsers drop tabs and newlines and read "\" as "/", so "/\t/host" and "/\host" both leave our origin
 export const safeRedirectPath = (path: string | undefined) =>
-  path && /^\/(?![/\\])/.test(path) ? path : "/";
+  path?.startsWith("/") &&
+  !path.startsWith("//") &&
+  [...path].every((c) => c > " " && c !== "\\")
+    ? path
+    : "/";

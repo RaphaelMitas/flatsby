@@ -62,6 +62,8 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
 
   const resetMutation = useMutation(
     trpc.invite.reset.mutationOptions({
+      onMutate: () =>
+        queryClient.cancelQueries(trpc.invite.get.queryFilter({ groupId })),
       onSuccess: (data) => {
         if (!data.success) return;
         queryClient.setQueryData(trpc.invite.get.queryKey({ groupId }), data);

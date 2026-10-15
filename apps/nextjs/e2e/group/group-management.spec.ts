@@ -83,6 +83,36 @@ test.describe("Group Management", () => {
     await expect(authPage.getByText(invitee.email)).toBeVisible();
   });
 
+  test("removed member can't rejoin with the old code", async ({
+    authPage,
+    browser,
+    baseURL,
+  }) => {
+    await createAndSelectGroup(authPage, uniqueGroupName());
+    const code = await openInvite(authPage);
+
+    const inviteePage = await (await browser.newContext()).newPage();
+    const invitee = await createAuthSession(inviteePage, baseURL);
+    await inviteePage.goto(`/join/${code}`);
+    const joinButton = inviteePage.getByTestId("join-invite-button");
+    await waitForHydration(joinButton);
+    await joinButton.click();
+    await inviteePage.waitForURL("/home");
+
+    await authPage.goto("/group/settings");
+    const memberActions = authPage
+      .locator("#manage-members")
+      .filter({ hasText: invitee.email })
+      .getByRole("button");
+    await waitForHydration(memberActions);
+    await memberActions.click();
+    await authPage.getByRole("button", { name: "Remove" }).click();
+    await expect(authPage.getByText(invitee.email)).not.toBeVisible();
+
+    await inviteePage.goto(`/join/${code}`);
+    await expect(inviteePage.getByTestId("join-invite-expired")).toBeVisible();
+  });
+
   test("reset link kills the old code", async ({ authPage }) => {
     await createAndSelectGroup(authPage, uniqueGroupName());
     const oldCode = await openInvite(authPage);

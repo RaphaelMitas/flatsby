@@ -4,6 +4,7 @@ import z from "zod/v4";
 import { alias, and, count, eq, inArray, isNull } from "@flatsby/db";
 import {
   expenses,
+  groupInvites,
   groupMembers,
   groups,
   shoppingListItems,
@@ -291,6 +292,21 @@ export const groupRouter = createTRPCRouter({
                                 .where(
                                   eq(groupMembers.id, targetGroupMember.id),
                                 );
+
+                              // A removed member could otherwise rejoin through the live invite
+                              if (
+                                targetGroupMember.id !==
+                                currentUserGroupMember.id
+                              ) {
+                                await trx
+                                  .delete(groupInvites)
+                                  .where(
+                                    eq(
+                                      groupInvites.groupId,
+                                      targetGroupMember.groupId,
+                                    ),
+                                  );
+                              }
 
                               return { success: true };
                             }),

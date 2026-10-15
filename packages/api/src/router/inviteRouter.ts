@@ -1,8 +1,9 @@
 import { Effect } from "effect";
 
-import { and, eq, gt } from "@flatsby/db";
+import { and, eq, gt, lte } from "@flatsby/db";
 import { groupInvites } from "@flatsby/db/schema";
 import {
+  DAY_MS,
   groupInviteInputSchema,
   INVITE_CODE_ALPHABET,
   INVITE_CODE_LENGTH,
@@ -11,9 +12,9 @@ import {
 } from "@flatsby/validators/invite";
 
 import type { Database } from "../types";
-import { Errors, safeDbOperation, withErrorHandlingAsResult } from "../errors";
+import { safeDbOperation, withErrorHandlingAsResult } from "../errors";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { GroupUtils } from "../utils";
+import { DbUtils, GroupUtils } from "../utils";
 
 const generateCode = () =>
   Array.from(
@@ -25,90 +26,92 @@ const issueInvite = (
   db: Database,
   groupId: number,
   createdByMemberId: number,
+  { onlyIfExpired }: { onlyIfExpired: boolean },
 ) => {
   const invite = {
     code: generateCode(),
     createdByMemberId,
-    expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000),
+    expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * DAY_MS),
   };
-  return Effect.map(
+  return Effect.flatMap(
     safeDbOperation(
       () =>
         db
           .insert(groupInvites)
           .values({ groupId, ...invite })
-          .onConflictDoUpdate({ target: groupInvites.groupId, set: invite }),
+          .onConflictDoUpdate({
+            target: groupInvites.groupId,
+            set: invite,
+            setWhere: onlyIfExpired
+              ? lte(groupInvites.expiresAt, new Date())
+              : undefined,
+          })
+          .returning({
+            code: groupInvites.code,
+            expiresAt: groupInvites.expiresAt,
+          }),
       "issue group invite",
     ),
-    () => ({ code: invite.code, expiresAt: invite.expiresAt }),
+    ([issued]) =>
+      issued
+        ? Effect.succeed(issued)
+        : DbUtils.findOneOrFail(
+            () =>
+              db.query.groupInvites.findFirst({
+                where: eq(groupInvites.groupId, groupId),
+                columns: { code: true, expiresAt: true },
+              }),
+            "group invite",
+          ),
   );
 };
 
 // Expired, reset and made-up codes all fail the same way, so a code reveals nothing.
 const findLiveInvite = (db: Database, code: string) =>
-  Effect.flatMap(
-    safeDbOperation(
-      () =>
-        db.query.groupInvites.findFirst({
-          where: and(
-            eq(groupInvites.code, code),
-            gt(groupInvites.expiresAt, new Date()),
-          ),
-          with: {
-            group: {
-              columns: { id: true, name: true, profilePicture: true },
-              with: {
-                groupMembers: {
-                  where: (members, { eq }) => eq(members.isActive, true),
-                  columns: { userId: true },
-                  with: { user: { columns: { name: true, image: true } } },
-                },
+  DbUtils.findOneOrFail(
+    () =>
+      db.query.groupInvites.findFirst({
+        where: and(
+          eq(groupInvites.code, code),
+          gt(groupInvites.expiresAt, new Date()),
+        ),
+        with: {
+          group: {
+            columns: { id: true, name: true, profilePicture: true },
+            with: {
+              groupMembers: {
+                where: (members, { eq }) => eq(members.isActive, true),
+                columns: { userId: true },
+                with: { user: { columns: { name: true, image: true } } },
               },
             },
-            createdByMember: {
-              with: { user: { columns: { name: true } } },
-            },
           },
-        }),
-      "find group invite",
-    ),
-    (invite) =>
-      invite
-        ? Effect.succeed(invite)
-        : Effect.fail(
-            Errors.notFound(
-              "invite",
-              undefined,
-              "This invite has expired. Ask someone in the group for a new one.",
-            ),
-          ),
+          createdByMember: {
+            with: { user: { columns: { name: true } } },
+          },
+        },
+      }),
+    "invite",
+    "This invite has expired. Ask someone in the group for a new one.",
   );
 
 export const inviteRouter = createTRPCRouter({
-  /** Issues a fresh invite when there is none or it expired, so admins never see a dead code. */
+  // A query that writes: an admin opening the sheet after expiry should see a fresh code, not a dead one.
   get: protectedProcedure
     .input(groupInviteInputSchema)
     .query(({ ctx, input }) =>
       withErrorHandlingAsResult(
-        Effect.gen(function* () {
-          const admin = yield* GroupUtils.requireAdminAccess(
+        Effect.flatMap(
+          GroupUtils.requireAdminAccess(
             ctx.db,
             input.groupId,
             ctx.session.user.id,
-          );
-          const existing = yield* safeDbOperation(
-            () =>
-              ctx.db.query.groupInvites.findFirst({
-                where: eq(groupInvites.groupId, input.groupId),
-                columns: { code: true, expiresAt: true },
-              }),
-            "find group invite",
-          );
-          if (existing && existing.expiresAt > new Date()) {
-            return existing;
-          }
-          return yield* issueInvite(ctx.db, input.groupId, admin.id);
-        }),
+          ),
+          (admin) =>
+            issueInvite(ctx.db, input.groupId, admin.id, {
+              onlyIfExpired: true,
+            }),
+        ),
       ),
     ),
 
@@ -122,7 +125,10 @@ export const inviteRouter = createTRPCRouter({
             input.groupId,
             ctx.session.user.id,
           ),
-          (admin) => issueInvite(ctx.db, input.groupId, admin.id),
+          (admin) =>
+            issueInvite(ctx.db, input.groupId, admin.id, {
+              onlyIfExpired: false,
+            }),
         ),
       ),
     ),

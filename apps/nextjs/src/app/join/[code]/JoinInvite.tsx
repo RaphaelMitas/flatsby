@@ -19,8 +19,8 @@ import {
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   formatInviteCode,
-  INVITE_PATH,
   INVITE_REFERRER_KEY,
+  invitePath,
 } from "@flatsby/validators/invite";
 
 import type { Platform } from "../../_components/landing/platform";
@@ -120,7 +120,7 @@ export function JoinInvite({
     );
   }
 
-  const signInHref = `/auth/login?next=${INVITE_PATH}/${code}`;
+  const signInHref = `/auth/login?next=${invitePath(code)}`;
   const joinError =
     join.data?.success === false ? join.data.error.message : null;
 
@@ -212,7 +212,7 @@ function InstallApp({
         <>
           <Button asChild>
             <a
-              href={`intent:/${INVITE_PATH}/${code}#Intent;scheme=flatsby;package=${PLAY_STORE_ID};S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end`}
+              href={`intent:/${invitePath(code)}#Intent;scheme=flatsby;package=${PLAY_STORE_ID};S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end`}
             >
               Open in Flatsby
             </a>

@@ -20,7 +20,7 @@ import {
 } from "@flatsby/ui/input-otp";
 import {
   INVITE_CODE_LENGTH,
-  INVITE_PATH,
+  invitePath,
   normalizeInviteCode,
 } from "@flatsby/validators/invite";
 
@@ -46,7 +46,7 @@ export function JoinWithCodeDialog() {
           className="flex flex-col items-center gap-6"
           onSubmit={(e) => {
             e.preventDefault();
-            router.push(`${INVITE_PATH}/${code}`);
+            router.push(invitePath(code));
           }}
         >
           <InputOTP

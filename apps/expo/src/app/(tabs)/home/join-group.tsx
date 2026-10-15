@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import {
   INVITE_CODE_LENGTH,
-  INVITE_PATH,
+  invitePath,
   normalizeInviteCode,
 } from "@flatsby/validators/invite";
 
@@ -21,7 +21,7 @@ export default function JoinGroupScreen() {
       <Text className="text-muted-foreground text-center text-sm">
         Enter the 8-character code
       </Text>
-      <Pressable className="relative flex-row items-center justify-center gap-1">
+      <View className="relative flex-row items-center justify-center gap-1">
         {slots.map((char, i) => (
           <View key={i} className="flex-row items-center gap-1">
             {i === INVITE_CODE_LENGTH / 2 && (
@@ -48,7 +48,7 @@ export default function JoinGroupScreen() {
           caretHidden
           className="absolute inset-0 opacity-0"
         />
-      </Pressable>
+      </View>
       <Text className="text-muted-foreground text-center text-xs">
         O and 0, I and 1 are treated the same
       </Text>
@@ -56,7 +56,7 @@ export default function JoinGroupScreen() {
         testID="group-join-code-submit"
         title="Continue"
         disabled={code.length !== INVITE_CODE_LENGTH}
-        onPress={() => router.replace(`${INVITE_PATH}/${code}`)}
+        onPress={() => router.replace(invitePath(code))}
       />
     </View>
   );
