@@ -8,6 +8,7 @@ import {
   INVITE_REFERRER_KEY,
   inviteCodeSchema,
   invitePath,
+  outlivesAnyInvite,
 } from "@flatsby/validators/invite";
 
 const HANDLED_KEY = "install_referrer_handled";
@@ -26,6 +27,11 @@ export function InstallReferrerInvite() {
     if (Platform.OS !== "android") return;
     void (async () => {
       if (await AsyncStorage.getItem(HANDLED_KEY)) return;
+      // An update to an install older than any invite would replay a long-dead referrer
+      if (outlivesAnyInvite(await Application.getInstallationTimeAsync())) {
+        await AsyncStorage.setItem(HANDLED_KEY, "true");
+        return;
+      }
       // Play's referrer service can be briefly unavailable; the next launch tries again
       const referrer = await Application.getInstallReferrerAsync().catch(
         () => null,

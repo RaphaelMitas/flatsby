@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { inviteCodeSchema, safeRedirectPath } from "./invite";
+import {
+  inviteCodeSchema,
+  outlivesAnyInvite,
+  safeRedirectPath,
+} from "./invite";
 
 describe("safeRedirectPath", () => {
   it("keeps same-origin paths", () => {
@@ -32,5 +36,13 @@ describe("inviteCodeSchema", () => {
   it("rejects short codes and letters outside the alphabet", () => {
     expect(inviteCodeSchema.safeParse("K7Q4").success).toBe(false);
     expect(inviteCodeSchema.safeParse("UUUUUUUU").success).toBe(false);
+  });
+});
+
+describe("outlivesAnyInvite", () => {
+  it("only lets installs younger than an invite's lifetime read the referrer", () => {
+    const day = 86_400_000;
+    expect(outlivesAnyInvite(new Date(Date.now() - 3 * day))).toBe(false);
+    expect(outlivesAnyInvite(new Date(Date.now() - 30 * day))).toBe(true);
   });
 });

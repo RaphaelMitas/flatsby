@@ -48,6 +48,9 @@ export const inviteCodeInputSchema = z.object({ code: inviteCodeSchema });
 export const inviteExpiresAt = () =>
   new Date(Date.now() + INVITE_TTL_DAYS * DAY_MS);
 
+export const outlivesAnyInvite = (since: Date) =>
+  Date.now() - since.getTime() > INVITE_TTL_DAYS * DAY_MS;
+
 export const inviteDaysLeft = (expiresAt: Date) =>
   Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / DAY_MS));
 

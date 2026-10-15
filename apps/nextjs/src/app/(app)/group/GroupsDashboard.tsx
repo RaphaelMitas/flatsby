@@ -43,7 +43,7 @@ export function GroupsDashboard() {
   return (
     <section className="mx-auto h-full w-full max-w-prose">
       <div className="flex h-full w-full flex-col gap-6 p-4 md:p-6">
-        <div className="flex h-fit items-center justify-between">
+        <div className="flex h-fit flex-wrap items-center justify-between gap-2">
           <h2
             className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl"
             data-testid="group-dashboard-title"
