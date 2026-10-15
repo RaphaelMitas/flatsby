@@ -4,7 +4,7 @@ import Papa from "papaparse";
 import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
-import { messages } from "@flatsby/i18n/messages";
+import { expenseCategories } from "@flatsby/i18n/messages/en/expenseCategories";
 
 import type { ExpenseSubcategoryId } from "./categories";
 import type { CurrencyCode } from "./types";
@@ -66,7 +66,7 @@ const splitwiseSubcategoryByCategory = new Map<string, ExpenseSubcategoryId>(
 
 const subcategoryIdByLabel = new Map<string, ExpenseSubcategoryId>(
   expenseSubcategories.map((sub) => [
-    messages.en.expenseCategories.subcategories[sub.id].toLowerCase(),
+    expenseCategories.subcategories[sub.id].toLowerCase(),
     sub.id,
   ]),
 );

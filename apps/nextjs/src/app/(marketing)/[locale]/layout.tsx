@@ -23,7 +23,9 @@ export default async function MarketingLayout(props: {
 }) {
   return (
     <RootShell lang={await getLocale()}>
-      <NextIntlClientProvider>{props.children}</NextIntlClientProvider>
+      <NextIntlClientProvider messages={null}>
+        {props.children}
+      </NextIntlClientProvider>
     </RootShell>
   );
 }

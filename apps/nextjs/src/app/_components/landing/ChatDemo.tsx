@@ -1,5 +1,3 @@
-"use client";
-
 import type { ModifyDataOutput } from "@flatsby/validators/chat/tools";
 import { CornerDownLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -7,9 +5,8 @@ import { useTranslations } from "next-intl";
 import {
   Conversation,
   ConversationContent,
-  Message,
-  MessageContent,
-} from "@flatsby/ui/ai-elements";
+} from "@flatsby/ui/ai-elements/conversation";
+import { Message, MessageContent } from "@flatsby/ui/ai-elements/message";
 import { Card } from "@flatsby/ui/card";
 
 import { ModifyDataResult } from "~/app/(app)/chat/_components/tool-results/modify-data-result";

@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
 
 import {
   rootMetadata,
@@ -11,9 +11,13 @@ export const metadata = rootMetadata;
 export const viewport = rootViewport;
 
 export default async function AppLayout(props: { children: React.ReactNode }) {
+  // Marketing and legal text only renders on the server, so the browser never needs it.
+  const { marketing, legal, ...messages } = await getMessages();
   return (
     <RootShell lang={await getLocale()}>
-      <NextIntlClientProvider>{props.children}</NextIntlClientProvider>
+      <NextIntlClientProvider messages={messages}>
+        {props.children}
+      </NextIntlClientProvider>
     </RootShell>
   );
 }

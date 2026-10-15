@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Globe, Play } from "lucide-react";
 import { useTranslations } from "next-intl";
