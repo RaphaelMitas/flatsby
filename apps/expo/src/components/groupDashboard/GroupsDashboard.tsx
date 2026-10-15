@@ -2,6 +2,7 @@ import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
@@ -10,6 +11,7 @@ import { trpc } from "~/utils/api";
 import GroupsDashboardElement from "./GroupsDashboardElement";
 
 export function GroupsDashboard() {
+  const t = useTranslations();
   const router = useRouter();
 
   const {
@@ -29,12 +31,12 @@ export function GroupsDashboard() {
           testID="group-dashboard-title"
           className="text-foreground text-3xl font-bold"
         >
-          Your Groups
+          {t("group.dashboard.title")}
         </Text>
 
         <Button
           testID="group-create-button"
-          title="Create Group"
+          title={t("navigation.createGroup")}
           variant="primary"
           size="lg"
           icon="plus"
@@ -45,10 +47,10 @@ export function GroupsDashboard() {
       {groups.data.length === 0 && (
         <View className="flex flex-col items-center justify-center gap-4">
           <Text className="text-foreground text-center text-lg font-semibold">
-            No groups yet
+            {t("group.dashboard.empty")}
           </Text>
           <Button
-            title="Create a Group"
+            title={t("group.create.title")}
             variant="primary"
             size="lg"
             onPress={() => router.push("/(tabs)/home/create-group")}
@@ -69,7 +71,7 @@ export function GroupsDashboard() {
             ListFooterComponent={
               <Button
                 testID="group-join-with-code-button"
-                title="Join with code"
+                title={t("invite.join.withCode")}
                 variant="outline"
                 className="mt-4"
                 onPress={() => router.push("/join")}

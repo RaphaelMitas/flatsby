@@ -8,7 +8,11 @@ import { Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { usePostHog } from "posthog-react-native";
+import { useTranslations } from "use-intl";
 
+import { redactInvitePath } from "@flatsby/validators/invite";
+
+import { getScreenName } from "~/utils/analytics/screen-names";
 import { queryClient } from "~/utils/api";
 
 import "../styles.css";
@@ -23,6 +27,7 @@ import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { isE2ETestingEnabled } from "~/utils/e2e";
+import { IntlProvider } from "~/utils/intl-provider";
 import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
 import {
   ShoppingStoreProvider,
@@ -39,80 +44,48 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PostHogProvider
-        apiKey={posthogApiKey || "phc-disabled"}
-        // expo-router never exposes a NavigationContainer, so PostHog's screen
-        // autocapture cannot read navigation state. ScreenTracker does it instead.
-        autocapture={{ captureScreens: false }}
-        options={{
-          disabled: posthogDisabled,
-          host: "https://eu.i.posthog.com",
-          errorTracking: {
-            autocapture: {
-              uncaughtExceptions: true,
-              unhandledRejections: true,
-              console: ["error"],
+      <IntlProvider>
+        <PostHogProvider
+          apiKey={posthogApiKey || "phc-disabled"}
+          // expo-router never exposes a NavigationContainer, so PostHog's screen
+          // autocapture cannot read navigation state. ScreenTracker does it instead.
+          autocapture={{ captureScreens: false }}
+          options={{
+            disabled: posthogDisabled,
+            host: "https://eu.i.posthog.com",
+            errorTracking: {
+              autocapture: {
+                uncaughtExceptions: true,
+                unhandledRejections: true,
+                console: ["error"],
+              },
             },
-          },
-        }}
-      >
-        <KeyboardProvider>
-          <SafeAreaProvider>
-            <BottomSheetModalProvider>
-              <ThemeProvider>
-                <QueryClientProvider client={queryClient}>
-                  <RevenueCatProvider>
-                    <ShoppingStoreProvider>
-                      {/**
+          }}
+        >
+          <KeyboardProvider>
+            <SafeAreaProvider>
+              <BottomSheetModalProvider>
+                <ThemeProvider>
+                  <QueryClientProvider client={queryClient}>
+                    <RevenueCatProvider>
+                      <ShoppingStoreProvider>
+                        {/**
                        The Stack component displays the current page.
                        It also allows you to configure your screens
                       **/}
-                      <StackLayout />
-                      <StatusBar />
-                    </ShoppingStoreProvider>
-                  </RevenueCatProvider>
-                </QueryClientProvider>
-              </ThemeProvider>
-            </BottomSheetModalProvider>
-          </SafeAreaProvider>
-        </KeyboardProvider>
-      </PostHogProvider>
+                        <StackLayout />
+                        <StatusBar />
+                      </ShoppingStoreProvider>
+                    </RevenueCatProvider>
+                  </QueryClientProvider>
+                </ThemeProvider>
+              </BottomSheetModalProvider>
+            </SafeAreaProvider>
+          </KeyboardProvider>
+        </PostHogProvider>
+      </IntlProvider>
     </GestureHandlerRootView>
   );
-}
-
-function getScreenName(segments: string[]): string {
-  const filtered = segments.filter((s) => !s.startsWith("("));
-  const key = filtered.join("/");
-
-  const names: Record<string, string> = {
-    home: "Home",
-    "home/create-group": "Create Group",
-    "settings/group-settings": "Group Settings",
-    "settings/group-settings/members": "Group Members",
-    "settings/group-settings/member-actions": "Member Actions",
-    "settings/group-settings/group-details": "Group Details",
-    "home/shopping-lists": "Shopping Lists",
-    "home/shopping-lists/create": "Create Shopping List",
-    shoppingList: "Shopping List",
-    "shoppingList/edit-item": "Edit Shopping Item",
-    expenses: "Expenses",
-    "expenses/create": "Create Expense",
-    "expenses/debts": "Debts",
-    "expenses/settle": "Settle Debts",
-    settings: "Settings",
-    "settings/account": "Account Settings",
-    "settings/profile": "Profile",
-    "settings/manage-groups": "Manage Groups",
-    "settings/danger": "Danger Zone",
-    "auth/login": "Login",
-  };
-
-  if (key.includes("[expenseId]")) {
-    if (key.endsWith("/edit")) return "Edit Expense";
-    return "Expense Detail";
-  }
-  return names[key] ?? filtered.join(" > ");
 }
 
 function ScreenTracker() {
@@ -122,13 +95,14 @@ function ScreenTracker() {
 
   useEffect(() => {
     const screenName = getScreenName(segments);
-    void posthog.screen(screenName, { pathname });
+    void posthog.screen(screenName, { pathname: redactInvitePath(pathname) });
   }, [pathname, segments, posthog]);
 
   return null;
 }
 
 const StackLayout = () => {
+  const t = useTranslations();
   const themedScreenOptions = useThemedScreenOptions();
   const { data, isPending } = useSession();
   const { hydrated } = useShoppingStore();
@@ -164,7 +138,7 @@ const StackLayout = () => {
         <Stack.Screen
           name="join/index"
           options={{
-            title: "Join a Group",
+            title: t("invite.join.screenTitle"),
             presentation: "modal",
             headerShown: true,
           }}

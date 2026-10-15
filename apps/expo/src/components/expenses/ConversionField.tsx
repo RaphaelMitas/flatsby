@@ -1,5 +1,6 @@
 import type { ExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
 import { Pressable, Text, View } from "react-native";
+import { useTranslations } from "use-intl";
 
 import { Label } from "~/lib/ui/label";
 import { Switch } from "~/lib/ui/switch";
@@ -13,13 +14,14 @@ export function ConversionField({
   currency: string;
   conversion: ExpenseConversion;
 }) {
+  const t = useTranslations("expenses.conversion");
   const { targetCurrency, isOn } = conversion;
   if (!conversion.isShown) return null;
 
   return (
     <View className="gap-2">
       <View className="flex-row items-center justify-between">
-        <Label>Convert to {targetCurrency}</Label>
+        <Label>{t("convertTo", { currency: targetCurrency })}</Label>
         <Switch
           testID="expense-form-convert"
           checked={isOn}
@@ -30,7 +32,7 @@ export function ConversionField({
         <View className="gap-2">
           <View className="flex-row items-center gap-2">
             <Text className="text-muted-foreground text-sm">
-              In {targetCurrency}
+              {t("inCurrency", { currency: targetCurrency })}
             </Text>
             <CurrencyInput
               testID="expense-form-converted-amount"
@@ -54,20 +56,22 @@ export function ConversionField({
                   hitSlop={8}
                   onPress={conversion.reset}
                 >
-                  <Text className="text-info text-xs font-medium">Reset</Text>
+                  <Text className="text-info text-xs font-medium">
+                    {t("reset")}
+                  </Text>
                 </Pressable>
               )}
             </View>
           )}
           {conversion.isRateUnavailable && (
             <Text className="text-muted-foreground text-xs">
-              Couldn't load a rate, enter the {targetCurrency} amount
+              {t("rateUnavailable", { currency: targetCurrency })}
             </Text>
           )}
         </View>
       ) : (
         <Text className="text-muted-foreground text-xs">
-          Stays in {currency}. Settled separately from {targetCurrency} debts.
+          {t("staysIn", { currency, target: targetCurrency })}
         </Text>
       )}
     </View>

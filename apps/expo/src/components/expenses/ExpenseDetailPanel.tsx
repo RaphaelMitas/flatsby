@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import type { SplitViewAction } from "../splitview/SplitViewAction";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -26,6 +27,7 @@ export function ExpenseDetailPanel({
   onSelectExpense,
   onEditExpense,
 }: ExpenseDetailPanelProps) {
+  const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
 
   if (!selectedExpenseId && action !== "create") {
@@ -34,10 +36,10 @@ export function ExpenseDetailPanel({
         <Icon name="receipt" size={64} color="muted-foreground" />
         <View className="items-center gap-2">
           <Text className="text-foreground text-lg font-semibold">
-            Select an expense
+            {t("expenses.selectExpense")}
           </Text>
           <Text className="text-muted-foreground text-center text-sm">
-            Choose an expense from the list to view details
+            {t("expenses.selectExpenseHint")}
           </Text>
         </View>
       </View>
@@ -49,7 +51,7 @@ export function ExpenseDetailPanel({
       <View className="flex-1 items-center justify-center gap-4 p-8">
         <Icon name="circle-alert" size={64} color="muted-foreground" />
         <Text className="text-muted-foreground text-center">
-          No group selected
+          {t("common.noGroupSelected")}
         </Text>
       </View>
     );
@@ -60,7 +62,9 @@ export function ExpenseDetailPanel({
       fallback={
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" />
-          <Text className="text-muted-foreground mt-4">Loading...</Text>
+          <Text className="text-muted-foreground mt-4">
+            {t("common.loading")}
+          </Text>
         </View>
       }
     >

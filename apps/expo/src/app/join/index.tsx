@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslations } from "use-intl";
 
 import {
   INVITE_CODE_GROUP,
@@ -12,6 +13,7 @@ import {
 import { Button } from "~/lib/ui/button";
 
 export default function JoinGroupScreen() {
+  const t = useTranslations();
   const router = useRouter();
   const [code, setCode] = useState("");
 
@@ -20,7 +22,7 @@ export default function JoinGroupScreen() {
   return (
     <View className="bg-background flex-1 gap-6 p-6">
       <Text className="text-muted-foreground text-center text-sm">
-        Enter the 8-character code
+        {t("invite.join.enterCode", { length: INVITE_CODE_LENGTH })}
       </Text>
       <View className="relative flex-row items-center justify-center gap-1">
         {slots.map((char, i) => (
@@ -51,11 +53,11 @@ export default function JoinGroupScreen() {
         />
       </View>
       <Text className="text-muted-foreground text-center text-xs">
-        O and 0, I and 1 are treated the same
+        {t("invite.join.lookAlikes")}
       </Text>
       <Button
         testID="group-join-code-submit"
-        title="Continue"
+        title={t("invite.join.continue")}
         disabled={code.length !== INVITE_CODE_LENGTH}
         onPress={() => router.replace(invitePath(code))}
       />

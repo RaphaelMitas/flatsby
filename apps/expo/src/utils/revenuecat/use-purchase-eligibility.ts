@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import Purchases from "react-native-purchases";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { PLAN_IDS } from "@flatsby/validators/billing";
 
 import { trpc } from "../api";
 
 export function usePurchaseEligibility() {
+  const t = useTranslations("billing");
   const { data: usageData, isLoading: usageLoading } = useQuery(
     trpc.user.getUsage.queryOptions(),
   );
@@ -55,7 +57,7 @@ export function usePurchaseEligibility() {
     hasPaidPlan,
     hasCredits,
     planId: autumnPlanId,
-    planName: subscriptionData?.planName ?? "Free",
+    planName: subscriptionData?.planName ?? t("free"),
     managementURL: rcCustomerInfo?.managementURL,
     isLoading: usageLoading || subscriptionLoading || rcLoading,
     creditBalance: usageData?.credits?.balance ?? 0,

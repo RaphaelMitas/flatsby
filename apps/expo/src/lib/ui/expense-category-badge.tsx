@@ -1,5 +1,6 @@
 import type { CategoryColorVariant } from "@flatsby/validators/expenses/category-colors";
 import { Text } from "react-native";
+import { useTranslations } from "use-intl";
 
 import type { BadgeProps } from "./badge";
 import { getExpenseCategoryData } from "~/components/expenses/ExpenseCategoryConfig";
@@ -22,6 +23,7 @@ export function ExpenseCategoryBadge({
   className,
   ...props
 }: ExpenseCategoryBadgeProps) {
+  const t = useTranslations();
   const colorVariant: CategoryColorVariant =
     variant === "default" ? "inverted" : "default";
   const categoryData = getExpenseCategoryData({
@@ -38,7 +40,7 @@ export function ExpenseCategoryBadge({
     >
       {showLabel && (
         <Text className={cn("text-xs font-medium", categoryData.color)}>
-          {categoryData.name}
+          {t(categoryData.name)}
         </Text>
       )}
       {children}

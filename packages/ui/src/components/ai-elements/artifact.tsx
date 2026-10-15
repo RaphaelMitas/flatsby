@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes } from "react";
 import { XIcon } from "lucide-react";
+import { useTranslations } from "use-intl";
 
 import { cn } from "@flatsby/ui";
 
@@ -49,21 +50,25 @@ export const ArtifactClose = ({
   size = "sm",
   variant = "ghost",
   ...props
-}: ArtifactCloseProps) => (
-  <Button
-    className={cn(
-      "text-muted-foreground hover:text-foreground size-8 p-0",
-      className,
-    )}
-    size={size}
-    type="button"
-    variant={variant}
-    {...props}
-  >
-    {children ?? <XIcon className="size-4" />}
-    <span className="sr-only">Close</span>
-  </Button>
-);
+}: ArtifactCloseProps) => {
+  const t = useTranslations("common");
+
+  return (
+    <Button
+      className={cn(
+        "text-muted-foreground hover:text-foreground size-8 p-0",
+        className,
+      )}
+      size={size}
+      type="button"
+      variant={variant}
+      {...props}
+    >
+      {children ?? <XIcon className="size-4" />}
+      <span className="sr-only">{t("close")}</span>
+    </Button>
+  );
+};
 
 export type ArtifactTitleProps = HTMLAttributes<HTMLParagraphElement>;
 

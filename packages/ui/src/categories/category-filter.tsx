@@ -1,6 +1,7 @@
 "use client";
 
 import type { CategoryId } from "@flatsby/validators/categories";
+import { useTranslations } from "use-intl";
 
 import { cn } from "..";
 import { Badge } from "../badge";
@@ -20,6 +21,7 @@ export function CategoryFilter({
   selectedCategory,
   onSelectCategory,
 }: CategoryFilterProps) {
+  const t = useTranslations();
   const availableCategories = categoryMapping.filter(
     (category) => category.id !== "ai-auto-select",
   );
@@ -38,7 +40,7 @@ export function CategoryFilter({
         className="shrink-0 rounded-full"
         data-testid="category-filter-all"
       >
-        All
+        {t("shoppingList.filter.all")}
         {total && total > 0 && (
           <Badge
             variant={selectedCategory === null ? "secondary" : "outline"}
@@ -75,7 +77,7 @@ export function CategoryFilter({
                 isSelected ? "text-primary-foreground" : colorClasses.base,
               )}
             />
-            {category.name}
+            {t(category.name)}
             {count > 0 && (
               <Badge
                 variant={isSelected ? "secondary" : "outline"}

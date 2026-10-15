@@ -1,8 +1,10 @@
 import { ImageResponse } from "next/og";
 
-import { FREE_ON, HEADLINE } from "./_components/landing/content";
+import { marketingTranslator } from "./_components/landing/i18n";
 
-export const alt = "Flatsby: shared shopping lists and bill splitting";
+const t = marketingTranslator("en");
+
+export const alt = t("ogImageAlt");
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -22,10 +24,10 @@ export default function Image() {
     >
       <div style={{ fontSize: 48, fontWeight: 600 }}>Flatsby</div>
       <div style={{ fontSize: 72, fontWeight: 700, marginTop: 24 }}>
-        {HEADLINE}
+        {t("headline")}
       </div>
       <div style={{ fontSize: 32, marginTop: 32, color: "#555" }}>
-        {FREE_ON}
+        {t("freeOn")}
       </div>
     </div>,
     size,

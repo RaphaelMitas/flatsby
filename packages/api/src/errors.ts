@@ -1,114 +1,64 @@
-import { TRPCError } from "@trpc/server";
+import type { Locale } from "@flatsby/i18n/locale";
+import type { MessageKey } from "@flatsby/i18n/message-key";
+import type { Messages } from "@flatsby/i18n/messages";
 import { Data, Effect } from "effect";
 import { z } from "zod/v4";
 
-import { captureError } from "./lib/posthog";
+import { translatorFor } from "@flatsby/i18n/translator";
+
+type MessageValues = Record<string, string | number>;
+
+interface Localized {
+  readonly messageKey: MessageKey;
+  readonly values?: MessageValues;
+}
 
 /**
  * Domain Error Types
- * These represent the various error scenarios that can occur in our API
+ * These represent the various error scenarios that can occur in our API.
+ * They carry a catalog key; the text is resolved in the request locale.
  */
-export class NotFoundError extends Data.TaggedError("NotFoundError")<{
-  readonly resource: string;
-  readonly identifier?: string | number;
-  readonly userMessage?: string;
-}> {
-  get message() {
-    return (
-      this.userMessage ??
-      `${this.resource} not found${this.identifier ? ` (ID: ${this.identifier})` : ""}`
-    );
-  }
-}
+export class NotFoundError extends Data.TaggedError("NotFoundError")<
+  Localized & { readonly identifier?: string | number }
+> {}
 
-export class ForbiddenError extends Data.TaggedError("ForbiddenError")<{
-  readonly action: string;
-  readonly resource?: string;
-  readonly userMessage?: string;
-}> {
-  get message() {
-    return (
-      this.userMessage ??
-      `You don't have permission to ${this.action}${this.resource ? ` ${this.resource}` : ""}`
-    );
-  }
-}
+export class ForbiddenError extends Data.TaggedError(
+  "ForbiddenError",
+)<Localized> {}
 
-export class UnauthorizedError extends Data.TaggedError("UnauthorizedError")<{
-  readonly userMessage?: string;
-}> {
-  get message() {
-    return this.userMessage ?? "You must be logged in to access this resource";
-  }
-}
+export class UnauthorizedError extends Data.TaggedError(
+  "UnauthorizedError",
+)<Localized> {}
 
-export class ConflictError extends Data.TaggedError("ConflictError")<{
-  readonly resource: string;
-  readonly reason: string;
-  readonly userMessage?: string;
-}> {
-  get message() {
-    return (
-      this.userMessage ??
-      `Cannot ${this.reason} ${this.resource} due to a conflict`
-    );
-  }
-}
+export class ConflictError extends Data.TaggedError(
+  "ConflictError",
+)<Localized> {}
 
-export class ValidationError extends Data.TaggedError("ValidationError")<{
-  readonly field: string;
-  readonly reason: string;
-  readonly userMessage?: string;
-}> {
-  get message() {
-    return this.userMessage ?? `${this.field}: ${this.reason}`;
-  }
-}
+export class ValidationError extends Data.TaggedError(
+  "ValidationError",
+)<Localized> {}
 
-export class DatabaseError extends Data.TaggedError("DatabaseError")<{
-  readonly operation: string;
-  readonly table?: string;
-  readonly cause?: unknown;
-  readonly userMessage?: string;
-}> {
-  get message() {
-    return (
-      this.userMessage ??
-      `Database operation failed${this.operation ? `: ${this.operation}` : ""}`
-    );
+export class DatabaseError extends Data.TaggedError("DatabaseError")<
+  Localized & {
+    readonly operation: string;
+    readonly table?: string;
+    readonly cause?: unknown;
   }
-}
+> {}
 
 export class ExternalServiceError extends Data.TaggedError(
   "ExternalServiceError",
-)<{
-  readonly service: string;
-  readonly operation: string;
-  readonly cause?: unknown;
-  readonly userMessage?: string;
-}> {
-  get message() {
-    return (
-      this.userMessage ??
-      `External service (${this.service}) is currently unavailable`
-    );
+)<
+  Localized & {
+    readonly service: string;
+    readonly operation: string;
+    readonly cause?: unknown;
   }
-}
+> {}
 
 export class InternalServerError extends Data.TaggedError(
   "InternalServerError",
-)<{
-  readonly operation?: string;
-  readonly cause?: unknown;
-  readonly userMessage?: string;
-}> {
-  get message() {
-    return (
-      this.userMessage ??
-      "An unexpected error occurred. Please try again later."
-    );
-  }
-}
+)<Localized & { readonly operation?: string; readonly cause?: unknown }> {}
 
 const ApiErrorResultSchema = z.object({
   type: z.enum([
@@ -162,152 +112,85 @@ export const getApiResultZod = <T extends z.ZodTypeAny>(dataSchema: T) => {
   ]);
 };
 
+export type NotFoundResource = keyof Messages["errors"]["notFound"];
+
 /**
  * Error factory functions for creating specific errors
  */
 export const Errors = {
-  notFound: (
-    resource: string,
-    identifier?: string | number,
-    userMessage?: string,
-  ) => new NotFoundError({ resource, identifier, userMessage }),
+  notFound: (resource: NotFoundResource, identifier?: string | number) =>
+    new NotFoundError({
+      messageKey: `errors.notFound.${resource}`,
+      identifier,
+    }),
 
-  forbidden: (action: string, resource?: string, userMessage?: string) =>
-    new ForbiddenError({ action, resource, userMessage }),
+  forbidden: (messageKey: MessageKey) => new ForbiddenError({ messageKey }),
 
-  unauthorized: (userMessage?: string) =>
-    new UnauthorizedError({ userMessage }),
+  unauthorized: () =>
+    new UnauthorizedError({ messageKey: "errors.unauthorized" }),
 
-  conflict: (resource: string, reason: string, userMessage?: string) =>
-    new ConflictError({ resource, reason, userMessage }),
+  conflict: (messageKey: MessageKey) => new ConflictError({ messageKey }),
 
-  validation: (field: string, reason: string, userMessage?: string) =>
-    new ValidationError({ field, reason, userMessage }),
+  validation: (messageKey: MessageKey, values?: MessageValues) =>
+    new ValidationError({ messageKey, values }),
 
   database: (
     operation: string,
     table?: string,
     cause?: unknown,
-    userMessage?: string,
-  ) => new DatabaseError({ operation, table, cause, userMessage }),
+    messageKey: MessageKey = "errors.databaseFailed",
+  ) =>
+    new DatabaseError({
+      messageKey,
+      values: { operation },
+      operation,
+      table,
+      cause,
+    }),
 
-  externalService: (
-    service: string,
-    operation: string,
-    cause?: unknown,
-    userMessage?: string,
-  ) => new ExternalServiceError({ service, operation, cause, userMessage }),
+  externalService: (service: string, operation: string, cause?: unknown) =>
+    new ExternalServiceError({
+      messageKey: "errors.serviceUnavailable",
+      values: { service },
+      service,
+      operation,
+      cause,
+    }),
 
-  internalServer: (operation?: string, cause?: unknown, userMessage?: string) =>
-    new InternalServerError({ operation, cause, userMessage }),
+  internalServer: (operation?: string, cause?: unknown) =>
+    new InternalServerError({
+      messageKey: "errors.unexpected",
+      operation,
+      cause,
+    }),
 };
 
 /**
  * Utility functions for working with Effects and errors
  */
 export const fail = {
-  notFound: (
-    resource: string,
-    identifier?: string | number,
-    userMessage?: string,
-  ) => Effect.fail(Errors.notFound(resource, identifier, userMessage)),
+  notFound: (...args: Parameters<typeof Errors.notFound>) =>
+    Effect.fail(Errors.notFound(...args)),
 
-  forbidden: (action: string, resource?: string, userMessage?: string) =>
-    Effect.fail(Errors.forbidden(action, resource, userMessage)),
+  forbidden: (...args: Parameters<typeof Errors.forbidden>) =>
+    Effect.fail(Errors.forbidden(...args)),
 
-  unauthorized: (userMessage?: string) =>
-    Effect.fail(Errors.unauthorized(userMessage)),
+  unauthorized: () => Effect.fail(Errors.unauthorized()),
 
-  conflict: (resource: string, reason: string, userMessage?: string) =>
-    Effect.fail(Errors.conflict(resource, reason, userMessage)),
+  conflict: (...args: Parameters<typeof Errors.conflict>) =>
+    Effect.fail(Errors.conflict(...args)),
 
-  validation: (field: string, reason: string, userMessage?: string) =>
-    Effect.fail(Errors.validation(field, reason, userMessage)),
+  validation: (...args: Parameters<typeof Errors.validation>) =>
+    Effect.fail(Errors.validation(...args)),
 
-  database: (
-    operation: string,
-    table?: string,
-    cause?: unknown,
-    userMessage?: string,
-  ) => Effect.fail(Errors.database(operation, table, cause, userMessage)),
+  database: (...args: Parameters<typeof Errors.database>) =>
+    Effect.fail(Errors.database(...args)),
 
-  externalService: (
-    service: string,
-    operation: string,
-    cause?: unknown,
-    userMessage?: string,
-  ) =>
-    Effect.fail(Errors.externalService(service, operation, cause, userMessage)),
+  externalService: (...args: Parameters<typeof Errors.externalService>) =>
+    Effect.fail(Errors.externalService(...args)),
 
-  internalServer: (operation?: string, cause?: unknown, userMessage?: string) =>
-    Effect.fail(Errors.internalServer(operation, cause, userMessage)),
-};
-
-/**
- * Convert domain errors to tRPC errors
- */
-export const toTRPCError = (error: ApiError): TRPCError => {
-  switch (error._tag) {
-    case "NotFoundError":
-      return new TRPCError({
-        code: "NOT_FOUND",
-        message: error.message,
-      });
-
-    case "ForbiddenError":
-      return new TRPCError({
-        code: "FORBIDDEN",
-        message: error.message,
-      });
-
-    case "UnauthorizedError":
-      return new TRPCError({
-        code: "UNAUTHORIZED",
-        message: error.message,
-      });
-
-    case "ConflictError":
-      return new TRPCError({
-        code: "CONFLICT",
-        message: error.message,
-      });
-
-    case "ValidationError":
-      return new TRPCError({
-        code: "BAD_REQUEST",
-        message: error.message,
-      });
-
-    case "DatabaseError":
-      captureError({
-        error,
-        operation: `db.${error.operation}`,
-        additionalProperties: { table: error.table },
-      });
-      return new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: error.message,
-      });
-
-    case "ExternalServiceError":
-      captureError({
-        error,
-        operation: `external.${error.service}.${error.operation}`,
-      });
-      return new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: error.message,
-      });
-    default:
-      captureError({
-        error,
-        operation: error.operation ?? "unknown",
-      });
-      return new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: error.message,
-      });
-  }
+  internalServer: (...args: Parameters<typeof Errors.internalServer>) =>
+    Effect.fail(Errors.internalServer(...args)),
 };
 
 /**
@@ -323,30 +206,23 @@ export const fromUnknownError = (
       error.message.includes("UNIQUE constraint failed") ||
       error.message.includes("duplicate key value")
     ) {
-      return Errors.conflict(
-        "resource",
-        "create duplicate",
-        "This item already exists",
-      );
+      return Errors.conflict("errors.alreadyExists");
     }
 
     if (
       error.message.includes("FOREIGN KEY constraint failed") ||
       error.message.includes("violates foreign key constraint")
     ) {
-      return Errors.validation(
-        "reference",
-        "invalid reference",
-        "Invalid reference to related data",
-      );
+      return Errors.validation("errors.invalidReference");
     }
 
     if (error.message.includes("NOT NULL constraint failed")) {
       const fieldMatch = /NOT NULL constraint failed: \w+\.(\w+)/.exec(
         error.message,
       );
-      const field = fieldMatch?.[1] ?? "field";
-      return Errors.validation(field, "required", `${field} is required`);
+      return Errors.validation("errors.fieldRequired", {
+        field: fieldMatch?.[1] ?? "field",
+      });
     }
 
     // Check for network/connection errors
@@ -395,28 +271,10 @@ export const safeDbOperation = <T>(
 };
 
 /**
- * Utility to run Effect and convert errors to tRPC errors
- */
-export const runEffectWithTRPCError = async <T>(
-  effect: Effect.Effect<T, ApiError>,
-): Promise<T> => {
-  return Effect.runPromise(Effect.mapError(effect, toTRPCError));
-};
-
-/**
- * Middleware helper for tRPC procedures using Effect
- * @deprecated Use withErrorHandlingAsResult instead
- */
-export const withErrorHandling = <T>(
-  effect: Effect.Effect<T, ApiError>,
-): Promise<T> => {
-  return runEffectWithTRPCError(effect);
-};
-
-/**
  * Convert Effect to a Result-like object with more detailed error info
  */
 export const withErrorHandlingAsResult = async <T>(
+  locale: Locale,
   effect: Effect.Effect<T, ApiError>,
 ): Promise<ApiResult<T>> => {
   const safeEffect = Effect.catchAllDefect(effect, (defect) => {
@@ -430,48 +288,32 @@ export const withErrorHandlingAsResult = async <T>(
       success: true,
       data: either.right,
     };
-  } else {
-    const error = either.left;
-    return {
-      success: false,
-      error: {
-        type: error._tag,
-        message: error.message,
-        name: error.name,
-        details: {
-          ...(error._tag === "NotFoundError" && {
-            resource: error.resource,
-            identifier: error.identifier,
-          }),
-          ...(error._tag === "ValidationError" && {
-            field: error.field,
-            reason: error.reason,
-          }),
-          ...(error._tag === "DatabaseError" && {
-            operation: error.operation,
-            table: error.table,
-          }),
-          ...(error._tag === "ExternalServiceError" && {
-            service: error.service,
-            operation: error.operation,
-          }),
-          ...(error._tag === "InternalServerError" && {
-            operation: error.operation,
-          }),
-          ...(error._tag === "ForbiddenError" && {
-            action: error.action,
-            resource: error.resource,
-          }),
-          ...(error._tag === "UnauthorizedError" && {
-            userMessage: error.userMessage,
-            cause: error.cause,
-          }),
-          ...(error._tag === "ConflictError" && {
-            resource: error.resource,
-            reason: error.reason,
-          }),
-        },
-      },
-    };
   }
+
+  const error = either.left;
+  return {
+    success: false,
+    error: {
+      type: error._tag,
+      message: translatorFor(locale)(error.messageKey, error.values),
+      name: error.name,
+      details: {
+        messageKey: error.messageKey,
+        ...(error._tag === "NotFoundError" && {
+          identifier: error.identifier,
+        }),
+        ...(error._tag === "DatabaseError" && {
+          operation: error.operation,
+          table: error.table,
+        }),
+        ...(error._tag === "ExternalServiceError" && {
+          service: error.service,
+          operation: error.operation,
+        }),
+        ...(error._tag === "InternalServerError" && {
+          operation: error.operation,
+        }),
+      },
+    },
+  };
 };

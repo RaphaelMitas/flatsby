@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
@@ -13,6 +14,7 @@ import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
 
 export default function DangerScreen() {
+  const t = useTranslations();
   const [confirmationInput, setConfirmationInput] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -45,10 +47,10 @@ export default function DangerScreen() {
           testID="delete-user-danger-zone-title"
           className="text-destructive mb-2 text-2xl font-bold"
         >
-          Danger Zone
+          {t("navigation.dangerZone")}
         </Text>
         <Text className="text-muted-foreground mb-8 text-sm">
-          Actions in this section are irreversible. Please proceed with caution.
+          {t("settings.danger.description")}
         </Text>
 
         <Alert variant="destructive" className="mb-6">
@@ -56,21 +58,19 @@ export default function DangerScreen() {
             <View className="flex-row items-center gap-2">
               <Icon name="triangle-alert" size={16} color="destructive" />
               <Text className="text-destructive text-lg font-semibold">
-                Delete Account
+                {t("settings.danger.deleteAccount")}
               </Text>
             </View>
           </AlertTitle>
           <AlertDescription className="text-primary">
-            Deleting your account will permanently remove all your data,
-            including shopping lists, items, and account information. This
-            action cannot be undone.
+            {t("settings.danger.deleteAccountDescription")}
           </AlertDescription>
 
           {!showConfirmation ? (
             <Button
               testID="delete-user-confirm-button"
               variant="destructive"
-              title="Delete My Account"
+              title={t("settings.danger.deleteMyAccount")}
               icon="trash-2"
               onPress={() => setShowConfirmation(true)}
               className="mt-4 w-full"
@@ -79,10 +79,10 @@ export default function DangerScreen() {
             <View className="mt-4 gap-4">
               <View className="gap-2">
                 <Text className="text-sm font-medium">
-                  Confirmation Required
+                  {t("settings.danger.confirmationRequired")}
                 </Text>
                 <Label htmlFor="email-confirmation" className="mb-2">
-                  To confirm deletion, please type your email address:
+                  {t("settings.danger.typeEmail")}
                 </Label>
                 <Text
                   testID="delete-user-email"
@@ -94,7 +94,7 @@ export default function DangerScreen() {
                   testID="delete-user-email-input"
                   value={confirmationInput}
                   onChangeText={setConfirmationInput}
-                  placeholder="Enter your email address"
+                  placeholder={t("settings.danger.emailPlaceholder")}
                   className="w-full"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -105,7 +105,7 @@ export default function DangerScreen() {
                 <Button
                   testID="delete-user-cancel-button"
                   variant="outline"
-                  title="Cancel"
+                  title={t("common.cancel")}
                   onPress={() => {
                     setShowConfirmation(false);
                     setConfirmationInput("");
@@ -117,8 +117,8 @@ export default function DangerScreen() {
                   variant="destructive"
                   title={
                     deleteUserMutation.isPending
-                      ? "Deleting..."
-                      : "Delete Forever"
+                      ? t("common.deleting")
+                      : t("settings.danger.deleteForever")
                   }
                   disabled={
                     !isConfirmationValid || deleteUserMutation.isPending
@@ -136,13 +136,13 @@ export default function DangerScreen() {
             (deleteUserMutation.data && !deleteUserMutation.data.success)) && (
             <Alert variant="destructive" className="mt-4">
               <Icon name="circle-alert" size={16} />
-              <AlertTitle>Deletion Failed</AlertTitle>
+              <AlertTitle>{t("settings.danger.deletionFailed")}</AlertTitle>
               <AlertDescription>
                 {deleteUserMutation.isError
                   ? deleteUserMutation.error.message
                   : !deleteUserMutation.data.success
                     ? deleteUserMutation.data.error.message
-                    : "An unknown error occurred"}
+                    : t("settings.danger.unknownError")}
               </AlertDescription>
             </Alert>
           )}

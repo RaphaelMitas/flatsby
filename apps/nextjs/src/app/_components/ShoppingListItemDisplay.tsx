@@ -1,4 +1,7 @@
+"use client";
+
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { getCategoryData } from "@flatsby/ui/categories";
@@ -17,6 +20,7 @@ export const ShoppingListItemDisplay = ({
   categoryId,
   showCheckbox = true,
 }: ShoppingListItemDisplayProps) => {
+  const t = useTranslations();
   const categoryData = categoryId ? getCategoryData(categoryId) : undefined;
 
   return (
@@ -52,7 +56,7 @@ export const ShoppingListItemDisplay = ({
             )}
           >
             <categoryData.icon size={20} />
-            <span>{categoryData.name}</span>
+            <span>{t(categoryData.name)}</span>
           </div>
         )}
       </div>

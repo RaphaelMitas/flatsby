@@ -44,6 +44,9 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { DbUtils, safeDbOperation } from "../utils";
 import { autumn, checkCredits } from "../utils/autumn";
 
+// i18n-ignore: plan names are Autumn product names like "Pro", not copy
+const freePlanName = "Free";
+
 export const userRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
     const user = ctx.session.user;
@@ -87,7 +90,7 @@ export const userRouter = createTRPCRouter({
         const activeSub = getCurrentSubscription(customer.subscriptions);
         return {
           planId: activeSub?.planId ?? PLAN_IDS.FREE,
-          planName: activeSub?.plan?.name ?? "Free",
+          planName: activeSub?.plan?.name ?? freePlanName,
         };
       } catch (error) {
         captureError({
@@ -95,7 +98,7 @@ export const userRouter = createTRPCRouter({
           operation: "user.getSubscription",
           distinctId: ctx.session.user.id,
         });
-        return { planId: PLAN_IDS.FREE, planName: "Free" };
+        return { planId: PLAN_IDS.FREE, planName: freePlanName };
       }
     }),
 
@@ -117,6 +120,7 @@ export const userRouter = createTRPCRouter({
     )
     .query(async ({ ctx }) => {
       return await withErrorHandlingAsResult(
+        ctx.locale,
         Effect.map(
           safeDbOperation(
             () =>
@@ -172,15 +176,12 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Validate input
           input.name.trim().length > 0
             ? Effect.succeed(input.name.trim())
-            : fail.validation(
-                "name",
-                "cannot be empty",
-                "Please enter a valid name",
-              ),
+            : fail.validation("errors.invalidName"),
           (validName) =>
             // Perform the update with better error handling
             Effect.tryPromise({
@@ -197,7 +198,7 @@ export const userRouter = createTRPCRouter({
                   "update user name",
                   "users",
                   error,
-                  "Unable to update your name at this time. Please try again.",
+                  "errors.updateNameFailed",
                 ),
             }),
         ),
@@ -208,6 +209,7 @@ export const userRouter = createTRPCRouter({
     .output(getApiResultZod(z.object({ success: z.boolean() })))
     .mutation(async ({ ctx }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         DbUtils.transaction(async (trx) => {
           const user = ctx.session.user;
 
@@ -407,6 +409,7 @@ export const userRouter = createTRPCRouter({
     .output(getApiResultZod(z.object({ success: z.boolean() })))
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.tryPromise({
           try: async () => {
             const now = new Date();
@@ -433,7 +436,7 @@ export const userRouter = createTRPCRouter({
               "update consent",
               "users",
               error,
-              "Unable to update consent at this time. Please try again.",
+              "errors.updateConsentFailed",
             ),
         }),
       );
@@ -470,6 +473,7 @@ export const userRouter = createTRPCRouter({
     .output(getApiResultZod(z.object({ success: z.boolean() })))
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.tryPromise({
           try: async () => {
             if (input.accepted) {
@@ -489,7 +493,7 @@ export const userRouter = createTRPCRouter({
               "update AI consent",
               "users",
               error,
-              "Unable to update AI consent at this time. Please try again.",
+              "errors.updateAiConsentFailed",
             ),
         }),
       );
@@ -499,6 +503,7 @@ export const userRouter = createTRPCRouter({
     .output(getApiResultZod(userDataExportSchema))
     .query(async ({ ctx }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.tryPromise({
           try: async () => {
             const userId = ctx.session.user.id;
@@ -700,7 +705,7 @@ export const userRouter = createTRPCRouter({
               "export user data",
               "users",
               error,
-              "Unable to export your data at this time. Please try again.",
+              "errors.exportDataFailed",
             ),
         }),
       );

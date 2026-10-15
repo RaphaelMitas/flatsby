@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, ShoppingCart } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   SidebarGroup,
@@ -19,6 +20,7 @@ import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 
 export function SidebarShoppingListSwitcher() {
+  const t = useTranslations("shoppingList");
   const pathname = usePathname();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
@@ -47,18 +49,18 @@ export function SidebarShoppingListSwitcher() {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Shopping Lists</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("sidebarTitle")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               isActive={isShoppingListDashboard}
-              tooltip="All Lists"
+              tooltip={t("allLists")}
             >
               <Link href="/shopping-list">
                 <Plus />
-                <span>All Lists</span>
+                <span>{t("allLists")}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -75,7 +77,7 @@ export function SidebarShoppingListSwitcher() {
           ) : shoppingLists.length === 0 ? (
             <SidebarMenuItem>
               <div className="text-muted-foreground px-2 py-1 text-sm">
-                No shopping lists yet
+                {t("noListsYet")}
               </div>
             </SidebarMenuItem>
           ) : (

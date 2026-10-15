@@ -1,10 +1,12 @@
+import type { MessageKey } from "@flatsby/i18n/message-key";
+import type { Messages } from "@flatsby/i18n/messages";
 import { Effect } from "effect";
 
 import { and, desc, eq } from "@flatsby/db";
 import { groupMembers, groups } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 
-import type { ApiError, NotFoundError } from "./errors";
+import type { ApiError, NotFoundError, NotFoundResource } from "./errors";
 import type {
   Database,
   DbTransaction,
@@ -15,7 +17,7 @@ import type {
   TransactionOperation,
   User,
 } from "./types";
-import { fail, safeDbOperation, withErrorHandling } from "./errors";
+import { Errors, fail, safeDbOperation } from "./errors";
 
 /**
  * Database operation utilities
@@ -26,15 +28,11 @@ export const DbUtils = {
    */
   findOneOrFail: <T>(
     operation: () => Promise<T | undefined>,
-    resource: string,
-    userMessage?: string,
+    resource: NotFoundResource,
   ): Effect.Effect<T, ApiError> => {
     return Effect.flatMap(
       safeDbOperation(operation, `find ${resource}`),
-      (result) =>
-        result
-          ? Effect.succeed(result)
-          : fail.notFound(resource, undefined, userMessage),
+      (result) => (result ? Effect.succeed(result) : fail.notFound(resource)),
     );
   },
 
@@ -43,13 +41,9 @@ export const DbUtils = {
    */
   checkAccess: (
     hasAccess: boolean,
-    action: string,
-    resource?: string,
-    customMessage?: string,
+    messageKey: MessageKey,
   ): Effect.Effect<void, ApiError> => {
-    return hasAccess
-      ? Effect.succeed(undefined)
-      : fail.forbidden(action, resource, customMessage);
+    return hasAccess ? Effect.succeed(undefined) : fail.forbidden(messageKey);
   },
 
   /**
@@ -58,15 +52,10 @@ export const DbUtils = {
   ensureGroupMember: (
     userId: string,
     groupMembers: Pick<GroupMember, "userId">[],
-    customMessage?: string,
+    messageKey: MessageKey = "errors.mustBeGroupMember",
   ): Effect.Effect<void, ApiError> => {
     const isMember = groupMembers.some((member) => member.userId === userId);
-    return DbUtils.checkAccess(
-      isMember,
-      "access this",
-      "group",
-      customMessage ?? "You must be a member of this group",
-    );
+    return DbUtils.checkAccess(isMember, messageKey);
   },
 
   /**
@@ -75,16 +64,11 @@ export const DbUtils = {
   ensureGroupAdmin: (
     userId: string,
     groupMembers: Pick<GroupMember, "userId" | "role">[],
-    customMessage?: string,
+    messageKey: MessageKey = "errors.mustBeAdmin",
   ): Effect.Effect<void, ApiError> => {
     const member = groupMembers.find((m) => m.userId === userId);
     const isAdmin = member?.role === "admin";
-    return DbUtils.checkAccess(
-      isAdmin,
-      "perform admin actions in this",
-      "group",
-      customMessage ?? "You must be an admin to perform this action",
-    );
+    return DbUtils.checkAccess(isAdmin, messageKey);
   },
 
   /**
@@ -103,9 +87,7 @@ export const DbUtils = {
 
     return DbUtils.checkAccess(
       !wouldBeLastAdmin,
-      "remove the last admin from this",
-      "group",
-      "Cannot remove the last admin from the group",
+      "errors.cannotRemoveLastAdmin",
     );
   },
 
@@ -131,35 +113,11 @@ export const ValidationUtils = {
    */
   notEmpty: (
     value: string,
-    fieldName: string,
+    field: keyof Messages["errors"]["empty"],
   ): Effect.Effect<string, ApiError> => {
     return value.trim().length > 0
       ? Effect.succeed(value)
-      : fail.validation(fieldName, "cannot be empty");
-  },
-
-  /**
-   * Validate that a number is positive
-   */
-  positive: (
-    value: number,
-    fieldName: string,
-  ): Effect.Effect<number, ApiError> => {
-    return value > 0
-      ? Effect.succeed(value)
-      : fail.validation(fieldName, "must be positive");
-  },
-
-  /**
-   * Validate that an array is not empty
-   */
-  notEmptyArray: <T>(
-    value: T[],
-    fieldName: string,
-  ): Effect.Effect<T[], ApiError> => {
-    return value.length > 0
-      ? Effect.succeed(value)
-      : fail.validation(fieldName, "cannot be empty");
+      : fail.validation(`errors.empty.${field}`);
   },
 };
 
@@ -203,7 +161,7 @@ export const OperationUtils = {
             );
 
             if (!thisGroupMember) {
-              return fail.notFound("group member", userId);
+              return fail.notFound("groupMember", userId);
             }
 
             return Effect.succeed({
@@ -239,14 +197,14 @@ export const OperationUtils = {
               },
             },
           }),
-        "shopping list",
+        "shoppingList",
       ),
       (list) =>
         Effect.map(
           DbUtils.ensureGroupMember(
             userId,
             list.group.groupMembers,
-            "You don't have access to this shopping list",
+            "errors.noShoppingListAccess",
           ),
           () => list,
         ),
@@ -290,7 +248,7 @@ export const GroupUtils = {
             },
           },
         }),
-      "group membership",
+      "groupMembership",
     );
   },
 
@@ -315,7 +273,7 @@ export const GroupUtils = {
               eq(members.isActive, true),
             ),
         }),
-      "group membership",
+      "groupMembership",
     );
   },
 
@@ -332,7 +290,7 @@ export const GroupUtils = {
         db.query.groupMembers.findFirst({
           where: GroupUtils.activeAdminWhere(groupId, userId),
         }),
-      "admin membership",
+      "adminMembership",
     );
   },
 
@@ -362,7 +320,7 @@ export const GroupUtils = {
               eq(members.isActive, true),
             ),
         }),
-      "group membership",
+      "groupMembership",
     );
   },
 
@@ -384,7 +342,7 @@ export const GroupUtils = {
     Effect.flatMap(
       safeDbOperation(
         () =>
-          db.transaction(async (tx): Promise<number | ApiError | "member"> => {
+          db.transaction(async (tx): Promise<number | ApiError> => {
             await GroupUtils.lockGroup(tx, groupId);
             const refused = await refusal?.(tx);
             if (refused) return refused;
@@ -395,7 +353,8 @@ export const GroupUtils = {
               ),
               orderBy: desc(groupMembers.isActive),
             });
-            if (existing?.isActive) return "member";
+            if (existing?.isActive)
+              return Errors.conflict("errors.alreadyMember");
             const [member] = existing
               ? await tx
                   .update(groupMembers)
@@ -412,15 +371,9 @@ export const GroupUtils = {
         "add group member",
       ),
       (result): Effect.Effect<number, ApiError> =>
-        typeof result === "object"
-          ? Effect.fail(result)
-          : result === "member"
-            ? fail.conflict(
-                "membership",
-                "already exists",
-                "This user is already a member of the group",
-              )
-            : Effect.succeed(result),
+        typeof result === "number"
+          ? Effect.succeed(result)
+          : Effect.fail(result),
     ),
 };
 
@@ -444,11 +397,7 @@ export const fetchGroupDebtSummary = async (db: Database, groupId: number) =>
     }),
   );
 
-/**
- * Helper to migrate existing tRPC procedures
- * Usage: return withErrorHandling(yourEffectChain)
- */
-export { withErrorHandling, safeDbOperation };
+export { safeDbOperation };
 
 /**
  * Helper to convert a simple async function to Effect with error handling

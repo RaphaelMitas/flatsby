@@ -1,6 +1,7 @@
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { Text, View } from "react-native";
+import { useLocale, useTranslations } from "use-intl";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
@@ -18,6 +19,8 @@ interface OtherDebtsProps {
 }
 
 export function OtherDebts({ debts, person, onSettle }: OtherDebtsProps) {
+  const t = useTranslations("debts");
+  const locale = useLocale();
   return (
     <Card className="px-4">
       {debts.map((debt, index) => {
@@ -55,12 +58,16 @@ export function OtherDebts({ debts, person, onSettle }: OtherDebtsProps) {
               {formatCurrencyFromCents({
                 cents: debt.amountInCents,
                 currency: debt.currency,
+                locale,
               })}
             </Text>
             <Button
               testID="debt-others-record"
-              accessibilityLabel={`Record ${from.name} paying ${to.name}`}
-              title="Record"
+              accessibilityLabel={t("recordPayment", {
+                from: from.name,
+                to: to.name,
+              })}
+              title={t("record")}
               size="sm"
               variant="outline"
               onPress={() => onSettle(debt)}

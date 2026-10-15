@@ -1,5 +1,6 @@
 import type { FaqItem } from "./content";
-import { FAQ, pickFaq, PLANS } from "./content";
+import type { MarketingTranslator } from "./i18n";
+import { FAQ, faqItems, PLANS } from "./content";
 
 const SCREENSHOT_BASE =
   "https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets";
@@ -11,41 +12,27 @@ export interface Screenshot {
   height: number;
 }
 
-const web = (file: string, alt: string): Screenshot => ({
-  src: `${SCREENSHOT_BASE}/web/${file}`,
-  alt,
-  width: 2880,
-  height: 1800,
-});
-
-const ios = (file: string, alt: string): Screenshot => ({
-  src: `${SCREENSHOT_BASE}/ios/${file}`,
-  alt,
-  width: 1320,
-  height: 2868,
-});
-
-export const SCREENSHOTS = {
-  webHome: web("web-home.png", "Flatsby home screen on the web"),
-  webLists: web(
-    "web-shopping-list.png",
-    "A shared grocery list in the Flatsby web app",
-  ),
-  webExpenses: web(
-    "web-expenses.png",
-    "List of shared expenses with who paid and how it was split",
-  ),
-  webChat: web(
-    "web-chat.png",
-    "The AI assistant answering a spending question with a chart",
-  ),
-  iosList: ios("02-shopping-list.png", "A shared shopping list on iPhone"),
-  iosExpenses: ios("03-expenses.png", "Shared expenses on iPhone"),
-  iosSplit: ios(
-    "04-expense-split.png",
-    "Splitting an expense between flatmates on iPhone",
-  ),
+const SHOTS = {
+  webHome: { file: "web/web-home.png", portrait: false },
+  webLists: { file: "web/web-shopping-list.png", portrait: false },
+  webExpenses: { file: "web/web-expenses.png", portrait: false },
+  webChat: { file: "web/web-chat.png", portrait: false },
+  iosList: { file: "ios/02-shopping-list.png", portrait: true },
+  iosSplit: { file: "ios/04-expense-split.png", portrait: true },
 };
+
+export function screenshot(
+  t: MarketingTranslator,
+  id: keyof typeof SHOTS,
+): Screenshot {
+  const { file, portrait } = SHOTS[id];
+  return {
+    src: `${SCREENSHOT_BASE}/${file}`,
+    alt: t(`screenshots.${id}`),
+    width: portrait ? 1320 : 2880,
+    height: portrait ? 2868 : 1800,
+  };
+}
 
 export interface PageSection {
   heading: string;
@@ -69,248 +56,247 @@ export interface ContentPageData {
   faq?: readonly FaqItem[];
 }
 
-export const CONTENT_PAGES = [
-  {
-    slug: "features/shopping-lists",
-    title: "Shared shopping list app for flatmates | Flatsby",
-    description:
-      "One shopping list for the whole flat on web, iPhone and Android, sorted by category, with who added each item. Free.",
-    headline: "A shared shopping list the whole flat can use",
-    intro:
-      "Everyone in your household adds to the same lists from their own phone or browser. Whoever is in the shop ticks things off, and the item is gone for everyone else too.",
-    sections: [
-      {
-        heading: "How it works",
-        paragraphs: [
-          "Create as many lists as your household needs, for example one for groceries and one for the hardware store. Anyone in the group can add, edit or tick off items.",
-          "Each item has a category such as produce, dairy or bakery, so the list sorts itself the way a shop is laid out. When you add an item, Flatsby can suggest the category by sending the item name to a classification model, and you can change it. This uses AI credits.",
-        ],
-        image: SCREENSHOTS.iosList,
-      },
-      {
-        heading: "The same list on every device",
-        paragraphs: [
-          "The same lists open on the web, on iPhone and on Android. Changes are not pushed live yet: a flatmate's edits show up when you open the list again or come back to the app or tab.",
-        ],
-        image: SCREENSHOTS.webLists,
-      },
-      {
-        heading: "What it does not do",
-        paragraphs: [
-          "There are no reminders or push notifications yet. Lists are for shopping, not for chores or to-dos.",
-        ],
-      },
-    ],
-    faq: pickFaq(
-      "Do shopping lists update in real time?",
-      "Does Flatsby work on Android?",
-      "How many people can be in a household?",
-    ),
-  },
-  {
-    slug: "features/expenses",
-    title: "Split bills and expenses with flatmates | Flatsby",
-    description:
-      "Log shared costs, split them equally, by percentage, by shares or exact amounts, and see who owes whom. Settle up with fewer payments. Free.",
-    headline: "Split bills with your flatmates without a spreadsheet",
-    intro:
-      "Log what you paid, choose how to split it, and Flatsby keeps a running balance for everyone in the household.",
-    sections: [
-      {
-        heading: "Four ways to split",
-        bullets: [
-          "Equally between everyone, or between the people you pick.",
-          "By percentage, for example rent split 60/40 by room size.",
-          "By shares, for example 2 parts to 1 when one person uses twice as much.",
-          "By exact amounts, when each person owes a specific sum.",
-        ],
-        paragraphs: [
-          "Each expense keeps its own split, so a 60/40 rent payment and a 50/50 grocery run can sit side by side in the same balance.",
-        ],
-        image: SCREENSHOTS.iosSplit,
-      },
-      {
-        heading: "Balances and settling up",
-        paragraphs: [
-          "Flatsby shows what each person owes or is owed. It simplifies the debts, so the household needs fewer payments to get back to zero.",
-          "When someone pays a flatmate back, record it as a settlement and both balances update.",
-        ],
-        image: SCREENSHOTS.webExpenses,
-      },
-      {
-        heading: "Currencies and categories",
-        paragraphs: [
-          "Expenses can be in EUR, USD, GBP or CHF. Flatsby does not convert between currencies. It keeps a separate balance per currency instead.",
-          "Every expense has a category, such as groceries, internet or home goods, so you can see where the money goes.",
-        ],
-      },
-      {
-        heading: "Rent and other recurring costs",
-        paragraphs: [
-          "There are no recurring expenses yet. Add rent as a new expense each month.",
-        ],
-      },
-    ],
-    faq: pickFaq(
-      "How does Flatsby split an expense?",
-      "Can I set up rent as a recurring expense?",
-      "Can I move my expenses over from Splitwise?",
-    ),
-  },
-  {
-    slug: "features/ai-assistant",
-    title: "AI assistant for your household | Flatsby",
-    description:
-      "Ask about your shared lists and expenses in plain language on the web. Get charts and tables, or have it add items and expenses for you.",
-    headline: "Ask your household anything",
-    intro:
-      "The assistant reads your group's shopping lists and expenses and answers in plain language, with charts and tables when numbers help. It is in the web app; the iPhone and Android apps don't have it yet.",
-    sections: [
-      {
-        heading: "What you can ask",
-        bullets: [
-          "How much did we spend on groceries last month?",
-          "Who has paid the most this year?",
-          "Add pasta, tomatoes and parmesan to the shopping list.",
-          "Log 45 euros for groceries, paid by me, split equally.",
-        ],
-        image: SCREENSHOTS.webChat,
-      },
-      {
-        heading: "Your data and the AI providers",
-        paragraphs: [
-          "The assistant asks for your consent before it sends anything. Your messages, and the list items, expenses and member names a question needs, go to OpenAI or Google through the Vercel AI Gateway to generate the answer.",
-          "Automatic categories are separate from the assistant: when you add a shopping item or an expense, its name goes through the same gateway to a classification model so Flatsby can suggest a category.",
-          "Your email address and sign-in details are not sent to the AI providers. Data sent for the assistant is used to generate the answer, not to train models. AI usage numbers such as the model and token counts, without your messages, go to PostHog for analytics.",
-        ],
-      },
-      {
-        heading: "Credits",
-        paragraphs: [
-          `The assistant and automatic categories use credits: ${PLANS.freeCredits} a month on the free plan, more on Starter and Pro. When credits run out, new items get the category Other until the next month. Lists, expenses and settling up never need credits.`,
-        ],
-      },
-    ],
-    faq: pickFaq("What does the AI assistant do?", "Is Flatsby free?"),
-  },
-  {
-    slug: "splitwise-alternative",
-    title: "Splitwise alternative for flatmates | Flatsby",
-    description:
-      "Flatsby vs Splitwise: no daily expense limit, no ads, a shared shopping list built in, and a Splitwise CSV import. Plus where Splitwise is better.",
-    headline: "A Splitwise alternative built for shared flats",
-    intro:
-      "Splitwise is the default for splitting bills, and it is good at it. Flatsby is for households that also want a shared shopping list and don't want a daily limit on adding expenses.",
-    table: {
-      caption:
-        "Flatsby and Splitwise compared. Splitwise details are from splitwise.com/pro, checked October 2026.",
-      head: ["", "Flatsby", "Splitwise"],
-      rows: [
-        ["Shared shopping lists", "Yes, on every device", "No"],
-        ["Limit on new expenses per day (free)", "None", "Yes, Pro removes it"],
-        ["Ads (free)", "None", "Yes, Pro is ad-free"],
-        [
-          "Split equally, by percentage, by shares or exact amounts",
-          "Yes",
-          "Yes",
-        ],
-        ["Debt simplification", "Yes", "Yes"],
-        ["Currency conversion", "No, balances per currency", "Pro"],
-        ["Receipt scanning", "No", "Pro"],
-        ["Spending charts", "Through the AI assistant (uses credits)", "Pro"],
-        ["Expenses outside a group", "No", "Yes"],
-        ["Platforms", "Web, iPhone, Android", "Web, iPhone, Android"],
-        ["Open source", "Yes, MIT license", "No"],
+export const CONTENT_SLUGS = [
+  "features/shopping-lists",
+  "features/expenses",
+  "features/ai-assistant",
+  "splitwise-alternative",
+  "pricing",
+  "faq",
+] as const;
+
+export function contentPages(t: MarketingTranslator): ContentPageData[] {
+  const yes = t("table.yes");
+  const no = t("table.no");
+  const none = t("table.none");
+  const pro = t("table.pro");
+  const noLimit = t("table.noLimit");
+  const platforms = t("table.platforms");
+
+  return [
+    {
+      slug: "features/shopping-lists",
+      title: t("pages.shoppingLists.title"),
+      description: t("pages.shoppingLists.description"),
+      headline: t("pages.shoppingLists.headline"),
+      intro: t("pages.shoppingLists.intro"),
+      sections: [
+        {
+          heading: t("pages.shoppingLists.howItWorks.heading"),
+          paragraphs: [
+            t("pages.shoppingLists.howItWorks.lists"),
+            t("pages.shoppingLists.howItWorks.categories"),
+          ],
+          image: screenshot(t, "iosList"),
+        },
+        {
+          heading: t("pages.shoppingLists.devices.heading"),
+          paragraphs: [t("pages.shoppingLists.devices.body")],
+          image: screenshot(t, "webLists"),
+        },
+        {
+          heading: t("pages.shoppingLists.limits.heading"),
+          paragraphs: [t("pages.shoppingLists.limits.body")],
+        },
       ],
+      faq: faqItems(t, ["realtime", "android", "members"]),
     },
-    sections: [
-      {
-        heading: "Where Splitwise is better",
-        paragraphs: [
-          "Splitwise Pro converts currencies, scans receipts and itemizes them, and in the US imports card transactions. Splitwise also handles one-off expenses with a friend outside any group. It has been around for years and most people already have an account. If those matter more to you than a shared shopping list, stay with Splitwise.",
-        ],
-      },
-      {
-        heading: "Moving from Splitwise to Flatsby",
-        bullets: [
-          "In Splitwise on the web, open the group and export it as a spreadsheet (CSV).",
-          "In Flatsby, create your household group and add your flatmates.",
-          "Open Group settings, choose Import expenses, pick the currency and upload the CSV.",
-          "Match each Splitwise name to a flatmate.",
-          "Check the preview. It lists rows it will skip, such as other currencies, expenses with several payers, or splits that don't add up.",
-          "Import. Each expense keeps the exact amount every person owed, so percentage splits arrive as amounts, not percentages.",
-        ],
-      },
-    ],
-    faq: pickFaq(
-      "Can I move my expenses over from Splitwise?",
-      "Is Flatsby free?",
-      "Does Flatsby work on Android?",
-    ),
-  },
-  {
-    slug: "pricing",
-    title: "Flatsby pricing: free, with optional Starter and Pro plans",
-    description: `Shopping lists, expenses, settlements and groups are free with no member limit and no ads. Starter (${PLANS.starter.price}) and Pro (${PLANS.pro.price}) add AI credits.`,
-    headline: "Free for the whole household",
-    intro:
-      "Everything a shared flat needs is free: shopping lists, expenses, settling up and groups, with no member limit and no ads. You only pay for more AI credits.",
-    table: {
-      caption: "Plans and monthly AI credits",
-      head: ["", "Free", "Starter", "Pro"],
-      rows: [
-        ["Shopping lists, expenses and settlements", "Yes", "Yes", "Yes"],
-        ["Members per household", "No limit", "No limit", "No limit"],
-        ["Ads", "None", "None", "None"],
-        [
-          "AI credits per month",
-          PLANS.freeCredits,
-          PLANS.starter.credits,
-          PLANS.pro.credits,
-        ],
-        [
-          "Price on the web",
-          "Free",
-          `${PLANS.starter.price} a month`,
-          `${PLANS.pro.price} a month`,
-        ],
+    {
+      slug: "features/expenses",
+      title: t("pages.expenses.title"),
+      description: t("pages.expenses.description"),
+      headline: t("pages.expenses.headline"),
+      intro: t("pages.expenses.intro"),
+      sections: [
+        {
+          heading: t("pages.expenses.splits.heading"),
+          bullets: [
+            t("pages.expenses.splits.equal"),
+            t("pages.expenses.splits.percentage"),
+            t("pages.expenses.splits.shares"),
+            t("pages.expenses.splits.exact"),
+          ],
+          paragraphs: [t("pages.expenses.splits.body")],
+          image: screenshot(t, "iosSplit"),
+        },
+        {
+          heading: t("pages.expenses.balances.heading"),
+          paragraphs: [
+            t("pages.expenses.balances.owes"),
+            t("pages.expenses.balances.settlement"),
+          ],
+          image: screenshot(t, "webExpenses"),
+        },
+        {
+          heading: t("pages.expenses.currencies.heading"),
+          paragraphs: [
+            t("pages.expenses.currencies.currencies"),
+            t("pages.expenses.currencies.categories"),
+          ],
+        },
+        {
+          heading: t("pages.expenses.recurring.heading"),
+          paragraphs: [t("pages.expenses.recurring.body")],
+        },
       ],
+      faq: faqItems(t, ["split", "rent", "splitwise"]),
     },
-    sections: [
-      {
-        heading: "What credits are for",
-        paragraphs: [
-          "The AI assistant and automatic categories use credits. When they run out, the assistant pauses and new items get the category Other until the next month. Nothing else in Flatsby uses credits.",
+    {
+      slug: "features/ai-assistant",
+      title: t("pages.aiAssistant.title"),
+      description: t("pages.aiAssistant.description"),
+      headline: t("pages.aiAssistant.headline"),
+      intro: t("pages.aiAssistant.intro"),
+      sections: [
+        {
+          heading: t("pages.aiAssistant.questions.heading"),
+          bullets: [
+            t("pages.aiAssistant.questions.groceries"),
+            t("pages.aiAssistant.questions.paidMost"),
+            t("pages.aiAssistant.questions.addItems"),
+            t("pages.aiAssistant.questions.logExpense"),
+          ],
+          image: screenshot(t, "webChat"),
+        },
+        {
+          heading: t("pages.aiAssistant.data.heading"),
+          paragraphs: [
+            t("pages.aiAssistant.data.consent"),
+            t("pages.aiAssistant.data.categories"),
+            t("pages.aiAssistant.data.training"),
+          ],
+        },
+        {
+          heading: t("pages.aiAssistant.credits.heading"),
+          paragraphs: [t("pages.aiAssistant.credits.body", PLANS)],
+        },
+      ],
+      faq: faqItems(t, ["assistant", "free"]),
+    },
+    {
+      slug: "splitwise-alternative",
+      title: t("pages.splitwise.title"),
+      description: t("pages.splitwise.description"),
+      headline: t("pages.splitwise.headline"),
+      intro: t("pages.splitwise.intro"),
+      table: {
+        caption: t("pages.splitwise.table.caption"),
+        head: ["", "Flatsby", "Splitwise"],
+        rows: [
+          [
+            t("pages.splitwise.table.lists"),
+            t("pages.splitwise.table.listsFlatsby"),
+            no,
+          ],
+          [
+            t("pages.splitwise.table.limit"),
+            none,
+            t("pages.splitwise.table.limitSplitwise"),
+          ],
+          [
+            t("pages.splitwise.table.ads"),
+            none,
+            t("pages.splitwise.table.adsSplitwise"),
+          ],
+          [t("pages.splitwise.table.split"), yes, yes],
+          [t("pages.splitwise.table.simplify"), yes, yes],
+          [
+            t("pages.splitwise.table.currency"),
+            t("pages.splitwise.table.currencyFlatsby"),
+            pro,
+          ],
+          [t("pages.splitwise.table.receipts"), no, pro],
+          [
+            t("pages.splitwise.table.charts"),
+            t("pages.splitwise.table.chartsFlatsby"),
+            pro,
+          ],
+          [t("pages.splitwise.table.outside"), no, yes],
+          [t("pages.splitwise.table.platforms"), platforms, platforms],
+          [
+            t("pages.splitwise.table.openSource"),
+            t("pages.splitwise.table.openSourceFlatsby"),
+            no,
+          ],
         ],
       },
-      {
-        heading: "Where to buy",
-        paragraphs: [
-          `On the web, open Billing after you sign in to choose Starter or Pro. The Android app links to that page. On iPhone, Pro is an in-app purchase at ${PLANS.proAppStorePrice} a month in the US App Store.`,
+      sections: [
+        {
+          heading: t("pages.splitwise.better.heading"),
+          paragraphs: [t("pages.splitwise.better.body")],
+        },
+        {
+          heading: t("pages.splitwise.moving.heading"),
+          bullets: [
+            t("pages.splitwise.moving.export"),
+            t("pages.splitwise.moving.group"),
+            t("pages.splitwise.moving.upload"),
+            t("pages.splitwise.moving.match"),
+            t("pages.splitwise.moving.preview"),
+            t("pages.splitwise.moving.import"),
+          ],
+        },
+      ],
+      faq: faqItems(t, ["splitwise", "free", "android"]),
+    },
+    {
+      slug: "pricing",
+      title: t("pages.pricing.title"),
+      description: t("pages.pricing.description", PLANS),
+      headline: t("pages.pricing.headline"),
+      intro: t("pages.pricing.intro"),
+      table: {
+        caption: t("pages.pricing.table.caption"),
+        head: ["", t("plans.free"), t("plans.starter"), t("plans.pro")],
+        rows: [
+          [t("pages.pricing.table.core"), yes, yes, yes],
+          [t("pages.pricing.table.members"), noLimit, noLimit, noLimit],
+          [t("pages.pricing.table.ads"), none, none, none],
+          [
+            t("pages.pricing.table.credits"),
+            t("plans.credits", { credits: PLANS.freeCredits }),
+            t("plans.credits", { credits: PLANS.starterCredits }),
+            t("plans.credits", { credits: PLANS.proCredits }),
+          ],
+          [
+            t("pages.pricing.table.price"),
+            t("plans.free"),
+            t("plans.perMonth", { price: PLANS.starterPrice }),
+            t("plans.perMonth", { price: PLANS.proPrice }),
+          ],
         ],
       },
-    ],
-    faq: pickFaq("Is Flatsby free?", "What does the AI assistant do?"),
-  },
-  {
-    slug: "faq",
-    title: "Flatsby FAQ: shared shopping lists and bill splitting",
-    description:
-      "Answers about Flatsby: price, Android and iPhone, splitting rent by percentage, moving from Splitwise, privacy and the AI assistant.",
-    headline: "Questions about Flatsby",
-    intro:
-      "Short answers to what people ask before they move their household into Flatsby.",
-    sections: [],
-    faq: FAQ,
-  },
-] as const satisfies readonly ContentPageData[];
+      sections: [
+        {
+          heading: t("pages.pricing.credits.heading"),
+          paragraphs: [t("pages.pricing.credits.body")],
+        },
+        {
+          heading: t("pages.pricing.buy.heading"),
+          paragraphs: [t("pages.pricing.buy.body", PLANS)],
+        },
+      ],
+      faq: faqItems(t, ["free", "assistant"]),
+    },
+    {
+      slug: "faq",
+      title: t("pages.faq.title"),
+      description: t("pages.faq.description"),
+      headline: t("pages.faq.headline"),
+      intro: t("pages.faq.intro"),
+      sections: [],
+      faq: faqItems(t, FAQ),
+    },
+  ] satisfies (ContentPageData & { slug: (typeof CONTENT_SLUGS)[number] })[];
+}
 
 export function contentPageParams() {
-  return CONTENT_PAGES.map((page) => ({ slug: page.slug.split("/") }));
+  return CONTENT_SLUGS.map((slug) => ({ slug: slug.split("/") }));
 }
 
 export function findContentPage(
+  t: MarketingTranslator,
   slug: readonly string[],
 ): ContentPageData | undefined {
-  return CONTENT_PAGES.find((page) => page.slug === slug.join("/"));
+  return contentPages(t).find((page) => page.slug === slug.join("/"));
 }

@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
 import { undecidedDebtCurrencies } from "@flatsby/validators/expenses/conversion";
 import {
@@ -35,6 +36,8 @@ interface DebtSummaryViewProps {
 
 export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const router = useRouter();
+  const t = useTranslations();
+  const locale = useLocale();
   const { invalidateDebtSummary } = useInvalidateExpenses(groupId);
   const [refreshing, setRefreshing] = useState(false);
   const [kind, setKind] = useState<DebtKind>("direct");
@@ -61,7 +64,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
 
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
-  const person = personLookup(groupData.data.groupMembers, meId);
+  const person = personLookup(groupData.data.groupMembers, meId, t);
   const others = debtsBetweenOthers(summary, meId, kind);
   const balances = groupBalances(summary, meId);
   const group = groupData.data;
@@ -95,21 +98,21 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         )}
         {hasDebts(summary) ? (
           <>
-            <DebtHero hero={debtHero(summary, meId)} />
+            <DebtHero hero={debtHero(summary, meId, t, locale)} />
             <ModeSwitch kind={kind} onChange={setKind} />
-            <SectionLabel>Between you and</SectionLabel>
+            <SectionLabel>{t("debts.betweenYouAnd")}</SectionLabel>
             <DirectDebts
               groupId={groupId}
               meId={meId}
               kind={kind}
-              counterparts={debtsFor(summary, meId, kind)}
-              allSquare={allSquareMessage(summary, meId, kind, person)}
+              counterparts={debtsFor(summary, meId, kind, t)}
+              allSquare={allSquareMessage(summary, meId, kind, person, t)}
               person={person}
               onSettle={openSettle}
             />
             {others.length > 0 && (
               <>
-                <SectionLabel>Between others</SectionLabel>
+                <SectionLabel>{t("debts.betweenOthers")}</SectionLabel>
                 <OtherDebts
                   debts={others}
                   person={person}
@@ -119,7 +122,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
             )}
             {balances.length > 0 && (
               <>
-                <SectionLabel>Balances</SectionLabel>
+                <SectionLabel>{t("debts.balances")}</SectionLabel>
                 <GroupBalances currencies={balances} person={person} />
               </>
             )}
@@ -130,10 +133,10 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
               <Icon name="check" size={30} color="success" />
             </View>
             <Text className="text-foreground text-lg font-semibold">
-              All settled up
+              {t("debts.allSettledUp")}
             </Text>
             <Text className="text-muted-foreground text-center text-sm">
-              Nobody in {groupData.data.name} owes anything.
+              {t("debts.nobodyOwes", { group: groupData.data.name })}
             </Text>
           </Card>
         )}
@@ -146,7 +149,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         >
           <Icon name="plus" size={16} color="muted-foreground" />
           <Text className="text-muted-foreground text-sm">
-            Record another payment
+            {t("debts.recordAnotherPayment")}
           </Text>
         </Pressable>
       </View>
@@ -155,9 +158,9 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
 }
 
 const modes = [
-  { kind: "direct", label: "Actual" },
-  { kind: "simplified", label: "Simplified" },
-] satisfies { kind: DebtKind; label: string }[];
+  { kind: "direct", name: "actual" },
+  { kind: "simplified", name: "simplified" },
+] as const satisfies { kind: DebtKind; name: string }[];
 
 function ModeSwitch({
   kind,
@@ -166,6 +169,7 @@ function ModeSwitch({
   kind: DebtKind;
   onChange: (kind: DebtKind) => void;
 }) {
+  const t = useTranslations("debts.mode");
   return (
     <View className="bg-muted mt-2 flex-row rounded-lg p-1">
       {modes.map((mode) => {
@@ -173,7 +177,7 @@ function ModeSwitch({
         return (
           <Pressable
             key={mode.kind}
-            testID={`debt-mode-${mode.label.toLowerCase()}`}
+            testID={`debt-mode-${mode.name}`}
             accessibilityRole="button"
             accessibilityState={{ selected }}
             onPress={() => onChange(mode.kind)}
@@ -188,7 +192,7 @@ function ModeSwitch({
                 selected ? "text-foreground" : "text-muted-foreground",
               )}
             >
-              {mode.label}
+              {t(mode.name)}
             </Text>
           </Pressable>
         );

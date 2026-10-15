@@ -5,12 +5,10 @@ import type { EditableSplitMethod } from "@flatsby/validators/expenses/split-edi
 import type { UseFormReturn } from "react-hook-form";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useWatch } from "react-hook-form";
+import { useLocale, useTranslations } from "use-intl";
 
 import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
-import {
-  formatCurrencyFromCents,
-  formatShareCount,
-} from "@flatsby/validators/expenses/formatting";
+import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
@@ -28,13 +26,12 @@ import { Separator } from "~/lib/ui/separator";
 import { CurrencyInput } from "./CurrencyInput";
 
 const SPLIT_METHOD_OPTIONS = [
-  { method: "equal", label: "Equal", icon: "equal" },
-  { method: "percentage", label: "Percentage", icon: "percent" },
-  { method: "shares", label: "Shares", icon: "divide" },
-  { method: "custom", label: "Custom", icon: "dollar-sign" },
+  { method: "equal", icon: "equal" },
+  { method: "percentage", icon: "percent" },
+  { method: "shares", icon: "divide" },
+  { method: "custom", icon: "dollar-sign" },
 ] as const satisfies readonly {
   method: EditableSplitMethod;
-  label: string;
   icon: IconProps["name"];
 }[];
 
@@ -60,6 +57,8 @@ export function SplitEditor({
   splitMethod,
   onSplitMethodChange,
 }: SplitEditorProps) {
+  const t = useTranslations();
+  const locale = useLocale();
   const splits = useWatch({ control: form.control, name: "splits" });
   const selectedMemberIds = splits.map((s) => s.groupMemberId);
   const {
@@ -91,11 +90,11 @@ export function SplitEditor({
   return (
     <View className="gap-4">
       <View className="flex-row flex-wrap gap-2">
-        {SPLIT_METHOD_OPTIONS.map(({ method, label, icon }) => (
+        {SPLIT_METHOD_OPTIONS.map(({ method, icon }) => (
           <Button
             key={method}
             testID={`split-method-${method}`}
-            title={label}
+            title={t(`expenses.splitMethods.${method}`)}
             variant={splitMethod === method ? "primary" : "outline"}
             size="sm"
             onPress={() => changeMethod(method)}
@@ -108,10 +107,10 @@ export function SplitEditor({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-foreground">Select People</CardTitle>
-          <CardDescription>
-            Choose who should be included in this expense
-          </CardDescription>
+          <CardTitle className="text-foreground">
+            {t("expenses.selectPeople")}
+          </CardTitle>
+          <CardDescription>{t("expenses.selectPeopleHint")}</CardDescription>
         </CardHeader>
         <CardContent>
           <View className="flex-row flex-wrap gap-2">
@@ -152,15 +151,21 @@ export function SplitEditor({
       {splits.length > 0 && (
         <Card testID="split-details-card">
           <CardHeader>
-            <CardTitle>Split Details</CardTitle>
+            <CardTitle>{t("expenses.splitDetails")}</CardTitle>
             <CardDescription>
-              {splitMethod === "equal" && "Amounts are split equally"}
+              {splitMethod === "equal" && t("expenses.splitHintEqual")}
               {splitMethod === "percentage" &&
-                "Enter percentage for each person (must sum to 100%)"}
+                t("expenses.splitHintPercentage")}
               {splitMethod === "shares" &&
-                `Enter shares for each person (${totalShares} total)`}
+                t("expenses.splitHintShares", { count: totalShares })}
               {splitMethod === "custom" &&
-                `Enter amounts (must sum to ${formatCurrencyFromCents({ cents: totalAmountCents, currency })})`}
+                t("expenses.splitHintCustom", {
+                  amount: formatCurrencyFromCents({
+                    cents: totalAmountCents,
+                    currency,
+                    locale,
+                  }),
+                })}
             </CardDescription>
           </CardHeader>
           <CardContent className="gap-3">
@@ -168,7 +173,7 @@ export function SplitEditor({
               const member = groupMembers.find(
                 (m) => m.id === split.groupMemberId,
               );
-              const memberName = member?.user.name ?? "Unknown";
+              const memberName = member?.user.name ?? t("common.unknown");
               const shares = split.shares ?? 0;
 
               return (
@@ -187,6 +192,7 @@ export function SplitEditor({
                       {formatCurrencyFromCents({
                         cents: split.amountInCents,
                         currency,
+                        locale,
                       })}
                     </Text>
                     {isConverted && (
@@ -195,6 +201,7 @@ export function SplitEditor({
                           cents:
                             ledger.expenseSplits[index]?.amountInCents ?? 0,
                           currency: ledger.currency,
+                          locale,
                         })}
                       </Text>
                     )}
@@ -226,7 +233,9 @@ export function SplitEditor({
                         icon="minus"
                         onPress={() => setShares(index, shares - 1)}
                         disabled={shares <= 1}
-                        accessibilityLabel={`Fewer shares for ${memberName}`}
+                        accessibilityLabel={t("expenses.fewerSharesFor", {
+                          name: memberName,
+                        })}
                       />
                       <Input
                         testID={`split-member-shares-${index}`}
@@ -237,7 +246,9 @@ export function SplitEditor({
                         }
                         textAlign="center"
                         className="w-16 px-2"
-                        accessibilityLabel={`Shares for ${memberName}`}
+                        accessibilityLabel={t("expenses.sharesFor", {
+                          name: memberName,
+                        })}
                       />
                       <Button
                         testID={`split-member-shares-increment-${index}`}
@@ -245,10 +256,12 @@ export function SplitEditor({
                         size="icon"
                         icon="plus"
                         onPress={() => setShares(index, shares + 1)}
-                        accessibilityLabel={`More shares for ${memberName}`}
+                        accessibilityLabel={t("expenses.moreSharesFor", {
+                          name: memberName,
+                        })}
                       />
                       <Text className="text-muted-foreground text-sm">
-                        of {formatShareCount(totalShares)}
+                        {t("expenses.ofShares", { count: totalShares })}
                       </Text>
                     </View>
                   )}
@@ -281,20 +294,26 @@ export function SplitEditor({
       {splits.length > 0 && (
         <View className="gap-1">
           <View className="flex-row items-center justify-between">
-            <Text className="text-muted-foreground text-sm">Total:</Text>
+            <Text className="text-muted-foreground text-sm">
+              {t("expenses.totalLabel")}
+            </Text>
             <Text
               className={`text-foreground text-sm font-semibold ${
                 validation.isValid ? "" : "text-destructive"
               }`}
             >
-              {formatCurrencyFromCents({ cents: totalSplitCents, currency })}
+              {formatCurrencyFromCents({
+                cents: totalSplitCents,
+                currency,
+                locale,
+              })}
               {isConverted &&
-                ` · ${formatCurrencyFromCents({ cents: ledger.amountInCents, currency: ledger.currency })}`}
+                ` · ${formatCurrencyFromCents({ cents: ledger.amountInCents, currency: ledger.currency, locale })}`}
             </Text>
           </View>
           {!validation.isValid && validation.error && (
             <Text className="text-destructive mt-1 text-xs">
-              {validation.error}
+              {t(validation.error.key, validation.error.values)}
             </Text>
           )}
         </View>

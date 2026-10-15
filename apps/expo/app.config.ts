@@ -126,7 +126,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "expo-secure-store",
     "expo-web-browser",
-    "expo-localization",
+    ["expo-localization", { supportedLocales: ["en", "de"] }],
     [
       "expo-splash-screen",
       {

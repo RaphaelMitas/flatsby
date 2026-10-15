@@ -4,6 +4,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
@@ -29,6 +30,7 @@ export function ExpenseListPanel({
   onCreateExpense,
 }: ExpenseListPanelProps) {
   const router = useRouter();
+  const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
   const isLargeScreen = useMediaQuery("lg");
 
@@ -96,12 +98,12 @@ export function ExpenseListPanel({
           testID="expense-heading"
           className="text-foreground text-3xl font-bold"
         >
-          Expenses
+          {t("navigation.expenses")}
         </Text>
         <View className="flex-row items-center gap-2">
           <Button
             testID="expense-debt-overview-button"
-            title="Debt Overview"
+            title={t("expenses.debtOverview")}
             size="md"
             icon="arrow-right"
             onPress={() => router.push(`/(tabs)/expenses/debts`)}
@@ -109,7 +111,7 @@ export function ExpenseListPanel({
           {isLargeScreen && (
             <Button
               testID="expense-add-button"
-              title="Add"
+              title={t("expenses.add")}
               size="md"
               icon="plus"
               onPress={onCreateExpense}
@@ -122,14 +124,14 @@ export function ExpenseListPanel({
         <View className="flex flex-1 flex-col items-center justify-center gap-4">
           <Icon name="wallet" size={64} color="muted-foreground" />
           <Text className="text-foreground text-lg font-semibold">
-            No expenses yet
+            {t("expenses.emptyTitle")}
           </Text>
           <Text className="text-muted-foreground text-center text-sm">
-            Start tracking expenses by adding your first one
+            {t("expenses.emptyHint")}
           </Text>
           <Button
             testID="expense-add-button"
-            title="Add Expense"
+            title={t("expenses.addExpense")}
             variant="primary"
             size="lg"
             icon="plus"

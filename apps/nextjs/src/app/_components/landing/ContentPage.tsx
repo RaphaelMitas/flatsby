@@ -1,19 +1,24 @@
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
+import { localePath } from "@flatsby/i18n/locale";
 import { Button } from "@flatsby/ui/button";
 
 import type { ContentPageData } from "./pages";
 import { UPDATED } from "./content";
 import { FaqSection } from "./FaqSection";
-import { CONTENT_PAGES } from "./pages";
+import { marketingTranslator } from "./i18n";
+import { contentPages } from "./pages";
 import { ScreenshotImage } from "./ScreenshotImage";
 import { SiteShell } from "./SiteShell";
 import { contentPageJsonLd, JsonLd } from "./structured-data";
 
 export function ContentPage({ page }: { page: ContentPageData }) {
+  const locale = useLocale();
+  const t = useTranslations("marketing");
   return (
-    <SiteShell>
-      <JsonLd graph={contentPageJsonLd(page)} />
+    <SiteShell path={`/${page.slug}`}>
+      <JsonLd graph={contentPageJsonLd(locale, page)} />
       <article className="mx-auto flex max-w-3xl flex-col gap-12 px-4 py-16">
         <header className="flex flex-col gap-4">
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
@@ -21,7 +26,10 @@ export function ContentPage({ page }: { page: ContentPageData }) {
           </h1>
           <p className="text-muted-foreground text-lg">{page.intro}</p>
           <p className="text-muted-foreground text-sm">
-            Updated <time dateTime={UPDATED}>{UPDATED}</time>
+            {t.rich("contentPage.updated", {
+              date: UPDATED,
+              time: (chunks) => <time dateTime={UPDATED}>{chunks}</time>,
+            })}
           </p>
         </header>
 
@@ -84,25 +92,27 @@ export function ContentPage({ page }: { page: ContentPageData }) {
 
         <div className="flex flex-wrap gap-3">
           <Button size="lg" asChild>
-            <Link href="/auth/login">Get Started Free</Link>
+            <Link href="/auth/login">{t("cta.button")}</Link>
           </Button>
           <Button variant="outline" size="lg" asChild>
-            <Link href="/">How Flatsby works</Link>
+            <Link href={localePath(locale, "/")}>
+              {t("contentPage.howItWorks")}
+            </Link>
           </Button>
         </div>
         <nav className="flex flex-col gap-2">
-          <h2 className="text-xl font-semibold">More about Flatsby</h2>
-          {CONTENT_PAGES.filter((other) => other.slug !== page.slug).map(
-            (other) => (
+          <h2 className="text-xl font-semibold">{t("contentPage.more")}</h2>
+          {contentPages(marketingTranslator(locale))
+            .filter((other) => other.slug !== page.slug)
+            .map((other) => (
               <Link
                 key={other.slug}
-                href={`/${other.slug}`}
+                href={localePath(locale, `/${other.slug}`)}
                 className="text-muted-foreground hover:text-foreground underline"
               >
                 {other.headline}
               </Link>
-            ),
-          )}
+            ))}
         </nav>
       </article>
       {page.faq && <FaqSection items={page.faq} />}

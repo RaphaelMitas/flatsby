@@ -3,7 +3,9 @@ import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { Alert, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
+import { translateIfKey } from "@flatsby/i18n/message-key";
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import { Button } from "~/lib/ui/button";
@@ -13,6 +15,7 @@ import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 
 export default function CreateShoppingList() {
+  const t = useTranslations();
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const handleGoBack = () => {
     router.back();
@@ -30,7 +33,7 @@ export default function CreateShoppingList() {
       }),
       previousLists,
     );
-    Alert.alert("Error", message ?? "Failed to create shopping list");
+    Alert.alert(t("common.error"), message ?? t("shoppingList.createFailed"));
   };
 
   const createShoppingListMutation = useMutation(
@@ -111,7 +114,7 @@ export default function CreateShoppingList() {
     <View className="bg-background flex-1 p-4">
       <Form {...form}>
         <View className="flex gap-2">
-          <Label htmlFor="name">List Name</Label>
+          <Label htmlFor="name">{t("shoppingList.listNameLabel")}</Label>
           <FormField
             name="name"
             control={form.control}
@@ -122,7 +125,7 @@ export default function CreateShoppingList() {
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
-                  placeholder="Enter your shopping list name"
+                  placeholder={t("shoppingList.create.namePlaceholder")}
                   className="w-full"
                   error={!!form.formState.errors.name}
                   maxLength={
@@ -134,20 +137,24 @@ export default function CreateShoppingList() {
           />
           {form.formState.errors.name && (
             <Text className="text-destructive">
-              {form.formState.errors.name.message}
+              {translateIfKey(t, form.formState.errors.name.message ?? "")}
             </Text>
           )}
 
           <View className="flex flex-row gap-2">
             <Button
-              title="Cancel"
+              title={t("common.cancel")}
               variant="secondary"
               onPress={handleGoBack}
               className="flex-1"
             />
             <Button
               testID="shopping-list-create-submit"
-              title={form.formState.isSubmitting ? "Creating..." : "Create"}
+              title={
+                form.formState.isSubmitting
+                  ? t("common.creating")
+                  : t("shoppingList.create.submit")
+              }
               className="flex-1"
               disabled={form.formState.isSubmitting}
               icon={form.formState.isSubmitting ? "loader" : undefined}

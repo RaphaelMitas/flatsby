@@ -8,6 +8,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import type { RouterOutputs } from "~/utils/api";
 import { TimedAlert } from "~/components/TimedAlert";
@@ -34,6 +35,7 @@ const MemberCard = ({
   currentUserGroupMember: GroupMemberWithUser;
   onPress: () => void;
 }) => {
+  const t = useTranslations("group.members");
   const isUserAdmin = groupMember.role === "admin";
   const isCurrentUser = groupMember.id === currentUserGroupMember.id;
   const isCurrentUserAdmin = currentUserGroupMember.role === "admin";
@@ -65,7 +67,7 @@ const MemberCard = ({
             </Text>
             {isUserAdmin && (
               <Text className="text-muted-foreground ml-1 text-sm font-medium">
-                (Admin)
+                {t("adminBadge")}
               </Text>
             )}
           </View>
@@ -80,6 +82,7 @@ const MemberCard = ({
 };
 
 export default function MembersScreen() {
+  const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -217,10 +220,10 @@ export default function MembersScreen() {
       {/* Header */}
       <View className="bg-background px-4 py-6">
         <Text className="text-foreground text-2xl font-bold">
-          Manage Members
+          {t("group.members.title")}
         </Text>
         <Text className="text-muted-foreground text-sm">
-          Invite people and update their roles.
+          {t("group.members.description")}
         </Text>
       </View>
 
@@ -228,7 +231,7 @@ export default function MembersScreen() {
         <View className="px-4 pb-4">
           <Button
             testID="group-invite-button"
-            title="Invite people"
+            title={t("invite.open")}
             icon="plus"
             onPress={() =>
               router.push("/(tabs)/settings/group-settings/invite")
@@ -244,7 +247,9 @@ export default function MembersScreen() {
             testID={`group-members-count-${group.data.groupMembers.length}`}
             className="text-foreground text-base font-medium"
           >
-            Members ({group.data.groupMembers.length})
+            {t("group.members.listTitle", {
+              count: group.data.groupMembers.length,
+            })}
           </Text>
         </View>
         <View className="flex-1">
@@ -266,13 +271,14 @@ export default function MembersScreen() {
             title={
               updateMemberRoleMutation.data?.success === false
                 ? updateMemberRoleMutation.data.error.type
-                : (updateMemberRoleMutation.error?.data?.code ?? "Error")
+                : (updateMemberRoleMutation.error?.data?.code ??
+                  t("common.error"))
             }
             description={
               updateMemberRoleMutation.data?.success === false
                 ? updateMemberRoleMutation.data.error.message
                 : (updateMemberRoleMutation.error?.message ??
-                  "Unknown error during role update")
+                  t("group.members.roleUpdateFailed"))
             }
             onDismiss={() => updateMemberRoleMutation.reset()}
           />
@@ -287,13 +293,14 @@ export default function MembersScreen() {
             title={
               removeGroupMemberMutation.data?.success === false
                 ? removeGroupMemberMutation.data.error.type
-                : (removeGroupMemberMutation.error?.data?.code ?? "Error")
+                : (removeGroupMemberMutation.error?.data?.code ??
+                  t("common.error"))
             }
             description={
               removeGroupMemberMutation.data?.success === false
                 ? removeGroupMemberMutation.data.error.message
                 : (removeGroupMemberMutation.error?.message ??
-                  "Unknown error during member removal")
+                  t("group.members.removeFailed"))
             }
             onDismiss={() => removeGroupMemberMutation.reset()}
           />
@@ -306,7 +313,7 @@ export default function MembersScreen() {
           <View className="px-4 py-2">
             <TimedAlert
               variant="success"
-              title="Role updated successfully!"
+              title={t("group.members.roleUpdated")}
               onDismiss={() => updateMemberRoleMutation.reset()}
             />
           </View>
@@ -317,7 +324,7 @@ export default function MembersScreen() {
           <View className="px-4 py-2">
             <TimedAlert
               variant="success"
-              title="Member removed successfully!"
+              title={t("group.members.removed")}
               onDismiss={() => removeGroupMemberMutation.reset()}
             />
           </View>

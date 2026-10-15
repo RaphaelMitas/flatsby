@@ -1,0 +1,101 @@
+import type { Messages } from "../../messages";
+
+export const group = {
+  avatarAlt: "Gruppenbild",
+  memberCount: "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+  nameLabel: "Gruppenname",
+  namePlaceholder: "Gruppennamen eingeben",
+  create: {
+    description: "Gib einen Namen für deine neue Gruppe ein.",
+    namePlaceholder: "Gib deinen Gruppennamen ein",
+    submit: "Erstellen",
+    title: "Gruppe erstellen",
+  },
+  dashboard: {
+    empty: "Noch keine Gruppen",
+    goToGroup: "Zur Gruppe",
+    notAMember: "Du bist noch in keiner Gruppe.",
+    selectGroup: "Gruppe auswählen",
+    title: "Deine Gruppen",
+  },
+  settings: {
+    changeGroup: "Gruppe wechseln",
+    changeGroupSubtitle: "Andere Gruppe auswählen oder neue erstellen",
+    details: "Gruppendetails",
+    detailsSubtitle: "Details deiner Gruppe bearbeiten",
+    importExpenses: "Ausgaben importieren",
+    importExpensesSubtitle: "Aus Splitwise-CSV importieren",
+    members: "Mitglieder",
+    membersSubtitle: "Mitglieder deiner Gruppe verwalten",
+    selectShoppingList: "Einkaufsliste auswählen",
+    selectShoppingListSubtitle:
+      "Einkaufslisten auswählen, erstellen und bearbeiten",
+  },
+  details: {
+    adminOnly: "Nur Admins der Gruppe können die Details bearbeiten.",
+    comingSoon: "Funktion kommt bald!",
+    description: "Ändere Namen und Bild deiner Gruppe.",
+    nameChanged: "Name erfolgreich geändert!",
+    nameUpdated: "Der Gruppenname wurde erfolgreich geändert.",
+    notAdmin: "Kein Admin",
+    notAdminLowercase: "kein Admin",
+    profilePicture: "Profilbild",
+    renameFailed: "Unbekannter Fehler beim Ändern des Namens",
+    saveChanges: "Änderungen speichern",
+    success: "Erledigt!",
+    uploadNew: "Neues hochladen",
+  },
+  delete: {
+    cannotBeUndone: "Das kann nicht rückgängig gemacht werden.",
+    confirmationLabel: "Gib zur Bestätigung den Gruppennamen ein: {name}",
+    description:
+      "Möchtest du „{name}“ wirklich löschen? Das kann nicht rückgängig gemacht werden und alle Daten dieser Gruppe werden dauerhaft entfernt.",
+    failed: "Unbekannter Fehler beim Löschen der Gruppe",
+    subtitle: "Diese Gruppe dauerhaft löschen",
+    title: "Gruppe löschen",
+    warning:
+      "Wenn du diese Gruppe löschst, werden sie und alle ihre Daten dauerhaft entfernt. Gib zur Bestätigung unten den Namen der Gruppe ein.",
+  },
+  members: {
+    adminBadge: "(Admin)",
+    adminBadgeLowercase: "(Admin)",
+    avatarAlt: "Profilbild des Mitglieds",
+    changeRole: "Rolle ändern",
+    description: "Lade Leute ein und verwalte ihre Rollen.",
+    editRole: "Rolle von {name} ändern:",
+    leaveGroup: "Gruppe verlassen",
+    listTitle: "Mitglieder ({count})",
+    manageMember: "Mitglied verwalten",
+    removed: "Mitglied entfernt!",
+    removeFailed: "Unbekannter Fehler beim Entfernen des Mitglieds",
+    roleUpdated: "Rolle geändert!",
+    roleUpdateFailed: "Unbekannter Fehler beim Ändern der Rolle",
+    selectRole: "Rolle auswählen",
+    title: "Mitglieder verwalten",
+    roles: {
+      admin: "Admin",
+      member: "Mitglied",
+    },
+  },
+  validation: {
+    invalidEmail: "Bitte gib eine gültige E-Mail-Adresse ein",
+    nameRequired: "Gruppenname ist erforderlich",
+    nameTooLong: "Der Gruppenname darf höchstens 256 Zeichen lang sein",
+  },
+  expenseSettings: {
+    title: "Ausgaben",
+    subtitle: "Gruppenwährung und Umrechnung",
+    description:
+      "In welcher Währung Schulden geführt werden und wie andere Währungen behandelt werden.",
+    adminOnly:
+      "Nur Admins der Gruppe können die Ausgabeneinstellungen bearbeiten.",
+    currency: "Gruppenwährung",
+    convertedStayIn: "Bereits umgerechnete Ausgaben bleiben in {currency}.",
+    convertAutomatically: "Automatisch umrechnen",
+    convertAutomaticallyHint:
+      "Neue Ausgaben in anderen Währungen werden in {currency} umgerechnet. Bei einzelnen Ausgaben kannst du die ursprüngliche Währung behalten. Bestehende Ausgaben ändern sich nicht.",
+    saved: "Ausgabeneinstellungen gespeichert",
+    updated: "Die Ausgabeneinstellungen wurden aktualisiert.",
+    saveFailed: "Unbekannter Fehler beim Speichern",
+  },
+} satisfies Messages["group"];

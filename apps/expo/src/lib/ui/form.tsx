@@ -14,6 +14,9 @@ import {
   FormProvider,
   useFormContext,
 } from "react-hook-form";
+import { useTranslations } from "use-intl";
+
+import { translateIfKey } from "@flatsby/i18n/message-key";
 
 import { cn } from "../utils";
 
@@ -88,8 +91,9 @@ interface FormMessageProps {
 }
 
 const FormMessage: React.FC<FormMessageProps> = ({ className, children }) => {
+  const t = useTranslations();
   const { error } = useFormField();
-  const body = error ? String(error.message) : children;
+  const body = error ? translateIfKey(t, String(error.message)) : children;
 
   if (!body) {
     return null;

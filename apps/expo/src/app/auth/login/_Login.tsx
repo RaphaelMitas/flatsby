@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
 import { Stack } from "expo-router";
+import { useLocale, useTranslations } from "use-intl";
+
+import { localePath } from "@flatsby/i18n/locale";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -11,6 +14,8 @@ import { signIn } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
 
 const Login = () => {
+  const t = useTranslations();
+  const locale = useLocale();
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
 
   const callbackURL = ExpoLinking.createURL("/");
@@ -31,7 +36,7 @@ const Login = () => {
             Flatsby
           </Text>
           <Text className="text-muted-foreground text-center text-base leading-relaxed">
-            Manage your daily life with your flatmates.
+            {t("auth.login.tagline")}
           </Text>
         </View>
 
@@ -51,8 +56,8 @@ const Login = () => {
             className="w-full py-4"
             title={
               loading === "google"
-                ? "Signing in with Google"
-                : "Sign in with Google"
+                ? t("auth.login.signingInWithGoogle")
+                : t("auth.login.signInWithGoogle")
             }
             icon={loading === "google" ? "loader" : "google"}
           />
@@ -71,8 +76,8 @@ const Login = () => {
             className="w-full py-4"
             title={
               loading === "apple"
-                ? "Signing in with Apple"
-                : "Sign in with Apple"
+                ? t("auth.login.signingInWithApple")
+                : t("auth.login.signInWithApple")
             }
             icon={loading === "apple" ? "loader" : "apple"}
           />
@@ -81,28 +86,42 @@ const Login = () => {
         {/* Legal Links */}
         <View className="mt-6 gap-2">
           <Text className="text-muted-foreground text-center text-xs">
-            By signing in, you agree to our{" "}
-            <Text
-              className="underline"
-              onPress={() => Linking.openURL(`${getBaseUrl()}/legal/terms`)}
-            >
-              Terms
-            </Text>{" "}
-            and{" "}
-            <Text
-              className="underline"
-              onPress={() => Linking.openURL(`${getBaseUrl()}/legal/privacy`)}
-            >
-              Privacy Policy
-            </Text>
+            {t.rich("auth.login.agreement", {
+              terms: (chunks) => (
+                <Text
+                  className="underline"
+                  onPress={() =>
+                    Linking.openURL(
+                      `${getBaseUrl()}${localePath(locale, "/legal/terms")}`,
+                    )
+                  }
+                >
+                  {chunks}
+                </Text>
+              ),
+              privacy: (chunks) => (
+                <Text
+                  className="underline"
+                  onPress={() =>
+                    Linking.openURL(
+                      `${getBaseUrl()}${localePath(locale, "/legal/privacy")}`,
+                    )
+                  }
+                >
+                  {chunks}
+                </Text>
+              ),
+            })}
           </Text>
           <Text
             className="text-muted-foreground text-center text-xs underline"
             onPress={() =>
-              Linking.openURL(`${getBaseUrl()}/legal/legal-notice`)
+              Linking.openURL(
+                `${getBaseUrl()}${localePath(locale, "/legal/legal-notice")}`,
+              )
             }
           >
-            Legal Notice
+            {t("navigation.legalNotice")}
           </Text>
         </View>
       </View>

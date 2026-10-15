@@ -15,11 +15,8 @@ import {
   WandSparkles,
 } from "lucide-react";
 
-import {
-  categoryDescriptions,
-  categoryIds,
-  categoryNames,
-} from "@flatsby/validators/categories";
+import { msg } from "@flatsby/i18n/message-key";
+import { categoryIds } from "@flatsby/validators/categories";
 
 import { cn } from "..";
 
@@ -89,9 +86,9 @@ const pickerOrder: readonly CategoryIdWithAiAutoSelect[] = [
 
 const categories = pickerOrder.map((id) => ({
   id,
-  name: categoryNames[id],
+  name: msg(`shoppingCategories.names.${id}`),
   icon: categoryIcons[id],
-  description: categoryDescriptions[id],
+  description: msg(`shoppingCategories.descriptions.${id}`),
 }));
 
 const categoryMapping = categories.map((category) => {

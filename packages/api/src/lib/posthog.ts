@@ -7,6 +7,8 @@ import {
 } from "@posthog/core";
 import { PostHog } from "posthog-node";
 
+import { redactInvitePath } from "@flatsby/validators/invite";
+
 const apiKey = process.env.POSTHOG_API_KEY;
 
 export const posthog =
@@ -108,7 +110,8 @@ function getBrowserLanguagePrefix(headers: Headers): string | undefined {
 
 export function buildPostHogProperties(headers: Headers) {
   const userAgent = headers.get("user-agent");
-  const referer = headers.get("referer");
+  const rawReferer = headers.get("referer");
+  const referer = rawReferer && redactInvitePath(rawReferer);
   const currentUrl = referer ?? undefined;
 
   // Detect browser/device info from user agent using @posthog/core

@@ -1,31 +1,25 @@
-"use client";
-
 import Link from "next/link";
 import { Globe, Play } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
 
 import type { Platform } from "./platform";
 import { PeekingCat } from "../peeking-cat";
-import {
-  APP_STORE_URL,
-  HEADLINE,
-  PLAY_STORE_URL,
-  SUBHEADLINE,
-} from "./content";
+import { APP_STORE_URL, PLAY_STORE_URL } from "./content";
 
-const WEB = { href: "/auth/login", label: "Open in Browser", icon: Globe };
+const WEB = { href: "/auth/login", id: "openInBrowser", icon: Globe } as const;
 const APP_STORE = {
   href: APP_STORE_URL,
-  label: "Download on the App Store",
+  id: "appStore",
   icon: AppleIcon,
-};
+} as const;
 const PLAY_STORE = {
   href: PLAY_STORE_URL,
-  label: "Get it on Google Play",
+  id: "googlePlay",
   icon: Play,
-};
+} as const;
 
 function orderFor(platform: Platform) {
   if (platform === "ios") return [APP_STORE, WEB, PLAY_STORE];
@@ -34,6 +28,7 @@ function orderFor(platform: Platform) {
 }
 
 export function HeroSection({ platform }: { platform: Platform }) {
+  const t = useTranslations("marketing");
   return (
     <section className="px-4 py-16 md:py-24">
       <div className="mx-auto max-w-4xl text-center">
@@ -42,10 +37,10 @@ export function HeroSection({ platform }: { platform: Platform }) {
           className="mb-4 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl"
           data-testid="hero-title"
         >
-          {HEADLINE}
+          {t("headline")}
         </h1>
         <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-lg md:text-xl">
-          {SUBHEADLINE}
+          {t("subheadline")}
         </p>
         <div className="flex w-full flex-col items-center gap-4">
           {orderFor(platform).map((store, index) => (
@@ -64,7 +59,7 @@ export function HeroSection({ platform }: { platform: Platform }) {
                 })}
               >
                 <store.icon className="h-5 w-5 text-current" />
-                {store.label}
+                {t(`hero.${store.id}`)}
               </Link>
             </Button>
           ))}

@@ -6,12 +6,10 @@ import type {
 import type React from "react";
 import { useMemo } from "react";
 import { View } from "react-native";
+import { useTranslations } from "use-intl";
 
-import {
-  categoryDescriptions,
-  categoryNames,
-  categorysIdWithAiAutoSelect,
-} from "@flatsby/validators/categories";
+import { msg } from "@flatsby/i18n/message-key";
+import { categorysIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import {
   categoryBgColorMap,
   categoryBorderColorMap,
@@ -97,13 +95,13 @@ export const getCategoryData = ({
   const borderColor = categoryBorderColorMap[config.colorKey];
 
   return {
-    name: categoryNames[categoryId],
+    name: msg(`shoppingCategories.names.${categoryId}`),
     color,
     bgColor,
     borderColor,
     colorKey: config.colorKey,
     icon: <Icon name={config.iconName} size={iconSize} className={color} />,
-    description: categoryDescriptions[categoryId],
+    description: msg(`shoppingCategories.descriptions.${categoryId}`),
   };
 };
 
@@ -124,6 +122,7 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
   iconButton = false,
   ...props
 }) => {
+  const t = useTranslations();
   const categoryItems = useMemo<BottomSheetPickerItem[]>(() => {
     return categorysIdWithAiAutoSelect
       .filter((categoryId) => !excludeCategories.includes(categoryId))
@@ -131,8 +130,8 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
         const categoryData = getCategoryData({ categoryId });
         return {
           id: categoryId,
-          title: categoryData.name,
-          description: categoryData.description,
+          title: t(categoryData.name),
+          description: t(categoryData.description),
           icon: (
             <View className="flex items-center justify-center">
               {categoryData.icon}
@@ -140,7 +139,7 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
           ),
         };
       });
-  }, [excludeCategories]);
+  }, [excludeCategories, t]);
 
   const handleSelect = (item: BottomSheetPickerItem) => {
     onChange?.(item.id as CategoryIdWithAiAutoSelect);
@@ -150,7 +149,8 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
     ? getCategoryData({ categoryId: value })
     : null;
   const displayTitle =
-    triggerTitle ?? selectedCategory?.name ?? "Select Category";
+    triggerTitle ??
+    (selectedCategory ? t(selectedCategory.name) : t("common.selectCategory"));
 
   return (
     <BottomSheetPickerTrigger

@@ -1,18 +1,20 @@
 import { z } from "zod/v4";
 
+import { msg } from "@flatsby/i18n/message-key";
+
 import { chatModelSchema } from "./models";
 
 export const userNameSchema = z
   .string()
   .min(1, {
-    message: "User name cannot be empty",
+    message: msg("settings.validation.nameRequired"),
   })
   .max(256, {
-    message: "User name cannot be longer than 256 characters",
+    message: msg("settings.validation.nameTooLong"),
   });
 
 export const userEmailSchema = z.email({
-  message: "Please enter a valid email address",
+  message: msg("settings.validation.emailInvalid"),
 });
 
 export const userImageSchema = z.string().optional().nullable();

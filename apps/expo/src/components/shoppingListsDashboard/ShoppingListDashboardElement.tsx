@@ -10,6 +10,7 @@ import ReanimatedSwipeable, {
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
@@ -32,6 +33,7 @@ interface Props {
 }
 
 const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
+  const t = useTranslations();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const { setSelectedShoppingList } = useShoppingStore();
@@ -219,13 +221,13 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
         <Reanimated.View style={rightActionStyle}>
           <View className="bg-destructive h-full w-full items-end justify-center rounded-lg p-4">
             <Text className="text-destructive-foreground text-sm font-medium">
-              Delete
+              {t("common.delete")}
             </Text>
           </View>
         </Reanimated.View>
       );
     },
-    [rightActionStyle],
+    [rightActionStyle, t],
   );
 
   const renderLeftActions = useCallback(
@@ -234,13 +236,13 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
         <Reanimated.View style={leftActionStyle}>
           <View className="bg-primary h-full w-full items-start justify-center rounded-lg p-4">
             <Text className="text-primary-foreground text-sm font-medium">
-              Rename
+              {t("shoppingList.rename")}
             </Text>
           </View>
         </Reanimated.View>
       );
     },
-    [leftActionStyle],
+    [leftActionStyle, t],
   );
 
   const isOptimistic = shoppingList.id === -1;
@@ -281,7 +283,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
                         testID="shopping-list-rename-input"
                         value={field.value}
                         onChangeText={field.onChange}
-                        placeholder="Enter new name"
+                        placeholder={t("shoppingList.renamePlaceholder")}
                         className="flex-1"
                         autoFocus
                       />
@@ -291,7 +293,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
                 />
                 <View className="flex flex-row gap-2">
                   <Button
-                    title="Cancel"
+                    title={t("common.cancel")}
                     variant="ghost"
                     size="md"
                     className="flex-1"
@@ -299,7 +301,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
                   />
                   <Button
                     testID="shopping-list-rename-save"
-                    title="Save"
+                    title={t("common.save")}
                     variant="primary"
                     size="md"
                     className="flex-1"
@@ -334,9 +336,9 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
               )}
             </View>
             <Text className="text-muted-foreground text-sm">
-              {shoppingList.uncheckedItemLength === 1
-                ? "1 item left"
-                : `${shoppingList.uncheckedItemLength} items left`}
+              {t("shoppingList.itemsLeft", {
+                count: shoppingList.uncheckedItemLength,
+              })}
             </Text>
           </TouchableOpacity>
         )}
@@ -347,9 +349,13 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
         onClose={handleCloseModal}
         onConfirm={handleDeleteList}
         itemName={shoppingList.name}
-        title="Delete Shopping List"
-        description={`Are you sure you want to delete "${shoppingList.name}"? This action cannot be undone and will permanently remove all items in this list.`}
-        confirmationLabel={`To confirm deletion, please type the shopping list name: ${shoppingList.name}`}
+        title={t("shoppingList.delete.title")}
+        description={t("shoppingList.delete.description", {
+          name: shoppingList.name,
+        })}
+        confirmationLabel={t("shoppingList.delete.confirmationLabel", {
+          name: shoppingList.name,
+        })}
         needsConfirmationInput
       />
     </>

@@ -30,11 +30,8 @@ export {
   // Error types and factories
   Errors,
   fail,
-  toTRPCError,
   fromUnknownError,
   // Main utilities
-  withErrorHandling,
-  runEffectWithTRPCError,
   safeDbOperation,
 } from "./errors";
 

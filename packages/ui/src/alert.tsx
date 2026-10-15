@@ -18,6 +18,7 @@ const alertVariants = cva(
         warning:
           "border-warning/50 text-warning dark:border-warning [&>svg]:text-warning",
         error:
+          // i18n-ignore
           "border-error/50 text-error dark:border-error [&>svg]:text-error",
       },
     },

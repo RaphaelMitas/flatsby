@@ -8,6 +8,7 @@ import ReanimatedSwipeable, {
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
 import { removeShoppingListItemFromCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
@@ -44,6 +45,8 @@ const ShoppingListItem = ({
   groupMembers,
   selectedCategory,
 }: ShoppingListItemProps) => {
+  const t = useTranslations();
+  const locale = useLocale();
   const [showDetails, setShowDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const queryClient = useQueryClient();
@@ -131,12 +134,12 @@ const ShoppingListItem = ({
 
   const { renderLeftActions, renderRightActions } = useSwipeActions({
     leftAction: {
-      text: "Edit",
+      text: t("common.edit"),
       className: "bg-info",
       textClassName: "text-info-foreground",
     },
     rightAction: {
-      text: "Delete",
+      text: t("common.delete"),
       className: "bg-destructive",
       textClassName: "text-destructive-foreground",
     },
@@ -198,16 +201,25 @@ const ShoppingListItem = ({
                 </Text>
                 <Text className="text-muted-foreground text-xs">
                   {item.completed
-                    ? `Done by ${completedByMember?.user.name ?? "unknown"} · ${
-                        item.completedAt?.toLocaleDateString() ?? ""
-                      }`
-                    : `Added by ${createdByMember?.user.name ?? "unknown"} · ${item.createdAt.toLocaleDateString()}`}
+                    ? t("shoppingList.item.doneBy", {
+                        name:
+                          completedByMember?.user.name ??
+                          t("shoppingList.item.unknownMember"),
+                        date:
+                          item.completedAt?.toLocaleDateString(locale) ?? "",
+                      })
+                    : t("shoppingList.item.addedBy", {
+                        name:
+                          createdByMember?.user.name ??
+                          t("shoppingList.item.unknownMember"),
+                        date: item.createdAt.toLocaleDateString(locale),
+                      })}
                 </Text>
               </View>
 
               <View className="items-center justify-center">
                 <Text className={cn("text-xs font-medium", categoryData.color)}>
-                  {categoryData.name}
+                  {t(categoryData.name)}
                 </Text>
               </View>
             </View>
@@ -217,7 +229,7 @@ const ShoppingListItem = ({
               onPress={() => setShowDetails(false)}
             >
               <Text className="text-muted-foreground text-center text-sm">
-                Close
+                {t("common.close")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -229,8 +241,10 @@ const ShoppingListItem = ({
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         itemName={item.name}
-        title="Delete Item"
-        description={`Are you sure you want to delete "${item.name}"?`}
+        title={t("shoppingList.item.deleteTitle")}
+        description={t("shoppingList.item.deleteDescription", {
+          name: item.name,
+        })}
       />
     </>
   );

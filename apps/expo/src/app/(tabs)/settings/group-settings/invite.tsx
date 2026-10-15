@@ -6,10 +6,11 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import QRCode from "react-qr-code";
+import { useTranslations } from "use-intl";
 
 import {
   formatInviteCode,
-  inviteExpiryLabel,
+  inviteDaysLeft,
   inviteLink,
 } from "@flatsby/validators/invite";
 
@@ -20,6 +21,7 @@ import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function InviteScreen() {
+  const t = useTranslations();
   const { selectedGroupId, selectedGroupName } = useShoppingStore();
   const groupId = Number(selectedGroupId) || 0;
   const router = useRouter();
@@ -49,16 +51,16 @@ export default function InviteScreen() {
   return (
     <View className="bg-background flex-1 items-center gap-4 p-6">
       <Text className="text-foreground text-center text-lg font-bold">
-        Invite to {selectedGroupName}
+        {t("invite.title", { group: selectedGroupName ?? "" })}
       </Text>
       <Text className="text-muted-foreground text-center text-sm">
-        Scan with the phone camera
+        {t("invite.scanWithCamera")}
       </Text>
       <View className="rounded-lg bg-white p-3">
         <QRCode value={link} size={180} />
       </View>
       <Text className="text-muted-foreground text-xs">
-        or enter this code in Flatsby
+        {t("invite.orEnterCode")}
       </Text>
       <Text
         testID="group-invite-code"
@@ -69,27 +71,37 @@ export default function InviteScreen() {
       <View className="w-full gap-3">
         <Button
           testID="group-invite-share"
-          title="Share link"
+          title={t("invite.shareLink")}
           icon="share"
           onPress={() =>
             Share.share({
-              message: `Join ${selectedGroupName} on Flatsby: ${link}`,
+              message: t("invite.shareMessage", {
+                group: selectedGroupName ?? "",
+                link,
+              }),
             })
           }
         />
         <View className="flex-row items-center justify-between">
           <Text className="text-muted-foreground text-xs">
-            {inviteExpiryLabel(invite.data.expiresAt)}
+            {t("invite.expiresIn", {
+              days: inviteDaysLeft(invite.data.expiresAt),
+            })}
           </Text>
           <Pressable
             disabled={resetMutation.isPending}
             onPress={() => resetMutation.mutate({ groupId })}
           >
             <Text className="text-destructive text-xs font-semibold">
-              Reset link
+              {t("invite.resetLink")}
             </Text>
           </Pressable>
         </View>
+        {(resetMutation.isError || resetMutation.data?.success === false) && (
+          <Text className="text-destructive text-center text-sm">
+            {t("invite.resetFailed")}
+          </Text>
+        )}
       </View>
     </View>
   );

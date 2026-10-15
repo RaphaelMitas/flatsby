@@ -12,6 +12,7 @@ import {
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
 import { Streamdown } from "streamdown";
+import { useTranslations } from "use-intl";
 
 import { cn } from "@flatsby/ui";
 
@@ -133,15 +134,27 @@ export type ReasoningTriggerProps = ComponentProps<
   getThinkingMessage?: (isStreaming: boolean, duration?: number) => ReactNode;
 };
 
-const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
+const ThinkingMessage = ({
+  isStreaming,
+  duration,
+}: {
+  isStreaming: boolean;
+  duration?: number;
+}) => {
+  const t = useTranslations("chat.elements");
+
   if (isStreaming || duration === 0) {
-    return <Shimmer duration={1}>Thinking...</Shimmer>;
+    return <Shimmer duration={1}>{t("thinking")}</Shimmer>;
   }
   if (duration === undefined) {
-    return <p>Thought for a few seconds</p>;
+    return <p>{t("thoughtFewSeconds")}</p>;
   }
-  return <p>Thought for {duration} seconds</p>;
+  return <p>{t("thoughtFor", { duration })}</p>;
 };
+
+const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => (
+  <ThinkingMessage isStreaming={isStreaming} duration={duration} />
+);
 
 export const ReasoningTrigger = memo(
   ({

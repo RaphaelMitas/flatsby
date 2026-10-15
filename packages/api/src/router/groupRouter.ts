@@ -38,10 +38,11 @@ const updateGroup = protectedProcedure
   .input(updateGroupSettingsSchema)
   .mutation(async ({ ctx, input: { id, ...settings } }) => {
     return withErrorHandlingAsResult(
+      ctx.locale,
       Effect.flatMap(
         settings.name === undefined
           ? Effect.succeed(undefined)
-          : ValidationUtils.notEmpty(settings.name, "Group name"),
+          : ValidationUtils.notEmpty(settings.name, "groupName"),
         () =>
           Effect.flatMap(
             GroupUtils.requireAdminAccess(ctx.db, id, ctx.session.user.id),
@@ -71,6 +72,7 @@ const updateGroup = protectedProcedure
 export const groupRouter = createTRPCRouter({
   getUserGroups: protectedProcedure.query(async ({ ctx }) => {
     return withErrorHandlingAsResult(
+      ctx.locale,
       safeDbOperation(() => {
         // Alias the groupMembers table for counting members
         const gmAll = alias(groupMembers, "gm_all");
@@ -106,6 +108,7 @@ export const groupRouter = createTRPCRouter({
     .input(groupSchema.pick({ id: true }))
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         OperationUtils.getGroupWithAccess(
           ctx.db,
           input.id,
@@ -118,6 +121,7 @@ export const groupRouter = createTRPCRouter({
     .input(updateMemberRoleInputSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Fetch the target member with group data (must be active)
           DbUtils.findOneOrFail(
@@ -140,7 +144,7 @@ export const groupRouter = createTRPCRouter({
                   },
                 },
               }),
-            "group member",
+            "groupMember",
           ),
           (targetMember: GroupMemberWithGroupMinimal) =>
             Effect.flatMap(
@@ -148,7 +152,7 @@ export const groupRouter = createTRPCRouter({
               DbUtils.ensureGroupAdmin(
                 ctx.session.user.id,
                 targetMember.group.groupMembers,
-                "You need admin privileges to change member roles",
+                "errors.adminRequiredToChangeRoles",
               ),
               () =>
                 Effect.flatMap(
@@ -173,7 +177,7 @@ export const groupRouter = createTRPCRouter({
                           "update member role",
                           "groupMembers",
                           error,
-                          "Unable to update member role at this time",
+                          "errors.updateRoleFailed",
                         ),
                     }),
                 ),
@@ -186,6 +190,7 @@ export const groupRouter = createTRPCRouter({
     .input(removeGroupMemberInputSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Find the target group member (must be active)
           DbUtils.findOneOrFail(
@@ -196,7 +201,7 @@ export const groupRouter = createTRPCRouter({
                   eq(groupMembers.isActive, true),
                 ),
               }),
-            "group member",
+            "groupMember",
           ),
           (targetGroupMember: GroupMember) =>
             Effect.flatMap(
@@ -210,7 +215,7 @@ export const groupRouter = createTRPCRouter({
                       eq(groupMembers.isActive, true),
                     ),
                   }),
-                "group membership",
+                "groupMembership",
               ),
               (currentUserGroupMember: GroupMember) =>
                 Effect.flatMap(
@@ -218,9 +223,7 @@ export const groupRouter = createTRPCRouter({
                   DbUtils.checkAccess(
                     currentUserGroupMember.role === "admin" ||
                       currentUserGroupMember.id === input.memberId,
-                    "remove this member from the",
-                    "group",
-                    "Only group admins can remove other members. You can only remove yourself.",
+                    "errors.onlyAdminsRemoveMembers",
                   ),
                   () =>
                     Effect.flatMap(
@@ -253,9 +256,7 @@ export const groupRouter = createTRPCRouter({
                             (adminCount: { count: number }[]) =>
                               DbUtils.checkAccess(
                                 (adminCount[0]?.count ?? 0) > 1,
-                                "remove the last admin from this",
-                                "group",
-                                "Cannot remove the last admin. Promote another member to admin first.",
+                                "errors.promoteAdminFirst",
                               ),
                           )
                         : Effect.succeed(undefined),
@@ -315,7 +316,7 @@ export const groupRouter = createTRPCRouter({
                               "remove group member",
                               "groupMembers",
                               error,
-                              "Unable to remove group member at this time. Please try again.",
+                              "errors.removeMemberFailed",
                             ),
                         }),
                     ),
@@ -329,9 +330,10 @@ export const groupRouter = createTRPCRouter({
     .input(createGroupSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Validate input name
-          ValidationUtils.notEmpty(input.name, "Group name"),
+          ValidationUtils.notEmpty(input.name, "groupName"),
           (validName) =>
             Effect.map(
               // Create group and add user as admin in transaction
@@ -374,6 +376,7 @@ export const groupRouter = createTRPCRouter({
     .input(addGroupMemberInputSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Check current user's active group membership and admin status
           DbUtils.findOneOrFail(
@@ -388,16 +391,14 @@ export const groupRouter = createTRPCRouter({
                   eq(groupMembers.isActive, true),
                 ),
               }),
-            "group membership",
+            "groupMembership",
           ),
           (currentGroupMember) =>
             Effect.flatMap(
               // Ensure current user is admin
               DbUtils.checkAccess(
                 currentGroupMember.role === "admin",
-                "add members to this",
-                "group",
-                "You need admin privileges to add members to this group",
+                "errors.adminRequiredToAddMembers",
               ),
               () =>
                 Effect.flatMap(
@@ -425,6 +426,7 @@ export const groupRouter = createTRPCRouter({
     .input(deleteGroupSchema)
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Check if user is admin of the group
           GroupUtils.requireAdminAccess(ctx.db, input.id, ctx.session.user.id),
@@ -480,6 +482,7 @@ export const groupRouter = createTRPCRouter({
     .output(getApiResultZod(z.array(activityItemSchema)))
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(
           // Get group with access check
           OperationUtils.getGroupWithAccess(

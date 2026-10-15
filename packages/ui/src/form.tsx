@@ -15,7 +15,9 @@ import {
   Controller,
   useFormContext,
 } from "react-hook-form";
+import { useTranslations } from "use-intl";
 
+import { translateIfKey } from "@flatsby/i18n/message-key";
 import { cn } from "@flatsby/ui";
 
 import { Label } from "./label";
@@ -152,8 +154,9 @@ export function FormMessage({
   children,
   ...props
 }: React.ComponentProps<"p">) {
+  const t = useTranslations();
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error.message) : children;
+  const body = error ? translateIfKey(t, String(error.message)) : children;
 
   if (!body) {
     return;

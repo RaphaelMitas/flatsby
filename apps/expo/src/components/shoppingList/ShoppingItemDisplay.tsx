@@ -1,5 +1,6 @@
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import { Text, View } from "react-native";
+import { useTranslations } from "use-intl";
 
 import { Card, CardContent } from "~/lib/ui/card";
 import { Checkbox } from "~/lib/ui/checkbox";
@@ -25,6 +26,7 @@ export function ShoppingItemDisplay({
   className,
   checkboxTestID,
 }: ShoppingItemDisplayProps) {
+  const t = useTranslations();
   const categoryData = categoryId ? getCategoryData({ categoryId }) : null;
 
   return (
@@ -54,7 +56,7 @@ export function ShoppingItemDisplay({
           <View className="flex-row items-center gap-2">
             {categoryData.icon}
             <Text className={cn("text-xs font-medium", categoryData.color)}>
-              {categoryData.name}
+              {t(categoryData.name)}
             </Text>
           </View>
         )}

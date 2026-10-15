@@ -24,6 +24,7 @@ export function useExpenseConversion({
   amountInCents,
   expenseDate,
   useExchangeRate,
+  locale,
 }: {
   group: { currency: CurrencyCode; convertAutomatically: boolean | null };
   expense?: {
@@ -40,6 +41,7 @@ export function useExpenseConversion({
     input: { from: CurrencyCode; to: CurrencyCode; day: string },
     enabled: boolean,
   ) => ExchangeRateQuery;
+  locale: Intl.LocalesArgument;
 }) {
   const targetCurrency =
     expense?.convertedCurrency && isCurrencyCode(expense.convertedCurrency)
@@ -84,7 +86,7 @@ export function useExpenseConversion({
       : null;
   const source =
     !isOwnRate && fetched.data
-      ? ` · ECB, ${formatExpenseDateShort(new Date(`${fetched.data.date}T00:00`))}`
+      ? ` · ECB, ${formatExpenseDateShort(new Date(`${fetched.data.date}T00:00`), locale)}`
       : "";
 
   return {
@@ -95,7 +97,7 @@ export function useExpenseConversion({
     rateText:
       rate === undefined
         ? undefined
-        : `${formatRate(currency, targetCurrency, rate)}${source}`,
+        : `${formatRate(currency, targetCurrency, rate, locale)}${source}`,
     isOwnRate,
     reset: () => setOwnRate(undefined),
     canEnterConverted: amountInCents > 0,

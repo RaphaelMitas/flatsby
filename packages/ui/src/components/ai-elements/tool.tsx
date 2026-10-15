@@ -11,6 +11,7 @@ import {
   WrenchIcon,
   XCircleIcon,
 } from "lucide-react";
+import { useTranslations } from "use-intl";
 
 import { cn } from "@flatsby/ui";
 
@@ -38,15 +39,16 @@ export interface ToolHeaderProps {
   className?: string;
 }
 
-const getStatusBadge = (status: ToolUIPart["state"]) => {
+const StatusBadge = ({ status }: { status: ToolUIPart["state"] }) => {
+  const t = useTranslations();
   const labels: Record<ToolUIPart["state"], string> = {
-    "input-streaming": "Pending",
-    "input-available": "Running",
-    "approval-requested": "Awaiting Approval",
-    "approval-responded": "Responded",
-    "output-available": "Completed",
-    "output-error": "Error",
-    "output-denied": "Denied",
+    "input-streaming": t("chat.elements.toolStatus.pending"),
+    "input-available": t("chat.elements.toolStatus.running"),
+    "approval-requested": t("chat.elements.toolStatus.awaitingApproval"),
+    "approval-responded": t("chat.elements.toolStatus.responded"),
+    "output-available": t("chat.elements.toolStatus.completed"),
+    "output-error": t("common.error"),
+    "output-denied": t("chat.elements.toolStatus.denied"),
   };
 
   const icons: Record<ToolUIPart["state"], ReactNode> = {
@@ -86,7 +88,7 @@ export const ToolHeader = ({
       <span className="text-sm font-medium">
         {title ?? type.split("-").slice(1).join("-")}
       </span>
-      {getStatusBadge(state)}
+      <StatusBadge status={state} />
     </div>
     <ChevronDownIcon className="text-muted-foreground size-4 transition-transform group-data-[state=open]:rotate-180" />
   </CollapsibleTrigger>
@@ -108,16 +110,20 @@ export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolUIPart["input"];
 };
 
-export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
-  <div className={cn("space-y-2 overflow-hidden p-4", className)} {...props}>
-    <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-      Parameters
-    </h4>
-    <div className="bg-muted/50 rounded-md">
-      <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
+export const ToolInput = ({ className, input, ...props }: ToolInputProps) => {
+  const t = useTranslations("chat.elements");
+
+  return (
+    <div className={cn("space-y-2 overflow-hidden p-4", className)} {...props}>
+      <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        {t("parameters")}
+      </h4>
+      <div className="bg-muted/50 rounded-md">
+        <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export type ToolOutputProps = ComponentProps<"div"> & {
   output: ToolUIPart["output"];
@@ -130,6 +136,8 @@ export const ToolOutput = ({
   errorText,
   ...props
 }: ToolOutputProps) => {
+  const t = useTranslations();
+
   if (!(output || errorText)) {
     return null;
   }
@@ -147,7 +155,7 @@ export const ToolOutput = ({
   return (
     <div className={cn("space-y-2 p-4", className)} {...props}>
       <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-        {errorText ? "Error" : "Result"}
+        {errorText ? t("common.error") : t("chat.elements.result")}
       </h4>
       <div
         className={cn(

@@ -1,5 +1,7 @@
 import { z } from "zod/v4";
 
+import { msg } from "@flatsby/i18n/message-key";
+
 export const INVITE_CODE_LENGTH = 8;
 export const INVITE_CODE_GROUP = INVITE_CODE_LENGTH / 2;
 export const INVITE_TTL_DAYS = 7;
@@ -28,27 +30,27 @@ export const invitePath = (code: string): `${typeof INVITE_PATH}/${string}` =>
 export const inviteLink = (baseUrl: string, code: string) =>
   `${baseUrl}${invitePath(code)}`;
 
+// A live code is enough to join, so analytics only ever sees the route
+export const redactInvitePath = (url: string) =>
+  url.replace(new RegExp(`${INVITE_PATH}/[^/?#]+`), `${INVITE_PATH}/[code]`);
+
 export const inviteCodeSchema = z
   .string()
   .transform(normalizeInviteCode)
   .pipe(
     z
       .string()
-      .length(INVITE_CODE_LENGTH, { message: "Invite codes have 8 characters" })
+      .length(INVITE_CODE_LENGTH, { message: msg("errors.invalidInviteCode") })
       .refine(
         (code) => [...code].every((c) => INVITE_CODE_ALPHABET.includes(c)),
-        {
-          message: "That isn't a valid invite code",
-        },
+        { message: msg("errors.invalidInviteCode") },
       ),
   );
 
 export const inviteCodeInputSchema = z.object({ code: inviteCodeSchema });
 
-export const inviteExpiryLabel = (expiresAt: Date) => {
-  const days = Math.ceil((expiresAt.getTime() - Date.now()) / DAY_MS);
-  return days <= 1 ? "Expires within a day" : `Expires in ${days} days`;
-};
+export const inviteDaysLeft = (expiresAt: Date) =>
+  Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / DAY_MS));
 
 // browsers drop tabs and newlines and read "\" as "/", so "/\t/host" and "/\host" both leave our origin
 export const safeRedirectPath = (path: string | undefined) =>

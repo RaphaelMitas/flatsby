@@ -27,9 +27,6 @@ const generateCode = () =>
     (byte) => INVITE_CODE_ALPHABET[byte % INVITE_CODE_ALPHABET.length],
   ).join("");
 
-const EXPIRED_INVITE =
-  "This invite has expired. Ask someone in the group for a new one.";
-
 const liveInviteWhere = (code: string) =>
   and(eq(groupInvites.code, code), gt(groupInvites.expiresAt, new Date()));
 
@@ -73,14 +70,13 @@ const issueInvite = (
             (await tx.query.groupInvites.findFirst({
               where: eq(groupInvites.groupId, groupId),
               columns: { code: true, expiresAt: true },
-            })) ??
-            null
+            }))
           );
         }),
       "issue group invite",
     ),
     (invite) =>
-      invite ? Effect.succeed(invite) : fail.notFound("admin membership"),
+      invite ? Effect.succeed(invite) : fail.notFound("adminMembership"),
   );
 
 // Expired, reset and made-up codes all fail the same way, so a code reveals nothing.
@@ -106,13 +102,13 @@ const findLiveInvite = (db: Database, code: string) =>
         },
       }),
     "invite",
-    EXPIRED_INVITE,
   );
 
 export const inviteRouter = createTRPCRouter({
   // A query that writes: an admin opening the sheet after expiry should see a fresh code, not a dead one.
   get: protectedProcedure.input(groupIdInputSchema).query(({ ctx, input }) =>
     withErrorHandlingAsResult(
+      ctx.locale,
       issueInvite(ctx.db, input.groupId, ctx.session.user.id, {
         onlyIfExpired: true,
       }),
@@ -123,6 +119,7 @@ export const inviteRouter = createTRPCRouter({
     .input(groupIdInputSchema)
     .mutation(({ ctx, input }) =>
       withErrorHandlingAsResult(
+        ctx.locale,
         issueInvite(ctx.db, input.groupId, ctx.session.user.id, {
           onlyIfExpired: false,
         }),
@@ -134,6 +131,7 @@ export const inviteRouter = createTRPCRouter({
     .input(inviteCodeInputSchema)
     .query(({ ctx, input }) =>
       withErrorHandlingAsResult(
+        ctx.locale,
         Effect.map(
           findLiveInvite(ctx.db, input.code),
           ({ group, createdByMember }) => ({
@@ -155,21 +153,23 @@ export const inviteRouter = createTRPCRouter({
     .input(inviteCodeInputSchema)
     .mutation(({ ctx, input }) =>
       withErrorHandlingAsResult(
+        ctx.locale,
         Effect.flatMap(findLiveInvite(ctx.db, input.code), ({ group }) =>
-          Effect.map(
-            GroupUtils.addMember(
-              ctx.db,
-              group.id,
-              ctx.session.user.id,
-              async (tx) =>
-                (await tx.query.groupInvites.findFirst({
-                  where: liveInviteWhere(input.code),
-                  columns: { groupId: true },
-                }))
-                  ? undefined
-                  : Errors.notFound("invite", undefined, EXPIRED_INVITE),
-            ),
-            () => ({ groupId: group.id, groupName: group.name }),
+          GroupUtils.addMember(
+            ctx.db,
+            group.id,
+            ctx.session.user.id,
+            async (tx) =>
+              (await tx.query.groupInvites.findFirst({
+                where: liveInviteWhere(input.code),
+                columns: { groupId: true },
+              }))
+                ? undefined
+                : Errors.notFound("invite"),
+          ).pipe(
+            // Joining a group you're already in (a preview from before you joined elsewhere) just opens it
+            Effect.catchTag("ConflictError", () => Effect.void),
+            Effect.as({ groupId: group.id, groupName: group.name }),
           ),
         ),
       ),

@@ -1,5 +1,6 @@
 import { Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { useTranslations } from "use-intl";
 
 import { ExpenseDetailView } from "~/components/expenses/ExpenseDetailView";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -8,11 +9,14 @@ export default function ExpenseDetailPage() {
   const params = useLocalSearchParams<{ expenseId: string }>();
   const expenseId = params.expenseId ? parseInt(params.expenseId, 10) : null;
   const { selectedGroupId } = useShoppingStore();
+  const t = useTranslations();
 
   if (!expenseId) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-muted-foreground">No expense ID provided</Text>
+        <Text className="text-muted-foreground">
+          {t("expenses.noExpenseId")}
+        </Text>
       </View>
     );
   }
@@ -20,7 +24,9 @@ export default function ExpenseDetailPage() {
   if (!selectedGroupId) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-muted-foreground">No group selected</Text>
+        <Text className="text-muted-foreground">
+          {t("common.noGroupSelected")}
+        </Text>
       </View>
     );
   }

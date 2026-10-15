@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
+import { localeNames, localePath, locales } from "@flatsby/i18n/locale";
 import { Button } from "@flatsby/ui/button";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 
@@ -10,52 +12,71 @@ import {
   PLAY_STORE_URL,
 } from "./content";
 
-const NAV = [
-  { href: "/features/shopping-lists", label: "Shopping lists" },
-  { href: "/features/expenses", label: "Expenses" },
-  { href: "/splitwise-alternative", label: "Splitwise alternative" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/faq", label: "FAQ" },
-];
+export function SiteShell({
+  path,
+  children,
+}: {
+  path: string;
+  children: React.ReactNode;
+}) {
+  const locale = useLocale();
+  const t = useTranslations("marketing.nav");
+  const local = (href: string) => localePath(locale, href);
 
-const FOOTER_GROUPS = [
-  {
-    title: "Product",
-    links: [
-      { href: "/features/shopping-lists", label: "Shopping lists" },
-      { href: "/features/expenses", label: "Expense splitting" },
-      { href: "/features/ai-assistant", label: "AI assistant" },
-      { href: "/splitwise-alternative", label: "Splitwise alternative" },
-      { href: "/pricing", label: "Pricing" },
-      { href: "/faq", label: "FAQ" },
-    ],
-  },
-  {
-    title: "Get the app",
-    links: [
-      { href: "/auth/login", label: "Web app" },
-      { href: APP_STORE_URL, label: "App Store" },
-      { href: PLAY_STORE_URL, label: "Google Play" },
-      { href: GITHUB_URL, label: "Source code" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: LEGAL_PAGES.map((page) => ({ href: page.path, label: page.label })),
-  },
-];
+  const nav = [
+    { href: local("/features/shopping-lists"), label: t("shoppingLists") },
+    { href: local("/features/expenses"), label: t("expenses") },
+    {
+      href: local("/splitwise-alternative"),
+      label: t("splitwiseAlternative"),
+    },
+    { href: local("/pricing"), label: t("pricing") },
+    { href: local("/faq"), label: t("faq") },
+  ];
 
-export function SiteShell({ children }: { children: React.ReactNode }) {
+  const footerGroups = [
+    {
+      title: t("product"),
+      links: [
+        { href: local("/features/shopping-lists"), label: t("shoppingLists") },
+        { href: local("/features/expenses"), label: t("expenseSplitting") },
+        { href: local("/features/ai-assistant"), label: t("aiAssistant") },
+        {
+          href: local("/splitwise-alternative"),
+          label: t("splitwiseAlternative"),
+        },
+        { href: local("/pricing"), label: t("pricing") },
+        { href: local("/faq"), label: t("faq") },
+      ],
+    },
+    {
+      title: t("getTheApp"),
+      links: [
+        { href: "/auth/login", label: t("webApp") },
+        { href: APP_STORE_URL, label: t("appStore") },
+        { href: PLAY_STORE_URL, label: t("googlePlay") },
+        { href: GITHUB_URL, label: t("sourceCode") },
+      ],
+    },
+    {
+      title: t("legal"),
+      links: LEGAL_PAGES.map((page) => ({
+        href: local(page.path),
+        label: t(page.id),
+      })),
+    },
+  ];
+
   return (
     <div className="bg-background h-screen overflow-auto">
       <header className="border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href={local("/")} className="flex items-center gap-2">
             <FlatsbyCat />
             <span className="text-xl font-semibold">Flatsby</span>
           </Link>
           <nav className="hidden gap-1 md:flex">
-            {NAV.map((link) => (
+            {nav.map((link) => (
               <Button key={link.href} variant="ghost" size="sm" asChild>
                 <Link href={link.href}>{link.label}</Link>
               </Button>
@@ -63,10 +84,10 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/auth/login">Sign In</Link>
+              <Link href="/auth/login">{t("signIn")}</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link href="/auth/login">Get Started</Link>
+              <Link href="/auth/login">{t("getStarted")}</Link>
             </Button>
           </div>
         </div>
@@ -74,7 +95,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <main>{children}</main>
       <footer className="border-t">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
-          {FOOTER_GROUPS.map((group) => (
+          {footerGroups.map((group) => (
             <nav key={group.title} className="flex flex-col gap-2 text-sm">
               <p className="font-medium">{group.title}</p>
               {group.links.map((link) => (
@@ -89,10 +110,40 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             </nav>
           ))}
         </div>
+        <LanguageLinks path={path} />
         <p className="text-muted-foreground pb-8 text-center text-sm">
           Flatsby {new Date().getFullYear()}
         </p>
       </footer>
     </div>
+  );
+}
+
+export function LanguageLinks({ path }: { path: string }) {
+  const current = useLocale();
+  const t = useTranslations("marketing.nav");
+  return (
+    <nav
+      aria-label={t("language")}
+      className="flex justify-center gap-4 pb-4 text-sm"
+    >
+      {locales.map((locale) =>
+        locale === current ? (
+          <span key={locale} lang={locale} className="font-medium">
+            {localeNames[locale]}
+          </span>
+        ) : (
+          <Link
+            key={locale}
+            href={localePath(locale, path)}
+            hrefLang={locale}
+            lang={locale}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            {localeNames[locale]}
+          </Link>
+        ),
+      )}
+    </nav>
   );
 }

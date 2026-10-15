@@ -26,10 +26,12 @@ export function InstallReferrerInvite() {
     if (Platform.OS !== "android") return;
     void (async () => {
       if (await AsyncStorage.getItem(HANDLED_KEY)) return;
-      await AsyncStorage.setItem(HANDLED_KEY, "true");
+      // Play's referrer service can be briefly unavailable; the next launch tries again
       const referrer = await Application.getInstallReferrerAsync().catch(
-        () => "",
+        () => null,
       );
+      if (referrer === null) return;
+      await AsyncStorage.setItem(HANDLED_KEY, "true");
       const code = inviteCodeSchema.safeParse(
         new URLSearchParams(referrer).get(INVITE_REFERRER_KEY) ?? "",
       );

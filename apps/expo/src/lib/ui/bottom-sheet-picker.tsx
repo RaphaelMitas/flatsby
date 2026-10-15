@@ -16,6 +16,7 @@ import BottomSheetRaw, {
 import { FlashList } from "@shopify/flash-list";
 import { styled } from "nativewind";
 import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
 
 import { useThemeColors } from "../utils";
 
@@ -274,6 +275,7 @@ export const BottomSheetPickerTrigger: React.FC<
   testID,
   disabled,
 }) => {
+  const t = useTranslations("common");
   const { openPicker } = useBottomSheetPicker();
 
   const handleOpen = useCallback(() => {
@@ -321,7 +323,7 @@ export const BottomSheetPickerTrigger: React.FC<
     >
       {selectedItem?.icon}
       <Text className={triggerTextVariants()}>
-        {triggerTitle ?? selectedItem?.title ?? "Select"}
+        {triggerTitle ?? selectedItem?.title ?? t("select")}
       </Text>
     </Pressable>
   );
