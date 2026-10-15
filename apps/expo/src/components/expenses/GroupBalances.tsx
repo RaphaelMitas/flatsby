@@ -1,6 +1,7 @@
 import type { groupBalances } from "@flatsby/validators/expenses/debt";
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import { Text, View } from "react-native";
+import { useLocale } from "use-intl";
 
 import { formatSignedCents } from "@flatsby/validators/expenses/formatting";
 
@@ -46,6 +47,7 @@ function BalanceBars({
   person,
   withHeading,
 }: BalanceBarsProps) {
+  const locale = useLocale();
   return (
     <View>
       {withHeading && (
@@ -80,7 +82,7 @@ function BalanceBars({
                       : "text-muted-foreground",
                 )}
               >
-                {formatSignedCents(cents, currency)}
+                {formatSignedCents(cents, currency, locale)}
               </Text>
             </View>
             <View className="bg-muted relative h-1.5 rounded-full">

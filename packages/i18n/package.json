@@ -1,0 +1,37 @@
+{
+  "name": "@flatsby/i18n",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./src/*.ts"
+    }
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "tsc",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "check": "biome check",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "use-intl": "catalog:"
+  },
+  "devDependencies": {
+    "@babel/parser": "^7.29.7",
+    "@babel/types": "^7.29.7",
+    "@biomejs/biome": "catalog:",
+    "@flatsby/prettier-config": "workspace:*",
+    "@flatsby/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "prettier": "@flatsby/prettier-config"
+}

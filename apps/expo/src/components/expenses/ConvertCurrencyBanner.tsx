@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
+import { useTranslations } from "use-intl";
 
 import { listCurrencies } from "@flatsby/validators/expenses/formatting";
 
@@ -19,6 +20,7 @@ export function ConvertCurrencyBanner({
   groupCurrency: string;
   currencies: string[];
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const posthog = usePostHog();
   const updateGroup = useUpdateGroup(groupId);
@@ -51,12 +53,14 @@ export function ConvertCurrencyBanner({
     <Alert variant="info" className="mt-4 gap-3">
       <View className="flex-row items-start justify-between gap-2">
         <AlertTitle variant="info" className="flex-1 leading-tight">
-          Debts are now in {listCurrencies(currencies, groupCurrency)}
+          {t("expenses.conversion.bannerTitle", {
+            currencies: listCurrencies(currencies, groupCurrency, t),
+          })}
         </AlertTitle>
         <Pressable
           testID="currency-banner-dismiss"
           accessibilityRole="button"
-          accessibilityLabel="Keep separate"
+          accessibilityLabel={t("expenses.conversion.keepSeparate")}
           hitSlop={8}
           onPress={keepSeparate}
         >
@@ -64,20 +68,19 @@ export function ConvertCurrencyBanner({
         </Pressable>
       </View>
       <AlertDescription>
-        Turn on automatic conversion and new expenses in other currencies count
-        toward {groupCurrency} debts instead.
+        {t("expenses.conversion.bannerBody", { currency: groupCurrency })}
       </AlertDescription>
       <View className="flex-row justify-end gap-2">
         <Button
           testID="currency-banner-keep-separate"
-          title="Keep separate"
+          title={t("expenses.conversion.keepSeparate")}
           variant="outline"
           size="sm"
           onPress={keepSeparate}
         />
         <Button
           testID="currency-banner-turn-on"
-          title="Turn on"
+          title={t("expenses.conversion.turnOn")}
           size="sm"
           onPress={turnOn}
         />

@@ -7,6 +7,7 @@ import ReanimatedSwipeable, {
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
 import { formatExpenseAmounts } from "@flatsby/validators/expenses/formatting";
 
@@ -37,6 +38,8 @@ export function ExpenseCard({
   isNotConverted,
 }: ExpenseCardProps) {
   const router = useRouter();
+  const t = useTranslations();
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const trpcClient = trpc;
   const swipeableRef = useRef<SwipeableMethods>(null);
@@ -94,18 +97,18 @@ export function ExpenseCard({
 
   const splitCount = expense.expenseSplits.length;
   const paidByName = expense.paidByGroupMember.user.name;
-  const amounts = formatExpenseAmounts(expense);
+  const amounts = formatExpenseAmounts(expense, locale);
   const expenseDate = new Date(expense.expenseDate);
   const fromMember = expense.expenseSplits[0]?.groupMember;
 
   const { renderLeftActions, renderRightActions } = useSwipeActions({
     leftAction: {
-      text: "Edit",
+      text: t("common.edit"),
       className: "bg-info",
       textClassName: "text-info-foreground",
     },
     rightAction: {
-      text: "Delete",
+      text: t("common.delete"),
       className: "bg-destructive",
       textClassName: "text-destructive-foreground",
     },
@@ -182,8 +185,12 @@ export function ExpenseCard({
         onClose={handleCloseModal}
         onConfirm={handleDelete}
         itemName={expense.description || amounts.amount}
-        title="Delete Expense"
-        description={`Are you sure you want to delete this ${expense.splitMethod === "settlement" ? "settlement" : "expense"}? This action cannot be undone.`}
+        title={t("expenses.deleteExpense")}
+        description={
+          expense.splitMethod === "settlement"
+            ? t("expenses.deleteSettlementConfirm")
+            : t("expenses.deleteExpenseConfirm")
+        }
       />
     </>
   );

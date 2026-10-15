@@ -7,6 +7,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { styled } from "nativewind";
+import { useTranslations } from "use-intl";
 
 import { bottomSheetVariants } from "~/lib/ui/bottom-sheet-picker";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -21,6 +22,7 @@ const renderBackdrop = (props: BottomSheetBackdropProps) => (
 );
 
 export function RateInfoButton({ targetCurrency }: { targetCurrency: string }) {
+  const t = useTranslations("expenses.conversion");
   const sheetRef = useRef<BottomSheetModal>(null);
   const { getColor } = useThemeColors();
 
@@ -29,7 +31,7 @@ export function RateInfoButton({ targetCurrency }: { targetCurrency: string }) {
       <Pressable
         testID="rate-info-button"
         accessibilityRole="button"
-        accessibilityLabel="Where this rate comes from"
+        accessibilityLabel={t("rateSourceTitle")}
         hitSlop={8}
         onPress={() => sheetRef.current?.present()}
       >
@@ -43,16 +45,13 @@ export function RateInfoButton({ targetCurrency }: { targetCurrency: string }) {
       >
         <BottomSheetView className="gap-3 px-4 pb-10">
           <Text className="text-foreground text-lg font-semibold">
-            Where this rate comes from
+            {t("rateSourceTitle")}
           </Text>
           <Text className="text-muted-foreground text-sm">
-            European Central Bank reference rate for the expense date, via
-            Frankfurter. Published on working days, so a weekend expense uses
-            Friday's rate.
+            {t("rateSourceBody")}
           </Text>
           <Text className="text-muted-foreground text-sm">
-            Your card or bank may charge a different rate. Type what you
-            actually paid in {targetCurrency} and the rate follows.
+            {t("rateSourceOwnRate", { currency: targetCurrency })}
           </Text>
         </BottomSheetView>
       </Sheet>

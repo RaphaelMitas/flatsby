@@ -1,5 +1,6 @@
 import { Text, View } from "react-native";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Card } from "~/lib/ui/card";
@@ -28,13 +29,14 @@ const InfoRow = ({
 );
 
 export default function AccountScreen() {
+  const t = useTranslations("settings.account");
+  const locale = useLocale();
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
   );
 
-  // Format date
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(locale, {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -45,16 +47,16 @@ export default function AccountScreen() {
     <SafeAreaView>
       <AppScrollView className="p-4">
         <Text className="text-foreground mb-6 text-2xl font-bold">
-          Account Information
+          {t("information")}
         </Text>
 
         <View className="gap-4">
-          <InfoRow label="Email Address" value={user.email} icon="mail" />
+          <InfoRow label={t("email")} value={user.email} icon="mail" />
 
-          <InfoRow label="Display Name" value={user.name} icon="user" />
+          <InfoRow label={t("displayName")} value={user.name} icon="user" />
 
           <InfoRow
-            label="Account Created"
+            label={t("created")}
             value={formatDate(user.createdAt)}
             icon="calendar"
           />
@@ -62,12 +64,10 @@ export default function AccountScreen() {
 
         <Card className="mt-8 rounded-lg p-4">
           <Text className="text-foreground mb-3 text-lg font-semibold">
-            Account Settings
+            {t("settings")}
           </Text>
           <Text className="text-muted-foreground text-sm leading-6">
-            Your account information is managed through your authentication
-            provider. You can't change your email address or other core account
-            details.
+            {t("managedByProvider")}
           </Text>
         </Card>
       </AppScrollView>

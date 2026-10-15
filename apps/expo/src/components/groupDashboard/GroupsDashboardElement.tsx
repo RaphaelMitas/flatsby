@@ -8,6 +8,7 @@ import ReanimatedSwipeable, {
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import type { RouterOutputs } from "~/utils/api";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
@@ -26,6 +27,7 @@ interface Props {
 }
 
 const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
+  const t = useTranslations();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const swipeableRef = useRef<SwipeableMethods>(null);
   const queryClient = useQueryClient();
@@ -36,12 +38,12 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
 
   const { renderLeftActions, renderRightActions } = useSwipeActions({
     leftAction: {
-      text: "Edit",
+      text: t("common.edit"),
       className: "bg-info",
       textClassName: "text-info-foreground",
     },
     rightAction: {
-      text: "Delete",
+      text: t("common.delete"),
       className: "bg-destructive",
       textClassName: "text-destructive-foreground",
     },
@@ -144,7 +146,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         >
           <View className="flex grow flex-row items-center gap-3">
             <Avatar>
-              <AvatarImage alt="Group Avatar" src={undefined} />
+              <AvatarImage alt={t("group.avatarAlt")} src={undefined} />
               <AvatarFallback>
                 {group.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
@@ -166,14 +168,16 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
                     isSelected && "text-muted",
                   )}
                 >
-                  {group.memberCount === 1
-                    ? `${group.memberCount} member`
-                    : `${group.memberCount} members`}
+                  {t("group.memberCount", { count: group.memberCount })}
                 </Text>
               </View>
               <Button
                 testID="group-select-button"
-                title={isSelected ? "Go to Group" : "Select Group"}
+                title={
+                  isSelected
+                    ? t("group.dashboard.goToGroup")
+                    : t("group.dashboard.selectGroup")
+                }
                 variant="outline"
                 size="md"
                 disabled={isOptimistic}
@@ -190,9 +194,11 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         onClose={handleCloseModal}
         onConfirm={handleDeleteGroup}
         itemName={group.name}
-        title="Delete Group"
-        description={`Are you sure you want to delete "${group.name}"? This action cannot be undone and will permanently remove all data associated with this group.`}
-        confirmationLabel={`To confirm deletion, please type the group name: ${group.name}`}
+        title={t("group.delete.title")}
+        description={t("group.delete.description", { name: group.name })}
+        confirmationLabel={t("group.delete.confirmationLabel", {
+          name: group.name,
+        })}
         needsConfirmationInput
       />
     </>

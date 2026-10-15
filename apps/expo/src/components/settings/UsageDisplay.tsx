@@ -1,5 +1,6 @@
 import { Linking, Pressable, Text, View } from "react-native";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
 import { formatCredits } from "@flatsby/validators/billing";
 
@@ -8,6 +9,8 @@ import { trpc } from "~/utils/api";
 import { getBaseUrl } from "~/utils/base-url";
 
 export function UsageDisplay() {
+  const t = useTranslations("billing.usage");
+  const locale = useLocale();
   const { data } = useSuspenseQuery(trpc.user.getUsage.queryOptions());
 
   const credits = data.credits;
@@ -34,9 +37,11 @@ export function UsageDisplay() {
           <Icon name="zap" size={16} color="primary" />
         </View>
         <View className="flex-1">
-          <Text className="text-foreground text-base font-medium">Credits</Text>
+          <Text className="text-foreground text-base font-medium">
+            {t("credits")}
+          </Text>
           <Text className="text-muted-foreground text-sm">
-            {formatCredits(balance)} remaining
+            {t("remaining", { credits: formatCredits(balance, locale) })}
           </Text>
           <View className="bg-secondary mt-2 h-2 w-full overflow-hidden rounded-full">
             <View
@@ -46,7 +51,7 @@ export function UsageDisplay() {
           </View>
           {balance === 0 && (
             <Text className="text-destructive mt-1 text-xs">
-              Out of credits. Tap to upgrade.
+              {t("outOfCredits")}
             </Text>
           )}
         </View>

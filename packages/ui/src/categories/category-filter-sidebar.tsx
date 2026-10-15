@@ -1,6 +1,7 @@
 "use client";
 
 import type { CategoryId } from "@flatsby/validators/categories";
+import { useTranslations } from "use-intl";
 
 import { cn } from "..";
 import { Badge } from "../badge";
@@ -21,6 +22,7 @@ export function CategoryFilterSidebar({
   selectedCategory,
   onSelectCategory,
 }: CategoryFilterSidebarProps) {
+  const t = useTranslations();
   // Filter categories excluding ai-auto-select
   const availableCategories = categoryMapping.filter(
     (category) => category.id !== "ai-auto-select",
@@ -43,7 +45,7 @@ export function CategoryFilterSidebar({
             className="w-full justify-between"
             data-testid="category-filter-all"
           >
-            All Items
+            {t("shoppingList.filter.allItems")}
             {total && total > 0 && (
               <Badge
                 variant={selectedCategory === null ? "secondary" : "outline"}
@@ -78,7 +80,7 @@ export function CategoryFilterSidebar({
                         : colorClasses.base,
                     )}
                   />
-                  {category.name}
+                  {t(category.name)}
                 </span>
                 {count > 0 && (
                   <Badge variant={isSelected ? "secondary" : "outline"}>

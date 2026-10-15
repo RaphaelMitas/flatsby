@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
@@ -84,6 +85,8 @@ interface HomeStatsProps {
 }
 
 export function HomeStats({ groupId }: HomeStatsProps) {
+  const t = useTranslations("home.stats");
+  const locale = useLocale();
   const { data: groupData } = useQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
@@ -103,7 +106,7 @@ export function HomeStats({ groupId }: HomeStatsProps) {
   let itemsCompleted = 0;
   let balanceAmount = 0;
   let balanceCurrency = "EUR";
-  let balanceLabel = "balanced";
+  let balanceLabel = t("balanced");
   let balanceIconColor: ColorName = "success";
 
   if (hasData) {
@@ -131,21 +134,23 @@ export function HomeStats({ groupId }: HomeStatsProps) {
     const isOwed = userBalance ? userBalance.amount > 0 : false;
     balanceLabel = userBalance
       ? isOwed
-        ? "owed to you"
-        : "you owe"
-      : "balanced";
+        ? t("owedToYou")
+        : t("youOwe")
+      : t("balanced");
     balanceIconColor = userBalance ? (isOwed ? "success" : "error") : "success";
   }
 
   const formatCurrency = (currency: string) => (cents: number) =>
-    formatCurrencyFromCents({ cents, currency });
+    formatCurrencyFromCents({ cents, currency, locale });
 
   const isLoading = !hasData;
 
   return (
     <View className="gap-2">
       <View className="-mb-2 flex-row items-end justify-between pr-4">
-        <Text className="text-muted-foreground mb-2 text-sm">Last 30 days</Text>
+        <Text className="text-muted-foreground mb-2 text-sm">
+          {t("last30Days")}
+        </Text>
         <PeekingCat />
       </View>
       <View className="flex-row gap-3">
@@ -153,14 +158,14 @@ export function HomeStats({ groupId }: HomeStatsProps) {
           iconName="wallet"
           value={spendingCents}
           format={formatCurrency(spendingCurrency)}
-          label="spent"
+          label={t("spent")}
           iconColor="info"
           loading={isLoading}
         />
         <StatCard
           iconName="circle-check"
           value={itemsCompleted}
-          label="items"
+          label={t("items")}
           iconColor="success"
           loading={isLoading}
         />

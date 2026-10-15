@@ -3,7 +3,9 @@ import type { GroupFormValues } from "@flatsby/validators/group";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
+import { translateIfKey } from "@flatsby/i18n/message-key";
 import { groupFormSchema } from "@flatsby/validators/group";
 
 import { Button } from "~/lib/ui/button";
@@ -13,6 +15,7 @@ import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 
 export default function CreateGroup() {
+  const t = useTranslations();
   const handleGoBack = () => {
     router.back();
   };
@@ -86,7 +89,7 @@ export default function CreateGroup() {
     <View className="bg-background flex-1 p-4">
       <Form {...form}>
         <View className="flex gap-2">
-          <Label htmlFor="name">Group Name</Label>
+          <Label htmlFor="name">{t("group.nameLabel")}</Label>
           <FormField
             name="name"
             control={form.control}
@@ -97,7 +100,7 @@ export default function CreateGroup() {
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
-                  placeholder="Enter your group name"
+                  placeholder={t("group.create.namePlaceholder")}
                   className="w-full"
                   error={!!form.formState.errors.name}
                 />
@@ -106,20 +109,24 @@ export default function CreateGroup() {
           />
           {form.formState.errors.name && (
             <Text className="text-destructive">
-              {form.formState.errors.name.message}
+              {translateIfKey(t, form.formState.errors.name.message ?? "")}
             </Text>
           )}
 
           <View className="flex flex-row gap-2">
             <Button
-              title="Cancel"
+              title={t("common.cancel")}
               variant="secondary"
               onPress={handleGoBack}
               className="flex-1"
             />
             <Button
               testID="group-create-submit"
-              title={form.formState.isSubmitting ? "Creating..." : "Create"}
+              title={
+                form.formState.isSubmitting
+                  ? t("common.creating")
+                  : t("group.create.submit")
+              }
               className="flex-1"
               disabled={form.formState.isSubmitting}
               icon={form.formState.isSubmitting ? "loader" : undefined}

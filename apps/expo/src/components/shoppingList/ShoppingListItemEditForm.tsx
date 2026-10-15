@@ -4,6 +4,7 @@ import type {
 } from "@flatsby/validators/shopping-list";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useTranslations } from "use-intl";
 
 import { editShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
 
@@ -22,6 +23,7 @@ import { CategoryPicker } from "./ShoppingListCategory";
 import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
 
 export function ShoppingListItemEditForm() {
+  const t = useTranslations();
   const router = useRouter();
   const params = useLocalSearchParams<{
     itemId: string;
@@ -90,7 +92,10 @@ export function ShoppingListItemEditForm() {
             render={({ field }) => (
               <>
                 <FormControl>
-                  <CategoryPicker {...field} triggerTitle="Select Category" />
+                  <CategoryPicker
+                    {...field}
+                    triggerTitle={t("common.selectCategory")}
+                  />
                 </FormControl>
                 <FormMessage />
               </>
@@ -99,14 +104,18 @@ export function ShoppingListItemEditForm() {
 
           <View className="flex flex-row gap-2">
             <Button
-              title="Cancel"
+              title={t("common.cancel")}
               variant="secondary"
               onPress={() => router.back()}
               className="flex-1"
             />
             <Button
               testID="shopping-list-item-edit-save"
-              title={form.formState.isSubmitting ? "Updating..." : "Update"}
+              title={
+                form.formState.isSubmitting
+                  ? t("common.updating")
+                  : t("shoppingList.item.update")
+              }
               className="flex-1"
               disabled={form.formState.isSubmitting}
               icon={form.formState.isSubmitting ? "loader" : undefined}

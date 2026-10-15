@@ -1,3 +1,4 @@
+import type { MessageKey } from "@flatsby/i18n/message-key";
 import type { ExpenseSubcategoryIdWithAuto } from "@flatsby/validators/expenses/categories";
 import type { CategoryColorKey } from "@flatsby/validators/expenses/category-colors";
 import type { LucideIcon } from "lucide-react";
@@ -47,7 +48,7 @@ import {
 import {
   AI_AUTO_DETECT,
   expenseCategoryGroupColorKeys,
-  expenseCategoryGroupLabels,
+  expenseCategoryLabelKeys,
   expenseSubcategories,
   isExpenseCategoryGroup,
 } from "@flatsby/validators/expenses/categories";
@@ -129,20 +130,17 @@ export function getExpenseCategoryColorClasses(groupId: string) {
 
 export interface ExpenseCategoryDataItem {
   id: ExpenseSubcategoryIdWithAuto;
-  name: string;
-  description: string;
+  name: MessageKey;
+  description: MessageKey;
   groupId: string;
-  groupName: string;
   icon: LucideIcon;
   colorClasses: { base: string; bg: string; border: string };
 }
 
 const otherFallback: ExpenseCategoryDataItem = {
   id: "other",
-  name: "Other",
-  description: "Other",
+  ...expenseCategoryLabelKeys("other"),
   groupId: "other",
-  groupName: "Other",
   icon: CircleHelp,
   colorClasses: getExpenseCategoryColorClasses("other"),
 };
@@ -150,28 +148,20 @@ const otherFallback: ExpenseCategoryDataItem = {
 const expenseCategoryDataRecord: Record<string, ExpenseCategoryDataItem> = {
   [AI_AUTO_DETECT]: {
     id: AI_AUTO_DETECT,
-    name: "AI Auto Detect",
-    description: "AI will detect the category from the description",
+    ...expenseCategoryLabelKeys(AI_AUTO_DETECT),
     groupId: "auto",
-    groupName: "Auto",
     icon: WandSparkles,
     colorClasses: getExpenseCategoryColorClasses("auto"),
   },
 };
 
 for (const sub of expenseSubcategories) {
-  const groupName = expenseCategoryGroupLabels[sub.group];
-  const icon = subcategoryIconMap[sub.id] ?? CircleHelp;
-  const colorClasses = getExpenseCategoryColorClasses(sub.group);
-
   expenseCategoryDataRecord[sub.id] = {
     id: sub.id,
-    name: sub.label,
-    description: groupName,
+    ...expenseCategoryLabelKeys(sub.id),
     groupId: sub.group,
-    groupName,
-    icon,
-    colorClasses,
+    icon: subcategoryIconMap[sub.id] ?? CircleHelp,
+    colorClasses: getExpenseCategoryColorClasses(sub.group),
   };
 }
 

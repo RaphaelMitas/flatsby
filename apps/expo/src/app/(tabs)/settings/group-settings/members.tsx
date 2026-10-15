@@ -8,6 +8,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import type { RouterOutputs } from "~/utils/api";
 import { TimedAlert } from "~/components/TimedAlert";
@@ -35,6 +36,7 @@ const MemberCard = ({
   currentUserGroupMember: GroupMemberWithUser;
   onPress: () => void;
 }) => {
+  const t = useTranslations("group.members");
   const isUserAdmin = groupMember.role === "admin";
   const isCurrentUser = groupMember.id === currentUserGroupMember.id;
   const isCurrentUserAdmin = currentUserGroupMember.role === "admin";
@@ -66,7 +68,7 @@ const MemberCard = ({
             </Text>
             {isUserAdmin && (
               <Text className="text-muted-foreground ml-1 text-sm font-medium">
-                (Admin)
+                {t("adminBadge")}
               </Text>
             )}
           </View>
@@ -81,6 +83,7 @@ const MemberCard = ({
 };
 
 export default function MembersScreen() {
+  const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
   const [newMemberEmail, setNewMemberEmail] = useState<string>("");
   const router = useRouter();
@@ -240,23 +243,25 @@ export default function MembersScreen() {
       {/* Header */}
       <View className="bg-background px-4 py-6">
         <Text className="text-foreground text-2xl font-bold">
-          Manage Members
+          {t("group.members.title")}
         </Text>
         <Text className="text-muted-foreground text-sm">
-          Add new members and update their roles.
+          {t("group.members.description")}
         </Text>
       </View>
 
       {/* Add Member Section */}
       <View className="bg-card px-4 py-4">
         <Text className="text-foreground mb-3 text-base font-medium">
-          Add Member
+          {t("group.members.addMember")}
         </Text>
         <View className="gap-3">
           <Input
             testID="group-add-member-email"
             placeholder={
-              isAdmin ? "Enter email address" : "Only admins can add members"
+              isAdmin
+                ? t("group.members.emailPlaceholder")
+                : t("group.members.onlyAdminsCanAdd")
             }
             value={newMemberEmail}
             onChangeText={setNewMemberEmail}
@@ -266,7 +271,7 @@ export default function MembersScreen() {
           />
           <Button
             testID="group-add-member-button"
-            title="Add Member"
+            title={t("group.members.addMember")}
             icon="plus"
             disabled={!isAdmin || !newMemberEmail.trim()}
             onPress={handleAddMember}
@@ -283,13 +288,14 @@ export default function MembersScreen() {
             title={
               addGroupMemberMutation.data?.success === false
                 ? addGroupMemberMutation.data.error.type
-                : (addGroupMemberMutation.error?.data?.code ?? "Error")
+                : (addGroupMemberMutation.error?.data?.code ??
+                  t("common.error"))
             }
             description={
               addGroupMemberMutation.data?.success === false
                 ? addGroupMemberMutation.data.error.message
                 : (addGroupMemberMutation.error?.message ??
-                  "Unknown error during member addition")
+                  t("group.members.addFailed"))
             }
             onDismiss={() => addGroupMemberMutation.reset()}
           />
@@ -302,7 +308,7 @@ export default function MembersScreen() {
           <View className="px-4 py-2">
             <TimedAlert
               variant="success"
-              title="Member added successfully!"
+              title={t("group.members.added")}
               onDismiss={() => addGroupMemberMutation.reset()}
             />
           </View>
@@ -315,7 +321,9 @@ export default function MembersScreen() {
             testID={`group-members-count-${group.data.groupMembers.length}`}
             className="text-foreground text-base font-medium"
           >
-            Members ({group.data.groupMembers.length})
+            {t("group.members.listTitle", {
+              count: group.data.groupMembers.length,
+            })}
           </Text>
         </View>
         <View className="flex-1">
@@ -337,13 +345,14 @@ export default function MembersScreen() {
             title={
               updateMemberRoleMutation.data?.success === false
                 ? updateMemberRoleMutation.data.error.type
-                : (updateMemberRoleMutation.error?.data?.code ?? "Error")
+                : (updateMemberRoleMutation.error?.data?.code ??
+                  t("common.error"))
             }
             description={
               updateMemberRoleMutation.data?.success === false
                 ? updateMemberRoleMutation.data.error.message
                 : (updateMemberRoleMutation.error?.message ??
-                  "Unknown error during role update")
+                  t("group.members.roleUpdateFailed"))
             }
             onDismiss={() => updateMemberRoleMutation.reset()}
           />
@@ -358,13 +367,14 @@ export default function MembersScreen() {
             title={
               removeGroupMemberMutation.data?.success === false
                 ? removeGroupMemberMutation.data.error.type
-                : (removeGroupMemberMutation.error?.data?.code ?? "Error")
+                : (removeGroupMemberMutation.error?.data?.code ??
+                  t("common.error"))
             }
             description={
               removeGroupMemberMutation.data?.success === false
                 ? removeGroupMemberMutation.data.error.message
                 : (removeGroupMemberMutation.error?.message ??
-                  "Unknown error during member removal")
+                  t("group.members.removeFailed"))
             }
             onDismiss={() => removeGroupMemberMutation.reset()}
           />
@@ -377,7 +387,7 @@ export default function MembersScreen() {
           <View className="px-4 py-2">
             <TimedAlert
               variant="success"
-              title="Role updated successfully!"
+              title={t("group.members.roleUpdated")}
               onDismiss={() => updateMemberRoleMutation.reset()}
             />
           </View>
@@ -388,7 +398,7 @@ export default function MembersScreen() {
           <View className="px-4 py-2">
             <TimedAlert
               variant="success"
-              title="Member removed successfully!"
+              title={t("group.members.removed")}
               onDismiss={() => removeGroupMemberMutation.reset()}
             />
           </View>

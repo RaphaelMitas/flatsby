@@ -37,6 +37,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { nanoid } from "nanoid";
+import { useLocale, useTranslations } from "use-intl";
 
 import { cn } from "@flatsby/ui";
 
@@ -297,6 +298,7 @@ export function PromptInputAttachment({
   className,
   ...props
 }: PromptInputAttachmentProps) {
+  const t = useTranslations();
   const attachments = usePromptInputAttachments();
 
   const filename = data.filename ?? "";
@@ -305,7 +307,9 @@ export function PromptInputAttachment({
     data.mediaType.startsWith("image/") && data.url ? "image" : "file";
   const isImage = mediaType === "image";
 
-  const attachmentLabel = filename || (isImage ? "Image" : "Attachment");
+  const attachmentLabel =
+    filename ||
+    (isImage ? t("chat.elements.image") : t("chat.elements.attachment"));
 
   return (
     <PromptInputHoverCard>
@@ -322,7 +326,7 @@ export function PromptInputAttachment({
             <div className="bg-background absolute inset-0 flex size-5 items-center justify-center overflow-hidden rounded transition-opacity group-hover:opacity-0">
               {isImage ? (
                 <img
-                  alt={filename || "attachment"}
+                  alt={filename || t("chat.elements.attachmentAlt")}
                   className="size-5 object-cover"
                   height={20}
                   src={data.url}
@@ -335,7 +339,7 @@ export function PromptInputAttachment({
               )}
             </div>
             <Button
-              aria-label="Remove attachment"
+              aria-label={t("chat.elements.removeAttachment")}
               className="absolute inset-0 size-5 cursor-pointer rounded p-0 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 [&>svg]:size-2.5"
               onClick={(e) => {
                 e.stopPropagation();
@@ -345,7 +349,7 @@ export function PromptInputAttachment({
               variant="ghost"
             >
               <XIcon />
-              <span className="sr-only">Remove</span>
+              <span className="sr-only">{t("common.remove")}</span>
             </Button>
           </div>
 
@@ -357,7 +361,7 @@ export function PromptInputAttachment({
           {isImage && (
             <div className="flex max-h-96 w-96 items-center justify-center overflow-hidden rounded-md border">
               <img
-                alt={filename || "attachment preview"}
+                alt={filename || t("chat.elements.attachmentPreviewAlt")}
                 className="max-h-full max-w-full object-contain"
                 height={384}
                 src={data.url}
@@ -368,7 +372,7 @@ export function PromptInputAttachment({
           <div className="flex items-center gap-2.5">
             <div className="min-w-0 flex-1 space-y-1 px-0.5">
               <h4 className="truncate text-sm leading-none font-semibold">
-                {filename || (isImage ? "Image" : "Attachment")}
+                {attachmentLabel}
               </h4>
               {data.mediaType && (
                 <p className="text-muted-foreground truncate font-mono text-xs">
@@ -420,9 +424,10 @@ export type PromptInputActionAddAttachmentsProps = ComponentProps<
 };
 
 export const PromptInputActionAddAttachments = ({
-  label = "Add photos or files",
+  label,
   ...props
 }: PromptInputActionAddAttachmentsProps) => {
+  const t = useTranslations("chat.elements");
   const attachments = usePromptInputAttachments();
 
   return (
@@ -433,7 +438,7 @@ export const PromptInputActionAddAttachments = ({
         attachments.openFileDialog();
       }}
     >
-      <ImageIcon className="mr-2 size-4" /> {label}
+      <ImageIcon className="mr-2 size-4" /> {label ?? t("addPhotosOrFiles")}
     </DropdownMenuItem>
   );
 };
@@ -479,6 +484,7 @@ export const PromptInput = ({
   children,
   ...props
 }: PromptInputProps) => {
+  const t = useTranslations("chat.elements");
   // Try to use a provider controller if present
   const controller = useOptionalPromptInputController();
   const usingProvider = !!controller;
@@ -532,7 +538,7 @@ export const PromptInput = ({
       if (incoming.length && accepted.length === 0) {
         onError?.({
           code: "accept",
-          message: "No files match the accepted types.",
+          message: t("fileErrors.accept"),
         });
         return;
       }
@@ -542,7 +548,7 @@ export const PromptInput = ({
       if (accepted.length > 0 && sized.length === 0) {
         onError?.({
           code: "max_file_size",
-          message: "All files exceed the maximum size.",
+          message: t("fileErrors.maxFileSize"),
         });
         return;
       }
@@ -557,7 +563,7 @@ export const PromptInput = ({
         if (typeof capacity === "number" && sized.length > capacity) {
           onError?.({
             code: "max_files",
-            message: "Too many files. Some were not added.",
+            message: t("fileErrors.maxFiles"),
           });
         }
         const next: (FileUIPart & { id: string })[] = [];
@@ -573,7 +579,7 @@ export const PromptInput = ({
         return prev.concat(next);
       });
     },
-    [matchesAccept, maxFiles, maxFileSize, onError],
+    [matchesAccept, maxFiles, maxFileSize, onError, t],
   );
 
   const removeLocal = useCallback(
@@ -784,17 +790,19 @@ export const PromptInput = ({
       });
   };
 
+  const uploadLabel = t("uploadFiles");
+
   // Render with or without local provider
   const inner = (
     <>
       <input
         accept={accept}
-        aria-label="Upload files"
+        aria-label={uploadLabel}
         className="hidden"
         multiple={multiple}
         onChange={handleChange}
         ref={inputRef}
-        title="Upload files"
+        title={uploadLabel}
         type="file"
       />
       <form
@@ -833,9 +841,10 @@ export type PromptInputTextareaProps = ComponentProps<
 export const PromptInputTextarea = ({
   onChange,
   className,
-  placeholder = "What would you like to know?",
+  placeholder,
   ...props
 }: PromptInputTextareaProps) => {
+  const t = useTranslations("chat.elements");
   const controller = useOptionalPromptInputController();
   const attachments = usePromptInputAttachments();
   const [isComposing, setIsComposing] = useState(false);
@@ -916,7 +925,7 @@ export const PromptInputTextarea = ({
       onCompositionStart={() => setIsComposing(true)}
       onKeyDown={handleKeyDown}
       onPaste={handlePaste}
-      placeholder={placeholder}
+      placeholder={placeholder ?? t("promptPlaceholder")}
       {...props}
       {...controlledProps}
     />
@@ -1040,6 +1049,7 @@ export const PromptInputSubmit = ({
   children,
   ...props
 }: PromptInputSubmitProps) => {
+  const t = useTranslations("chat.elements");
   let Icon = <CornerDownLeftIcon className="size-4" />;
 
   if (status === "submitted") {
@@ -1052,7 +1062,7 @@ export const PromptInputSubmit = ({
 
   return (
     <InputGroupButton
-      aria-label="Submit"
+      aria-label={t("submit")}
       className={cn(className)}
       size={size}
       type="submit"
@@ -1126,6 +1136,7 @@ export const PromptInputSpeechButton = ({
   onTranscriptionChange,
   ...props
 }: PromptInputSpeechButtonProps) => {
+  const locale = useLocale();
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(
     null,
@@ -1143,7 +1154,7 @@ export const PromptInputSpeechButton = ({
 
       speechRecognition.continuous = true;
       speechRecognition.interimResults = true;
-      speechRecognition.lang = "en-US";
+      speechRecognition.lang = locale === "de" ? "de-DE" : "en-US";
 
       speechRecognition.onstart = () => {
         setIsListening(true);
@@ -1191,7 +1202,7 @@ export const PromptInputSpeechButton = ({
         recognitionRef.current.stop();
       }
     };
-  }, [textareaRef, onTranscriptionChange]);
+  }, [textareaRef, onTranscriptionChange, locale]);
 
   const toggleListening = useCallback(() => {
     if (!recognition) {

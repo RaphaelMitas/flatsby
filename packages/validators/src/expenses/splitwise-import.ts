@@ -1,5 +1,10 @@
+import type { MessageKey } from "@flatsby/i18n/message-key";
+import type { ParseError } from "papaparse";
 import Papa from "papaparse";
 import { z } from "zod/v4";
+
+import { msg } from "@flatsby/i18n/message-key";
+import { expenseCategories } from "@flatsby/i18n/messages/en/expenseCategories";
 
 import type { ExpenseSubcategoryId } from "./categories";
 import type { CurrencyCode } from "./types";
@@ -60,7 +65,10 @@ const splitwiseSubcategoryByCategory = new Map<string, ExpenseSubcategoryId>(
 );
 
 const subcategoryIdByLabel = new Map<string, ExpenseSubcategoryId>(
-  expenseSubcategories.map((sub) => [sub.label.toLowerCase(), sub.id]),
+  expenseSubcategories.map((sub) => [
+    expenseCategories.subcategories[sub.id].toLowerCase(),
+    sub.id,
+  ]),
 );
 
 function mapSplitwiseCategory(rawCategory: string): ExpenseSubcategoryId {
@@ -81,10 +89,15 @@ interface SplitwiseRow {
   [personName: string]: string;
 }
 
+export interface ImportMessage {
+  key: MessageKey;
+  values?: Record<string, string | number>;
+}
+
 export interface ParsedSplitwiseResult {
   rows: SplitwiseRow[];
   personNames: string[];
-  errors: string[];
+  errors: ImportMessage[];
 }
 
 export interface TransformConfig {
@@ -96,7 +109,7 @@ export type TransformedExpense = BulkCreateExpensesInput["expenses"][number];
 
 export interface SkippedRow {
   row: number;
-  reason: string;
+  reason: ImportMessage;
 }
 
 export interface TransformResult {
@@ -104,8 +117,18 @@ export interface TransformResult {
   skipped: SkippedRow[];
 }
 
+const papaErrorKeys = {
+  MissingQuotes: msg("splitwiseImport.parseError.missingQuotes"),
+  InvalidQuotes: msg("splitwiseImport.parseError.invalidQuotes"),
+  UndetectableDelimiter: msg(
+    "splitwiseImport.parseError.undetectableDelimiter",
+  ),
+  TooFewFields: msg("splitwiseImport.parseError.tooFewFields"),
+  TooManyFields: msg("splitwiseImport.parseError.tooManyFields"),
+} satisfies Record<ParseError["code"], MessageKey>;
+
 export function parseSplitwiseCsv(csvText: string): ParsedSplitwiseResult {
-  const errors: string[] = [];
+  const errors: ImportMessage[] = [];
 
   const parsed = Papa.parse<SplitwiseRow>(csvText, {
     header: true,
@@ -114,7 +137,10 @@ export function parseSplitwiseCsv(csvText: string): ParsedSplitwiseResult {
 
   if (parsed.errors.length > 0) {
     for (const err of parsed.errors) {
-      errors.push(`Row ${err.row}: ${err.message}`);
+      errors.push({
+        key: papaErrorKeys[err.code],
+        values: { row: err.row ?? 0 },
+      });
     }
   }
 
@@ -122,7 +148,13 @@ export function parseSplitwiseCsv(csvText: string): ParsedSplitwiseResult {
   const currencyIndex = headers.indexOf("Currency");
 
   if (currencyIndex === -1) {
-    return { rows: [], personNames: [], errors: ["Missing 'Currency' column"] };
+    return {
+      rows: [],
+      personNames: [],
+      errors: [
+        { key: msg("splitwiseImport.parseError.missingCurrencyColumn") },
+      ],
+    };
   }
 
   const personNames = headers.slice(currencyIndex + 1).filter(Boolean);
@@ -131,7 +163,7 @@ export function parseSplitwiseCsv(csvText: string): ParsedSplitwiseResult {
     return {
       rows: [],
       personNames: [],
-      errors: ["No person columns found after 'Currency'"],
+      errors: [{ key: msg("splitwiseImport.parseError.noPersonColumns") }],
     };
   }
 
@@ -173,14 +205,23 @@ export function transformSplitwiseRows(
     if (row.Currency !== config.targetCurrency) {
       skipped.push({
         row: rowNum,
-        reason: `Currency mismatch: ${row.Currency} (expected ${config.targetCurrency})`,
+        reason: {
+          key: msg("splitwiseImport.skipReason.currencyMismatch"),
+          values: { actual: row.Currency, expected: config.targetCurrency },
+        },
       });
       continue;
     }
 
     const cost = parseFloat(row.Cost);
     if (Number.isNaN(cost) || cost <= 0) {
-      skipped.push({ row: rowNum, reason: `Invalid cost: ${row.Cost}` });
+      skipped.push({
+        row: rowNum,
+        reason: {
+          key: msg("splitwiseImport.skipReason.invalidCost"),
+          values: { cost: row.Cost },
+        },
+      });
       continue;
     }
 
@@ -196,7 +237,10 @@ export function transformSplitwiseRows(
     const debtors = personAmounts.filter((p) => p.amount < 0);
 
     if (payers.length === 0) {
-      skipped.push({ row: rowNum, reason: "No payer found" });
+      skipped.push({
+        row: rowNum,
+        reason: { key: msg("splitwiseImport.skipReason.noPayer") },
+      });
       continue;
     }
 
@@ -242,7 +286,7 @@ export function transformSplitwiseRows(
     if (payers.length > 1) {
       skipped.push({
         row: rowNum,
-        reason: "Multiple payers not supported",
+        reason: { key: msg("splitwiseImport.skipReason.multiplePayers") },
       });
       continue;
     }
@@ -293,7 +337,10 @@ export function transformSplitwiseRows(
     } else if (Math.abs(diff) > 1) {
       skipped.push({
         row: rowNum,
-        reason: `Split amounts don't match total (off by ${diff} cents)`,
+        reason: {
+          key: msg("splitwiseImport.skipReason.splitMismatch"),
+          values: { diff },
+        },
       });
       continue;
     }

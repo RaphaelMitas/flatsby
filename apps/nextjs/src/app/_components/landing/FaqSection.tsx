@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+
+import { localePath } from "@flatsby/i18n/locale";
 
 import type { FaqItem } from "./content";
 
@@ -9,11 +12,13 @@ export function FaqSection({
   items: readonly FaqItem[];
   showAllLink?: boolean;
 }) {
+  const t = useTranslations("marketing.faq");
+  const locale = useLocale();
   return (
     <section id="faq" className="bg-muted/50 px-4 py-16 md:py-24">
       <div className="mx-auto max-w-3xl">
         <h2 className="mb-8 text-center text-3xl font-bold md:text-4xl">
-          Questions
+          {t("heading")}
         </h2>
         {items.map((item) => (
           <details key={item.question} className="border-b py-4">
@@ -25,8 +30,11 @@ export function FaqSection({
         ))}
         {showAllLink && (
           <p className="mt-6 text-center">
-            <Link href="/faq" className="font-medium underline">
-              All questions
+            <Link
+              href={localePath(locale, "/faq")}
+              className="font-medium underline"
+            >
+              {t("allQuestions")}
             </Link>
           </p>
         )}

@@ -1,9 +1,11 @@
 import { Stack } from "expo-router";
+import { useTranslations } from "use-intl";
 
 import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function ExpenseDetailLayout() {
   const themedScreenOptions = useThemedScreenOptions();
+  const t = useTranslations();
   return (
     <Stack
       screenOptions={{
@@ -15,8 +17,8 @@ export default function ExpenseDetailLayout() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: "Edit Expense",
-          headerBackTitle: "Back",
+          headerTitle: t("expenses.editExpense"),
+          headerBackTitle: t("common.back"),
         }}
         name="edit"
       />

@@ -6,6 +6,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
 import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import {
@@ -51,6 +52,8 @@ export function ExpenseDetailView({
   onEdit,
 }: ExpenseDetailViewProps) {
   const router = useRouter();
+  const t = useTranslations();
+  const locale = useLocale();
   const trpcClient = trpc;
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -137,10 +140,10 @@ export function ExpenseDetailView({
 
   const expense = expenseData.data;
 
-  const amounts = formatExpenseAmounts(expense);
+  const amounts = formatExpenseAmounts(expense, locale);
   const ledger = inLedgerCurrency(expense);
   const expenseDate = new Date(expense.expenseDate);
-  const formattedDate = formatExpenseDateLong(expenseDate);
+  const formattedDate = formatExpenseDateLong(expenseDate, locale);
 
   return (
     <>
@@ -148,7 +151,7 @@ export function ExpenseDetailView({
         <View className="flex-row gap-2">
           <Button
             testID="expense-edit-button"
-            title="Edit"
+            title={t("common.edit")}
             variant="outline"
             onPress={() => {
               if (onEdit) {
@@ -166,7 +169,7 @@ export function ExpenseDetailView({
           />
           <Button
             testID="expense-delete-button"
-            title="Delete"
+            title={t("common.delete")}
             variant="destructive"
             onPress={() => setShowDeleteDialog(true)}
             disabled={deleteExpenseMutation.isPending}
@@ -189,7 +192,7 @@ export function ExpenseDetailView({
                       </Text>
                       <View className="flex-row items-center gap-1">
                         <Text className="text-muted-foreground text-xs">
-                          Converted when added
+                          {t("expenses.conversion.convertedWhenAdded")}
                         </Text>
                         <RateInfoButton targetCurrency={ledger.currency} />
                       </View>
@@ -209,7 +212,7 @@ export function ExpenseDetailView({
                       color="secondary-foreground"
                     />
                     <Text className="text-secondary-foreground text-xs font-medium">
-                      Settlement
+                      {t("expenses.settlement")}
                     </Text>
                   </Badge>
                 )}
@@ -234,7 +237,7 @@ export function ExpenseDetailView({
                     </Avatar>
                     <View>
                       <Text className="text-muted-foreground text-sm">
-                        From
+                        {t("expenses.from")}
                       </Text>
                       <Text className="font-semibold">
                         {expense.expenseSplits[0].groupMember.user.name}
@@ -256,7 +259,9 @@ export function ExpenseDetailView({
                 </Avatar>
                 <View>
                   <Text className="text-muted-foreground text-sm">
-                    {expense.splitMethod === "settlement" ? "To" : "Paid by"}
+                    {expense.splitMethod === "settlement"
+                      ? t("expenses.to")
+                      : t("expenses.paidByLabel")}
                   </Text>
                   <Text className="text-foreground font-semibold">
                     {expense.paidByGroupMember.user.name}
@@ -269,7 +274,9 @@ export function ExpenseDetailView({
               <View className="flex-row items-center gap-3">
                 <Icon name="calendar" size={20} color="muted-foreground" />
                 <View>
-                  <Text className="text-muted-foreground text-sm">Date</Text>
+                  <Text className="text-muted-foreground text-sm">
+                    {t("common.date")}
+                  </Text>
                   <Text className="text-foreground font-semibold">
                     {formattedDate}
                   </Text>
@@ -279,7 +286,7 @@ export function ExpenseDetailView({
               <Separator />
               <View>
                 <Text className="text-muted-foreground mb-1.5 text-sm">
-                  Category
+                  {t("common.category")}
                 </Text>
                 <ExpenseCategoryBadge
                   subcategoryId={expense.subcategory}
@@ -295,10 +302,12 @@ export function ExpenseDetailView({
               <CardHeader>
                 <View className="flex-row items-center gap-2">
                   <Icon name="users" size={20} color="foreground" />
-                  <CardTitle>Split Details</CardTitle>
+                  <CardTitle>{t("expenses.splitDetails")}</CardTitle>
                 </View>
                 <CardDescription>
-                  {`Split between ${expense.expenseSplits.length} ${expense.expenseSplits.length === 1 ? "person" : "people"}`}
+                  {t("expenses.splitBetween", {
+                    count: expense.expenseSplits.length,
+                  })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -308,14 +317,21 @@ export function ExpenseDetailView({
                     const splitAmount = formatCurrencyFromCents({
                       cents: ledger.expenseSplits[index]?.amountInCents ?? 0,
                       currency: ledger.currency,
+                      locale,
                     });
                     const paidSplitAmount =
                       amounts.paid &&
                       formatCurrencyFromCents({
                         cents: split.amountInCents,
                         currency: expense.currency,
+                        locale,
                       });
-                    const portion = formatSplitPortion({ split, expense });
+                    const portion = formatSplitPortion({
+                      split,
+                      expense,
+                      t,
+                      locale,
+                    });
 
                     return (
                       <View key={split.id}>
@@ -376,7 +392,7 @@ export function ExpenseDetailView({
                 </Avatar>
                 <View>
                   <Text className="text-muted-foreground text-sm">
-                    Created by
+                    {t("expenses.createdBy")}
                   </Text>
                   <Text className="text-foreground text-sm font-medium">
                     {expense.createdByGroupMember.user.name}
@@ -394,8 +410,8 @@ export function ExpenseDetailView({
         onClose={() => setShowDeleteDialog(false)}
         onConfirm={handleDelete}
         itemName={expense.description}
-        title="Delete Expense"
-        description="Are you sure you want to delete this expense? This action cannot be undone."
+        title={t("expenses.deleteExpense")}
+        description={t("expenses.deleteExpenseConfirm")}
       />
     </>
   );

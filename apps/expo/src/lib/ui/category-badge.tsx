@@ -1,5 +1,6 @@
 import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
 import { Text } from "react-native";
+import { useTranslations } from "use-intl";
 
 import type { BadgeProps } from "./badge";
 import { getCategoryData } from "~/components/shoppingList/ShoppingListCategory";
@@ -19,6 +20,7 @@ export function CategoryBadge({
   className,
   ...props
 }: CategoryBadgeProps) {
+  const t = useTranslations();
   const categoryData = getCategoryData({
     categoryId,
   });
@@ -38,7 +40,7 @@ export function CategoryBadge({
     >
       {showLabel && (
         <Text className={cn("text-base", categoryData.color)}>
-          {categoryData.name}
+          {t(categoryData.name)}
         </Text>
       )}
       {children}

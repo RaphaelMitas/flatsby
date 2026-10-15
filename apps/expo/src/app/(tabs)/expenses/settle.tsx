@@ -8,6 +8,7 @@ import {
   useRouter,
 } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { SettlementForm } from "~/components/expenses/SettlementForm";
 import { Button } from "~/lib/ui/button";
@@ -24,6 +25,7 @@ export default function SettlePage() {
     source?: string;
   }>();
   const router = useRouter();
+  const t = useTranslations();
   const navigation = useNavigation();
   const route = useRoute();
   const { selectedGroupId } = useShoppingStore();
@@ -62,13 +64,13 @@ export default function SettlePage() {
   if (!selectedGroupId) {
     return (
       <>
-        <Stack.Screen options={{ headerTitle: "Error" }} />
+        <Stack.Screen options={{ headerTitle: t("common.error") }} />
         <View className="h-full w-full flex-col items-center justify-center gap-4 p-4">
           <Text className="text-muted-foreground text-center">
-            No group selected. Please select a group first.
+            {t("common.noGroupSelectedHint")}
           </Text>
           <Button
-            title="Go to groups"
+            title={t("debts.goToGroups")}
             onPress={() => router.push("/(tabs)/home")}
           />
         </View>
@@ -79,14 +81,18 @@ export default function SettlePage() {
   return (
     <>
       <Stack.Screen
-        options={{ headerTitle: expenseId ? "Edit Settlement" : "Settle Up" }}
+        options={{
+          headerTitle: expenseId
+            ? t("debts.editSettlement")
+            : t("debts.settleUp"),
+        }}
       />
       <Suspense
         fallback={
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" />
             <Text className="text-muted-foreground mt-4">
-              Loading settlement form...
+              {t("debts.loadingSettlementForm")}
             </Text>
           </View>
         }

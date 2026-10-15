@@ -2,30 +2,41 @@ import type { FaqItem } from "./content";
 import type { ContentPageData, PageSection } from "./pages";
 import {
   APP_STORE_URL,
-  DESCRIPTION,
   FACTS,
+  faqItems,
   FEATURES,
   GITHUB_URL,
   HOME_FAQ,
   LEGAL_PAGES,
+  PLANS,
   PLAY_STORE_URL,
   SECTIONS,
   SITE_URL,
   STEPS,
   UPDATED,
 } from "./content";
-import { CONTENT_PAGES } from "./pages";
+import { marketingTranslator } from "./i18n";
+import { contentPages } from "./pages";
 
-const facts = FACTS.map((f) => `- ${f.label}: ${f.value}`).join("\n");
+// The markdown twins are for AI agents and stay English.
+const t = marketingTranslator("en");
+
+export const englishContentPages = contentPages(t);
+
+const facts = FACTS.map(
+  (fact) => `- ${t(`facts.${fact}.label`)}: ${t(`facts.${fact}.value`, PLANS)}`,
+).join("\n");
 
 const legalLinks = LEGAL_PAGES.map(
-  (page) => `- [${page.label}](${SITE_URL}${page.path})`,
+  (page) => `- [${t(`nav.${page.id}`)}](${SITE_URL}${page.path})`,
 ).join("\n");
 
-const pageLinks = CONTENT_PAGES.map(
-  (page) =>
-    `- [${page.headline}](${SITE_URL}/${page.slug}.md): ${page.description}`,
-).join("\n");
+const pageLinks = englishContentPages
+  .map(
+    (page) =>
+      `- [${page.headline}](${SITE_URL}/${page.slug}.md): ${page.description}`,
+  )
+  .join("\n");
 
 function questionsMarkdown(items: readonly FaqItem[]) {
   return `## Questions\n\n${items.map((q) => `### ${q.question}\n\n${q.answer}`).join("\n\n")}`;
@@ -54,7 +65,7 @@ function sectionMarkdown(section: PageSection) {
 export function llmsTxt() {
   return `# Flatsby
 
-> ${DESCRIPTION}
+> ${t("description")}
 
 Key facts:
 ${facts}
@@ -83,7 +94,7 @@ ${legalLinks}
 export function homeMarkdown() {
   return `# Flatsby
 
-> ${DESCRIPTION}
+> ${t("description")}
 
 Updated: ${UPDATED}
 
@@ -97,15 +108,15 @@ ${facts}
 
 ## Features
 
-${FEATURES.map((f) => `### ${f.title}\n\n${f.body}`).join("\n\n")}
+${FEATURES.map((f) => `### ${t(`features.${f}.title`)}\n\n${t(`features.${f}.body`)}`).join("\n\n")}
 
 ## Get started
 
-${STEPS.map((s, i) => `${i + 1}. ${s.title}. ${s.body}`).join("\n")}
+${STEPS.map((s, i) => `${i + 1}. ${t(`steps.${s}.title`)}. ${t(`steps.${s}.body`)}`).join("\n")}
 
-${SECTIONS.map((s) => `## ${s.title}\n\n${s.body}`).join("\n\n")}
+${SECTIONS.map((s) => `## ${t(`sections.${s}.title`)}\n\n${t(`sections.${s}.body`)}`).join("\n\n")}
 
-${questionsMarkdown(HOME_FAQ)}
+${questionsMarkdown(faqItems(t, HOME_FAQ))}
 
 All questions: ${SITE_URL}/faq.md
 

@@ -17,6 +17,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { Streamdown } from "streamdown";
+import { useTranslations } from "use-intl";
 
 import { cn } from "@flatsby/ui";
 
@@ -250,11 +251,12 @@ export const MessageBranchPrevious = ({
   children,
   ...props
 }: MessageBranchPreviousProps) => {
+  const t = useTranslations("chat.elements");
   const { goToPrevious, totalBranches } = useMessageBranch();
 
   return (
     <Button
-      aria-label="Previous branch"
+      aria-label={t("previousBranch")}
       disabled={totalBranches <= 1}
       onClick={goToPrevious}
       size="icon"
@@ -274,11 +276,12 @@ export const MessageBranchNext = ({
   className,
   ...props
 }: MessageBranchNextProps) => {
+  const t = useTranslations("chat.elements");
   const { goToNext, totalBranches } = useMessageBranch();
 
   return (
     <Button
-      aria-label="Next branch"
+      aria-label={t("nextBranch")}
       disabled={totalBranches <= 1}
       onClick={goToNext}
       size="icon"
@@ -298,6 +301,7 @@ export const MessageBranchPage = ({
   className,
   ...props
 }: MessageBranchPageProps) => {
+  const t = useTranslations("chat.elements");
   const { currentBranch, totalBranches } = useMessageBranch();
 
   return (
@@ -308,7 +312,7 @@ export const MessageBranchPage = ({
       )}
       {...props}
     >
-      {currentBranch + 1} of {totalBranches}
+      {t("branchPage", { current: currentBranch + 1, total: totalBranches })}
     </ButtonGroupText>
   );
 };
@@ -342,11 +346,14 @@ export function MessageAttachment({
   onRemove,
   ...props
 }: MessageAttachmentProps) {
+  const t = useTranslations();
   const filename = data.filename ?? "";
   const mediaType =
     data.mediaType.startsWith("image/") && data.url ? "image" : "file";
   const isImage = mediaType === "image";
-  const attachmentLabel = filename || (isImage ? "Image" : "Attachment");
+  const attachmentLabel =
+    filename ||
+    (isImage ? t("chat.elements.image") : t("chat.elements.attachment"));
 
   return (
     <div
@@ -359,7 +366,7 @@ export function MessageAttachment({
       {isImage ? (
         <>
           <img
-            alt={filename || "attachment"}
+            alt={filename || t("chat.elements.attachmentAlt")}
             className="size-full object-cover"
             height={100}
             src={data.url}
@@ -367,7 +374,7 @@ export function MessageAttachment({
           />
           {onRemove && (
             <Button
-              aria-label="Remove attachment"
+              aria-label={t("chat.elements.removeAttachment")}
               className="bg-background/80 hover:bg-background absolute top-2 right-2 size-6 rounded-full p-0 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 [&>svg]:size-3"
               onClick={(e) => {
                 e.stopPropagation();
@@ -377,7 +384,7 @@ export function MessageAttachment({
               variant="ghost"
             >
               <XIcon />
-              <span className="sr-only">Remove</span>
+              <span className="sr-only">{t("common.remove")}</span>
             </Button>
           )}
         </>
@@ -395,7 +402,7 @@ export function MessageAttachment({
           </Tooltip>
           {onRemove && (
             <Button
-              aria-label="Remove attachment"
+              aria-label={t("chat.elements.removeAttachment")}
               className="hover:bg-accent size-6 shrink-0 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100 [&>svg]:size-3"
               onClick={(e) => {
                 e.stopPropagation();
@@ -405,7 +412,7 @@ export function MessageAttachment({
               variant="ghost"
             >
               <XIcon />
-              <span className="sr-only">Remove</span>
+              <span className="sr-only">{t("common.remove")}</span>
             </Button>
           )}
         </>

@@ -4,6 +4,8 @@
 
 import { z } from "zod/v4";
 
+import { msg } from "@flatsby/i18n/message-key";
+
 import { expenseSubcategoryIdSchema } from "./categories";
 import { CURRENCY_CODES, MAX_SHARES, SPLIT_METHODS } from "./types";
 import { validateSplits } from "./validation";
@@ -26,10 +28,12 @@ export const currencyCodeSchema = z.enum(CURRENCY_CODES);
 const amountInCentsSchema = z
   .number()
   .int()
-  .min(1, "Amount must be greater than 0");
+  .min(1, msg("expenses.validation.amountPositive"));
 
 export const expenseSchema = z.object({
-  paidByGroupMemberId: z.number().min(1, "Please select who paid"),
+  paidByGroupMemberId: z
+    .number()
+    .min(1, msg("expenses.validation.selectPayer")),
   amountInCents: amountInCentsSchema,
   currency: currencyCodeSchema,
   convertedAmountInCents: amountInCentsSchema.nullish(),
@@ -39,7 +43,7 @@ export const expenseSchema = z.object({
   expenseDate: z.date(),
   splits: z
     .array(expenseSplitSchema)
-    .min(1, "At least one person must be included"),
+    .min(1, msg("expenses.validation.atLeastOnePerson")),
   splitMethod: splitMethodSchema,
 });
 function isCompleteConversion({
@@ -59,7 +63,7 @@ function isCompleteConversion({
 }
 
 const completeConversion = {
-  message: "Enter the converted amount",
+  message: msg("expenses.validation.convertedAmountRequired"),
   path: ["convertedAmountInCents"],
 };
 
@@ -74,7 +78,7 @@ export const expenseSchemaWithValidateSplits = expenseSchema
       return validation.isValid;
     },
     {
-      message: "Split amounts are invalid",
+      message: msg("expenses.validation.splitAmountsInvalid"),
       path: ["splits"],
     },
   )
@@ -106,7 +110,7 @@ export const updateExpenseSchema = expenseSchema
       return validation.isValid;
     },
     {
-      message: "Split amounts are invalid",
+      message: msg("expenses.validation.splitAmountsInvalid"),
       path: ["splits"],
     },
   )
@@ -123,14 +127,18 @@ export const deleteExpenseSchema = z.object({
 
 export const settlementFormSchema = z
   .object({
-    amountInCents: z.number().min(1, "Amount must be greater than 0"),
-    fromGroupMemberId: z.number().min(1, "Please select who is paying"),
-    toGroupMemberId: z.number().min(1, "Please select who is receiving"),
+    amountInCents: z.number().min(1, msg("expenses.validation.amountPositive")),
+    fromGroupMemberId: z
+      .number()
+      .min(1, msg("expenses.validation.selectSender")),
+    toGroupMemberId: z
+      .number()
+      .min(1, msg("expenses.validation.selectRecipient")),
     currency: currencyCodeSchema,
   })
   .refine((values) => values.fromGroupMemberId !== values.toGroupMemberId, {
     path: ["toGroupMemberId"],
-    message: "Pick two different people",
+    message: msg("expenses.validation.pickTwoPeople"),
   });
 
 export type SettlementFormValues = z.infer<typeof settlementFormSchema>;
@@ -139,7 +147,7 @@ export const getPairActivityInputSchema = z.object({
   groupId: z.number(),
   groupMemberIds: z
     .tuple([z.number(), z.number()])
-    .refine(([a, b]) => a !== b, "Pick two different members"),
+    .refine(([a, b]) => a !== b, msg("expenses.validation.pickTwoMembers")),
   cursor: z.object({ date: z.date(), id: z.number() }).optional(),
 });
 

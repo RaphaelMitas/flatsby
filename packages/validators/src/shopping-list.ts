@@ -1,5 +1,7 @@
 import { z } from "zod/v4";
 
+import { msg } from "@flatsby/i18n/message-key";
+
 import {
   categoryIdSchema,
   categorysIdWithAiAutoSelectSchema,
@@ -11,19 +13,19 @@ import {
 export const shoppingListNameSchema = z
   .string()
   .min(1, {
-    message: "Shopping list name is required",
+    message: msg("shoppingList.validation.nameRequired"),
   })
   .max(32, {
-    message: "Shopping list name cannot be longer than 32 characters",
+    message: msg("shoppingList.validation.nameTooLong"),
   });
 
 export const shoppingListIconSchema = z
   .string()
   .min(1, {
-    message: "Shopping list icon cannot be empty",
+    message: msg("shoppingList.validation.iconRequired"),
   })
   .max(32, {
-    message: "Shopping list icon is invalid",
+    message: msg("shoppingList.validation.iconInvalid"),
   })
   .optional()
   .nullable();
@@ -31,10 +33,10 @@ export const shoppingListIconSchema = z
 export const shoppingListDescriptionSchema = z
   .string()
   .min(1, {
-    message: "Shopping list description cannot be empty",
+    message: msg("shoppingList.validation.descriptionRequired"),
   })
   .max(256, {
-    message: "Shopping list description cannot be longer than 256 characters",
+    message: msg("shoppingList.validation.descriptionTooLong"),
   })
   .optional()
   .nullable();
@@ -90,10 +92,10 @@ export type ShoppingListFormValues = z.infer<typeof shoppingListFormSchema>;
 export const shoppingListItemNameSchema = z
   .string()
   .min(1, {
-    message: "Shopping list item name cannot be empty",
+    message: msg("shoppingList.validation.itemNameRequired"),
   })
   .max(64, {
-    message: "Shopping list item name cannot be longer than 64 characters",
+    message: msg("shoppingList.validation.itemNameTooLong"),
   });
 
 export const shoppingListItemSchema = z.object({

@@ -1,3 +1,4 @@
+import type { Locale } from "@flatsby/i18n/locale";
 import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import type { AssistantModelMessage, ModelMessage, ToolModelMessage } from "ai";
 import superjson from "superjson";
@@ -8,6 +9,11 @@ import { messageRoleSchema } from "@flatsby/validators/chat/messages";
 import { persistedToolCallSchema } from "@flatsby/validators/chat/tools";
 
 import type { Database } from "../types";
+
+const languageNames: Record<Locale, string> = {
+  en: "English",
+  de: "German",
+};
 
 /**
  * Validates and filters tool calls from the database.
@@ -29,6 +35,7 @@ function filterValidToolCalls(
 export async function buildContextMessages(
   db: Database,
   conversationId: string,
+  locale: Locale,
 ): Promise<ModelMessage[]> {
   const conversation = await db.query.conversations.findFirst({
     where: eq(conversations.id, conversationId),
@@ -52,7 +59,12 @@ export async function buildContextMessages(
     .filter((m) => m.status === "complete")
     .reverse();
 
-  const contextMessages: ModelMessage[] = [];
+  const contextMessages: ModelMessage[] = [
+    {
+      role: "system",
+      content: `Respond in ${languageNames[locale]} unless the user writes in another language.`,
+    },
+  ];
 
   if (conversation?.systemPrompt) {
     contextMessages.push({

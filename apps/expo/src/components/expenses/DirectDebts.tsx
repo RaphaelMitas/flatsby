@@ -7,6 +7,7 @@ import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
 import {
   describePairActivity,
@@ -43,6 +44,7 @@ export function DirectDebts({
   person,
   onSettle,
 }: DirectDebtsProps) {
+  const t = useTranslations("debts");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const expandable = kind === "direct";
 
@@ -54,7 +56,7 @@ export function DirectDebts({
         </View>
         <View className="flex-1">
           <Text className="text-foreground font-semibold">
-            You're all square
+            {t("allSquare")}
           </Text>
           <Text className="text-muted-foreground text-sm">{allSquare}</Text>
         </View>
@@ -111,6 +113,8 @@ function DirectDebtRow({
   onToggle,
   onSettle,
 }: DirectDebtRowProps) {
+  const t = useTranslations("debts");
+  const locale = useLocale();
   const otherId = counterpart.groupMemberId;
   const other = person(otherId);
 
@@ -159,12 +163,16 @@ function DirectDebtRow({
                 {formatCurrencyFromCents({
                   cents: debt.amountInCents,
                   currency: debt.currency,
+                  locale,
                 })}
               </Text>
               <Button
                 testID="debt-settle"
-                accessibilityLabel={`Settle ${debt.currency} with ${other.name}`}
-                title="Settle"
+                accessibilityLabel={t("recordCurrencyWith", {
+                  currency: debt.currency,
+                  name: other.name,
+                })}
+                title={t("record")}
                 size="sm"
                 variant="outline"
                 onPress={() => onSettle(debt)}
@@ -198,6 +206,8 @@ function PairActivityList({
   otherId,
   person,
 }: PairActivityListProps) {
+  const t = useTranslations();
+  const locale = useLocale();
   const {
     data,
     isError,
@@ -220,9 +230,9 @@ function PairActivityList({
 
   let message: string | undefined;
   if (data?.pages[0]?.success === false || (isError && !data)) {
-    message = "Couldn't load recent activity";
+    message = t("debts.activityLoadFailed");
   } else if (items?.length === 0) {
-    message = "Nothing shared yet";
+    message = t("debts.nothingShared");
   }
 
   return (
@@ -240,6 +250,8 @@ function PairActivityList({
             item,
             meId,
             person,
+            t,
+            locale,
           );
           return (
             <View
@@ -272,7 +284,7 @@ function PairActivityList({
                       : "text-destructive",
                 )}
               >
-                {formatSignedCents(cents, item.currency)}
+                {formatSignedCents(cents, item.currency, locale)}
               </Text>
             </View>
           );
@@ -281,7 +293,9 @@ function PairActivityList({
       {hasNextPage && (
         <Button
           testID="pair-activity-more"
-          title={isFetchingNextPage ? "Loading…" : "Show more"}
+          title={
+            isFetchingNextPage ? t("debts.loadingMore") : t("debts.showMore")
+          }
           size="sm"
           variant="ghost"
           disabled={isFetching}

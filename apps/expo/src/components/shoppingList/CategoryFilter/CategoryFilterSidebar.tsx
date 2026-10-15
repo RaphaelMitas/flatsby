@@ -1,5 +1,6 @@
 import type { CategoryId } from "@flatsby/validators/categories";
 import { ScrollView, View } from "react-native";
+import { useTranslations } from "use-intl";
 
 import { categoryIds } from "@flatsby/validators/categories";
 
@@ -19,6 +20,7 @@ export function CategoryFilterSidebar({
   selectedCategory,
   onSelectCategory,
 }: CategoryFilterSidebarProps) {
+  const t = useTranslations("shoppingList.filter");
   if (total === 0) {
     return null;
   }
@@ -32,7 +34,7 @@ export function CategoryFilterSidebar({
         <Badge
           size="xl"
           onPress={() => onSelectCategory(null)}
-          label="All Items"
+          label={t("allItems")}
           variant={selectedCategory ? "outline" : "default"}
           count={total && total > 0 ? total : undefined}
         />

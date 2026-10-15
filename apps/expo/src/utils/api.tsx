@@ -15,6 +15,7 @@ import superjson from "superjson";
 
 import { authClient } from "./auth/auth-client";
 import { getBaseUrl } from "./base-url";
+import { languageTags } from "./intl-provider";
 
 function isUnauthorizedError(error: unknown): boolean {
   if (!(error instanceof TRPCClientError)) return false;
@@ -58,6 +59,7 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
 async function getHeaders() {
   const headers = new Map<string, string>();
   headers.set("x-trpc-source", "expo-react");
+  headers.set("Accept-Language", languageTags().join(","));
 
   const cookies = await authClient.getCookie();
   if (cookies) {

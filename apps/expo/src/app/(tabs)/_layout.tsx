@@ -4,6 +4,7 @@ import { useKeyboardState } from "react-native-keyboard-controller";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
+import { useTranslations } from "use-intl";
 
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
@@ -23,6 +24,7 @@ export default function TabLayout() {
   const { selectedGroupId, selectedShoppingListId, selectedShoppingListName } =
     useShoppingStore();
   const { getColor } = useThemeColors();
+  const t = useTranslations("navigation");
   const keyboardVisible = useKeyboardState((state) => state.isVisible);
 
   usePostHogIdentify();
@@ -97,7 +99,7 @@ export default function TabLayout() {
       rippleColor={getColor("primary")}
     >
       <NativeTabs.Trigger name="home" testID="tab-home">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t("home")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon src={houseIcon} renderingMode="template" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger
@@ -106,7 +108,7 @@ export default function TabLayout() {
         hidden={!selectedShoppingListId}
       >
         <NativeTabs.Trigger.Label>
-          {selectedShoppingListName ?? "Shopping List"}
+          {selectedShoppingListName ?? t("shoppingList")}
         </NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           src={shoppingBasketIcon}
@@ -118,11 +120,11 @@ export default function TabLayout() {
         testID="tab-expenses"
         hidden={!selectedGroupId}
       >
-        <NativeTabs.Trigger.Label>Expenses</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t("expenses")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon src={walletIcon} renderingMode="template" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings" testID="tab-settings">
-        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t("settings")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon src={settingsIcon} renderingMode="template" />
       </NativeTabs.Trigger>
     </NativeTabs>

@@ -24,6 +24,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@flatsby/i18n": "workspace:*",
     "papaparse": "^5.7.0",
     "zod": "catalog:"
   },

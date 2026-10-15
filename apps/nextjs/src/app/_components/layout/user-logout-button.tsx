@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
@@ -11,6 +12,7 @@ import { signOutAndRedirect } from "~/auth/client";
 const UserLogoutButton = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const t = useTranslations("navigation");
 
   return (
     <Button
@@ -23,7 +25,7 @@ const UserLogoutButton = () => {
       }}
       disabled={loading}
     >
-      {loading ? <LoadingSpinner /> : "Logout"}
+      {loading ? <LoadingSpinner /> : t("logout")}
     </Button>
   );
 };

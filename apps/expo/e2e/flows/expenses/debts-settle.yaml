@@ -19,8 +19,8 @@ tags:
 - assertVisible:
     id: "debt-hero-amount"
     text: ".*€30[.,]50"
-- assertVisible: "Settle EUR with Max"
-- assertVisible: "Settle USD with Max"
+- assertVisible: "Record EUR payment with Max"
+- assertVisible: "Record USD payment with Max"
 
 - assertVisible: "Record Max paying Lena"
 - assertVisible: "€25[.,]00"
@@ -39,7 +39,7 @@ tags:
 - tapOn:
     id: "debt-mode-actual"
 
-- tapOn: "Settle EUR with Sophie"
+- tapOn: "Record EUR payment with Sophie"
 - extendedWaitUntil:
     visible:
       id: "settlement-submit-button"
@@ -55,9 +55,9 @@ tags:
       id: "debt-summary-title"
     timeout: 15000
 - extendedWaitUntil:
-    notVisible: "Settle EUR with Sophie"
+    notVisible: "Record EUR payment with Sophie"
     timeout: 20000
 - assertVisible:
     id: "debt-hero-amount"
     text: ".*€12[.,]50"
-- assertVisible: "Settle EUR with Max"
+- assertVisible: "Record EUR payment with Max"

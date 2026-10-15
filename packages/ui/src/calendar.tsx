@@ -1,5 +1,6 @@
 "use client";
 
+import type { Locale } from "@flatsby/i18n/locale";
 import type { DayButton } from "react-day-picker";
 import * as React from "react";
 import {
@@ -8,9 +9,13 @@ import {
   ChevronRightIcon,
 } from "lucide-react";
 import { DayPicker, getDefaultClassNames } from "react-day-picker";
+import { de, enUS } from "react-day-picker/locale";
+import { useLocale } from "use-intl";
 
 import { Button, buttonVariants } from "@flatsby/ui/button";
 import { cn } from "@flatsby/ui/lib/utils";
+
+const dayPickerLocales = { en: enUS, de } satisfies Record<Locale, typeof enUS>;
 
 function Calendar({
   className,
@@ -25,9 +30,11 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const locale = useLocale();
 
   return (
     <DayPicker
+      locale={dayPickerLocales[locale]}
       showOutsideDays={showOutsideDays}
       className={cn(
         "group/calendar bg-background p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
@@ -38,7 +45,7 @@ function Calendar({
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+          date.toLocaleString(locale, { month: "short" }),
         ...formatters,
       }}
       classNames={{

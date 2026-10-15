@@ -3,6 +3,7 @@ import Purchases from "react-native-purchases";
 import RevenueCatUI from "react-native-purchases-ui";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
 import { formatCredits } from "@flatsby/validators/billing";
 
@@ -14,6 +15,8 @@ import { usePurchaseEligibility } from "~/utils/revenuecat/use-purchase-eligibil
 export default function CreditsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const t = useTranslations("billing");
+  const locale = useLocale();
   const {
     canPurchaseMobile,
     hasWebPlan,
@@ -23,18 +26,22 @@ export default function CreditsScreen() {
     creditBalance,
   } = usePurchaseEligibility();
 
+  const credits = {
+    count: creditBalance,
+    credits: formatCredits(creditBalance, locale),
+  };
+
   if (Platform.OS !== "ios") {
     return (
       <View className="bg-background flex-1 items-center justify-center p-6">
         <Text className="text-foreground mb-4 text-center text-xl font-bold">
-          Not Available
+          {t("mobile.notAvailable")}
         </Text>
         <Text className="text-muted-foreground mb-6 text-center">
-          In-app purchases are only available on iOS. Visit our website to
-          manage your subscription.
+          {t("mobile.iosOnly")}
         </Text>
         <Button
-          title="Open Website"
+          title={t("mobile.openWebsite")}
           onPress={() => Linking.openURL(`${getBaseUrl()}/billing`)}
         />
       </View>
@@ -53,16 +60,16 @@ export default function CreditsScreen() {
     return (
       <View className="bg-background flex-1 items-center justify-center p-6">
         <Text className="text-foreground mb-4 text-center text-xl font-bold">
-          {planName} Active
+          {t("mobile.planActive", { plan: planName })}
         </Text>
         <Text className="text-muted-foreground mb-2 text-center">
-          You have {formatCredits(creditBalance)} credits remaining.
+          {t("mobile.creditsRemaining", credits)}
         </Text>
         <Text className="text-muted-foreground mb-6 text-center">
-          Manage your subscription on the web.
+          {t("mobile.manageOnWebHint")}
         </Text>
         <Button
-          title="Manage on Web"
+          title={t("mobile.manageOnWeb")}
           onPress={() => Linking.openURL(`${getBaseUrl()}/billing`)}
         />
       </View>
@@ -73,16 +80,16 @@ export default function CreditsScreen() {
     return (
       <View className="bg-background flex-1 items-center justify-center p-6">
         <Text className="text-foreground mb-4 text-center text-xl font-bold">
-          {planName} Active
+          {t("mobile.planActive", { plan: planName })}
         </Text>
         <Text className="text-muted-foreground mb-2 text-center">
-          You have {formatCredits(creditBalance)} credits remaining.
+          {t("mobile.creditsRemaining", credits)}
         </Text>
         <Text className="text-muted-foreground mb-6 text-center">
-          Manage your subscription in your device settings.
+          {t("mobile.manageOnDeviceHint")}
         </Text>
         <Button
-          title="Manage Subscription"
+          title={t("manageSubscription")}
           onPress={async () => {
             const info = await Purchases.getCustomerInfo();
             const url =
@@ -99,13 +106,12 @@ export default function CreditsScreen() {
     return (
       <View className="bg-background flex-1 items-center justify-center p-6">
         <Text className="text-foreground mb-4 text-center text-xl font-bold">
-          Credits Available
+          {t("mobile.creditsAvailable")}
         </Text>
         <Text className="text-muted-foreground mb-6 text-center">
-          You have {formatCredits(creditBalance)} credits. Manage your
-          subscription on the web.
+          {t("mobile.creditsAvailableDescription", credits)}
         </Text>
-        <Button title="Go Back" onPress={() => router.back()} />
+        <Button title={t("mobile.goBack")} onPress={() => router.back()} />
       </View>
     );
   }

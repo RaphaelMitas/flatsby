@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 
@@ -39,6 +40,7 @@ export default function ExpenseSettingsScreen() {
 }
 
 function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
+  const t = useTranslations();
   const router = useRouter();
   const { highlight } = useLocalSearchParams<{ highlight?: string }>();
   const isAdmin = group.thisGroupMember.role === "admin";
@@ -87,14 +89,14 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
           {!isAdmin && (
             <View className="bg-muted rounded-lg p-3">
               <Text className="text-muted-foreground text-sm">
-                Only group administrators can edit expense settings.
+                {t("group.expenseSettings.adminOnly")}
               </Text>
             </View>
           )}
 
           <View className="gap-4">
             <View className="gap-2">
-              <Label>Group currency</Label>
+              <Label>{t("group.expenseSettings.currency")}</Label>
               <BottomSheetPickerTrigger
                 testID="group-currency-picker"
                 items={currencyItems}
@@ -107,7 +109,9 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
               />
               {currency !== group.currency && (
                 <Text className="text-warning text-sm">
-                  Expenses already converted stay in {group.currency}.
+                  {t("group.expenseSettings.convertedStayIn", {
+                    currency: group.currency,
+                  })}
                 </Text>
               )}
             </View>
@@ -121,11 +125,11 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
               )}
             >
               <View className="flex-1 gap-1">
-                <Label>Convert automatically</Label>
+                <Label>{t("group.expenseSettings.convertAutomatically")}</Label>
                 <Text className="text-muted-foreground text-sm">
-                  New expenses in other currencies are converted to {currency}.
-                  You can keep the original currency on any single expense.
-                  Existing expenses don't change.
+                  {t("group.expenseSettings.convertAutomaticallyHint", {
+                    currency,
+                  })}
                 </Text>
               </View>
               <Switch
@@ -142,10 +146,10 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
               disabled={!isEditable || Object.keys(changes).length === 0}
               title={
                 updateGroupMutation.isPending
-                  ? "Saving..."
+                  ? t("common.saving")
                   : !isAdmin
-                    ? "Not an admin"
-                    : "Save Changes"
+                    ? t("group.details.notAdmin")
+                    : t("group.details.saveChanges")
               }
               onPress={save}
               className="w-full"
@@ -155,15 +159,15 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
           {result === "saved" && (
             <TimedAlert
               variant="success"
-              title="Success!"
-              description="Expense settings have been updated."
+              title={t("group.details.success")}
+              description={t("group.expenseSettings.updated")}
               onDismiss={() => setResult(undefined)}
             />
           )}
           {typeof result === "object" && (
             <TimedAlert
               variant="destructive"
-              title="Error"
+              title={t("common.error")}
               description={result.error}
               onDismiss={() => setResult(undefined)}
             />

@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslations } from "use-intl";
 
 import type { SplitViewAction } from "../splitview/SplitViewAction";
 import { Button } from "~/lib/ui/button";
@@ -13,6 +14,7 @@ import { ExpenseListPanel } from "./ExpenseListPanel";
 
 export function ExpensesSplitView() {
   const router = useRouter();
+  const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
   const isLargeScreen = useMediaQuery("lg");
 
@@ -67,10 +69,10 @@ export function ExpensesSplitView() {
       <View className="flex-1 items-center justify-center gap-4 p-4">
         <Icon name="wallet" size={48} color="muted-foreground" />
         <Text className="text-muted-foreground text-center text-lg font-semibold">
-          Select a group to view its expenses
+          {t("expenses.selectGroupHint")}
         </Text>
         <Button
-          title="Manage Groups"
+          title={t("navigation.manageGroups")}
           variant="primary"
           size="lg"
           icon="arrow-left-right"
@@ -88,7 +90,7 @@ export function ExpensesSplitView() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" />
           <Text className="text-muted-foreground mt-4">
-            Loading expenses...
+            {t("expenses.loadingExpenses")}
           </Text>
         </View>
       }

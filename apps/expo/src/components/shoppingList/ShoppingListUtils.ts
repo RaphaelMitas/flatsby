@@ -8,8 +8,10 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import { trpc } from "~/utils/api";
 import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
+type SectionKey = "today" | "last7Days" | "older";
+
 interface GroupedSection {
-  title: string;
+  key: SectionKey;
   items: ShoppingListItem[];
 }
 
@@ -51,7 +53,7 @@ const groupItemsByDate = (
 
   const todayItems = todayIndex === -1 ? items : items.slice(0, todayIndex);
   if (todayItems.length > 0) {
-    sections.push({ title: "Today", items: todayItems });
+    sections.push({ key: "today", items: todayItems });
   }
 
   const last7DaysItems =
@@ -62,12 +64,12 @@ const groupItemsByDate = (
           last7DaysIndex === -1 ? undefined : last7DaysIndex,
         );
   if (last7DaysItems.length > 0) {
-    sections.push({ title: "Last 7 Days", items: last7DaysItems });
+    sections.push({ key: "last7Days", items: last7DaysItems });
   }
 
   const olderItems = last7DaysIndex === -1 ? [] : items.slice(last7DaysIndex);
   if (olderItems.length > 0) {
-    sections.push({ title: "Older", items: olderItems });
+    sections.push({ key: "older", items: olderItems });
   }
 
   return sections;

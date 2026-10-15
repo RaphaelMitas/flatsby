@@ -4,6 +4,7 @@ import { Autumn } from "autumn-js";
 import { z } from "zod";
 
 import { env } from "@flatsby/auth/env";
+import { msg } from "@flatsby/i18n/message-key";
 import { AUTUMN_FEATURES, costToCredits } from "@flatsby/validators/billing";
 
 import { captureError } from "../lib/posthog";
@@ -45,7 +46,7 @@ export async function checkCredits({
     });
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
-      message: "Error checking credits",
+      message: msg("errors.creditCheckFailed"),
     });
   }
 }
