@@ -376,7 +376,7 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {wizard.expenses.map((exp, i) => (
+              {wizard.expenses.slice(0, 50).map((exp, i) => (
                 <TableRow key={i}>
                   <TableCell className="text-sm">
                     {exp.expenseDate.toLocaleDateString()}
@@ -400,13 +400,19 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
         </div>
       )}
 
+      {wizard.expenses.length > 50 && (
+        <p className="text-muted-foreground text-center text-sm">
+          ...and {wizard.expenses.length - 50} more
+        </p>
+      )}
+
       {wizard.skipped.length > 0 && (
         <details className="space-y-2">
           <summary className="text-muted-foreground cursor-pointer text-sm">
             {wizard.skipped.length} skipped rows
           </summary>
           <div className="max-h-32 overflow-y-auto rounded border p-2">
-            {wizard.skipped.map((s, i) => (
+            {wizard.skipped.slice(0, 10).map((s, i) => (
               <div key={i} className="text-muted-foreground text-xs">
                 Row {s.row}: {s.reason}
               </div>
@@ -415,13 +421,21 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
         </details>
       )}
 
+      {wizard.tooLargeMessage && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Too large to import</AlertTitle>
+          <AlertDescription>{wizard.tooLargeMessage}</AlertDescription>
+        </Alert>
+      )}
+
       <DialogFooter className="gap-2">
         <Button variant="outline" onClick={wizard.goBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
         <Button
-          disabled={wizard.expenses.length === 0}
+          disabled={wizard.expenses.length === 0 || !!wizard.tooLargeMessage}
           onClick={wizard.goToConfirm}
         >
           Next

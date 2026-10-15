@@ -313,6 +313,17 @@ export function transformSplitwiseRows(
   return { expenses, skipped };
 }
 
+const MAX_IMPORT_EXPENSES = 5000;
+// Vercel rejects request bodies over 4.5MB before the API ever sees them.
+const MAX_IMPORT_BYTES = 4_000_000;
+
+export function exceedsImportLimit(expenses: TransformedExpense[]): boolean {
+  return (
+    expenses.length > MAX_IMPORT_EXPENSES ||
+    JSON.stringify(expenses).length > MAX_IMPORT_BYTES
+  );
+}
+
 export const bulkCreateExpensesSchema = z.object({
   groupId: z.number(),
   expenses: z
@@ -329,7 +340,7 @@ export const bulkCreateExpensesSchema = z.object({
       }),
     )
     .min(1)
-    .max(5000),
+    .max(MAX_IMPORT_EXPENSES),
 });
 
 export type BulkCreateExpensesInput = z.infer<typeof bulkCreateExpensesSchema>;
