@@ -54,6 +54,9 @@ export default function InviteScreen() {
         {t("invite.title", { group: selectedGroupName ?? "" })}
       </Text>
       <Text className="text-muted-foreground text-center text-sm">
+        {t("invite.anyoneCanJoin")}
+      </Text>
+      <Text className="text-muted-foreground text-center text-sm">
         {t("invite.scanWithCamera")}
       </Text>
       <View className="rounded-lg bg-white p-3">

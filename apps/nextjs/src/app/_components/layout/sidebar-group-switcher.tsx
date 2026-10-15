@@ -1,8 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, ChevronDown, Plus, Settings, Users } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  KeyRound,
+  Plus,
+  Settings,
+  Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -22,10 +30,13 @@ import {
 } from "@flatsby/ui/sidebar";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
+import { JoinWithCodeDialog } from "~/app/(app)/group/JoinWithCodeDialog";
 
 export function SidebarGroupSwitcher() {
   const pathname = usePathname();
   const t = useTranslations("navigation");
+  const tInvite = useTranslations("invite.join");
+  const [joinOpen, setJoinOpen] = useState(false);
   const { currentGroup, groups, switchGroup, hasCurrentGroup } =
     useGroupContext();
 
@@ -72,6 +83,11 @@ export function SidebarGroupSwitcher() {
                 </Link>
               </DropdownMenuItem>
 
+              <DropdownMenuItem onSelect={() => setJoinOpen(true)}>
+                <KeyRound className="mr-2 size-4" />
+                <span>{tInvite("withCode")}</span>
+              </DropdownMenuItem>
+
               <DropdownMenuItem asChild>
                 <Link href="/group/create">
                   <Plus className="mr-2 size-4" />
@@ -96,6 +112,7 @@ export function SidebarGroupSwitcher() {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>

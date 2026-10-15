@@ -299,13 +299,22 @@ export const groupRouter = createTRPCRouter({
                                   eq(groupMembers.id, targetGroupMember.id),
                                 );
 
-                              // Otherwise the removed member could rejoin with the live link
+                              // A removed member could rejoin with the live link; one who leaves may, unless it's theirs
                               await trx
                                 .delete(groupInvites)
                                 .where(
-                                  eq(
-                                    groupInvites.groupId,
-                                    targetGroupMember.groupId,
+                                  and(
+                                    eq(
+                                      groupInvites.groupId,
+                                      targetGroupMember.groupId,
+                                    ),
+                                    targetGroupMember.id ===
+                                      currentUserGroupMember.id
+                                      ? eq(
+                                          groupInvites.createdByMemberId,
+                                          targetGroupMember.id,
+                                        )
+                                      : undefined,
                                   ),
                                 );
 

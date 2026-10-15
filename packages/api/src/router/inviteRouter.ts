@@ -167,7 +167,7 @@ export const inviteRouter = createTRPCRouter({
                 ? undefined
                 : Errors.notFound("invite"),
           ).pipe(
-            // Joining a group you're already in (a preview from before you joined elsewhere) just opens it
+            // A stale preview from another tab or device still offers Join, so joining again just opens the group
             Effect.catchTag("ConflictError", () => Effect.void),
             Effect.as({ groupId: group.id, groupName: group.name }),
           ),

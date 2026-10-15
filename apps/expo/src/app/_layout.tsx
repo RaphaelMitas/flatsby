@@ -53,6 +53,21 @@ export default function RootLayout() {
           options={{
             disabled: posthogDisabled,
             host: "https://eu.i.posthog.com",
+            // Deep links reach PostHog as screen paths and the "Application Opened" url
+            before_send: (event) =>
+              event && {
+                ...event,
+                properties:
+                  event.properties &&
+                  Object.fromEntries(
+                    Object.entries(event.properties).map(([key, value]) => [
+                      key,
+                      typeof value === "string"
+                        ? redactInvitePath(value)
+                        : value,
+                    ]),
+                  ),
+              },
             errorTracking: {
               autocapture: {
                 uncaughtExceptions: true,
@@ -95,7 +110,7 @@ function ScreenTracker() {
 
   useEffect(() => {
     const screenName = getScreenName(segments);
-    void posthog.screen(screenName, { pathname: redactInvitePath(pathname) });
+    void posthog.screen(screenName, { pathname });
   }, [pathname, segments, posthog]);
 
   return null;
@@ -138,7 +153,7 @@ const StackLayout = () => {
         <Stack.Screen
           name="join/index"
           options={{
-            title: t("invite.join.screenTitle"),
+            title: t("invite.join.title"),
             presentation: "modal",
             headerShown: true,
           }}

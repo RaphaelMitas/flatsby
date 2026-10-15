@@ -15,6 +15,20 @@ async function newInvitee(browser: Browser, baseURL: string | undefined) {
   return { page, user };
 }
 
+async function joinAsNewUser(
+  browser: Browser,
+  baseURL: string | undefined,
+  code: string,
+) {
+  const invitee = await newInvitee(browser, baseURL);
+  await invitee.page.goto(`/join/${code}`);
+  const joinButton = invitee.page.getByTestId("join-invite-button");
+  await waitForHydration(joinButton);
+  await joinButton.click();
+  await invitee.page.waitForURL("/home");
+  return invitee;
+}
+
 async function openInvite(page: Page) {
   await page.goto("/group/settings");
   const inviteButton = page.getByTestId("group-invite-button");
@@ -100,15 +114,11 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, uniqueGroupName());
     const code = await openInvite(authPage);
 
-    const { page: inviteePage, user: invitee } = await newInvitee(
+    const { page: inviteePage, user: invitee } = await joinAsNewUser(
       browser,
       baseURL,
+      code,
     );
-    await inviteePage.goto(`/join/${code}`);
-    const joinButton = inviteePage.getByTestId("join-invite-button");
-    await waitForHydration(joinButton);
-    await joinButton.click();
-    await inviteePage.waitForURL("/home");
 
     await authPage.goto("/group/settings");
     const memberActions = authPage
@@ -133,12 +143,7 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, uniqueGroupName());
     const code = await openInvite(authPage);
 
-    const { page: memberPage } = await newInvitee(browser, baseURL);
-    await memberPage.goto(`/join/${code}`);
-    const joinButton = memberPage.getByTestId("join-invite-button");
-    await waitForHydration(joinButton);
-    await joinButton.click();
-    await memberPage.waitForURL("/home");
+    const { page: memberPage } = await joinAsNewUser(browser, baseURL, code);
 
     await memberPage.goto("/group/settings");
     await expect(

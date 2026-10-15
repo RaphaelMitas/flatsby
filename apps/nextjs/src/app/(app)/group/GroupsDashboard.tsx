@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
@@ -15,6 +16,7 @@ import { JoinWithCodeDialog } from "./JoinWithCodeDialog";
 export function GroupsDashboard() {
   const t = useTranslations();
   const trpc = useTRPC();
+  const [joinOpen, setJoinOpen] = useState(false);
   const router = useRouter();
   const handleApiError = useHandleApiError();
 
@@ -49,15 +51,20 @@ export function GroupsDashboard() {
             {t("group.dashboard.title")}
           </h2>
           <div className="flex items-center gap-2">
-            <JoinWithCodeDialog />
-            <Link
-              className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors focus-visible:ring-1 focus-visible:ring-gray-950 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 md:hover:bg-gray-900/90 dark:bg-gray-50 dark:text-gray-900 dark:focus-visible:ring-gray-300 md:dark:hover:bg-gray-50/90"
-              href="group/create"
-              data-testid="group-create-link"
+            <Button
+              variant="outline"
+              data-testid="group-join-with-code-button"
+              onClick={() => setJoinOpen(true)}
             >
-              {t("navigation.createGroup")}
-            </Link>
+              {t("invite.join.withCode")}
+            </Button>
+            <Button asChild>
+              <Link href="/group/create" data-testid="group-create-link">
+                {t("navigation.createGroup")}
+              </Link>
+            </Button>
           </div>
+          <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
         </div>
 
         {status === "success" && groups.data.length === 0 ? (

@@ -77,7 +77,7 @@ export default function JoinScreen() {
               {t("invite.join.loadFailedTitle")}
             </Text>
             <Button
-              title={t("invite.join.tryAgain")}
+              title={t("home.retry")}
               variant="outline"
               disabled={preview.isFetching}
               onPress={() => void preview.refetch()}

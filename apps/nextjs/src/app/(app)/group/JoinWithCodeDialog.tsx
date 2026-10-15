@@ -11,7 +11,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@flatsby/ui/dialog";
 import {
   InputOTP,
@@ -26,18 +25,19 @@ import {
   normalizeInviteCode,
 } from "@flatsby/validators/invite";
 
-export function JoinWithCodeDialog() {
+export function JoinWithCodeDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const t = useTranslations();
   const router = useRouter();
   const [code, setCode] = useState("");
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" data-testid="group-join-with-code-button">
-          {t("invite.join.withCode")}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{t("invite.join.title")}</DialogTitle>

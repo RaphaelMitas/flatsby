@@ -183,7 +183,9 @@ export function JoinInvite({
           </>
         ) : platform === "other" ? (
           <Button asChild>
-            <Link href={signInHref}>{t("invite.join.signInToJoin")}</Link>
+            <Link href={signInHref}>
+              {t("invite.join.signInToJoinGroup", { group: preview.groupName })}
+            </Link>
           </Button>
         ) : (
           <InstallApp platform={platform} code={code} signInHref={signInHref} />

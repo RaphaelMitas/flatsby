@@ -12,13 +12,13 @@ export const DAY_MS = 86_400_000;
 // Crockford base32: no I, L, O or U, so no look-alikes or accidental words
 export const INVITE_CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
-/** Also takes a pasted invite link. */
+/** Also takes a pasted invite link, and drops letters a code can't contain. */
 export const normalizeInviteCode = (raw: string) =>
   (raw.split(`${INVITE_PATH}/`).pop() ?? "")
     .toUpperCase()
     .replace(/O/g, "0")
     .replace(/[IL]/g, "1")
-    .replace(/[^0-9A-Z]/g, "")
+    .replace(new RegExp(`[^${INVITE_CODE_ALPHABET}]`, "g"), "")
     .slice(0, INVITE_CODE_LENGTH);
 
 export const formatInviteCode = (code: string) =>
@@ -40,11 +40,7 @@ export const inviteCodeSchema = z
   .pipe(
     z
       .string()
-      .length(INVITE_CODE_LENGTH, { message: msg("errors.invalidInviteCode") })
-      .refine(
-        (code) => [...code].every((c) => INVITE_CODE_ALPHABET.includes(c)),
-        { message: msg("errors.invalidInviteCode") },
-      ),
+      .length(INVITE_CODE_LENGTH, { message: msg("errors.invalidInviteCode") }),
   );
 
 export const inviteCodeInputSchema = z.object({ code: inviteCodeSchema });

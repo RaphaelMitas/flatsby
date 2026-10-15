@@ -12,7 +12,6 @@ export const invite = {
   expiresIn:
     "{days, plural, =1 {Expires within a day} other {Expires in # days}}",
   join: {
-    screenTitle: "Join a Group",
     withCode: "Join with code",
     title: "Join a group",
     enterCode: "Enter the {length}-character code",
@@ -23,7 +22,6 @@ export const invite = {
       "Members will see your name and profile picture, and you'll see the group's lists and expenses.",
     join: "Join {group}",
     joinFailed: "Couldn't join. Try again.",
-    signInToJoin: "Sign in to join",
     signInToJoinGroup: "Sign in to join {group}",
     openGroup: "Open group",
     notNow: "Not now",
@@ -31,7 +29,6 @@ export const invite = {
     expiredTitle: "This invite has expired",
     expiredHint: "Ask someone in the group for a new link.",
     loadFailedTitle: "Couldn't load this invite",
-    tryAgain: "Try again",
     goToFlatsby: "Go to Flatsby",
     afterInstall: 'After installing, tap "Join with code"',
     continueInBrowser: "Continue in browser",
