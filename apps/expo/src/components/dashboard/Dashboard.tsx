@@ -119,7 +119,6 @@ function DashboardContent() {
           setSelectedGroup(groupId, item.title);
         }
       },
-      snapPoints: ["40%"],
     });
   }, [openPicker, groupItems, selectedGroupId, setSelectedGroup, router]);
 
