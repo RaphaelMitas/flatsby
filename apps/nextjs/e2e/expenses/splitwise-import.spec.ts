@@ -1,4 +1,5 @@
 import { createAuthSession, expect, test } from "../fixtures/auth";
+import { waitForHydration } from "../helpers/hydration";
 
 const ROWS = 600;
 
@@ -13,35 +14,44 @@ function splitwiseCsv() {
   return [header, ...rows].join("\n");
 }
 
-test("Splitwise Import: a history larger than 500 expenses imports in one go", async ({
-  page,
-  baseURL,
-}) => {
-  await createAuthSession(page, baseURL, { seed: "debts" });
-  await page.goto("/group/settings");
+test.describe("Splitwise Import", () => {
+  test("imports a history larger than 500 expenses in one go", async ({
+    page,
+    baseURL,
+  }) => {
+    await createAuthSession(page, baseURL, { seed: "debts" });
+    await page.goto("/group/settings");
 
-  await page.getByRole("button", { name: "Import from Splitwise" }).click();
-  const dialog = page.getByRole("dialog");
-  await dialog.locator('input[type="file"]').setInputFiles({
-    name: "splitwise.csv",
-    mimeType: "text/csv",
-    buffer: Buffer.from(splitwiseCsv()),
+    const importButton = page.getByRole("button", {
+      name: "Import from Splitwise",
+    });
+    await waitForHydration(importButton);
+    await importButton.click();
+
+    const dialog = page.getByRole("dialog");
+    await dialog.locator('input[type="file"]').setInputFiles({
+      name: "splitwise.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(splitwiseCsv()),
+    });
+    await expect(dialog.getByText(`Found ${ROWS} rows`)).toBeVisible();
+    await dialog.getByRole("button", { name: "Next" }).click();
+
+    const memberPickers = dialog.getByRole("combobox");
+    await memberPickers.nth(0).click();
+    await page.getByRole("option", { name: /E2E Test User/ }).click();
+    await memberPickers.nth(1).click();
+    await page.getByRole("option", { name: /Lena/ }).click();
+    await dialog.getByRole("button", { name: "Next" }).click();
+
+    await expect(dialog.getByText(`${ROWS} expenses to import`)).toBeVisible();
+    await dialog.getByRole("button", { name: "Next" }).click();
+    await dialog
+      .getByRole("button", { name: `Import ${ROWS} expenses` })
+      .click();
+
+    await expect(
+      dialog.getByText(`Successfully imported ${ROWS} expenses.`),
+    ).toBeVisible({ timeout: 30000 });
   });
-  await expect(dialog.getByText(`Found ${ROWS} rows`)).toBeVisible();
-  await dialog.getByRole("button", { name: "Next" }).click();
-
-  const [me, lena] = await dialog.getByRole("combobox").all();
-  await me?.click();
-  await page.getByRole("option", { name: /E2E Test User/ }).click();
-  await lena?.click();
-  await page.getByRole("option", { name: /Lena/ }).click();
-  await dialog.getByRole("button", { name: "Next" }).click();
-
-  await expect(dialog.getByText(`${ROWS} expenses to import`)).toBeVisible();
-  await dialog.getByRole("button", { name: "Next" }).click();
-  await dialog.getByRole("button", { name: `Import ${ROWS} expenses` }).click();
-
-  await expect(
-    dialog.getByText(`Successfully imported ${ROWS} expenses.`),
-  ).toBeVisible({ timeout: 30000 });
 });

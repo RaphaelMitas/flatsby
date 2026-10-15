@@ -14,6 +14,8 @@ import {
 
 type WizardStep = "file" | "mapping" | "preview" | "confirm";
 
+const PREVIEW_ROWS = 50;
+
 interface WizardState {
   step: WizardStep;
   csvText: string | null;
@@ -72,6 +74,8 @@ export function useSplitwiseImport() {
     [state.expenses],
   );
 
+  const canConfirm = state.expenses.length > 0 && tooLargeMessage === null;
+
   const goToMapping = useCallback(() => {
     setState((s) => ({ ...s, step: "mapping" }));
   }, []);
@@ -128,6 +132,9 @@ export function useSplitwiseImport() {
     setMemberMapping,
     allNamesMapped,
     tooLargeMessage,
+    canConfirm,
+    previewExpenses: state.expenses.slice(0, PREVIEW_ROWS),
+    hiddenExpenseCount: Math.max(0, state.expenses.length - PREVIEW_ROWS),
     goToMapping,
     goToPreview,
     goToConfirm,

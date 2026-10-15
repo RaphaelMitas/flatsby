@@ -376,7 +376,7 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {wizard.expenses.slice(0, 50).map((exp, i) => (
+              {wizard.previewExpenses.map((exp, i) => (
                 <TableRow key={i}>
                   <TableCell className="text-sm">
                     {exp.expenseDate.toLocaleDateString()}
@@ -400,9 +400,9 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
         </div>
       )}
 
-      {wizard.expenses.length > 50 && (
+      {wizard.hiddenExpenseCount > 0 && (
         <p className="text-muted-foreground text-center text-sm">
-          ...and {wizard.expenses.length - 50} more
+          ...and {wizard.hiddenExpenseCount} more
         </p>
       )}
 
@@ -412,7 +412,7 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
             {wizard.skipped.length} skipped rows
           </summary>
           <div className="max-h-32 overflow-y-auto rounded border p-2">
-            {wizard.skipped.slice(0, 10).map((s, i) => (
+            {wizard.skipped.map((s, i) => (
               <div key={i} className="text-muted-foreground text-xs">
                 Row {s.row}: {s.reason}
               </div>
@@ -434,10 +434,7 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button
-          disabled={wizard.expenses.length === 0 || !!wizard.tooLargeMessage}
-          onClick={wizard.goToConfirm}
-        >
+        <Button disabled={!wizard.canConfirm} onClick={wizard.goToConfirm}>
           Next
         </Button>
       </DialogFooter>

@@ -246,7 +246,7 @@ export default function ImportExpensesScreen() {
                   `, ${wizard.skipped.length} rows skipped`}
               </Text>
 
-              {wizard.expenses.slice(0, 50).map((exp, i) => (
+              {wizard.previewExpenses.map((exp, i) => (
                 <View
                   key={i}
                   className="border-border flex-row items-center justify-between border-b py-2"
@@ -269,9 +269,9 @@ export default function ImportExpensesScreen() {
                 </View>
               ))}
 
-              {wizard.expenses.length > 50 && (
+              {wizard.hiddenExpenseCount > 0 && (
                 <Text className="text-muted-foreground text-center text-sm">
-                  ...and {wizard.expenses.length - 50} more
+                  ...and {wizard.hiddenExpenseCount} more
                 </Text>
               )}
 
@@ -306,9 +306,7 @@ export default function ImportExpensesScreen() {
                 />
                 <Button
                   title="Next"
-                  disabled={
-                    wizard.expenses.length === 0 || !!wizard.tooLargeMessage
-                  }
+                  disabled={!wizard.canConfirm}
                   onPress={wizard.goToConfirm}
                   className="flex-1"
                 />

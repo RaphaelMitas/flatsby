@@ -320,7 +320,7 @@ const MAX_IMPORT_BYTES = 4_000_000;
 export function exceedsImportLimit(expenses: TransformedExpense[]): boolean {
   return (
     expenses.length > MAX_IMPORT_EXPENSES ||
-    JSON.stringify(expenses).length > MAX_IMPORT_BYTES
+    new TextEncoder().encode(JSON.stringify(expenses)).length > MAX_IMPORT_BYTES
   );
 }
 
