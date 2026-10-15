@@ -125,6 +125,29 @@ test.describe("Group Management", () => {
     await inviteePage.context().close();
   });
 
+  test("members who aren't admins can't invite", async ({
+    authPage,
+    browser,
+    baseURL,
+  }) => {
+    await createAndSelectGroup(authPage, uniqueGroupName());
+    const code = await openInvite(authPage);
+
+    const { page: memberPage } = await newInvitee(browser, baseURL);
+    await memberPage.goto(`/join/${code}`);
+    const joinButton = memberPage.getByTestId("join-invite-button");
+    await waitForHydration(joinButton);
+    await joinButton.click();
+    await memberPage.waitForURL("/home");
+
+    await memberPage.goto("/group/settings");
+    await expect(
+      memberPage.getByTestId("group-manage-members-title"),
+    ).toBeVisible();
+    await expect(memberPage.getByTestId("group-invite-button")).toHaveCount(0);
+    await memberPage.context().close();
+  });
+
   test("reset link kills the old code", async ({ authPage }) => {
     await createAndSelectGroup(authPage, uniqueGroupName());
     const oldCode = await openInvite(authPage);
@@ -162,7 +185,6 @@ test.describe("Group Management", () => {
 
   // TODO: Requires multi-user fixture
   // test("non-admin cannot change group name", () => {});
-  // test("non-admin cannot invite", () => {});
   // test("non-admin cannot remove other members", () => {});
 
   test("delete group", async ({ authPage }) => {
