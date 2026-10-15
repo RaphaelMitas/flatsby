@@ -374,32 +374,19 @@ export const GroupUtils = {
       .where(eq(groups.id, groupId))
       .for("update"),
 
-  /** Run after a membership change under the group lock: the checks before the lock can be stale. */
-  ensureAdminRemains: async (tx: DbTransaction, groupId: number) => {
-    const admin = await tx.query.groupMembers.findFirst({
-      where: and(
-        eq(groupMembers.groupId, groupId),
-        eq(groupMembers.role, "admin"),
-        eq(groupMembers.isActive, true),
-      ),
-      columns: { id: true },
-    });
-    if (!admin) throw new Error("A group needs at least one admin");
-  },
-
-  /** `refusal` runs under the group lock, so the caller's check sees concurrent removals. */
+  /** Callers check the right to add; `refusal` runs under the group lock, so it sees concurrent removals. */
   addMember: (
     db: Database,
     groupId: number,
     userId: string,
-    refusal: (tx: DbTransaction) => Promise<ApiError | undefined>,
+    refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
   ): Effect.Effect<number, ApiError> =>
     Effect.flatMap(
       safeDbOperation(
         () =>
           db.transaction(async (tx): Promise<number | ApiError | "member"> => {
             await GroupUtils.lockGroup(tx, groupId);
-            const refused = await refusal(tx);
+            const refused = await refusal?.(tx);
             if (refused) return refused;
             const existing = await tx.query.groupMembers.findFirst({
               where: and(

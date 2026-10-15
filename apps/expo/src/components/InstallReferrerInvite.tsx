@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 import * as Application from "expo-application";
 import { usePathname, useRouter } from "expo-router";
@@ -16,6 +16,11 @@ const HANDLED_KEY = "install_referrer_handled";
 export function InstallReferrerInvite() {
   const router = useRouter();
   const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     if (Platform.OS !== "android") return;
@@ -29,11 +34,11 @@ export function InstallReferrerInvite() {
         new URLSearchParams(referrer).get(INVITE_REFERRER_KEY) ?? "",
       );
       // A link to the same invite may have opened the app already
-      if (code.success && pathname !== invitePath(code.data)) {
+      if (code.success && pathnameRef.current !== invitePath(code.data)) {
         router.push(invitePath(code.data));
       }
     })();
-  }, [router, pathname]);
+  }, [router]);
 
   return null;
 }

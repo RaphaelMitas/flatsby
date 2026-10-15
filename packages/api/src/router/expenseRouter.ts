@@ -29,7 +29,6 @@ import {
 } from "@flatsby/validators/expenses/split-editing";
 import { bulkCreateExpensesSchema } from "@flatsby/validators/expenses/splitwise-import";
 import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
-import { groupIdInputSchema } from "@flatsby/validators/group";
 
 import type { ApiError } from "../errors";
 import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
@@ -701,7 +700,7 @@ export const expenseRouter = createTRPCRouter({
     }),
 
   getDebtSummary: protectedProcedure
-    .input(groupIdInputSchema)
+    .input(z.object({ groupId: z.number() }))
     .query(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(
@@ -835,7 +834,7 @@ export const expenseRouter = createTRPCRouter({
     }),
 
   deleteAllGroupExpenses: protectedProcedure
-    .input(groupIdInputSchema)
+    .input(z.object({ groupId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       return withErrorHandlingAsResult(
         Effect.flatMap(

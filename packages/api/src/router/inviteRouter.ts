@@ -129,7 +129,7 @@ export const inviteRouter = createTRPCRouter({
       ),
     ),
 
-  /** Public so the web landing page can show who is inviting before sign-in. */
+  /** Public so the join page can show who is inviting before sign-in. */
   preview: publicProcedure
     .input(inviteCodeInputSchema)
     .query(({ ctx, input }) =>

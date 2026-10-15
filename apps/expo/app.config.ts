@@ -1,6 +1,7 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const isE2E = process.env.E2E_TESTING === "true";
+const WEB_HOST = "www.flatsby.com";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -16,7 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: "com.flatcove.app.v2",
     supportsTablet: true,
-    associatedDomains: ["applinks:www.flatsby.com"],
+    associatedDomains: [`applinks:${WEB_HOST}`],
     icon: {
       light: "./assets/ios-light.png",
       dark: "./assets/ios-dark.png",
@@ -90,9 +91,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         action: "VIEW",
         autoVerify: true,
-        data: [
-          { scheme: "https", host: "www.flatsby.com", pathPrefix: "/join" },
-        ],
+        data: [{ scheme: "https", host: WEB_HOST, pathPrefix: "/join" }],
         category: ["BROWSABLE", "DEFAULT"],
       },
     ],
