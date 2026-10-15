@@ -329,7 +329,7 @@ export const bulkCreateExpensesSchema = z.object({
       }),
     )
     .min(1)
-    .max(500),
+    .max(5000),
 });
 
 export type BulkCreateExpensesInput = z.infer<typeof bulkCreateExpensesSchema>;

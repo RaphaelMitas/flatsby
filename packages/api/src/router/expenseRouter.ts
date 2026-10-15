@@ -1,7 +1,7 @@
 import type { ExpenseSubcategoryId } from "@flatsby/validators/expenses/categories";
 import type { CreateExpenseInput } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { z } from "zod/v4";
 
 import { and, desc, eq, inArray, lt, or } from "@flatsby/db";
@@ -75,6 +75,8 @@ function ensureActiveMembers(
 }
 
 const PAIR_ACTIVITY_PAGE = 5;
+// Keeps each insert under Postgres's 65535 bind-parameter limit.
+const BULK_INSERT_BATCH = 250;
 
 async function fetchExchangeRate(from: string, to: string, day: string) {
   const today = new Date().toISOString().slice(0, 10);
@@ -901,54 +903,47 @@ export const expenseRouter = createTRPCRouter({
                   ),
                   () =>
                     DbUtils.transaction(async (trx) => {
-                      const createdExpenses = await trx
-                        .insert(expenses)
-                        .values(
-                          input.expenses.map((expense) => ({
-                            groupId: input.groupId,
-                            paidByGroupMemberId: expense.paidByGroupMemberId,
-                            amountInCents: expense.amountInCents,
-                            currency: expense.currency,
-                            description: expense.description ?? "",
-                            category: getSubcategoryGroup(expense.subcategory),
-                            subcategory: expense.subcategory ?? "other",
-                            expenseDate: expense.expenseDate,
-                            createdByGroupMemberId: group.thisGroupMember.id,
-                            splitMethod: expense.splitMethod,
-                          })),
-                        )
-                        .returning({ id: expenses.id });
+                      for (const batch of Arr.chunksOf(
+                        input.expenses,
+                        BULK_INSERT_BATCH,
+                      )) {
+                        const created = await trx
+                          .insert(expenses)
+                          .values(
+                            batch.map((expense) => ({
+                              groupId: input.groupId,
+                              paidByGroupMemberId: expense.paidByGroupMemberId,
+                              amountInCents: expense.amountInCents,
+                              currency: expense.currency,
+                              description: expense.description ?? "",
+                              category: getSubcategoryGroup(
+                                expense.subcategory,
+                              ),
+                              subcategory: expense.subcategory ?? "other",
+                              expenseDate: expense.expenseDate,
+                              createdByGroupMemberId: group.thisGroupMember.id,
+                              splitMethod: expense.splitMethod,
+                            })),
+                          )
+                          .returning({ id: expenses.id });
 
-                      if (createdExpenses.length !== input.expenses.length) {
-                        throw new Error("Failed to create all expenses");
-                      }
-
-                      const allSplits: {
-                        expenseId: number;
-                        groupMemberId: number;
-                        amountInCents: number;
-                        percentage: number | null;
-                      }[] = [];
-
-                      for (let i = 0; i < input.expenses.length; i++) {
-                        const expense = input.expenses[i];
-                        const created = createdExpenses[i];
-                        if (!expense || !created) continue;
-                        for (const split of expense.splits) {
-                          allSplits.push({
-                            expenseId: created.id,
-                            groupMemberId: split.groupMemberId,
-                            amountInCents: split.amountInCents,
-                            percentage: split.percentage,
-                          });
+                        if (created.length !== batch.length) {
+                          throw new Error("Failed to create all expenses");
                         }
+
+                        await trx.insert(expenseSplits).values(
+                          Arr.zip(batch, created).flatMap(([expense, { id }]) =>
+                            expense.splits.map((split) => ({
+                              expenseId: id,
+                              groupMemberId: split.groupMemberId,
+                              amountInCents: split.amountInCents,
+                              percentage: split.percentage,
+                            })),
+                          ),
+                        );
                       }
 
-                      if (allSplits.length > 0) {
-                        await trx.insert(expenseSplits).values(allSplits);
-                      }
-
-                      return { importedCount: createdExpenses.length };
+                      return { importedCount: input.expenses.length };
                     }, "bulk create expenses")(ctx.db),
                 ),
             ),
