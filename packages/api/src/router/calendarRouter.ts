@@ -11,7 +11,7 @@ import {
   inArray,
   isNotNull,
   isNull,
-  ne,
+  not,
   or,
 } from "@flatsby/db";
 import {
@@ -186,13 +186,19 @@ const itemValues = ({
 });
 
 // Drops rows that no longer differ from the rule
-const pruneOccurrence = (db: Database, itemId: number, originalDate: string) =>
+const pruneOccurrences = (
+  db: Database | DbTransaction,
+  itemId: number,
+  originalDate?: string,
+) =>
   db
     .delete(calendarOccurrences)
     .where(
       and(
         eq(calendarOccurrences.itemId, itemId),
-        eq(calendarOccurrences.originalDate, originalDate),
+        originalDate === undefined
+          ? undefined
+          : eq(calendarOccurrences.originalDate, originalDate),
         isNull(calendarOccurrences.movedTo),
         eq(calendarOccurrences.skipped, false),
         isNull(calendarOccurrences.completedAt),
@@ -341,24 +347,35 @@ export const calendarRouter = createTRPCRouter({
                 .set(itemValues(input))
                 .where(eq(calendarItems.id, input.id));
               await writeMembers(tx, input.id, input.memberIds);
-              const scheduleChanged = !sameSchedule(previous, input);
-              const stale = or(
-                // Skips and moves belong to the old rule; completions stay as history
-                scheduleChanged
-                  ? isNull(calendarOccurrences.completedAt)
-                  : undefined,
-                // A one-off only ever loads around its own date, so other completions would show in some months only
-                scheduleChanged && input.recurrence === null
-                  ? ne(calendarOccurrences.originalDate, input.startsOn)
-                  : undefined,
-                input.kind === "event"
-                  ? isNotNull(calendarOccurrences.completedAt)
-                  : undefined,
-              );
-              if (stale)
+              const ofItem = eq(calendarOccurrences.itemId, input.id);
+              if (!sameSchedule(previous, input)) {
+                // Rows of the old rule go; a task keeps its completions as history, a one-off only its own date's
+                const history =
+                  input.kind === "task"
+                    ? and(
+                        isNotNull(calendarOccurrences.completedAt),
+                        input.recurrence === null
+                          ? eq(calendarOccurrences.originalDate, input.startsOn)
+                          : undefined,
+                      )
+                    : undefined;
                 await tx
                   .delete(calendarOccurrences)
-                  .where(and(eq(calendarOccurrences.itemId, input.id), stale));
+                  .where(history ? and(ofItem, not(history)) : ofItem);
+                // A one-off can't be moved, and is only loaded around its own date
+                if (input.recurrence === null)
+                  await tx
+                    .update(calendarOccurrences)
+                    .set({ movedTo: null })
+                    .where(ofItem);
+              } else if (input.kind === "event") {
+                // Events can't be done, but their skips and moves still hold
+                await tx
+                  .update(calendarOccurrences)
+                  .set({ completedByGroupMemberId: null, completedAt: null })
+                  .where(ofItem);
+                await pruneOccurrences(tx, input.id);
+              }
               return { id: input.id };
             }, "update calendar item")(ctx.db),
         ),
@@ -445,7 +462,7 @@ export const calendarRouter = createTRPCRouter({
                         eq(calendarOccurrences.originalDate, originalDate),
                       ),
                     );
-                  await pruneOccurrence(ctx.db, item.id, originalDate);
+                  await pruneOccurrences(ctx.db, item.id, originalDate);
                 }
                 return { itemId: item.id, originalDate };
               }, "set calendar occurrence done"),
@@ -482,7 +499,7 @@ export const calendarRouter = createTRPCRouter({
                   ],
                   set: change,
                 });
-              await pruneOccurrence(ctx.db, item.id, input.originalDate);
+              await pruneOccurrences(ctx.db, item.id, input.originalDate);
               return { itemId: item.id, originalDate: input.originalDate };
             }, "reschedule calendar occurrence");
           },

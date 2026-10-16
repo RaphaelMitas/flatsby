@@ -659,12 +659,16 @@ export function withSavedItem(
       ),
     };
   }
-  // Mirrors the server: events keep no completions, a one-off only its own
-  const completions = cachedCompletions(range, item.id).filter(
-    (completion) =>
-      !isEvent &&
-      (item.recurrence !== null || completion.originalDate === item.startsOn),
-  );
+  // Mirrors the server: events keep no completions, a one-off only its own and unmoved
+  const completions = cachedCompletions(range, item.id)
+    .filter(
+      (completion) =>
+        !isEvent &&
+        (item.recurrence !== null || completion.originalDate === item.startsOn),
+    )
+    .map((completion) =>
+      item.recurrence === null ? { ...completion, movedTo: null } : completion,
+    );
   return {
     items: [...rest.items, item],
     occurrences: [
