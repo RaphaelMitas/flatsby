@@ -197,7 +197,7 @@ function EntryRow({
           </p>
         </div>
         {done ? (
-          <DoneBy occurrence={occurrence} members={members} />
+          <DoneBy occurrence={occurrence} />
         ) : (
           occurrence.turnGroupMemberId !== null && (
             <TurnPill

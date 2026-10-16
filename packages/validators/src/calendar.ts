@@ -3,6 +3,8 @@ import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
 
+import type { DebtPerson } from "./expenses/formatting";
+
 export const weekdays = ["mo", "tu", "we", "th", "fr", "sa", "su"] as const;
 export const weekdaySchema = z.enum(weekdays);
 export type Weekday = z.infer<typeof weekdaySchema>;
@@ -177,19 +179,16 @@ export interface ExpandableItem {
   memberIds: number[];
 }
 
-/** Sent with each completion, so someone who has since left the group keeps their name */
-export interface CalendarPerson {
-  name: string;
-  image: string | null;
-}
-
 export interface OccurrenceOverride {
   originalDate: string;
   movedTo: string | null;
   skipped: boolean;
   completedByGroupMemberId: number | null;
-  completedBy: CalendarPerson | null;
+  /** Sent with each completion, so someone who has since left the group keeps their name */
+  completedBy: DebtPerson | null;
   completedAt: Date | null;
+  /** Stored when it was done, so later rotation changes don't rewrite whose turn it was */
+  turnGroupMemberId: number | null;
 }
 
 export interface Occurrence {
@@ -199,7 +198,7 @@ export interface Occurrence {
   date: string;
   turnGroupMemberId: number | null;
   completedByGroupMemberId: number | null;
-  completedBy: CalendarPerson | null;
+  completedBy: DebtPerson | null;
   completedAt: Date | null;
   /** A forecast of an afterDone chore past its next due date, which can't be done yet */
   projected: boolean;
@@ -233,6 +232,32 @@ export function turnOn(
   );
   return turnFor(item.memberIds, ordinal === -1 ? null : ordinal);
 }
+
+/** Whose turn a completion recorded now is; for afterDone `originalDate` is the day it was done. */
+export function turnForCompletion(
+  item: ExpandableItem,
+  overrides: OccurrenceOverride[],
+  originalDate: string,
+) {
+  if (item.recurrence?.type !== "afterDone")
+    return turnOn(item, [], originalDate);
+  return turnFor(
+    item.memberIds,
+    completionsInOrder(overrides).filter(
+      (override) => override.originalDate < originalDate,
+    ).length,
+  );
+}
+
+export const wasCovered = (
+  occurrence: Pick<
+    Occurrence,
+    "completedByGroupMemberId" | "turnGroupMemberId"
+  >,
+) =>
+  occurrence.completedByGroupMemberId !== null &&
+  occurrence.turnGroupMemberId !== null &&
+  occurrence.completedByGroupMemberId !== occurrence.turnGroupMemberId;
 
 /** Whether a fixed schedule has an occurrence that originally fell on `date`. */
 export const isScheduledOn = (item: ExpandableItem, date: string) =>
@@ -270,7 +295,9 @@ export function expandOccurrences(
     itemId: item.id,
     originalDate,
     date,
-    turnGroupMemberId: turnFor(item.memberIds, ordinal),
+    turnGroupMemberId: override?.completedAt
+      ? override.turnGroupMemberId
+      : turnFor(item.memberIds, ordinal),
     completedByGroupMemberId: override?.completedByGroupMemberId ?? null,
     completedBy: override?.completedBy ?? null,
     completedAt: override?.completedAt ?? null,
@@ -500,6 +527,7 @@ const cachedCompletions = (range: CalendarRange, itemId: number) =>
       completedByGroupMemberId: occurrence.completedByGroupMemberId,
       completedBy: occurrence.completedBy,
       completedAt: occurrence.completedAt,
+      turnGroupMemberId: occurrence.turnGroupMemberId,
     }));
 
 export function withDone(
@@ -509,7 +537,7 @@ export function withDone(
     originalDate: string;
     done: boolean;
     byGroupMemberId: number;
-    by: CalendarPerson;
+    by: DebtPerson;
   },
   { from, to, today }: { from: string; to: string; today: string },
 ): CalendarRange {
@@ -661,9 +689,10 @@ export function withSavedItem(
         occurrence.itemId === item.id && (redealsTurns || isEvent)
           ? {
               ...occurrence,
-              ...(redealsTurns && {
-                turnGroupMemberId: turnOn(item, [], occurrence.originalDate),
-              }),
+              ...(redealsTurns &&
+                !occurrence.completedAt && {
+                  turnGroupMemberId: turnOn(item, [], occurrence.originalDate),
+                }),
               ...(isEvent && {
                 completedByGroupMemberId: null,
                 completedBy: null,

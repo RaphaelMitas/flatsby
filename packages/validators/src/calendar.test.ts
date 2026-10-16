@@ -18,6 +18,7 @@ import {
   recurrenceSchema,
   repeatFormOf,
   shiftMonth,
+  turnForCompletion,
   turnOn,
   weekdayOf,
   withDone,
@@ -31,13 +32,18 @@ const item = (
   memberIds: number[] = [],
 ): ExpandableItem => ({ id: 1, startsOn, recurrence, memberIds });
 
-const done = (originalDate: string, by = 1): OccurrenceOverride => ({
+const done = (
+  originalDate: string,
+  by = 1,
+  turn: number | null = null,
+): OccurrenceOverride => ({
   originalDate,
   movedTo: null,
   skipped: false,
   completedByGroupMemberId: by,
   completedBy: { name: `Member ${by}`, image: null },
   completedAt: new Date(`${originalDate}T12:00:00Z`),
+  turnGroupMemberId: turn,
 });
 
 const dates = (
@@ -103,7 +109,7 @@ describe("expandOccurrences", () => {
     );
     const occurrences = expandOccurrences(
       weekly,
-      [done("2026-10-06", 30)],
+      [done("2026-10-06", 30, 10)],
       "2026-10-01",
       "2026-10-31",
       "2026-10-16",
@@ -549,7 +555,14 @@ describe("afterDone ticking", () => {
     );
     const server = expandOccurrences(
       chore,
-      [...overrides, done("2026-10-16", 2)],
+      [
+        ...overrides,
+        done(
+          "2026-10-16",
+          2,
+          turnForCompletion(chore, overrides, "2026-10-16"),
+        ),
+      ],
       "2026-10-01",
       "2026-10-31",
       "2026-10-16",

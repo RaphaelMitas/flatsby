@@ -32,6 +32,7 @@ import {
   rescheduleOccurrenceSchema,
   sameSchedule,
   setOccurrenceDoneSchema,
+  turnForCompletion,
   turnOn,
   updateCalendarItemSchema,
 } from "@flatsby/validators/calendar";
@@ -109,6 +110,7 @@ const loadOverrides = async (db: Database, where: SQL | undefined) =>
         skipped: true,
         completedByGroupMemberId: true,
         completedAt: true,
+        turnGroupMemberId: true,
       },
       with: {
         completedByGroupMember: {
@@ -315,7 +317,9 @@ export const calendarRouter = createTRPCRouter({
                   completedByGroupMemberId: row.completedByGroupMemberId,
                   completedBy: row.completedBy,
                   completedAt: row.completedAt,
-                  turnGroupMemberId: turnOn(item, overrides, row.originalDate),
+                  turnGroupMemberId: row.completedAt
+                    ? row.turnGroupMemberId
+                    : turnOn(item, overrides, row.originalDate),
                 })),
             };
           }, "load calendar item"),
@@ -388,7 +392,11 @@ export const calendarRouter = createTRPCRouter({
                 // Events can't be done, but their skips and moves still hold
                 await tx
                   .update(calendarOccurrences)
-                  .set({ completedByGroupMemberId: null, completedAt: null })
+                  .set({
+                    completedByGroupMemberId: null,
+                    completedAt: null,
+                    turnGroupMemberId: null,
+                  })
                   .where(ofItem);
                 await pruneOccurrences(tx, input.id);
               }
@@ -429,7 +437,7 @@ export const calendarRouter = createTRPCRouter({
               input.done && item.recurrence?.type === "afterDone"
                 ? input.today
                 : input.originalDate;
-            const allowed = input.done
+            const turn = input.done
               ? Effect.flatMap(
                   safeDbOperation(
                     () =>
@@ -446,16 +454,19 @@ export const calendarRouter = createTRPCRouter({
                       input.originalDate,
                       input.today,
                     )
-                      ? Effect.void
+                      ? Effect.succeed(
+                          turnForCompletion(item, overrides, originalDate),
+                        )
                       : fail.conflict("errors.calendarDateNotScheduled"),
                 )
-              : Effect.void;
-            return Effect.flatMap(allowed, () =>
+              : Effect.succeed(null);
+            return Effect.flatMap(turn, (turnGroupMemberId) =>
               safeDbOperation(async () => {
                 if (input.done) {
                   const completion = {
                     completedByGroupMemberId: member.id,
                     completedAt: new Date(),
+                    turnGroupMemberId,
                     skipped: false,
                   };
                   await ctx.db
@@ -471,7 +482,11 @@ export const calendarRouter = createTRPCRouter({
                 } else {
                   await ctx.db
                     .update(calendarOccurrences)
-                    .set({ completedByGroupMemberId: null, completedAt: null })
+                    .set({
+                      completedByGroupMemberId: null,
+                      completedAt: null,
+                      turnGroupMemberId: null,
+                    })
                     .where(
                       and(
                         eq(calendarOccurrences.itemId, item.id),

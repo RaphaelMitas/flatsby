@@ -1,10 +1,10 @@
 import type {
   CalendarItemDetail,
   CalendarItemView,
-  CalendarPerson,
   CalendarRange,
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
+import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
 import type {
   QueryClient,
   QueryFilters,
@@ -142,7 +142,7 @@ export const calendarMutation = <TInput>(
 export const calendarPatches = {
   setDone: (
     input: { itemId: number; originalDate: string; done: boolean },
-    me: { groupMemberId: number; person: CalendarPerson },
+    me: { groupMemberId: number; person: DebtPerson },
   ): CalendarPatch => ({
     range: (range, window) =>
       withDone(

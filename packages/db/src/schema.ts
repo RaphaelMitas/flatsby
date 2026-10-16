@@ -511,6 +511,11 @@ export const calendarOccurrences = createTable(
       "completed_by_group_member_id",
     ).references(() => groupMembers.id, { onDelete: "set null" }),
     completedAt: timestamp("completed_at"),
+    // Whose turn it was when it was done, so later rotation changes don't rewrite history
+    turnGroupMemberId: integer("turn_group_member_id").references(
+      () => groupMembers.id,
+      { onDelete: "set null" },
+    ),
   },
   (table) => [
     primaryKey({ columns: [table.itemId, table.originalDate] }),

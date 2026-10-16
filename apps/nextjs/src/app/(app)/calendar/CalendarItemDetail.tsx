@@ -198,7 +198,7 @@ export function CalendarItemDetail({
                       )}
                     </span>
                   ) : (
-                    <DoneBy occurrence={row} members={members} />
+                    <DoneBy occurrence={row} />
                   )}
                 </li>
               ))}

@@ -4,6 +4,8 @@ import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
 import { Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
+import { wasCovered } from "@flatsby/validators/calendar";
+
 import { cn } from "~/lib/utils";
 import { MemberAvatar } from "../expenses/MemberAvatar";
 
@@ -11,7 +13,6 @@ export interface CalendarPeople {
   meId: number;
   /** null is a member whose account is gone */
   person: (groupMemberId: number | null) => DebtPerson;
-  isMember: (groupMemberId: number) => boolean;
 }
 
 export function useCalendarPeople(group: GroupWithAccess): CalendarPeople {
@@ -19,7 +20,6 @@ export function useCalendarPeople(group: GroupWithAccess): CalendarPeople {
   const byId = new Map(group.groupMembers.map((member) => [member.id, member]));
   return {
     meId: group.thisGroupMember.id,
-    isMember: (groupMemberId) => byId.has(groupMemberId),
     person: (groupMemberId) => {
       const user =
         groupMemberId === null ? undefined : byId.get(groupMemberId)?.user;
@@ -79,22 +79,15 @@ export function OccurrenceStatus({
   people: CalendarPeople;
 }) {
   const t = useTranslations("calendar");
-  const { turnGroupMemberId: turn, completedByGroupMemberId: doneBy } =
-    occurrence;
+  const turn = occurrence.turnGroupMemberId;
 
   if (occurrence.completedAt) {
     const doer = occurrence.completedBy ?? people.person(null);
-    // Turns of someone who left are dealt to the others, so only a current member can have covered
-    const covered =
-      doneBy !== null &&
-      people.isMember(doneBy) &&
-      turn !== null &&
-      turn !== doneBy;
     return (
       <PersonPill
         person={doer}
         label={
-          covered
+          wasCovered(occurrence)
             ? t("coveredBy", { name: doer.name })
             : t("doneBy", { name: doer.name })
         }
