@@ -7,6 +7,7 @@ export const errors = {
     invite:
       "Diese Einladung ist abgelaufen. Bitte jemanden in der Gruppe um eine neue.",
     adminMembership: "Admin-Mitgliedschaft nicht gefunden",
+    calendarItem: "Kalendereintrag nicht gefunden",
     expense: "Ausgabe nicht gefunden",
     group: "Gruppe nicht gefunden",
     groupMember: "Mitglied nicht gefunden",

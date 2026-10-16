@@ -1,5 +1,6 @@
 import { auth } from "./de/auth";
 import { billing } from "./de/billing";
+import { calendar } from "./de/calendar";
 import { chat } from "./de/chat";
 import { common } from "./de/common";
 import { debts } from "./de/debts";
@@ -33,6 +34,7 @@ export const de = {
   expenseCategories,
   debts,
   splitwiseImport,
+  calendar,
   chat,
   errors,
   marketing,

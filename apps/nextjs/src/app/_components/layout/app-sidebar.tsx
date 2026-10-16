@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  Calendar,
   HandCoins,
   LoaderIcon,
   MessageSquareIcon,
@@ -54,6 +55,7 @@ export function AppSidebar() {
   // Determine active pages based on pathname
   const isExpensesPage = pathname.startsWith("/expenses");
   const isDebtsPage = pathname === "/expenses/debts";
+  const isCalendarPage = pathname.startsWith("/calendar");
 
   // Get current conversation ID from pathname
   const conversationMatch = /\/chat\/([^/]+)/.exec(pathname);
@@ -162,6 +164,28 @@ export function AppSidebar() {
                     <Link href="/expenses/debts">
                       <HandCoins />
                       <span>{t("navigation.debts")}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {hasCurrentGroup && (
+          <SidebarGroup>
+            <SidebarGroupLabel>{t("navigation.calendar")}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isCalendarPage}
+                    tooltip={t("navigation.calendar")}
+                  >
+                    <Link href="/calendar">
+                      <Calendar />
+                      <span>{t("navigation.calendar")}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

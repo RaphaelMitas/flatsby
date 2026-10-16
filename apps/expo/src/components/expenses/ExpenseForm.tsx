@@ -5,9 +5,8 @@ import type {
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useMemo, useState } from "react";
-import { Alert, Platform, Pressable, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
@@ -39,6 +38,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/lib/ui/card";
+import { DatePickerField } from "~/lib/ui/date-picker-field";
 import {
   Form,
   FormControl,
@@ -49,7 +49,6 @@ import {
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
-import { useThemeColors } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
@@ -67,65 +66,6 @@ function useExchangeRate(
       enabled,
       staleTime: Infinity,
     }),
-  );
-}
-
-function DatePickerField({
-  value,
-  onChange,
-}: {
-  value: Date;
-  onChange: (date: Date) => void;
-}) {
-  const t = useTranslations();
-  const locale = useLocale();
-  const [showPicker, setShowPicker] = useState(false);
-  const { colorScheme } = useThemeColors();
-  const formattedDate = value.toLocaleDateString(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  if (Platform.OS === "ios") {
-    return (
-      <View className="gap-2">
-        <Label>{t("common.date")}</Label>
-        <DateTimePicker
-          value={value}
-          mode="date"
-          display="default"
-          themeVariant={colorScheme}
-          className="border-input bg-background h-12 rounded-lg border px-3"
-          onChange={(_: unknown, selectedDate: Date | undefined) => {
-            if (selectedDate) onChange(selectedDate);
-          }}
-        />
-      </View>
-    );
-  }
-
-  return (
-    <View className="gap-2">
-      <Label>{t("common.date")}</Label>
-      <Pressable
-        onPress={() => setShowPicker(true)}
-        className="border-input bg-background flex h-12 flex-row items-center rounded-lg border px-3"
-      >
-        <Text className="text-foreground">{formattedDate}</Text>
-      </Pressable>
-      {showPicker && (
-        <DateTimePicker
-          value={value}
-          mode="date"
-          display="default"
-          onChange={(_, selectedDate) => {
-            setShowPicker(false);
-            if (selectedDate) onChange(selectedDate);
-          }}
-        />
-      )}
-    </View>
   );
 }
 
@@ -711,6 +651,7 @@ export function ExpenseForm({
                       name="expenseDate"
                       render={({ field }) => (
                         <DatePickerField
+                          label={t("common.date")}
                           value={field.value}
                           onChange={field.onChange}
                         />

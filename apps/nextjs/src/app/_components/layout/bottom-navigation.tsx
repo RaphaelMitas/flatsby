@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Calendar,
   HomeIcon,
   MessageSquareIcon,
   ShoppingCartIcon,
@@ -22,6 +23,7 @@ export function BottomNavigation() {
   const isGroupPage = pathname === "/group" || pathname.startsWith("/group/");
   const isShoppingPage = pathname.startsWith("/shopping-list");
   const isExpensesPage = pathname.startsWith("/expenses");
+  const isCalendarPage = pathname.startsWith("/calendar");
   const isChatPage = pathname.startsWith("/chat");
 
   // Determine active state - only one can be active
@@ -65,6 +67,17 @@ export function BottomNavigation() {
         >
           <Wallet className="h-6 w-6" />
           <span className="text-xs">{t("expenses")}</span>
+        </Link>
+        <Link
+          href={hasCurrentGroup ? "/calendar" : "/group"}
+          className={cn(
+            "hover:text-foreground flex flex-col items-center gap-1",
+            isCalendarPage ? "text-foreground" : "text-muted-foreground",
+          )}
+          prefetch={false}
+        >
+          <Calendar className="h-6 w-6" />
+          <span className="text-xs">{t("calendar")}</span>
         </Link>
         <Link
           href="/chat"

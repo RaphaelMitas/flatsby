@@ -13,7 +13,7 @@ appId: ${APP_ID}
     env:
       TAB_ID: "tab-expenses"
       TAB_LABEL: "Expenses"
-      TAB_X: "62%"
+      TAB_X: "39%"
 - extendedWaitUntil:
     visible:
       id: "expense-heading"

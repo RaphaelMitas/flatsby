@@ -4,6 +4,7 @@ export const errors = {
   notFound: {
     invite: "This invite has expired. Ask someone in the group for a new one.",
     adminMembership: "admin membership not found",
+    calendarItem: "calendar entry not found",
     expense: "expense not found",
     group: "group not found",
     groupMember: "group member not found",
