@@ -2,67 +2,23 @@ appId: ${APP_ID}
 tags:
   - group
 ---
-# Mirrors "delete group" + "deleted group inaccessible" from
-# apps/nextjs/e2e/group/group-management.spec.ts.
+# Mirrors "delete group", "deleted group inaccessible" and "delete group with
+# expenses" from apps/nextjs/e2e/group/group-management.spec.ts.
 - runFlow: ../../subflows/e2e-login.yaml
 
-# Create a group we can safely delete (known name for the confirmation input)
-- tapOn:
-    id: "group-create-button"
-- extendedWaitUntil:
-    visible:
-      id: "group-create-name-input"
-    timeout: 15000
-- tapOn:
-    id: "group-create-name-input"
-- inputText: "Delete Me Group"
-- tapOn:
-    id: "group-create-submit"
-- extendedWaitUntil:
-    visible: "Delete Me Group"
-    timeout: 15000
-
 # Swipe left on the dashboard row to reveal Delete, confirm with typed name
+- runFlow:
+    file: ../../subflows/create-group.yaml
+    env:
+      GROUP_NAME: "Delete Me Group"
 - swipe:
     from:
       text: "Delete Me Group"
     direction: LEFT
-- extendedWaitUntil:
-    visible:
-      id: "delete-confirmation-input"
-    timeout: 15000
-- tapOn:
-    id: "delete-confirmation-input"
-- inputText: "Delete Me Group"
-- waitForAnimationToEnd
-- extendedWaitUntil:
-    visible:
-      id: "delete-confirmation-input"
-      text: "Delete Me Group"
-    timeout: 5000
-# Dismiss the keyboard (tapping the modal body dismisses it), then confirm
-- tapOn: "Confirmation Required"
-- waitForAnimationToEnd
-- assertVisible:
-    id: "delete-confirmation-confirm"
-    enabled: true
-# The confirm tap sometimes doesn't register on hosted runners.
-- retry:
-    maxRetries: 2
-    commands:
-      - runFlow:
-          when:
-            visible:
-              id: "delete-confirmation-confirm"
-          commands:
-            - tapOn:
-                id: "delete-confirmation-confirm"
-      - extendedWaitUntil:
-          notVisible:
-            id: "delete-confirmation-confirm"
-          timeout: 20000
-
-# The deleted group is gone from the dashboard
+- runFlow:
+    file: ../../subflows/confirm-delete.yaml
+    env:
+      CONFIRM_TEXT: "Delete Me Group"
 - extendedWaitUntil:
     notVisible: "Delete Me Group"
     timeout: 15000
@@ -70,20 +26,10 @@ tags:
     id: "group-dashboard-title"
 
 # A group with an expense must delete too, here through group settings
-- tapOn:
-    id: "group-create-button"
-- extendedWaitUntil:
-    visible:
-      id: "group-create-name-input"
-    timeout: 15000
-- tapOn:
-    id: "group-create-name-input"
-- inputText: "Spent Group"
-- tapOn:
-    id: "group-create-submit"
-- extendedWaitUntil:
-    visible: "Spent Group"
-    timeout: 15000
+- runFlow:
+    file: ../../subflows/create-group.yaml
+    env:
+      GROUP_NAME: "Spent Group"
 - tapOn:
     id: "group-select-button"
     index: 1
@@ -123,22 +69,10 @@ tags:
     direction: DOWN
 - tapOn:
     id: "group-settings-delete"
-- extendedWaitUntil:
-    visible:
-      id: "delete-confirmation-input"
-    timeout: 15000
-- tapOn:
-    id: "delete-confirmation-input"
-- inputText: "Spent Group"
-- waitForAnimationToEnd
-- tapOn: "Confirmation Required"
-- waitForAnimationToEnd
-- tapOn:
-    id: "delete-confirmation-confirm"
-- extendedWaitUntil:
-    notVisible:
-      id: "delete-confirmation-confirm"
-    timeout: 20000
+- runFlow:
+    file: ../../subflows/confirm-delete.yaml
+    env:
+      CONFIRM_TEXT: "Spent Group"
 
 # The list hides the group optimistically, so relaunch to read what the server kept
 - launchApp

@@ -1,0 +1,38 @@
+appId: ${APP_ID}
+---
+# Shared subflow: with the delete confirmation dialog opening, types
+# ${CONFIRM_TEXT} and confirms until the dialog closes.
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-input"
+    timeout: 15000
+- tapOn:
+    id: "delete-confirmation-input"
+- inputText: ${CONFIRM_TEXT}
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-input"
+      text: ${CONFIRM_TEXT}
+    timeout: 5000
+# Dismiss the keyboard (tapping the modal body dismisses it), then confirm
+- tapOn: "Confirmation Required"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "delete-confirmation-confirm"
+    enabled: true
+# The confirm tap sometimes doesn't register on hosted runners.
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "delete-confirmation-confirm"
+          commands:
+            - tapOn:
+                id: "delete-confirmation-confirm"
+      - extendedWaitUntil:
+          notVisible:
+            id: "delete-confirmation-confirm"
+          timeout: 20000

@@ -2,8 +2,16 @@ import type { MessageKey } from "@flatsby/i18n/message-key";
 import type { Messages } from "@flatsby/i18n/messages";
 import { Effect } from "effect";
 
-import { and, desc, eq } from "@flatsby/db";
-import { groupMembers, groups } from "@flatsby/db/schema";
+import { and, desc, eq, inArray } from "@flatsby/db";
+import {
+  expenses,
+  expenseSplits,
+  groupMembers,
+  groups,
+  shoppingListItems,
+  shoppingLists,
+  users,
+} from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 
 import type { ApiError, NotFoundError, NotFoundResource } from "./errors";
@@ -331,6 +339,37 @@ export const GroupUtils = {
       .from(groups)
       .where(eq(groups.id, groupId))
       .for("update"),
+
+  /** Foreign keys don't cascade, so every child row goes before its parent. */
+  deleteGroupData: async (tx: DbTransaction, groupId: number) => {
+    const groupLists = tx
+      .select({ id: shoppingLists.id })
+      .from(shoppingLists)
+      .where(eq(shoppingLists.groupId, groupId));
+    const groupExpenses = tx
+      .select({ id: expenses.id })
+      .from(expenses)
+      .where(eq(expenses.groupId, groupId));
+
+    await tx
+      .delete(shoppingListItems)
+      .where(inArray(shoppingListItems.shoppingListId, groupLists));
+    await tx
+      .delete(expenseSplits)
+      .where(inArray(expenseSplits.expenseId, groupExpenses));
+    await tx.delete(expenses).where(eq(expenses.groupId, groupId));
+    await tx.delete(groupMembers).where(eq(groupMembers.groupId, groupId));
+    await tx
+      .update(users)
+      .set({ lastGroupUsed: null, lastShoppingListUsed: null })
+      .where(eq(users.lastGroupUsed, groupId));
+    await tx
+      .update(users)
+      .set({ lastShoppingListUsed: null })
+      .where(inArray(users.lastShoppingListUsed, groupLists));
+    await tx.delete(shoppingLists).where(eq(shoppingLists.groupId, groupId));
+    await tx.delete(groups).where(eq(groups.id, groupId));
+  },
 
   /** Callers check the right to add; `refusal` runs under the group lock, so it sees concurrent removals. */
   addMember: (

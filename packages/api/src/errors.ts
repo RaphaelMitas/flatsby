@@ -4,6 +4,7 @@ import type { Messages } from "@flatsby/i18n/messages";
 import { Data, Effect } from "effect";
 import { z } from "zod/v4";
 
+import { DrizzleQueryError } from "@flatsby/db";
 import { translatorFor } from "@flatsby/i18n/translator";
 
 import { captureError } from "./lib/posthog";
@@ -266,8 +267,11 @@ export const safeDbOperation = <T>(
     try: operation,
     catch: (error) => {
       const operation = `${operationName}${tableName ? ` on ${tableName}` : ""}`;
-      captureError({ error, operation });
-      return fromUnknownError(error, operation);
+      // The wrapper's message carries the query params, which hold user data
+      const cause =
+        error instanceof DrizzleQueryError && error.cause ? error.cause : error;
+      captureError({ error: cause, operation });
+      return fromUnknownError(cause, operation);
     },
   });
 };

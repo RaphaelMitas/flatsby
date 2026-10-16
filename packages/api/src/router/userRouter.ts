@@ -8,7 +8,6 @@ import {
   expenses,
   expenseSplits,
   groupMembers,
-  groups,
   sessions,
   shoppingListItems,
   shoppingLists,
@@ -41,7 +40,7 @@ import {
 } from "../errors";
 import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, safeDbOperation } from "../utils";
+import { DbUtils, GroupUtils, safeDbOperation } from "../utils";
 import { autumn, checkCredits } from "../utils/autumn";
 
 // i18n-ignore: plan names are Autumn product names like "Pro", not copy
@@ -348,39 +347,7 @@ export const userRouter = createTRPCRouter({
                   .where(eq(groupMembers.id, groupMemberId));
               } else {
                 // The user is the last member and admin
-                // Delete all entries related to the group
-
-                // Collect all shopping list item IDs
-                const shoppingListItemIds = group.shoppingLists
-                  .flatMap((list) => list.shoppingListItems)
-                  .map((item) => item.id);
-
-                if (shoppingListItemIds.length > 0) {
-                  // Delete shopping list items
-                  await trx
-                    .delete(shoppingListItems)
-                    .where(inArray(shoppingListItems.id, shoppingListItemIds));
-                }
-
-                // Collect all shopping list IDs
-                const shoppingListIds = group.shoppingLists.map(
-                  (list) => list.id,
-                );
-
-                if (shoppingListIds.length > 0) {
-                  // Delete shopping lists
-                  await trx
-                    .delete(shoppingLists)
-                    .where(inArray(shoppingLists.id, shoppingListIds));
-                }
-
-                // Delete group memberships
-                await trx
-                  .delete(groupMembers)
-                  .where(eq(groupMembers.groupId, groupId));
-
-                // Delete the group
-                await trx.delete(groups).where(eq(groups.id, groupId));
+                await GroupUtils.deleteGroupData(trx, groupId);
               }
             } else {
               // The user is not an admin, simply remove their membership
