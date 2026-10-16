@@ -23,6 +23,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
 
 import { InstallReferrerInvite } from "~/components/InstallReferrerInvite";
+import { UpdateNudge } from "~/components/UpdateNudge";
 import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
@@ -139,6 +140,7 @@ const StackLayout = () => {
     <View className="bg-background flex-1">
       <ScreenTracker />
       <InstallReferrerInvite />
+      <UpdateNudge />
       <Stack
         screenOptions={{
           headerShown: false,

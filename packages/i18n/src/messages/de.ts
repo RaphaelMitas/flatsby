@@ -1,3 +1,4 @@
+import { appUpdate } from "./de/appUpdate";
 import { auth } from "./de/auth";
 import { billing } from "./de/billing";
 import { chat } from "./de/chat";
@@ -38,4 +39,5 @@ export const de = {
   marketing,
   legal,
   notFound,
+  appUpdate,
 };
