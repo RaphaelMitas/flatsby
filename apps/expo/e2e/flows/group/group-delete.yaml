@@ -68,3 +68,81 @@ tags:
     timeout: 15000
 - assertVisible:
     id: "group-dashboard-title"
+
+# A group with an expense must delete too, here through group settings
+- tapOn:
+    id: "group-create-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-create-name-input"
+    timeout: 15000
+- tapOn:
+    id: "group-create-name-input"
+- inputText: "Spent Group"
+- tapOn:
+    id: "group-create-submit"
+- extendedWaitUntil:
+    visible: "Spent Group"
+    timeout: 15000
+- tapOn:
+    id: "group-select-button"
+    index: 1
+- extendedWaitUntil:
+    visible:
+      id: "shopping-lists-group-settings"
+    timeout: 15000
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-expenses"
+      TAB_LABEL: "Expenses"
+      TAB_X: "62%"
+- extendedWaitUntil:
+    visible:
+      id: "expense-heading"
+    timeout: 15000
+- runFlow:
+    file: ../../subflows/create-expense.yaml
+    env:
+      AMOUNT: "25.00"
+      DESCRIPTION: "Before Delete"
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
+      TAB_X: "41%"
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-lists-group-settings"
+      MARKER_ID: "group-settings-details"
+- scrollUntilVisible:
+    element:
+      id: "group-settings-delete"
+    direction: DOWN
+- tapOn:
+    id: "group-settings-delete"
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-input"
+    timeout: 15000
+- tapOn:
+    id: "delete-confirmation-input"
+- inputText: "Spent Group"
+- waitForAnimationToEnd
+- tapOn: "Confirmation Required"
+- waitForAnimationToEnd
+- tapOn:
+    id: "delete-confirmation-confirm"
+- extendedWaitUntil:
+    notVisible:
+      id: "delete-confirmation-confirm"
+    timeout: 20000
+
+# The list hides the group optimistically, so relaunch to read what the server kept
+- launchApp
+- extendedWaitUntil:
+    visible: "E2E Test Group.*"
+    timeout: 30000
+- assertNotVisible: "Spent Group"

@@ -1,6 +1,7 @@
 import type { Browser, Page } from "@playwright/test";
 
 import { createAuthSession, expect, test } from "../fixtures/auth";
+import { createTestExpense } from "../helpers/expenses";
 import {
   createAndSelectGroup,
   deleteCurrentGroup,
@@ -218,6 +219,19 @@ test.describe("Group Management", () => {
     await expect(
       authPage.getByTestId(`group-card-${groupId}`),
     ).not.toBeVisible();
+  });
+
+  test("delete group with expenses", async ({ authPage, testUser }) => {
+    const groupId = await createAndSelectGroup(authPage, uniqueGroupName());
+    await createTestExpense(authPage);
+
+    await deleteCurrentGroup(authPage);
+
+    await authPage.reload();
+    await expect(
+      authPage.getByTestId(`group-card-${testUser.groupId}`),
+    ).toBeVisible();
+    await expect(authPage.getByTestId(`group-card-${groupId}`)).toHaveCount(0);
   });
 
   // TODO: Requires multi-user fixture
