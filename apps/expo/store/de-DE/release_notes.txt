@@ -1,4 +1,3 @@
-• Lade Mitbewohner per Link, QR-Code oder kurzem Code ein. Sie sehen, wer sie eingeladen hat, und treten mit einem Tippen bei, ganz ohne E-Mail.
-• Flatsby spricht jetzt Deutsch. Die App folgt der Sprache deines Handys, und du kannst sie in den Einstellungen ändern.
-• Splitwise-Importe funktionieren jetzt auch für Haushalte mit mehr als 500 Ausgaben.
+• Flatsby sagt dir jetzt Bescheid, wenn eine neue Version da ist, und du aktualisierst mit einem Tippen.
+• Neue Artikel in der Einkaufsliste sind jetzt sofort sichtbar, auch wenn du nach unten gescrollt hast.
 • Kleine Fehlerbehebungen und Verbesserungen.
