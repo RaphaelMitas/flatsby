@@ -15,7 +15,7 @@ import { z } from "zod/v4";
 import {
   addDays,
   calendarRangeSchema,
-  continuedRotation,
+  splitOff,
   splitsSeries,
   startsAfterEnd,
   withDone,
@@ -216,8 +216,7 @@ export const calendarPatches = {
       const endsOn = addDays(input.startsOn, -1);
       const next = {
         ...asView(temporaryId(), input),
-        endsOn: previous.endsOn,
-        memberIds: continuedRotation(previous, input),
+        ...splitOff(previous, input),
       };
       return {
         range: (range, window) =>

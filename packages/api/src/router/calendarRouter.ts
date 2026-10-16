@@ -27,13 +27,13 @@ import {
   calendarItemDetailSchema,
   calendarItemRefSchema,
   calendarRangeSchema,
-  continuedRotation,
   createCalendarItemSchema,
   expandOccurrences,
   isScheduledOn,
   LONGEST_GAP_DAYS,
   setOccurrenceDoneSchema,
   setOccurrenceSkippedSchema,
+  splitOff,
   splitsSeries,
   startsAfterEnd,
   updateCalendarItemSchema,
@@ -408,18 +408,17 @@ export const calendarRouter = createTRPCRouter({
                 // Someone else's edit split it first
                 if (!ended)
                   return Errors.conflict("errors.calendarSeriesReplaced");
-                const memberIds = continuedRotation(previous, input);
-                // Squeezed in before a later change keeps that change's start
+                const piece = splitOff(previous, input);
                 const next = await insertItem(
                   tx,
-                  { ...input, memberIds },
+                  { ...input, memberIds: piece.memberIds },
                   member.id,
-                  previous.endsOn,
+                  piece.endsOn,
                 );
                 await carryOccurrences(tx, previous.id, {
                   ...input,
+                  ...piece,
                   ...next,
-                  endsOn: previous.endsOn,
                 });
                 return next;
               }

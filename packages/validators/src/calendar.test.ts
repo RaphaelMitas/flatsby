@@ -9,7 +9,6 @@ import type {
   Recurrence,
 } from "./calendar";
 import {
-  continuedRotation,
   describeRecurrence,
   editedStartsOn,
   entriesOn,
@@ -19,6 +18,7 @@ import {
   recurrenceSchema,
   repeatFormOf,
   shiftMonth,
+  splitOff,
   splitsSeries,
   startsAfterEnd,
   withSavedItem,
@@ -282,23 +282,36 @@ describe("startsAfterEnd", () => {
   });
 });
 
-describe("continuedRotation", () => {
-  it("starts the new series with whoever was next under the old one", () => {
-    // Tuesdays from 10-06 for 1, 2, 3: 10-20 is the third, so 3 is up
-    const weekly = item(
-      { type: "weekly", interval: 1, days: ["tu"] },
-      undefined,
-      [1, 2, 3],
-    );
+describe("splitOff", () => {
+  // Tuesdays from 10-06 for 1, 2, 3: 10-20 is the third, so 3 is up
+  const weekly = item(
+    { type: "weekly", interval: 1, days: ["tu"] },
+    undefined,
+    [1, 2, 3],
+  );
+  const next = {
+    startsOn: "2026-10-19",
+    recurrence: weekly.recurrence,
+    memberIds: [1, 2, 3],
+  };
+
+  it("hands the rotation on to whoever was next under the old rule", () => {
+    expect(splitOff(weekly, next).memberIds).toEqual([3, 1, 2]);
+    expect(splitOff(weekly, { ...next, memberIds: [1, 2] }).memberIds).toEqual([
+      1, 2,
+    ]);
+  });
+
+  it("finds the next turn even when the old piece ends before it", () => {
     expect(
-      continuedRotation(weekly, {
-        startsOn: "2026-10-19",
-        memberIds: [1, 2, 3],
-      }),
+      splitOff({ ...weekly, endsOn: "2026-10-19" }, next).memberIds,
     ).toEqual([3, 1, 2]);
-    expect(
-      continuedRotation(weekly, { startsOn: "2026-10-19", memberIds: [1, 2] }),
-    ).toEqual([1, 2]);
+  });
+
+  it("keeps a later change's start, unless the new piece is a one-off", () => {
+    const ending = { ...weekly, endsOn: "2026-11-01" };
+    expect(splitOff(ending, next).endsOn).toBe("2026-11-01");
+    expect(splitOff(ending, { ...next, recurrence: null }).endsOn).toBeNull();
   });
 });
 

@@ -378,7 +378,6 @@ const isRunning = (item: Series, today: string) =>
   item.startsOn < today &&
   (item.endsOn === null || item.endsOn >= today);
 
-// A newer rule takes over after `previous` ends
 export const startsAfterEnd = (previous: Series, next: Schedule) =>
   previous.endsOn !== null && next.startsOn > previous.endsOn;
 
@@ -388,8 +387,7 @@ export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
   !sameSchedule(previous, next) &&
   next.startsOn > previous.startsOn;
 
-/** The new series picks up the rotation where the old one would have been. */
-export function continuedRotation(
+function continuedRotation(
   previous: ExpandableItem,
   next: Pick<ExpandableItem, "startsOn" | "memberIds">,
 ) {
@@ -405,6 +403,15 @@ export function continuedRotation(
   }
   return next.memberIds;
 }
+
+/** The new piece of a split ends where the old one did, so a later change still takes over, and carries on the rotation. */
+export const splitOff = (
+  previous: ExpandableItem,
+  next: Pick<ExpandableItem, "startsOn" | "recurrence" | "memberIds">,
+) => ({
+  endsOn: next.recurrence ? previous.endsOn : null,
+  memberIds: continuedRotation(previous, next),
+});
 
 interface RangeWindow {
   from: string;
