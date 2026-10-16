@@ -37,8 +37,8 @@ jobs:
       - name: Check
         run: pnpm check && pnpm lint:ws
 
-      - name: Release notes fit Play's 500 character limit
-        run: test "$(wc -m < apps/expo/store/release-notes.txt)" -le 500
+      - name: Store listing text is complete and fits the store limits
+        run: node scripts/check-store-text.mjs
 
   audit:
     runs-on: ubuntu-latest

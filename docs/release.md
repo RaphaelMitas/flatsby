@@ -29,16 +29,17 @@ lands on main, `.github/workflows/release.yml` takes over:
    `flatsby-vX.Y.Z-{ios,android}-screenshots.zip` (also workflow artifacts
    for 30 days).
 4. **Store listings + review** - `publish-ios` uploads the screenshots to
-   the App Store listing (en-US), sets "What's New" from
-   `apps/expo/store/release-notes.txt`, and submits the build for review
-   with automatic release (retrying while Apple processes the binary).
-   `publish-android` uploads the screenshots and the same release notes to
-   the Play listing (en-US) and promotes the build from internal to
-   production, which sends it to Google review and then live at 100%
+   the App Store listing (en-US), sets the listing text and "What's New"
+   for every locale from `apps/expo/store/<locale>/`, and submits the build
+   for review with automatic release (retrying while Apple processes the
+   binary). `publish-android` uploads the screenshots, the description and
+   release notes, and the Play title and short description from `play/` to
+   Play and promotes the build from internal
+   to production, which sends it to Google review and then live at 100%
    (managed publishing is off). Landing the release on main therefore
    publishes everything with no manual step - edit
-   `apps/expo/store/release-notes.txt` before cutting a release, or in the
-   release PR; Play caps it at 500 characters and CI fails anything longer.
+   `apps/expo/store/<locale>/release_notes.txt` for every locale before
+   cutting a release, or in the release PR.
 
 If a job fails, use **Re-run failed jobs** on that run. **Run workflow** on
 the Release workflow (or `gh workflow run release.yml`) re-runs the whole
@@ -74,9 +75,24 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   checks credits first and falls back when the check fails.
 - Marketing version comes from `app.config.ts`; build numbers auto-increment
   remotely on EAS (`appVersionSource: "remote"`).
-- Listing uploads assume the `en-US` locale and only touch the provided
-  assets: iPhone 6.9" / Play phone screenshots are replaced, existing iPad
-  screenshots and all other listing content stay untouched.
+- `apps/expo/store/<locale>/` is the source of truth for listing text. Its
+  top-level files use deliver's names and go to the App Store, which reads
+  the folder directly; `description.txt` and `release_notes.txt` also go to
+  Play, next to the Play-only fields in `play/`. Store-side edits to these
+  fields are overwritten by the next release; fields without a file, like
+  promotional text or the Play video, are left alone.
+  `scripts/check-store-text.mjs` runs in CI and fails when a locale is
+  missing a file, a file is empty, or a text is over its store limit
+  (release notes: 500, Play's cap).
+- A new locale is a new folder, plus one manual step on the App Store:
+  deliver only creates a locale's name, subtitle and privacy URL when an
+  existing locale's values changed in the same run, so add the language in
+  App Store Connect first. The folder name must be a code both stores
+  accept (`fr-FR`, `es-ES`); for languages where they differ, like Apple's
+  `it` and Play's `it-IT`, the workflows need a mapping first.
+- Screenshots are `en-US` only and synced: every App Store screenshot that
+  wasn't captured, in any locale, is deleted. Other locales show the `en-US`
+  ones.
 - This is a fully automatic pipeline: once the release PR merges, the new
   version goes live on both stores (after store review) without further
   approval. Review the diff and release notes before merging.

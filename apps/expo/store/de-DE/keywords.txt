@@ -1,0 +1,1 @@
+wg,mitbewohner,haushalt,einkauf,einkaufszettel,ausgaben,geld,schulden,abrechnung,familie,paar,miete
