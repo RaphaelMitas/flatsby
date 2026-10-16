@@ -76,7 +76,7 @@ tags:
 # Delete takes a second tap to confirm
 - tapOn:
     id: "calendar-detail-delete"
-- assertVisible: "Tap again to delete it and its history"
+- assertVisible: "Press again to delete it and its history"
 - tapOn:
     id: "calendar-detail-delete"
 - extendedWaitUntil:

@@ -31,22 +31,28 @@ import {
   createCalendarItemSchema,
   expandOccurrences,
   isScheduledOn,
+  LONGEST_GAP_DAYS,
   setOccurrenceDoneSchema,
   setOccurrenceSkippedSchema,
   splitsSeries,
+  startsAfterEnd,
   updateCalendarItemSchema,
 } from "@flatsby/validators/calendar";
 
 import type { ApiError } from "../errors";
 import type { Database, DbTransaction, GroupMember } from "../types";
-import { fail, safeDbOperation, withErrorHandlingAsResult } from "../errors";
+import {
+  ConflictError,
+  Errors,
+  fail,
+  safeDbOperation,
+  withErrorHandlingAsResult,
+} from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { DbUtils, GroupUtils } from "../utils";
 
 const UPCOMING_COUNT = 5;
 const HISTORY_COUNT = 8;
-// The longest intervals are 365 days and 52 weeks, so this always reaches the next occurrence
-const UPCOMING_WINDOW_DAYS = 400;
 
 interface MemberContext {
   locale: Parameters<typeof withErrorHandlingAsResult>[0];
@@ -319,7 +325,7 @@ export const calendarRouter = createTRPCRouter({
       asMember(ctx, input.groupId, () =>
         Effect.flatMap(findItem(ctx.db, input.groupId, input.id), (item) =>
           safeDbOperation(async () => {
-            const until = addDays(input.today, UPCOMING_WINDOW_DAYS);
+            const until = addDays(input.today, LONGEST_GAP_DAYS);
             const [ahead, history] = await Promise.all([
               loadOverrides(
                 ctx.db,
@@ -332,7 +338,11 @@ export const calendarRouter = createTRPCRouter({
                 ctx.db,
                 and(
                   eq(calendarOccurrences.itemId, item.id),
-                  lte(calendarOccurrences.date, input.today),
+                  // Future skips stay listed so they can be undone
+                  or(
+                    lte(calendarOccurrences.date, input.today),
+                    eq(calendarOccurrences.skipped, true),
+                  ),
                 ),
                 HISTORY_COUNT,
               ),
@@ -384,7 +394,9 @@ export const calendarRouter = createTRPCRouter({
             // Tasks and events are different things, so an item can't switch
             if (input.kind !== previous.kind)
               return fail.validation("errors.unexpected");
-            return DbUtils.transaction(async (tx) => {
+            if (startsAfterEnd(previous, input))
+              return fail.conflict("errors.calendarSeriesReplaced");
+            const saved = DbUtils.transaction(async (tx) => {
               if (splitsSeries(previous, input, input.today)) {
                 const [ended] = await tx
                   .update(calendarItems)
@@ -396,7 +408,9 @@ export const calendarRouter = createTRPCRouter({
                     ),
                   )
                   .returning({ id: calendarItems.id });
-                if (!ended) throw new Error("Calendar series already split");
+                // Someone else's edit split it first
+                if (!ended)
+                  return Errors.conflict("errors.calendarSeriesReplaced");
                 const memberIds = continuedRotation(previous, input);
                 const next = await insertItem(
                   tx,
@@ -421,6 +435,11 @@ export const calendarRouter = createTRPCRouter({
               });
               return { id: input.id };
             }, "update calendar item")(ctx.db);
+            return Effect.flatMap(saved, (result) =>
+              result instanceof ConflictError
+                ? Effect.fail(result)
+                : Effect.succeed(result),
+            );
           },
         ),
       ),

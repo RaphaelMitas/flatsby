@@ -20,6 +20,7 @@ import {
   repeatFormOf,
   shiftMonth,
   splitsSeries,
+  startsAfterEnd,
   withSavedItem,
   withSkipped,
   withSplitSeries,
@@ -259,6 +260,19 @@ describe("splitsSeries", () => {
     expect(
       splitsSeries({ ...weekly, endsOn: "2026-10-12" }, tuesdays, today),
     ).toBe(false);
+  });
+});
+
+describe("startsAfterEnd", () => {
+  it("refuses to start an ended piece after its end", () => {
+    const ended = {
+      ...item({ type: "weekly", interval: 1, days: ["mo"] }),
+      endsOn: "2026-10-15",
+    };
+    expect(startsAfterEnd(ended, { ...ended, startsOn: "2026-10-16" })).toBe(
+      true,
+    );
+    expect(startsAfterEnd(ended, ended)).toBe(false);
   });
 });
 

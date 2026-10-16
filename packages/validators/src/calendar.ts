@@ -10,6 +10,8 @@ export const weekdaySchema = z.enum(weekdays);
 export type Weekday = z.infer<typeof weekdaySchema>;
 
 export const MAX_INTERVAL = { days: 365, weeks: 52 } as const;
+/** Far enough ahead to always reach a rule's next occurrence */
+export const LONGEST_GAP_DAYS = 7 * (MAX_INTERVAL.weeks + 1);
 
 // Stored as jsonb; a new kind of repeat is a new member here, not a migration
 export const recurrenceSchema = z.discriminatedUnion("type", [
@@ -375,13 +377,15 @@ export const sameSchedule = (a: Schedule, b: Schedule) =>
 const isRunning = (item: Series, today: string) =>
   item.recurrence !== null && item.endsOn === null && item.startsOn < today;
 
+/** A newer rule took over after `previous` ended, so it can't start past that. */
+export const startsAfterEnd = (previous: Series, next: Schedule) =>
+  previous.endsOn !== null && next.startsOn > previous.endsOn;
+
 /** A new schedule for a running series starts a new item, so the old one keeps its history. */
 export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
   isRunning(previous, today) &&
   !sameSchedule(previous, next) &&
   next.startsOn > previous.startsOn;
-
-const ROTATION_LOOKAHEAD_DAYS = 7 * MAX_INTERVAL.weeks + 7;
 
 /** The new series picks up the rotation where the old one would have been. */
 export function continuedRotation(
@@ -389,7 +393,7 @@ export function continuedRotation(
   next: Pick<ExpandableItem, "startsOn" | "memberIds">,
 ) {
   const start = toDayNumber(next.startsOn);
-  for (let day = start; day <= start + ROTATION_LOOKAHEAD_DAYS; day++) {
+  for (let day = start; day <= start + LONGEST_GAP_DAYS; day++) {
     const turn = turnOn(previous, fromDayNumber(day));
     if (turn === null) continue;
     const first = next.memberIds.indexOf(turn);

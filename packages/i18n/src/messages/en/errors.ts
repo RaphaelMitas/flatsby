@@ -28,6 +28,8 @@ export const errors = {
   onlyAdminsRemoveMembers:
     "Only group admins can remove other members. You can only remove yourself.",
   calendarDateNotScheduled: "That date is no longer on the schedule",
+  calendarSeriesReplaced:
+    "A newer repeat already took over from that date. Edit that one instead.",
   cannotRemoveLastAdmin: "Cannot remove the last admin from the group",
   promoteAdminFirst:
     "Cannot remove the last admin. Promote another member to admin first.",

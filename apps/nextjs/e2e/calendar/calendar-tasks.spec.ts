@@ -60,7 +60,7 @@ test.describe("Calendar", () => {
     const deleteButton = detail.getByTestId("calendar-detail-delete");
     await deleteButton.click();
     await expect(deleteButton).toHaveText(
-      "Tap again to delete it and its history",
+      "Press again to delete it and its history",
     );
     const deleted = writeSettled(authPage);
     await deleteButton.click();

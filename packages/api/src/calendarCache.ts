@@ -17,6 +17,7 @@ import {
   calendarRangeSchema,
   continuedRotation,
   splitsSeries,
+  startsAfterEnd,
   withDone,
   withoutItem,
   withSavedItem,
@@ -213,9 +214,10 @@ export const calendarPatches = {
     input: CreateCalendarItemInput & { id: number; today: string },
     findCachedItem: FindCachedItem,
   ): CalendarPatch => {
-    // Looked up across every cached month, so an item moving into a month it wasn't in still shows up there
+    // A month's cache may not hold the item, yet the edit can still reach into it
     const previous = findCachedItem(input.id);
-    if (!previous) return { range: (range) => range };
+    if (!previous || startsAfterEnd(previous, input))
+      return { range: (range) => range };
     if (splitsSeries(previous, input, input.today)) {
       const endsOn = addDays(input.startsOn, -1);
       const next = {
@@ -233,6 +235,7 @@ export const calendarPatches = {
                 upcoming: detail.upcoming.filter(
                   (occurrence) => occurrence.date <= endsOn,
                 ),
+                history: detail.history.filter((entry) => entry.date <= endsOn),
               }
             : detail,
       };
