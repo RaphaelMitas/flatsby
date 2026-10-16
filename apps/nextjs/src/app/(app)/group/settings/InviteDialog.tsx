@@ -90,7 +90,7 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
     resetMutation.isError || resetMutation.data?.success === false;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <p className="text-muted-foreground text-center text-sm">
         {t("invite.scanWithCamera")}
       </p>
