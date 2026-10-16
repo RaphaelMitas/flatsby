@@ -340,6 +340,17 @@ export const GroupUtils = {
       .where(eq(groups.id, groupId))
       .for("update"),
 
+  detachMemberFromItems: async (tx: DbTransaction, groupMemberId: number) => {
+    await tx
+      .update(shoppingListItems)
+      .set({ createdByGroupMemberId: null })
+      .where(eq(shoppingListItems.createdByGroupMemberId, groupMemberId));
+    await tx
+      .update(shoppingListItems)
+      .set({ completedByGroupMemberId: null })
+      .where(eq(shoppingListItems.completedByGroupMemberId, groupMemberId));
+  },
+
   deleteGroupExpenses: async (tx: DbTransaction, groupId: number) => {
     await tx
       .delete(expenseSplits)

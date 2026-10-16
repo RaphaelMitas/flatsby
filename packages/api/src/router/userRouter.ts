@@ -9,7 +9,6 @@ import {
   expenseSplits,
   groupMembers,
   sessions,
-  shoppingListItems,
   shoppingLists,
   users,
   verificationTokens,
@@ -212,7 +211,7 @@ export const userRouter = createTRPCRouter({
         DbUtils.transaction(async (trx) => {
           const user = ctx.session.user;
 
-          // Before the user row: deleteGroup locks its group, then updates users
+          // Lock groups before updating users, the order deleteGroup uses, so the two can't deadlock
           const userGroups = await trx
             .selectDistinct({ groupId: groupMembers.groupId })
             .from(groupMembers)
@@ -265,18 +264,7 @@ export const userRouter = createTRPCRouter({
             );
 
             if (otherMembers.length > 0) {
-              await trx
-                .update(shoppingListItems)
-                .set({ createdByGroupMemberId: null })
-                .where(
-                  eq(shoppingListItems.createdByGroupMemberId, groupMemberId),
-                );
-              await trx
-                .update(shoppingListItems)
-                .set({ completedByGroupMemberId: null })
-                .where(
-                  eq(shoppingListItems.completedByGroupMemberId, groupMemberId),
-                );
+              await GroupUtils.detachMemberFromItems(trx, groupMemberId);
             }
             if (isAdmin) {
               if (otherAdmins.length > 0) {

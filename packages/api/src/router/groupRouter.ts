@@ -270,26 +270,10 @@ export const groupRouter = createTRPCRouter({
                                 targetGroupMember.groupId,
                               );
 
-                              // Clean up shopping list item references
-                              await trx
-                                .update(shoppingListItems)
-                                .set({ completedByGroupMemberId: null })
-                                .where(
-                                  eq(
-                                    shoppingListItems.completedByGroupMemberId,
-                                    targetGroupMember.id,
-                                  ),
-                                );
-
-                              await trx
-                                .update(shoppingListItems)
-                                .set({ createdByGroupMemberId: null })
-                                .where(
-                                  eq(
-                                    shoppingListItems.createdByGroupMemberId,
-                                    targetGroupMember.id,
-                                  ),
-                                );
+                              await GroupUtils.detachMemberFromItems(
+                                trx,
+                                targetGroupMember.id,
+                              );
 
                               // Mark member as inactive instead of deleting
                               await trx

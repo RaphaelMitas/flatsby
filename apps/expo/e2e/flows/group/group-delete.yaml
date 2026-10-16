@@ -74,6 +74,16 @@ tags:
       CONFIRM_TEXT: "Spent Group"
 
 # The list hides the group optimistically, so relaunch to read what the server kept
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
+      TAB_X: "41%"
+- extendedWaitUntil:
+    visible:
+      id: "group-dashboard-title"
+    timeout: 15000
 - launchApp
 - extendedWaitUntil:
     visible: "E2E Test Group.*"
