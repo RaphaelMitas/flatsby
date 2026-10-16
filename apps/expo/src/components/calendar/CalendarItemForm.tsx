@@ -271,6 +271,7 @@ function ItemFields({
               : t("calendar.form.date")
           }
           value={pickerDate(startsOn)}
+          maximumDate={item?.endsOn ? pickerDate(item.endsOn) : undefined}
           onChange={(picked) => setPickedStart(localDate(picked))}
         />
         {!isTask && (

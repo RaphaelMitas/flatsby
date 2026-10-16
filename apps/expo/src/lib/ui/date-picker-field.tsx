@@ -11,6 +11,7 @@ interface DatePickerFieldProps {
   value: Date;
   onChange: (date: Date) => void;
   mode?: "date" | "time";
+  maximumDate?: Date;
   testID?: string;
 }
 
@@ -19,6 +20,7 @@ export function DatePickerField({
   value,
   onChange,
   mode = "date",
+  maximumDate,
   testID,
 }: DatePickerFieldProps) {
   const locale = useLocale();
@@ -44,6 +46,7 @@ export function DatePickerField({
           testID={testID}
           value={value}
           mode={mode}
+          maximumDate={maximumDate}
           display="default"
           themeVariant={colorScheme}
           className="border-input bg-background h-12 rounded-lg border px-3"
@@ -67,6 +70,7 @@ export function DatePickerField({
         <DateTimePicker
           value={value}
           mode={mode}
+          maximumDate={maximumDate}
           display="default"
           onValueChange={(_, selectedDate) => {
             setShowPicker(false);

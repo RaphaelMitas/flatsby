@@ -154,14 +154,6 @@ const asView = (
   memberIds,
 });
 
-const withoutUpcoming = (
-  detail: CalendarItemDetail,
-  date: string,
-): CalendarItemDetail => ({
-  ...detail,
-  upcoming: detail.upcoming.filter((occurrence) => occurrence.date !== date),
-});
-
 // Negative so it never collides with a real id before the refetch lands
 const temporaryId = () => -Date.now();
 
@@ -177,10 +169,6 @@ export const calendarPatches = {
         byGroupMemberId: me.groupMemberId,
         by: me.person,
       }),
-    detail: (detail) =>
-      detail.item.id === input.itemId && input.done
-        ? withoutUpcoming(detail, input.date)
-        : detail,
   }),
 
   setSkipped: (input: {
@@ -191,7 +179,13 @@ export const calendarPatches = {
     range: (range, window) => withSkipped(range, input, window),
     detail: (detail) => {
       if (detail.item.id !== input.itemId) return detail;
-      if (input.skipped) return withoutUpcoming(detail, input.date);
+      if (input.skipped)
+        return {
+          ...detail,
+          upcoming: detail.upcoming.filter(
+            (occurrence) => occurrence.date !== input.date,
+          ),
+        };
       return {
         ...detail,
         history: detail.history.filter(
@@ -222,6 +216,7 @@ export const calendarPatches = {
       const endsOn = addDays(input.startsOn, -1);
       const next = {
         ...asView(temporaryId(), input),
+        endsOn: previous.endsOn,
         memberIds: continuedRotation(previous, input),
       };
       return {

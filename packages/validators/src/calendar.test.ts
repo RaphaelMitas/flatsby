@@ -255,6 +255,12 @@ describe("splitsSeries", () => {
     ).toBe(false);
   });
 
+  it("splits a piece whose newer rule only takes over later", () => {
+    expect(
+      splitsSeries({ ...weekly, endsOn: "2026-11-01" }, tuesdays, today),
+    ).toBe(true);
+  });
+
   it("edits in place before the series started or once a newer rule took over", () => {
     expect(splitsSeries(weekly, tuesdays, "2026-10-06")).toBe(false);
     expect(

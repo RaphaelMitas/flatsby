@@ -373,11 +373,12 @@ const sameRecurrence = (a: Recurrence | null, b: Recurrence | null) =>
 export const sameSchedule = (a: Schedule, b: Schedule) =>
   a.startsOn === b.startsOn && sameRecurrence(a.recurrence, b.recurrence);
 
-// An ended series already has a newer rule after it, so it never splits again
 const isRunning = (item: Series, today: string) =>
-  item.recurrence !== null && item.endsOn === null && item.startsOn < today;
+  item.recurrence !== null &&
+  item.startsOn < today &&
+  (item.endsOn === null || item.endsOn >= today);
 
-/** A newer rule took over after `previous` ended, so it can't start past that. */
+// A newer rule takes over after `previous` ends
 export const startsAfterEnd = (previous: Series, next: Schedule) =>
   previous.endsOn !== null && next.startsOn > previous.endsOn;
 
@@ -394,7 +395,8 @@ export function continuedRotation(
 ) {
   const start = toDayNumber(next.startsOn);
   for (let day = start; day <= start + LONGEST_GAP_DAYS; day++) {
-    const turn = turnOn(previous, fromDayNumber(day));
+    // The old rule may already end before its next turn would come round
+    const turn = turnOn({ ...previous, endsOn: null }, fromDayNumber(day));
     if (turn === null) continue;
     const first = next.memberIds.indexOf(turn);
     return first <= 0

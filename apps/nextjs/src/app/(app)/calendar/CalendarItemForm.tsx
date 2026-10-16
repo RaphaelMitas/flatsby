@@ -153,7 +153,11 @@ export function CalendarItemForm({
             recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
           }
         >
-          <DatePopover value={startsOn} onSelect={setPickedStart}>
+          <DatePopover
+            value={startsOn}
+            max={item?.endsOn}
+            onSelect={setPickedStart}
+          >
             <Button
               type="button"
               variant="secondary"

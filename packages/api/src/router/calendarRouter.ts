@@ -195,11 +195,13 @@ const insertItem = async (
   tx: DbTransaction,
   input: z.infer<typeof createCalendarItemSchema>,
   createdByGroupMemberId: number,
+  endsOn: string | null = null,
 ) => {
   const [created] = await tx
     .insert(calendarItems)
     .values({
       ...itemValues(input),
+      endsOn,
       groupId: input.groupId,
       createdByGroupMemberId,
     })
@@ -336,14 +338,7 @@ export const calendarRouter = createTRPCRouter({
               ),
               loadOverrides(
                 ctx.db,
-                and(
-                  eq(calendarOccurrences.itemId, item.id),
-                  // Future skips stay listed so they can be undone
-                  or(
-                    lte(calendarOccurrences.date, input.today),
-                    eq(calendarOccurrences.skipped, true),
-                  ),
-                ),
+                eq(calendarOccurrences.itemId, item.id),
                 HISTORY_COUNT,
               ),
             ]);
@@ -404,7 +399,9 @@ export const calendarRouter = createTRPCRouter({
                   .where(
                     and(
                       eq(calendarItems.id, previous.id),
-                      isNull(calendarItems.endsOn),
+                      previous.endsOn === null
+                        ? isNull(calendarItems.endsOn)
+                        : eq(calendarItems.endsOn, previous.endsOn),
                     ),
                   )
                   .returning({ id: calendarItems.id });
@@ -412,15 +409,17 @@ export const calendarRouter = createTRPCRouter({
                 if (!ended)
                   return Errors.conflict("errors.calendarSeriesReplaced");
                 const memberIds = continuedRotation(previous, input);
+                // Squeezed in before a later change keeps that change's start
                 const next = await insertItem(
                   tx,
                   { ...input, memberIds },
                   member.id,
+                  previous.endsOn,
                 );
                 await carryOccurrences(tx, previous.id, {
                   ...input,
                   ...next,
-                  endsOn: null,
+                  endsOn: previous.endsOn,
                 });
                 return next;
               }
