@@ -25,6 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      AppStoreID: "6747908544",
       // The e2e suite talks to a plain-HTTP server on the runner, which App
       // Transport Security blocks in a Release build.
       ...(isE2E && {
