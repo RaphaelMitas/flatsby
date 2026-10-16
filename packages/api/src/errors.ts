@@ -6,6 +6,8 @@ import { z } from "zod/v4";
 
 import { translatorFor } from "@flatsby/i18n/translator";
 
+import { captureError } from "./lib/posthog";
+
 type MessageValues = Record<string, string | number>;
 
 interface Localized {
@@ -262,11 +264,11 @@ export const safeDbOperation = <T>(
 ): Effect.Effect<T, ApiError> => {
   return Effect.tryPromise({
     try: operation,
-    catch: (error) =>
-      fromUnknownError(
-        error,
-        `${operationName}${tableName ? ` on ${tableName}` : ""}`,
-      ),
+    catch: (error) => {
+      const operation = `${operationName}${tableName ? ` on ${tableName}` : ""}`;
+      captureError({ error, operation });
+      return fromUnknownError(error, operation);
+    },
   });
 };
 

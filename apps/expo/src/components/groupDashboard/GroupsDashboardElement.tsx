@@ -1,4 +1,3 @@
-import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
 import type React from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
@@ -7,15 +6,14 @@ import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import type { RouterOutputs } from "~/utils/api";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
 import { cn } from "~/lib/utils";
-import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { useDeleteGroup } from "~/utils/useDeleteGroup";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 
@@ -30,10 +28,8 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const t = useTranslations();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const swipeableRef = useRef<SwipeableMethods>(null);
-  const queryClient = useQueryClient();
   const router = useRouter();
-  const { selectedGroupId, setSelectedGroup, clearSelectedGroup } =
-    useShoppingStore();
+  const { selectedGroupId, setSelectedGroup } = useShoppingStore();
   const isOptimistic = group.id === -1;
 
   const { renderLeftActions, renderRightActions } = useSwipeActions({
@@ -49,53 +45,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
     },
   });
 
-  const onDeleteGroupError = (
-    previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
-  ) => {
-    queryClient.setQueryData(
-      trpc.group.getUserGroups.queryKey(),
-      previousGroups,
-    );
-  };
-
-  const deleteGroupMutation = useMutation(
-    trpc.group.deleteGroup.mutationOptions({
-      onMutate: () => {
-        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
-
-        const previousGroups = queryClient.getQueryData(
-          trpc.group.getUserGroups.queryKey(),
-        );
-
-        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
-          if (!old?.success) return old;
-          return {
-            success: true as const,
-            data: old.data.filter((g) => g.id !== group.id),
-          };
-        });
-
-        if (selectedGroupId === group.id) {
-          clearSelectedGroup();
-        }
-
-        return { previousGroups };
-      },
-      onSuccess: (data, _variables, context) => {
-        if (!data.success) {
-          onDeleteGroupError(context.previousGroups);
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.group.getUserGroups.queryOptions(),
-        );
-      },
-      onError: (_error, _variables, context) => {
-        onDeleteGroupError(context?.previousGroups);
-      },
-    }),
-  );
+  const deleteGroupMutation = useDeleteGroup();
 
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);

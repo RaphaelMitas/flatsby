@@ -4,6 +4,7 @@ import z from "zod/v4";
 import { alias, and, count, eq, inArray, isNull } from "@flatsby/db";
 import {
   expenses,
+  expenseSplits,
   groupInvites,
   groupMembers,
   groups,
@@ -459,23 +460,39 @@ export const groupRouter = createTRPCRouter({
                     ),
                   );
 
-                // Step 2: Delete group members
+                // Step 2: Delete expense splits and expenses
+                await trx
+                  .delete(expenseSplits)
+                  .where(
+                    inArray(
+                      expenseSplits.expenseId,
+                      trx
+                        .select({ id: expenses.id })
+                        .from(expenses)
+                        .where(eq(expenses.groupId, input.id)),
+                    ),
+                  );
+                await trx
+                  .delete(expenses)
+                  .where(eq(expenses.groupId, input.id));
+
+                // Step 3: Delete group members
                 await trx
                   .delete(groupMembers)
                   .where(eq(groupMembers.groupId, input.id));
 
-                // Step 3: Remove lastGroupUsed references
+                // Step 4: Remove lastGroupUsed references
                 await trx
                   .update(users)
                   .set({ lastGroupUsed: null, lastShoppingListUsed: null })
                   .where(eq(users.lastGroupUsed, input.id));
 
-                // Step 4: Delete shopping lists
+                // Step 5: Delete shopping lists
                 await trx
                   .delete(shoppingLists)
                   .where(eq(shoppingLists.groupId, input.id));
 
-                // Step 5: Delete the group
+                // Step 6: Delete the group
                 await trx.delete(groups).where(eq(groups.id, input.id));
 
                 return input.id;
