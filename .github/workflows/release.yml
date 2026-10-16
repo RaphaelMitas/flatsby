@@ -40,6 +40,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # CI may still be running on this push, and a missing or empty listing
+      # file would otherwise reach the stores as an empty field.
+      - name: Check store listing text
+        run: node scripts/check-store-text.mjs
+
       - name: Decide whether this push is a release
         id: decide
         env:
@@ -573,8 +578,6 @@ jobs:
           git commit -q -m "README screenshots for $TAG"
           git push --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" assets
 
-  # Sets each locale's listing text, uploads the captured en-US screenshots,
-  # and submits the EAS-delivered build for review with automatic release.
   # Runs whatever the screenshot job did: store listings keep their last
   # uploaded assets, so a failed capture must not block the review
   # submission; fresh screenshots ride along only when the job succeeded.
@@ -788,9 +791,6 @@ jobs:
         env:
           ASC_KEY_PATH: ${{ runner.temp }}/asc_key.json
 
-  # The Play counterpart of publish-ios: promotes the build EAS put on the
-  # internal track to production in one edit with each locale's listing text,
-  # which sends it to Google review and then live.
   # Like publish-ios, independent of the screenshot job's outcome: listing
   # text always goes up, fresh en-US screenshots only when captured.
   publish-android:
@@ -860,8 +860,6 @@ jobs:
         run: |
           printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/play_key.json"
           # supply sends files verbatim, so $(cat) drops the trailing newline.
-          # default.txt keeps Play's "What's New" in sync with the App Store
-          # text; --version_code pins it to the release EAS just submitted.
           for dir in apps/expo/store/*/; do
             out="store/metadata/android/$(basename "$dir")"
             mkdir -p "$out/changelogs"

@@ -28,7 +28,7 @@ for (const locale of locales) {
       errors.push(`${locale}/${file} is missing`);
       continue;
     }
-    const length = [...readFileSync(path, "utf8").trimEnd()].length;
+    const length = [...readFileSync(path, "utf8").replace(/\n+$/, "")].length;
     if (length === 0) errors.push(`${locale}/${file} is empty`);
     if (length > limit) {
       errors.push(`${locale}/${file} has ${length} characters, limit ${limit}`);

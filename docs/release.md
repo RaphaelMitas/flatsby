@@ -32,8 +32,9 @@ lands on main, `.github/workflows/release.yml` takes over:
    the App Store listing (en-US), sets the listing text and "What's New"
    for every locale from `apps/expo/store/<locale>/`, and submits the build
    for review with automatic release (retrying while Apple processes the
-   binary). `publish-android` uploads the screenshots, the same listing text
-   and the same release notes to Play and promotes the build from internal
+   binary). `publish-android` uploads the screenshots, the description and
+   release notes, and the Play title and short description from `play/` to
+   Play and promotes the build from internal
    to production, which sends it to Google review and then live at 100%
    (managed publishing is off). Landing the release on main therefore
    publishes everything with no manual step - edit
@@ -86,7 +87,9 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
 - A new locale is a new folder, plus one manual step on the App Store:
   deliver only creates a locale's name, subtitle and privacy URL when an
   existing locale's values changed in the same run, so add the language in
-  App Store Connect first.
+  App Store Connect first. The folder name must be a code both stores
+  accept (`fr-FR`, `es-ES`); for languages where they differ, like Apple's
+  `it` and Play's `it-IT`, the workflows need a mapping first.
 - Screenshots are `en-US` only and synced: every App Store screenshot that
   wasn't captured, in any locale, is deleted. Other locales show the `en-US`
   ones.
