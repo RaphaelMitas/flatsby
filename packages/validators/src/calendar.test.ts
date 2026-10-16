@@ -8,6 +8,7 @@ import type {
   Recurrence,
 } from "./calendar";
 import {
+  canComplete,
   describeRecurrence,
   entriesOn,
   expandOccurrences,
@@ -19,6 +20,7 @@ import {
   shiftMonth,
   turnOn,
   weekdayOf,
+  withDone,
   withRescheduled,
   withSavedItem,
 } from "./calendar";
@@ -386,5 +388,85 @@ describe("isScheduledOn", () => {
       recurrenceSchema.safeParse({ type: "weekly", interval: 53, days: ["mo"] })
         .success,
     ).toBe(false);
+  });
+});
+
+describe("afterDone ticking", () => {
+  const window = { from: "2026-10-01", to: "2026-10-31", today: "2026-10-16" };
+  const chore = {
+    ...item({ type: "afterDone", interval: 3 }, "2026-10-01", [1, 2]),
+    kind: "task" as const,
+    title: "Vacuum",
+    time: null,
+  };
+
+  it("lets only the next due occurrence be ticked", () => {
+    const overrides = [done("2026-10-14")];
+    const expanded = expandOccurrences(
+      chore,
+      overrides,
+      "2026-10-16",
+      "2026-10-22",
+      "2026-10-16",
+    );
+    expect(expanded.map((o) => [o.date, o.projected])).toEqual([
+      ["2026-10-17", false],
+      ["2026-10-20", true],
+    ]);
+    expect(canComplete(chore, overrides, "2026-10-17", "2026-10-16")).toBe(
+      true,
+    );
+    expect(canComplete(chore, overrides, "2026-10-20", "2026-10-16")).toBe(
+      false,
+    );
+    expect(
+      canComplete(chore, [done("2026-10-16")], "2026-10-19", "2026-10-16"),
+    ).toBe(false);
+  });
+
+  it("waits for a later start date even after it was done", () => {
+    expect(
+      dates({ ...chore, startsOn: "2026-10-25" }, "2026-10-01", "2026-10-31", [
+        done("2026-10-14"),
+      ]),
+    ).toEqual(["2026-10-14", "2026-10-25", "2026-10-28", "2026-10-31"]);
+  });
+
+  it("moves the tick to today and counts the next ones from there, like the server", () => {
+    const overrides = [done("2026-10-14")];
+    const range = {
+      items: [chore],
+      occurrences: expandOccurrences(
+        chore,
+        overrides,
+        "2026-10-01",
+        "2026-10-31",
+        "2026-10-16",
+      ),
+    };
+    const ticked = withDone(
+      range,
+      { itemId: 1, originalDate: "2026-10-17", done: true, byGroupMemberId: 2 },
+      window,
+    );
+    const server = expandOccurrences(
+      chore,
+      [...overrides, done("2026-10-16", 2)],
+      "2026-10-01",
+      "2026-10-31",
+      "2026-10-16",
+    );
+    const shape = (o: {
+      date: string;
+      turnGroupMemberId: number | null;
+      completedByGroupMemberId: number | null;
+      projected: boolean;
+    }) => [
+      o.date,
+      o.turnGroupMemberId,
+      o.completedByGroupMemberId,
+      o.projected,
+    ];
+    expect(ticked.occurrences.map(shape)).toEqual(server.map(shape));
   });
 });

@@ -1,21 +1,11 @@
-import type {
-  CalendarPatch,
-  CalendarSnapshot,
-} from "@flatsby/api/calendarCache";
+import type { CalendarPatch } from "@flatsby/api/calendarCache";
 import { Alert } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import {
-  calendarPatches,
-  patchCalendar,
-  restoreCalendar,
-} from "@flatsby/api/calendarCache";
+import { calendarMutation, calendarPatches } from "@flatsby/api/calendarCache";
 
 import { trpc } from "~/utils/api";
-
-type Result =
-  { success: true } | { success: false; error: { message: string } };
 
 export function useCalendarMutations(groupId: number, meId: number) {
   const queryClient = useQueryClient();
@@ -24,28 +14,10 @@ export function useCalendarMutations(groupId: number, meId: number) {
     ranges: trpc.calendar.range.queryFilter({ groupId }),
     details: trpc.calendar.item.queryFilter({ groupId }),
   };
-
-  const optimistic = <TInput>(patchFor: (input: TInput) => CalendarPatch) => ({
-    onMutate: (input: TInput) =>
-      patchCalendar(queryClient, filters, patchFor(input)),
-    onError: (_error: unknown, _input: TInput, snapshot?: CalendarSnapshot) => {
-      restoreCalendar(queryClient, snapshot);
-      Alert.alert(t("common.error"), t("errors.unexpected"));
-    },
-    onSuccess: (
-      result: Result,
-      _input: TInput,
-      snapshot?: CalendarSnapshot,
-    ) => {
-      if (result.success) return;
-      restoreCalendar(queryClient, snapshot);
-      Alert.alert(t("common.error"), result.error.message);
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries(filters.ranges);
-      void queryClient.invalidateQueries(filters.details);
-    },
-  });
+  const optimistic = <TInput>(patchFor: (input: TInput) => CalendarPatch) =>
+    calendarMutation(queryClient, filters, patchFor, (message) =>
+      Alert.alert(t("common.error"), message ?? t("errors.unexpected")),
+    );
 
   return {
     setDone: useMutation(

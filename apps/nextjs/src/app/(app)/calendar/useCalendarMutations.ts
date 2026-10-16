@@ -1,17 +1,10 @@
 "use client";
 
-import type { ApiResult } from "@flatsby/api";
-import type {
-  CalendarPatch,
-  CalendarSnapshot,
-} from "@flatsby/api/calendarCache";
+import type { CalendarPatch } from "@flatsby/api/calendarCache";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
-import {
-  calendarPatches,
-  patchCalendar,
-  restoreCalendar,
-} from "@flatsby/api/calendarCache";
+import { calendarMutation, calendarPatches } from "@flatsby/api/calendarCache";
 import { toast } from "@flatsby/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
@@ -19,36 +12,15 @@ import { useTRPC } from "~/trpc/react";
 export function useCalendarMutations(groupId: number, meId: number) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const t = useTranslations();
   const filters = {
     ranges: trpc.calendar.range.queryFilter({ groupId }),
     details: trpc.calendar.item.queryFilter({ groupId }),
   };
-
-  const optimistic = <TInput>(patchFor: (input: TInput) => CalendarPatch) => ({
-    onMutate: (input: TInput) =>
-      patchCalendar(queryClient, filters, patchFor(input)),
-    onError: (
-      error: { message: string },
-      _input: TInput,
-      snapshot: CalendarSnapshot | undefined,
-    ) => {
-      restoreCalendar(queryClient, snapshot);
-      toast.error(error.message);
-    },
-    onSuccess: (
-      result: ApiResult<unknown>,
-      _input: TInput,
-      snapshot: CalendarSnapshot,
-    ) => {
-      if (result.success) return;
-      restoreCalendar(queryClient, snapshot);
-      toast.error(result.error.message);
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries(filters.ranges);
-      void queryClient.invalidateQueries(filters.details);
-    },
-  });
+  const optimistic = <TInput>(patchFor: (input: TInput) => CalendarPatch) =>
+    calendarMutation(queryClient, filters, patchFor, (message) =>
+      toast.error(message ?? t("errors.unexpected")),
+    );
 
   return {
     setDone: useMutation(

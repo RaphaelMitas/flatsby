@@ -209,6 +209,7 @@ export function CalendarItemForm({
             {t("calendar.form.every")}
             <Input
               type="number"
+              required
               min={1}
               max={maxEvery(repeat)}
               value={everyText}

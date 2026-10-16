@@ -7,7 +7,13 @@ import type {
   CalendarRange,
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   keepPreviousData,
   useQuery,
@@ -109,26 +115,21 @@ function CalendarScreen({
     }
   }
 
-  const { from, to } = monthGrid(month);
-  const { data } = useQuery(
-    trpc.calendar.range.queryOptions(
-      { groupId, from, to, today },
-      { placeholderData: keepPreviousData },
-    ),
+  const rangeOptions = useCallback(
+    (visibleMonth: string) => {
+      const { from, to } = monthGrid(visibleMonth);
+      return trpc.calendar.range.queryOptions({ groupId, from, to, today });
+    },
+    [trpc, groupId, today],
   );
+  const { data } = useQuery({
+    ...rangeOptions(month),
+    placeholderData: keepPreviousData,
+  });
   useEffect(() => {
-    for (const delta of [-1, 1]) {
-      const neighbour = monthGrid(shiftMonth(month, delta));
-      void queryClient.prefetchQuery(
-        trpc.calendar.range.queryOptions({
-          groupId,
-          from: neighbour.from,
-          to: neighbour.to,
-          today,
-        }),
-      );
-    }
-  }, [queryClient, trpc, groupId, month, today]);
+    for (const delta of [-1, 1])
+      void queryClient.prefetchQuery(rangeOptions(shiftMonth(month, delta)));
+  }, [queryClient, rangeOptions, month]);
   const range = data?.success ? data.data : EMPTY_RANGE;
   const { setDone, reschedule, remove, create, update } = useCalendarMutations(
     groupId,
@@ -153,8 +154,10 @@ function CalendarScreen({
     selectDay(next === monthOf(today) ? today : `${next}-01`);
   };
 
-  const save = (input: CreateCalendarItemInput, id?: number) => {
+  const save = async (input: CreateCalendarItemInput, id?: number) => {
     if (id === undefined) {
+      // The optimistic row can only land in a month that is already cached
+      await queryClient.ensureQueryData(rangeOptions(monthOf(input.startsOn)));
       create.mutate(input);
       selectDay(input.startsOn);
     } else {
@@ -175,7 +178,7 @@ function CalendarScreen({
           item={current.item}
           defaultDate={selected}
           onCancel={() => setPanel(null)}
-          onSubmit={(input) => save(input, current.item?.id)}
+          onSubmit={(input) => void save(input, current.item?.id)}
         />
       );
     const { item, occurrence } = current.entry;

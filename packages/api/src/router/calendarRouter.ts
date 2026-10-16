@@ -24,6 +24,7 @@ import {
   calendarItemDetailSchema,
   calendarItemRefSchema,
   calendarRangeSchema,
+  canComplete,
   createCalendarItemSchema,
   expandOccurrences,
   isScheduledOn,
@@ -365,47 +366,65 @@ export const calendarRouter = createTRPCRouter({
           (item) => {
             if (item.kind !== "task")
               return fail.validation("errors.unexpected");
-            if (
-              input.done &&
-              item.recurrence?.type !== "afterDone" &&
-              !isScheduledOn(item, input.originalDate)
-            )
-              return fail.conflict("errors.calendarDateNotScheduled");
             // An afterDone chore counts from the day it was actually done
             const originalDate =
               input.done && item.recurrence?.type === "afterDone"
                 ? input.today
                 : input.originalDate;
-            return safeDbOperation(async () => {
-              if (input.done) {
-                const completion = {
-                  completedByGroupMemberId: member.id,
-                  completedAt: new Date(),
-                };
-                await ctx.db
-                  .insert(calendarOccurrences)
-                  .values({ itemId: item.id, originalDate, ...completion })
-                  .onConflictDoUpdate({
-                    target: [
-                      calendarOccurrences.itemId,
-                      calendarOccurrences.originalDate,
-                    ],
-                    set: completion,
-                  });
-              } else {
-                await ctx.db
-                  .update(calendarOccurrences)
-                  .set({ completedByGroupMemberId: null, completedAt: null })
-                  .where(
-                    and(
-                      eq(calendarOccurrences.itemId, item.id),
-                      eq(calendarOccurrences.originalDate, originalDate),
-                    ),
-                  );
-                await pruneOccurrence(ctx.db, item.id, originalDate);
-              }
-              return { itemId: item.id, originalDate };
-            }, "set calendar occurrence done");
+            const allowed = input.done
+              ? Effect.flatMap(
+                  safeDbOperation(
+                    () =>
+                      ctx.db.query.calendarOccurrences.findMany({
+                        columns: overrideColumns,
+                        where: eq(calendarOccurrences.itemId, item.id),
+                      }),
+                    "load calendar occurrences",
+                  ),
+                  (overrides) =>
+                    canComplete(
+                      item,
+                      overrides,
+                      input.originalDate,
+                      input.today,
+                    )
+                      ? Effect.void
+                      : fail.conflict("errors.calendarDateNotScheduled"),
+                )
+              : Effect.void;
+            return Effect.flatMap(allowed, () =>
+              safeDbOperation(async () => {
+                if (input.done) {
+                  const completion = {
+                    completedByGroupMemberId: member.id,
+                    completedAt: new Date(),
+                    skipped: false,
+                  };
+                  await ctx.db
+                    .insert(calendarOccurrences)
+                    .values({ itemId: item.id, originalDate, ...completion })
+                    .onConflictDoUpdate({
+                      target: [
+                        calendarOccurrences.itemId,
+                        calendarOccurrences.originalDate,
+                      ],
+                      set: completion,
+                    });
+                } else {
+                  await ctx.db
+                    .update(calendarOccurrences)
+                    .set({ completedByGroupMemberId: null, completedAt: null })
+                    .where(
+                      and(
+                        eq(calendarOccurrences.itemId, item.id),
+                        eq(calendarOccurrences.originalDate, originalDate),
+                      ),
+                    );
+                  await pruneOccurrence(ctx.db, item.id, originalDate);
+                }
+                return { itemId: item.id, originalDate };
+              }, "set calendar occurrence done"),
+            );
           },
         ),
       ),
@@ -420,7 +439,9 @@ export const calendarRouter = createTRPCRouter({
           (item) => {
             if (!item.recurrence || item.recurrence.type === "afterDone")
               return fail.validation("errors.unexpected");
-            if (!isScheduledOn(item, input.originalDate))
+            // Resetting must work even after an edit orphaned the row, so only real changes are checked
+            const resets = input.movedTo === null && !input.skipped;
+            if (!resets && !isScheduledOn(item, input.originalDate))
               return fail.conflict("errors.calendarDateNotScheduled");
             const change = { movedTo: input.movedTo, skipped: input.skipped };
             return safeDbOperation(async () => {

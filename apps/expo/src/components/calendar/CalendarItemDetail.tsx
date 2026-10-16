@@ -60,6 +60,7 @@ function DateRow({
   return (
     <Pressable
       disabled={!onPress}
+      accessible={!!onPress}
       accessibilityRole={onPress ? "button" : undefined}
       onPress={onPress}
       className={cn(
@@ -290,7 +291,11 @@ export function CalendarItemDetail({
           {moving && originalDate && (
             <DatePickerField
               label={t("calendar.form.date")}
-              value={pickerDate(originalDate)}
+              value={pickerDate(
+                upcoming.find(
+                  (occurrence) => occurrence.originalDate === originalDate,
+                )?.date ?? originalDate,
+              )}
               onChange={(date) => rescheduleTo(localDate(date))}
             />
           )}

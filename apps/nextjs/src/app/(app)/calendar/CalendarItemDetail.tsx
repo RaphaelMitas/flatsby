@@ -220,7 +220,7 @@ export function CalendarItemDetail({
         >
           {t("calendar.detail.edit")}
         </Button>
-        {canReschedule && (
+        {canReschedule && !entry.occurrence.completedAt && (
           <>
             <Button
               variant="outline"

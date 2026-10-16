@@ -1,5 +1,15 @@
+import type { Page } from "@playwright/test";
+
 import { expect, test } from "../fixtures/auth";
 import { waitForHydration } from "../helpers/hydration";
+
+// The month is refetched once a write settles; reloading any earlier can abort the write
+const writeSettled = (page: Page) =>
+  page.waitForResponse(
+    (response) =>
+      response.url().includes("calendar.range") &&
+      response.request().method() === "GET",
+  );
 
 test.describe("Calendar", () => {
   test("creates a weekly task, ticks it off and deletes it", async ({
@@ -29,16 +39,13 @@ test.describe("Calendar", () => {
       "0 of 1 done",
     );
 
-    // The tick shows before the server has it, so reloading early would drop it
-    const saved = authPage.waitForResponse((response) =>
-      response.url().includes("calendar.setDone"),
-    );
+    const ticked = writeSettled(authPage);
     await row.getByTestId("calendar-entry-toggle").click();
     await expect(authPage.getByTestId("calendar-day-progress")).toHaveText(
       "1 of 1 done",
     );
     await expect(row).toContainText("Done by");
-    await saved;
+    await ticked;
 
     await authPage.reload();
     await expect(authPage.getByTestId("calendar-day-progress")).toHaveText(
@@ -55,9 +62,7 @@ test.describe("Calendar", () => {
     await expect(deleteButton).toHaveText(
       "Tap again to delete it and its history",
     );
-    const deleted = authPage.waitForResponse((response) =>
-      response.url().includes("calendar.delete"),
-    );
+    const deleted = writeSettled(authPage);
     await deleteButton.click();
 
     await expect(row).toHaveCount(0);

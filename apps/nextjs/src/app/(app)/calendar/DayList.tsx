@@ -156,7 +156,7 @@ function EntryRow({
       {isTask ? (
         <Checkbox
           checked={done}
-          disabled={pending}
+          disabled={pending || occurrence.projected}
           onCheckedChange={(checked) => onToggle(entry, checked === true)}
           aria-label={item.title}
           data-testid="calendar-entry-toggle"

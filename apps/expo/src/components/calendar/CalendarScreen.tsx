@@ -6,6 +6,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
+  calendarDateSchema,
   daySummary,
   entriesOn,
   formatCalendarDate,
@@ -70,8 +71,10 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
 
   useEffect(() => {
     if (!jumpTo) return;
-    setSelected(jumpTo);
-    setMonth(monthOf(jumpTo));
+    if (calendarDateSchema.safeParse(jumpTo).success) {
+      setSelected(jumpTo);
+      setMonth(monthOf(jumpTo));
+    }
     router.setParams({ date: undefined });
   }, [jumpTo, router]);
 
@@ -158,7 +161,11 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
           />
         </View>
 
-        {shown.length > 0 ? (
+        {data?.success === false ? (
+          <Text className="text-destructive text-center">
+            {data.error.message}
+          </Text>
+        ) : shown.length > 0 ? (
           <View className="border-border overflow-hidden rounded-lg border">
             {shown.map((entry, index) => (
               <View
@@ -183,7 +190,10 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
                       pathname: "/(tabs)/calendar/[itemId]",
                       params: {
                         itemId: String(entry.item.id),
-                        date: entry.occurrence.originalDate,
+                        // Only an open occurrence can be skipped or moved
+                        ...(!entry.occurrence.completedAt && {
+                          date: entry.occurrence.originalDate,
+                        }),
                       },
                     })
                   }

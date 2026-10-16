@@ -193,6 +193,8 @@ export interface Occurrence {
   turnGroupMemberId: number | null;
   completedByGroupMemberId: number | null;
   completedAt: Date | null;
+  /** A forecast of an afterDone chore past its next due date, which can't be done yet */
+  projected: boolean;
 }
 
 const turnFor = (memberIds: number[], ordinal: number | null) =>
@@ -228,6 +230,19 @@ export function turnOn(
 export const isScheduledOn = (item: ExpandableItem, date: string) =>
   scheduledOrdinal(item.startsOn, item.recurrence, toDayNumber(date)) !== null;
 
+/** Whether ticking the occurrence that originally fell on `date` is allowed; afterDone items need every completion in `overrides`. */
+export function canComplete(
+  item: ExpandableItem,
+  overrides: OccurrenceOverride[],
+  date: string,
+  today: string,
+) {
+  if (item.recurrence?.type !== "afterDone") return isScheduledOn(item, date);
+  return expandOccurrences(item, overrides, date, date, today).some(
+    (occurrence) => !occurrence.completedAt && !occurrence.projected,
+  );
+}
+
 /** Overrides must hold every row whose originalDate or movedTo is in range, and for afterDone items every completion. */
 export function expandOccurrences(
   item: ExpandableItem,
@@ -241,6 +256,7 @@ export function expandOccurrences(
     date: string,
     ordinal: number | null,
     override?: OccurrenceOverride,
+    projected = false,
   ): Occurrence => ({
     itemId: item.id,
     originalDate,
@@ -248,6 +264,7 @@ export function expandOccurrences(
     turnGroupMemberId: turnFor(item.memberIds, ordinal),
     completedByGroupMemberId: override?.completedByGroupMemberId ?? null,
     completedAt: override?.completedAt ?? null,
+    projected,
   });
   const first = toDayNumber(from);
   const last = toDayNumber(to);
@@ -263,10 +280,14 @@ export function expandOccurrences(
         );
     });
     const lastDone = done.at(-1);
-    const due = lastDone
-      ? toDayNumber(lastDone.originalDate) + interval
-      : toDayNumber(item.startsOn);
-    let day = Math.max(due, toDayNumber(today));
+    const due = Math.max(
+      lastDone ? toDayNumber(lastDone.originalDate) + interval : 0,
+      toDayNumber(item.startsOn),
+    );
+    const nextDue = Math.max(due, toDayNumber(today));
+    // Done today already, so doing it again would only overwrite today's completion
+    const doneToday = lastDone?.originalDate === today;
+    let day = nextDue;
     let ordinal = done.length;
     if (day < first) {
       const skip = Math.ceil((first - day) / interval);
@@ -275,7 +296,15 @@ export function expandOccurrences(
     }
     for (; day <= last; day += interval, ordinal++) {
       const date = fromDayNumber(day);
-      occurrences.push(occurrence(date, date, ordinal));
+      occurrences.push(
+        occurrence(
+          date,
+          date,
+          ordinal,
+          undefined,
+          doneToday || day !== nextDue,
+        ),
+      );
     }
     return occurrences;
   }
@@ -447,7 +476,23 @@ const sameOccurrence =
   (itemId: number, originalDate: string) => (occurrence: Occurrence) =>
     occurrence.itemId === itemId && occurrence.originalDate === originalDate;
 
-export const withDone = (
+const cachedOverrides = (range: CalendarRange, itemId: number) =>
+  range.occurrences
+    .filter(
+      (occurrence) =>
+        occurrence.itemId === itemId &&
+        (occurrence.completedAt || occurrence.date !== occurrence.originalDate),
+    )
+    .map((occurrence) => ({
+      originalDate: occurrence.originalDate,
+      movedTo:
+        occurrence.date === occurrence.originalDate ? null : occurrence.date,
+      skipped: false,
+      completedByGroupMemberId: occurrence.completedByGroupMemberId,
+      completedAt: occurrence.completedAt,
+    }));
+
+export function withDone(
   range: CalendarRange,
   change: {
     itemId: number;
@@ -455,18 +500,61 @@ export const withDone = (
     done: boolean;
     byGroupMemberId: number;
   },
-): CalendarRange => ({
-  ...range,
-  occurrences: range.occurrences.map((occurrence) =>
-    sameOccurrence(change.itemId, change.originalDate)(occurrence)
-      ? {
-          ...occurrence,
-          completedByGroupMemberId: change.done ? change.byGroupMemberId : null,
-          completedAt: change.done ? new Date() : null,
-        }
-      : occurrence,
-  ),
-});
+  { from, to, today }: { from: string; to: string; today: string },
+): CalendarRange {
+  const matches = sameOccurrence(change.itemId, change.originalDate);
+  const item = range.items.find((cached) => cached.id === change.itemId);
+  const completion = {
+    completedByGroupMemberId: change.done ? change.byGroupMemberId : null,
+    completedAt: change.done ? new Date() : null,
+  };
+  if (item?.recurrence?.type !== "afterDone" || !change.done)
+    return {
+      ...range,
+      occurrences: range.occurrences.map((occurrence) =>
+        matches(occurrence) ? { ...occurrence, ...completion } : occurrence,
+      ),
+    };
+
+  // The server records an afterDone chore on today and counts the next ones from there
+  const { interval } = item.recurrence;
+  const ticked = range.occurrences.find(matches);
+  const turnIndex = item.memberIds.indexOf(ticked?.turnGroupMemberId ?? -1);
+  const turnAfter = (steps: number) =>
+    turnIndex === -1
+      ? null
+      : (item.memberIds[(turnIndex + steps) % item.memberIds.length] ?? null);
+  const forecasts: Occurrence[] = [];
+  for (
+    let day = toDayNumber(today), steps = 0;
+    day <= toDayNumber(to);
+    day += interval, steps++
+  ) {
+    const date = fromDayNumber(day);
+    if (date >= from)
+      forecasts.push({
+        itemId: item.id,
+        originalDate: date,
+        date,
+        turnGroupMemberId: turnAfter(steps),
+        ...(steps === 0
+          ? completion
+          : { completedByGroupMemberId: null, completedAt: null }),
+        projected: steps > 0,
+      });
+  }
+  return {
+    ...range,
+    occurrences: [
+      ...range.occurrences.filter(
+        (occurrence) =>
+          occurrence.itemId !== item.id ||
+          (occurrence.completedAt && occurrence.originalDate < today),
+      ),
+      ...forecasts,
+    ].sort((a, b) => a.date.localeCompare(b.date)),
+  };
+}
 
 /** Also brings back an un-skipped occurrence, which the cache no longer holds. */
 export function withRescheduled(
@@ -493,6 +581,7 @@ export function withRescheduled(
     turnGroupMemberId: turnOn(item, [], change.originalDate),
     completedByGroupMemberId: null,
     completedAt: null,
+    projected: false,
   };
   return {
     ...range,
@@ -547,7 +636,13 @@ export function withSavedItem(
     items: [...rest.items, item],
     occurrences: [
       ...rest.occurrences,
-      ...expandOccurrences(item, [], from, to, today),
+      ...expandOccurrences(
+        item,
+        cachedOverrides(range, item.id),
+        from,
+        to,
+        today,
+      ),
     ],
   };
 }

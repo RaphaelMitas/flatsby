@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 import { useState, useSyncExternalStore } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
@@ -17,6 +17,7 @@ import {
   describeRecurrence,
   localDate,
   maxEvery,
+  monthOf,
   newRepeatForm,
   pickerDate,
   recurrenceOf,
@@ -42,6 +43,7 @@ import { trpc } from "~/utils/api";
 import { MemberAvatar } from "../expenses/MemberAvatar";
 import { fromPickerTime, pickerTime } from "./calendarDates";
 import { useCalendarPeople } from "./CalendarPeople";
+import { calendarRangeOptions } from "./CalendarScreen";
 import { useCalendarMutations } from "./useCalendarMutations";
 
 const DEFAULT_TIME = "19:00";
@@ -146,6 +148,7 @@ function ItemFields({
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const people = useCalendarPeople(group);
   const { create, update } = useCalendarMutations(group.id, people.meId);
 
@@ -179,13 +182,17 @@ function ItemFields({
   };
   const valid = createCalendarItemSchema.safeParse(input).success;
 
-  const save = () => {
+  const save = async () => {
     if (!valid) return;
     const trimmed = { ...input, title: title.trim() };
     if (item) {
       update.mutate({ ...trimmed, id: item.id });
       router.dismissTo("/(tabs)/calendar");
     } else {
+      // The optimistic row can only land in a month that is already cached
+      await queryClient.ensureQueryData(
+        calendarRangeOptions(group.id, monthOf(startsOn), localDate()),
+      );
       create.mutate(trimmed);
       router.dismissTo({
         pathname: "/(tabs)/calendar",
@@ -413,7 +420,7 @@ function ItemFields({
         size="lg"
         disabled={!valid}
         title={item ? t("calendar.form.save") : t("calendar.form.create")}
-        onPress={save}
+        onPress={() => void save()}
       />
     </AppScrollView>
   );

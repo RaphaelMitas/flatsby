@@ -36,10 +36,18 @@ export interface CalendarPatch {
 
 export type CalendarSnapshot = [QueryKey, unknown][];
 
+interface CalendarFilters {
+  ranges: QueryFilters;
+  details: QueryFilters;
+}
+
+// tRPC keys mutations by path, so this prefix matches every calendar write
+const calendarMutationKey = [["calendar"]];
+
 /** Applies one change to every cached month and item detail of the group, so nothing on screen lags behind. */
 export async function patchCalendar(
   queryClient: QueryClient,
-  filters: { ranges: QueryFilters; details: QueryFilters },
+  filters: CalendarFilters,
   patch: CalendarPatch,
 ): Promise<CalendarSnapshot> {
   await Promise.all([
@@ -96,13 +104,45 @@ const asView = (
   memberIds,
 });
 
+/** Mutation callbacks for one calendar write; `onFailure` gets null when the request itself failed. */
+export const calendarMutation = <TInput>(
+  queryClient: QueryClient,
+  filters: CalendarFilters,
+  patchFor: (input: TInput) => CalendarPatch,
+  onFailure: (message: string | null) => void,
+) => ({
+  onMutate: (input: TInput) =>
+    patchCalendar(queryClient, filters, patchFor(input)),
+  onError: (_error: unknown, _input: TInput, snapshot?: CalendarSnapshot) => {
+    restoreCalendar(queryClient, snapshot);
+    onFailure(null);
+  },
+  onSuccess: (
+    result: ApiResult<unknown>,
+    _input: TInput,
+    snapshot?: CalendarSnapshot,
+  ) => {
+    if (result.success) return;
+    restoreCalendar(queryClient, snapshot);
+    onFailure(result.error.message);
+  },
+  onSettled: () => {
+    // A refetch while another write is in flight would briefly show the older server state
+    if (queryClient.isMutating({ mutationKey: calendarMutationKey }) > 1)
+      return;
+    void queryClient.invalidateQueries(filters.ranges);
+    void queryClient.invalidateQueries(filters.details);
+  },
+});
+
 /** The optimistic side of each calendar mutation, shared by both clients. */
 export const calendarPatches = {
   setDone: (
     input: { itemId: number; originalDate: string; done: boolean },
     byGroupMemberId: number,
   ): CalendarPatch => ({
-    range: (range) => withDone(range, { ...input, byGroupMemberId }),
+    range: (range, window) =>
+      withDone(range, { ...input, byGroupMemberId }, window),
   }),
 
   reschedule: (input: {
