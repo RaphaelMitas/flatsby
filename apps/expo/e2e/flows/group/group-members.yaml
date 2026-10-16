@@ -66,5 +66,5 @@ tags:
     id: "join-invite-button"
 - extendedWaitUntil:
     visible:
-      id: "shopping-list-create-button"
+      id: "dashboard-group-picker"
     timeout: 20000
