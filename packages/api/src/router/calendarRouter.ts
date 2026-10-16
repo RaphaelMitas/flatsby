@@ -11,6 +11,7 @@ import {
   inArray,
   isNotNull,
   isNull,
+  ne,
   or,
 } from "@flatsby/db";
 import {
@@ -278,7 +279,12 @@ export const calendarRouter = createTRPCRouter({
                 .sort((a, b) => a.date.localeCompare(b.date))
                 .slice(0, UPCOMING_COUNT),
               history: overrides
-                .filter((row) => row.completedAt || row.skipped)
+                .filter(
+                  (row) =>
+                    row.completedAt ||
+                    // A skip that raced a schedule edit can outlive its rule
+                    (row.skipped && isScheduledOn(item, row.originalDate)),
+                )
                 .sort((a, b) => b.originalDate.localeCompare(a.originalDate))
                 .slice(0, HISTORY_COUNT)
                 .map((row) => ({
@@ -335,16 +341,24 @@ export const calendarRouter = createTRPCRouter({
                 .set(itemValues(input))
                 .where(eq(calendarItems.id, input.id));
               await writeMembers(tx, input.id, input.memberIds);
-              // Skips and moves belong to the old rule; completions stay as history
-              if (!sameSchedule(previous, input))
+              const scheduleChanged = !sameSchedule(previous, input);
+              const stale = or(
+                // Skips and moves belong to the old rule; completions stay as history
+                scheduleChanged
+                  ? isNull(calendarOccurrences.completedAt)
+                  : undefined,
+                // A one-off only ever loads around its own date, so other completions would show in some months only
+                scheduleChanged && input.recurrence === null
+                  ? ne(calendarOccurrences.originalDate, input.startsOn)
+                  : undefined,
+                input.kind === "event"
+                  ? isNotNull(calendarOccurrences.completedAt)
+                  : undefined,
+              );
+              if (stale)
                 await tx
                   .delete(calendarOccurrences)
-                  .where(
-                    and(
-                      eq(calendarOccurrences.itemId, input.id),
-                      isNull(calendarOccurrences.completedAt),
-                    ),
-                  );
+                  .where(and(eq(calendarOccurrences.itemId, input.id), stale));
               return { id: input.id };
             }, "update calendar item")(ctx.db),
         ),

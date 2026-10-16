@@ -374,6 +374,42 @@ describe("withSavedItem", () => {
     expect(once.occurrences.map((o) => o.date)).toEqual(["2026-10-05"]);
   });
 
+  it("clears ticks when a task becomes an event or a done one-off moves, like the server", () => {
+    const weekly = view({ type: "weekly", interval: 1, days: ["mo"] });
+    const ticked = withDone(
+      withSavedItem({ items: [], occurrences: [] }, weekly, window),
+      {
+        itemId: 1,
+        originalDate: "2026-10-05",
+        done: true,
+        byGroupMemberId: 1,
+      },
+      window,
+    );
+    const event = withSavedItem(ticked, { ...weekly, kind: "event" }, window);
+    expect(event.occurrences.some((o) => o.completedAt)).toBe(false);
+
+    const once = { ...weekly, recurrence: null };
+    const doneOnce = withDone(
+      withSavedItem({ items: [], occurrences: [] }, once, window),
+      {
+        itemId: 1,
+        originalDate: "2026-10-05",
+        done: true,
+        byGroupMemberId: 1,
+      },
+      window,
+    );
+    const moved = withSavedItem(
+      doneOnce,
+      { ...once, startsOn: "2026-10-20" },
+      window,
+    );
+    expect(moved.occurrences.map((o) => [o.date, !!o.completedAt])).toEqual([
+      ["2026-10-20", false],
+    ]);
+  });
+
   it("re-deals turns when the rotation changes", () => {
     const weekly = view({ type: "weekly", interval: 1, days: ["mo"] }, [1, 2]);
     const cached = withSavedItem(

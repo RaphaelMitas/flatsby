@@ -636,33 +636,40 @@ export function withSavedItem(
 ): CalendarRange {
   const previous = range.items.find((cached) => cached.id === item.id);
   const rest = withoutItem(range, item.id);
+  const isEvent = item.kind === "event";
   if (previous && sameSchedule(previous, item)) {
     const membersChanged = previous.memberIds.join() !== item.memberIds.join();
+    const redealsTurns =
+      membersChanged && item.recurrence?.type !== "afterDone";
     return {
       items: [...rest.items, item],
       occurrences: range.occurrences.map((occurrence) =>
-        occurrence.itemId === item.id &&
-        membersChanged &&
-        item.recurrence?.type !== "afterDone"
+        occurrence.itemId === item.id && (redealsTurns || isEvent)
           ? {
               ...occurrence,
-              turnGroupMemberId: turnOn(item, [], occurrence.originalDate),
+              ...(redealsTurns && {
+                turnGroupMemberId: turnOn(item, [], occurrence.originalDate),
+              }),
+              ...(isEvent && {
+                completedByGroupMemberId: null,
+                completedAt: null,
+              }),
             }
           : occurrence,
       ),
     };
   }
+  // Mirrors the server: events keep no completions, a one-off only its own
+  const completions = cachedCompletions(range, item.id).filter(
+    (completion) =>
+      !isEvent &&
+      (item.recurrence !== null || completion.originalDate === item.startsOn),
+  );
   return {
     items: [...rest.items, item],
     occurrences: [
       ...rest.occurrences,
-      ...expandOccurrences(
-        item,
-        cachedCompletions(range, item.id),
-        from,
-        to,
-        today,
-      ),
+      ...expandOccurrences(item, completions, from, to, today),
     ],
   };
 }
