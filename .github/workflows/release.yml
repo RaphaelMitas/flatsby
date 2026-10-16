@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v7
 
       # CI may still be running on this push, and a missing or empty listing
-      # file would otherwise reach the stores as an empty field.
+      # file would otherwise reach Play as an empty field.
       - name: Check store listing text
         run: node scripts/check-store-text.mjs
 
