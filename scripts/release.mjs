@@ -106,7 +106,7 @@ Dry run; nothing written or pushed. A real run would:
   }
   3. on merge to main, the Release workflow tags v${next}, builds + submits
      via EAS (iOS review + Play production), and uploads store screenshots
-     to both listings (release notes: apps/expo/store/release-notes.txt)`);
+     to both listings (listing text: apps/expo/store/<locale>/)`);
   process.exit(0);
 }
 
@@ -131,7 +131,7 @@ if (direct) {
     "2. run EAS production builds and submit them (iOS review + Play production)",
     "3. capture store screenshots and upload them to both store listings",
     "",
-    'Check apps/expo/store/release-notes.txt before merging - it becomes the "What\'s New" text on both stores, and the release goes live on both after store review.',
+    'Check apps/expo/store/<locale>/release_notes.txt for every locale before merging - it becomes the "What\'s New" text on both stores, and the release goes live on both after store review.',
   ].join("\n");
   console.log(
     run("gh", [

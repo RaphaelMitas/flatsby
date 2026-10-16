@@ -1,0 +1,1 @@
+roommate,flatmate,household,grocery,shopping,expense,split,debt,family,couple,rent,flat,home
