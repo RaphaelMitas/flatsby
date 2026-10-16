@@ -5,15 +5,19 @@ import type {
 import type { Ref } from "react";
 import { BottomSheetBackdrop, BottomSheetModal } from "@gorhom/bottom-sheet";
 import { styled } from "nativewind";
+import { tv } from "tailwind-variants";
 
-import { bottomSheetVariants } from "~/lib/ui/bottom-sheet-picker";
 import { useThemeColors } from "~/lib/utils";
+
+export const bottomSheetVariants = tv({
+  base: "bg-background border-2 border-muted rounded-t-3xl",
+});
 
 const StyledSheet = styled(BottomSheetModal, {
   className: { target: "backgroundStyle" },
 });
 
-const renderBackdrop = (props: BottomSheetBackdropProps) => (
+export const renderBackdrop = (props: BottomSheetBackdropProps) => (
   <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />
 );
 

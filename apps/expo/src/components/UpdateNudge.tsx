@@ -45,7 +45,6 @@ export function UpdateNudge() {
 
   const update = () => {
     posthog.capture("update_nudge_update", { storeVersion });
-    sheetRef.current?.dismiss();
     void ExpoInAppUpdates.startUpdate(true);
   };
 
