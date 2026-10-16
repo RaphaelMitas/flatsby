@@ -270,26 +270,10 @@ export const groupRouter = createTRPCRouter({
                                 targetGroupMember.groupId,
                               );
 
-                              // Clean up shopping list item references
-                              await trx
-                                .update(shoppingListItems)
-                                .set({ completedByGroupMemberId: null })
-                                .where(
-                                  eq(
-                                    shoppingListItems.completedByGroupMemberId,
-                                    targetGroupMember.id,
-                                  ),
-                                );
-
-                              await trx
-                                .update(shoppingListItems)
-                                .set({ createdByGroupMemberId: null })
-                                .where(
-                                  eq(
-                                    shoppingListItems.createdByGroupMemberId,
-                                    targetGroupMember.id,
-                                  ),
-                                );
+                              await GroupUtils.detachMemberFromItems(
+                                trx,
+                                targetGroupMember.id,
+                              );
 
                               // Mark member as inactive instead of deleting
                               await trx
@@ -446,37 +430,7 @@ export const groupRouter = createTRPCRouter({
                 // Same lock order as joins and removals, which lock the group before its rows
                 await GroupUtils.lockGroup(trx, input.id);
 
-                // Step 1: Delete shopping list items
-                await trx
-                  .delete(shoppingListItems)
-                  .where(
-                    inArray(
-                      shoppingListItems.shoppingListId,
-                      trx
-                        .select({ id: shoppingLists.id })
-                        .from(shoppingLists)
-                        .where(eq(shoppingLists.groupId, input.id)),
-                    ),
-                  );
-
-                // Step 2: Delete group members
-                await trx
-                  .delete(groupMembers)
-                  .where(eq(groupMembers.groupId, input.id));
-
-                // Step 3: Remove lastGroupUsed references
-                await trx
-                  .update(users)
-                  .set({ lastGroupUsed: null, lastShoppingListUsed: null })
-                  .where(eq(users.lastGroupUsed, input.id));
-
-                // Step 4: Delete shopping lists
-                await trx
-                  .delete(shoppingLists)
-                  .where(eq(shoppingLists.groupId, input.id));
-
-                // Step 5: Delete the group
-                await trx.delete(groups).where(eq(groups.id, input.id));
+                await GroupUtils.deleteGroupData(trx, input.id);
 
                 return input.id;
               }, "delete group and all related data")(ctx.db),

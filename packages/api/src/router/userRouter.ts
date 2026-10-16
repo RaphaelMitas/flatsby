@@ -8,9 +8,7 @@ import {
   expenses,
   expenseSplits,
   groupMembers,
-  groups,
   sessions,
-  shoppingListItems,
   shoppingLists,
   users,
   verificationTokens,
@@ -41,7 +39,7 @@ import {
 } from "../errors";
 import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, safeDbOperation } from "../utils";
+import { DbUtils, GroupUtils, safeDbOperation } from "../utils";
 import { autumn, checkCredits } from "../utils/autumn";
 
 // i18n-ignore: plan names are Autumn product names like "Pro", not copy
@@ -213,6 +211,16 @@ export const userRouter = createTRPCRouter({
         DbUtils.transaction(async (trx) => {
           const user = ctx.session.user;
 
+          // Lock groups before updating users, the order deleteGroup uses, so the two can't deadlock
+          const userGroups = await trx
+            .selectDistinct({ groupId: groupMembers.groupId })
+            .from(groupMembers)
+            .where(eq(groupMembers.userId, user.id))
+            .orderBy(groupMembers.groupId);
+          for (const { groupId } of userGroups) {
+            await GroupUtils.lockGroup(trx, groupId);
+          }
+
           // Clear user's last used references
           await trx
             .update(users)
@@ -230,34 +238,14 @@ export const userRouter = createTRPCRouter({
             },
             with: {
               group: {
-                columns: {
-                  id: true,
-                  name: true,
-                },
+                columns: { id: true },
                 with: {
                   groupMembers: {
                     where: ne(groupMembers.userId, user.id),
                     columns: {
                       id: true,
-                      userId: true,
                       role: true,
                       joinedOn: true,
-                    },
-                  },
-                  shoppingLists: {
-                    columns: {
-                      id: true,
-                      name: true,
-                    },
-                    with: {
-                      shoppingListItems: {
-                        columns: {
-                          id: true,
-                          shoppingListId: true,
-                          createdByGroupMemberId: true,
-                          completedByGroupMemberId: true,
-                        },
-                      },
                     },
                   },
                 },
@@ -276,49 +264,7 @@ export const userRouter = createTRPCRouter({
             );
 
             if (otherMembers.length > 0) {
-              // Set `createdByGroupMemberId` and `completedByGroupMemberId` to null
-              const affectedShoppingListItemIds = group.shoppingLists
-                .flatMap((list) => list.shoppingListItems)
-                .filter(
-                  (item) =>
-                    item.createdByGroupMemberId === groupMemberId ||
-                    item.completedByGroupMemberId === groupMemberId,
-                )
-                .map((item) => item.id);
-
-              if (affectedShoppingListItemIds.length > 0) {
-                await trx
-                  .update(shoppingListItems)
-                  .set({ createdByGroupMemberId: null })
-                  .where(
-                    and(
-                      inArray(
-                        shoppingListItems.id,
-                        affectedShoppingListItemIds,
-                      ),
-                      eq(
-                        shoppingListItems.createdByGroupMemberId,
-                        groupMemberId,
-                      ),
-                    ),
-                  );
-
-                await trx
-                  .update(shoppingListItems)
-                  .set({ completedByGroupMemberId: null })
-                  .where(
-                    and(
-                      inArray(
-                        shoppingListItems.id,
-                        affectedShoppingListItemIds,
-                      ),
-                      eq(
-                        shoppingListItems.completedByGroupMemberId,
-                        groupMemberId,
-                      ),
-                    ),
-                  );
-              }
+              await GroupUtils.detachMemberFromItems(trx, groupMemberId);
             }
             if (isAdmin) {
               if (otherAdmins.length > 0) {
@@ -348,39 +294,7 @@ export const userRouter = createTRPCRouter({
                   .where(eq(groupMembers.id, groupMemberId));
               } else {
                 // The user is the last member and admin
-                // Delete all entries related to the group
-
-                // Collect all shopping list item IDs
-                const shoppingListItemIds = group.shoppingLists
-                  .flatMap((list) => list.shoppingListItems)
-                  .map((item) => item.id);
-
-                if (shoppingListItemIds.length > 0) {
-                  // Delete shopping list items
-                  await trx
-                    .delete(shoppingListItems)
-                    .where(inArray(shoppingListItems.id, shoppingListItemIds));
-                }
-
-                // Collect all shopping list IDs
-                const shoppingListIds = group.shoppingLists.map(
-                  (list) => list.id,
-                );
-
-                if (shoppingListIds.length > 0) {
-                  // Delete shopping lists
-                  await trx
-                    .delete(shoppingLists)
-                    .where(inArray(shoppingLists.id, shoppingListIds));
-                }
-
-                // Delete group memberships
-                await trx
-                  .delete(groupMembers)
-                  .where(eq(groupMembers.groupId, groupId));
-
-                // Delete the group
-                await trx.delete(groups).where(eq(groups.id, groupId));
+                await GroupUtils.deleteGroupData(trx, groupId);
               }
             } else {
               // The user is not an admin, simply remove their membership

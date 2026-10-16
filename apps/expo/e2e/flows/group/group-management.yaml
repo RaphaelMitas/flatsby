@@ -7,22 +7,12 @@ tags:
 - runFlow: ../../subflows/e2e-login.yaml
 
 # Create a group via the UI
-- tapOn:
-    id: "group-create-button"
-- extendedWaitUntil:
-    visible:
-      id: "group-create-name-input"
-    timeout: 15000
-- tapOn:
-    id: "group-create-name-input"
-- inputText: "Maestro Group"
-- tapOn:
-    id: "group-create-submit"
+- runFlow:
+    file: ../../subflows/create-group.yaml
+    env:
+      GROUP_NAME: "Maestro Group"
 
 # New group appears on the dashboard
-- extendedWaitUntil:
-    visible: "Maestro Group"
-    timeout: 15000
 - assertVisible:
     id: "group-dashboard-title"
 

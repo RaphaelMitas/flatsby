@@ -3,8 +3,15 @@ tags:
   - account
 ---
 # Mirrors apps/nextjs/e2e/account/account-management.spec.ts:
-# danger zone access, two-step email confirmation, account deletion signs out.
+# danger zone access, two-step email confirmation, account deletion signs out
+# even when the user's only group has expenses.
 - runFlow: ../../subflows/e2e-login.yaml
+- runFlow: ../../subflows/open-expenses.yaml
+- runFlow:
+    file: ../../subflows/create-expense.yaml
+    env:
+      AMOUNT: "25.00"
+      DESCRIPTION: "Before Account Delete"
 
 # Deep-link to the danger screen: Maestro's synthetic swipes don't move this
 # screen's KeyboardAwareScrollView on hosted simulators, and SettingsItem rows

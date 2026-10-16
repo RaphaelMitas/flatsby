@@ -12,6 +12,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
+import { DrizzleQueryError } from "@flatsby/db";
 import { db } from "@flatsby/db/client";
 import { defaultLocale, localeFromHeaders } from "@flatsby/i18n/locale";
 import { translateIfKey } from "@flatsby/i18n/message-key";
@@ -73,7 +74,11 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
     const translate = translatorFor(ctx?.locale ?? defaultLocale);
     return {
       ...shape,
-      message: translateIfKey(translate, shape.message),
+      // DrizzleQueryError's message embeds the query params, which hold user data
+      message:
+        error.cause instanceof DrizzleQueryError
+          ? translate("errors.unexpected")
+          : translateIfKey(translate, shape.message),
       data: {
         ...shape.data,
         zodError:
