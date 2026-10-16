@@ -6,7 +6,6 @@ tags:
 # expenses" from apps/nextjs/e2e/group/group-management.spec.ts.
 - runFlow: ../../subflows/e2e-login.yaml
 
-# Swipe left on the dashboard row to reveal Delete, confirm with typed name
 - runFlow:
     file: ../../subflows/create-group.yaml
     env:

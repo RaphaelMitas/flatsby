@@ -203,6 +203,13 @@ export const fromUnknownError = (
   error: unknown,
   operation?: string,
 ): ApiError => {
+  if (error instanceof DrizzleQueryError && error.cause) {
+    const fromCause = fromUnknownError(error.cause, operation);
+    return fromCause._tag === "InternalServerError"
+      ? Errors.database(operation ?? "unknown", undefined, error.cause)
+      : fromCause;
+  }
+
   if (error instanceof Error) {
     // Check for common database constraint errors
     if (
@@ -267,11 +274,8 @@ export const safeDbOperation = <T>(
     try: operation,
     catch: (error) => {
       const operation = `${operationName}${tableName ? ` on ${tableName}` : ""}`;
-      // The wrapper's message carries the query params, which hold user data
-      const cause =
-        error instanceof DrizzleQueryError && error.cause ? error.cause : error;
-      captureError({ error: cause, operation });
-      return fromUnknownError(cause, operation);
+      captureError({ error, operation });
+      return fromUnknownError(error, operation);
     },
   });
 };

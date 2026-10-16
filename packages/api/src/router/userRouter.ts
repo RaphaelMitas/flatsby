@@ -212,6 +212,16 @@ export const userRouter = createTRPCRouter({
         DbUtils.transaction(async (trx) => {
           const user = ctx.session.user;
 
+          // Before the user row: deleteGroup locks its group, then updates users
+          const userGroups = await trx
+            .selectDistinct({ groupId: groupMembers.groupId })
+            .from(groupMembers)
+            .where(eq(groupMembers.userId, user.id))
+            .orderBy(groupMembers.groupId);
+          for (const { groupId } of userGroups) {
+            await GroupUtils.lockGroup(trx, groupId);
+          }
+
           // Clear user's last used references
           await trx
             .update(users)
@@ -229,34 +239,14 @@ export const userRouter = createTRPCRouter({
             },
             with: {
               group: {
-                columns: {
-                  id: true,
-                  name: true,
-                },
+                columns: { id: true },
                 with: {
                   groupMembers: {
                     where: ne(groupMembers.userId, user.id),
                     columns: {
                       id: true,
-                      userId: true,
                       role: true,
                       joinedOn: true,
-                    },
-                  },
-                  shoppingLists: {
-                    columns: {
-                      id: true,
-                      name: true,
-                    },
-                    with: {
-                      shoppingListItems: {
-                        columns: {
-                          id: true,
-                          shoppingListId: true,
-                          createdByGroupMemberId: true,
-                          completedByGroupMemberId: true,
-                        },
-                      },
                     },
                   },
                 },
@@ -275,49 +265,18 @@ export const userRouter = createTRPCRouter({
             );
 
             if (otherMembers.length > 0) {
-              // Set `createdByGroupMemberId` and `completedByGroupMemberId` to null
-              const affectedShoppingListItemIds = group.shoppingLists
-                .flatMap((list) => list.shoppingListItems)
-                .filter(
-                  (item) =>
-                    item.createdByGroupMemberId === groupMemberId ||
-                    item.completedByGroupMemberId === groupMemberId,
-                )
-                .map((item) => item.id);
-
-              if (affectedShoppingListItemIds.length > 0) {
-                await trx
-                  .update(shoppingListItems)
-                  .set({ createdByGroupMemberId: null })
-                  .where(
-                    and(
-                      inArray(
-                        shoppingListItems.id,
-                        affectedShoppingListItemIds,
-                      ),
-                      eq(
-                        shoppingListItems.createdByGroupMemberId,
-                        groupMemberId,
-                      ),
-                    ),
-                  );
-
-                await trx
-                  .update(shoppingListItems)
-                  .set({ completedByGroupMemberId: null })
-                  .where(
-                    and(
-                      inArray(
-                        shoppingListItems.id,
-                        affectedShoppingListItemIds,
-                      ),
-                      eq(
-                        shoppingListItems.completedByGroupMemberId,
-                        groupMemberId,
-                      ),
-                    ),
-                  );
-              }
+              await trx
+                .update(shoppingListItems)
+                .set({ createdByGroupMemberId: null })
+                .where(
+                  eq(shoppingListItems.createdByGroupMemberId, groupMemberId),
+                );
+              await trx
+                .update(shoppingListItems)
+                .set({ completedByGroupMemberId: null })
+                .where(
+                  eq(shoppingListItems.completedByGroupMemberId, groupMemberId),
+                );
             }
             if (isAdmin) {
               if (otherAdmins.length > 0) {

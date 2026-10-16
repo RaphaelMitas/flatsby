@@ -1,7 +1,7 @@
 appId: ${APP_ID}
 ---
-# Shared subflow: with the delete confirmation dialog opening, types
-# ${CONFIRM_TEXT} and confirms until the dialog closes.
+# Shared subflow: once the delete dialog is opening, types ${CONFIRM_TEXT}
+# and confirms until it closes.
 - extendedWaitUntil:
     visible:
       id: "delete-confirmation-input"
@@ -15,7 +15,7 @@ appId: ${APP_ID}
       id: "delete-confirmation-input"
       text: ${CONFIRM_TEXT}
     timeout: 5000
-# Dismiss the keyboard (tapping the modal body dismisses it), then confirm
+# Tapping the modal title dismisses the keyboard
 - tapOn: "Confirmation Required"
 - waitForAnimationToEnd
 - assertVisible:

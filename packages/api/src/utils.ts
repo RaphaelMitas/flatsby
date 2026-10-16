@@ -340,24 +340,36 @@ export const GroupUtils = {
       .where(eq(groups.id, groupId))
       .for("update"),
 
+  deleteGroupExpenses: async (tx: DbTransaction, groupId: number) => {
+    await tx
+      .delete(expenseSplits)
+      .where(
+        inArray(
+          expenseSplits.expenseId,
+          tx
+            .select({ id: expenses.id })
+            .from(expenses)
+            .where(eq(expenses.groupId, groupId)),
+        ),
+      );
+    const deleted = await tx
+      .delete(expenses)
+      .where(eq(expenses.groupId, groupId))
+      .returning({ id: expenses.id });
+    return deleted.length;
+  },
+
   /** Foreign keys don't cascade, so every child row goes before its parent. */
   deleteGroupData: async (tx: DbTransaction, groupId: number) => {
     const groupLists = tx
       .select({ id: shoppingLists.id })
       .from(shoppingLists)
       .where(eq(shoppingLists.groupId, groupId));
-    const groupExpenses = tx
-      .select({ id: expenses.id })
-      .from(expenses)
-      .where(eq(expenses.groupId, groupId));
 
     await tx
       .delete(shoppingListItems)
       .where(inArray(shoppingListItems.shoppingListId, groupLists));
-    await tx
-      .delete(expenseSplits)
-      .where(inArray(expenseSplits.expenseId, groupExpenses));
-    await tx.delete(expenses).where(eq(expenses.groupId, groupId));
+    await GroupUtils.deleteGroupExpenses(tx, groupId);
     await tx.delete(groupMembers).where(eq(groupMembers.groupId, groupId));
     await tx
       .update(users)
