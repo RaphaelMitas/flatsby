@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { isLocale } from "@flatsby/i18n/locale";
@@ -11,6 +10,7 @@ import {
 } from "~/app/_components/landing/i18n";
 import { LandingPage } from "~/app/_components/landing/LandingPage";
 import { marketingMetadata } from "~/app/_components/landing/metadata";
+import { getPlatform } from "~/app/_components/landing/platform";
 import { getSession, signOutAndRedirect } from "~/auth/server";
 import { caller } from "~/trpc/server";
 
@@ -34,13 +34,7 @@ export default async function HomePage(props: LocaleParams) {
   const session = await getSession();
 
   if (!session?.user) {
-    const ua = (await headers()).get("user-agent") ?? "";
-    const platform = /iPhone|iPad|iPod/.test(ua)
-      ? "ios"
-      : /Android/.test(ua)
-        ? "android"
-        : "other";
-    return <LandingPage locale={locale} platform={platform} />;
+    return <LandingPage locale={locale} platform={await getPlatform()} />;
   }
 
   const userWithGroups = await caller.user.getCurrentUserWithGroups();

@@ -1,5 +1,5 @@
 import type { ApiResult, GroupWithAccess } from "@flatsby/api";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
@@ -16,7 +16,6 @@ import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { Input } from "~/lib/ui/input";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -85,30 +84,12 @@ const MemberCard = ({
 export default function MembersScreen() {
   const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
-  const [newMemberEmail, setNewMemberEmail] = useState<string>("");
   const router = useRouter();
   const queryClient = useQueryClient();
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({
       id: Number(selectedGroupId) || 0,
-    }),
-  );
-
-  const addGroupMemberMutation = useMutation(
-    trpc.group.addGroupMember.mutationOptions({
-      onSuccess: (data) => {
-        if (!data.success) {
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.group.getGroup.queryOptions({
-            id: Number(selectedGroupId) || 0,
-          }),
-        );
-        setNewMemberEmail("");
-      },
     }),
   );
 
@@ -190,6 +171,11 @@ export default function MembersScreen() {
             id: Number(selectedGroupId) || 0,
           }),
         );
+        void queryClient.invalidateQueries(
+          trpc.invite.get.queryFilter({
+            groupId: Number(selectedGroupId) || 0,
+          }),
+        );
       },
     }),
   );
@@ -207,15 +193,6 @@ export default function MembersScreen() {
       });
     }, [updateMemberRoleMutation, removeGroupMemberMutation]),
   );
-
-  const handleAddMember = () => {
-    if (!newMemberEmail.trim()) return;
-
-    addGroupMemberMutation.mutate({
-      groupId: Number(selectedGroupId) || 0,
-      memberEmail: newMemberEmail.trim(),
-    });
-  };
 
   const handleMemberPress = (memberId: number) => {
     router.push({
@@ -250,69 +227,18 @@ export default function MembersScreen() {
         </Text>
       </View>
 
-      {/* Add Member Section */}
-      <View className="bg-card px-4 py-4">
-        <Text className="text-foreground mb-3 text-base font-medium">
-          {t("group.members.addMember")}
-        </Text>
-        <View className="gap-3">
-          <Input
-            testID="group-add-member-email"
-            placeholder={
-              isAdmin
-                ? t("group.members.emailPlaceholder")
-                : t("group.members.onlyAdminsCanAdd")
-            }
-            value={newMemberEmail}
-            onChangeText={setNewMemberEmail}
-            editable={isAdmin}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+      {isAdmin && (
+        <View className="px-4 pb-4">
           <Button
-            testID="group-add-member-button"
-            title={t("group.members.addMember")}
+            testID="group-invite-button"
+            title={t("invite.open")}
             icon="plus"
-            disabled={!isAdmin || !newMemberEmail.trim()}
-            onPress={handleAddMember}
-          />
-        </View>
-      </View>
-
-      {/* Error Alert for Add Member */}
-      {(addGroupMemberMutation.isError ||
-        addGroupMemberMutation.data?.success === false) && (
-        <View className="px-4 py-2">
-          <TimedAlert
-            variant="destructive"
-            title={
-              addGroupMemberMutation.data?.success === false
-                ? addGroupMemberMutation.data.error.type
-                : (addGroupMemberMutation.error?.data?.code ??
-                  t("common.error"))
+            onPress={() =>
+              router.push("/(tabs)/settings/group-settings/invite")
             }
-            description={
-              addGroupMemberMutation.data?.success === false
-                ? addGroupMemberMutation.data.error.message
-                : (addGroupMemberMutation.error?.message ??
-                  t("group.members.addFailed"))
-            }
-            onDismiss={() => addGroupMemberMutation.reset()}
           />
         </View>
       )}
-
-      {/* Success Alert for Add Member */}
-      {addGroupMemberMutation.isSuccess &&
-        addGroupMemberMutation.data.success === true && (
-          <View className="px-4 py-2">
-            <TimedAlert
-              variant="success"
-              title={t("group.members.added")}
-              onDismiss={() => addGroupMemberMutation.reset()}
-            />
-          </View>
-        )}
 
       {/* Members List */}
       <View className="bg-background flex-1">

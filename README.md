@@ -66,8 +66,9 @@ for you.
 
 ## Groups
 
-A group is your household. Invite flatmates by email, manage roles, and keep
-every list and expense scoped to the people who share the flat.
+A group is your household. Invite flatmates with a link, QR code or short code,
+manage roles, and keep every list and expense scoped to the people who share
+the flat.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/05-add-member.png" alt="Managing members on iOS" width="200">

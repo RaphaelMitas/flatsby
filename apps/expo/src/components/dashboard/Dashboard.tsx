@@ -78,6 +78,7 @@ function DashboardContent() {
   }, [queryClient]);
 
   const CREATE_GROUP_ID = "__create_group__";
+  const JOIN_GROUP_ID = "__join_group__";
 
   const groupItems = useMemo(() => {
     if (!userWithGroups.success) return [];
@@ -92,6 +93,11 @@ function DashboardContent() {
         title: t("home.createGroup"),
         icon: <Icon name="plus" size={20} color="muted-foreground" />,
       },
+      {
+        id: JOIN_GROUP_ID,
+        title: t("invite.join.withCode"),
+        icon: <Icon name="key-round" size={20} color="muted-foreground" />,
+      },
     ];
   }, [userWithGroups, t]);
 
@@ -104,12 +110,15 @@ function DashboardContent() {
           router.push("/(tabs)/home/create-group");
           return;
         }
+        if (item.id === JOIN_GROUP_ID) {
+          router.push("/join");
+          return;
+        }
         const groupId = parseInt(item.id, 10);
         if (groupId !== selectedGroupId) {
           setSelectedGroup(groupId, item.title);
         }
       },
-      snapPoints: ["40%"],
     });
   }, [openPicker, groupItems, selectedGroupId, setSelectedGroup, router]);
 

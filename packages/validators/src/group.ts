@@ -41,6 +41,8 @@ export const updateGroupSettingsSchema = groupSchema
 
 export const deleteGroupSchema = groupSchema.pick({ id: true });
 
+export const groupIdInputSchema = z.object({ groupId: groupSchema.shape.id });
+
 // Group Member validators
 export const groupMemberRoleSchema = z.enum(["admin", "member"]);
 export type GroupMemberRole = z.infer<typeof groupMemberRoleSchema>;
@@ -86,9 +88,6 @@ export const addGroupMemberInputSchema = z.object({
   memberEmail: groupMemberEmailSchema,
 });
 export type AddGroupMemberInput = z.infer<typeof addGroupMemberInputSchema>;
-
-export const addMemberFormSchema = z.object({ email: groupMemberEmailSchema });
-export type AddMemberFormValues = z.infer<typeof addMemberFormSchema>;
 
 // Activity validators
 export const activityUserSchema = z.object({

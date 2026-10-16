@@ -4,6 +4,8 @@ export const errors = {
   aiConsentRequired:
     "Bitte stimme der Datenweitergabe an die KI zu, bevor du den Assistenten nutzt.",
   notFound: {
+    invite:
+      "Diese Einladung ist abgelaufen. Bitte jemanden in der Gruppe um eine neue.",
     adminMembership: "Admin-Mitgliedschaft nicht gefunden",
     expense: "Ausgabe nicht gefunden",
     group: "Gruppe nicht gefunden",
@@ -33,6 +35,7 @@ export const errors = {
   noExpenseAccess: "Du hast keinen Zugriff auf diese Ausgabe",
   noShoppingListAccess: "Du hast keinen Zugriff auf diese Einkaufsliste",
   unauthorized: "Du musst angemeldet sein, um darauf zuzugreifen",
+  invalidInviteCode: "Das ist kein gültiger Einladungscode",
   alreadyMember: "Diese Person ist bereits Mitglied der Gruppe",
   alreadyExists: "Das gibt es bereits",
   invalidReference: "Ungültiger Verweis auf zugehörige Daten",

@@ -149,6 +149,28 @@ export const groupMembers = createTable(
   ],
 );
 
+export const groupInvites = createTable("group_invites", {
+  groupId: integer("group_id")
+    .primaryKey()
+    .references(() => groups.id, { onDelete: "cascade" }),
+  code: varchar("code", { length: 8 }).notNull().unique(),
+  createdByMemberId: integer("created_by_member_id")
+    .notNull()
+    .references(() => groupMembers.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+export const groupInvitesRelations = relations(groupInvites, ({ one }) => ({
+  group: one(groups, {
+    fields: [groupInvites.groupId],
+    references: [groups.id],
+  }),
+  createdByMember: one(groupMembers, {
+    fields: [groupInvites.createdByMemberId],
+    references: [groupMembers.id],
+  }),
+}));
+
 export const groupsRelations = relations(groups, ({ many }) => ({
   groupMembers: many(groupMembers),
   shoppingLists: many(shoppingLists),

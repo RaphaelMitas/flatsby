@@ -43,6 +43,13 @@
       "when": 1791975057207,
       "tag": "0005_group_currency",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792080297263,
+      "tag": "0006_group_invites",
+      "breakpoints": true
     }
   ]
 }

@@ -55,9 +55,6 @@ export function GroupsDashboard() {
             size="lg"
             onPress={() => router.push("/(tabs)/home/create-group")}
           />
-          <Text className="text-muted-foreground text-center text-sm">
-            {t("group.dashboard.pullToRefresh")}
-          </Text>
         </View>
       )}
       <PullToRefresh
@@ -71,6 +68,15 @@ export function GroupsDashboard() {
             data={groups.data}
             ItemSeparatorComponent={() => <View className="h-4" />}
             renderItem={(item) => <GroupsDashboardElement group={item.item} />}
+            ListFooterComponent={
+              <Button
+                testID="group-join-with-code-button"
+                title={t("invite.join.withCode")}
+                variant="outline"
+                className="mt-4"
+                onPress={() => router.push("/join")}
+              />
+            }
           />
         )}
       </PullToRefresh>

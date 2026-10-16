@@ -8,6 +8,9 @@ import { Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { usePostHog } from "posthog-react-native";
+import { useTranslations } from "use-intl";
+
+import { redactInvitePath } from "@flatsby/validators/invite";
 
 import { getScreenName } from "~/utils/analytics/screen-names";
 import { queryClient } from "~/utils/api";
@@ -19,6 +22,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
 
+import { InstallReferrerInvite } from "~/components/InstallReferrerInvite";
 import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
@@ -49,6 +53,21 @@ export default function RootLayout() {
           options={{
             disabled: posthogDisabled,
             host: "https://eu.i.posthog.com",
+            // Deep links reach PostHog as screen paths and the "Application Opened" url
+            before_send: (event) =>
+              event && {
+                ...event,
+                properties:
+                  event.properties &&
+                  Object.fromEntries(
+                    Object.entries(event.properties).map(([key, value]) => [
+                      key,
+                      typeof value === "string"
+                        ? redactInvitePath(value)
+                        : value,
+                    ]),
+                  ),
+              },
             errorTracking: {
               autocapture: {
                 uncaughtExceptions: true,
@@ -98,6 +117,7 @@ function ScreenTracker() {
 }
 
 const StackLayout = () => {
+  const t = useTranslations();
   const themedScreenOptions = useThemedScreenOptions();
   const { data, isPending } = useSession();
   const { hydrated } = useShoppingStore();
@@ -118,6 +138,7 @@ const StackLayout = () => {
   return (
     <View className="bg-background flex-1">
       <ScreenTracker />
+      <InstallReferrerInvite />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -129,6 +150,15 @@ const StackLayout = () => {
           name="auth/login/index"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="join/index"
+          options={{
+            title: t("invite.join.title"),
+            presentation: "modal",
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen name="join/[code]" options={{ presentation: "modal" }} />
       </Stack>
     </View>
   );

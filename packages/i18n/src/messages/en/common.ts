@@ -2,6 +2,8 @@ export const common = {
   back: "Back",
   cancel: "Cancel",
   category: "Category",
+  copy: "Copy",
+  copied: "Copied",
   close: "Close",
   creating: "Creating...",
   date: "Date",

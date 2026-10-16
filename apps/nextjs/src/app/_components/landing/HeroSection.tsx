@@ -5,10 +5,9 @@ import { useTranslations } from "next-intl";
 import { Button } from "@flatsby/ui/button";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
 
+import type { Platform } from "./platform";
 import { PeekingCat } from "../peeking-cat";
 import { APP_STORE_URL, PLAY_STORE_URL } from "./content";
-
-export type Platform = "ios" | "android" | "other";
 
 const WEB = { href: "/auth/login", id: "openInBrowser", icon: Globe } as const;
 const APP_STORE = {

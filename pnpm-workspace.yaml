@@ -57,6 +57,7 @@ catalog:
   next-intl: ^4.14.9
   prettier: ^3.9.10
   react-hook-form: ^7.90.0
+  react-qr-code: ^2.2.0
   superjson: ^2.2.6
   tailwindcss: ^4.3.3
   turbo: ^2.11.8

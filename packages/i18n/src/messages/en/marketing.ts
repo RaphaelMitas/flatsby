@@ -51,7 +51,7 @@ export const marketing = {
     },
     groups: {
       title: "Household groups",
-      body: "A group is your household. Each flatmate signs in once, then a group admin adds them by the email on their account. Every list and expense stays inside the group.",
+      body: "A group is your household. A group admin shares a link, QR code or short code, and each flatmate joins once they agree. Every list and expense stays inside the group.",
     },
   },
   steps: {
@@ -65,8 +65,8 @@ export const marketing = {
       body: "Make a group for your home. You become its admin.",
     },
     addFlatmates: {
-      title: "Add flatmates",
-      body: "Once they have signed in, add them to the group by their email.",
+      title: "Invite flatmates",
+      body: "Send them a link, show them a QR code or read out the code. They join with one tap.",
     },
   },
   sections: {
@@ -151,7 +151,7 @@ export const marketing = {
     members: {
       question: "How many people can be in a household?",
       answer:
-        "There is no member limit. A group admin adds each flatmate by the email they signed in with.",
+        "There is no member limit. A group admin invites each flatmate with a link, QR code or short code.",
     },
     web: {
       question: "Is the web app the same as the phone apps?",

@@ -2,6 +2,7 @@ export const errors = {
   aiConsentRequired:
     "Please accept AI data sharing before using the assistant.",
   notFound: {
+    invite: "This invite has expired. Ask someone in the group for a new one.",
     adminMembership: "admin membership not found",
     expense: "expense not found",
     group: "group not found",
@@ -31,6 +32,7 @@ export const errors = {
   noExpenseAccess: "You don't have access to this expense",
   noShoppingListAccess: "You don't have access to this shopping list",
   unauthorized: "You must be logged in to access this resource",
+  invalidInviteCode: "That isn't a valid invite code",
   alreadyMember: "This user is already a member of the group",
   alreadyExists: "This item already exists",
   invalidReference: "Invalid reference to related data",

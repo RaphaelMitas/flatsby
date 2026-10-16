@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 
+import { redactInvitePath } from "@flatsby/validators/invite";
+
 import { useSession } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
 
@@ -32,6 +34,6 @@ export function usePageViewTracking() {
     if (prevPathRef.current === url) return;
     prevPathRef.current = url;
 
-    capture("$pageview", { $pathname: pathname });
+    capture("$pageview", { $pathname: redactInvitePath(pathname) });
   }, [pathname, searchParams, session.data?.user, capture]);
 }

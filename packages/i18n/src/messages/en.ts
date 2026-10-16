@@ -8,6 +8,7 @@ import { expenseCategories } from "./en/expenseCategories";
 import { expenses } from "./en/expenses";
 import { group } from "./en/group";
 import { home } from "./en/home";
+import { invite } from "./en/invite";
 import { legal } from "./en/legal";
 import { marketing } from "./en/marketing";
 import { navigation } from "./en/navigation";
@@ -25,6 +26,7 @@ export const en = {
   billing,
   home,
   group,
+  invite,
   shoppingList,
   shoppingCategories,
   expenses,

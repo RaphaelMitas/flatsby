@@ -53,7 +53,7 @@ export const marketing = {
     },
     groups: {
       title: "Haushaltsgruppen",
-      body: "Eine Gruppe ist dein Haushalt. Jeder Mitbewohner meldet sich einmal an, danach fügt ein Gruppenadmin ihn über die E-Mail-Adresse seines Kontos hinzu. Jede Liste und jede Ausgabe bleibt in der Gruppe.",
+      body: "Eine Gruppe ist dein Haushalt. Ein Gruppenadmin teilt einen Link, QR-Code oder kurzen Code, und jeder Mitbewohner tritt bei, sobald er zustimmt. Jede Liste und jede Ausgabe bleibt in der Gruppe.",
     },
   },
   steps: {
@@ -67,8 +67,8 @@ export const marketing = {
       body: "Leg eine Gruppe für dein Zuhause an. Du wirst ihr Admin.",
     },
     addFlatmates: {
-      title: "Mitbewohner hinzufügen",
-      body: "Sobald sie sich angemeldet haben, fügst du sie über ihre E-Mail-Adresse zur Gruppe hinzu.",
+      title: "Mitbewohner einladen",
+      body: "Schick ihnen einen Link, zeig ihnen einen QR-Code oder lies den Code vor. Sie treten mit einem Tippen bei.",
     },
   },
   sections: {
@@ -157,7 +157,7 @@ export const marketing = {
     members: {
       question: "Wie viele Personen können in einem Haushalt sein?",
       answer:
-        "Es gibt keine Mitgliederbegrenzung. Ein Gruppenadmin fügt jeden Mitbewohner über die E-Mail-Adresse hinzu, mit der er sich angemeldet hat.",
+        "Es gibt keine Mitgliederbegrenzung. Ein Gruppenadmin lädt jeden Mitbewohner mit einem Link, QR-Code oder kurzen Code ein.",
     },
     web: {
       question: "Ist die Web-App dieselbe wie die Handy-Apps?",

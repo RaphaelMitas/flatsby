@@ -13,7 +13,7 @@ import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 
 import { signIn } from "~/auth/client";
 
-const Login = () => {
+const Login = ({ callbackURL }: { callbackURL: string }) => {
   const t = useTranslations();
   const locale = useLocale();
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
@@ -42,7 +42,7 @@ const Login = () => {
 
               await signIn.social({
                 provider: "google",
-                callbackURL: "/",
+                callbackURL,
               });
               setLoading("false");
             }}
@@ -68,7 +68,7 @@ const Login = () => {
               setLoading("apple");
               await signIn.social({
                 provider: "apple",
-                callbackURL: "/",
+                callbackURL,
               });
               setLoading("false");
             }}

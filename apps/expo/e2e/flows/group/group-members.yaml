@@ -2,8 +2,6 @@ appId: ${APP_ID}
 tags:
   - group
 ---
-# Mirrors "add member by email form interaction" from
-# apps/nextjs/e2e/group/group-management.spec.ts.
 - runFlow: ../../subflows/e2e-login.yaml
 
 # Select the fixture group to enter it
@@ -14,7 +12,7 @@ tags:
       id: "shopping-list-create-button"
     timeout: 15000
 
-# Open group settings -> members
+# Open group settings -> members -> invite
 - tapOn:
     id: "shopping-lists-group-settings"
 - extendedWaitUntil:
@@ -25,17 +23,48 @@ tags:
     id: "group-settings-members"
 - extendedWaitUntil:
     visible:
-      id: "group-add-member-email"
+      id: "group-invite-button"
     timeout: 15000
+- tapOn:
+    id: "group-invite-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-invite-code"
+    timeout: 15000
+- copyTextFrom:
+    id: "group-invite-code"
 
-# Fill the add-member form and submit; the email stays visible in the input
-# (the user does not exist, mirroring the web assertion).
+# The admin is already a member, so the preview offers "Open group", not join.
+- openLink: flatsby://join/${maestro.copiedText}
+- runFlow:
+    when:
+      visible: "Open in .*Flatsby.*"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible:
+      id: "join-invite-group-name"
+    timeout: 15000
+- assertVisible: "Open group"
+
+# e2e-login mints a fresh user, who joins by typing the copied code
+- runFlow: ../../subflows/e2e-login.yaml
 - tapOn:
-    id: "group-add-member-email"
-- inputText: "newuser@example.com"
-- tapOn: "Manage Members"
+    id: "group-join-with-code-button"
+- extendedWaitUntil:
+    visible:
+      id: "group-join-code-submit"
+    timeout: 15000
+- inputText: ${maestro.copiedText}
 - tapOn:
-    id: "group-add-member-button"
-- assertVisible:
-    id: "group-add-member-email"
-    text: "newuser@example.com"
+    id: "group-join-code-submit"
+- extendedWaitUntil:
+    visible:
+      id: "join-invite-button"
+    timeout: 15000
+- tapOn:
+    id: "join-invite-button"
+- extendedWaitUntil:
+    visible:
+      id: "dashboard-group-picker"
+    timeout: 20000

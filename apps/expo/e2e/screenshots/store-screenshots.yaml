@@ -221,7 +221,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-until.yaml
     env:
       TARGET_ID: "group-settings-members"
-      MARKER_ID: "group-add-member-email"
+      MARKER_ID: "group-invite-button"
 - extendedWaitUntil:
     visible:
       id: "group-members-count-3"

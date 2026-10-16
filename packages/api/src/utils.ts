@@ -2,11 +2,14 @@ import type { MessageKey } from "@flatsby/i18n/message-key";
 import type { Messages } from "@flatsby/i18n/messages";
 import { Effect } from "effect";
 
+import { and, desc, eq } from "@flatsby/db";
+import { groupMembers, groups } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 
 import type { ApiError, NotFoundError, NotFoundResource } from "./errors";
 import type {
   Database,
+  DbTransaction,
   GroupMember,
   GroupWithAccess,
   Role,
@@ -14,7 +17,7 @@ import type {
   TransactionOperation,
   User,
 } from "./types";
-import { fail, safeDbOperation } from "./errors";
+import { Errors, fail, safeDbOperation } from "./errors";
 
 /**
  * Database operation utilities
@@ -285,17 +288,19 @@ export const GroupUtils = {
     return DbUtils.findOneOrFail(
       () =>
         db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(
-              eq(members.userId, userId),
-              eq(members.groupId, groupId),
-              eq(members.role, "admin"),
-              eq(members.isActive, true),
-            ),
+          where: GroupUtils.activeAdminWhere(groupId, userId),
         }),
       "adminMembership",
     );
   },
+
+  activeAdminWhere: (groupId: number, userId: string) =>
+    and(
+      eq(groupMembers.userId, userId),
+      eq(groupMembers.groupId, groupId),
+      eq(groupMembers.role, "admin"),
+      eq(groupMembers.isActive, true),
+    ),
 
   /**
    * Require user to be a member of the group (any role)
@@ -318,6 +323,53 @@ export const GroupUtils = {
       "groupMembership",
     );
   },
+
+  /** Serializes membership changes in a group; call it first inside the transaction. */
+  lockGroup: (tx: DbTransaction, groupId: number) =>
+    tx
+      .select({ id: groups.id })
+      .from(groups)
+      .where(eq(groups.id, groupId))
+      .for("update"),
+
+  /** Callers check the right to add; `refusal` runs under the group lock, so it sees concurrent removals. */
+  addMember: (
+    db: Database,
+    groupId: number,
+    userId: string,
+    refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
+  ): Effect.Effect<number, ApiError> =>
+    Effect.flatMap(
+      DbUtils.transaction(async (tx): Promise<number | ApiError> => {
+        await GroupUtils.lockGroup(tx, groupId);
+        const refused = await refusal?.(tx);
+        if (refused) return refused;
+        const existing = await tx.query.groupMembers.findFirst({
+          where: and(
+            eq(groupMembers.groupId, groupId),
+            eq(groupMembers.userId, userId),
+          ),
+          orderBy: desc(groupMembers.isActive),
+        });
+        if (existing?.isActive) return Errors.conflict("errors.alreadyMember");
+        const [member] = existing
+          ? await tx
+              .update(groupMembers)
+              .set({ isActive: true, role: "member" })
+              .where(eq(groupMembers.id, existing.id))
+              .returning({ id: groupMembers.id })
+          : await tx
+              .insert(groupMembers)
+              .values({ groupId, userId, role: "member" })
+              .returning({ id: groupMembers.id });
+        if (!member) throw new Error("Failed to add group member");
+        return member.id;
+      }, "add group member")(db),
+      (result): Effect.Effect<number, ApiError> =>
+        typeof result === "number"
+          ? Effect.succeed(result)
+          : Effect.fail(result),
+    ),
 };
 
 /** Does not check group access, callers must. */

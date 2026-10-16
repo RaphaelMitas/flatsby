@@ -1,19 +1,14 @@
 "use client";
 
-import type {
-  AddMemberFormValues,
-  GroupMemberWithUser,
-} from "@flatsby/validators/group";
+import type { GroupMemberWithUser } from "@flatsby/validators/group";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { AlertCircle, ChevronDown, Plus } from "lucide-react";
+import { AlertCircle, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
@@ -25,8 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
-import { Form, FormControl, FormField, FormMessage } from "@flatsby/ui/form";
-import { Input } from "@flatsby/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@flatsby/ui/popover";
 import {
   Select,
@@ -35,10 +28,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
-import { addMemberFormSchema } from "@flatsby/validators/group";
 
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
+import { InviteDialog } from "./InviteDialog";
 
 interface ManageMembersProps {
   groupId: number;
@@ -47,51 +40,11 @@ interface ManageMembersProps {
 const ManageMembers = ({ groupId }: ManageMembersProps) => {
   const t = useTranslations();
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const handleApiError = useHandleApiError();
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
-
-  const form = useForm<AddMemberFormValues>({
-    resolver: zodResolver(addMemberFormSchema),
-    defaultValues: {
-      email: "",
-    },
-  });
-
-  const onAddGroupMemberError = (errorMessage: string) => {
-    form.setError("email", {
-      message: errorMessage,
-    });
-  };
-
-  const addGroupMemberMutation = useMutation(
-    trpc.group.addGroupMember.mutationOptions({
-      onSuccess: (data) => {
-        if (!data.success) {
-          onAddGroupMemberError(data.error.message);
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.group.getGroup.queryOptions({ id: groupId }),
-        );
-        form.reset();
-      },
-      onError: (err) => {
-        onAddGroupMemberError(err.message);
-      },
-    }),
-  );
-
-  const handleSubmit = (values: AddMemberFormValues) => {
-    addGroupMemberMutation.mutate({
-      groupId,
-      memberEmail: values.email,
-    });
-  };
 
   if (!group.success) {
     return handleApiError(group.error);
@@ -109,66 +62,9 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="flex flex-col items-center gap-4 md:flex-row"
-            >
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        data-testid="group-add-member-email"
-                        placeholder={
-                          isAdmin
-                            ? t("group.members.emailPlaceholderShort")
-                            : t("group.members.onlyAdminsCanAdd")
-                        }
-                        type="email"
-                        disabled={!isAdmin || addGroupMemberMutation.isPending}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </>
-                )}
-              />
-              <Button
-                data-testid="group-add-member-button"
-                type="submit"
-                className="w-full min-w-37.5 md:w-fit"
-                disabled={!isAdmin || addGroupMemberMutation.isPending}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {addGroupMemberMutation.isPending
-                  ? t("group.members.adding")
-                  : t("group.members.addMemberShort")}
-              </Button>
-            </form>
-          </Form>
-          {(addGroupMemberMutation.isError ||
-            addGroupMemberMutation.data?.success === false) &&
-            !form.formState.errors.email && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>
-                  {addGroupMemberMutation.data?.success === false
-                    ? addGroupMemberMutation.data.error.type
-                    : (addGroupMemberMutation.error?.data?.code ??
-                      t("common.error"))}
-                </AlertTitle>
-                <AlertDescription>
-                  {addGroupMemberMutation.data?.success === false
-                    ? addGroupMemberMutation.data.error.message
-                    : (addGroupMemberMutation.error?.message ??
-                      t("group.members.addFailed"))}
-                </AlertDescription>
-              </Alert>
-            )}
+          {isAdmin && (
+            <InviteDialog groupId={groupId} groupName={group.data.name} />
+          )}
           <div className="grid gap-4">
             {group.data.groupMembers.map((groupMember) => (
               <MemberCard
@@ -227,6 +123,9 @@ const MemberCard = ({
           trpc.group.getGroup.queryOptions({
             id: groupMember.groupId,
           }),
+        );
+        void queryClient.invalidateQueries(
+          trpc.invite.get.queryFilter({ groupId: groupMember.groupId }),
         );
         if (groupMember.id === currentUserGroupMember.id) {
           void queryClient.invalidateQueries(
