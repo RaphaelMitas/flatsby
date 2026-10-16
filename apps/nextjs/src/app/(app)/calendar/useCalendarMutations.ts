@@ -37,9 +37,9 @@ export function useCalendarMutations(group: GroupWithAccess) {
         ),
       ),
     ),
-    reschedule: useMutation(
-      trpc.calendar.reschedule.mutationOptions(
-        optimistic(calendarPatches.reschedule),
+    setSkipped: useMutation(
+      trpc.calendar.setSkipped.mutationOptions(
+        optimistic(calendarPatches.setSkipped),
       ),
     ),
     remove: useMutation(

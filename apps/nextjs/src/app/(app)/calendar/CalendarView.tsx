@@ -39,7 +39,6 @@ import {
   monthGrid,
   monthOf,
   shiftMonth,
-  watchLocalDate,
 } from "@flatsby/validators/calendar";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -56,6 +55,7 @@ type Panel =
   | { type: "form"; item?: CalendarItemView };
 
 const EMPTY_RANGE: CalendarRange = { items: [], occurrences: [] };
+const noUpdates = () => () => undefined;
 
 export function CalendarView() {
   const trpc = useTRPC();
@@ -65,7 +65,7 @@ export function CalendarView() {
     trpc.group.getGroup.queryOptions({ id: currentGroup?.id ?? 0 }),
   );
   // "Today" is the viewer's local day, which the server can't know while rendering
-  const today = useSyncExternalStore(watchLocalDate, localDate, () => null);
+  const today = useSyncExternalStore(noUpdates, localDate, () => null);
 
   if (!groupData.success) return handleApiError(groupData.error);
   if (!today)
@@ -97,7 +97,6 @@ function CalendarScreen({
   const isLargeScreen = useMediaQuery("lg");
   const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(monthOf(today));
-  const [shownToday, setShownToday] = useState(today);
   const [mine, setMine] = useState(false);
   const [panel, setPanel] = useState<Panel | null>(null);
 
@@ -107,20 +106,13 @@ function CalendarScreen({
     () => new Map(group.groupMembers.map((member) => [member.id, member])),
     [group.groupMembers],
   );
-  if (today !== shownToday) {
-    setShownToday(today);
-    if (selected === shownToday) {
-      setSelected(today);
-      setMonth(monthOf(today));
-    }
-  }
 
   const rangeOptions = useCallback(
     (visibleMonth: string) => {
       const { from, to } = monthGrid(visibleMonth);
-      return trpc.calendar.range.queryOptions({ groupId, from, to, today });
+      return trpc.calendar.range.queryOptions({ groupId, from, to });
     },
-    [trpc, groupId, today],
+    [trpc, groupId],
   );
   const { data } = useQuery({
     ...rangeOptions(month),
@@ -131,7 +123,7 @@ function CalendarScreen({
       void queryClient.prefetchQuery(rangeOptions(shiftMonth(month, delta)));
   }, [queryClient, rangeOptions, month]);
   const range = data?.success ? data.data : EMPTY_RANGE;
-  const { setDone, reschedule, remove, create, update } =
+  const { setDone, setSkipped, remove, create, update } =
     useCalendarMutations(group);
 
   if (data?.success === false)
@@ -180,22 +172,17 @@ function CalendarScreen({
           members={group.groupMembers}
           item={current.item}
           defaultDate={selected}
+          today={today}
           onCancel={() => setPanel(null)}
           onSubmit={(input) => void save(input, current.item?.id)}
         />
       );
     const { item, occurrence } = current.entry;
-    const reschedulePatch = (movedTo: string | null, skipped: boolean) =>
-      reschedule.mutate({
-        groupId,
-        itemId: item.id,
-        originalDate: occurrence.originalDate,
-        movedTo,
-        skipped,
-      });
+    const skip = (date: string, skipped: boolean) =>
+      setSkipped.mutate({ groupId, itemId: item.id, date, skipped });
     return (
       <CalendarItemDetail
-        key={`${item.id}-${occurrence.originalDate}`}
+        key={`${item.id}-${occurrence.date}`}
         entry={current.entry}
         groupId={groupId}
         meId={meId}
@@ -204,22 +191,10 @@ function CalendarScreen({
         onEdit={(latest) => setPanel({ type: "form", item: latest })}
         onJump={selectDay}
         onSkip={() => {
-          reschedulePatch(null, true);
+          skip(occurrence.date, true);
           setPanel(null);
         }}
-        onMove={(date) => {
-          reschedulePatch(date, false);
-          selectDay(date);
-        }}
-        onUnskip={(originalDate) =>
-          reschedule.mutate({
-            groupId,
-            itemId: item.id,
-            originalDate,
-            movedTo: null,
-            skipped: false,
-          })
-        }
+        onUnskip={(date) => skip(date, false)}
         onDelete={() => {
           remove.mutate({ groupId, id: item.id });
           setPanel(null);
@@ -252,9 +227,8 @@ function CalendarScreen({
         setDone.mutate({
           groupId,
           itemId: item.id,
-          originalDate: occurrence.originalDate,
+          date: occurrence.date,
           done,
-          today,
         })
       }
       onOpen={(entry) => setPanel({ type: "detail", entry })}

@@ -1,5 +1,4 @@
 import type { SQL } from "@flatsby/db";
-import type { OccurrenceOverride } from "@flatsby/validators/calendar";
 import type { z } from "zod/v4";
 import { Effect } from "effect";
 
@@ -7,11 +6,13 @@ import {
   and,
   asc,
   between,
+  desc,
   eq,
+  gte,
   inArray,
   isNotNull,
   isNull,
-  not,
+  lte,
   or,
 } from "@flatsby/db";
 import {
@@ -25,15 +26,13 @@ import {
   calendarItemDetailSchema,
   calendarItemRefSchema,
   calendarRangeSchema,
-  canComplete,
   createCalendarItemSchema,
   expandOccurrences,
   isScheduledOn,
-  rescheduleOccurrenceSchema,
   sameSchedule,
   setOccurrenceDoneSchema,
-  turnForCompletion,
-  turnOn,
+  setOccurrenceSkippedSchema,
+  splitsSeries,
   updateCalendarItemSchema,
 } from "@flatsby/validators/calendar";
 
@@ -67,10 +66,7 @@ const asMember = <T>(
     ),
   );
 
-const loadItems = async (
-  db: Database | DbTransaction,
-  where: SQL | undefined,
-) =>
+const loadItems = async (db: Database, where: SQL | undefined) =>
   (
     await db.query.calendarItems.findMany({
       where,
@@ -79,6 +75,7 @@ const loadItems = async (
         kind: true,
         title: true,
         startsOn: true,
+        endsOn: true,
         time: true,
         recurrence: true,
       },
@@ -100,17 +97,19 @@ const loadItems = async (
       .map((member) => member.groupMemberId),
   }));
 
-const loadOverrides = async (db: Database, where: SQL | undefined) =>
+const loadOverrides = async (
+  db: Database,
+  where: SQL | undefined,
+  limit?: number,
+) =>
   (
     await db.query.calendarOccurrences.findMany({
       columns: {
         itemId: true,
-        originalDate: true,
-        movedTo: true,
+        date: true,
         skipped: true,
         completedByGroupMemberId: true,
         completedAt: true,
-        turnGroupMemberId: true,
       },
       with: {
         completedByGroupMember: {
@@ -119,16 +118,13 @@ const loadOverrides = async (db: Database, where: SQL | undefined) =>
         },
       },
       where,
+      orderBy: [desc(calendarOccurrences.date)],
+      limit,
     })
   ).map(({ completedByGroupMember, ...row }) => ({
     ...row,
     completedBy: completedByGroupMember?.user ?? null,
   }));
-
-const groupOverrides = (
-  rows: (OccurrenceOverride & { itemId: number })[],
-  itemId: number,
-) => rows.filter((row) => row.itemId === itemId);
 
 const findItem = (db: Database, groupId: number, id: number) =>
   DbUtils.findOneOrFail(
@@ -188,6 +184,24 @@ const writeMembers = async (
     );
 };
 
+const insertItem = async (
+  tx: DbTransaction,
+  input: z.infer<typeof createCalendarItemSchema>,
+  createdByGroupMemberId: number,
+) => {
+  const [created] = await tx
+    .insert(calendarItems)
+    .values({
+      ...itemValues(input),
+      groupId: input.groupId,
+      createdByGroupMemberId,
+    })
+    .returning({ id: calendarItems.id });
+  if (!created) throw new Error("Failed to create calendar item");
+  await writeMembers(tx, created.id, input.memberIds);
+  return { id: created.id };
+};
+
 const itemValues = ({
   kind,
   title,
@@ -202,21 +216,19 @@ const itemValues = ({
   recurrence,
 });
 
-// Drops rows that no longer differ from the rule
-const pruneOccurrences = (
-  db: Database | DbTransaction,
-  itemId: number,
-  originalDate?: string,
-) =>
+const occurrenceOf = (itemId: number, date: string) =>
+  and(
+    eq(calendarOccurrences.itemId, itemId),
+    eq(calendarOccurrences.date, date),
+  );
+
+// A row that is neither done nor skipped says nothing the rule doesn't
+const pruneOccurrence = (db: Database, itemId: number, date: string) =>
   db
     .delete(calendarOccurrences)
     .where(
       and(
-        eq(calendarOccurrences.itemId, itemId),
-        originalDate === undefined
-          ? undefined
-          : eq(calendarOccurrences.originalDate, originalDate),
-        isNull(calendarOccurrences.movedTo),
+        occurrenceOf(itemId, date),
         eq(calendarOccurrences.skipped, false),
         isNull(calendarOccurrences.completedAt),
       ),
@@ -226,20 +238,21 @@ export const calendarRouter = createTRPCRouter({
   range: protectedProcedure.input(calendarRangeSchema).query(({ ctx, input }) =>
     asMember(ctx, input.groupId, () =>
       safeDbOperation(async () => {
-        // Repeating items load whatever their start, since done and moved occurrences can land before it
         const items = await loadItems(
           ctx.db,
           and(
             eq(calendarItems.groupId, input.groupId),
+            lte(calendarItems.startsOn, input.to),
             or(
               isNotNull(calendarItems.recurrence),
-              between(calendarItems.startsOn, input.from, input.to),
+              gte(calendarItems.startsOn, input.from),
+            ),
+            or(
+              isNull(calendarItems.endsOn),
+              gte(calendarItems.endsOn, input.from),
             ),
           ),
         );
-        const afterDoneIds = items
-          .filter((item) => item.recurrence?.type === "afterDone")
-          .map((item) => item.id);
         const overrides =
           items.length === 0
             ? []
@@ -250,17 +263,7 @@ export const calendarRouter = createTRPCRouter({
                     calendarOccurrences.itemId,
                     items.map((item) => item.id),
                   ),
-                  or(
-                    between(
-                      calendarOccurrences.originalDate,
-                      input.from,
-                      input.to,
-                    ),
-                    between(calendarOccurrences.movedTo, input.from, input.to),
-                    afterDoneIds.length > 0
-                      ? inArray(calendarOccurrences.itemId, afterDoneIds)
-                      : undefined,
-                  ),
+                  between(calendarOccurrences.date, input.from, input.to),
                 ),
               );
         return {
@@ -268,10 +271,9 @@ export const calendarRouter = createTRPCRouter({
           occurrences: items.flatMap((item) =>
             expandOccurrences(
               item,
-              groupOverrides(overrides, item.id),
+              overrides.filter((row) => row.itemId === item.id),
               input.from,
               input.to,
-              input.today,
             ),
           ),
         };
@@ -285,42 +287,34 @@ export const calendarRouter = createTRPCRouter({
       asMember(ctx, input.groupId, () =>
         Effect.flatMap(findItem(ctx.db, input.groupId, input.id), (item) =>
           safeDbOperation(async () => {
-            const overrides = await loadOverrides(
-              ctx.db,
-              eq(calendarOccurrences.itemId, item.id),
-            );
+            const until = addDays(input.today, UPCOMING_WINDOW_DAYS);
+            const [ahead, history] = await Promise.all([
+              loadOverrides(
+                ctx.db,
+                and(
+                  eq(calendarOccurrences.itemId, item.id),
+                  between(calendarOccurrences.date, input.today, until),
+                ),
+              ),
+              loadOverrides(
+                ctx.db,
+                eq(calendarOccurrences.itemId, item.id),
+                HISTORY_COUNT,
+              ),
+            ]);
             return {
               item,
-              upcoming: expandOccurrences(
-                item,
-                overrides,
-                input.today,
-                addDays(input.today, UPCOMING_WINDOW_DAYS),
-                input.today,
-              )
+              upcoming: expandOccurrences(item, ahead, input.today, until)
                 .filter((occurrence) => !occurrence.completedAt)
-                .sort((a, b) => a.date.localeCompare(b.date))
                 .slice(0, UPCOMING_COUNT),
-              history: overrides
-                .filter(
-                  (row) =>
-                    row.completedAt ||
-                    // A skip that raced a schedule edit can outlive its rule
-                    (row.skipped && isScheduledOn(item, row.originalDate)),
-                )
-                .sort((a, b) => b.originalDate.localeCompare(a.originalDate))
-                .slice(0, HISTORY_COUNT)
-                .map((row) => ({
-                  originalDate: row.originalDate,
-                  date: row.movedTo ?? row.originalDate,
-                  skipped: row.skipped,
-                  completedByGroupMemberId: row.completedByGroupMemberId,
-                  completedBy: row.completedBy,
-                  completedAt: row.completedAt,
-                  turnGroupMemberId: row.completedAt
-                    ? row.turnGroupMemberId
-                    : turnOn(item, overrides, row.originalDate),
-                })),
+              history: history.map(
+                ({ date, skipped, completedBy, completedAt }) => ({
+                  date,
+                  skipped,
+                  completedBy,
+                  completedAt,
+                }),
+              ),
             };
           }, "load calendar item"),
         ),
@@ -334,19 +328,10 @@ export const calendarRouter = createTRPCRouter({
         Effect.flatMap(
           ensureMembersInGroup(ctx.db, input.groupId, input.memberIds),
           () =>
-            DbUtils.transaction(async (tx) => {
-              const [created] = await tx
-                .insert(calendarItems)
-                .values({
-                  ...itemValues(input),
-                  groupId: input.groupId,
-                  createdByGroupMemberId: member.id,
-                })
-                .returning({ id: calendarItems.id });
-              if (!created) throw new Error("Failed to create calendar item");
-              await writeMembers(tx, created.id, input.memberIds);
-              return { id: created.id };
-            }, "create calendar item")(ctx.db),
+            DbUtils.transaction(
+              (tx) => insertItem(tx, input, member.id),
+              "create calendar item",
+            )(ctx.db),
         ),
       ),
     ),
@@ -354,54 +339,45 @@ export const calendarRouter = createTRPCRouter({
   update: protectedProcedure
     .input(updateCalendarItemSchema)
     .mutation(({ ctx, input }) =>
-      asMember(ctx, input.groupId, () =>
+      asMember(ctx, input.groupId, (member) =>
         Effect.flatMap(
           Effect.zip(
             findItem(ctx.db, input.groupId, input.id),
             ensureMembersInGroup(ctx.db, input.groupId, input.memberIds),
           ),
-          ([previous]) =>
-            DbUtils.transaction(async (tx) => {
+          ([previous]) => {
+            // Tasks and events are different things, so an item can't switch
+            if (input.kind !== previous.kind)
+              return fail.validation("errors.unexpected");
+            return DbUtils.transaction(async (tx) => {
+              if (splitsSeries(previous, input)) {
+                await tx
+                  .update(calendarItems)
+                  .set({ endsOn: addDays(input.startsOn, -1) })
+                  .where(eq(calendarItems.id, previous.id));
+                await tx
+                  .delete(calendarOccurrences)
+                  .where(
+                    and(
+                      eq(calendarOccurrences.itemId, previous.id),
+                      gte(calendarOccurrences.date, input.startsOn),
+                    ),
+                  );
+                return insertItem(tx, input, member.id);
+              }
               await tx
                 .update(calendarItems)
                 .set(itemValues(input))
                 .where(eq(calendarItems.id, input.id));
               await writeMembers(tx, input.id, input.memberIds);
-              const ofItem = eq(calendarOccurrences.itemId, input.id);
-              if (!sameSchedule(previous, input)) {
-                // Rows of the old rule go; a task keeps its completions as history, a one-off only its own date's
-                const history =
-                  input.kind === "task"
-                    ? and(
-                        isNotNull(calendarOccurrences.completedAt),
-                        input.recurrence === null
-                          ? eq(calendarOccurrences.originalDate, input.startsOn)
-                          : undefined,
-                      )
-                    : undefined;
+              // A rewritten schedule starts over; its ticks and skips belonged to the old one
+              if (!sameSchedule(previous, input))
                 await tx
                   .delete(calendarOccurrences)
-                  .where(history ? and(ofItem, not(history)) : ofItem);
-                // A one-off can't be moved, and is only loaded around its own date
-                if (input.recurrence === null)
-                  await tx
-                    .update(calendarOccurrences)
-                    .set({ movedTo: null })
-                    .where(ofItem);
-              } else if (input.kind === "event") {
-                // Events can't be done, but their skips and moves still hold
-                await tx
-                  .update(calendarOccurrences)
-                  .set({
-                    completedByGroupMemberId: null,
-                    completedAt: null,
-                    turnGroupMemberId: null,
-                  })
-                  .where(ofItem);
-                await pruneOccurrences(tx, input.id);
-              }
+                  .where(eq(calendarOccurrences.itemId, input.id));
               return { id: input.id };
-            }, "update calendar item")(ctx.db),
+            }, "update calendar item")(ctx.db);
+          },
         ),
       ),
     ),
@@ -432,107 +408,61 @@ export const calendarRouter = createTRPCRouter({
           (item) => {
             if (item.kind !== "task")
               return fail.validation("errors.unexpected");
-            // An afterDone chore counts from the day it was actually done
-            const originalDate =
-              input.done && item.recurrence?.type === "afterDone"
-                ? input.today
-                : input.originalDate;
-            const turn = input.done
-              ? Effect.flatMap(
-                  safeDbOperation(
-                    () =>
-                      loadOverrides(
-                        ctx.db,
-                        eq(calendarOccurrences.itemId, item.id),
-                      ),
-                    "load calendar occurrences",
-                  ),
-                  (overrides) =>
-                    canComplete(
-                      item,
-                      overrides,
-                      input.originalDate,
-                      input.today,
-                    )
-                      ? Effect.succeed(
-                          turnForCompletion(item, overrides, originalDate),
-                        )
-                      : fail.conflict("errors.calendarDateNotScheduled"),
-                )
-              : Effect.succeed(null);
-            return Effect.flatMap(turn, (turnGroupMemberId) =>
-              safeDbOperation(async () => {
-                if (input.done) {
-                  const completion = {
+            if (input.done && !isScheduledOn(item, input.date))
+              return fail.conflict("errors.calendarDateNotScheduled");
+            return safeDbOperation(async () => {
+              const completion = input.done
+                ? {
                     completedByGroupMemberId: member.id,
                     completedAt: new Date(),
-                    turnGroupMemberId,
-                    skipped: false,
-                  };
-                  await ctx.db
-                    .insert(calendarOccurrences)
-                    .values({ itemId: item.id, originalDate, ...completion })
-                    .onConflictDoUpdate({
-                      target: [
-                        calendarOccurrences.itemId,
-                        calendarOccurrences.originalDate,
-                      ],
-                      set: completion,
-                    });
-                } else {
-                  await ctx.db
-                    .update(calendarOccurrences)
-                    .set({
-                      completedByGroupMemberId: null,
-                      completedAt: null,
-                      turnGroupMemberId: null,
-                    })
-                    .where(
-                      and(
-                        eq(calendarOccurrences.itemId, item.id),
-                        eq(calendarOccurrences.originalDate, originalDate),
-                      ),
-                    );
-                  await pruneOccurrences(ctx.db, item.id, originalDate);
-                }
-                return { itemId: item.id, originalDate };
-              }, "set calendar occurrence done"),
-            );
+                  }
+                : { completedByGroupMemberId: null, completedAt: null };
+              await ctx.db
+                .insert(calendarOccurrences)
+                .values({ itemId: item.id, date: input.date, ...completion })
+                .onConflictDoUpdate({
+                  target: [
+                    calendarOccurrences.itemId,
+                    calendarOccurrences.date,
+                  ],
+                  set: completion,
+                });
+              await pruneOccurrence(ctx.db, item.id, input.date);
+              return { itemId: item.id, date: input.date };
+            }, "set calendar occurrence done");
           },
         ),
       ),
     ),
 
-  reschedule: protectedProcedure
-    .input(rescheduleOccurrenceSchema)
+  setSkipped: protectedProcedure
+    .input(setOccurrenceSkippedSchema)
     .mutation(({ ctx, input }) =>
       asMember(ctx, input.groupId, () =>
         Effect.flatMap(
           findItem(ctx.db, input.groupId, input.itemId),
           (item) => {
-            if (!item.recurrence || item.recurrence.type === "afterDone")
-              return fail.validation("errors.unexpected");
-            if (!isScheduledOn(item, input.originalDate))
+            if (!item.recurrence) return fail.validation("errors.unexpected");
+            if (input.skipped && !isScheduledOn(item, input.date))
               return fail.conflict("errors.calendarDateNotScheduled");
-            const change = { movedTo: input.movedTo, skipped: input.skipped };
             return safeDbOperation(async () => {
               await ctx.db
                 .insert(calendarOccurrences)
                 .values({
                   itemId: item.id,
-                  originalDate: input.originalDate,
-                  ...change,
+                  date: input.date,
+                  skipped: input.skipped,
                 })
                 .onConflictDoUpdate({
                   target: [
                     calendarOccurrences.itemId,
-                    calendarOccurrences.originalDate,
+                    calendarOccurrences.date,
                   ],
-                  set: change,
+                  set: { skipped: input.skipped },
                 });
-              await pruneOccurrences(ctx.db, item.id, input.originalDate);
-              return { itemId: item.id, originalDate: input.originalDate };
-            }, "reschedule calendar occurrence");
+              await pruneOccurrence(ctx.db, item.id, input.date);
+              return { itemId: item.id, date: input.date };
+            }, "set calendar occurrence skipped");
           },
         ),
       ),

@@ -96,7 +96,7 @@ export function DayList({
         <ul className="divide-y overflow-hidden rounded-xl border">
           {entries.map((entry) => (
             <EntryRow
-              key={`${entry.item.id}-${entry.occurrence.originalDate}`}
+              key={`${entry.item.id}-${entry.occurrence.date}`}
               entry={entry}
               today={today}
               meId={meId}
@@ -156,7 +156,7 @@ function EntryRow({
       {isTask ? (
         <Checkbox
           checked={done}
-          disabled={pending || occurrence.projected}
+          disabled={pending}
           onCheckedChange={(checked) => onToggle(entry, checked === true)}
           aria-label={item.title}
           data-testid="calendar-entry-toggle"
@@ -197,7 +197,7 @@ function EntryRow({
           </p>
         </div>
         {done ? (
-          <DoneBy occurrence={occurrence} />
+          <DoneBy completedBy={occurrence.completedBy} />
         ) : (
           occurrence.turnGroupMemberId !== null && (
             <TurnPill

@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { wasCovered } from "@flatsby/validators/calendar";
 
 export type MemberLookup = Map<number, GroupMemberWithUserInfo>;
 
@@ -61,22 +60,13 @@ export function TurnPill({
   );
 }
 
-export function DoneBy({
-  occurrence,
-}: {
-  occurrence: Pick<
-    Occurrence,
-    "completedByGroupMemberId" | "completedBy" | "turnGroupMemberId"
-  >;
-}) {
+export function DoneBy({ completedBy }: Pick<Occurrence, "completedBy">) {
   const t = useTranslations();
-  const { completedBy } = occurrence;
-  const name = completedBy?.name ?? t("common.unknown");
   return (
     <span className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
-      {wasCovered(occurrence)
-        ? t("calendar.coveredBy", { name })
-        : t("calendar.doneBy", { name })}
+      {t("calendar.doneBy", {
+        name: completedBy?.name ?? t("common.unknown"),
+      })}
       {completedBy && (
         <UserAvatar
           name={completedBy.name}

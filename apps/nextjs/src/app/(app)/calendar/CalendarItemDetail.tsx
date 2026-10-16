@@ -7,13 +7,7 @@ import type {
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowRight,
-  CalendarClock,
-  Clock,
-  Repeat,
-  SquareCheck,
-} from "lucide-react";
+import { ArrowRight, Clock, Repeat, SquareCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
@@ -27,7 +21,6 @@ import {
 import type { MemberLookup } from "./CalendarPeople";
 import { useTRPC } from "~/trpc/react";
 import { DoneBy, MemberPill, TurnPill } from "./CalendarPeople";
-import { DatePopover } from "./DatePopover";
 
 const pillClass = "gap-1.5 rounded-full border-transparent py-1";
 
@@ -40,8 +33,7 @@ interface CalendarItemDetailProps {
   onEdit: (item: CalendarItemView) => void;
   onJump: (date: string) => void;
   onSkip: () => void;
-  onMove: (date: string) => void;
-  onUnskip: (originalDate: string) => void;
+  onUnskip: (date: string) => void;
   onDelete: () => void;
 }
 
@@ -54,7 +46,6 @@ export function CalendarItemDetail({
   onEdit,
   onJump,
   onSkip,
-  onMove,
   onUnskip,
   onDelete,
 }: CalendarItemDetailProps) {
@@ -71,8 +62,7 @@ export function CalendarItemDetail({
   const detail = data?.success ? data.data : null;
   const item = detail?.item ?? entry.item;
   const isTask = item.kind === "task";
-  const canReschedule =
-    item.recurrence !== null && item.recurrence.type !== "afterDone";
+  const canSkip = item.recurrence !== null;
   const currentTurn =
     detail?.upcoming[0]?.turnGroupMemberId ??
     entry.occurrence.turnGroupMemberId;
@@ -149,7 +139,7 @@ export function CalendarItemDetail({
         <Section label={t("calendar.detail.comingUp")}>
           <ul className="divide-y overflow-hidden rounded-xl border">
             {detail.upcoming.map((occurrence) => (
-              <li key={occurrence.originalDate}>
+              <li key={occurrence.date}>
                 <button
                   type="button"
                   onClick={() => onJump(occurrence.date)}
@@ -180,25 +170,25 @@ export function CalendarItemDetail({
             <ul className="divide-y overflow-hidden rounded-xl border">
               {detail.history.map((row) => (
                 <li
-                  key={row.originalDate}
+                  key={row.date}
                   className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
                 >
                   {dayLabel(row.date)}
                   {row.skipped ? (
                     <span className="text-muted-foreground flex items-center gap-2 text-xs">
                       {t("calendar.detail.skipped")}
-                      {canReschedule && (
+                      {canSkip && (
                         <Button
                           variant="ghost"
                           size="xs"
-                          onClick={() => onUnskip(row.originalDate)}
+                          onClick={() => onUnskip(row.date)}
                         >
                           {t("calendar.detail.unskip")}
                         </Button>
                       )}
                     </span>
                   ) : (
-                    <DoneBy occurrence={row} />
+                    <DoneBy completedBy={row.completedBy} />
                   )}
                 </li>
               ))}
@@ -216,27 +206,15 @@ export function CalendarItemDetail({
         >
           {t("calendar.detail.edit")}
         </Button>
-        {canReschedule && !entry.occurrence.completedAt && (
-          <>
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={onSkip}
-              data-testid="calendar-detail-skip"
-            >
-              {t("calendar.detail.skip")}
-            </Button>
-            <DatePopover value={entry.occurrence.date} onSelect={onMove}>
-              <Button
-                variant="outline"
-                className="flex-1"
-                data-testid="calendar-detail-move"
-              >
-                <CalendarClock />
-                {t("calendar.detail.move")}
-              </Button>
-            </DatePopover>
-          </>
+        {canSkip && !entry.occurrence.completedAt && (
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={onSkip}
+            data-testid="calendar-detail-skip"
+          >
+            {t("calendar.detail.skip")}
+          </Button>
         )}
       </div>
       <Button

@@ -135,7 +135,7 @@ export function MonthGrid({
                 <View className="h-1.5 flex-row gap-0.5">
                   {entries.map(({ item, occurrence }) => (
                     <View
-                      key={`${item.id}-${occurrence.originalDate}`}
+                      key={`${item.id}-${occurrence.date}`}
                       className={cn(
                         "h-1.5 w-1.5 rounded-full",
                         item.kind === "event" ? "bg-info" : "bg-foreground",

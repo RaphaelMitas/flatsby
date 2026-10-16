@@ -40,8 +40,7 @@ export function CalendarEntryRow({
           testID={`calendar-entry-checkbox-${item.title}`}
           accessibilityLabel={item.title}
           checked={done}
-          disabled={pending || occurrence.projected}
-          className={occurrence.projected ? "opacity-50" : undefined}
+          disabled={pending}
           onCheckedChange={onToggle}
         />
       )}

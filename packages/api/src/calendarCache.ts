@@ -14,10 +14,12 @@ import { z } from "zod/v4";
 
 import {
   calendarRangeSchema,
+  splitsSeries,
   withDone,
   withoutItem,
-  withRescheduled,
   withSavedItem,
+  withSkipped,
+  withSplitSeries,
 } from "@flatsby/validators/calendar";
 
 import type { ApiResult } from "./errors";
@@ -42,11 +44,8 @@ interface CalendarFilters {
   details: QueryFilters;
 }
 
-// tRPC keys mutations by path, so this prefix matches every calendar write
-const calendarMutationKey = [["calendar"]];
-
 /** Applies one change to every cached month and item detail of the group, so nothing on screen lags behind. */
-export async function patchCalendar(
+async function patchCalendar(
   queryClient: QueryClient,
   filters: CalendarFilters,
   patch: CalendarPatch,
@@ -78,32 +77,12 @@ export async function patchCalendar(
   return [...ranges, ...details];
 }
 
-export const restoreCalendar = (
+const restoreCalendar = (
   queryClient: QueryClient,
   snapshot: CalendarSnapshot = [],
 ) => {
   for (const [key, cached] of snapshot) queryClient.setQueryData(key, cached);
 };
-
-const asView = (
-  id: number,
-  {
-    kind,
-    title,
-    startsOn,
-    time,
-    recurrence,
-    memberIds,
-  }: CreateCalendarItemInput,
-): CalendarItemView => ({
-  id,
-  kind,
-  title,
-  startsOn,
-  time,
-  recurrence,
-  memberIds,
-});
 
 /** Mutation callbacks for one calendar write; `onFailure` gets null when the request itself failed. */
 export const calendarMutation = <TInput>(
@@ -127,45 +106,62 @@ export const calendarMutation = <TInput>(
     restoreCalendar(queryClient, snapshot);
     onFailure(result.error.message);
   },
-  onSettled: () =>
-    // A refetch while another write is in flight would briefly show the older server state;
-    // deferred because a mutation still counts as running inside its own onSettled
-    setTimeout(() => {
-      if (queryClient.isMutating({ mutationKey: calendarMutationKey }) > 0)
-        return;
-      void queryClient.invalidateQueries(filters.ranges);
-      void queryClient.invalidateQueries(filters.details);
-    }),
+  onSettled: () => {
+    void queryClient.invalidateQueries(filters.ranges);
+    void queryClient.invalidateQueries(filters.details);
+  },
 });
+
+const asView = (
+  id: number,
+  {
+    kind,
+    title,
+    startsOn,
+    time,
+    recurrence,
+    memberIds,
+  }: CreateCalendarItemInput,
+): CalendarItemView => ({
+  id,
+  kind,
+  title,
+  startsOn,
+  endsOn: null,
+  time,
+  recurrence,
+  memberIds,
+});
+
+// Negative so it never collides with a real id before the refetch lands
+const temporaryId = () => -Date.now();
 
 /** The optimistic side of each calendar mutation, shared by both clients. */
 export const calendarPatches = {
   setDone: (
-    input: { itemId: number; originalDate: string; done: boolean },
+    input: { itemId: number; date: string; done: boolean },
     me: { groupMemberId: number; person: DebtPerson },
   ): CalendarPatch => ({
-    range: (range, window) =>
-      withDone(
-        range,
-        { ...input, byGroupMemberId: me.groupMemberId, by: me.person },
-        window,
-      ),
+    range: (range) =>
+      withDone(range, {
+        ...input,
+        byGroupMemberId: me.groupMemberId,
+        by: me.person,
+      }),
   }),
 
-  reschedule: (input: {
+  setSkipped: (input: {
     itemId: number;
-    originalDate: string;
-    movedTo: string | null;
+    date: string;
     skipped: boolean;
   }): CalendarPatch => ({
-    range: (range, window) => withRescheduled(range, input, window),
+    range: (range, window) => withSkipped(range, input, window),
     detail: (detail) =>
       detail.item.id === input.itemId && !input.skipped
         ? {
             ...detail,
             history: detail.history.filter(
-              (entry) =>
-                entry.originalDate !== input.originalDate || entry.completedAt,
+              (entry) => entry.date !== input.date || entry.completedAt,
             ),
           }
         : detail,
@@ -176,17 +172,28 @@ export const calendarPatches = {
   }),
 
   create: (input: CreateCalendarItemInput): CalendarPatch => {
-    // Negative so it never collides with a real id before the refetch lands
-    const item = asView(-Date.now(), input);
+    const item = asView(temporaryId(), input);
     return { range: (range, window) => withSavedItem(range, item, window) };
   },
 
   update: (input: CreateCalendarItemInput & { id: number }): CalendarPatch => {
-    const item = asView(input.id, input);
+    const split = asView(temporaryId(), input);
+    const edited = (previous: CalendarItemView) => ({
+      ...asView(input.id, input),
+      endsOn: previous.endsOn,
+    });
     return {
-      range: (range, window) => withSavedItem(range, item, window),
+      range: (range, window) => {
+        const previous = range.items.find((item) => item.id === input.id);
+        if (!previous) return range;
+        return splitsSeries(previous, input)
+          ? withSplitSeries(range, previous.id, split, window)
+          : withSavedItem(range, edited(previous), window);
+      },
       detail: (detail) =>
-        detail.item.id === item.id ? { ...detail, item } : detail,
+        detail.item.id === input.id && !splitsSeries(detail.item, input)
+          ? { ...detail, item: edited(detail.item) }
+          : detail,
     };
   },
 };

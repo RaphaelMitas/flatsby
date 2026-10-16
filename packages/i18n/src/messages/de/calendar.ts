@@ -17,7 +17,6 @@ export const calendar = {
   turnOf: "{name} ist dran",
   anyone: "Beliebig",
   doneBy: "Erledigt von {name}",
-  coveredBy: "Übernommen von {name}",
   allDay: "Ganztägig",
   overdue: "Überfällig",
   kind: {
@@ -48,7 +47,6 @@ export const calendar = {
     daily: "Jeden Tag",
     weekly: "Jede Woche",
     biweekly: "Alle 2 Wochen",
-    afterDone: "Nach Erledigung",
     custom: "Eigene",
   },
   unit: {
@@ -60,8 +58,6 @@ export const calendar = {
     daily: "{count, plural, =1 {Jeden Tag} other {Alle # Tage}}",
     weekly:
       "{count, plural, =1 {Jeden {days}} =2 {Jeden zweiten {days}} other {Alle # Wochen am {days}}}",
-    afterDone:
-      "{count, plural, one {# Tag} other {# Tage}} nach der letzten Erledigung",
   },
   detail: {
     order: "Reihenfolge",
@@ -71,7 +67,6 @@ export const calendar = {
     skipped: "Ausgelassen",
     skip: "Dieses Mal auslassen",
     unskip: "Doch nicht auslassen",
-    move: "Dieses Mal verschieben",
     edit: "Bearbeiten",
     delete: "Löschen",
     confirmDelete: "Nochmal tippen, um es samt Verlauf zu löschen",

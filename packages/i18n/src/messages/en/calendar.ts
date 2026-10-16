@@ -15,7 +15,6 @@ export const calendar = {
   turnOf: "{name}'s turn",
   anyone: "Anyone",
   doneBy: "Done by {name}",
-  coveredBy: "Covered by {name}",
   allDay: "All day",
   overdue: "Overdue",
   kind: {
@@ -45,7 +44,6 @@ export const calendar = {
     daily: "Every day",
     weekly: "Every week",
     biweekly: "Every 2 weeks",
-    afterDone: "After it's done",
     custom: "Custom",
   },
   unit: {
@@ -57,8 +55,6 @@ export const calendar = {
     daily: "{count, plural, =1 {Every day} other {Every # days}}",
     weekly:
       "{count, plural, =1 {Every {days}} =2 {Every other {days}} other {Every # weeks on {days}}}",
-    afterDone:
-      "{count, plural, one {# day} other {# days}} after it's last done",
   },
   detail: {
     order: "Taking turns",
@@ -68,7 +64,6 @@ export const calendar = {
     skipped: "Skipped",
     skip: "Skip this one",
     unskip: "Don't skip",
-    move: "Move this one",
     edit: "Edit",
     delete: "Delete",
     confirmDelete: "Tap again to delete it and its history",

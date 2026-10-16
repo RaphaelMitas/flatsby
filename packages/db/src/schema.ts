@@ -444,6 +444,8 @@ export const calendarItems = createTable(
     kind: varchar("kind", { length: 16 }).$type<CalendarItemKind>().notNull(),
     title: varchar("title", { length: 256 }).notNull(),
     startsOn: date("starts_on", { mode: "string" }).notNull(),
+    // Set when an edit split the series and a newer item took over
+    endsOn: date("ends_on", { mode: "string" }),
     // Wall-clock time, so 19:00 stays 19:00 across DST; null means all day
     time: time("time"),
     // null means it happens once
@@ -497,30 +499,21 @@ export const calendarItemMembersRelations = relations(
   }),
 );
 
-/** Only occurrences that differ from the rule get a row: done, skipped or moved. */
+/** Only occurrences that differ from the rule get a row: done or skipped. */
 export const calendarOccurrences = createTable(
   "calendar_occurrence",
   {
     itemId: integer("item_id")
       .notNull()
       .references(() => calendarItems.id, { onDelete: "cascade" }),
-    originalDate: date("original_date", { mode: "string" }).notNull(),
-    movedTo: date("moved_to", { mode: "string" }),
+    date: date("occurs_on", { mode: "string" }).notNull(),
     skipped: boolean("skipped").default(false).notNull(),
     completedByGroupMemberId: integer(
       "completed_by_group_member_id",
     ).references(() => groupMembers.id, { onDelete: "set null" }),
     completedAt: timestamp("completed_at"),
-    // Whose turn it was when it was done, so later rotation changes don't rewrite history
-    turnGroupMemberId: integer("turn_group_member_id").references(
-      () => groupMembers.id,
-      { onDelete: "set null" },
-    ),
   },
-  (table) => [
-    primaryKey({ columns: [table.itemId, table.originalDate] }),
-    index("calendar_occurrence_moved_idx").on(table.itemId, table.movedTo),
-  ],
+  (table) => [primaryKey({ columns: [table.itemId, table.date] })],
 );
 
 export const calendarOccurrencesRelations = relations(

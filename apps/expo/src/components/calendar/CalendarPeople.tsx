@@ -4,8 +4,6 @@ import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
 import { Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
-import { wasCovered } from "@flatsby/validators/calendar";
-
 import { cn } from "~/lib/utils";
 import { MemberAvatar } from "../expenses/MemberAvatar";
 
@@ -71,10 +69,7 @@ export function OccurrenceStatus({
 }: {
   occurrence: Pick<
     Occurrence,
-    | "turnGroupMemberId"
-    | "completedByGroupMemberId"
-    | "completedBy"
-    | "completedAt"
+    "turnGroupMemberId" | "completedBy" | "completedAt"
   >;
   people: CalendarPeople;
 }) {
@@ -84,14 +79,7 @@ export function OccurrenceStatus({
   if (occurrence.completedAt) {
     const doer = occurrence.completedBy ?? people.person(null);
     return (
-      <PersonPill
-        person={doer}
-        label={
-          wasCovered(occurrence)
-            ? t("coveredBy", { name: doer.name })
-            : t("doneBy", { name: doer.name })
-        }
-      />
+      <PersonPill person={doer} label={t("doneBy", { name: doer.name })} />
     );
   }
   if (turn === null) return null;

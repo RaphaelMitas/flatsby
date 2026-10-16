@@ -21,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   describeRecurrence,
+  editedStartsOn,
   formatCalendarDate,
   maxEvery,
   newRepeatForm,
@@ -42,6 +43,7 @@ interface CalendarItemFormProps {
   members: GroupMemberWithUserInfo[];
   item?: CalendarItemView;
   defaultDate: string;
+  today: string;
   onCancel: () => void;
   onSubmit: (input: CreateCalendarItemInput) => void;
 }
@@ -51,6 +53,7 @@ export function CalendarItemForm({
   members,
   item,
   defaultDate,
+  today,
   onCancel,
   onSubmit,
 }: CalendarItemFormProps) {
@@ -58,7 +61,7 @@ export function CalendarItemForm({
   const locale = useLocale();
   const [kind, setKind] = useState<CalendarItemKind>(item?.kind ?? "task");
   const [title, setTitle] = useState(item?.title ?? "");
-  const [startsOn, setStartsOn] = useState(item?.startsOn ?? defaultDate);
+  const [pickedStart, setPickedStart] = useState<string | null>(null);
   const [time, setTime] = useState(item?.time ?? null);
   const [repeat, setRepeat] = useState<RepeatForm>(() =>
     item ? repeatFormOf(item.recurrence) : newRepeatForm,
@@ -68,15 +71,12 @@ export function CalendarItemForm({
   const [everyText, setEveryText] = useState(String(repeat.every));
 
   const isTask = kind === "task";
-  const recurrence = recurrenceOf(repeat, startsOn, kind);
+  const startsOn = item
+    ? editedStartsOn(item, repeat, pickedStart, today)
+    : (pickedStart ?? defaultDate);
+  const recurrence = recurrenceOf(repeat, startsOn);
   const weekDays = repeat.days ?? [weekdayOf(startsOn)];
   const canSave = title.trim().length > 0;
-
-  const changeKind = (next: CalendarItemKind) => {
-    setKind(next);
-    if (next === "event" && repeat.choice === "afterDone")
-      setRepeat({ ...repeat, choice: "never" });
-  };
 
   const toggleDay = (day: Weekday) => {
     const days = weekDays.includes(day)
@@ -126,23 +126,25 @@ export function CalendarItemForm({
         data-testid="calendar-form-title"
       />
 
-      <Tabs
-        value={kind}
-        onValueChange={(value) =>
-          changeKind(value === "event" ? "event" : "task")
-        }
-      >
-        <TabsList className="w-full">
-          <TabsTrigger value="task" data-testid="calendar-form-kind-task">
-            <SquareCheck />
-            {t("calendar.kind.task")}
-          </TabsTrigger>
-          <TabsTrigger value="event" data-testid="calendar-form-kind-event">
-            <Clock />
-            {t("calendar.kind.event")}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {!item && (
+        <Tabs
+          value={kind}
+          onValueChange={(value) =>
+            setKind(value === "event" ? "event" : "task")
+          }
+        >
+          <TabsList className="w-full">
+            <TabsTrigger value="task" data-testid="calendar-form-kind-task">
+              <SquareCheck />
+              {t("calendar.kind.task")}
+            </TabsTrigger>
+            <TabsTrigger value="event" data-testid="calendar-form-kind-event">
+              <Clock />
+              {t("calendar.kind.event")}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
 
       <div className="divide-y rounded-xl border">
         <FormRow
@@ -150,7 +152,7 @@ export function CalendarItemForm({
             recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
           }
         >
-          <DatePopover value={startsOn} onSelect={setStartsOn}>
+          <DatePopover value={startsOn} onSelect={setPickedStart}>
             <Button
               type="button"
               variant="secondary"
@@ -191,20 +193,18 @@ export function CalendarItemForm({
 
       <Field label={t("calendar.form.repeat")}>
         <div className="flex flex-wrap gap-1.5">
-          {repeatChoices
-            .filter((choice) => isTask || choice !== "afterDone")
-            .map((choice) => (
-              <Chip
-                key={choice}
-                selected={repeat.choice === choice}
-                onClick={() => setRepeat({ ...repeat, choice })}
-                testId={`calendar-repeat-${choice}`}
-              >
-                {t(`calendar.repeatOption.${choice}`)}
-              </Chip>
-            ))}
+          {repeatChoices.map((choice) => (
+            <Chip
+              key={choice}
+              selected={repeat.choice === choice}
+              onClick={() => setRepeat({ ...repeat, choice })}
+              testId={`calendar-repeat-${choice}`}
+            >
+              {t(`calendar.repeatOption.${choice}`)}
+            </Chip>
+          ))}
         </div>
-        {(repeat.choice === "custom" || repeat.choice === "afterDone") && (
+        {repeat.choice === "custom" && (
           <div className="flex flex-wrap items-center gap-2 pt-1 text-sm">
             {t("calendar.form.every")}
             <Input
@@ -226,26 +226,22 @@ export function CalendarItemForm({
               className="w-20"
               data-testid="calendar-form-interval"
             />
-            {repeat.choice === "afterDone" ? (
-              t("calendar.unit.days", { count: repeat.every })
-            ) : (
-              <div className="flex gap-1.5">
-                {(["days", "weeks"] as const).map((unit) => (
-                  <Chip
-                    key={unit}
-                    selected={repeat.unit === unit}
-                    onClick={() => {
-                      const next = { ...repeat, unit };
-                      const every = Math.min(next.every, maxEvery(next));
-                      setRepeat({ ...next, every });
-                      setEveryText(String(every));
-                    }}
-                  >
-                    {t(`calendar.unit.${unit}`, { count: repeat.every })}
-                  </Chip>
-                ))}
-              </div>
-            )}
+            <div className="flex gap-1.5">
+              {(["days", "weeks"] as const).map((unit) => (
+                <Chip
+                  key={unit}
+                  selected={repeat.unit === unit}
+                  onClick={() => {
+                    const next = { ...repeat, unit };
+                    const every = Math.min(next.every, maxEvery(next));
+                    setRepeat({ ...next, every });
+                    setEveryText(String(every));
+                  }}
+                >
+                  {t(`calendar.unit.${unit}`, { count: repeat.every })}
+                </Chip>
+              ))}
+            </div>
           </div>
         )}
         {repeatShowsDays(repeat) && (

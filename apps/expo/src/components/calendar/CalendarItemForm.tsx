@@ -6,7 +6,7 @@ import type {
   Weekday,
 } from "@flatsby/validators/calendar";
 import type { ReactNode } from "react";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ import { useLocale, useTranslations } from "use-intl";
 import {
   createCalendarItemSchema,
   describeRecurrence,
+  editedStartsOn,
   localDate,
   maxEvery,
   monthOf,
@@ -24,7 +25,6 @@ import {
   repeatChoices,
   repeatFormOf,
   repeatShowsDays,
-  watchLocalDate,
   weekdayName,
   weekdayOf,
   weekdays,
@@ -100,7 +100,7 @@ export function CalendarItemForm({
   itemId,
   date,
 }: CalendarItemFormProps) {
-  const today = useSyncExternalStore(watchLocalDate, localDate);
+  const today = localDate();
   const { data } = useQuery(
     trpc.calendar.item.queryOptions(
       { groupId: group.id, id: itemId ?? -1, today },
@@ -109,7 +109,7 @@ export function CalendarItemForm({
   );
 
   if (itemId === undefined) {
-    return <ItemFields group={group} startsOn={date ?? today} />;
+    return <ItemFields group={group} defaultStart={date ?? today} />;
   }
   if (!data) {
     return (
@@ -131,7 +131,7 @@ export function CalendarItemForm({
     <ItemFields
       group={group}
       item={data.data.item}
-      startsOn={data.data.item.startsOn}
+      defaultStart={data.data.item.startsOn}
     />
   );
 }
@@ -139,11 +139,11 @@ export function CalendarItemForm({
 function ItemFields({
   group,
   item,
-  startsOn: initialStartsOn,
+  defaultStart,
 }: {
   group: GroupWithAccess;
   item?: CalendarItemView;
-  startsOn: string;
+  defaultStart: string;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -154,18 +154,18 @@ function ItemFields({
 
   const [title, setTitle] = useState(item?.title ?? "");
   const [kind, setKind] = useState<CalendarItemKind>(item?.kind ?? "task");
-  const [startsOn, setStartsOn] = useState(initialStartsOn);
+  const [pickedStart, setPickedStart] = useState<string | null>(null);
   const [time, setTime] = useState(item?.time ?? null);
   const [repeat, setRepeat] = useState(() =>
     item ? repeatFormOf(item.recurrence) : newRepeatForm,
   );
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
 
+  const startsOn = item
+    ? editedStartsOn(item, repeat, pickedStart, localDate())
+    : (pickedStart ?? defaultStart);
   const days = repeat.days ?? [weekdayOf(startsOn)];
   const isTask = kind === "task";
-  const choices = repeatChoices.filter(
-    (choice) => isTask || choice !== "afterDone",
-  );
   const changeRepeat = (change: Partial<RepeatForm>) => {
     const next = { ...repeat, ...change };
     setRepeat({ ...next, every: Math.min(next.every, maxEvery(next)) });
@@ -177,7 +177,7 @@ function ItemFields({
     title,
     startsOn,
     time: isTask ? null : time,
-    recurrence: recurrenceOf(repeat, startsOn, kind),
+    recurrence: recurrenceOf(repeat, startsOn),
     memberIds: isTask ? memberIds : [],
   };
   const valid = createCalendarItemSchema.safeParse(input).success;
@@ -196,7 +196,7 @@ function ItemFields({
       });
       await queryClient
         .query({
-          ...calendarRangeOptions(group.id, monthOf(startsOn), localDate()),
+          ...calendarRangeOptions(group.id, monthOf(startsOn)),
           staleTime: "static",
         })
         .catch(() => undefined);
@@ -237,37 +237,35 @@ function ItemFields({
         returnKeyType="done"
       />
 
-      <View className="mt-4">
-        <Segmented
-          value={kind}
-          onChange={(next) => {
-            setKind(next);
-            if (next === "event" && repeat.choice === "afterDone")
-              changeRepeat({ choice: "never" });
-          }}
-          options={[
-            {
-              value: "task",
-              label: t("calendar.kind.task"),
-              icon: "square-check",
-              testID: "calendar-form-kind-task",
-            },
-            {
-              value: "event",
-              label: t("calendar.kind.event"),
-              icon: "clock",
-              testID: "calendar-form-kind-event",
-            },
-          ]}
-        />
-      </View>
+      {!item && (
+        <View className="mt-4">
+          <Segmented
+            value={kind}
+            onChange={setKind}
+            options={[
+              {
+                value: "task",
+                label: t("calendar.kind.task"),
+                icon: "square-check",
+                testID: "calendar-form-kind-task",
+              },
+              {
+                value: "event",
+                label: t("calendar.kind.event"),
+                icon: "clock",
+                testID: "calendar-form-kind-event",
+              },
+            ]}
+          />
+        </View>
+      )}
 
       <View className="mt-6 gap-4">
         <DatePickerField
           testID="calendar-form-starts-on"
           label={t("calendar.form.startsOn")}
           value={pickerDate(startsOn)}
-          onChange={(picked) => setStartsOn(localDate(picked))}
+          onChange={(picked) => setPickedStart(localDate(picked))}
         />
         {!isTask && (
           <>
@@ -296,7 +294,7 @@ function ItemFields({
 
       <FieldLabel>{t("calendar.form.repeat")}</FieldLabel>
       <View className="flex-row flex-wrap gap-1.5">
-        {choices.map((choice) => (
+        {repeatChoices.map((choice) => (
           <Chip
             key={choice}
             testID={`calendar-form-repeat-${choice}`}
@@ -307,7 +305,7 @@ function ItemFields({
         ))}
       </View>
 
-      {(repeat.choice === "custom" || repeat.choice === "afterDone") && (
+      {repeat.choice === "custom" && (
         <View className="mt-3 flex-row flex-wrap items-center gap-2">
           <Text className="text-foreground">{t("calendar.form.every")}</Text>
           <Button
@@ -329,27 +327,21 @@ function ItemFields({
             disabled={repeat.every >= maxEvery(repeat)}
             onPress={() => changeRepeat({ every: repeat.every + 1 })}
           />
-          {repeat.choice === "custom" ? (
-            <Segmented
-              size="sm"
-              value={repeat.unit}
-              onChange={(unit) => changeRepeat({ unit })}
-              options={[
-                {
-                  value: "days",
-                  label: t("calendar.unit.days", { count: repeat.every }),
-                },
-                {
-                  value: "weeks",
-                  label: t("calendar.unit.weeks", { count: repeat.every }),
-                },
-              ]}
-            />
-          ) : (
-            <Text className="text-foreground">
-              {t("calendar.unit.days", { count: repeat.every })}
-            </Text>
-          )}
+          <Segmented
+            size="sm"
+            value={repeat.unit}
+            onChange={(unit) => changeRepeat({ unit })}
+            options={[
+              {
+                value: "days",
+                label: t("calendar.unit.days", { count: repeat.every }),
+              },
+              {
+                value: "weeks",
+                label: t("calendar.unit.weeks", { count: repeat.every }),
+              },
+            ]}
+          />
         </View>
       )}
 

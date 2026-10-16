@@ -1,6 +1,6 @@
 import type { GroupWithAccess } from "@flatsby/api";
 import type { ReactNode } from "react";
-import { Fragment, useState, useSyncExternalStore } from "react";
+import { Fragment, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -10,15 +10,12 @@ import {
   describeRecurrence,
   formatCalendarDate,
   localDate,
-  pickerDate,
-  watchLocalDate,
 } from "@flatsby/validators/calendar";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Badge } from "~/lib/ui/badge";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { DatePickerField } from "~/lib/ui/date-picker-field";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import {
@@ -31,10 +28,8 @@ import { useCalendarMutations } from "./useCalendarMutations";
 interface CalendarItemDetailProps {
   group: GroupWithAccess;
   itemId: number;
-  /** The occurrence that was tapped, which skip and move act on */
-  originalDate: string | undefined;
-  /** Where that occurrence sits now, which differs once it was moved */
-  currentDate: string | undefined;
+  /** The occurrence that was tapped, which skip acts on */
+  date: string | undefined;
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -79,17 +74,15 @@ function DateRow({
 export function CalendarItemDetail({
   group,
   itemId,
-  originalDate,
-  currentDate,
+  date,
 }: CalendarItemDetailProps) {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
   const people = useCalendarPeople(group);
-  const today = useSyncExternalStore(watchLocalDate, localDate);
-  const { reschedule, remove } = useCalendarMutations(group);
+  const today = localDate();
+  const { setSkipped, remove } = useCalendarMutations(group);
   const [armed, setArmed] = useState(false);
-  const [moving, setMoving] = useState(false);
 
   const { data } = useQuery(
     trpc.calendar.item.queryOptions({ groupId: group.id, id: itemId, today }),
@@ -113,33 +106,25 @@ export function CalendarItemDetail({
   }
 
   const { item, upcoming, history } = data.data;
-  const dayLabel = (date: string) =>
-    date === today
+  const dayLabel = (day: string) =>
+    day === today
       ? t("calendar.today")
-      : formatCalendarDate(date, locale, {
+      : formatCalendarDate(day, locale, {
           weekday: "short",
           day: "numeric",
           month: "short",
         });
-  const repeatsOnSchedule =
-    item.recurrence !== null && item.recurrence.type !== "afterDone";
-  const canReschedule = originalDate !== undefined && repeatsOnSchedule;
+  const repeats = item.recurrence !== null;
   const currentTurn = upcoming[0]?.turnGroupMemberId ?? null;
-  const showOnCalendar = (date: string) =>
-    router.dismissTo({ pathname: "/(tabs)/calendar", params: { date } });
-
-  const rescheduleTo = (movedTo: string | null) => {
-    if (!originalDate) return;
-    reschedule.mutate({
+  const showOnCalendar = (day: string) =>
+    router.dismissTo({ pathname: "/(tabs)/calendar", params: { date: day } });
+  const skip = (day: string, skipped: boolean) =>
+    setSkipped.mutate({
       groupId: group.id,
       itemId: item.id,
-      originalDate,
-      movedTo,
-      skipped: movedTo === null,
+      date: day,
+      skipped,
     });
-    if (movedTo) showOnCalendar(movedTo);
-    else router.back();
-  };
 
   return (
     <AppScrollView contentContainerClassName="p-5 pb-12">
@@ -212,7 +197,7 @@ export function CalendarItemDetail({
           <View className="border-border rounded-lg border">
             {upcoming.map((occurrence, index) => (
               <DateRow
-                key={occurrence.originalDate}
+                key={occurrence.date}
                 first={index === 0}
                 label={dayLabel(occurrence.date)}
                 onPress={() => showOnCalendar(occurrence.date)}
@@ -234,7 +219,7 @@ export function CalendarItemDetail({
             <View className="border-border rounded-lg border">
               {history.map((entry, index) => (
                 <DateRow
-                  key={entry.originalDate}
+                  key={entry.date}
                   first={index === 0}
                   label={dayLabel(entry.date)}
                 >
@@ -243,26 +228,21 @@ export function CalendarItemDetail({
                       <Text className="text-muted-foreground text-sm">
                         {t("calendar.detail.skipped")}
                       </Text>
-                      {repeatsOnSchedule && (
+                      {repeats && (
                         <Button
                           testID="calendar-detail-unskip"
                           variant="ghost"
                           size="sm"
                           title={t("calendar.detail.unskip")}
-                          onPress={() =>
-                            reschedule.mutate({
-                              groupId: group.id,
-                              itemId: item.id,
-                              originalDate: entry.originalDate,
-                              movedTo: null,
-                              skipped: false,
-                            })
-                          }
+                          onPress={() => skip(entry.date, false)}
                         />
                       )}
                     </View>
                   ) : (
-                    <OccurrenceStatus occurrence={entry} people={people} />
+                    <OccurrenceStatus
+                      occurrence={{ ...entry, turnGroupMemberId: null }}
+                      people={people}
+                    />
                   )}
                 </DateRow>
               ))}
@@ -271,34 +251,18 @@ export function CalendarItemDetail({
         </Section>
       )}
 
-      {canReschedule && (
-        <View className="mt-6 gap-2">
-          <View className="flex-row gap-2">
-            <Button
-              testID="calendar-detail-skip"
-              className="flex-1"
-              variant="outline"
-              icon="skip-forward"
-              title={t("calendar.detail.skip")}
-              onPress={() => rescheduleTo(null)}
-            />
-            <Button
-              testID="calendar-detail-move"
-              className="flex-1"
-              variant="outline"
-              icon="calendar-arrow-up"
-              title={t("calendar.detail.move")}
-              onPress={() => setMoving(!moving)}
-            />
-          </View>
-          {moving && originalDate && (
-            <DatePickerField
-              label={t("calendar.form.date")}
-              value={pickerDate(currentDate ?? originalDate)}
-              onChange={(date) => rescheduleTo(localDate(date))}
-            />
-          )}
-        </View>
+      {repeats && date && (
+        <Button
+          testID="calendar-detail-skip"
+          className="mt-6"
+          variant="outline"
+          icon="skip-forward"
+          title={t("calendar.detail.skip")}
+          onPress={() => {
+            skip(date, true);
+            router.back();
+          }}
+        />
       )}
 
       <View className="mt-6 flex-row gap-2">

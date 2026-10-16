@@ -1,5 +1,5 @@
 {
-  "id": "8a6786d6-a0e4-44d1-a5e7-1707c7a3ce1a",
+  "id": "e1158dd3-4b97-4c54-a8b4-3e53b4a9fde7",
   "prevId": "d51adbc9-1fb1-43fe-b769-2bf164c89437",
   "version": "7",
   "dialect": "postgresql",
@@ -194,6 +194,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "ends_on": {
+          "name": "ends_on",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
         "time": {
           "name": "time",
           "type": "time",
@@ -273,17 +279,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "original_date": {
-          "name": "original_date",
+        "occurs_on": {
+          "name": "occurs_on",
           "type": "date",
           "primaryKey": false,
           "notNull": true
-        },
-        "moved_to": {
-          "name": "moved_to",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
         },
         "skipped": {
           "name": "skipped",
@@ -303,37 +303,9 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
-        },
-        "turn_group_member_id": {
-          "name": "turn_group_member_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         }
       },
-      "indexes": {
-        "calendar_occurrence_moved_idx": {
-          "name": "calendar_occurrence_moved_idx",
-          "columns": [
-            {
-              "expression": "item_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "moved_to",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "flat-cove_calendar_occurrence_item_id_flat-cove_calendar_item_id_fk": {
           "name": "flat-cove_calendar_occurrence_item_id_flat-cove_calendar_item_id_fk",
@@ -352,21 +324,12 @@
           "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
-        },
-        "flat-cove_calendar_occurrence_turn_group_member_id_flat-cove_group_members_id_fk": {
-          "name": "flat-cove_calendar_occurrence_turn_group_member_id_flat-cove_group_members_id_fk",
-          "tableFrom": "flat-cove_calendar_occurrence",
-          "tableTo": "flat-cove_group_members",
-          "columnsFrom": ["turn_group_member_id"],
-          "columnsTo": ["id"],
-          "onDelete": "set null",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
-        "flat-cove_calendar_occurrence_item_id_original_date_pk": {
-          "name": "flat-cove_calendar_occurrence_item_id_original_date_pk",
-          "columns": ["item_id", "original_date"]
+        "flat-cove_calendar_occurrence_item_id_occurs_on_pk": {
+          "name": "flat-cove_calendar_occurrence_item_id_occurs_on_pk",
+          "columns": ["item_id", "occurs_on"]
         }
       },
       "uniqueConstraints": {},

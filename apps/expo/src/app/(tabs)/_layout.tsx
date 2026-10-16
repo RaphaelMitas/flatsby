@@ -77,9 +77,8 @@ export default function TabLayout() {
           },
         ),
       );
-      const today = localDate();
       void prefetch(
-        calendarRangeOptions(selectedGroupId, monthOf(today), today),
+        calendarRangeOptions(selectedGroupId, monthOf(localDate())),
       );
     }
 

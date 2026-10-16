@@ -116,7 +116,7 @@ export function MonthGrid({
                   .slice(0, MAX_DOTS)
                   .map(({ item, occurrence }) => (
                     <span
-                      key={`${item.id}-${occurrence.originalDate}`}
+                      key={`${item.id}-${occurrence.date}`}
                       className={cn(
                         "size-1.5 rounded-full",
                         item.kind === "event" ? "bg-info" : "bg-foreground",

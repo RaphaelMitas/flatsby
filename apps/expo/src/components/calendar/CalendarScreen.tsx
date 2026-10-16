@@ -1,5 +1,5 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -14,7 +14,6 @@ import {
   monthGrid,
   monthOf,
   shiftMonth,
-  watchLocalDate,
 } from "@flatsby/validators/calendar";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -26,13 +25,9 @@ import { useCalendarPeople } from "./CalendarPeople";
 import { MonthGrid } from "./MonthGrid";
 import { useCalendarMutations } from "./useCalendarMutations";
 
-export const calendarRangeOptions = (
-  groupId: number,
-  month: string,
-  today: string,
-) => {
+export const calendarRangeOptions = (groupId: number, month: string) => {
   const { from, to } = monthGrid(month);
-  return trpc.calendar.range.queryOptions({ groupId, from, to, today });
+  return trpc.calendar.range.queryOptions({ groupId, from, to });
 };
 
 export function CalendarScreen({ group }: { group: GroupWithAccess }) {
@@ -40,34 +35,28 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const locale = useLocale();
   const router = useRouter();
   const people = useCalendarPeople(group);
-  const today = useSyncExternalStore(watchLocalDate, localDate);
+  const today = localDate();
   const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(monthOf(today));
   const [mine, setMine] = useState(false);
-  const [shownToday, setShownToday] = useState(today);
   const { date: jumpTo } = useLocalSearchParams<{ date?: string }>();
   const { setDone } = useCalendarMutations(group);
 
   const { data, refetch } = useQuery({
-    ...calendarRangeOptions(group.id, month, today),
+    ...calendarRangeOptions(group.id, month),
     placeholderData: keepPreviousData,
   });
   const range = data?.success ? data.data : undefined;
 
   useEffect(() => {
-    prefetch(calendarRangeOptions(group.id, shiftMonth(month, -1), today));
-    prefetch(calendarRangeOptions(group.id, shiftMonth(month, 1), today));
-  }, [group.id, month, today]);
+    prefetch(calendarRangeOptions(group.id, shiftMonth(month, -1)));
+    prefetch(calendarRangeOptions(group.id, shiftMonth(month, 1)));
+  }, [group.id, month]);
 
   const select = (date: string) => {
     setSelected(date);
     setMonth(monthOf(date));
   };
-
-  if (shownToday !== today) {
-    setShownToday(today);
-    if (selected === shownToday) select(today);
-  }
 
   useEffect(() => {
     if (!jumpTo) return;
@@ -169,7 +158,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
           <View className="border-border overflow-hidden rounded-lg border">
             {shown.map((entry, index) => (
               <View
-                key={`${entry.item.id}-${entry.occurrence.originalDate}`}
+                key={`${entry.item.id}-${entry.occurrence.date}`}
                 className={index > 0 ? "border-border border-t" : undefined}
               >
                 <CalendarEntryRow
@@ -180,9 +169,8 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
                     setDone.mutate({
                       groupId: group.id,
                       itemId: entry.item.id,
-                      originalDate: entry.occurrence.originalDate,
+                      date: entry.occurrence.date,
                       done,
-                      today,
                     })
                   }
                   onOpen={() =>
@@ -190,10 +178,9 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
                       pathname: "/(tabs)/calendar/[itemId]",
                       params: {
                         itemId: String(entry.item.id),
-                        // Only an open occurrence can be skipped or moved
+                        // Only an open occurrence can be skipped
                         ...(!entry.occurrence.completedAt && {
-                          date: entry.occurrence.originalDate,
-                          at: entry.occurrence.date,
+                          date: entry.occurrence.date,
                         }),
                       },
                     })
