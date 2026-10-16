@@ -12,7 +12,7 @@ import { useShoppingStore } from "~/utils/shopping-store";
 
 type Render = (group: GroupWithAccess) => ReactNode;
 
-export function CalendarGroupGate({ children }: { children: Render }) {
+export function GroupGate({ children }: { children: Render }) {
   const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
 
@@ -50,6 +50,15 @@ function GroupLoader({
   const { data } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
-  if (!data.success) return handleApiError({ router, error: data.error });
+  if (!data.success) {
+    handleApiError({ router, error: data.error });
+    return (
+      <View className="flex-1 items-center justify-center p-4">
+        <Text className="text-destructive text-center">
+          {data.error.message}
+        </Text>
+      </View>
+    );
+  }
   return children(data.data);
 }

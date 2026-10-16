@@ -7,10 +7,11 @@ import type {
   CalendarRange,
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   keepPreviousData,
   useQuery,
+  useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
@@ -32,6 +33,7 @@ import {
   monthGrid,
   monthOf,
   shiftMonth,
+  watchLocalDate,
 } from "@flatsby/validators/calendar";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -49,8 +51,6 @@ type Panel =
 
 const EMPTY_RANGE: CalendarRange = { items: [], occurrences: [] };
 
-const subscribeNever = () => () => undefined;
-
 export function CalendarView() {
   const trpc = useTRPC();
   const handleApiError = useHandleApiError();
@@ -59,7 +59,7 @@ export function CalendarView() {
     trpc.group.getGroup.queryOptions({ id: currentGroup?.id ?? 0 }),
   );
   // "Today" is the viewer's local day, which the server can't know while rendering
-  const today = useSyncExternalStore(subscribeNever, localDate, () => null);
+  const today = useSyncExternalStore(watchLocalDate, localDate, () => null);
 
   if (!groupData.success) return handleApiError(groupData.error);
   if (!today)
@@ -68,7 +68,13 @@ export function CalendarView() {
         <LoadingSpinner />
       </div>
     );
-  return <CalendarScreen group={groupData.data} today={today} />;
+  return (
+    <CalendarScreen
+      key={groupData.data.id}
+      group={groupData.data}
+      today={today}
+    />
+  );
 }
 
 function CalendarScreen({
@@ -80,9 +86,12 @@ function CalendarScreen({
 }) {
   const t = useTranslations();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const handleApiError = useHandleApiError();
   const isLargeScreen = useMediaQuery("lg");
   const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(monthOf(today));
+  const [shownToday, setShownToday] = useState(today);
   const [mine, setMine] = useState(false);
   const [panel, setPanel] = useState<Panel | null>(null);
 
@@ -92,6 +101,14 @@ function CalendarScreen({
     () => new Map(group.groupMembers.map((member) => [member.id, member])),
     [group.groupMembers],
   );
+  if (today !== shownToday) {
+    setShownToday(today);
+    if (selected === shownToday) {
+      setSelected(today);
+      setMonth(monthOf(today));
+    }
+  }
+
   const { from, to } = monthGrid(month);
   const { data } = useQuery(
     trpc.calendar.range.queryOptions(
@@ -99,11 +116,31 @@ function CalendarScreen({
       { placeholderData: keepPreviousData },
     ),
   );
+  useEffect(() => {
+    for (const delta of [-1, 1]) {
+      const neighbour = monthGrid(shiftMonth(month, delta));
+      void queryClient.prefetchQuery(
+        trpc.calendar.range.queryOptions({
+          groupId,
+          from: neighbour.from,
+          to: neighbour.to,
+          today,
+        }),
+      );
+    }
+  }, [queryClient, trpc, groupId, month, today]);
   const range = data?.success ? data.data : EMPTY_RANGE;
   const { setDone, reschedule, remove, create, update } = useCalendarMutations(
     groupId,
     meId,
   );
+
+  if (data?.success === false)
+    return (
+      handleApiError(data.error) ?? (
+        <p className="text-destructive p-4 text-sm">{data.error.message}</p>
+      )
+    );
 
   const selectDay = (date: string) => {
     setSelected(date);

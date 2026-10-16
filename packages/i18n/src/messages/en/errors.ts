@@ -27,6 +27,7 @@ export const errors = {
     "You need admin privileges to add members to this group",
   onlyAdminsRemoveMembers:
     "Only group admins can remove other members. You can only remove yourself.",
+  calendarDateNotScheduled: "That date is no longer on the schedule",
   cannotRemoveLastAdmin: "Cannot remove the last admin from the group",
   promoteAdminFirst:
     "Cannot remove the last admin. Promote another member to admin first.",

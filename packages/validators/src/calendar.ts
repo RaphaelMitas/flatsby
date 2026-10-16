@@ -7,21 +7,22 @@ export const weekdays = ["mo", "tu", "we", "th", "fr", "sa", "su"] as const;
 export const weekdaySchema = z.enum(weekdays);
 export type Weekday = z.infer<typeof weekdaySchema>;
 
-const intervalSchema = z.int().min(1).max(365);
+export const MAX_INTERVAL = { days: 365, weeks: 52 } as const;
+const daysIntervalSchema = z.int().min(1).max(MAX_INTERVAL.days);
 
 // Stored as jsonb; a new kind of repeat is a new member here, not a migration
 export const recurrenceSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("daily"), interval: intervalSchema }),
+  z.object({ type: z.literal("daily"), interval: daysIntervalSchema }),
   z.object({
     type: z.literal("weekly"),
-    interval: intervalSchema,
+    interval: z.int().min(1).max(MAX_INTERVAL.weeks),
     days: z
       .array(weekdaySchema)
       .min(1)
       .transform((days) => weekdays.filter((day) => days.includes(day))),
   }),
   // Counts from the day it was last done instead of a fixed slot
-  z.object({ type: z.literal("afterDone"), interval: intervalSchema }),
+  z.object({ type: z.literal("afterDone"), interval: daysIntervalSchema }),
 ]);
 export type Recurrence = z.infer<typeof recurrenceSchema>;
 
@@ -117,6 +118,12 @@ const weekdayIndex = (day: number) => (((day + 3) % 7) + 7) % 7;
 
 export const weekdayOf = (date: string): Weekday =>
   weekdays[weekdayIndex(toDayNumber(date))] ?? "mo";
+
+/** For useSyncExternalStore with localDate, so "today" turns over at midnight on an open screen. */
+export const watchLocalDate = (onChange: () => void) => {
+  const timer = setInterval(onChange, 60_000);
+  return () => clearInterval(timer);
+};
 
 /** The device's calendar day, which is what "today" means to the person holding it. */
 export const localDate = (now = new Date()) =>
@@ -216,6 +223,10 @@ export function turnOn(
   );
   return turnFor(item.memberIds, ordinal === -1 ? null : ordinal);
 }
+
+/** Whether a fixed schedule has an occurrence that originally fell on `date`. */
+export const isScheduledOn = (item: ExpandableItem, date: string) =>
+  scheduledOrdinal(item.startsOn, item.recurrence, toDayNumber(date)) !== null;
 
 /** Overrides must hold every row whose originalDate or movedTo is in range, and for afterDone items every completion. */
 export function expandOccurrences(
@@ -359,6 +370,16 @@ export interface CalendarRange {
   occurrences: Occurrence[];
 }
 
+export interface CalendarHistoryEntry extends Omit<Occurrence, "itemId"> {
+  skipped: boolean;
+}
+
+export interface CalendarItemDetail {
+  item: CalendarItemView;
+  upcoming: Occurrence[];
+  history: CalendarHistoryEntry[];
+}
+
 export const monthOf = (date: string) => date.slice(0, 7);
 
 export const shiftMonth = (month: string, delta: number) => {
@@ -447,7 +468,8 @@ export const withDone = (
   ),
 });
 
-export const withRescheduled = (
+/** Also brings back an un-skipped occurrence, which the cache no longer holds. */
+export function withRescheduled(
   range: CalendarRange,
   change: {
     itemId: number;
@@ -455,15 +477,30 @@ export const withRescheduled = (
     movedTo: string | null;
     skipped: boolean;
   },
-): CalendarRange => ({
-  ...range,
-  occurrences: range.occurrences.flatMap((occurrence) => {
-    if (!sameOccurrence(change.itemId, change.originalDate)(occurrence))
-      return [occurrence];
-    if (change.skipped) return [];
-    return [{ ...occurrence, date: change.movedTo ?? occurrence.originalDate }];
-  }),
-});
+  { from, to }: { from: string; to: string },
+): CalendarRange {
+  const matches = sameOccurrence(change.itemId, change.originalDate);
+  const item = range.items.find((cached) => cached.id === change.itemId);
+  const occurrences = range.occurrences.filter(
+    (occurrence) => !matches(occurrence),
+  );
+  const date = change.movedTo ?? change.originalDate;
+  if (change.skipped || !item || date < from || date > to)
+    return { ...range, occurrences };
+  const existing = range.occurrences.find(matches) ?? {
+    itemId: item.id,
+    originalDate: change.originalDate,
+    turnGroupMemberId: turnOn(item, [], change.originalDate),
+    completedByGroupMemberId: null,
+    completedAt: null,
+  };
+  return {
+    ...range,
+    occurrences: [...occurrences, { ...existing, date }].sort((a, b) =>
+      a.date.localeCompare(b.date),
+    ),
+  };
+}
 
 export const withoutItem = (
   range: CalendarRange,
@@ -475,32 +512,42 @@ export const withoutItem = (
   ),
 });
 
-/** Optimistic create or edit; done and moved occurrences already in the cache carry over. */
+const sameSchedule = (a: CalendarItemView, b: CalendarItemView) =>
+  a.startsOn === b.startsOn &&
+  a.recurrence?.type === b.recurrence?.type &&
+  a.recurrence?.interval === b.recurrence?.interval &&
+  (a.recurrence?.type === "weekly" ? a.recurrence.days.join() : "") ===
+    (b.recurrence?.type === "weekly" ? b.recurrence.days.join() : "");
+
+/** Optimistic create or edit; an edit that keeps the schedule leaves done, skipped and moved occurrences alone. */
 export function withSavedItem(
   range: CalendarRange,
   item: CalendarItemView,
   { from, to, today }: { from: string; to: string; today: string },
 ): CalendarRange {
-  const overrides = range.occurrences
-    .filter(
-      (occurrence) =>
-        occurrence.itemId === item.id &&
-        (occurrence.completedAt || occurrence.date !== occurrence.originalDate),
-    )
-    .map((occurrence) => ({
-      originalDate: occurrence.originalDate,
-      movedTo:
-        occurrence.date === occurrence.originalDate ? null : occurrence.date,
-      skipped: false,
-      completedByGroupMemberId: occurrence.completedByGroupMemberId,
-      completedAt: occurrence.completedAt,
-    }));
+  const previous = range.items.find((cached) => cached.id === item.id);
   const rest = withoutItem(range, item.id);
+  if (previous && sameSchedule(previous, item)) {
+    const membersChanged = previous.memberIds.join() !== item.memberIds.join();
+    return {
+      items: [...rest.items, item],
+      occurrences: range.occurrences.map((occurrence) =>
+        occurrence.itemId === item.id &&
+        membersChanged &&
+        item.recurrence?.type !== "afterDone"
+          ? {
+              ...occurrence,
+              turnGroupMemberId: turnOn(item, [], occurrence.originalDate),
+            }
+          : occurrence,
+      ),
+    };
+  }
   return {
     items: [...rest.items, item],
     occurrences: [
       ...rest.occurrences,
-      ...expandOccurrences(item, overrides, from, to, today),
+      ...expandOccurrences(item, [], from, to, today),
     ],
   };
 }
@@ -557,12 +604,18 @@ export const repeatShowsDays = ({ choice, unit }: RepeatForm) =>
   choice === "biweekly" ||
   (choice === "custom" && unit === "weeks");
 
+export const maxEvery = (form: RepeatForm) =>
+  form.choice === "custom" && form.unit === "weeks"
+    ? MAX_INTERVAL.weeks
+    : MAX_INTERVAL.days;
+
 export function recurrenceOf(
   form: RepeatForm,
   startsOn: string,
   kind: CalendarItemKind,
 ): Recurrence | null {
   const days = form.days ?? [weekdayOf(startsOn)];
+  const every = Math.min(form.every, maxEvery(form));
   switch (form.choice) {
     case "never":
       return null;
@@ -573,12 +626,10 @@ export function recurrenceOf(
     case "biweekly":
       return { type: "weekly", interval: 2, days };
     case "afterDone":
-      return kind === "task"
-        ? { type: "afterDone", interval: form.every }
-        : null;
+      return kind === "task" ? { type: "afterDone", interval: every } : null;
     case "custom":
       return form.unit === "days"
-        ? { type: "daily", interval: form.every }
-        : { type: "weekly", interval: form.every, days };
+        ? { type: "daily", interval: every }
+        : { type: "weekly", interval: every, days };
   }
 }

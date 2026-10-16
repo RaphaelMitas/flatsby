@@ -47,9 +47,7 @@ export function DatePickerField({
           display="default"
           themeVariant={colorScheme}
           className="border-input bg-background h-12 rounded-lg border px-3"
-          onChange={(_: unknown, selectedDate: Date | undefined) => {
-            if (selectedDate) onChange(selectedDate);
-          }}
+          onValueChange={(_, selectedDate) => onChange(selectedDate)}
         />
       </View>
     );
@@ -70,10 +68,11 @@ export function DatePickerField({
           value={value}
           mode={mode}
           display="default"
-          onChange={(_, selectedDate) => {
+          onValueChange={(_, selectedDate) => {
             setShowPicker(false);
-            if (selectedDate) onChange(selectedDate);
+            onChange(selectedDate);
           }}
+          onDismiss={() => setShowPicker(false)}
         />
       )}
     </View>

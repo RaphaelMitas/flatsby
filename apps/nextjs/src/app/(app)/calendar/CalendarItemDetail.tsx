@@ -66,6 +66,8 @@ export function CalendarItemDetail({
   const { data } = useQuery(
     trpc.calendar.item.queryOptions({ groupId, id: entry.item.id, today }),
   );
+  if (data?.success === false)
+    return <p className="text-destructive text-sm">{data.error.message}</p>;
   const detail = data?.success ? data.data : null;
   const item = detail?.item ?? entry.item;
   const isTask = item.kind === "task";

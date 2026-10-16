@@ -50,7 +50,12 @@ tags:
     timeout: 15000
 - assertVisible: "Your turn"
 
-# Tick it off
+# The optimistic row stays disabled until the save comes back with a real id
+- extendedWaitUntil:
+    visible:
+      id: "calendar-entry-checkbox-Bins out"
+      enabled: true
+    timeout: 15000
 - tapOn:
     id: "calendar-entry-checkbox-Bins out"
 - extendedWaitUntil:
@@ -59,7 +64,8 @@ tags:
 - assertVisible: "Done by .*"
 
 # Detail shows the repeat and the completion
-- tapOn: "Bins out"
+- tapOn:
+    id: "calendar-entry-Bins out"
 - extendedWaitUntil:
     visible:
       id: "calendar-detail-title"

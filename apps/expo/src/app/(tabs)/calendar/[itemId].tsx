@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 
-import { CalendarGroupGate } from "~/components/calendar/CalendarGroupGate";
 import { CalendarItemDetail } from "~/components/calendar/CalendarItemDetail";
+import { GroupGate } from "~/components/GroupGate";
 
 export default function CalendarItemScreen() {
   const { itemId, date } = useLocalSearchParams<{
@@ -10,7 +10,7 @@ export default function CalendarItemScreen() {
   }>();
 
   return (
-    <CalendarGroupGate>
+    <GroupGate>
       {(group) => (
         <CalendarItemDetail
           group={group}
@@ -18,6 +18,6 @@ export default function CalendarItemScreen() {
           originalDate={date}
         />
       )}
-    </CalendarGroupGate>
+    </GroupGate>
   );
 }

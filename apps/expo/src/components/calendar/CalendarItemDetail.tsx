@@ -1,7 +1,7 @@
 import type { GroupWithAccess } from "@flatsby/api";
 import type { ReactNode } from "react";
-import { Fragment, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Fragment, useState, useSyncExternalStore } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
@@ -11,6 +11,7 @@ import {
   formatCalendarDate,
   localDate,
   pickerDate,
+  watchLocalDate,
 } from "@flatsby/validators/calendar";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -48,22 +49,27 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function DateRow({
   label,
   first,
+  onPress,
   children,
 }: {
   label: string;
   first: boolean;
+  onPress?: () => void;
   children: ReactNode;
 }) {
   return (
-    <View
+    <Pressable
+      disabled={!onPress}
+      accessibilityRole={onPress ? "button" : undefined}
+      onPress={onPress}
       className={cn(
-        "flex-row items-center justify-between gap-3 px-3.5 py-2.5",
+        "active:bg-muted flex-row items-center justify-between gap-3 px-3.5 py-2.5",
         !first && "border-border border-t",
       )}
     >
       <Text className="text-foreground">{label}</Text>
       {children}
-    </View>
+    </Pressable>
   );
 }
 
@@ -76,7 +82,7 @@ export function CalendarItemDetail({
   const locale = useLocale();
   const router = useRouter();
   const people = useCalendarPeople(group);
-  const today = localDate();
+  const today = useSyncExternalStore(watchLocalDate, localDate);
   const { reschedule, remove } = useCalendarMutations(group.id, people.meId);
   const [armed, setArmed] = useState(false);
   const [moving, setMoving] = useState(false);
@@ -115,6 +121,8 @@ export function CalendarItemDetail({
     item.recurrence !== null && item.recurrence.type !== "afterDone";
   const canReschedule = originalDate !== undefined && repeatsOnSchedule;
   const currentTurn = upcoming[0]?.turnGroupMemberId ?? null;
+  const showOnCalendar = (date: string) =>
+    router.dismissTo({ pathname: "/(tabs)/calendar", params: { date } });
 
   const rescheduleTo = (movedTo: string | null) => {
     if (!originalDate) return;
@@ -125,7 +133,8 @@ export function CalendarItemDetail({
       movedTo,
       skipped: movedTo === null,
     });
-    router.back();
+    if (movedTo) showOnCalendar(movedTo);
+    else router.back();
   };
 
   return (
@@ -202,6 +211,7 @@ export function CalendarItemDetail({
                 key={occurrence.originalDate}
                 first={index === 0}
                 label={dayLabel(occurrence.date)}
+                onPress={() => showOnCalendar(occurrence.date)}
               >
                 <OccurrenceStatus occurrence={occurrence} people={people} />
               </DateRow>
@@ -210,7 +220,7 @@ export function CalendarItemDetail({
         </Section>
       )}
 
-      {item.kind === "task" && (
+      {(item.kind === "task" || history.length > 0) && (
         <Section title={t("calendar.detail.history")}>
           {history.length === 0 ? (
             <Text className="text-muted-foreground">

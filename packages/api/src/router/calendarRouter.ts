@@ -8,11 +8,9 @@ import {
   asc,
   between,
   eq,
-  gte,
   inArray,
   isNotNull,
   isNull,
-  lte,
   or,
 } from "@flatsby/db";
 import {
@@ -28,6 +26,7 @@ import {
   calendarRangeSchema,
   createCalendarItemSchema,
   expandOccurrences,
+  isScheduledOn,
   rescheduleOccurrenceSchema,
   setOccurrenceDoneSchema,
   turnOn,
@@ -42,7 +41,7 @@ import { DbUtils, GroupUtils } from "../utils";
 
 const UPCOMING_COUNT = 5;
 const HISTORY_COUNT = 8;
-// The longest interval is 365 days, so this always reaches the next occurrence
+// The longest intervals are 365 days and 52 weeks, so this always reaches the next occurrence
 const UPCOMING_WINDOW_DAYS = 400;
 
 interface MemberContext {
@@ -201,19 +200,14 @@ export const calendarRouter = createTRPCRouter({
   range: protectedProcedure.input(calendarRangeSchema).query(({ ctx, input }) =>
     asMember(ctx, input.groupId, () =>
       safeDbOperation(async () => {
-        const movedIntoRange = ctx.db
-          .select({ itemId: calendarOccurrences.itemId })
-          .from(calendarOccurrences)
-          .where(between(calendarOccurrences.movedTo, input.from, input.to));
+        // Repeating items load whatever their start, since done and moved occurrences can land before it
         const items = await loadItems(
           ctx.db,
           and(
             eq(calendarItems.groupId, input.groupId),
-            lte(calendarItems.startsOn, input.to),
             or(
               isNotNull(calendarItems.recurrence),
-              gte(calendarItems.startsOn, input.from),
-              inArray(calendarItems.id, movedIntoRange),
+              between(calendarItems.startsOn, input.from, input.to),
             ),
           ),
         );
@@ -371,6 +365,12 @@ export const calendarRouter = createTRPCRouter({
           (item) => {
             if (item.kind !== "task")
               return fail.validation("errors.unexpected");
+            if (
+              input.done &&
+              item.recurrence?.type !== "afterDone" &&
+              !isScheduledOn(item, input.originalDate)
+            )
+              return fail.conflict("errors.calendarDateNotScheduled");
             // An afterDone chore counts from the day it was actually done
             const originalDate =
               input.done && item.recurrence?.type === "afterDone"
@@ -420,6 +420,8 @@ export const calendarRouter = createTRPCRouter({
           (item) => {
             if (!item.recurrence || item.recurrence.type === "afterDone")
               return fail.validation("errors.unexpected");
+            if (!isScheduledOn(item, input.originalDate))
+              return fail.conflict("errors.calendarDateNotScheduled");
             const change = { movedTo: input.movedTo, skipped: input.skipped };
             return safeDbOperation(async () => {
               await ctx.db

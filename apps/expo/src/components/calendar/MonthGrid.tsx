@@ -106,6 +106,9 @@ export function MonthGrid({
                 testID={`calendar-day-${day}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={formatCalendarDate(day, locale, {
+                  dateStyle: "full",
+                })}
                 onPress={() => onSelect(day)}
                 className="h-12 flex-1 items-center gap-1 pt-1"
               >

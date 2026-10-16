@@ -14,6 +14,7 @@ import { OccurrenceStatus } from "./CalendarPeople";
 interface CalendarEntryRowProps {
   entry: CalendarEntry;
   people: CalendarPeople;
+  today: string;
   onToggle: (done: boolean) => void;
   onOpen: () => void;
 }
@@ -21,6 +22,7 @@ interface CalendarEntryRowProps {
 export function CalendarEntryRow({
   entry: { item, occurrence },
   people,
+  today,
   onToggle,
   onOpen,
 }: CalendarEntryRowProps) {
@@ -28,57 +30,66 @@ export function CalendarEntryRow({
   const locale = useLocale();
   const done = occurrence.completedAt !== null;
   const pending = item.id < 0;
-  const when =
-    item.kind === "event" ? (item.time ?? t("calendar.allDay")) : null;
+  const isTask = item.kind === "task";
+  const overdue = isTask && !done && occurrence.date < today;
 
   return (
-    <Pressable
-      testID={`calendar-entry-${item.title}`}
-      accessible={e2eAccessibilityOverride()}
-      disabled={pending}
-      onPress={onOpen}
-      className={cn(
-        "active:bg-muted flex-row items-center gap-1 pr-3",
-        pending && "opacity-60",
-      )}
-    >
-      {item.kind === "task" ? (
+    <View className={cn("flex-row items-center", pending && "opacity-60")}>
+      {isTask && (
         <Checkbox
           testID={`calendar-entry-checkbox-${item.title}`}
+          accessibilityLabel={item.title}
           checked={done}
           disabled={pending}
           onCheckedChange={onToggle}
         />
-      ) : (
-        <View className="items-center justify-center p-4">
-          <View className="bg-info/15 h-6 w-6 items-center justify-center rounded-full">
-            <Icon name="clock" size={14} color="info" />
+      )}
+      <Pressable
+        testID={`calendar-entry-${item.title}`}
+        accessible={e2eAccessibilityOverride()}
+        accessibilityRole="button"
+        disabled={pending}
+        onPress={onOpen}
+        className="active:bg-muted flex-1 flex-row items-center gap-1 self-stretch pr-3"
+      >
+        {!isTask && (
+          <View className="items-center justify-center p-4">
+            <View className="bg-info/15 h-6 w-6 items-center justify-center rounded-full">
+              <Icon name="clock" size={14} color="info" />
+            </View>
+          </View>
+        )}
+        <View className="min-w-0 flex-1 py-3">
+          <Text
+            numberOfLines={1}
+            className={cn(
+              "text-foreground text-base font-medium",
+              done && "text-muted-foreground line-through",
+            )}
+          >
+            {item.title}
+          </Text>
+          <View className="flex-row items-center gap-1">
+            {!isTask && (
+              <Text className="text-muted-foreground text-sm">
+                {item.time ?? t("calendar.allDay")} ·
+              </Text>
+            )}
+            {overdue && (
+              <Text className="text-destructive text-sm">
+                {t("calendar.overdue")} ·
+              </Text>
+            )}
+            {item.recurrence && (
+              <Icon name="repeat" size={12} color="muted-foreground" />
+            )}
+            <Text numberOfLines={1} className="text-muted-foreground text-sm">
+              {describeRecurrence(item.recurrence, t, locale)}
+            </Text>
           </View>
         </View>
-      )}
-      <View className="min-w-0 flex-1 py-3">
-        <Text
-          numberOfLines={1}
-          className={cn(
-            "text-foreground text-base font-medium",
-            done && "text-muted-foreground line-through",
-          )}
-        >
-          {item.title}
-        </Text>
-        <View className="flex-row items-center gap-1">
-          {when && (
-            <Text className="text-muted-foreground text-sm">{when} ·</Text>
-          )}
-          {item.recurrence && (
-            <Icon name="repeat" size={12} color="muted-foreground" />
-          )}
-          <Text numberOfLines={1} className="text-muted-foreground text-sm">
-            {describeRecurrence(item.recurrence, t, locale)}
-          </Text>
-        </View>
-      </View>
-      <OccurrenceStatus occurrence={occurrence} people={people} />
-    </Pressable>
+        <OccurrenceStatus occurrence={occurrence} people={people} />
+      </Pressable>
+    </View>
   );
 }

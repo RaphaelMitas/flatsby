@@ -15,7 +15,7 @@ export const calendar = {
   onYou: "{count} bei dir",
   yourTurn: "Du bist dran",
   turnOf: "{name} ist dran",
-  anyone: "Alle",
+  anyone: "Beliebig",
   doneBy: "Erledigt von {name}",
   coveredBy: "Übernommen von {name}",
   allDay: "Ganztägig",
@@ -35,6 +35,8 @@ export const calendar = {
     repeat: "Wiederholen",
     days: "An",
     every: "Alle",
+    decreaseInterval: "Weniger",
+    increaseInterval: "Mehr",
     who: "Wer",
     whoHint:
       "Wähle mehrere, um sich abzuwechseln, in der Reihenfolge, in der du tippst",

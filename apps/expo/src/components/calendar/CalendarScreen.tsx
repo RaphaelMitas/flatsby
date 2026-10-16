@@ -1,7 +1,7 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -13,6 +13,7 @@ import {
   monthGrid,
   monthOf,
   shiftMonth,
+  watchLocalDate,
 } from "@flatsby/validators/calendar";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -38,10 +39,12 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const locale = useLocale();
   const router = useRouter();
   const people = useCalendarPeople(group);
-  const today = localDate();
+  const today = useSyncExternalStore(watchLocalDate, localDate);
   const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(monthOf(today));
   const [mine, setMine] = useState(false);
+  const [shownToday, setShownToday] = useState(today);
+  const { date: jumpTo } = useLocalSearchParams<{ date?: string }>();
   const { setDone } = useCalendarMutations(group.id, people.meId);
 
   const { data, refetch } = useQuery({
@@ -58,6 +61,23 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const select = (date: string) => {
     setSelected(date);
     setMonth(monthOf(date));
+  };
+
+  if (shownToday !== today) {
+    setShownToday(today);
+    if (selected === shownToday) select(today);
+  }
+
+  useEffect(() => {
+    if (!jumpTo) return;
+    setSelected(jumpTo);
+    setMonth(monthOf(jumpTo));
+    router.setParams({ date: undefined });
+  }, [jumpTo, router]);
+
+  const shiftVisibleMonth = (delta: number) => {
+    const next = shiftMonth(month, delta);
+    select(next === monthOf(today) ? today : `${next}-01`);
   };
 
   const summary = daySummary(
@@ -90,7 +110,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
           selected={selected}
           today={today}
           onSelect={select}
-          onShiftMonth={(delta) => setMonth(shiftMonth(month, delta))}
+          onShiftMonth={shiftVisibleMonth}
         />
 
         <View className="bg-border -mx-4 my-4 h-px" />
@@ -148,6 +168,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
                 <CalendarEntryRow
                   entry={entry}
                   people={people}
+                  today={today}
                   onToggle={(done) =>
                     setDone.mutate({
                       groupId: group.id,
@@ -173,15 +194,17 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         ) : (
           <View className="border-border items-center gap-3 rounded-lg border p-6">
             <Text className="text-muted-foreground text-center">
-              {t("nothingPlanned")}
+              {mine ? t("nothingOnYou") : t("nothingPlanned")}
             </Text>
-            <Button
-              testID="calendar-empty-add-button"
-              variant="outline"
-              icon="plus"
-              title={t("addSomething")}
-              onPress={openForm}
-            />
+            {!mine && (
+              <Button
+                testID="calendar-empty-add-button"
+                variant="outline"
+                icon="plus"
+                title={t("addSomething")}
+                onPress={openForm}
+              />
+            )}
           </View>
         )}
       </AppScrollView>

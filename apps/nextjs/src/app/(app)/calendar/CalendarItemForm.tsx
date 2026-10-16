@@ -22,6 +22,7 @@ import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   describeRecurrence,
   formatCalendarDate,
+  maxEvery,
   newRepeatForm,
   recurrenceOf,
   repeatChoices,
@@ -35,7 +36,6 @@ import {
 import { DatePopover } from "./DatePopover";
 
 const DEFAULT_TIME = "19:00";
-const MAX_INTERVAL = 365;
 
 interface CalendarItemFormProps {
   groupId: number;
@@ -64,6 +64,8 @@ export function CalendarItemForm({
     item ? repeatFormOf(item.recurrence) : newRepeatForm,
   );
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
+  // Typing "10" passes through an empty field, which the number itself can't hold
+  const [everyText, setEveryText] = useState(String(repeat.every));
 
   const isTask = kind === "task";
   const recurrence = recurrenceOf(repeat, startsOn, kind);
@@ -208,17 +210,18 @@ export function CalendarItemForm({
             <Input
               type="number"
               min={1}
-              max={MAX_INTERVAL}
-              value={repeat.every}
-              onChange={(event) =>
-                setRepeat({
-                  ...repeat,
-                  every: Math.min(
-                    MAX_INTERVAL,
-                    Math.max(1, Math.round(Number(event.target.value)) || 1),
-                  ),
-                })
-              }
+              max={maxEvery(repeat)}
+              value={everyText}
+              onChange={(event) => {
+                setEveryText(event.target.value);
+                const every = Math.round(Number(event.target.value));
+                if (every >= 1)
+                  setRepeat({
+                    ...repeat,
+                    every: Math.min(every, maxEvery(repeat)),
+                  });
+              }}
+              onBlur={() => setEveryText(String(repeat.every))}
               className="w-20"
               data-testid="calendar-form-interval"
             />
@@ -230,7 +233,12 @@ export function CalendarItemForm({
                   <Chip
                     key={unit}
                     selected={repeat.unit === unit}
-                    onClick={() => setRepeat({ ...repeat, unit })}
+                    onClick={() => {
+                      const next = { ...repeat, unit };
+                      const every = Math.min(next.every, maxEvery(next));
+                      setRepeat({ ...next, every });
+                      setEveryText(String(every));
+                    }}
                   >
                     {t(`calendar.unit.${unit}`, { count: repeat.every })}
                   </Chip>

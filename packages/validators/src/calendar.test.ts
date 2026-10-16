@@ -11,6 +11,7 @@ import {
   describeRecurrence,
   entriesOn,
   expandOccurrences,
+  isScheduledOn,
   monthGrid,
   recurrenceOf,
   recurrenceSchema,
@@ -18,6 +19,8 @@ import {
   shiftMonth,
   turnOn,
   weekdayOf,
+  withRescheduled,
+  withSavedItem,
 } from "./calendar";
 
 const item = (
@@ -270,5 +273,118 @@ describe("repeat form", () => {
         "event",
       ),
     ).toBeNull();
+  });
+});
+
+describe("withSavedItem", () => {
+  const window = { from: "2026-10-01", to: "2026-10-31", today: "2026-10-16" };
+  const view = (recurrence: Recurrence, memberIds: number[] = []) => ({
+    ...item(recurrence, "2026-10-05", memberIds),
+    kind: "task" as const,
+    title: "Vacuum",
+    time: null,
+  });
+
+  it("keeps skipped occurrences hidden when only the title changes", () => {
+    const weekly = view({ type: "weekly", interval: 1, days: ["mo"] });
+    const cached = withRescheduled(
+      withSavedItem({ items: [], occurrences: [] }, weekly, window),
+      { itemId: 1, originalDate: "2026-10-12", movedTo: null, skipped: true },
+      window,
+    );
+    const renamed = withSavedItem(
+      cached,
+      { ...weekly, title: "Hoover" },
+      window,
+    );
+    expect(renamed.occurrences.map((o) => o.date)).not.toContain("2026-10-12");
+    expect(renamed.items[0]?.title).toBe("Hoover");
+  });
+
+  it("keeps afterDone dates whose last completion is outside the cache", () => {
+    const chore = view({ type: "afterDone", interval: 7 });
+    const cached = {
+      items: [chore],
+      occurrences: expandOccurrences(
+        chore,
+        [done("2026-09-28")],
+        "2026-10-26",
+        "2026-11-30",
+        "2026-10-16",
+      ),
+    };
+    const renamed = withSavedItem(
+      cached,
+      { ...chore, title: "Hoover" },
+      window,
+    );
+    expect(renamed.occurrences).toEqual(cached.occurrences);
+  });
+
+  it("brings an un-skipped occurrence back and moves into a cached month", () => {
+    const weekly = view({ type: "weekly", interval: 1, days: ["mo"] }, [1, 2]);
+    const skipped = withRescheduled(
+      withSavedItem({ items: [], occurrences: [] }, weekly, window),
+      { itemId: 1, originalDate: "2026-10-12", movedTo: null, skipped: true },
+      window,
+    );
+    const restored = withRescheduled(
+      skipped,
+      { itemId: 1, originalDate: "2026-10-12", movedTo: null, skipped: false },
+      window,
+    );
+    expect(
+      restored.occurrences.map((o) => [o.date, o.turnGroupMemberId]),
+    ).toEqual([
+      ["2026-10-05", 1],
+      ["2026-10-12", 2],
+      ["2026-10-19", 1],
+      ["2026-10-26", 2],
+    ]);
+    const movedAway = withRescheduled(
+      restored,
+      {
+        itemId: 1,
+        originalDate: "2026-10-26",
+        movedTo: "2026-11-02",
+        skipped: false,
+      },
+      window,
+    );
+    expect(movedAway.occurrences.map((o) => o.date)).not.toContain(
+      "2026-10-26",
+    );
+  });
+
+  it("re-deals turns when the rotation changes", () => {
+    const weekly = view({ type: "weekly", interval: 1, days: ["mo"] }, [1, 2]);
+    const cached = withSavedItem(
+      { items: [], occurrences: [] },
+      weekly,
+      window,
+    );
+    const swapped = withSavedItem(
+      cached,
+      { ...weekly, memberIds: [2, 1] },
+      window,
+    );
+    expect(swapped.occurrences.map((o) => o.turnGroupMemberId)).toEqual([
+      2, 1, 2, 1,
+    ]);
+  });
+});
+
+describe("isScheduledOn", () => {
+  it("rejects dates the rule no longer produces", () => {
+    const tuesdays = item({ type: "weekly", interval: 1, days: ["tu"] });
+    expect(isScheduledOn(tuesdays, "2026-10-13")).toBe(true);
+    expect(isScheduledOn(tuesdays, "2026-10-12")).toBe(false);
+  });
+
+  it("caps weekly intervals at a year", () => {
+    expect(
+      recurrenceSchema.safeParse({ type: "weekly", interval: 53, days: ["mo"] })
+        .success,
+    ).toBe(false);
   });
 });

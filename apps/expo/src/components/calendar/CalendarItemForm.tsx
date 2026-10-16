@@ -6,7 +6,7 @@ import type {
   Weekday,
 } from "@flatsby/validators/calendar";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -16,11 +16,14 @@ import {
   createCalendarItemSchema,
   describeRecurrence,
   localDate,
+  maxEvery,
+  newRepeatForm,
   pickerDate,
   recurrenceOf,
   repeatChoices,
   repeatFormOf,
   repeatShowsDays,
+  watchLocalDate,
   weekdayName,
   weekdayOf,
   weekdays,
@@ -42,7 +45,6 @@ import { useCalendarPeople } from "./CalendarPeople";
 import { useCalendarMutations } from "./useCalendarMutations";
 
 const DEFAULT_TIME = "19:00";
-const MAX_INTERVAL = 365;
 
 function Chip({
   label,
@@ -96,15 +98,16 @@ export function CalendarItemForm({
   itemId,
   date,
 }: CalendarItemFormProps) {
+  const today = useSyncExternalStore(watchLocalDate, localDate);
   const { data } = useQuery(
     trpc.calendar.item.queryOptions(
-      { groupId: group.id, id: itemId ?? -1, today: localDate() },
+      { groupId: group.id, id: itemId ?? -1, today },
       { enabled: itemId !== undefined },
     ),
   );
 
   if (itemId === undefined) {
-    return <ItemFields group={group} startsOn={date ?? localDate()} />;
+    return <ItemFields group={group} startsOn={date ?? today} />;
   }
   if (!data) {
     return (
@@ -151,7 +154,7 @@ function ItemFields({
   const [startsOn, setStartsOn] = useState(initialStartsOn);
   const [time, setTime] = useState(item?.time ?? null);
   const [repeat, setRepeat] = useState(() =>
-    repeatFormOf(item?.recurrence ?? null),
+    item ? repeatFormOf(item.recurrence) : newRepeatForm,
   );
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
 
@@ -160,8 +163,10 @@ function ItemFields({
   const choices = repeatChoices.filter(
     (choice) => isTask || choice !== "afterDone",
   );
-  const changeRepeat = (change: Partial<RepeatForm>) =>
-    setRepeat({ ...repeat, ...change });
+  const changeRepeat = (change: Partial<RepeatForm>) => {
+    const next = { ...repeat, ...change };
+    setRepeat({ ...next, every: Math.min(next.every, maxEvery(next)) });
+  };
 
   const input = {
     groupId: group.id,
@@ -177,19 +182,24 @@ function ItemFields({
   const save = () => {
     if (!valid) return;
     const trimmed = { ...input, title: title.trim() };
-    if (item) update.mutate({ ...trimmed, id: item.id });
-    else create.mutate(trimmed);
-    router.back();
+    if (item) {
+      update.mutate({ ...trimmed, id: item.id });
+      router.dismissTo("/(tabs)/calendar");
+    } else {
+      create.mutate(trimmed);
+      router.dismissTo({
+        pathname: "/(tabs)/calendar",
+        params: { date: startsOn },
+      });
+    }
   };
 
-  const toggleDay = (day: Weekday) =>
-    changeRepeat({
-      days: days.includes(day)
-        ? days.length > 1
-          ? days.filter((d) => d !== day)
-          : days
-        : [...days, day],
-    });
+  const toggleDay = (day: Weekday) => {
+    const next = days.includes(day)
+      ? days.filter((d) => d !== day)
+      : weekdays.filter((d) => d === day || days.includes(d));
+    if (next.length > 0) changeRepeat({ days: next });
+  };
 
   const toggleMember = (memberId: number) =>
     setMemberIds(
@@ -294,6 +304,7 @@ function ItemFields({
             variant="outline"
             size="sm"
             icon="minus"
+            accessibilityLabel={t("calendar.form.decreaseInterval")}
             disabled={repeat.every <= 1}
             onPress={() => changeRepeat({ every: repeat.every - 1 })}
           />
@@ -304,7 +315,8 @@ function ItemFields({
             variant="outline"
             size="sm"
             icon="plus"
-            disabled={repeat.every >= MAX_INTERVAL}
+            accessibilityLabel={t("calendar.form.increaseInterval")}
+            disabled={repeat.every >= maxEvery(repeat)}
             onPress={() => changeRepeat({ every: repeat.every + 1 })}
           />
           {repeat.choice === "custom" ? (

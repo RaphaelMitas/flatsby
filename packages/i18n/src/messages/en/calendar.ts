@@ -33,6 +33,8 @@ export const calendar = {
     repeat: "Repeat",
     days: "On",
     every: "Every",
+    decreaseInterval: "Fewer",
+    increaseInterval: "More",
     who: "Who",
     whoHint: "Pick several to take turns, in the order you tap them",
     save: "Save",

@@ -29,6 +29,7 @@ export const errors = {
     "Nur Admins können Mitglieder zu dieser Gruppe hinzufügen",
   onlyAdminsRemoveMembers:
     "Nur Admins können andere Mitglieder entfernen. Du kannst nur dich selbst entfernen.",
+  calendarDateNotScheduled: "Dieses Datum ist nicht mehr im Plan",
   cannotRemoveLastAdmin:
     "Der letzte Admin kann nicht aus der Gruppe entfernt werden",
   promoteAdminFirst:

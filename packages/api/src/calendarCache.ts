@@ -1,4 +1,9 @@
-import type { CalendarRange } from "@flatsby/validators/calendar";
+import type {
+  CalendarItemDetail,
+  CalendarItemView,
+  CalendarRange,
+  CreateCalendarItemInput,
+} from "@flatsby/validators/calendar";
 import type {
   QueryClient,
   QueryFilters,
@@ -6,7 +11,13 @@ import type {
 } from "@tanstack/react-query";
 import { z } from "zod/v4";
 
-import { calendarRangeSchema } from "@flatsby/validators/calendar";
+import {
+  calendarRangeSchema,
+  withDone,
+  withoutItem,
+  withRescheduled,
+  withSavedItem,
+} from "@flatsby/validators/calendar";
 
 import type { ApiResult } from "./errors";
 
@@ -16,37 +27,119 @@ const rangeKeySchema = z.tuple([
   z.object({ input: calendarRangeSchema }),
 ]);
 
-export type CalendarRangeSnapshot = [
-  QueryKey,
-  ApiResult<CalendarRange> | undefined,
-][];
+type RangeWindow = z.infer<typeof calendarRangeSchema>;
 
-/** Applies one change to every cached month of the group, so switching months never shows stale state. */
-export async function patchCalendarRanges(
+export interface CalendarPatch {
+  range: (range: CalendarRange, window: RangeWindow) => CalendarRange;
+  detail?: (detail: CalendarItemDetail) => CalendarItemDetail;
+}
+
+export type CalendarSnapshot = [QueryKey, unknown][];
+
+/** Applies one change to every cached month and item detail of the group, so nothing on screen lags behind. */
+export async function patchCalendar(
   queryClient: QueryClient,
-  filters: QueryFilters,
-  patch: (
-    range: CalendarRange,
-    window: z.infer<typeof calendarRangeSchema>,
-  ) => CalendarRange,
-): Promise<CalendarRangeSnapshot> {
-  await queryClient.cancelQueries(filters);
-  const snapshot =
-    queryClient.getQueriesData<ApiResult<CalendarRange>>(filters);
-  for (const [key, cached] of snapshot) {
+  filters: { ranges: QueryFilters; details: QueryFilters },
+  patch: CalendarPatch,
+): Promise<CalendarSnapshot> {
+  await Promise.all([
+    queryClient.cancelQueries(filters.ranges),
+    queryClient.cancelQueries(filters.details),
+  ]);
+  const ranges = queryClient.getQueriesData<ApiResult<CalendarRange>>(
+    filters.ranges,
+  );
+  const details = queryClient.getQueriesData<ApiResult<CalendarItemDetail>>(
+    filters.details,
+  );
+  for (const [key, cached] of ranges) {
     const window = rangeKeySchema.safeParse(key);
     if (cached?.success && window.success)
       queryClient.setQueryData(key, {
         ...cached,
-        data: patch(cached.data, window.data[1].input),
+        data: patch.range(cached.data, window.data[1].input),
       });
   }
-  return snapshot;
+  const { detail } = patch;
+  if (detail)
+    for (const [key, cached] of details) {
+      if (cached?.success)
+        queryClient.setQueryData(key, { ...cached, data: detail(cached.data) });
+    }
+  return [...ranges, ...details];
 }
 
-export const restoreCalendarRanges = (
+export const restoreCalendar = (
   queryClient: QueryClient,
-  snapshot: CalendarRangeSnapshot = [],
+  snapshot: CalendarSnapshot = [],
 ) => {
   for (const [key, cached] of snapshot) queryClient.setQueryData(key, cached);
+};
+
+const asView = (
+  id: number,
+  {
+    kind,
+    title,
+    startsOn,
+    time,
+    recurrence,
+    memberIds,
+  }: CreateCalendarItemInput,
+): CalendarItemView => ({
+  id,
+  kind,
+  title,
+  startsOn,
+  time,
+  recurrence,
+  memberIds,
+});
+
+/** The optimistic side of each calendar mutation, shared by both clients. */
+export const calendarPatches = {
+  setDone: (
+    input: { itemId: number; originalDate: string; done: boolean },
+    byGroupMemberId: number,
+  ): CalendarPatch => ({
+    range: (range) => withDone(range, { ...input, byGroupMemberId }),
+  }),
+
+  reschedule: (input: {
+    itemId: number;
+    originalDate: string;
+    movedTo: string | null;
+    skipped: boolean;
+  }): CalendarPatch => ({
+    range: (range, window) => withRescheduled(range, input, window),
+    detail: (detail) =>
+      detail.item.id === input.itemId && !input.skipped
+        ? {
+            ...detail,
+            history: detail.history.filter(
+              (entry) =>
+                entry.originalDate !== input.originalDate || entry.completedAt,
+            ),
+          }
+        : detail,
+  }),
+
+  remove: (input: { id: number }): CalendarPatch => ({
+    range: (range) => withoutItem(range, input.id),
+  }),
+
+  create: (input: CreateCalendarItemInput): CalendarPatch => {
+    // Negative so it never collides with a real id before the refetch lands
+    const item = asView(-Date.now(), input);
+    return { range: (range, window) => withSavedItem(range, item, window) };
+  },
+
+  update: (input: CreateCalendarItemInput & { id: number }): CalendarPatch => {
+    const item = asView(input.id, input);
+    return {
+      range: (range, window) => withSavedItem(range, item, window),
+      detail: (detail) =>
+        detail.item.id === item.id ? { ...detail, item } : detail,
+    };
+  },
 };
