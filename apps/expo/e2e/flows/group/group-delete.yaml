@@ -73,7 +73,8 @@ tags:
     env:
       CONFIRM_TEXT: "Spent Group"
 
-# The list hides the group optimistically, so relaunch to read what the server kept
+# The list hides the group optimistically, so relaunch to read what the server
+# kept, once the dashboard shows and the delete request has left the app
 - runFlow:
     file: ../../subflows/tap-tab.yaml
     env:
