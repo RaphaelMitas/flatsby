@@ -4,7 +4,8 @@ import type {
   CategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
-import { useCallback, useMemo, useState } from "react";
+import type { FlashListRef } from "@shopify/flash-list";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import {
@@ -45,6 +46,7 @@ type ListItem =
 const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   const t = useTranslations("shoppingList");
   const queryClient = useQueryClient();
+  const listRef = useRef<FlashListRef<ListItem>>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
     null,
   );
@@ -277,6 +279,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       groupId,
       shoppingListId,
     });
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
   const handleLoadMore = () => {
@@ -385,6 +388,12 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               {(refreshProps) => (
                 <FlashList
                   {...refreshProps}
+                  ref={(list) => {
+                    listRef.current = list;
+                    refreshProps.ref?.(list);
+                  }}
+                  // Keeping the old top row in place would push a freshly added item above the viewport.
+                  maintainVisibleContentPosition={{ disabled: true }}
                   className="flex-1"
                   data={flashListData}
                   renderItem={renderItem}
