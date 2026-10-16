@@ -7,7 +7,7 @@ import type {
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Clock, Repeat, SquareCheck } from "lucide-react";
+import { ArrowRight, CircleCheckBig, Clock, Repeat } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
@@ -17,6 +17,7 @@ import {
   describeRecurrence,
   formatCalendarDate,
 } from "@flatsby/validators/calendar";
+import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import type { MemberLookup } from "./CalendarPeople";
 import { useTRPC } from "~/trpc/react";
@@ -78,14 +79,19 @@ export function CalendarItemDetail({
   return (
     <div className="flex flex-col gap-5" data-testid="calendar-detail">
       <div className="flex flex-col gap-2">
-        <h2 className="pr-8 text-2xl font-bold tracking-tight">{item.title}</h2>
+        <h2 className="flex items-center gap-2.5 pr-8 text-2xl font-bold tracking-tight">
+          <span
+            className={cn(
+              "size-3 shrink-0 rounded-full",
+              categoryFillColorMap[item.color],
+            )}
+          />
+          {item.title}
+        </h2>
         <div className="flex flex-wrap gap-1.5">
-          <Badge
-            variant="secondary"
-            className={cn(pillClass, !isTask && "bg-info/10 text-info")}
-          >
+          <Badge variant="secondary" className={pillClass}>
             {isTask ? (
-              <SquareCheck className="size-3.5" />
+              <CircleCheckBig className="size-3.5" />
             ) : (
               <Clock className="size-3.5" />
             )}

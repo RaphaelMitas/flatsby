@@ -2,6 +2,7 @@
 
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import type {
+  CalendarColor,
   CalendarItemKind,
   CalendarItemView,
   CreateCalendarItemInput,
@@ -10,9 +11,10 @@ import type {
 } from "@flatsby/validators/calendar";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { CalendarIcon, Clock, Repeat, SquareCheck } from "lucide-react";
+import { CalendarIcon, CircleCheckBig, Clock, Repeat } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
@@ -20,6 +22,8 @@ import { Switch } from "@flatsby/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
+  calendarColors,
+  defaultColorFor,
   describeRecurrence,
   editedStartsOn,
   formatCalendarDate,
@@ -33,6 +37,7 @@ import {
   weekdayOf,
   weekdays,
 } from "@flatsby/validators/calendar";
+import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import { DatePopover } from "./DatePopover";
 
@@ -61,6 +66,9 @@ export function CalendarItemForm({
   const locale = useLocale();
   const [kind, setKind] = useState<CalendarItemKind>(item?.kind ?? "task");
   const [title, setTitle] = useState(item?.title ?? "");
+  const [pickedColor, setPickedColor] = useState<CalendarColor | null>(
+    item?.color ?? null,
+  );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
   const [time, setTime] = useState(item?.time ?? null);
   const [repeat, setRepeat] = useState<RepeatForm>(() =>
@@ -71,6 +79,7 @@ export function CalendarItemForm({
   const [everyText, setEveryText] = useState(String(repeat.every));
 
   const isTask = kind === "task";
+  const color = pickedColor ?? defaultColorFor(kind);
   const startsOn = item
     ? editedStartsOn(item, repeat, pickedStart, today)
     : (pickedStart ?? defaultDate);
@@ -96,6 +105,7 @@ export function CalendarItemForm({
       groupId,
       kind,
       title: title.trim(),
+      color,
       startsOn,
       time: isTask ? null : time,
       recurrence,
@@ -136,7 +146,7 @@ export function CalendarItemForm({
         >
           <TabsList className="w-full">
             <TabsTrigger value="task" data-testid="calendar-form-kind-task">
-              <SquareCheck />
+              <CircleCheckBig />
               {t("calendar.kind.task")}
             </TabsTrigger>
             <TabsTrigger value="event" data-testid="calendar-form-kind-event">
@@ -146,6 +156,27 @@ export function CalendarItemForm({
           </TabsList>
         </Tabs>
       )}
+
+      <Field label={t("calendar.form.color")}>
+        <div className="flex flex-wrap gap-2">
+          {calendarColors.map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-label={t(`calendar.color.${option}`)}
+              aria-pressed={color === option}
+              onClick={() => setPickedColor(option)}
+              className={cn(
+                "size-7 rounded-full",
+                categoryFillColorMap[option],
+                color === option &&
+                  "ring-ring ring-offset-background ring-2 ring-offset-2",
+              )}
+              data-testid={`calendar-form-color-${option}`}
+            />
+          ))}
+        </div>
+      </Field>
 
       <div className="divide-y rounded-xl border">
         <FormRow

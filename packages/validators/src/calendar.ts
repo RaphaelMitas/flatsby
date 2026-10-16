@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
 
+import type { CategoryColorKey } from "./expenses/category-colors";
 import type { DebtPerson } from "./expenses/formatting";
 
 export const weekdays = ["mo", "tu", "we", "th", "fr", "sa", "su"] as const;
@@ -35,6 +36,24 @@ export const calendarTimeSchema = z.iso.time({ precision: -1 });
 export const calendarItemKindSchema = z.enum(["task", "event"]);
 export type CalendarItemKind = z.infer<typeof calendarItemKindSchema>;
 
+export const calendarColors = [
+  "gray",
+  "blue",
+  "cyan",
+  "green",
+  "yellow",
+  "orange",
+  "red",
+  "pink",
+  "purple",
+] as const satisfies readonly CategoryColorKey[];
+export const calendarColorSchema = z.enum(calendarColors);
+export type CalendarColor = z.infer<typeof calendarColorSchema>;
+
+// Matches how each kind looked before items had a color
+export const defaultColorFor = (kind: CalendarItemKind): CalendarColor =>
+  kind === "event" ? "blue" : "gray";
+
 export const calendarItemTitleSchema = z
   .string()
   .trim()
@@ -45,6 +64,7 @@ const calendarItemFields = z.object({
   groupId: z.number(),
   kind: calendarItemKindSchema,
   title: calendarItemTitleSchema,
+  color: calendarColorSchema,
   startsOn: calendarDateSchema,
   time: calendarTimeSchema.nullable(),
   recurrence: recurrenceSchema.nullable(),
@@ -276,6 +296,7 @@ export function describeRecurrence(
 
 export interface CalendarItemView extends ExpandableItem {
   kind: CalendarItemKind;
+  color: CalendarColor;
   title: string;
   time: string | null;
 }

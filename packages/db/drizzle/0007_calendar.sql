@@ -10,6 +10,7 @@ CREATE TABLE "flat-cove_calendar_item" (
 	"group_id" integer NOT NULL,
 	"kind" varchar(16) NOT NULL,
 	"title" varchar(256) NOT NULL,
+	"color" varchar(16) NOT NULL,
 	"starts_on" date NOT NULL,
 	"ends_on" date,
 	"time" time,

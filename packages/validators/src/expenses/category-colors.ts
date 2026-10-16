@@ -101,6 +101,22 @@ export const categoryBgColorMap: Record<CategoryColorKey, string> = {
   zinc: "bg-zinc-100 dark:bg-zinc-900/30",
 };
 
+// ---- Fill colors (dots and swatches) ---------------------------------------
+
+export const categoryFillColorMap: Record<CategoryColorKey, string> = {
+  primary: "bg-primary",
+  orange: "bg-orange-600 dark:bg-orange-300",
+  blue: "bg-blue-600 dark:bg-blue-300",
+  cyan: "bg-cyan-600 dark:bg-cyan-300",
+  pink: "bg-pink-600 dark:bg-pink-300",
+  purple: "bg-purple-600 dark:bg-purple-300",
+  gray: "bg-gray-600 dark:bg-gray-300",
+  red: "bg-red-600 dark:bg-red-300",
+  green: "bg-green-600 dark:bg-green-300",
+  yellow: "bg-yellow-600 dark:bg-yellow-300",
+  zinc: "bg-zinc-600 dark:bg-zinc-300",
+};
+
 // ---- Border colors ---------------------------------------------------------
 
 export const categoryBorderColorMap: Record<CategoryColorKey, string> = {

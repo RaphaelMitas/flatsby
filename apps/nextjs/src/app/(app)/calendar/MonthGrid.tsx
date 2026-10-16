@@ -12,6 +12,7 @@ import {
   monthGrid,
   monthOf,
 } from "@flatsby/validators/calendar";
+import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 const MAX_DOTS = 3;
 
@@ -119,7 +120,7 @@ export function MonthGrid({
                       key={`${item.id}-${occurrence.date}`}
                       className={cn(
                         "size-1.5 rounded-full",
-                        item.kind === "event" ? "bg-info" : "bg-foreground",
+                        categoryFillColorMap[item.color],
                         occurrence.completedAt && "opacity-25",
                       )}
                     />

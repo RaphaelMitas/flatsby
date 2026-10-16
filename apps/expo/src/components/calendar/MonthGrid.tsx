@@ -7,6 +7,7 @@ import {
   formatCalendarDate,
   monthOf,
 } from "@flatsby/validators/calendar";
+import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import { Button } from "~/lib/ui/button";
 import { cn } from "~/lib/utils";
@@ -138,7 +139,7 @@ export function MonthGrid({
                       key={`${item.id}-${occurrence.date}`}
                       className={cn(
                         "h-1.5 w-1.5 rounded-full",
-                        item.kind === "event" ? "bg-info" : "bg-foreground",
+                        categoryFillColorMap[item.color],
                         occurrence.completedAt && "opacity-25",
                       )}
                     />

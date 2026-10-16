@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { describeRecurrence } from "@flatsby/validators/calendar";
+import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import type { CalendarPeople } from "./CalendarPeople";
 import { Checkbox } from "~/lib/ui/checkbox";
@@ -54,11 +55,18 @@ export function CalendarEntryRow({
       >
         {!isTask && (
           <View className="items-center justify-center p-4">
-            <View className="bg-info/15 h-6 w-6 items-center justify-center rounded-full">
-              <Icon name="clock" size={14} color="info" />
+            <View className="bg-muted h-6 w-6 items-center justify-center rounded-full">
+              <Icon name="clock" size={14} color="muted-foreground" />
             </View>
           </View>
         )}
+        <View
+          className={cn(
+            "mr-1.5 h-2.5 w-2.5 rounded-full",
+            categoryFillColorMap[item.color],
+            done && "opacity-25",
+          )}
+        />
         <View className="min-w-0 flex-1 py-3">
           <Text
             numberOfLines={1}

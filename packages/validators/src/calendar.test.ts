@@ -34,6 +34,7 @@ const item = (
   id: 1,
   kind: "task",
   title: "Bins",
+  color: "gray",
   time: null,
   startsOn,
   endsOn: null,

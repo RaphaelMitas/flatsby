@@ -11,6 +11,7 @@ import {
   formatCalendarDate,
   localDate,
 } from "@flatsby/validators/calendar";
+import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Badge } from "~/lib/ui/badge";
@@ -128,18 +129,26 @@ export function CalendarItemDetail({
 
   return (
     <AppScrollView contentContainerClassName="p-5 pb-12">
-      <Text
-        testID="calendar-detail-title"
-        className="text-foreground text-2xl font-bold"
-      >
-        {item.title}
-      </Text>
+      <View className="flex-row items-center gap-2.5">
+        <View
+          className={cn(
+            "h-3 w-3 rounded-full",
+            categoryFillColorMap[item.color],
+          )}
+        />
+        <Text
+          testID="calendar-detail-title"
+          className="text-foreground flex-1 text-2xl font-bold"
+        >
+          {item.title}
+        </Text>
+      </View>
       <View className="mt-2 flex-row flex-wrap gap-1.5">
         <Badge
           variant="secondary"
           icon={
             <Icon
-              name={item.kind === "event" ? "clock" : "square-check"}
+              name={item.kind === "event" ? "clock" : "circle-check-big"}
               size={12}
               color="muted-foreground"
             />

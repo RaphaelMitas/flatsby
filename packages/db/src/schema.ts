@@ -1,4 +1,5 @@
 import type {
+  CalendarColor,
   CalendarItemKind,
   Recurrence,
 } from "@flatsby/validators/calendar";
@@ -443,6 +444,7 @@ export const calendarItems = createTable(
       .references(() => groups.id, { onDelete: "cascade" }),
     kind: varchar("kind", { length: 16 }).$type<CalendarItemKind>().notNull(),
     title: varchar("title", { length: 256 }).notNull(),
+    color: varchar("color", { length: 16 }).$type<CalendarColor>().notNull(),
     startsOn: date("starts_on", { mode: "string" }).notNull(),
     // Set when an edit split the series and a newer item took over
     endsOn: date("ends_on", { mode: "string" }),

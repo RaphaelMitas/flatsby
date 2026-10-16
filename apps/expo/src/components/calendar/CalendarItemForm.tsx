@@ -1,5 +1,6 @@
 import type { GroupWithAccess } from "@flatsby/api";
 import type {
+  CalendarColor,
   CalendarItemKind,
   CalendarItemView,
   RepeatForm,
@@ -13,7 +14,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
+  calendarColors,
   createCalendarItemSchema,
+  defaultColorFor,
   describeRecurrence,
   editedStartsOn,
   formatCalendarDate,
@@ -30,6 +33,7 @@ import {
   weekdayOf,
   weekdays,
 } from "@flatsby/validators/calendar";
+import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
@@ -155,6 +159,9 @@ function ItemFields({
 
   const [title, setTitle] = useState(item?.title ?? "");
   const [kind, setKind] = useState<CalendarItemKind>(item?.kind ?? "task");
+  const [pickedColor, setPickedColor] = useState<CalendarColor | null>(
+    item?.color ?? null,
+  );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
   const [time, setTime] = useState(item?.time ?? null);
   const [repeat, setRepeat] = useState(() =>
@@ -168,6 +175,7 @@ function ItemFields({
     : (pickedStart ?? defaultStart);
   const days = repeat.days ?? [weekdayOf(startsOn)];
   const isTask = kind === "task";
+  const color = pickedColor ?? defaultColorFor(kind);
   const changeRepeat = (change: Partial<RepeatForm>) => {
     const next = { ...repeat, ...change };
     setRepeat({ ...next, every: Math.min(next.every, maxEvery(next)) });
@@ -177,6 +185,7 @@ function ItemFields({
     groupId: group.id,
     kind,
     title,
+    color,
     startsOn,
     time: isTask ? null : time,
     recurrence: recurrenceOf(repeat, startsOn),
@@ -248,7 +257,7 @@ function ItemFields({
               {
                 value: "task",
                 label: t("calendar.kind.task"),
-                icon: "square-check",
+                icon: "circle-check-big",
                 testID: "calendar-form-kind-task",
               },
               {
@@ -261,6 +270,28 @@ function ItemFields({
           />
         </View>
       )}
+
+      <FieldLabel>{t("calendar.form.color")}</FieldLabel>
+      <View className="flex-row flex-wrap gap-3">
+        {calendarColors.map((option) => (
+          <Pressable
+            key={option}
+            testID={`calendar-form-color-${option}`}
+            accessibilityRole="button"
+            accessibilityLabel={t(`calendar.color.${option}`)}
+            accessibilityState={{ selected: color === option }}
+            onPress={() => setPickedColor(option)}
+            className={cn(
+              "h-8 w-8 items-center justify-center rounded-full",
+              categoryFillColorMap[option],
+            )}
+          >
+            {color === option && (
+              <Icon name="check" size={16} color="background" />
+            )}
+          </Pressable>
+        ))}
+      </View>
 
       <View className="mt-6 gap-4">
         <DatePickerField

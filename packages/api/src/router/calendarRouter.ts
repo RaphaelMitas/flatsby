@@ -81,6 +81,7 @@ const loadItems = async (db: Database, where: SQL | undefined) =>
         id: true,
         kind: true,
         title: true,
+        color: true,
         startsOn: true,
         endsOn: true,
         time: true,
@@ -214,12 +215,14 @@ const insertItem = async (
 const itemValues = ({
   kind,
   title,
+  color,
   startsOn,
   time,
   recurrence,
 }: z.infer<typeof createCalendarItemSchema>) => ({
   kind,
   title,
+  color,
   startsOn,
   time,
   recurrence,

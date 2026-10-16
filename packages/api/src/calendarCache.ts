@@ -138,6 +138,7 @@ const asView = (
   {
     kind,
     title,
+    color,
     startsOn,
     time,
     recurrence,
@@ -147,6 +148,7 @@ const asView = (
   id,
   kind,
   title,
+  color,
   startsOn,
   endsOn: null,
   time,

@@ -17,6 +17,7 @@ import {
   entriesOn,
   formatCalendarDate,
 } from "@flatsby/validators/calendar";
+import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import type { MemberLookup } from "./CalendarPeople";
 import { DoneBy, TurnPill } from "./CalendarPeople";
@@ -166,7 +167,7 @@ function EntryRow({
           className="h-5 w-5 cursor-pointer rounded-md"
         />
       ) : (
-        <span className="bg-info/10 text-info grid size-6 shrink-0 place-items-center rounded-md">
+        <span className="bg-muted text-muted-foreground grid size-6 shrink-0 place-items-center rounded-md">
           <Clock className="size-4" />
         </span>
       )}
@@ -177,6 +178,13 @@ function EntryRow({
         className="flex min-w-0 flex-1 items-center gap-3 text-left"
         data-testid="calendar-entry-open"
       >
+        <span
+          className={cn(
+            "size-2.5 shrink-0 rounded-full",
+            categoryFillColorMap[item.color],
+            done && "opacity-25",
+          )}
+        />
         <div className="min-w-0 flex-1">
           <p
             className={cn(
