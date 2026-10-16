@@ -1,7 +1,7 @@
 Flatsby is a household app for people who live together. Share one shopping list, split expenses and see who owes whom.
 
 SHARED SHOPPING LISTS
-Everyone in the household works from the same lists, on their phone and on the web. Whoever is in the shop ticks items off, and everyone else sees it. Items sort into categories such as produce, dairy or bakery, so the list follows the way a shop is laid out.
+Everyone in the household works from the same lists, on their phone and on the web. Whoever is in the shop ticks items off, and everyone else sees it the next time they open the list. Items sort into categories such as produce, dairy or bakery, so the list follows the way a shop is laid out.
 
 EXPENSE SPLITTING
 Log what you paid and split it equally, by percentage, by shares or by exact amounts. Flatsby keeps a running balance per person and simplifies debts, so fewer payments settle everyone up. Works with EUR, USD, GBP and CHF.

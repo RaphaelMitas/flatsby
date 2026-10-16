@@ -7,9 +7,12 @@ const limits = {
   // Play's cap; the App Store allows 4000.
   "release_notes.txt": 500,
   "description.txt": 4000,
-  "app-store/name.txt": 30,
-  "app-store/subtitle.txt": 30,
-  "app-store/keywords.txt": 100,
+  "name.txt": 30,
+  "subtitle.txt": 30,
+  "keywords.txt": 100,
+  "privacy_url.txt": Infinity,
+  "support_url.txt": Infinity,
+  "marketing_url.txt": Infinity,
   "play/title.txt": 30,
   "play/short_description.txt": 80,
 };
@@ -25,7 +28,8 @@ for (const locale of locales) {
       errors.push(`${locale}/${file} is missing`);
       continue;
     }
-    const length = [...readFileSync(path, "utf8").trim()].length;
+    const length = [...readFileSync(path, "utf8").trimEnd()].length;
+    if (length === 0) errors.push(`${locale}/${file} is empty`);
     if (length > limit) {
       errors.push(`${locale}/${file} has ${length} characters, limit ${limit}`);
     }

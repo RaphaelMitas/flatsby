@@ -74,16 +74,22 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   checks credits first and falls back when the check fails.
 - Marketing version comes from `app.config.ts`; build numbers auto-increment
   remotely on EAS (`appVersionSource: "remote"`).
-- `apps/expo/store/<locale>/` is the source of truth for listing text:
-  `description.txt` and `release_notes.txt` go to both stores, `app-store/`
-  and `play/` hold the fields only one store has. Edits made in App Store
-  Connect or the Play Console are overwritten by the next release.
+- `apps/expo/store/<locale>/` is the source of truth for listing text. Its
+  top-level files use deliver's names and go to the App Store, which reads
+  the folder directly; `description.txt` and `release_notes.txt` also go to
+  Play, next to the Play-only fields in `play/`. Store-side edits to these
+  fields are overwritten by the next release; fields without a file, like
+  promotional text or the Play video, are left alone.
   `scripts/check-store-text.mjs` runs in CI and fails when a locale is
-  missing a file or a text is over its store limit (release notes: 500, Play's
-  cap). A new locale is a new folder; both stores create the localization on
-  the next release.
-- Screenshots are `en-US` only; other locales show those. iPhone 6.9" / Play
-  phone screenshots are replaced, existing iPad screenshots stay untouched.
+  missing a file, a file is empty, or a text is over its store limit
+  (release notes: 500, Play's cap).
+- A new locale is a new folder, plus one manual step on the App Store:
+  deliver only creates a locale's name, subtitle and privacy URL when an
+  existing locale's values changed in the same run, so add the language in
+  App Store Connect first.
+- Screenshots are `en-US` only and synced: every App Store screenshot that
+  wasn't captured, in any locale, is deleted. Other locales show the `en-US`
+  ones.
 - This is a fully automatic pipeline: once the release PR merges, the new
   version goes live on both stores (after store review) without further
   approval. Review the diff and release notes before merging.

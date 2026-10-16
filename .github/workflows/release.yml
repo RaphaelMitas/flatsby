@@ -573,13 +573,11 @@ jobs:
           git commit -q -m "README screenshots for $TAG"
           git push --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" assets
 
-  # Uploads the captured screenshots to the App Store listing (en-US), sets
-  # each locale's listing text from apps/expo/store/<locale>/, and submits the
-  # EAS-delivered build for review with automatic release. Runs even if the
-  # screenshot job was skipped (submits with the existing listing assets).
+  # Sets each locale's listing text, uploads the captured en-US screenshots,
+  # and submits the EAS-delivered build for review with automatic release.
   # Runs whatever the screenshot job did: store listings keep their last
   # uploaded assets, so a failed capture must not block the review
-  # submission — fresh screenshots ride along only when the job succeeded.
+  # submission; fresh screenshots ride along only when the job succeeded.
   publish-ios:
     needs: [check, eas-build-submit, screenshots-ios]
     if: >-
@@ -626,11 +624,6 @@ jobs:
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
         run: |
-          for dir in apps/expo/store/*/; do
-            locale=$(basename "$dir")
-            mkdir -p "store/metadata/$locale"
-            cp "$dir"app-store/*.txt "$dir"description.txt "$dir"release_notes.txt "store/metadata/$locale/"
-          done
           if compgen -G "results/screenshots/*.png" > /dev/null; then
             mkdir -p store/screenshots/en-US
             cp results/screenshots/*.png store/screenshots/en-US/
@@ -708,7 +701,7 @@ jobs:
             --app_identifier com.flatcove.app.v2
             --app_version "$VERSION"
             --api_key_path "$RUNNER_TEMP/asc_key.json"
-            --metadata_path store/metadata
+            --metadata_path apps/expo/store
             --skip_binary_upload true
             --submit_for_review true
             --automatic_release true
@@ -796,11 +789,10 @@ jobs:
           ASC_KEY_PATH: ${{ runner.temp }}/asc_key.json
 
   # The Play counterpart of publish-ios: promotes the build EAS put on the
-  # internal track to production with each locale's listing text and release
-  # notes, and en-US screenshots, in one edit, which sends it to Google review
-  # and then live.
-  # Like publish-ios, independent of the screenshot job's outcome: the
-  # changelog always goes up, fresh screenshots only when captured.
+  # internal track to production in one edit with each locale's listing text,
+  # which sends it to Google review and then live.
+  # Like publish-ios, independent of the screenshot job's outcome: listing
+  # text always goes up, fresh en-US screenshots only when captured.
   publish-android:
     needs: [check, eas-build-submit, screenshots-android]
     if: >-
@@ -867,14 +859,16 @@ jobs:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/play_key.json"
+          # supply sends files verbatim, so $(cat) drops the trailing newline.
           # default.txt keeps Play's "What's New" in sync with the App Store
           # text; --version_code pins it to the release EAS just submitted.
           for dir in apps/expo/store/*/; do
-            locale=$(basename "$dir")
-            mkdir -p "store/metadata/android/$locale/changelogs"
-            cp "$dir"play/*.txt "store/metadata/android/$locale/"
-            cp "$dir"description.txt "store/metadata/android/$locale/full_description.txt"
-            cp "$dir"release_notes.txt "store/metadata/android/$locale/changelogs/default.txt"
+            out="store/metadata/android/$(basename "$dir")"
+            mkdir -p "$out/changelogs"
+            printf '%s' "$(cat "${dir}play/title.txt")" > "$out/title.txt"
+            printf '%s' "$(cat "${dir}play/short_description.txt")" > "$out/short_description.txt"
+            printf '%s' "$(cat "${dir}description.txt")" > "$out/full_description.txt"
+            printf '%s' "$(cat "${dir}release_notes.txt")" > "$out/changelogs/default.txt"
           done
           SKIP_SCREENSHOTS=true
           if compgen -G "results/screenshots/*.png" > /dev/null; then
