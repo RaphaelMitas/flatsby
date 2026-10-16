@@ -111,10 +111,9 @@ export function CalendarItemDetail({
           day: "numeric",
           month: "short",
         });
-  const canReschedule =
-    originalDate !== undefined &&
-    item.recurrence !== null &&
-    item.recurrence.type !== "afterDone";
+  const repeatsOnSchedule =
+    item.recurrence !== null && item.recurrence.type !== "afterDone";
+  const canReschedule = originalDate !== undefined && repeatsOnSchedule;
   const currentTurn = upcoming[0]?.turnGroupMemberId ?? null;
 
   const rescheduleTo = (movedTo: string | null) => {
@@ -226,9 +225,28 @@ export function CalendarItemDetail({
                   label={dayLabel(entry.date)}
                 >
                   {entry.skipped ? (
-                    <Text className="text-muted-foreground text-sm">
-                      {t("calendar.detail.skipped")}
-                    </Text>
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-muted-foreground text-sm">
+                        {t("calendar.detail.skipped")}
+                      </Text>
+                      {repeatsOnSchedule && (
+                        <Button
+                          testID="calendar-detail-unskip"
+                          variant="ghost"
+                          size="sm"
+                          title={t("calendar.detail.unskip")}
+                          onPress={() =>
+                            reschedule.mutate({
+                              groupId: group.id,
+                              itemId: item.id,
+                              originalDate: entry.originalDate,
+                              movedTo: null,
+                              skipped: false,
+                            })
+                          }
+                        />
+                      )}
+                    </View>
                   ) : (
                     <OccurrenceStatus occurrence={entry} people={people} />
                   )}
