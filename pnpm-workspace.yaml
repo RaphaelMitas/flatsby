@@ -38,8 +38,8 @@ auditConfig:
     - GHSA-vcc3-ghjq-m6fr
 
 catalog:
-  "@ai-sdk/provider": ^4.0.27
-  "@ai-sdk/react": ^4.0.145
+  "@ai-sdk/provider": ^4.0.28
+  "@ai-sdk/react": ^4.0.146
   "@biomejs/biome": 2.5.15
   "@hookform/resolvers": ^5.9.1
   "@t3-oss/env-nextjs": ^0.13.11
@@ -50,10 +50,10 @@ catalog:
   "@trpc/tanstack-react-query": ^11.19.0
   "@turbo/gen": ^2.11.8
   "@types/node": ^24.19.2
-  ai: ^7.0.141
-  autumn-js: ^1.4.50
+  ai: ^7.0.142
+  autumn-js: ^1.5.1
   babel-plugin-react-compiler: ^1.0.0
-  next: ^16.4.1
+  next: ^16.4.2
   next-intl: ^4.14.9
   prettier: ^3.9.10
   react-hook-form: ^7.90.0
@@ -63,7 +63,7 @@ catalog:
   turbo: ^2.11.8
   typescript: ^7.0.2
   use-intl: ^4.14.9
-  vitest: ^5.0.4
+  vitest: ^5.0.5
   zod: ^4.6.7
 
 catalogs:
@@ -71,8 +71,8 @@ catalogs:
     # 1.6.24+ breaks the Expo client plugin types: expoClient no longer satisfies
     # BetterAuthClientPlugin and authClient.getCookie loses its type.
     # https://github.com/better-auth/better-auth/issues/10767
-    "@better-auth/expo": 1.7.9
-    better-auth: 1.7.9
+    "@better-auth/expo": 1.7.10
+    better-auth: 1.7.10
   react19:
     "@types/react": ~19.2.0
     "@types/react-dom": ~19.2.0
