@@ -189,15 +189,18 @@ function ItemFields({
       update.mutate({ ...trimmed, id: item.id });
       router.dismissTo("/(tabs)/calendar");
     } else {
-      // The optimistic row can only land in a month that is already cached
-      await queryClient.ensureQueryData(
-        calendarRangeOptions(group.id, monthOf(startsOn), localDate()),
-      );
-      create.mutate(trimmed);
+      // Leaving first rules out a second submit; the optimistic row needs its month cached
       router.dismissTo({
         pathname: "/(tabs)/calendar",
         params: { date: startsOn },
       });
+      await queryClient
+        .query({
+          ...calendarRangeOptions(group.id, monthOf(startsOn), localDate()),
+          staleTime: "static",
+        })
+        .catch(() => undefined);
+      create.mutate(trimmed);
     }
   };
 

@@ -33,6 +33,8 @@ interface CalendarItemDetailProps {
   itemId: number;
   /** The occurrence that was tapped, which skip and move act on */
   originalDate: string | undefined;
+  /** Where that occurrence sits now, which differs once it was moved */
+  currentDate: string | undefined;
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -78,6 +80,7 @@ export function CalendarItemDetail({
   group,
   itemId,
   originalDate,
+  currentDate,
 }: CalendarItemDetailProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -291,11 +294,7 @@ export function CalendarItemDetail({
           {moving && originalDate && (
             <DatePickerField
               label={t("calendar.form.date")}
-              value={pickerDate(
-                upcoming.find(
-                  (occurrence) => occurrence.originalDate === originalDate,
-                )?.date ?? originalDate,
-              )}
+              value={pickerDate(currentDate ?? originalDate)}
               onChange={(date) => rescheduleTo(localDate(date))}
             />
           )}

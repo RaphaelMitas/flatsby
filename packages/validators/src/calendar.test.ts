@@ -400,11 +400,10 @@ describe("afterDone ticking", () => {
     time: null,
   };
 
-  it("lets only the next due occurrence be ticked", () => {
-    const overrides = [done("2026-10-14")];
+  it("shows only the next due occurrence as tickable", () => {
     const expanded = expandOccurrences(
       chore,
-      overrides,
+      [done("2026-10-14")],
       "2026-10-16",
       "2026-10-22",
       "2026-10-16",
@@ -413,15 +412,47 @@ describe("afterDone ticking", () => {
       ["2026-10-17", false],
       ["2026-10-20", true],
     ]);
-    expect(canComplete(chore, overrides, "2026-10-17", "2026-10-16")).toBe(
-      true,
-    );
-    expect(canComplete(chore, overrides, "2026-10-20", "2026-10-16")).toBe(
-      false,
-    );
+  });
+
+  it("blocks a second tick once it was done today or later, even after an undo elsewhere", () => {
+    expect(
+      canComplete(chore, [done("2026-10-14")], "2026-10-17", "2026-10-16"),
+    ).toBe(true);
     expect(
       canComplete(chore, [done("2026-10-16")], "2026-10-19", "2026-10-16"),
     ).toBe(false);
+    expect(
+      canComplete(chore, [done("2026-10-17")], "2026-10-20", "2026-10-16"),
+    ).toBe(false);
+  });
+
+  it("counts forecasts from a later start date after an optimistic tick", () => {
+    const later = { ...chore, startsOn: "2026-10-30" };
+    const range = {
+      items: [later],
+      occurrences: expandOccurrences(
+        later,
+        [],
+        "2026-10-01",
+        "2026-10-31",
+        "2026-10-16",
+      ),
+    };
+    const ticked = withDone(
+      range,
+      { itemId: 1, originalDate: "2026-10-30", done: true, byGroupMemberId: 1 },
+      window,
+    );
+    const server = expandOccurrences(
+      later,
+      [done("2026-10-16", 1)],
+      "2026-10-01",
+      "2026-10-31",
+      "2026-10-16",
+    );
+    expect(ticked.occurrences.map((o) => [o.date, o.projected])).toEqual(
+      server.map((o) => [o.date, o.projected]),
+    );
   });
 
   it("waits for a later start date even after it was done", () => {

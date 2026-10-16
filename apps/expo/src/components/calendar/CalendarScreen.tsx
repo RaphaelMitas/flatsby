@@ -193,6 +193,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
                         // Only an open occurrence can be skipped or moved
                         ...(!entry.occurrence.completedAt && {
                           date: entry.occurrence.originalDate,
+                          at: entry.occurrence.date,
                         }),
                       },
                     })

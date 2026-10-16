@@ -4,9 +4,10 @@ import { CalendarItemDetail } from "~/components/calendar/CalendarItemDetail";
 import { GroupGate } from "~/components/GroupGate";
 
 export default function CalendarItemScreen() {
-  const { itemId, date } = useLocalSearchParams<{
+  const { itemId, date, at } = useLocalSearchParams<{
     itemId: string;
     date?: string;
+    at?: string;
   }>();
 
   return (
@@ -16,6 +17,7 @@ export default function CalendarItemScreen() {
           group={group}
           itemId={Number(itemId)}
           originalDate={date}
+          currentDate={at}
         />
       )}
     </GroupGate>

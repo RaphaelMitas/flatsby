@@ -126,13 +126,15 @@ export const calendarMutation = <TInput>(
     restoreCalendar(queryClient, snapshot);
     onFailure(result.error.message);
   },
-  onSettled: () => {
-    // A refetch while another write is in flight would briefly show the older server state
-    if (queryClient.isMutating({ mutationKey: calendarMutationKey }) > 1)
-      return;
-    void queryClient.invalidateQueries(filters.ranges);
-    void queryClient.invalidateQueries(filters.details);
-  },
+  onSettled: () =>
+    // A refetch while another write is in flight would briefly show the older server state;
+    // deferred because a mutation still counts as running inside its own onSettled
+    setTimeout(() => {
+      if (queryClient.isMutating({ mutationKey: calendarMutationKey }) > 0)
+        return;
+      void queryClient.invalidateQueries(filters.ranges);
+      void queryClient.invalidateQueries(filters.details);
+    }),
 });
 
 /** The optimistic side of each calendar mutation, shared by both clients. */

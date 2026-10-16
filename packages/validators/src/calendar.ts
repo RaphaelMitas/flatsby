@@ -238,8 +238,9 @@ export function canComplete(
   today: string,
 ) {
   if (item.recurrence?.type !== "afterDone") return isScheduledOn(item, date);
-  return expandOccurrences(item, overrides, date, date, today).some(
-    (occurrence) => !occurrence.completedAt && !occurrence.projected,
+  // The server records it on today whatever was ticked, so only an existing completion today or later blocks it
+  return overrides.every(
+    (override) => !override.completedAt || override.originalDate < today,
   );
 }
 
@@ -285,8 +286,8 @@ export function expandOccurrences(
       toDayNumber(item.startsOn),
     );
     const nextDue = Math.max(due, toDayNumber(today));
-    // Done today already, so doing it again would only overwrite today's completion
-    const doneToday = lastDone?.originalDate === today;
+    // Done today already (or later, by someone whose day is ahead), so doing it again changes nothing
+    const doneToday = lastDone !== undefined && lastDone.originalDate >= today;
     let day = nextDue;
     let ordinal = done.length;
     if (day < first) {
@@ -525,8 +526,21 @@ export function withDone(
       ? null
       : (item.memberIds[(turnIndex + steps) % item.memberIds.length] ?? null);
   const forecasts: Occurrence[] = [];
+  if (today >= from && today <= to)
+    forecasts.push({
+      itemId: item.id,
+      originalDate: today,
+      date: today,
+      turnGroupMemberId: turnAfter(0),
+      ...completion,
+      projected: false,
+    });
   for (
-    let day = toDayNumber(today), steps = 0;
+    let day = Math.max(
+        toDayNumber(today) + interval,
+        toDayNumber(item.startsOn),
+      ),
+      steps = 1;
     day <= toDayNumber(to);
     day += interval, steps++
   ) {
@@ -537,10 +551,9 @@ export function withDone(
         originalDate: date,
         date,
         turnGroupMemberId: turnAfter(steps),
-        ...(steps === 0
-          ? completion
-          : { completedByGroupMemberId: null, completedAt: null }),
-        projected: steps > 0,
+        completedByGroupMemberId: null,
+        completedAt: null,
+        projected: true,
       });
   }
   return {
@@ -573,7 +586,13 @@ export function withRescheduled(
     (occurrence) => !matches(occurrence),
   );
   const date = change.movedTo ?? change.originalDate;
-  if (change.skipped || !item || date < from || date > to)
+  if (
+    change.skipped ||
+    !item ||
+    !isScheduledOn(item, change.originalDate) ||
+    date < from ||
+    date > to
+  )
     return { ...range, occurrences };
   const existing = range.occurrences.find(matches) ?? {
     itemId: item.id,

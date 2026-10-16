@@ -156,10 +156,15 @@ function CalendarScreen({
 
   const save = async (input: CreateCalendarItemInput, id?: number) => {
     if (id === undefined) {
-      // The optimistic row can only land in a month that is already cached
-      await queryClient.ensureQueryData(rangeOptions(monthOf(input.startsOn)));
-      create.mutate(input);
+      // Closing the form first rules out a second submit; the optimistic row needs its month cached
       selectDay(input.startsOn);
+      await queryClient
+        .query({
+          ...rangeOptions(monthOf(input.startsOn)),
+          staleTime: "static",
+        })
+        .catch(() => undefined);
+      create.mutate(input);
     } else {
       update.mutate({ ...input, id });
       setPanel(null);

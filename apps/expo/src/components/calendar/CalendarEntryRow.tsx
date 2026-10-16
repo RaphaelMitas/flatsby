@@ -41,6 +41,7 @@ export function CalendarEntryRow({
           accessibilityLabel={item.title}
           checked={done}
           disabled={pending || occurrence.projected}
+          className={occurrence.projected ? "opacity-50" : undefined}
           onCheckedChange={onToggle}
         />
       )}
