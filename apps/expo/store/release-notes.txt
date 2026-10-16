@@ -1,5 +1,4 @@
-• See who you actually owe. The debts page now lists each person you share expenses with, and you can settle up with them one by one.
-• Travelling? Convert foreign expenses into your group's currency as you add them, so the whole trip settles in one currency. Turn it on in group settings.
-• You can now track expenses in Swiss francs.
-• Ask your flatmates to update too, so converted expenses and Swiss francs work for everyone.
+• Invite flatmates with a link, a QR code or a short code. They see who invited them and join with one tap, no email needed.
+• Flatsby now speaks German. The app follows your phone's language, and you can change it in settings.
+• Splitwise imports now work for households with more than 500 expenses.
 • Small fixes and improvements.
