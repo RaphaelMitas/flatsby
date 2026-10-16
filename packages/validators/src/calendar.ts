@@ -177,11 +177,18 @@ export interface ExpandableItem {
   memberIds: number[];
 }
 
+/** Sent with each completion, so someone who has since left the group keeps their name */
+export interface CalendarPerson {
+  name: string;
+  image: string | null;
+}
+
 export interface OccurrenceOverride {
   originalDate: string;
   movedTo: string | null;
   skipped: boolean;
   completedByGroupMemberId: number | null;
+  completedBy: CalendarPerson | null;
   completedAt: Date | null;
 }
 
@@ -192,6 +199,7 @@ export interface Occurrence {
   date: string;
   turnGroupMemberId: number | null;
   completedByGroupMemberId: number | null;
+  completedBy: CalendarPerson | null;
   completedAt: Date | null;
   /** A forecast of an afterDone chore past its next due date, which can't be done yet */
   projected: boolean;
@@ -264,6 +272,7 @@ export function expandOccurrences(
     date,
     turnGroupMemberId: turnFor(item.memberIds, ordinal),
     completedByGroupMemberId: override?.completedByGroupMemberId ?? null,
+    completedBy: override?.completedBy ?? null,
     completedAt: override?.completedAt ?? null,
     projected,
   });
@@ -489,6 +498,7 @@ const cachedCompletions = (range: CalendarRange, itemId: number) =>
         occurrence.date === occurrence.originalDate ? null : occurrence.date,
       skipped: false,
       completedByGroupMemberId: occurrence.completedByGroupMemberId,
+      completedBy: occurrence.completedBy,
       completedAt: occurrence.completedAt,
     }));
 
@@ -499,6 +509,7 @@ export function withDone(
     originalDate: string;
     done: boolean;
     byGroupMemberId: number;
+    by: CalendarPerson;
   },
   { from, to, today }: { from: string; to: string; today: string },
 ): CalendarRange {
@@ -506,6 +517,7 @@ export function withDone(
   const item = range.items.find((cached) => cached.id === change.itemId);
   const completion = {
     completedByGroupMemberId: change.done ? change.byGroupMemberId : null,
+    completedBy: change.done ? change.by : null,
     completedAt: change.done ? new Date() : null,
   };
   if (item?.recurrence?.type !== "afterDone" || !change.done)
@@ -551,6 +563,7 @@ export function withDone(
         date,
         turnGroupMemberId: turnAfter(steps),
         completedByGroupMemberId: null,
+        completedBy: null,
         completedAt: null,
         projected: true,
       });
@@ -598,6 +611,7 @@ export function withRescheduled(
     originalDate: change.originalDate,
     turnGroupMemberId: turnOn(item, [], change.originalDate),
     completedByGroupMemberId: null,
+    completedBy: null,
     completedAt: null,
     projected: false,
   };
@@ -652,6 +666,7 @@ export function withSavedItem(
               }),
               ...(isEvent && {
                 completedByGroupMemberId: null,
+                completedBy: null,
                 completedAt: null,
               }),
             }

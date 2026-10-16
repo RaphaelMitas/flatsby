@@ -99,14 +99,29 @@ const loadItems = async (
       .map((member) => member.groupMemberId),
   }));
 
-const overrideColumns = {
-  itemId: true,
-  originalDate: true,
-  movedTo: true,
-  skipped: true,
-  completedByGroupMemberId: true,
-  completedAt: true,
-} as const;
+const loadOverrides = async (db: Database, where: SQL | undefined) =>
+  (
+    await db.query.calendarOccurrences.findMany({
+      columns: {
+        itemId: true,
+        originalDate: true,
+        movedTo: true,
+        skipped: true,
+        completedByGroupMemberId: true,
+        completedAt: true,
+      },
+      with: {
+        completedByGroupMember: {
+          columns: {},
+          with: { user: { columns: { name: true, image: true } } },
+        },
+      },
+      where,
+    })
+  ).map(({ completedByGroupMember, ...row }) => ({
+    ...row,
+    completedBy: completedByGroupMember?.user ?? null,
+  }));
 
 const groupOverrides = (
   rows: (OccurrenceOverride & { itemId: number })[],
@@ -226,9 +241,9 @@ export const calendarRouter = createTRPCRouter({
         const overrides =
           items.length === 0
             ? []
-            : await ctx.db.query.calendarOccurrences.findMany({
-                columns: overrideColumns,
-                where: and(
+            : await loadOverrides(
+                ctx.db,
+                and(
                   inArray(
                     calendarOccurrences.itemId,
                     items.map((item) => item.id),
@@ -245,7 +260,7 @@ export const calendarRouter = createTRPCRouter({
                       : undefined,
                   ),
                 ),
-              });
+              );
         return {
           items,
           occurrences: items.flatMap((item) =>
@@ -268,10 +283,10 @@ export const calendarRouter = createTRPCRouter({
       asMember(ctx, input.groupId, () =>
         Effect.flatMap(findItem(ctx.db, input.groupId, input.id), (item) =>
           safeDbOperation(async () => {
-            const overrides = await ctx.db.query.calendarOccurrences.findMany({
-              columns: overrideColumns,
-              where: eq(calendarOccurrences.itemId, item.id),
-            });
+            const overrides = await loadOverrides(
+              ctx.db,
+              eq(calendarOccurrences.itemId, item.id),
+            );
             return {
               item,
               upcoming: expandOccurrences(
@@ -298,6 +313,7 @@ export const calendarRouter = createTRPCRouter({
                   date: row.movedTo ?? row.originalDate,
                   skipped: row.skipped,
                   completedByGroupMemberId: row.completedByGroupMemberId,
+                  completedBy: row.completedBy,
                   completedAt: row.completedAt,
                   turnGroupMemberId: turnOn(item, overrides, row.originalDate),
                 })),
@@ -417,10 +433,10 @@ export const calendarRouter = createTRPCRouter({
               ? Effect.flatMap(
                   safeDbOperation(
                     () =>
-                      ctx.db.query.calendarOccurrences.findMany({
-                        columns: overrideColumns,
-                        where: eq(calendarOccurrences.itemId, item.id),
-                      }),
+                      loadOverrides(
+                        ctx.db,
+                        eq(calendarOccurrences.itemId, item.id),
+                      ),
                     "load calendar occurrences",
                   ),
                   (overrides) =>

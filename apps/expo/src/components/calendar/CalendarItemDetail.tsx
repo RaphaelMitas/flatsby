@@ -87,7 +87,7 @@ export function CalendarItemDetail({
   const router = useRouter();
   const people = useCalendarPeople(group);
   const today = useSyncExternalStore(watchLocalDate, localDate);
-  const { reschedule, remove } = useCalendarMutations(group.id, people.meId);
+  const { reschedule, remove } = useCalendarMutations(group);
   const [armed, setArmed] = useState(false);
   const [moving, setMoving] = useState(false);
 

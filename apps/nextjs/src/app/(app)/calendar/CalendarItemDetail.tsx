@@ -198,11 +198,7 @@ export function CalendarItemDetail({
                       )}
                     </span>
                   ) : (
-                    <DoneBy
-                      byId={row.completedByGroupMemberId}
-                      turnId={row.turnGroupMemberId}
-                      members={members}
-                    />
+                    <DoneBy occurrence={row} members={members} />
                   )}
                 </li>
               ))}

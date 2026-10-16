@@ -46,7 +46,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const [mine, setMine] = useState(false);
   const [shownToday, setShownToday] = useState(today);
   const { date: jumpTo } = useLocalSearchParams<{ date?: string }>();
-  const { setDone } = useCalendarMutations(group.id, people.meId);
+  const { setDone } = useCalendarMutations(group);
 
   const { data, refetch } = useQuery({
     ...calendarRangeOptions(group.id, month, today),

@@ -131,10 +131,8 @@ function CalendarScreen({
       void queryClient.prefetchQuery(rangeOptions(shiftMonth(month, delta)));
   }, [queryClient, rangeOptions, month]);
   const range = data?.success ? data.data : EMPTY_RANGE;
-  const { setDone, reschedule, remove, create, update } = useCalendarMutations(
-    groupId,
-    meId,
-  );
+  const { setDone, reschedule, remove, create, update } =
+    useCalendarMutations(group);
 
   if (data?.success === false)
     return (

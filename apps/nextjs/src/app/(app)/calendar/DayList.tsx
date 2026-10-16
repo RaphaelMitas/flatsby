@@ -197,11 +197,7 @@ function EntryRow({
           </p>
         </div>
         {done ? (
-          <DoneBy
-            byId={occurrence.completedByGroupMemberId}
-            turnId={occurrence.turnGroupMemberId}
-            members={members}
-          />
+          <DoneBy occurrence={occurrence} members={members} />
         ) : (
           occurrence.turnGroupMemberId !== null && (
             <TurnPill

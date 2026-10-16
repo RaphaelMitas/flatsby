@@ -1,6 +1,7 @@
 import type {
   CalendarItemDetail,
   CalendarItemView,
+  CalendarPerson,
   CalendarRange,
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
@@ -141,10 +142,14 @@ export const calendarMutation = <TInput>(
 export const calendarPatches = {
   setDone: (
     input: { itemId: number; originalDate: string; done: boolean },
-    byGroupMemberId: number,
+    me: { groupMemberId: number; person: CalendarPerson },
   ): CalendarPatch => ({
     range: (range, window) =>
-      withDone(range, { ...input, byGroupMemberId }, window),
+      withDone(
+        range,
+        { ...input, byGroupMemberId: me.groupMemberId, by: me.person },
+        window,
+      ),
   }),
 
   reschedule: (input: {

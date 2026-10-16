@@ -11,6 +11,7 @@ export interface CalendarPeople {
   meId: number;
   /** null is a member whose account is gone */
   person: (groupMemberId: number | null) => DebtPerson;
+  isMember: (groupMemberId: number) => boolean;
 }
 
 export function useCalendarPeople(group: GroupWithAccess): CalendarPeople {
@@ -18,6 +19,7 @@ export function useCalendarPeople(group: GroupWithAccess): CalendarPeople {
   const byId = new Map(group.groupMembers.map((member) => [member.id, member]));
   return {
     meId: group.thisGroupMember.id,
+    isMember: (groupMemberId) => byId.has(groupMemberId),
     person: (groupMemberId) => {
       const user =
         groupMemberId === null ? undefined : byId.get(groupMemberId)?.user;
@@ -69,7 +71,10 @@ export function OccurrenceStatus({
 }: {
   occurrence: Pick<
     Occurrence,
-    "turnGroupMemberId" | "completedByGroupMemberId" | "completedAt"
+    | "turnGroupMemberId"
+    | "completedByGroupMemberId"
+    | "completedBy"
+    | "completedAt"
   >;
   people: CalendarPeople;
 }) {
@@ -78,12 +83,18 @@ export function OccurrenceStatus({
     occurrence;
 
   if (occurrence.completedAt) {
-    const doer = people.person(doneBy);
+    const doer = occurrence.completedBy ?? people.person(null);
+    // Turns of someone who left are dealt to the others, so only a current member can have covered
+    const covered =
+      doneBy !== null &&
+      people.isMember(doneBy) &&
+      turn !== null &&
+      turn !== doneBy;
     return (
       <PersonPill
         person={doer}
         label={
-          doneBy !== null && turn !== null && turn !== doneBy
+          covered
             ? t("coveredBy", { name: doer.name })
             : t("doneBy", { name: doer.name })
         }

@@ -36,6 +36,7 @@ const done = (originalDate: string, by = 1): OccurrenceOverride => ({
   movedTo: null,
   skipped: false,
   completedByGroupMemberId: by,
+  completedBy: { name: `Member ${by}`, image: null },
   completedAt: new Date(`${originalDate}T12:00:00Z`),
 });
 
@@ -383,6 +384,7 @@ describe("withSavedItem", () => {
         originalDate: "2026-10-05",
         done: true,
         byGroupMemberId: 1,
+        by: { name: "Member 1", image: null },
       },
       window,
     );
@@ -397,6 +399,7 @@ describe("withSavedItem", () => {
         originalDate: "2026-10-05",
         done: true,
         byGroupMemberId: 1,
+        by: { name: "Member 1", image: null },
       },
       window,
     );
@@ -492,7 +495,13 @@ describe("afterDone ticking", () => {
     };
     const ticked = withDone(
       range,
-      { itemId: 1, originalDate: "2026-10-30", done: true, byGroupMemberId: 1 },
+      {
+        itemId: 1,
+        originalDate: "2026-10-30",
+        done: true,
+        byGroupMemberId: 1,
+        by: { name: "Member 1", image: null },
+      },
       window,
     );
     const server = expandOccurrences(
@@ -529,7 +538,13 @@ describe("afterDone ticking", () => {
     };
     const ticked = withDone(
       range,
-      { itemId: 1, originalDate: "2026-10-17", done: true, byGroupMemberId: 2 },
+      {
+        itemId: 1,
+        originalDate: "2026-10-17",
+        done: true,
+        byGroupMemberId: 2,
+        by: { name: "Member 2", image: null },
+      },
       window,
     );
     const server = expandOccurrences(

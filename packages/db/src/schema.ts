@@ -525,5 +525,9 @@ export const calendarOccurrencesRelations = relations(
       fields: [calendarOccurrences.itemId],
       references: [calendarItems.id],
     }),
+    completedByGroupMember: one(groupMembers, {
+      fields: [calendarOccurrences.completedByGroupMemberId],
+      references: [groupMembers.id],
+    }),
   }),
 );

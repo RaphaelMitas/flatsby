@@ -150,7 +150,7 @@ function ItemFields({
   const router = useRouter();
   const queryClient = useQueryClient();
   const people = useCalendarPeople(group);
-  const { create, update } = useCalendarMutations(group.id, people.meId);
+  const { create, update } = useCalendarMutations(group);
 
   const [title, setTitle] = useState(item?.title ?? "");
   const [kind, setKind] = useState<CalendarItemKind>(item?.kind ?? "task");

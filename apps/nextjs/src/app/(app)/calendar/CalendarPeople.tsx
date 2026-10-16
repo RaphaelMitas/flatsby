@@ -1,6 +1,7 @@
 "use client";
 
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
+import type { Occurrence } from "@flatsby/validators/calendar";
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
@@ -60,26 +61,37 @@ export function TurnPill({
 }
 
 export function DoneBy({
-  byId,
-  turnId,
+  occurrence,
   members,
 }: {
-  byId: number | null;
-  turnId: number | null;
+  occurrence: Pick<
+    Occurrence,
+    "completedByGroupMemberId" | "completedBy" | "turnGroupMemberId"
+  >;
   members: MemberLookup;
 }) {
   const t = useTranslations();
-  const member = byId === null ? undefined : members.get(byId);
-  const name = member?.user.name ?? t("common.unknown");
+  const {
+    completedByGroupMemberId: byId,
+    completedBy,
+    turnGroupMemberId,
+  } = occurrence;
+  const name = completedBy?.name ?? t("common.unknown");
+  // Turns of someone who left are dealt to the others, so only a current member can have covered
+  const covered =
+    byId !== null &&
+    members.has(byId) &&
+    turnGroupMemberId !== null &&
+    byId !== turnGroupMemberId;
   return (
     <span className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
-      {byId !== null && turnId !== null && byId !== turnId
+      {covered
         ? t("calendar.coveredBy", { name })
         : t("calendar.doneBy", { name })}
-      {member && (
+      {completedBy && (
         <UserAvatar
-          name={member.user.name}
-          image={member.user.image}
+          name={completedBy.name}
+          image={completedBy.image}
           size="xs"
         />
       )}
