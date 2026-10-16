@@ -6,7 +6,7 @@ import type {
   CategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { redirect } from "next/navigation";
 import {
   useInfiniteQuery,
@@ -70,6 +70,7 @@ const ShoppingListInner = ({
   const t = useTranslations("shoppingList");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const listRef = useRef<HTMLDivElement>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
     null,
   );
@@ -227,6 +228,7 @@ const ShoppingListInner = ({
       groupId,
       shoppingListId,
     });
+    listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // One flat keyed list, so ticking a row reorders it instead of remounting it
@@ -295,7 +297,7 @@ const ShoppingListInner = ({
           />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto">
+        <div ref={listRef} className="min-h-0 flex-1 overflow-auto">
           <div className="space-y-2 px-4 pt-4">
             {rows.map((row) =>
               row.type === "header" ? (
