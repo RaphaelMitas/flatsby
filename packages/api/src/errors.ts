@@ -277,20 +277,20 @@ export const withErrorHandlingAsResult = async <T>(
   locale: Locale,
   effect: Effect.Effect<T, ApiError>,
 ): Promise<ApiResult<T>> => {
-  const safeEffect = Effect.catchAllDefect(effect, (defect) => {
+  const safeEffect = Effect.catchDefect(effect, (defect) => {
     return Effect.fail(fromUnknownError(defect, "operation"));
   });
 
-  const either = await Effect.runPromise(Effect.either(safeEffect));
+  const result = await Effect.runPromise(Effect.result(safeEffect));
 
-  if (either._tag === "Right") {
+  if (result._tag === "Success") {
     return {
       success: true,
-      data: either.right,
+      data: result.success,
     };
   }
 
-  const error = either.left;
+  const error = result.failure;
   return {
     success: false,
     error: {
