@@ -50,12 +50,16 @@ export function TurnPill({
   meId: number;
   members: MemberLookup;
 }) {
-  const t = useTranslations("calendar");
+  const t = useTranslations();
   const member = members.get(memberId);
   const isMe = memberId === meId;
   return (
     <MemberPill member={member} highlighted={isMe}>
-      {isMe ? t("yourTurn") : t("turnOf", { name: member?.user.name ?? "" })}
+      {isMe
+        ? t("calendar.yourTurn")
+        : t("calendar.turnOf", {
+            name: member?.user.name ?? t("common.unknown"),
+          })}
     </MemberPill>
   );
 }

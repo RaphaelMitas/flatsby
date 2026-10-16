@@ -13,7 +13,9 @@ import type {
 import { z } from "zod/v4";
 
 import {
+  addDays,
   calendarRangeSchema,
+  continuedRotation,
   splitsSeries,
   withDone,
   withoutItem,
@@ -39,6 +41,13 @@ export interface CalendarPatch {
 
 export type CalendarSnapshot = [QueryKey, unknown][];
 
+type FindCachedItem = (id: number) => CalendarItemView | undefined;
+
+export type CalendarPatchFor<TInput> = (
+  input: TInput,
+  findCachedItem: FindCachedItem,
+) => CalendarPatch;
+
 interface CalendarFilters {
   ranges: QueryFilters;
   details: QueryFilters;
@@ -48,7 +57,7 @@ interface CalendarFilters {
 async function patchCalendar(
   queryClient: QueryClient,
   filters: CalendarFilters,
-  patch: CalendarPatch,
+  patchFor: (findCachedItem: FindCachedItem) => CalendarPatch,
 ): Promise<CalendarSnapshot> {
   await Promise.all([
     queryClient.cancelQueries(filters.ranges),
@@ -60,6 +69,15 @@ async function patchCalendar(
   const details = queryClient.getQueriesData<ApiResult<CalendarItemDetail>>(
     filters.details,
   );
+  const cachedItems = [
+    ...ranges.flatMap(([, cached]) =>
+      cached?.success ? cached.data.items : [],
+    ),
+    ...details.flatMap(([, cached]) =>
+      cached?.success ? [cached.data.item] : [],
+    ),
+  ];
+  const patch = patchFor((id) => cachedItems.find((item) => item.id === id));
   for (const [key, cached] of ranges) {
     const window = rangeKeySchema.safeParse(key);
     if (cached?.success && window.success)
@@ -88,11 +106,13 @@ const restoreCalendar = (
 export const calendarMutation = <TInput>(
   queryClient: QueryClient,
   filters: CalendarFilters,
-  patchFor: (input: TInput) => CalendarPatch,
+  patchFor: CalendarPatchFor<TInput>,
   onFailure: (message: string | null) => void,
 ) => ({
   onMutate: (input: TInput) =>
-    patchCalendar(queryClient, filters, patchFor(input)),
+    patchCalendar(queryClient, filters, (findCachedItem) =>
+      patchFor(input, findCachedItem),
+    ),
   onError: (_error: unknown, _input: TInput, snapshot?: CalendarSnapshot) => {
     restoreCalendar(queryClient, snapshot);
     onFailure(null);
@@ -133,6 +153,14 @@ const asView = (
   memberIds,
 });
 
+const withoutUpcoming = (
+  detail: CalendarItemDetail,
+  date: string,
+): CalendarItemDetail => ({
+  ...detail,
+  upcoming: detail.upcoming.filter((occurrence) => occurrence.date !== date),
+});
+
 // Negative so it never collides with a real id before the refetch lands
 const temporaryId = () => -Date.now();
 
@@ -148,6 +176,10 @@ export const calendarPatches = {
         byGroupMemberId: me.groupMemberId,
         by: me.person,
       }),
+    detail: (detail) =>
+      detail.item.id === input.itemId && input.done
+        ? withoutUpcoming(detail, input.date)
+        : detail,
   }),
 
   setSkipped: (input: {
@@ -156,15 +188,16 @@ export const calendarPatches = {
     skipped: boolean;
   }): CalendarPatch => ({
     range: (range, window) => withSkipped(range, input, window),
-    detail: (detail) =>
-      detail.item.id === input.itemId && !input.skipped
-        ? {
-            ...detail,
-            history: detail.history.filter(
-              (entry) => entry.date !== input.date || entry.completedAt,
-            ),
-          }
-        : detail,
+    detail: (detail) => {
+      if (detail.item.id !== input.itemId) return detail;
+      if (input.skipped) return withoutUpcoming(detail, input.date);
+      return {
+        ...detail,
+        history: detail.history.filter(
+          (entry) => entry.date !== input.date || entry.completedAt,
+        ),
+      };
+    },
   }),
 
   remove: (input: { id: number }): CalendarPatch => ({
@@ -176,24 +209,39 @@ export const calendarPatches = {
     return { range: (range, window) => withSavedItem(range, item, window) };
   },
 
-  update: (input: CreateCalendarItemInput & { id: number }): CalendarPatch => {
-    const split = asView(temporaryId(), input);
-    const edited = (previous: CalendarItemView) => ({
-      ...asView(input.id, input),
-      endsOn: previous.endsOn,
-    });
+  update: (
+    input: CreateCalendarItemInput & { id: number; today: string },
+    findCachedItem: FindCachedItem,
+  ): CalendarPatch => {
+    // Looked up across every cached month, so an item moving into a month it wasn't in still shows up there
+    const previous = findCachedItem(input.id);
+    if (!previous) return { range: (range) => range };
+    if (splitsSeries(previous, input, input.today)) {
+      const endsOn = addDays(input.startsOn, -1);
+      const next = {
+        ...asView(temporaryId(), input),
+        memberIds: continuedRotation(previous, input),
+      };
+      return {
+        range: (range, window) =>
+          withSplitSeries(range, previous.id, next, window),
+        detail: (detail) =>
+          detail.item.id === previous.id
+            ? {
+                ...detail,
+                item: { ...detail.item, endsOn },
+                upcoming: detail.upcoming.filter(
+                  (occurrence) => occurrence.date <= endsOn,
+                ),
+              }
+            : detail,
+      };
+    }
+    const edited = { ...asView(input.id, input), endsOn: previous.endsOn };
     return {
-      range: (range, window) => {
-        const previous = range.items.find((item) => item.id === input.id);
-        if (!previous) return range;
-        return splitsSeries(previous, input)
-          ? withSplitSeries(range, previous.id, split, window)
-          : withSavedItem(range, edited(previous), window);
-      },
+      range: (range, window) => withSavedItem(range, edited, window),
       detail: (detail) =>
-        detail.item.id === input.id && !splitsSeries(detail.item, input)
-          ? { ...detail, item: edited(detail.item) }
-          : detail,
+        detail.item.id === input.id ? { ...detail, item: edited } : detail,
     };
   },
 };

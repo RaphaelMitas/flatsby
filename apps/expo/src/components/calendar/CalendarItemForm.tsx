@@ -16,6 +16,7 @@ import {
   createCalendarItemSchema,
   describeRecurrence,
   editedStartsOn,
+  formatCalendarDate,
   localDate,
   maxEvery,
   monthOf,
@@ -161,8 +162,9 @@ function ItemFields({
   );
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
 
+  const today = localDate();
   const startsOn = item
-    ? editedStartsOn(item, repeat, pickedStart, localDate())
+    ? editedStartsOn(item, repeat, pickedStart, today)
     : (pickedStart ?? defaultStart);
   const days = repeat.days ?? [weekdayOf(startsOn)];
   const isTask = kind === "task";
@@ -186,7 +188,7 @@ function ItemFields({
     if (!valid) return;
     const trimmed = { ...input, title: title.trim() };
     if (item) {
-      update.mutate({ ...trimmed, id: item.id });
+      update.mutate({ ...trimmed, id: item.id, today });
       router.dismissTo("/(tabs)/calendar");
     } else {
       // Leaving first rules out a second submit; the optimistic row needs its month cached
@@ -263,14 +265,18 @@ function ItemFields({
       <View className="mt-6 gap-4">
         <DatePickerField
           testID="calendar-form-starts-on"
-          label={t("calendar.form.startsOn")}
+          label={
+            input.recurrence
+              ? t("calendar.form.startsOn")
+              : t("calendar.form.date")
+          }
           value={pickerDate(startsOn)}
           onChange={(picked) => setPickedStart(localDate(picked))}
         />
         {!isTask && (
           <>
             <View className="flex-row items-center justify-between">
-              <Label>{t("calendar.form.allDay")}</Label>
+              <Label>{t("calendar.allDay")}</Label>
               <Switch
                 testID="calendar-form-all-day"
                 checked={time === null}
@@ -405,7 +411,7 @@ function ItemFields({
           testID="calendar-form-summary"
           className="text-foreground flex-1 text-sm"
         >
-          {describeRecurrence(input.recurrence, t, locale)}
+          {`${describeRecurrence(input.recurrence, t, locale)} · ${formatCalendarDate(startsOn, locale, { weekday: "short", day: "numeric", month: "short" })}`}
         </Text>
       </View>
 

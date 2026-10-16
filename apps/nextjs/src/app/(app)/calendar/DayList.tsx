@@ -150,7 +150,10 @@ function EntryRow({
 
   return (
     <li
-      className="flex items-center gap-3 px-4 py-3"
+      className={cn(
+        "flex items-center gap-3 px-4 py-3",
+        pending && "opacity-60",
+      )}
       data-testid={`calendar-entry-${item.id}`}
     >
       {isTask ? (

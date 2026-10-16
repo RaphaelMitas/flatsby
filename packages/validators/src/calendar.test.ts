@@ -9,6 +9,7 @@ import type {
   Recurrence,
 } from "./calendar";
 import {
+  continuedRotation,
   describeRecurrence,
   editedStartsOn,
   entriesOn,
@@ -229,24 +230,55 @@ describe("entriesOn", () => {
 
 describe("splitsSeries", () => {
   const weekly = item({ type: "weekly", interval: 1, days: ["mo"] });
+  const tuesdays = {
+    startsOn: "2026-10-20",
+    recurrence: { type: "weekly", interval: 1, days: ["tu"] },
+  } satisfies Parameters<typeof splitsSeries>[1];
+  const today = "2026-10-16";
 
   it("splits a running series when its rule changes from a later date", () => {
-    expect(
-      splitsSeries(weekly, {
-        startsOn: "2026-10-20",
-        recurrence: { type: "weekly", interval: 1, days: ["tu"] },
-      }),
-    ).toBe(true);
+    expect(splitsSeries(weekly, tuesdays, today)).toBe(true);
   });
 
   it("edits in place when only other fields change, the start moves back, or it never repeated", () => {
-    expect(splitsSeries(weekly, weekly)).toBe(false);
+    expect(splitsSeries(weekly, weekly, today)).toBe(false);
     expect(
-      splitsSeries(weekly, { startsOn: "2026-10-01", recurrence: null }),
+      splitsSeries(weekly, { startsOn: "2026-10-01", recurrence: null }, today),
     ).toBe(false);
     expect(
-      splitsSeries(item(null), { startsOn: "2026-10-20", recurrence: null }),
+      splitsSeries(
+        item(null),
+        { startsOn: "2026-10-20", recurrence: null },
+        today,
+      ),
     ).toBe(false);
+  });
+
+  it("edits in place before the series started or once a newer rule took over", () => {
+    expect(splitsSeries(weekly, tuesdays, "2026-10-06")).toBe(false);
+    expect(
+      splitsSeries({ ...weekly, endsOn: "2026-10-12" }, tuesdays, today),
+    ).toBe(false);
+  });
+});
+
+describe("continuedRotation", () => {
+  it("starts the new series with whoever was next under the old one", () => {
+    // Tuesdays from 10-06 for 1, 2, 3: 10-20 is the third, so 3 is up
+    const weekly = item(
+      { type: "weekly", interval: 1, days: ["tu"] },
+      undefined,
+      [1, 2, 3],
+    );
+    expect(
+      continuedRotation(weekly, {
+        startsOn: "2026-10-19",
+        memberIds: [1, 2, 3],
+      }),
+    ).toEqual([3, 1, 2]);
+    expect(
+      continuedRotation(weekly, { startsOn: "2026-10-19", memberIds: [1, 2] }),
+    ).toEqual([1, 2]);
   });
 });
 
@@ -275,6 +307,39 @@ describe("optimistic patches", () => {
     ).toBe(2);
   });
 
+  it("keeps ticks and skips on days an edited schedule still has", () => {
+    const range = withSkipped(
+      {
+        items: [weekly],
+        occurrences: expandOccurrences(
+          weekly,
+          [done("2026-10-06")],
+          window.from,
+          window.to,
+        ),
+      },
+      { itemId: 1, date: "2026-10-13", skipped: true },
+      window,
+    );
+    const edited = withSavedItem(
+      range,
+      {
+        ...weekly,
+        recurrence: { type: "weekly", interval: 1, days: ["tu", "fr"] },
+      },
+      window,
+    );
+    expect(edited.occurrences.map((o) => [o.date, !!o.completedAt])).toEqual([
+      ["2026-10-06", true],
+      ["2026-10-09", false],
+      ["2026-10-16", false],
+      ["2026-10-20", false],
+      ["2026-10-23", false],
+      ["2026-10-27", false],
+      ["2026-10-30", false],
+    ]);
+  });
+
   it("keeps ticks on an edit that keeps the schedule and re-deals turns", () => {
     const range = {
       items: [weekly],
@@ -301,21 +366,33 @@ describe("optimistic patches", () => {
     ]);
   });
 
-  it("ends the old series the day before the new rule starts", () => {
+  it("ends the old series the day before the new rule starts and moves its later ticks over", () => {
     const next = {
       ...weekly,
       id: -1,
-      startsOn: "2026-10-21",
-      recurrence: { type: "weekly", interval: 1, days: ["we"] },
+      startsOn: "2026-10-20",
+      recurrence: { type: "weekly", interval: 1, days: ["tu", "we"] },
     } satisfies CalendarItemView;
-    const split = withSplitSeries(rangeOf(weekly), 1, next, window);
-    expect(split.items.find((i) => i.id === 1)?.endsOn).toBe("2026-10-20");
-    expect(split.occurrences.map((o) => `${o.itemId}:${o.date}`)).toEqual([
-      "1:2026-10-06",
-      "1:2026-10-13",
-      "1:2026-10-20",
-      "-1:2026-10-21",
-      "-1:2026-10-28",
+    const ticked = {
+      items: [weekly],
+      occurrences: expandOccurrences(
+        weekly,
+        [done("2026-10-13"), done("2026-10-20")],
+        window.from,
+        window.to,
+      ),
+    };
+    const split = withSplitSeries(ticked, 1, next, window);
+    expect(split.items.find((i) => i.id === 1)?.endsOn).toBe("2026-10-19");
+    expect(
+      split.occurrences.map((o) => `${o.itemId}:${o.date}:${!!o.completedAt}`),
+    ).toEqual([
+      "1:2026-10-06:false",
+      "1:2026-10-13:true",
+      "-1:2026-10-20:true",
+      "-1:2026-10-21:false",
+      "-1:2026-10-27:false",
+      "-1:2026-10-28:false",
     ]);
   });
 });

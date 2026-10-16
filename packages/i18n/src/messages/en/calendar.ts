@@ -28,7 +28,6 @@ export const calendar = {
     startsOn: "Starts",
     date: "Date",
     time: "Time",
-    allDay: "All day",
     repeat: "Repeat",
     days: "On",
     every: "Every",
@@ -66,7 +65,7 @@ export const calendar = {
     unskip: "Don't skip",
     edit: "Edit",
     delete: "Delete",
-    confirmDelete: "Tap again to delete it and its history",
+    confirmDelete: "Press again to delete it and its history",
   },
   validation: {
     titleRequired: "Give it a name",

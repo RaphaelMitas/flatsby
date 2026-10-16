@@ -30,7 +30,6 @@ export const calendar = {
     startsOn: "Ab",
     date: "Datum",
     time: "Uhrzeit",
-    allDay: "Ganztägig",
     repeat: "Wiederholen",
     days: "An",
     every: "Alle",
@@ -69,7 +68,7 @@ export const calendar = {
     unskip: "Doch nicht auslassen",
     edit: "Bearbeiten",
     delete: "Löschen",
-    confirmDelete: "Nochmal tippen, um es samt Verlauf zu löschen",
+    confirmDelete: "Nochmal drücken, um es samt Verlauf zu löschen",
   },
   validation: {
     titleRequired: "Gib ihm einen Namen",

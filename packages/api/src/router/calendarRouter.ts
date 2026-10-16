@@ -1,4 +1,5 @@
 import type { SQL } from "@flatsby/db";
+import type { ExpandableItem } from "@flatsby/validators/calendar";
 import type { z } from "zod/v4";
 import { Effect } from "effect";
 
@@ -26,10 +27,10 @@ import {
   calendarItemDetailSchema,
   calendarItemRefSchema,
   calendarRangeSchema,
+  continuedRotation,
   createCalendarItemSchema,
   expandOccurrences,
   isScheduledOn,
-  sameSchedule,
   setOccurrenceDoneSchema,
   setOccurrenceSkippedSchema,
   splitsSeries,
@@ -234,6 +235,37 @@ const pruneOccurrence = (db: Database, itemId: number, date: string) =>
       ),
     );
 
+/** A changed schedule keeps the ticks and skips on days it still has; the rest belonged to the old one. */
+const carryOccurrences = async (
+  tx: DbTransaction,
+  fromItemId: number,
+  to: ExpandableItem,
+) => {
+  const split = to.id !== fromItemId;
+  const since = split ? gte(calendarOccurrences.date, to.startsOn) : undefined;
+  const rows = await tx
+    .select({ date: calendarOccurrences.date })
+    .from(calendarOccurrences)
+    .where(and(eq(calendarOccurrences.itemId, fromItemId), since));
+  const dropped = rows
+    .map((row) => row.date)
+    .filter((date) => !isScheduledOn(to, date));
+  if (dropped.length > 0)
+    await tx
+      .delete(calendarOccurrences)
+      .where(
+        and(
+          eq(calendarOccurrences.itemId, fromItemId),
+          inArray(calendarOccurrences.date, dropped),
+        ),
+      );
+  if (split)
+    await tx
+      .update(calendarOccurrences)
+      .set({ itemId: to.id })
+      .where(and(eq(calendarOccurrences.itemId, fromItemId), since));
+};
+
 export const calendarRouter = createTRPCRouter({
   range: protectedProcedure.input(calendarRangeSchema).query(({ ctx, input }) =>
     asMember(ctx, input.groupId, () =>
@@ -298,7 +330,10 @@ export const calendarRouter = createTRPCRouter({
               ),
               loadOverrides(
                 ctx.db,
-                eq(calendarOccurrences.itemId, item.id),
+                and(
+                  eq(calendarOccurrences.itemId, item.id),
+                  lte(calendarOccurrences.date, input.today),
+                ),
                 HISTORY_COUNT,
               ),
             ]);
@@ -350,31 +385,40 @@ export const calendarRouter = createTRPCRouter({
             if (input.kind !== previous.kind)
               return fail.validation("errors.unexpected");
             return DbUtils.transaction(async (tx) => {
-              if (splitsSeries(previous, input)) {
-                await tx
+              if (splitsSeries(previous, input, input.today)) {
+                const [ended] = await tx
                   .update(calendarItems)
                   .set({ endsOn: addDays(input.startsOn, -1) })
-                  .where(eq(calendarItems.id, previous.id));
-                await tx
-                  .delete(calendarOccurrences)
                   .where(
                     and(
-                      eq(calendarOccurrences.itemId, previous.id),
-                      gte(calendarOccurrences.date, input.startsOn),
+                      eq(calendarItems.id, previous.id),
+                      isNull(calendarItems.endsOn),
                     ),
-                  );
-                return insertItem(tx, input, member.id);
+                  )
+                  .returning({ id: calendarItems.id });
+                if (!ended) throw new Error("Calendar series already split");
+                const memberIds = continuedRotation(previous, input);
+                const next = await insertItem(
+                  tx,
+                  { ...input, memberIds },
+                  member.id,
+                );
+                await carryOccurrences(tx, previous.id, {
+                  ...input,
+                  ...next,
+                  endsOn: null,
+                });
+                return next;
               }
               await tx
                 .update(calendarItems)
                 .set(itemValues(input))
                 .where(eq(calendarItems.id, input.id));
               await writeMembers(tx, input.id, input.memberIds);
-              // A rewritten schedule starts over; its ticks and skips belonged to the old one
-              if (!sameSchedule(previous, input))
-                await tx
-                  .delete(calendarOccurrences)
-                  .where(eq(calendarOccurrences.itemId, input.id));
+              await carryOccurrences(tx, input.id, {
+                ...input,
+                endsOn: previous.endsOn,
+              });
               return { id: input.id };
             }, "update calendar item")(ctx.db);
           },

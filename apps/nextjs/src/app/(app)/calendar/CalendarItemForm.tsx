@@ -120,6 +120,7 @@ export function CalendarItemForm({
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         placeholder={t("calendar.form.titlePlaceholder")}
+        aria-label={t("calendar.form.titlePlaceholder")}
         maxLength={256}
         autoFocus={!item}
         className="h-11 text-lg font-semibold"
@@ -165,7 +166,7 @@ export function CalendarItemForm({
           </DatePopover>
         </FormRow>
         {!isTask && (
-          <FormRow label={t("calendar.form.allDay")} htmlFor="calendar-all-day">
+          <FormRow label={t("calendar.allDay")} htmlFor="calendar-all-day">
             <Switch
               id="calendar-all-day"
               checked={time === null}
@@ -223,6 +224,7 @@ export function CalendarItemForm({
                   });
               }}
               onBlur={() => setEveryText(String(repeat.every))}
+              aria-label={t("calendar.form.every")}
               className="w-20"
               data-testid="calendar-form-interval"
             />

@@ -1,5 +1,5 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import type { CalendarPatch } from "@flatsby/api/calendarCache";
+import type { CalendarPatchFor } from "@flatsby/api/calendarCache";
 import { Alert } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -15,7 +15,7 @@ export function useCalendarMutations(group: GroupWithAccess) {
     ranges: trpc.calendar.range.queryFilter({ groupId: group.id }),
     details: trpc.calendar.item.queryFilter({ groupId: group.id }),
   };
-  const optimistic = <TInput>(patchFor: (input: TInput) => CalendarPatch) =>
+  const optimistic = <TInput>(patchFor: CalendarPatchFor<TInput>) =>
     calendarMutation(queryClient, filters, patchFor, (message) =>
       Alert.alert(t("common.error"), message ?? t("errors.unexpected")),
     );

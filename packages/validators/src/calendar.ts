@@ -57,7 +57,7 @@ export const createCalendarItemSchema =
 export type CreateCalendarItemInput = z.input<typeof createCalendarItemSchema>;
 
 export const updateCalendarItemSchema = calendarItemFields
-  .extend({ id: z.number() })
+  .extend({ id: z.number(), today: calendarDateSchema })
   .refine(isConsistentItem);
 
 export const calendarItemRefSchema = z.object({
@@ -360,6 +360,7 @@ export function entriesOn(
 }
 
 type Schedule = Pick<ExpandableItem, "startsOn" | "recurrence">;
+type Series = Schedule & Pick<ExpandableItem, "endsOn">;
 
 const sameRecurrence = (a: Recurrence | null, b: Recurrence | null) =>
   a?.type === b?.type &&
@@ -370,11 +371,34 @@ const sameRecurrence = (a: Recurrence | null, b: Recurrence | null) =>
 export const sameSchedule = (a: Schedule, b: Schedule) =>
   a.startsOn === b.startsOn && sameRecurrence(a.recurrence, b.recurrence);
 
-/** A new rule for a running series starts a new item, so the old one keeps its history. */
-export const splitsSeries = (previous: Schedule, next: Schedule) =>
-  previous.recurrence !== null &&
+// An ended series already has a newer rule after it, so it never splits again
+const isRunning = (item: Series, today: string) =>
+  item.recurrence !== null && item.endsOn === null && item.startsOn < today;
+
+/** A new schedule for a running series starts a new item, so the old one keeps its history. */
+export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
+  isRunning(previous, today) &&
   !sameSchedule(previous, next) &&
   next.startsOn > previous.startsOn;
+
+const ROTATION_LOOKAHEAD_DAYS = 7 * MAX_INTERVAL.weeks + 7;
+
+/** The new series picks up the rotation where the old one would have been. */
+export function continuedRotation(
+  previous: ExpandableItem,
+  next: Pick<ExpandableItem, "startsOn" | "memberIds">,
+) {
+  const start = toDayNumber(next.startsOn);
+  for (let day = start; day <= start + ROTATION_LOOKAHEAD_DAYS; day++) {
+    const turn = turnOn(previous, fromDayNumber(day));
+    if (turn === null) continue;
+    const first = next.memberIds.indexOf(turn);
+    return first <= 0
+      ? next.memberIds
+      : [...next.memberIds.slice(first), ...next.memberIds.slice(0, first)];
+  }
+  return next.memberIds;
+}
 
 interface RangeWindow {
   from: string;
@@ -443,30 +467,52 @@ export const withoutItem = (
   ),
 });
 
-/** Optimistic create or in-place edit; the server drops ticks and skips when the schedule changes. */
+/** Reads an item's ticks and skips back out of a cached range; a scheduled day that isn't shown was skipped. */
+function cachedOverrides(
+  range: CalendarRange,
+  itemId: number,
+  { from, to }: RangeWindow,
+): OccurrenceOverride[] {
+  const item = range.items.find((cached) => cached.id === itemId);
+  if (!item) return [];
+  const shown = new Map(
+    range.occurrences
+      .filter((occurrence) => occurrence.itemId === itemId)
+      .map((occurrence) => [occurrence.date, occurrence]),
+  );
+  return expandOccurrences(item, [], from, to).flatMap(({ date }) => {
+    const occurrence = shown.get(date);
+    if (occurrence && !occurrence.completedAt) return [];
+    return [
+      {
+        date,
+        skipped: !occurrence,
+        completedByGroupMemberId: occurrence?.completedByGroupMemberId ?? null,
+        completedBy: occurrence?.completedBy ?? null,
+        completedAt: occurrence?.completedAt ?? null,
+      },
+    ];
+  });
+}
+
+/** Optimistic create or edit; like the server, ticks and skips stay on days the new schedule still has. */
 export function withSavedItem(
   range: CalendarRange,
   item: CalendarItemView,
-  { from, to }: RangeWindow,
+  window: RangeWindow,
+  carried = cachedOverrides(range, item.id, window),
 ): CalendarRange {
-  const previous = range.items.find((cached) => cached.id === item.id);
   const rest = withoutItem(range, item.id);
-  const occurrences =
-    previous && sameSchedule(previous, item)
-      ? range.occurrences
-          .filter((occurrence) => occurrence.itemId === item.id)
-          .map((occurrence) => ({
-            ...occurrence,
-            turnGroupMemberId: turnOn(item, occurrence.date),
-          }))
-      : expandOccurrences(item, [], from, to);
   return {
     items: [...rest.items, item],
-    occurrences: [...rest.occurrences, ...occurrences].sort(byDate),
+    occurrences: [
+      ...rest.occurrences,
+      ...expandOccurrences(item, carried, window.from, window.to),
+    ].sort(byDate),
   };
 }
 
-/** Optimistic split: the old series ends the day before the new rule takes over. */
+/** Optimistic split: the old series ends the day before the new one takes over. */
 export function withSplitSeries(
   range: CalendarRange,
   previousId: number,
@@ -474,6 +520,9 @@ export function withSplitSeries(
   window: RangeWindow,
 ): CalendarRange {
   const endsOn = addDays(next.startsOn, -1);
+  const carried = cachedOverrides(range, previousId, window).filter(
+    (override) => override.date > endsOn,
+  );
   const ended: CalendarRange = {
     items: range.items.map((item) =>
       item.id === previousId ? { ...item, endsOn } : item,
@@ -483,7 +532,7 @@ export function withSplitSeries(
         occurrence.itemId !== previousId || occurrence.date <= endsOn,
     ),
   };
-  return withSavedItem(ended, next, window);
+  return withSavedItem(ended, next, window, carried);
 }
 
 export const repeatChoices = [
@@ -543,16 +592,17 @@ export const maxEvery = (form: RepeatForm) =>
 
 /** The edit form's start: a changed repeat of a running series starts today unless a date was picked, so the old part keeps its history. */
 export function editedStartsOn(
-  item: Schedule,
+  item: Series,
   repeat: RepeatForm,
   pickedStart: string | null,
   today: string,
 ) {
   if (pickedStart) return pickedStart;
-  const ruleChanged =
-    item.recurrence !== null &&
-    !sameRecurrence(item.recurrence, recurrenceOf(repeat, item.startsOn));
-  return ruleChanged && item.startsOn < today ? today : item.startsOn;
+  const ruleChanged = !sameRecurrence(
+    item.recurrence,
+    recurrenceOf(repeat, item.startsOn),
+  );
+  return ruleChanged && isRunning(item, today) ? today : item.startsOn;
 }
 
 export function recurrenceOf(

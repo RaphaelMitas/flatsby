@@ -55,7 +55,15 @@ type Panel =
   | { type: "form"; item?: CalendarItemView };
 
 const EMPTY_RANGE: CalendarRange = { items: [], occurrences: [] };
-const noUpdates = () => () => undefined;
+// Coming back to a tab left open overnight has to move "today" along
+const onReturn = (notify: () => void) => {
+  document.addEventListener("visibilitychange", notify);
+  window.addEventListener("focus", notify);
+  return () => {
+    document.removeEventListener("visibilitychange", notify);
+    window.removeEventListener("focus", notify);
+  };
+};
 
 export function CalendarView() {
   const trpc = useTRPC();
@@ -65,7 +73,7 @@ export function CalendarView() {
     trpc.group.getGroup.queryOptions({ id: currentGroup?.id ?? 0 }),
   );
   // "Today" is the viewer's local day, which the server can't know while rendering
-  const today = useSyncExternalStore(noUpdates, localDate, () => null);
+  const today = useSyncExternalStore(onReturn, localDate, () => null);
 
   if (!groupData.success) return handleApiError(groupData.error);
   if (!today)
@@ -156,7 +164,7 @@ function CalendarScreen({
         .catch(() => undefined);
       create.mutate(input);
     } else {
-      update.mutate({ ...input, id });
+      update.mutate({ ...input, id, today });
       setPanel(null);
     }
   };
@@ -309,6 +317,7 @@ function CalendarScreen({
       >
         <SheetContent
           side="bottom"
+          aria-describedby={undefined}
           className="max-h-11/12 overflow-y-auto rounded-t-2xl px-5 pt-6 pb-8"
         >
           <SheetTitle className="sr-only">{t("calendar.title")}</SheetTitle>

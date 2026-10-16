@@ -230,7 +230,7 @@ export function CalendarItemDetail({
                       </Text>
                       {repeats && (
                         <Button
-                          testID="calendar-detail-unskip"
+                          testID={`calendar-detail-unskip-${entry.date}`}
                           variant="ghost"
                           size="sm"
                           title={t("calendar.detail.unskip")}
