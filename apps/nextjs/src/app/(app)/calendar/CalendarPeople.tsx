@@ -73,7 +73,7 @@ export function DoneBy({
   const name = member?.user.name ?? t("common.unknown");
   return (
     <span className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
-      {turnId !== null && byId !== turnId
+      {byId !== null && turnId !== null && byId !== turnId
         ? t("calendar.coveredBy", { name })
         : t("calendar.doneBy", { name })}
       {member && (

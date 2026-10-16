@@ -477,12 +477,11 @@ const sameOccurrence =
   (itemId: number, originalDate: string) => (occurrence: Occurrence) =>
     occurrence.itemId === itemId && occurrence.originalDate === originalDate;
 
-const cachedOverrides = (range: CalendarRange, itemId: number) =>
+/** Only completions survive a schedule change; the server drops skips and moves of the old rule. */
+const cachedCompletions = (range: CalendarRange, itemId: number) =>
   range.occurrences
     .filter(
-      (occurrence) =>
-        occurrence.itemId === itemId &&
-        (occurrence.completedAt || occurrence.date !== occurrence.originalDate),
+      (occurrence) => occurrence.itemId === itemId && occurrence.completedAt,
     )
     .map((occurrence) => ({
       originalDate: occurrence.originalDate,
@@ -620,7 +619,9 @@ export const withoutItem = (
   ),
 });
 
-const sameSchedule = (a: CalendarItemView, b: CalendarItemView) =>
+type Schedule = Pick<ExpandableItem, "startsOn" | "recurrence">;
+
+export const sameSchedule = (a: Schedule, b: Schedule) =>
   a.startsOn === b.startsOn &&
   a.recurrence?.type === b.recurrence?.type &&
   a.recurrence?.interval === b.recurrence?.interval &&
@@ -657,7 +658,7 @@ export function withSavedItem(
       ...rest.occurrences,
       ...expandOccurrences(
         item,
-        cachedOverrides(range, item.id),
+        cachedCompletions(range, item.id),
         from,
         to,
         today,

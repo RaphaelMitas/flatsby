@@ -358,6 +358,22 @@ describe("withSavedItem", () => {
     );
   });
 
+  it("drops moves of the old rule when the schedule changes, like the server", () => {
+    const weekly = view({ type: "weekly", interval: 1, days: ["mo"] });
+    const moved = withRescheduled(
+      withSavedItem({ items: [], occurrences: [] }, weekly, window),
+      {
+        itemId: 1,
+        originalDate: "2026-10-12",
+        movedTo: "2026-10-14",
+        skipped: false,
+      },
+      window,
+    );
+    const once = withSavedItem(moved, { ...weekly, recurrence: null }, window);
+    expect(once.occurrences.map((o) => o.date)).toEqual(["2026-10-05"]);
+  });
+
   it("re-deals turns when the rotation changes", () => {
     const weekly = view({ type: "weekly", interval: 1, days: ["mo"] }, [1, 2]);
     const cached = withSavedItem(

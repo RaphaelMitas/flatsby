@@ -29,6 +29,7 @@ import {
   expandOccurrences,
   isScheduledOn,
   rescheduleOccurrenceSchema,
+  sameSchedule,
   setOccurrenceDoneSchema,
   turnOn,
   updateCalendarItemSchema,
@@ -327,13 +328,23 @@ export const calendarRouter = createTRPCRouter({
             findItem(ctx.db, input.groupId, input.id),
             ensureMembersInGroup(ctx.db, input.groupId, input.memberIds),
           ),
-          () =>
+          ([previous]) =>
             DbUtils.transaction(async (tx) => {
               await tx
                 .update(calendarItems)
                 .set(itemValues(input))
                 .where(eq(calendarItems.id, input.id));
               await writeMembers(tx, input.id, input.memberIds);
+              // Skips and moves belong to the old rule; completions stay as history
+              if (!sameSchedule(previous, input))
+                await tx
+                  .delete(calendarOccurrences)
+                  .where(
+                    and(
+                      eq(calendarOccurrences.itemId, input.id),
+                      isNull(calendarOccurrences.completedAt),
+                    ),
+                  );
               return { id: input.id };
             }, "update calendar item")(ctx.db),
         ),
@@ -439,9 +450,7 @@ export const calendarRouter = createTRPCRouter({
           (item) => {
             if (!item.recurrence || item.recurrence.type === "afterDone")
               return fail.validation("errors.unexpected");
-            // Resetting must work even after an edit orphaned the row, so only real changes are checked
-            const resets = input.movedTo === null && !input.skipped;
-            if (!resets && !isScheduledOn(item, input.originalDate))
+            if (!isScheduledOn(item, input.originalDate))
               return fail.conflict("errors.calendarDateNotScheduled");
             const change = { movedTo: input.movedTo, skipped: input.skipped };
             return safeDbOperation(async () => {

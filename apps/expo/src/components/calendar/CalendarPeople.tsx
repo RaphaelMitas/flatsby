@@ -9,7 +9,8 @@ import { MemberAvatar } from "../expenses/MemberAvatar";
 
 export interface CalendarPeople {
   meId: number;
-  person: (groupMemberId: number) => DebtPerson;
+  /** null is a member whose account is gone */
+  person: (groupMemberId: number | null) => DebtPerson;
 }
 
 export function useCalendarPeople(group: GroupWithAccess): CalendarPeople {
@@ -18,7 +19,8 @@ export function useCalendarPeople(group: GroupWithAccess): CalendarPeople {
   return {
     meId: group.thisGroupMember.id,
     person: (groupMemberId) => {
-      const user = byId.get(groupMemberId)?.user;
+      const user =
+        groupMemberId === null ? undefined : byId.get(groupMemberId)?.user;
       return {
         name: user?.name ?? t("common.unknown"),
         image: user?.image ?? null,
@@ -67,7 +69,7 @@ export function OccurrenceStatus({
 }: {
   occurrence: Pick<
     Occurrence,
-    "turnGroupMemberId" | "completedByGroupMemberId"
+    "turnGroupMemberId" | "completedByGroupMemberId" | "completedAt"
   >;
   people: CalendarPeople;
 }) {
@@ -75,15 +77,15 @@ export function OccurrenceStatus({
   const { turnGroupMemberId: turn, completedByGroupMemberId: doneBy } =
     occurrence;
 
-  if (doneBy !== null) {
-    const { name } = people.person(doneBy);
+  if (occurrence.completedAt) {
+    const doer = people.person(doneBy);
     return (
       <PersonPill
-        person={people.person(doneBy)}
+        person={doer}
         label={
-          turn !== null && turn !== doneBy
-            ? t("coveredBy", { name })
-            : t("doneBy", { name })
+          doneBy !== null && turn !== null && turn !== doneBy
+            ? t("coveredBy", { name: doer.name })
+            : t("doneBy", { name: doer.name })
         }
       />
     );
