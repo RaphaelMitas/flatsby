@@ -23,7 +23,7 @@ import {
   localDate,
   maxEvery,
   monthOf,
-  newRepeatForm,
+  newRepeatFormFor,
   pickerDate,
   recurrenceOf,
   repeatChoices,
@@ -164,9 +164,10 @@ function ItemFields({
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
   const [time, setTime] = useState(item?.time ?? null);
-  const [repeat, setRepeat] = useState(() =>
-    item ? repeatFormOf(item.recurrence) : newRepeatForm,
+  const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
+    item ? repeatFormOf(item.recurrence) : null,
   );
+  const repeat = pickedRepeat ?? newRepeatFormFor(kind);
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
 
   const today = localDate();

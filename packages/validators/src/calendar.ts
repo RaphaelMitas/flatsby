@@ -589,12 +589,12 @@ export interface RepeatForm {
 
 const DEFAULT_CUSTOM_INTERVAL = 3;
 
-export const newRepeatForm: RepeatForm = {
-  choice: "weekly",
+export const newRepeatFormFor = (kind: CalendarItemKind): RepeatForm => ({
+  choice: kind === "event" ? "never" : "weekly",
   every: DEFAULT_CUSTOM_INTERVAL,
   unit: "days",
   days: null,
-};
+});
 
 export function repeatFormOf(recurrence: Recurrence | null): RepeatForm {
   const form: RepeatForm = {

@@ -28,7 +28,7 @@ import {
   editedStartsOn,
   formatCalendarDate,
   maxEvery,
-  newRepeatForm,
+  newRepeatFormFor,
   recurrenceOf,
   repeatChoices,
   repeatFormOf,
@@ -71,9 +71,10 @@ export function CalendarItemForm({
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
   const [time, setTime] = useState(item?.time ?? null);
-  const [repeat, setRepeat] = useState<RepeatForm>(() =>
-    item ? repeatFormOf(item.recurrence) : newRepeatForm,
+  const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
+    item ? repeatFormOf(item.recurrence) : null,
   );
+  const repeat = pickedRepeat ?? newRepeatFormFor(kind);
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
   // Typing "10" passes through an empty field, which the number itself can't hold
   const [everyText, setEveryText] = useState(String(repeat.every));
