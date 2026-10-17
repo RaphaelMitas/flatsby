@@ -36,7 +36,7 @@
     "@trpc/server": "catalog:",
     "ai": "catalog:",
     "effect": "^4.0.5",
-    "posthog-node": "^5.56.1",
+    "posthog-node": "^5.56.2",
     "superjson": "catalog:",
     "use-intl": "catalog:",
     "zod": "catalog:"
