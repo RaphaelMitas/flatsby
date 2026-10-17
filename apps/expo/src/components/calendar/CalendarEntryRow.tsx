@@ -2,7 +2,10 @@ import type { CalendarEntry } from "@flatsby/validators/calendar";
 import { Pressable, Text, View } from "react-native";
 import { useLocale, useTranslations } from "use-intl";
 
-import { describeRecurrence } from "@flatsby/validators/calendar";
+import {
+  describeEventTime,
+  describeRecurrence,
+} from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import type { CalendarPeople } from "./CalendarPeople";
@@ -80,7 +83,7 @@ export function CalendarEntryRow({
           <View className="flex-row items-center gap-1">
             {!isTask && (
               <Text className="text-muted-foreground text-sm">
-                {item.time ?? t("calendar.allDay")} ·
+                {describeEventTime(item.time, t)} ·
               </Text>
             )}
             {overdue && (

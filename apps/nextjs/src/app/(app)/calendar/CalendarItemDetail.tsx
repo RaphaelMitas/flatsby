@@ -14,6 +14,7 @@ import { cn } from "@flatsby/ui";
 import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import {
+  describeEventTime,
   describeRecurrence,
   formatCalendarDate,
 } from "@flatsby/validators/calendar";
@@ -103,7 +104,7 @@ export function CalendarItemDetail({
           </Badge>
           {!isTask && (
             <Badge variant="secondary" className={pillClass}>
-              {item.time ?? t("calendar.allDay")}
+              {describeEventTime(item.time, t)}
             </Badge>
           )}
         </div>

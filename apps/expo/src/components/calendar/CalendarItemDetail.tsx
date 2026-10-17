@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
+  describeEventTime,
   describeRecurrence,
   formatCalendarDate,
   localDate,
@@ -161,10 +162,7 @@ export function CalendarItemDetail({
           label={describeRecurrence(item.recurrence, t, locale)}
         />
         {item.kind === "event" && (
-          <Badge
-            variant="secondary"
-            label={item.time ?? t("calendar.allDay")}
-          />
+          <Badge variant="secondary" label={describeEventTime(item.time, t)} />
         )}
       </View>
 

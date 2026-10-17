@@ -13,6 +13,7 @@ import { Checkbox } from "@flatsby/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import {
   daySummary,
+  describeEventTime,
   describeRecurrence,
   entriesOn,
   formatCalendarDate,
@@ -195,7 +196,7 @@ function EntryRow({
             {item.title}
           </p>
           <p className="text-muted-foreground flex items-center gap-1 truncate text-sm">
-            {!isTask && <span>{item.time ?? t("calendar.allDay")} ·</span>}
+            {!isTask && <span>{describeEventTime(item.time, t)} ·</span>}
             {overdue && (
               <span className="text-destructive">
                 {t("calendar.overdue")} ·

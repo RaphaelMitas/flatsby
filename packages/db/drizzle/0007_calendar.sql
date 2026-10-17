@@ -13,7 +13,8 @@ CREATE TABLE "flat-cove_calendar_item" (
 	"color" varchar(16) NOT NULL,
 	"starts_on" date NOT NULL,
 	"ends_on" date,
-	"time" time,
+	"start_time" time,
+	"end_time" time,
 	"recurrence" jsonb,
 	"created_by_group_member_id" integer,
 	"created_at" timestamp DEFAULT now() NOT NULL

@@ -33,6 +33,12 @@ export type Recurrence = z.infer<typeof recurrenceSchema>;
 
 export const calendarDateSchema = z.iso.date();
 export const calendarTimeSchema = z.iso.time({ precision: -1 });
+/** An end before the start means the event runs past midnight. */
+export const eventTimeSchema = z.object({
+  start: calendarTimeSchema,
+  end: calendarTimeSchema,
+});
+export type EventTime = z.infer<typeof eventTimeSchema>;
 export const calendarItemKindSchema = z.enum(["task", "event"]);
 export type CalendarItemKind = z.infer<typeof calendarItemKindSchema>;
 
@@ -66,7 +72,7 @@ const calendarItemFields = z.object({
   title: calendarItemTitleSchema,
   color: calendarColorSchema,
   startsOn: calendarDateSchema,
-  time: calendarTimeSchema.nullable(),
+  time: eventTimeSchema.nullable(),
   recurrence: recurrenceSchema.nullable(),
   memberIds: z.array(z.number()).max(50),
 });
@@ -272,6 +278,29 @@ export const pickerDate = (date: string) => {
   return new Date(year, month - 1, day);
 };
 
+export const defaultEventTime: EventTime = { start: "19:00", end: "20:00" };
+
+const DAY_MINUTES = 24 * 60;
+const minutesOf = (time: string) => {
+  const [hours = 0, minutes = 0] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+const timeOf = (minutes: number) => {
+  const wrapped = ((minutes % DAY_MINUTES) + DAY_MINUTES) % DAY_MINUTES;
+  return [Math.floor(wrapped / 60), wrapped % 60]
+    .map((part) => String(part).padStart(2, "0"))
+    .join(":");
+};
+
+/** Moving the start keeps the event's length. */
+export const withStart = (time: EventTime, start: string): EventTime => ({
+  start,
+  end: timeOf(minutesOf(time.end) - minutesOf(time.start) + minutesOf(start)),
+});
+
+export const describeEventTime = (time: EventTime | null, t: Translate) =>
+  time ? `${time.start}–${time.end}` : t("calendar.allDay");
+
 export function describeRecurrence(
   recurrence: Recurrence | null,
   t: Translate,
@@ -298,7 +327,7 @@ export interface CalendarItemView extends ExpandableItem {
   kind: CalendarItemKind;
   color: CalendarColor;
   title: string;
-  time: string | null;
+  time: EventTime | null;
 }
 
 export interface CalendarRange {
@@ -377,8 +406,9 @@ export function entriesOn(
     )
     .sort(
       (a, b) =>
-        (a.item.time ?? "99").localeCompare(b.item.time ?? "99") ||
-        a.item.title.localeCompare(b.item.title),
+        (a.item.time?.start ?? "99").localeCompare(
+          b.item.time?.start ?? "99",
+        ) || a.item.title.localeCompare(b.item.title),
     );
 }
 

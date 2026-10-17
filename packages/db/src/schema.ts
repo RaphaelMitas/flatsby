@@ -448,8 +448,9 @@ export const calendarItems = createTable(
     startsOn: date("starts_on", { mode: "string" }).notNull(),
     // Set when an edit split the series and a newer item took over
     endsOn: date("ends_on", { mode: "string" }),
-    // Wall-clock time, so 19:00 stays 19:00 across DST; null means all day
-    time: time("time"),
+    // Wall-clock times, so 19:00 stays 19:00 across DST; null means all day
+    startTime: time("start_time"),
+    endTime: time("end_time"),
     // null means it happens once
     recurrence: jsonb("recurrence").$type<Recurrence>(),
     createdByGroupMemberId: integer("created_by_group_member_id").references(

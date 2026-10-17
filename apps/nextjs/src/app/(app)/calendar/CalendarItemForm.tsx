@@ -6,6 +6,7 @@ import type {
   CalendarItemKind,
   CalendarItemView,
   CreateCalendarItemInput,
+  EventTime,
   RepeatForm,
   Weekday,
 } from "@flatsby/validators/calendar";
@@ -24,6 +25,7 @@ import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   calendarColors,
   defaultColorFor,
+  defaultEventTime,
   describeRecurrence,
   editedStartsOn,
   formatCalendarDate,
@@ -36,12 +38,11 @@ import {
   weekdayName,
   weekdayOf,
   weekdays,
+  withStart,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import { DatePopover } from "./DatePopover";
-
-const DEFAULT_TIME = "19:00";
 
 interface CalendarItemFormProps {
   groupId: number;
@@ -70,7 +71,7 @@ export function CalendarItemForm({
     item?.color ?? null,
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
-  const [time, setTime] = useState(item?.time ?? null);
+  const [time, setTime] = useState<EventTime | null>(item?.time ?? null);
   const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
     item ? repeatFormOf(item.recurrence) : null,
   );
@@ -207,24 +208,40 @@ export function CalendarItemForm({
               id="calendar-all-day"
               checked={time === null}
               onCheckedChange={(allDay) =>
-                setTime(allDay ? null : DEFAULT_TIME)
+                setTime(allDay ? null : defaultEventTime)
               }
             />
           </FormRow>
         )}
         {!isTask && time !== null && (
-          <FormRow label={t("calendar.form.time")} htmlFor="calendar-time">
-            <Input
-              id="calendar-time"
-              type="time"
-              value={time}
-              onChange={(event) =>
-                event.target.value && setTime(event.target.value)
-              }
-              className="w-auto"
-              data-testid="calendar-form-time"
-            />
-          </FormRow>
+          <>
+            <FormRow label={t("calendar.form.from")} htmlFor="calendar-start">
+              <Input
+                id="calendar-start"
+                type="time"
+                value={time.start}
+                onChange={(event) =>
+                  event.target.value &&
+                  setTime(withStart(time, event.target.value))
+                }
+                className="w-auto"
+                data-testid="calendar-form-start-time"
+              />
+            </FormRow>
+            <FormRow label={t("calendar.form.to")} htmlFor="calendar-end">
+              <Input
+                id="calendar-end"
+                type="time"
+                value={time.end}
+                onChange={(event) =>
+                  event.target.value &&
+                  setTime({ ...time, end: event.target.value })
+                }
+                className="w-auto"
+                data-testid="calendar-form-end-time"
+              />
+            </FormRow>
+          </>
         )}
       </div>
 

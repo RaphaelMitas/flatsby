@@ -84,7 +84,8 @@ const loadItems = async (db: Database, where: SQL | undefined) =>
         color: true,
         startsOn: true,
         endsOn: true,
-        time: true,
+        startTime: true,
+        endTime: true,
         recurrence: true,
       },
       with: {
@@ -94,11 +95,14 @@ const loadItems = async (db: Database, where: SQL | undefined) =>
           with: { groupMember: { columns: { isActive: true } } },
         },
       },
-      orderBy: [asc(calendarItems.time), asc(calendarItems.id)],
+      orderBy: [asc(calendarItems.startTime), asc(calendarItems.id)],
     })
-  ).map(({ members, time, ...item }) => ({
+  ).map(({ members, startTime, endTime, ...item }) => ({
     ...item,
-    time: time?.slice(0, 5) ?? null,
+    time:
+      startTime && endTime
+        ? { start: startTime.slice(0, 5), end: endTime.slice(0, 5) }
+        : null,
     // People who left drop out and the rotation re-flows over whoever is still here
     memberIds: members
       .filter((member) => member.groupMember.isActive)
@@ -224,7 +228,8 @@ const itemValues = ({
   title,
   color,
   startsOn,
-  time,
+  startTime: time?.start ?? null,
+  endTime: time?.end ?? null,
   recurrence,
 });
 

@@ -3,6 +3,7 @@ import type {
   CalendarColor,
   CalendarItemKind,
   CalendarItemView,
+  EventTime,
   RepeatForm,
   Weekday,
 } from "@flatsby/validators/calendar";
@@ -17,6 +18,7 @@ import {
   calendarColors,
   createCalendarItemSchema,
   defaultColorFor,
+  defaultEventTime,
   describeRecurrence,
   editedStartsOn,
   formatCalendarDate,
@@ -32,6 +34,7 @@ import {
   weekdayName,
   weekdayOf,
   weekdays,
+  withStart,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
@@ -50,8 +53,6 @@ import { fromPickerTime, pickerTime } from "./calendarDates";
 import { useCalendarPeople } from "./CalendarPeople";
 import { calendarRangeOptions } from "./CalendarScreen";
 import { useCalendarMutations } from "./useCalendarMutations";
-
-const DEFAULT_TIME = "19:00";
 
 function Chip({
   label,
@@ -163,7 +164,7 @@ function ItemFields({
     item?.color ?? null,
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
-  const [time, setTime] = useState(item?.time ?? null);
+  const [time, setTime] = useState<EventTime | null>(item?.time ?? null);
   const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
     item ? repeatFormOf(item.recurrence) : null,
   );
@@ -314,18 +315,35 @@ function ItemFields({
                 testID="calendar-form-all-day"
                 checked={time === null}
                 onCheckedChange={(allDay) =>
-                  setTime(allDay ? null : DEFAULT_TIME)
+                  setTime(allDay ? null : defaultEventTime)
                 }
               />
             </View>
             {time !== null && (
-              <DatePickerField
-                testID="calendar-form-time"
-                mode="time"
-                label={t("calendar.form.time")}
-                value={pickerTime(time)}
-                onChange={(picked) => setTime(fromPickerTime(picked))}
-              />
+              <View className="flex-row gap-3">
+                <View className="flex-1">
+                  <DatePickerField
+                    testID="calendar-form-start-time"
+                    mode="time"
+                    label={t("calendar.form.from")}
+                    value={pickerTime(time.start)}
+                    onChange={(picked) =>
+                      setTime(withStart(time, fromPickerTime(picked)))
+                    }
+                  />
+                </View>
+                <View className="flex-1">
+                  <DatePickerField
+                    testID="calendar-form-end-time"
+                    mode="time"
+                    label={t("calendar.form.to")}
+                    value={pickerTime(time.end)}
+                    onChange={(picked) =>
+                      setTime({ ...time, end: fromPickerTime(picked) })
+                    }
+                  />
+                </View>
+              </View>
             )}
           </>
         )}

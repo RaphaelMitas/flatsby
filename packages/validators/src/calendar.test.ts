@@ -24,6 +24,7 @@ import {
   withSavedItem,
   withSkipped,
   withSplitSeries,
+  withStart,
 } from "./calendar";
 
 const item = (
@@ -218,7 +219,7 @@ describe("entriesOn", () => {
       id: 2,
       kind: "event",
       title: "Plumber",
-      time: "14:00",
+      time: { start: "14:00", end: "15:00" },
     });
     expect(entriesOn(range, "2026-10-16").map((e) => e.item.title)).toEqual([
       "Plumber",
@@ -227,6 +228,19 @@ describe("entriesOn", () => {
     expect(entriesOn(range, "2026-10-16", 1).map((e) => e.item.title)).toEqual([
       "Plumber",
     ]);
+  });
+});
+
+describe("withStart", () => {
+  it("keeps the length when the start moves, wrapping past midnight", () => {
+    expect(withStart({ start: "19:00", end: "20:30" }, "23:00")).toEqual({
+      start: "23:00",
+      end: "00:30",
+    });
+    expect(withStart({ start: "22:00", end: "02:00" }, "01:00")).toEqual({
+      start: "01:00",
+      end: "05:00",
+    });
   });
 });
 
