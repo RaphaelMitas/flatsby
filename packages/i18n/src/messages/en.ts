@@ -1,3 +1,4 @@
+import { appUpdate } from "./en/appUpdate";
 import { auth } from "./en/auth";
 import { billing } from "./en/billing";
 import { calendar } from "./en/calendar";
@@ -40,4 +41,5 @@ export const en = {
   marketing,
   legal,
   notFound,
+  appUpdate,
 };

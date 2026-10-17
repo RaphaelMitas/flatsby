@@ -10,7 +10,6 @@ import {
 } from "react";
 import { Keyboard, Pressable, Text, View } from "react-native";
 import BottomSheetRaw, {
-  BottomSheetBackdrop,
   useBottomSheetScrollableCreator,
 } from "@gorhom/bottom-sheet";
 import { FlashList } from "@shopify/flash-list";
@@ -19,6 +18,7 @@ import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
 
 import { useThemeColors } from "../utils";
+import { bottomSheetVariants, renderBackdrop } from "./sheet-modal";
 
 const BottomSheet = styled(BottomSheetRaw, {
   className: {
@@ -61,10 +61,6 @@ const triggerVariants = tv({
 
 const triggerTextVariants = tv({
   base: "text-foreground",
-});
-
-export const bottomSheetVariants = tv({
-  base: "bg-background border-2 border-muted rounded-t-3xl",
 });
 
 const bottomSheetContentVariants = tv({
@@ -205,17 +201,6 @@ export const BottomSheetPickerProvider: React.FC<
       </Pressable>
     ),
     [pickerConfig?.selectedId, handleItemSelect],
-  );
-
-  const renderBackdrop = useCallback(
-    (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-      />
-    ),
-    [],
   );
 
   const contextValue = useMemo(

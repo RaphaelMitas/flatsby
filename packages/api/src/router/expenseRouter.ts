@@ -37,6 +37,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   DbUtils,
   fetchGroupDebtSummary,
+  GroupUtils,
   OperationUtils,
   safeDbOperation,
 } from "../utils";
@@ -848,31 +849,15 @@ export const expenseRouter = createTRPCRouter({
             ctx.session.user.id,
           ),
           () =>
-            DbUtils.transaction(async (trx) => {
-              // Get all expense IDs in this group
-              const groupExpenses = await trx.query.expenses.findMany({
-                where: eq(expenses.groupId, input.groupId),
-                columns: { id: true },
-              });
-
-              if (groupExpenses.length === 0) {
-                return { deletedCount: 0 };
-              }
-
-              const expenseIds = groupExpenses.map((e) => e.id);
-
-              // Delete splits first (foreign key constraint)
-              await trx
-                .delete(expenseSplits)
-                .where(inArray(expenseSplits.expenseId, expenseIds));
-
-              // Delete expenses
-              await trx
-                .delete(expenses)
-                .where(eq(expenses.groupId, input.groupId));
-
-              return { deletedCount: expenseIds.length };
-            }, "delete all group expenses")(ctx.db),
+            DbUtils.transaction(
+              async (trx) => ({
+                deletedCount: await GroupUtils.deleteGroupExpenses(
+                  trx,
+                  input.groupId,
+                ),
+              }),
+              "delete all group expenses",
+            )(ctx.db),
         ),
       );
     }),

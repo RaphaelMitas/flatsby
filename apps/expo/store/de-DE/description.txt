@@ -1,0 +1,18 @@
+Flatsby ist die Haushalts-App für alle, die zusammenwohnen. Teile eine Einkaufsliste mit deinen Mitbewohnern, teile Ausgaben und sieh, wer wem was schuldet.
+
+GEMEINSAME EINKAUFSLISTEN
+Alle im Haushalt arbeiten mit denselben Listen, auf dem Handy und im Web. Wer gerade im Laden ist, hakt Artikel ab, und alle anderen sehen es, sobald sie die Liste das nächste Mal öffnen. Artikel bekommen eine Kategorie wie Obst & Gemüse, Milchprodukte oder Backwaren, so kannst du die Liste nach Bereichen im Laden filtern.
+
+KOSTEN TEILEN
+Trag ein, was du bezahlt hast, und teile es gleichmäßig, nach Prozent, nach Anteilen oder mit genauen Beträgen. Flatsby führt für jede Person einen laufenden Kontostand und vereinfacht die Schulden, damit weniger Zahlungen nötig sind, um alles auszugleichen. Unterstützt EUR, USD, GBP und CHF.
+
+HAUSHALTSGRUPPEN
+Eine Gruppe ist dein Haushalt. Lade Mitbewohner per Link, QR-Code oder kurzem Code ein, und sie treten mit einem Tippen bei. Jede Liste und jede Ausgabe bleibt in der Gruppe.
+
+KOSTENLOS
+Einkaufslisten, Ausgaben, Ausgleichszahlungen und Gruppen sind kostenlos, ohne Mitgliederbegrenzung. Automatische Kategorien nutzen KI-Credits: Der kostenlose Plan enthält ein monatliches Kontingent, ein Abo bringt mehr.
+
+Dein Konto und deine Daten sind auf jedem Gerät und im Web unter flatsby.com dieselben.
+
+Nutzungsbedingungen: https://www.flatsby.com/de/legal/terms
+Datenschutz: https://www.flatsby.com/de/legal/privacy

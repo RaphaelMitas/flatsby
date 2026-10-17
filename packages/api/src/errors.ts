@@ -4,7 +4,10 @@ import type { Messages } from "@flatsby/i18n/messages";
 import { Data, Effect } from "effect";
 import { z } from "zod/v4";
 
+import { DrizzleQueryError } from "@flatsby/db";
 import { translatorFor } from "@flatsby/i18n/translator";
+
+import { captureError } from "./lib/posthog";
 
 type MessageValues = Record<string, string | number>;
 
@@ -200,6 +203,13 @@ export const fromUnknownError = (
   error: unknown,
   operation?: string,
 ): ApiError => {
+  if (error instanceof DrizzleQueryError && error.cause) {
+    const fromCause = fromUnknownError(error.cause, operation);
+    return fromCause._tag === "InternalServerError"
+      ? Errors.database(operation ?? "unknown", undefined, error.cause)
+      : fromCause;
+  }
+
   if (error instanceof Error) {
     // Check for common database constraint errors
     if (
@@ -262,11 +272,11 @@ export const safeDbOperation = <T>(
 ): Effect.Effect<T, ApiError> => {
   return Effect.tryPromise({
     try: operation,
-    catch: (error) =>
-      fromUnknownError(
-        error,
-        `${operationName}${tableName ? ` on ${tableName}` : ""}`,
-      ),
+    catch: (error) => {
+      const operation = `${operationName}${tableName ? ` on ${tableName}` : ""}`;
+      captureError({ error, operation });
+      return fromUnknownError(error, operation);
+    },
   });
 };
 
@@ -277,20 +287,20 @@ export const withErrorHandlingAsResult = async <T>(
   locale: Locale,
   effect: Effect.Effect<T, ApiError>,
 ): Promise<ApiResult<T>> => {
-  const safeEffect = Effect.catchAllDefect(effect, (defect) => {
+  const safeEffect = Effect.catchDefect(effect, (defect) => {
     return Effect.fail(fromUnknownError(defect, "operation"));
   });
 
-  const either = await Effect.runPromise(Effect.either(safeEffect));
+  const result = await Effect.runPromise(Effect.result(safeEffect));
 
-  if (either._tag === "Right") {
+  if (result._tag === "Success") {
     return {
       success: true,
-      data: either.right,
+      data: result.success,
     };
   }
 
-  const error = either.left;
+  const error = result.failure;
   return {
     success: false,
     error: {

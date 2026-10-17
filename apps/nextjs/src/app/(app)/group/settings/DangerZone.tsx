@@ -37,8 +37,8 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
   );
   const deleteGroupMutation = useMutation(
     trpc.group.deleteGroup.mutationOptions({
-      onSuccess: () => {
-        router.push("/group");
+      onSuccess: (data) => {
+        if (data.success) router.push("/group");
       },
     }),
   );

@@ -7,6 +7,7 @@ import {
 } from "@posthog/core";
 import { PostHog } from "posthog-node";
 
+import { DrizzleQueryError } from "@flatsby/db";
 import { redactInvitePath } from "@flatsby/validators/invite";
 
 const apiKey = process.env.POSTHOG_API_KEY;
@@ -186,10 +187,13 @@ export function captureError({
   distinctId?: string;
   additionalProperties?: Record<string, unknown>;
 }) {
-  const err = error instanceof Error ? error : new Error(String(error));
+  // DrizzleQueryError's message embeds the query params, which hold user data
+  const cause =
+    error instanceof DrizzleQueryError && error.cause ? error.cause : error;
+  const err = cause instanceof Error ? cause : new Error(String(cause));
 
   if (process.env.NODE_ENV === "development") {
-    console.error(`[${operation}]`, error);
+    console.error(`[${operation}]`, cause);
   }
 
   if (!posthog) return;

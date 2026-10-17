@@ -1,11 +1,6 @@
-import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
 import { useState } from "react";
 import { Link, useRouter } from "expo-router";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import DeleteConfirmationModal from "~/components/DeleteConfirmationModal";
@@ -17,12 +12,12 @@ import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { useDeleteGroup } from "~/utils/useDeleteGroup";
 
 export default function GroupSettingsIndex() {
   const t = useTranslations();
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { selectedGroupId, clearSelectedGroup } = useShoppingStore();
+  const { selectedGroupId } = useShoppingStore();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: group } = useSuspenseQuery(
@@ -31,55 +26,11 @@ export default function GroupSettingsIndex() {
     }),
   );
 
-  const onDeleteGroupError = (
-    previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
-  ) => {
-    queryClient.setQueryData(
-      trpc.group.getUserGroups.queryKey(),
-      previousGroups,
-    );
-  };
-
-  const deleteGroupMutation = useMutation(
-    trpc.group.deleteGroup.mutationOptions({
-      onMutate: () => {
-        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
-
-        const previousGroups = queryClient.getQueryData(
-          trpc.group.getUserGroups.queryKey(),
-        );
-
-        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
-          if (!old?.success) return old;
-          return {
-            success: true as const,
-            data: old.data.filter((g) => g.id !== Number(selectedGroupId)),
-          };
-        });
-        router.back();
-
-        return { previousGroups };
-      },
-      onSuccess: (data, _variables, context) => {
-        if (!data.success) {
-          onDeleteGroupError(context.previousGroups);
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.group.getUserGroups.queryOptions(),
-        );
-      },
-      onError: (_error, _variables, context) => {
-        onDeleteGroupError(context?.previousGroups);
-      },
-    }),
-  );
+  const deleteGroupMutation = useDeleteGroup();
 
   const handleDeleteGroup = () => {
     setShowDeleteModal(false);
     deleteGroupMutation.mutate({ id: Number(selectedGroupId) });
-    clearSelectedGroup();
     router.dismissAll();
   };
 

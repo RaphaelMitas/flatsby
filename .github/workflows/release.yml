@@ -40,6 +40,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # CI may still be running on this push, and a missing or empty listing
+      # file would otherwise reach Play as an empty field.
+      - name: Check store listing text
+        run: node scripts/check-store-text.mjs
+
       - name: Decide whether this push is a release
         id: decide
         env:
@@ -573,13 +578,9 @@ jobs:
           git commit -q -m "README screenshots for $TAG"
           git push --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" assets
 
-  # Uploads the captured screenshots to the App Store listing (en-US), sets
-  # the release notes from apps/expo/store/release-notes.txt, and submits the
-  # EAS-delivered build for review with automatic release. Runs even if the
-  # screenshot job was skipped (submits with the existing listing assets).
   # Runs whatever the screenshot job did: store listings keep their last
   # uploaded assets, so a failed capture must not block the review
-  # submission — fresh screenshots ride along only when the job succeeded.
+  # submission; fresh screenshots ride along only when the job succeeded.
   publish-ios:
     needs: [check, eas-build-submit, screenshots-ios]
     if: >-
@@ -626,8 +627,6 @@ jobs:
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
         run: |
-          mkdir -p store/metadata/en-US
-          cp apps/expo/store/release-notes.txt store/metadata/en-US/release_notes.txt
           if compgen -G "results/screenshots/*.png" > /dev/null; then
             mkdir -p store/screenshots/en-US
             cp results/screenshots/*.png store/screenshots/en-US/
@@ -705,7 +704,7 @@ jobs:
             --app_identifier com.flatcove.app.v2
             --app_version "$VERSION"
             --api_key_path "$RUNNER_TEMP/asc_key.json"
-            --metadata_path store/metadata
+            --metadata_path apps/expo/store
             --skip_binary_upload true
             --submit_for_review true
             --automatic_release true
@@ -792,11 +791,8 @@ jobs:
         env:
           ASC_KEY_PATH: ${{ runner.temp }}/asc_key.json
 
-  # The Play counterpart of publish-ios: promotes the build EAS put on the
-  # internal track to production with the release notes and screenshots
-  # (en-US) in one edit, which sends it to Google review and then live.
-  # Like publish-ios, independent of the screenshot job's outcome: the
-  # changelog always goes up, fresh screenshots only when captured.
+  # Like publish-ios, independent of the screenshot job's outcome: listing
+  # text always goes up, fresh en-US screenshots only when captured.
   publish-android:
     needs: [check, eas-build-submit, screenshots-android]
     if: >-
@@ -863,10 +859,15 @@ jobs:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/play_key.json"
-          mkdir -p store/metadata/android/en-US/changelogs
-          # default.txt keeps Play's "What's New" in sync with the App Store
-          # text; --version_code pins it to the release EAS just submitted.
-          cp apps/expo/store/release-notes.txt store/metadata/android/en-US/changelogs/default.txt
+          # supply sends files verbatim, so $(cat) drops the trailing newline.
+          for dir in apps/expo/store/*/; do
+            out="store/metadata/android/$(basename "$dir")"
+            mkdir -p "$out/changelogs"
+            printf '%s' "$(cat "${dir}play/title.txt")" > "$out/title.txt"
+            printf '%s' "$(cat "${dir}play/short_description.txt")" > "$out/short_description.txt"
+            printf '%s' "$(cat "${dir}description.txt")" > "$out/full_description.txt"
+            printf '%s' "$(cat "${dir}release_notes.txt")" > "$out/changelogs/default.txt"
+          done
           SKIP_SCREENSHOTS=true
           if compgen -G "results/screenshots/*.png" > /dev/null; then
             mkdir -p store/metadata/android/en-US/images/phoneScreenshots
@@ -885,7 +886,7 @@ jobs:
             --rescue_changes_not_sent_for_review false \
             --skip_upload_apk true \
             --skip_upload_aab true \
-            --skip_upload_metadata true \
+            --skip_upload_metadata false \
             --skip_upload_changelogs false \
             --skip_upload_images true \
             --skip_upload_screenshots "$SKIP_SCREENSHOTS"

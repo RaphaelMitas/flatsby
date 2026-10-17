@@ -105,8 +105,8 @@ Dry run; nothing written or pushed. A real run would:
   2. push branch release/v${next} and open a PR with auto-merge`
   }
   3. on merge to main, the Release workflow tags v${next}, builds + submits
-     via EAS (iOS review + Play production), and uploads store screenshots
-     to both listings (release notes: apps/expo/store/release-notes.txt)`);
+     via EAS (iOS review + Play production), and uploads listing text from
+     apps/expo/store/<locale>/ and store screenshots to both stores`);
   process.exit(0);
 }
 
@@ -129,9 +129,9 @@ if (direct) {
     "Once this lands on main, the Release workflow will:",
     `1. tag the merge commit as v${next} and create a GitHub release`,
     "2. run EAS production builds and submit them (iOS review + Play production)",
-    "3. capture store screenshots and upload them to both store listings",
+    "3. upload listing text from apps/expo/store/<locale>/ and fresh store screenshots to both stores",
     "",
-    'Check apps/expo/store/release-notes.txt before merging - it becomes the "What\'s New" text on both stores, and the release goes live on both after store review.',
+    'Check apps/expo/store/<locale>/release_notes.txt for every locale before merging - it becomes the "What\'s New" text on both stores, and the release goes live on both after store review.',
   ].join("\n");
   console.log(
     run("gh", [
