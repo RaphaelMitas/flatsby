@@ -4,6 +4,7 @@ export const errors = {
   notFound: {
     invite: "This invite has expired. Ask someone in the group for a new one.",
     adminMembership: "admin membership not found",
+    calendarItem: "calendar entry not found",
     expense: "expense not found",
     group: "group not found",
     groupMember: "group member not found",
@@ -26,6 +27,9 @@ export const errors = {
     "You need admin privileges to add members to this group",
   onlyAdminsRemoveMembers:
     "Only group admins can remove other members. You can only remove yourself.",
+  calendarDateNotScheduled: "That date is no longer on the schedule",
+  calendarSeriesReplaced:
+    "A newer repeat already took over from that date. Edit that one instead.",
   cannotRemoveLastAdmin: "Cannot remove the last admin from the group",
   promoteAdminFirst:
     "Cannot remove the last admin. Promote another member to admin first.",

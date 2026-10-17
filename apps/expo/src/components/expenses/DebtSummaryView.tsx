@@ -22,6 +22,7 @@ import {
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { Segmented } from "~/lib/ui/segmented";
 import { cn, handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { ConvertCurrencyBanner } from "./ConvertCurrencyBanner";
@@ -99,7 +100,24 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         {hasDebts(summary) ? (
           <>
             <DebtHero hero={debtHero(summary, meId, t, locale)} />
-            <ModeSwitch kind={kind} onChange={setKind} />
+            <View className="mt-2">
+              <Segmented
+                value={kind}
+                onChange={setKind}
+                options={[
+                  {
+                    value: "direct",
+                    label: t("debts.mode.actual"),
+                    testID: "debt-mode-actual",
+                  },
+                  {
+                    value: "simplified",
+                    label: t("debts.mode.simplified"),
+                    testID: "debt-mode-simplified",
+                  },
+                ]}
+              />
+            </View>
             <SectionLabel>{t("debts.betweenYouAnd")}</SectionLabel>
             <DirectDebts
               groupId={groupId}
@@ -154,50 +172,6 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         </Pressable>
       </View>
     </AppScrollView>
-  );
-}
-
-const modes = [
-  { kind: "direct", name: "actual" },
-  { kind: "simplified", name: "simplified" },
-] as const satisfies { kind: DebtKind; name: string }[];
-
-function ModeSwitch({
-  kind,
-  onChange,
-}: {
-  kind: DebtKind;
-  onChange: (kind: DebtKind) => void;
-}) {
-  const t = useTranslations("debts.mode");
-  return (
-    <View className="bg-muted mt-2 flex-row rounded-lg p-1">
-      {modes.map((mode) => {
-        const selected = mode.kind === kind;
-        return (
-          <Pressable
-            key={mode.kind}
-            testID={`debt-mode-${mode.name}`}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            onPress={() => onChange(mode.kind)}
-            className={cn(
-              "flex-1 items-center rounded-lg py-1.5",
-              selected && "bg-background shadow-sm",
-            )}
-          >
-            <Text
-              className={cn(
-                "text-sm font-medium",
-                selected ? "text-foreground" : "text-muted-foreground",
-              )}
-            >
-              {t(mode.name)}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
   );
 }
 

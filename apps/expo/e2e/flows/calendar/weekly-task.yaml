@@ -1,0 +1,85 @@
+appId: ${APP_ID}
+tags:
+  - calendar
+---
+# Create a weekly task on today, tick it off, open its detail, delete it.
+- runFlow: ../../subflows/e2e-login.yaml
+- tapOn:
+    id: "group-select-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 15000
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-calendar"
+      TAB_LABEL: "Calendar"
+      TAB_X: "61%"
+- extendedWaitUntil:
+    visible:
+      id: "calendar-heading"
+    timeout: 15000
+- assertVisible: "Nothing planned for this day"
+
+# Weekly task on today, assigned to the only member
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "calendar-add-button"
+      MARKER_ID: "calendar-form-title"
+- tapOn:
+    id: "calendar-form-title"
+- inputText: "Bins out"
+# Tapping a label dismisses the keyboard, which would swallow the taps below
+- tapOn: "Starts"
+- tapOn:
+    id: "calendar-form-repeat-weekly"
+- assertVisible:
+    id: "calendar-form-summary"
+    text: "Every .*"
+- scrollUntilVisible:
+    element:
+      id: "calendar-form-save"
+- tapOn:
+    id: "calendar-form-member-.*"
+- tapOn:
+    id: "calendar-form-save"
+- extendedWaitUntil:
+    visible: "Bins out"
+    timeout: 15000
+- assertVisible: "Your turn"
+
+# The optimistic row stays disabled until the save comes back with a real id
+- extendedWaitUntil:
+    visible:
+      id: "calendar-entry-checkbox-Bins out"
+      enabled: true
+    timeout: 15000
+- tapOn:
+    id: "calendar-entry-checkbox-Bins out"
+- extendedWaitUntil:
+    visible: "1 of 1 done"
+    timeout: 15000
+- assertVisible: "Done by .*"
+
+# Detail shows the repeat and the completion
+- tapOn:
+    id: "calendar-entry-Bins out"
+- extendedWaitUntil:
+    visible:
+      id: "calendar-detail-title"
+    timeout: 15000
+- assertVisible: "Every .*"
+- assertVisible: "History"
+
+# Delete takes a second tap to confirm
+- tapOn:
+    id: "calendar-detail-delete"
+- assertVisible: "Press again to delete it and its history"
+- tapOn:
+    id: "calendar-detail-delete"
+- extendedWaitUntil:
+    visible: "Nothing planned for this day"
+    timeout: 15000
+- assertNotVisible: "Bins out"

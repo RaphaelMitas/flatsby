@@ -6,8 +6,10 @@ import { NativeTabs } from "expo-router/unstable-native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
 import { useTranslations } from "use-intl";
 
+import { localDate, monthOf } from "@flatsby/validators/calendar";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
+import { calendarRangeOptions } from "~/components/calendar/CalendarScreen";
 import { useThemeColors } from "~/lib/utils";
 import { usePostHogIdentify } from "~/utils/analytics/use-posthog-identify";
 import { prefetch, trpc } from "~/utils/api";
@@ -17,6 +19,7 @@ import { useShoppingStore } from "~/utils/shopping-store";
 const houseIcon = LucideIcon.getImageSourceSync("house", 20);
 const shoppingBasketIcon = LucideIcon.getImageSourceSync("shopping-basket", 20);
 const walletIcon = LucideIcon.getImageSourceSync("wallet", 20);
+const calendarIcon = LucideIcon.getImageSourceSync("calendar", 20);
 const settingsIcon = LucideIcon.getImageSourceSync("settings", 20);
 
 export default function TabLayout() {
@@ -74,6 +77,9 @@ export default function TabLayout() {
           },
         ),
       );
+      void prefetch(
+        calendarRangeOptions(selectedGroupId, monthOf(localDate())),
+      );
     }
 
     void prefetch(trpc.group.getUserGroups.queryOptions());
@@ -122,6 +128,14 @@ export default function TabLayout() {
       >
         <NativeTabs.Trigger.Label>{t("expenses")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon src={walletIcon} renderingMode="template" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger
+        name="calendar"
+        testID="tab-calendar"
+        hidden={!selectedGroupId}
+      >
+        <NativeTabs.Trigger.Label>{t("calendar")}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon src={calendarIcon} renderingMode="template" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings" testID="tab-settings">
         <NativeTabs.Trigger.Label>{t("settings")}</NativeTabs.Trigger.Label>

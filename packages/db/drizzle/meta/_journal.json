@@ -50,6 +50,13 @@
       "when": 1792080297263,
       "tag": "0006_group_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792174287802,
+      "tag": "0007_calendar",
+      "breakpoints": true
     }
   ]
 }

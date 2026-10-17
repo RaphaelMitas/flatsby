@@ -21,6 +21,7 @@ interface CheckboxProps {
   disabled?: boolean;
   className?: string;
   testID?: string;
+  accessibilityLabel?: string;
 }
 
 // Geometric length of lucide's check path; react-native-svg has no pathLength
@@ -97,6 +98,8 @@ const Checkbox = forwardRef<ComponentRef<typeof Pressable>, CheckboxProps>(
         className="items-center justify-center p-4"
         onPress={handlePress}
         disabled={disabled}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked, disabled }}
         {...props}
       >
         <Animated.View
