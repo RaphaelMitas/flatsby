@@ -34,7 +34,7 @@ tags:
 # Tapping a label dismisses the keyboard, which would swallow the taps below
 - tapOn: "Starts"
 - tapOn:
-    id: "calendar-form-repeat-weekly"
+    id: "calendar-form-repeat-weeks"
 - assertVisible:
     id: "calendar-form-summary"
     text: "Every .*"

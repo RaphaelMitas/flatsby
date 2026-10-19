@@ -19,21 +19,23 @@ import {
   createCalendarItemSchema,
   defaultColorFor,
   defaultEventTime,
+  describeMonthDay,
   describeRecurrence,
   editedStartsOn,
   formatCalendarDate,
   localDate,
   maxEvery,
+  monthDayChoices,
   monthOf,
   newRepeatFormFor,
   pickerDate,
   recurrenceOf,
-  repeatChoices,
   repeatFormOf,
-  repeatShowsDays,
+  repeatUnits,
   weekdayName,
   weekdayOf,
   weekdays,
+  withPickedStart,
   withStart,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
@@ -217,6 +219,11 @@ function ItemFields({
     }
   };
 
+  const pickStart = (picked: string) => {
+    setPickedStart(picked);
+    if (pickedRepeat) setRepeat(withPickedStart(pickedRepeat, picked));
+  };
+
   const toggleDay = (day: Weekday) => {
     const next = days.includes(day)
       ? days.filter((d) => d !== day)
@@ -305,7 +312,7 @@ function ItemFields({
           }
           value={pickerDate(startsOn)}
           maximumDate={item?.endsOn ? pickerDate(item.endsOn) : undefined}
-          onChange={(picked) => setPickedStart(localDate(picked))}
+          onChange={(picked) => pickStart(localDate(picked))}
         />
         {!isTask && (
           <>
@@ -351,19 +358,19 @@ function ItemFields({
 
       <FieldLabel>{t("calendar.form.repeat")}</FieldLabel>
       <View className="flex-row flex-wrap gap-1.5">
-        {repeatChoices.map((choice) => (
+        {repeatUnits.map((unit) => (
           <Chip
-            key={choice}
-            testID={`calendar-form-repeat-${choice}`}
-            label={t(`calendar.repeatOption.${choice}`)}
-            active={repeat.choice === choice}
-            onPress={() => changeRepeat({ choice })}
+            key={unit}
+            testID={`calendar-form-repeat-${unit}`}
+            label={t(`calendar.repeatOption.${unit}`)}
+            active={repeat.unit === unit}
+            onPress={() => changeRepeat({ unit })}
           />
         ))}
       </View>
 
-      {repeat.choice === "custom" && (
-        <View className="mt-3 flex-row flex-wrap items-center gap-2">
+      {repeat.unit !== "never" && (
+        <View className="mt-3 flex-row items-center gap-2">
           <Text className="text-foreground">{t("calendar.form.every")}</Text>
           <Button
             variant="outline"
@@ -384,25 +391,13 @@ function ItemFields({
             disabled={repeat.every >= maxEvery(repeat)}
             onPress={() => changeRepeat({ every: repeat.every + 1 })}
           />
-          <Segmented
-            size="sm"
-            value={repeat.unit}
-            onChange={(unit) => changeRepeat({ unit })}
-            options={[
-              {
-                value: "days",
-                label: t("calendar.unit.days", { count: repeat.every }),
-              },
-              {
-                value: "weeks",
-                label: t("calendar.unit.weeks", { count: repeat.every }),
-              },
-            ]}
-          />
+          <Text className="text-foreground">
+            {t(`calendar.unit.${repeat.unit}`, { count: repeat.every })}
+          </Text>
         </View>
       )}
 
-      {repeatShowsDays(repeat) && (
+      {repeat.unit === "weeks" && (
         <>
           <FieldLabel>{t("calendar.form.days")}</FieldLabel>
           <View className="flex-row flex-wrap gap-1.5">
@@ -417,6 +412,25 @@ function ItemFields({
             ))}
           </View>
         </>
+      )}
+
+      {repeat.unit === "months" && (
+        <View className="mt-3 flex-row flex-wrap gap-1.5">
+          {monthDayChoices(repeat, startsOn).map(({ on, selected }) => {
+            const by = "week" in on ? "weekday" : "day";
+            return (
+              <Chip
+                key={by}
+                testID={`calendar-form-repeat-on-${by}`}
+                label={t("calendar.form.on", {
+                  on: describeMonthDay(on, t, locale),
+                })}
+                active={selected}
+                onPress={() => changeRepeat({ monthDay: on })}
+              />
+            );
+          })}
+        </View>
       )}
 
       {isTask && (

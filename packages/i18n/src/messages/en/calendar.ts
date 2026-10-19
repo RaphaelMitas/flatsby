@@ -44,6 +44,7 @@ export const calendar = {
     repeat: "Repeat",
     days: "On",
     every: "Every",
+    on: "On {on}",
     decreaseInterval: "Fewer",
     increaseInterval: "More",
     who: "Who",
@@ -53,20 +54,38 @@ export const calendar = {
   },
   repeatOption: {
     never: "Never",
-    daily: "Every day",
-    weekly: "Every week",
-    biweekly: "Every 2 weeks",
-    custom: "Custom",
+    days: "Daily",
+    weeks: "Weekly",
+    months: "Monthly",
+    years: "Yearly",
   },
   unit: {
     days: "{count, plural, one {day} other {days}}",
     weeks: "{count, plural, one {week} other {weeks}}",
+    months: "{count, plural, one {month} other {months}}",
+    years: "{count, plural, one {year} other {years}}",
+  },
+  weekOfMonth: {
+    first: "first",
+    second: "second",
+    third: "third",
+    fourth: "fourth",
+    last: "last",
+  },
+  monthDay: {
+    day: "day {day}",
+    lastDay: "the last day",
+    weekday: "the {week} {weekday}",
   },
   repeat: {
     once: "Once",
     daily: "{count, plural, =1 {Every day} other {Every # days}}",
     weekly:
       "{count, plural, =1 {Every {days}} =2 {Every other {days}} other {Every # weeks on {days}}}",
+    monthly:
+      "{count, plural, =1 {Every month on {on}} other {Every # months on {on}}}",
+    yearly:
+      "{count, plural, =1 {Every year on {date}} other {Every # years on {date}}}",
   },
   detail: {
     order: "Taking turns",

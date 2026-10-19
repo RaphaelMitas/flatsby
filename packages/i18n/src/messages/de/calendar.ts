@@ -46,6 +46,7 @@ export const calendar = {
     repeat: "Wiederholen",
     days: "An",
     every: "Alle",
+    on: "Am {on}",
     decreaseInterval: "Weniger",
     increaseInterval: "Mehr",
     who: "Wer",
@@ -56,20 +57,38 @@ export const calendar = {
   },
   repeatOption: {
     never: "Nie",
-    daily: "Jeden Tag",
-    weekly: "Jede Woche",
-    biweekly: "Alle 2 Wochen",
-    custom: "Eigene",
+    days: "Täglich",
+    weeks: "Wöchentlich",
+    months: "Monatlich",
+    years: "Jährlich",
   },
   unit: {
     days: "{count, plural, one {Tag} other {Tage}}",
     weeks: "{count, plural, one {Woche} other {Wochen}}",
+    months: "{count, plural, one {Monat} other {Monate}}",
+    years: "{count, plural, one {Jahr} other {Jahre}}",
+  },
+  weekOfMonth: {
+    first: "ersten",
+    second: "zweiten",
+    third: "dritten",
+    fourth: "vierten",
+    last: "letzten",
+  },
+  monthDay: {
+    day: "{day}.",
+    lastDay: "letzten Tag",
+    weekday: "{week} {weekday}",
   },
   repeat: {
     once: "Einmalig",
     daily: "{count, plural, =1 {Jeden Tag} other {Alle # Tage}}",
     weekly:
       "{count, plural, =1 {Jeden {days}} =2 {Jeden zweiten {days}} other {Alle # Wochen am {days}}}",
+    monthly:
+      "{count, plural, =1 {Jeden Monat am {on}} other {Alle # Monate am {on}}}",
+    yearly:
+      "{count, plural, =1 {Jedes Jahr am {date}} other {Alle # Jahre am {date}}}",
   },
   detail: {
     order: "Reihenfolge",

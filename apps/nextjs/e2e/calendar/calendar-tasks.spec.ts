@@ -24,7 +24,7 @@ test.describe("Calendar", () => {
 
     const form = authPage.getByTestId("calendar-form");
     await form.getByTestId("calendar-form-title").fill(title);
-    await form.getByTestId("calendar-repeat-weekly").click();
+    await form.getByTestId("calendar-repeat-weeks").click();
     await expect(form.getByTestId("calendar-form-summary")).toContainText(
       "Every",
     );

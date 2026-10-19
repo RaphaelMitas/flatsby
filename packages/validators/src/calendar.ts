@@ -10,9 +10,34 @@ export const weekdays = ["mo", "tu", "we", "th", "fr", "sa", "su"] as const;
 export const weekdaySchema = z.enum(weekdays);
 export type Weekday = z.infer<typeof weekdaySchema>;
 
-export const MAX_INTERVAL = { days: 365, weeks: 52 } as const;
+export const MAX_INTERVAL = {
+  days: 365,
+  weeks: 52,
+  months: 24,
+  years: 10,
+} as const;
 /** Far enough ahead to always reach a rule's next occurrence */
-export const LONGEST_GAP_DAYS = 7 * (MAX_INTERVAL.weeks + 1);
+export const LONGEST_GAP_DAYS = 366 * MAX_INTERVAL.years;
+
+export const weeksOfMonth = [
+  "first",
+  "second",
+  "third",
+  "fourth",
+  "last",
+] as const;
+const dayOfMonthSchema = z.int().min(1).max(31);
+/** A day past the end of a shorter month falls on its last day. */
+export const monthDaySchema = z.union([
+  z.object({ day: dayOfMonthSchema }),
+  z.object({ week: z.enum(weeksOfMonth), weekday: weekdaySchema }),
+]);
+export type MonthDay = z.infer<typeof monthDaySchema>;
+const yearDaySchema = z.object({
+  month: z.int().min(1).max(12),
+  day: dayOfMonthSchema,
+});
+export type YearDay = z.infer<typeof yearDaySchema>;
 
 // Stored as jsonb; a new kind of repeat is a new member here, not a migration
 export const recurrenceSchema = z.discriminatedUnion("type", [
@@ -27,6 +52,16 @@ export const recurrenceSchema = z.discriminatedUnion("type", [
       .array(weekdaySchema)
       .min(1)
       .transform((days) => weekdays.filter((day) => days.includes(day))),
+  }),
+  z.object({
+    type: z.literal("monthly"),
+    interval: z.int().min(1).max(MAX_INTERVAL.months),
+    on: monthDaySchema,
+  }),
+  z.object({
+    type: z.literal("yearly"),
+    interval: z.int().min(1).max(MAX_INTERVAL.years),
+    on: yearDaySchema,
   }),
 ]);
 export type Recurrence = z.infer<typeof recurrenceSchema>;
@@ -129,6 +164,8 @@ export const setOccurrenceSkippedSchema = z.object({
 
 const DAY_MS = 86_400_000;
 
+const pad = (part: number) => String(part).padStart(2, "0");
+
 export const toDayNumber = (date: string) =>
   Date.parse(`${date}T00:00:00Z`) / DAY_MS;
 
@@ -146,11 +183,7 @@ export const weekdayOf = (date: string): Weekday =>
 
 /** The device's calendar day, which is what "today" means to the person holding it. */
 export const localDate = (now = new Date()) =>
-  [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0"),
-  ].join("-");
+  [now.getFullYear(), pad(now.getMonth() + 1), pad(now.getDate())].join("-");
 
 export interface ExpandableItem {
   id: number;
@@ -160,6 +193,47 @@ export interface ExpandableItem {
   recurrence: Recurrence | null;
   /** Active members in rotation order */
   memberIds: number[];
+}
+
+/** Months since year 0, so month arithmetic is plain subtraction */
+const monthIndexOf = (day: number) => {
+  const date = new Date(day * DAY_MS);
+  return date.getUTCFullYear() * 12 + date.getUTCMonth();
+};
+
+const dayNumberOf = (monthIndex: number, dayOfMonth: number) =>
+  Date.UTC(Math.floor(monthIndex / 12), monthIndex % 12, dayOfMonth) / DAY_MS;
+
+const monthLength = (monthIndex: number) =>
+  dayNumberOf(monthIndex + 1, 0) - dayNumberOf(monthIndex, 0);
+
+function dayIn(monthIndex: number, on: MonthDay) {
+  const length = monthLength(monthIndex);
+  if ("day" in on) return dayNumberOf(monthIndex, Math.min(on.day, length));
+  const target = weekdays.indexOf(on.weekday);
+  if (on.week === "last") {
+    const last = dayNumberOf(monthIndex, length);
+    return last - ((weekdayIndex(last) - target + 7) % 7);
+  }
+  const first = dayNumberOf(monthIndex, 1);
+  return (
+    first +
+    ((target - weekdayIndex(first) + 7) % 7) +
+    7 * weeksOfMonth.indexOf(on.week)
+  );
+}
+
+/** Every `period` months from `firstMonth`, whose own date may fall before the start and not count. */
+function monthlyOrdinal(
+  day: number,
+  start: number,
+  rule: { period: number; firstMonth: number; on: MonthDay },
+) {
+  const offset = monthIndexOf(day) - rule.firstMonth;
+  if (offset < 0 || offset % rule.period !== 0) return null;
+  if (day !== dayIn(monthIndexOf(day), rule.on)) return null;
+  const missedFirst = dayIn(rule.firstMonth, rule.on) < start ? 1 : 0;
+  return offset / rule.period - missedFirst;
 }
 
 /** How many times the rule fired before `day`, or null when it doesn't fire on `day`. */
@@ -175,6 +249,19 @@ function ordinalOn(item: ExpandableItem, day: number): number | null {
       ? offset / recurrence.interval
       : null;
   }
+  const startMonth = monthIndexOf(start);
+  if (recurrence.type === "monthly")
+    return monthlyOrdinal(day, start, {
+      period: recurrence.interval,
+      firstMonth: startMonth,
+      on: recurrence.on,
+    });
+  if (recurrence.type === "yearly")
+    return monthlyOrdinal(day, start, {
+      period: 12 * recurrence.interval,
+      firstMonth: startMonth - (startMonth % 12) + recurrence.on.month - 1,
+      on: { day: recurrence.on.day },
+    });
   const dayIndexes = recurrence.days.map((d) => weekdays.indexOf(d));
   const weekday = weekdayIndex(day);
   const startWeekday = weekdayIndex(start);
@@ -287,9 +374,7 @@ const minutesOf = (time: string) => {
 };
 const timeOf = (minutes: number) => {
   const wrapped = ((minutes % DAY_MINUTES) + DAY_MINUTES) % DAY_MINUTES;
-  return [Math.floor(wrapped / 60), wrapped % 60]
-    .map((part) => String(part).padStart(2, "0"))
-    .join(":");
+  return [Math.floor(wrapped / 60), wrapped % 60].map(pad).join(":");
 };
 
 /** Moving the start keeps the event's length. */
@@ -307,21 +392,55 @@ export function describeRecurrence(
   locale: Intl.LocalesArgument,
 ): string {
   if (!recurrence) return t("calendar.repeat.once");
-  if (recurrence.type === "daily")
-    return t("calendar.repeat.daily", { count: recurrence.interval });
-  return t("calendar.repeat.weekly", {
-    count: recurrence.interval,
-    days: recurrence.days
-      .map((day) =>
-        weekdayName(
-          day,
+  const count = recurrence.interval;
+  switch (recurrence.type) {
+    case "daily":
+      return t("calendar.repeat.daily", { count });
+    case "weekly":
+      return t("calendar.repeat.weekly", {
+        count,
+        days: recurrence.days
+          .map((day) =>
+            weekdayName(
+              day,
+              locale,
+              recurrence.days.length === 1 ? "long" : "short",
+            ),
+          )
+          .join(", "),
+      });
+    case "monthly":
+      return t("calendar.repeat.monthly", {
+        count,
+        on: describeMonthDay(recurrence.on, t, locale),
+      });
+    case "yearly":
+      return t("calendar.repeat.yearly", {
+        count,
+        // 2024 was a leap year, so Feb 29 formats too
+        date: formatCalendarDate(
+          `2024-${pad(recurrence.on.month)}-${pad(recurrence.on.day)}`,
           locale,
-          recurrence.days.length === 1 ? "long" : "short",
+          { month: "long", day: "numeric" },
         ),
-      )
-      .join(", "),
-  });
+      });
+  }
 }
+
+export const describeMonthDay = (
+  on: MonthDay,
+  t: Translate,
+  locale: Intl.LocalesArgument,
+) => {
+  if ("week" in on)
+    return t("calendar.monthDay.weekday", {
+      week: t(`calendar.weekOfMonth.${on.week}`),
+      weekday: weekdayName(on.weekday, locale, "long"),
+    });
+  return on.day === 31
+    ? t("calendar.monthDay.lastDay")
+    : t("calendar.monthDay.day", { day: on.day });
+};
 
 export interface CalendarItemView extends ExpandableItem {
   kind: CalendarItemKind;
@@ -415,11 +534,26 @@ export function entriesOn(
 type Schedule = Pick<ExpandableItem, "startsOn" | "recurrence">;
 type Series = Schedule & Pick<ExpandableItem, "endsOn">;
 
+// Spelled out rather than JSON, since jsonb hands keys back in its own order
+function ruleKey(recurrence: Recurrence | null) {
+  if (!recurrence) return "";
+  const { type, interval } = recurrence;
+  switch (type) {
+    case "daily":
+      return `${type} ${interval}`;
+    case "weekly":
+      return `${type} ${interval} ${recurrence.days.join()}`;
+    case "monthly": {
+      const { on } = recurrence;
+      return `${type} ${interval} ${"week" in on ? `${on.week} ${on.weekday}` : on.day}`;
+    }
+    case "yearly":
+      return `${type} ${interval} ${recurrence.on.month}/${recurrence.on.day}`;
+  }
+}
+
 const sameRecurrence = (a: Recurrence | null, b: Recurrence | null) =>
-  a?.type === b?.type &&
-  a?.interval === b?.interval &&
-  (a?.type === "weekly" ? a.days.join() : "") ===
-    (b?.type === "weekly" ? b.days.join() : "");
+  ruleKey(a) === ruleKey(b);
 
 export const sameSchedule = (a: Schedule, b: Schedule) =>
   a.startsOn === b.startsOn && sameRecurrence(a.recurrence, b.recurrence);
@@ -599,60 +733,84 @@ export function withSplitSeries(
   return withSavedItem(ended, next, window, carried);
 }
 
-export const repeatChoices = [
+export const repeatUnits = [
   "never",
-  "daily",
-  "weekly",
-  "biweekly",
-  "custom",
+  "days",
+  "weeks",
+  "months",
+  "years",
 ] as const;
-export type RepeatChoice = (typeof repeatChoices)[number];
+export type RepeatUnit = (typeof repeatUnits)[number];
 
-/** What the repeat chips in the create and edit forms hold. */
+/** What the repeat section of the create and edit forms holds; each null follows the start date until someone picks. */
 export interface RepeatForm {
-  choice: RepeatChoice;
+  unit: RepeatUnit;
   every: number;
-  unit: "days" | "weeks";
-  /** null follows the start date's weekday until someone picks days */
   days: Weekday[] | null;
+  monthDay: MonthDay | null;
+  yearDay: YearDay | null;
 }
 
-const DEFAULT_CUSTOM_INTERVAL = 3;
+const followingStart = { every: 1, days: null, monthDay: null, yearDay: null };
 
 export const newRepeatFormFor = (kind: CalendarItemKind): RepeatForm => ({
-  choice: kind === "event" ? "never" : "weekly",
-  every: DEFAULT_CUSTOM_INTERVAL,
-  unit: "days",
-  days: null,
+  ...followingStart,
+  unit: kind === "event" ? "never" : "weeks",
 });
 
 export function repeatFormOf(recurrence: Recurrence | null): RepeatForm {
-  const form: RepeatForm = {
-    choice: "custom",
-    every: recurrence?.interval ?? DEFAULT_CUSTOM_INTERVAL,
-    unit: recurrence?.type === "weekly" ? "weeks" : "days",
-    days: recurrence?.type === "weekly" ? recurrence.days : null,
-  };
-  if (!recurrence) return { ...form, choice: "never" };
-  if (recurrence.interval === 1)
-    return {
-      ...form,
-      choice: recurrence.type === "daily" ? "daily" : "weekly",
-    };
-  if (recurrence.type === "weekly" && recurrence.interval === 2)
-    return { ...form, choice: "biweekly" };
-  return form;
+  if (!recurrence) return { ...followingStart, unit: "never" };
+  const form = { ...followingStart, every: recurrence.interval };
+  switch (recurrence.type) {
+    case "daily":
+      return { ...form, unit: "days" };
+    case "weekly":
+      return { ...form, unit: "weeks", days: recurrence.days };
+    case "monthly":
+      return { ...form, unit: "months", monthDay: recurrence.on };
+    case "yearly":
+      return { ...form, unit: "years", yearDay: recurrence.on };
+  }
 }
 
-export const repeatShowsDays = ({ choice, unit }: RepeatForm) =>
-  choice === "weekly" ||
-  choice === "biweekly" ||
-  (choice === "custom" && unit === "weeks");
+export const maxEvery = ({ unit }: RepeatForm) =>
+  unit === "never" ? 1 : MAX_INTERVAL[unit];
 
-export const maxEvery = (form: RepeatForm) =>
-  form.choice === "custom" && form.unit === "weeks"
-    ? MAX_INTERVAL.weeks
-    : MAX_INTERVAL.days;
+/** A date's day of the month, and its weekday counted from the end when it falls in the month's last seven days. */
+function monthDaysOf(date: string): [MonthDay, MonthDay] {
+  const day = Number(date.slice(8, 10));
+  const week =
+    day + 7 > monthLength(monthIndexOf(toDayNumber(date)))
+      ? "last"
+      : (weeksOfMonth[Math.floor((day - 1) / 7)] ?? "last");
+  return [{ day }, { week, weekday: weekdayOf(date) }];
+}
+
+const yearDayOf = (date: string): YearDay => ({
+  month: Number(date.slice(5, 7)),
+  day: Number(date.slice(8, 10)),
+});
+
+/** The monthly toggle's two options; a picked one keeps its day while the other follows the start date. */
+export function monthDayChoices(form: RepeatForm, startsOn: string) {
+  const options = monthDaysOf(startsOn);
+  const picked = form.monthDay ?? options[0];
+  return options.map((on) => {
+    const selected = "week" in on === "week" in picked;
+    return { on: selected ? picked : on, selected };
+  });
+}
+
+/** Picking a start date moves a monthly or yearly day along with it. */
+export const withPickedStart = (
+  form: RepeatForm,
+  startsOn: string,
+): RepeatForm => ({
+  ...form,
+  monthDay:
+    form.monthDay && monthDaysOf(startsOn)["week" in form.monthDay ? 1 : 0],
+  yearDay: null,
+});
 
 /** The edit form's start: a changed repeat of a running series starts today unless a date was picked, so the old part keeps its history. */
 export function editedStartsOn(
@@ -673,20 +831,29 @@ export function recurrenceOf(
   form: RepeatForm,
   startsOn: string,
 ): Recurrence | null {
-  const days = form.days ?? [weekdayOf(startsOn)];
-  const every = Math.min(form.every, maxEvery(form));
-  switch (form.choice) {
+  const interval = Math.min(form.every, maxEvery(form));
+  switch (form.unit) {
     case "never":
       return null;
-    case "daily":
-      return { type: "daily", interval: 1 };
-    case "weekly":
-      return { type: "weekly", interval: 1, days };
-    case "biweekly":
-      return { type: "weekly", interval: 2, days };
-    case "custom":
-      return form.unit === "days"
-        ? { type: "daily", interval: every }
-        : { type: "weekly", interval: every, days };
+    case "days":
+      return { type: "daily", interval };
+    case "weeks":
+      return {
+        type: "weekly",
+        interval,
+        days: form.days ?? [weekdayOf(startsOn)],
+      };
+    case "months":
+      return {
+        type: "monthly",
+        interval,
+        on: form.monthDay ?? monthDaysOf(startsOn)[0],
+      };
+    case "years":
+      return {
+        type: "yearly",
+        interval,
+        on: form.yearDay ?? yearDayOf(startsOn),
+      };
   }
 }

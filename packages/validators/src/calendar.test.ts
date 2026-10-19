@@ -13,6 +13,7 @@ import {
   editedStartsOn,
   entriesOn,
   expandOccurrences,
+  monthDayChoices,
   monthGrid,
   recurrenceOf,
   recurrenceSchema,
@@ -21,6 +22,7 @@ import {
   splitOff,
   splitsSeries,
   startsAfterEnd,
+  withPickedStart,
   withSavedItem,
   withSkipped,
   withSplitSeries,
@@ -144,6 +146,91 @@ describe("expandOccurrences", () => {
   });
 });
 
+describe("monthly and yearly", () => {
+  const between = (expandable: CalendarItemView, from: string, to: string) =>
+    expandOccurrences(expandable, [], from, to).map((o) => [
+      o.date,
+      o.turnGroupMemberId,
+    ]);
+
+  it("puts day 31 on the last day of shorter months", () => {
+    const monthEnd = item(
+      { type: "monthly", interval: 1, on: { day: 31 } },
+      "2026-01-31",
+    );
+    expect(
+      expandOccurrences(monthEnd, [], "2026-01-01", "2026-05-31").map(
+        (o) => o.date,
+      ),
+    ).toEqual([
+      "2026-01-31",
+      "2026-02-28",
+      "2026-03-31",
+      "2026-04-30",
+      "2026-05-31",
+    ]);
+  });
+
+  it("skips months by interval and doesn't count a first date before the start", () => {
+    const thirdThursday = item(
+      { type: "monthly", interval: 2, on: { week: "third", weekday: "th" } },
+      "2026-10-20",
+      [1, 2],
+    );
+    expect(between(thirdThursday, "2026-10-01", "2027-02-28")).toEqual([
+      ["2026-12-17", 1],
+      ["2027-02-18", 2],
+    ]);
+  });
+
+  it("finds the last weekday of each month", () => {
+    const lastFriday = item(
+      { type: "monthly", interval: 1, on: { week: "last", weekday: "fr" } },
+      "2026-10-01",
+    );
+    expect(
+      expandOccurrences(lastFriday, [], "2026-10-01", "2026-12-31").map(
+        (o) => o.date,
+      ),
+    ).toEqual(["2026-10-30", "2026-11-27", "2026-12-25"]);
+  });
+
+  it("moves Feb 29 to Feb 28 outside leap years", () => {
+    const leapDay = item(
+      { type: "yearly", interval: 1, on: { month: 2, day: 29 } },
+      "2024-02-29",
+    );
+    expect(
+      expandOccurrences(leapDay, [], "2024-01-01", "2028-12-31").map(
+        (o) => o.date,
+      ),
+    ).toEqual([
+      "2024-02-29",
+      "2025-02-28",
+      "2026-02-28",
+      "2027-02-28",
+      "2028-02-29",
+    ]);
+  });
+
+  it("starts a yearly rule in the first year its date comes after the start", () => {
+    const rule: Recurrence = {
+      type: "yearly",
+      interval: 2,
+      on: { month: 10, day: 16 },
+    };
+    expect(
+      between(item(rule, "2026-10-20", [1, 2]), "2026-01-01", "2030-12-31"),
+    ).toEqual([
+      ["2028-10-16", 1],
+      ["2030-10-16", 2],
+    ]);
+    expect(
+      between(item(rule, "2026-03-01"), "2026-01-01", "2026-12-31"),
+    ).toEqual([["2026-10-16", null]]);
+  });
+});
+
 describe("recurrenceSchema", () => {
   it("sorts weekdays and caps weekly intervals at a year", () => {
     expect(
@@ -185,6 +272,39 @@ describe("describeRecurrence", () => {
       ),
     ).toBe("Every 3 days");
   });
+
+  it("describes monthly and yearly rules", () => {
+    const cases: [Recurrence, string, string][] = [
+      [
+        { type: "monthly", interval: 1, on: { day: 16 } },
+        "Every month on day 16",
+        "Jeden Monat am 16.",
+      ],
+      [
+        { type: "monthly", interval: 3, on: { week: "third", weekday: "th" } },
+        "Every 3 months on the third Thursday",
+        "Alle 3 Monate am dritten Donnerstag",
+      ],
+      [
+        { type: "monthly", interval: 1, on: { day: 31 } },
+        "Every month on the last day",
+        "Jeden Monat am letzten Tag",
+      ],
+      [
+        { type: "yearly", interval: 1, on: { month: 10, day: 16 } },
+        "Every year on October 16",
+        "Jedes Jahr am 16. Oktober",
+      ],
+    ];
+    for (const [recurrence, en, de] of cases) {
+      expect(describeRecurrence(recurrence, translatorFor("en"), "en")).toBe(
+        en,
+      );
+      expect(describeRecurrence(recurrence, translatorFor("de"), "de")).toBe(
+        de,
+      );
+    }
+  });
 });
 
 describe("repeat form", () => {
@@ -195,10 +315,44 @@ describe("repeat form", () => {
     { type: "weekly", interval: 1, days: ["mo", "th"] },
     { type: "weekly", interval: 2, days: ["fr"] },
     { type: "weekly", interval: 3, days: ["sa"] },
+    { type: "monthly", interval: 1, on: { day: 3 } },
+    { type: "monthly", interval: 6, on: { week: "last", weekday: "mo" } },
+    { type: "yearly", interval: 1, on: { month: 2, day: 29 } },
   ])("round-trips %j", (recurrence) => {
     expect(recurrenceOf(repeatFormOf(recurrence), "2026-10-16")).toEqual(
       recurrence,
     );
+  });
+
+  it("offers the start date's day and weekday, with 'last' in the month's final week", () => {
+    const monthly = repeatFormOf({
+      type: "monthly",
+      interval: 1,
+      on: { day: 16 },
+    });
+    expect(monthDayChoices(monthly, "2026-10-16")).toEqual([
+      { on: { day: 16 }, selected: true },
+      { on: { week: "third", weekday: "fr" }, selected: false },
+    ]);
+    expect(monthDayChoices(monthly, "2026-10-29")[1]).toEqual({
+      on: { week: "last", weekday: "th" },
+      selected: false,
+    });
+  });
+
+  it("moves a picked monthly day when the start date is picked", () => {
+    const byWeekday = repeatFormOf({
+      type: "monthly",
+      interval: 1,
+      on: { week: "third", weekday: "fr" },
+    });
+    expect(
+      recurrenceOf(withPickedStart(byWeekday, "2026-10-29"), "2026-10-29"),
+    ).toEqual({
+      type: "monthly",
+      interval: 1,
+      on: { week: "last", weekday: "th" },
+    });
   });
 });
 
@@ -461,5 +615,17 @@ describe("editedStartsOn", () => {
     expect(editedStartsOn(weekly, changed, "2026-11-02", today)).toBe(
       "2026-11-02",
     );
+  });
+
+  it("keeps a monthly day when a change splits the series today", () => {
+    const monthly = item({ type: "monthly", interval: 1, on: { day: 6 } });
+    const everyOther = { ...repeatFormOf(monthly.recurrence), every: 2 };
+    const startsOn = editedStartsOn(monthly, everyOther, null, today);
+    expect(startsOn).toBe(today);
+    expect(recurrenceOf(everyOther, startsOn)).toEqual({
+      type: "monthly",
+      interval: 2,
+      on: { day: 6 },
+    });
   });
 });

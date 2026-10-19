@@ -26,18 +26,20 @@ import {
   calendarColors,
   defaultColorFor,
   defaultEventTime,
+  describeMonthDay,
   describeRecurrence,
   editedStartsOn,
   formatCalendarDate,
   maxEvery,
+  monthDayChoices,
   newRepeatFormFor,
   recurrenceOf,
-  repeatChoices,
   repeatFormOf,
-  repeatShowsDays,
+  repeatUnits,
   weekdayName,
   weekdayOf,
   weekdays,
+  withPickedStart,
   withStart,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
@@ -88,6 +90,18 @@ export function CalendarItemForm({
   const recurrence = recurrenceOf(repeat, startsOn);
   const weekDays = repeat.days ?? [weekdayOf(startsOn)];
   const canSave = title.trim().length > 0;
+
+  const changeRepeat = (change: Partial<RepeatForm>) => {
+    const next = { ...repeat, ...change };
+    const every = Math.min(next.every, maxEvery(next));
+    setRepeat({ ...next, every });
+    setEveryText(String(every));
+  };
+
+  const pickStart = (date: string) => {
+    setPickedStart(date);
+    if (pickedRepeat) setRepeat(withPickedStart(pickedRepeat, date));
+  };
 
   const toggleDay = (day: Weekday) => {
     const days = weekDays.includes(day)
@@ -186,11 +200,7 @@ export function CalendarItemForm({
             recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
           }
         >
-          <DatePopover
-            value={startsOn}
-            max={item?.endsOn}
-            onSelect={setPickedStart}
-          >
+          <DatePopover value={startsOn} max={item?.endsOn} onSelect={pickStart}>
             <Button
               type="button"
               variant="secondary"
@@ -247,19 +257,19 @@ export function CalendarItemForm({
 
       <Field label={t("calendar.form.repeat")}>
         <div className="flex flex-wrap gap-1.5">
-          {repeatChoices.map((choice) => (
+          {repeatUnits.map((unit) => (
             <Chip
-              key={choice}
-              selected={repeat.choice === choice}
-              onClick={() => setRepeat({ ...repeat, choice })}
-              testId={`calendar-repeat-${choice}`}
+              key={unit}
+              selected={repeat.unit === unit}
+              onClick={() => changeRepeat({ unit })}
+              testId={`calendar-repeat-${unit}`}
             >
-              {t(`calendar.repeatOption.${choice}`)}
+              {t(`calendar.repeatOption.${unit}`)}
             </Chip>
           ))}
         </div>
-        {repeat.choice === "custom" && (
-          <div className="flex flex-wrap items-center gap-2 pt-1 text-sm">
+        {repeat.unit !== "never" && (
+          <div className="flex items-center gap-2 pt-1 text-sm">
             {t("calendar.form.every")}
             <Input
               type="number"
@@ -281,25 +291,10 @@ export function CalendarItemForm({
               className="w-20"
               data-testid="calendar-form-interval"
             />
-            <div className="flex gap-1.5">
-              {(["days", "weeks"] as const).map((unit) => (
-                <Chip
-                  key={unit}
-                  selected={repeat.unit === unit}
-                  onClick={() => {
-                    const next = { ...repeat, unit };
-                    const every = Math.min(next.every, maxEvery(next));
-                    setRepeat({ ...next, every });
-                    setEveryText(String(every));
-                  }}
-                >
-                  {t(`calendar.unit.${unit}`, { count: repeat.every })}
-                </Chip>
-              ))}
-            </div>
+            {t(`calendar.unit.${repeat.unit}`, { count: repeat.every })}
           </div>
         )}
-        {repeatShowsDays(repeat) && (
+        {repeat.unit === "weeks" && (
           <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm">
             <span className="mr-1">{t("calendar.form.days")}</span>
             {weekdays.map((day) => (
@@ -311,6 +306,25 @@ export function CalendarItemForm({
                 {weekdayName(day, locale, "short")}
               </Chip>
             ))}
+          </div>
+        )}
+        {repeat.unit === "months" && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {monthDayChoices(repeat, startsOn).map(({ on, selected }) => {
+              const by = "week" in on ? "weekday" : "day";
+              return (
+                <Chip
+                  key={by}
+                  selected={selected}
+                  onClick={() => changeRepeat({ monthDay: on })}
+                  testId={`calendar-repeat-on-${by}`}
+                >
+                  {t("calendar.form.on", {
+                    on: describeMonthDay(on, t, locale),
+                  })}
+                </Chip>
+              );
+            })}
           </div>
         )}
       </Field>
