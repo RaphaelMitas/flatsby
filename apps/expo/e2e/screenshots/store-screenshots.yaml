@@ -1,7 +1,7 @@
 appId: ${APP_ID}
 ---
 # Store screenshot flow. All content — the "Sunset Villa" group, its three
-# members, the stocked "Groceries" list, and the split expenses — is seeded
+# members, the stocked "Groceries" list, expenses and the calendar — is seeded
 # server-side by the e2e create-session endpoint (`seed=store`), so this flow
 # performs no mutations: it logs in, navigates, and captures. Runtime
 # mutations were the pipeline's chronic flake: a Maestro tap that silently
@@ -181,6 +181,29 @@ appId: ${APP_ID}
                 visible:
                   id: "expense-heading"
                 timeout: 15000
+
+# "01a" sorts the calendar right after home in both stores without renaming
+# the files the README and landing page link to.
+- retry:
+    maxRetries: 1
+    commands:
+      - runFlow:
+          file: ../subflows/tap-tab.yaml
+          env:
+            TAB_ID: "tab-calendar"
+            TAB_LABEL: "Calendar"
+            TAB_X: "69%"
+      - extendedWaitUntil:
+          visible:
+            id: "calendar-heading"
+          timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: "calendar-day-progress"
+      text: "1 of 3 done.*"
+    timeout: 45000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/01a-calendar
 
 # Members screen (reached from the overview's group-settings button); the
 # three seeded members are a read, confirmed by the count header's id.
