@@ -7,6 +7,7 @@ export const errors = {
     invite:
       "Diese Einladung ist abgelaufen. Bitte jemanden in der Gruppe um eine neue.",
     adminMembership: "Admin-Mitgliedschaft nicht gefunden",
+    calendarItem: "Kalendereintrag nicht gefunden",
     expense: "Ausgabe nicht gefunden",
     group: "Gruppe nicht gefunden",
     groupMember: "Mitglied nicht gefunden",
@@ -28,6 +29,9 @@ export const errors = {
     "Nur Admins können Mitglieder zu dieser Gruppe hinzufügen",
   onlyAdminsRemoveMembers:
     "Nur Admins können andere Mitglieder entfernen. Du kannst nur dich selbst entfernen.",
+  calendarDateNotScheduled: "Dieses Datum ist nicht mehr im Plan",
+  calendarSeriesReplaced:
+    "Ab diesem Datum gilt schon eine neuere Wiederholung. Bearbeite stattdessen diese.",
   cannotRemoveLastAdmin:
     "Der letzte Admin kann nicht aus der Gruppe entfernt werden",
   promoteAdminFirst:

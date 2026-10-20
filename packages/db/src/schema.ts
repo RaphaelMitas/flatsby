@@ -1,16 +1,24 @@
+import type {
+  CalendarColor,
+  CalendarItemKind,
+  Recurrence,
+} from "@flatsby/validators/calendar";
 import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
   pgEnum,
   pgTableCreator,
+  primaryKey,
   real,
   serial,
   text,
+  time,
   timestamp,
   uuid,
   varchar,
@@ -175,6 +183,7 @@ export const groupsRelations = relations(groups, ({ many }) => ({
   groupMembers: many(groupMembers),
   shoppingLists: many(shoppingLists),
   expenses: many(expenses),
+  calendarItems: many(calendarItems),
 }));
 
 export const groupMembersRelations = relations(
@@ -425,3 +434,101 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
     references: [conversations.id],
   }),
 }));
+
+export const calendarItems = createTable(
+  "calendar_item",
+  {
+    id: serial("id").primaryKey(),
+    groupId: integer("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    kind: varchar("kind", { length: 16 }).$type<CalendarItemKind>().notNull(),
+    title: varchar("title", { length: 256 }).notNull(),
+    color: varchar("color", { length: 16 }).$type<CalendarColor>().notNull(),
+    startsOn: date("starts_on", { mode: "string" }).notNull(),
+    // Set when an edit split the series and a newer item took over
+    endsOn: date("ends_on", { mode: "string" }),
+    // Wall-clock times, so 19:00 stays 19:00 across DST; null means all day
+    startTime: time("start_time"),
+    endTime: time("end_time"),
+    // null means it happens once
+    recurrence: jsonb("recurrence").$type<Recurrence>(),
+    createdByGroupMemberId: integer("created_by_group_member_id").references(
+      () => groupMembers.id,
+      { onDelete: "set null" },
+    ),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("calendar_item_group_idx").on(table.groupId)],
+);
+
+export const calendarItemsRelations = relations(
+  calendarItems,
+  ({ one, many }) => ({
+    group: one(groups, {
+      fields: [calendarItems.groupId],
+      references: [groups.id],
+    }),
+    members: many(calendarItemMembers),
+    occurrences: many(calendarOccurrences),
+  }),
+);
+
+export const calendarItemMembers = createTable(
+  "calendar_item_member",
+  {
+    itemId: integer("item_id")
+      .notNull()
+      .references(() => calendarItems.id, { onDelete: "cascade" }),
+    groupMemberId: integer("group_member_id")
+      .notNull()
+      .references(() => groupMembers.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.itemId, table.groupMemberId] })],
+);
+
+export const calendarItemMembersRelations = relations(
+  calendarItemMembers,
+  ({ one }) => ({
+    item: one(calendarItems, {
+      fields: [calendarItemMembers.itemId],
+      references: [calendarItems.id],
+    }),
+    groupMember: one(groupMembers, {
+      fields: [calendarItemMembers.groupMemberId],
+      references: [groupMembers.id],
+    }),
+  }),
+);
+
+/** Only occurrences that differ from the rule get a row: done or skipped. */
+export const calendarOccurrences = createTable(
+  "calendar_occurrence",
+  {
+    itemId: integer("item_id")
+      .notNull()
+      .references(() => calendarItems.id, { onDelete: "cascade" }),
+    date: date("occurs_on", { mode: "string" }).notNull(),
+    skipped: boolean("skipped").default(false).notNull(),
+    completedByGroupMemberId: integer(
+      "completed_by_group_member_id",
+    ).references(() => groupMembers.id, { onDelete: "set null" }),
+    completedAt: timestamp("completed_at"),
+  },
+  (table) => [primaryKey({ columns: [table.itemId, table.date] })],
+);
+
+export const calendarOccurrencesRelations = relations(
+  calendarOccurrences,
+  ({ one }) => ({
+    item: one(calendarItems, {
+      fields: [calendarOccurrences.itemId],
+      references: [calendarItems.id],
+    }),
+    completedByGroupMember: one(groupMembers, {
+      fields: [calendarOccurrences.completedByGroupMemberId],
+      references: [groupMembers.id],
+    }),
+  }),
+);

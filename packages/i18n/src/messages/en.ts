@@ -1,6 +1,7 @@
 import { appUpdate } from "./en/appUpdate";
 import { auth } from "./en/auth";
 import { billing } from "./en/billing";
+import { calendar } from "./en/calendar";
 import { chat } from "./en/chat";
 import { common } from "./en/common";
 import { debts } from "./en/debts";
@@ -34,6 +35,7 @@ export const en = {
   expenseCategories,
   debts,
   splitwiseImport,
+  calendar,
   chat,
   errors,
   marketing,

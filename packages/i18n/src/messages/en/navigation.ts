@@ -1,4 +1,5 @@
 export const navigation = {
+  calendar: "Calendar",
   chat: "Chat",
   createGroup: "Create Group",
   dangerZone: "Danger Zone",

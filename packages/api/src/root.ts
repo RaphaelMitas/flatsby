@@ -1,6 +1,7 @@
 import type { createTRPCContext } from "./trpc";
 import { analyticsRouter } from "./router/analyticsRouter";
 import { authRouter } from "./router/auth";
+import { calendarRouter } from "./router/calendarRouter";
 import { chatRouter } from "./router/chatRouter";
 import { expenseRouter } from "./router/expenseRouter";
 import { groupRouter } from "./router/groupRouter";
@@ -13,6 +14,7 @@ import { createCallerFactory, createTRPCRouter } from "./trpc";
 export const appRouter = createTRPCRouter({
   analytics: analyticsRouter,
   auth: authRouter,
+  calendar: calendarRouter,
   chat: chatRouter,
   group: groupRouter,
   invite: inviteRouter,

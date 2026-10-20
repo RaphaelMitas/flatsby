@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Calendar,
   HomeIcon,
-  MessageSquareIcon,
+  Settings,
   ShoppingCartIcon,
   Wallet,
 } from "lucide-react";
@@ -22,13 +23,13 @@ export function BottomNavigation() {
   const isGroupPage = pathname === "/group" || pathname.startsWith("/group/");
   const isShoppingPage = pathname.startsWith("/shopping-list");
   const isExpensesPage = pathname.startsWith("/expenses");
-  const isChatPage = pathname.startsWith("/chat");
+  const isCalendarPage = pathname.startsWith("/calendar");
+  const isSettingsPage = pathname.startsWith("/user-settings");
 
   // Determine active state - only one can be active
   const isGroupActive = isGroupPage && !pathname.startsWith("/group/settings");
   const isShoppingActive = isShoppingPage;
   const isExpensesActive = isExpensesPage;
-  const isChatActive = isChatPage;
 
   return (
     <div className="bg-background fixed right-0 bottom-0 left-0 z-50 h-16 border-t md:hidden">
@@ -67,15 +68,26 @@ export function BottomNavigation() {
           <span className="text-xs">{t("expenses")}</span>
         </Link>
         <Link
-          href="/chat"
+          href={hasCurrentGroup ? "/calendar" : "/group"}
           className={cn(
             "hover:text-foreground flex flex-col items-center gap-1",
-            isChatActive ? "text-foreground" : "text-muted-foreground",
+            isCalendarPage ? "text-foreground" : "text-muted-foreground",
           )}
           prefetch={false}
         >
-          <MessageSquareIcon className="h-6 w-6" />
-          <span className="text-xs">{t("chat")}</span>
+          <Calendar className="h-6 w-6" />
+          <span className="text-xs">{t("calendar")}</span>
+        </Link>
+        <Link
+          href="/user-settings"
+          className={cn(
+            "hover:text-foreground flex flex-col items-center gap-1",
+            isSettingsPage ? "text-foreground" : "text-muted-foreground",
+          )}
+          prefetch={false}
+        >
+          <Settings className="h-6 w-6" />
+          <span className="text-xs">{t("settings")}</span>
         </Link>
       </nav>
     </div>

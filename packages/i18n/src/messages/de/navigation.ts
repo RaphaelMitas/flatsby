@@ -1,6 +1,7 @@
 import type { Messages } from "../../messages";
 
 export const navigation = {
+  calendar: "Kalender",
   chat: "Chat",
   createGroup: "Gruppe erstellen",
   dangerZone: "Gefahrenzone",
