@@ -6,6 +6,9 @@ import { and, eq, inArray, like, lt, or } from "drizzle-orm";
 import { db } from "@flatsby/db/client";
 import {
   accounts,
+  calendarItemMembers,
+  calendarItems,
+  calendarOccurrences,
   chatMessages,
   conversations,
   expenses,
@@ -18,6 +21,7 @@ import {
   users,
 } from "@flatsby/db/schema";
 import { CURRENT_AI_CONSENT_VERSION } from "@flatsby/validators/ai-consent";
+import { addDays, localDate, weekdayOf } from "@flatsby/validators/calendar";
 import { DEFAULT_CHAT_MODEL } from "@flatsby/validators/models";
 
 import { auth } from "~/auth/server";
@@ -105,10 +109,11 @@ function thirds(totalCents: number): [number, number, number] {
 
 /**
  * Seeds the full store-screenshot scenario server-side: the "Sunset Villa"
- * group with three members, a stocked shopping list, and split expenses. The
- * screenshot flow then only logs in, navigates, and captures — it performs no
- * mutations, because a Maestro tap that silently misses a button would leave
- * state missing and the flow waiting on UI that never appears.
+ * group with three members, a stocked shopping list, split expenses, and a
+ * calendar. The screenshot flow then only logs in, navigates, and captures —
+ * it performs no mutations, because a Maestro tap that silently misses a
+ * button would leave state missing and the flow waiting on UI that never
+ * appears.
  */
 async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   const [group] = await db
@@ -250,6 +255,12 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
     ]);
   }
 
+  await seedStoreCalendar(group.id, [
+    alexMember.id,
+    annaMember.id,
+    tomMember.id,
+  ]);
+
   // A canned conversation so screenshots show the AI answering with a chart
   // without any model call. Consent must be current or the gate covers the
   // screen.
@@ -322,6 +333,104 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   ]);
 
   return { group, conversationId: conversation.id };
+}
+
+/**
+ * Today's day list shows one task on the viewer's turn, one already done by
+ * Anna, one for anyone and an evening event; the other items put dots across
+ * the month grid. Everything is relative to today, so any capture date works.
+ */
+async function seedStoreCalendar(
+  groupId: number,
+  [alex, anna, tom]: [number, number, number],
+) {
+  const today = localDate();
+  const items = await db
+    .insert(calendarItems)
+    .values([
+      {
+        groupId,
+        kind: "task",
+        title: "Take out bins",
+        color: "green",
+        startsOn: today,
+        recurrence: { type: "weekly", interval: 1, days: [weekdayOf(today)] },
+        createdByGroupMemberId: alex,
+      },
+      {
+        groupId,
+        kind: "task",
+        title: "Clean bathroom",
+        color: "cyan",
+        startsOn: addDays(today, -14),
+        recurrence: { type: "weekly", interval: 1, days: [weekdayOf(today)] },
+        createdByGroupMemberId: anna,
+      },
+      {
+        groupId,
+        kind: "task",
+        title: "Water the plants",
+        color: "yellow",
+        startsOn: addDays(today, -21),
+        recurrence: { type: "daily", interval: 3 },
+        createdByGroupMemberId: tom,
+      },
+      {
+        groupId,
+        kind: "event",
+        title: "Flat dinner",
+        color: "blue",
+        startsOn: today,
+        startTime: "19:00",
+        endTime: "21:00",
+        recurrence: null,
+        createdByGroupMemberId: tom,
+      },
+      {
+        groupId,
+        kind: "event",
+        title: "Movie night",
+        color: "purple",
+        startsOn: addDays(today, -12),
+        startTime: "20:30",
+        endTime: "23:00",
+        recurrence: {
+          type: "weekly",
+          interval: 1,
+          days: [weekdayOf(addDays(today, 2))],
+        },
+        createdByGroupMemberId: anna,
+      },
+      {
+        groupId,
+        kind: "event",
+        title: "Rent due",
+        color: "red",
+        startsOn: addDays(today, -60),
+        recurrence: { type: "monthly", interval: 1, on: { day: 1 } },
+        createdByGroupMemberId: alex,
+      },
+    ])
+    .returning({ id: calendarItems.id });
+  const [bins, bathroom, plants] = items;
+  if (!bins || !bathroom || !plants) {
+    throw new Error("Failed to create seeded calendar items");
+  }
+
+  await db.insert(calendarItemMembers).values([
+    ...[alex, anna, tom].map((groupMemberId, position) => ({
+      itemId: bins.id,
+      groupMemberId,
+      position,
+    })),
+    { itemId: bathroom.id, groupMemberId: anna, position: 0 },
+  ]);
+  await db.insert(calendarOccurrences).values({
+    itemId: bathroom.id,
+    date: today,
+    completedByGroupMemberId: anna,
+    completedAt: new Date(),
+  });
 }
 
 /** Same EUR scenario as debt.test.ts, so the e2e direct debts match its assertions */
