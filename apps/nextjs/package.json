@@ -36,7 +36,7 @@
     "ai": "catalog:",
     "autumn-js": "catalog:",
     "better-auth": "catalog:better-auth",
-    "geist": "^1.7.2",
+    "geist": "^1.8.1",
     "jose": "^6.2.12",
     "next": "catalog:",
     "next-intl": "catalog:",
