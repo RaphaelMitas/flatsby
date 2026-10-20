@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@flatsby/ui/alert-dialog";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
+import { useMediaQuery } from "@flatsby/ui/hooks/use-media-query";
 import { ScrollArea } from "@flatsby/ui/scroll-area";
 import { toast } from "@flatsby/ui/toast";
 
@@ -51,6 +52,7 @@ export function ExpenseDetailPanel({
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
   const handleApiError = useHandleApiError();
+  const isLargeScreen = useMediaQuery("lg");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const groupId = currentGroup?.id ?? 0;
@@ -128,6 +130,7 @@ export function ExpenseDetailPanel({
         group={groupData.data}
         onClose={onBack}
         onSuccess={(expenseId) => onSelectExpense(expenseId)}
+        closeOnSubmit={!isLargeScreen}
       />
     );
   }

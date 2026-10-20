@@ -60,7 +60,9 @@ appId: ${APP_ID}
     timeout: 45000
 - tapOn:
     id: "expense-form-submit"
+# The form closes on submit; the card is disabled until the server confirms it
 - extendedWaitUntil:
     visible:
       id: "expense-card-${DESCRIPTION}"
+      enabled: true
     timeout: 45000
