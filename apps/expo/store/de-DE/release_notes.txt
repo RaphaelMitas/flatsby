@@ -1,3 +1,3 @@
 • Neuer Kalender-Tab für Aufgaben und Termine. Wiederhole sie täglich, wöchentlich, monatlich oder jährlich, lass deine Mitbewohner sich automatisch abwechseln und hake Erledigtes ab.
-• Gruppen mit Ausgaben lassen sich jetzt löschen. Klappt das Löschen einmal nicht, sagt dir die App Bescheid, statt die Gruppe still wiederherzustellen.
+• Gruppen mit Ausgaben lassen sich jetzt löschen. Klappt das Löschen einmal nicht, sagt dir die App Bescheid, statt die Gruppe stillschweigend wiederherzustellen.
 • Kleine Fehlerbehebungen und Verbesserungen.
