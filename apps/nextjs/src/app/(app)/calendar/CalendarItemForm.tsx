@@ -194,66 +194,63 @@ export function CalendarItemForm({
         </div>
       </Field>
 
-      <div className="divide-y rounded-xl border">
-        <FormRow
-          label={
-            recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
-          }
-        >
-          <DatePopover value={startsOn} max={item?.endsOn} onSelect={pickStart}>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              data-testid="calendar-form-date"
-            >
-              <CalendarIcon />
-              {formatCalendarDate(startsOn, locale, { dateStyle: "medium" })}
-            </Button>
-          </DatePopover>
-        </FormRow>
-        {!isTask && (
-          <FormRow label={t("calendar.allDay")} htmlFor="calendar-all-day">
-            <Switch
-              id="calendar-all-day"
-              checked={time === null}
-              onCheckedChange={(allDay) =>
-                setTime(allDay ? null : defaultEventTime)
+      <Field
+        label={
+          recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
+        }
+      >
+        <DatePopover value={startsOn} max={item?.endsOn} onSelect={pickStart}>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-start font-normal"
+            data-testid="calendar-form-date"
+          >
+            <CalendarIcon />
+            {formatCalendarDate(startsOn, locale, { dateStyle: "long" })}
+          </Button>
+        </DatePopover>
+      </Field>
+      {!isTask && (
+        <div className="flex items-center justify-between">
+          <Label htmlFor="calendar-all-day">{t("calendar.allDay")}</Label>
+          <Switch
+            id="calendar-all-day"
+            checked={time === null}
+            onCheckedChange={(allDay) =>
+              setTime(allDay ? null : defaultEventTime)
+            }
+          />
+        </div>
+      )}
+      {!isTask && time !== null && (
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t("calendar.form.from")} htmlFor="calendar-start">
+            <Input
+              id="calendar-start"
+              type="time"
+              value={time.start}
+              onChange={(event) =>
+                event.target.value &&
+                setTime(withStart(time, event.target.value))
               }
+              data-testid="calendar-form-start-time"
             />
-          </FormRow>
-        )}
-        {!isTask && time !== null && (
-          <>
-            <FormRow label={t("calendar.form.from")} htmlFor="calendar-start">
-              <Input
-                id="calendar-start"
-                type="time"
-                value={time.start}
-                onChange={(event) =>
-                  event.target.value &&
-                  setTime(withStart(time, event.target.value))
-                }
-                className="w-auto"
-                data-testid="calendar-form-start-time"
-              />
-            </FormRow>
-            <FormRow label={t("calendar.form.to")} htmlFor="calendar-end">
-              <Input
-                id="calendar-end"
-                type="time"
-                value={time.end}
-                onChange={(event) =>
-                  event.target.value &&
-                  setTime({ ...time, end: event.target.value })
-                }
-                className="w-auto"
-                data-testid="calendar-form-end-time"
-              />
-            </FormRow>
-          </>
-        )}
-      </div>
+          </Field>
+          <Field label={t("calendar.form.to")} htmlFor="calendar-end">
+            <Input
+              id="calendar-end"
+              type="time"
+              value={time.end}
+              onChange={(event) =>
+                event.target.value &&
+                setTime({ ...time, end: event.target.value })
+              }
+              data-testid="calendar-form-end-time"
+            />
+          </Field>
+        </div>
+      )}
 
       <Field label={t("calendar.form.repeat")}>
         <div className="flex flex-wrap gap-1.5">
@@ -327,6 +324,11 @@ export function CalendarItemForm({
             })}
           </div>
         )}
+        {(repeat.unit === "months" || repeat.unit === "years") && (
+          <p className="text-muted-foreground text-xs">
+            {t("calendar.form.startDateHint")}
+          </p>
+        )}
       </Field>
 
       {isTask && (
@@ -392,16 +394,7 @@ export function CalendarItemForm({
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
-}
-
-function FormRow({
+function Field({
   label,
   htmlFor,
   children,
@@ -411,10 +404,8 @@ function FormRow({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-12 items-center justify-between gap-3 px-3.5 py-2">
-      <Label htmlFor={htmlFor} className="font-normal">
-        {label}
-      </Label>
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={htmlFor}>{label}</Label>
       {children}
     </div>
   );
