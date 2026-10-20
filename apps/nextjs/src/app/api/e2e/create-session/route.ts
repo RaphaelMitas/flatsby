@@ -109,11 +109,10 @@ function thirds(totalCents: number): [number, number, number] {
 
 /**
  * Seeds the full store-screenshot scenario server-side: the "Sunset Villa"
- * group with three members, a stocked shopping list, split expenses, and a
- * calendar. The screenshot flow then only logs in, navigates, and captures —
- * it performs no mutations, because a Maestro tap that silently misses a
- * button would leave state missing and the flow waiting on UI that never
- * appears.
+ * group with three members, a stocked list, expenses and a calendar. The
+ * screenshot flow then only logs in, navigates, and captures — it performs no
+ * mutations, because a Maestro tap that silently misses a button would leave
+ * state missing and the flow waiting on UI that never appears.
  */
 async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   const [group] = await db
@@ -335,11 +334,7 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   return { group, conversationId: conversation.id };
 }
 
-/**
- * Today's day list shows one task on the viewer's turn, one already done by
- * Anna, one for anyone and an evening event; the other items put dots across
- * the month grid. Everything is relative to today, so any capture date works.
- */
+// Relative to today, so the flows' "1 of 3 done" holds on any capture day
 async function seedStoreCalendar(
   groupId: number,
   [alex, anna, tom]: [number, number, number],

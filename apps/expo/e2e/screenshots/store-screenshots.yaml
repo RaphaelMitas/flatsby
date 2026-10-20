@@ -1,14 +1,14 @@
 appId: ${APP_ID}
 ---
 # Store screenshot flow. All content — the "Sunset Villa" group, its three
-# members, the stocked "Groceries" list, the split expenses, and the calendar —
-# is seeded server-side by the e2e create-session endpoint (`seed=store`), so
-# this flow performs no mutations: it logs in, navigates, and captures. Runtime
+# members, the stocked "Groceries" list, expenses and the calendar — is seeded
+# server-side by the e2e create-session endpoint (`seed=store`), so this flow
+# performs no mutations: it logs in, navigates, and captures. Runtime
 # mutations were the pipeline's chronic flake: a Maestro tap that silently
-# misses a button (stale coordinates after a layout shift) leaves state missing
-# and the flow waiting on UI that will never appear. Reads don't have that
-# failure mode — the data exists before the app's first query, and query retries
-# cover transient fetch errors.
+# misses a button (stale coordinates after a layout shift) leaves state
+# missing and the flow waiting on UI that will never appear. Reads don't have
+# that failure mode — the data exists before the app's first query, and
+# query retries cover transient fetch errors.
 #
 # Navigation taps go through tap-until.yaml (act-verify-repeat) or
 # tap-tab.yaml (id -> label -> position) so a missed tap costs seconds, not
@@ -197,10 +197,6 @@ appId: ${APP_ID}
           visible:
             id: "calendar-heading"
           timeout: 20000
-- extendedWaitUntil:
-    visible:
-      id: "calendar-entry-Take out bins"
-    timeout: 45000
 - extendedWaitUntil:
     visible:
       id: "calendar-day-progress"

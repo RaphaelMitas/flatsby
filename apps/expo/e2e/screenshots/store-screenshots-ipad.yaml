@@ -169,10 +169,6 @@ appId: ${APP_ID}
           timeout: 20000
 - extendedWaitUntil:
     visible:
-      id: "calendar-entry-Take out bins"
-    timeout: 45000
-- extendedWaitUntil:
-    visible:
       id: "calendar-day-progress"
       text: "1 of 3 done.*"
     timeout: 45000
