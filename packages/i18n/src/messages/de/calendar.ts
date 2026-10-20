@@ -47,6 +47,7 @@ export const calendar = {
     days: "An",
     every: "Alle",
     on: "Am {on}",
+    startDateHint: "Richtet sich nach dem Startdatum",
     decreaseInterval: "Weniger",
     increaseInterval: "Mehr",
     who: "Wer",

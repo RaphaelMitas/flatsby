@@ -45,6 +45,7 @@ export const calendar = {
     days: "On",
     every: "Every",
     on: "On {on}",
+    startDateHint: "Based on the start date",
     decreaseInterval: "Fewer",
     increaseInterval: "More",
     who: "Who",

@@ -433,6 +433,12 @@ function ItemFields({
         </View>
       )}
 
+      {(repeat.unit === "months" || repeat.unit === "years") && (
+        <Text className="text-muted-foreground mt-2 text-xs">
+          {t("calendar.form.startDateHint")}
+        </Text>
+      )}
+
       {isTask && (
         <>
           <FieldLabel>{t("calendar.form.who")}</FieldLabel>
