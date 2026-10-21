@@ -14,7 +14,6 @@ export const home = {
     },
     summary:
       "{count, plural, =0 {A quiet one.} one {One thing today.} other {# things today.}}",
-    yourTurn: "Your turn",
     youOwe: "You owe {name}",
     more: "+{count} more",
     nothingNeedsYou: "Nothing needs you.",
@@ -36,7 +35,6 @@ export const home = {
       add: "Add",
       calendarEntry: "Calendar entry",
       otherLists: "Other lists",
-      allLists: "All lists",
       open: "{count} open",
       lastUsed: "Last used · {count} open",
       newList: "New shopping list",

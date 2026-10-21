@@ -545,12 +545,10 @@ export function entriesOn(
   );
 }
 
-// Together they stay inside one 62-day range query
-export const HOME_LOOKBACK_DAYS = 55;
 export const HOME_LOOKAHEAD_DAYS = 6;
+export const HOME_LOOKBACK_DAYS = MAX_RANGE_DAYS - HOME_LOOKAHEAD_DAYS;
 
 export interface DueChore extends CalendarEntry {
-  /** Earlier open days of the same chore */
   missed: string[];
 }
 

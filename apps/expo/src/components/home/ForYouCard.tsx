@@ -51,6 +51,7 @@ export function ForYouCard({
 
   return (
     <View>
+      {/* Before the card, so the card hides whatever sinks below its edge */}
       <HomeCat
         pose={pose}
         stretchKey={stretchKey}
@@ -123,7 +124,7 @@ function ChoreLine({
             overdue ? "text-destructive" : "text-muted-foreground",
           )}
         >
-          {overdue ? t("calendar.overdue") : t("home.new.yourTurn")}
+          {overdue ? t("calendar.overdue") : t("calendar.yourTurn")}
           {more > 0 && ` · ${t("home.new.more", { count: more })}`}
         </Text>
         <Text

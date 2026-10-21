@@ -32,6 +32,7 @@ export function QuickAddDial({
 }) {
   const t = useTranslations("home.new.dial");
   const tActions = useTranslations("home.quickActions");
+  const tLists = useTranslations("shoppingList");
   const router = useRouter();
   const isFocused = useIsFocused();
   const [open, setOpen] = useState(false);
@@ -143,7 +144,7 @@ export function QuickAddDial({
           >
             <Icon name="list" size={19} color="foreground" />
             <Text className="text-foreground flex-1 font-medium">
-              {t("allLists")}
+              {tLists("allLists")}
             </Text>
             <Icon name="chevron-right" size={16} color="muted-foreground" />
           </Pressable>
@@ -195,7 +196,7 @@ export function QuickAddDial({
               className="active:bg-muted flex-row items-center gap-2 rounded-xl py-2 pr-2 pl-9"
             >
               <Text className="text-muted-foreground flex-1">
-                {t("allLists")}
+                {tLists("allLists")}
               </Text>
               <Icon name="chevron-right" size={14} color="muted-foreground" />
             </Pressable>

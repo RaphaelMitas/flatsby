@@ -33,7 +33,6 @@ export function HomeCat({
   onPress,
 }: {
   pose: CatPose;
-  /** Changes each time the cat should stretch */
   stretchKey: number;
   onPress: () => void;
 }) {
@@ -72,7 +71,6 @@ export function HomeCat({
     onPress();
   };
 
-  // Rendered before the card, so the card hides whatever sinks below its edge
   return (
     <Pressable
       testID="home-cat"
