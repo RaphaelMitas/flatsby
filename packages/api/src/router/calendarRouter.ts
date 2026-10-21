@@ -239,7 +239,6 @@ const occurrenceOf = (itemId: number, date: string) =>
     eq(calendarOccurrences.date, date),
   );
 
-// A row that is neither done nor skipped says nothing the rule doesn't
 type OccurrenceRow = typeof calendarOccurrences.$inferInsert;
 
 const upsertOccurrences = (
@@ -257,6 +256,7 @@ const upsertOccurrences = (
       setWhere,
     });
 
+// A row that is neither done nor skipped says nothing the rule doesn't
 const pruneOccurrence = (
   db: Database | DbTransaction,
   itemId: number,

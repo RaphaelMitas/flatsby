@@ -76,6 +76,8 @@ export function QuickAddDial({
     action();
   };
   const openList = (list: ShoppingListSummary) => go(() => onOpenList(list));
+  const openAllLists = () =>
+    go(() => router.push("/(tabs)/home/shopping-lists"));
 
   return (
     <>
@@ -133,6 +135,19 @@ export function QuickAddDial({
           />
         </View>
 
+        {last && others.length === 0 && (
+          <Pressable
+            testID="home-dial-all-lists"
+            onPress={openAllLists}
+            className="mt-1 flex-row items-center gap-2.5 px-2 pt-2.5 pb-2"
+          >
+            <Icon name="list" size={19} color="foreground" />
+            <Text className="text-foreground flex-1 font-medium">
+              {t("allLists")}
+            </Text>
+            <Icon name="chevron-right" size={16} color="muted-foreground" />
+          </Pressable>
+        )}
         {others.length > 0 && (
           <Pressable
             testID="home-dial-other-lists"
@@ -174,6 +189,16 @@ export function QuickAddDial({
                 </Pressable>
               </Animated.View>
             ))}
+            <Pressable
+              testID="home-dial-all-lists"
+              onPress={openAllLists}
+              className="active:bg-muted flex-row items-center gap-2 rounded-xl py-2 pr-2 pl-9"
+            >
+              <Text className="text-muted-foreground flex-1">
+                {t("allLists")}
+              </Text>
+              <Icon name="chevron-right" size={14} color="muted-foreground" />
+            </Pressable>
           </ScrollView>
         )}
 

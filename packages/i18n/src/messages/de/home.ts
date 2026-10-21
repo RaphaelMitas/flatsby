@@ -38,6 +38,7 @@ export const home = {
       add: "Hinzufügen",
       calendarEntry: "Kalendereintrag",
       otherLists: "Andere Listen",
+      allLists: "Alle Listen",
       open: "{count} offen",
       lastUsed: "Zuletzt genutzt · {count} offen",
       newList: "Neue Einkaufsliste",

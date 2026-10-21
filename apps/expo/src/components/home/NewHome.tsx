@@ -25,7 +25,6 @@ import {
 } from "@flatsby/validators/expenses/formatting";
 
 import type { Nudge } from "./ForYouCard";
-import type { CatPose } from "./HomeCat";
 import type { HomeRowProps } from "./HomeRows";
 import { fromPickerTime } from "~/components/calendar/calendarDates";
 import { useCalendarMutations } from "~/components/calendar/useCalendarMutations";
@@ -272,11 +271,6 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   ];
   const rows = candidates.filter((row): row is HomeRowProps => Boolean(row));
 
-  const catLines: Record<CatPose, string> = {
-    sitting: t("home.new.cat.sitting"),
-    peeking: t("home.new.cat.peeking"),
-    asleep: t("home.new.cat.asleep"),
-  };
   const firstName = group.thisGroupMember.user.name.split(" ")[0] ?? "";
 
   return (
@@ -322,7 +316,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           person={person}
           speech={speech}
           stretchKey={stretchKey}
-          onCatPress={(pose) => say(catLines[pose])}
+          onCatPress={(pose) => say(t(`home.new.cat.${pose}`))}
           onTick={(entry) => {
             setDone.mutate({
               groupId: group.id,
