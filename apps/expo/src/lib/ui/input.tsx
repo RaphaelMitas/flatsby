@@ -18,16 +18,18 @@ const inputVariants = tv({
 });
 
 interface InputProps extends TextInputProps {
+  ref?: React.Ref<React.ComponentRef<typeof TextInput>>;
   className?: string;
   error?: boolean;
 }
 
-const Input = ({ className, error, ...props }: InputProps) => {
+const Input = ({ ref, className, error, ...props }: InputProps) => {
   const [isFocused, setIsFocused] = React.useState(false);
   const { getColor } = useThemeColors();
 
   return (
     <TextInput
+      ref={ref}
       className={inputVariants({
         className,
         error,
