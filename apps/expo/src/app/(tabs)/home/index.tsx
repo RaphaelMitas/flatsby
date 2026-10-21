@@ -1,12 +1,15 @@
 import { useEffect } from "react";
 import { Text, View } from "react-native";
 import { TRPCClientError } from "@trpc/client";
+import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import { Dashboard } from "~/components/dashboard/Dashboard";
+import { NewHome } from "~/components/home/NewHome";
 import { Button } from "~/lib/ui/button";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { authClient, signOut } from "~/utils/auth/auth-client";
+import { useHomeVersion } from "~/utils/home-version";
 
 export function ErrorBoundary({
   error,
@@ -55,15 +58,21 @@ export function ErrorBoundary({
 
 export default function Index() {
   const { data: session } = authClient.useSession();
+  const { version } = useHomeVersion();
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    if (version) void posthog.register({ home_version: version });
+  }, [posthog, version]);
 
   // The tab layout owns the redirect to login.
-  if (!session) {
+  if (!session || !version) {
     return null;
   }
 
   return (
     <SafeAreaView>
-      <Dashboard />
+      {version === "new" ? <NewHome /> : <Dashboard />}
     </SafeAreaView>
   );
 }

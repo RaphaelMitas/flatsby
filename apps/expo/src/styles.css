@@ -8,3 +8,15 @@
 
 /* Include workspace package files that contain shared Tailwind class strings. */
 @source "../../../packages/validators/src/**/*.ts";
+
+/* react-native-css drops calc(var(--radius) ± px), which left rounded-sm/md/xl square */
+@theme {
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-xl: 18px;
+}
+
+/* Tailwind's rounded-full is calc(infinity * 1px), which react-native-css keeps on mount but drops on re-render */
+@utility rounded-full {
+  border-radius: 9999px;
+}

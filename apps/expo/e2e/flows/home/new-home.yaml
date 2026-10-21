@@ -1,0 +1,57 @@
+appId: ${APP_ID}
+tags:
+  - home
+---
+# Try the new home from the invite, add an expense from the plus, switch back.
+- runFlow: ../../subflows/e2e-login.yaml
+- tapOn:
+    id: "group-select-button"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-create-button"
+    timeout: 15000
+# A relaunch opens the home on the selected group
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "home-invite"
+    timeout: 30000
+- tapOn:
+    id: "home-invite-try"
+- extendedWaitUntil:
+    visible:
+      id: "home-for-you"
+    timeout: 15000
+# A fresh group has no chores and no debts
+- assertVisible: "Nothing needs you."
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "home-dial"
+      MARKER_ID: "home-dial-expense"
+- tapOn:
+    id: "home-dial-expense"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-description"
+    timeout: 15000
+
+# The choice survives a relaunch, and switching back returns the classic home
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "home-for-you"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: "home-switch-back"
+    direction: DOWN
+- tapOn:
+    id: "home-switch-back"
+- tapOn: "Just switch back"
+- extendedWaitUntil:
+    notVisible:
+      id: "home-for-you"
+    timeout: 15000
+- assertNotVisible:
+    id: "home-invite"

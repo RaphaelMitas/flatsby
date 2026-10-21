@@ -19,6 +19,7 @@ import {
   entriesOn,
   expandOccurrences,
   formEndsOn,
+  homeAgenda,
   monthDayChoices,
   monthGrid,
   recurrenceOf,
@@ -727,5 +728,92 @@ describe("editedStartsOn", () => {
       interval: 2,
       on: { day: 6 },
     });
+  });
+});
+
+describe("homeAgenda", () => {
+  const ME = 1;
+  const task = (
+    id: number,
+    title: string,
+    startsOn: string,
+    memberIds: number[],
+    recurrence: Recurrence | null = null,
+  ): CalendarItemView => ({
+    ...item(recurrence, startsOn, memberIds),
+    id,
+    title,
+  });
+  const event = (
+    id: number,
+    title: string,
+    startsOn: string,
+  ): CalendarItemView => ({
+    ...task(id, title, startsOn, []),
+    kind: "event",
+    time: { start: "19:00", end: "20:00" },
+  });
+  const kitchen = task(1, "Kitchen", "2026-10-05", [ME], {
+    type: "weekly",
+    interval: 1,
+    days: ["mo"],
+  });
+  const items = [
+    kitchen,
+    task(2, "Bathroom", "2026-10-21", [ME]),
+    task(3, "Bins", "2026-10-21", [2]),
+    event(4, "Yesterday's party", "2026-10-20"),
+    event(5, "Lea's birthday", "2026-10-24"),
+    event(6, "Flat dinner", "2026-10-23"),
+    {
+      ...event(7, "Breakfast", "2026-10-21"),
+      time: { start: "08:00", end: "09:00" },
+    },
+  ];
+  const range: CalendarRange = {
+    items,
+    occurrences: items.flatMap((i) =>
+      expandOccurrences(
+        i,
+        i === kitchen ? [done("2026-10-05")] : [],
+        window.from,
+        window.to,
+      ),
+    ),
+  };
+  const agenda = homeAgenda(range, "2026-10-21", "12:00", ME);
+
+  it("lists my open chores up to today, a chore left for weeks once with its missed days", () => {
+    expect(
+      agenda.due.map(({ item, occurrence, missed }) => [
+        item.title,
+        occurrence.date,
+        missed,
+      ]),
+    ).toEqual([
+      ["Kitchen", "2026-10-19", ["2026-10-12"]],
+      ["Bathroom", "2026-10-21", []],
+    ]);
+  });
+
+  it("finds my next turn after today and the next event that hasn't ended", () => {
+    expect(agenda.nextTurn?.occurrence.date).toBe("2026-10-26");
+    expect(agenda.nextEvent?.item.title).toBe("Flat dinner");
+  });
+
+  it("keeps an event that runs past midnight until it ends", () => {
+    const party = {
+      ...event(8, "Party", "2026-10-21"),
+      time: { start: "21:00", end: "01:00" },
+    };
+    const withParty: CalendarRange = {
+      items: [party],
+      occurrences: expandOccurrences(party, [], window.from, window.to),
+    };
+    const next = (today: string, now: string) =>
+      homeAgenda(withParty, today, now, ME).nextEvent?.item.title;
+    expect(next("2026-10-21", "22:00")).toBe("Party");
+    expect(next("2026-10-22", "00:30")).toBe("Party");
+    expect(next("2026-10-22", "02:00")).toBeUndefined();
   });
 });

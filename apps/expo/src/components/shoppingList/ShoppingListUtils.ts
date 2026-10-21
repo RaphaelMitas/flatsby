@@ -75,6 +75,24 @@ const groupItemsByDate = (
   return sections;
 };
 
+export const shoppingListItemsOptions = (
+  groupId: number,
+  shoppingListId: number,
+  categoryId?: CategoryId,
+) =>
+  trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
+    {
+      groupId,
+      shoppingListId,
+      limit: PAGE_SIZE.shoppingListItems,
+      categoryId,
+    },
+    {
+      getNextPageParam: (lastPage) =>
+        lastPage.success === true ? lastPage.data.nextCursor : null,
+    },
+  );
+
 export const groupShoppingList = (
   items: ShoppingListItem[],
 ): GroupedShoppingList => {

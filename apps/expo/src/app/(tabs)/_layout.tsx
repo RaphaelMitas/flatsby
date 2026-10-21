@@ -10,6 +10,7 @@ import { localDate, monthOf } from "@flatsby/validators/calendar";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { calendarRangeOptions } from "~/components/calendar/CalendarScreen";
+import { shoppingListItemsOptions } from "~/components/shoppingList/ShoppingListUtils";
 import { useThemeColors } from "~/lib/utils";
 import { usePostHogIdentify } from "~/utils/analytics/use-posthog-identify";
 import { prefetch, trpc } from "~/utils/api";
@@ -45,17 +46,7 @@ export default function TabLayout() {
         }),
       );
       void prefetch(
-        trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
-          {
-            groupId: selectedGroupId,
-            shoppingListId: selectedShoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-          },
-          {
-            getNextPageParam: (lastPage) =>
-              lastPage.success === true ? lastPage.data.nextCursor : null,
-          },
-        ),
+        shoppingListItemsOptions(selectedGroupId, selectedShoppingListId),
       );
     }
 

@@ -308,6 +308,14 @@ appId: ${APP_ID}
     visible:
       id: "dashboard-group-picker"
     timeout: 45000
+# Store screenshots show the classic home without the invite to the new one
+- runFlow:
+    when:
+      visible:
+        id: "home-invite-dismiss"
+    commands:
+      - tapOn:
+          id: "home-invite-dismiss"
 - retry:
     maxRetries: 2
     commands:

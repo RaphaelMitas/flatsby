@@ -8,6 +8,7 @@ import {
   calculateDebts,
   debtsBetweenOthers,
   debtsFor,
+  myDebts,
   pairDebt,
 } from "./debt";
 import { allSquareMessage, debtHero, personLookup } from "./formatting";
@@ -761,5 +762,18 @@ describe("debtHero", () => {
       label: "Overall",
       amounts: [{ currency: "EUR", cents: 0, text: "€0.00" }],
     });
+  });
+});
+
+describe("myDebts", () => {
+  it("splits my side of the settle plan, the group currency first", () => {
+    const summary = calculateDebts([
+      owes(YOU, LENA, 900),
+      owes(YOU, MAX, 2000, "CHF"),
+      owes(SOPHIE, YOU, 500, "GBP"),
+    ]);
+    const { owe, owed } = myDebts(summary, YOU, "EUR");
+    expect(owe.map((d) => d.currency)).toEqual(["EUR", "CHF"]);
+    expect(owed).toEqual([debt(SOPHIE, YOU, 500, "GBP")]);
   });
 });

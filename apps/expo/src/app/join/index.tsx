@@ -33,7 +33,7 @@ export default function JoinGroupScreen() {
             <View
               className={`h-12 w-8 items-center justify-center rounded-lg border ${
                 i === code.length ? "border-foreground" : "border-border"
-              } ${char ? "bg-muted" : ""}`}
+              } ${char ? "bg-muted" : "bg-background"}`}
             >
               <Text className="text-foreground font-mono text-xl font-bold">
                 {char}

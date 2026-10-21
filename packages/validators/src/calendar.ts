@@ -161,6 +161,8 @@ export const setOccurrenceDoneSchema = z.object({
   itemId: z.number(),
   date: calendarDateSchema,
   done: z.boolean(),
+  /** Earlier open days of the same chore, skipped in the same write */
+  skip: z.array(calendarDateSchema).max(MAX_RANGE_DAYS).optional(),
 });
 
 export const setOccurrenceSkippedSchema = z.object({
@@ -558,30 +560,99 @@ export function daySummary(entries: CalendarEntry[], meId: number) {
   };
 }
 
+function rangeEntries(
+  range: CalendarRange,
+  keep: (entry: CalendarEntry) => boolean,
+): CalendarEntry[] {
+  const items = new Map(range.items.map((item) => [item.id, item]));
+  return range.occurrences
+    .flatMap((occurrence) => {
+      const item = items.get(occurrence.itemId);
+      return item ? [{ item, occurrence }] : [];
+    })
+    .filter(keep)
+    .sort(
+      (a, b) =>
+        a.occurrence.date.localeCompare(b.occurrence.date) ||
+        // All-day entries after the timed ones
+        (a.item.time?.start ?? "99").localeCompare(
+          b.item.time?.start ?? "99",
+        ) ||
+        a.item.title.localeCompare(b.item.title),
+    );
+}
+
 /** "Mine" keeps events and the tasks that are the member's turn. */
 export function entriesOn(
   range: CalendarRange,
   date: string,
   mineMemberId?: number,
 ): CalendarEntry[] {
-  const items = new Map(range.items.map((item) => [item.id, item]));
-  return range.occurrences
-    .flatMap((occurrence) => {
-      const item = items.get(occurrence.itemId);
-      return item && occurrence.date === date ? [{ item, occurrence }] : [];
-    })
-    .filter(
-      ({ item, occurrence }) =>
-        mineMemberId === undefined ||
+  return rangeEntries(
+    range,
+    ({ item, occurrence }) =>
+      occurrence.date === date &&
+      (mineMemberId === undefined ||
         item.kind === "event" ||
-        occurrence.turnGroupMemberId === mineMemberId,
-    )
-    .sort(
-      (a, b) =>
-        (a.item.time?.start ?? "99").localeCompare(
-          b.item.time?.start ?? "99",
-        ) || a.item.title.localeCompare(b.item.title),
-    );
+        occurrence.turnGroupMemberId === mineMemberId),
+  );
+}
+
+export const HOME_LOOKAHEAD_DAYS = 6;
+export const HOME_LOOKBACK_DAYS = MAX_RANGE_DAYS - HOME_LOOKAHEAD_DAYS;
+
+export interface DueChore extends CalendarEntry {
+  missed: string[];
+}
+
+function notOverYet(
+  time: EventTime | null,
+  date: string,
+  today: string,
+  now: string,
+) {
+  const overnight = time !== null && time.end <= time.start;
+  if (date > today) return true;
+  if (date === today) return overnight || (time?.end ?? "24:00") > now;
+  return overnight && date === addDays(today, -1) && time.end > now;
+}
+
+/** `now` is the wall-clock time ("HH:MM"), to pass over events that ended today */
+export function homeAgenda(
+  range: CalendarRange,
+  today: string,
+  now: string,
+  meId: number,
+) {
+  const entries = rangeEntries(range, () => true);
+  const myOpenTasks = entries.filter(
+    ({ item, occurrence }) =>
+      item.kind === "task" &&
+      !occurrence.completedAt &&
+      occurrence.turnGroupMemberId === meId,
+  );
+  // A chore left for days shows once, on its latest open day
+  const due: DueChore[] = [];
+  for (const entry of myOpenTasks) {
+    if (entry.occurrence.date > today) continue;
+    const seen = due.find(({ item }) => item.id === entry.item.id);
+    if (seen) {
+      seen.missed.push(seen.occurrence.date);
+      seen.occurrence = entry.occurrence;
+    } else {
+      due.push({ ...entry, missed: [] });
+    }
+  }
+
+  return {
+    due,
+    nextTurn: myOpenTasks.find(({ occurrence }) => occurrence.date > today),
+    nextEvent: entries.find(
+      ({ item, occurrence }) =>
+        item.kind === "event" &&
+        notOverYet(item.time, occurrence.date, today, now),
+    ),
+  };
 }
 
 type Schedule = Pick<ExpandableItem, "startsOn" | "recurrence">;

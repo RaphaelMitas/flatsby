@@ -20,6 +20,7 @@ import { useTheme } from "~/lib/ui/theme";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
+import { useHomeVersion } from "~/utils/home-version";
 import { useLocalePreference } from "~/utils/intl-provider";
 import { useShoppingStore } from "~/utils/shopping-store";
 
@@ -33,6 +34,7 @@ export default function SettingsIndex() {
     () => !posthog.optedOut,
   );
   const { clearSelectedGroup } = useShoppingStore();
+  const { version: homeVersion, switchTo: switchHome } = useHomeVersion();
 
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
@@ -102,6 +104,17 @@ export default function SettingsIndex() {
             choices={[
               { value: "system", label: t("settings.language.system") },
               ...locales.map((value) => ({ value, label: localeNames[value] })),
+            ]}
+          />
+          <SettingsChoiceItem
+            title={t("settings.items.home")}
+            subtitle={t("settings.items.homeSubtitle")}
+            iconName="house"
+            selected={homeVersion === "new" ? "new" : "classic"}
+            onSelect={(value) => switchHome(value, "settings")}
+            choices={[
+              { value: "classic", label: t("settings.items.homeClassic") },
+              { value: "new", label: t("settings.items.homeNew") },
             ]}
           />
         </SettingsSection>

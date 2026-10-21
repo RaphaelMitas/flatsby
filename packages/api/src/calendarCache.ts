@@ -165,15 +165,23 @@ const temporaryId = () => -Date.now();
 /** The optimistic side of each calendar mutation, shared by both clients. */
 export const calendarPatches = {
   setDone: (
-    input: { itemId: number; date: string; done: boolean },
+    input: { itemId: number; date: string; done: boolean; skip?: string[] },
     me: { groupMemberId: number; person: DebtPerson },
   ): CalendarPatch => ({
-    range: (range) =>
-      withDone(range, {
-        ...input,
-        byGroupMemberId: me.groupMemberId,
-        by: me.person,
-      }),
+    range: (range, window) =>
+      (input.done ? (input.skip ?? []) : []).reduce(
+        (patched, date) =>
+          withSkipped(
+            patched,
+            { itemId: input.itemId, date, skipped: true },
+            window,
+          ),
+        withDone(range, {
+          ...input,
+          byGroupMemberId: me.groupMemberId,
+          by: me.person,
+        }),
+      ),
   }),
 
   setSkipped: (input: {

@@ -37,10 +37,18 @@ export function useInvalidateShoppingList({
     });
   }, [queryClient, groupId, shoppingListId]);
 
+  // The open counts on each list feed the home and the plus
+  const invalidateLists = useCallback(() => {
+    return queryClient.invalidateQueries({
+      queryKey: trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
+    });
+  }, [queryClient, groupId]);
+
   const invalidateAll = useCallback(() => {
     void invalidateItems();
     void invalidateCategoryCounts();
-  }, [invalidateItems, invalidateCategoryCounts]);
+    void invalidateLists();
+  }, [invalidateItems, invalidateCategoryCounts, invalidateLists]);
 
   return {
     invalidateItems,
