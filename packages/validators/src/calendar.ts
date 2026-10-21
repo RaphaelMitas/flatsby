@@ -560,7 +560,6 @@ function notOverYet(
   today: string,
   now: string,
 ) {
-  // An end before the start runs past midnight
   const overnight = time !== null && time.end <= time.start;
   if (date > today) return true;
   if (date === today) return overnight || (time?.end ?? "24:00") > now;

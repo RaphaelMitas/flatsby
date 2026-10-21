@@ -1,8 +1,8 @@
 import type { GroupWithAccess, ShoppingListSummary } from "@flatsby/api";
-import { useEffect, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AppState, Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -70,6 +70,19 @@ export function NewHome() {
 const greetingFor = (hour: number) =>
   hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
 
+// The tab stays mounted for days, so the clock is read on focus and on return to the app
+function useNow() {
+  const [now, setNow] = useState(() => new Date());
+  useFocusEffect(useCallback(() => setNow(new Date()), []));
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") setNow(new Date());
+    });
+    return () => subscription.remove();
+  }, []);
+  return now;
+}
+
 function useSpeech() {
   const [speech, setSpeech] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -94,7 +107,8 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const [speech, say] = useSpeech();
   const [stretchKey, setStretchKey] = useState(0);
 
-  const today = localDate();
+  const now = useNow();
+  const today = localDate(now);
   const meId = group.thisGroupMember.id;
   const person = personLookup(group.groupMembers, meId, t);
 
@@ -112,7 +126,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     });
 
   const agenda = rangeData.success
-    ? homeAgenda(rangeData.data, today, fromPickerTime(new Date()), meId)
+    ? homeAgenda(rangeData.data, today, fromPickerTime(now), meId)
     : { due: [], nextTurn: undefined, nextEvent: undefined };
   const { owe, owed } = debtData.success
     ? myDebts(debtData.data, meId, group.currency)
@@ -284,7 +298,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             testID="home-greeting"
             className="text-foreground text-4xl font-extrabold tracking-tight"
           >
-            {t(`home.new.greeting.${greetingFor(new Date().getHours())}`, {
+            {t(`home.new.greeting.${greetingFor(now.getHours())}`, {
               name: firstName,
             })}
           </Text>

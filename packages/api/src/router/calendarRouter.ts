@@ -240,6 +240,23 @@ const occurrenceOf = (itemId: number, date: string) =>
   );
 
 // A row that is neither done nor skipped says nothing the rule doesn't
+type OccurrenceRow = typeof calendarOccurrences.$inferInsert;
+
+const upsertOccurrences = (
+  db: Database | DbTransaction,
+  rows: OccurrenceRow[],
+  set: Partial<OccurrenceRow>,
+  setWhere?: SQL,
+) =>
+  db
+    .insert(calendarOccurrences)
+    .values(rows)
+    .onConflictDoUpdate({
+      target: [calendarOccurrences.itemId, calendarOccurrences.date],
+      set,
+      setWhere,
+    });
+
 const pruneOccurrence = (
   db: Database | DbTransaction,
   itemId: number,
@@ -494,28 +511,24 @@ export const calendarRouter = createTRPCRouter({
                     completedAt: new Date(),
                   }
                 : { completedByGroupMemberId: null, completedAt: null };
-              await tx
-                .insert(calendarOccurrences)
-                .values({ itemId: item.id, date: input.date, ...completion })
-                .onConflictDoUpdate({
-                  target: [
-                    calendarOccurrences.itemId,
-                    calendarOccurrences.date,
-                  ],
-                  set: completion,
-                });
+              await upsertOccurrences(
+                tx,
+                [{ itemId: item.id, date: input.date, ...completion }],
+                completion,
+              );
               await pruneOccurrence(tx, item.id, input.date);
-              for (const date of skip) {
-                await tx
-                  .insert(calendarOccurrences)
-                  .values({ itemId: item.id, date, skipped: true })
-                  .onConflictDoUpdate({
-                    target: [
-                      calendarOccurrences.itemId,
-                      calendarOccurrences.date,
-                    ],
-                    set: { skipped: true },
-                  });
+              if (skip.length > 0) {
+                // The skip days come from the client's cache: a day someone ticked since stays done
+                await upsertOccurrences(
+                  tx,
+                  skip.map((date) => ({
+                    itemId: item.id,
+                    date,
+                    skipped: true,
+                  })),
+                  { skipped: true },
+                  isNull(calendarOccurrences.completedAt),
+                );
               }
               return { itemId: item.id, date: input.date };
             }, "set calendar occurrence done")(ctx.db);
@@ -535,20 +548,11 @@ export const calendarRouter = createTRPCRouter({
             if (input.skipped && !isScheduledOn(item, input.date))
               return fail.conflict("errors.calendarDateNotScheduled");
             return safeDbOperation(async () => {
-              await ctx.db
-                .insert(calendarOccurrences)
-                .values({
-                  itemId: item.id,
-                  date: input.date,
-                  skipped: input.skipped,
-                })
-                .onConflictDoUpdate({
-                  target: [
-                    calendarOccurrences.itemId,
-                    calendarOccurrences.date,
-                  ],
-                  set: { skipped: input.skipped },
-                });
+              await upsertOccurrences(
+                ctx.db,
+                [{ itemId: item.id, date: input.date, skipped: input.skipped }],
+                { skipped: input.skipped },
+              );
               await pruneOccurrence(ctx.db, item.id, input.date);
               return { itemId: item.id, date: input.date };
             }, "set calendar occurrence skipped");
