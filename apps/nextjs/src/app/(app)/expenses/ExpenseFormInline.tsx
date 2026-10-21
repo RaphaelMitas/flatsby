@@ -13,6 +13,7 @@ interface ExpenseFormInlineProps {
   expense?: ExpenseWithSplitsAndMembers;
   onClose: () => void;
   onSuccess?: (expenseId: number) => void;
+  closeOnSubmit?: boolean;
 }
 
 export function ExpenseFormInline({
@@ -20,8 +21,15 @@ export function ExpenseFormInline({
   expense,
   onClose,
   onSuccess,
+  closeOnSubmit,
 }: ExpenseFormInlineProps) {
-  const formState = useExpenseForm({ group, expense, onClose, onSuccess });
+  const formState = useExpenseForm({
+    group,
+    expense,
+    onClose,
+    onSuccess,
+    closeOnSubmit,
+  });
 
   return (
     <div className="flex h-full flex-col overflow-y-auto p-4">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export type ExpenseAction = "view" | "create" | "edit";
 
@@ -15,7 +15,6 @@ interface ExpenseSelection {
 }
 
 export function useExpenseSelection(): ExpenseSelection {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const selectedParam = searchParams.get("selected");
@@ -52,11 +51,14 @@ export function useExpenseSelection(): ExpenseSelection {
       }
 
       const queryString = newParams.toString();
-      router.push(`/expenses${queryString ? `?${queryString}` : ""}`, {
-        scroll: false,
-      });
+      // Shallow: a server render would re-hydrate the list over optimistic rows
+      window.history.pushState(
+        null,
+        "",
+        `/expenses${queryString ? `?${queryString}` : ""}`,
+      );
     },
-    [router, searchParams],
+    [searchParams],
   );
 
   const selectExpense = useCallback(

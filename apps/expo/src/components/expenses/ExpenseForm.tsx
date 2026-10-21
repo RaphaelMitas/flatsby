@@ -76,6 +76,7 @@ interface ExpenseFormProps {
   onClose?: () => void;
   /** Callback when form is successfully submitted. If not provided, uses router.back() */
   onSuccess?: (expenseId: number) => void;
+  closeOnSubmit?: boolean;
 }
 
 export function ExpenseForm({
@@ -83,6 +84,7 @@ export function ExpenseForm({
   expense,
   onClose,
   onSuccess,
+  closeOnSubmit,
 }: ExpenseFormProps) {
   const router = useRouter();
   const t = useTranslations();
@@ -290,11 +292,12 @@ export function ExpenseForm({
           if (context.previousData) {
             queryClient.setQueryData(expenseListQueryKey, context.previousData);
           }
-          Alert.alert(t("common.error"), data.error.message);
+          Alert.alert(t("expenses.createFailed"), data.error.message);
           return;
         }
 
         invalidateAll();
+        if (closeOnSubmit) return;
         form.reset();
         setCurrentStep(1);
         if (onSuccess) {
@@ -442,6 +445,7 @@ export function ExpenseForm({
         splits,
         splitMethod: values.splitMethod,
       });
+      if (closeOnSubmit) router.back();
     }
   };
 

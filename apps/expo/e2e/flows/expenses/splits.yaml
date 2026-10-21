@@ -132,6 +132,7 @@ tags:
 - extendedWaitUntil:
     visible:
       id: "expense-card-Shares groceries"
+      enabled: true
     timeout: 45000
 - tapOn: "Shares groceries"
 - extendedWaitUntil:
