@@ -179,7 +179,7 @@ export function QuickAddDial({
               >
                 <Pressable
                   onPress={() => openList(list)}
-                  className="active:bg-muted flex-row items-center gap-2 rounded-xl py-2 pr-2 pl-9"
+                  className="bg-card active:bg-muted flex-row items-center gap-2 rounded-xl py-2 pr-2 pl-9"
                 >
                   <Text numberOfLines={1} className="text-foreground flex-1">
                     {list.name}
@@ -193,7 +193,7 @@ export function QuickAddDial({
             <Pressable
               testID="home-dial-all-lists"
               onPress={openAllLists}
-              className="active:bg-muted flex-row items-center gap-2 rounded-xl py-2 pr-2 pl-9"
+              className="bg-card active:bg-muted flex-row items-center gap-2 rounded-xl py-2 pr-2 pl-9"
             >
               <Text className="text-muted-foreground flex-1">
                 {tLists("allLists")}

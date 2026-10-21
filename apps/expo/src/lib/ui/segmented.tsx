@@ -38,7 +38,8 @@ export function Segmented<T extends string>({
             className={cn(
               "flex-row items-center justify-center gap-1.5 rounded-lg",
               size === "sm" ? "px-3 py-1" : "flex-1 py-2",
-              active && "bg-background shadow-sm",
+              // Opaque even when inactive: Android drops the radius when a background appears from none (react-native#52415)
+              active ? "bg-background shadow-sm" : "bg-muted",
             )}
           >
             {option.icon && (

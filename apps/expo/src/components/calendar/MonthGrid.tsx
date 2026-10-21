@@ -119,7 +119,8 @@ export function MonthGrid({
                 <View
                   className={cn(
                     "h-8 w-8 items-center justify-center rounded-full",
-                    isSelected && "bg-primary",
+                    // Android drops the radius when a background appears from none (react-native#52415)
+                    isSelected ? "bg-primary" : "bg-background",
                   )}
                 >
                   <Text
