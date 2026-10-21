@@ -6,24 +6,7 @@
     <style>
       .bubble {
         position: absolute;
-        background: #fff;
-        font-weight: 600;
-        letter-spacing: -0.015em;
-        line-height: 1.2;
-        white-space: nowrap;
-        box-shadow: 0 0.6vw 1.8vw rgba(9, 9, 11, 0.14);
         z-index: 4;
-      }
-      .bubble::before {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        width: 1em;
-        height: 0.88em;
-        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 44' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M30 0C30 24 22 36 0 44H50V0Z'/%3E%3C/svg%3E")
-          no-repeat;
-        background-size: 100% 100%;
-        left: -0.36em;
       }
       .bubble.out::before {
         left: auto;
@@ -32,12 +15,6 @@
       }
       h1 {
         position: absolute;
-        margin: 0;
-        font-weight: 900;
-        line-height: 0.98;
-        letter-spacing: -0.02em;
-        word-spacing: 0.06em;
-        text-wrap: balance;
         z-index: 5;
       }
       .crop {
@@ -51,7 +28,7 @@
   </head>
   <body>
     <script type="module">
-      import { loadImage, place } from "/compose.js";
+      import { loadImage, place, placeCat } from "/compose.js";
 
       const q = new URLSearchParams(location.search);
       const asset = q.get("asset") ?? "search";
@@ -164,16 +141,12 @@
               backgroundPosition: `${-trim * naturalWidth * s}px 0`,
             });
             if (c.cat) {
-              // The cat fills x 0.29-0.71 of the 1024px icon with its ears at y 0.27; the tile's top edge cuts it at y `cut`.
               const { size, cut, at = 0.5 } = c.cat;
-              const visible = (cut - 0.27) * size;
-              place("cat", {
-                left: px(c.x + c.w * at - size * 0.21),
-                top: px(c.y - visible),
-                width: px(size * 0.42),
-                height: px(visible),
-                backgroundSize: `${px(size)} ${px(size)}`,
-                backgroundPosition: `${px(-size * 0.29)} ${px(-size * 0.27)}`,
+              placeCat({
+                size: size * u,
+                cut,
+                centerX: (c.x + c.w * at) * u,
+                bottom: c.y * u,
               });
             }
           }
@@ -181,8 +154,6 @@
           layout.bubbles.forEach((b, i) => {
             const el = place(`bubble${b.out ? " out" : ""}`, {
               fontSize: px(b.size),
-              padding: `${px(b.size * 0.36)} ${px(b.size * 0.78)} ${px(b.size * 0.4)}`,
-              borderRadius: px(b.size * 0.86),
               top: px(b.y),
               transform: `rotate(${b.rot}deg)`,
             });
@@ -198,7 +169,6 @@
             left: px(h.x),
             top: px(h.y),
             width: px(h.w),
-            textAlign: "center",
           });
           document.body.appendChild(h1);
           let size = h.size;

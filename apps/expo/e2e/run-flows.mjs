@@ -65,7 +65,7 @@ function resolveTarget(target) {
 }
 
 // Maestro ≥2 saves takeScreenshot output inside the debug bundle, not the
-// cwd; copy captures to e2e/results/screenshots/ before the bundle is deleted.
+// cwd; copy captures out before the bundle is deleted.
 function collectTakeScreenshots(debugDir, locale) {
   if (!existsSync(debugDir)) return;
   const screenshotsDir = join(resultsDir, "screenshots", locale ?? "");
@@ -80,10 +80,10 @@ function collectTakeScreenshots(debugDir, locale) {
 }
 
 function runFlow({ file, locale }, index) {
-  const tag = [locale, index].filter((part) => part !== undefined).join("-");
+  const tag = [basename(file, ".yaml"), locale, index]
+    .filter((part) => part !== undefined)
+    .join("-");
   const debugDir = join(resultsDir, `debug-${tag}`);
-  // A later invocation (the iPad pass) reuses these tags; a failed run's
-  // bundle must not be collected again.
   rmSync(debugDir, { recursive: true, force: true });
   console.log(`\n> maestro test ${relative(e2eDir, file)}`);
   const { status, error } = spawnSync(

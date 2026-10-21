@@ -21,3 +21,34 @@ body {
   z-index: 1;
   background: url("/brand/adaptive-icon.png") no-repeat;
 }
+.bubble {
+  position: relative;
+  background: #fff;
+  padding: 0.36em 0.78em 0.4em;
+  border-radius: 0.86em;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 0.2em 0.6em rgba(9, 9, 11, 0.14);
+}
+.bubble::before {
+  content: "";
+  position: absolute;
+  left: -0.36em;
+  bottom: 0;
+  width: 1em;
+  height: 0.88em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 44' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M30 0C30 24 22 36 0 44H50V0Z'/%3E%3C/svg%3E")
+    no-repeat;
+  background-size: 100% 100%;
+}
+h1 {
+  margin: 0;
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  word-spacing: 0.06em;
+  text-align: center;
+  text-wrap: balance;
+}

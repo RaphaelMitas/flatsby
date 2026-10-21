@@ -3,9 +3,9 @@
  * Composes the store listing assets from the Maestro store-screenshot
  * captures.
  *
- * <captures-dir>/<platform>/<locale>/ holds one run of
- * apps/expo/e2e/screenshots/store-screenshots.yaml (full screens plus the
- * crop-* element captures). Writes, per store locale:
+ * <captures-dir>/<platform>/<locale>/ holds that locale's captures from the
+ * flows in apps/expo/e2e/screenshots/ (full screens, crop-* elements and the
+ * iPad's ipad-* screens). Writes, per store locale:
  *   <out>/<platform>/<store-locale>/NN.png   framed phone screenshots, plus
  *                                            the raw ipad-*.png for iOS
  *   <out>/app-store/<store-locale>/{search,header}.png   iOS 27 creative assets

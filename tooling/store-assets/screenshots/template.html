@@ -13,42 +13,13 @@
         flex-direction: column;
         align-items: center;
       }
-      .chat {
+      .bubble {
+        font-size: 5vw;
         margin-bottom: 2.6vw;
         transform: rotate(-1.5deg);
       }
-      .bubble {
-        position: relative;
-        background: #fff;
-        padding: 1.9vw 4vw 2.1vw;
-        border-radius: 4.4vw;
-        font-size: 5vw;
-        font-weight: 600;
-        letter-spacing: -0.015em;
-        line-height: 1.2;
-        white-space: nowrap;
-        box-shadow: 0 1vw 3vw rgba(9, 9, 11, 0.14);
-      }
-      .bubble::before {
-        content: "";
-        position: absolute;
-        left: -1.8vw;
-        bottom: 0;
-        width: 5vw;
-        height: 4.4vw;
-        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 44' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M30 0C30 24 22 36 0 44H50V0Z'/%3E%3C/svg%3E")
-          no-repeat;
-        background-size: 100% 100%;
-      }
       h1 {
-        margin: 0;
         font-size: 12.4vw;
-        font-weight: 900;
-        line-height: 0.98;
-        letter-spacing: -0.02em;
-        word-spacing: 0.06em;
-        text-align: center;
-        text-wrap: balance;
       }
       .card,
       .zoom {
@@ -80,11 +51,18 @@
   </head>
   <body>
     <header>
-      <div class="chat"><div class="bubble" id="bubble"></div></div>
+      <div class="bubble" id="bubble"></div>
       <h1 id="h"></h1>
     </header>
     <script type="module">
-      import { loadImage, locate, place, trimX, union } from "/compose.js";
+      import {
+        loadImage,
+        locate,
+        place,
+        placeCat,
+        trimX,
+        union,
+      } from "/compose.js";
 
       const q = new URLSearchParams(location.search);
       const platform = q.get("platform") ?? "ios";
@@ -147,6 +125,8 @@
               box[3] / capture.naturalHeight,
             ];
           }
+          // The cat is a CSS background, which the screenshot would not wait for.
+          if (frame.cat) await loadImage("/brand/adaptive-icon.png");
           await document.fonts.ready;
           fitHeadline(h1, frame.lines ?? 2);
 
@@ -154,9 +134,14 @@
           const zoneTop =
             document.querySelector("header").getBoundingClientRect().bottom +
             5 * vw;
-          // The cat fills x 0.30-0.70 of the 1024px icon, ears at y 0.27; the frame edge cuts it at y `cut`.
           const catTop = frame.cat
-            ? H - (frame.cat.cut - 0.27) * frame.cat.size * vw
+            ? H -
+              placeCat({
+                size: frame.cat.size * vw,
+                cut: frame.cat.cut,
+                centerX: window.innerWidth / 2,
+                bottom: H,
+              })
             : H;
           const zoneBottom = catTop - 4 * vw;
           const ratio = (c) =>
@@ -275,18 +260,6 @@
             });
           }
 
-          if (frame.cat) {
-            const size = frame.cat.size * vw;
-            const box = size * 0.42;
-            place("cat", {
-              width: `${box}px`,
-              height: `${H - catTop}px`,
-              backgroundSize: `${size}px ${size}px`,
-              backgroundPosition: `${-size * 0.29}px ${-size * 0.27}px`,
-              left: `${(window.innerWidth - box) / 2}px`,
-              top: `${catTop}px`,
-            });
-          }
           document.body.dataset.ready = "true";
         });
     </script>

@@ -188,9 +188,9 @@ const STORE_COPY = {
 } satisfies Record<Locale, unknown>;
 
 /**
- * Seeds the full store-screenshot scenario server-side, in STORE_COPY's
- * language: a group with three members, a stocked list, expenses and a calendar. The
- * screenshot flow then only logs in, navigates, and captures — it performs no
+ * Seeds the full store-screenshot scenario server-side: a group with three
+ * members, a stocked list, expenses and a calendar. The screenshot flow then
+ * only logs in, navigates, and captures — it performs no
  * mutations, because a Maestro tap that silently misses a button would leave
  * state missing and the flow waiting on UI that never appears.
  */

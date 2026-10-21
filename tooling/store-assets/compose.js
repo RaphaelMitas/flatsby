@@ -15,6 +15,22 @@ export function place(className, styles, parent = document.body) {
   return el;
 }
 
+// The icon's cat spans x 0.30-0.70 with its ears at y 0.27; it is drawn from a
+// 1% wider box and cut off at y `cut` by whatever it peeks over. Returns the
+// visible height.
+export function placeCat({ size, cut, centerX, bottom }) {
+  const visible = (cut - 0.27) * size;
+  place("cat", {
+    left: `${centerX - size * 0.21}px`,
+    top: `${bottom - visible}px`,
+    width: `${size * 0.42}px`,
+    height: `${visible}px`,
+    backgroundSize: `${size}px ${size}px`,
+    backgroundPosition: `${-size * 0.29}px ${-size * 0.27}px`,
+  });
+  return visible;
+}
+
 function pixels(img) {
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;

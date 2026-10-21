@@ -1,8 +1,8 @@
 appId: ${APP_ID}
 ---
 # Store screenshot flow. All content — the group, its three members, the
-# stocked list, expenses and the calendar — is seeded
-# server-side by the e2e create-session endpoint (`seed=store`), so this flow
+# stocked list, expenses and the calendar — is seeded server-side by the e2e
+# create-session endpoint (`seed=store`), so this flow
 # performs no mutations: it logs in, navigates, and captures. Runtime
 # mutations were the pipeline's chronic flake: a Maestro tap that silently
 # misses a button (stale coordinates after a layout shift) leaves state
@@ -13,7 +13,7 @@ appId: ${APP_ID}
 # Navigation taps go through tap-until.yaml (act-verify-repeat) or
 # tap-tab.yaml (id -> label -> position) so a missed tap costs seconds, not
 # the run. Run via `node e2e/run-flows.mjs ../screenshots/store-screenshots`;
-# E2E_LOCALE=de seeds and captures the German household.
+# E2E_LOCALES="en de" captures each language's household.
 #
 # The crop-* captures are single elements the store templates lift out of a
 # screen; cropping by id keeps them exact whatever the language or layout.
