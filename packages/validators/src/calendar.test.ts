@@ -9,7 +9,6 @@ import type {
   Recurrence,
 } from "./calendar";
 import {
-  changesPastEnd,
   createCalendarItemSchema,
   defaultEndsOn,
   describeRecurrence,
@@ -24,7 +23,9 @@ import {
   recurrenceOf,
   recurrenceSchema,
   repeatFormOf,
+  rewritesPast,
   shiftMonth,
+  splitEndsOn,
   splitOff,
   splitsSeries,
   withPickedStart,
@@ -475,11 +476,25 @@ describe("end dates", () => {
     expect(editedEndsOn(ended, { endsOn: null })).toBeNull();
   });
 
-  it("refuses moving an end into or out of the past", () => {
-    expect(changesPastEnd(ended, null, today)).toBe(true);
-    expect(changesPastEnd(ended, "2026-10-15", today)).toBe(false);
-    expect(changesPastEnd(weekly, "2026-10-20", today)).toBe(true);
-    expect(changesPastEnd(weekly, today, today)).toBe(false);
+  it("refuses moving an end into or out of the past, or reshaping an ended series", () => {
+    expect(rewritesPast(ended, { ...ended, endsOn: null }, today)).toBe(true);
+    expect(rewritesPast(ended, ended, today)).toBe(false);
+    expect(rewritesPast(ended, { ...ended, recurrence: null }, today)).toBe(
+      true,
+    );
+    expect(
+      rewritesPast(weekly, { ...weekly, endsOn: "2026-10-20" }, today),
+    ).toBe(true);
+    expect(rewritesPast(weekly, { ...weekly, endsOn: today }, today)).toBe(
+      false,
+    );
+  });
+
+  it("never moves a split's old end later than it already was", () => {
+    expect(splitEndsOn(weekly, "2026-10-30")).toBe("2026-10-29");
+    expect(splitEndsOn({ ...weekly, endsOn: "2026-10-25" }, "2026-10-30")).toBe(
+      "2026-10-25",
+    );
   });
 
   it("offers ends from today on, or from a later start", () => {
@@ -661,7 +676,7 @@ describe("optimistic patches", () => {
         window.to,
       ),
     };
-    const split = withSplitSeries(ticked, 1, next, window);
+    const split = withSplitSeries(ticked, weekly, next, window);
     expect(split.items.find((i) => i.id === 1)?.endsOn).toBe("2026-10-19");
     expect(
       split.occurrences.map((o) => `${o.itemId}:${o.date}:${!!o.completedAt}`),

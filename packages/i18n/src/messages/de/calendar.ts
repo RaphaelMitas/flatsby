@@ -52,7 +52,7 @@ export const calendar = {
     endsOnDate: "An einem Datum",
     lastDay: "Letzter Tag",
     ended: "Beendet",
-    endedHint: "Leg einen neuen Eintrag an, um es wieder zu starten",
+    endedHint: "Vergangene Tage bleiben, wie sie waren",
     decreaseInterval: "Weniger",
     increaseInterval: "Mehr",
     who: "Wer",

@@ -27,15 +27,16 @@ import {
   calendarItemDetailSchema,
   calendarItemRefSchema,
   calendarRangeSchema,
-  changesPastEnd,
   createCalendarItemSchema,
   editedEndsOn,
   endsBeforeStart,
   expandOccurrences,
   isScheduledOn,
   LONGEST_GAP_DAYS,
+  rewritesPast,
   setOccurrenceDoneSchema,
   setOccurrenceSkippedSchema,
+  splitEndsOn,
   splitOff,
   splitsSeries,
   updateCalendarItemSchema,
@@ -405,7 +406,7 @@ export const calendarRouter = createTRPCRouter({
             if (input.kind !== previous.kind)
               return fail.validation("errors.unexpected");
             const edited = { ...input, endsOn: editedEndsOn(previous, input) };
-            if (changesPastEnd(previous, edited.endsOn, input.today))
+            if (rewritesPast(previous, edited, input.today))
               return fail.conflict("errors.calendarSeriesEnded");
             // An edit without endsOn keeps the stored end, which the new start can pass
             if (endsBeforeStart(edited))
@@ -414,7 +415,7 @@ export const calendarRouter = createTRPCRouter({
               if (splitsSeries(previous, input, input.today)) {
                 const [ended] = await tx
                   .update(calendarItems)
-                  .set({ endsOn: addDays(input.startsOn, -1) })
+                  .set({ endsOn: splitEndsOn(previous, input.startsOn) })
                   .where(
                     and(
                       eq(calendarItems.id, previous.id),
@@ -422,7 +423,7 @@ export const calendarRouter = createTRPCRouter({
                     ),
                   )
                   .returning({ id: calendarItems.id });
-                // Someone else's edit split it first
+                // Someone else's edit split it or changed its end first
                 if (!ended)
                   return Errors.conflict("errors.calendarSeriesReplaced");
                 const piece = { ...edited, ...splitOff(previous, edited) };
@@ -441,7 +442,7 @@ export const calendarRouter = createTRPCRouter({
                 )
                 .returning({ id: calendarItems.id });
               if (!updated)
-                return Errors.conflict("errors.calendarSeriesReplaced");
+                return Errors.conflict("errors.calendarItemChanged");
               await writeMembers(tx, input.id, input.memberIds);
               await carryOccurrences(tx, input.id, edited);
               return { id: input.id };

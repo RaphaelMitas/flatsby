@@ -13,11 +13,11 @@ import type {
 import { z } from "zod/v4";
 
 import {
-  addDays,
   calendarRangeSchema,
-  changesPastEnd,
   editedEndsOn,
   isScheduledOn,
+  rewritesPast,
+  splitEndsOn,
   splitOff,
   splitsSeries,
   withDone,
@@ -220,10 +220,10 @@ export const calendarPatches = {
       ...input,
       endsOn: editedEndsOn(previous, input),
     });
-    if (changesPastEnd(previous, edited.endsOn, input.today))
+    if (rewritesPast(previous, edited, input.today))
       return { range: (range) => range };
     if (splitsSeries(previous, input, input.today)) {
-      const endsOn = addDays(input.startsOn, -1);
+      const endsOn = splitEndsOn(previous, input.startsOn);
       const next = {
         ...edited,
         id: temporaryId(),
@@ -231,7 +231,7 @@ export const calendarPatches = {
       };
       return {
         range: (range, window) =>
-          withSplitSeries(range, previous.id, next, window),
+          withSplitSeries(range, previous, next, window),
         detail: (detail) =>
           detail.item.id === previous.id
             ? {

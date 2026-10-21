@@ -50,7 +50,7 @@ export const calendar = {
     endsOnDate: "On date",
     lastDay: "Last day",
     ended: "Ended",
-    endedHint: "To start it again, add a new entry",
+    endedHint: "Days that are over stay as they were",
     decreaseInterval: "Fewer",
     increaseInterval: "More",
     who: "Who",

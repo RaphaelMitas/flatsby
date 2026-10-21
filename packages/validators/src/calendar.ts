@@ -109,7 +109,7 @@ const calendarItemFields = z.object({
   startsOn: calendarDateSchema,
   time: eventTimeSchema.nullable(),
   recurrence: recurrenceSchema.nullable(),
-  // v0.12.0 apps leave it out
+  // undefined keeps the stored end; apps up to v0.12.0 leave it out
   endsOn: calendarDateSchema.nullable().optional(),
   memberIds: z.array(z.number()).max(50),
 });
@@ -616,14 +616,18 @@ export const editedEndsOn = (
   next: { endsOn?: string | null },
 ) => (next.endsOn === undefined ? previous.endsOn : next.endsOn);
 
-/** Ending in the past drops done ticks; reopening brings missed days back or runs a split's old half beside its successor. */
-export const changesPastEnd = (
-  previous: Series,
-  endsOn: string | null,
-  today: string,
-) =>
-  endsOn !== previous.endsOn &&
-  (hasEnded(previous, today) || hasEnded({ endsOn }, today));
+/** Days that are over keep their ticks and schedule; reopening would also overlap a split's successor. */
+export const rewritesPast = (previous: Series, next: Series, today: string) =>
+  hasEnded(previous, today)
+    ? !sameSchedule(previous, next) || next.endsOn !== previous.endsOn
+    : next.endsOn !== previous.endsOn && hasEnded(next, today);
+
+export const splitEndsOn = (previous: Series, startsOn: string) => {
+  const dayBefore = addDays(startsOn, -1);
+  return previous.endsOn !== null && previous.endsOn < dayBefore
+    ? previous.endsOn
+    : dayBefore;
+};
 
 /** A new schedule for a running series starts a new item, so the old one keeps its history. */
 export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
@@ -774,21 +778,21 @@ export function withSavedItem(
 /** Optimistic split: the old series ends the day before the new one takes over. */
 export function withSplitSeries(
   range: CalendarRange,
-  previousId: number,
+  previous: ExpandableItem,
   next: CalendarItemView,
   window: RangeWindow,
 ): CalendarRange {
-  const endsOn = addDays(next.startsOn, -1);
-  const carried = cachedOverrides(range, previousId, window).filter(
+  const endsOn = splitEndsOn(previous, next.startsOn);
+  const carried = cachedOverrides(range, previous.id, window).filter(
     (override) => override.date > endsOn,
   );
   const ended: CalendarRange = {
     items: range.items.map((item) =>
-      item.id === previousId ? { ...item, endsOn } : item,
+      item.id === previous.id ? { ...item, endsOn } : item,
     ),
     occurrences: range.occurrences.filter(
       (occurrence) =>
-        occurrence.itemId !== previousId || occurrence.date <= endsOn,
+        occurrence.itemId !== previous.id || occurrence.date <= endsOn,
     ),
   };
   return withSavedItem(ended, next, window, carried);

@@ -312,15 +312,17 @@ function ItemFields({
       </View>
 
       <View className="mt-6 gap-4">
-        <DatePickerField
-          testID="calendar-form-starts-on"
-          label={
-            recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
-          }
-          value={pickerDate(startsOn)}
-          maximumDate={endsOn ? pickerDate(endsOn) : undefined}
-          onChange={(picked) => pickStart(localDate(picked))}
-        />
+        {!ended && (
+          <DatePickerField
+            testID="calendar-form-starts-on"
+            label={
+              recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
+            }
+            value={pickerDate(startsOn)}
+            maximumDate={endsOn ? pickerDate(endsOn) : undefined}
+            onChange={(picked) => pickStart(localDate(picked))}
+          />
+        )}
         {!isTask && (
           <>
             <View className="flex-row items-center justify-between">
@@ -363,90 +365,96 @@ function ItemFields({
         )}
       </View>
 
-      <FieldLabel>{t("calendar.form.repeat")}</FieldLabel>
-      <View className="flex-row flex-wrap gap-1.5">
-        {repeatUnits.map((unit) => (
-          <Chip
-            key={unit}
-            testID={`calendar-form-repeat-${unit}`}
-            label={t(`calendar.repeatOption.${unit}`)}
-            active={repeat.unit === unit}
-            onPress={() => changeRepeat({ unit })}
-          />
-        ))}
-      </View>
-
-      {repeat.unit !== "never" && (
-        <View className="mt-3 flex-row items-center gap-2">
-          <Text className="text-foreground">{t("calendar.form.every")}</Text>
-          <Button
-            variant="outline"
-            size="sm"
-            icon="minus"
-            accessibilityLabel={t("calendar.form.decreaseInterval")}
-            disabled={repeat.every <= 1}
-            onPress={() => changeRepeat({ every: repeat.every - 1 })}
-          />
-          <Text className="text-foreground min-w-8 text-center text-lg font-bold">
-            {repeat.every}
-          </Text>
-          <Button
-            variant="outline"
-            size="sm"
-            icon="plus"
-            accessibilityLabel={t("calendar.form.increaseInterval")}
-            disabled={repeat.every >= maxEvery(repeat)}
-            onPress={() => changeRepeat({ every: repeat.every + 1 })}
-          />
-          <Text className="text-foreground">
-            {t(`calendar.unit.${repeat.unit}`, { count: repeat.every })}
-          </Text>
-        </View>
-      )}
-
-      {repeat.unit === "weeks" && (
+      {!ended && (
         <>
-          <FieldLabel>{t("calendar.form.days")}</FieldLabel>
+          <FieldLabel>{t("calendar.form.repeat")}</FieldLabel>
           <View className="flex-row flex-wrap gap-1.5">
-            {weekdays.map((day) => (
+            {repeatUnits.map((unit) => (
               <Chip
-                key={day}
-                testID={`calendar-form-day-${day}`}
-                label={weekdayName(day, locale, "short")}
-                active={days.includes(day)}
-                onPress={() => toggleDay(day)}
+                key={unit}
+                testID={`calendar-form-repeat-${unit}`}
+                label={t(`calendar.repeatOption.${unit}`)}
+                active={repeat.unit === unit}
+                onPress={() => changeRepeat({ unit })}
               />
             ))}
           </View>
+
+          {repeat.unit !== "never" && (
+            <View className="mt-3 flex-row items-center gap-2">
+              <Text className="text-foreground">
+                {t("calendar.form.every")}
+              </Text>
+              <Button
+                variant="outline"
+                size="sm"
+                icon="minus"
+                accessibilityLabel={t("calendar.form.decreaseInterval")}
+                disabled={repeat.every <= 1}
+                onPress={() => changeRepeat({ every: repeat.every - 1 })}
+              />
+              <Text className="text-foreground min-w-8 text-center text-lg font-bold">
+                {repeat.every}
+              </Text>
+              <Button
+                variant="outline"
+                size="sm"
+                icon="plus"
+                accessibilityLabel={t("calendar.form.increaseInterval")}
+                disabled={repeat.every >= maxEvery(repeat)}
+                onPress={() => changeRepeat({ every: repeat.every + 1 })}
+              />
+              <Text className="text-foreground">
+                {t(`calendar.unit.${repeat.unit}`, { count: repeat.every })}
+              </Text>
+            </View>
+          )}
+
+          {repeat.unit === "weeks" && (
+            <>
+              <FieldLabel>{t("calendar.form.days")}</FieldLabel>
+              <View className="flex-row flex-wrap gap-1.5">
+                {weekdays.map((day) => (
+                  <Chip
+                    key={day}
+                    testID={`calendar-form-day-${day}`}
+                    label={weekdayName(day, locale, "short")}
+                    active={days.includes(day)}
+                    onPress={() => toggleDay(day)}
+                  />
+                ))}
+              </View>
+            </>
+          )}
+
+          {repeat.unit === "months" && (
+            <View className="mt-3 flex-row flex-wrap gap-1.5">
+              {monthDayChoices(repeat, startsOn).map(({ on, selected }) => {
+                const by = "week" in on ? "weekday" : "day";
+                return (
+                  <Chip
+                    key={by}
+                    testID={`calendar-form-repeat-on-${by}`}
+                    label={t("calendar.form.on", {
+                      on: describeMonthDay(on, t, locale),
+                    })}
+                    active={selected}
+                    onPress={() => changeRepeat({ monthDay: on })}
+                  />
+                );
+              })}
+            </View>
+          )}
+
+          {(repeat.unit === "months" || repeat.unit === "years") && (
+            <Text className="text-muted-foreground mt-2 text-xs">
+              {t("calendar.form.startDateHint")}
+            </Text>
+          )}
         </>
       )}
 
-      {repeat.unit === "months" && (
-        <View className="mt-3 flex-row flex-wrap gap-1.5">
-          {monthDayChoices(repeat, startsOn).map(({ on, selected }) => {
-            const by = "week" in on ? "weekday" : "day";
-            return (
-              <Chip
-                key={by}
-                testID={`calendar-form-repeat-on-${by}`}
-                label={t("calendar.form.on", {
-                  on: describeMonthDay(on, t, locale),
-                })}
-                active={selected}
-                onPress={() => changeRepeat({ monthDay: on })}
-              />
-            );
-          })}
-        </View>
-      )}
-
-      {(repeat.unit === "months" || repeat.unit === "years") && (
-        <Text className="text-muted-foreground mt-2 text-xs">
-          {t("calendar.form.startDateHint")}
-        </Text>
-      )}
-
-      {recurrence && ended && endsOn && (
+      {ended && endsOn && (
         <>
           <FieldLabel>{t("calendar.form.ended")}</FieldLabel>
           <View

@@ -12,7 +12,7 @@ import type {
 } from "@flatsby/validators/calendar";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { CalendarIcon, CircleCheckBig, Clock, Repeat } from "lucide-react";
+import { CircleCheckBig, Clock, Repeat } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
@@ -203,23 +203,20 @@ export function CalendarItemForm({
         </div>
       </Field>
 
-      <Field
-        label={
-          recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
-        }
-      >
-        <DatePopover value={startsOn} max={endsOn} onSelect={pickStart}>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full justify-start font-normal"
-            data-testid="calendar-form-date"
-          >
-            <CalendarIcon />
-            {formatCalendarDate(startsOn, locale, { dateStyle: "long" })}
-          </Button>
-        </DatePopover>
-      </Field>
+      {!ended && (
+        <Field
+          label={
+            recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
+          }
+        >
+          <DatePopover
+            value={startsOn}
+            max={endsOn}
+            onSelect={pickStart}
+            testId="calendar-form-date"
+          />
+        </Field>
+      )}
       {!isTask && (
         <div className="flex items-center justify-between">
           <Label htmlFor="calendar-all-day">{t("calendar.allDay")}</Label>
@@ -261,86 +258,88 @@ export function CalendarItemForm({
         </div>
       )}
 
-      <Field label={t("calendar.form.repeat")}>
-        <div className="flex flex-wrap gap-1.5">
-          {repeatUnits.map((unit) => (
-            <Chip
-              key={unit}
-              selected={repeat.unit === unit}
-              onClick={() => changeRepeat({ unit })}
-              testId={`calendar-repeat-${unit}`}
-            >
-              {t(`calendar.repeatOption.${unit}`)}
-            </Chip>
-          ))}
-        </div>
-        {repeat.unit !== "never" && (
-          <div className="flex items-center gap-2 pt-1 text-sm">
-            {t("calendar.form.every")}
-            <Input
-              type="number"
-              required
-              min={1}
-              max={maxEvery(repeat)}
-              value={everyText}
-              onChange={(event) => {
-                setEveryText(event.target.value);
-                const every = Math.round(Number(event.target.value));
-                if (every >= 1)
-                  setRepeat({
-                    ...repeat,
-                    every: Math.min(every, maxEvery(repeat)),
-                  });
-              }}
-              onBlur={() => setEveryText(String(repeat.every))}
-              aria-label={t("calendar.form.every")}
-              className="w-20"
-              data-testid="calendar-form-interval"
-            />
-            {t(`calendar.unit.${repeat.unit}`, { count: repeat.every })}
-          </div>
-        )}
-        {repeat.unit === "weeks" && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm">
-            <span className="mr-1">{t("calendar.form.days")}</span>
-            {weekdays.map((day) => (
+      {!ended && (
+        <Field label={t("calendar.form.repeat")}>
+          <div className="flex flex-wrap gap-1.5">
+            {repeatUnits.map((unit) => (
               <Chip
-                key={day}
-                selected={weekDays.includes(day)}
-                onClick={() => toggleDay(day)}
+                key={unit}
+                selected={repeat.unit === unit}
+                onClick={() => changeRepeat({ unit })}
+                testId={`calendar-repeat-${unit}`}
               >
-                {weekdayName(day, locale, "short")}
+                {t(`calendar.repeatOption.${unit}`)}
               </Chip>
             ))}
           </div>
-        )}
-        {repeat.unit === "months" && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {monthDayChoices(repeat, startsOn).map(({ on, selected }) => {
-              const by = "week" in on ? "weekday" : "day";
-              return (
+          {repeat.unit !== "never" && (
+            <div className="flex items-center gap-2 pt-1 text-sm">
+              {t("calendar.form.every")}
+              <Input
+                type="number"
+                required
+                min={1}
+                max={maxEvery(repeat)}
+                value={everyText}
+                onChange={(event) => {
+                  setEveryText(event.target.value);
+                  const every = Math.round(Number(event.target.value));
+                  if (every >= 1)
+                    setRepeat({
+                      ...repeat,
+                      every: Math.min(every, maxEvery(repeat)),
+                    });
+                }}
+                onBlur={() => setEveryText(String(repeat.every))}
+                aria-label={t("calendar.form.every")}
+                className="w-20"
+                data-testid="calendar-form-interval"
+              />
+              {t(`calendar.unit.${repeat.unit}`, { count: repeat.every })}
+            </div>
+          )}
+          {repeat.unit === "weeks" && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm">
+              <span className="mr-1">{t("calendar.form.days")}</span>
+              {weekdays.map((day) => (
                 <Chip
-                  key={by}
-                  selected={selected}
-                  onClick={() => changeRepeat({ monthDay: on })}
-                  testId={`calendar-repeat-on-${by}`}
+                  key={day}
+                  selected={weekDays.includes(day)}
+                  onClick={() => toggleDay(day)}
                 >
-                  {t("calendar.form.on", {
-                    on: describeMonthDay(on, t, locale),
-                  })}
+                  {weekdayName(day, locale, "short")}
                 </Chip>
-              );
-            })}
-          </div>
-        )}
-        {(repeat.unit === "months" || repeat.unit === "years") && (
-          <p className="text-muted-foreground text-xs">
-            {t("calendar.form.startDateHint")}
-          </p>
-        )}
-      </Field>
+              ))}
+            </div>
+          )}
+          {repeat.unit === "months" && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {monthDayChoices(repeat, startsOn).map(({ on, selected }) => {
+                const by = "week" in on ? "weekday" : "day";
+                return (
+                  <Chip
+                    key={by}
+                    selected={selected}
+                    onClick={() => changeRepeat({ monthDay: on })}
+                    testId={`calendar-repeat-on-${by}`}
+                  >
+                    {t("calendar.form.on", {
+                      on: describeMonthDay(on, t, locale),
+                    })}
+                  </Chip>
+                );
+              })}
+            </div>
+          )}
+          {(repeat.unit === "months" || repeat.unit === "years") && (
+            <p className="text-muted-foreground text-xs">
+              {t("calendar.form.startDateHint")}
+            </p>
+          )}
+        </Field>
+      )}
 
-      {recurrence && ended && endsOn && (
+      {ended && endsOn && (
         <Field label={t("calendar.form.ended")}>
           <p
             className="bg-muted rounded-md px-3 py-2 text-sm"
@@ -378,17 +377,8 @@ export function CalendarItemForm({
               value={endsOn}
               min={earliestEndsOn(startsOn, today)}
               onSelect={setPickedEnd}
-            >
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start font-normal"
-                data-testid="calendar-form-ends-date"
-              >
-                <CalendarIcon />
-                {formatCalendarDate(endsOn, locale, { dateStyle: "long" })}
-              </Button>
-            </DatePopover>
+              testId="calendar-form-ends-date"
+            />
           )}
         </Field>
       )}
