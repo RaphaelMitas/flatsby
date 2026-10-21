@@ -483,6 +483,10 @@ describe("end dates", () => {
   it("refuses moving an end into or out of the past, or reshaping an ended series", () => {
     expect(rewritesPast(ended, { ...ended, endsOn: null }, today)).toBe(true);
     expect(rewritesPast(ended, ended, today)).toBe(false);
+    const legacyOneOff = { ...ended, recurrence: null };
+    expect(
+      rewritesPast(legacyOneOff, { ...legacyOneOff, endsOn: null }, today),
+    ).toBe(false);
     expect(rewritesPast(ended, { ...ended, recurrence: null }, today)).toBe(
       true,
     );

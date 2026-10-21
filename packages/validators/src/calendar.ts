@@ -434,11 +434,14 @@ export function describeRecurrence(
   }
 }
 
-export const hasEnded = (item: Pick<ExpandableItem, "endsOn">, today: string) =>
-  item.endsOn !== null && item.endsOn < today;
+// Older apps could leave an end on an item they turned into a one-off
+export const hasEnded = (
+  item: Pick<ExpandableItem, "recurrence" | "endsOn">,
+  today: string,
+) => item.recurrence !== null && item.endsOn !== null && item.endsOn < today;
 
 function describeEnd(
-  item: Pick<ExpandableItem, "endsOn">,
+  item: Pick<ExpandableItem, "recurrence" | "endsOn">,
   today: string,
   t: Translate,
   locale: Intl.LocalesArgument,
@@ -638,7 +641,6 @@ export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
   !sameSchedule(previous, next) &&
   next.startsOn > previous.startsOn;
 
-/** The new piece of a split carries on the rotation from whoever was next. */
 export function continuedRotation(
   previous: ExpandableItem,
   next: Pick<ExpandableItem, "startsOn" | "memberIds">,
