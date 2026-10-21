@@ -502,12 +502,18 @@ describe("end dates", () => {
     expect(defaultEndsOn("2026-12-01", today)).toBe("2026-12-29");
   });
 
-  it("saves no end for a one-off and keeps an ended series' own", () => {
-    expect(formEndsOn(undefined, null, "2026-11-30", today)).toBeNull();
-    expect(formEndsOn(weekly, weekly.recurrence, "2026-11-30", today)).toBe(
+  it("saves no end for a one-off, keeps an ended series' own and moves a stale one up", () => {
+    const { recurrence, startsOn } = weekly;
+    expect(
+      formEndsOn(undefined, null, "2026-11-30", startsOn, today),
+    ).toBeNull();
+    expect(formEndsOn(weekly, recurrence, "2026-11-30", startsOn, today)).toBe(
       "2026-11-30",
     );
-    expect(formEndsOn(ended, null, null, today)).toBe("2026-10-15");
+    expect(formEndsOn(ended, null, null, startsOn, today)).toBe("2026-10-15");
+    expect(
+      formEndsOn(weekly, recurrence, "2026-11-30", "2026-12-07", today),
+    ).toBe("2026-12-07");
   });
 
   it("says until when, or that it ended, with the year only when it differs", () => {

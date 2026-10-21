@@ -95,7 +95,7 @@ export function CalendarItemForm({
     : (pickedStart ?? defaultDate);
   const recurrence = recurrenceOf(repeat, startsOn);
   const ended = item ? hasEnded(item, today) : false;
-  const endsOn = formEndsOn(item, recurrence, pickedEnd, today);
+  const endsOn = formEndsOn(item, recurrence, pickedEnd, startsOn, today);
   const weekDays = repeat.days ?? [weekdayOf(startsOn)];
   const input = {
     groupId,

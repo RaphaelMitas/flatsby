@@ -423,9 +423,8 @@ export const calendarRouter = createTRPCRouter({
                     ),
                   )
                   .returning({ id: calendarItems.id });
-                // Someone else's edit split it or changed its end first
                 if (!ended)
-                  return Errors.conflict("errors.calendarSeriesReplaced");
+                  return Errors.conflict("errors.calendarItemChanged");
                 const piece = { ...edited, ...splitOff(previous, edited) };
                 const next = await insertItem(tx, piece, member.id);
                 await carryOccurrences(tx, previous.id, { ...piece, ...next });

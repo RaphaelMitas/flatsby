@@ -616,7 +616,7 @@ export const editedEndsOn = (
   next: { endsOn?: string | null },
 ) => (next.endsOn === undefined ? previous.endsOn : next.endsOn);
 
-/** Days that are over keep their ticks and schedule; reopening would also overlap a split's successor. */
+/** Days that are over keep their ticks and schedule. */
 export const rewritesPast = (previous: Series, next: Series, today: string) =>
   hasEnded(previous, today)
     ? !sameSchedule(previous, next) || next.endsOn !== previous.endsOn
@@ -775,7 +775,7 @@ export function withSavedItem(
   };
 }
 
-/** Optimistic split: the old series ends the day before the new one takes over. */
+/** Optimistic split: the old series ends by the day before the new one takes over. */
 export function withSplitSeries(
   range: CalendarRange,
   previous: ExpandableItem,
@@ -887,10 +887,13 @@ export function formEndsOn(
   item: Series | undefined,
   recurrence: Recurrence | null,
   pickedEnd: string | null,
+  startsOn: string,
   today: string,
 ) {
   if (item && hasEnded(item, today)) return item.endsOn;
-  return recurrence ? pickedEnd : null;
+  if (!recurrence || !pickedEnd) return null;
+  const earliest = earliestEndsOn(startsOn, today);
+  return pickedEnd < earliest ? earliest : pickedEnd;
 }
 
 /** The edit form's start: a changed repeat of a running series starts today unless a date was picked, so the old part keeps its history. */
