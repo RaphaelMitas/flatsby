@@ -23,7 +23,14 @@ interface InputProps extends TextInputProps {
   error?: boolean;
 }
 
-const Input = ({ ref, className, error, ...props }: InputProps) => {
+const Input = ({
+  ref,
+  className,
+  error,
+  onFocus,
+  onBlur,
+  ...props
+}: InputProps) => {
   const [isFocused, setIsFocused] = React.useState(false);
   const { getColor } = useThemeColors();
 
@@ -37,11 +44,11 @@ const Input = ({ ref, className, error, ...props }: InputProps) => {
       })}
       onFocus={(e) => {
         setIsFocused(true);
-        props.onFocus?.(e);
+        onFocus?.(e);
       }}
       onBlur={(e) => {
         setIsFocused(false);
-        props.onBlur?.(e);
+        onBlur?.(e);
       }}
       placeholderTextColor={getColor("muted-foreground")}
       {...props}
