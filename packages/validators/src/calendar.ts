@@ -506,13 +506,17 @@ export function daySummary(entries: CalendarEntry[], meId: number) {
 }
 
 /** By day, then start time with all-day entries last, then title */
-function rangeEntries(range: CalendarRange): CalendarEntry[] {
+function rangeEntries(
+  range: CalendarRange,
+  keep: (entry: CalendarEntry) => boolean,
+): CalendarEntry[] {
   const items = new Map(range.items.map((item) => [item.id, item]));
   return range.occurrences
     .flatMap((occurrence) => {
       const item = items.get(occurrence.itemId);
       return item ? [{ item, occurrence }] : [];
     })
+    .filter(keep)
     .sort(
       (a, b) =>
         a.occurrence.date.localeCompare(b.occurrence.date) ||
@@ -529,7 +533,8 @@ export function entriesOn(
   date: string,
   mineMemberId?: number,
 ): CalendarEntry[] {
-  return rangeEntries(range).filter(
+  return rangeEntries(
+    range,
     ({ item, occurrence }) =>
       occurrence.date === date &&
       (mineMemberId === undefined ||
@@ -543,7 +548,7 @@ export const HOME_LOOKBACK_DAYS = 55;
 export const HOME_LOOKAHEAD_DAYS = 6;
 
 export function homeAgenda(range: CalendarRange, today: string, meId: number) {
-  const entries = rangeEntries(range);
+  const entries = rangeEntries(range, () => true);
   const myOpenTasks = entries.filter(
     ({ item, occurrence }) =>
       item.kind === "task" &&

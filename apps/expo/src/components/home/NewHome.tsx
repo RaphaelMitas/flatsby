@@ -181,7 +181,8 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       params: focus ? { focus: "1" } : {},
     });
   };
-  const openDebts = () => router.navigate("/(tabs)/expenses/debts");
+  const openDebts = () =>
+    router.navigate("/(tabs)/expenses/debts", { withAnchor: true });
   const { nextTurn, nextEvent } = agenda;
   const firstOwed = owed[0];
   const from = firstOwed && person(firstOwed.fromGroupMemberId);
@@ -312,7 +313,9 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             setStretchKey((key) => key + 1);
             say(t("home.new.cat.ticked"));
           }}
-          onSettle={(debt) => router.push(settleHref(debt, "simplified"))}
+          onSettle={(debt) =>
+            router.push(settleHref(debt, "simplified"), { withAnchor: true })
+          }
         />
 
         {rows.length > 0 && (

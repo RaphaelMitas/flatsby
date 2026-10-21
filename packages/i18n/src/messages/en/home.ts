@@ -27,8 +27,8 @@ export const home = {
     nothingDue: "Nothing on you this week",
     nothingToBuy: "Nothing to buy",
     cat: {
-      sitting: "Two today. You got this.",
-      peeking: "Just one left.",
+      sitting: "You got this.",
+      peeking: "Almost there.",
       asleep: "Five more minutes.",
       ticked: "Nice.",
       snore: "z",
