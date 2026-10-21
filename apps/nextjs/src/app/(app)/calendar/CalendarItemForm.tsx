@@ -23,16 +23,15 @@ import { Switch } from "@flatsby/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
-  addDays,
   calendarColors,
   createCalendarItemSchema,
   defaultColorFor,
+  defaultEndsOn,
   defaultEventTime,
-  describeEnd,
   describeMonthDay,
-  describeRecurrence,
+  describeSeries,
+  earliestEndsOn,
   editedStartsOn,
-  endsBeforeStart,
   formatCalendarDate,
   formEndsOn,
   hasEnded,
@@ -110,7 +109,6 @@ export function CalendarItemForm({
     memberIds: isTask ? memberIds : [],
   };
   const canSave = createCalendarItemSchema.safeParse(input).success;
-  const endsTooEarly = endsBeforeStart(input);
 
   const changeRepeat = (change: Partial<RepeatForm>) => {
     const next = { ...repeat, ...change };
@@ -367,32 +365,30 @@ export function CalendarItemForm({
             </Chip>
             <Chip
               selected={endsOn !== null}
-              onClick={() => setPickedEnd(pickedEnd ?? addDays(startsOn, 28))}
+              onClick={() =>
+                setPickedEnd(pickedEnd ?? defaultEndsOn(startsOn, today))
+              }
               testId="calendar-form-ends-on-date"
             >
               {t("calendar.form.endsOnDate")}
             </Chip>
           </div>
           {endsOn && (
-            <DatePopover value={endsOn} min={startsOn} onSelect={setPickedEnd}>
+            <DatePopover
+              value={endsOn}
+              min={earliestEndsOn(startsOn, today)}
+              onSelect={setPickedEnd}
+            >
               <Button
                 type="button"
                 variant="outline"
-                className={cn(
-                  "w-full justify-start font-normal",
-                  endsTooEarly && "border-destructive",
-                )}
+                className="w-full justify-start font-normal"
                 data-testid="calendar-form-ends-date"
               >
                 <CalendarIcon />
                 {formatCalendarDate(endsOn, locale, { dateStyle: "long" })}
               </Button>
             </DatePopover>
-          )}
-          {endsTooEarly && (
-            <p className="text-destructive text-xs">
-              {t("calendar.validation.endsBeforeStart")}
-            </p>
           )}
         </Field>
       )}
@@ -435,17 +431,7 @@ export function CalendarItemForm({
         data-testid="calendar-form-summary"
       >
         <Repeat className="size-4 shrink-0" />
-        {[
-          describeRecurrence(recurrence, t, locale),
-          formatCalendarDate(startsOn, locale, {
-            weekday: "short",
-            day: "numeric",
-            month: "short",
-          }),
-          describeEnd({ endsOn }, today, t, locale),
-        ]
-          .filter(Boolean)
-          .join(" · ")}
+        {describeSeries({ recurrence, endsOn }, today, t, locale, startsOn)}
       </p>
 
       <div className="flex gap-2">

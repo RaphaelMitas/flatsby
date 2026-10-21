@@ -33,7 +33,7 @@ export const errors = {
   calendarSeriesReplaced:
     "Ab diesem Datum gilt schon eine neuere Wiederholung. Bearbeite stattdessen diese.",
   calendarSeriesEnded:
-    "Das ist schon beendet. Leg einen neuen Eintrag an, um es wieder zu starten.",
+    "Ein Ende in der Vergangenheit lässt sich nicht setzen oder ändern. Leg einen neuen Eintrag an, um es wieder zu starten.",
   cannotRemoveLastAdmin:
     "Der letzte Admin kann nicht aus der Gruppe entfernt werden",
   promoteAdminFirst:

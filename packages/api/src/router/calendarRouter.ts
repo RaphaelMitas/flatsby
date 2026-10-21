@@ -27,13 +27,13 @@ import {
   calendarItemDetailSchema,
   calendarItemRefSchema,
   calendarRangeSchema,
+  changesPastEnd,
   createCalendarItemSchema,
   editedEndsOn,
   endsBeforeStart,
   expandOccurrences,
   isScheduledOn,
   LONGEST_GAP_DAYS,
-  reopensEnded,
   setOccurrenceDoneSchema,
   setOccurrenceSkippedSchema,
   splitOff,
@@ -235,6 +235,11 @@ const itemValues = ({
   recurrence,
 });
 
+const endsOnStill = (endsOn: string | null) =>
+  endsOn === null
+    ? isNull(calendarItems.endsOn)
+    : eq(calendarItems.endsOn, endsOn);
+
 const occurrenceOf = (itemId: number, date: string) =>
   and(
     eq(calendarOccurrences.itemId, itemId),
@@ -399,13 +404,12 @@ export const calendarRouter = createTRPCRouter({
             // Tasks and events are different things, so an item can't switch
             if (input.kind !== previous.kind)
               return fail.validation("errors.unexpected");
-            const endsOn = editedEndsOn(previous, input);
-            if (reopensEnded(previous, endsOn, input.today))
+            const edited = { ...input, endsOn: editedEndsOn(previous, input) };
+            if (changesPastEnd(previous, edited.endsOn, input.today))
               return fail.conflict("errors.calendarSeriesEnded");
-            // Apps from before end dates can still move an ended piece's start past its end
-            if (endsBeforeStart({ startsOn: input.startsOn, endsOn }))
+            // An edit without endsOn keeps the stored end, which the new start can pass
+            if (endsBeforeStart(edited))
               return fail.conflict("errors.calendarSeriesReplaced");
-            const edited = { ...input, endsOn };
             const saved = DbUtils.transaction(async (tx) => {
               if (splitsSeries(previous, input, input.today)) {
                 const [ended] = await tx
@@ -414,9 +418,7 @@ export const calendarRouter = createTRPCRouter({
                   .where(
                     and(
                       eq(calendarItems.id, previous.id),
-                      previous.endsOn === null
-                        ? isNull(calendarItems.endsOn)
-                        : eq(calendarItems.endsOn, previous.endsOn),
+                      endsOnStill(previous.endsOn),
                     ),
                   )
                   .returning({ id: calendarItems.id });
@@ -428,10 +430,18 @@ export const calendarRouter = createTRPCRouter({
                 await carryOccurrences(tx, previous.id, { ...piece, ...next });
                 return next;
               }
-              await tx
+              const [updated] = await tx
                 .update(calendarItems)
                 .set(itemValues(edited))
-                .where(eq(calendarItems.id, input.id));
+                .where(
+                  and(
+                    eq(calendarItems.id, input.id),
+                    endsOnStill(previous.endsOn),
+                  ),
+                )
+                .returning({ id: calendarItems.id });
+              if (!updated)
+                return Errors.conflict("errors.calendarSeriesReplaced");
               await writeMembers(tx, input.id, input.memberIds);
               await carryOccurrences(tx, input.id, edited);
               return { id: input.id };

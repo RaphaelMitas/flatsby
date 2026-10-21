@@ -9,7 +9,9 @@ import type {
   Recurrence,
 } from "./calendar";
 import {
+  changesPastEnd,
   createCalendarItemSchema,
+  defaultEndsOn,
   describeRecurrence,
   describeSeries,
   editedEndsOn,
@@ -21,7 +23,6 @@ import {
   monthGrid,
   recurrenceOf,
   recurrenceSchema,
-  reopensEnded,
   repeatFormOf,
   shiftMonth,
   splitOff,
@@ -474,10 +475,16 @@ describe("end dates", () => {
     expect(editedEndsOn(ended, { endsOn: null })).toBeNull();
   });
 
-  it("only refuses changing the end of a series that already ended", () => {
-    expect(reopensEnded(ended, null, today)).toBe(true);
-    expect(reopensEnded(ended, "2026-10-15", today)).toBe(false);
-    expect(reopensEnded(weekly, "2026-10-30", today)).toBe(false);
+  it("refuses moving an end into or out of the past", () => {
+    expect(changesPastEnd(ended, null, today)).toBe(true);
+    expect(changesPastEnd(ended, "2026-10-15", today)).toBe(false);
+    expect(changesPastEnd(weekly, "2026-10-20", today)).toBe(true);
+    expect(changesPastEnd(weekly, today, today)).toBe(false);
+  });
+
+  it("offers ends from today on, or from a later start", () => {
+    expect(defaultEndsOn("2026-10-06", today)).toBe("2026-11-18");
+    expect(defaultEndsOn("2026-12-01", today)).toBe("2026-12-29");
   });
 
   it("saves no end for a one-off and keeps an ended series' own", () => {
@@ -505,6 +512,18 @@ describe("end dates", () => {
       ),
     ).toBe("Jeden Dienstag · bis 31. Jan. 2027");
     expect(describeSeries(weekly, today, en, "en")).toBe("Every Tuesday");
+    expect(
+      describeSeries({ ...ended, recurrence: null }, today, en, "en"),
+    ).toBe("Once");
+    expect(
+      describeSeries(
+        { ...ended, endsOn: "2026-11-30" },
+        today,
+        en,
+        "en",
+        "2026-10-21",
+      ),
+    ).toBe("Every Tuesday · Wed, Oct 21 · until Nov 30");
   });
 });
 

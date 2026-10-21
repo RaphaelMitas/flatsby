@@ -49,7 +49,7 @@ export const calendar = {
     on: "Am {on}",
     startDateHint: "Richtet sich nach dem Startdatum",
     ends: "Endet",
-    endsOnDate: "Am Datum",
+    endsOnDate: "An einem Datum",
     lastDay: "Letzter Tag",
     ended: "Beendet",
     endedHint: "Leg einen neuen Eintrag an, um es wieder zu starten",
@@ -113,6 +113,5 @@ export const calendar = {
   validation: {
     titleRequired: "Gib ihm einen Namen",
     titleTooLong: "Der Name ist zu lang",
-    endsBeforeStart: "Endet, bevor es beginnt",
   },
 } satisfies Messages["calendar"];

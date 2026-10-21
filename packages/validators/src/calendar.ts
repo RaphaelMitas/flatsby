@@ -109,7 +109,7 @@ const calendarItemFields = z.object({
   startsOn: calendarDateSchema,
   time: eventTimeSchema.nullable(),
   recurrence: recurrenceSchema.nullable(),
-  // Apps from before end dates leave it out
+  // v0.12.0 apps leave it out
   endsOn: calendarDateSchema.nullable().optional(),
   memberIds: z.array(z.number()).max(50),
 });
@@ -437,7 +437,7 @@ export function describeRecurrence(
 export const hasEnded = (item: Pick<ExpandableItem, "endsOn">, today: string) =>
   item.endsOn !== null && item.endsOn < today;
 
-export function describeEnd(
+function describeEnd(
   item: Pick<ExpandableItem, "endsOn">,
   today: string,
   t: Translate,
@@ -462,10 +462,17 @@ export const describeSeries = (
   today: string,
   t: Translate,
   locale: Intl.LocalesArgument,
+  startsOn?: string,
 ) =>
   [
     describeRecurrence(item.recurrence, t, locale),
-    describeEnd(item, today, t, locale),
+    startsOn &&
+      formatCalendarDate(startsOn, locale, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }),
+    item.recurrence && describeEnd(item, today, t, locale),
   ]
     .filter(Boolean)
     .join(" · ");
@@ -602,22 +609,21 @@ export const sameSchedule = (a: Schedule, b: Schedule) =>
   a.startsOn === b.startsOn && sameRecurrence(a.recurrence, b.recurrence);
 
 const isRunning = (item: Series, today: string) =>
-  item.recurrence !== null &&
-  item.startsOn < today &&
-  (item.endsOn === null || item.endsOn >= today);
+  item.recurrence !== null && item.startsOn < today && !hasEnded(item, today);
 
-/** Leaving it out of an edit keeps the stored end. */
 export const editedEndsOn = (
   previous: Series,
   next: { endsOn?: string | null },
 ) => (next.endsOn === undefined ? previous.endsOn : next.endsOn);
 
-/** A series that already ended keeps its end; starting it again is a new entry. */
-export const reopensEnded = (
+/** Ending in the past drops done ticks; reopening brings missed days back or runs a split's old half beside its successor. */
+export const changesPastEnd = (
   previous: Series,
   endsOn: string | null,
   today: string,
-) => hasEnded(previous, today) && endsOn !== previous.endsOn;
+) =>
+  endsOn !== previous.endsOn &&
+  (hasEnded(previous, today) || hasEnded({ endsOn }, today));
 
 /** A new schedule for a running series starts a new item, so the old one keeps its history. */
 export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
@@ -642,7 +648,6 @@ function continuedRotation(
   return next.memberIds;
 }
 
-/** The new piece of a split carries on the rotation. */
 export const splitOff = (
   previous: ExpandableItem,
   next: Pick<
@@ -868,7 +873,12 @@ export const withPickedStart = (
   yearDay: null,
 });
 
-/** What the form saves as the end: none for a one-off, and an ended series keeps its own. */
+export const earliestEndsOn = (startsOn: string, today: string) =>
+  startsOn > today ? startsOn : today;
+
+export const defaultEndsOn = (startsOn: string, today: string) =>
+  addDays(earliestEndsOn(startsOn, today), 28);
+
 export function formEndsOn(
   item: Series | undefined,
   recurrence: Recurrence | null,

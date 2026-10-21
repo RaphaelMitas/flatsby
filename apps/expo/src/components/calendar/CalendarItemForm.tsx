@@ -15,16 +15,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
-  addDays,
   calendarColors,
   createCalendarItemSchema,
   defaultColorFor,
+  defaultEndsOn,
   defaultEventTime,
-  describeEnd,
   describeMonthDay,
-  describeRecurrence,
+  describeSeries,
+  earliestEndsOn,
   editedStartsOn,
-  endsBeforeStart,
   formatCalendarDate,
   formEndsOn,
   hasEnded,
@@ -206,7 +205,6 @@ function ItemFields({
     memberIds: isTask ? memberIds : [],
   };
   const valid = createCalendarItemSchema.safeParse(input).success;
-  const endsTooEarly = endsBeforeStart(input);
 
   const save = async () => {
     if (!valid) return;
@@ -478,7 +476,9 @@ function ItemFields({
               testID="calendar-form-ends-on-date"
               label={t("calendar.form.endsOnDate")}
               active={endsOn !== null}
-              onPress={() => setPickedEnd(pickedEnd ?? addDays(startsOn, 28))}
+              onPress={() =>
+                setPickedEnd(pickedEnd ?? defaultEndsOn(startsOn, today))
+              }
             />
           </View>
           {endsOn && (
@@ -487,15 +487,10 @@ function ItemFields({
                 testID="calendar-form-ends-date"
                 label={t("calendar.form.lastDay")}
                 value={pickerDate(endsOn)}
-                minimumDate={pickerDate(startsOn)}
+                minimumDate={pickerDate(earliestEndsOn(startsOn, today))}
                 onChange={(picked) => setPickedEnd(localDate(picked))}
               />
             </View>
-          )}
-          {endsTooEarly && (
-            <Text className="text-destructive mt-2 text-xs">
-              {t("calendar.validation.endsBeforeStart")}
-            </Text>
           )}
         </>
       )}
@@ -543,17 +538,7 @@ function ItemFields({
           testID="calendar-form-summary"
           className="text-foreground flex-1 text-sm"
         >
-          {[
-            describeRecurrence(recurrence, t, locale),
-            formatCalendarDate(startsOn, locale, {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-            }),
-            describeEnd({ endsOn }, today, t, locale),
-          ]
-            .filter(Boolean)
-            .join(" · ")}
+          {describeSeries({ recurrence, endsOn }, today, t, locale, startsOn)}
         </Text>
       </View>
 

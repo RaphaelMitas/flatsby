@@ -15,8 +15,9 @@ import { z } from "zod/v4";
 import {
   addDays,
   calendarRangeSchema,
+  changesPastEnd,
   editedEndsOn,
-  reopensEnded,
+  isScheduledOn,
   splitOff,
   splitsSeries,
   withDone,
@@ -219,7 +220,7 @@ export const calendarPatches = {
       ...input,
       endsOn: editedEndsOn(previous, input),
     });
-    if (reopensEnded(previous, edited.endsOn, input.today))
+    if (changesPastEnd(previous, edited.endsOn, input.today))
       return { range: (range) => range };
     if (splitsSeries(previous, input, input.today)) {
       const endsOn = addDays(input.startsOn, -1);
@@ -247,7 +248,15 @@ export const calendarPatches = {
     return {
       range: (range, window) => withSavedItem(range, edited, window),
       detail: (detail) =>
-        detail.item.id === input.id ? { ...detail, item: edited } : detail,
+        detail.item.id === input.id
+          ? {
+              ...detail,
+              item: edited,
+              upcoming: detail.upcoming.filter((occurrence) =>
+                isScheduledOn(edited, occurrence.date),
+              ),
+            }
+          : detail,
     };
   },
 };

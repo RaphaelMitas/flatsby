@@ -110,6 +110,5 @@ export const calendar = {
   validation: {
     titleRequired: "Give it a name",
     titleTooLong: "That name is too long",
-    endsBeforeStart: "Ends before it starts",
   },
 };
