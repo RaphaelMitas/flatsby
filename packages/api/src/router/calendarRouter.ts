@@ -27,6 +27,7 @@ import {
   calendarItemDetailSchema,
   calendarItemRefSchema,
   calendarRangeSchema,
+  continuedRotation,
   createCalendarItemSchema,
   editedEndsOn,
   endsBeforeStart,
@@ -37,7 +38,6 @@ import {
   setOccurrenceDoneSchema,
   setOccurrenceSkippedSchema,
   splitEndsOn,
-  splitOff,
   splitsSeries,
   updateCalendarItemSchema,
 } from "@flatsby/validators/calendar";
@@ -425,7 +425,10 @@ export const calendarRouter = createTRPCRouter({
                   .returning({ id: calendarItems.id });
                 if (!ended)
                   return Errors.conflict("errors.calendarItemChanged");
-                const piece = { ...edited, ...splitOff(previous, edited) };
+                const piece = {
+                  ...edited,
+                  memberIds: continuedRotation(previous, edited),
+                };
                 const next = await insertItem(tx, piece, member.id);
                 await carryOccurrences(tx, previous.id, { ...piece, ...next });
                 return next;

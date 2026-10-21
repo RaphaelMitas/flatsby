@@ -613,8 +613,11 @@ const isRunning = (item: Series, today: string) =>
 
 export const editedEndsOn = (
   previous: Series,
-  next: { endsOn?: string | null },
-) => (next.endsOn === undefined ? previous.endsOn : next.endsOn);
+  next: Pick<Series, "recurrence"> & { endsOn?: string | null },
+) => {
+  if (!next.recurrence) return null;
+  return next.endsOn === undefined ? previous.endsOn : next.endsOn;
+};
 
 /** Days that are over keep their ticks and schedule. */
 export const rewritesPast = (previous: Series, next: Series, today: string) =>
@@ -635,7 +638,8 @@ export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
   !sameSchedule(previous, next) &&
   next.startsOn > previous.startsOn;
 
-function continuedRotation(
+/** The new piece of a split carries on the rotation from whoever was next. */
+export function continuedRotation(
   previous: ExpandableItem,
   next: Pick<ExpandableItem, "startsOn" | "memberIds">,
 ) {
@@ -651,17 +655,6 @@ function continuedRotation(
   }
   return next.memberIds;
 }
-
-export const splitOff = (
-  previous: ExpandableItem,
-  next: Pick<
-    ExpandableItem,
-    "startsOn" | "endsOn" | "recurrence" | "memberIds"
-  >,
-) => ({
-  endsOn: next.recurrence ? next.endsOn : null,
-  memberIds: continuedRotation(previous, next),
-});
 
 interface RangeWindow {
   from: string;

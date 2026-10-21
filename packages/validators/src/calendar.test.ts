@@ -9,6 +9,7 @@ import type {
   Recurrence,
 } from "./calendar";
 import {
+  continuedRotation,
   createCalendarItemSchema,
   defaultEndsOn,
   describeRecurrence,
@@ -26,7 +27,6 @@ import {
   rewritesPast,
   shiftMonth,
   splitEndsOn,
-  splitOff,
   splitsSeries,
   withPickedStart,
   withSavedItem,
@@ -471,9 +471,13 @@ describe("end dates", () => {
     ).toBe(false);
   });
 
-  it("keeps the stored end when an edit leaves it out", () => {
-    expect(editedEndsOn(ended, {})).toBe("2026-10-15");
-    expect(editedEndsOn(ended, { endsOn: null })).toBeNull();
+  it("keeps the stored end when an edit leaves it out, but never on a one-off", () => {
+    expect(editedEndsOn(ended, ended)).toBe("2026-10-15");
+    expect(editedEndsOn(ended, { ...ended, endsOn: undefined })).toBe(
+      "2026-10-15",
+    );
+    expect(editedEndsOn(ended, { ...ended, endsOn: null })).toBeNull();
+    expect(editedEndsOn(ended, { recurrence: null })).toBeNull();
   });
 
   it("refuses moving an end into or out of the past, or reshaping an ended series", () => {
@@ -548,7 +552,7 @@ describe("end dates", () => {
   });
 });
 
-describe("splitOff", () => {
+describe("continuedRotation", () => {
   // Tuesdays from 10-06 for 1, 2, 3: 10-20 is the third, so 3 is up
   const weekly = item(
     { type: "weekly", interval: 1, days: ["tu"] },
@@ -563,22 +567,16 @@ describe("splitOff", () => {
   };
 
   it("hands the rotation on to whoever was next under the old rule", () => {
-    expect(splitOff(weekly, next).memberIds).toEqual([3, 1, 2]);
-    expect(splitOff(weekly, { ...next, memberIds: [1, 2] }).memberIds).toEqual([
+    expect(continuedRotation(weekly, next)).toEqual([3, 1, 2]);
+    expect(continuedRotation(weekly, { ...next, memberIds: [1, 2] })).toEqual([
       1, 2,
     ]);
   });
 
   it("finds the next turn even when the old piece ends before it", () => {
     expect(
-      splitOff({ ...weekly, endsOn: "2026-10-19" }, next).memberIds,
+      continuedRotation({ ...weekly, endsOn: "2026-10-19" }, next),
     ).toEqual([3, 1, 2]);
-  });
-
-  it("ends where the edit says, unless the new piece is a one-off", () => {
-    const ending = { ...next, endsOn: "2026-11-01" };
-    expect(splitOff(weekly, ending).endsOn).toBe("2026-11-01");
-    expect(splitOff(weekly, { ...ending, recurrence: null }).endsOn).toBeNull();
   });
 });
 

@@ -14,11 +14,11 @@ import { z } from "zod/v4";
 
 import {
   calendarRangeSchema,
+  continuedRotation,
   editedEndsOn,
   isScheduledOn,
   rewritesPast,
   splitEndsOn,
-  splitOff,
   splitsSeries,
   withDone,
   withoutItem,
@@ -227,7 +227,7 @@ export const calendarPatches = {
       const next = {
         ...edited,
         id: temporaryId(),
-        ...splitOff(previous, edited),
+        memberIds: continuedRotation(previous, edited),
       };
       return {
         range: (range, window) =>
