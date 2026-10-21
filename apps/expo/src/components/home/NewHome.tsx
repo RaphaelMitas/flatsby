@@ -27,6 +27,7 @@ import {
 import type { Nudge } from "./ForYouCard";
 import type { CatPose } from "./HomeCat";
 import type { HomeRowProps } from "./HomeRows";
+import { fromPickerTime } from "~/components/calendar/calendarDates";
 import { useCalendarMutations } from "~/components/calendar/useCalendarMutations";
 import { settleHref } from "~/components/expenses/settleHref";
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
@@ -111,7 +112,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     });
 
   const agenda = rangeData.success
-    ? homeAgenda(rangeData.data, today, meId)
+    ? homeAgenda(rangeData.data, today, fromPickerTime(new Date()), meId)
     : { due: [], nextTurn: undefined, nextEvent: undefined };
   const { owe, owed } = debtData.success
     ? myDebts(debtData.data, meId, group.currency)

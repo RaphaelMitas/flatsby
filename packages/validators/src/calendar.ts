@@ -552,7 +552,13 @@ export interface DueChore extends CalendarEntry {
   missed: string[];
 }
 
-export function homeAgenda(range: CalendarRange, today: string, meId: number) {
+/** `now` is the wall-clock time ("HH:MM"), to pass over events that ended today */
+export function homeAgenda(
+  range: CalendarRange,
+  today: string,
+  now: string,
+  meId: number,
+) {
   const entries = rangeEntries(range, () => true);
   const myOpenTasks = entries.filter(
     ({ item, occurrence }) =>
@@ -578,7 +584,9 @@ export function homeAgenda(range: CalendarRange, today: string, meId: number) {
     nextTurn: myOpenTasks.find(({ occurrence }) => occurrence.date > today),
     nextEvent: entries.find(
       ({ item, occurrence }) =>
-        item.kind === "event" && occurrence.date >= today,
+        item.kind === "event" &&
+        (occurrence.date > today ||
+          (occurrence.date === today && (item.time?.end ?? "24:00") > now)),
     ),
   };
 }

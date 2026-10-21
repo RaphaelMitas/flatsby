@@ -665,6 +665,10 @@ describe("homeAgenda", () => {
     event(4, "Yesterday's party", "2026-10-20"),
     event(5, "Lea's birthday", "2026-10-24"),
     event(6, "Flat dinner", "2026-10-23"),
+    {
+      ...event(7, "Breakfast", "2026-10-21"),
+      time: { start: "08:00", end: "09:00" },
+    },
   ];
   const range: CalendarRange = {
     items,
@@ -677,7 +681,7 @@ describe("homeAgenda", () => {
       ),
     ),
   };
-  const agenda = homeAgenda(range, "2026-10-21", ME);
+  const agenda = homeAgenda(range, "2026-10-21", "12:00", ME);
 
   it("lists my open chores up to today, a chore left for weeks once with its missed days", () => {
     expect(
@@ -692,7 +696,7 @@ describe("homeAgenda", () => {
     ]);
   });
 
-  it("finds my next turn after today and the next event from today on", () => {
+  it("finds my next turn after today and the next event that hasn't ended", () => {
     expect(agenda.nextTurn?.occurrence.date).toBe("2026-10-26");
     expect(agenda.nextEvent?.item.title).toBe("Flat dinner");
   });
