@@ -19,7 +19,6 @@ export const home = {
     yourTurn: "Du bist dran",
     youOwe: "Du schuldest {name}",
     more: "+{count} weitere",
-    settleUp: "Begleichen",
     nothingNeedsYou: "Gerade braucht dich nichts.",
     wakeYou: "Ich wecke dich, wenn sich das ändert.",
     household: "WG",
@@ -37,7 +36,6 @@ export const home = {
     },
     dial: {
       add: "Hinzufügen",
-      expense: "Ausgabe",
       calendarEntry: "Kalendereintrag",
       otherLists: "Andere Listen",
       open: "{count} offen",

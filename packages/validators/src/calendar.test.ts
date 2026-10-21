@@ -700,4 +700,18 @@ describe("homeAgenda", () => {
     expect(agenda.nextTurn?.occurrence.date).toBe("2026-10-26");
     expect(agenda.nextEvent?.item.title).toBe("Flat dinner");
   });
+
+  it("keeps an event that runs past midnight until it ends", () => {
+    const party = {
+      ...event(8, "Party", "2026-10-21"),
+      time: { start: "21:00", end: "01:00" },
+    };
+    const withParty: CalendarRange = {
+      items: [party],
+      occurrences: expandOccurrences(party, [], window.from, window.to),
+    };
+    expect(
+      homeAgenda(withParty, "2026-10-21", "22:00", ME).nextEvent?.item.title,
+    ).toBe("Party");
+  });
 });

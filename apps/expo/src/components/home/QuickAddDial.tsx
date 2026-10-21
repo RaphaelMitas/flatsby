@@ -31,6 +31,7 @@ export function QuickAddDial({
   onOpenList: (list: ShoppingListSummary) => void;
 }) {
   const t = useTranslations("home.new.dial");
+  const tActions = useTranslations("home.quickActions");
   const router = useRouter();
   const isFocused = useIsFocused();
   const [open, setOpen] = useState(false);
@@ -107,7 +108,7 @@ export function QuickAddDial({
           <Tile
             testID="home-dial-expense"
             icon="receipt"
-            label={t("expense")}
+            label={tActions("expense")}
             onPress={() =>
               go(() =>
                 router.push(

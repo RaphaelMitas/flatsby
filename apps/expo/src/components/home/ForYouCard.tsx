@@ -159,6 +159,7 @@ function DebtLine({
   onSettle: (debt: DebtEntry) => void;
 }) {
   const t = useTranslations("home.new");
+  const tDebts = useTranslations("debts");
   const locale = useLocale();
   const to = person(debt.toGroupMemberId);
 
@@ -185,7 +186,7 @@ function DebtLine({
         testID="home-settle-up"
         size="sm"
         className="rounded-full"
-        title={t("settleUp")}
+        title={tDebts("settleUp")}
         onPress={() => onSettle(debt)}
       />
     </View>

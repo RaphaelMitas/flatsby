@@ -552,6 +552,10 @@ export interface DueChore extends CalendarEntry {
   missed: string[];
 }
 
+// An end before the start runs past midnight, so it is still on today
+const endOfDay = (time: EventTime | null) =>
+  time && time.end > time.start ? time.end : "24:00";
+
 /** `now` is the wall-clock time ("HH:MM"), to pass over events that ended today */
 export function homeAgenda(
   range: CalendarRange,
@@ -586,7 +590,7 @@ export function homeAgenda(
       ({ item, occurrence }) =>
         item.kind === "event" &&
         (occurrence.date > today ||
-          (occurrence.date === today && (item.time?.end ?? "24:00") > now)),
+          (occurrence.date === today && endOfDay(item.time) > now)),
     ),
   };
 }

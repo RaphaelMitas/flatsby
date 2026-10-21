@@ -117,7 +117,10 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const { owe, owed } = debtData.success
     ? myDebts(debtData.data, meId, group.currency)
     : { owe: [], owed: [] };
-  const lists = listsData.success ? listsData.data : [];
+  // A list still being created has a placeholder id and can't be opened yet
+  const lists = (listsData.success ? listsData.data : []).filter(
+    ({ id }) => id > 0,
+  );
   const selectedList = lists.find(({ id }) => id === selectedShoppingListId);
   const lastList = selectedList ?? lists[0];
 
