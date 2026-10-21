@@ -1,0 +1,59 @@
+name: OTA update
+
+# Started by `pnpm release ota`. Publishes main's JavaScript as an EAS Update
+# to every production binary on main's version (runtimeVersion policy
+# "appVersion"). An update that expects native code its binary lacks crashes
+# on launch, so it only goes out when main's native fingerprint matches a
+# finished production build of that version on both platforms.
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Update message shown on expo.dev"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ota
+  cancel-in-progress: false
+
+env:
+  FORCE_COLOR: 3
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      # eas prints an env-loading notice on stdout ahead of the JSON, hence the sed.
+      - name: Check native fingerprint against production builds
+        working-directory: apps/expo
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n 's/.*version: "\([0-9][0-9.]*\)".*/\1/p' app.config.ts | head -1)
+          for PLATFORM in ios android; do
+            HASH=$(pnpm dlx eas-cli@21.5.0 fingerprint:generate --platform "$PLATFORM" --environment production --json | sed -n '/^{/,$p' | jq -r .hash)
+            BUILD=$(pnpm dlx eas-cli@21.5.0 build:list --platform "$PLATFORM" --channel production --status finished --runtime-version "$VERSION" --fingerprint-hash "$HASH" --limit 1 --json | sed -n '/^\[/,$p' | jq -r '.[0].id // empty')
+            if [ -z "$BUILD" ]; then
+              echo "::error::No finished $PLATFORM production build of v$VERSION has fingerprint $HASH. Either main changed native code since the last release or v$VERSION is still building; cut a store release with pnpm release instead."
+              exit 1
+            fi
+            echo "$PLATFORM fingerprint $HASH matches production build $BUILD"
+          done
+
+      - name: Publish update
+        working-directory: apps/expo
+        env:
+          MESSAGE: ${{ inputs.message }}
+        run: pnpm dlx eas-cli@21.5.0 update --channel production --environment production --platform all --message "$MESSAGE" --non-interactive

@@ -9,6 +9,10 @@
  *   --direct   commit the bump on main and push directly (skips the PR);
  *              requires push access to main.
  *   --dry-run  print what would happen without writing or pushing anything.
+ *
+ * Usage: pnpm release ota [message] [--dry-run]
+ *   Publishes origin/main's JavaScript as an over-the-air update via
+ *   .github/workflows/ota.yml; message defaults to main's latest commit subject.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -35,7 +39,38 @@ function fail(message) {
 const args = process.argv.slice(2);
 const direct = args.includes("--direct");
 const dryRun = args.includes("--dry-run");
-const bump = args.find((a) => !a.startsWith("--")) ?? "patch";
+const [bump = "patch", otaMessage] = args.filter((a) => !a.startsWith("--"));
+
+if (bump === "ota") {
+  console.log("Fetching origin/main...");
+  run("git", ["fetch", "origin", "main"]);
+  const [sha, subject] = run("git", [
+    "log",
+    "-1",
+    "--format=%h%n%s",
+    "origin/main",
+  ]).split("\n");
+  const message = otaMessage ?? subject;
+  if (dryRun) {
+    console.log(
+      `Dry run; a real run would publish origin/main (${sha}) as an OTA update: "${message}"`,
+    );
+    process.exit(0);
+  }
+  run("gh", [
+    "workflow",
+    "run",
+    "ota.yml",
+    "--ref",
+    "main",
+    "-f",
+    `message=${message}`,
+  ]);
+  console.log(
+    `✓ OTA update of ${sha} queued. Watch: gh run watch, or the Actions tab.`,
+  );
+  process.exit(0);
+}
 
 // In --dry-run mode, guard failures are reported but don't abort, so the
 // plan prints from any branch/state.
