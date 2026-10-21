@@ -1,10 +1,8 @@
 name: OTA update
 
-# Started by `pnpm release ota`. Publishes main's JavaScript as an EAS Update
-# to every production binary on main's version (runtimeVersion policy
-# "appVersion"). An update that expects native code its binary lacks crashes
-# on launch, so it only goes out when main's native fingerprint matches a
-# finished production build of that version on both platforms.
+# Started by `pnpm release ota`. runtimeVersion is "appVersion", so an update
+# reaches every production binary of main's version, and one expecting native
+# code a binary lacks crashes on launch; hence the fingerprint gate.
 on:
   workflow_dispatch:
     inputs:
@@ -28,32 +26,37 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     steps:
       - uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup
 
-      # eas prints an env-loading notice on stdout ahead of the JSON, hence the sed.
+      # fingerprint:generate prints an env-loading notice on stdout ahead of the JSON.
       - name: Check native fingerprint against production builds
         working-directory: apps/expo
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           set -euo pipefail
           VERSION=$(sed -n 's/.*version: "\([0-9][0-9.]*\)".*/\1/p' app.config.ts | head -1)
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not parse version from apps/expo/app.config.ts"
+            exit 1
+          fi
           for PLATFORM in ios android; do
-            HASH=$(pnpm dlx eas-cli@21.5.0 fingerprint:generate --platform "$PLATFORM" --environment production --json | sed -n '/^{/,$p' | jq -r .hash)
-            BUILD=$(pnpm dlx eas-cli@21.5.0 build:list --platform "$PLATFORM" --channel production --status finished --runtime-version "$VERSION" --fingerprint-hash "$HASH" --limit 1 --json | sed -n '/^\[/,$p' | jq -r '.[0].id // empty')
-            if [ -z "$BUILD" ]; then
-              echo "::error::No finished $PLATFORM production build of v$VERSION has fingerprint $HASH. Either main changed native code since the last release or v$VERSION is still building; cut a store release with pnpm release instead."
+            HASH=$(pnpm dlx eas-cli@21.5.0 fingerprint:generate --platform "$PLATFORM" --environment production --json | sed -n '/^{/,$p' | jq -er .hash)
+            if ! pnpm dlx eas-cli@21.5.0 build:list --platform "$PLATFORM" --channel production --status finished --runtime-version "$VERSION" --limit 50 --json \
+              | jq -e --arg hash "$HASH" 'length > 0 and all(.[]; .fingerprint.hash == $hash)' > /dev/null; then
+              echo "::error::Not every finished $PLATFORM production build of v$VERSION has fingerprint $HASH. Either main changed native code since v$VERSION was built or v$VERSION is still building; cut a store release with pnpm release instead."
               exit 1
             fi
-            echo "$PLATFORM fingerprint $HASH matches production build $BUILD"
+            echo "$PLATFORM fingerprint $HASH matches every production build of v$VERSION"
           done
 
       - name: Publish update
         working-directory: apps/expo
         env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           MESSAGE: ${{ inputs.message }}
         run: pnpm dlx eas-cli@21.5.0 update --channel production --environment production --platform all --message "$MESSAGE" --non-interactive

@@ -59,12 +59,14 @@ pnpm release ota --dry-run
 The script starts `.github/workflows/ota.yml` on main, which publishes an EAS
 Update to the `production` channel for every binary on main's version
 (`runtimeVersion` follows the app version). It goes to all users at once:
-they download it on their next launch and run it on the one after.
+they download it on their next launch and run it on the one after. Once a
+store release has landed on main, an OTA targets that new version, so users
+still on the previous one only get it after updating from the store.
 
 Before publishing, the workflow fingerprints main's native project per
-platform and requires a finished production build of the same version with
-that fingerprint. If main added a native module or changed native config
-since the last release, it fails instead of shipping an update that would
+platform and requires every finished production build of the same version
+to have that fingerprint. If main added a native module or changed native
+config since that version was built, it fails instead of shipping an update that would
 crash on launch; cut a store release with `pnpm release` then.
 
 To undo a bad update, `eas update:rollback` (from `apps/expo`) points the
@@ -76,7 +78,7 @@ locally; otherwise publish a fix forward.
 
 All GitHub repo settings, nothing local (already configured as of Aug 2026):
 
-- **`EXPO_TOKEN`** (repo secret, required for build + submit): a robot access
+- **`EXPO_TOKEN`** (repo secret, required for build + submit and OTA updates): a robot access
   token for the `flatsby` EAS org (https://expo.dev/settings/access-tokens).
   iOS submission also needs App Store Connect API credentials stored on EAS -
   already the case if `eas submit -p ios` has ever run interactively.

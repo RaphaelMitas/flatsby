@@ -39,18 +39,19 @@ function fail(message) {
 const args = process.argv.slice(2);
 const direct = args.includes("--direct");
 const dryRun = args.includes("--dry-run");
-const [bump = "patch", otaMessage] = args.filter((a) => !a.startsWith("--"));
+const [bump = "patch", ...otaWords] = args.filter((a) => !a.startsWith("--"));
+
+console.log("Fetching origin/main...");
+run("git", ["fetch", "origin", "main"]);
 
 if (bump === "ota") {
-  console.log("Fetching origin/main...");
-  run("git", ["fetch", "origin", "main"]);
   const [sha, subject] = run("git", [
     "log",
     "-1",
     "--format=%h%n%s",
     "origin/main",
   ]).split("\n");
-  const message = otaMessage ?? subject;
+  const message = otaWords.join(" ") || subject;
   if (dryRun) {
     console.log(
       `Dry run; a real run would publish origin/main (${sha}) as an OTA update: "${message}"`,
@@ -91,8 +92,6 @@ guard(
   `Releases start from main (currently on "${branch}").`,
 );
 
-console.log("Fetching origin/main...");
-run("git", ["fetch", "origin", "main"]);
 guard(
   run("git", ["rev-parse", "HEAD"]) ===
     run("git", ["rev-parse", "origin/main"]),
