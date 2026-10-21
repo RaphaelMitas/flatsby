@@ -190,9 +190,9 @@ const STORE_COPY = {
 /**
  * Seeds the full store-screenshot scenario server-side: a group with three
  * members, a stocked list, expenses and a calendar. The screenshot flow then
- * only logs in, navigates, and captures — it performs no
- * mutations, because a Maestro tap that silently misses a button would leave
- * state missing and the flow waiting on UI that never appears.
+ * only logs in, navigates, and captures — it performs no mutations, because a
+ * Maestro tap that silently misses a button would leave state missing and the
+ * flow waiting on UI that never appears.
  */
 async function seedStoreScenario(
   adminUserId: string,

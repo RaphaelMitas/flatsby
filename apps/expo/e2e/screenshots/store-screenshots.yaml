@@ -2,13 +2,12 @@ appId: ${APP_ID}
 ---
 # Store screenshot flow. All content — the group, its three members, the
 # stocked list, expenses and the calendar — is seeded server-side by the e2e
-# create-session endpoint (`seed=store`), so this flow
-# performs no mutations: it logs in, navigates, and captures. Runtime
-# mutations were the pipeline's chronic flake: a Maestro tap that silently
-# misses a button (stale coordinates after a layout shift) leaves state
-# missing and the flow waiting on UI that will never appear. Reads don't have
-# that failure mode — the data exists before the app's first query, and
-# query retries cover transient fetch errors.
+# create-session endpoint (`seed=store`), so this flow performs no mutations:
+# it logs in, navigates, and captures. Runtime mutations were the pipeline's
+# chronic flake: a Maestro tap that silently misses a button (stale coordinates
+# after a layout shift) leaves state missing and the flow waiting on UI that
+# will never appear. Reads don't have that failure mode — the data exists
+# before the app's first query, and query retries cover transient fetch errors.
 #
 # Navigation taps go through tap-until.yaml (act-verify-repeat) or
 # tap-tab.yaml (id -> label -> position) so a missed tap costs seconds, not
