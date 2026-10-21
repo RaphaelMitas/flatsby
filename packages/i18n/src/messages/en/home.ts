@@ -12,8 +12,6 @@ export const home = {
       afternoon: "Hi, {name}.",
       evening: "Evening, {name}.",
     },
-    summary:
-      "{count, plural, =0 {A quiet one.} one {One thing today.} other {# things today.}}",
     youOwe: "You owe {name}",
     more: "+{count} more",
     nothingNeedsYou: "Nothing needs you.",

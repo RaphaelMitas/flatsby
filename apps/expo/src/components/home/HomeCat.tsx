@@ -168,7 +168,7 @@ function CatBubble({ text }: { text: string }) {
       entering={ZoomIn.springify().damping(14)}
       exiting={FadeOut.duration(150)}
       pointerEvents="none"
-      className="bg-primary absolute top-1 right-20 rounded-2xl rounded-br-sm px-3 py-1.5"
+      className="bg-primary absolute top-6 right-28 rounded-2xl rounded-br-sm px-3 py-1.5"
     >
       <Text className="text-primary-foreground text-xs font-semibold">
         {text}

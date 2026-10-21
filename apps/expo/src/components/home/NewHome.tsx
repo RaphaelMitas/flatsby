@@ -1,7 +1,6 @@
 import type { GroupWithAccess, ShoppingListSummary } from "@flatsby/api";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Pressable, Text, View } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useFocusEffect, useRouter } from "expo-router";
 import {
   useInfiniteQuery,
@@ -296,19 +295,6 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
               name: firstName,
             })}
           </Text>
-          <View className="mt-1.5 h-5">
-            {!speech && (
-              <Animated.Text
-                entering={FadeIn}
-                exiting={FadeOut.duration(120)}
-                className="text-muted-foreground text-sm"
-              >
-                {t("home.new.summary", {
-                  count: agenda.due.length + owe.length,
-                })}
-              </Animated.Text>
-            )}
-          </View>
         </View>
 
         <ForYouCard

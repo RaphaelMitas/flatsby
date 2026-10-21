@@ -14,8 +14,6 @@ export const home = {
       afternoon: "Hallo, {name}.",
       evening: "Guten Abend, {name}.",
     },
-    summary:
-      "{count, plural, =0 {Ein ruhiger Tag.} one {Eine Sache heute.} other {# Sachen heute.}}",
     youOwe: "Du schuldest {name}",
     more: "+{count} weitere",
     nothingNeedsYou: "Gerade braucht dich nichts.",
