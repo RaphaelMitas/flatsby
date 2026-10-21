@@ -15,14 +15,19 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
+  addDays,
   calendarColors,
   createCalendarItemSchema,
   defaultColorFor,
   defaultEventTime,
+  describeEnd,
   describeMonthDay,
   describeRecurrence,
   editedStartsOn,
+  endsBeforeStart,
   formatCalendarDate,
+  formEndsOn,
+  hasEnded,
   localDate,
   maxEvery,
   monthDayChoices,
@@ -171,6 +176,7 @@ function ItemFields({
     item ? repeatFormOf(item.recurrence) : null,
   );
   const repeat = pickedRepeat ?? newRepeatFormFor(kind);
+  const [pickedEnd, setPickedEnd] = useState(item?.endsOn ?? null);
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
 
   const today = localDate();
@@ -185,6 +191,9 @@ function ItemFields({
     setRepeat({ ...next, every: Math.min(next.every, maxEvery(next)) });
   };
 
+  const recurrence = recurrenceOf(repeat, startsOn);
+  const ended = item ? hasEnded(item, today) : false;
+  const endsOn = formEndsOn(item, recurrence, pickedEnd, today);
   const input = {
     groupId: group.id,
     kind,
@@ -192,10 +201,12 @@ function ItemFields({
     color,
     startsOn,
     time: isTask ? null : time,
-    recurrence: recurrenceOf(repeat, startsOn),
+    recurrence,
+    endsOn,
     memberIds: isTask ? memberIds : [],
   };
   const valid = createCalendarItemSchema.safeParse(input).success;
+  const endsTooEarly = endsBeforeStart(input);
 
   const save = async () => {
     if (!valid) return;
@@ -306,12 +317,10 @@ function ItemFields({
         <DatePickerField
           testID="calendar-form-starts-on"
           label={
-            input.recurrence
-              ? t("calendar.form.startsOn")
-              : t("calendar.form.date")
+            recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
           }
           value={pickerDate(startsOn)}
-          maximumDate={item?.endsOn ? pickerDate(item.endsOn) : undefined}
+          maximumDate={endsOn ? pickerDate(endsOn) : undefined}
           onChange={(picked) => pickStart(localDate(picked))}
         />
         {!isTask && (
@@ -439,6 +448,58 @@ function ItemFields({
         </Text>
       )}
 
+      {recurrence && ended && endsOn && (
+        <>
+          <FieldLabel>{t("calendar.form.ended")}</FieldLabel>
+          <View
+            testID="calendar-form-ended"
+            className="bg-muted h-12 justify-center rounded-lg px-3"
+          >
+            <Text className="text-foreground">
+              {formatCalendarDate(endsOn, locale, { dateStyle: "long" })}
+            </Text>
+          </View>
+          <Text className="text-muted-foreground mt-2 text-xs">
+            {t("calendar.form.endedHint")}
+          </Text>
+        </>
+      )}
+      {recurrence && !ended && (
+        <>
+          <FieldLabel>{t("calendar.form.ends")}</FieldLabel>
+          <View className="flex-row flex-wrap gap-1.5">
+            <Chip
+              testID="calendar-form-ends-never"
+              label={t("calendar.repeatOption.never")}
+              active={endsOn === null}
+              onPress={() => setPickedEnd(null)}
+            />
+            <Chip
+              testID="calendar-form-ends-on-date"
+              label={t("calendar.form.endsOnDate")}
+              active={endsOn !== null}
+              onPress={() => setPickedEnd(pickedEnd ?? addDays(startsOn, 28))}
+            />
+          </View>
+          {endsOn && (
+            <View className="mt-3">
+              <DatePickerField
+                testID="calendar-form-ends-date"
+                label={t("calendar.form.lastDay")}
+                value={pickerDate(endsOn)}
+                minimumDate={pickerDate(startsOn)}
+                onChange={(picked) => setPickedEnd(localDate(picked))}
+              />
+            </View>
+          )}
+          {endsTooEarly && (
+            <Text className="text-destructive mt-2 text-xs">
+              {t("calendar.validation.endsBeforeStart")}
+            </Text>
+          )}
+        </>
+      )}
+
       {isTask && (
         <>
           <FieldLabel>{t("calendar.form.who")}</FieldLabel>
@@ -482,7 +543,17 @@ function ItemFields({
           testID="calendar-form-summary"
           className="text-foreground flex-1 text-sm"
         >
-          {`${describeRecurrence(input.recurrence, t, locale)} · ${formatCalendarDate(startsOn, locale, { weekday: "short", day: "numeric", month: "short" })}`}
+          {[
+            describeRecurrence(recurrence, t, locale),
+            formatCalendarDate(startsOn, locale, {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+            }),
+            describeEnd({ endsOn }, today, t, locale),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         </Text>
       </View>
 

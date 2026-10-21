@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from "use-intl";
 
 import {
   describeEventTime,
-  describeRecurrence,
+  describeSeries,
   formatCalendarDate,
   localDate,
 } from "@flatsby/validators/calendar";
@@ -159,7 +159,7 @@ export function CalendarItemDetail({
         <Badge
           variant="secondary"
           icon={<Icon name="repeat" size={12} color="muted-foreground" />}
-          label={describeRecurrence(item.recurrence, t, locale)}
+          label={describeSeries(item, today, t, locale)}
         />
         {item.kind === "event" && (
           <Badge variant="secondary" label={describeEventTime(item.time, t)} />

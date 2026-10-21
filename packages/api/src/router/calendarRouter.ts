@@ -28,14 +28,16 @@ import {
   calendarItemRefSchema,
   calendarRangeSchema,
   createCalendarItemSchema,
+  editedEndsOn,
+  endsBeforeStart,
   expandOccurrences,
   isScheduledOn,
   LONGEST_GAP_DAYS,
+  reopensEnded,
   setOccurrenceDoneSchema,
   setOccurrenceSkippedSchema,
   splitOff,
   splitsSeries,
-  startsAfterEnd,
   updateCalendarItemSchema,
 } from "@flatsby/validators/calendar";
 
@@ -200,13 +202,11 @@ const insertItem = async (
   tx: DbTransaction,
   input: z.infer<typeof createCalendarItemSchema>,
   createdByGroupMemberId: number,
-  endsOn: string | null = null,
 ) => {
   const [created] = await tx
     .insert(calendarItems)
     .values({
       ...itemValues(input),
-      endsOn,
       groupId: input.groupId,
       createdByGroupMemberId,
     })
@@ -223,11 +223,13 @@ const itemValues = ({
   startsOn,
   time,
   recurrence,
+  endsOn,
 }: z.infer<typeof createCalendarItemSchema>) => ({
   kind,
   title,
   color,
   startsOn,
+  endsOn: endsOn ?? null,
   startTime: time?.start ?? null,
   endTime: time?.end ?? null,
   recurrence,
@@ -397,8 +399,13 @@ export const calendarRouter = createTRPCRouter({
             // Tasks and events are different things, so an item can't switch
             if (input.kind !== previous.kind)
               return fail.validation("errors.unexpected");
-            if (startsAfterEnd(previous, input))
+            const endsOn = editedEndsOn(previous, input);
+            if (reopensEnded(previous, endsOn, input.today))
+              return fail.conflict("errors.calendarSeriesEnded");
+            // Apps from before end dates can still move an ended piece's start past its end
+            if (endsBeforeStart({ startsOn: input.startsOn, endsOn }))
               return fail.conflict("errors.calendarSeriesReplaced");
+            const edited = { ...input, endsOn };
             const saved = DbUtils.transaction(async (tx) => {
               if (splitsSeries(previous, input, input.today)) {
                 const [ended] = await tx
@@ -416,29 +423,17 @@ export const calendarRouter = createTRPCRouter({
                 // Someone else's edit split it first
                 if (!ended)
                   return Errors.conflict("errors.calendarSeriesReplaced");
-                const piece = splitOff(previous, input);
-                const next = await insertItem(
-                  tx,
-                  { ...input, memberIds: piece.memberIds },
-                  member.id,
-                  piece.endsOn,
-                );
-                await carryOccurrences(tx, previous.id, {
-                  ...input,
-                  ...piece,
-                  ...next,
-                });
+                const piece = { ...edited, ...splitOff(previous, edited) };
+                const next = await insertItem(tx, piece, member.id);
+                await carryOccurrences(tx, previous.id, { ...piece, ...next });
                 return next;
               }
               await tx
                 .update(calendarItems)
-                .set(itemValues(input))
+                .set(itemValues(edited))
                 .where(eq(calendarItems.id, input.id));
               await writeMembers(tx, input.id, input.memberIds);
-              await carryOccurrences(tx, input.id, {
-                ...input,
-                endsOn: previous.endsOn,
-              });
+              await carryOccurrences(tx, input.id, edited);
               return { id: input.id };
             }, "update calendar item")(ctx.db);
             return Effect.flatMap(saved, (result) =>

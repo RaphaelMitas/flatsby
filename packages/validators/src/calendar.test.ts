@@ -9,19 +9,23 @@ import type {
   Recurrence,
 } from "./calendar";
 import {
+  createCalendarItemSchema,
   describeRecurrence,
+  describeSeries,
+  editedEndsOn,
   editedStartsOn,
   entriesOn,
   expandOccurrences,
+  formEndsOn,
   monthDayChoices,
   monthGrid,
   recurrenceOf,
   recurrenceSchema,
+  reopensEnded,
   repeatFormOf,
   shiftMonth,
   splitOff,
   splitsSeries,
-  startsAfterEnd,
   withPickedStart,
   withSavedItem,
   withSkipped,
@@ -438,16 +442,69 @@ describe("splitsSeries", () => {
   });
 });
 
-describe("startsAfterEnd", () => {
-  it("refuses to start an ended piece after its end", () => {
-    const ended = {
-      ...item({ type: "weekly", interval: 1, days: ["mo"] }),
-      endsOn: "2026-10-15",
-    };
-    expect(startsAfterEnd(ended, { ...ended, startsOn: "2026-10-16" })).toBe(
-      true,
+describe("end dates", () => {
+  const weekly = item({ type: "weekly", interval: 1, days: ["tu"] });
+  const ended = { ...weekly, endsOn: "2026-10-15" };
+  const today = "2026-10-21";
+  const input = {
+    groupId: 1,
+    kind: "task",
+    title: "Bins",
+    color: "gray",
+    startsOn: "2026-10-06",
+    time: null,
+    recurrence: weekly.recurrence,
+    memberIds: [],
+  } as const;
+
+  it("accepts input without an end, as older apps send it, but not one before the start", () => {
+    expect(createCalendarItemSchema.safeParse(input).success).toBe(true);
+    expect(
+      createCalendarItemSchema.safeParse({ ...input, endsOn: "2026-10-06" })
+        .success,
+    ).toBe(true);
+    expect(
+      createCalendarItemSchema.safeParse({ ...input, endsOn: "2026-10-05" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("keeps the stored end when an edit leaves it out", () => {
+    expect(editedEndsOn(ended, {})).toBe("2026-10-15");
+    expect(editedEndsOn(ended, { endsOn: null })).toBeNull();
+  });
+
+  it("only refuses changing the end of a series that already ended", () => {
+    expect(reopensEnded(ended, null, today)).toBe(true);
+    expect(reopensEnded(ended, "2026-10-15", today)).toBe(false);
+    expect(reopensEnded(weekly, "2026-10-30", today)).toBe(false);
+  });
+
+  it("saves no end for a one-off and keeps an ended series' own", () => {
+    expect(formEndsOn(undefined, null, "2026-11-30", today)).toBeNull();
+    expect(formEndsOn(weekly, weekly.recurrence, "2026-11-30", today)).toBe(
+      "2026-11-30",
     );
-    expect(startsAfterEnd(ended, ended)).toBe(false);
+    expect(formEndsOn(ended, null, null, today)).toBe("2026-10-15");
+  });
+
+  it("says until when, or that it ended, with the year only when it differs", () => {
+    const en = translatorFor("en");
+    expect(
+      describeSeries({ ...weekly, endsOn: "2026-11-30" }, today, en, "en"),
+    ).toBe("Every Tuesday · until Nov 30");
+    expect(describeSeries(ended, today, en, "en")).toBe(
+      "Every Tuesday · ended Oct 15",
+    );
+    expect(
+      describeSeries(
+        { ...weekly, endsOn: "2027-01-31" },
+        today,
+        translatorFor("de"),
+        "de",
+      ),
+    ).toBe("Jeden Dienstag · bis 31. Jan. 2027");
+    expect(describeSeries(weekly, today, en, "en")).toBe("Every Tuesday");
   });
 });
 
@@ -460,6 +517,7 @@ describe("splitOff", () => {
   );
   const next = {
     startsOn: "2026-10-19",
+    endsOn: null,
     recurrence: weekly.recurrence,
     memberIds: [1, 2, 3],
   };
@@ -477,10 +535,10 @@ describe("splitOff", () => {
     ).toEqual([3, 1, 2]);
   });
 
-  it("keeps a later change's start, unless the new piece is a one-off", () => {
-    const ending = { ...weekly, endsOn: "2026-11-01" };
-    expect(splitOff(ending, next).endsOn).toBe("2026-11-01");
-    expect(splitOff(ending, { ...next, recurrence: null }).endsOn).toBeNull();
+  it("ends where the edit says, unless the new piece is a one-off", () => {
+    const ending = { ...next, endsOn: "2026-11-01" };
+    expect(splitOff(weekly, ending).endsOn).toBe("2026-11-01");
+    expect(splitOff(weekly, { ...ending, recurrence: null }).endsOn).toBeNull();
   });
 });
 

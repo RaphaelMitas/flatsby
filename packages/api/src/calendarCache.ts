@@ -15,9 +15,10 @@ import { z } from "zod/v4";
 import {
   addDays,
   calendarRangeSchema,
+  editedEndsOn,
+  reopensEnded,
   splitOff,
   splitsSeries,
-  startsAfterEnd,
   withDone,
   withoutItem,
   withSavedItem,
@@ -142,6 +143,7 @@ const asView = (
     startsOn,
     time,
     recurrence,
+    endsOn,
     memberIds,
   }: CreateCalendarItemInput,
 ): CalendarItemView => ({
@@ -150,7 +152,7 @@ const asView = (
   title,
   color,
   startsOn,
-  endsOn: null,
+  endsOn: endsOn ?? null,
   time,
   recurrence,
   memberIds,
@@ -212,13 +214,19 @@ export const calendarPatches = {
   ): CalendarPatch => {
     // A month's cache may not hold the item, yet the edit can still reach into it
     const previous = findCachedItem(input.id);
-    if (!previous || startsAfterEnd(previous, input))
+    if (!previous) return { range: (range) => range };
+    const edited = asView(input.id, {
+      ...input,
+      endsOn: editedEndsOn(previous, input),
+    });
+    if (reopensEnded(previous, edited.endsOn, input.today))
       return { range: (range) => range };
     if (splitsSeries(previous, input, input.today)) {
       const endsOn = addDays(input.startsOn, -1);
       const next = {
-        ...asView(temporaryId(), input),
-        ...splitOff(previous, input),
+        ...edited,
+        id: temporaryId(),
+        ...splitOff(previous, edited),
       };
       return {
         range: (range, window) =>
@@ -236,7 +244,6 @@ export const calendarPatches = {
             : detail,
       };
     }
-    const edited = { ...asView(input.id, input), endsOn: previous.endsOn };
     return {
       range: (range, window) => withSavedItem(range, edited, window),
       detail: (detail) =>

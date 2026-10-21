@@ -2,7 +2,7 @@ appId: ${APP_ID}
 tags:
   - calendar
 ---
-# Create a weekly task on today, tick it off, open its detail, delete it.
+# Create a weekly task on today that ends in four weeks, tick it off, open its detail, delete it.
 - runFlow: ../../subflows/e2e-login.yaml
 - tapOn:
     id: "group-select-button"
@@ -35,9 +35,15 @@ tags:
 - tapOn: "Starts"
 - tapOn:
     id: "calendar-form-repeat-weeks"
-- assertVisible:
-    id: "calendar-form-summary"
-    text: "Every .*"
+- scrollUntilVisible:
+    element:
+      id: "calendar-form-ends-on-date"
+- tapOn:
+    id: "calendar-form-ends-on-date"
+- scrollUntilVisible:
+    element:
+      id: "calendar-form-summary"
+      text: "Every .* until .*"
 - scrollUntilVisible:
     element:
       id: "calendar-form-save"
@@ -70,7 +76,7 @@ tags:
     visible:
       id: "calendar-detail-title"
     timeout: 15000
-- assertVisible: "Every .*"
+- assertVisible: "Every .* until .*"
 - assertVisible: "History"
 
 # Delete takes a second tap to confirm

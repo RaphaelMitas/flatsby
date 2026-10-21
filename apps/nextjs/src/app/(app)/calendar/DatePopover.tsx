@@ -9,11 +9,13 @@ import { localDate, pickerDate } from "@flatsby/validators/calendar";
 
 export function DatePopover({
   value,
+  min,
   max,
   onSelect,
   children,
 }: {
   value: string;
+  min?: string;
   max?: string | null;
   onSelect: (date: string) => void;
   children: ReactNode;
@@ -30,7 +32,10 @@ export function DatePopover({
           weekStartsOn={1}
           selected={selected}
           defaultMonth={selected}
-          disabled={max ? { after: pickerDate(max) } : undefined}
+          disabled={[
+            ...(min ? [{ before: pickerDate(min) }] : []),
+            ...(max ? [{ after: pickerDate(max) }] : []),
+          ]}
           onSelect={(date) => {
             if (!date) return;
             onSelect(localDate(date));

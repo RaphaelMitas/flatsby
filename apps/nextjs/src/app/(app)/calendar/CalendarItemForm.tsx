@@ -23,13 +23,19 @@ import { Switch } from "@flatsby/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
+  addDays,
   calendarColors,
+  createCalendarItemSchema,
   defaultColorFor,
   defaultEventTime,
+  describeEnd,
   describeMonthDay,
   describeRecurrence,
   editedStartsOn,
+  endsBeforeStart,
   formatCalendarDate,
+  formEndsOn,
+  hasEnded,
   maxEvery,
   monthDayChoices,
   newRepeatFormFor,
@@ -78,6 +84,7 @@ export function CalendarItemForm({
     item ? repeatFormOf(item.recurrence) : null,
   );
   const repeat = pickedRepeat ?? newRepeatFormFor(kind);
+  const [pickedEnd, setPickedEnd] = useState(item?.endsOn ?? null);
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
   // Typing "10" passes through an empty field, which the number itself can't hold
   const [everyText, setEveryText] = useState(String(repeat.every));
@@ -88,8 +95,22 @@ export function CalendarItemForm({
     ? editedStartsOn(item, repeat, pickedStart, today)
     : (pickedStart ?? defaultDate);
   const recurrence = recurrenceOf(repeat, startsOn);
+  const ended = item ? hasEnded(item, today) : false;
+  const endsOn = formEndsOn(item, recurrence, pickedEnd, today);
   const weekDays = repeat.days ?? [weekdayOf(startsOn)];
-  const canSave = title.trim().length > 0;
+  const input = {
+    groupId,
+    kind,
+    title: title.trim(),
+    color,
+    startsOn,
+    time: isTask ? null : time,
+    recurrence,
+    endsOn,
+    memberIds: isTask ? memberIds : [],
+  };
+  const canSave = createCalendarItemSchema.safeParse(input).success;
+  const endsTooEarly = endsBeforeStart(input);
 
   const changeRepeat = (change: Partial<RepeatForm>) => {
     const next = { ...repeat, ...change };
@@ -116,17 +137,7 @@ export function CalendarItemForm({
     );
 
   const submit = () => {
-    if (!canSave) return;
-    onSubmit({
-      groupId,
-      kind,
-      title: title.trim(),
-      color,
-      startsOn,
-      time: isTask ? null : time,
-      recurrence,
-      memberIds: isTask ? memberIds : [],
-    });
+    if (canSave) onSubmit(input);
   };
 
   return (
@@ -199,7 +210,7 @@ export function CalendarItemForm({
           recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
         }
       >
-        <DatePopover value={startsOn} max={item?.endsOn} onSelect={pickStart}>
+        <DatePopover value={startsOn} max={endsOn} onSelect={pickStart}>
           <Button
             type="button"
             variant="outline"
@@ -331,6 +342,61 @@ export function CalendarItemForm({
         )}
       </Field>
 
+      {recurrence && ended && endsOn && (
+        <Field label={t("calendar.form.ended")}>
+          <p
+            className="bg-muted rounded-md px-3 py-2 text-sm"
+            data-testid="calendar-form-ended"
+          >
+            {formatCalendarDate(endsOn, locale, { dateStyle: "long" })}
+          </p>
+          <p className="text-muted-foreground text-xs">
+            {t("calendar.form.endedHint")}
+          </p>
+        </Field>
+      )}
+      {recurrence && !ended && (
+        <Field label={t("calendar.form.ends")}>
+          <div className="flex flex-wrap gap-1.5">
+            <Chip
+              selected={endsOn === null}
+              onClick={() => setPickedEnd(null)}
+              testId="calendar-form-ends-never"
+            >
+              {t("calendar.repeatOption.never")}
+            </Chip>
+            <Chip
+              selected={endsOn !== null}
+              onClick={() => setPickedEnd(pickedEnd ?? addDays(startsOn, 28))}
+              testId="calendar-form-ends-on-date"
+            >
+              {t("calendar.form.endsOnDate")}
+            </Chip>
+          </div>
+          {endsOn && (
+            <DatePopover value={endsOn} min={startsOn} onSelect={setPickedEnd}>
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  "w-full justify-start font-normal",
+                  endsTooEarly && "border-destructive",
+                )}
+                data-testid="calendar-form-ends-date"
+              >
+                <CalendarIcon />
+                {formatCalendarDate(endsOn, locale, { dateStyle: "long" })}
+              </Button>
+            </DatePopover>
+          )}
+          {endsTooEarly && (
+            <p className="text-destructive text-xs">
+              {t("calendar.validation.endsBeforeStart")}
+            </p>
+          )}
+        </Field>
+      )}
+
       {isTask && (
         <Field label={t("calendar.form.who")}>
           <div className="flex flex-wrap gap-2">
@@ -369,7 +435,17 @@ export function CalendarItemForm({
         data-testid="calendar-form-summary"
       >
         <Repeat className="size-4 shrink-0" />
-        {`${describeRecurrence(recurrence, t, locale)} · ${formatCalendarDate(startsOn, locale, { weekday: "short", day: "numeric", month: "short" })}`}
+        {[
+          describeRecurrence(recurrence, t, locale),
+          formatCalendarDate(startsOn, locale, {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+          }),
+          describeEnd({ endsOn }, today, t, locale),
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       </p>
 
       <div className="flex gap-2">

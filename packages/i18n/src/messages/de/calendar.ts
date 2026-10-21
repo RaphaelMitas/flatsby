@@ -48,6 +48,11 @@ export const calendar = {
     every: "Alle",
     on: "Am {on}",
     startDateHint: "Richtet sich nach dem Startdatum",
+    ends: "Endet",
+    endsOnDate: "Am Datum",
+    lastDay: "Letzter Tag",
+    ended: "Beendet",
+    endedHint: "Leg einen neuen Eintrag an, um es wieder zu starten",
     decreaseInterval: "Weniger",
     increaseInterval: "Mehr",
     who: "Wer",
@@ -90,6 +95,8 @@ export const calendar = {
       "{count, plural, =1 {Jeden Monat am {on}} other {Alle # Monate am {on}}}",
     yearly:
       "{count, plural, =1 {Jedes Jahr am {date}} other {Alle # Jahre am {date}}}",
+    until: "bis {date}",
+    ended: "endete am {date}",
   },
   detail: {
     order: "Reihenfolge",
@@ -106,5 +113,6 @@ export const calendar = {
   validation: {
     titleRequired: "Gib ihm einen Namen",
     titleTooLong: "Der Name ist zu lang",
+    endsBeforeStart: "Endet, bevor es beginnt",
   },
 } satisfies Messages["calendar"];
