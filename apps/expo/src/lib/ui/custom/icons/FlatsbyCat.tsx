@@ -95,10 +95,13 @@ export default function FlatsbyCat({
   detail: detailOverride,
   size,
   animated = false,
+  asleep = false,
 }: Omit<IconProps, "name" | "color"> & {
   color?: string;
   detail?: string;
   animated?: boolean;
+  /** Eyes held at the closed blink frame */
+  asleep?: boolean;
 }) {
   const { getColor } = useThemeColors();
   const detail = detailOverride ?? getColor("cat-detail");
@@ -108,6 +111,12 @@ export default function FlatsbyCat({
 
   // Same rhythm as the web cat's fc-blink and fc-look keyframes.
   useEffect(() => {
+    if (asleep) {
+      blink.value = withTiming(0.06, { duration: 400 });
+      look.value = 0;
+      return;
+    }
+    blink.value = 1;
     if (!animated || reduceMotion) return;
     blink.value = withRepeat(
       withSequence(
@@ -128,7 +137,7 @@ export default function FlatsbyCat({
       cancelAnimation(blink);
       cancelAnimation(look);
     };
-  }, [animated, reduceMotion, blink, look]);
+  }, [animated, asleep, reduceMotion, blink, look]);
 
   return (
     <Svg

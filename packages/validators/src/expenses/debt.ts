@@ -180,6 +180,26 @@ export function pairDebt(
   return between.find((debt) => debt.fromGroupMemberId === payer) ?? between[0];
 }
 
+/** From the settle plan, so it matches what Settle up offers */
+export function myDebts(
+  summary: GroupDebtSummary,
+  meId: number,
+  groupCurrency: string,
+) {
+  const debts = Object.values(summary.currencies)
+    .flatMap(({ simplified }) => simplified)
+    .sort(
+      (a, b) =>
+        Number(b.currency === groupCurrency) -
+          Number(a.currency === groupCurrency) ||
+        b.amountInCents - a.amountInCents,
+    );
+  return {
+    owe: debts.filter(({ fromGroupMemberId }) => fromGroupMemberId === meId),
+    owed: debts.filter(({ toGroupMemberId }) => toGroupMemberId === meId),
+  };
+}
+
 export function hasDebts(summary: GroupDebtSummary): boolean {
   return Object.values(summary.currencies).some(
     ({ direct }) => direct.length > 0,

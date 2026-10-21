@@ -15,6 +15,10 @@ export const settings = {
     legal: "Rechtliches",
   },
   items: {
+    home: "Startseite",
+    homeSubtitle: "Klassisch oder die neue",
+    homeClassic: "Klassisch",
+    homeNew: "Neu",
     buyCredits: "Credits kaufen",
     buyCreditsSubtitle: "Credits per In-App-Kauf erwerben",
     theme: "Design",

@@ -12,6 +12,10 @@ export const settings = {
     legal: "Legal",
   },
   items: {
+    home: "Home",
+    homeSubtitle: "Classic or the new one",
+    homeClassic: "Classic",
+    homeNew: "New",
     buyCredits: "Buy Credits",
     buyCreditsSubtitle: "Purchase credits via In-App Purchase",
     theme: "Theme",

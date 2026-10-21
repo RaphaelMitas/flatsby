@@ -76,6 +76,7 @@ interface ExpenseFormProps {
   onClose?: () => void;
   /** Callback when form is successfully submitted. If not provided, uses router.back() */
   onSuccess?: (expenseId: number) => void;
+  autoFocus?: boolean;
 }
 
 export function ExpenseForm({
@@ -83,6 +84,7 @@ export function ExpenseForm({
   expense,
   onClose,
   onSuccess,
+  autoFocus = false,
 }: ExpenseFormProps) {
   const router = useRouter();
   const t = useTranslations();
@@ -554,6 +556,7 @@ export function ExpenseForm({
                           <FormControl>
                             <Input
                               testID="expense-form-description"
+                              autoFocus={autoFocus}
                               placeholder={t("expenses.descriptionPlaceholder")}
                               value={field.value}
                               onChangeText={field.onChange}

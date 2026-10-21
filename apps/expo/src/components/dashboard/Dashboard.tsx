@@ -1,23 +1,22 @@
-import { Suspense, useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import {
-  BottomSheetPickerProvider,
-  useBottomSheetPicker,
-} from "~/lib/ui/bottom-sheet-picker";
+import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
-import Icon from "~/lib/ui/custom/icons/Icon";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { useHomeVersion } from "~/utils/home-version";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { GroupsDashboard } from "../groupDashboard/GroupsDashboard";
+import { HomeInvite } from "../home/HomeSwitch";
 import { HomeStats } from "./HomeStats";
 import { NavLinks } from "./NavLinks";
 import { QuickActions } from "./QuickActions";
+import { useGroupPicker } from "./useGroupPicker";
 
 export function Dashboard() {
   const t = useTranslations("home");
@@ -55,9 +54,9 @@ function DashboardContent() {
   const t = useTranslations();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { openPicker } = useBottomSheetPicker();
-  const { selectedGroupId, selectedGroupName, setSelectedGroup } =
-    useShoppingStore();
+  const openGroupPicker = useGroupPicker();
+  const { selectedGroupId, selectedGroupName } = useShoppingStore();
+  const { version: homeVersion } = useHomeVersion();
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: userWithGroups } = useSuspenseQuery(
@@ -76,51 +75,6 @@ function DashboardContent() {
     ]);
     setRefreshing(false);
   }, [queryClient]);
-
-  const CREATE_GROUP_ID = "__create_group__";
-  const JOIN_GROUP_ID = "__join_group__";
-
-  const groupItems = useMemo(() => {
-    if (!userWithGroups.success) return [];
-    const groups = userWithGroups.data.groups.map((group) => ({
-      id: String(group.id),
-      title: group.name,
-    }));
-    return [
-      ...groups,
-      {
-        id: CREATE_GROUP_ID,
-        title: t("home.createGroup"),
-        icon: <Icon name="plus" size={20} color="muted-foreground" />,
-      },
-      {
-        id: JOIN_GROUP_ID,
-        title: t("invite.join.withCode"),
-        icon: <Icon name="key-round" size={20} color="muted-foreground" />,
-      },
-    ];
-  }, [userWithGroups, t]);
-
-  const handleOpenGroupPicker = useCallback(() => {
-    openPicker({
-      items: groupItems,
-      selectedId: selectedGroupId ? String(selectedGroupId) : undefined,
-      onSelect: (item) => {
-        if (item.id === CREATE_GROUP_ID) {
-          router.push("/(tabs)/home/create-group");
-          return;
-        }
-        if (item.id === JOIN_GROUP_ID) {
-          router.push("/join");
-          return;
-        }
-        const groupId = parseInt(item.id, 10);
-        if (groupId !== selectedGroupId) {
-          setSelectedGroup(groupId, item.title);
-        }
-      },
-    });
-  }, [openPicker, groupItems, selectedGroupId, setSelectedGroup, router]);
 
   if (!selectedGroupId) {
     return null;
@@ -141,7 +95,7 @@ function DashboardContent() {
           <Button
             testID="dashboard-group-picker"
             className="flex-1"
-            onPress={handleOpenGroupPicker}
+            onPress={openGroupPicker}
             variant="outline"
             title={selectedGroupName ?? t("home.selectGroup")}
             icon="chevron-down"
@@ -158,6 +112,8 @@ function DashboardContent() {
             }
           />
         </View>
+
+        {homeVersion === "undecided" && <HomeInvite />}
 
         <HomeStats groupId={selectedGroupId} />
 

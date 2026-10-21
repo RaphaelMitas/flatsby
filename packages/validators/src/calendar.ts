@@ -531,6 +531,47 @@ export function entriesOn(
     );
 }
 
+// Together they stay inside one 62-day range query
+export const HOME_LOOKBACK_DAYS = 55;
+export const HOME_LOOKAHEAD_DAYS = 6;
+
+export function homeAgenda(range: CalendarRange, today: string, meId: number) {
+  const items = new Map(range.items.map((item) => [item.id, item]));
+  const entries = range.occurrences
+    .flatMap((occurrence) => {
+      const item = items.get(occurrence.itemId);
+      return item ? [{ item, occurrence }] : [];
+    })
+    .sort(
+      (a, b) =>
+        a.occurrence.date.localeCompare(b.occurrence.date) ||
+        (a.item.time?.start ?? "").localeCompare(b.item.time?.start ?? "") ||
+        a.item.title.localeCompare(b.item.title),
+    );
+  const myOpenTasks = entries.filter(
+    ({ item, occurrence }) =>
+      item.kind === "task" &&
+      !occurrence.completedAt &&
+      occurrence.turnGroupMemberId === meId,
+  );
+  // A chore left for weeks shows once, from its oldest open day
+  const due: CalendarEntry[] = [];
+  for (const entry of myOpenTasks) {
+    if (entry.occurrence.date > today) continue;
+    if (due.some(({ item }) => item.id === entry.item.id)) continue;
+    due.push(entry);
+  }
+
+  return {
+    due,
+    nextTurn: myOpenTasks.find(({ occurrence }) => occurrence.date > today),
+    nextEvent: entries.find(
+      ({ item, occurrence }) =>
+        item.kind === "event" && occurrence.date >= today,
+    ),
+  };
+}
+
 type Schedule = Pick<ExpandableItem, "startsOn" | "recurrence">;
 type Series = Schedule & Pick<ExpandableItem, "endsOn">;
 

@@ -13,6 +13,7 @@ import {
   editedStartsOn,
   entriesOn,
   expandOccurrences,
+  homeAgenda,
   monthDayChoices,
   monthGrid,
   recurrenceOf,
@@ -627,5 +628,68 @@ describe("editedStartsOn", () => {
       interval: 2,
       on: { day: 6 },
     });
+  });
+});
+
+describe("homeAgenda", () => {
+  const ME = 1;
+  const task = (
+    id: number,
+    title: string,
+    startsOn: string,
+    memberIds: number[],
+    recurrence: Recurrence | null = null,
+  ): CalendarItemView => ({
+    ...item(recurrence, startsOn, memberIds),
+    id,
+    title,
+  });
+  const event = (
+    id: number,
+    title: string,
+    startsOn: string,
+  ): CalendarItemView => ({
+    ...task(id, title, startsOn, []),
+    kind: "event",
+    time: { start: "19:00", end: "20:00" },
+  });
+  const kitchen = task(1, "Kitchen", "2026-10-05", [ME], {
+    type: "weekly",
+    interval: 1,
+    days: ["mo"],
+  });
+  const items = [
+    kitchen,
+    task(2, "Bathroom", "2026-10-21", [ME]),
+    task(3, "Bins", "2026-10-21", [2]),
+    event(4, "Yesterday's party", "2026-10-20"),
+    event(5, "Lea's birthday", "2026-10-24"),
+    event(6, "Flat dinner", "2026-10-23"),
+  ];
+  const range: CalendarRange = {
+    items,
+    occurrences: items.flatMap((i) =>
+      expandOccurrences(
+        i,
+        i === kitchen ? [done("2026-10-05")] : [],
+        window.from,
+        window.to,
+      ),
+    ),
+  };
+  const agenda = homeAgenda(range, "2026-10-21", ME);
+
+  it("lists my open chores up to today, a chore left for weeks once from its oldest day", () => {
+    expect(
+      agenda.due.map(({ item, occurrence }) => [item.title, occurrence.date]),
+    ).toEqual([
+      ["Kitchen", "2026-10-12"],
+      ["Bathroom", "2026-10-21"],
+    ]);
+  });
+
+  it("finds my next turn after today and the next event from today on", () => {
+    expect(agenda.nextTurn?.occurrence.date).toBe("2026-10-26");
+    expect(agenda.nextEvent?.item.title).toBe("Flat dinner");
   });
 });
