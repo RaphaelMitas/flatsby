@@ -15,3 +15,8 @@
   --radius-md: 12px;
   --radius-xl: 18px;
 }
+
+/* Tailwind's rounded-full is calc(infinity * 1px), which react-native-css keeps on mount but drops on re-render */
+@utility rounded-full {
+  border-radius: 9999px;
+}
