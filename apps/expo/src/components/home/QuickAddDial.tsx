@@ -1,6 +1,6 @@
 import type { ShoppingListSummary } from "@flatsby/api";
 import { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -19,11 +19,14 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 export function QuickAddDial({
   groupId,
   last,
+  lastUsed,
   others,
   onOpenList,
 }: {
   groupId: number;
   last: ShoppingListSummary | undefined;
+  /** False right after a group switch, when the list is just the first one */
+  lastUsed: boolean;
   others: ShoppingListSummary[];
   onOpenList: (list: ShoppingListSummary) => void;
 }) {
@@ -149,26 +152,29 @@ export function QuickAddDial({
             />
           </Pressable>
         )}
-        {showOthers &&
-          others.map((list) => (
-            <Animated.View
-              key={list.id}
-              entering={FadeIn}
-              exiting={FadeOut.duration(100)}
-            >
-              <Pressable
-                onPress={() => openList(list)}
-                className="active:bg-muted flex-row items-center gap-2 rounded-xl py-2 pr-2 pl-9"
+        {showOthers && (
+          <ScrollView className="max-h-48">
+            {others.map((list) => (
+              <Animated.View
+                key={list.id}
+                entering={FadeIn}
+                exiting={FadeOut.duration(100)}
               >
-                <Text numberOfLines={1} className="text-foreground flex-1">
-                  {list.name}
-                </Text>
-                <Text className="text-muted-foreground text-xs">
-                  {t("open", { count: list.uncheckedItemLength })}
-                </Text>
-              </Pressable>
-            </Animated.View>
-          ))}
+                <Pressable
+                  onPress={() => openList(list)}
+                  className="active:bg-muted flex-row items-center gap-2 rounded-xl py-2 pr-2 pl-9"
+                >
+                  <Text numberOfLines={1} className="text-foreground flex-1">
+                    {list.name}
+                  </Text>
+                  <Text className="text-muted-foreground text-xs">
+                    {t("open", { count: list.uncheckedItemLength })}
+                  </Text>
+                </Pressable>
+              </Animated.View>
+            ))}
+          </ScrollView>
+        )}
 
         {last ? (
           <Pressable
@@ -185,7 +191,9 @@ export function QuickAddDial({
                 {last.name}
               </Text>
               <Text className="text-primary-foreground text-xs opacity-70">
-                {t("lastUsed", { count: last.uncheckedItemLength })}
+                {t(lastUsed ? "lastUsed" : "open", {
+                  count: last.uncheckedItemLength,
+                })}
               </Text>
             </View>
           </Pressable>

@@ -117,8 +117,8 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     ? myDebts(debtData.data, meId, group.currency)
     : { owe: [], owed: [] };
   const lists = listsData.success ? listsData.data : [];
-  const lastList =
-    lists.find(({ id }) => id === selectedShoppingListId) ?? lists[0];
+  const selectedList = lists.find(({ id }) => id === selectedShoppingListId);
+  const lastList = selectedList ?? lists[0];
 
   const { data: itemsData } = useInfiniteQuery({
     ...shoppingListItemsOptions(group.id, lastList?.id ?? 0),
@@ -143,11 +143,10 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
         : 0,
   }));
   const nudges: Nudge[] = [
-    ...chores.slice(0, 1),
+    ...chores,
     ...(firstDebt
       ? [{ kind: "debt", debt: firstDebt, more: owe.length - 1 } as const]
       : []),
-    ...chores.slice(1),
   ];
 
   const refresh = () =>
@@ -332,6 +331,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       <QuickAddDial
         groupId={group.id}
         last={lastList}
+        lastUsed={selectedList !== undefined}
         others={lists.filter((list) => list !== lastList)}
         onOpenList={(list) => openList(list, true)}
       />

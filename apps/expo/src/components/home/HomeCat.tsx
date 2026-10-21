@@ -95,7 +95,6 @@ export function HomeCat({
   );
 }
 
-/** Drawn over the card */
 export function CatOverlay({
   pose,
   speech,

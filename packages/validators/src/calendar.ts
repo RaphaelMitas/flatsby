@@ -505,7 +505,6 @@ export function daySummary(entries: CalendarEntry[], meId: number) {
   };
 }
 
-/** By day, then start time with all-day entries last, then title */
 function rangeEntries(
   range: CalendarRange,
   keep: (entry: CalendarEntry) => boolean,
@@ -520,6 +519,7 @@ function rangeEntries(
     .sort(
       (a, b) =>
         a.occurrence.date.localeCompare(b.occurrence.date) ||
+        // All-day entries after the timed ones
         (a.item.time?.start ?? "99").localeCompare(
           b.item.time?.start ?? "99",
         ) ||
