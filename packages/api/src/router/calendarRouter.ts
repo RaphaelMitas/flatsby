@@ -240,7 +240,11 @@ const occurrenceOf = (itemId: number, date: string) =>
   );
 
 // A row that is neither done nor skipped says nothing the rule doesn't
-const pruneOccurrence = (db: Database, itemId: number, date: string) =>
+const pruneOccurrence = (
+  db: Database | DbTransaction,
+  itemId: number,
+  date: string,
+) =>
   db
     .delete(calendarOccurrences)
     .where(
@@ -475,18 +479,22 @@ export const calendarRouter = createTRPCRouter({
         Effect.flatMap(
           findItem(ctx.db, input.groupId, input.itemId),
           (item) => {
-            if (item.kind !== "task")
+            const skip = input.done ? (input.skip ?? []) : [];
+            if (item.kind !== "task" || (skip.length > 0 && !item.recurrence))
               return fail.validation("errors.unexpected");
-            if (input.done && !isScheduledOn(item, input.date))
+            if (
+              input.done &&
+              [input.date, ...skip].some((date) => !isScheduledOn(item, date))
+            )
               return fail.conflict("errors.calendarDateNotScheduled");
-            return safeDbOperation(async () => {
+            return DbUtils.transaction(async (tx) => {
               const completion = input.done
                 ? {
                     completedByGroupMemberId: member.id,
                     completedAt: new Date(),
                   }
                 : { completedByGroupMemberId: null, completedAt: null };
-              await ctx.db
+              await tx
                 .insert(calendarOccurrences)
                 .values({ itemId: item.id, date: input.date, ...completion })
                 .onConflictDoUpdate({
@@ -496,9 +504,21 @@ export const calendarRouter = createTRPCRouter({
                   ],
                   set: completion,
                 });
-              await pruneOccurrence(ctx.db, item.id, input.date);
+              await pruneOccurrence(tx, item.id, input.date);
+              for (const date of skip) {
+                await tx
+                  .insert(calendarOccurrences)
+                  .values({ itemId: item.id, date, skipped: true })
+                  .onConflictDoUpdate({
+                    target: [
+                      calendarOccurrences.itemId,
+                      calendarOccurrences.date,
+                    ],
+                    set: { skipped: true },
+                  });
+              }
               return { itemId: item.id, date: input.date };
-            }, "set calendar occurrence done");
+            }, "set calendar occurrence done")(ctx.db);
           },
         ),
       ),

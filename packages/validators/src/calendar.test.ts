@@ -710,8 +710,10 @@ describe("homeAgenda", () => {
       items: [party],
       occurrences: expandOccurrences(party, [], window.from, window.to),
     };
-    expect(
-      homeAgenda(withParty, "2026-10-21", "22:00", ME).nextEvent?.item.title,
-    ).toBe("Party");
+    const next = (today: string, now: string) =>
+      homeAgenda(withParty, today, now, ME).nextEvent?.item.title;
+    expect(next("2026-10-21", "22:00")).toBe("Party");
+    expect(next("2026-10-22", "00:30")).toBe("Party");
+    expect(next("2026-10-22", "02:00")).toBeUndefined();
   });
 });

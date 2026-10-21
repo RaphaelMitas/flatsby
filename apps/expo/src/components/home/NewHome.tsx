@@ -90,7 +90,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const openGroupPicker = useGroupPicker();
   const { selectedShoppingListId, setSelectedShoppingList } =
     useShoppingStore();
-  const { setDone, setSkipped } = useCalendarMutations(group);
+  const { setDone } = useCalendarMutations(group);
   const [speech, say] = useSpeech();
   const [stretchKey, setStretchKey] = useState(0);
 
@@ -310,22 +310,14 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           stretchKey={stretchKey}
           onCatPress={(pose) => say(catLines[pose])}
           onTick={(entry) => {
-            const itemId = entry.item.id;
             setDone.mutate({
               groupId: group.id,
-              itemId,
+              itemId: entry.item.id,
               date: entry.occurrence.date,
               done: true,
+              // Done once means done now; the days it was left are skipped, not done
+              skip: entry.missed,
             });
-            // Done once means done now; the days it was left are skipped, not done
-            for (const date of entry.missed) {
-              setSkipped.mutate({
-                groupId: group.id,
-                itemId,
-                date,
-                skipped: true,
-              });
-            }
             setStretchKey((key) => key + 1);
             say(t("home.new.cat.ticked"));
           }}

@@ -153,6 +153,8 @@ export const setOccurrenceDoneSchema = z.object({
   itemId: z.number(),
   date: calendarDateSchema,
   done: z.boolean(),
+  /** Earlier open days of the same chore, skipped in the same write */
+  skip: z.array(calendarDateSchema).max(MAX_RANGE_DAYS).optional(),
 });
 
 export const setOccurrenceSkippedSchema = z.object({
@@ -552,9 +554,18 @@ export interface DueChore extends CalendarEntry {
   missed: string[];
 }
 
-// An end before the start runs past midnight, so it is still on today
-const endOfDay = (time: EventTime | null) =>
-  time && time.end > time.start ? time.end : "24:00";
+function notOverYet(
+  time: EventTime | null,
+  date: string,
+  today: string,
+  now: string,
+) {
+  // An end before the start runs past midnight
+  const overnight = time !== null && time.end <= time.start;
+  if (date > today) return true;
+  if (date === today) return overnight || (time?.end ?? "24:00") > now;
+  return overnight && date === addDays(today, -1) && time.end > now;
+}
 
 /** `now` is the wall-clock time ("HH:MM"), to pass over events that ended today */
 export function homeAgenda(
@@ -589,8 +600,7 @@ export function homeAgenda(
     nextEvent: entries.find(
       ({ item, occurrence }) =>
         item.kind === "event" &&
-        (occurrence.date > today ||
-          (occurrence.date === today && endOfDay(item.time) > now)),
+        notOverYet(item.time, occurrence.date, today, now),
     ),
   };
 }
