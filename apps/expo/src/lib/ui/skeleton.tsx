@@ -15,9 +15,7 @@ const skeletonVariants = tv({
   variants: {
     variant: {
       default: "bg-muted",
-      rounded: "rounded-full bg-muted",
       text: "bg-muted rounded-sm",
-      card: "bg-muted rounded-xl",
     },
     size: {
       xs: "h-3",
