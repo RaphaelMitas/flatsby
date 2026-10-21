@@ -8,7 +8,8 @@ name: Release
 # even if the tag already exists (e.g. after fixing the workflow or release
 # notes), with skip_eas_build when only the publish half failed, so a
 # listing fix does not spend another pair of EAS builds on a binary the
-# stores already have.
+# stores already have. dry_run captures and composes the store assets from
+# any branch and stops there: no tag, no build, nothing published.
 on:
   push:
     branches: [main]
@@ -16,6 +17,10 @@ on:
     inputs:
       skip_eas_build:
         description: "Skip the EAS build+submit (the binary is already in the stores; only re-capture screenshots and re-run publish-ios and publish-android)"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Only capture and compose the store screenshots and banners (any branch); tag, build and publish nothing"
         type: boolean
         default: false
 
@@ -31,7 +36,7 @@ env:
 
 jobs:
   check:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || inputs.dry_run
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -57,6 +62,11 @@ jobs:
           fi
           TAG="v$VERSION"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "Dry run: capturing store assets for $TAG without tagging."
+            echo "is-release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if [ -n "$(git ls-remote --tags origin "refs/tags/$TAG")" ]; then
             if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
               echo "Tag $TAG exists; re-running release on manual dispatch."
@@ -72,7 +82,7 @@ jobs:
           echo "is-release=true" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub release
-        if: steps.decide.outputs.is-release == 'true'
+        if: steps.decide.outputs.is-release == 'true' && !inputs.dry_run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.decide.outputs.tag }}
@@ -80,7 +90,7 @@ jobs:
 
   eas-build-submit:
     needs: check
-    if: needs.check.outputs.is-release == 'true' && !inputs.skip_eas_build
+    if: needs.check.outputs.is-release == 'true' && !inputs.skip_eas_build && !inputs.dry_run
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -242,8 +252,9 @@ jobs:
       - name: Capture store screenshots
         working-directory: apps/expo
         run: |
-          mkdir -p e2e/results/screenshots
-          node e2e/run-flows.mjs ../screenshots/store-screenshots
+          for locale in en de; do
+            E2E_LOCALE=$locale node e2e/run-flows.mjs ../screenshots/store-screenshots
+          done
         env:
           E2E_API_URL: http://localhost:3000
 
@@ -292,7 +303,10 @@ jobs:
 
       - name: Capture iPad store screenshots
         working-directory: apps/expo
-        run: node e2e/run-flows.mjs ../screenshots/store-screenshots-ipad
+        run: |
+          for locale in en de; do
+            E2E_LOCALE=$locale node e2e/run-flows.mjs ../screenshots/store-screenshots-ipad
+          done
         env:
           E2E_API_URL: http://localhost:3000
 
@@ -350,6 +364,7 @@ jobs:
           retention-days: 30
 
       - name: Attach screenshots to GitHub release
+        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.check.outputs.tag }}
@@ -432,8 +447,7 @@ jobs:
             adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
             adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4
             adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
-            mkdir -p apps/expo/e2e/results/screenshots
-            bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/apps/expo/android/app/build/outputs/apk/release/app-release.apk" ../screenshots/store-screenshots
+            E2E_LOCALE=en bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/apps/expo/android/app/build/outputs/apk/release/app-release.apk" ../screenshots/store-screenshots && E2E_LOCALE=de bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/apps/expo/android/app/build/outputs/apk/release/app-release.apk" ../screenshots/store-screenshots
         env:
           E2E_PLATFORM: android
           E2E_API_URL: http://localhost:3000
@@ -469,6 +483,7 @@ jobs:
           retention-days: 30
 
       - name: Attach screenshots to GitHub release
+        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.check.outputs.tag }}
@@ -517,7 +532,7 @@ jobs:
   publish-readme-assets:
     needs: [check, screenshots-ios, screenshots-web]
     if: >-
-      always() && needs.check.outputs.is-release == 'true' &&
+      always() && needs.check.outputs.is-release == 'true' && !inputs.dry_run &&
       (needs.screenshots-ios.result == 'success' || needs.screenshots-web.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -558,7 +573,7 @@ jobs:
           # Replace each directory wholesale, so a renamed or dropped capture
           # doesn't leave last release's file behind alongside this one's.
           shopt -s nullglob
-          ios=(ios-results/screenshots/[0-9]*.png)
+          ios=(ios-results/screenshots/en/[0-9]*.png)
           web=(web-results/readme-screenshots/*.png)
           if (( ${#ios[@]} )); then
             rm -rf "$PUBLISH/ios"
@@ -578,13 +593,78 @@ jobs:
           git commit -q -m "README screenshots for $TAG"
           git push --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" assets
 
+  # Frames the captures into the listing's screenshots and renders the
+  # banners (tooling/store-assets). iPad screenshots ship as captured.
+  compose-store-assets:
+    needs: [check, screenshots-ios, screenshots-android]
+    if: >-
+      always() && needs.check.outputs.is-release == 'true' &&
+      (needs.screenshots-ios.result == 'success' || needs.screenshots-android.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Install Playwright browser
+        run: pnpm -F @flatsby/store-assets exec playwright install --with-deps chromium
+
+      - name: Download iOS captures
+        if: needs.screenshots-ios.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          name: store-screenshots-ios
+          path: results/ios
+
+      - name: Download Android captures
+        if: needs.screenshots-android.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          name: store-screenshots-android
+          path: results/android
+
+      - name: Compose store assets
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          for platform in ios android; do
+            if [ -d "results/$platform/screenshots" ]; then
+              cp -R "results/$platform/screenshots" "captures/$platform"
+            fi
+          done
+          pnpm -F @flatsby/store-assets render "$GITHUB_WORKSPACE/captures" "$GITHUB_WORKSPACE/store-assets"
+          for dir in captures/ios/*/; do
+            locale=$(basename "$dir")
+            case "$locale" in en) store=en-US ;; de) store=de-DE ;; *) continue ;; esac
+            cp "$dir"ipad-*.png "store-assets/ios/$store/"
+          done
+
+      - name: Upload store assets
+        uses: actions/upload-artifact@v7
+        with:
+          name: store-assets
+          path: store-assets/
+          retention-days: 30
+
+      - name: Attach store assets to GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          cd store-assets
+          zip -r "$RUNNER_TEMP/flatsby-$TAG-store-assets.zip" .
+          gh release upload "$TAG" "$RUNNER_TEMP/flatsby-$TAG-store-assets.zip" --clobber
+
   # Runs whatever the screenshot job did: store listings keep their last
   # uploaded assets, so a failed capture must not block the review
   # submission; fresh screenshots ride along only when the job succeeded.
   publish-ios:
-    needs: [check, eas-build-submit, screenshots-ios]
+    needs: [check, eas-build-submit, compose-store-assets]
     if: >-
-      always() && needs.check.outputs.is-release == 'true' &&
+      always() && needs.check.outputs.is-release == 'true' && !inputs.dry_run &&
       (needs.eas-build-submit.result == 'success' || inputs.skip_eas_build)
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -613,12 +693,12 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         run: gem install fastlane -N
 
-      - name: Download screenshots
-        if: steps.guard.outputs.skip != 'true' && needs.screenshots-ios.result == 'success'
+      - name: Download store assets
+        if: steps.guard.outputs.skip != 'true' && needs.compose-store-assets.result == 'success'
         uses: actions/download-artifact@v8
         with:
-          name: store-screenshots-ios
-          path: results
+          name: store-assets
+          path: store-assets
 
       - name: Arrange deliver inputs
         if: steps.guard.outputs.skip != 'true'
@@ -627,9 +707,9 @@ jobs:
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
         run: |
-          if compgen -G "results/screenshots/*.png" > /dev/null; then
-            mkdir -p store/screenshots/en-US
-            cp results/screenshots/*.png store/screenshots/en-US/
+          if [ -d store-assets/ios ]; then
+            mkdir -p store/screenshots
+            cp -R store-assets/ios/. store/screenshots/
           fi
           # Without a Deliverfile, deliver prompts to set one up, which
           # crashes non-interactive runs; an empty file satisfies it.
@@ -721,7 +801,7 @@ jobs:
             # is the only way to correct a listing after submitting it.
             --reject_if_possible true
           )
-          if [ -d store/screenshots/en-US ]; then
+          if [ -d store/screenshots ]; then
             # sync, not overwrite: deliver verifies uploads before App Store
             # Connect has indexed them, declares them missing and uploads a
             # second copy (run 31280124106 doubled every screenshot and then
@@ -792,11 +872,12 @@ jobs:
           ASC_KEY_PATH: ${{ runner.temp }}/asc_key.json
 
   # Like publish-ios, independent of the screenshot job's outcome: listing
-  # text always goes up, fresh en-US screenshots only when captured.
+  # text always goes up, fresh screenshots and feature graphics only when
+  # composed.
   publish-android:
-    needs: [check, eas-build-submit, screenshots-android]
+    needs: [check, eas-build-submit, compose-store-assets]
     if: >-
-      always() && needs.check.outputs.is-release == 'true' &&
+      always() && needs.check.outputs.is-release == 'true' && !inputs.dry_run &&
       (needs.eas-build-submit.result == 'success' || inputs.skip_eas_build)
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -846,12 +927,12 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         run: gem install fastlane -N
 
-      - name: Download screenshots
-        if: steps.guard.outputs.skip != 'true' && needs.screenshots-android.result == 'success'
+      - name: Download store assets
+        if: steps.guard.outputs.skip != 'true' && needs.compose-store-assets.result == 'success'
         uses: actions/download-artifact@v8
         with:
-          name: store-screenshots-android
-          path: results
+          name: store-assets
+          path: store-assets
 
       - name: Update Play listing and release
         if: steps.guard.outputs.skip != 'true'
@@ -869,11 +950,20 @@ jobs:
             printf '%s' "$(cat "${dir}release_notes.txt")" > "$out/changelogs/default.txt"
           done
           SKIP_SCREENSHOTS=true
-          if compgen -G "results/screenshots/*.png" > /dev/null; then
-            mkdir -p store/metadata/android/en-US/images/phoneScreenshots
-            cp results/screenshots/*.png store/metadata/android/en-US/images/phoneScreenshots/
+          SKIP_IMAGES=true
+          for dir in store-assets/android/*/; do
+            images="store/metadata/android/$(basename "$dir")/images"
+            mkdir -p "$images/phoneScreenshots"
+            cp "$dir"*.png "$images/phoneScreenshots/"
             SKIP_SCREENSHOTS=false
-          fi
+          done
+          for graphic in store-assets/play/*/featureGraphic.png; do
+            [ -f "$graphic" ] || continue
+            images="store/metadata/android/$(basename "$(dirname "$graphic")")/images"
+            mkdir -p "$images"
+            cp "$graphic" "$images/featureGraphic.png"
+            SKIP_IMAGES=false
+          done
           # rescue_changes_not_sent_for_review would otherwise commit
           # silently without sending the release to review.
           fastlane supply \
@@ -888,5 +978,5 @@ jobs:
             --skip_upload_aab true \
             --skip_upload_metadata false \
             --skip_upload_changelogs false \
-            --skip_upload_images true \
+            --skip_upload_images "$SKIP_IMAGES" \
             --skip_upload_screenshots "$SKIP_SCREENSHOTS"

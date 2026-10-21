@@ -1,0 +1,275 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("/fonts/inter.woff2") format("woff2");
+        font-weight: 100 900;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+      body {
+        background: #facc15;
+        color: #09090b;
+        font-family: "Inter", sans-serif;
+        position: relative;
+      }
+      .bubble {
+        position: absolute;
+        background: #fff;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        line-height: 1.2;
+        white-space: nowrap;
+        box-shadow: 0 0.6vw 1.8vw rgba(9, 9, 11, 0.14);
+        z-index: 4;
+      }
+      .bubble::before {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        width: 1em;
+        height: 0.88em;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 44' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M30 0C30 24 22 36 0 44H50V0Z'/%3E%3C/svg%3E")
+          no-repeat;
+        background-size: 100% 100%;
+        left: -0.36em;
+      }
+      .bubble.out::before {
+        left: auto;
+        right: -0.36em;
+        transform: scaleX(-1);
+      }
+      h1 {
+        position: absolute;
+        margin: 0;
+        font-weight: 900;
+        line-height: 0.98;
+        letter-spacing: -0.02em;
+        word-spacing: 0.06em;
+        text-wrap: balance;
+        z-index: 5;
+      }
+      .crop {
+        position: absolute;
+        background-color: #09090b;
+        background-repeat: no-repeat;
+        overflow: hidden;
+      }
+      .crop {
+        z-index: 2;
+      }
+      .cat {
+        position: absolute;
+        background: url("/brand/adaptive-icon.png") no-repeat;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { locate, trimX } from "/locate.js";
+
+      const q = new URLSearchParams(location.search);
+      const asset = q.get("asset") ?? "search";
+      const lang = q.get("lang") ?? "en";
+      const src = (capture) => `/captures/ios/${lang}/${capture}.png`;
+
+      // Element crops from the iPhone captures, located in their screen so they keep its scale.
+      // `card` crops are whole cards, so they keep the card's rounded corner radius.
+      const REGIONS = {
+        internet: {
+          capture: "03-expenses",
+          crop: "crop-expense-internet",
+          card: true,
+        },
+        yourTurn: { capture: "01a-calendar", crop: "crop-row-bins" },
+        oatMilk: {
+          capture: "02-shopping-list",
+          crop: "crop-item-oat-milk",
+          card: true,
+        },
+        owed: { capture: "01-home", crop: "crop-balance", trim: 0.24 },
+      };
+      const CARD_RADIUS = 44;
+
+      // Layouts in design pixels of each asset's CSS viewport; scaled to the real viewport below.
+      // `right` anchors a bubble to the right edge so longer German copy grows inward.
+      const LAYOUTS = {
+        search: {
+          width: 1920,
+          bubbles: [
+            { right: 380, y: 700, rot: 3, size: 54 },
+            { right: 190, y: 196, rot: 3.5, size: 56, out: true },
+            { x: 190, y: 92, rot: -3.5, size: 56 },
+          ],
+          headline: { x: 360, y: 384, w: 1200, size: 100, lines: 2 },
+          crops: [
+            { region: "internet", x: 390, y: 606, w: 1140 },
+            { region: "yourTurn", x: 130, y: 1046, w: 810 },
+            {
+              region: "oatMilk",
+              x: 980,
+              y: 1054,
+              w: 810,
+              cat: { size: 340, cut: 0.555, at: 0.85 },
+            },
+          ],
+        },
+        header: {
+          width: 1920,
+          bubbles: [
+            { right: 1350, y: 180, rot: -5, size: 42 },
+            { right: 1390, y: 500, rot: 4, size: 42, out: true },
+          ],
+          headline: { x: 548, y: 280, w: 823, size: 132, lines: 2 },
+          crops: [
+            {
+              region: "owed",
+              x: 1400,
+              y: 400,
+              w: 400,
+              cat: { size: 620, cut: 0.555 },
+            },
+          ],
+        },
+        play: {
+          width: 1024,
+          bubbles: [
+            { x: 168, y: 168, rot: -4, size: 20 },
+            { x: 186, y: 228, rot: 3, size: 20, out: true },
+            { x: 168, y: 288, rot: -2, size: 20 },
+          ],
+          headline: { x: 172, y: 78, w: 680, size: 62, lines: 1 },
+          crops: [
+            {
+              region: "owed",
+              x: 612,
+              y: 204,
+              w: 250,
+              cat: { size: 180, cut: 0.53 },
+            },
+            { region: "yourTurn", x: 232, y: 338, w: 560 },
+          ],
+        },
+      };
+
+      const loadImage = (url) =>
+        new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = url;
+        });
+
+      const add = (className, style) => {
+        const el = document.createElement("div");
+        el.className = className;
+        Object.assign(el.style, style);
+        document.body.appendChild(el);
+        return el;
+      };
+
+      fetch("captions.json")
+        .then((r) => r.json())
+        .then(async (captions) => {
+          const copy = captions[lang][asset];
+          const layout = LAYOUTS[asset];
+          const u = window.innerWidth / layout.width;
+          const px = (n) => `${n * u}px`;
+          document.documentElement.lang = lang;
+
+          const names = new Set(
+            layout.crops.flatMap((c) => [
+              REGIONS[c.region].capture,
+              REGIONS[c.region].crop,
+            ]),
+          );
+          const [images] = await Promise.all([
+            Promise.all(
+              [...names].map(async (n) => [n, await loadImage(src(n))]),
+            ).then(Object.fromEntries),
+            loadImage("/brand/adaptive-icon.png"),
+            document.fonts.load('900 100px "Inter"'),
+            document.fonts.load('600 100px "Inter"'),
+          ]);
+
+          for (const c of layout.crops) {
+            const { capture, crop, card, trim } = REGIONS[c.region];
+            const [bx, by, bw, bh] = trimX(
+              locate(images[capture], images[crop]),
+              trim,
+            );
+            const s = (c.w * u) / bw;
+            add("crop", {
+              left: px(c.x),
+              top: px(c.y),
+              width: px(c.w),
+              height: `${bh * s}px`,
+              borderRadius: card
+                ? `${CARD_RADIUS * s}px`
+                : px(c.radius ?? c.w * 0.045),
+              boxShadow: `0 ${px(c.w * 0.02)} ${px(c.w * 0.07)} rgba(9, 9, 11, 0.28)`,
+              backgroundImage: `url("${src(capture)}")`,
+              backgroundSize: `${images[capture].naturalWidth * s}px auto`,
+              backgroundPosition: `${-bx * s}px ${-by * s}px`,
+            });
+            if (c.cat) {
+              // The cat fills x 0.29-0.71 of the 1024px icon with its ears at y 0.27; the tile's top edge cuts it at y `cut`.
+              const { size, cut, at = 0.5 } = c.cat;
+              const visible = (cut - 0.27) * size;
+              add("cat", {
+                left: px(c.x + c.w * at - size * 0.21),
+                top: px(c.y - visible),
+                width: px(size * 0.42),
+                height: px(visible),
+                backgroundSize: `${px(size)} ${px(size)}`,
+                backgroundPosition: `${px(-size * 0.29)} ${px(-size * 0.27)}`,
+              });
+            }
+          }
+
+          layout.bubbles.forEach((b, i) => {
+            const el = add(`bubble${b.out ? " out" : ""}`, {
+              fontSize: px(b.size),
+              padding: `${px(b.size * 0.36)} ${px(b.size * 0.78)} ${px(b.size * 0.4)}`,
+              borderRadius: px(b.size * 0.86),
+              top: px(b.y),
+              transform: `rotate(${b.rot}deg)`,
+            });
+            el.textContent = copy.bubbles[i];
+            if (b.right !== undefined) el.style.right = px(b.right);
+            else el.style.left = px(b.x);
+          });
+
+          const h = layout.headline;
+          const h1 = document.createElement("h1");
+          h1.textContent = copy.headline;
+          Object.assign(h1.style, {
+            left: px(h.x),
+            top: px(h.y),
+            width: px(h.w),
+            textAlign: "center",
+          });
+          document.body.appendChild(h1);
+          let size = h.size;
+          const fit = () => {
+            h1.style.fontSize = px(size);
+            return (
+              h1.offsetHeight <= (h.lines + 0.5) * size * 0.98 * u &&
+              h1.scrollWidth <= h1.clientWidth
+            );
+          };
+          while (!fit() && size > h.size * 0.6) size -= 2;
+          document.body.dataset.ready = "true";
+        });
+    </script>
+  </body>
+</html>

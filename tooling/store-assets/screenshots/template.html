@@ -1,0 +1,331 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("/fonts/inter.woff2") format("woff2");
+        font-weight: 100 900;
+      }
+      :root {
+        --bg: #facc15;
+        --ink: #09090b;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Inter", sans-serif;
+        position: relative;
+      }
+      header {
+        position: absolute;
+        top: 2.4vh;
+        left: 5vw;
+        right: 5vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .chat {
+        margin-bottom: 2.6vw;
+        transform: rotate(-1.5deg);
+      }
+      .bubble {
+        position: relative;
+        background: #fff;
+        padding: 1.9vw 4vw 2.1vw;
+        border-radius: 4.4vw;
+        font-size: 5vw;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        line-height: 1.2;
+        white-space: nowrap;
+        box-shadow: 0 1vw 3vw rgba(9, 9, 11, 0.14);
+      }
+      .bubble::before {
+        content: "";
+        position: absolute;
+        left: -1.8vw;
+        bottom: 0;
+        width: 5vw;
+        height: 4.4vw;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 44' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M30 0C30 24 22 36 0 44H50V0Z'/%3E%3C/svg%3E")
+          no-repeat;
+        background-size: 100% 100%;
+      }
+      h1 {
+        margin: 0;
+        font-size: 12.4vw;
+        font-weight: 900;
+        line-height: 0.98;
+        letter-spacing: -0.02em;
+        word-spacing: 0.06em;
+        text-align: center;
+        text-wrap: balance;
+      }
+      .card,
+      .zoom {
+        position: absolute;
+        overflow: hidden;
+        background: #09090b;
+      }
+      .card {
+        border-radius: 5vw;
+        box-shadow: 0 2vw 7vw rgba(9, 9, 11, 0.28);
+        z-index: 2;
+      }
+      .segment {
+        background-repeat: no-repeat;
+      }
+      .mask {
+        position: absolute;
+        background: #09090b;
+      }
+      .zoom {
+        z-index: 3;
+        background-repeat: no-repeat;
+        border-radius: 3.6vw;
+        box-shadow:
+          0 3vw 8vw rgba(9, 9, 11, 0.5),
+          0 0 0 0.35vw rgba(255, 255, 255, 0.16);
+      }
+      .cat {
+        position: absolute;
+        z-index: 1;
+        background: url("/brand/adaptive-icon.png") no-repeat;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="chat"><div class="bubble" id="bubble"></div></div>
+      <h1 id="h"></h1>
+    </header>
+    <script type="module">
+      import { locate, trimX, union } from "/locate.js";
+
+      const q = new URLSearchParams(location.search);
+      const platform = q.get("platform") ?? "ios";
+      const lang = q.get("lang") ?? "en";
+      const index = Number(q.get("frame") ?? 0);
+      const vw = window.innerWidth / 100;
+      const H = window.innerHeight;
+
+      const pick = (value) =>
+        value && typeof value === "object" && platform in value
+          ? value[platform]
+          : value;
+      const src = (capture) => `/captures/${platform}/${lang}/${capture}.png`;
+
+      const loadImage = (url) =>
+        new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = url;
+        });
+
+      const place = (className, styles, parent = document.body) => {
+        const el = document.createElement("div");
+        el.className = className;
+        Object.assign(el.style, styles);
+        parent.appendChild(el);
+        return el;
+      };
+
+      // Store guidance (Google Play) wants captions in roughly the top fifth of the frame.
+      const captionLimit = 0.215 * H;
+      const fitHeadline = (h1, maxLines) => {
+        let size = 12.4;
+        h1.style.fontSize = `${size}vw`;
+        const tooBig = () =>
+          h1.offsetHeight > (maxLines + 0.5) * size * 0.98 * vw ||
+          h1.scrollWidth > h1.clientWidth ||
+          h1.getBoundingClientRect().bottom > captionLimit;
+        while (tooBig() && size > 8) {
+          size -= 0.2;
+          h1.style.fontSize = `${size}vw`;
+        }
+      };
+
+      fetch("captions.json")
+        .then((r) => r.json())
+        .then(async (captions) => {
+          const frame = captions[lang][index];
+          document.documentElement.lang = lang;
+          document.getElementById("bubble").textContent = frame.bubble;
+          const h1 = document.getElementById("h");
+          h1.textContent = frame.headline;
+
+          const captures = [
+            ...new Set([
+              ...[...frame.cards, ...(frame.zooms ?? [])].map((c) => c.capture),
+              ...(frame.zooms ?? []).flatMap((z) => z.crop),
+            ]),
+          ];
+          const images = Object.fromEntries(
+            await Promise.all(
+              captures.map(async (c) => [c, await loadImage(src(c))]),
+            ),
+          );
+          for (const z of frame.zooms ?? []) {
+            const capture = images[z.capture];
+            const box = trimX(
+              union([z.crop].flat().map((c) => locate(capture, images[c]))),
+              z.trim,
+            );
+            z.region = [
+              box[0] / capture.naturalWidth,
+              box[1] / capture.naturalHeight,
+              box[2] / capture.naturalWidth,
+              box[3] / capture.naturalHeight,
+            ];
+          }
+          await document.fonts.ready;
+          fitHeadline(h1, frame.lines ?? 2);
+
+          const gap = 3.2 * vw;
+          const zoneTop =
+            document.querySelector("header").getBoundingClientRect().bottom +
+            5 * vw;
+          // The cat fills x 0.30-0.70 of the 1024px icon, ears at y 0.27; the frame edge cuts it at y `cut`.
+          const catTop = frame.cat
+            ? H - (frame.cat.cut - 0.27) * frame.cat.size * vw
+            : H;
+          const zoneBottom = catTop - 4 * vw;
+          const ratio = (c) =>
+            images[c.capture].naturalHeight / images[c.capture].naturalWidth;
+          const cardAspect = (c) =>
+            pick(c.segments).reduce(
+              (sum, [a, b]) => sum + (b - a) * ratio(c),
+              0,
+            );
+          const zoomBox = (z) => {
+            const [, , w, h] = z.region;
+            const width = z.width * vw;
+            return { width, height: (width * h * ratio(z)) / w };
+          };
+
+          const stacked = (frame.zooms ?? []).filter((z) => z.stack);
+          const fixed =
+            stacked.reduce(
+              (sum, z) => sum + zoomBox(z).height - z.overlap * vw,
+              0,
+            ) +
+            gap * (frame.cards.length - 1);
+          const aspects = frame.cards.reduce(
+            (sum, c) => sum + cardAspect(c),
+            0,
+          );
+          const width = Math.min(
+            (frame.maxWidth ?? 96) * vw,
+            (zoneBottom - zoneTop - fixed) / aspects,
+          );
+          const total = width * aspects + fixed;
+          let y = zoneTop + (zoneBottom - zoneTop - total) / 2;
+          const left = (window.innerWidth - width) / 2;
+
+          const cardTops = frame.cards.map((c) => {
+            const top = y;
+            const full = width;
+            const fullHeight = full * ratio(c);
+            const card = place("card", {
+              left: `${left}px`,
+              top: `${top}px`,
+              width: `${width}px`,
+            });
+            for (const [a, b] of pick(c.segments)) {
+              const seg = place(
+                "segment",
+                {
+                  position: "relative",
+                  height: `${(b - a) * fullHeight}px`,
+                  backgroundImage: `url("${src(c.capture)}")`,
+                  backgroundSize: `${full}px auto`,
+                  backgroundPosition: `0 ${-a * fullHeight}px`,
+                },
+                card,
+              );
+              // Hides a secondary line in repeated list rows and re-centres the kept line on the row.
+              const rows = pick(c.rows);
+              if (rows) {
+                const { x, w, area, keep, shift, step, count } = rows;
+                for (let i = 0; i < count; i++) {
+                  const off = i * step;
+                  if (area[0] + off < a || area[1] + off > b) continue;
+                  const box = (y0, y1) => ({
+                    left: `${x * full}px`,
+                    width: `${w * full}px`,
+                    top: `${(y0 - a) * fullHeight}px`,
+                    height: `${(y1 - y0) * fullHeight}px`,
+                  });
+                  place("mask", box(area[0] + off, area[1] + off), seg);
+                  place(
+                    "mask",
+                    {
+                      ...box(keep[0] + off + shift, keep[1] + off + shift),
+                      backgroundImage: `url("${src(c.capture)}")`,
+                      backgroundSize: `${full}px auto`,
+                      backgroundPosition: `${-x * full}px ${-(keep[0] + off) * fullHeight}px`,
+                    },
+                    seg,
+                  );
+                }
+              }
+            }
+            y += cardAspect(c) * width + gap;
+            return { top, segments: pick(c.segments), fullHeight };
+          });
+          y -= gap;
+
+          for (const z of frame.zooms ?? []) {
+            const [rx, ry, rw] = z.region;
+            const box = zoomBox(z);
+            const full = box.width / rw;
+            let top;
+            if (z.stack) {
+              top = y - z.overlap * vw;
+              y = top + box.height;
+            } else {
+              const card = cardTops[z.card];
+              const [a] = card.segments[0];
+              const sourceCenter =
+                card.top + (ry - a + z.region[3] / 2) * card.fullHeight;
+              top = sourceCenter - box.height / 2;
+            }
+            place("zoom", {
+              backgroundImage: `url("${src(z.capture)}")`,
+              backgroundSize: `${full}px auto`,
+              backgroundPosition: `${-rx * full}px ${-ry * full * ratio(z)}px`,
+              width: `${box.width}px`,
+              height: `${box.height}px`,
+              left: `${(window.innerWidth - box.width) / 2}px`,
+              top: `${top}px`,
+            });
+          }
+
+          if (frame.cat) {
+            const size = frame.cat.size * vw;
+            const box = size * 0.42;
+            place("cat", {
+              width: `${box}px`,
+              height: `${H - catTop}px`,
+              backgroundSize: `${size}px ${size}px`,
+              backgroundPosition: `${-size * 0.29}px ${-size * 0.27}px`,
+              left: `${(window.innerWidth - box) / 2}px`,
+              top: `${catTop}px`,
+            });
+          }
+          document.body.dataset.ready = "true";
+        });
+    </script>
+  </body>
+</html>

@@ -48,6 +48,7 @@ interface StatCardProps {
   label: string;
   iconColor: ColorName;
   loading?: boolean;
+  testID?: string;
 }
 
 function StatCard({
@@ -57,6 +58,7 @@ function StatCard({
   label,
   iconColor,
   loading,
+  testID,
 }: StatCardProps) {
   const animatedValue = useCountUp(value);
   const displayValue = loading
@@ -66,7 +68,7 @@ function StatCard({
       : String(animatedValue);
 
   return (
-    <Card className="flex-1">
+    <Card testID={testID} className="flex-1">
       <CardContent className="items-center justify-center p-4">
         <View className="mb-2">
           <Icon name={iconName} size={25} color={iconColor} />
@@ -177,6 +179,7 @@ export function HomeStats({ groupId }: HomeStatsProps) {
         label={balanceLabel}
         iconColor={balanceIconColor}
         loading={isLoading}
+        testID="home-stat-balance"
       />
     </View>
   );

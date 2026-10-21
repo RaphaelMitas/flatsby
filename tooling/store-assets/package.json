@@ -1,0 +1,21 @@
+{
+  "name": "@flatsby/store-assets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo node_modules",
+    "check": "biome check",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "render": "node render.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@flatsby/prettier-config": "workspace:*",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@playwright/test": "^1.64.1",
+    "prettier": "catalog:"
+  },
+  "prettier": "@flatsby/prettier-config"
+}

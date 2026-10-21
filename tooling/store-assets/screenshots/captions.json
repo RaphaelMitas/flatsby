@@ -1,0 +1,282 @@
+{
+  "en": [
+    {
+      "bubble": "bathroom. whose turn?",
+      "headline": "Get your flat out of the group chat",
+      "lines": 3,
+      "cards": [
+        {
+          "capture": "01a-calendar",
+          "segments": {
+            "ios": [[0.055, 0.7908]],
+            "android": [[0.045, 0.8159]]
+          }
+        }
+      ],
+      "zooms": [
+        {
+          "capture": "01a-calendar",
+          "card": 0,
+          "width": 98,
+          "crop": ["crop-row-bathroom", "crop-row-bins"]
+        }
+      ]
+    },
+    {
+      "bubble": "wait, you bought milk too?",
+      "headline": "Never buy milk twice",
+      "cards": [
+        {
+          "capture": "06-shopping-lists",
+          "segments": {
+            "ios": [[0.125, 0.3326]],
+            "android": [[0.122, 0.3413]]
+          }
+        },
+        {
+          "capture": "02-shopping-list",
+          "segments": {
+            "ios": [
+              [0.07, 0.4741],
+              [0.8466, 0.9065]
+            ],
+            "android": [
+              [0.065, 0.4854],
+              [0.817, 0.879]
+            ]
+          }
+        }
+      ],
+      "zooms": [
+        {
+          "capture": "02-shopping-list",
+          "card": 1,
+          "width": 98,
+          "crop": "crop-item-oat-milk"
+        }
+      ]
+    },
+    {
+      "bubble": "who paid for the wifi?",
+      "headline": "Know who owes what",
+      "cards": [
+        {
+          "capture": "03-expenses",
+          "segments": {
+            "ios": [[0.052, 0.615]],
+            "android": [[0.045, 0.6345]]
+          }
+        }
+      ],
+      "zooms": [
+        {
+          "capture": "01-home",
+          "stack": true,
+          "overlap": 3,
+          "width": 76,
+          "crop": "crop-balance",
+          "trim": 0.24
+        }
+      ]
+    },
+    {
+      "bubble": "so how much is that each?",
+      "headline": "Split it to the cent",
+      "cards": [
+        {
+          "capture": "04-expense-split",
+          "segments": {
+            "ios": [[0.052, 0.735]],
+            "android": [[0.066, 0.764]]
+          }
+        }
+      ],
+      "zooms": [
+        {
+          "capture": "04-expense-split",
+          "card": 0,
+          "width": 98,
+          "crop": "crop-split-details"
+        }
+      ]
+    },
+    {
+      "bubble": "new flatmate on Monday!",
+      "headline": "One link and they’re in",
+      "cat": {
+        "size": 150,
+        "cut": 0.62
+      },
+      "cards": [
+        {
+          "capture": "05-add-member",
+          "segments": {
+            "ios": [[0.052, 0.503]],
+            "android": [[0.065, 0.522]]
+          },
+          "rows": {
+            "ios": {
+              "x": 0.125,
+              "w": 0.6,
+              "area": [0.3305, 0.369],
+              "keep": [0.3315, 0.347],
+              "shift": 0.0095,
+              "step": 0.0598,
+              "count": 3
+            },
+            "android": {
+              "x": 0.13,
+              "w": 0.6,
+              "area": [0.338, 0.379],
+              "keep": [0.339, 0.3555],
+              "shift": 0.0105,
+              "step": 0.0646,
+              "count": 3
+            }
+          }
+        }
+      ],
+      "zooms": []
+    }
+  ],
+  "de": [
+    {
+      "bubble": "wer ist mit Bad dran??",
+      "headline": "WG-Orga ohne Chat-Chaos",
+      "lines": 3,
+      "cards": [
+        {
+          "capture": "01a-calendar",
+          "segments": {
+            "ios": [[0.055, 0.7908]],
+            "android": [[0.045, 0.8159]]
+          }
+        }
+      ],
+      "zooms": [
+        {
+          "capture": "01a-calendar",
+          "card": 0,
+          "width": 98,
+          "crop": ["crop-row-bathroom", "crop-row-bins"]
+        }
+      ]
+    },
+    {
+      "bubble": "warte, du hast auch Milch geholt??",
+      "headline": "Nie wieder Milch doppelt kaufen",
+      "cards": [
+        {
+          "capture": "06-shopping-lists",
+          "segments": {
+            "ios": [[0.125, 0.3326]],
+            "android": [[0.122, 0.3413]]
+          }
+        },
+        {
+          "capture": "02-shopping-list",
+          "segments": {
+            "ios": [
+              [0.07, 0.4741],
+              [0.8466, 0.9065]
+            ],
+            "android": [
+              [0.065, 0.4854],
+              [0.817, 0.879]
+            ]
+          }
+        }
+      ],
+      "zooms": [
+        {
+          "capture": "02-shopping-list",
+          "card": 1,
+          "width": 98,
+          "crop": "crop-item-oat-milk"
+        }
+      ]
+    },
+    {
+      "bubble": "wer hat das WLAN bezahlt?",
+      "headline": "Wer schuldet wem? Steht hier.",
+      "cards": [
+        {
+          "capture": "03-expenses",
+          "segments": {
+            "ios": [[0.052, 0.615]],
+            "android": [[0.045, 0.6345]]
+          }
+        }
+      ],
+      "zooms": [
+        {
+          "capture": "01-home",
+          "stack": true,
+          "overlap": 3,
+          "width": 76,
+          "crop": "crop-balance",
+          "trim": 0.24
+        }
+      ]
+    },
+    {
+      "bubble": "wie viel macht das pro Kopf?",
+      "headline": "Auf den Cent genau geteilt",
+      "cards": [
+        {
+          "capture": "04-expense-split",
+          "segments": {
+            "ios": [[0.052, 0.735]],
+            "android": [[0.066, 0.764]]
+          }
+        }
+      ],
+      "zooms": [
+        {
+          "capture": "04-expense-split",
+          "card": 0,
+          "width": 98,
+          "crop": "crop-split-details"
+        }
+      ]
+    },
+    {
+      "bubble": "ab Montag sind wir zu viert!",
+      "headline": "Ein Link, alle drin",
+      "cat": {
+        "size": 150,
+        "cut": 0.62
+      },
+      "cards": [
+        {
+          "capture": "05-add-member",
+          "segments": {
+            "ios": [[0.052, 0.503]],
+            "android": [[0.065, 0.522]]
+          },
+          "rows": {
+            "ios": {
+              "x": 0.125,
+              "w": 0.6,
+              "area": [0.3305, 0.369],
+              "keep": [0.3315, 0.347],
+              "shift": 0.0095,
+              "step": 0.0598,
+              "count": 3
+            },
+            "android": {
+              "x": 0.13,
+              "w": 0.6,
+              "area": [0.338, 0.379],
+              "keep": [0.339, 0.3555],
+              "shift": 0.0105,
+              "step": 0.0646,
+              "count": 3
+            }
+          }
+        }
+      ],
+      "zooms": []
+    }
+  ]
+}

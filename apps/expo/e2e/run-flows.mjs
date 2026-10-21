@@ -2,7 +2,8 @@
 /**
  * CI Maestro runner: `node e2e/run-flows.mjs [dir-or-flow ...]`, no args for
  * the whole suite. Needs E2E_API_URL. E2E_PLATFORM selects the app id ("ios"
- * default, or "android").
+ * default, or "android"). E2E_LOCALE (e.g. "de") is passed to the flows and
+ * files their captures under e2e/results/screenshots/<locale>/.
  *
  * One maestro invocation per flow, because the XCTest driver occasionally
  * crashes mid-batch on hosted runners and a shared invocation then fails
@@ -39,6 +40,7 @@ const APP_IDS = {
   android: "com.flatcove.app",
 };
 const platform = process.env.E2E_PLATFORM ?? "ios";
+const locale = process.env.E2E_LOCALE;
 const appId = APP_IDS[platform];
 if (!appId) {
   console.error(
@@ -65,7 +67,7 @@ function resolveTarget(target) {
 // cwd; copy captures to e2e/results/screenshots/ before the bundle is deleted.
 function collectTakeScreenshots(debugDir) {
   if (!existsSync(debugDir)) return;
-  const screenshotsDir = join(resultsDir, "screenshots");
+  const screenshotsDir = join(resultsDir, "screenshots", locale ?? "");
   for (const rel of readdirSync(debugDir, { recursive: true })) {
     if (!rel.endsWith(".png")) continue;
     if (!rel.split(sep).includes("takeScreenshot")) continue;
@@ -87,6 +89,7 @@ function runFlow(file, tag) {
       `APP_ID=${appId}`,
       "-e",
       `E2E_API_URL=${apiUrl}`,
+      ...(locale ? ["-e", `E2E_LOCALE=${locale}`] : []),
       "--format",
       "junit",
       "--output",

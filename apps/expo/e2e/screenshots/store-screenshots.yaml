@@ -12,7 +12,12 @@ appId: ${APP_ID}
 #
 # Navigation taps go through tap-until.yaml (act-verify-repeat) or
 # tap-tab.yaml (id -> label -> position) so a missed tap costs seconds, not
-# the run. Run via `node e2e/run-flows.mjs ../screenshots/store-screenshots`.
+# the run. Run via `node e2e/run-flows.mjs ../screenshots/store-screenshots`;
+# E2E_LOCALE=de seeds and captures the German household.
+#
+# The crop-* captures are single elements the store templates lift out of a
+# screen; cropping by id keeps them exact whatever the language or layout.
+- runScript: store-strings.js
 - runFlow:
     file: ../subflows/e2e-login.yaml
     env:
@@ -24,7 +29,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "group-card-name"
-      text: "Sunset Villa"
+      text: ${output.store.group}
     timeout: 45000
 
 # Into the group: the shopping-lists overview with the seeded list card.
@@ -36,17 +41,17 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "shopping-lists-group-name"
-      text: "Sunset Villa"
+      text: ${output.store.group}
     timeout: 45000
 - extendedWaitUntil:
     visible:
       id: "shopping-list-dashboard-link"
     timeout: 45000
 - extendedWaitUntil:
-    visible: "4 items left"
+    visible: ${output.store.itemsLeft}
     timeout: 45000
 - waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/06-shopping-lists
+- takeScreenshot: e2e/results/screenshots/${output.locale}/06-shopping-lists
 
 # Into the seeded list; items are reads, identified by their checkbox ids.
 - runFlow:
@@ -56,14 +61,18 @@ appId: ${APP_ID}
       MARKER_ID: "shopping-list-item-input"
 - extendedWaitUntil:
     visible:
-      id: "shopping-list-item-checkbox-Apples"
+      id: "shopping-list-item-checkbox-${output.store.apples}"
     timeout: 45000
 - extendedWaitUntil:
     visible:
-      id: "shopping-list-item-checkbox-Paper Towels"
+      id: "shopping-list-item-checkbox-${output.store.paperTowels}"
     timeout: 45000
 - waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/02-shopping-list
+- takeScreenshot: e2e/results/screenshots/${output.locale}/02-shopping-list
+- takeScreenshot:
+    path: e2e/results/screenshots/${output.locale}/crop-item-oat-milk
+    cropOn:
+      id: "shopping-list-item-${output.store.oatMilk}"
 
 # Expenses tab with the three seeded expenses.
 - retry:
@@ -73,7 +82,7 @@ appId: ${APP_ID}
           file: ../subflows/tap-tab.yaml
           env:
             TAB_ID: "tab-expenses"
-            TAB_LABEL: "Expenses"
+            TAB_LABEL: ${output.store.tabExpenses}
             TAB_X: "50%"
       - extendedWaitUntil:
           visible:
@@ -81,14 +90,18 @@ appId: ${APP_ID}
           timeout: 20000
 - extendedWaitUntil:
     visible:
-      id: "expense-card-Weekly shopping"
+      id: "expense-card-${output.store.weeklyShopping}"
     timeout: 45000
 - extendedWaitUntil:
     visible:
-      id: "expense-card-Cleaning supplies"
+      id: "expense-card-${output.store.cleaningSupplies}"
     timeout: 45000
 - waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/03-expenses
+- takeScreenshot: e2e/results/screenshots/${output.locale}/03-expenses
+- takeScreenshot:
+    path: e2e/results/screenshots/${output.locale}/crop-expense-internet
+    cropOn:
+      id: "expense-card-${output.store.internetBill}"
 
 # The split screenshot needs the form mid-flight: fill Step 1 locally, walk
 # to Step 2 (the three-way split), capture, then back out without submitting.
@@ -102,9 +115,9 @@ appId: ${APP_ID}
 - inputText: "64.30"
 - tapOn:
     id: "expense-form-description"
-- inputText: "Ski trip fund"
+- inputText: ${output.store.description}
 # Tap a neutral heading to dismiss the keyboard (hideKeyboard is flaky on iOS)
-- tapOn: "Amount & Details"
+- tapOn: ${output.store.amountHeading}
 - waitForAnimationToEnd
 - tapOn:
     id: "expense-form-category"
@@ -131,10 +144,14 @@ appId: ${APP_ID}
       - extendedWaitUntil:
           visible:
             id: "expense-form-step"
-            text: "Step 2 of 3"
+            text: ${output.store.step2}
           timeout: 15000
 - waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/04-expense-split
+- takeScreenshot: e2e/results/screenshots/${output.locale}/04-expense-split
+- takeScreenshot:
+    path: e2e/results/screenshots/${output.locale}/crop-split-details
+    cropOn:
+      id: "split-details-card"
 
 # Back out: Step 2 -> Step 1 -> closed.
 - retry:
@@ -150,7 +167,7 @@ appId: ${APP_ID}
       - extendedWaitUntil:
           visible:
             id: "expense-form-step"
-            text: "Step 1 of 3"
+            text: ${output.store.step1}
           timeout: 15000
 # On Step 1 the footer has no back button (expense-form-back renders only on
 # later steps) — the way out is the navigation header's back on iOS and the
@@ -191,7 +208,7 @@ appId: ${APP_ID}
           file: ../subflows/tap-tab.yaml
           env:
             TAB_ID: "tab-calendar"
-            TAB_LABEL: "Calendar"
+            TAB_LABEL: ${output.store.tabCalendar}
             TAB_X: "69%"
       - extendedWaitUntil:
           visible:
@@ -200,10 +217,18 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "calendar-day-progress"
-      text: "1 of 3 done.*"
+      text: ${output.store.dayProgress}
     timeout: 45000
 - waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/01a-calendar
+- takeScreenshot: e2e/results/screenshots/${output.locale}/01a-calendar
+- takeScreenshot:
+    path: e2e/results/screenshots/${output.locale}/crop-row-bathroom
+    cropOn:
+      id: "calendar-row-${output.store.bathroom}"
+- takeScreenshot:
+    path: e2e/results/screenshots/${output.locale}/crop-row-bins
+    cropOn:
+      id: "calendar-row-${output.store.bins}"
 
 # Members screen (reached from the overview's group-settings button); the
 # three seeded members are a read, confirmed by the count header's id.
@@ -219,7 +244,7 @@ appId: ${APP_ID}
           file: ../subflows/tap-tab.yaml
           env:
             TAB_ID: "tab-home"
-            TAB_LABEL: "Home"
+            TAB_LABEL: ${output.store.tabHome}
             TAB_X: "12%"
       - runFlow:
           when:
@@ -250,7 +275,7 @@ appId: ${APP_ID}
       id: "group-members-count-3"
     timeout: 45000
 - waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/05-add-member
+- takeScreenshot: e2e/results/screenshots/${output.locale}/05-add-member
 
 # Home root: the stats dashboard with the seeded totals. The overview screen
 # is pushed on top of it, so pop back after switching tabs.
@@ -261,12 +286,12 @@ appId: ${APP_ID}
           file: ../subflows/tap-tab.yaml
           env:
             TAB_ID: "tab-home"
-            TAB_LABEL: "Home"
+            TAB_LABEL: ${output.store.tabHome}
             TAB_X: "12%"
       - extendedWaitUntil:
           visible:
             id: "shopping-lists-group-name"
-            text: "Sunset Villa"
+            text: ${output.store.group}
           timeout: 20000
 - runFlow:
     when:
@@ -293,7 +318,11 @@ appId: ${APP_ID}
           start: "50%, 40%"
           end: "50%, 85%"
       - extendedWaitUntil:
-          visible: "€142.69"
+          visible: ${output.store.spent}
           timeout: 15000
 - waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/01-home
+- takeScreenshot: e2e/results/screenshots/${output.locale}/01-home
+- takeScreenshot:
+    path: e2e/results/screenshots/${output.locale}/crop-balance
+    cropOn:
+      id: "home-stat-balance"

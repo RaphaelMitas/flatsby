@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Redirect, Stack, useLocalSearchParams } from "expo-router";
 
+import { isLocale } from "@flatsby/i18n/locale";
+
 import { isE2ETestingEnabled, setupE2ESession } from "~/utils/e2e";
+import { useLocalePreference } from "~/utils/intl-provider";
 
 type E2ELoginState =
   | { status: "pending" }
@@ -20,18 +23,25 @@ export default function E2ELoginScreen() {
     name?: string;
     email?: string;
     seed?: string;
+    locale?: string;
   }>();
+  const { setPreference } = useLocalePreference();
   const [state, setState] = useState<E2ELoginState>({ status: "pending" });
 
   const apiUrl = typeof params.apiUrl === "string" ? params.apiUrl : "";
   const name = typeof params.name === "string" ? params.name : undefined;
   const email = typeof params.email === "string" ? params.email : undefined;
   const seed = typeof params.seed === "string" ? params.seed : undefined;
+  const locale =
+    typeof params.locale === "string" && isLocale(params.locale)
+      ? params.locale
+      : undefined;
 
   useEffect(() => {
     if (!isE2ETestingEnabled() || !apiUrl) return;
-    setupE2ESession({ apiUrl, name, email, seed })
+    setupE2ESession({ apiUrl, name, email, seed, locale })
       .then((session) => {
+        if (locale) setPreference(locale);
         setState({ status: "done", email: session.email });
       })
       .catch((error: unknown) => {
@@ -40,7 +50,7 @@ export default function E2ELoginScreen() {
           message: error instanceof Error ? error.message : String(error),
         });
       });
-  }, [apiUrl, name, email, seed]);
+  }, [apiUrl, name, email, seed, locale, setPreference]);
 
   if (!isE2ETestingEnabled()) {
     return <Redirect href="/" />;
