@@ -180,14 +180,13 @@ export function pairDebt(
   return between.find((debt) => debt.fromGroupMemberId === payer) ?? between[0];
 }
 
-/** From the settle plan, so it matches what Settle up offers */
 export function myDebts(
   summary: GroupDebtSummary,
   meId: number,
   groupCurrency: string,
 ) {
   const debts = Object.values(summary.currencies)
-    .flatMap(({ simplified }) => simplified)
+    .flatMap(({ direct }) => direct)
     .sort(
       (a, b) =>
         Number(b.currency === groupCurrency) -
