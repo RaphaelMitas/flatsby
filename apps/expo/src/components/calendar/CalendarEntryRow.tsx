@@ -38,7 +38,10 @@ export function CalendarEntryRow({
   const overdue = isTask && !done && occurrence.date < today;
 
   return (
-    <View className={cn("flex-row items-center", pending && "opacity-60")}>
+    <View
+      testID={`calendar-row-${item.title}`}
+      className={cn("flex-row items-center", pending && "opacity-60")}
+    >
       {isTask && (
         <Checkbox
           testID={`calendar-entry-checkbox-${item.title}`}

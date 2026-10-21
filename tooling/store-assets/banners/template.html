@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="/common.css" />
+    <style>
+      .bubble {
+        position: absolute;
+        z-index: 4;
+      }
+      .bubble.out::before {
+        left: auto;
+        right: -0.36em;
+        transform: scaleX(-1);
+      }
+      h1 {
+        position: absolute;
+        z-index: 5;
+      }
+      .crop {
+        position: absolute;
+        background-color: #09090b;
+        background-repeat: no-repeat;
+        overflow: hidden;
+        z-index: 2;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { loadImage, place, placeCat } from "/compose.js";
+
+      const q = new URLSearchParams(location.search);
+      const asset = q.get("asset") ?? "search";
+      const lang = q.get("lang") ?? "en";
+      const src = (name) => `/captures/ios/${lang}/${name}.png`;
+
+      // `card` crops are whole cards, so they keep the card's rounded corner radius.
+      const REGIONS = {
+        internet: { crop: "crop-expense-internet", card: true },
+        yourTurn: { crop: "crop-row-bins" },
+        oatMilk: { crop: "crop-item-oat-milk", card: true },
+        owed: { crop: "crop-balance", trim: 0.24 },
+      };
+      const CARD_RADIUS = 44;
+
+      // `right` anchors a bubble to the right edge so longer German copy grows inward.
+      const LAYOUTS = {
+        search: {
+          width: 1920,
+          bubbles: [
+            { right: 380, y: 700, rot: 3, size: 54 },
+            { right: 190, y: 196, rot: 3.5, size: 56, out: true },
+            { x: 190, y: 92, rot: -3.5, size: 56 },
+          ],
+          headline: { x: 360, y: 384, w: 1200, size: 100, lines: 2 },
+          crops: [
+            { region: "internet", x: 390, y: 606, w: 1140 },
+            { region: "yourTurn", x: 130, y: 1046, w: 810 },
+            {
+              region: "oatMilk",
+              x: 980,
+              y: 1054,
+              w: 810,
+              cat: { size: 340, cut: 0.555, at: 0.85 },
+            },
+          ],
+        },
+        header: {
+          width: 1920,
+          bubbles: [
+            { right: 1350, y: 180, rot: -5, size: 42 },
+            { right: 1390, y: 500, rot: 4, size: 42, out: true },
+          ],
+          headline: { x: 548, y: 280, w: 823, size: 132, lines: 2 },
+          crops: [
+            {
+              region: "owed",
+              x: 1400,
+              y: 400,
+              w: 400,
+              cat: { size: 620, cut: 0.555 },
+            },
+          ],
+        },
+        play: {
+          width: 1024,
+          bubbles: [
+            { x: 168, y: 168, rot: -4, size: 20 },
+            { x: 186, y: 228, rot: 3, size: 20, out: true },
+            { x: 168, y: 288, rot: -2, size: 20 },
+          ],
+          headline: { x: 172, y: 78, w: 680, size: 62, lines: 1 },
+          crops: [
+            {
+              region: "owed",
+              x: 612,
+              y: 204,
+              w: 250,
+              cat: { size: 180, cut: 0.53 },
+            },
+            { region: "yourTurn", x: 232, y: 338, w: 560 },
+          ],
+        },
+      };
+
+      fetch("captions.json")
+        .then((r) => r.json())
+        .then(async (captions) => {
+          const copy = captions[lang][asset];
+          const layout = LAYOUTS[asset];
+          const u = window.innerWidth / layout.width;
+          const px = (n) => `${n * u}px`;
+          document.documentElement.lang = lang;
+
+          const names = new Set(
+            layout.crops.map((c) => REGIONS[c.region].crop),
+          );
+          const [images] = await Promise.all([
+            Promise.all(
+              [...names].map(async (n) => [n, await loadImage(src(n))]),
+            ).then(Object.fromEntries),
+            loadImage("/brand/adaptive-icon.png"),
+            document.fonts.load('900 100px "Inter"'),
+            document.fonts.load('600 100px "Inter"'),
+          ]);
+
+          for (const c of layout.crops) {
+            const { crop, card, trim = 0 } = REGIONS[c.region];
+            const { naturalWidth, naturalHeight } = images[crop];
+            const s = (c.w * u) / (naturalWidth * (1 - 2 * trim));
+            place("crop", {
+              left: px(c.x),
+              top: px(c.y),
+              width: px(c.w),
+              height: `${naturalHeight * s}px`,
+              borderRadius: card ? `${CARD_RADIUS * s}px` : px(c.w * 0.045),
+              boxShadow: `0 ${px(c.w * 0.02)} ${px(c.w * 0.07)} rgba(9, 9, 11, 0.28)`,
+              backgroundImage: `url("${src(crop)}")`,
+              backgroundSize: `${naturalWidth * s}px auto`,
+              backgroundPosition: `${-trim * naturalWidth * s}px 0`,
+            });
+            if (c.cat) {
+              const { size, cut, at = 0.5 } = c.cat;
+              placeCat({
+                size: size * u,
+                cut,
+                centerX: (c.x + c.w * at) * u,
+                bottom: c.y * u,
+              });
+            }
+          }
+
+          layout.bubbles.forEach((b, i) => {
+            const el = place(`bubble${b.out ? " out" : ""}`, {
+              fontSize: px(b.size),
+              top: px(b.y),
+              transform: `rotate(${b.rot}deg)`,
+            });
+            el.textContent = copy.bubbles[i];
+            if (b.right !== undefined) el.style.right = px(b.right);
+            else el.style.left = px(b.x);
+          });
+
+          const h = layout.headline;
+          const h1 = document.createElement("h1");
+          h1.textContent = copy.headline;
+          Object.assign(h1.style, {
+            left: px(h.x),
+            top: px(h.y),
+            width: px(h.w),
+          });
+          document.body.appendChild(h1);
+          let size = h.size;
+          const fit = () => {
+            h1.style.fontSize = px(size);
+            return (
+              h1.offsetHeight <= (h.lines + 0.5) * size * 0.98 * u &&
+              h1.scrollWidth <= h1.clientWidth
+            );
+          };
+          while (!fit() && size > h.size * 0.6) size -= 2;
+          document.body.dataset.ready = "true";
+        });
+    </script>
+  </body>
+</html>

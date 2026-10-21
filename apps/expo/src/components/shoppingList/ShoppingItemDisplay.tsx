@@ -15,6 +15,7 @@ export interface ShoppingItemDisplayProps {
   disabled?: boolean;
   className?: string;
   checkboxTestID?: string;
+  testID?: string;
 }
 
 export function ShoppingItemDisplay({
@@ -25,12 +26,13 @@ export function ShoppingItemDisplay({
   disabled,
   className,
   checkboxTestID,
+  testID,
 }: ShoppingItemDisplayProps) {
   const t = useTranslations();
   const categoryData = categoryId ? getCategoryData({ categoryId }) : null;
 
   return (
-    <Card>
+    <Card testID={testID}>
       <CardContent
         className={cn("flex-row items-center gap-2 py-0 pr-3 pl-0", className)}
       >

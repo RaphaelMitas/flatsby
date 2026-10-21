@@ -85,7 +85,7 @@ export function ExpenseDisplay({
               <>
                 <Avatar className="h-5 w-5">
                   {fromImage && <AvatarImage src={fromImage} />}
-                  <AvatarFallback className="text-xs">
+                  <AvatarFallback textClassName="text-xs">
                     {fromName.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -97,7 +97,7 @@ export function ExpenseDisplay({
             )}
             <Avatar className="h-5 w-5">
               {paidByImage && <AvatarImage src={paidByImage} />}
-              <AvatarFallback className="text-xs">
+              <AvatarFallback textClassName="text-xs">
                 {paidByName.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>

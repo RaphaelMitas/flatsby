@@ -1,0 +1,46 @@
+{
+  "en": {
+    "search": {
+      "headline": "Get your flat out of the group chat",
+      "bubbles": [
+        "who paid for the wifi?",
+        "wait, you bought milk too?",
+        "bathroom. whose turn?"
+      ]
+    },
+    "header": {
+      "headline": "Less chat. More flat.",
+      "bubbles": ["who paid for the wifi?", "milk again??"]
+    },
+    "play": {
+      "headline": "Less chat. More flat.",
+      "bubbles": [
+        "who paid for the wifi?",
+        "milk again??",
+        "bathroom. whose turn?"
+      ]
+    }
+  },
+  "de": {
+    "search": {
+      "headline": "WG-Orga ohne Chat-Chaos",
+      "bubbles": [
+        "wer zahlt das WLAN?",
+        "du hast AUCH Milch geholt??",
+        "wer ist mit Bad dran??"
+      ]
+    },
+    "header": {
+      "headline": "Weniger Chat. Mehr WG.",
+      "bubbles": ["wer zahlt das WLAN?", "schon wieder Milch??"]
+    },
+    "play": {
+      "headline": "Weniger Chat. Mehr WG.",
+      "bubbles": [
+        "wer zahlt das WLAN?",
+        "schon wieder Milch??",
+        "wer ist mit Bad dran??"
+      ]
+    }
+  }
+}
