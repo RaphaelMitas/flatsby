@@ -12,7 +12,7 @@ export const settings = {
     legal: "Legal",
   },
   items: {
-    home: "Home",
+    home: "Home screen",
     homeSubtitle: "Classic or the new one",
     homeClassic: "Classic",
     homeNew: "New",
