@@ -30,31 +30,28 @@ interface AvatarProps {
   children: React.ReactNode;
 }
 
-const Avatar = React.forwardRef<View, AvatarProps>(
-  ({ className, children, ...props }, ref) => {
-    const [imageLoaded, setImageLoaded] = React.useState(false);
-    const [imageError, setImageError] = React.useState(false);
+const Avatar = ({ className, children, ...props }: AvatarProps) => {
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
 
-    const contextValue = React.useMemo(
-      () => ({
-        imageLoaded,
-        setImageLoaded,
-        imageError,
-        setImageError,
-      }),
-      [imageLoaded, imageError],
-    );
+  const contextValue = React.useMemo(
+    () => ({
+      imageLoaded,
+      setImageLoaded,
+      imageError,
+      setImageError,
+    }),
+    [imageLoaded, imageError],
+  );
 
-    return (
-      <AvatarContext.Provider value={contextValue}>
-        <View ref={ref} className={avatarVariants({ className })} {...props}>
-          {children}
-        </View>
-      </AvatarContext.Provider>
-    );
-  },
-);
-Avatar.displayName = "Avatar";
+  return (
+    <AvatarContext.Provider value={contextValue}>
+      <View className={avatarVariants({ className })} {...props}>
+        {children}
+      </View>
+    </AvatarContext.Provider>
+  );
+};
 
 interface AvatarImageProps {
   className?: string;
@@ -62,59 +59,55 @@ interface AvatarImageProps {
   alt?: string;
 }
 
-const AvatarImage = React.forwardRef<Image, AvatarImageProps>(
-  ({ className, src, alt, ...props }, ref) => {
-    const context = React.useContext(AvatarContext);
+const AvatarImage = ({ className, src, alt, ...props }: AvatarImageProps) => {
+  const context = React.useContext(AvatarContext);
 
-    if (!context) {
-      throw new Error("AvatarImage must be used within Avatar");
-    }
+  if (!context) {
+    throw new Error("AvatarImage must be used within Avatar");
+  }
 
-    const { setImageLoaded, setImageError } = context;
+  const { setImageLoaded, setImageError } = context;
 
-    React.useEffect(() => {
-      // Reset states when src changes
-      setImageLoaded(false);
-      setImageError(false);
-    }, [src, setImageLoaded, setImageError]);
+  React.useEffect(() => {
+    // Reset states when src changes
+    setImageLoaded(false);
+    setImageError(false);
+  }, [src, setImageLoaded, setImageError]);
 
-    const handleLoad = () => {
-      setImageLoaded(true);
-      setImageError(false);
-    };
+  const handleLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
+  };
 
-    const handleError = () => {
-      setImageLoaded(false);
-      setImageError(true);
-    };
+  const handleError = () => {
+    setImageLoaded(false);
+    setImageError(true);
+  };
 
-    // Handle case when no src is provided
-    React.useEffect(() => {
-      if (!src) {
-        setImageError(true);
-        setImageLoaded(false);
-      }
-    }, [src, setImageError, setImageLoaded]);
-
-    // Don't render image if no src provided
+  // Handle case when no src is provided
+  React.useEffect(() => {
     if (!src) {
-      return null;
+      setImageError(true);
+      setImageLoaded(false);
     }
+  }, [src, setImageError, setImageLoaded]);
 
-    return (
-      <Image
-        ref={ref}
-        source={{ uri: src }}
-        className={avatarImageVariants({ className })}
-        accessibilityLabel={alt}
-        onLoad={handleLoad}
-        onError={handleError}
-        {...props}
-      />
-    );
-  },
-);
-AvatarImage.displayName = "AvatarImage";
+  // Don't render image if no src provided
+  if (!src) {
+    return null;
+  }
+
+  return (
+    <Image
+      source={{ uri: src }}
+      className={avatarImageVariants({ className })}
+      accessibilityLabel={alt}
+      onLoad={handleLoad}
+      onError={handleError}
+      {...props}
+    />
+  );
+};
 
 interface AvatarFallbackProps {
   className?: string;
@@ -122,34 +115,32 @@ interface AvatarFallbackProps {
   children: React.ReactNode;
 }
 
-const AvatarFallback = React.forwardRef<View, AvatarFallbackProps>(
-  ({ className, textClassName, children, ...props }, ref) => {
-    const context = React.useContext(AvatarContext);
+const AvatarFallback = ({
+  className,
+  textClassName,
+  children,
+  ...props
+}: AvatarFallbackProps) => {
+  const context = React.useContext(AvatarContext);
 
-    if (!context) {
-      throw new Error("AvatarFallback must be used within Avatar");
-    }
+  if (!context) {
+    throw new Error("AvatarFallback must be used within Avatar");
+  }
 
-    const { imageLoaded, imageError } = context;
+  const { imageLoaded, imageError } = context;
 
-    // Only show fallback if image failed to load or there was an error
-    if (imageLoaded && !imageError) {
-      return null;
-    }
+  // Only show fallback if image failed to load or there was an error
+  if (imageLoaded && !imageError) {
+    return null;
+  }
 
-    return (
-      <View
-        ref={ref}
-        className={avatarFallbackVariants({ className })}
-        {...props}
-      >
-        <Text className={cn("text-muted text-sm font-medium", textClassName)}>
-          {children}
-        </Text>
-      </View>
-    );
-  },
-);
-AvatarFallback.displayName = "AvatarFallback";
+  return (
+    <View className={avatarFallbackVariants({ className })} {...props}>
+      <Text className={cn("text-muted text-sm font-medium", textClassName)}>
+        {children}
+      </Text>
+    </View>
+  );
+};
 
 export { Avatar, AvatarImage, AvatarFallback };

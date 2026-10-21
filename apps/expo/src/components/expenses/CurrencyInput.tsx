@@ -1,5 +1,4 @@
-import type { TextInput } from "react-native";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   centsToDecimal,
@@ -40,7 +39,6 @@ export function CurrencyInput({
 }: CurrencyInputProps) {
   const [rawInput, setRawInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<TextInput>(null);
 
   // Extract only digits and decimal separators (both . and ,) from input
   // Convert comma to period for internal processing
@@ -152,7 +150,6 @@ export function CurrencyInput({
 
   return (
     <Input
-      ref={inputRef}
       testID={testID}
       inputMode="decimal"
       placeholder={placeholder}

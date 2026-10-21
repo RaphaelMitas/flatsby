@@ -71,7 +71,6 @@
     "react-native": "~0.86.2",
     "react-native-css": "3.0.7",
     "react-native-gesture-handler": "~2.32.0",
-    "react-native-gifted-charts": "^1.4.81",
     "react-native-keyboard-controller": "1.22.7",
     "react-native-purchases": "10.14.0",
     "react-native-purchases-ui": "10.14.0",

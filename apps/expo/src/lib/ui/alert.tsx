@@ -1,5 +1,5 @@
+import type * as React from "react";
 import type { VariantProps } from "tailwind-variants";
-import * as React from "react";
 import { Text, View } from "react-native";
 import { tv } from "tailwind-variants";
 
@@ -25,18 +25,16 @@ interface AlertProps extends VariantProps<typeof alertVariants> {
   children: React.ReactNode;
 }
 
-const Alert = React.forwardRef<View, AlertProps>(
-  ({ className, variant = "default", children, ...props }, ref) => (
-    <View
-      ref={ref}
-      className={alertVariants({ variant, className })}
-      {...props}
-    >
-      {children}
-    </View>
-  ),
+const Alert = ({
+  className,
+  variant = "default",
+  children,
+  ...props
+}: AlertProps) => (
+  <View className={alertVariants({ variant, className })} {...props}>
+    {children}
+  </View>
 );
-Alert.displayName = "Alert";
 
 const alertTitleVariants = tv({
   base: "mb-1 text-sm font-medium leading-none tracking-tight",
@@ -58,18 +56,16 @@ interface AlertTitleProps {
   variant?: VariantProps<typeof alertTitleVariants>["variant"];
 }
 
-const AlertTitle = React.forwardRef<Text, AlertTitleProps>(
-  ({ className, children, variant = "default", ...props }, ref) => (
-    <Text
-      ref={ref}
-      className={alertTitleVariants({ variant, className })}
-      {...props}
-    >
-      {children}
-    </Text>
-  ),
+const AlertTitle = ({
+  className,
+  children,
+  variant = "default",
+  ...props
+}: AlertTitleProps) => (
+  <Text className={alertTitleVariants({ variant, className })} {...props}>
+    {children}
+  </Text>
 );
-AlertTitle.displayName = "AlertTitle";
 
 const alertDescriptionVariants = tv({
   base: "text-sm leading-relaxed",
@@ -91,17 +87,15 @@ interface AlertDescriptionProps {
   variant?: VariantProps<typeof alertDescriptionVariants>["variant"];
 }
 
-const AlertDescription = React.forwardRef<Text, AlertDescriptionProps>(
-  ({ className, children, variant = "default", ...props }, ref) => (
-    <Text
-      ref={ref}
-      className={alertDescriptionVariants({ variant, className })}
-      {...props}
-    >
-      {children}
-    </Text>
-  ),
+const AlertDescription = ({
+  className,
+  children,
+  variant = "default",
+  ...props
+}: AlertDescriptionProps) => (
+  <Text className={alertDescriptionVariants({ variant, className })} {...props}>
+    {children}
+  </Text>
 );
-AlertDescription.displayName = "AlertDescription";
 
 export { Alert, AlertTitle, AlertDescription };
