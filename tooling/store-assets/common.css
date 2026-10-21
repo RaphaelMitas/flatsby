@@ -1,0 +1,23 @@
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter.woff2") format("woff2");
+  font-weight: 100 900;
+}
+html,
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+body {
+  background: #facc15;
+  color: #09090b;
+  font-family: "Inter", sans-serif;
+  position: relative;
+}
+.cat {
+  position: absolute;
+  z-index: 1;
+  background: url("/brand/adaptive-icon.png") no-repeat;
+}

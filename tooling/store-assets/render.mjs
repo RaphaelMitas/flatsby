@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 /**
  * Composes the store listing assets from the Maestro store-screenshot
- * captures: `node render.mjs <captures-dir> <out-dir>`.
+ * captures.
  *
  * <captures-dir>/<platform>/<locale>/ holds one run of
  * apps/expo/e2e/screenshots/store-screenshots.yaml (full screens plus the
  * crop-* element captures). Writes, per store locale:
- *   <out>/<platform>/<store-locale>/NN.png   framed phone screenshots
+ *   <out>/<platform>/<store-locale>/NN.png   framed phone screenshots, plus
+ *                                            the raw ipad-*.png for iOS
  *   <out>/app-store/<store-locale>/{search,header}.png   iOS 27 creative assets
  *   <out>/play/<store-locale>/featureGraphic.png
  * The App Store and Play assets need iPhone captures; they are skipped without.
  */
 import { readdirSync, readFileSync } from "node:fs";
-import { mkdir, readFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { dirname, extname, join, resolve } from "node:path";
@@ -31,7 +32,6 @@ const packageDir = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const STORE_LOCALES = { en: "en-US", de: "de-DE" };
 
-// Served paths the templates reference, mapped to files on disk.
 const routes = {
   "/fonts/inter.woff2": () =>
     require.resolve("@fontsource-variable/inter/files/inter-latin-wght-normal.woff2"),
@@ -40,6 +40,7 @@ const routes = {
   "/": (rest) => join(packageDir, rest),
 };
 const types = {
+  ".css": "text/css",
   ".html": "text/html",
   ".js": "text/javascript",
   ".json": "application/json",
@@ -48,7 +49,7 @@ const types = {
 };
 
 const server = createServer(async (req, res) => {
-  const path = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
+  const path = new URL(req.url ?? "/", "http://x").pathname;
   const prefix = Object.keys(routes).find((p) => path.startsWith(p));
   try {
     const file = routes[prefix](path.slice(prefix.length));
@@ -71,20 +72,26 @@ const problems = [];
 
 async function shoot(url, viewport, deviceScaleFactor, file) {
   const page = await browser.newPage({ viewport, deviceScaleFactor });
-  page.on("pageerror", (e) => problems.push(`${url}: ${e.message}`));
+  const crashed = new Promise((_, reject) =>
+    page.on("pageerror", (e) => reject(new Error(`${url}: ${e.message}`))),
+  );
   page.on("response", (r) => {
     if (r.status() >= 400) problems.push(`${url}: ${r.status()} ${r.url()}`);
   });
   await page.goto(`${base}${url}`);
-  await page.waitForSelector("body[data-ready]", { timeout: 60_000 });
+  await Promise.race([
+    crashed,
+    page.waitForSelector("body[data-ready]", {
+      state: "attached",
+      timeout: 60_000,
+    }),
+  ]);
   await mkdir(dirname(file), { recursive: true });
   await page.screenshot({ path: file });
   await page.close();
   console.log(file);
 }
 
-// The phone screenshots render at the capture's own size, so each device
-// class keeps its store resolution.
 function pngSize(file) {
   const png = readFileSync(file);
   return { width: png.readUInt32BE(16), height: png.readUInt32BE(20) };
@@ -103,8 +110,9 @@ for (const platform of readdirSync(capturesDir)) {
     const storeLocale = STORE_LOCALES[locale];
     if (!storeLocale) continue;
     const captures = join(capturesDir, platform, locale);
+    // Rendering at the capture's size keeps each device's store resolution.
     const viewport = pngSize(join(captures, "01-home.png"));
-    for (const [i] of frames[locale].entries()) {
+    for (const [i] of frames.entries()) {
       await shoot(
         `/screenshots/template.html?frame=${i}&lang=${locale}&platform=${platform}`,
         viewport,
@@ -118,6 +126,14 @@ for (const platform of readdirSync(capturesDir)) {
       );
     }
     if (platform !== "ios") continue;
+    for (const ipad of readdirSync(captures).filter((f) =>
+      f.startsWith("ipad-"),
+    )) {
+      await copyFile(
+        join(captures, ipad),
+        join(outDir, platform, storeLocale, ipad),
+      );
+    }
     for (const [asset, { viewport: size, scale }] of Object.entries(BANNERS)) {
       await shoot(
         `/banners/template.html?asset=${asset}&lang=${locale}`,

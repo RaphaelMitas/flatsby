@@ -8,8 +8,7 @@ name: Release
 # even if the tag already exists (e.g. after fixing the workflow or release
 # notes), with skip_eas_build when only the publish half failed, so a
 # listing fix does not spend another pair of EAS builds on a binary the
-# stores already have. dry_run captures and composes the store assets from
-# any branch and stops there: no tag, no build, nothing published.
+# stores already have.
 on:
   push:
     branches: [main]
@@ -27,8 +26,10 @@ on:
 permissions:
   contents: write
 
+# A dry run gets its own group: a newly queued run cancels the group's pending
+# one, which would otherwise drop a release waiting behind a dry run.
 concurrency:
-  group: release
+  group: ${{ inputs.dry_run && format('release-dry-{0}', github.ref) || 'release' }}
   cancel-in-progress: false
 
 env:
@@ -123,8 +124,9 @@ jobs:
     needs: check
     if: needs.check.outputs.is-release == 'true'
     runs-on: xcode-27
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
+      MAESTRO_VERSION: "2.3.0"
       MAESTRO_CLI_NO_ANALYTICS: "1"
       MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
@@ -251,12 +253,10 @@ jobs:
 
       - name: Capture store screenshots
         working-directory: apps/expo
-        run: |
-          for locale in en de; do
-            E2E_LOCALE=$locale node e2e/run-flows.mjs ../screenshots/store-screenshots
-          done
+        run: node e2e/run-flows.mjs ../screenshots/store-screenshots
         env:
           E2E_API_URL: http://localhost:3000
+          E2E_LOCALES: en de
 
       # App Store review refuses the submission without at least one 13"
       # iPad screenshot (the app supports tablets), so a minimal iPad flow
@@ -303,12 +303,10 @@ jobs:
 
       - name: Capture iPad store screenshots
         working-directory: apps/expo
-        run: |
-          for locale in en de; do
-            E2E_LOCALE=$locale node e2e/run-flows.mjs ../screenshots/store-screenshots-ipad
-          done
+        run: node e2e/run-flows.mjs ../screenshots/store-screenshots-ipad
         env:
           E2E_API_URL: http://localhost:3000
+          E2E_LOCALES: en de
 
       # Failures must be diagnosable from the job log alone: print the debug
       # bundle's error lines, an element census of each captured failure-screen
@@ -379,6 +377,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
+      MAESTRO_VERSION: "2.3.0"
       MAESTRO_CLI_NO_ANALYTICS: "1"
       MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
@@ -447,10 +446,11 @@ jobs:
             adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
             adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4
             adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
-            E2E_LOCALE=en bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/apps/expo/android/app/build/outputs/apk/release/app-release.apk" ../screenshots/store-screenshots && E2E_LOCALE=de bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/apps/expo/android/app/build/outputs/apk/release/app-release.apk" ../screenshots/store-screenshots
+            bash apps/expo/e2e/android-ci.sh "$GITHUB_WORKSPACE/apps/expo/android/app/build/outputs/apk/release/app-release.apk" ../screenshots/store-screenshots
         env:
           E2E_PLATFORM: android
           E2E_API_URL: http://localhost:3000
+          E2E_LOCALES: en de
 
       # A JS fatal appears in the captured device logs with its message and
       # stack — the most readable source for a crash the iOS release bundle
@@ -635,11 +635,6 @@ jobs:
             fi
           done
           pnpm -F @flatsby/store-assets render "$GITHUB_WORKSPACE/captures" "$GITHUB_WORKSPACE/store-assets"
-          for dir in captures/ios/*/; do
-            locale=$(basename "$dir")
-            case "$locale" in en) store=en-US ;; de) store=de-DE ;; *) continue ;; esac
-            cp "$dir"ipad-*.png "store-assets/ios/$store/"
-          done
 
       - name: Upload store assets
         uses: actions/upload-artifact@v7
@@ -658,9 +653,9 @@ jobs:
           zip -r "$RUNNER_TEMP/flatsby-$TAG-store-assets.zip" .
           gh release upload "$TAG" "$RUNNER_TEMP/flatsby-$TAG-store-assets.zip" --clobber
 
-  # Runs whatever the screenshot job did: store listings keep their last
+  # Runs whatever compose-store-assets did: store listings keep their last
   # uploaded assets, so a failed capture must not block the review
-  # submission; fresh screenshots ride along only when the job succeeded.
+  # submission; fresh screenshots ride along only when compose succeeded.
   publish-ios:
     needs: [check, eas-build-submit, compose-store-assets]
     if: >-
@@ -871,7 +866,7 @@ jobs:
         env:
           ASC_KEY_PATH: ${{ runner.temp }}/asc_key.json
 
-  # Like publish-ios, independent of the screenshot job's outcome: listing
+  # Like publish-ios, independent of compose-store-assets' outcome: listing
   # text always goes up, fresh screenshots and feature graphics only when
   # composed.
   publish-android:
@@ -952,6 +947,7 @@ jobs:
           SKIP_SCREENSHOTS=true
           SKIP_IMAGES=true
           for dir in store-assets/android/*/; do
+            [ -d "$dir" ] || continue
             images="store/metadata/android/$(basename "$dir")/images"
             mkdir -p "$images/phoneScreenshots"
             cp "$dir"*.png "$images/phoneScreenshots/"

@@ -126,8 +126,7 @@ appId: ${APP_ID}
                 id: "expense-form-next"
       - extendedWaitUntil:
           visible:
-            id: "expense-form-step"
-            text: ${output.store.step2}
+            id: "split-details-card"
           timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-04-expense-split
@@ -144,8 +143,7 @@ appId: ${APP_ID}
                 id: "expense-form-back"
       - extendedWaitUntil:
           visible:
-            id: "expense-form-step"
-            text: ${output.store.step1}
+            id: "expense-form-amount"
           timeout: 15000
 # Step 1 has no footer back button; the navigation header's does the job.
 - runFlow:
@@ -171,7 +169,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "calendar-day-progress"
-      text: ${output.store.dayProgress}
+      text: "1 .* 3 .*"
     timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-01a-calendar
@@ -249,7 +247,7 @@ appId: ${APP_ID}
           start: "50%, 40%"
           end: "50%, 85%"
       - extendedWaitUntil:
-          visible: ${output.store.spent}
+          visible: ".*142.69.*"
           timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-01-home

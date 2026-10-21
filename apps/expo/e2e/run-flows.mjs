@@ -2,8 +2,9 @@
 /**
  * CI Maestro runner: `node e2e/run-flows.mjs [dir-or-flow ...]`, no args for
  * the whole suite. Needs E2E_API_URL. E2E_PLATFORM selects the app id ("ios"
- * default, or "android"). E2E_LOCALE (e.g. "de") is passed to the flows and
- * files their captures under e2e/results/screenshots/<locale>/.
+ * default, or "android"). E2E_LOCALES (e.g. "en de") runs every flow once per
+ * locale, passing it as E2E_LOCALE and filing captures under
+ * e2e/results/screenshots/<locale>/.
  *
  * One maestro invocation per flow, because the XCTest driver occasionally
  * crashes mid-batch on hosted runners and a shared invocation then fails
@@ -40,7 +41,7 @@ const APP_IDS = {
   android: "com.flatcove.app",
 };
 const platform = process.env.E2E_PLATFORM ?? "ios";
-const locale = process.env.E2E_LOCALE;
+const locales = process.env.E2E_LOCALES?.split(" ").filter(Boolean) ?? [];
 const appId = APP_IDS[platform];
 if (!appId) {
   console.error(
@@ -65,7 +66,7 @@ function resolveTarget(target) {
 
 // Maestro ≥2 saves takeScreenshot output inside the debug bundle, not the
 // cwd; copy captures to e2e/results/screenshots/ before the bundle is deleted.
-function collectTakeScreenshots(debugDir) {
+function collectTakeScreenshots(debugDir, locale) {
   if (!existsSync(debugDir)) return;
   const screenshotsDir = join(resultsDir, "screenshots", locale ?? "");
   for (const rel of readdirSync(debugDir, { recursive: true })) {
@@ -78,8 +79,12 @@ function collectTakeScreenshots(debugDir) {
   }
 }
 
-function runFlow(file, tag) {
+function runFlow({ file, locale }, index) {
+  const tag = [locale, index].filter((part) => part !== undefined).join("-");
   const debugDir = join(resultsDir, `debug-${tag}`);
+  // A later invocation (the iPad pass) reuses these tags; a failed run's
+  // bundle must not be collected again.
+  rmSync(debugDir, { recursive: true, force: true });
   console.log(`\n> maestro test ${relative(e2eDir, file)}`);
   const { status, error } = spawnSync(
     "maestro",
@@ -101,7 +106,7 @@ function runFlow(file, tag) {
     { stdio: "inherit" },
   );
   if (error) throw error;
-  collectTakeScreenshots(debugDir);
+  collectTakeScreenshots(debugDir, locale);
   // Step screenshots and hierarchy dumps are only worth keeping for failures.
   if (status === 0) rmSync(debugDir, { recursive: true, force: true });
   return status ?? 1;
@@ -112,9 +117,12 @@ const files = (targets.length ? targets : ["."]).flatMap(resolveTarget);
 
 mkdirSync(resultsDir, { recursive: true });
 
+const runs = (locales.length ? locales : [undefined]).flatMap((locale) =>
+  files.map((file) => ({ file, locale })),
+);
 const failed = [];
-for (const [i, file] of files.entries()) {
-  if (runFlow(file, i) !== 0) failed.push(file);
+for (const [i, run] of runs.entries()) {
+  if (runFlow(run, i) !== 0) failed.push(run);
 }
 if (failed.length === 0) process.exit(0);
 
@@ -125,11 +133,15 @@ if (failed.length > MAX_RERUN_FLOWS) {
   process.exit(1);
 }
 
-const names = failed.map((f) => relative(e2eDir, f)).join(", ");
+const names = failed
+  .map(({ file, locale }) =>
+    [relative(e2eDir, file), locale].filter(Boolean).join(" "),
+  )
+  .join(", ");
 console.log(`\nRerunning ${failed.length} flow file(s) once: ${names}`);
 const stillFailing = [];
-for (const [i, file] of failed.entries()) {
-  if (runFlow(file, `retry-${i}`) !== 0) stillFailing.push(file);
+for (const [i, run] of failed.entries()) {
+  if (runFlow(run, `retry-${i}`) !== 0) stillFailing.push(run);
 }
 if (stillFailing.length > 0) process.exit(1);
 console.log("All failed flows passed on rerun.");

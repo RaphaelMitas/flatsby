@@ -2,29 +2,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <link rel="stylesheet" href="/common.css" />
     <style>
-      @font-face {
-        font-family: "Inter";
-        src: url("/fonts/inter.woff2") format("woff2");
-        font-weight: 100 900;
-      }
-      :root {
-        --bg: #facc15;
-        --ink: #09090b;
-      }
-      html,
-      body {
-        margin: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-      }
-      body {
-        background: var(--bg);
-        color: var(--ink);
-        font-family: "Inter", sans-serif;
-        position: relative;
-      }
       header {
         position: absolute;
         top: 2.4vh;
@@ -97,11 +76,6 @@
           0 3vw 8vw rgba(9, 9, 11, 0.5),
           0 0 0 0.35vw rgba(255, 255, 255, 0.16);
       }
-      .cat {
-        position: absolute;
-        z-index: 1;
-        background: url("/brand/adaptive-icon.png") no-repeat;
-      }
     </style>
   </head>
   <body>
@@ -110,7 +84,7 @@
       <h1 id="h"></h1>
     </header>
     <script type="module">
-      import { locate, trimX, union } from "/locate.js";
+      import { loadImage, locate, place, trimX, union } from "/compose.js";
 
       const q = new URLSearchParams(location.search);
       const platform = q.get("platform") ?? "ios";
@@ -124,22 +98,6 @@
           ? value[platform]
           : value;
       const src = (capture) => `/captures/${platform}/${lang}/${capture}.png`;
-
-      const loadImage = (url) =>
-        new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = reject;
-          img.src = url;
-        });
-
-      const place = (className, styles, parent = document.body) => {
-        const el = document.createElement("div");
-        el.className = className;
-        Object.assign(el.style, styles);
-        parent.appendChild(el);
-        return el;
-      };
 
       // Store guidance (Google Play) wants captions in roughly the top fifth of the frame.
       const captionLimit = 0.215 * H;
@@ -158,17 +116,17 @@
 
       fetch("captions.json")
         .then((r) => r.json())
-        .then(async (captions) => {
-          const frame = captions[lang][index];
+        .then(async (frames) => {
+          const frame = frames[index];
           document.documentElement.lang = lang;
-          document.getElementById("bubble").textContent = frame.bubble;
+          document.getElementById("bubble").textContent = frame.bubble[lang];
           const h1 = document.getElementById("h");
-          h1.textContent = frame.headline;
+          h1.textContent = frame.headline[lang];
 
           const captures = [
             ...new Set([
-              ...[...frame.cards, ...(frame.zooms ?? [])].map((c) => c.capture),
-              ...(frame.zooms ?? []).flatMap((z) => z.crop),
+              ...[...frame.cards, ...frame.zooms].map((c) => c.capture),
+              ...frame.zooms.flatMap((z) => z.crop),
             ]),
           ];
           const images = Object.fromEntries(
@@ -176,7 +134,7 @@
               captures.map(async (c) => [c, await loadImage(src(c))]),
             ),
           );
-          for (const z of frame.zooms ?? []) {
+          for (const z of frame.zooms) {
             const capture = images[z.capture];
             const box = trimX(
               union([z.crop].flat().map((c) => locate(capture, images[c]))),
@@ -214,7 +172,7 @@
             return { width, height: (width * h * ratio(z)) / w };
           };
 
-          const stacked = (frame.zooms ?? []).filter((z) => z.stack);
+          const stacked = frame.zooms.filter((z) => z.stack);
           const fixed =
             stacked.reduce(
               (sum, z) => sum + zoomBox(z).height - z.overlap * vw,
@@ -226,7 +184,7 @@
             0,
           );
           const width = Math.min(
-            (frame.maxWidth ?? 96) * vw,
+            96 * vw,
             (zoneBottom - zoneTop - fixed) / aspects,
           );
           const total = width * aspects + fixed;
@@ -235,8 +193,7 @@
 
           const cardTops = frame.cards.map((c) => {
             const top = y;
-            const full = width;
-            const fullHeight = full * ratio(c);
+            const fullHeight = width * ratio(c);
             const card = place("card", {
               left: `${left}px`,
               top: `${top}px`,
@@ -249,7 +206,7 @@
                   position: "relative",
                   height: `${(b - a) * fullHeight}px`,
                   backgroundImage: `url("${src(c.capture)}")`,
-                  backgroundSize: `${full}px auto`,
+                  backgroundSize: `${width}px auto`,
                   backgroundPosition: `0 ${-a * fullHeight}px`,
                 },
                 card,
@@ -262,8 +219,8 @@
                   const off = i * step;
                   if (area[0] + off < a || area[1] + off > b) continue;
                   const box = (y0, y1) => ({
-                    left: `${x * full}px`,
-                    width: `${w * full}px`,
+                    left: `${x * width}px`,
+                    width: `${w * width}px`,
                     top: `${(y0 - a) * fullHeight}px`,
                     height: `${(y1 - y0) * fullHeight}px`,
                   });
@@ -273,8 +230,8 @@
                     {
                       ...box(keep[0] + off + shift, keep[1] + off + shift),
                       backgroundImage: `url("${src(c.capture)}")`,
-                      backgroundSize: `${full}px auto`,
-                      backgroundPosition: `${-x * full}px ${-(keep[0] + off) * fullHeight}px`,
+                      backgroundSize: `${width}px auto`,
+                      backgroundPosition: `${-x * width}px ${-(keep[0] + off) * fullHeight}px`,
                     },
                     seg,
                   );
@@ -286,8 +243,8 @@
           });
           y -= gap;
 
-          for (const z of frame.zooms ?? []) {
-            const [rx, ry, rw] = z.region;
+          for (const z of frame.zooms) {
+            const [rx, ry, rw, rh] = z.region;
             const box = zoomBox(z);
             const full = box.width / rw;
             let top;
@@ -296,9 +253,15 @@
               y = top + box.height;
             } else {
               const card = cardTops[z.card];
-              const [a] = card.segments[0];
+              const [a, b] = card.segments[0];
+              // A layout change can move the row out of the slice the card shows.
+              if (ry < a || ry + rh > b) {
+                throw new Error(
+                  `${z.crop} lies outside its card's first segment`,
+                );
+              }
               const sourceCenter =
-                card.top + (ry - a + z.region[3] / 2) * card.fullHeight;
+                card.top + (ry - a + rh / 2) * card.fullHeight;
               top = sourceCenter - box.height / 2;
             }
             place("zoom", {

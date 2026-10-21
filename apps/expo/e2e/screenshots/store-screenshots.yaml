@@ -1,7 +1,7 @@
 appId: ${APP_ID}
 ---
-# Store screenshot flow. All content — the "Sunset Villa" group, its three
-# members, the stocked "Groceries" list, expenses and the calendar — is seeded
+# Store screenshot flow. All content — the group, its three members, the
+# stocked list, expenses and the calendar — is seeded
 # server-side by the e2e create-session endpoint (`seed=store`), so this flow
 # performs no mutations: it logs in, navigates, and captures. Runtime
 # mutations were the pipeline's chronic flake: a Maestro tap that silently
@@ -143,8 +143,7 @@ appId: ${APP_ID}
                 id: "expense-form-next"
       - extendedWaitUntil:
           visible:
-            id: "expense-form-step"
-            text: ${output.store.step2}
+            id: "split-details-card"
           timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/04-expense-split
@@ -166,8 +165,7 @@ appId: ${APP_ID}
                 id: "expense-form-back"
       - extendedWaitUntil:
           visible:
-            id: "expense-form-step"
-            text: ${output.store.step1}
+            id: "expense-form-amount"
           timeout: 15000
 # On Step 1 the footer has no back button (expense-form-back renders only on
 # later steps) — the way out is the navigation header's back on iOS and the
@@ -217,7 +215,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "calendar-day-progress"
-      text: ${output.store.dayProgress}
+      text: "1 .* 3 .*"
     timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/01a-calendar
@@ -318,7 +316,7 @@ appId: ${APP_ID}
           start: "50%, 40%"
           end: "50%, 85%"
       - extendedWaitUntil:
-          visible: ${output.store.spent}
+          visible: ".*142.69.*"
           timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/01-home

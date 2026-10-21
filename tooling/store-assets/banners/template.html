@@ -2,25 +2,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <link rel="stylesheet" href="/common.css" />
     <style>
-      @font-face {
-        font-family: "Inter";
-        src: url("/fonts/inter.woff2") format("woff2");
-        font-weight: 100 900;
-      }
-      html,
-      body {
-        margin: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-      }
-      body {
-        background: #facc15;
-        color: #09090b;
-        font-family: "Inter", sans-serif;
-        position: relative;
-      }
       .bubble {
         position: absolute;
         background: #fff;
@@ -62,45 +45,28 @@
         background-color: #09090b;
         background-repeat: no-repeat;
         overflow: hidden;
-      }
-      .crop {
         z-index: 2;
-      }
-      .cat {
-        position: absolute;
-        background: url("/brand/adaptive-icon.png") no-repeat;
-        z-index: 1;
       }
     </style>
   </head>
   <body>
     <script type="module">
-      import { locate, trimX } from "/locate.js";
+      import { loadImage, place } from "/compose.js";
 
       const q = new URLSearchParams(location.search);
       const asset = q.get("asset") ?? "search";
       const lang = q.get("lang") ?? "en";
-      const src = (capture) => `/captures/ios/${lang}/${capture}.png`;
+      const src = (name) => `/captures/ios/${lang}/${name}.png`;
 
-      // Element crops from the iPhone captures, located in their screen so they keep its scale.
       // `card` crops are whole cards, so they keep the card's rounded corner radius.
       const REGIONS = {
-        internet: {
-          capture: "03-expenses",
-          crop: "crop-expense-internet",
-          card: true,
-        },
-        yourTurn: { capture: "01a-calendar", crop: "crop-row-bins" },
-        oatMilk: {
-          capture: "02-shopping-list",
-          crop: "crop-item-oat-milk",
-          card: true,
-        },
-        owed: { capture: "01-home", crop: "crop-balance", trim: 0.24 },
+        internet: { crop: "crop-expense-internet", card: true },
+        yourTurn: { crop: "crop-row-bins" },
+        oatMilk: { crop: "crop-item-oat-milk", card: true },
+        owed: { crop: "crop-balance", trim: 0.24 },
       };
       const CARD_RADIUS = 44;
 
-      // Layouts in design pixels of each asset's CSS viewport; scaled to the real viewport below.
       // `right` anchors a bubble to the right edge so longer German copy grows inward.
       const LAYOUTS = {
         search: {
@@ -161,22 +127,6 @@
         },
       };
 
-      const loadImage = (url) =>
-        new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = reject;
-          img.src = url;
-        });
-
-      const add = (className, style) => {
-        const el = document.createElement("div");
-        el.className = className;
-        Object.assign(el.style, style);
-        document.body.appendChild(el);
-        return el;
-      };
-
       fetch("captions.json")
         .then((r) => r.json())
         .then(async (captions) => {
@@ -187,10 +137,7 @@
           document.documentElement.lang = lang;
 
           const names = new Set(
-            layout.crops.flatMap((c) => [
-              REGIONS[c.region].capture,
-              REGIONS[c.region].crop,
-            ]),
+            layout.crops.map((c) => REGIONS[c.region].crop),
           );
           const [images] = await Promise.all([
             Promise.all(
@@ -202,30 +149,25 @@
           ]);
 
           for (const c of layout.crops) {
-            const { capture, crop, card, trim } = REGIONS[c.region];
-            const [bx, by, bw, bh] = trimX(
-              locate(images[capture], images[crop]),
-              trim,
-            );
-            const s = (c.w * u) / bw;
-            add("crop", {
+            const { crop, card, trim = 0 } = REGIONS[c.region];
+            const { naturalWidth, naturalHeight } = images[crop];
+            const s = (c.w * u) / (naturalWidth * (1 - 2 * trim));
+            place("crop", {
               left: px(c.x),
               top: px(c.y),
               width: px(c.w),
-              height: `${bh * s}px`,
-              borderRadius: card
-                ? `${CARD_RADIUS * s}px`
-                : px(c.radius ?? c.w * 0.045),
+              height: `${naturalHeight * s}px`,
+              borderRadius: card ? `${CARD_RADIUS * s}px` : px(c.w * 0.045),
               boxShadow: `0 ${px(c.w * 0.02)} ${px(c.w * 0.07)} rgba(9, 9, 11, 0.28)`,
-              backgroundImage: `url("${src(capture)}")`,
-              backgroundSize: `${images[capture].naturalWidth * s}px auto`,
-              backgroundPosition: `${-bx * s}px ${-by * s}px`,
+              backgroundImage: `url("${src(crop)}")`,
+              backgroundSize: `${naturalWidth * s}px auto`,
+              backgroundPosition: `${-trim * naturalWidth * s}px 0`,
             });
             if (c.cat) {
               // The cat fills x 0.29-0.71 of the 1024px icon with its ears at y 0.27; the tile's top edge cuts it at y `cut`.
               const { size, cut, at = 0.5 } = c.cat;
               const visible = (cut - 0.27) * size;
-              add("cat", {
+              place("cat", {
                 left: px(c.x + c.w * at - size * 0.21),
                 top: px(c.y - visible),
                 width: px(size * 0.42),
@@ -237,7 +179,7 @@
           }
 
           layout.bubbles.forEach((b, i) => {
-            const el = add(`bubble${b.out ? " out" : ""}`, {
+            const el = place(`bubble${b.out ? " out" : ""}`, {
               fontSize: px(b.size),
               padding: `${px(b.size * 0.36)} ${px(b.size * 0.78)} ${px(b.size * 0.4)}`,
               borderRadius: px(b.size * 0.86),

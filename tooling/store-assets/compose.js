@@ -1,6 +1,20 @@
-// Finds where an element crop (Maestro `takeScreenshot` with `cropOn`) sits in
-// the full capture of the same screen, so templates can lift exactly that row
-// or tile whatever the language or layout. Returns [x, y, w, h] in capture px.
+export function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+export function place(className, styles, parent = document.body) {
+  const el = document.createElement("div");
+  el.className = className;
+  Object.assign(el.style, styles);
+  parent.appendChild(el);
+  return el;
+}
+
 function pixels(img) {
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;
@@ -10,6 +24,8 @@ function pixels(img) {
   return ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 }
 
+// Where a Maestro `cropOn` capture sits in the full screenshot of the same
+// screen, as [x, y, w, h] in capture pixels.
 export function locate(capture, crop) {
   const W = capture.naturalWidth;
   const w = crop.naturalWidth;
@@ -38,10 +54,14 @@ export function locate(capture, crop) {
       if (error < best.error) best = { error, x, y };
     }
   }
+  // The crop is cut from a second screenshot of the same settled screen, so a
+  // real match is near pixel-exact; anything else means the screen changed.
+  if (best.error > samples.length * 3 * 0.1) {
+    throw new Error(`${crop.src} does not match its capture`);
+  }
   return [best.x, best.y, w, h];
 }
 
-// Several crops lifted as one block (e.g. two consecutive list rows).
 export function union(boxes) {
   const x = Math.min(...boxes.map((b) => b[0]));
   const y = Math.min(...boxes.map((b) => b[1]));
@@ -50,7 +70,6 @@ export function union(boxes) {
   return [x, y, right - x, bottom - y];
 }
 
-// Narrows a full-width tile to its centred content.
-export function trimX([x, y, w, h], fraction = 0) {
-  return [x + w * fraction, y, w * (1 - 2 * fraction), h];
+export function trimX([x, y, w, h], fractionPerSide = 0) {
+  return [x + w * fractionPerSide, y, w * (1 - 2 * fractionPerSide), h];
 }
