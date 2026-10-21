@@ -58,7 +58,7 @@ export function PullToRefresh(props: PullToRefreshProps) {
       refreshControl: (
         <RefreshControl
           refreshing={props.refreshing}
-          onRefresh={props.onRefresh}
+          onRefresh={() => void props.onRefresh()}
         />
       ),
     });

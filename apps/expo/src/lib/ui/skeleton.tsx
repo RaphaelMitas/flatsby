@@ -50,7 +50,6 @@ interface SkeletonProps
   extends
     React.ComponentProps<typeof View>,
     VariantProps<typeof skeletonVariants> {
-  animated?: boolean;
   children?: React.ReactNode;
 }
 
@@ -59,7 +58,6 @@ const Skeleton = ({
   variant,
   size,
   width,
-  animated = true,
   children,
   style,
   ...props
@@ -67,30 +65,19 @@ const Skeleton = ({
   const opacity = useSharedValue(0.5);
 
   useEffect(() => {
-    if (!animated) {
-      opacity.value = 1;
-      return;
-    }
-
     opacity.value = withRepeat(withTiming(1, { duration: 1000 }), -1, true);
-  }, [animated, opacity]);
+  }, [opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: animated ? opacity.value : 1,
-    };
-  });
-
-  const ViewComponent = animated ? Animated.View : View;
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   return (
-    <ViewComponent
+    <Animated.View
       className={skeletonVariants({ variant, size, width, className })}
       style={[style, animatedStyle]}
       {...props}
     >
       {children}
-    </ViewComponent>
+    </Animated.View>
   );
 };
 
@@ -119,58 +106,6 @@ const SkeletonText = ({
   );
 };
 
-const SkeletonAvatar = ({
-  size = "xl",
-  className,
-  ...props
-}: Omit<SkeletonProps, "variant">) => (
-  <Skeleton
-    variant="rounded"
-    size={size}
-    width={size}
-    className={className}
-    {...props}
-  />
-);
-
-const SkeletonCard = ({
-  className,
-  children,
-  ...props
-}: Omit<SkeletonProps, "variant">) => (
-  <Skeleton variant="card" className={`p-6 ${className}`} {...props}>
-    {children ?? (
-      <View className="gap-4">
-        <View className="flex-row items-center gap-4">
-          <SkeletonAvatar size="lg" />
-          <View className="flex-1 gap-2">
-            <SkeletonText size="lg" width="2xl" />
-            <SkeletonText size="sm" width="lg" />
-          </View>
-        </View>
-        <View className="gap-2">
-          <SkeletonText lines={3} />
-        </View>
-      </View>
-    )}
-  </Skeleton>
-);
-
-const SkeletonButton = ({
-  size = "lg",
-  width = "lg",
-  className,
-  ...props
-}: Omit<SkeletonProps, "variant">) => (
-  <Skeleton
-    variant="default"
-    size={size}
-    width={width}
-    className={`rounded-md ${className}`}
-    {...props}
-  />
-);
-
 const SkeletonList = ({
   items = 3,
   className,
@@ -187,13 +122,4 @@ const SkeletonList = ({
   </View>
 );
 
-export {
-  Skeleton,
-  SkeletonText,
-  SkeletonAvatar,
-  SkeletonCard,
-  SkeletonButton,
-  SkeletonList,
-  skeletonVariants,
-  type SkeletonProps,
-};
+export { Skeleton, SkeletonText, SkeletonList };

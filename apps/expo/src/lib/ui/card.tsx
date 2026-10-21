@@ -22,10 +22,6 @@ const cardContentVariants = tv({
   base: "p-6 pt-0",
 });
 
-const cardFooterVariants = tv({
-  base: "flex items-center p-6 pt-0",
-});
-
 interface CardProps {
   className?: string;
   children: React.ReactNode;
@@ -62,17 +58,4 @@ const CardContent = ({ className, children, ...props }: CardProps) => (
   </View>
 );
 
-const CardFooter = ({ className, children, ...props }: CardProps) => (
-  <View className={cardFooterVariants({ className })} {...props}>
-    {children}
-  </View>
-);
-
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-  CardContent,
-};
+export { Card, CardHeader, CardTitle, CardDescription, CardContent };
