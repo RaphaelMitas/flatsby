@@ -91,6 +91,7 @@ export async function setupE2ESession(options: {
   name?: string;
   email?: string;
   seed?: string;
+  locale?: string;
 }): Promise<E2ESession> {
   const apiUrl = options.apiUrl.replace(/\/+$/, "");
   SecureStore.setItem(API_URL_KEY, apiUrl);
@@ -99,6 +100,7 @@ export async function setupE2ESession(options: {
   if (options.name) query.set("name", options.name);
   if (options.email) query.set("email", options.email);
   if (options.seed) query.set("seed", options.seed);
+  if (options.locale) query.set("locale", options.locale);
   const suffix = query.size > 0 ? `?${query.toString()}` : "";
 
   // The first request out of a freshly booted simulator or emulator can fail

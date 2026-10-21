@@ -160,6 +160,7 @@ export function ExpenseCard({
         data-testid={`expense-card-${expense.id}`}
         type="button"
         onClick={onSelect}
+        disabled={"isPending" in expense && expense.isPending === true}
         className="w-full text-left"
       >
         {cardContent}

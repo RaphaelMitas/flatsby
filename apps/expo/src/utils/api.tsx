@@ -1,13 +1,10 @@
 import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
-import { fetch as expoFetch } from "expo/fetch";
 import { QueryClient } from "@tanstack/react-query";
 import {
   createTRPCClient,
   httpBatchLink,
-  httpBatchStreamLink,
   loggerLink,
-  splitLink,
   TRPCClientError,
 } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
@@ -80,21 +77,13 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
           (opts.direction === "down" && opts.result instanceof Error),
         colorMode: "ansi",
       }),
-      // Use splitLink to route chat streaming procedures through httpBatchStreamLink
-      splitLink({
-        condition: (op) => op.path.startsWith("chat.send"),
-        true: httpBatchStreamLink({
-          transformer: superjson,
-          url: `${getBaseUrl()}/api/trpc`,
-          headers: getHeaders,
-          // Use expo/fetch for proper streaming support in React Native
-          fetch: expoFetch,
-        }),
-        false: httpBatchLink({
-          transformer: superjson,
-          url: `${getBaseUrl()}/api/trpc`,
-          headers: getHeaders,
-        }),
+      httpBatchLink({
+        transformer: superjson,
+        url: `${getBaseUrl()}/api/trpc`,
+        headers: getHeaders,
+        // iOS would append its own stored cookies to the Cookie header from getHeaders
+        fetch: (url, options) =>
+          fetch(url, { ...options, credentials: "omit" }),
       }),
     ],
   }),

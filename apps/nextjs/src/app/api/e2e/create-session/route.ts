@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { Locale } from "@flatsby/i18n/locale";
 import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import { NextResponse } from "next/server";
 import { and, eq, inArray, like, lt, or } from "drizzle-orm";
@@ -6,6 +7,9 @@ import { and, eq, inArray, like, lt, or } from "drizzle-orm";
 import { db } from "@flatsby/db/client";
 import {
   accounts,
+  calendarItemMembers,
+  calendarItems,
+  calendarOccurrences,
   chatMessages,
   conversations,
   expenses,
@@ -17,7 +21,9 @@ import {
   shoppingLists,
   users,
 } from "@flatsby/db/schema";
+import { isLocale } from "@flatsby/i18n/locale";
 import { CURRENT_AI_CONSENT_VERSION } from "@flatsby/validators/ai-consent";
+import { addDays, localDate, weekdayOf } from "@flatsby/validators/calendar";
 import { DEFAULT_CHAT_MODEL } from "@flatsby/validators/models";
 
 import { auth } from "~/auth/server";
@@ -103,17 +109,100 @@ function thirds(totalCents: number): [number, number, number] {
   return [totalCents - 2 * base, base, base];
 }
 
+const STORE_COPY = {
+  en: {
+    group: "Sunset Villa",
+    list: "Groceries",
+    items: {
+      apples: "Apples",
+      oatMilk: "Oat Milk",
+      bread: "Sourdough Bread",
+      paperTowels: "Paper Towels",
+    },
+    expenses: {
+      shopping: "Weekly shopping",
+      internet: "Internet bill",
+      cleaning: "Cleaning supplies",
+    },
+    calendar: {
+      bins: "Take out bins",
+      bathroom: "Clean bathroom",
+      plants: "Water the plants",
+      dinner: "Flat dinner",
+      movies: "Movie night",
+      rent: "Rent due",
+    },
+    chat: {
+      title: "Spending overview",
+      chartTitle: "Spending by category",
+      categories: {
+        food: "Food & Drinks",
+        utilities: "Utilities",
+        shopping: "Shopping",
+      },
+      question: "How is our spending looking this month?",
+      answer:
+        "Sunset Villa spent **€142.69** this month across three expenses. " +
+        "Food & drinks was the biggest chunk at €84.20, followed by " +
+        "utilities at €39.99 and shopping at €18.50. Here's the breakdown:",
+    },
+  },
+  de: {
+    group: "WG Sonnenblick",
+    list: "Einkauf",
+    items: {
+      apples: "Äpfel",
+      oatMilk: "Hafermilch",
+      bread: "Sauerteigbrot",
+      paperTowels: "Küchenrolle",
+    },
+    expenses: {
+      shopping: "Wocheneinkauf",
+      internet: "Internetrechnung",
+      cleaning: "Putzmittel",
+    },
+    calendar: {
+      bins: "Müll rausbringen",
+      bathroom: "Bad putzen",
+      plants: "Pflanzen gießen",
+      dinner: "WG-Abendessen",
+      movies: "Filmabend",
+      rent: "Miete fällig",
+    },
+    chat: {
+      title: "Ausgabenübersicht",
+      chartTitle: "Ausgaben nach Kategorie",
+      categories: {
+        food: "Essen & Trinken",
+        utilities: "Nebenkosten",
+        shopping: "Shopping",
+      },
+      question: "Wie sehen unsere Ausgaben diesen Monat aus?",
+      answer:
+        "Die WG Sonnenblick hat diesen Monat **142,69 €** für drei Ausgaben " +
+        "ausgegeben. Essen & Trinken war mit 84,20 € der größte Posten, " +
+        "danach Nebenkosten mit 39,99 € und Shopping mit 18,50 €. " +
+        "Hier die Aufteilung:",
+    },
+  },
+} satisfies Record<Locale, unknown>;
+
 /**
- * Seeds the full store-screenshot scenario server-side: the "Sunset Villa"
- * group with three members, a stocked shopping list, and split expenses. The
- * screenshot flow then only logs in, navigates, and captures — it performs no
- * mutations, because a Maestro tap that silently misses a button would leave
- * state missing and the flow waiting on UI that never appears.
+ * Seeds the full store-screenshot scenario server-side: a group with three
+ * members, a stocked list, expenses and a calendar. The screenshot flow then
+ * only logs in, navigates, and captures — it performs no mutations, because a
+ * Maestro tap that silently misses a button would leave state missing and the
+ * flow waiting on UI that never appears.
  */
-async function seedStoreScenario(adminUserId: string, adminEmail: string) {
+async function seedStoreScenario(
+  adminUserId: string,
+  adminEmail: string,
+  locale: Locale,
+) {
+  const copy = STORE_COPY[locale];
   const [group] = await db
     .insert(groups)
-    .values({ name: "Sunset Villa" })
+    .values({ name: copy.group })
     .returning();
   if (!group) throw new Error("Failed to create seeded group");
 
@@ -153,35 +242,35 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
 
   const [list] = await db
     .insert(shoppingLists)
-    .values({ groupId: group.id, name: "Groceries" })
+    .values({ groupId: group.id, name: copy.list })
     .returning();
   if (!list) throw new Error("Failed to create seeded shopping list");
 
   await db.insert(shoppingListItems).values([
     {
       shoppingListId: list.id,
-      name: "Apples",
+      name: copy.items.apples,
       categoryId: "produce",
       createdByGroupMemberId: annaMember.id,
       completed: false,
     },
     {
       shoppingListId: list.id,
-      name: "Oat Milk",
+      name: copy.items.oatMilk,
       categoryId: "dairy",
       createdByGroupMemberId: tomMember.id,
       completed: false,
     },
     {
       shoppingListId: list.id,
-      name: "Sourdough Bread",
+      name: copy.items.bread,
       categoryId: "bakery",
       createdByGroupMemberId: alexMember.id,
       completed: false,
     },
     {
       shoppingListId: list.id,
-      name: "Paper Towels",
+      name: copy.items.paperTowels,
       categoryId: "household",
       createdByGroupMemberId: annaMember.id,
       completed: false,
@@ -191,7 +280,7 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   const dayMs = 24 * 60 * 60 * 1000;
   const seedExpenses = [
     {
-      description: "Weekly shopping",
+      description: copy.expenses.shopping,
       amountInCents: 8420,
       category: "food-drinks",
       subcategory: "groceries",
@@ -199,7 +288,7 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
       expenseDate: new Date(),
     },
     {
-      description: "Internet bill",
+      description: copy.expenses.internet,
       amountInCents: 3999,
       category: "utilities",
       subcategory: "internet",
@@ -207,7 +296,7 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
       expenseDate: new Date(Date.now() - dayMs),
     },
     {
-      description: "Cleaning supplies",
+      description: copy.expenses.cleaning,
       amountInCents: 1850,
       category: "shopping",
       subcategory: "home-goods",
@@ -250,6 +339,12 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
     ]);
   }
 
+  await seedStoreCalendar(
+    group.id,
+    [alexMember.id, annaMember.id, tomMember.id],
+    copy.calendar,
+  );
+
   // A canned conversation so screenshots show the AI answering with a chart
   // without any model call. Consent must be current or the gate covers the
   // screen.
@@ -270,7 +365,7 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
     .insert(conversations)
     .values({
       userId: adminUserId,
-      title: "Spending overview",
+      title: copy.chat.title,
       model: DEFAULT_CHAT_MODEL,
     })
     .returning({ id: conversations.id });
@@ -282,12 +377,12 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
     input: {
       component: "chart",
       config: {
-        title: "Spending by category",
+        title: copy.chat.chartTitle,
         chartType: "pie",
         data: [
-          { label: "Food & Drinks", value: 84.2 },
-          { label: "Utilities", value: 39.99 },
-          { label: "Shopping", value: 18.5 },
+          { label: copy.chat.categories.food, value: 84.2 },
+          { label: copy.chat.categories.utilities, value: 39.99 },
+          { label: copy.chat.categories.shopping, value: 18.5 },
         ],
       },
     },
@@ -302,7 +397,7 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
       id: `${conversation.id}-user`,
       conversationId: conversation.id,
       role: "user",
-      content: "How is our spending looking this month?",
+      content: copy.chat.question,
       status: "complete",
       createdAt: askedAt,
     },
@@ -311,10 +406,7 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
       conversationId: conversation.id,
       role: "assistant",
       createdAt: new Date(askedAt.getTime() + 1000),
-      content:
-        "Sunset Villa spent **€142.69** this month across three expenses. " +
-        "Food & drinks was the biggest chunk at €84.20, followed by " +
-        "utilities at €39.99 and shopping at €18.50. Here's the breakdown:",
+      content: copy.chat.answer,
       status: "complete",
       model: DEFAULT_CHAT_MODEL,
       toolCalls: [chartToolCall],
@@ -322,6 +414,101 @@ async function seedStoreScenario(adminUserId: string, adminEmail: string) {
   ]);
 
   return { group, conversationId: conversation.id };
+}
+
+// Relative to today, so the flows' "1 of 3 done" holds on any capture day
+async function seedStoreCalendar(
+  groupId: number,
+  [alex, anna, tom]: [number, number, number],
+  titles: (typeof STORE_COPY)[Locale]["calendar"],
+) {
+  const today = localDate();
+  const items = await db
+    .insert(calendarItems)
+    .values([
+      {
+        groupId,
+        kind: "task",
+        title: titles.bins,
+        color: "green",
+        startsOn: today,
+        recurrence: { type: "weekly", interval: 1, days: [weekdayOf(today)] },
+        createdByGroupMemberId: alex,
+      },
+      {
+        groupId,
+        kind: "task",
+        title: titles.bathroom,
+        color: "cyan",
+        startsOn: addDays(today, -14),
+        recurrence: { type: "weekly", interval: 1, days: [weekdayOf(today)] },
+        createdByGroupMemberId: anna,
+      },
+      {
+        groupId,
+        kind: "task",
+        title: titles.plants,
+        color: "yellow",
+        startsOn: addDays(today, -21),
+        recurrence: { type: "daily", interval: 3 },
+        createdByGroupMemberId: tom,
+      },
+      {
+        groupId,
+        kind: "event",
+        title: titles.dinner,
+        color: "blue",
+        startsOn: today,
+        startTime: "19:00",
+        endTime: "21:00",
+        recurrence: null,
+        createdByGroupMemberId: tom,
+      },
+      {
+        groupId,
+        kind: "event",
+        title: titles.movies,
+        color: "purple",
+        startsOn: addDays(today, -12),
+        startTime: "20:30",
+        endTime: "23:00",
+        recurrence: {
+          type: "weekly",
+          interval: 1,
+          days: [weekdayOf(addDays(today, 2))],
+        },
+        createdByGroupMemberId: anna,
+      },
+      {
+        groupId,
+        kind: "event",
+        title: titles.rent,
+        color: "red",
+        startsOn: addDays(today, -60),
+        recurrence: { type: "monthly", interval: 1, on: { day: 1 } },
+        createdByGroupMemberId: alex,
+      },
+    ])
+    .returning({ id: calendarItems.id });
+  const [bins, bathroom, plants] = items;
+  if (!bins || !bathroom || !plants) {
+    throw new Error("Failed to create seeded calendar items");
+  }
+
+  await db.insert(calendarItemMembers).values([
+    ...[alex, anna, tom].map((groupMemberId, position) => ({
+      itemId: bins.id,
+      groupMemberId,
+      position,
+    })),
+    { itemId: bathroom.id, groupMemberId: anna, position: 0 },
+  ]);
+  await db.insert(calendarOccurrences).values({
+    itemId: bathroom.id,
+    date: today,
+    completedByGroupMemberId: anna,
+    completedAt: new Date(),
+  });
 }
 
 /** Same EUR scenario as debt.test.ts, so the e2e direct debts match its assertions */
@@ -399,6 +586,8 @@ export async function POST(request: Request) {
   const name = nameParam ? nameParam.slice(0, 64) : "E2E Test User";
   const emailParam = searchParams.get("email")?.trim().toLowerCase();
   const seed = searchParams.get("seed");
+  const localeParam = searchParams.get("locale");
+  const locale = localeParam && isLocale(localeParam) ? localeParam : "en";
 
   // Reject anything that is not a plain mailbox at the e2e domain — a
   // malformed override (e.g. a "+" decoded to a space upstream) would
@@ -414,7 +603,7 @@ export async function POST(request: Request) {
   let group: { id: number };
   let conversationId: string | undefined;
   if (seed === "store") {
-    const seeded = await seedStoreScenario(userId, email);
+    const seeded = await seedStoreScenario(userId, email, locale);
     group = seeded.group;
     conversationId = seeded.conversationId;
   } else {

@@ -32,6 +32,7 @@ interface UseExpenseFormProps {
   expense?: ExpenseWithSplitsAndMembers;
   onClose: () => void;
   onSuccess?: (expenseId: number) => void;
+  closeOnSubmit?: boolean;
 }
 
 function useExchangeRate(
@@ -52,6 +53,7 @@ export function useExpenseForm({
   expense,
   onClose,
   onSuccess,
+  closeOnSubmit,
 }: UseExpenseFormProps) {
   const trpc = useTRPC();
   const t = useTranslations();
@@ -256,6 +258,7 @@ export function useExpenseForm({
 
         toast.success(t("expenses.createSuccess"));
         invalidateAll();
+        if (closeOnSubmit) return;
         onSuccess?.(data.data.id);
         onClose();
         form.reset();
@@ -397,6 +400,7 @@ export function useExpenseForm({
         splitMethod: values.splitMethod,
         ...conversion.fields,
       });
+      if (closeOnSubmit) onClose();
     }
   };
 

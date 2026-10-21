@@ -7,7 +7,9 @@ export default function CreateExpense() {
   const { focus } = useLocalSearchParams<{ focus?: string }>();
   return (
     <GroupGate>
-      {(group) => <ExpenseForm group={group} autoFocus={focus === "1"} />}
+      {(group) => (
+        <ExpenseForm group={group} closeOnSubmit autoFocus={focus === "1"} />
+      )}
     </GroupGate>
   );
 }

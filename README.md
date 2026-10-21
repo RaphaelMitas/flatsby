@@ -54,6 +54,19 @@ debts between two people.
   <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/04-expense-split.png" alt="Splitting an expense on iOS" width="200">
 </p>
 
+## Calendar
+
+Chores and events for the whole household. Repeat them daily, weekly, monthly
+or yearly, and pick several flatmates to take turns. Tick a chore off and
+everyone sees who did it.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-calendar.png" alt="Calendar on web" width="760">
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/01a-calendar.png" alt="Calendar on iOS" width="200">
+</p>
+
 ## AI assistant
 
 Ask about your household in plain language. The assistant reads your lists

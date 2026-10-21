@@ -1,4 +1,3 @@
-• Invite flatmates with a link, a QR code or a short code. They see who invited them and join with one tap, no email needed.
-• Flatsby now speaks German. The app follows your phone's language, and you can change it in settings.
-• Splitwise imports now work for households with more than 500 expenses.
+• New Calendar tab for chores and events. Repeat them daily, weekly, monthly or yearly, let flatmates take turns automatically, and tick off what's done.
+• Groups that have expenses can now be deleted. If deleting a group ever fails, the app tells you instead of quietly putting it back.
 • Small fixes and improvements.
