@@ -1,0 +1,60 @@
+name: OTA update
+
+# Started by `pnpm release ota`. runtimeVersion is "appVersion", so an update
+# needing native code a same-version binary lacks would crash it on launch.
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Update message shown on expo.dev"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ota
+
+env:
+  FORCE_COLOR: 3
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      # fingerprint:generate prints an env-loading notice on stdout ahead of the JSON.
+      - name: Check native fingerprint against production builds
+        working-directory: apps/expo
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n 's/.*version: "\([0-9][0-9.]*\)".*/\1/p' app.config.ts | head -1)
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not parse version from apps/expo/app.config.ts"
+            exit 1
+          fi
+          for PLATFORM in ios android; do
+            HASH=$(pnpm dlx eas-cli@21.5.0 fingerprint:generate --platform "$PLATFORM" --environment production --json | sed -n '/^{/,$p' | jq -er .hash)
+            if ! pnpm dlx eas-cli@21.5.0 build:list --platform "$PLATFORM" --channel production --status finished --runtime-version "$VERSION" --limit 50 --json \
+              | jq -e --arg hash "$HASH" 'length > 0 and length < 50 and all(.[]; .fingerprint.hash == $hash)' > /dev/null; then
+              echo "::error::Not every finished $PLATFORM production build of v$VERSION has fingerprint $HASH. Either main changed native code since v$VERSION was built or v$VERSION is still building; cut a store release with pnpm release instead."
+              exit 1
+            fi
+            echo "$PLATFORM fingerprint $HASH matches every production build of v$VERSION"
+          done
+
+      - name: Publish update
+        working-directory: apps/expo
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          MESSAGE: ${{ inputs.message }}
+        run: pnpm dlx eas-cli@21.5.0 update --channel production --environment production --message "$MESSAGE" --non-interactive
