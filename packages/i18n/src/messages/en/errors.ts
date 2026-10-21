@@ -30,6 +30,10 @@ export const errors = {
   calendarDateNotScheduled: "That date is no longer on the schedule",
   calendarSeriesReplaced:
     "A newer repeat already took over from that date. Edit that one instead.",
+  calendarSeriesEnded:
+    "That would change days that are already over. Add a new entry instead.",
+  calendarItemChanged:
+    "Someone else just changed this. Open it again to see their edit.",
   cannotRemoveLastAdmin: "Cannot remove the last admin from the group",
   promoteAdminFirst:
     "Cannot remove the last admin. Promote another member to admin first.",

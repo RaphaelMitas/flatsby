@@ -109,11 +109,19 @@ const calendarItemFields = z.object({
   startsOn: calendarDateSchema,
   time: eventTimeSchema.nullable(),
   recurrence: recurrenceSchema.nullable(),
+  // undefined keeps the stored end; apps up to v0.12.0 leave it out
+  endsOn: calendarDateSchema.nullable().optional(),
   memberIds: z.array(z.number()).max(50),
 });
 
+export const endsBeforeStart = (item: {
+  startsOn: string;
+  endsOn?: string | null;
+}) => !!item.endsOn && item.endsOn < item.startsOn;
+
 const isConsistentItem = (item: z.infer<typeof calendarItemFields>) =>
-  item.kind === "task" ? item.time === null : item.memberIds.length === 0;
+  (item.kind === "task" ? item.time === null : item.memberIds.length === 0) &&
+  !endsBeforeStart(item);
 
 export const createCalendarItemSchema =
   calendarItemFields.refine(isConsistentItem);
@@ -190,7 +198,6 @@ export const localDate = (now = new Date()) =>
 export interface ExpandableItem {
   id: number;
   startsOn: string;
-  /** Set when an edit split the series and a newer rule took over */
   endsOn: string | null;
   recurrence: Recurrence | null;
   /** Active members in rotation order */
@@ -429,6 +436,52 @@ export function describeRecurrence(
   }
 }
 
+// Older apps could leave an end on an item they turned into a one-off
+export const hasEnded = (
+  item: Pick<ExpandableItem, "recurrence" | "endsOn">,
+  today: string,
+) => item.recurrence !== null && item.endsOn !== null && item.endsOn < today;
+
+function describeEnd(
+  item: Pick<ExpandableItem, "recurrence" | "endsOn">,
+  today: string,
+  t: Translate,
+  locale: Intl.LocalesArgument,
+) {
+  if (!item.endsOn) return null;
+  const date = formatCalendarDate(item.endsOn, locale, {
+    day: "numeric",
+    month: "short",
+    year: item.endsOn.slice(0, 4) === today.slice(0, 4) ? undefined : "numeric",
+  });
+  return t(
+    hasEnded(item, today) ? "calendar.repeat.ended" : "calendar.repeat.until",
+    {
+      date,
+    },
+  );
+}
+
+export const describeSeries = (
+  item: Pick<ExpandableItem, "recurrence" | "endsOn">,
+  today: string,
+  t: Translate,
+  locale: Intl.LocalesArgument,
+  startsOn?: string,
+) =>
+  [
+    describeRecurrence(item.recurrence, t, locale),
+    startsOn &&
+      formatCalendarDate(startsOn, locale, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }),
+    item.recurrence && describeEnd(item, today, t, locale),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
 export const describeMonthDay = (
   on: MonthDay,
   t: Translate,
@@ -630,12 +683,28 @@ export const sameSchedule = (a: Schedule, b: Schedule) =>
   a.startsOn === b.startsOn && sameRecurrence(a.recurrence, b.recurrence);
 
 const isRunning = (item: Series, today: string) =>
-  item.recurrence !== null &&
-  item.startsOn < today &&
-  (item.endsOn === null || item.endsOn >= today);
+  item.recurrence !== null && item.startsOn < today && !hasEnded(item, today);
 
-export const startsAfterEnd = (previous: Series, next: Schedule) =>
-  previous.endsOn !== null && next.startsOn > previous.endsOn;
+export const editedEndsOn = (
+  previous: Series,
+  next: Pick<Series, "recurrence"> & { endsOn?: string | null },
+) => {
+  if (!next.recurrence) return null;
+  return next.endsOn === undefined ? previous.endsOn : next.endsOn;
+};
+
+/** Days that are over keep their ticks and schedule. */
+export const rewritesPast = (previous: Series, next: Series, today: string) =>
+  hasEnded(previous, today)
+    ? !sameSchedule(previous, next) || next.endsOn !== previous.endsOn
+    : next.endsOn !== previous.endsOn && hasEnded(next, today);
+
+export const splitEndsOn = (previous: Series, startsOn: string) => {
+  const dayBefore = addDays(startsOn, -1);
+  return previous.endsOn !== null && previous.endsOn < dayBefore
+    ? previous.endsOn
+    : dayBefore;
+};
 
 /** A new schedule for a running series starts a new item, so the old one keeps its history. */
 export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
@@ -643,7 +712,7 @@ export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
   !sameSchedule(previous, next) &&
   next.startsOn > previous.startsOn;
 
-function continuedRotation(
+export function continuedRotation(
   previous: ExpandableItem,
   next: Pick<ExpandableItem, "startsOn" | "memberIds">,
 ) {
@@ -659,15 +728,6 @@ function continuedRotation(
   }
   return next.memberIds;
 }
-
-/** The new piece of a split ends where the old one did, so a later change still takes over, and carries on the rotation. */
-export const splitOff = (
-  previous: ExpandableItem,
-  next: Pick<ExpandableItem, "startsOn" | "recurrence" | "memberIds">,
-) => ({
-  endsOn: next.recurrence ? previous.endsOn : null,
-  memberIds: continuedRotation(previous, next),
-});
 
 interface RangeWindow {
   from: string;
@@ -781,24 +841,24 @@ export function withSavedItem(
   };
 }
 
-/** Optimistic split: the old series ends the day before the new one takes over. */
+/** Optimistic split: the old series ends by the day before the new one takes over. */
 export function withSplitSeries(
   range: CalendarRange,
-  previousId: number,
+  previous: ExpandableItem,
   next: CalendarItemView,
   window: RangeWindow,
 ): CalendarRange {
-  const endsOn = addDays(next.startsOn, -1);
-  const carried = cachedOverrides(range, previousId, window).filter(
+  const endsOn = splitEndsOn(previous, next.startsOn);
+  const carried = cachedOverrides(range, previous.id, window).filter(
     (override) => override.date > endsOn,
   );
   const ended: CalendarRange = {
     items: range.items.map((item) =>
-      item.id === previousId ? { ...item, endsOn } : item,
+      item.id === previous.id ? { ...item, endsOn } : item,
     ),
     occurrences: range.occurrences.filter(
       (occurrence) =>
-        occurrence.itemId !== previousId || occurrence.date <= endsOn,
+        occurrence.itemId !== previous.id || occurrence.date <= endsOn,
     ),
   };
   return withSavedItem(ended, next, window, carried);
@@ -882,6 +942,25 @@ export const withPickedStart = (
     form.monthDay && monthDaysOf(startsOn)["week" in form.monthDay ? 1 : 0],
   yearDay: null,
 });
+
+export const earliestEndsOn = (startsOn: string, today: string) =>
+  startsOn > today ? startsOn : today;
+
+export const defaultEndsOn = (startsOn: string, today: string) =>
+  addDays(earliestEndsOn(startsOn, today), 28);
+
+export function formEndsOn(
+  item: Series | undefined,
+  recurrence: Recurrence | null,
+  pickedEnd: string | null,
+  startsOn: string,
+  today: string,
+) {
+  if (item && hasEnded(item, today)) return item.endsOn;
+  if (!recurrence || !pickedEnd) return null;
+  const earliest = earliestEndsOn(startsOn, today);
+  return pickedEnd < earliest ? earliest : pickedEnd;
+}
 
 /** The edit form's start: a changed repeat of a running series starts today unless a date was picked, so the old part keeps its history. */
 export function editedStartsOn(

@@ -27,15 +27,18 @@ import {
   calendarItemDetailSchema,
   calendarItemRefSchema,
   calendarRangeSchema,
+  continuedRotation,
   createCalendarItemSchema,
+  editedEndsOn,
+  endsBeforeStart,
   expandOccurrences,
   isScheduledOn,
   LONGEST_GAP_DAYS,
+  rewritesPast,
   setOccurrenceDoneSchema,
   setOccurrenceSkippedSchema,
-  splitOff,
+  splitEndsOn,
   splitsSeries,
-  startsAfterEnd,
   updateCalendarItemSchema,
 } from "@flatsby/validators/calendar";
 
@@ -200,13 +203,11 @@ const insertItem = async (
   tx: DbTransaction,
   input: z.infer<typeof createCalendarItemSchema>,
   createdByGroupMemberId: number,
-  endsOn: string | null = null,
 ) => {
   const [created] = await tx
     .insert(calendarItems)
     .values({
       ...itemValues(input),
-      endsOn,
       groupId: input.groupId,
       createdByGroupMemberId,
     })
@@ -223,15 +224,22 @@ const itemValues = ({
   startsOn,
   time,
   recurrence,
+  endsOn,
 }: z.infer<typeof createCalendarItemSchema>) => ({
   kind,
   title,
   color,
   startsOn,
+  endsOn: endsOn ?? null,
   startTime: time?.start ?? null,
   endTime: time?.end ?? null,
   recurrence,
 });
+
+const endsOnStill = (endsOn: string | null) =>
+  endsOn === null
+    ? isNull(calendarItems.endsOn)
+    : eq(calendarItems.endsOn, endsOn);
 
 const occurrenceOf = (itemId: number, date: string) =>
   and(
@@ -418,48 +426,48 @@ export const calendarRouter = createTRPCRouter({
             // Tasks and events are different things, so an item can't switch
             if (input.kind !== previous.kind)
               return fail.validation("errors.unexpected");
-            if (startsAfterEnd(previous, input))
+            const edited = { ...input, endsOn: editedEndsOn(previous, input) };
+            if (rewritesPast(previous, edited, input.today))
+              return fail.conflict("errors.calendarSeriesEnded");
+            // An edit without endsOn keeps the stored end, which the new start can pass
+            if (endsBeforeStart(edited))
               return fail.conflict("errors.calendarSeriesReplaced");
             const saved = DbUtils.transaction(async (tx) => {
               if (splitsSeries(previous, input, input.today)) {
                 const [ended] = await tx
                   .update(calendarItems)
-                  .set({ endsOn: addDays(input.startsOn, -1) })
+                  .set({ endsOn: splitEndsOn(previous, input.startsOn) })
                   .where(
                     and(
                       eq(calendarItems.id, previous.id),
-                      previous.endsOn === null
-                        ? isNull(calendarItems.endsOn)
-                        : eq(calendarItems.endsOn, previous.endsOn),
+                      endsOnStill(previous.endsOn),
                     ),
                   )
                   .returning({ id: calendarItems.id });
-                // Someone else's edit split it first
                 if (!ended)
-                  return Errors.conflict("errors.calendarSeriesReplaced");
-                const piece = splitOff(previous, input);
-                const next = await insertItem(
-                  tx,
-                  { ...input, memberIds: piece.memberIds },
-                  member.id,
-                  piece.endsOn,
-                );
-                await carryOccurrences(tx, previous.id, {
-                  ...input,
-                  ...piece,
-                  ...next,
-                });
+                  return Errors.conflict("errors.calendarItemChanged");
+                const piece = {
+                  ...edited,
+                  memberIds: continuedRotation(previous, edited),
+                };
+                const next = await insertItem(tx, piece, member.id);
+                await carryOccurrences(tx, previous.id, { ...piece, ...next });
                 return next;
               }
-              await tx
+              const [updated] = await tx
                 .update(calendarItems)
-                .set(itemValues(input))
-                .where(eq(calendarItems.id, input.id));
+                .set(itemValues(edited))
+                .where(
+                  and(
+                    eq(calendarItems.id, input.id),
+                    endsOnStill(previous.endsOn),
+                  ),
+                )
+                .returning({ id: calendarItems.id });
+              if (!updated)
+                return Errors.conflict("errors.calendarItemChanged");
               await writeMembers(tx, input.id, input.memberIds);
-              await carryOccurrences(tx, input.id, {
-                ...input,
-                endsOn: previous.endsOn,
-              });
+              await carryOccurrences(tx, input.id, edited);
               return { id: input.id };
             }, "update calendar item")(ctx.db);
             return Effect.flatMap(saved, (result) =>

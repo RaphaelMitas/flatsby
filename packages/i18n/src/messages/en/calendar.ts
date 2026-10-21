@@ -46,6 +46,11 @@ export const calendar = {
     every: "Every",
     on: "On {on}",
     startDateHint: "Based on the start date",
+    ends: "Ends",
+    endsOnDate: "On date",
+    lastDay: "Last day",
+    ended: "Ended",
+    endedHint: "Days that are over stay as they were",
     decreaseInterval: "Fewer",
     increaseInterval: "More",
     who: "Who",
@@ -87,6 +92,8 @@ export const calendar = {
       "{count, plural, =1 {Every month on {on}} other {Every # months on {on}}}",
     yearly:
       "{count, plural, =1 {Every year on {date}} other {Every # years on {date}}}",
+    until: "until {date}",
+    ended: "ended {date}",
   },
   detail: {
     order: "Taking turns",

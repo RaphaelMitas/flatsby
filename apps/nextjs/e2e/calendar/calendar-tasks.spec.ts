@@ -12,7 +12,7 @@ const writeSettled = (page: Page) =>
   );
 
 test.describe("Calendar", () => {
-  test("creates a weekly task, ticks it off and deletes it", async ({
+  test("creates a weekly task with an end, ticks it off and deletes it", async ({
     authPage,
   }) => {
     const title = "Clean bathroom";
@@ -27,6 +27,11 @@ test.describe("Calendar", () => {
     await form.getByTestId("calendar-repeat-weeks").click();
     await expect(form.getByTestId("calendar-form-summary")).toContainText(
       "Every",
+    );
+    await form.getByTestId("calendar-form-ends-on-date").click();
+    await expect(form.getByTestId("calendar-form-ends-date")).toBeVisible();
+    await expect(form.getByTestId("calendar-form-summary")).toContainText(
+      "until",
     );
     await form.getByTestId("calendar-form-submit").click();
 
@@ -56,6 +61,7 @@ test.describe("Calendar", () => {
     const detail = authPage.getByTestId("calendar-detail");
     await expect(detail.getByRole("heading", { name: title })).toBeVisible();
     await expect(detail.getByText("History")).toBeVisible();
+    await expect(detail.getByText(/^Every .* · until /)).toBeVisible();
 
     const deleteButton = detail.getByTestId("calendar-detail-delete");
     await deleteButton.click();

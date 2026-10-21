@@ -446,7 +446,6 @@ export const calendarItems = createTable(
     title: varchar("title", { length: 256 }).notNull(),
     color: varchar("color", { length: 16 }).$type<CalendarColor>().notNull(),
     startsOn: date("starts_on", { mode: "string" }).notNull(),
-    // Set when an edit split the series and a newer item took over
     endsOn: date("ends_on", { mode: "string" }),
     // Wall-clock times, so 19:00 stays 19:00 across DST; null means all day
     startTime: time("start_time"),

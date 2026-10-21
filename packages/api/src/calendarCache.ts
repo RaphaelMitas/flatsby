@@ -13,11 +13,13 @@ import type {
 import { z } from "zod/v4";
 
 import {
-  addDays,
   calendarRangeSchema,
-  splitOff,
+  continuedRotation,
+  editedEndsOn,
+  isScheduledOn,
+  rewritesPast,
+  splitEndsOn,
   splitsSeries,
-  startsAfterEnd,
   withDone,
   withoutItem,
   withSavedItem,
@@ -142,6 +144,7 @@ const asView = (
     startsOn,
     time,
     recurrence,
+    endsOn,
     memberIds,
   }: CreateCalendarItemInput,
 ): CalendarItemView => ({
@@ -150,7 +153,7 @@ const asView = (
   title,
   color,
   startsOn,
-  endsOn: null,
+  endsOn: endsOn ?? null,
   time,
   recurrence,
   memberIds,
@@ -220,17 +223,23 @@ export const calendarPatches = {
   ): CalendarPatch => {
     // A month's cache may not hold the item, yet the edit can still reach into it
     const previous = findCachedItem(input.id);
-    if (!previous || startsAfterEnd(previous, input))
+    if (!previous) return { range: (range) => range };
+    const edited = asView(input.id, {
+      ...input,
+      endsOn: editedEndsOn(previous, input),
+    });
+    if (rewritesPast(previous, edited, input.today))
       return { range: (range) => range };
     if (splitsSeries(previous, input, input.today)) {
-      const endsOn = addDays(input.startsOn, -1);
+      const endsOn = splitEndsOn(previous, input.startsOn);
       const next = {
-        ...asView(temporaryId(), input),
-        ...splitOff(previous, input),
+        ...edited,
+        id: temporaryId(),
+        memberIds: continuedRotation(previous, edited),
       };
       return {
         range: (range, window) =>
-          withSplitSeries(range, previous.id, next, window),
+          withSplitSeries(range, previous, next, window),
         detail: (detail) =>
           detail.item.id === previous.id
             ? {
@@ -244,11 +253,18 @@ export const calendarPatches = {
             : detail,
       };
     }
-    const edited = { ...asView(input.id, input), endsOn: previous.endsOn };
     return {
       range: (range, window) => withSavedItem(range, edited, window),
       detail: (detail) =>
-        detail.item.id === input.id ? { ...detail, item: edited } : detail,
+        detail.item.id === input.id
+          ? {
+              ...detail,
+              item: edited,
+              upcoming: detail.upcoming.filter((occurrence) =>
+                isScheduledOn(edited, occurrence.date),
+              ),
+            }
+          : detail,
     };
   },
 };
