@@ -61,14 +61,14 @@ export function ForYouCard({
         layout={LinearTransition}
         testID="home-for-you"
         style={{ marginTop: CAT_SIZE }}
-        className="bg-card border-border rounded-3xl border px-3.5 py-1 shadow-sm"
+        className="bg-card border-border rounded-3xl border px-4 py-2 shadow-sm"
       >
         {nudges.length === 0 ? (
-          <Animated.View entering={FadeIn.delay(200)} className="py-3.5">
-            <Text className="text-foreground text-lg font-bold">
+          <Animated.View entering={FadeIn.delay(200)} className="py-4">
+            <Text className="text-foreground text-xl font-bold">
               {t("nothingNeedsYou")}
             </Text>
-            <Text className="text-muted-foreground mt-0.5 text-sm">
+            <Text className="text-muted-foreground mt-0.5 text-base">
               {t("wakeYou")}
             </Text>
           </Animated.View>
@@ -110,17 +110,14 @@ function ChoreLine({
   const { color, title } = entry.item;
 
   return (
-    <View className="min-h-16 flex-row items-center gap-2.5 py-2">
+    <View className="min-h-20 flex-row items-center gap-3 py-3">
       <View
-        className={cn(
-          "mx-2 h-2.5 w-2.5 rounded-full",
-          categoryFillColorMap[color],
-        )}
+        className={cn("mx-2 h-3 w-3 rounded-full", categoryFillColorMap[color])}
       />
       <View className="min-w-0 flex-1">
         <Text
           className={cn(
-            "text-sm font-semibold",
+            "text-base font-semibold",
             overdue ? "text-destructive" : "text-muted-foreground",
           )}
         >
@@ -129,7 +126,7 @@ function ChoreLine({
         </Text>
         <Text
           numberOfLines={1}
-          className="text-foreground text-xl font-extrabold tracking-tight"
+          className="text-foreground text-2xl font-extrabold tracking-tight"
         >
           {title}
         </Text>
@@ -142,7 +139,7 @@ function ChoreLine({
         hitSlop={8}
         onPress={() => onTick(entry)}
         className={cn(
-          "h-8 w-8 rounded-full border-2",
+          "h-10 w-10 rounded-full border-2",
           categoryBorderColorMap[color],
         )}
       />
@@ -165,17 +162,21 @@ function DebtLine({
   const to = person(debt.toGroupMemberId);
 
   return (
-    <View className="min-h-16 flex-row items-center gap-2.5 py-2">
-      <MemberAvatar person={to} className="h-7 w-7" textClassName="text-xs" />
+    <View className="min-h-20 flex-row items-center gap-3 py-3">
+      <MemberAvatar
+        person={to}
+        className="h-10 w-10"
+        textClassName="text-base"
+      />
       <View className="min-w-0 flex-1">
         <Text
           numberOfLines={1}
-          className="text-muted-foreground text-sm font-semibold"
+          className="text-muted-foreground text-base font-semibold"
         >
           {t("youOwe", { name: to.name })}
           {more > 0 && ` · ${t("more", { count: more })}`}
         </Text>
-        <Text className="text-foreground text-xl font-extrabold tracking-tight">
+        <Text className="text-foreground text-2xl font-extrabold tracking-tight">
           {formatCurrencyFromCents({
             cents: debt.amountInCents,
             currency: debt.currency,
@@ -185,7 +186,6 @@ function DebtLine({
       </View>
       <Button
         testID="home-settle-up"
-        size="sm"
         className="rounded-full"
         title={tDebts("settleUp")}
         onPress={() => onSettle(debt)}

@@ -197,10 +197,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     });
   };
   const openDebts = () =>
-    router.navigate(
-      { pathname: "/(tabs)/expenses/debts", params: { kind: "simplified" } },
-      { withAnchor: true },
-    );
+    router.navigate("/(tabs)/expenses/debts", { withAnchor: true });
   const { nextTurn, nextEvent } = agenda;
   const firstOwed = owed[0];
   const from = firstOwed && person(firstOwed.fromGroupMemberId);
@@ -316,7 +313,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             say(t("home.new.cat.ticked"));
           }}
           onSettle={(debt) =>
-            router.push(settleHref(debt, "simplified"), { withAnchor: true })
+            router.push(settleHref(debt, "direct"), { withAnchor: true })
           }
         />
 
