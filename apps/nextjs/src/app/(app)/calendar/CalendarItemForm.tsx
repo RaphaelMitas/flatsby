@@ -83,7 +83,9 @@ export function CalendarItemForm({
     item ? repeatFormOf(item.recurrence) : null,
   );
   const repeat = pickedRepeat ?? newRepeatFormFor(kind);
-  const [pickedEnd, setPickedEnd] = useState(item?.endsOn ?? null);
+  const [pickedEnd, setPickedEnd] = useState(
+    item?.recurrence ? item.endsOn : null,
+  );
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
   // Typing "10" passes through an empty field, which the number itself can't hold
   const [everyText, setEveryText] = useState(String(repeat.every));
