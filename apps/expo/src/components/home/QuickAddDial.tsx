@@ -61,7 +61,7 @@ export function QuickAddDial({
       ],
     };
   });
-  // bg-black/30 renders nothing here: the theme has no black
+  // bg-black/30 rendered no scrim on the iOS simulator, so the color is inline
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
     backgroundColor: "rgba(0, 0, 0, 0.35)",

@@ -17,10 +17,10 @@ import { useTranslations } from "use-intl";
 
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import { useThemeColors } from "~/lib/utils";
+import { CAT_SIZE, CatTapReaction, useCatTap } from "../dashboard/useCatTap";
 
 export type CatPose = "sitting" | "peeking" | "asleep";
 
-export const CAT_SIZE = 56;
 const SINK_BELOW_CARD: Record<CatPose, number> = {
   sitting: 10,
   peeking: 20,
@@ -41,7 +41,7 @@ export function HomeCat({
   const { getColor } = useThemeColors();
   const isFocused = useIsFocused();
   const sink = useSharedValue(CAT_SIZE);
-  const hop = useSharedValue(0);
+  const { hop, taps, tap } = useCatTap();
   const stretch = useSharedValue(0);
 
   useEffect(() => {
@@ -68,10 +68,7 @@ export function HomeCat({
   }));
 
   const handlePress = () => {
-    hop.value = withSequence(
-      withTiming(-8, { duration: 120 }),
-      withSpring(0, { damping: 8, stiffness: 300 }),
-    );
+    tap();
     onPress();
   };
 
@@ -91,6 +88,7 @@ export function HomeCat({
           asleep={pose === "asleep"}
         />
       </Animated.View>
+      <CatTapReaction taps={taps} />
     </Pressable>
   );
 }

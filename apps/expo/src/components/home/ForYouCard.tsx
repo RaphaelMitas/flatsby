@@ -1,4 +1,4 @@
-import type { CalendarEntry } from "@flatsby/validators/calendar";
+import type { DueChore } from "@flatsby/validators/calendar";
 import type { PersonLookup } from "@flatsby/validators/expenses/formatting";
 import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { Pressable, Text, View } from "react-native";
@@ -20,10 +20,11 @@ import type { CatPose } from "./HomeCat";
 import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import { Button } from "~/lib/ui/button";
 import { cn } from "~/lib/utils";
-import { CAT_SIZE, CatOverlay, HomeCat } from "./HomeCat";
+import { CAT_SIZE } from "../dashboard/useCatTap";
+import { CatOverlay, HomeCat } from "./HomeCat";
 
 export type Nudge =
-  | { kind: "chore"; entry: CalendarEntry; overdue: boolean; more: number }
+  | { kind: "chore"; entry: DueChore; overdue: boolean; more: number }
   | { kind: "debt"; debt: DebtEntry; more: number };
 
 const POSES: CatPose[] = ["asleep", "peeking", "sitting"];
@@ -41,7 +42,7 @@ export function ForYouCard({
   person: PersonLookup;
   speech: string | null;
   stretchKey: number;
-  onTick: (entry: CalendarEntry) => void;
+  onTick: (entry: DueChore) => void;
   onSettle: (debt: DebtEntry) => void;
   onCatPress: (pose: CatPose) => void;
 }) {
@@ -102,7 +103,7 @@ function ChoreLine({
   onTick,
 }: {
   nudge: Extract<Nudge, { kind: "chore" }>;
-  onTick: (entry: CalendarEntry) => void;
+  onTick: (entry: DueChore) => void;
 }) {
   const t = useTranslations();
   const { color, title } = entry.item;

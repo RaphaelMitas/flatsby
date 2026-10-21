@@ -2,7 +2,7 @@ import type { DebtKind } from "@flatsby/validators/expenses/debt";
 import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -42,7 +42,11 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const locale = useLocale();
   const { invalidateDebtSummary } = useInvalidateExpenses(groupId);
   const [refreshing, setRefreshing] = useState(false);
-  const [kind, setKind] = useState<DebtKind>("direct");
+  // The home's money row reads the settle plan, so it opens on it
+  const { kind: initialKind } = useLocalSearchParams<{ kind?: string }>();
+  const [kind, setKind] = useState<DebtKind>(
+    initialKind === "simplified" ? "simplified" : "direct",
+  );
 
   const { data: debtData } = useSuspenseQuery(
     trpc.expense.getDebtSummary.queryOptions({ groupId }),

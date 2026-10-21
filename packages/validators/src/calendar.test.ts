@@ -679,12 +679,16 @@ describe("homeAgenda", () => {
   };
   const agenda = homeAgenda(range, "2026-10-21", ME);
 
-  it("lists my open chores up to today, a chore left for weeks once from its oldest day", () => {
+  it("lists my open chores up to today, a chore left for weeks once with its missed days", () => {
     expect(
-      agenda.due.map(({ item, occurrence }) => [item.title, occurrence.date]),
+      agenda.due.map(({ item, occurrence, missed }) => [
+        item.title,
+        occurrence.date,
+        missed,
+      ]),
     ).toEqual([
-      ["Kitchen", "2026-10-12"],
-      ["Bathroom", "2026-10-21"],
+      ["Kitchen", "2026-10-19", ["2026-10-12"]],
+      ["Bathroom", "2026-10-21", []],
     ]);
   });
 

@@ -547,6 +547,11 @@ export function entriesOn(
 export const HOME_LOOKBACK_DAYS = 55;
 export const HOME_LOOKAHEAD_DAYS = 6;
 
+export interface DueChore extends CalendarEntry {
+  /** Earlier open days of the same chore */
+  missed: string[];
+}
+
 export function homeAgenda(range: CalendarRange, today: string, meId: number) {
   const entries = rangeEntries(range, () => true);
   const myOpenTasks = entries.filter(
@@ -555,12 +560,17 @@ export function homeAgenda(range: CalendarRange, today: string, meId: number) {
       !occurrence.completedAt &&
       occurrence.turnGroupMemberId === meId,
   );
-  // A chore left for weeks shows once, from its oldest open day
-  const due: CalendarEntry[] = [];
+  // A chore left for days shows once, on its latest open day
+  const due: DueChore[] = [];
   for (const entry of myOpenTasks) {
     if (entry.occurrence.date > today) continue;
-    if (due.some(({ item }) => item.id === entry.item.id)) continue;
-    due.push(entry);
+    const seen = due.find(({ item }) => item.id === entry.item.id);
+    if (seen) {
+      seen.missed.push(seen.occurrence.date);
+      seen.occurrence = entry.occurrence;
+    } else {
+      due.push({ ...entry, missed: [] });
+    }
   }
 
   return {

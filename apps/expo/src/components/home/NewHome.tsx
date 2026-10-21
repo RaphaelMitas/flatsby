@@ -89,7 +89,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const openGroupPicker = useGroupPicker();
   const { selectedShoppingListId, setSelectedShoppingList } =
     useShoppingStore();
-  const { setDone } = useCalendarMutations(group);
+  const { setDone, setSkipped } = useCalendarMutations(group);
   const [speech, say] = useSpeech();
   const [stretchKey, setStretchKey] = useState(0);
 
@@ -136,7 +136,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const chores = shownChores.map((entry, index): Nudge => ({
     kind: "chore",
     entry,
-    overdue: entry.occurrence.date < today,
+    overdue: entry.occurrence.date < today || entry.missed.length > 0,
     more:
       index === shownChores.length - 1
         ? agenda.due.length - shownChores.length
@@ -181,7 +181,10 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     });
   };
   const openDebts = () =>
-    router.navigate("/(tabs)/expenses/debts", { withAnchor: true });
+    router.navigate(
+      { pathname: "/(tabs)/expenses/debts", params: { kind: "simplified" } },
+      { withAnchor: true },
+    );
   const { nextTurn, nextEvent } = agenda;
   const firstOwed = owed[0];
   const from = firstOwed && person(firstOwed.fromGroupMemberId);
@@ -303,12 +306,22 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           stretchKey={stretchKey}
           onCatPress={(pose) => say(catLines[pose])}
           onTick={(entry) => {
+            const itemId = entry.item.id;
             setDone.mutate({
               groupId: group.id,
-              itemId: entry.item.id,
+              itemId,
               date: entry.occurrence.date,
               done: true,
             });
+            // Done once means done now; the days it was left are skipped, not done
+            for (const date of entry.missed) {
+              setSkipped.mutate({
+                groupId: group.id,
+                itemId,
+                date,
+                skipped: true,
+              });
+            }
             setStretchKey((key) => key + 1);
             say(t("home.new.cat.ticked"));
           }}

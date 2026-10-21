@@ -1,32 +1,26 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
   withSpring,
-  withTiming,
 } from "react-native-reanimated";
 import { useFocusEffect, useIsFocused } from "expo-router";
 import { useTranslations } from "use-intl";
 
-import { season } from "~/lib/seasonal/season";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import { useThemeColors } from "~/lib/utils";
+import { CAT_SIZE, CatTapReaction, HOP, useCatTap } from "./useCatTap";
 
-const CAT_SIZE = 56;
 const PEEK = 30;
-const HOP = 8;
 
 export function PeekingCat() {
   const t = useTranslations("home");
   const { getColor } = useThemeColors();
   const isFocused = useIsFocused();
   const rise = useSharedValue(PEEK);
-  const hop = useSharedValue(0);
-  const [taps, setTaps] = useState(0);
-  const TapReaction = season.TapReaction;
+  const { hop, taps, tap } = useCatTap();
 
   useFocusEffect(
     useCallback(() => {
@@ -41,18 +35,10 @@ export function PeekingCat() {
     transform: [{ translateY: rise.value + hop.value }],
   }));
 
-  const handlePress = () => {
-    hop.value = withSequence(
-      withTiming(-HOP, { duration: 120 }),
-      withSpring(0, { damping: 8, stiffness: 300 }),
-    );
-    setTaps((n) => n + 1);
-  };
-
   return (
     <View>
       <View style={{ height: PEEK + HOP }} className="overflow-hidden">
-        <Pressable onPress={handlePress} accessibilityLabel={t("catLabel")}>
+        <Pressable onPress={tap} accessibilityLabel={t("catLabel")}>
           <Animated.View style={[{ marginTop: HOP }, catStyle]}>
             <FlatsbyCat
               size={CAT_SIZE}
@@ -62,11 +48,7 @@ export function PeekingCat() {
           </Animated.View>
         </Pressable>
       </View>
-      {TapReaction && taps > 0 && (
-        <View pointerEvents="none" className="absolute top-5 left-1/2">
-          <TapReaction key={taps} />
-        </View>
-      )}
+      <CatTapReaction taps={taps} />
     </View>
   );
 }
