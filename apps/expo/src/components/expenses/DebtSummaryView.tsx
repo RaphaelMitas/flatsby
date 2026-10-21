@@ -29,6 +29,7 @@ import { ConvertCurrencyBanner } from "./ConvertCurrencyBanner";
 import { DirectDebts } from "./DirectDebts";
 import { GroupBalances } from "./GroupBalances";
 import { OtherDebts } from "./OtherDebts";
+import { settleHref } from "./settleHref";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface DebtSummaryViewProps {
@@ -71,17 +72,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const group = groupData.data;
   const bannerCurrencies = undecidedDebtCurrencies(group, balances);
 
-  const openSettle = (debt: DebtEntry) =>
-    router.push({
-      pathname: "/(tabs)/expenses/settle",
-      params: {
-        fromGroupMemberId: debt.fromGroupMemberId.toString(),
-        toGroupMemberId: debt.toGroupMemberId.toString(),
-        currency: debt.currency,
-        amount: debt.amountInCents.toString(),
-        source: kind,
-      },
-    });
+  const openSettle = (debt: DebtEntry) => router.push(settleHref(debt, kind));
 
   return (
     <AppScrollView

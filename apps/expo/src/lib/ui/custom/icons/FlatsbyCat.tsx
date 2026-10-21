@@ -100,7 +100,6 @@ export default function FlatsbyCat({
   color?: string;
   detail?: string;
   animated?: boolean;
-  /** Eyes held at the closed blink frame */
   asleep?: boolean;
 }) {
   const { getColor } = useThemeColors();

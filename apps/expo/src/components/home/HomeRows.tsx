@@ -7,7 +7,6 @@ import { useLocale } from "use-intl";
 import { formatCalendarDate } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
-import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { cn } from "~/lib/utils";
@@ -91,14 +90,6 @@ export function DoneLead() {
   return (
     <View className="bg-muted h-8 w-8 items-center justify-center rounded-full">
       <Icon name="check" size={15} color="muted-foreground" />
-    </View>
-  );
-}
-
-export function IconLead({ name }: { name: IconProps["name"] }) {
-  return (
-    <View className="bg-muted h-8 w-8 items-center justify-center rounded-full">
-      <Icon name={name} size={16} color="foreground" />
     </View>
   );
 }

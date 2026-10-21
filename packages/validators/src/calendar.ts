@@ -505,39 +505,10 @@ export function daySummary(entries: CalendarEntry[], meId: number) {
   };
 }
 
-/** "Mine" keeps events and the tasks that are the member's turn. */
-export function entriesOn(
-  range: CalendarRange,
-  date: string,
-  mineMemberId?: number,
-): CalendarEntry[] {
+/** By day, then start time with all-day entries last, then title */
+function rangeEntries(range: CalendarRange): CalendarEntry[] {
   const items = new Map(range.items.map((item) => [item.id, item]));
   return range.occurrences
-    .flatMap((occurrence) => {
-      const item = items.get(occurrence.itemId);
-      return item && occurrence.date === date ? [{ item, occurrence }] : [];
-    })
-    .filter(
-      ({ item, occurrence }) =>
-        mineMemberId === undefined ||
-        item.kind === "event" ||
-        occurrence.turnGroupMemberId === mineMemberId,
-    )
-    .sort(
-      (a, b) =>
-        (a.item.time?.start ?? "99").localeCompare(
-          b.item.time?.start ?? "99",
-        ) || a.item.title.localeCompare(b.item.title),
-    );
-}
-
-// Together they stay inside one 62-day range query
-export const HOME_LOOKBACK_DAYS = 55;
-export const HOME_LOOKAHEAD_DAYS = 6;
-
-export function homeAgenda(range: CalendarRange, today: string, meId: number) {
-  const items = new Map(range.items.map((item) => [item.id, item]));
-  const entries = range.occurrences
     .flatMap((occurrence) => {
       const item = items.get(occurrence.itemId);
       return item ? [{ item, occurrence }] : [];
@@ -545,9 +516,34 @@ export function homeAgenda(range: CalendarRange, today: string, meId: number) {
     .sort(
       (a, b) =>
         a.occurrence.date.localeCompare(b.occurrence.date) ||
-        (a.item.time?.start ?? "").localeCompare(b.item.time?.start ?? "") ||
+        (a.item.time?.start ?? "99").localeCompare(
+          b.item.time?.start ?? "99",
+        ) ||
         a.item.title.localeCompare(b.item.title),
     );
+}
+
+/** "Mine" keeps events and the tasks that are the member's turn. */
+export function entriesOn(
+  range: CalendarRange,
+  date: string,
+  mineMemberId?: number,
+): CalendarEntry[] {
+  return rangeEntries(range).filter(
+    ({ item, occurrence }) =>
+      occurrence.date === date &&
+      (mineMemberId === undefined ||
+        item.kind === "event" ||
+        occurrence.turnGroupMemberId === mineMemberId),
+  );
+}
+
+// Together they stay inside one 62-day range query
+export const HOME_LOOKBACK_DAYS = 55;
+export const HOME_LOOKAHEAD_DAYS = 6;
+
+export function homeAgenda(range: CalendarRange, today: string, meId: number) {
+  const entries = rangeEntries(range);
   const myOpenTasks = entries.filter(
     ({ item, occurrence }) =>
       item.kind === "task" &&

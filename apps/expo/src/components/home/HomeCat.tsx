@@ -21,8 +21,11 @@ import { useThemeColors } from "~/lib/utils";
 export type CatPose = "sitting" | "peeking" | "asleep";
 
 export const CAT_SIZE = 56;
-// How far the cat sinks behind the card edge in each pose
-const SINK: Record<CatPose, number> = { sitting: 10, peeking: 20, asleep: 24 };
+const SINK_BELOW_CARD: Record<CatPose, number> = {
+  sitting: 10,
+  peeking: 20,
+  asleep: 24,
+};
 
 export function HomeCat({
   pose,
@@ -42,7 +45,9 @@ export function HomeCat({
   const stretch = useSharedValue(0);
 
   useEffect(() => {
-    sink.value = isFocused ? withSpring(SINK[pose], { damping: 14 }) : CAT_SIZE;
+    sink.value = isFocused
+      ? withSpring(SINK_BELOW_CARD[pose], { damping: 14 })
+      : CAT_SIZE;
   }, [isFocused, pose, sink]);
 
   useEffect(() => {
@@ -90,7 +95,7 @@ export function HomeCat({
   );
 }
 
-/** Drawn over the card: paws on its edge, z's, the speech bubble */
+/** Drawn over the card */
 export function CatOverlay({
   pose,
   speech,

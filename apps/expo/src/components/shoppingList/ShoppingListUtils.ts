@@ -78,9 +78,15 @@ const groupItemsByDate = (
 export const shoppingListItemsOptions = (
   groupId: number,
   shoppingListId: number,
+  categoryId?: CategoryId,
 ) =>
   trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
-    { groupId, shoppingListId, limit: PAGE_SIZE.shoppingListItems },
+    {
+      groupId,
+      shoppingListId,
+      limit: PAGE_SIZE.shoppingListItems,
+      categoryId,
+    },
     {
       getNextPageParam: (lastPage) =>
         lastPage.success === true ? lastPage.data.nextCursor : null,

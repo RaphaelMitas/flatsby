@@ -28,7 +28,10 @@ import { CategoryFilterPills } from "./CategoryFilter/CategoryFilterPills";
 import { CategoryFilterSidebar } from "./CategoryFilter/CategoryFilterSidebar";
 import ShoppingListItem from "./ShoppingListItem";
 import { ShoppingListItemAddForm } from "./ShoppingListItemAddForm";
-import { groupShoppingList } from "./ShoppingListUtils";
+import {
+  groupShoppingList,
+  shoppingListItemsOptions,
+} from "./ShoppingListUtils";
 import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
 interface ShoppingListProps {
@@ -77,21 +80,14 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     isFetchingNextPage,
     refetch: refetchItems,
     isRefetching: isRefetchingItems,
-  } = useInfiniteQuery(
-    trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
-      {
-        groupId,
-        shoppingListId,
-        limit: PAGE_SIZE.shoppingListItems,
-        categoryId: selectedCategory ?? undefined,
-      },
-      {
-        getNextPageParam: (lastPage) =>
-          lastPage.success === true ? lastPage.data.nextCursor : null,
-        placeholderData: keepPreviousData,
-      },
+  } = useInfiniteQuery({
+    ...shoppingListItemsOptions(
+      groupId,
+      shoppingListId,
+      selectedCategory ?? undefined,
     ),
-  );
+    placeholderData: keepPreviousData,
+  });
 
   const handleRefresh = useCallback(
     () => Promise.all([refetchItems(), refetchCategoryCounts()]),

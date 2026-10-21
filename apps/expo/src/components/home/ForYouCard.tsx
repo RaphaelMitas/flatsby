@@ -23,7 +23,7 @@ import { cn } from "~/lib/utils";
 import { CAT_SIZE, CatOverlay, HomeCat } from "./HomeCat";
 
 export type Nudge =
-  | { kind: "chore"; entry: CalendarEntry; overdue: boolean }
+  | { kind: "chore"; entry: CalendarEntry; overdue: boolean; more: number }
   | { kind: "debt"; debt: DebtEntry; more: number };
 
 const POSES: CatPose[] = ["asleep", "peeking", "sitting"];
@@ -98,7 +98,7 @@ export function ForYouCard({
 }
 
 function ChoreLine({
-  nudge: { entry, overdue },
+  nudge: { entry, overdue, more },
   onTick,
 }: {
   nudge: Extract<Nudge, { kind: "chore" }>;
@@ -123,6 +123,7 @@ function ChoreLine({
           )}
         >
           {overdue ? t("calendar.overdue") : t("home.new.yourTurn")}
+          {more > 0 && ` · ${t("home.new.more", { count: more })}`}
         </Text>
         <Text
           numberOfLines={1}

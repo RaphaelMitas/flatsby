@@ -1,4 +1,4 @@
-import type { GroupWithAccess } from "@flatsby/api";
+import type { GroupWithAccess, ShoppingListSummary } from "@flatsby/api";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
@@ -28,6 +28,7 @@ import type { Nudge } from "./ForYouCard";
 import type { CatPose } from "./HomeCat";
 import type { HomeRowProps } from "./HomeRows";
 import { useCalendarMutations } from "~/components/calendar/useCalendarMutations";
+import { settleHref } from "~/components/expenses/settleHref";
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
 import { GroupGate } from "~/components/GroupGate";
 import { shoppingListItemsOptions } from "~/components/shoppingList/ShoppingListUtils";
@@ -130,19 +131,24 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     .slice(0, 2)
     .map(({ name }) => name);
 
-  const chores = agenda.due.map((entry): Nudge => ({
+  const firstDebt = owe[0];
+  const shownChores = agenda.due.slice(0, firstDebt ? 1 : 2);
+  const chores = shownChores.map((entry, index): Nudge => ({
     kind: "chore",
     entry,
     overdue: entry.occurrence.date < today,
+    more:
+      index === shownChores.length - 1
+        ? agenda.due.length - shownChores.length
+        : 0,
   }));
-  const firstDebt = owe[0];
-  const nudges = [
+  const nudges: Nudge[] = [
     ...chores.slice(0, 1),
     ...(firstDebt
       ? [{ kind: "debt", debt: firstDebt, more: owe.length - 1 } as const]
       : []),
     ...chores.slice(1),
-  ].slice(0, 2);
+  ];
 
   const refresh = () =>
     Promise.all([
@@ -166,12 +172,14 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       .filter(Boolean)
       .join(" ");
 
-  const openList = () => {
-    if (!lastList) return;
-    if (lastList.id !== selectedShoppingListId) {
-      setSelectedShoppingList(lastList.id, lastList.name);
+  const openList = (list: ShoppingListSummary, focus = false) => {
+    if (list.id !== selectedShoppingListId) {
+      setSelectedShoppingList(list.id, list.name);
     }
-    router.navigate("/(tabs)/shoppingList");
+    router.navigate({
+      pathname: "/(tabs)/shoppingList",
+      params: focus ? { focus: "1" } : {},
+    });
   };
   const openDebts = () => router.navigate("/(tabs)/expenses/debts");
   const { nextTurn, nextEvent } = agenda;
@@ -238,7 +246,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       label: lastList.name,
       value: listCount > 0 ? openItems.join(", ") : t("home.new.nothingToBuy"),
       muted: listCount === 0,
-      onPress: openList,
+      onPress: () => openList(lastList),
     },
   ];
   const rows = candidates.filter((row): row is HomeRowProps => Boolean(row));
@@ -280,7 +288,9 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
                 exiting={FadeOut.duration(120)}
                 className="text-muted-foreground text-sm"
               >
-                {t("home.new.summary", { count: nudges.length })}
+                {t("home.new.summary", {
+                  count: agenda.due.length + owe.length,
+                })}
               </Animated.Text>
             )}
           </View>
@@ -302,18 +312,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             setStretchKey((key) => key + 1);
             say(t("home.new.cat.ticked"));
           }}
-          onSettle={(debt) =>
-            router.push({
-              pathname: "/(tabs)/expenses/settle",
-              params: {
-                fromGroupMemberId: debt.fromGroupMemberId.toString(),
-                toGroupMemberId: debt.toGroupMemberId.toString(),
-                currency: debt.currency,
-                amount: debt.amountInCents.toString(),
-                source: "simplified",
-              },
-            })
-          }
+          onSettle={(debt) => router.push(settleHref(debt, "simplified"))}
         />
 
         {rows.length > 0 && (
@@ -327,7 +326,12 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
         <SwitchBack />
       </AppScrollView>
 
-      <QuickAddDial lists={lists} />
+      <QuickAddDial
+        groupId={group.id}
+        last={lastList}
+        others={lists.filter((list) => list !== lastList)}
+        onOpenList={(list) => openList(list, true)}
+      />
     </View>
   );
 }

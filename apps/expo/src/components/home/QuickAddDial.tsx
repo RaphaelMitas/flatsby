@@ -1,3 +1,4 @@
+import type { ShoppingListSummary } from "@flatsby/api";
 import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
@@ -14,28 +15,25 @@ import { useTranslations } from "use-intl";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { useShoppingStore } from "~/utils/shopping-store";
 
-interface DialList {
-  id: number;
-  name: string;
-  uncheckedItemLength: number;
-}
-
-export function QuickAddDial({ lists }: { lists: DialList[] }) {
+export function QuickAddDial({
+  groupId,
+  last,
+  others,
+  onOpenList,
+}: {
+  groupId: number;
+  last: ShoppingListSummary | undefined;
+  others: ShoppingListSummary[];
+  onOpenList: (list: ShoppingListSummary) => void;
+}) {
   const t = useTranslations("home.new.dial");
   const router = useRouter();
   const isFocused = useIsFocused();
-  const { selectedShoppingListId, setSelectedShoppingList } =
-    useShoppingStore();
   const [open, setOpen] = useState(false);
   const [showOthers, setShowOthers] = useState(false);
   const progress = useSharedValue(0);
   const size = useSharedValue({ width: 0, height: 0 });
-
-  const last =
-    lists.find(({ id }) => id === selectedShoppingListId) ?? lists[0];
-  const others = lists.filter((list) => list !== last);
 
   useEffect(() => {
     if (!isFocused) setOpen(false);
@@ -73,16 +71,7 @@ export function QuickAddDial({ lists }: { lists: DialList[] }) {
     setOpen(false);
     action();
   };
-  const openList = (list: DialList) =>
-    go(() => {
-      if (list.id !== selectedShoppingListId) {
-        setSelectedShoppingList(list.id, list.name);
-      }
-      router.navigate({
-        pathname: "/(tabs)/shoppingList",
-        params: { focus: "1" },
-      });
-    });
+  const openList = (list: ShoppingListSummary) => go(() => onOpenList(list));
 
   return (
     <>
@@ -204,7 +193,12 @@ export function QuickAddDial({ lists }: { lists: DialList[] }) {
           <Pressable
             testID="home-dial-new-list"
             onPress={() =>
-              go(() => router.push("/(tabs)/home/shopping-lists/create"))
+              go(() =>
+                router.push({
+                  pathname: "/(tabs)/home/shopping-lists/create",
+                  params: { groupId: String(groupId) },
+                }),
+              )
             }
             className="border-border mt-2 flex-row items-center gap-3 rounded-2xl border border-dashed p-3"
           >
