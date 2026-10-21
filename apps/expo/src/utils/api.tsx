@@ -82,7 +82,8 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
         url: `${getBaseUrl()}/api/trpc`,
         headers: getHeaders,
         // iOS would append its own stored cookies to the Cookie header from getHeaders
-        fetch: (url, options) => fetch(url, { ...options, credentials: "omit" }),
+        fetch: (url, options) =>
+          fetch(url, { ...options, credentials: "omit" }),
       }),
     ],
   }),
