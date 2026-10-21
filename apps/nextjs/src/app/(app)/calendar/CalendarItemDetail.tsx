@@ -15,7 +15,7 @@ import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import {
   describeEventTime,
-  describeRecurrence,
+  describeSeries,
   formatCalendarDate,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
@@ -100,7 +100,7 @@ export function CalendarItemDetail({
           </Badge>
           <Badge variant="secondary" className={pillClass}>
             <Repeat className="size-3.5" />
-            {describeRecurrence(item.recurrence, t, locale)}
+            {describeSeries(item, today, t, locale)}
           </Badge>
           {!isTask && (
             <Badge variant="secondary" className={pillClass}>

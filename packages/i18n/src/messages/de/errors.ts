@@ -32,6 +32,10 @@ export const errors = {
   calendarDateNotScheduled: "Dieses Datum ist nicht mehr im Plan",
   calendarSeriesReplaced:
     "Ab diesem Datum gilt schon eine neuere Wiederholung. Bearbeite stattdessen diese.",
+  calendarSeriesEnded:
+    "Das würde schon vergangene Tage ändern. Leg stattdessen einen neuen Eintrag an.",
+  calendarItemChanged:
+    "Jemand anderes hat das gerade geändert. Öffne es erneut, um die Änderung zu sehen.",
   cannotRemoveLastAdmin:
     "Der letzte Admin kann nicht aus der Gruppe entfernt werden",
   promoteAdminFirst:
