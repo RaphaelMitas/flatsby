@@ -15,10 +15,13 @@ import {
   monthAgenda,
   newEntryDate,
   positionWindow,
+  revealDate,
   showDate,
   shownDates,
+  showsToday,
   stepPosition,
   switchView,
+  tickInput,
   weekDays,
 } from "@flatsby/validators/calendar";
 
@@ -65,18 +68,19 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   );
 
   const show = (date: string) => setPosition(showDate(position, date, today));
+  const reveal = (date: string) =>
+    setPosition(revealDate(position, date, today));
   const showList = (date: string) =>
     setPosition(showDate({ ...position, view: "list" }, date, today));
 
   const onLinked = useEffectEvent((date: string) => {
-    if (calendarDateSchema.safeParse(date).success) show(date);
+    if (calendarDateSchema.safeParse(date).success) reveal(date);
     router.setParams({ date: undefined });
   });
   useEffect(() => {
     if (linked) onLinked(linked);
   }, [linked]);
 
-  const atToday = (view === "list" ? position.start : position.month) === null;
   const list = range
     ? listAgenda(range, start, today, people.meId, member)
     : undefined;
@@ -137,7 +141,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             variant="outline"
             size="sm"
             title={t("today")}
-            disabled={atToday}
+            disabled={showsToday(position)}
             onPress={() => show(today)}
           />
           <Button
@@ -183,16 +187,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
           people={people}
           member={member}
           onRefresh={refetch}
-          onToggle={(entry, done, skip) =>
-            setDone({
-              groupId: group.id,
-              itemId: entry.item.id,
-              date: entry.occurrence.date,
-              done,
-              // Done once means done now; the days it was left are skipped, not done
-              skip: done ? skip : undefined,
-            })
-          }
+          onToggle={(entry, done) => setDone(tickInput(group.id, entry, done))}
           onOpen={(entry) =>
             router.push({
               pathname: "/(tabs)/calendar/[itemId]",

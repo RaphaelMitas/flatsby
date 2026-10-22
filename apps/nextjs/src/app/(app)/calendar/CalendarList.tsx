@@ -2,6 +2,7 @@
 
 import type {
   AgendaDay,
+  AgendaEntry,
   CalendarEntry,
   DueChore,
 } from "@flatsby/validators/calendar";
@@ -14,9 +15,9 @@ import { Checkbox } from "@flatsby/ui/checkbox";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import {
   describeEventTime,
-  describeOverdue,
   describeRecurrence,
   formatCalendarDate,
+  timesMissed,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
@@ -33,7 +34,7 @@ interface CalendarListProps {
   meId: number;
   members: MemberLookup;
   member: number | null;
-  onToggle: (entry: CalendarEntry, done: boolean, skip?: string[]) => void;
+  onToggle: (entry: AgendaEntry, done: boolean) => void;
   onOpen: (entry: CalendarEntry) => void;
 }
 
@@ -51,7 +52,7 @@ export function CalendarList({
   const locale = useLocale();
   const scroller = useRef<HTMLDivElement>(null);
 
-  const rows = (entries: (CalendarEntry & Partial<DueChore>)[]) => (
+  const rows = (entries: AgendaEntry[]) => (
     <ul className="divide-y overflow-hidden rounded-xl border">
       {entries.map((entry) => (
         <EntryRow
@@ -205,11 +206,11 @@ function EntryRow({
   onToggle,
   onOpen,
 }: {
-  entry: CalendarEntry & Partial<DueChore>;
+  entry: AgendaEntry;
   today: string;
   meId: number;
   members: MemberLookup;
-  onToggle: (entry: CalendarEntry, done: boolean, skip?: string[]) => void;
+  onToggle: (entry: AgendaEntry, done: boolean) => void;
   onOpen: (entry: CalendarEntry) => void;
 }) {
   const t = useTranslations();
@@ -218,9 +219,7 @@ function EntryRow({
   const done = occurrence.completedAt !== null;
   const pending = item.id < 0;
   const isTask = item.kind === "task";
-  const missed = entry.missed ?? [];
-  const overdue =
-    isTask && !done && (occurrence.date < today || missed.length > 0);
+  const missed = timesMissed(entry, today);
 
   return (
     <li
@@ -234,9 +233,7 @@ function EntryRow({
         <Checkbox
           checked={done}
           disabled={pending}
-          onCheckedChange={(checked) =>
-            onToggle(entry, checked === true, entry.missed)
-          }
+          onCheckedChange={(checked) => onToggle(entry, checked === true)}
           aria-label={item.title}
           data-testid="calendar-entry-toggle"
           className="h-5 w-5 cursor-pointer rounded-md"
@@ -271,9 +268,9 @@ function EntryRow({
           </p>
           <p className="text-muted-foreground flex items-center gap-1 truncate text-sm">
             {!isTask && <span>{describeEventTime(item.time, t)} ·</span>}
-            {overdue && (
+            {missed > 0 && (
               <span className="text-destructive">
-                {describeOverdue(missed, t)} ·
+                {t("calendar.missed", { count: missed })} ·
               </span>
             )}
             {item.recurrence && <Repeat className="size-3 shrink-0" />}

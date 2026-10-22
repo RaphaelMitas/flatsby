@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
+import { Button } from "@flatsby/ui/button";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 
 export type MemberLookup = Map<number, GroupMemberWithUserInfo>;
@@ -96,34 +97,23 @@ export function TurnBar({
   onChange: (member: number | null) => void;
 }) {
   const t = useTranslations("calendar");
-  const chip = (selected: boolean) =>
-    cn(
-      "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border text-sm font-medium transition-colors",
-      selected
-        ? "bg-primary text-primary-foreground border-primary"
-        : "hover:bg-muted",
-    );
   return (
     <div className="flex gap-1.5 overflow-x-auto px-4 pb-3">
-      <button
-        type="button"
-        aria-pressed={member === null}
+      <Chip
+        selected={member === null}
         onClick={() => onChange(null)}
-        className={cn(chip(member === null), "px-3")}
-        data-testid="calendar-filter-all"
+        testId="calendar-filter-all"
       >
         {t("all")}
-      </button>
+      </Chip>
       {[...members.values()]
         .sort((a, b) => Number(b.id === meId) - Number(a.id === meId))
         .map(({ id, user }) => (
-          <button
+          <Chip
             key={id}
-            type="button"
-            aria-pressed={member === id}
+            selected={member === id}
             onClick={() => onChange(member === id ? null : id)}
-            className={cn(chip(member === id), "pr-3 pl-1")}
-            data-testid={`calendar-filter-${id}`}
+            testId={`calendar-filter-${id}`}
           >
             <UserAvatar
               name={user.name}
@@ -132,13 +122,35 @@ export function TurnBar({
               className="text-foreground"
             />
             {id === meId ? t("you") : user.name}
-            <span
-              className={member === id ? "opacity-70" : "text-muted-foreground"}
-            >
-              {turns.get(id) ?? 0}
-            </span>
-          </button>
+            <span className="opacity-60">{turns.get(id) ?? 0}</span>
+          </Chip>
         ))}
     </div>
+  );
+}
+
+export function Chip({
+  selected,
+  onClick,
+  testId,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  testId?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant={selected ? "default" : "outline"}
+      aria-pressed={selected}
+      onClick={onClick}
+      className="rounded-full"
+      data-testid={testId}
+    >
+      {children}
+    </Button>
   );
 }

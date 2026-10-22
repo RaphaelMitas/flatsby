@@ -49,6 +49,7 @@ import {
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
+import { Chip } from "./CalendarPeople";
 import { DatePopover } from "./DatePopover";
 
 interface CalendarItemFormProps {
@@ -462,31 +463,5 @@ function Field({
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
     </div>
-  );
-}
-
-function Chip({
-  selected,
-  onClick,
-  testId,
-  children,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  testId?: string;
-  children: ReactNode;
-}) {
-  return (
-    <Button
-      type="button"
-      size="sm"
-      variant={selected ? "default" : "outline"}
-      aria-pressed={selected}
-      onClick={onClick}
-      className="rounded-full"
-      data-testid={testId}
-    >
-      {children}
-    </Button>
   );
 }

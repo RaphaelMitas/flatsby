@@ -1,5 +1,6 @@
 import type {
   AgendaDay,
+  AgendaEntry,
   CalendarEntry,
   DueChore,
 } from "@flatsby/validators/calendar";
@@ -27,7 +28,7 @@ interface CalendarListProps {
   people: CalendarPeople;
   member: number | null;
   onRefresh: () => Promise<unknown>;
-  onToggle: (entry: CalendarEntry, done: boolean, skip?: string[]) => void;
+  onToggle: (entry: AgendaEntry, done: boolean) => void;
   onOpen: (entry: CalendarEntry) => void;
 }
 
@@ -45,7 +46,7 @@ export function CalendarList({
   const scroller = useRef<KeyboardAwareScrollViewRef>(null);
   const sections = useRef(new Map<string, number>());
 
-  const rows = (entries: (CalendarEntry & Partial<DueChore>)[]) => (
+  const rows = (entries: AgendaEntry[]) => (
     <View className="border-border mx-4 overflow-hidden rounded-lg border">
       {entries.map((entry, index) => (
         <View
@@ -56,8 +57,7 @@ export function CalendarList({
             entry={entry}
             people={people}
             today={today}
-            missed={entry.missed}
-            onToggle={(done) => onToggle(entry, done, entry.missed)}
+            onToggle={(done) => onToggle(entry, done)}
             onOpen={() => onOpen(entry)}
           />
         </View>

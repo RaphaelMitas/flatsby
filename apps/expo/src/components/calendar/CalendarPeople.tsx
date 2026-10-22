@@ -1,6 +1,7 @@
 import type { GroupWithAccess } from "@flatsby/api";
 import type { Occurrence } from "@flatsby/validators/calendar";
 import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
+import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
@@ -116,10 +117,10 @@ export function TurnBar({
       className="mb-3 grow-0"
       contentContainerClassName="gap-1.5 px-4"
     >
-      <TurnChip
+      <Chip
         testID="calendar-filter-all"
         label={t("all")}
-        selected={member === null}
+        active={member === null}
         onPress={() => onChange(null)}
       />
       {[...group.groupMembers]
@@ -129,74 +130,59 @@ export function TurnBar({
         .map(({ id }) => {
           const person = people.person(id);
           return (
-            <TurnChip
+            <Chip
               key={id}
               testID={`calendar-filter-${id}`}
-              person={person}
-              label={id === people.meId ? t("you") : person.name}
-              count={turns.get(id) ?? 0}
-              selected={member === id}
+              label={`${id === people.meId ? t("you") : person.name} ${turns.get(id) ?? 0}`}
+              active={member === id}
               onPress={() => onChange(member === id ? null : id)}
-            />
+            >
+              <MemberAvatar
+                person={person}
+                className="-ml-2 h-6 w-6"
+                textClassName="text-xs"
+              />
+            </Chip>
           );
         })}
     </ScrollView>
   );
 }
 
-function TurnChip({
-  testID,
-  person,
+export function Chip({
   label,
-  count,
-  selected,
+  active,
   onPress,
+  testID,
+  children,
 }: {
-  testID: string;
-  person?: DebtPerson;
   label: string;
-  count?: number;
-  selected: boolean;
+  active: boolean;
   onPress: () => void;
+  testID?: string;
+  children?: ReactNode;
 }) {
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected: active }}
       onPress={onPress}
       className={cn(
-        "border-border h-8 flex-row items-center gap-1.5 rounded-full border",
-        person ? "pr-3 pl-1" : "px-3",
-        // Opaque either way: Android drops the radius when a background appears from none (react-native#52415)
-        selected ? "bg-primary border-primary" : "bg-background",
+        "flex-row items-center gap-2 rounded-full border px-3 py-1.5",
+        // Opaque even when inactive: Android drops the radius when a background appears from none (react-native#52415)
+        active ? "border-primary bg-primary" : "border-border bg-background",
       )}
     >
-      {person && (
-        <MemberAvatar
-          person={person}
-          className="h-6 w-6"
-          textClassName="text-xs"
-        />
-      )}
+      {children}
       <Text
         className={cn(
           "text-sm font-medium",
-          selected ? "text-primary-foreground" : "text-foreground",
+          active ? "text-primary-foreground" : "text-foreground",
         )}
       >
         {label}
       </Text>
-      {count !== undefined && (
-        <Text
-          className={cn(
-            "text-sm",
-            selected ? "text-primary-foreground" : "text-muted-foreground",
-          )}
-        >
-          {count}
-        </Text>
-      )}
     </Pressable>
   );
 }

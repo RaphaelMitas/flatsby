@@ -49,10 +49,13 @@ import {
   monthAgenda,
   newEntryDate,
   positionWindow,
+  revealDate,
   showDate,
   shownDates,
+  showsToday,
   stepPosition,
   switchView,
+  tickInput,
   weekDays,
 } from "@flatsby/validators/calendar";
 
@@ -163,9 +166,11 @@ function CalendarScreen({
   };
   const show = (date: string) => moveTo(showDate(position, date, today));
   const step = (delta: number) => moveTo(stepPosition(position, delta, today));
-  const atToday = (view === "list" ? position.start : position.month) === null;
 
-  const onArrow = useEffectEvent(step);
+  // An open form or detail keeps the keys; stepping would close it
+  const onArrow = useEffectEvent((delta: number) => {
+    if (!panel) step(delta);
+  });
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (
@@ -202,7 +207,7 @@ function CalendarScreen({
   const save = async (input: CreateCalendarItemInput, id?: number) => {
     if (id === undefined) {
       // Closing the form first rules out a second submit; the optimistic entry needs its window cached
-      const next = showDate(position, input.startsOn, today);
+      const next = revealDate(position, input.startsOn, today);
       moveTo(next);
       await queryClient
         .query({ ...rangeOf(next), staleTime: "static" })
@@ -244,7 +249,7 @@ function CalendarScreen({
         today={today}
         members={members}
         onEdit={(latest) => setPanel({ type: "form", item: latest })}
-        onJump={show}
+        onJump={(date) => moveTo(revealDate(position, date, today))}
         onSkip={() => {
           skip(occurrence.date, true);
           setPanel(null);
@@ -327,7 +332,7 @@ function CalendarScreen({
           <Button
             variant="outline"
             size="sm"
-            disabled={atToday}
+            disabled={showsToday(position)}
             onClick={() => show(today)}
             data-testid="calendar-today-button"
           >
@@ -374,16 +379,7 @@ function CalendarScreen({
           meId={meId}
           members={members}
           member={member}
-          onToggle={({ item, occurrence }, done, skip) =>
-            setDone({
-              groupId,
-              itemId: item.id,
-              date: occurrence.date,
-              done,
-              // Done once means done now; the days it was left are skipped, not done
-              skip: done ? skip : undefined,
-            })
-          }
+          onToggle={(entry, done) => setDone(tickInput(groupId, entry, done))}
           onOpen={openEntry}
         />
       ) : (

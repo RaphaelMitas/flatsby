@@ -403,11 +403,6 @@ export const withStart = (time: EventTime, start: string): EventTime => ({
   end: timeOf(minutesOf(time.end) - minutesOf(time.start) + minutesOf(start)),
 });
 
-export const describeOverdue = (missed: string[], t: Translate) =>
-  missed.length > 0
-    ? t("calendar.missed", { count: missed.length + 1 })
-    : t("calendar.overdue");
-
 export const describeEventTime = (time: EventTime | null, t: Translate) =>
   time ? `${time.start}–${time.end}` : t("calendar.allDay");
 
@@ -611,9 +606,11 @@ export interface DueChore extends CalendarEntry {
   missed: string[];
 }
 
+export type AgendaEntry = CalendarEntry & Partial<DueChore>;
+
 export interface AgendaDay {
   date: string;
-  entries: (CalendarEntry & Partial<DueChore>)[];
+  entries: AgendaEntry[];
   summary: ReturnType<typeof daySummary>;
 }
 
@@ -635,6 +632,25 @@ function agendaDays(
 
 const isOpenTask = ({ item, occurrence }: CalendarEntry) =>
   item.kind === "task" && !occurrence.completedAt;
+
+/** A chore's earlier open days, plus its own day once that has passed too. */
+export const timesMissed = (entry: AgendaEntry, today: string) =>
+  isOpenTask(entry)
+    ? (entry.missed?.length ?? 0) + (entry.occurrence.date < today ? 1 : 0)
+    : 0;
+
+/** Done once means done now; the days a chore was left are skipped, not done. */
+export const tickInput = (
+  groupId: number,
+  { item, occurrence, missed }: AgendaEntry,
+  done: boolean,
+) => ({
+  groupId,
+  itemId: item.id,
+  date: occurrence.date,
+  done,
+  skip: done ? missed : undefined,
+});
 
 /** A chore left for days shows once per member, on their latest open day before `before`. */
 function latestOpen(openTasks: CalendarEntry[], before: string) {
@@ -675,7 +691,7 @@ function agenda(days: AgendaDay[], overdue: DueChore[], member: number | null) {
   };
 }
 
-export const HOME_LOOKAHEAD_DAYS = 6;
+const HOME_LOOKAHEAD_DAYS = 6;
 const HOME_LOOKBACK_DAYS = MAX_RANGE_DAYS - HOME_LOOKAHEAD_DAYS;
 
 /** Starting today, the list also reaches back for overdue chores: the same window home loads. */
@@ -752,6 +768,23 @@ export function showDate(
   const month = monthOf(date);
   return { ...position, month: month === monthOf(today) ? null : month };
 }
+
+/** Like showDate, but a list that already shows `date` stays where it is. */
+export function revealDate(
+  position: CalendarPosition,
+  date: string,
+  today: string,
+) {
+  const { start } = shownDates(position, today);
+  const shown =
+    position.view === "list" &&
+    date >= start &&
+    date <= addDays(start, HOME_LOOKAHEAD_DAYS);
+  return shown ? position : showDate(position, date, today);
+}
+
+export const showsToday = (position: CalendarPosition) =>
+  (position.view === "list" ? position.start : position.month) === null;
 
 export const switchView = (
   position: CalendarPosition,

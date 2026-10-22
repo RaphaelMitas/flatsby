@@ -71,7 +71,7 @@ export function MonthGrid({
         data-testid="calendar-month"
       >
         {dates.map((date, index) => {
-          const entries = days?.find((day) => day.date === date)?.entries ?? [];
+          const entries = days?.[index]?.entries ?? [];
           const shown =
             entries.length > lines ? entries.slice(0, lines - 1) : entries;
           return (

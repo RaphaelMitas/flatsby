@@ -1,11 +1,11 @@
-import type { CalendarEntry } from "@flatsby/validators/calendar";
+import type { AgendaEntry } from "@flatsby/validators/calendar";
 import { Pressable, Text, View } from "react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
   describeEventTime,
-  describeOverdue,
   describeRecurrence,
+  timesMissed,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
@@ -17,29 +17,27 @@ import { e2eAccessibilityOverride } from "~/utils/e2e";
 import { OccurrenceStatus } from "./CalendarPeople";
 
 interface CalendarEntryRowProps {
-  entry: CalendarEntry;
+  entry: AgendaEntry;
   people: CalendarPeople;
   today: string;
-  missed?: string[];
   onToggle: (done: boolean) => void;
   onOpen: () => void;
 }
 
 export function CalendarEntryRow({
-  entry: { item, occurrence },
+  entry,
   people,
   today,
-  missed = [],
   onToggle,
   onOpen,
 }: CalendarEntryRowProps) {
   const t = useTranslations();
   const locale = useLocale();
+  const { item, occurrence } = entry;
   const done = occurrence.completedAt !== null;
   const pending = item.id < 0;
   const isTask = item.kind === "task";
-  const overdue =
-    isTask && !done && (occurrence.date < today || missed.length > 0);
+  const missed = timesMissed(entry, today);
 
   return (
     <View
@@ -93,9 +91,9 @@ export function CalendarEntryRow({
                 {describeEventTime(item.time, t)} ·
               </Text>
             )}
-            {overdue && (
+            {missed > 0 && (
               <Text className="text-destructive text-sm">
-                {describeOverdue(missed, t)} ·
+                {t("calendar.missed", { count: missed })} ·
               </Text>
             )}
             {item.recurrence && (

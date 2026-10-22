@@ -14,6 +14,8 @@ import {
   homeAgenda,
   listWindow,
   localDate,
+  tickInput,
+  timesMissed,
 } from "@flatsby/validators/calendar";
 import { myDebts } from "@flatsby/validators/expenses/debt";
 import {
@@ -67,7 +69,6 @@ export function NewHome() {
 const greetingFor = (hour: number) =>
   hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
 
-// The tab stays mounted for days, so the clock is read on focus and on return to the app
 function useSpeech() {
   const [speech, setSpeech] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -138,7 +139,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const chores = shownChores.map((entry, index): Nudge => ({
     kind: "chore",
     entry,
-    overdue: entry.occurrence.date < today || entry.missed.length > 0,
+    overdue: timesMissed(entry, today) > 0,
     more:
       index === shownChores.length - 1
         ? agenda.due.length - shownChores.length
@@ -287,14 +288,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           stretchKey={stretchKey}
           onCatPress={(pose) => say(t(`home.new.cat.${pose}`))}
           onTick={(entry) => {
-            setDone.mutate({
-              groupId: group.id,
-              itemId: entry.item.id,
-              date: entry.occurrence.date,
-              done: true,
-              // Done once means done now; the days it was left are skipped, not done
-              skip: entry.missed,
-            });
+            setDone.mutate(tickInput(group.id, entry, true));
             setStretchKey((key) => key + 1);
             say(t("home.new.cat.ticked"));
           }}

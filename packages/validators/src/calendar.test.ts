@@ -29,6 +29,7 @@ import {
   shiftMonth,
   splitEndsOn,
   splitsSeries,
+  timesMissed,
   weekDays,
   weekStart,
   withPickedStart,
@@ -413,6 +414,11 @@ describe("listAgenda", () => {
     expect(days[0]?.entries.map(({ missed }) => missed)).toEqual([
       ["2026-10-19"],
     ]);
+    expect(
+      [overdue[0], days[0]?.entries[0]].map(
+        (entry) => entry && timesMissed(entry, "2026-10-21"),
+      ),
+    ).toEqual([1, 1]);
     expect(Object.fromEntries(turns)).toEqual({ 1: 4, 2: 4 });
   });
 
