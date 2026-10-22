@@ -1,3 +1,4 @@
+import { getSessionCookie } from "better-auth/cookies";
 import { isbot } from "isbot";
 
 import { captureCookieless } from "@flatsby/api/posthog";
@@ -5,6 +6,8 @@ import { captureCookieless } from "@flatsby/api/posthog";
 function isVisitor(headers: Headers) {
   const userAgent = headers.get("user-agent");
   if (!userAgent || isbot(userAgent)) return false;
+  // Signed-in views are already recorded with the account
+  if (getSessionCookie(headers)) return false;
   return headers.get("sec-gpc") !== "1" && headers.get("dnt") !== "1";
 }
 

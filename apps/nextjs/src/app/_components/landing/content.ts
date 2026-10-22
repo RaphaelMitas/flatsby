@@ -1,5 +1,7 @@
 // One source for every fact on the site, so the pages, JSON-LD and .md twins can't disagree.
 
+import { INVITE_REFERRER_KEY } from "@flatsby/validators/invite";
+
 import type { MarketingTranslator } from "./i18n";
 
 export const SITE_URL = "https://www.flatsby.com";
@@ -12,23 +14,31 @@ export const UPDATED = "2026-10-09";
 
 export const APP_STORE_LINK = "/get/ios";
 export const PLAY_STORE_LINK = "/get/android";
+export const STORE_LINKS: readonly string[] = [APP_STORE_LINK, PLAY_STORE_LINK];
+export const STORE_LINK_PROPS = {
+  target: "_blank",
+  rel: "noopener",
+  prefetch: false,
+} as const;
+
 // Campaign tags make the website show up as an install source in App Store Connect and Play Console
-export const STORE_REDIRECTS = new Map([
-  [
-    APP_STORE_LINK,
-    {
+export function storeRedirect(pathname: string, inviteCode: string | null) {
+  if (pathname === APP_STORE_LINK) {
+    return {
       store: "ios",
       url: `https://apps.apple.com/app/apple-store/id${APP_STORE_ID}?pt=121729394&ct=flatsby.com&mt=8`,
-    },
-  ],
-  [
-    PLAY_STORE_LINK,
-    {
+    };
+  }
+  if (pathname === PLAY_STORE_LINK) {
+    const referrer = new URLSearchParams({ utm_source: "flatsby.com" });
+    if (inviteCode) referrer.set(INVITE_REFERRER_KEY, inviteCode);
+    return {
       store: "android",
-      url: `${PLAY_STORE_URL}&referrer=${encodeURIComponent("utm_source=flatsby.com")}`,
-    },
-  ],
-]);
+      url: `${PLAY_STORE_URL}&referrer=${encodeURIComponent(referrer.toString())}`,
+    };
+  }
+  return undefined;
+}
 
 export const PLANS = {
   freeCredits: 5000,

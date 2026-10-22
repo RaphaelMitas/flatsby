@@ -7,7 +7,7 @@ import { after } from "next/server";
 import { getOAuthState } from "better-auth/api";
 import { importPKCS8, SignJWT } from "jose";
 
-import { captureEvent, posthog } from "@flatsby/api/posthog";
+import { captureError } from "@flatsby/api/posthog";
 import { initAuth } from "@flatsby/auth";
 
 import { env } from "~/env";
@@ -42,30 +42,24 @@ async function signupPlatform() {
     : "app";
 }
 
-async function onUserCreated(
-  userId: string,
-  requestHeaders: Headers | undefined,
-) {
-  if (!requestHeaders || !posthog) return;
-  const platform = await signupPlatform();
-  // OAuth calls back in the browser that started sign-in, so this hashes to that browser's visitor
-  after(async () => {
-    captureEvent({
-      distinctId: userId,
-      event: "signed_up",
-      headers: requestHeaders,
-      additionalProperties: { platform },
-    });
-    await Promise.all([
+// Only the cookieless event: an identified twin at the same moment would tie the visit to the account
+async function onUserCreated(requestHeaders: Headers | undefined) {
+  if (!requestHeaders) return;
+  try {
+    const platform = await signupPlatform();
+    // OAuth calls back in the browser that started sign-in, so this hashes to that browser's visitor
+    after(() =>
       captureVisit(
         "signed_up",
         requestHeaders,
         { url: `${env.BETTER_AUTH_URL}/api/auth/callback`, referrer: null },
         { platform },
       ),
-      posthog?.flush(),
-    ]);
-  });
+    );
+  } catch (error) {
+    // A throw here would fail a signup Better Auth already committed
+    captureError({ error, operation: "auth.onUserCreated" });
+  }
 }
 
 export const getSession = cache(async () =>

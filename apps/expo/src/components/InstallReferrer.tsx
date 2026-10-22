@@ -14,7 +14,7 @@ import {
 
 const HANDLED_KEY = "install_referrer_handled";
 
-// Play's install referrer carries a web invite code and the store link's utm_source
+// The web join page passes the invite code through the Play Store install referrer
 export function InstallReferrer() {
   const router = useRouter();
   const posthog = usePostHog();
@@ -41,13 +41,11 @@ export function InstallReferrer() {
       if (referrer === null) return;
       await AsyncStorage.setItem(HANDLED_KEY, "true");
       const params = new URLSearchParams(referrer);
-      const source = params.get("utm_source");
       posthog.capture("install_referrer", {
-        utm_source: source,
+        utm_source: params.get("utm_source"),
         utm_medium: params.get("utm_medium"),
         utm_campaign: params.get("utm_campaign"),
         via_invite: params.has(INVITE_REFERRER_KEY),
-        ...(source && { $set_once: { install_source: source } }),
       });
       const code = inviteCodeSchema.safeParse(
         params.get(INVITE_REFERRER_KEY) ?? "",

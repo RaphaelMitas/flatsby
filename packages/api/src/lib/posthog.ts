@@ -250,6 +250,19 @@ function clientIp(headers: Headers) {
   );
 }
 
+// Click IDs like gclid, or anything else a link carries, could recognize a visitor across days
+function keepOnlyUtmParams(url: string) {
+  try {
+    const parsed = new URL(url);
+    for (const key of [...parsed.searchParams.keys()]) {
+      if (!key.startsWith("utm_")) parsed.searchParams.delete(key);
+    }
+    return parsed.href;
+  } catch {
+    return null;
+  }
+}
+
 // PostHog hashes IP, user agent and host with a daily salt, so the device stores nothing
 export async function captureCookieless({
   event,
@@ -262,12 +275,14 @@ export async function captureCookieless({
   page: PageUrls;
   additionalProperties?: Record<string, unknown>;
 }) {
-  if (!posthog) return;
+  const url = keepOnlyUtmParams(page.url);
+  if (!posthog || !url) return;
+  const referrer = page.referrer && keepOnlyUtmParams(page.referrer);
   await posthog.captureImmediate({
     distinctId: "$posthog_cookieless",
     event,
     properties: {
-      ...buildPostHogProperties(headers, page),
+      ...buildPostHogProperties(headers, { url, referrer }),
       $cookieless_mode: true,
       // Without it PostHog hashes our server's IP and every visitor collapses into one
       $ip: clientIp(headers),

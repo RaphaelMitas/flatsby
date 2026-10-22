@@ -4,9 +4,16 @@ import { z } from "zod/v4";
 
 import { captureVisit } from "~/utils/page-views";
 
-const navigationSchema = z.object({ url: z.url(), referrer: z.url() });
+const navigationSchema = z.object({
+  url: z.url().max(2048),
+  referrer: z.url().max(2048).nullable(),
+});
 
 export async function POST(request: NextRequest) {
+  // Other sites could otherwise make their visitors' browsers report page views here
+  if (request.headers.get("sec-fetch-site") !== "same-origin") {
+    return new Response(null, { status: 403 });
+  }
   const navigation = navigationSchema.safeParse(
     await request.json().catch(() => null),
   );

@@ -2,8 +2,10 @@ import type { NextFetchEvent, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { defaultLocale, locales } from "@flatsby/i18n/locale";
+import { INVITE_REFERRER_KEY } from "@flatsby/validators/invite";
 
-import { STORE_REDIRECTS } from "~/app/_components/landing/content";
+import { storeRedirect } from "~/app/_components/landing/content";
+import { isEntryPage } from "~/utils/entry-pages";
 import { captureVisit } from "~/utils/page-views";
 
 const prefix = `/${defaultLocale}`;
@@ -11,14 +13,16 @@ const prefix = `/${defaultLocale}`;
 const startsWithSegment = (pathname: string, segment: string) =>
   pathname === segment || pathname.startsWith(`${segment}/`);
 
-// Client-side navigations arrive as router fetches, which NavBeacon reports instead
+// Client-side navigations arrive as router fetches, which NavBeacon reports instead.
+// Browsers without fetch metadata still ask for HTML only on a real page load.
 function isPageLoad(request: NextRequest) {
   const dest = request.headers.get("sec-fetch-dest");
   const purpose =
     request.headers.get("sec-purpose") ?? request.headers.get("purpose") ?? "";
+  const asksForHtml = request.headers.get("accept")?.includes("text/html");
   return (
     request.method === "GET" &&
-    (dest === null || dest === "document") &&
+    (dest === "document" || (dest === null && asksForHtml === true)) &&
     !purpose.includes("prefetch")
   );
 }
@@ -33,12 +37,14 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = url;
   if (pathname.endsWith(".md")) return;
 
-  const store = STORE_REDIRECTS.get(pathname);
+  const inviteCode = url.searchParams.get(INVITE_REFERRER_KEY);
+  const store = storeRedirect(pathname, inviteCode);
   if (store) {
     if (isPageLoad(request)) {
       event.waitUntil(
         captureVisit("store_click", request.headers, pageOf(request), {
           store: store.store,
+          via_invite: inviteCode !== null,
         }),
       );
     }
@@ -57,8 +63,7 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   }
 
   const rendersInPlace =
-    pathname === "/auth/login" ||
-    startsWithSegment(pathname, "/join") ||
+    isEntryPage(pathname) ||
     locales.some((locale) => startsWithSegment(pathname, `/${locale}`));
   if (rendersInPlace) return;
 
@@ -77,7 +82,8 @@ export const config = {
     "/pricing",
     "/faq",
     "/auth/login",
-    "/join/:path*",
-    "/get/:path*",
+    "/join/:path+",
+    "/get/ios",
+    "/get/android",
   ],
 };
