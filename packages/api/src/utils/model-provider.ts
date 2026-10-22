@@ -23,7 +23,7 @@ const REASONING_ALWAYS_ON_MODELS: ReadonlySet<string> = new Set([
   "openai/gpt-6-astra",
 ] satisfies ChatModel[]);
 
-function chatProviderOptions(model: string) {
+function providerOptionsFor(model: string) {
   return {
     ...DISCLOSED_PROVIDERS_ONLY,
     openai: {
@@ -36,13 +36,6 @@ function chatProviderOptions(model: string) {
     },
   } satisfies ProviderOptions;
 }
-
-const TITLE_GENERATION_PROVIDER_OPTIONS = {
-  ...DISCLOSED_PROVIDERS_ONLY,
-  openai: {
-    reasoningEffort: "none",
-  },
-} satisfies ProviderOptions;
 
 export function getDefaultModel() {
   return DEFAULT_CHAT_MODEL;
@@ -61,7 +54,6 @@ export interface StreamChatOptions {
   model?: string;
   systemPrompt?: string;
   tracing?: TracingOptions;
-  providerOptions?: ProviderOptions;
 }
 
 export interface StreamChatWithToolsOptions extends StreamChatOptions {
@@ -135,7 +127,7 @@ export function streamChatCompletion(
     model: gateway(modelName),
     messages,
     allowSystemInMessages: true,
-    providerOptions: options.providerOptions ?? chatProviderOptions(modelName),
+    providerOptions: providerOptionsFor(modelName),
     onEnd: (event) => {
       captureGeneration({
         tracing: options.tracing,
@@ -184,7 +176,7 @@ export function streamChatWithTools(
     allowSystemInMessages: true,
     tools: options.tools,
     stopWhen: stepCountIs(maxSteps),
-    providerOptions: options.providerOptions ?? chatProviderOptions(modelName),
+    providerOptions: providerOptionsFor(modelName),
     onEnd: (event) => {
       captureGeneration({
         tracing: options.tracing,
@@ -228,7 +220,7 @@ export async function generateConversationTitle(
   try {
     const result = await generateText({
       model: gateway(TITLE_GENERATION_MODEL),
-      providerOptions: TITLE_GENERATION_PROVIDER_OPTIONS,
+      providerOptions: providerOptionsFor(TITLE_GENERATION_MODEL),
       system: systemPrompt,
       prompt: userMessage,
     });
