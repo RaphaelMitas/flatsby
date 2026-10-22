@@ -766,7 +766,7 @@ describe("debtHero", () => {
 });
 
 describe("myDebts", () => {
-  it("splits my side of the settle plan, the group currency first", () => {
+  it("splits my actual debts, the group currency first", () => {
     const summary = calculateDebts([
       owes(YOU, LENA, 900),
       owes(YOU, MAX, 2000, "CHF"),
@@ -775,5 +775,13 @@ describe("myDebts", () => {
     const { owe, owed } = myDebts(summary, YOU, "EUR");
     expect(owe.map((d) => d.currency)).toEqual(["EUR", "CHF"]);
     expect(owed).toEqual([debt(SOPHIE, YOU, 500, "GBP")]);
+  });
+
+  it("keeps who you actually owe when the settle plan reroutes it", () => {
+    const summary = calculateDebts([
+      owes(YOU, LENA, 900),
+      owes(LENA, MAX, 900),
+    ]);
+    expect(myDebts(summary, YOU, "EUR").owe).toEqual([debt(YOU, LENA, 900)]);
   });
 });

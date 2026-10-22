@@ -1,13 +1,11 @@
 import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
-import type { SharedValue } from "react-native-reanimated";
 import { useCallback, useRef, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
-import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -23,6 +21,7 @@ import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import { useShoppingStore } from "~/utils/shopping-store";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
+import { useSwipeActions } from "../SwipeActions";
 
 interface Props {
   shoppingList: Extract<
@@ -46,20 +45,6 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
     defaultValues: {
       name: shoppingList.name,
     },
-  });
-
-  const rightActionStyle = useAnimatedStyle(() => {
-    return {
-      flex: 1,
-      flexDirection: "row",
-    };
-  });
-
-  const leftActionStyle = useAnimatedStyle(() => {
-    return {
-      flex: 1,
-      flexDirection: "row",
-    };
   });
 
   const onMutateShoppingListError = (
@@ -215,37 +200,19 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
     router.push("/(tabs)/shoppingList");
   };
 
-  const renderRightActions = useCallback(
-    (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
-      return (
-        <Reanimated.View style={rightActionStyle}>
-          <View className="bg-destructive h-full w-full items-end justify-center rounded-lg p-4">
-            <Text className="text-destructive-foreground text-sm font-medium">
-              {t("common.delete")}
-            </Text>
-          </View>
-        </Reanimated.View>
-      );
-    },
-    [rightActionStyle, t],
-  );
-
-  const renderLeftActions = useCallback(
-    (_prog: SharedValue<number>, _drag: SharedValue<number>) => {
-      return (
-        <Reanimated.View style={leftActionStyle}>
-          <View className="bg-primary h-full w-full items-start justify-center rounded-lg p-4">
-            <Text className="text-primary-foreground text-sm font-medium">
-              {t("shoppingList.rename")}
-            </Text>
-          </View>
-        </Reanimated.View>
-      );
-    },
-    [leftActionStyle, t],
-  );
-
   const isOptimistic = shoppingList.id === -1;
+  const { swipeableProps, guardPress } = useSwipeActions({
+    leftAction: {
+      text: t("shoppingList.rename"),
+      className: "bg-primary",
+      textClassName: "text-primary-foreground",
+    },
+    rightAction: {
+      text: t("common.delete"),
+      className: "bg-destructive",
+      textClassName: "text-destructive-foreground",
+    },
+  });
 
   return (
     <>
@@ -255,8 +222,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
         friction={2}
         leftThreshold={40}
         rightThreshold={40}
-        renderLeftActions={renderLeftActions}
-        renderRightActions={renderRightActions}
+        {...swipeableProps}
         onSwipeableOpen={(direction) => {
           if (direction === SwipeDirection.LEFT) {
             swipeableRef.current?.close();
@@ -265,9 +231,6 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
             swipeableRef.current?.close();
             setIsRenaming(true);
           }
-        }}
-        onSwipeableClose={() => {
-          // No action needed - rename is handled by Cancel/Save buttons
         }}
       >
         {isRenaming ? (
@@ -305,9 +268,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
                     variant="primary"
                     size="md"
                     className="flex-1"
-                    onPress={() => {
-                      void form.handleSubmit(handleRename)();
-                    }}
+                    onPress={form.handleSubmit(handleRename)}
                   />
                 </View>
               </View>
@@ -322,7 +283,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
               isOptimistic && "animate-pulse",
             )}
             disabled={isOptimistic}
-            onPress={handleListPress}
+            onPress={guardPress(handleListPress)}
             activeOpacity={0.7}
           >
             <View className="flex-1">

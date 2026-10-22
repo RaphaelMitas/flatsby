@@ -1,8 +1,8 @@
 import type { DebtKind } from "@flatsby/validators/expenses/debt";
 import type { DebtEntry } from "@flatsby/validators/expenses/types";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -43,14 +43,6 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const { invalidateDebtSummary } = useInvalidateExpenses(groupId);
   const [refreshing, setRefreshing] = useState(false);
   const [kind, setKind] = useState<DebtKind>("direct");
-  const { kind: kindParam } = useLocalSearchParams<{ kind?: string }>();
-
-  // The home's money row reads the settle plan, so it opens on it
-  useEffect(() => {
-    if (kindParam !== "simplified") return;
-    setKind("simplified");
-    router.setParams({ kind: undefined });
-  }, [kindParam, router]);
 
   const { data: debtData } = useSuspenseQuery(
     trpc.expense.getDebtSummary.queryOptions({ groupId }),

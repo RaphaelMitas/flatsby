@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
+import { NavBeacon } from "~/app/_components/analytics/NavBeacon";
 import {
   rootMetadata,
   RootShell,
@@ -15,6 +16,7 @@ export default async function AppLayout(props: { children: React.ReactNode }) {
   const { marketing, legal, ...messages } = await getMessages();
   return (
     <RootShell lang={await getLocale()}>
+      <NavBeacon entryPagesOnly />
       <NextIntlClientProvider messages={messages}>
         {props.children}
       </NextIntlClientProvider>

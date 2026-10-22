@@ -96,7 +96,7 @@ interface AccordionMultipleProps extends AccordionBaseProps {
 type AccordionProps = AccordionSingleProps | AccordionMultipleProps;
 
 // Accordion Root
-const Accordion = React.forwardRef<View, AccordionProps>((props, ref) => {
+const Accordion = (props: AccordionProps) => {
   const {
     type,
     value: controlledValue,
@@ -158,13 +158,10 @@ const Accordion = React.forwardRef<View, AccordionProps>((props, ref) => {
 
   return (
     <AccordionContext.Provider value={contextValue}>
-      <View ref={ref} className={accordionVariants({ className })}>
-        {children}
-      </View>
+      <View className={accordionVariants({ className })}>{children}</View>
     </AccordionContext.Provider>
   );
-});
-Accordion.displayName = "Accordion";
+};
 
 // AccordionItem
 interface AccordionItemProps {
@@ -174,39 +171,38 @@ interface AccordionItemProps {
   disabled?: boolean;
 }
 
-const AccordionItem = React.forwardRef<View, AccordionItemProps>(
-  ({ value, children, className, disabled = false, ...props }, ref) => {
-    const accordionContext = useAccordionContext();
+const AccordionItem = ({
+  value,
+  children,
+  className,
+  disabled = false,
+  ...props
+}: AccordionItemProps) => {
+  const accordionContext = useAccordionContext();
 
-    const isOpen =
-      accordionContext.type === "single"
-        ? accordionContext.value === value
-        : Array.isArray(accordionContext.value) &&
-          accordionContext.value.includes(value);
+  const isOpen =
+    accordionContext.type === "single"
+      ? accordionContext.value === value
+      : Array.isArray(accordionContext.value) &&
+        accordionContext.value.includes(value);
 
-    const itemContextValue = React.useMemo(
-      () => ({
-        value,
-        isOpen,
-        disabled: disabled || accordionContext.disabled,
-      }),
-      [value, isOpen, disabled, accordionContext.disabled],
-    );
+  const itemContextValue = React.useMemo(
+    () => ({
+      value,
+      isOpen,
+      disabled: disabled || accordionContext.disabled,
+    }),
+    [value, isOpen, disabled, accordionContext.disabled],
+  );
 
-    return (
-      <AccordionItemContext.Provider value={itemContextValue}>
-        <View
-          ref={ref}
-          className={accordionItemVariants({ className })}
-          {...props}
-        >
-          {children}
-        </View>
-      </AccordionItemContext.Provider>
-    );
-  },
-);
-AccordionItem.displayName = "AccordionItem";
+  return (
+    <AccordionItemContext.Provider value={itemContextValue}>
+      <View className={accordionItemVariants({ className })} {...props}>
+        {children}
+      </View>
+    </AccordionItemContext.Provider>
+  );
+};
 
 // AccordionTrigger
 interface AccordionTriggerProps {
@@ -215,41 +211,42 @@ interface AccordionTriggerProps {
   showChevron?: boolean;
 }
 
-const AccordionTrigger = React.forwardRef<View, AccordionTriggerProps>(
-  ({ children, className, showChevron = true, ...props }, ref) => {
-    const accordionContext = useAccordionContext();
-    const itemContext = useAccordionItemContext();
+const AccordionTrigger = ({
+  children,
+  className,
+  showChevron = true,
+  ...props
+}: AccordionTriggerProps) => {
+  const accordionContext = useAccordionContext();
+  const itemContext = useAccordionItemContext();
 
-    const handlePress = () => {
-      if (!itemContext.disabled) {
-        accordionContext.onValueChange(itemContext.value);
-      }
-    };
+  const handlePress = () => {
+    if (!itemContext.disabled) {
+      accordionContext.onValueChange(itemContext.value);
+    }
+  };
 
-    return (
-      <Pressable
-        ref={ref}
-        onPress={handlePress}
-        disabled={itemContext.disabled}
-        className={accordionTriggerVariants({
-          className,
-          disabled: itemContext.disabled,
-        })}
-        {...props}
-      >
-        <View className="min-w-0 flex-1 flex-row items-center">{children}</View>
-        {showChevron && (
-          <Icon
-            name={itemContext.isOpen ? "chevron-up" : "chevron-down"}
-            size={16}
-            color="muted-foreground"
-          />
-        )}
-      </Pressable>
-    );
-  },
-);
-AccordionTrigger.displayName = "AccordionTrigger";
+  return (
+    <Pressable
+      onPress={handlePress}
+      disabled={itemContext.disabled}
+      className={accordionTriggerVariants({
+        className,
+        disabled: itemContext.disabled,
+      })}
+      {...props}
+    >
+      <View className="min-w-0 flex-1 flex-row items-center">{children}</View>
+      {showChevron && (
+        <Icon
+          name={itemContext.isOpen ? "chevron-up" : "chevron-down"}
+          size={16}
+          color="muted-foreground"
+        />
+      )}
+    </Pressable>
+  );
+};
 
 // AccordionContent with Reanimated
 interface AccordionContentProps {
@@ -257,37 +254,34 @@ interface AccordionContentProps {
   className?: string;
 }
 
-const AccordionContent = React.forwardRef<View, AccordionContentProps>(
-  ({ children, className }, ref) => {
-    const itemContext = useAccordionItemContext();
-    const height = useSharedValue(0);
+const AccordionContent = ({ children, className }: AccordionContentProps) => {
+  const itemContext = useAccordionItemContext();
+  const height = useSharedValue(0);
 
-    const derivedHeight = useDerivedValue(() =>
-      withTiming(height.value * (itemContext.isOpen ? 1 : 0), {
-        duration: ANIMATION_DURATION,
-      }),
-    );
+  const derivedHeight = useDerivedValue(() =>
+    withTiming(height.value * (itemContext.isOpen ? 1 : 0), {
+      duration: ANIMATION_DURATION,
+    }),
+  );
 
-    const animatedStyle = useAnimatedStyle(() => ({
-      height: derivedHeight.value,
-      overflow: "hidden" as const,
-    }));
+  const animatedStyle = useAnimatedStyle(() => ({
+    height: derivedHeight.value,
+    overflow: "hidden" as const,
+  }));
 
-    return (
-      <Animated.View ref={ref} style={animatedStyle}>
-        <View
-          className={`absolute top-0 right-0 left-0 ${className ?? ""}`}
-          onLayout={(e) => {
-            height.value = e.nativeEvent.layout.height;
-          }}
-        >
-          {children}
-        </View>
-      </Animated.View>
-    );
-  },
-);
-AccordionContent.displayName = "AccordionContent";
+  return (
+    <Animated.View style={animatedStyle}>
+      <View
+        className={`absolute top-0 right-0 left-0 ${className ?? ""}`}
+        onLayout={(e) => {
+          height.value = e.nativeEvent.layout.height;
+        }}
+      >
+        {children}
+      </View>
+    </Animated.View>
+  );
+};
 
 export {
   Accordion,

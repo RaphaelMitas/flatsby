@@ -1,5 +1,5 @@
+import type * as React from "react";
 import type { VariantProps } from "tailwind-variants";
-import * as React from "react";
 import { Text } from "react-native";
 import { tv } from "tailwind-variants";
 
@@ -13,13 +13,15 @@ interface LabelProps extends VariantProps<typeof labelVariants> {
   htmlFor?: string; // Keep for compatibility but not used in React Native
 }
 
-const Label = React.forwardRef<Text, LabelProps>(
-  ({ className, children, htmlFor: _htmlFor, ...props }, ref) => (
-    <Text ref={ref} className={labelVariants({ className })} {...props}>
-      {children}
-    </Text>
-  ),
+const Label = ({
+  className,
+  children,
+  htmlFor: _htmlFor,
+  ...props
+}: LabelProps) => (
+  <Text className={labelVariants({ className })} {...props}>
+    {children}
+  </Text>
 );
-Label.displayName = "Label";
 
 export { Label };

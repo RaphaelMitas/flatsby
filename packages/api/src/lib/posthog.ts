@@ -7,7 +7,7 @@ import {
 } from "@posthog/core";
 import { PostHog } from "posthog-node";
 
-import { DrizzleQueryError } from "@flatsby/db";
+import { DrizzleQueryError } from "@flatsby/db/errors";
 import { redactInvitePath } from "@flatsby/validators/invite";
 
 const apiKey = process.env.POSTHOG_API_KEY;
@@ -109,11 +109,19 @@ function getBrowserLanguagePrefix(headers: Headers): string | undefined {
   return lang?.split("-")[0];
 }
 
-export function buildPostHogProperties(headers: Headers) {
+interface PageUrls {
+  url: string;
+  referrer: string | null;
+}
+
+export function buildPostHogProperties(headers: Headers, page?: PageUrls) {
   const userAgent = headers.get("user-agent");
   const rawReferer = headers.get("referer");
-  const referer = rawReferer && redactInvitePath(rawReferer);
-  const currentUrl = referer ?? undefined;
+  // An API call's referer is the page it was made from, so it stands in for both
+  const rawUrl = page ? page.url : rawReferer;
+  const rawReferrer = page ? page.referrer : rawReferer;
+  const currentUrl = rawUrl ? redactInvitePath(rawUrl) : undefined;
+  const referer = rawReferrer ? redactInvitePath(rawReferrer) : null;
 
   // Detect browser/device info from user agent using @posthog/core
   const vendor = ""; // Not available server-side
@@ -128,8 +136,8 @@ export function buildPostHogProperties(headers: Headers) {
   const deviceType = userAgent ? detectDeviceType(userAgent) : undefined;
 
   // Get referrer info
-  const referringDomain = getReferringDomain(referer ?? null);
-  const searchEngine = getSearchEngine(referer ?? null);
+  const referringDomain = getReferringDomain(referer);
+  const searchEngine = getSearchEngine(referer);
 
   // Get campaign params from current URL
   const campaignParams = currentUrl ? getCampaignParamsFromUrl(currentUrl) : {};
@@ -229,6 +237,57 @@ export function captureEvent({
     event,
     properties: {
       ...buildPostHogProperties(headers),
+      ...additionalProperties,
+    },
+  });
+}
+
+function clientIp(headers: Headers) {
+  return (
+    headers.get("x-real-ip") ??
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    undefined
+  );
+}
+
+// Click IDs like gclid, or anything else a link carries, could recognize a visitor across days
+function keepOnlyUtmParams(url: string) {
+  try {
+    const parsed = new URL(url);
+    for (const key of [...parsed.searchParams.keys()]) {
+      if (!key.startsWith("utm_")) parsed.searchParams.delete(key);
+    }
+    parsed.hash = "";
+    return parsed.href;
+  } catch {
+    return null;
+  }
+}
+
+// PostHog hashes IP, user agent and host with a daily salt, so the device stores nothing
+export async function captureCookieless({
+  event,
+  headers,
+  page,
+  additionalProperties,
+}: {
+  event: string;
+  headers: Headers;
+  page: PageUrls;
+  additionalProperties?: Record<string, unknown>;
+}) {
+  const url = keepOnlyUtmParams(page.url);
+  if (!posthog || !url) return;
+  const referrer = page.referrer && keepOnlyUtmParams(page.referrer);
+  await posthog.captureImmediate({
+    distinctId: "$posthog_cookieless",
+    event,
+    properties: {
+      ...buildPostHogProperties(headers, { url, referrer }),
+      $cookieless_mode: true,
+      // Without it PostHog hashes our server's IP and every visitor collapses into one
+      $ip: clientIp(headers),
+      $process_person_profile: false,
       ...additionalProperties,
     },
   });

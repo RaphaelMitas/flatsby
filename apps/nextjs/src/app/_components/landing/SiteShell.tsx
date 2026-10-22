@@ -6,10 +6,11 @@ import { Button } from "@flatsby/ui/button";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 
 import {
-  APP_STORE_URL,
+  APP_STORE_LINK,
   GITHUB_URL,
   LEGAL_PAGES,
-  PLAY_STORE_URL,
+  PLAY_STORE_LINK,
+  storeLinkProps,
 } from "./content";
 
 export function SiteShell({
@@ -53,8 +54,8 @@ export function SiteShell({
       title: t("getTheApp"),
       links: [
         { href: "/auth/login", label: t("webApp") },
-        { href: APP_STORE_URL, label: t("appStore") },
-        { href: PLAY_STORE_URL, label: t("googlePlay") },
+        { href: APP_STORE_LINK, label: t("appStore") },
+        { href: PLAY_STORE_LINK, label: t("googlePlay") },
         { href: GITHUB_URL, label: t("sourceCode") },
       ],
     },
@@ -103,6 +104,7 @@ export function SiteShell({
                   key={link.href}
                   href={link.href}
                   className="text-muted-foreground hover:text-foreground"
+                  {...storeLinkProps(link.href)}
                 >
                   {link.label}
                 </Link>

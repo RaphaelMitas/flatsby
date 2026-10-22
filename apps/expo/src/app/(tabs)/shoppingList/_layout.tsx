@@ -4,16 +4,11 @@ import { useTranslations } from "use-intl";
 import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function ShoppingListsLayout() {
-  const themedScreenOptions = useThemedScreenOptions();
+  const { screenOptions, solidHeader } = useThemedScreenOptions();
   const t = useTranslations("shoppingList");
 
   return (
-    <Stack
-      initialRouteName="index"
-      screenOptions={{
-        ...themedScreenOptions,
-      }}
-    >
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen
         name="index"
         options={{
@@ -27,6 +22,7 @@ export default function ShoppingListsLayout() {
           title: t("editItem"),
           headerBackTitle: "",
           presentation: "modal",
+          ...solidHeader,
         }}
       />
     </Stack>

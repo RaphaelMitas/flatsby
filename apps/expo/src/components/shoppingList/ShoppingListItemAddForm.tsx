@@ -3,6 +3,7 @@ import type {
   CategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
+import type { ComponentRef } from "react";
 import type { TextInput } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -32,7 +33,7 @@ export const ShoppingListItemAddForm = ({
   const [categoryId, setCategoryId] =
     useState<CategoryIdWithAiAutoSelect>("ai-auto-select");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const router = useRouter();
   const { focus } = useLocalSearchParams<{ focus?: string }>();
 

@@ -142,7 +142,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "expo-build-properties",
       {
-        ios: { ccacheEnabled: isE2E, enableSceneSupport: true },
+        ios: { ccacheEnabled: isE2E },
         android: {
           enableMinifyInReleaseBuilds: true,
           enableShrinkResourcesInReleaseBuilds: true,

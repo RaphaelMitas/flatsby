@@ -86,161 +86,129 @@ export const legal = {
     title: "Privacy Policy",
     lastUpdated: "October 2026",
     toc: {
-      introduction: "Introduction",
-      controller: "Data Controller",
-      collected: "Data We Collect",
-      basis: "Legal Basis for Processing",
-      use: "How We Use Your Data",
-      sharing: "Data Sharing",
-      retention: "Data Retention",
-      rights: "Your Rights (GDPR)",
-      security: "Data Security",
-      international: "International Data Transfers",
-      children: "Children's Privacy",
-      changes: "Changes to This Policy",
-      contact: "Contact Us",
+      controller: "Controller",
+      collected: "Data We Process",
+      basis: "Purposes and Legal Bases",
+      sharing: "Recipients",
+      retention: "Storage Periods",
+      rights: "Your Rights",
+      objection: "Your Right to Object",
+      international: "Transfers Outside the EU",
+      children: "Children",
+      changes: "Changes",
     },
-    introduction:
-      'This Privacy Policy explains how Flatsby ("we", "us", "our") collects, uses, and protects your personal data when you use our household management application. We are committed to protecting your privacy and complying with the General Data Protection Regulation (GDPR) and other applicable data protection laws.',
     city: "64291 Darmstadt, Germany",
     emailLine: "Email: support@flatsby.com",
-    controller: "The data controller responsible for your personal data is:",
+    controller: "The controller is:",
     account: {
-      heading: "3.1 Account Information",
-      intro: "When you sign up via Google or Apple Sign-In, we receive:",
+      heading: "Account",
+      intro: "From your Google or Apple sign-in and your account, we store:",
       name: "Your name",
-      email: "Email address",
-      picture: "Profile picture (if provided)",
-      identifier: "Unique identifier from the authentication provider",
+      email: "Your email address",
+      picture: "Your profile picture (Google only)",
+      identifier: "Your Google or Apple account ID",
+      plan: "Your plan, purchases and AI credit balance",
     },
     userContent: {
-      heading: "3.2 User-Generated Content",
-      intro: "Data you create while using the app:",
-      lists: "Shopping lists and items (names, categories, completion status)",
-      expenses:
-        "Expenses (amounts, descriptions, dates, categories, split information)",
-      groups: "Group information (names, member relationships)",
-      chat: "Chat conversations with our AI assistant",
+      heading: "Your Content",
+      intro: "What you create in Flatsby:",
+      lists: "Shopping lists and items",
+      expenses: "Expenses and settlements",
+      calendar: "Calendar entries and chores",
+      groups: "Groups and their members",
+      chat: "Chats with the AI assistant",
     },
     technical: {
-      heading: "3.3 Technical Data",
-      intro: "Automatically collected data varies by platform:",
+      heading: "Technical Data",
+      intro: "Collected automatically:",
       website: "Website:",
-      websiteIp:
-        "IP address (for session management only, not shared with analytics)",
-      websiteViews: "Page views and navigation patterns (anonymized)",
-      mobile: "Mobile App:",
-      mobileIp: "IP address (shared with analytics provider)",
-      mobileDevice: "Device type, operating system, and app version",
-      mobileViews: "Screen views and navigation patterns",
+      websiteIp: "IP address and browser details",
+      websiteViews:
+        "Pages you open, referring website and campaign tags; when signed in, your actions",
+      websiteSession:
+        "When signed in: a session cookie and login records (IP address, browser)",
+      mobile: "App:",
+      mobileIp: "IP address and approximate location (country, city)",
+      mobileDevice:
+        "Device type, operating system, app version and a random device ID",
+      mobileViews: "Screens you open and actions you take",
+      errors: "Error reports, occasionally including content you entered",
     },
     basis: {
-      intro: "We process your personal data based on:",
       contract:
-        "<strong>Contract performance (Art. 6(1)(b) GDPR):</strong> To provide the service you signed up for, including AI-powered features like automatic category detection",
-      consent:
-        "<strong>Consent (Art. 6(1)(a) GDPR):</strong> For the AI chat assistant",
+        "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including purchases and automatic AI categories",
+      consent: "<strong>Consent (Art. 6(1)(a) GDPR):</strong> the AI assistant",
       interests:
-        "<strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> For service improvement and security",
+        "<strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> running the website securely; analytics on the website and in the app, to learn how people find and use Flatsby; error reports, to fix bugs; AI usage metrics, to control costs; login session records, to protect your account",
       obligations:
-        "<strong>Legal obligations (Art. 6(1)(c) GDPR):</strong> To comply with applicable laws",
-    },
-    use: {
-      intro: "We use your personal data to:",
-      provide: "Provide and maintain the Flatsby service",
-      collaborate: "Enable collaboration with your household members",
-      display: "Process and display your shopping lists and expenses",
-      ai: "Provide AI-powered assistance (when enabled)",
-      communications: "Send service-related communications",
-      improve: "Improve and optimize the service",
-      security: "Ensure security and prevent fraud",
+        "<strong>Legal obligation (Art. 6(1)(c) GDPR):</strong> keeping invoices and payment records under tax and commercial law",
+      required:
+        "No law requires you to provide data. Without your name, email address and Google or Apple account ID we can't create an account. Analytics isn't needed to use Flatsby.",
     },
     groups: {
-      heading: "6.1 Within Your Groups",
-      body: "When you join a household group, other group members can see your name, profile picture, and the content you share within that group (shopping list items, expenses).",
+      heading: "Your Groups",
+      body: "Members of your groups see your name, email address, profile picture and what you add to the group.",
     },
     providers: {
-      heading: "6.2 Service Providers",
-      intro: "We use third-party services to operate Flatsby:",
-      neon: "<strong>Neon (Database):</strong> Stores your data securely",
-      vercel: "<strong>Vercel (Hosting):</strong> Hosts our web application",
-      auth: "<strong>Google/Apple (Authentication):</strong> Provides sign-in services",
-      ai: "<strong>AI Services (Vercel AI Gateway):</strong> AI features are integrated throughout Flatsby (chat assistant, automatic category detection for shopping items, and more). Data is processed via <gateway>Vercel AI Gateway</gateway>, which routes requests to OpenAI (GPT models) or Google (Gemini models). See <dpa>Vercel's DPA</dpa> for data processing terms.",
+      heading: "Service Providers",
+      neon: "<strong>Neon (database):</strong> Stores our data in Frankfurt.",
+      vercel:
+        "<strong>Vercel (hosting):</strong> Every request passes through Vercel, with your IP address and browser details. Our API runs in Frankfurt; pages may be served from a location near you, possibly outside the EU.",
+      auth: "<strong>Google and Apple (sign-in):</strong> Confirm your identity. Google profile pictures load from Google's servers, so Google sees the IP address of anyone viewing them (Art. 6(1)(b) GDPR).",
+      billing:
+        "<strong>Autumn, Stripe and RevenueCat (plans and AI credits):</strong> Autumn (web) receives your account ID, name and email address, RevenueCat (app) your account ID, both with your purchases. Autumn uses Stripe for payments.",
+      expo: "<strong>Expo (app updates):</strong> The app checks Expo's servers for updates, which receive your IP address, app version and platform.",
+      stores:
+        "<strong>Apple App Store and Google Play:</strong> Distribute the app and handle in-app purchases as separate controllers under their own privacy policies.",
+      ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories and, if you use the AI assistant, your messages and the list, expense and member data it needs. See <dpa>Vercel's privacy policy</dpa>.",
       posthog:
-        "<strong>PostHog (Analytics):</strong> Helps us understand how users interact with Flatsby so we can improve the service. Data collection differs by platform:",
+        "<strong>PostHog (analytics, error reports):</strong> Stores data in Frankfurt and receives:",
       posthogWebsite:
-        "<strong>Website:</strong> Analytics are processed on our servers before being sent to PostHog. Your IP address is not shared with PostHog.",
+        "<strong>Website, not signed in:</strong> We count visits without cookies and without storing anything on your device. PostHog turns your IP address and browser details into a visitor ID that changes daily, then discards the IP address. It stores that ID with the pages you open, the referring website, campaign tags (utm parameters), whether you click an app store link or sign up, and your browser, operating system, device type and language. We can't recognize you on another day and don't link visits to your account.",
+      posthogServer:
+        "<strong>Signed in (web and app):</strong> Our server sends each action you take with your account ID and group, but not what you entered. On the web it also sends the pages you open, your browser details and the referring page.",
       posthogMobile:
-        "<strong>Mobile App:</strong> The app connects directly to PostHog and may collect device information (operating system, app version), screen views, and IP address.",
+        "<strong>App:</strong> By default the app also sends PostHog the screens you open, device details, app version and error reports, and once you're signed in your account ID, name and email address. It stores a random ID on your device. PostHog derives your approximate location from your IP address, then discards it. On Android the app reads the install source from Google Play (campaign tags, invite link). The switch in the app settings stops this, but not the actions our server sends.",
       posthogAi:
-        "AI feature usage analytics (such as which AI model was used, token counts, response latency, and cost) are also tracked via PostHog to help us monitor and improve AI features. No chat messages, prompts, or AI responses are shared with PostHog. PostHog processes data on EU servers. See <link>PostHog's Privacy Policy</link>.",
-    },
-    legalRequirements: {
-      heading: "6.3 Legal Requirements",
-      body: "We may disclose your data if required by law or to protect our rights and safety.",
-    },
-    aiProcessing: {
-      heading: "6.4 AI Data Processing",
-      intro:
-        "AI features are integrated throughout Flatsby. The following data may be sent to AI providers:",
-      names:
-        "Shopping list item names and expense descriptions (for automatic category detection)",
-      chat: "Chat messages and conversation history (when using the AI assistant)",
-      data: "Shopping list and expense data (when using AI assistant tools)",
-      members: "Group member names (when AI needs to identify members)",
-      outro:
-        "AI providers process this data to provide intelligent features. Data processing is governed by Vercel's DPA linked above.",
+        "We also send AI usage metrics (model, tokens, latency, cost), never prompts or responses. See <link>PostHog's privacy policy</link>.",
     },
     retention: {
-      intro:
-        "We retain your personal data for as long as your account is active. When you delete your account:",
-      personal: "Your personal data is deleted immediately",
+      intro: "We keep your data while your account exists. When you delete it:",
+      personal:
+        "Your account, profile and chats are deleted from our database immediately",
       content:
-        "Shopping list items and expenses you created may be anonymized but retained for other group members",
-      chat: "Chat conversations are permanently deleted",
+        "List items and expenses you created may remain, anonymized, for the other group members",
       outro:
-        "We may retain certain data longer if required by law or for legitimate business purposes (e.g., billing records).",
+        "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. PostHog deletes analytics events after 12 months. Your PostHog profile and customer records at Autumn and RevenueCat remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
     },
     rights: {
-      intro: "Under the GDPR, you have the right to:",
-      access: "<strong>Access:</strong> Request a copy of your personal data",
+      access: "<strong>Access:</strong> get a copy of your data",
       rectification:
-        "<strong>Rectification:</strong> Correct inaccurate personal data",
-      erasure:
-        '<strong>Erasure:</strong> Delete your personal data ("right to be forgotten")',
-      restriction:
-        "<strong>Restriction:</strong> Restrict processing of your data",
+        "<strong>Rectification:</strong> have wrong data corrected",
+      erasure: "<strong>Erasure:</strong> have your data deleted",
+      restriction: "<strong>Restriction:</strong> have processing restricted",
       portability:
-        "<strong>Portability:</strong> Receive your data in a machine-readable format",
-      object:
-        "<strong>Object:</strong> Object to processing based on legitimate interests",
+        "<strong>Portability:</strong> get your data in a machine-readable format",
+      object: "<strong>Objection:</strong> see Your Right to Object",
       withdraw:
-        "<strong>Withdraw consent:</strong> Withdraw consent at any time for consent-based processing",
-      optOut:
-        "<strong>Analytics opt-out:</strong> You can disable analytics tracking in the app settings. This will stop collection of usage data while still allowing the app to function normally.",
+        "<strong>Withdrawal:</strong> withdraw consent at any time by email; processing before that stays lawful",
       exercise:
-        'To exercise these rights, use the "Export My Data" feature in Settings or contact us at support@flatsby.com. You also have the right to lodge a complaint with a supervisory authority.',
+        'Use "Export My Data" or delete your account in the settings, or email support@flatsby.com. You can also complain to a supervisory authority, in particular where you live or work. Ours is the Hessian Commissioner for Data Protection and Freedom of Information (HBDI), <link>datenschutz.hessen.de</link>.',
     },
-    security: {
+    objection: {
       intro:
-        "We implement appropriate technical and organizational measures to protect your personal data, including:",
-      transit: "Encryption of data in transit (HTTPS/TLS)",
-      rest: "Encryption of data at rest",
-      oauth: "Secure authentication via OAuth 2.0",
-      assessments: "Regular security assessments",
-      access: "Access controls and monitoring",
+        "Where we rely on legitimate interests, you can object at any time on grounds relating to your particular situation (Art. 21 GDPR). For analytics you don't need to give a reason.",
+      signedIn:
+        "<strong>Signed in:</strong> Email support@flatsby.com, from your account's address if you can. We then stop analytics for your account, on the web and in the app.",
+      visitor:
+        "<strong>Not signed in:</strong> We can't recognize you, so turn on Global Privacy Control or Do Not Track in your browser. We then don't count your visits.",
     },
     international:
-      "Your data may be processed outside the European Economic Area (EEA) by our service providers. In particular, AI services (OpenAI and Google) process data in the United States. We ensure appropriate safeguards are in place, such as Standard Contractual Clauses (SCCs) or adequacy decisions. See the DPA link in Section 6.2 for details.",
+      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe and Expo are US companies, so data may reach the USA. For providers certified under the EU-US Data Privacy Framework, the EU adequacy decision applies (Art. 45 GDPR). PostHog is certified and has also signed the EU Standard Contractual Clauses with us (Art. 46(2)(c) GDPR); ask us for a copy.",
     children:
-      "Flatsby is not intended for children under 16 years of age. We do not knowingly collect personal data from children under 16. If you believe we have collected data from a child, please contact us immediately.",
+      "Flatsby is not meant for children under 16. If you think a child has given us data, contact us.",
     changes:
-      'We may update this Privacy Policy from time to time. We will notify you of material changes by updating the "Last updated" date and, where appropriate, by additional notice (e.g., in-app notification).',
-    contact: {
-      intro:
-        "For privacy-related questions or to exercise your rights, contact us:",
-      email: "<strong>Email:</strong> support@flatsby.com",
-    },
+      "We update this policy when our processing changes. We also tell you about material changes in Flatsby.",
   },
   legalNotice: {
     metaTitle: "Legal Notice - Flatsby",

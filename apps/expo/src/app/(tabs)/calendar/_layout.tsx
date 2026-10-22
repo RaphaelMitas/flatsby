@@ -4,16 +4,11 @@ import { useTranslations } from "use-intl";
 import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function CalendarLayout() {
-  const themedScreenOptions = useThemedScreenOptions();
+  const { screenOptions } = useThemedScreenOptions();
   const t = useTranslations();
 
   return (
-    <Stack
-      initialRouteName="index"
-      screenOptions={{
-        ...themedScreenOptions,
-      }}
-    >
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen
         name="index"
         options={{ title: t("navigation.calendar"), headerShown: false }}

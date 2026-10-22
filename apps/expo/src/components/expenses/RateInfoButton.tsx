@@ -1,7 +1,6 @@
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useRef } from "react";
-import { Pressable, Text } from "react-native";
-import { BottomSheetView } from "@gorhom/bottom-sheet";
+import { Pressable, Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -23,7 +22,7 @@ export function RateInfoButton({ targetCurrency }: { targetCurrency: string }) {
         <Icon name="info" size={14} color="muted-foreground" />
       </Pressable>
       <SheetModal ref={sheetRef}>
-        <BottomSheetView className="gap-3 px-4 pb-10">
+        <View className="gap-3 px-4 pb-10">
           <Text className="text-foreground text-lg font-semibold">
             {t("rateSourceTitle")}
           </Text>
@@ -33,7 +32,7 @@ export function RateInfoButton({ targetCurrency }: { targetCurrency: string }) {
           <Text className="text-muted-foreground text-sm">
             {t("rateSourceOwnRate", { currency: targetCurrency })}
           </Text>
-        </BottomSheetView>
+        </View>
       </SheetModal>
     </>
   );

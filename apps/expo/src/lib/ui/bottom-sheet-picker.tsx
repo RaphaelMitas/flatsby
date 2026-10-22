@@ -1,3 +1,4 @@
+import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { ReactNode } from "react";
 import type React from "react";
 import {
@@ -9,22 +10,13 @@ import {
   useState,
 } from "react";
 import { Keyboard, Pressable, Text, View } from "react-native";
-import BottomSheetRaw, {
-  useBottomSheetScrollableCreator,
-} from "@gorhom/bottom-sheet";
 import { FlashList } from "@shopify/flash-list";
-import { styled } from "nativewind";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
 
-import { useThemeColors } from "../utils";
-import { bottomSheetVariants, renderBackdrop } from "./sheet-modal";
+import { SheetModal } from "./sheet-modal";
 
-const BottomSheet = styled(BottomSheetRaw, {
-  className: {
-    target: "backgroundStyle",
-  },
-});
+const SNAP_POINTS = ["50%", "80%"];
 
 const itemVariants = tv({
   base: "flex-row items-center gap-3 px-4 py-3 active:bg-muted/50",
@@ -75,21 +67,14 @@ export interface BottomSheetPickerItem {
   disabled?: boolean;
 }
 
-export interface BottomSheetPickerRef {
-  open: () => void;
-  close: () => void;
-  snapToIndex: (index: number) => void;
+interface PickerConfig {
+  items: BottomSheetPickerItem[];
+  selectedId?: string;
+  onSelect?: (item: BottomSheetPickerItem) => void;
 }
 
-// Context for connecting trigger and sheet
 interface BottomSheetPickerContextValue {
-  openPicker: (config: {
-    items: BottomSheetPickerItem[];
-    selectedId?: string;
-    onSelect?: (item: BottomSheetPickerItem) => void;
-    snapPoints?: string[];
-  }) => void;
-  closePicker: () => void;
+  openPicker: (config: PickerConfig) => void;
 }
 
 const BottomSheetPickerContext =
@@ -105,75 +90,29 @@ export const useBottomSheetPicker = () => {
   return context;
 };
 
-// Provider component that should be placed high in the component tree
 interface BottomSheetPickerProviderProps {
   children: ReactNode;
 }
 
-// Component that uses the hook inside BottomSheet context
-interface BottomSheetPickerContentProps {
-  items: BottomSheetPickerItem[];
-  renderItem: ({ item }: { item: BottomSheetPickerItem }) => React.ReactElement;
-}
-
-const BottomSheetPickerContent: React.FC<BottomSheetPickerContentProps> = ({
-  items,
-  renderItem,
-}) => {
-  const BottomSheetScrollable = useBottomSheetScrollableCreator();
-
-  return (
-    <FlashList
-      className={bottomSheetContentVariants()}
-      data={items}
-      keyExtractor={(item: BottomSheetPickerItem) => item.id}
-      renderItem={renderItem}
-      showsVerticalScrollIndicator={false}
-      renderScrollComponent={BottomSheetScrollable}
-    />
-  );
-};
-
 export const BottomSheetPickerProvider: React.FC<
   BottomSheetPickerProviderProps
 > = ({ children }) => {
-  const bottomSheetRef = useRef<BottomSheetRaw>(null);
-  const [pickerConfig, setPickerConfig] = useState<{
-    items: BottomSheetPickerItem[];
-    selectedId?: string;
-    onSelect?: (item: BottomSheetPickerItem) => void;
-    snapPoints: string[];
-  } | null>(null);
-  const { getColor } = useThemeColors();
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const [pickerConfig, setPickerConfig] = useState<PickerConfig | null>(null);
 
-  const openPicker = useCallback(
-    (config: {
-      items: BottomSheetPickerItem[];
-      selectedId?: string;
-      onSelect?: (item: BottomSheetPickerItem) => void;
-      snapPoints?: string[];
-    }) => {
-      setPickerConfig({
-        ...config,
-        snapPoints: config.snapPoints ?? ["50%", "80%"],
-      });
-      bottomSheetRef.current?.snapToIndex(0);
-    },
-    [],
-  );
-
-  const closePicker = useCallback(() => {
-    bottomSheetRef.current?.close();
+  const openPicker = useCallback((config: PickerConfig) => {
+    setPickerConfig(config);
+    bottomSheetRef.current?.present();
   }, []);
 
   const handleItemSelect = useCallback(
     (item: BottomSheetPickerItem) => {
       if (!item.disabled) {
         pickerConfig?.onSelect?.(item);
-        closePicker();
+        bottomSheetRef.current?.close();
       }
     },
-    [pickerConfig, closePicker],
+    [pickerConfig],
   );
 
   const renderItem = useCallback(
@@ -203,34 +142,21 @@ export const BottomSheetPickerProvider: React.FC<
     [pickerConfig?.selectedId, handleItemSelect],
   );
 
-  const contextValue = useMemo(
-    () => ({
-      openPicker,
-      closePicker,
-    }),
-    [openPicker, closePicker],
-  );
+  const contextValue = useMemo(() => ({ openPicker }), [openPicker]);
 
   return (
     <BottomSheetPickerContext.Provider value={contextValue}>
       {children}
-      <BottomSheet
-        ref={bottomSheetRef}
-        accessible={false}
-        snapPoints={pickerConfig?.snapPoints ?? ["50%", "80%"]}
-        index={-1}
-        enablePanDownToClose
-        className={bottomSheetVariants()}
-        handleIndicatorStyle={{
-          backgroundColor: getColor("primary"),
-        }}
-        backdropComponent={renderBackdrop}
-      >
-        <BottomSheetPickerContent
-          items={pickerConfig?.items ?? []}
+      <SheetModal ref={bottomSheetRef} snapPoints={SNAP_POINTS}>
+        <FlashList
+          className={bottomSheetContentVariants()}
+          data={pickerConfig?.items ?? []}
+          keyExtractor={(item) => item.id}
           renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
         />
-      </BottomSheet>
+      </SheetModal>
     </BottomSheetPickerContext.Provider>
   );
 };
@@ -241,7 +167,6 @@ export interface BottomSheetPickerTriggerProps {
   onSelect?: (item: BottomSheetPickerItem) => void;
   trigger?: ReactNode;
   triggerTitle?: string;
-  snapPoints?: string[];
   iconButton?: boolean;
   testID?: string;
   disabled?: boolean;
@@ -255,7 +180,6 @@ export const BottomSheetPickerTrigger: React.FC<
   onSelect,
   trigger,
   triggerTitle,
-  snapPoints,
   iconButton = false,
   testID,
   disabled,
@@ -269,9 +193,8 @@ export const BottomSheetPickerTrigger: React.FC<
       items,
       selectedId,
       onSelect,
-      snapPoints,
     });
-  }, [openPicker, items, selectedId, onSelect, snapPoints]);
+  }, [openPicker, items, selectedId, onSelect]);
 
   const selectedItem = useMemo(() => {
     return items.find((item) => item.id === selectedId);

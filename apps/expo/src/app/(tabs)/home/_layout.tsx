@@ -4,15 +4,14 @@ import { useTranslations } from "use-intl";
 import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function HomeLayout() {
-  const themedScreenOptions = useThemedScreenOptions();
+  const { screenOptions, solidHeader } = useThemedScreenOptions();
   const t = useTranslations("navigation");
 
   return (
     <Stack
-      initialRouteName="index"
       screenOptions={{
         headerShown: false,
-        ...themedScreenOptions,
+        ...screenOptions,
       }}
     >
       <Stack.Screen
@@ -28,6 +27,7 @@ export default function HomeLayout() {
           title: t("createGroup"),
           presentation: "modal",
           headerShown: true,
+          ...solidHeader,
         }}
       />
       <Stack.Screen

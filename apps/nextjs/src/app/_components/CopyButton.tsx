@@ -6,12 +6,19 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 
-export function CopyButton({ value }: { value: string }) {
+export function CopyButton({
+  value,
+  onCopy,
+}: {
+  value: string;
+  onCopy?: () => void;
+}) {
   const t = useTranslations();
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
     await navigator.clipboard.writeText(value);
+    onCopy?.();
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
