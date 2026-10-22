@@ -76,7 +76,7 @@ export default function TabLayout() {
   // Guarding per screen segfaults in UIKit: signing out from Settings
   // redirected from the backgrounded home tab, tearing down one tab's
   // navigation stack while another was still mounted.
-  // Pending without data only happens signed out: a refetch keeps the user it had.
+  // StackLayout blanks the first load; after that a refetch keeps the user it had
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;
   }

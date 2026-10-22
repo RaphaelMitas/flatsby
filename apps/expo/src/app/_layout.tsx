@@ -1,10 +1,16 @@
 import "~/polyfills";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Stack, usePathname, useSegments } from "expo-router";
+import {
+  router,
+  Stack,
+  useNavigationContainerRef,
+  usePathname,
+  useSegments,
+} from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
@@ -118,14 +124,19 @@ const StackLayout = () => {
   if (!isPending && !sessionResolved) setSessionResolved(true);
   const { hydrated } = useShoppingStore();
   const userId = data?.user.id;
-  // Sign-in only stores the cookie and refetches, so a fresh stack at the index
-  // route is what navigates off login and on to a remembered invite
-  const [signIns, setSignIns] = useState(0);
-  const [previousUserId, setPreviousUserId] = useState(userId);
-  if (userId !== previousUserId) {
-    setPreviousUserId(userId);
-    if (userId) setSignIns(signIns + 1);
-  }
+  const navigationRef = useNavigationContainerRef();
+  const previousUserId = useRef(userId);
+
+  // Sign-in only stores the cookie and refetches; the index route is what
+  // leaves login for home or a remembered invite
+  useEffect(() => {
+    const arrived = userId !== undefined && userId !== previousUserId.current;
+    previousUserId.current = userId;
+    if (arrived && navigationRef.isReady()) {
+      if (router.canDismiss()) router.dismissAll();
+      router.replace("/");
+    }
+  }, [userId, navigationRef]);
 
   // Cached errors from a revoked session would sign the next login out again.
   // By now TabLayout's Redirect has unmounted the tabs; clearing under them
@@ -147,7 +158,6 @@ const StackLayout = () => {
       <InstallReferrer />
       <UpdateNudge />
       <Stack
-        key={signIns}
         screenOptions={{
           headerShown: false,
           ...screenOptions,
