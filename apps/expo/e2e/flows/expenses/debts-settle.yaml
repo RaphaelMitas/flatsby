@@ -22,11 +22,17 @@ tags:
 - assertVisible: "Record EUR payment with Max"
 - assertVisible: "Record USD payment with Max"
 
+- scrollUntilVisible:
+    element: "€12[.,]00"
+    direction: DOWN
 - assertVisible: "Record Max paying Lena"
 - assertVisible: "€25[.,]00"
 - assertVisible: "Record Sophie paying Max"
-- assertVisible: "€12[.,]00"
 
+- scrollUntilVisible:
+    element:
+      id: "debt-hero-amount"
+    direction: UP
 - tapOn:
     id: "debt-mode-simplified"
 - assertVisible: "€55[.,]50"
