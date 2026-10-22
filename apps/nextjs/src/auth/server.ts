@@ -42,7 +42,7 @@ async function signupPlatform() {
     : "app";
 }
 
-// Cookieless only, hashed to the browser OAuth calls back in; an identified twin would tie the visit to the account
+// Cookieless and never identified, so the signup counts toward its source without tying the visit to the account
 async function onUserCreated(requestHeaders: Headers | undefined) {
   if (!requestHeaders) return;
   try {

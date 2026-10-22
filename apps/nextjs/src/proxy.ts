@@ -29,15 +29,17 @@ function isPageLoad(request: NextRequest) {
   );
 }
 
-function pageOf(request: NextRequest) {
-  return { url: request.url, referrer: request.headers.get("referer") };
-}
-
 // English marketing pages keep their unprefixed URLs and render from the [locale] segment.
 export function proxy(request: NextRequest, event: NextFetchEvent) {
   const url = request.nextUrl.clone();
   const { pathname } = url;
   if (pathname.endsWith(".md")) return;
+
+  const countVisit = (name: string, properties?: Record<string, unknown>) => {
+    if (!isPageLoad(request)) return;
+    const page = { url: request.url, referrer: request.headers.get("referer") };
+    event.waitUntil(captureVisit(name, request.headers, page, properties));
+  };
 
   const invite = inviteCodeSchema.safeParse(
     url.searchParams.get(INVITE_REFERRER_KEY),
@@ -45,14 +47,10 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   const inviteCode = invite.success ? invite.data : null;
   const store = storeRedirect(pathname, inviteCode);
   if (store) {
-    if (isPageLoad(request)) {
-      event.waitUntil(
-        captureVisit("store_click", request.headers, pageOf(request), {
-          store: store.store,
-          via_invite: inviteCode !== null,
-        }),
-      );
-    }
+    countVisit("store_click", {
+      store: store.store,
+      via_invite: inviteCode !== null,
+    });
     return NextResponse.redirect(store.url, 302);
   }
 
@@ -61,11 +59,7 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
     return NextResponse.redirect(url, 308);
   }
 
-  if (isPageLoad(request)) {
-    event.waitUntil(
-      captureVisit("$pageview", request.headers, pageOf(request)),
-    );
-  }
+  countVisit("$pageview");
 
   const rendersInPlace =
     isEntryPage(pathname) ||

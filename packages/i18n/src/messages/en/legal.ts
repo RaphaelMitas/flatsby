@@ -127,7 +127,7 @@ export const legal = {
       intro: "Automatically collected data varies by platform:",
       website: "Website:",
       websiteIp:
-        "IP address and browser user agent (to run the website, and passed to PostHog only to form a visitor ID that changes daily, see 6.2)",
+        "IP address and browser user agent (to run the website; when you are not signed in, passed to PostHog only to form a visitor ID that changes daily, see 6.2)",
       websiteViews:
         "Page views, the referring website, campaign tags in links (utm parameters) and clicks on app store links, without cookies",
       mobile: "Mobile App:",
@@ -170,7 +170,7 @@ export const legal = {
       posthog:
         "<strong>PostHog (Analytics):</strong> Helps us understand how users interact with Flatsby so we can improve the service. Data collection differs by platform:",
       posthogWebsite:
-        "<strong>Website:</strong> Analytics are processed on our servers before being sent to PostHog. When you're signed in, page views and actions in the web app are recorded with your account. When you're not signed in, nothing is stored on your device: for each visit, PostHog combines your IP address, your browser's user agent and a random key that is deleted every day into a visitor ID, and stores it with the page, the referring website, campaign tags in the link (utm parameters), and your browser, operating system, device type and language, but not your IP address or user agent. This lets us count visits and sign-ups per source without recognizing you on another day, and we don't link these visits to your account. The legal basis is our legitimate interest in understanding how people find Flatsby (Art. 6(1)(f) GDPR). We don't count visits from browsers that send a Global Privacy Control or Do Not Track signal, and you can object at any time at support@flatsby.com.",
+        "<strong>Website:</strong> Analytics are processed on our servers before being sent to PostHog. When you're signed in, page views and actions in the web app are recorded with your account, including your browser details. When you're not signed in, nothing is stored on your device: for each visit, PostHog combines your IP address, your browser's user agent and a random key that is deleted every day into a visitor ID, and stores it with the page, the referring website, campaign tags in the link (utm parameters), and your browser, operating system, device type and language, but not your IP address or user agent. This lets us count visits and sign-ups per source without recognizing you on another day, and we don't link these visits to your account. The legal basis is our legitimate interest in understanding how people find Flatsby (Art. 6(1)(f) GDPR). We don't count visits from browsers that send a Global Privacy Control or Do Not Track signal, and you can object at any time at support@flatsby.com.",
       posthogMobile:
         "<strong>Mobile App:</strong> The app connects directly to PostHog and may collect device information (operating system, app version), screen views, and IP address. On Android, it also records the install source Google Play reports, such as the website or invite link that led to the download.",
       posthogAi:
