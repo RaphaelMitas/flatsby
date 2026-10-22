@@ -1,15 +1,23 @@
 import type { CalendarRange } from "@flatsby/validators/calendar";
 import type { ReactNode } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import { Pressable, Text, View } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { memo, useEffect, useRef, useState } from "react";
+import { FlatList, Pressable, Text, View } from "react-native";
+import Animated, {
+  useAnimatedReaction,
+  useAnimatedStyle,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
+  addDays,
   entriesOn,
   formatCalendarDate,
   monthGrid,
   monthOf,
+  weekDays,
+  weekStart,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
@@ -21,12 +29,13 @@ const MAX_DOTS = 3;
 const WEEK_HEIGHT = 42;
 const WEEK_PADDING = 6;
 const WEEKS = 6;
+const WEEKS_EACH_WAY = 520;
 
 /** How far the open month reaches over the agenda; scrolling that far closes it. */
 export const MONTH_COVER = (WEEKS - 1) * WEEK_HEIGHT;
 
 interface MonthGridProps {
-  range: CalendarRange | undefined;
+  rangeOf: (date: string) => CalendarRange | undefined;
   selected: string;
   today: string;
   /** 0 is the open month, MONTH_COVER the single week; the agenda's scrolling drives it. */
@@ -42,7 +51,7 @@ interface MonthGridProps {
 }
 
 export function MonthGrid({
-  range,
+  rangeOf,
   selected,
   today,
   collapse,
@@ -61,6 +70,14 @@ export function MonthGrid({
     days.slice(week * 7, week * 7 + 7),
   );
   const selectedWeek = Math.floor(days.indexOf(selected) / 7);
+  const [closed, setClosed] = useState(false);
+
+  useAnimatedReaction(
+    () => collapse.value >= MONTH_COVER - 1,
+    (next, previous) => {
+      if (previous !== null && next !== previous) scheduleOnRN(setClosed, next);
+    },
+  );
 
   const clipStyle = useAnimatedStyle(() => ({
     height: WEEK_HEIGHT * WEEKS - collapse.value,
@@ -163,80 +180,209 @@ export function MonthGrid({
                   return (
                     <View
                       key={week[0]}
-                      className="flex-row"
-                      style={{ height: WEEK_HEIGHT }}
                       accessibilityElementsHidden={hidden}
                       importantForAccessibility={
                         hidden ? "no-hide-descendants" : "auto"
                       }
                     >
-                      {week.map((day) => {
-                        const isSelected = day === selected;
-                        const entries = range
-                          ? entriesOn(range, day).slice(0, MAX_DOTS)
-                          : [];
-                        return (
-                          <Pressable
-                            key={day}
-                            testID={`calendar-day-${day}`}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected: isSelected }}
-                            accessibilityLabel={formatCalendarDate(
-                              day,
-                              locale,
-                              {
-                                weekday: "long",
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              },
-                            )}
-                            onPress={() => onSelect(day)}
-                            className="flex-1 items-center justify-center gap-1"
-                          >
-                            <View
-                              className={cn(
-                                "h-8 w-8 items-center justify-center rounded-full",
-                                // Android drops the radius when a background appears from none (react-native#52415)
-                                isSelected ? "bg-primary" : "bg-background",
-                              )}
-                            >
-                              <Text
-                                className={cn(
-                                  "text-foreground text-base",
-                                  monthOf(day) !== month && "opacity-40",
-                                  day === today && "text-destructive font-bold",
-                                  isSelected &&
-                                    "text-primary-foreground font-bold",
-                                )}
-                              >
-                                {Number(day.slice(8))}
-                              </Text>
-                            </View>
-                            <View className="h-1.5 flex-row gap-0.5">
-                              {entries.map(({ item, occurrence }) => (
-                                <View
-                                  key={`${item.id}-${occurrence.date}`}
-                                  className={cn(
-                                    "h-1.5 w-1.5 rounded-full",
-                                    categoryFillColorMap[item.color],
-                                    occurrence.completedAt && "opacity-25",
-                                  )}
-                                />
-                              ))}
-                            </View>
-                          </Pressable>
-                        );
-                      })}
+                      <WeekRow
+                        days={week}
+                        month={month}
+                        selected={selectedIn(week, selected)}
+                        today={today}
+                        rangeOf={rangeOf}
+                        onSelect={onSelect}
+                      />
                     </View>
                   );
                 })}
               </Animated.View>
             </Animated.View>
+            <WeekStrip
+              selected={selected}
+              today={today}
+              month={month}
+              rangeOf={rangeOf}
+              closed={closed}
+              onSelect={onSelect}
+            />
           </View>
           {banner}
         </View>
       </View>
+    </View>
+  );
+}
+
+interface WeekRowProps {
+  days: string[];
+  month: string;
+  /** Only for the row that holds it, so a new selection re-renders two rows instead of all of them. */
+  selected: string | undefined;
+  today: string;
+  rangeOf: (date: string) => CalendarRange | undefined;
+  onSelect: (date: string) => void;
+}
+
+const selectedIn = (days: string[], selected: string) =>
+  days.includes(selected) ? selected : undefined;
+
+const WeekRow = memo(function WeekRow({
+  days,
+  month,
+  selected,
+  today,
+  rangeOf,
+  onSelect,
+}: WeekRowProps) {
+  const locale = useLocale();
+  return (
+    <View className="flex-row" style={{ height: WEEK_HEIGHT }}>
+      {days.map((day) => {
+        const isSelected = day === selected;
+        const range = rangeOf(day);
+        const entries = range ? entriesOn(range, day).slice(0, MAX_DOTS) : [];
+        return (
+          <Pressable
+            key={day}
+            testID={`calendar-day-${day}`}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSelected }}
+            accessibilityLabel={formatCalendarDate(day, locale, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+            onPress={() => onSelect(day)}
+            className="flex-1 items-center justify-center gap-1"
+          >
+            <View
+              className={cn(
+                "h-8 w-8 items-center justify-center rounded-full",
+                // Android drops the radius when a background appears from none (react-native#52415)
+                isSelected ? "bg-primary" : "bg-background",
+              )}
+            >
+              <Text
+                className={cn(
+                  "text-foreground text-base",
+                  monthOf(day) !== month && "opacity-40",
+                  day === today && "text-destructive font-bold",
+                  isSelected && "text-primary-foreground font-bold",
+                )}
+              >
+                {Number(day.slice(8))}
+              </Text>
+            </View>
+            <View className="h-1.5 flex-row gap-0.5">
+              {entries.map(({ item, occurrence }) => (
+                <View
+                  key={`${item.id}-${occurrence.date}`}
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    categoryFillColorMap[item.color],
+                    occurrence.completedAt && "opacity-25",
+                  )}
+                />
+              ))}
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+});
+
+/** Lies over the closed month's week; native paging lets it follow the finger and land on whole weeks. */
+function WeekStrip({
+  closed,
+  ...row
+}: Omit<WeekRowProps, "days" | "selected"> & {
+  selected: string;
+  closed: boolean;
+}) {
+  const { selected, today, onSelect } = row;
+  const list = useRef<FlatList<string[]>>(null);
+  const [width, setWidth] = useState(0);
+  // Fixed at mount, so midnight can't shift every page under the finger
+  const [weeks] = useState(() => {
+    const first = addDays(weekStart(today), -7 * WEEKS_EACH_WAY);
+    return Array.from({ length: 2 * WEEKS_EACH_WAY + 1 }, (_, index) =>
+      weekDays(addDays(first, 7 * index)),
+    );
+  });
+  const start = weekStart(selected);
+  const index = weeks.findIndex((days) => days[0] === start);
+
+  // Only a finger picks a week; our own scrolls pass pages nobody chose
+  const swiping = useRef(false);
+  const land = (page: number) => {
+    if (!swiping.current) return;
+    swiping.current = false;
+    if (page !== index) onSelect(addDays(selected, 7 * (page - index)));
+  };
+
+  useEffect(() => {
+    swiping.current = false;
+    if (index >= 0) list.current?.scrollToIndex({ index, animated: closed });
+  }, [index, closed]);
+
+  return (
+    <View
+      className="bg-background absolute right-4 left-4"
+      style={{
+        top: WEEK_PADDING,
+        height: WEEK_HEIGHT,
+        opacity: closed ? 1 : 0,
+        pointerEvents: closed ? "auto" : "none",
+      }}
+      // The month grid under it carries the same days for screen readers
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+    >
+      {width > 0 && (
+        <FlatList
+          ref={list}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          data={weeks}
+          extraData={row}
+          keyExtractor={(days) => days[0] ?? ""}
+          getItemLayout={(_, page) => ({
+            length: width,
+            offset: width * page,
+            index: page,
+          })}
+          initialScrollIndex={Math.max(index, 0)}
+          initialNumToRender={1}
+          windowSize={3}
+          renderItem={({ item: days }) => (
+            <View style={{ width }}>
+              <WeekRow
+                {...row}
+                days={days}
+                selected={selectedIn(days, selected)}
+              />
+            </View>
+          )}
+          onScrollBeginDrag={() => {
+            swiping.current = true;
+          }}
+          scrollEventThrottle={16}
+          onScroll={(event) => {
+            const x = event.nativeEvent.contentOffset.x;
+            const page = Math.round(x / width);
+            // Android reports the end of a page snap late, so land once the strip rests on another week
+            if (page !== index && Math.abs(x - page * width) < 1) land(page);
+          }}
+          onMomentumScrollEnd={(event) =>
+            land(Math.round(event.nativeEvent.contentOffset.x / width))
+          }
+        />
+      )}
     </View>
   );
 }

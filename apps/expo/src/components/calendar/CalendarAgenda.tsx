@@ -43,6 +43,41 @@ type AgendaRow =
   | { type: "empty" | "loading"; date: string };
 
 const EMPTY_RANGE: CalendarRange = { items: [], occurrences: [] };
+const rowsByRange = new WeakMap<CalendarRange, Map<string, AgendaRow[]>>();
+
+/** A loaded month keeps its rows while its range is unchanged, so a neighbour arriving doesn't re-render every visible row. */
+function monthRows(
+  month: string,
+  range: CalendarRange | undefined,
+  meId: number,
+  mine: boolean,
+): AgendaRow[] {
+  const key = `${month} ${meId} ${mine}`;
+  const cached = range && rowsByRange.get(range)?.get(key);
+  if (cached) return cached;
+  const rows = agendaDays(range ?? EMPTY_RANGE, month, meId, mine).flatMap(
+    ({ date, summary, entries }): AgendaRow[] => [
+      { type: "day", date, summary },
+      ...(!range
+        ? [{ type: "loading" as const, date }]
+        : entries.length === 0
+          ? [{ type: "empty" as const, date }]
+          : entries.map((entry, index) => ({
+              type: "entry" as const,
+              date,
+              entry,
+              first: index === 0,
+              last: index === entries.length - 1,
+            }))),
+    ],
+  );
+  if (range)
+    rowsByRange.set(
+      range,
+      (rowsByRange.get(range) ?? new Map()).set(key, rows),
+    );
+  return rows;
+}
 export const DAY_HEADING_HEIGHT = 60;
 // A month still loading keeps the height of an empty day, the most common row, so its arrival rarely moves anything
 const EMPTY_ROW_HEIGHT = 28;
@@ -96,43 +131,10 @@ export function CalendarAgenda({
   const lastY = useRef(0);
   const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const lastStep = useSharedValue(0);
-  useAnimatedReaction(
-    () => offset.value,
-    (y, previous) => {
-      const step = previous === null ? 0 : y - previous;
-      // FlashList keeps its place by shifting the offset in one frame when rows above change; no finger changes speed that fast
-      const correction = Math.abs(step - lastStep.value) > MAX_SPEED_CHANGE;
-      if (!correction) lastStep.value = step;
-      if (!frozen.value && !correction)
-        collapse.value = Math.min(
-          MONTH_COVER,
-          Math.max(0, collapse.value + step),
-        );
-      // Offset and collapse from the same frame, so the day on screen can't lag a frame behind
-      scheduleOnRN(onFrame, y, collapse.value, frozen.value);
-    },
-  );
-
   const rows = useMemo(
     () =>
       months.flatMap(({ month, range }) =>
-        agendaDays(range ?? EMPTY_RANGE, month, people.meId, mine).flatMap(
-          ({ date, summary, entries }): AgendaRow[] => [
-            { type: "day", date, summary },
-            ...(!range
-              ? [{ type: "loading" as const, date }]
-              : entries.length === 0
-                ? [{ type: "empty" as const, date }]
-                : entries.map((entry, index) => ({
-                    type: "entry" as const,
-                    date,
-                    entry,
-                    first: index === 0,
-                    last: index === entries.length - 1,
-                  }))),
-          ],
-        ),
+        monthRows(month, range, people.meId, mine),
       ),
     [months, people.meId, mine],
   );
@@ -144,42 +146,7 @@ export function CalendarAgenda({
     (row) => row.type === "day" && row.date === jump.date,
   );
 
-  useEffect(() => {
-    if (handledJump.current === jump || jumpIndex < 0) return;
-    handledJump.current = jump;
-    frozen.value = true;
-    void list.current?.scrollToIndex({
-      index: jumpIndex,
-      animated: false,
-      // FlashList adds viewOffset to the scroll position, so a gap above the day is negative
-      viewOffset: -(MONTH_COVER - collapse.value),
-    });
-  }, [jump, jumpIndex, frozen, collapse]);
-
-  const scrollBy = (distance: number) => {
-    frozen.value = false;
-    list.current?.scrollToOffset({
-      offset: lastY.current + distance,
-      animated: true,
-    });
-  };
-
-  useImperativeHandle(ref, () => ({
-    toggleMonth: () =>
-      scrollBy(
-        collapse.value > MONTH_COVER / 2
-          ? -collapse.value
-          : MONTH_COVER - collapse.value,
-      ),
-  }));
-
-  const settle = () => {
-    const rest = collapse.value;
-    if (rest <= 0 || rest >= MONTH_COVER) return;
-    scrollBy(rest > MONTH_COVER / 2 ? MONTH_COVER - rest : -rest);
-  };
-
-  function onFrame(y: number, collapsed: number, isFrozen: boolean) {
+  const onFrame = (y: number, collapsed: number, isFrozen: boolean) => {
     lastY.current = y;
     if (isFrozen) return;
     // A day owns the pinned heading once its own heading is half under it
@@ -193,7 +160,55 @@ export function CalendarAgenda({
         return;
       }
     }
-  }
+  };
+
+  const lastStep = useSharedValue(0);
+  useAnimatedReaction(
+    () => offset.get(),
+    (y, previous) => {
+      const step = previous === null ? 0 : y - previous;
+      // FlashList keeps its place by shifting the offset in one frame when rows above change; no finger changes speed that fast
+      const correction = Math.abs(step - lastStep.get()) > MAX_SPEED_CHANGE;
+      if (!correction) lastStep.set(step);
+      if (!frozen.get() && !correction)
+        collapse.set(Math.min(MONTH_COVER, Math.max(0, collapse.get() + step)));
+      // Offset and collapse from the same frame, so the day on screen can't lag a frame behind
+      scheduleOnRN(onFrame, y, collapse.get(), frozen.get());
+    },
+  );
+
+  useEffect(() => {
+    if (handledJump.current === jump || jumpIndex < 0) return;
+    handledJump.current = jump;
+    frozen.set(true);
+    void list.current?.scrollToIndex({
+      index: jumpIndex,
+      animated: false,
+      // FlashList adds viewOffset to the scroll position, so a gap above the day is negative
+      viewOffset: -(MONTH_COVER - collapse.get()),
+    });
+  }, [jump, jumpIndex, frozen, collapse]);
+
+  const scrollBy = (distance: number) => {
+    frozen.set(false);
+    list.current?.scrollToOffset({
+      offset: lastY.current + distance,
+      animated: true,
+    });
+  };
+
+  useImperativeHandle(ref, () => ({
+    toggleMonth: () => {
+      const rest = collapse.get();
+      scrollBy(rest > MONTH_COVER / 2 ? -rest : MONTH_COVER - rest);
+    },
+  }));
+
+  const settle = () => {
+    const rest = collapse.get();
+    if (rest <= 0 || rest >= MONTH_COVER) return;
+    scrollBy(rest > MONTH_COVER / 2 ? MONTH_COVER - rest : -rest);
+  };
 
   const renderItem = ({ item: row }: { item: AgendaRow }) => {
     switch (row.type) {
@@ -266,7 +281,7 @@ export function CalendarAgenda({
       initialScrollIndexParams={{ viewOffset: -MONTH_COVER }}
       onScrollBeginDrag={() => {
         clearTimeout(settleTimer.current);
-        frozen.value = false;
+        frozen.set(false);
       }}
       // A release without a fling still settles the month, once no momentum follows
       onScrollEndDrag={() => {
@@ -294,7 +309,7 @@ export function DayHeading({
   date,
   today,
   summary,
-  testID = `calendar-agenda-${date === today ? "today" : date}`,
+  testID,
 }: {
   date: string;
   today: string;
@@ -305,7 +320,7 @@ export function DayHeading({
   const locale = useLocale();
   return (
     <View
-      testID={testID}
+      testID={testID ?? `calendar-agenda-${date === today ? "today" : date}`}
       className="bg-background justify-center px-4"
       style={{ height: DAY_HEADING_HEIGHT }}
     >

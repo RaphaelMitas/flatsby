@@ -2,6 +2,7 @@
 
 import type { CalendarRange } from "@flatsby/validators/calendar";
 import type { ReactNode, Ref } from "react";
+import { useLayoutEffect, useRef } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -13,10 +14,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import {
+  addDays,
   entriesOn,
   formatCalendarDate,
   monthGrid,
   monthOf,
+  weekDays,
+  weekStart,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
@@ -33,8 +37,10 @@ interface MonthGridProps {
   ref: Ref<HTMLDivElement>;
   selected: string;
   today: string;
-  range: CalendarRange;
+  rangeOf: (date: string) => CalendarRange;
   collapsed: boolean;
+  /** Fully closed: the swipeable week strip replaces the grid's week. */
+  closed: boolean;
   onSelect: (date: string) => void;
   onStep: (delta: number) => void;
   onToggleCollapsed: () => void;
@@ -46,8 +52,9 @@ export function MonthGrid({
   ref,
   selected,
   today,
-  range,
+  rangeOf,
   collapsed,
+  closed,
   onSelect,
   onStep,
   onToggleCollapsed,
@@ -153,61 +160,151 @@ export function MonthGrid({
               }}
             >
               {weeks.map((week, index) => (
-                <div
+                <WeekRow
                   key={week[0]}
-                  className="grid grid-cols-7"
-                  style={{ height: WEEK_HEIGHT }}
+                  days={week}
+                  month={month}
+                  selected={selected}
+                  today={today}
+                  rangeOf={rangeOf}
+                  onSelect={onSelect}
                   inert={collapsed && index !== selectedWeek}
-                >
-                  {week.map((day) => {
-                    const isSelected = day === selected;
-                    return (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => onSelect(day)}
-                        aria-pressed={isSelected}
-                        aria-label={formatCalendarDate(day, locale, {
-                          dateStyle: "full",
-                        })}
-                        data-testid={`calendar-day-${day}`}
-                        className="hover:bg-muted/60 flex flex-col items-center justify-center gap-1 rounded-xl transition-colors"
-                      >
-                        <span
-                          className={cn(
-                            "grid size-8 place-items-center rounded-full text-sm tabular-nums",
-                            monthOf(day) !== month &&
-                              "text-muted-foreground/50",
-                            day === today && "text-destructive font-bold",
-                            isSelected &&
-                              "bg-primary text-primary-foreground font-bold",
-                          )}
-                        >
-                          {Number(day.slice(8))}
-                        </span>
-                        <span className="flex h-1.5 gap-0.5">
-                          {entriesOn(range, day)
-                            .slice(0, MAX_DOTS)
-                            .map(({ item, occurrence }) => (
-                              <span
-                                key={`${item.id}-${occurrence.date}`}
-                                className={cn(
-                                  "size-1.5 rounded-full",
-                                  categoryFillColorMap[item.color],
-                                  occurrence.completedAt && "opacity-25",
-                                )}
-                              />
-                            ))}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                />
               ))}
             </div>
           </div>
+          <WeekStrip
+            key={weekStart(selected)}
+            selected={selected}
+            today={today}
+            month={month}
+            rangeOf={rangeOf}
+            closed={closed}
+            onSelect={onSelect}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+interface WeekRowProps {
+  days: string[];
+  month: string;
+  selected: string;
+  today: string;
+  rangeOf: (date: string) => CalendarRange;
+  onSelect: (date: string) => void;
+  inert?: boolean;
+  /** The strip repeats the grid's days, so only the grid carries their test ids. */
+  testIds?: boolean;
+}
+
+function WeekRow({
+  days,
+  month,
+  selected,
+  today,
+  rangeOf,
+  onSelect,
+  inert,
+  testIds = true,
+}: WeekRowProps) {
+  const locale = useLocale();
+  return (
+    <div
+      className="grid w-full shrink-0 snap-start grid-cols-7"
+      style={{ height: WEEK_HEIGHT }}
+      inert={inert}
+    >
+      {days.map((day) => {
+        const isSelected = day === selected;
+        return (
+          <button
+            key={day}
+            type="button"
+            onClick={() => onSelect(day)}
+            aria-pressed={isSelected}
+            aria-label={formatCalendarDate(day, locale, { dateStyle: "full" })}
+            data-testid={testIds ? `calendar-day-${day}` : undefined}
+            className="hover:bg-muted/60 flex flex-col items-center justify-center gap-1 rounded-xl transition-colors"
+          >
+            <span
+              className={cn(
+                "grid size-8 place-items-center rounded-full text-sm tabular-nums",
+                monthOf(day) !== month && "text-muted-foreground/50",
+                day === today && "text-destructive font-bold",
+                isSelected && "bg-primary text-primary-foreground font-bold",
+              )}
+            >
+              {Number(day.slice(8))}
+            </span>
+            <span className="flex h-1.5 gap-0.5">
+              {entriesOn(rangeOf(day), day)
+                .slice(0, MAX_DOTS)
+                .map(({ item, occurrence }) => (
+                  <span
+                    key={`${item.id}-${occurrence.date}`}
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      categoryFillColorMap[item.color],
+                      occurrence.completedAt && "opacity-25",
+                    )}
+                  />
+                ))}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Lies over the closed month's week and snaps a week at a time, for touch and trackpad swipes. */
+function WeekStrip({
+  closed,
+  ...row
+}: Omit<WeekRowProps, "days" | "inert" | "testIds"> & { closed: boolean }) {
+  const { selected, onSelect } = row;
+  const scroller = useRef<HTMLDivElement>(null);
+  const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const start = weekStart(selected);
+
+  // Remounted per week with the selected week in the middle; centring it before paint hides the swap after a swipe
+  useLayoutEffect(() => {
+    const element = scroller.current;
+    if (element) element.scrollLeft = element.clientWidth;
+  }, []);
+
+  const land = () => {
+    const element = scroller.current;
+    if (!element) return;
+    const page = Math.round(element.scrollLeft / element.clientWidth);
+    // Mid-drag positions aren't a choice; only a snapped page is
+    if (Math.abs(element.scrollLeft - page * element.clientWidth) > 1) return;
+    if (page !== 1) onSelect(addDays(selected, 7 * (page - 1)));
+  };
+
+  return (
+    <div
+      ref={scroller}
+      onScroll={() => {
+        clearTimeout(settleTimer.current);
+        settleTimer.current = setTimeout(land, 100);
+      }}
+      className={cn(
+        "bg-background absolute inset-x-4 flex snap-x snap-mandatory overflow-x-auto",
+        !closed && "pointer-events-none opacity-0",
+      )}
+      style={{ top: WEEK_PADDING, scrollbarWidth: "none" }}
+      // The month grid under it carries the same days
+      inert={!closed}
+      aria-hidden
+    >
+      {[-1, 0, 1].map((delta) => {
+        const days = weekDays(addDays(start, 7 * delta));
+        return <WeekRow key={days[0]} days={days} testIds={false} {...row} />;
+      })}
     </div>
   );
 }

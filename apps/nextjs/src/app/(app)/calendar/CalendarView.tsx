@@ -110,6 +110,7 @@ function CalendarScreen({
   const [jump, setJump] = useState({ date: today });
   const [span, setSpan] = useState(() => spanAround(today));
   const [collapsed, setCollapsed] = useState(false);
+  const [closed, setClosed] = useState(false);
   const collapse = useRef(0);
   const monthFrame = useRef<HTMLDivElement>(null);
   const agenda = useRef<AgendaHandle>(null);
@@ -136,8 +137,8 @@ function CalendarScreen({
     const data = results[index]?.data;
     return { month, range: data?.success ? data.data : undefined };
   });
-  const range =
-    agendaMonths.find(({ month }) => month === monthOf(selected))?.range ??
+  const rangeOf = (date: string) =>
+    agendaMonths.find(({ month }) => month === monthOf(date))?.range ??
     EMPTY_RANGE;
   const error = results.flatMap(({ data }) =>
     data?.success === false ? [data.error] : [],
@@ -253,8 +254,9 @@ function CalendarScreen({
         ref={monthFrame}
         selected={selected}
         today={today}
-        range={range}
+        rangeOf={rangeOf}
         collapsed={collapsed}
+        closed={closed}
         onSelect={selectDay}
         onStep={(delta) =>
           selectDay(stepFrom(selected, today, delta, collapsed))
@@ -277,6 +279,7 @@ function CalendarScreen({
               `${value}px`,
             );
             setCollapsed(value > MONTH_COVER / 2);
+            setClosed(value >= MONTH_COVER - 1);
           }}
           onScrolledTo={setSelected}
           onReachEdge={(month) =>

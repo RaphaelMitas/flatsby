@@ -1,5 +1,11 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Text, View } from "react-native";
 import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -52,7 +58,8 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const [collapsed, setCollapsed] = useState(false);
   const agenda = useRef<CalendarAgendaHandle>(null);
   const [mine, setMine] = useState(false);
-  const { setDone } = useCalendarMutations(group);
+  // useMutation's result is new every render, its mutate is not; holding the result would re-render the whole agenda on every selection
+  const { mutate: setDone } = useCalendarMutations(group).setDone;
 
   const monthList = monthsOf(span);
   // combine keeps the result stable between renders, so FlashList only sees new data when a month changes
@@ -68,7 +75,9 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
       )[0],
     }),
   });
-  const range = months.find(({ month }) => month === monthOf(selected))?.range;
+  const rangeOf = (date: string) =>
+    months.find(({ month }) => month === monthOf(date))?.range;
+  const range = rangeOf(selected);
 
   useAnimatedReaction(
     () => collapse.value > MONTH_COVER / 2,
@@ -80,8 +89,11 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
 
   const select = useCallback((date: string) => {
     setSelected(date);
-    setSpan((current) => spanAround(date, current));
-    setJump({ date });
+    // The highlight shows at once; moving the agenda takes far longer to render
+    startTransition(() => {
+      setSpan((current) => spanAround(date, current));
+      setJump({ date });
+    });
   }, []);
 
   useEffect(() => {
@@ -126,7 +138,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
       </View>
 
       <MonthGrid
-        range={range}
+        rangeOf={rangeOf}
         selected={selected}
         today={today}
         collapsed={collapsed}
@@ -170,7 +182,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
               )
             }
             onToggle={(entry, done) =>
-              setDone.mutate({
+              setDone({
                 groupId: group.id,
                 itemId: entry.item.id,
                 date: entry.occurrence.date,

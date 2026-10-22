@@ -31,6 +31,8 @@ import {
   spanAround,
   splitEndsOn,
   splitsSeries,
+  weekDays,
+  weekStart,
   withPickedStart,
   withSavedItem,
   withSkipped,
@@ -372,6 +374,12 @@ describe("monthGrid", () => {
     expect(grid.to).toBe("2026-11-08");
     expect(grid.days).toHaveLength(42);
     expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+  });
+
+  it("starts a week on the Monday the grid shows first, even from a Sunday", () => {
+    expect(weekStart("2026-10-25")).toBe("2026-10-19");
+    expect(weekStart("2026-10-26")).toBe("2026-10-26");
+    expect(weekDays("2026-12-28").at(-1)).toBe("2027-01-03");
   });
 });
 

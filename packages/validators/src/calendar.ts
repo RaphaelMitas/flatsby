@@ -349,14 +349,25 @@ export function expandOccurrences(
 }
 
 /** Calendar dates carry no time zone, so they format as UTC to keep the day from shifting. */
+// Building a formatter costs milliseconds on Hermes, and a calendar formats hundreds of dates per render
+const formatters = new Map<string, Intl.DateTimeFormat>();
+
 export const formatCalendarDate = (
   date: string,
   locale: Intl.LocalesArgument,
   options: Intl.DateTimeFormatOptions,
-) =>
-  new Intl.DateTimeFormat(locale, { ...options, timeZone: "UTC" }).format(
-    Date.parse(`${date}T00:00:00Z`),
-  );
+) => {
+  const key = `${String(locale)} ${JSON.stringify(options)}`;
+  let formatter = formatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, {
+      ...options,
+      timeZone: "UTC",
+    });
+    formatters.set(key, formatter);
+  }
+  return formatter.format(Date.parse(`${date}T00:00:00Z`));
+};
 
 export const weekdayName = (
   day: Weekday,
@@ -542,6 +553,12 @@ export function monthGrid(month: string) {
   );
   return { days, from: days[0] ?? month, to: days.at(-1) ?? month };
 }
+
+export const weekStart = (date: string) =>
+  addDays(date, -weekdayIndex(toDayNumber(date)));
+
+export const weekDays = (start: string) =>
+  Array.from({ length: 7 }, (_, i) => addDays(start, i));
 
 /** Where the grid's arrows land: a week on when collapsed, else the next month's 1st, or today in this month. */
 export function stepFrom(
