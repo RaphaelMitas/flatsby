@@ -398,7 +398,7 @@ describe("listAgenda", () => {
     date: string,
   ) => days.find((day) => day.date === date)?.entries.map((e) => e.item.title);
 
-  it("starts today with the chores left before it, each once on its latest day", () => {
+  it("starts today with the chores left before it, once per member on their latest day", () => {
     const { overdue, days, turns } = listAgenda(
       range,
       "2026-10-21",
@@ -409,8 +409,10 @@ describe("listAgenda", () => {
     expect(days.map((day) => day.date)).toEqual(weekDays("2026-10-21"));
     expect(
       overdue.map(({ occurrence, missed }) => [occurrence.date, missed]),
-    ).toEqual([["2026-10-20", ["2026-10-19"]]]);
-    expect(titlesOn(days, "2026-10-21")).toEqual(["Dishes"]);
+    ).toEqual([["2026-10-20", []]]);
+    expect(days[0]?.entries.map(({ missed }) => missed)).toEqual([
+      ["2026-10-19"],
+    ]);
     expect(Object.fromEntries(turns)).toEqual({ 1: 4, 2: 4 });
   });
 

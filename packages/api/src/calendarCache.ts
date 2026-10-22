@@ -56,7 +56,7 @@ interface CalendarFilters {
   details: QueryFilters;
 }
 
-/** Applies one change to every cached month and item detail of the group, so nothing on screen lags behind. */
+/** Applies one change to every cached range and item detail of the group, so nothing on screen lags behind. */
 async function patchCalendar(
   queryClient: QueryClient,
   filters: CalendarFilters,
@@ -221,7 +221,7 @@ export const calendarPatches = {
     input: CreateCalendarItemInput & { id: number; today: string },
     findCachedItem: FindCachedItem,
   ): CalendarPatch => {
-    // A month's cache may not hold the item, yet the edit can still reach into it
+    // A range's cache may not hold the item, yet the edit can still reach into it
     const previous = findCachedItem(input.id);
     if (!previous) return { range: (range) => range };
     const edited = asView(input.id, {

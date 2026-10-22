@@ -122,20 +122,24 @@ export function TurnBar({
         selected={member === null}
         onPress={() => onChange(null)}
       />
-      {group.groupMembers.map(({ id }) => {
-        const person = people.person(id);
-        return (
-          <TurnChip
-            key={id}
-            testID={`calendar-filter-${id}`}
-            person={person}
-            label={id === people.meId ? t("you") : person.name}
-            count={turns.get(id) ?? 0}
-            selected={member === id}
-            onPress={() => onChange(member === id ? null : id)}
-          />
-        );
-      })}
+      {[...group.groupMembers]
+        .sort(
+          (a, b) => Number(b.id === people.meId) - Number(a.id === people.meId),
+        )
+        .map(({ id }) => {
+          const person = people.person(id);
+          return (
+            <TurnChip
+              key={id}
+              testID={`calendar-filter-${id}`}
+              person={person}
+              label={id === people.meId ? t("you") : person.name}
+              count={turns.get(id) ?? 0}
+              selected={member === id}
+              onPress={() => onChange(member === id ? null : id)}
+            />
+          );
+        })}
     </ScrollView>
   );
 }

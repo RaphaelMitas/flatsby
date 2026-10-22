@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "../fixtures/auth";
 import { waitForHydration } from "../helpers/hydration";
 
-// The month is refetched once a write settles; reloading any earlier can abort the write
+// The range is refetched once a write settles; reloading any earlier can abort the write
 const writeSettled = (page: Page) =>
   page.waitForResponse(
     (response) =>

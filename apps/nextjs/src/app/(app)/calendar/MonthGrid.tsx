@@ -5,7 +5,11 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 
 import { cn } from "@flatsby/ui";
-import { formatCalendarDate, monthOf } from "@flatsby/validators/calendar";
+import {
+  formatCalendarDate,
+  monthGrid,
+  monthOf,
+} from "@flatsby/validators/calendar";
 import {
   categoryBgColorMap,
   categoryFillColorMap,
@@ -20,7 +24,6 @@ interface MonthGridProps {
   month: string;
   /** Undefined while loading */
   days: AgendaDay[] | undefined;
-  dates: string[];
   today: string;
   onSelect: (date: string) => void;
   onOpen: (entry: CalendarEntry) => void;
@@ -29,12 +32,12 @@ interface MonthGridProps {
 export function MonthGrid({
   month,
   days,
-  dates,
   today,
   onSelect,
   onOpen,
 }: MonthGridProps) {
   const locale = useLocale();
+  const dates = monthGrid(month).weeks.flat();
   const grid = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
   const lines = Math.max(

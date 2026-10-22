@@ -1,7 +1,7 @@
 import type { GroupWithAccess, ShoppingListSummary } from "@flatsby/api";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Pressable, Text, View } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -10,11 +10,9 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 
 import {
-  addDays,
   formatCalendarDate,
-  HOME_LOOKAHEAD_DAYS,
-  HOME_LOOKBACK_DAYS,
   homeAgenda,
+  listWindow,
   localDate,
 } from "@flatsby/validators/calendar";
 import { myDebts } from "@flatsby/validators/expenses/debt";
@@ -36,6 +34,7 @@ import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { useNow } from "~/utils/useNow";
 import { useGroupPicker } from "../dashboard/useGroupPicker";
 import { ForYouCard } from "./ForYouCard";
 import {
@@ -69,18 +68,6 @@ const greetingFor = (hour: number) =>
   hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
 
 // The tab stays mounted for days, so the clock is read on focus and on return to the app
-function useNow() {
-  const [now, setNow] = useState(() => new Date());
-  useFocusEffect(useCallback(() => setNow(new Date()), []));
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") setNow(new Date());
-    });
-    return () => subscription.remove();
-  }, []);
-  return now;
-}
-
 function useSpeech() {
   const [speech, setSpeech] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -115,8 +102,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       queries: [
         trpc.calendar.range.queryOptions({
           groupId: group.id,
-          from: addDays(today, -HOME_LOOKBACK_DAYS),
-          to: addDays(today, HOME_LOOKAHEAD_DAYS),
+          ...listWindow(today, today),
         }),
         trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
         trpc.shoppingList.getShoppingLists.queryOptions({ groupId: group.id }),

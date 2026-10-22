@@ -1,28 +1,31 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import { useEffect, useState } from "react";
+import type { CalendarPosition } from "@flatsby/validators/calendar";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { usePrefetchQuery, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
-  addDays,
   calendarDateSchema,
   describeListRange,
   formatCalendarDate,
   listAgenda,
-  listWindow,
   localDate,
   monthAgenda,
-  monthGrid,
-  monthOf,
-  shiftMonth,
+  newEntryDate,
+  positionWindow,
+  showDate,
+  shownDates,
+  stepPosition,
+  switchView,
   weekDays,
 } from "@flatsby/validators/calendar";
 
 import { Button } from "~/lib/ui/button";
 import { Segmented } from "~/lib/ui/segmented";
-import { prefetch, trpc } from "~/utils/api";
+import { trpc } from "~/utils/api";
+import { useNow } from "~/utils/useNow";
 import { CalendarList } from "./CalendarList";
 import { TurnBar, useCalendarPeople } from "./CalendarPeople";
 import { MonthGrid } from "./MonthGrid";
@@ -33,87 +36,59 @@ export const calendarRangeOptions = (
   { from, to }: { from: string; to: string },
 ) => trpc.calendar.range.queryOptions({ groupId, from, to });
 
-type CalendarView = "list" | "month";
-
 export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const t = useTranslations("calendar");
   const locale = useLocale();
   const router = useRouter();
   const people = useCalendarPeople(group);
-  const today = localDate();
+  const today = localDate(useNow());
   const { date: linked } = useLocalSearchParams<{ date?: string }>();
-  const [view, setView] = useState<CalendarView>("list");
-  // null follows today, so a screen left open overnight moves on with it
-  const [start, setStart] = useState<string | null>(null);
-  const [month, setMonth] = useState<string | null>(null);
+  const [position, setPosition] = useState<CalendarPosition>({
+    view: "list",
+    start: null,
+    month: null,
+  });
   const [member, setMember] = useState<number | null>(null);
   const { mutate: setDone } = useCalendarMutations(group).setDone;
 
-  const listStart = start ?? today;
-  const shownMonth = month ?? monthOf(today);
-  const windowOf = (view: CalendarView, step = 0) =>
-    view === "list"
-      ? listWindow(addDays(listStart, 7 * step), today)
-      : monthGrid(shiftMonth(shownMonth, step));
-
-  const { data, refetch } = useQuery(
-    calendarRangeOptions(group.id, windowOf(view)),
-  );
+  const { view } = position;
+  const { start, month } = shownDates(position, today);
+  const rangeOf = (at: CalendarPosition) =>
+    calendarRangeOptions(group.id, positionWindow(at, today));
+  const { data, refetch } = useQuery(rangeOf(position));
   const range = data?.success ? data.data : undefined;
 
-  // The neighbouring steps and the other view, so neither stepping nor switching waits on the network
-  const nearby = [
-    windowOf(view, -1),
-    windowOf(view, 1),
-    windowOf(view === "list" ? "month" : "list"),
-  ]
-    .map(({ from, to }) => `${from}/${to}`)
-    .join(" ");
-  useEffect(() => {
-    for (const [from = "", to = ""] of nearby
-      .split(" ")
-      .map((span) => span.split("/"))) {
-      prefetch(calendarRangeOptions(group.id, { from, to }));
-    }
-  }, [group.id, nearby]);
+  usePrefetchQuery(rangeOf(stepPosition(position, -1, today)));
+  usePrefetchQuery(rangeOf(stepPosition(position, 1, today)));
+  usePrefetchQuery(
+    rangeOf(switchView(position, view === "list" ? "month" : "list", today)),
+  );
 
-  const showList = (date: string) => {
-    setView("list");
-    setStart(date === today ? null : date);
-  };
+  const show = (date: string) => setPosition(showDate(position, date, today));
+  const showList = (date: string) =>
+    setPosition(showDate({ ...position, view: "list" }, date, today));
 
-  useEffect(() => {
-    if (!linked) return;
-    if (calendarDateSchema.safeParse(linked).success) {
-      setView("list");
-      setStart(linked === today ? null : linked);
-    }
+  const onLinked = useEffectEvent((date: string) => {
+    if (calendarDateSchema.safeParse(date).success) show(date);
     router.setParams({ date: undefined });
-  }, [linked, router, today]);
+  });
+  useEffect(() => {
+    if (linked) onLinked(linked);
+  }, [linked]);
 
-  const atToday =
-    view === "list" ? listStart === today : shownMonth === monthOf(today);
-  const step = (delta: number) =>
-    view === "list"
-      ? showList(addDays(listStart, 7 * delta))
-      : setMonth(shiftMonth(shownMonth, delta));
-
-  const listDates = weekDays(listStart);
+  const atToday = (view === "list" ? position.start : position.month) === null;
   const list = range
-    ? listAgenda(range, listStart, today, people.meId, member)
+    ? listAgenda(range, start, today, people.meId, member)
     : undefined;
   const grid = range
-    ? monthAgenda(range, shownMonth, people.meId, member)
+    ? monthAgenda(range, month, people.meId, member)
     : undefined;
   const shown = view === "list" ? list : grid;
 
   const openForm = () =>
     router.push({
       pathname: "/(tabs)/calendar/form",
-      params: {
-        date:
-          view === "list" ? listStart : atToday ? today : `${shownMonth}-01`,
-      },
+      params: { date: newEntryDate(position, today) },
     });
 
   return (
@@ -128,7 +103,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         <Segmented
           size="sm"
           value={view}
-          onChange={setView}
+          onChange={(next) => setPosition(switchView(position, next, today))}
           options={[
             { value: "list", label: t("list"), testID: "calendar-view-list" },
             {
@@ -145,15 +120,12 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
           testID="calendar-range-title"
           accessibilityRole="button"
           disabled={view === "month"}
-          onPress={() => {
-            setMonth(monthOf(listStart));
-            setView("month");
-          }}
+          onPress={() => setPosition(switchView(position, "month", today))}
         >
           <Text className="text-foreground text-lg font-semibold">
             {view === "list"
-              ? describeListRange(listStart, locale)
-              : formatCalendarDate(`${shownMonth}-01`, locale, {
+              ? describeListRange(start, locale)
+              : formatCalendarDate(`${month}-01`, locale, {
                   month: "long",
                   year: "numeric",
                 })}
@@ -166,7 +138,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             size="sm"
             title={t("today")}
             disabled={atToday}
-            onPress={() => (view === "list" ? showList(today) : setMonth(null))}
+            onPress={() => show(today)}
           />
           <Button
             testID="calendar-previous"
@@ -176,7 +148,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             accessibilityLabel={
               view === "list" ? t("previousWeek") : t("previousMonth")
             }
-            onPress={() => step(-1)}
+            onPress={() => setPosition(stepPosition(position, -1, today))}
           />
           <Button
             testID="calendar-next"
@@ -186,7 +158,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             accessibilityLabel={
               view === "list" ? t("nextWeek") : t("nextMonth")
             }
-            onPress={() => step(1)}
+            onPress={() => setPosition(stepPosition(position, 1, today))}
           />
         </View>
       </View>
@@ -206,7 +178,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
       ) : view === "list" ? (
         <CalendarList
           agenda={list}
-          dates={listDates}
+          dates={weekDays(start)}
           today={today}
           people={people}
           member={member}
@@ -236,9 +208,8 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         />
       ) : (
         <MonthGrid
-          month={shownMonth}
+          month={month}
           days={grid?.days}
-          dates={monthGrid(shownMonth).weeks.flat()}
           today={today}
           onSelect={showList}
         />

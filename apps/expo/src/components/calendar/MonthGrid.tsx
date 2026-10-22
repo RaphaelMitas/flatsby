@@ -3,7 +3,11 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocale } from "use-intl";
 
-import { formatCalendarDate, monthOf } from "@flatsby/validators/calendar";
+import {
+  formatCalendarDate,
+  monthGrid,
+  monthOf,
+} from "@flatsby/validators/calendar";
 import {
   categoryBgColorMap,
   categoryFillColorMap,
@@ -20,19 +24,13 @@ interface MonthGridProps {
   month: string;
   /** Undefined while loading */
   days: AgendaDay[] | undefined;
-  dates: string[];
   today: string;
   onSelect: (date: string) => void;
 }
 
-export function MonthGrid({
-  month,
-  days,
-  dates,
-  today,
-  onSelect,
-}: MonthGridProps) {
+export function MonthGrid({ month, days, today, onSelect }: MonthGridProps) {
   const locale = useLocale();
+  const dates = monthGrid(month).weeks.flat();
   const [height, setHeight] = useState(0);
   const lines = Math.max(
     1,

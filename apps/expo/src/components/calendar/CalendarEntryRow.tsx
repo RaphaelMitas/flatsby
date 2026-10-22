@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "use-intl";
 
 import {
   describeEventTime,
+  describeOverdue,
   describeRecurrence,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
@@ -37,7 +38,8 @@ export function CalendarEntryRow({
   const done = occurrence.completedAt !== null;
   const pending = item.id < 0;
   const isTask = item.kind === "task";
-  const overdue = isTask && !done && occurrence.date < today;
+  const overdue =
+    isTask && !done && (occurrence.date < today || missed.length > 0);
 
   return (
     <View
@@ -93,10 +95,7 @@ export function CalendarEntryRow({
             )}
             {overdue && (
               <Text className="text-destructive text-sm">
-                {missed.length > 0
-                  ? t("calendar.missed", { count: missed.length + 1 })
-                  : t("calendar.overdue")}{" "}
-                ·
+                {describeOverdue(missed, t)} ·
               </Text>
             )}
             {item.recurrence && (

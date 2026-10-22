@@ -114,29 +114,31 @@ export function TurnBar({
       >
         {t("all")}
       </button>
-      {[...members.values()].map(({ id, user }) => (
-        <button
-          key={id}
-          type="button"
-          aria-pressed={member === id}
-          onClick={() => onChange(member === id ? null : id)}
-          className={cn(chip(member === id), "pr-3 pl-1")}
-          data-testid={`calendar-filter-${id}`}
-        >
-          <UserAvatar
-            name={user.name}
-            image={user.image}
-            size="sm"
-            className="text-foreground"
-          />
-          {id === meId ? t("you") : user.name}
-          <span
-            className={member === id ? "opacity-70" : "text-muted-foreground"}
+      {[...members.values()]
+        .sort((a, b) => Number(b.id === meId) - Number(a.id === meId))
+        .map(({ id, user }) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={member === id}
+            onClick={() => onChange(member === id ? null : id)}
+            className={cn(chip(member === id), "pr-3 pl-1")}
+            data-testid={`calendar-filter-${id}`}
           >
-            {turns.get(id) ?? 0}
-          </span>
-        </button>
-      ))}
+            <UserAvatar
+              name={user.name}
+              image={user.image}
+              size="sm"
+              className="text-foreground"
+            />
+            {id === meId ? t("you") : user.name}
+            <span
+              className={member === id ? "opacity-70" : "text-muted-foreground"}
+            >
+              {turns.get(id) ?? 0}
+            </span>
+          </button>
+        ))}
     </div>
   );
 }

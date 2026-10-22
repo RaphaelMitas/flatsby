@@ -14,6 +14,7 @@ import { Checkbox } from "@flatsby/ui/checkbox";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import {
   describeEventTime,
+  describeOverdue,
   describeRecurrence,
   formatCalendarDate,
 } from "@flatsby/validators/calendar";
@@ -69,9 +70,8 @@ export function CalendarList({
   return (
     <>
       <div className="grid grid-cols-7 border-b px-2 pb-2">
-        {dates.map((date) => {
-          const entries =
-            agenda?.days.find((day) => day.date === date)?.entries ?? [];
+        {dates.map((date, index) => {
+          const entries = agenda?.days[index]?.entries ?? [];
           return (
             <button
               key={date}
@@ -218,7 +218,9 @@ function EntryRow({
   const done = occurrence.completedAt !== null;
   const pending = item.id < 0;
   const isTask = item.kind === "task";
-  const overdue = isTask && !done && occurrence.date < today;
+  const missed = entry.missed ?? [];
+  const overdue =
+    isTask && !done && (occurrence.date < today || missed.length > 0);
 
   return (
     <li
@@ -271,10 +273,7 @@ function EntryRow({
             {!isTask && <span>{describeEventTime(item.time, t)} ·</span>}
             {overdue && (
               <span className="text-destructive">
-                {entry.missed?.length
-                  ? t("calendar.missed", { count: entry.missed.length + 1 })
-                  : t("calendar.overdue")}{" "}
-                ·
+                {describeOverdue(missed, t)} ·
               </span>
             )}
             {item.recurrence && <Repeat className="size-3 shrink-0" />}

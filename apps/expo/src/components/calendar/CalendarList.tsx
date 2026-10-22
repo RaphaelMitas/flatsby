@@ -68,14 +68,12 @@ export function CalendarList({
   return (
     <>
       <View className="border-border flex-row border-b px-2 pb-2">
-        {dates.map((date) => (
+        {dates.map((date, index) => (
           <StripDay
             key={date}
             date={date}
             today={today}
-            entries={
-              agenda?.days.find((day) => day.date === date)?.entries ?? []
-            }
+            entries={agenda?.days[index]?.entries ?? []}
             onPress={() =>
               scroller.current?.scrollTo({
                 // The first day goes to the very top, so the overdue chores above it show too
