@@ -118,6 +118,14 @@ const StackLayout = () => {
   if (!isPending && !sessionResolved) setSessionResolved(true);
   const { hydrated } = useShoppingStore();
   const userId = data?.user.id;
+  // Sign-in only stores the cookie and refetches, so a fresh stack at the index
+  // route is what navigates off login and on to a remembered invite
+  const [signIns, setSignIns] = useState(0);
+  const [previousUserId, setPreviousUserId] = useState(userId);
+  if (userId !== previousUserId) {
+    setPreviousUserId(userId);
+    if (userId) setSignIns(signIns + 1);
+  }
 
   // Cached errors from a revoked session would sign the next login out again.
   // By now TabLayout's Redirect has unmounted the tabs; clearing under them
@@ -139,6 +147,7 @@ const StackLayout = () => {
       <InstallReferrer />
       <UpdateNudge />
       <Stack
+        key={signIns}
         screenOptions={{
           headerShown: false,
           ...screenOptions,
