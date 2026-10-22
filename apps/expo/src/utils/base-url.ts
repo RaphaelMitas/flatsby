@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 
-import { getE2EApiUrlOverride } from "./e2e";
+import { getE2EApiUrlOverride, isE2ETestingEnabled } from "./e2e";
 
 /**
  * Extend this function when going to production by
@@ -15,7 +15,8 @@ export const getBaseUrl = () => {
   const debuggerHost = Constants.expoConfig?.hostUri;
   const localhost = debuggerHost?.split(":")[0];
 
-  if (!localhost) {
+  // Before e2e-login stores its override, an e2e build would ask production
+  if (!localhost && !isE2ETestingEnabled()) {
     return "https://www.flatsby.com";
   }
   return `http://localhost:3000`;

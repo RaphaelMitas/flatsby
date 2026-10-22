@@ -44,11 +44,25 @@ export function useInvalidateShoppingList({
     });
   }, [queryClient, groupId]);
 
+  const invalidateSuggestions = useCallback(() => {
+    return queryClient.invalidateQueries({
+      queryKey: trpc.shoppingList.suggestItems.pathKey(),
+      // Refetching now would flash the last word's suggestions over the next
+      refetchType: "none",
+    });
+  }, [queryClient]);
+
   const invalidateAll = useCallback(() => {
     void invalidateItems();
     void invalidateCategoryCounts();
     void invalidateLists();
-  }, [invalidateItems, invalidateCategoryCounts, invalidateLists]);
+    void invalidateSuggestions();
+  }, [
+    invalidateItems,
+    invalidateCategoryCounts,
+    invalidateLists,
+    invalidateSuggestions,
+  ]);
 
   return {
     invalidateItems,

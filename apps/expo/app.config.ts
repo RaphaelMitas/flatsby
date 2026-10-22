@@ -1,9 +1,11 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import type { ConfigPlugin } from "expo/config-plugins";
+import { withAndroidManifest } from "expo/config-plugins";
 
 const isE2E = process.env.E2E_TESTING === "true";
 const WEB_HOST = "www.flatsby.com";
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
+const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Flatsby",
   slug: "flatsby",
@@ -154,3 +156,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ["expo-font", { fonts: ["./assets/fonts/lucide.ttf"] }],
   ],
 });
+
+// Android's sampled heap checker segfaults walking Hermes frames on free,
+// killing about one e2e flow per Android run
+const withoutGwpAsan: ConfigPlugin = (config) =>
+  withAndroidManifest(config, (manifest) => {
+    const application = manifest.modResults.manifest.application?.[0];
+    if (application) application.$["android:gwpAsanMode"] = "never";
+    return manifest;
+  });
+
+export default (context: ConfigContext): ExpoConfig =>
+  isE2E ? withoutGwpAsan(appConfig(context)) : appConfig(context);

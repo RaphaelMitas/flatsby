@@ -1,6 +1,6 @@
 import "~/polyfills";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -114,6 +114,8 @@ const StackLayout = () => {
   const t = useTranslations();
   const { screenOptions, solidHeader } = useThemedScreenOptions();
   const { data, isPending } = useSession();
+  const [sessionResolved, setSessionResolved] = useState(!isPending);
+  if (!isPending && !sessionResolved) setSessionResolved(true);
   const { hydrated } = useShoppingStore();
   const userId = data?.user.id;
 
@@ -125,7 +127,9 @@ const StackLayout = () => {
   }, [userId]);
 
   // The Expo client restores a cached session into data while it revalidates.
-  if ((isPending && !data) || !hydrated) {
+  // Later refetches (every app focus) set isPending again while signed out,
+  // and blanking then would unmount the screen the user is on.
+  if ((!sessionResolved && !data) || !hydrated) {
     return <View className="bg-background flex-1" />;
   }
 
