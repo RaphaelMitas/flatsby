@@ -208,21 +208,16 @@ jobs:
         with:
           device: "^iPhone [0-9]+ Pro Max$"
 
-      # A fresh simulator shows the QuickPath swipe-typing tutorial over the
-      # keyboard the second time an input gains focus, which would end up in
-      # the screenshots.
-      - name: Prepare iOS simulator
+      - name: Prepare iOS simulator for screenshots
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
           xcrun simctl bootstatus "$UDID"
           xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
+          # A fresh simulator shows the QuickPath swipe-typing tutorial over
+          # the keyboard the second time an input gains focus, which would
+          # end up in the screenshots.
           xcrun simctl spawn "$UDID" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
-
-      - name: Clean up status bar and set dark mode for screenshots
-        env:
-          UDID: ${{ steps.sim.outputs.udid }}
-        run: |
           xcrun simctl ui "$UDID" appearance dark
           xcrun simctl status_bar "$UDID" override \
             --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
@@ -247,6 +242,7 @@ jobs:
         env:
           E2E_API_URL: http://localhost:3000
           E2E_LOCALES: en de
+          E2E_DEVICE: ${{ steps.sim.outputs.udid }}
 
       # App Store review refuses the submission without at least one 13"
       # iPad screenshot (the app supports tablets), so a minimal iPad flow
@@ -289,6 +285,7 @@ jobs:
         env:
           E2E_API_URL: http://localhost:3000
           E2E_LOCALES: en de
+          E2E_DEVICE: ${{ steps.ipad.outputs.udid }}
 
       # Failures must be diagnosable from the job log alone: print the debug
       # bundle's error lines, an element census of each captured failure-screen

@@ -33,7 +33,7 @@ tags:
     timeout: 15000
 - copyTextFrom:
     id: "group-invite-code"
-# e2e-login below reuses the clipboard
+# e2e-login below overwrites maestro.copiedText
 - evalScript: ${output.inviteCode = maestro.copiedText}
 
 # The admin is already a member, so the preview offers "Open group", not join.

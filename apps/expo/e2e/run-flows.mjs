@@ -29,8 +29,8 @@ const resultsDir = join(e2eDir, "results");
 
 const MAX_RERUN_FLOWS = 5;
 
-// Reinstalling the XCTest driver costs iOS 25-55s per flow; a failure might
-// have left it broken, so only then does the next flow reinstall it.
+// A driver reinstall costs 25-55s per iOS flow; only a failure can leave the
+// driver broken.
 let reinstallDriver = true;
 
 const apiUrl = process.env.E2E_API_URL;

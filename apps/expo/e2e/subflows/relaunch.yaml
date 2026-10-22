@@ -1,7 +1,7 @@
 appId: ${APP_ID}
 ---
-# Relaunch, keeping state, until MARKER_ID shows. Retried: on iOS Maestro
-# sometimes reports a slow cold start as a crash.
+# Relaunch, keeping state. Retried: on iOS Maestro sometimes reports a slow
+# cold start as a crash.
 #
 # env: MARKER_ID (element the relaunched screen shows)
 - retry:

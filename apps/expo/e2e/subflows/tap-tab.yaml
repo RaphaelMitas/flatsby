@@ -1,15 +1,13 @@
 appId: ${APP_ID}
 ---
-# Switch to a bottom tab and wait for MARKER_ID to prove it showed. Each retry
-# escalates: label text, which is what nearly every green CI run tapped; then
-# the trigger testID on iOS, which the SwiftUI tab bar exposes only sometimes
-# (run 31252036515 failed on "Id matching regex: tab-home"; run 31252348033
-# resolved the same id fine) and Android never; then the tab's slot position,
-# which at 95% height misses the iOS 26 floating tab bar (run 31254443153).
+# Switch to a bottom tab and wait for MARKER_ID. Each attempt escalates:
+# label text, what nearly every green CI run tapped; then the testID, which
+# the SwiftUI tab bar exposes only sometimes (run 31252036515 vs 31252348033)
+# and Android never, so Android retries the label; then the slot position,
+# last because at 95% height it misses the iOS 26 floating bar (run 31254443153).
 #
-# Attempts are counted rather than probed with `when: visible`, because a
-# false visibility check waits out Maestro's 7s lookup window, and right after
-# launchApp that window can shrink to nothing and skip every branch.
+# Attempts are counted, not probed with `when: visible`: a false check waits
+# out Maestro's 7s window, which right after launchApp can shrink to nothing.
 #
 # env: TAB_ID (e.g. tab-home), TAB_LABEL (e.g. Home), TAB_X (slot center as
 # an integer percent, e.g. "12%"), MARKER_ID (element only that tab shows)
@@ -45,4 +43,4 @@ appId: ${APP_ID}
       - extendedWaitUntil:
           visible:
             id: ${MARKER_ID}
-          timeout: 15000
+          timeout: 20000

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
@@ -76,7 +77,8 @@ export default function TabLayout() {
   // Guarding per screen segfaults in UIKit: signing out from Settings
   // redirected from the backgrounded home tab, tearing down one tab's
   // navigation stack while another was still mounted.
-  if (!session.isPending && !session.data?.user) {
+  if (!session.data?.user) {
+    if (session.isPending) return <View className="bg-background flex-1" />;
     return <Redirect href="/auth/login" />;
   }
 

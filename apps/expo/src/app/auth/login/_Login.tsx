@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Linking, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
-import { Redirect, Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useLocale, useTranslations } from "use-intl";
 
 import { localePath } from "@flatsby/i18n/locale";
@@ -11,6 +11,7 @@ import { localePath } from "@flatsby/i18n/locale";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { signIn, useSession } from "~/utils/auth/auth-client";
+import { clearPostLoginPath } from "~/utils/auth/post-login-path";
 import { getBaseUrl } from "~/utils/base-url";
 
 const Login = () => {
@@ -18,11 +19,21 @@ const Login = () => {
   const locale = useLocale();
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
   const { data: session } = useSession();
+  const router = useRouter();
 
   const callbackURL = ExpoLinking.createURL("/");
 
-  // Sign-in only stores the cookie and refetches the session; nothing navigates
-  if (session) return <Redirect href="/" />;
+  // Sign-in only stores the cookie and refetches the session; nothing navigates.
+  // The join screen pushes this one and already serves the signed-in user.
+  useEffect(() => {
+    if (!session) return;
+    if (router.canGoBack()) {
+      clearPostLoginPath();
+      router.back();
+    } else {
+      router.replace("/");
+    }
+  }, [session, router]);
 
   return (
     <View testID="login-screen" className="bg-background flex-1 px-6 py-8">

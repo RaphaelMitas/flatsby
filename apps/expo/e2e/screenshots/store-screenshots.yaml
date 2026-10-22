@@ -10,7 +10,7 @@ appId: ${APP_ID}
 # before the app's first query, and query retries cover transient fetch errors.
 #
 # Navigation taps go through tap-until.yaml (act-verify-repeat) or
-# tap-tab.yaml (label -> id -> position) so a missed tap costs seconds, not
+# tap-tab.yaml (label -> id on iOS -> position) so a missed tap costs seconds, not
 # the run. Run via `node e2e/run-flows.mjs ../screenshots/store-screenshots`;
 # E2E_LOCALES="en de" captures each language's household.
 #
