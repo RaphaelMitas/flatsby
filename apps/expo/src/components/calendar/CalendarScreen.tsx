@@ -22,6 +22,7 @@ import {
   stepPosition,
   switchView,
   tickInput,
+  todayPosition,
   weekDays,
 } from "@flatsby/validators/calendar";
 
@@ -31,6 +32,7 @@ import { queryClient, trpc } from "~/utils/api";
 import { useNow } from "~/utils/useNow";
 import { CalendarList } from "./CalendarList";
 import { TurnBar, useCalendarPeople } from "./CalendarPeople";
+import { setCalendarPosition, useCalendarPosition } from "./calendarPosition";
 import { MonthGrid } from "./MonthGrid";
 import { useCalendarMutations } from "./useCalendarMutations";
 
@@ -39,9 +41,11 @@ export const calendarRangeOptions = (
   { from, to }: { from: string; to: string },
 ) => ({
   ...trpc.calendar.range.queryOptions({ groupId, from, to }),
-  // Ranges go stale at once here, and a refetch on entering one mid-write would wipe its optimistic patch
-  refetchOnMount: () =>
-    queryClient.isMutating({ mutationKey: trpc.calendar.pathKey() }) === 0,
+  // Ranges go stale at once here, and refetching one mid-write would wipe its optimistic patch
+  staleTime: () =>
+    queryClient.isMutating({ mutationKey: trpc.calendar.pathKey() }) > 0
+      ? Number.POSITIVE_INFINITY
+      : 0,
 });
 
 export function CalendarScreen({ group }: { group: GroupWithAccess }) {
@@ -51,11 +55,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const people = useCalendarPeople(group);
   const today = localDate(useNow());
   const { date: linked } = useLocalSearchParams<{ date?: string }>();
-  const [position, setPosition] = useState<CalendarPosition>({
-    view: "list",
-    start: null,
-    month: null,
-  });
+  const position = useCalendarPosition();
   const [member, setMember] = useState<number | null>(null);
   const rangeAt = (at: CalendarPosition) =>
     calendarRangeOptions(group.id, positionWindow(at, today));
@@ -72,7 +72,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
 
   const onLinked = useEffectEvent((date: string) => {
     if (calendarDateSchema.safeParse(date).success)
-      setPosition(revealDate(position, date, today));
+      setCalendarPosition(revealDate(position, date, today));
     router.setParams({ date: undefined });
   });
   useEffect(() => {
@@ -82,12 +82,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const openForm = () =>
     router.push({
       pathname: "/(tabs)/calendar/form",
-      params: {
-        date: newEntryDate(position, today),
-        view,
-        ...(position.start && { start: position.start }),
-        ...(position.month && { month: position.month }),
-      },
+      params: { date: newEntryDate(position, today) },
     });
 
   return (
@@ -102,7 +97,9 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         <Segmented
           size="sm"
           value={view}
-          onChange={(next) => setPosition(switchView(position, next, today))}
+          onChange={(next) =>
+            setCalendarPosition(switchView(position, next, today))
+          }
           options={[
             { value: "list", label: t("list"), testID: "calendar-view-list" },
             {
@@ -119,7 +116,9 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
           testID="calendar-range-title"
           accessibilityRole="button"
           disabled={view === "month"}
-          onPress={() => setPosition(switchView(position, "month", today))}
+          onPress={() =>
+            setCalendarPosition(switchView(position, "month", today))
+          }
         >
           <Text className="text-foreground text-lg font-semibold">
             {view === "list"
@@ -137,7 +136,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             size="sm"
             title={t("today")}
             disabled={showsToday(position)}
-            onPress={() => setPosition(showDate(position, today, today))}
+            onPress={() => setCalendarPosition(todayPosition(position))}
           />
           <Button
             testID="calendar-previous"
@@ -147,7 +146,9 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             accessibilityLabel={
               view === "list" ? t("previousWeek") : t("previousMonth")
             }
-            onPress={() => setPosition(stepPosition(position, -1, today))}
+            onPress={() =>
+              setCalendarPosition(stepPosition(position, -1, today))
+            }
           />
           <Button
             testID="calendar-next"
@@ -157,7 +158,9 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             accessibilityLabel={
               view === "list" ? t("nextWeek") : t("nextMonth")
             }
-            onPress={() => setPosition(stepPosition(position, 1, today))}
+            onPress={() =>
+              setCalendarPosition(stepPosition(position, 1, today))
+            }
           />
         </View>
       </View>
@@ -202,7 +205,9 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
           days={agenda?.days}
           today={today}
           onSelect={(date) =>
-            setPosition(showDate({ ...position, view: "list" }, date, today))
+            setCalendarPosition(
+              showDate({ ...position, view: "list" }, date, today),
+            )
           }
         />
       )}

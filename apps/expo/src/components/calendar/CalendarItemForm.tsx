@@ -3,7 +3,6 @@ import type {
   CalendarColor,
   CalendarItemKind,
   CalendarItemView,
-  CalendarPosition,
   EventTime,
   RepeatForm,
   Weekday,
@@ -58,6 +57,7 @@ import { trpc } from "~/utils/api";
 import { MemberAvatar } from "../expenses/MemberAvatar";
 import { fromPickerTime, pickerTime } from "./calendarDates";
 import { Chip, useCalendarPeople } from "./CalendarPeople";
+import { calendarPosition } from "./calendarPosition";
 import { calendarRangeOptions } from "./CalendarScreen";
 import { useCalendarMutations } from "./useCalendarMutations";
 
@@ -69,15 +69,12 @@ interface CalendarItemFormProps {
   group: GroupWithAccess;
   itemId: number | undefined;
   date: string | undefined;
-  /** Where the calendar stands, so a new entry's range is cached before the screen shows it */
-  calendar: CalendarPosition;
 }
 
 export function CalendarItemForm({
   group,
   itemId,
   date,
-  calendar,
 }: CalendarItemFormProps) {
   const today = localDate();
   const { data } = useQuery(
@@ -88,13 +85,7 @@ export function CalendarItemForm({
   );
 
   if (itemId === undefined) {
-    return (
-      <ItemFields
-        group={group}
-        defaultStart={date ?? today}
-        calendar={calendar}
-      />
-    );
+    return <ItemFields group={group} defaultStart={date ?? today} />;
   }
   if (!data) {
     return (
@@ -117,7 +108,6 @@ export function CalendarItemForm({
       group={group}
       item={data.data.item}
       defaultStart={data.data.item.startsOn}
-      calendar={calendar}
     />
   );
 }
@@ -126,12 +116,10 @@ function ItemFields({
   group,
   item,
   defaultStart,
-  calendar,
 }: {
   group: GroupWithAccess;
   item?: CalendarItemView;
   defaultStart: string;
-  calendar: CalendarPosition;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -201,7 +189,7 @@ function ItemFields({
         .query({
           ...calendarRangeOptions(
             group.id,
-            positionWindow(revealDate(calendar, startsOn, now), now),
+            positionWindow(revealDate(calendarPosition(), startsOn, now), now),
           ),
           staleTime: "static",
         })

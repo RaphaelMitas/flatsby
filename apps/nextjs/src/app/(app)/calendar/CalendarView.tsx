@@ -56,6 +56,7 @@ import {
   stepPosition,
   switchView,
   tickInput,
+  todayPosition,
   weekDays,
 } from "@flatsby/validators/calendar";
 
@@ -71,7 +72,7 @@ import { useCalendarMutations } from "./useCalendarMutations";
 
 type Panel =
   | { type: "detail"; entry: CalendarEntry }
-  | { type: "form"; item?: CalendarItemView };
+  | { type: "form"; item?: CalendarItemView; date?: string };
 
 // Coming back to a tab left open overnight has to move "today" along
 const onReturn = (notify: () => void) => {
@@ -156,12 +157,13 @@ function CalendarScreen({
     update,
   } = useCalendarMutations(group);
 
-  // Looking around keeps a half-filled form; only a detail closes
+  // Stepping keeps a half-filled form; a view switch moves the panel to another container, which would remount it empty
   const moveTo = (next: CalendarPosition) => {
     setPosition(next);
-    setPanel((open) => (open?.type === "form" ? open : null));
+    setPanel((open) =>
+      open?.type === "form" && next.view === position.view ? open : null,
+    );
   };
-  const show = (date: string) => moveTo(showDate(position, date, today));
   const step = (delta: number) => moveTo(stepPosition(position, delta, today));
 
   // Arrow keys belong to an open form or detail
@@ -201,7 +203,7 @@ function CalendarScreen({
 
   const save = async (input: CreateCalendarItemInput, id?: number) => {
     if (id === undefined) {
-      // Closing the form first rules out a second submit; the optimistic entry needs its window cached
+      // Closing the form first rules out a second submit; the optimistic entry needs its range cached
       const next = revealDate(position, input.startsOn, today);
       moveTo(next);
       setPanel(null);
@@ -215,7 +217,8 @@ function CalendarScreen({
     }
   };
 
-  const openAdd = () => setPanel({ type: "form" });
+  const openAdd = () =>
+    setPanel({ type: "form", date: newEntryDate(position, today) });
   const openEntry = (entry: CalendarEntry) =>
     setPanel({ type: "detail", entry });
 
@@ -227,7 +230,7 @@ function CalendarScreen({
           groupId={groupId}
           members={group.groupMembers}
           item={current.item}
-          defaultDate={newEntryDate(position, today)}
+          defaultDate={current.date ?? today}
           today={today}
           onCancel={() => setPanel(null)}
           onSubmit={(input) => void save(input, current.item?.id)}
@@ -329,7 +332,7 @@ function CalendarScreen({
             variant="outline"
             size="sm"
             disabled={showsToday(position)}
-            onClick={() => show(today)}
+            onClick={() => moveTo(todayPosition(position))}
             data-testid="calendar-today-button"
           >
             {t("calendar.today")}

@@ -779,6 +779,14 @@ export function revealDate(
   return shown ? position : showDate(position, date, today);
 }
 
+export const todayPosition = ({
+  view,
+}: CalendarPosition): CalendarPosition => ({
+  view,
+  start: null,
+  month: null,
+});
+
 export const showsToday = (position: CalendarPosition) =>
   (position.view === "list" ? position.start : position.month) === null;
 
