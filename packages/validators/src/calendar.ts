@@ -170,7 +170,6 @@ export const setOccurrenceSkippedSchema = z.object({
   itemId: z.number(),
   date: calendarDateSchema,
   skipped: z.boolean(),
-  /** Earlier open days of the same chore, skipped in the same write */
   missed: z.array(calendarDateSchema).max(MAX_RANGE_DAYS).optional(),
 });
 

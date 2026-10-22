@@ -191,7 +191,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
               pathname: "/(tabs)/calendar/[itemId]",
               params: {
                 itemId: String(entry.item.id),
-                // Only an open occurrence can be skipped, along with the days it was left
+                // Only an open occurrence can be skipped
                 ...(!entry.occurrence.completedAt && {
                   date: entry.occurrence.date,
                   ...(entry.missed?.length

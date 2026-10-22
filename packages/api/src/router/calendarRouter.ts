@@ -556,24 +556,21 @@ export const calendarRouter = createTRPCRouter({
           findItem(ctx.db, input.groupId, input.itemId),
           (item) => {
             if (!item.recurrence) return fail.validation("errors.unexpected");
-            const missed = input.skipped ? (input.missed ?? []) : [];
-            if (
-              input.skipped &&
-              [input.date, ...missed].some((date) => !isScheduledOn(item, date))
-            )
+            const skip = input.skipped
+              ? [input.date, ...(input.missed ?? [])]
+              : [];
+            if (skip.some((date) => !isScheduledOn(item, date)))
               return fail.conflict("errors.calendarDateNotScheduled");
             return DbUtils.transaction(async (tx) => {
-              await upsertOccurrences(
-                tx,
-                [{ itemId: item.id, date: input.date, skipped: input.skipped }],
-                { skipped: input.skipped },
-                // A skip offered on an open day mustn't hide a tick that landed since
-                input.skipped
-                  ? isNull(calendarOccurrences.completedAt)
-                  : undefined,
-              );
-              await pruneOccurrence(tx, item.id, input.date);
-              await skipOpenDays(tx, item.id, missed);
+              if (input.skipped) await skipOpenDays(tx, item.id, skip);
+              else {
+                await upsertOccurrences(
+                  tx,
+                  [{ itemId: item.id, date: input.date, skipped: false }],
+                  { skipped: false },
+                );
+                await pruneOccurrence(tx, item.id, input.date);
+              }
               return { itemId: item.id, date: input.date };
             }, "set calendar occurrence skipped")(ctx.db);
           },

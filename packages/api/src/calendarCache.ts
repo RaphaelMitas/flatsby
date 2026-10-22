@@ -162,6 +162,18 @@ const asView = (
 // Negative so it never collides with a real id before the refetch lands
 const temporaryId = () => -Date.now();
 
+const skipDays = (
+  range: CalendarRange,
+  itemId: number,
+  dates: string[],
+  window: RangeWindow,
+) =>
+  dates.reduce(
+    (patched, date) =>
+      withSkipped(patched, { itemId, date, skipped: true }, window),
+    range,
+  );
+
 /** The optimistic side of each calendar mutation, shared by both clients. */
 export const calendarPatches = {
   setDone: (
@@ -169,18 +181,15 @@ export const calendarPatches = {
     me: { groupMemberId: number; person: DebtPerson },
   ): CalendarPatch => ({
     range: (range, window) =>
-      (input.done ? (input.skip ?? []) : []).reduce(
-        (patched, date) =>
-          withSkipped(
-            patched,
-            { itemId: input.itemId, date, skipped: true },
-            window,
-          ),
+      skipDays(
         withDone(range, {
           ...input,
           byGroupMemberId: me.groupMemberId,
           by: me.person,
         }),
+        input.itemId,
+        input.done ? (input.skip ?? []) : [],
+        window,
       ),
   }),
 
@@ -191,15 +200,14 @@ export const calendarPatches = {
     missed?: string[];
   }): CalendarPatch => ({
     range: (range, window) =>
-      (input.skipped ? (input.missed ?? []) : []).reduce(
-        (patched, date) =>
-          withSkipped(
-            patched,
-            { itemId: input.itemId, date, skipped: true },
+      input.skipped
+        ? skipDays(
+            range,
+            input.itemId,
+            [input.date, ...(input.missed ?? [])],
             window,
-          ),
-        withSkipped(range, input, window),
-      ),
+          )
+        : withSkipped(range, input, window),
     detail: (detail) => {
       if (detail.item.id !== input.itemId) return detail;
       if (input.skipped)
