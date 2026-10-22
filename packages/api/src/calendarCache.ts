@@ -188,8 +188,18 @@ export const calendarPatches = {
     itemId: number;
     date: string;
     skipped: boolean;
+    missed?: string[];
   }): CalendarPatch => ({
-    range: (range, window) => withSkipped(range, input, window),
+    range: (range, window) =>
+      (input.skipped ? (input.missed ?? []) : []).reduce(
+        (patched, date) =>
+          withSkipped(
+            patched,
+            { itemId: input.itemId, date, skipped: true },
+            window,
+          ),
+        withSkipped(range, input, window),
+      ),
     detail: (detail) => {
       if (detail.item.id !== input.itemId) return detail;
       if (input.skipped)

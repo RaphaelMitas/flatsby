@@ -264,6 +264,21 @@ const upsertOccurrences = (
       setWhere,
     });
 
+// The days come from the client's cache: a day someone ticked since stays done
+const skipOpenDays = async (
+  db: Database | DbTransaction,
+  itemId: number,
+  dates: string[],
+) => {
+  if (dates.length === 0) return;
+  await upsertOccurrences(
+    db,
+    dates.map((date) => ({ itemId, date, skipped: true })),
+    { skipped: true },
+    isNull(calendarOccurrences.completedAt),
+  );
+};
+
 // A row that is neither done nor skipped says nothing the rule doesn't
 const pruneOccurrence = (
   db: Database | DbTransaction,
@@ -525,19 +540,7 @@ export const calendarRouter = createTRPCRouter({
                 completion,
               );
               await pruneOccurrence(tx, item.id, input.date);
-              if (skip.length > 0) {
-                // The skip days come from the client's cache: a day someone ticked since stays done
-                await upsertOccurrences(
-                  tx,
-                  skip.map((date) => ({
-                    itemId: item.id,
-                    date,
-                    skipped: true,
-                  })),
-                  { skipped: true },
-                  isNull(calendarOccurrences.completedAt),
-                );
-              }
+              await skipOpenDays(tx, item.id, skip);
               return { itemId: item.id, date: input.date };
             }, "set calendar occurrence done")(ctx.db);
           },
@@ -553,17 +556,26 @@ export const calendarRouter = createTRPCRouter({
           findItem(ctx.db, input.groupId, input.itemId),
           (item) => {
             if (!item.recurrence) return fail.validation("errors.unexpected");
-            if (input.skipped && !isScheduledOn(item, input.date))
+            const missed = input.skipped ? (input.missed ?? []) : [];
+            if (
+              input.skipped &&
+              [input.date, ...missed].some((date) => !isScheduledOn(item, date))
+            )
               return fail.conflict("errors.calendarDateNotScheduled");
-            return safeDbOperation(async () => {
+            return DbUtils.transaction(async (tx) => {
               await upsertOccurrences(
-                ctx.db,
+                tx,
                 [{ itemId: item.id, date: input.date, skipped: input.skipped }],
                 { skipped: input.skipped },
+                // A skip offered on an open day mustn't hide a tick that landed since
+                input.skipped
+                  ? isNull(calendarOccurrences.completedAt)
+                  : undefined,
               );
-              await pruneOccurrence(ctx.db, item.id, input.date);
+              await pruneOccurrence(tx, item.id, input.date);
+              await skipOpenDays(tx, item.id, missed);
               return { itemId: item.id, date: input.date };
-            }, "set calendar occurrence skipped");
+            }, "set calendar occurrence skipped")(ctx.db);
           },
         ),
       ),

@@ -236,8 +236,6 @@ function CalendarScreen({
         />
       );
     const { item, occurrence } = current.entry;
-    const skip = (date: string, skipped: boolean) =>
-      setSkipped.mutate({ groupId, itemId: item.id, date, skipped });
     return (
       <CalendarItemDetail
         key={`${item.id}-${occurrence.date}`}
@@ -250,11 +248,18 @@ function CalendarScreen({
         onJump={(date) => moveTo(revealDate(position, date, today))}
         onSkip={() => {
           // A chore left for days is skipped for all of them, or the next one would take its place
-          for (const day of [occurrence.date, ...(current.entry.missed ?? [])])
-            skip(day, true);
+          setSkipped.mutate({
+            groupId,
+            itemId: item.id,
+            date: occurrence.date,
+            skipped: true,
+            missed: current.entry.missed,
+          });
           setPanel(null);
         }}
-        onUnskip={(date) => skip(date, false)}
+        onUnskip={(date) =>
+          setSkipped.mutate({ groupId, itemId: item.id, date, skipped: false })
+        }
         onDelete={() => {
           remove.mutate({ groupId, id: item.id });
           setPanel(null);

@@ -194,7 +194,9 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
                 // Only an open occurrence can be skipped, along with the days it was left
                 ...(!entry.occurrence.completedAt && {
                   date: entry.occurrence.date,
-                  missed: entry.missed?.join(","),
+                  ...(entry.missed?.length
+                    ? { missed: entry.missed.join(",") }
+                    : {}),
                 }),
               },
             })

@@ -122,12 +122,13 @@ export function CalendarItemDetail({
   const currentTurn = upcoming[0]?.turnGroupMemberId ?? null;
   const showOnCalendar = (day: string) =>
     router.dismissTo({ pathname: "/(tabs)/calendar", params: { date: day } });
-  const skip = (day: string, skipped: boolean) =>
+  const skip = (day: string, skipped: boolean, missed?: string[]) =>
     setSkipped.mutate({
       groupId: group.id,
       itemId: item.id,
       date: day,
       skipped,
+      missed,
     });
 
   return (
@@ -268,7 +269,7 @@ export function CalendarItemDetail({
           icon="skip-forward"
           title={t("calendar.detail.skip")}
           onPress={() => {
-            for (const day of [date, ...missed]) skip(day, true);
+            skip(date, true, missed);
             router.back();
           }}
         />
