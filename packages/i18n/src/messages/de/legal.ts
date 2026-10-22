@@ -104,6 +104,7 @@ export const legal = {
       children: "Datenschutz bei Kindern",
       changes: "Änderungen dieser Datenschutzerklärung",
       contact: "Kontakt",
+      objection: "Ihr Widerspruchsrecht",
     },
     introduction:
       "Diese Datenschutzerklärung erläutert, wie Flatsby („wir“, „uns“, „unser“) Ihre personenbezogenen Daten erhebt, verwendet und schützt, wenn Sie unsere Anwendung zur Haushaltsorganisation nutzen. Wir sind dem Schutz Ihrer Privatsphäre und der Einhaltung der Datenschutz-Grundverordnung (DSGVO) sowie anderer anwendbarer Datenschutzgesetze verpflichtet.",
@@ -118,6 +119,7 @@ export const legal = {
       email: "Ihre E-Mail-Adresse",
       picture: "Ihr Profilbild (falls vorhanden)",
       identifier: "eine eindeutige Kennung des Anmeldeanbieters",
+      plan: "Ihr Tarif, Ihre Käufe und Ihr KI-Guthaben",
     },
     userContent: {
       heading: "3.2 Von Nutzern erstellte Inhalte",
@@ -128,6 +130,8 @@ export const legal = {
         "Ausgaben (Beträge, Beschreibungen, Daten, Kategorien, Angaben zur Aufteilung)",
       groups: "Gruppeninformationen (Namen, Mitgliedschaften)",
       chat: "Chatverläufe mit unserem KI-Assistenten",
+      calendar:
+        "Kalendereinträge und Aufgaben (Titel, Termine, Wiederholungen, zugeordnete Mitglieder)",
     },
     technical: {
       heading: "3.3 Technische Daten",
@@ -139,21 +143,28 @@ export const legal = {
       websiteViews:
         "Seitenaufrufe, die verweisende Website, Kampagnenangaben in Links (utm-Parameter) und Klicks auf App-Store-Links, ohne Cookies",
       mobile: "Mobile App:",
-      mobileIp: "IP-Adresse (wird an den Analyseanbieter weitergegeben)",
+      mobileIp:
+        "IP-Adresse (PostHog ermittelt daraus einen ungefähren Standort wie Land und Stadt und verwirft sie dann)",
       mobileDevice: "Gerätetyp, Betriebssystem und App-Version",
       mobileViews: "Bildschirmaufrufe und Navigationsmuster",
+      websiteSession:
+        "Wenn Sie angemeldet sind: IP-Adresse und Browser jeder Anmeldesitzung, gespeichert mit der Sitzung, um Ihr Konto zu schützen",
+      errors:
+        "Fehlerberichte (Web und App): technische Angaben, wenn etwas fehlschlägt, etwa die betroffene Funktion und ein Stacktrace, die an PostHog übermittelt werden. Fehlermeldungen der App können vereinzelt von Ihnen eingegebene Inhalte enthalten.",
     },
     basis: {
       intro:
         "Wir verarbeiten Ihre personenbezogenen Daten auf folgenden Grundlagen:",
       contract:
-        "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Um den Dienst bereitzustellen, für den Sie sich registriert haben, einschließlich KI-gestützter Funktionen wie der automatischen Kategorieerkennung",
+        "<strong>Vertrag (Art. 6 Abs. 1 lit. b DSGVO):</strong> Ihr Konto, Gruppen, Listen, Ausgaben, Kalender und Käufe sowie die automatische Kategorisierung, die Artikelnamen und Ausgabenbeschreibungen an ein KI-Modell sendet",
       consent:
-        "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO):</strong> Für den KI-Chat-Assistenten",
+        "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO):</strong> Der KI-Chat-Assistent",
       interests:
-        "<strong>Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO):</strong> Zur Verbesserung und Sicherheit des Dienstes",
+        "<strong>Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO):</strong> Zählen von Website-Besuchen und Registrierungen je Quelle ohne Cookies, um zu sehen, wo unser Marketing wirkt; Erfassung der Aktionen angemeldeter Nutzer im Web und in der App, um zu sehen, welche Funktionen genutzt werden und wo es hakt; Fehlerberichte, um Fehler zu finden und zu beheben; Nutzungsdaten der KI (Modell, Tokens, Antwortzeit, Kosten), um KI-Funktionen bezahlbar und zuverlässig zu halten; Speicherung von Anmeldesitzungen (IP-Adresse, Browser), um Ihr Konto zu schützen",
       obligations:
-        "<strong>Rechtliche Verpflichtungen (Art. 6 Abs. 1 lit. c DSGVO):</strong> Zur Einhaltung geltender Gesetze",
+        "<strong>Rechtliche Pflicht (Art. 6 Abs. 1 lit. c DSGVO):</strong> Aufbewahrung von Rechnungen und Zahlungsbelegen nach Steuer- und Handelsrecht",
+      required:
+        "Gesetzlich müssen Sie uns keine Daten geben. Für ein Konto brauchen wir Ihren Namen, Ihre E-Mail-Adresse und die Kennung von Google oder Apple; ohne sie können Sie Flatsby nicht nutzen. Für die Nutzung von Flatsby ist die Analyse nicht erforderlich.",
     },
     use: {
       intro: "Wir verwenden Ihre personenbezogenen Daten, um:",
@@ -173,18 +184,26 @@ export const legal = {
     providers: {
       heading: "6.2 Dienstleister",
       intro: "Für den Betrieb von Flatsby nutzen wir Dienste Dritter:",
-      neon: "<strong>Neon (Datenbank):</strong> Speichert Ihre Daten sicher",
-      vercel: "<strong>Vercel (Hosting):</strong> Hostet unsere Webanwendung",
+      neon: "<strong>Neon (Datenbank):</strong> Speichert Ihre Daten auf Servern in Frankfurt",
+      vercel:
+        "<strong>Vercel Inc., USA (Hosting):</strong> Betreibt unsere Website und unsere API. Jede Anfrage an Flatsby läuft über Vercel, einschließlich Ihrer IP-Adresse und Angaben zu Ihrem Browser.",
       auth: "<strong>Google/Apple (Authentifizierung):</strong> Stellen die Anmeldung bereit",
-      ai: "<strong>KI-Dienste (Vercel AI Gateway):</strong> KI-Funktionen sind in ganz Flatsby integriert (Chat-Assistent, automatische Kategorieerkennung für Einkaufsartikel und mehr). Die Daten werden über das <gateway>Vercel AI Gateway</gateway> verarbeitet, das Anfragen an OpenAI (GPT-Modelle) oder Google (Gemini-Modelle) weiterleitet. Die Bedingungen der Datenverarbeitung finden Sie im <dpa>Auftragsverarbeitungsvertrag (DPA) von Vercel</dpa>.",
+      ai: "<strong>KI-Dienste (Vercel AI Gateway):</strong> KI-Funktionen sind in ganz Flatsby integriert (Chat-Assistent, automatische Kategorieerkennung für Einkaufsartikel und mehr). Die Daten werden über das <gateway>Vercel AI Gateway</gateway> verarbeitet, das Anfragen an OpenAI (GPT-Modelle) oder Google (Gemini-Modelle) weiterleitet. Siehe die <dpa>Datenschutzerklärung von Vercel</dpa>.",
       posthog:
-        "<strong>PostHog (Analyse):</strong> Hilft uns zu verstehen, wie Nutzer mit Flatsby interagieren, damit wir den Dienst verbessern können. Die Datenerhebung unterscheidet sich je nach Plattform:",
+        "<strong>PostHog (Analyse):</strong> Hilft uns zu verstehen, wie Menschen Flatsby finden und nutzen, damit wir den Dienst verbessern können. Was erfasst wird, hängt davon ab, wie Sie Flatsby nutzen:",
       posthogWebsite:
-        "<strong>Website:</strong> Analysedaten werden auf unseren Servern verarbeitet, bevor sie an PostHog gesendet werden. Wenn Sie angemeldet sind, werden Seitenaufrufe und Aktionen in der Web-App mit Ihrem Konto erfasst, einschließlich Angaben zu Ihrem Browser. Wenn Sie nicht angemeldet sind, wird auf Ihrem Gerät nichts gespeichert: Für jeden Besuch bildet PostHog aus Ihrer IP-Adresse, dem User-Agent Ihres Browsers und einem zufälligen Schlüssel, der täglich gelöscht wird, eine Besucher-ID und speichert sie mit der aufgerufenen Seite, der verweisenden Website, Kampagnenangaben im Link (utm-Parameter) sowie Ihrem Browser, Betriebssystem, Gerätetyp und Ihrer Sprache, aber ohne Ihre IP-Adresse und Ihren User-Agent. So können wir Besuche und Registrierungen je Quelle zählen, ohne Sie an einem anderen Tag wiederzuerkennen, und wir verknüpfen diese Besuche nicht mit Ihrem Konto. Rechtsgrundlage ist unser berechtigtes Interesse, zu verstehen, wie Menschen auf Flatsby aufmerksam werden (Art. 6 Abs. 1 lit. f DSGVO). Besuche aus Browsern, die ein Global-Privacy-Control- oder Do-Not-Track-Signal senden, zählen wir nicht, und Sie können jederzeit unter support@flatsby.com widersprechen.",
+        "<strong>Website, wenn Sie nicht angemeldet sind:</strong> Für die Analyse setzen wir keine Cookies, speichern nichts auf Ihrem Gerät und laden kein Skript von PostHog. Unser Server zählt jede Seite, die Sie öffnen. Wenn Sie innerhalb der Website die Seite wechseln, teilt ein kleines Skript auf unserer eigenen Domain unserem Server die Adresse der neuen und der vorherigen Seite mit. Unser Server leitet dies an PostHog weiter, zusammen mit den Angaben, die Ihr Browser bei jeder Anfrage sendet: IP-Adresse, User-Agent, verweisende Website und Sprache. PostHog bildet aus IP-Adresse, User-Agent und einem zufälligen Schlüssel, der täglich gelöscht wird, eine Besucher-ID und verwirft danach IP-Adresse und User-Agent. Gespeichert werden die Besucher-ID, die Seitenadresse (ohne Einladungscodes), die verweisende Website, Kampagnenangaben (utm-Parameter), Browser, Betriebssystem, Gerätetyp und Sprache. Ihren Standort ermittelt PostHog nicht. Wenn Sie sich registrieren, wird ein weiteres Ereignis mit derselben Besucher-ID gespeichert, damit wir Registrierungen je Quelle zählen können. An einem anderen Tag können wir Sie nicht wiedererkennen, und wir verknüpfen diese Daten nicht mit Ihrem Konto. Rechtsgrundlage ist unser berechtigtes Interesse, zu wissen, wie Menschen auf Flatsby aufmerksam werden (Art. 6 Abs. 1 lit. f DSGVO). Ihre Interessen überwiegen aus unserer Sicht nicht, weil kein Profil entsteht, Sie nach Ablauf des Tages nicht wiedererkannt werden können und PostHog die Daten in Frankfurt speichert. Browser, die ein Global-Privacy-Control- oder Do-Not-Track-Signal senden, zählen wir gar nicht, siehe Ihr Widerspruchsrecht.",
       posthogMobile:
-        "<strong>Mobile App:</strong> Die App verbindet sich direkt mit PostHog und kann Geräteinformationen (Betriebssystem, App-Version), Bildschirmaufrufe und die IP-Adresse erheben. Unter Android erfasst sie außerdem die von Google Play gemeldete Installationsquelle, etwa die Website oder den Einladungslink, über die die App geladen wurde.",
+        "<strong>Mobile App:</strong> Standardmäßig sendet die App zusätzlich Nutzungsdaten direkt an PostHog: Bildschirmaufrufe, Gerätetyp, Betriebssystem, App-Version, Fehlerberichte und nach der Anmeldung Ihre Konto-ID, Ihren Namen und Ihre E-Mail-Adresse. Dafür speichert die PostHog-Bibliothek eine zufällige Kennung auf Ihrem Gerät. PostHog erhält bei jeder Anfrage Ihre IP-Adresse, ermittelt daraus einen ungefähren Standort (Land, Stadt) und verwirft sie dann. Unter Android liest die App außerdem die von Google Play gemeldete Installationsquelle aus (Kampagnenangaben und ob Sie über einen Einladungslink kamen). Rechtsgrundlage ist unser berechtigtes Interesse, zu sehen, wie die App genutzt wird (Art. 6 Abs. 1 lit. f DSGVO). Sie können das in den App-Einstellungen ausschalten.",
       posthogAi:
         "Nutzungsdaten der KI-Funktionen (etwa welches KI-Modell verwendet wurde, Anzahl der Tokens, Antwortzeit und Kosten) werden ebenfalls über PostHog erfasst, damit wir die KI-Funktionen überwachen und verbessern können. Chatnachrichten, Prompts oder KI-Antworten werden nicht an PostHog weitergegeben. PostHog verarbeitet die Daten auf Servern in der EU. Siehe die <link>Datenschutzerklärung von PostHog</link>.",
+      billing:
+        "<strong>Autumn (Web) und RevenueCat (iOS/Android), Tarife und KI-Guthaben:</strong> Verwalten Ihren Tarif, Ihre Käufe und Ihr Guthaben. Autumn erhält Ihre Konto-ID, Ihren Namen und Ihre E-Mail-Adresse, RevenueCat Ihre Konto-ID, und beide Ihre Kaufhistorie. In der App wickeln Apple oder Google die Käufe ab; im Web nutzt Autumn Stripe für die Zahlung.",
+      expo: "<strong>Expo (App-Updates):</strong> Beim Start fragt die App bei den Servern von Expo nach Updates. Expo erhält dabei Ihre IP-Adresse und technische Daten wie App-Version und Plattform.",
+      stores:
+        "<strong>Apple App Store und Google Play:</strong> Vertreiben die App und wickeln In-App-Käufe als eigene Verantwortliche nach ihren eigenen Datenschutzbestimmungen ab.",
+      posthogServer:
+        "<strong>Wenn Sie angemeldet sind (Web und App):</strong> Unser Server sendet jede Aktion, etwa das Hinzufügen eines Artikels, mit Ihrer Konto-ID, der betroffenen Haushaltsgruppe und der Dauer an PostHog. Im Web sendet er außerdem jede aufgerufene Seite mit Browser, Betriebssystem, Gerätetyp, User-Agent und verweisender Seite. Ihre IP-Adresse wird nicht übermittelt. Rechtsgrundlage ist unser berechtigtes Interesse, zu sehen, wie Flatsby genutzt wird, um Fehler zu beheben und den Dienst zu verbessern (Art. 6 Abs. 1 lit. f DSGVO). Sie können jederzeit widersprechen, siehe Ihr Widerspruchsrecht.",
     },
     legalRequirements: {
       heading: "6.3 Gesetzliche Anforderungen",
@@ -201,17 +220,17 @@ export const legal = {
       members:
         "Namen von Gruppenmitgliedern (wenn die KI Mitglieder zuordnen muss)",
       outro:
-        "Die KI-Anbieter verarbeiten diese Daten, um intelligente Funktionen bereitzustellen. Die Datenverarbeitung richtet sich nach dem oben verlinkten Auftragsverarbeitungsvertrag (DPA) von Vercel.",
+        "Vercel leitet diese Daten an OpenAI oder Google weiter, die damit das Ergebnis erzeugen.",
     },
     retention: {
       intro:
         "Wir speichern Ihre personenbezogenen Daten, solange Ihr Konto aktiv ist. Wenn Sie Ihr Konto löschen:",
-      personal: "werden Ihre personenbezogenen Daten sofort gelöscht",
+      personal:
+        "werden Ihr Konto, Ihr Profil und Ihre Chatverläufe sofort aus unserer Datenbank gelöscht",
       content:
         "können von Ihnen erstellte Einkaufslistenartikel und Ausgaben anonymisiert, aber für die anderen Gruppenmitglieder aufbewahrt werden",
-      chat: "werden Chatverläufe endgültig gelöscht",
       outro:
-        "Bestimmte Daten können wir länger aufbewahren, wenn dies gesetzlich vorgeschrieben ist oder berechtigten geschäftlichen Zwecken dient (z. B. Abrechnungsunterlagen).",
+        "Unabhängig davon gilt: Datenbank-Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen samt IP-Adresse und Browser werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Analyseereignisse bei PostHog werden nach 12 Monaten gelöscht. Der tägliche Schlüssel für Besucher-IDs auf der Website wird jeden Tag gelöscht. Wenn Sie einen Tarif gekauft haben, bewahren wir Rechnungen und Zahlungsbelege so lange auf, wie es das Steuer- und Handelsrecht vorschreibt (bis zu 10 Jahre).",
     },
     rights: {
       intro: "Nach der DSGVO haben Sie das Recht auf:",
@@ -225,14 +244,13 @@ export const legal = {
         "<strong>Einschränkung:</strong> Die Verarbeitung Ihrer Daten einschränken",
       portability:
         "<strong>Datenübertragbarkeit:</strong> Ihre Daten in einem maschinenlesbaren Format erhalten",
-      object:
-        "<strong>Widerspruch:</strong> Der Verarbeitung auf Grundlage berechtigter Interessen widersprechen",
+      object: "<strong>Widerspruch:</strong> Siehe Ihr Widerspruchsrecht unten",
       withdraw:
         "<strong>Widerruf der Einwilligung:</strong> Eine Einwilligung für einwilligungsbasierte Verarbeitungen jederzeit widerrufen",
       optOut:
-        "<strong>Widerspruch gegen Analyse:</strong> Sie können das Analyse-Tracking in den Einstellungen der App deaktivieren. Dadurch werden keine Nutzungsdaten mehr erhoben, während die App weiterhin normal funktioniert.",
+        "<strong>Analyse in der App:</strong> Sie können die Analyse in den App-Einstellungen ausschalten. Die App sendet dann keine Nutzungsdaten mehr an PostHog. Unser Server erfasst Aktionen aber weiterhin mit Ihrem Konto. Wenn Sie auch das nicht möchten, widersprechen Sie wie unter Ihr Widerspruchsrecht beschrieben.",
       exercise:
-        "Um diese Rechte auszuüben, nutzen Sie die Funktion „Meine Daten exportieren“ in den Einstellungen oder kontaktieren Sie uns unter support@flatsby.com. Sie haben außerdem das Recht, sich bei einer Aufsichtsbehörde zu beschweren.",
+        "Um diese Rechte auszuüben, nutzen Sie die Funktion „Meine Daten exportieren“ in den Einstellungen oder schreiben Sie uns an support@flatsby.com. Sie können sich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren, insbesondere in dem EU-Mitgliedstaat, in dem Sie wohnen oder arbeiten. Für uns zuständig ist der Hessische Beauftragte für Datenschutz und Informationsfreiheit (HBDI) in Wiesbaden, <link>datenschutz.hessen.de</link>.",
     },
     security: {
       intro:
@@ -244,7 +262,7 @@ export const legal = {
       access: "Zugriffskontrollen und Überwachung",
     },
     international:
-      "Ihre Daten können von unseren Dienstleistern außerhalb des Europäischen Wirtschaftsraums (EWR) verarbeitet werden. Insbesondere verarbeiten die KI-Dienste (OpenAI und Google) Daten in den Vereinigten Staaten. Wir stellen sicher, dass geeignete Garantien bestehen, etwa Standardvertragsklauseln (SCC) oder Angemessenheitsbeschlüsse. Einzelheiten finden Sie im DPA-Link in Abschnitt 6.2.",
+      "Einige unserer Dienstleister sind Unternehmen mit Sitz in den USA: Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe und Expo. Neon und PostHog speichern unsere Daten in Frankfurt. Die EU-Kommission hat festgestellt, dass nach dem EU-US Data Privacy Framework zertifizierte Unternehmen ein angemessenes Datenschutzniveau bieten (Art. 45 DSGVO). PostHog ist zertifiziert und hat mit uns zusätzlich die EU-Standardvertragsklauseln vereinbart (Art. 46 Abs. 2 lit. c DSGVO).",
     children:
       "Flatsby richtet sich nicht an Kinder unter 16 Jahren. Wir erheben nicht wissentlich personenbezogene Daten von Kindern unter 16 Jahren. Wenn Sie glauben, dass wir Daten eines Kindes erhoben haben, kontaktieren Sie uns bitte umgehend.",
     changes:
@@ -253,6 +271,14 @@ export const legal = {
       intro:
         "Bei Fragen zum Datenschutz oder um Ihre Rechte auszuüben, kontaktieren Sie uns:",
       email: "<strong>E-Mail:</strong> support@flatsby.com",
+    },
+    objection: {
+      intro:
+        "Soweit wir Ihre Daten auf Grundlage berechtigter Interessen verarbeiten (Art. 6 Abs. 1 lit. f DSGVO, siehe Rechtsgrundlagen der Verarbeitung), können Sie aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit widersprechen (Art. 21 DSGVO). Bei der Analyse müssen Sie keinen Grund angeben; wir hören dann damit auf.",
+      signedIn:
+        "<strong>Angemeldet:</strong> Schreiben Sie von der E-Mail-Adresse Ihres Kontos an support@flatsby.com. Wir erfassen dann für Ihr Konto keine Analyseereignisse mehr, weder im Web noch in der App.",
+      visitor:
+        "<strong>Nicht angemeldet:</strong> Wir können Sie nicht wiedererkennen und einen Widerspruch per E-Mail deshalb Ihren Besuchen nicht zuordnen. Aktivieren Sie stattdessen Global Privacy Control oder Do Not Track in Ihrem Browser. Dann zählen wir Ihre Besuche gar nicht.",
     },
   },
   legalNotice: {

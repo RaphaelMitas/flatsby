@@ -8,7 +8,7 @@ export const auth = {
     signInWithApple: "Mit Apple anmelden",
     signingInWithApple: "Anmeldung mit Apple",
     agreement:
-      "Mit der Anmeldung stimmst du unseren <terms>Nutzungsbedingungen</terms> und der <privacy>Datenschutzerklärung</privacy> zu",
+      "Mit der Anmeldung stimmst du unseren <terms>Nutzungsbedingungen</terms> zu. Wie wir deine Daten verarbeiten, erklärt die <privacy>Datenschutzerklärung</privacy>.",
   },
   consent: {
     title: "Willkommen bei Flatsby",
@@ -17,9 +17,8 @@ export const auth = {
     agreeTerms: "Ich stimme den <link>Nutzungsbedingungen</link> zu",
     termsHint:
       "Mit diesem Häkchen erklärst du dich an unsere Bedingungen gebunden.",
-    agreePrivacy: "Ich stimme der <link>Datenschutzerklärung</link> zu",
-    privacyHint:
-      "Mit diesem Häkchen willigst du in unsere Datenverarbeitung ein.",
+    agreePrivacy: "Ich habe die <link>Datenschutzerklärung</link> gelesen",
+    privacyHint: "Sie erklärt, wie wir deine Daten verarbeiten.",
     continue: "Weiter",
     error: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
   },

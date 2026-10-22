@@ -29,7 +29,7 @@ import { legalMetadata, LegalShell } from "../_components/legal-shell";
 export const dynamicParams = false;
 
 const PATH = "/legal/privacy";
-const PRIVACY_VERSION = "1.2";
+const PRIVACY_VERSION = "1.3";
 
 const SECTIONS = [
   { id: "introduction", key: "introduction" },
@@ -40,6 +40,7 @@ const SECTIONS = [
   { id: "data-sharing", key: "sharing" },
   { id: "data-retention", key: "retention" },
   { id: "your-rights", key: "rights" },
+  { id: "objection", key: "objection" },
   { id: "security", key: "security" },
   { id: "international", key: "international" },
   { id: "children", key: "children" },
@@ -100,14 +101,16 @@ export default function PrivacyPage() {
             <LegalSubheading>{t("account.heading")}</LegalSubheading>
             <LegalParagraph>{t("account.intro")}</LegalParagraph>
             <LegalItems
-              keys={["name", "email", "picture", "identifier"] as const}
+              keys={["name", "email", "picture", "identifier", "plan"] as const}
               render={(key) => t(`account.${key}`)}
             />
 
             <LegalSubheading>{t("userContent.heading")}</LegalSubheading>
             <LegalParagraph>{t("userContent.intro")}</LegalParagraph>
             <LegalItems
-              keys={["lists", "expenses", "groups", "chat"] as const}
+              keys={
+                ["lists", "expenses", "calendar", "groups", "chat"] as const
+              }
               render={(key) => t(`userContent.${key}`)}
             />
 
@@ -117,7 +120,7 @@ export default function PrivacyPage() {
               <strong>{t("technical.website")}</strong>
             </LegalParagraph>
             <LegalItems
-              keys={["websiteIp", "websiteViews"] as const}
+              keys={["websiteIp", "websiteViews", "websiteSession"] as const}
               render={(key) => t(`technical.${key}`)}
             />
             <LegalParagraph>
@@ -127,6 +130,7 @@ export default function PrivacyPage() {
               keys={["mobileIp", "mobileDevice", "mobileViews"] as const}
               render={(key) => t(`technical.${key}`)}
             />
+            <LegalParagraph>{t("technical.errors")}</LegalParagraph>
           </LegalSection>
 
           <LegalSection id="legal-basis">
@@ -138,6 +142,7 @@ export default function PrivacyPage() {
               }
               render={(key) => t.rich(`basis.${key}`, { strong })}
             />
+            <LegalParagraph>{t("basis.required")}</LegalParagraph>
           </LegalSection>
 
           <LegalSection id="data-use">
@@ -171,6 +176,9 @@ export default function PrivacyPage() {
               <li>{t.rich("providers.neon", { strong })}</li>
               <li>{t.rich("providers.vercel", { strong })}</li>
               <li>{t.rich("providers.auth", { strong })}</li>
+              <li>{t.rich("providers.billing", { strong })}</li>
+              <li>{t.rich("providers.expo", { strong })}</li>
+              <li>{t.rich("providers.stores", { strong })}</li>
               <li>
                 {t.rich("providers.ai", {
                   strong,
@@ -183,7 +191,10 @@ export default function PrivacyPage() {
                     </LegalLink>
                   ),
                   dpa: (chunks) => (
-                    <LegalLink href="https://vercel.com/legal/dpa" external>
+                    <LegalLink
+                      href="https://vercel.com/legal/privacy-policy"
+                      external
+                    >
                       {chunks}
                     </LegalLink>
                   ),
@@ -193,6 +204,7 @@ export default function PrivacyPage() {
                 {t.rich("providers.posthog", { strong })}
                 <ul className="mt-2 ml-4 list-disc space-y-1">
                   <li>{t.rich("providers.posthogWebsite", { strong })}</li>
+                  <li>{t.rich("providers.posthogServer", { strong })}</li>
                   <li>{t.rich("providers.posthogMobile", { strong })}</li>
                 </ul>
                 {t.rich("providers.posthogAi", {
@@ -221,7 +233,7 @@ export default function PrivacyPage() {
             <LegalHeading>{heading("retention")}</LegalHeading>
             <LegalParagraph>{t("retention.intro")}</LegalParagraph>
             <LegalItems
-              keys={["personal", "content", "chat"] as const}
+              keys={["personal", "content"] as const}
               render={(key) => t(`retention.${key}`)}
             />
             <LegalParagraph>{t("retention.outro")}</LegalParagraph>
@@ -247,7 +259,26 @@ export default function PrivacyPage() {
             <LegalParagraph>
               {t.rich("rights.optOut", { strong })}
             </LegalParagraph>
-            <LegalParagraph>{t("rights.exercise")}</LegalParagraph>
+            <LegalParagraph>
+              {t.rich("rights.exercise", {
+                link: (chunks) => (
+                  <LegalLink href="https://datenschutz.hessen.de" external>
+                    {chunks}
+                  </LegalLink>
+                ),
+              })}
+            </LegalParagraph>
+          </LegalSection>
+
+          <LegalSection id="objection">
+            <LegalHeading>{heading("objection")}</LegalHeading>
+            <LegalParagraph>
+              <strong>{t("objection.intro")}</strong>
+            </LegalParagraph>
+            <LegalItems
+              keys={["signedIn", "visitor"] as const}
+              render={(key) => t.rich(`objection.${key}`, { strong })}
+            />
           </LegalSection>
 
           <LegalSection id="security">
