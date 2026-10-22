@@ -1,7 +1,6 @@
-import type React from "react";
 import type { SharedValue } from "react-native-reanimated";
 import type { ClassNameValue } from "tailwind-merge";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { Text, View } from "react-native";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 
@@ -18,21 +17,13 @@ interface SwipeActionsProps {
   rightAction?: SwipeAction;
 }
 
-interface SwipeActionsReturn {
-  renderLeftActions?: (
-    _prog: SharedValue<number>,
-    _drag: SharedValue<number>,
-  ) => React.ReactElement;
-  renderRightActions?: (
-    _prog: SharedValue<number>,
-    _drag: SharedValue<number>,
-  ) => React.ReactElement;
-}
-
 export const useSwipeActions = ({
   leftAction,
   rightAction,
-}: SwipeActionsProps): SwipeActionsReturn => {
+}: SwipeActionsProps) => {
+  // Gesture Handler 3 fires presses inside the row as a swipe ends, so ignore them until the row closes
+  const swiping = useRef(false);
+
   const rightActionStyle = useAnimatedStyle(() => {
     return {
       flex: 1,
@@ -98,7 +89,20 @@ export const useSwipeActions = ({
   );
 
   return {
-    renderLeftActions: leftAction ? renderLeftActions : undefined,
-    renderRightActions: rightAction ? renderRightActions : undefined,
+    swipeableProps: {
+      renderLeftActions: leftAction ? renderLeftActions : undefined,
+      renderRightActions: rightAction ? renderRightActions : undefined,
+      onSwipeableOpenStartDrag: () => {
+        swiping.current = true;
+      },
+      onSwipeableClose: () => {
+        swiping.current = false;
+      },
+    },
+    guardPress:
+      <Args extends unknown[]>(onPress: (...args: Args) => void) =>
+      (...args: Args) => {
+        if (!swiping.current) onPress(...args);
+      },
   };
 };

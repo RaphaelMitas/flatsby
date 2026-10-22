@@ -24,6 +24,7 @@ export function AppScrollView({
   const renderScrollView = (refreshProps: ListRefreshProps = {}) => (
     <KeyboardAwareScrollView
       keyboardShouldPersistTaps="handled"
+      contentInsetAdjustmentBehavior="automatic"
       className={cn("flex-1", className)}
       bottomOffset={safeAreaInsets.bottom}
       contentContainerClassName={cn("grow", contentContainerClassName)}

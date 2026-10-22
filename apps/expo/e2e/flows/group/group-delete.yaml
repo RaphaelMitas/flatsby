@@ -62,10 +62,12 @@ tags:
     env:
       TARGET_ID: "shopping-lists-group-settings"
       MARKER_ID: "group-settings-details"
+# Centered, or the tap can land on the iOS tab bar floating over the row
 - scrollUntilVisible:
     element:
       id: "group-settings-delete"
     direction: DOWN
+    centerElement: true
 - tapOn:
     id: "group-settings-delete"
 - runFlow:
@@ -73,14 +75,8 @@ tags:
     env:
       CONFIRM_TEXT: "Spent Group"
 
-# The list hides the group optimistically, so relaunch to read what the server
-# kept, once the dashboard shows and the delete request has left the app
-- runFlow:
-    file: ../../subflows/tap-tab.yaml
-    env:
-      TAB_ID: "tab-home"
-      TAB_LABEL: "Home"
-      TAB_X: "41%"
+# Lands on Home's group list, which hides the group optimistically. Once it shows,
+# the delete has left the app, so relaunch to read what the server kept.
 - extendedWaitUntil:
     visible:
       id: "group-dashboard-title"

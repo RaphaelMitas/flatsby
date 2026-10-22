@@ -101,7 +101,7 @@ export function ExpenseCard({
   const expenseDate = new Date(expense.expenseDate);
   const fromMember = expense.expenseSplits[0]?.groupMember;
 
-  const { renderLeftActions, renderRightActions } = useSwipeActions({
+  const { swipeableProps, guardPress } = useSwipeActions({
     leftAction: {
       text: t("common.edit"),
       className: "bg-info",
@@ -145,8 +145,7 @@ export function ExpenseCard({
         friction={2}
         leftThreshold={40}
         rightThreshold={40}
-        renderLeftActions={renderLeftActions}
-        renderRightActions={renderRightActions}
+        {...swipeableProps}
         onSwipeableOpen={(direction) => {
           if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
@@ -160,7 +159,7 @@ export function ExpenseCard({
         <Pressable
           testID={`expense-card-${expense.description}`}
           accessible={e2eAccessibilityOverride()}
-          onPress={handleCardPress}
+          onPress={guardPress(handleCardPress)}
           disabled={isOptimistic}
         >
           <ExpenseDisplay

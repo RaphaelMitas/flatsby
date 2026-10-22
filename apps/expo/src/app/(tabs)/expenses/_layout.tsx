@@ -4,14 +4,14 @@ import { useTranslations } from "use-intl";
 import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function ExpensesLayout() {
-  const themedScreenOptions = useThemedScreenOptions();
+  const { screenOptions, solidHeader } = useThemedScreenOptions();
   const t = useTranslations();
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        ...themedScreenOptions,
+        ...screenOptions,
       }}
     >
       <Stack.Screen name="index" />
@@ -21,6 +21,7 @@ export default function ExpensesLayout() {
           headerShown: true,
           headerTitle: t("expenses.addExpense"),
           headerBackTitle: t("expenses.backToExpenses"),
+          ...solidHeader,
         }}
       />
       <Stack.Screen
@@ -29,6 +30,7 @@ export default function ExpensesLayout() {
           headerShown: true,
           headerTitle: t("navigation.debts"),
           headerBackTitle: t("navigation.expenses"),
+          ...solidHeader,
         }}
       />
       <Stack.Screen
@@ -45,6 +47,7 @@ export default function ExpensesLayout() {
           headerShown: true,
           headerTitle: t("expenses.expenseDetails"),
           headerBackTitle: t("common.back"),
+          ...solidHeader,
         }}
       />
     </Stack>

@@ -4,12 +4,12 @@ import { useTranslations } from "use-intl";
 import { useThemeColors, useThemedScreenOptions } from "~/lib/utils";
 
 export default function SettingsLayout() {
-  const themedScreenOptions = useThemedScreenOptions();
+  const { screenOptions, solidHeader } = useThemedScreenOptions();
   const { getColor } = useThemeColors();
   const t = useTranslations();
 
   return (
-    <Stack screenOptions={themedScreenOptions}>
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen
         name="index"
         options={{
@@ -29,6 +29,7 @@ export default function SettingsLayout() {
         options={{
           title: t("navigation.profile"),
           headerBackTitle: "",
+          ...solidHeader,
         }}
       />
       <Stack.Screen
@@ -45,6 +46,15 @@ export default function SettingsLayout() {
           title: t("settings.items.buyCredits"),
           headerBackTitle: "",
           presentation: "modal",
+          ...solidHeader,
+        }}
+      />
+      <Stack.Screen
+        name="manage-groups"
+        options={{
+          title: t("navigation.manageGroups"),
+          headerBackTitle: t("navigation.settings"),
+          ...solidHeader,
         }}
       />
       <Stack.Screen
@@ -81,6 +91,7 @@ export default function SettingsLayout() {
           title: t("navigation.memberActions"),
           presentation: "modal",
           headerShown: true,
+          ...solidHeader,
         }}
       />
       <Stack.Screen
@@ -96,6 +107,7 @@ export default function SettingsLayout() {
         options={{
           title: t("splitwiseImport.importExpenses"),
           headerBackTitle: "",
+          ...solidHeader,
         }}
       />
     </Stack>

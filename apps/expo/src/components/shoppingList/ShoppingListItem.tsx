@@ -132,7 +132,7 @@ const ShoppingListItem = ({
     deleteShoppingListItemMutation.mutate({ id: item.id });
   };
 
-  const { renderLeftActions, renderRightActions } = useSwipeActions({
+  const { swipeableProps, guardPress } = useSwipeActions({
     leftAction: {
       text: t("common.edit"),
       className: "bg-info",
@@ -155,8 +155,7 @@ const ShoppingListItem = ({
         friction={2}
         leftThreshold={40}
         rightThreshold={40}
-        renderRightActions={renderRightActions}
-        renderLeftActions={renderLeftActions}
+        {...swipeableProps}
         onSwipeableOpen={(direction) => {
           if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
@@ -170,13 +169,13 @@ const ShoppingListItem = ({
         <Pressable
           accessible={e2eAccessibilityOverride()}
           disabled={item.isPending}
-          onPress={() => setShowDetails(true)}
+          onPress={guardPress(() => setShowDetails(true))}
         >
           <ShoppingItemDisplay
             name={item.name}
             completed={item.completed}
             categoryId={item.categoryId}
-            onCheckedChange={handleCheckboxToggle}
+            onCheckedChange={guardPress(handleCheckboxToggle)}
             disabled={item.isPending}
             checkboxTestID={`shopping-list-item-checkbox-${item.name}`}
             testID={`shopping-list-item-${item.name}`}
