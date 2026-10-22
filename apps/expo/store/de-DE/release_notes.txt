@@ -1,3 +1,6 @@
-• Neuer Kalender-Tab für Aufgaben und Termine. Wiederhole sie täglich, wöchentlich, monatlich oder jährlich, lass deine Mitbewohner sich automatisch abwechseln und hake Erledigtes ab.
-• Gruppen mit Ausgaben lassen sich jetzt löschen. Klappt das Löschen einmal nicht, sagt dir die App Bescheid, statt die Gruppe stillschweigend wiederherzustellen.
+• Probier die neue Startseite: Was heute ansteht, etwa deine nächste Aufgabe oder eine offene Schuld, steht oben. Zurück geht's jederzeit in den Einstellungen.
+• Der Kalender ist jetzt eine durchgehende Liste. Beim Scrollen klappt der Monat zur Woche zusammen, durch die du wischen kannst.
+• Wiederkehrende Aufgaben und Termine können jetzt an einem Datum enden.
+• Nach dem Speichern einer Ausgabe geht's direkt zur Liste.
+• Liquid Glass unter iOS 26.
 • Kleine Fehlerbehebungen und Verbesserungen.

@@ -1,3 +1,6 @@
-• New Calendar tab for chores and events. Repeat them daily, weekly, monthly or yearly, let flatmates take turns automatically, and tick off what's done.
-• Groups that have expenses can now be deleted. If deleting a group ever fails, the app tells you instead of quietly putting it back.
+• Try the new home: what needs you today, like your next chore or a debt to settle, right at the top. Switch back anytime in Settings.
+• The calendar is now one scrolling list of every day. Scroll and the month folds into a week you can swipe through.
+• Repeating tasks and events can now end on a date.
+• Saving an expense takes you straight back to the list.
+• Liquid Glass on iOS 26.
 • Small fixes and improvements.
