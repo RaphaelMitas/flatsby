@@ -167,7 +167,7 @@ export const legal = {
       neon: "<strong>Neon (Datenbank):</strong> Speichert unsere Daten in Frankfurt.",
       vercel:
         "<strong>Vercel (Hosting):</strong> Jede Anfrage läuft über Vercel, mit Ihrer IP-Adresse und Ihren Browserangaben. Unsere API läuft in Frankfurt; Seiten können von einem Standort in Ihrer Nähe ausgeliefert werden, auch außerhalb der EU.",
-      auth: "<strong>Google und Apple (Anmeldung):</strong> Bestätigen Ihre Identität. Profilbilder von Google werden von Servern von Google geladen, daher sieht Google die IP-Adresse aller, die sie ansehen.",
+      auth: "<strong>Google und Apple (Anmeldung):</strong> Bestätigen Ihre Identität. Profilbilder von Google werden von Servern von Google geladen, daher sieht Google die IP-Adresse aller, die sie ansehen (Art. 6 Abs. 1 lit. b DSGVO).",
       billing:
         "<strong>Autumn, Stripe und RevenueCat (Tarife und KI-Guthaben):</strong> Autumn (Web) erhält Ihre Konto-ID, Ihren Namen und Ihre E-Mail-Adresse, RevenueCat (App) Ihre Konto-ID, beide mit Ihren Käufen. Autumn nutzt Stripe für Zahlungen.",
       expo: "<strong>Expo (App-Updates):</strong> Die App fragt bei den Servern von Expo nach Updates; diese erhalten Ihre IP-Adresse, App-Version und Plattform.",
@@ -215,7 +215,7 @@ export const legal = {
       intro:
         "Soweit wir uns auf berechtigte Interessen stützen, können Sie aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit widersprechen (Art. 21 DSGVO). Bei der Analyse brauchen Sie keinen Grund anzugeben.",
       signedIn:
-        "<strong>Angemeldet:</strong> Schreiben Sie von der E-Mail-Adresse Ihres Kontos an support@flatsby.com. Wir beenden dann die Analyse für Ihr Konto, im Web und in der App.",
+        "<strong>Angemeldet:</strong> Schreiben Sie an support@flatsby.com, möglichst von der E-Mail-Adresse Ihres Kontos. Wir beenden dann die Analyse für Ihr Konto, im Web und in der App.",
       visitor:
         "<strong>Nicht angemeldet:</strong> Wir können Sie nicht wiedererkennen. Aktivieren Sie daher Global Privacy Control oder Do Not Track in Ihrem Browser. Dann zählen wir Ihre Besuche nicht.",
     },

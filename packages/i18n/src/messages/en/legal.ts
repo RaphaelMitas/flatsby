@@ -160,7 +160,7 @@ export const legal = {
       neon: "<strong>Neon (database):</strong> Stores our data in Frankfurt.",
       vercel:
         "<strong>Vercel (hosting):</strong> Every request passes through Vercel, with your IP address and browser details. Our API runs in Frankfurt; pages may be served from a location near you, possibly outside the EU.",
-      auth: "<strong>Google and Apple (sign-in):</strong> Confirm your identity. Google profile pictures load from Google's servers, so Google sees the IP address of anyone viewing them.",
+      auth: "<strong>Google and Apple (sign-in):</strong> Confirm your identity. Google profile pictures load from Google's servers, so Google sees the IP address of anyone viewing them (Art. 6(1)(b) GDPR).",
       billing:
         "<strong>Autumn, Stripe and RevenueCat (plans and AI credits):</strong> Autumn (web) receives your account ID, name and email address, RevenueCat (app) your account ID, both with your purchases. Autumn uses Stripe for payments.",
       expo: "<strong>Expo (app updates):</strong> The app checks Expo's servers for updates, which receive your IP address, app version and platform.",
@@ -206,7 +206,7 @@ export const legal = {
       intro:
         "Where we rely on legitimate interests, you can object at any time on grounds relating to your particular situation (Art. 21 GDPR). For analytics you don't need to give a reason.",
       signedIn:
-        "<strong>Signed in:</strong> Email support@flatsby.com from your account's address. We then stop analytics for your account, on the web and in the app.",
+        "<strong>Signed in:</strong> Email support@flatsby.com, from your account's address if you can. We then stop analytics for your account, on the web and in the app.",
       visitor:
         "<strong>Not signed in:</strong> We can't recognize you, so turn on Global Privacy Control or Do Not Track in your browser. We then don't count your visits.",
     },
