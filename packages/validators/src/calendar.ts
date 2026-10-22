@@ -580,17 +580,13 @@ function daySummary(entries: CalendarEntry[], meId: number) {
   };
 }
 
-function rangeEntries(
-  range: CalendarRange,
-  keep: (entry: CalendarEntry) => boolean,
-): CalendarEntry[] {
+function rangeEntries(range: CalendarRange): CalendarEntry[] {
   const items = new Map(range.items.map((item) => [item.id, item]));
   return range.occurrences
     .flatMap((occurrence) => {
       const item = items.get(occurrence.itemId);
       return item ? [{ item, occurrence }] : [];
     })
-    .filter(keep)
     .sort(
       (a, b) =>
         a.occurrence.date.localeCompare(b.occurrence.date) ||
@@ -622,7 +618,7 @@ function agendaDays(
   const byDate = new Map(
     dates.map((date): [string, CalendarEntry[]] => [date, []]),
   );
-  for (const entry of rangeEntries(range, () => true))
+  for (const entry of rangeEntries(range))
     byDate.get(entry.occurrence.date)?.push(entry);
   return dates.map((date) => {
     const entries = byDate.get(date) ?? [];
@@ -719,7 +715,9 @@ export function listAgenda(
   member: number | null,
 ) {
   const due =
-    start === today ? latestOpen(rangeEntries(range, isOpenTask), today) : [];
+    start === today
+      ? latestOpen(rangeEntries(range).filter(isOpenTask), today)
+      : [];
   // A chore still open today carries its missed days there, so one tick settles them like on home
   const days = agendaDays(range, weekDays(start), meId).map((day) => ({
     ...day,
@@ -793,14 +791,16 @@ export const showsToday = (position: CalendarPosition) =>
 export const otherView = ({ view }: CalendarPosition): CalendarView =>
   view === "list" ? "month" : "list";
 
-export const switchView = (
+export function switchView(
   position: CalendarPosition,
   view: CalendarView,
   today: string,
-) =>
-  view === "month"
+): CalendarPosition {
+  if (view === position.view) return position;
+  return view === "month"
     ? showDate({ ...position, view }, shownDates(position, today).start, today)
     : { ...position, view };
+}
 
 export function stepPosition(
   position: CalendarPosition,
@@ -862,7 +862,7 @@ export function homeAgenda(
   now: string,
   meId: number,
 ) {
-  const entries = rangeEntries(range, () => true);
+  const entries = rangeEntries(range);
   const myOpenTasks = entries.filter(
     (entry) => isOpenTask(entry) && entry.occurrence.turnGroupMemberId === meId,
   );

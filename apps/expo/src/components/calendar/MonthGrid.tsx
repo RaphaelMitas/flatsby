@@ -7,6 +7,7 @@ import {
   formatCalendarDate,
   monthGrid,
   monthOf,
+  timesMissed,
 } from "@flatsby/validators/calendar";
 import {
   categoryBgColorMap,
@@ -99,7 +100,8 @@ export function MonthGrid({ month, days, today, onSelect }: MonthGridProps) {
                   </Text>
                 </View>
               </View>
-              {shown.map(({ item, occurrence }) => {
+              {shown.map((entry) => {
+                const { item, occurrence } = entry;
                 const done = occurrence.completedAt !== null;
                 const key = `${item.id}-${occurrence.date}`;
                 if (item.kind === "event")
@@ -137,7 +139,7 @@ export function MonthGrid({ month, days, today, onSelect }: MonthGridProps) {
                         "flex-1 text-xs",
                         done
                           ? "text-muted-foreground line-through"
-                          : date < today
+                          : timesMissed(entry, today) > 0
                             ? "text-destructive"
                             : "text-foreground",
                       )}

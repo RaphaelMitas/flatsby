@@ -9,6 +9,7 @@ import {
   formatCalendarDate,
   monthGrid,
   monthOf,
+  timesMissed,
 } from "@flatsby/validators/calendar";
 import {
   categoryBgColorMap,
@@ -124,7 +125,8 @@ export function MonthGrid({
                       item.kind === "task" &&
                         (done
                           ? "text-muted-foreground line-through"
-                          : date < today && "text-destructive"),
+                          : timesMissed(entry, today) > 0 &&
+                            "text-destructive"),
                     )}
                     style={{ height: LINE_HEIGHT - 2 }}
                     data-testid="calendar-month-entry"

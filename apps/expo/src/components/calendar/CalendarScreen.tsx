@@ -41,7 +41,7 @@ export const calendarRangeOptions = (
   { from, to }: { from: string; to: string },
 ) => ({
   ...trpc.calendar.range.queryOptions({ groupId, from, to }),
-  // Ranges go stale at once here, and refetching one mid-write would wipe its optimistic patch
+  // Refetching a range mid-write would wipe its optimistic patch
   staleTime: () =>
     queryClient.isMutating({ mutationKey: trpc.calendar.pathKey() }) > 0
       ? Number.POSITIVE_INFINITY
