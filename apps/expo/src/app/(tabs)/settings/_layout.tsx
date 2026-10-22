@@ -50,6 +50,14 @@ export default function SettingsLayout() {
         }}
       />
       <Stack.Screen
+        name="manage-groups"
+        options={{
+          title: t("navigation.manageGroups"),
+          headerBackTitle: t("navigation.settings"),
+          ...solidHeader,
+        }}
+      />
+      <Stack.Screen
         name="group-settings/index"
         options={{
           title: t("navigation.groupSettings"),

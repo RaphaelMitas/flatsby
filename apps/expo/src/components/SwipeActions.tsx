@@ -21,7 +21,7 @@ export const useSwipeActions = ({
   leftAction,
   rightAction,
 }: SwipeActionsProps) => {
-  // Gesture Handler 3 still fires presses inside the row when a swipe ends, so ignore them until it springs back
+  // Gesture Handler 3 fires presses inside the row as a swipe ends, so ignore them until the row closes
   const swiping = useRef(false);
 
   const rightActionStyle = useAnimatedStyle(() => {

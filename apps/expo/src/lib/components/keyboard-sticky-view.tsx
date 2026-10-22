@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { ViewInstance } from "react-native";
 import type { KeyboardStickyViewProps } from "react-native-keyboard-controller";
 import { useRef, useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { Dimensions, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 
 interface AppKeyboardStickyViewProps extends Omit<
@@ -18,7 +18,6 @@ export function AppKeyboardStickyView({
   className,
   ...props
 }: AppKeyboardStickyViewProps) {
-  const { height: windowHeight } = useWindowDimensions();
   const anchor = useRef<ViewInstance>(null);
   const [coveredBelow, setCoveredBelow] = useState(0);
 
@@ -27,12 +26,14 @@ export function AppKeyboardStickyView({
       ref={anchor}
       onLayout={() =>
         anchor.current?.measureInWindow((_x, y, _width, height) =>
-          setCoveredBelow(Math.max(0, windowHeight - y - height)),
+          setCoveredBelow(
+            Math.max(0, Dimensions.get("window").height - y - height),
+          ),
         )
       }
     >
       <KeyboardStickyView
-        // The keyboard rises from the window's bottom edge, but this view already sits above what it covers
+        // Keyboard height counts from the window bottom, but this view already sits coveredBelow above it
         offset={{ opened: coveredBelow, closed: 0 }}
         className={className}
         {...props}

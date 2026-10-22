@@ -30,9 +30,13 @@ export function useDeleteGroup() {
       onError: () => {
         Alert.alert(t("common.error"), t("group.delete.failed"));
       },
-      // Doubles as the rollback: restoring snapshots breaks when deletes overlap
+      // Doubles as the rollback: restoring snapshots breaks when deletes overlap.
+      // "all" also replaces a fetch started mid-delete, e.g. the group list mounting once the selection clears.
       onSettled: () => {
-        void queryClient.invalidateQueries({ queryKey: groupsQueryKey });
+        void queryClient.invalidateQueries({
+          queryKey: groupsQueryKey,
+          refetchType: "all",
+        });
       },
     }),
   );

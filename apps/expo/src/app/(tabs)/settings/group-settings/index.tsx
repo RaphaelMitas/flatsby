@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useRouter } from "expo-router";
+import { Link, useNavigation, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
@@ -17,6 +17,7 @@ import { useDeleteGroup } from "~/utils/useDeleteGroup";
 export default function GroupSettingsIndex() {
   const t = useTranslations();
   const router = useRouter();
+  const tabs = useNavigation("/(tabs)");
   const { selectedGroupId } = useShoppingStore();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -29,12 +30,15 @@ export default function GroupSettingsIndex() {
   const deleteGroupMutation = useDeleteGroup();
 
   const handleDeleteGroup = () => {
+    const homeStack = tabs
+      .getState()
+      ?.routes.find((route) => route.name === "home")?.state;
     setShowDeleteModal(false);
     deleteGroupMutation.mutate({ id: Number(selectedGroupId) });
     router.dismissAll();
     router.navigate("/(tabs)/home");
-    // Pops Home too, which may still hold screens of the deleted group
-    router.dismissAll();
+    // Home may still hold screens of the deleted group, and popping an empty stack logs an error
+    if (homeStack?.index) router.dismissAll();
   };
 
   const handleCloseModal = () => {

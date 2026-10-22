@@ -75,14 +75,8 @@ tags:
     env:
       CONFIRM_TEXT: "Spent Group"
 
-# The list hides the group optimistically, so relaunch to read what the server
-# kept, once the dashboard shows and the delete request has left the app
-- runFlow:
-    file: ../../subflows/tap-tab.yaml
-    env:
-      TAB_ID: "tab-home"
-      TAB_LABEL: "Home"
-      TAB_X: "41%"
+# Deleting the selected group lands on Home's group list. It hides the group
+# optimistically, so relaunch to read what the server kept.
 - extendedWaitUntil:
     visible:
       id: "group-dashboard-title"

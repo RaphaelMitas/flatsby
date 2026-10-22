@@ -75,7 +75,6 @@ interface PickerConfig {
 
 interface BottomSheetPickerContextValue {
   openPicker: (config: PickerConfig) => void;
-  closePicker: () => void;
 }
 
 const BottomSheetPickerContext =
@@ -147,13 +146,7 @@ export const BottomSheetPickerProvider: React.FC<
     [pickerConfig?.selectedId, handleItemSelect],
   );
 
-  const contextValue = useMemo(
-    () => ({
-      openPicker,
-      closePicker,
-    }),
-    [openPicker, closePicker],
-  );
+  const contextValue = useMemo(() => ({ openPicker }), [openPicker]);
 
   return (
     <BottomSheetPickerContext.Provider value={contextValue}>
