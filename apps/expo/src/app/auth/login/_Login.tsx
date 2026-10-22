@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Linking, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { useLocale, useTranslations } from "use-intl";
 
 import { localePath } from "@flatsby/i18n/locale";
@@ -25,15 +25,18 @@ const Login = () => {
 
   // Sign-in only stores the cookie and refetches the session; nothing navigates.
   // The join screen pushes this one and already serves the signed-in user.
-  useEffect(() => {
-    if (!session) return;
-    if (router.canGoBack()) {
-      clearPostLoginPath();
-      router.back();
-    } else {
-      router.replace("/");
-    }
-  }, [session, router]);
+  // Focused only: a second login screen can sit lower in the stack.
+  useFocusEffect(
+    useCallback(() => {
+      if (!session) return;
+      if (router.canGoBack()) {
+        clearPostLoginPath();
+        router.back();
+      } else {
+        router.replace("/");
+      }
+    }, [session, router]),
+  );
 
   return (
     <View testID="login-screen" className="bg-background flex-1 px-6 py-8">

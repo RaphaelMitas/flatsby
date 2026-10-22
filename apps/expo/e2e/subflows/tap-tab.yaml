@@ -7,7 +7,7 @@ appId: ${APP_ID}
 # last because at 95% height it misses the iOS 26 floating bar (run 31254443153).
 #
 # Attempts are counted, not probed with `when: visible`: a false check waits
-# out Maestro's 7s window, which right after launchApp can shrink to nothing.
+# out Maestro's 7s window.
 #
 # env: TAB_ID (e.g. tab-home), TAB_LABEL (e.g. Home), TAB_X (slot center as
 # an integer percent, e.g. "12%"), MARKER_ID (element only that tab shows)

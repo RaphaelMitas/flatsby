@@ -56,7 +56,7 @@ appId: ${APP_ID}
       - extendedWaitUntil:
           visible: "Open in .*Flatsby.*|E2E session ready"
           timeout: 45000
-      # Read which one showed; a false `when: visible` would cost every flow 7s
+      # copyTextFrom + `true:`, since a false `when: visible` costs every flow 7s
       - copyTextFrom: "Open in .*Flatsby.*|E2E session ready"
       - runFlow:
           when:

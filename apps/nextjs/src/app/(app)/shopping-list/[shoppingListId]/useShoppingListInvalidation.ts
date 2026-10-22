@@ -35,17 +35,13 @@ export function useShoppingListInvalidation(
     });
   }, [queryClient, trpc, groupId, shoppingListId]);
 
-  const invalidateSuggestions = useCallback(() => {
-    return queryClient.invalidateQueries({
-      queryKey: trpc.shoppingList.suggestItems.pathKey(),
-    });
-  }, [queryClient, trpc]);
-
   const invalidateAll = useCallback(() => {
     void invalidateItems();
     void invalidateCategoryCounts();
-    void invalidateSuggestions();
-  }, [invalidateItems, invalidateCategoryCounts, invalidateSuggestions]);
+    void queryClient.invalidateQueries(
+      trpc.shoppingList.suggestItems.pathFilter(),
+    );
+  }, [queryClient, trpc, invalidateItems, invalidateCategoryCounts]);
 
   return {
     invalidateItems,

@@ -1,6 +1,6 @@
 import type { Href } from "expo-router";
 
-// Module state, not a route param: the sign-in callback URL only ever points at the index route
+// Module state, not a route param: sign-in can land on the bare index route, which then redirects to it
 let pending: Href | null = null;
 
 export const rememberPostLoginPath = (path: Href) => {

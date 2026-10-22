@@ -44,23 +44,14 @@ export function useInvalidateShoppingList({
     });
   }, [queryClient, groupId]);
 
-  const invalidateSuggestions = useCallback(() => {
-    return queryClient.invalidateQueries({
-      queryKey: trpc.shoppingList.suggestItems.pathKey(),
-    });
-  }, [queryClient]);
-
   const invalidateAll = useCallback(() => {
     void invalidateItems();
     void invalidateCategoryCounts();
     void invalidateLists();
-    void invalidateSuggestions();
-  }, [
-    invalidateItems,
-    invalidateCategoryCounts,
-    invalidateLists,
-    invalidateSuggestions,
-  ]);
+    void queryClient.invalidateQueries(
+      trpc.shoppingList.suggestItems.pathFilter(),
+    );
+  }, [queryClient, invalidateItems, invalidateCategoryCounts, invalidateLists]);
 
   return {
     invalidateItems,
