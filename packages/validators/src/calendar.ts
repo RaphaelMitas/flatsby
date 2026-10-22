@@ -543,6 +543,18 @@ export function monthGrid(month: string) {
   return { days, from: days[0] ?? month, to: days.at(-1) ?? month };
 }
 
+/** Where the grid's arrows land: a week on when collapsed, else the next month's 1st, or today in this month. */
+export function stepFrom(
+  selected: string,
+  today: string,
+  delta: number,
+  collapsed: boolean,
+) {
+  if (collapsed) return addDays(selected, 7 * delta);
+  const month = shiftMonth(monthOf(selected), delta);
+  return month === monthOf(today) ? today : `${month}-01`;
+}
+
 export interface CalendarEntry {
   item: CalendarItemView;
   occurrence: Occurrence;
@@ -582,20 +594,66 @@ function rangeEntries(
     );
 }
 
-/** "Mine" keeps events and the tasks that are the member's turn. */
-export function entriesOn(
+export const entriesOn = (range: CalendarRange, date: string) =>
+  rangeEntries(range, ({ occurrence }) => occurrence.date === date);
+
+export interface AgendaDay {
+  date: string;
+  entries: CalendarEntry[];
+  summary: ReturnType<typeof daySummary>;
+}
+
+/** Every day of `month`, empty ones included. "Mine" keeps events and the tasks that are the member's turn. */
+export function agendaDays(
   range: CalendarRange,
-  date: string,
-  mineMemberId?: number,
-): CalendarEntry[] {
-  return rangeEntries(
+  month: string,
+  meId: number,
+  mine: boolean,
+): AgendaDay[] {
+  const inMonth = rangeEntries(
     range,
-    ({ item, occurrence }) =>
-      occurrence.date === date &&
-      (mineMemberId === undefined ||
-        item.kind === "event" ||
-        occurrence.turnGroupMemberId === mineMemberId),
+    ({ occurrence }) => monthOf(occurrence.date) === month,
   );
+  const first = toDayNumber(`${month}-01`);
+  const length = toDayNumber(`${shiftMonth(month, 1)}-01`) - first;
+  return Array.from({ length }, (_, i) => {
+    const date = fromDayNumber(first + i);
+    const entries = inMonth.filter(
+      ({ occurrence }) => occurrence.date === date,
+    );
+    return {
+      date,
+      summary: daySummary(entries, meId),
+      entries: mine
+        ? entries.filter(
+            ({ item, occurrence }) =>
+              item.kind === "event" || occurrence.turnGroupMemberId === meId,
+          )
+        : entries,
+    };
+  });
+}
+
+export interface MonthSpan {
+  first: string;
+  last: string;
+}
+
+/** Grows the loaded months so `date` has a whole month on either side to scroll into. */
+export const spanAround = (date: string, span?: MonthSpan): MonthSpan => {
+  const before = shiftMonth(monthOf(date), -1);
+  const after = shiftMonth(monthOf(date), 1);
+  return {
+    first: span && span.first < before ? span.first : before,
+    last: span && span.last > after ? span.last : after,
+  };
+};
+
+export function monthsOf({ first, last }: MonthSpan) {
+  const months = [first];
+  while ((months.at(-1) ?? last) < last)
+    months.push(shiftMonth(months.at(-1) ?? last, 1));
+  return months;
 }
 
 export const HOME_LOOKAHEAD_DAYS = 6;

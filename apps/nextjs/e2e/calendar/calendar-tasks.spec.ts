@@ -35,27 +35,24 @@ test.describe("Calendar", () => {
     );
     await form.getByTestId("calendar-form-submit").click();
 
+    // A weekly task shows up on every week of the agenda, so everything is checked on today
+    const todaySection = authPage.getByTestId("calendar-agenda-today");
+    const progress = todaySection.getByTestId("calendar-day-progress");
     // Saved rows carry their server id; the optimistic one has a negative id
-    const row = authPage
+    const row = todaySection
       .getByTestId(/^calendar-entry-\d+$/)
       .filter({ hasText: title });
     await expect(row).toBeVisible();
-    await expect(authPage.getByTestId("calendar-day-progress")).toHaveText(
-      "0 of 1 done",
-    );
+    await expect(progress).toHaveText("0 of 1 done");
 
     const ticked = writeSettled(authPage);
     await row.getByTestId("calendar-entry-toggle").click();
-    await expect(authPage.getByTestId("calendar-day-progress")).toHaveText(
-      "1 of 1 done",
-    );
+    await expect(progress).toHaveText("1 of 1 done");
     await expect(row).toContainText("Done by");
     await ticked;
 
     await authPage.reload();
-    await expect(authPage.getByTestId("calendar-day-progress")).toHaveText(
-      "1 of 1 done",
-    );
+    await expect(progress).toHaveText("1 of 1 done");
 
     await row.getByTestId("calendar-entry-open").click();
     const detail = authPage.getByTestId("calendar-detail");
@@ -72,15 +69,11 @@ test.describe("Calendar", () => {
     await deleteButton.click();
 
     await expect(row).toHaveCount(0);
-    await expect(
-      authPage.getByText("Nothing planned for this day"),
-    ).toBeVisible();
+    await expect(todaySection.getByText("Nothing planned")).toBeVisible();
     await deleted;
 
     await authPage.reload();
-    await expect(
-      authPage.getByText("Nothing planned for this day"),
-    ).toBeVisible();
+    await expect(todaySection.getByText("Nothing planned")).toBeVisible();
     await expect(row).toHaveCount(0);
   });
 });
