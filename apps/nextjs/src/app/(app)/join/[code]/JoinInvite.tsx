@@ -27,9 +27,10 @@ import {
 import type { Platform } from "~/app/_components/landing/platform";
 import { CopyButton } from "~/app/_components/CopyButton";
 import {
-  APP_STORE_URL,
+  APP_STORE_LINK,
   PLAY_STORE_ID,
-  PLAY_STORE_URL,
+  PLAY_STORE_LINK,
+  SITE_URL,
 } from "~/app/_components/landing/content";
 import { useTRPC } from "~/trpc/react";
 
@@ -206,13 +207,15 @@ function InstallApp({
   signInHref: string;
 }) {
   const t = useTranslations();
-  const playStoreUrl = `${PLAY_STORE_URL}&referrer=${encodeURIComponent(`${INVITE_REFERRER_KEY}=${code}`)}`;
+  const invite = `?${new URLSearchParams({ [INVITE_REFERRER_KEY]: code })}`;
+  // Chrome only follows an absolute fallback URL out of an intent link
+  const playStoreFallback = `${SITE_URL}${PLAY_STORE_LINK}${invite}`;
 
   return (
     <>
       {platform === "ios" ? (
         <Button asChild>
-          <a href={APP_STORE_URL}>
+          <a href={`${APP_STORE_LINK}${invite}`}>
             <AppleIcon className="h-5 w-5 text-current" />
             {t("invite.join.appStore")}
           </a>
@@ -221,13 +224,13 @@ function InstallApp({
         <>
           <Button asChild>
             <a
-              href={`intent:/${invitePath(code)}#Intent;scheme=flatsby;package=${PLAY_STORE_ID};S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end`}
+              href={`intent:/${invitePath(code)}#Intent;scheme=flatsby;package=${PLAY_STORE_ID};S.browser_fallback_url=${encodeURIComponent(playStoreFallback)};end`}
             >
               {t("invite.join.openInApp")}
             </a>
           </Button>
           <Button variant="outline" asChild>
-            <a href={playStoreUrl}>
+            <a href={`${PLAY_STORE_LINK}${invite}`}>
               <Play className="h-5 w-5" />
               {t("invite.join.googlePlay")}
             </a>

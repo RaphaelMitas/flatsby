@@ -106,42 +106,56 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
  */
 export const createTRPCRouter = t.router;
 
-const timingMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
-  if (t._config.isDev) {
-    // simulates production latency so request waterfalls show up locally
-    const waitMs = Math.floor(Math.random() * 400) + 100;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
+// Most inputs name the group; joining an invite only learns it, so its result carries it
+function groupIdOf(value: unknown): number | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  if ("groupId" in value && typeof value.groupId === "number") {
+    return value.groupId;
   }
+  return "data" in value ? groupIdOf(value.data) : undefined;
+}
 
-  const start = Date.now();
-  const result = await next();
-  const durationMs = Date.now() - start;
+const timingMiddleware = t.middleware(
+  async ({ ctx, next, path, type, getRawInput }) => {
+    if (t._config.isDev) {
+      // simulates production latency so request waterfalls show up locally
+      const waitMs = Math.floor(Math.random() * 400) + 100;
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
 
-  if (t._config.isDev) {
-    console.log(`[TRPC] ${path} took ${durationMs}ms to execute`);
-  }
+    const start = Date.now();
+    const result = await next();
+    const durationMs = Date.now() - start;
 
-  if (
-    ctx.session?.user.id &&
-    type === "mutation" &&
-    !path.startsWith("analytics.")
-  ) {
-    // a streaming procedure returns before its body runs, so its duration and outcome are unknown here
-    const isStream = result.ok && Symbol.asyncIterator in Object(result.data);
-    captureEvent({
-      distinctId: ctx.session.user.id,
-      event: path,
-      headers: ctx.headers,
-      additionalProperties: {
-        procedure: path,
-        authMs: ctx.authMs,
-        ...(!isStream && { ok: result.ok, durationMs }),
-      },
-    });
-  }
+    if (t._config.isDev) {
+      console.log(`[TRPC] ${path} took ${durationMs}ms to execute`);
+    }
 
-  return result;
-});
+    if (
+      ctx.session?.user.id &&
+      type === "mutation" &&
+      !path.startsWith("analytics.")
+    ) {
+      // a streaming procedure returns before its body runs, so its duration and outcome are unknown here
+      const isStream = result.ok && Symbol.asyncIterator in Object(result.data);
+      captureEvent({
+        distinctId: ctx.session.user.id,
+        event: path,
+        headers: ctx.headers,
+        additionalProperties: {
+          procedure: path,
+          authMs: ctx.authMs,
+          groupId:
+            groupIdOf(await getRawInput()) ??
+            (result.ok ? groupIdOf(result.data) : undefined),
+          ...(!isStream && { ok: result.ok, durationMs }),
+        },
+      });
+    }
+
+    return result;
+  },
+);
 
 /**
  * Public (unauthed) procedure

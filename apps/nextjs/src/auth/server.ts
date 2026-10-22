@@ -3,11 +3,15 @@ import "server-only";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { getOAuthState } from "better-auth/api";
 import { importPKCS8, SignJWT } from "jose";
 
+import { captureError } from "@flatsby/api/posthog";
 import { initAuth } from "@flatsby/auth";
 
 import { env } from "~/env";
+import { captureVisit } from "~/utils/page-views";
 
 export const auth = initAuth({
   baseUrl: env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL,
@@ -27,7 +31,38 @@ export const auth = initAuth({
   trustedOrigins: env.VERCEL_BRANCH_URL
     ? [`https://${env.VERCEL_BRANCH_URL}`]
     : [],
+  onUserCreated,
 });
+
+// The Expo client starts OAuth with a deep link as its callback, the web app with a path
+async function signupPlatform() {
+  const callbackURL = (await getOAuthState())?.callbackURL ?? "/";
+  return callbackURL.startsWith("/") || /^https?:/.test(callbackURL)
+    ? "web"
+    : "app";
+}
+
+// Cookieless and never identified, so the signup counts toward its source without tying the visit to the account
+async function onUserCreated(requestHeaders: Headers | undefined) {
+  if (!requestHeaders) return;
+  try {
+    const platform = await signupPlatform();
+    // A session cookie left in the OAuth browser belongs to an earlier account, not this signup
+    const signupHeaders = new Headers(requestHeaders);
+    signupHeaders.delete("cookie");
+    after(() =>
+      captureVisit(
+        "signed_up",
+        signupHeaders,
+        { url: `${env.BETTER_AUTH_URL}/api/auth/callback`, referrer: null },
+        { platform },
+      ),
+    );
+  } catch (error) {
+    // A throw here would fail a signup Better Auth already committed
+    captureError({ error, operation: "auth.onUserCreated" });
+  }
+}
 
 export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
