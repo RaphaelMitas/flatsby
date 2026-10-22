@@ -70,20 +70,20 @@ export function MonthGrid({
   const [closed, setClosed] = useState(false);
 
   useAnimatedReaction(
-    () => collapse.value >= MONTH_COVER - 1,
+    () => collapse.get() >= MONTH_COVER - 1,
     (next, previous) => {
       if (previous !== null && next !== previous) scheduleOnRN(setClosed, next);
     },
   );
 
   const clipStyle = useAnimatedStyle(() => ({
-    height: WEEK_HEIGHT * WEEKS - collapse.value,
+    height: WEEK_HEIGHT * WEEKS - collapse.get(),
   }));
   const slideStyle = useAnimatedStyle(() => ({
     transform: [
       {
         translateY:
-          (-WEEK_HEIGHT * selectedWeek * collapse.value) / MONTH_COVER,
+          (-WEEK_HEIGHT * selectedWeek * collapse.get()) / MONTH_COVER,
       },
     ],
   }));
@@ -315,7 +315,7 @@ function WeekStrip({
   const index = weeks.findIndex((days) => days[0] === start);
   if (index < 0) setWeeks(weeksAround(start));
 
-  // Only a finger picks a week; our own scrolls pass pages nobody chose
+  // Only a finger that settles on a page picks a week; Android reports snap ends late, so resting on a page counts too
   const swiping = useRef(false);
   const land = (page: number) => {
     if (!swiping.current) return;
@@ -372,17 +372,14 @@ function WeekStrip({
               />
             </View>
           )}
-          // A finger catching a snap gets no momentum end, so each drag starts over
           onScrollBeginDrag={() => {
             swiping.current = false;
           }}
-          // A slow drag passes page edges too; only where the strip settles after release counts
           onScrollEndDrag={(event) => {
             swiping.current = true;
             landIfSnapped(event.nativeEvent.contentOffset.x);
           }}
           scrollEventThrottle={16}
-          // Android reports the end of a page snap late, so land once the strip rests on a week
           onScroll={(event) => landIfSnapped(event.nativeEvent.contentOffset.x)}
           onMomentumScrollEnd={(event) =>
             land(Math.round(event.nativeEvent.contentOffset.x / width))

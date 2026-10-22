@@ -71,7 +71,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const range = rangeOf(selected);
 
   useAnimatedReaction(
-    () => collapse.value > MONTH_COVER / 2,
+    () => collapse.get() > MONTH_COVER / 2,
     (next, previous) => {
       if (previous !== null && next !== previous)
         scheduleOnRN(setCollapsed, next);

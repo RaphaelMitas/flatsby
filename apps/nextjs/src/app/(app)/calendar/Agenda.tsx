@@ -207,7 +207,8 @@ export function Agenda({
                 </div>
                 <div className="px-4">
                   {!range ? (
-                    <Skeleton className="h-12 rounded-xl" />
+                    // One line tall like an empty day, so a month arriving above barely moves the list
+                    <Skeleton className="h-5 w-32 rounded" />
                   ) : entries.length > 0 ? (
                     <ul className="divide-y overflow-hidden rounded-xl border">
                       {entries.map((entry) => (

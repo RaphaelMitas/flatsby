@@ -660,26 +660,25 @@ export interface MonthSpan {
   last: string;
 }
 
-// Every loaded month is a live query that each change refetches, so the end away from the date drops off
-const MAX_MONTHS = 7;
-
-const monthsApart = (from: string, to: string) =>
-  monthIndexOf(toDayNumber(`${to}-01`)) -
-  monthIndexOf(toDayNumber(`${from}-01`));
+const FAR_MONTHS = 12;
 
 /** Grows the loaded months so `date` has a whole month on either side to scroll into. */
 export const spanAround = (date: string, span?: MonthSpan): MonthSpan => {
   const month = monthOf(date);
   const before = shiftMonth(month, -1);
   const after = shiftMonth(month, 1);
-  if (!span) return { first: before, last: after };
+  // A far jump (a mistyped year, a link) starts over rather than loading every month in between
+  if (
+    !span ||
+    month < shiftMonth(span.first, -FAR_MONTHS) ||
+    month > shiftMonth(span.last, FAR_MONTHS)
+  )
+    return { first: before, last: after };
   if (span.first <= before && span.last >= after) return span;
-  const first = span.first < before ? span.first : before;
-  const last = span.last > after ? span.last : after;
-  if (monthsApart(first, last) < MAX_MONTHS) return { first, last };
-  return after > span.last
-    ? { first: shiftMonth(last, 1 - MAX_MONTHS), last }
-    : { first, last: shiftMonth(first, MAX_MONTHS - 1) };
+  return {
+    first: span.first < before ? span.first : before,
+    last: span.last > after ? span.last : after,
+  };
 };
 
 export function monthsOf({ first, last }: MonthSpan) {
