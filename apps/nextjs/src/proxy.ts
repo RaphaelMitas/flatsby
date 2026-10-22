@@ -2,7 +2,10 @@ import type { NextFetchEvent, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { defaultLocale, locales } from "@flatsby/i18n/locale";
-import { INVITE_REFERRER_KEY } from "@flatsby/validators/invite";
+import {
+  INVITE_REFERRER_KEY,
+  inviteCodeSchema,
+} from "@flatsby/validators/invite";
 
 import { storeRedirect } from "~/app/_components/landing/content";
 import { isEntryPage } from "~/utils/entry-pages";
@@ -13,8 +16,7 @@ const prefix = `/${defaultLocale}`;
 const startsWithSegment = (pathname: string, segment: string) =>
   pathname === segment || pathname.startsWith(`${segment}/`);
 
-// Client-side navigations arrive as router fetches, which NavBeacon reports instead.
-// Browsers without fetch metadata still ask for HTML only on a real page load.
+// Router fetches are NavBeacon's job; without fetch metadata only a page load asks for HTML
 function isPageLoad(request: NextRequest) {
   const dest = request.headers.get("sec-fetch-dest");
   const purpose =
@@ -37,7 +39,10 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = url;
   if (pathname.endsWith(".md")) return;
 
-  const inviteCode = url.searchParams.get(INVITE_REFERRER_KEY);
+  const invite = inviteCodeSchema.safeParse(
+    url.searchParams.get(INVITE_REFERRER_KEY),
+  );
+  const inviteCode = invite.success ? invite.data : null;
   const store = storeRedirect(pathname, inviteCode);
   if (store) {
     if (isPageLoad(request)) {

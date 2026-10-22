@@ -9,11 +9,15 @@ const navigationSchema = z.object({
   referrer: z.url().max(2048).nullable(),
 });
 
+// Other sites could otherwise make their visitors' browsers report page views here
+function isSameOrigin(request: NextRequest) {
+  const site = request.headers.get("sec-fetch-site");
+  if (site !== null) return site === "same-origin";
+  return request.headers.get("origin") === request.nextUrl.origin;
+}
+
 export async function POST(request: NextRequest) {
-  // Other sites could otherwise make their visitors' browsers report page views here
-  if (request.headers.get("sec-fetch-site") !== "same-origin") {
-    return new Response(null, { status: 403 });
-  }
+  if (!isSameOrigin(request)) return new Response(null, { status: 403 });
   const navigation = navigationSchema.safeParse(
     await request.json().catch(() => null),
   );

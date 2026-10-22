@@ -42,12 +42,11 @@ async function signupPlatform() {
     : "app";
 }
 
-// Only the cookieless event: an identified twin at the same moment would tie the visit to the account
+// Cookieless only, hashed to the browser OAuth calls back in; an identified twin would tie the visit to the account
 async function onUserCreated(requestHeaders: Headers | undefined) {
   if (!requestHeaders) return;
   try {
     const platform = await signupPlatform();
-    // OAuth calls back in the browser that started sign-in, so this hashes to that browser's visitor
     after(() =>
       captureVisit(
         "signed_up",

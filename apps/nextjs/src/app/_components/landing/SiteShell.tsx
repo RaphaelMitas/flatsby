@@ -10,8 +10,7 @@ import {
   GITHUB_URL,
   LEGAL_PAGES,
   PLAY_STORE_LINK,
-  STORE_LINK_PROPS,
-  STORE_LINKS,
+  storeLinkProps,
 } from "./content";
 
 export function SiteShell({
@@ -105,7 +104,7 @@ export function SiteShell({
                   key={link.href}
                   href={link.href}
                   className="text-muted-foreground hover:text-foreground"
-                  {...(STORE_LINKS.includes(link.href) && STORE_LINK_PROPS)}
+                  {...storeLinkProps(link.href)}
                 >
                   {link.label}
                 </Link>

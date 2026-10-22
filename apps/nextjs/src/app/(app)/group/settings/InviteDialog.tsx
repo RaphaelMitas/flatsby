@@ -64,7 +64,7 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
   const isShown = inviteQuery.data?.success === true;
   const hasCapturedShown = useRef(false);
 
-  // Scanning the QR code or reading out the code leaves no trace, so showing them is what's countable
+  // QR scans and read-out codes leave no trace, so showing them is what's countable
   useEffect(() => {
     if (!isShown || hasCapturedShown.current) return;
     hasCapturedShown.current = true;

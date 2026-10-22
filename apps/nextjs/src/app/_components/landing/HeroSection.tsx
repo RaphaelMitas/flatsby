@@ -7,12 +7,7 @@ import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
 
 import type { Platform } from "./platform";
 import { PeekingCat } from "../peeking-cat";
-import {
-  APP_STORE_LINK,
-  PLAY_STORE_LINK,
-  STORE_LINK_PROPS,
-  STORE_LINKS,
-} from "./content";
+import { APP_STORE_LINK, PLAY_STORE_LINK, storeLinkProps } from "./content";
 
 const WEB = { href: "/auth/login", id: "openInBrowser", icon: Globe } as const;
 const APP_STORE = {
@@ -56,10 +51,7 @@ export function HeroSection({ platform }: { platform: Platform }) {
               className="w-full max-w-72"
               asChild
             >
-              <Link
-                href={store.href}
-                {...(STORE_LINKS.includes(store.href) && STORE_LINK_PROPS)}
-              >
+              <Link href={store.href} {...storeLinkProps(store.href)}>
                 <store.icon className="h-5 w-5 text-current" />
                 {t(`hero.${store.id}`)}
               </Link>

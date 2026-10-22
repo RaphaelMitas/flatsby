@@ -14,12 +14,11 @@ export const UPDATED = "2026-10-09";
 
 export const APP_STORE_LINK = "/get/ios";
 export const PLAY_STORE_LINK = "/get/android";
-export const STORE_LINKS: readonly string[] = [APP_STORE_LINK, PLAY_STORE_LINK];
-export const STORE_LINK_PROPS = {
-  target: "_blank",
-  rel: "noopener",
-  prefetch: false,
-} as const;
+
+export const storeLinkProps = (href: string) =>
+  href === APP_STORE_LINK || href === PLAY_STORE_LINK
+    ? ({ target: "_blank", rel: "noopener", prefetch: false } as const)
+    : {};
 
 // Campaign tags make the website show up as an install source in App Store Connect and Play Console
 export function storeRedirect(pathname: string, inviteCode: string | null) {

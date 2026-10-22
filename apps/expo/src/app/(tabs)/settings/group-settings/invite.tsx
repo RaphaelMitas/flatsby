@@ -37,7 +37,7 @@ export default function InviteScreen() {
 
   const hasCapturedShown = useRef(false);
 
-  // Scanning the QR code or reading out the code leaves no trace, so showing them is what's countable
+  // QR scans and read-out codes leave no trace, so showing them is what's countable
   useEffect(() => {
     if (!invite.success || hasCapturedShown.current) return;
     hasCapturedShown.current = true;
