@@ -4,13 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import {
-  router,
-  Stack,
-  useNavigationContainerRef,
-  usePathname,
-  useSegments,
-} from "expo-router";
+import { router, Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
@@ -116,6 +110,24 @@ function ScreenTracker() {
   return null;
 }
 
+// Sign-in only stores the cookie and refetches; the index route is what leaves
+// login for home or a remembered invite. Mounted with the stack, so a cold
+// start's first session doesn't count as a sign-in.
+function SignInNavigator() {
+  const userId = useSession().data?.user.id;
+  const previousUserId = useRef(userId);
+
+  useEffect(() => {
+    const arrived = userId !== undefined && userId !== previousUserId.current;
+    previousUserId.current = userId;
+    if (!arrived) return;
+    if (router.canDismiss()) router.dismissAll();
+    router.replace("/");
+  }, [userId]);
+
+  return null;
+}
+
 const StackLayout = () => {
   const t = useTranslations();
   const { screenOptions, solidHeader } = useThemedScreenOptions();
@@ -124,19 +136,6 @@ const StackLayout = () => {
   if (!isPending && !sessionResolved) setSessionResolved(true);
   const { hydrated } = useShoppingStore();
   const userId = data?.user.id;
-  const navigationRef = useNavigationContainerRef();
-  const previousUserId = useRef(userId);
-
-  // Sign-in only stores the cookie and refetches; the index route is what
-  // leaves login for home or a remembered invite
-  useEffect(() => {
-    const arrived = userId !== undefined && userId !== previousUserId.current;
-    previousUserId.current = userId;
-    if (arrived && navigationRef.isReady()) {
-      if (router.canDismiss()) router.dismissAll();
-      router.replace("/");
-    }
-  }, [userId, navigationRef]);
 
   // Cached errors from a revoked session would sign the next login out again.
   // By now TabLayout's Redirect has unmounted the tabs; clearing under them
@@ -155,6 +154,7 @@ const StackLayout = () => {
   return (
     <View className="bg-background flex-1">
       <ScreenTracker />
+      <SignInNavigator />
       <InstallReferrer />
       <UpdateNudge />
       <Stack
