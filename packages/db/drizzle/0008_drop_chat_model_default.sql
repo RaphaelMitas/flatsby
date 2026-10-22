@@ -1,0 +1,1 @@
+ALTER TABLE "flat-cove_conversations" ALTER COLUMN "model" DROP DEFAULT;
