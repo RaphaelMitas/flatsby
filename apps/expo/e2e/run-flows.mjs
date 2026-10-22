@@ -4,7 +4,8 @@
  * the whole suite. Needs E2E_API_URL. E2E_PLATFORM selects the app id ("ios"
  * default, or "android"). E2E_LOCALES (e.g. "en de") runs every flow once per
  * locale, passing it as E2E_LOCALE and filing captures under
- * e2e/results/screenshots/<locale>/.
+ * e2e/results/screenshots/<locale>/. E2E_DEVICE pins a simulator or emulator
+ * when several are running.
  *
  * One maestro invocation per flow, because the XCTest driver occasionally
  * crashes mid-batch on hosted runners and a shared invocation then fails
@@ -27,6 +28,10 @@ const flowsDir = join(e2eDir, "flows");
 const resultsDir = join(e2eDir, "results");
 
 const MAX_RERUN_FLOWS = 5;
+
+// Reinstalling the XCTest driver costs iOS 25-55s per flow; a failure might
+// have left it broken, so only then does the next flow reinstall it.
+let reinstallDriver = true;
 
 const apiUrl = process.env.E2E_API_URL;
 if (!apiUrl) {
@@ -90,6 +95,8 @@ function runFlow({ file, locale }, index) {
     "maestro",
     [
       "test",
+      ...(process.env.E2E_DEVICE ? ["--device", process.env.E2E_DEVICE] : []),
+      ...(reinstallDriver ? [] : ["--no-reinstall-driver"]),
       "-e",
       `APP_ID=${appId}`,
       "-e",
@@ -106,6 +113,7 @@ function runFlow({ file, locale }, index) {
     { stdio: "inherit" },
   );
   if (error) throw error;
+  reinstallDriver = status !== 0;
   collectTakeScreenshots(debugDir, locale);
   // Step screenshots and hierarchy dumps are only worth keeping for failures.
   if (status === 0) rmSync(debugDir, { recursive: true, force: true });

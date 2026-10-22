@@ -14,7 +14,4 @@ appId: ${APP_ID}
       TAB_ID: "tab-expenses"
       TAB_LABEL: "Expenses"
       TAB_X: "39%"
-- extendedWaitUntil:
-    visible:
-      id: "expense-heading"
-    timeout: 15000
+      MARKER_ID: "expense-heading"

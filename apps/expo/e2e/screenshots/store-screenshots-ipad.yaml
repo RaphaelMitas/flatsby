@@ -62,19 +62,13 @@ appId: ${APP_ID}
 # Expenses. On a tablet this is a split view: the list on the left, a detail
 # panel on the right, with the add button in the header rather than a FAB —
 # same testIDs either way.
-- retry:
-    maxRetries: 1
-    commands:
-      - runFlow:
-          file: ../subflows/tap-tab.yaml
-          env:
-            TAB_ID: "tab-expenses"
-            TAB_LABEL: ${output.store.tabExpenses}
-            TAB_X: "49%"
-      - extendedWaitUntil:
-          visible:
-            id: "expense-heading"
-          timeout: 20000
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-expenses"
+      TAB_LABEL: ${output.store.tabExpenses}
+      TAB_X: "49%"
+      MARKER_ID: "expense-heading"
 - extendedWaitUntil:
     visible:
       id: "expense-card-${output.store.weeklyShopping}"
@@ -153,19 +147,13 @@ appId: ${APP_ID}
       MARKER_ID: "expense-heading"
 
 # "01a": see the calendar step in store-screenshots.yaml.
-- retry:
-    maxRetries: 1
-    commands:
-      - runFlow:
-          file: ../subflows/tap-tab.yaml
-          env:
-            TAB_ID: "tab-calendar"
-            TAB_LABEL: ${output.store.tabCalendar}
-            TAB_X: "59%"
-      - extendedWaitUntil:
-          visible:
-            id: "calendar-heading"
-          timeout: 20000
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-calendar"
+      TAB_LABEL: ${output.store.tabCalendar}
+      TAB_X: "59%"
+      MARKER_ID: "calendar-heading"
 - extendedWaitUntil:
     visible:
       id: "calendar-day-progress"
@@ -186,6 +174,7 @@ appId: ${APP_ID}
             TAB_ID: "tab-home"
             TAB_LABEL: ${output.store.tabHome}
             TAB_X: "30%"
+            MARKER_ID: "dashboard-shopping-lists-link|shopping-lists-group-settings"
       - runFlow:
           when:
             visible:
@@ -219,20 +208,18 @@ appId: ${APP_ID}
 
 # Home root: the stats dashboard with the seeded totals, one pop below the
 # overview.
-- retry:
-    maxRetries: 1
-    commands:
-      - runFlow:
-          file: ../subflows/tap-tab.yaml
-          env:
-            TAB_ID: "tab-home"
-            TAB_LABEL: ${output.store.tabHome}
-            TAB_X: "30%"
-      - extendedWaitUntil:
-          visible:
-            id: "shopping-lists-group-name"
-            text: ${output.store.group}
-          timeout: 20000
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: ${output.store.tabHome}
+      TAB_X: "30%"
+      MARKER_ID: "shopping-lists-group-name"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-lists-group-name"
+      text: ${output.store.group}
+    timeout: 20000
 - swipe:
     start: "1%, 50%"
     end: "70%, 50%"

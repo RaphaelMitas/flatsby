@@ -16,10 +16,7 @@ tags:
       TAB_ID: "tab-calendar"
       TAB_LABEL: "Calendar"
       TAB_X: "61%"
-- extendedWaitUntil:
-    visible:
-      id: "calendar-heading"
-    timeout: 15000
+      MARKER_ID: "calendar-heading"
 - assertVisible: "Nothing planned"
 
 # Weekly task on today, assigned to the only member

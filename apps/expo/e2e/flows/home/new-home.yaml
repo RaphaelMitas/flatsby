@@ -11,11 +11,15 @@ tags:
       id: "shopping-list-create-button"
     timeout: 15000
 # A relaunch opens the home on the selected group
-- launchApp
-- extendedWaitUntil:
-    visible:
-      id: "home-invite"
-    timeout: 30000
+# Retried for the same reason as e2e-login's relaunch
+- retry:
+    maxRetries: 2
+    commands:
+      - launchApp
+      - extendedWaitUntil:
+          visible:
+            id: "home-invite"
+          timeout: 30000
 - tapOn:
     id: "home-invite-try"
 - extendedWaitUntil:
@@ -37,11 +41,15 @@ tags:
     timeout: 15000
 
 # The choice survives a relaunch, and switching back returns the classic home
-- launchApp
-- extendedWaitUntil:
-    visible:
-      id: "home-for-you"
-    timeout: 30000
+# Retried for the same reason as e2e-login's relaunch
+- retry:
+    maxRetries: 2
+    commands:
+      - launchApp
+      - extendedWaitUntil:
+          visible:
+            id: "home-for-you"
+          timeout: 30000
 - scrollUntilVisible:
     element:
       id: "home-switch-back"

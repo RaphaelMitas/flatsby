@@ -10,7 +10,7 @@ appId: ${APP_ID}
 # before the app's first query, and query retries cover transient fetch errors.
 #
 # Navigation taps go through tap-until.yaml (act-verify-repeat) or
-# tap-tab.yaml (id -> label -> position) so a missed tap costs seconds, not
+# tap-tab.yaml (label -> id -> position) so a missed tap costs seconds, not
 # the run. Run via `node e2e/run-flows.mjs ../screenshots/store-screenshots`;
 # E2E_LOCALES="en de" captures each language's household.
 #
@@ -74,19 +74,13 @@ appId: ${APP_ID}
       id: "shopping-list-item-${output.store.oatMilk}"
 
 # Expenses tab with the three seeded expenses.
-- retry:
-    maxRetries: 1
-    commands:
-      - runFlow:
-          file: ../subflows/tap-tab.yaml
-          env:
-            TAB_ID: "tab-expenses"
-            TAB_LABEL: ${output.store.tabExpenses}
-            TAB_X: "50%"
-      - extendedWaitUntil:
-          visible:
-            id: "expense-heading"
-          timeout: 20000
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-expenses"
+      TAB_LABEL: ${output.store.tabExpenses}
+      TAB_X: "50%"
+      MARKER_ID: "expense-heading"
 - extendedWaitUntil:
     visible:
       id: "expense-card-${output.store.weeklyShopping}"
@@ -198,19 +192,13 @@ appId: ${APP_ID}
 
 # "01a" sorts the calendar right after home in both stores without renaming
 # the files the README and landing page link to.
-- retry:
-    maxRetries: 1
-    commands:
-      - runFlow:
-          file: ../subflows/tap-tab.yaml
-          env:
-            TAB_ID: "tab-calendar"
-            TAB_LABEL: ${output.store.tabCalendar}
-            TAB_X: "69%"
-      - extendedWaitUntil:
-          visible:
-            id: "calendar-heading"
-          timeout: 20000
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-calendar"
+      TAB_LABEL: ${output.store.tabCalendar}
+      TAB_X: "69%"
+      MARKER_ID: "calendar-heading"
 - extendedWaitUntil:
     visible:
       id: "calendar-day-progress"
@@ -243,6 +231,7 @@ appId: ${APP_ID}
             TAB_ID: "tab-home"
             TAB_LABEL: ${output.store.tabHome}
             TAB_X: "12%"
+            MARKER_ID: "dashboard-shopping-lists-link|shopping-lists-group-settings"
       - runFlow:
           when:
             visible:
@@ -276,20 +265,18 @@ appId: ${APP_ID}
 
 # Home root: the stats dashboard with the seeded totals. The overview screen
 # is pushed on top of it, so pop back after switching tabs.
-- retry:
-    maxRetries: 1
-    commands:
-      - runFlow:
-          file: ../subflows/tap-tab.yaml
-          env:
-            TAB_ID: "tab-home"
-            TAB_LABEL: ${output.store.tabHome}
-            TAB_X: "12%"
-      - extendedWaitUntil:
-          visible:
-            id: "shopping-lists-group-name"
-            text: ${output.store.group}
-          timeout: 20000
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: ${output.store.tabHome}
+      TAB_X: "12%"
+      MARKER_ID: "shopping-lists-group-name"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-lists-group-name"
+      text: ${output.store.group}
+    timeout: 20000
 - runFlow:
     when:
       platform: iOS

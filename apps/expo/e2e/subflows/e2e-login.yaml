@@ -5,21 +5,30 @@ appId: ${APP_ID}
 #
 # Requires env vars (passed via `maestro test -e`):
 #   E2E_API_URL            - the server to test against
-# A failed flow can leave the "Open in Flatsby?" confirmation on the
-# springboard, which blocks launchApp for every flow after it. (iOS only:
-# Android opens scheme links directly, so the conditionals never fire there.)
-- runFlow:
-    when:
-      visible: "Open in .*Flatsby.*"
-    commands:
-      - tapOn: "Cancel"
+# Overwrites maestro.copiedText.
 # clearState alone leaves the iOS Keychain intact, where expo-secure-store
 # keeps the previous flow's session — clear it so every flow starts logged out.
 # The post-clearState relaunch can stall for minutes on a black screen before
 # the first frame; maxRetries is at Maestro's cap of 3.
+#
+# A failed flow can leave the "Open in Flatsby?" confirmation on the
+# springboard, hiding the login screen, so retries dismiss it first. Only
+# retries: a visibility check that comes back false costs 7s, every flow.
+# (iOS only: Android opens scheme links directly.)
+- evalScript: ${output.launchAttempt = 0}
 - retry:
     maxRetries: 3
     commands:
+      - evalScript: ${output.launchAttempt = output.launchAttempt + 1}
+      - runFlow:
+          when:
+            true: ${output.launchAttempt > 1}
+          commands:
+            - runFlow:
+                when:
+                  visible: "Open in .*Flatsby.*"
+                commands:
+                  - tapOn: "Cancel"
       - launchApp:
           clearState: true
           clearKeychain: true
@@ -40,15 +49,20 @@ appId: ${APP_ID}
 - evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + (typeof E2E_USER_NAME !== 'undefined' ? '&name=' + encodeURIComponent(E2E_USER_NAME) : '') + (output.e2eEmail ? '&email=' + encodeURIComponent(output.e2eEmail) : '') + (typeof E2E_SEED !== 'undefined' ? '&seed=' + encodeURIComponent(E2E_SEED) : '') + (typeof E2E_LOCALE !== 'undefined' ? '&locale=' + encodeURIComponent(E2E_LOCALE) : '')}"
 # openLink sits inside the retry: if session setup errors out, the e2e-login
 # screen parks in its error state (run 31255356976, iPad), and only re-firing
-# the link restarts it — re-waiting alone never recovers. iOS also sometimes
-# confirms scheme links a beat after openLink returns, hence the guarded tap.
+# the link restarts it — re-waiting alone never recovers. iOS sometimes asks
+# to confirm the link, a beat after openLink returns: wait for whichever of
+# the prompt and the done screen shows, and read which it was.
 - retry:
     maxRetries: 2
     commands:
       - openLink: ${output.e2eLoginLink}
+      - extendedWaitUntil:
+          visible: "Open in .*Flatsby.*|E2E session ready"
+          timeout: 45000
+      - copyTextFrom: "Open in .*Flatsby.*|E2E session ready"
       - runFlow:
           when:
-            visible: "Open in .*Flatsby.*"
+            true: ${maestro.copiedText.startsWith('Open')}
           commands:
             - tapOn: "Open"
       - extendedWaitUntil:
@@ -56,9 +70,13 @@ appId: ${APP_ID}
             id: "e2e-login-done"
           timeout: 45000
 # Relaunch (keeping state) so the auth client and tRPC links initialize with
-# the injected session + API URL override.
-- launchApp
-- extendedWaitUntil:
-    visible:
-      id: "group-dashboard-title"
-    timeout: 60000
+# the injected session + API URL override. Retried: on iOS Maestro sometimes
+# reports a slow cold start as a crash, and a retry with state kept is safe.
+- retry:
+    maxRetries: 2
+    commands:
+      - launchApp
+      - extendedWaitUntil:
+          visible:
+            id: "group-dashboard-title"
+          timeout: 60000

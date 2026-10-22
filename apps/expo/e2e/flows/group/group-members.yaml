@@ -33,9 +33,11 @@ tags:
     timeout: 15000
 - copyTextFrom:
     id: "group-invite-code"
+# e2e-login below reuses the clipboard
+- evalScript: ${output.inviteCode = maestro.copiedText}
 
 # The admin is already a member, so the preview offers "Open group", not join.
-- openLink: flatsby://join/${maestro.copiedText}
+- openLink: flatsby://join/${output.inviteCode}
 - runFlow:
     when:
       visible: "Open in .*Flatsby.*"
@@ -55,7 +57,7 @@ tags:
     visible:
       id: "group-join-code-submit"
     timeout: 15000
-- inputText: ${maestro.copiedText}
+- inputText: ${output.inviteCode}
 - tapOn:
     id: "group-join-code-submit"
 - extendedWaitUntil:

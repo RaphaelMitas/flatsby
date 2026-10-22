@@ -201,26 +201,33 @@ jobs:
       - name: Unpack app
         run: tar -xzf Flatsby-app.tar.gz
 
-      # Highest iPhone model number: the images still carry old devices, and
-      # an iPhone 11 boots slowly enough to time out Maestro's driver.
-      - name: Boot iOS simulator
+      # A fresh device, not one of the image's: those come paired with Watch
+      # simulators, and booting a paired iPhone sometimes aborts CoreSimulator
+      # ("Invalid parameter not satisfying: devicePair"). The newest Pro Max on
+      # the newest runtime that has one: an old model boots slowly enough to
+      # time out Maestro's driver, and the flows' tab positions assume its
+      # screen. Booting continues while the stack starts.
+      - name: Create and boot iOS simulator
         id: sim
         run: |
-          UDID=$(xcrun simctl list devices available --json | jq -r '
-            [.devices | to_entries[] | select(.key | test("iOS")) | .value[]
-              | select(.name | startswith("iPhone"))
-              | {udid, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
-            | sort_by(.n) | last // {} | .udid // empty')
-          if [ -z "$UDID" ]; then
-            echo "::error::No iPhone simulator available on this image"
-            xcrun simctl list devices available
+          read -r DEVICE_TYPE RUNTIME < <(xcrun simctl list runtimes available --json | jq -r '
+            [.runtimes[] | select(.platform == "iOS") | . as $runtime
+              | .supportedDeviceTypes[] | select(.name | test("^iPhone [0-9]+ Pro Max$"))
+              | {runtime: $runtime.identifier, type: .identifier,
+                 v: ($runtime.version | split(".") | map(tonumber)),
+                 n: (.name | scan("[0-9]+") | tonumber)}]
+            | sort_by(.v, .n) | last // empty | "\(.type) \(.runtime)"') || true
+          if [ -z "$DEVICE_TYPE" ]; then
+            echo "::error::No iPhone Pro Max simulator available on this image"
+            xcrun simctl list runtimes available
             exit 1
           fi
-          xcrun simctl erase "$UDID"
+          UDID=$(xcrun simctl create e2e "$DEVICE_TYPE" "$RUNTIME")
           xcrun simctl boot "$UDID"
-          xcrun simctl bootstatus "$UDID"
-          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Start E2E stack
+        uses: ./tooling/github/e2e-stack
 
       # The first launch pays dyld/springboard warm-up, which stalls past the
       # first flow's wait if it happens inside Maestro.
@@ -228,13 +235,12 @@ jobs:
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
+          xcrun simctl bootstatus "$UDID"
+          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
           xcrun simctl install "$UDID" Flatsby.app
           xcrun simctl launch "$UDID" com.flatcove.app.v2 || true
           sleep 15
           xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
-
-      - name: Start E2E stack
-        uses: ./tooling/github/e2e-stack
 
       # The simulator shares the host's network stack, so localhost is the
       # runner's own server.
@@ -243,6 +249,7 @@ jobs:
         run: node e2e/run-flows.mjs ${{ matrix.areas }}
         env:
           E2E_API_URL: http://localhost:3000
+          E2E_DEVICE: ${{ steps.sim.outputs.udid }}
 
       - name: Collect crash reports, simulator and server logs
         if: always()
@@ -281,6 +288,18 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      # Gradle would fetch the NDK mid-build with no retry, and Google's
+      # mirror sometimes serves a truncated archive ("Error on ZipFile").
+      - name: Install NDK
+        run: |
+          NDK=$(sed -nE 's/^ndkVersion = "(.*)"/\1/p' node_modules/react-native/gradle/libs.versions.toml)
+          for attempt in 1 2 3; do
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK" > /dev/null && exit 0
+            echo "NDK $NDK install attempt $attempt failed"
+            sleep 15
+          done
+          exit 1
 
       - name: Prebuild Android project
         working-directory: apps/expo
@@ -371,6 +390,18 @@ jobs:
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
+
+      # The emulator action installs these itself with no retry, and a failed
+      # download fails the shard; once present, its install is a no-op.
+      - name: Install emulator and system image
+        run: |
+          for attempt in 1 2 3; do
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install emulator \
+              "system-images;android-34;google_apis;x86_64" > /dev/null && exit 0
+            echo "Install attempt $attempt failed"
+            sleep 15
+          done
+          exit 1
 
       # The runner executes every `script` line as a separate `sh -c`, so the
       # install / pre-warm / run / logcat sequence lives in one script file.
