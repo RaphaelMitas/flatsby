@@ -21,7 +21,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
 
-import { InstallReferrerInvite } from "~/components/InstallReferrerInvite";
+import { InstallReferrer } from "~/components/InstallReferrer";
 import { UpdateNudge } from "~/components/UpdateNudge";
 import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
@@ -132,7 +132,7 @@ const StackLayout = () => {
   return (
     <View className="bg-background flex-1">
       <ScreenTracker />
-      <InstallReferrerInvite />
+      <InstallReferrer />
       <UpdateNudge />
       <Stack
         screenOptions={{
