@@ -86,7 +86,6 @@ export const legal = {
     title: "Privacy Policy",
     lastUpdated: "October 2026",
     toc: {
-      introduction: "Introduction",
       controller: "Controller",
       collected: "Data We Process",
       basis: "Purposes and Legal Bases",
@@ -97,10 +96,7 @@ export const legal = {
       international: "Transfers Outside the EU",
       children: "Children",
       changes: "Changes",
-      contact: "Contact",
     },
-    introduction:
-      "This policy explains how Flatsby processes personal data on the website and in the app.",
     city: "64291 Darmstadt, Germany",
     emailLine: "Email: support@flatsby.com",
     controller: "The controller is:",
@@ -139,12 +135,11 @@ export const legal = {
       errors: "Error reports, occasionally including content you entered",
     },
     basis: {
-      intro: "We process data for these purposes:",
       contract:
         "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including purchases and automatic categories, which send item names and expense descriptions to an AI model",
       consent: "<strong>Consent (Art. 6(1)(a) GDPR):</strong> the AI assistant",
       interests:
-        "<strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> running the website securely; analytics, to learn how people find and use Flatsby; error reports, to fix bugs; AI usage metrics, to control costs; login session records, to protect your account",
+        "<strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> running the website securely; analytics on the website and in the app, to learn how people find and use Flatsby; error reports, to fix bugs; AI usage metrics, to control costs; login session records, to protect your account",
       obligations:
         "<strong>Legal obligation (Art. 6(1)(c) GDPR):</strong> keeping invoices and payment records under tax and commercial law",
       required:
@@ -156,7 +151,6 @@ export const legal = {
     },
     providers: {
       heading: "Service Providers",
-      intro: "We use these providers:",
       neon: "<strong>Neon (database):</strong> Stores our data in Frankfurt.",
       vercel:
         "<strong>Vercel (hosting):</strong> Every request passes through Vercel, with your IP address and browser details. Our API runs in Frankfurt; pages may be served from a location near you, possibly outside the EU.",
@@ -168,13 +162,13 @@ export const legal = {
         "<strong>Apple App Store and Google Play:</strong> Distribute the app and handle in-app purchases as separate controllers under their own privacy policies.",
       ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories and, if you use the AI assistant, your messages and the list, expense and member data it needs. See <dpa>Vercel's privacy policy</dpa>.",
       posthog:
-        "<strong>PostHog (analytics, error reports):</strong> Stores data in Frankfurt. What it receives depends on how you use Flatsby:",
+        "<strong>PostHog (analytics, error reports):</strong> Stores data in Frankfurt and receives:",
       posthogWebsite:
-        "<strong>Website, not signed in:</strong> We count visits without cookies and without storing anything on your device. PostHog turns your IP address and browser details into a visitor ID that changes daily, then discards the IP address. It stores that ID with the pages you open, the referring website, campaign tags (utm parameters), whether you click an app store link or sign up, and your browser, operating system, device type and language. We can't recognize you on another day and don't link visits to your account. Legal basis: our legitimate interest in knowing how people find Flatsby (Art. 6(1)(f) GDPR). Browsers that send Global Privacy Control or Do Not Track aren't counted.",
+        "<strong>Website, not signed in:</strong> We count visits without cookies and without storing anything on your device. PostHog turns your IP address and browser details into a visitor ID that changes daily, then discards the IP address. It stores that ID with the pages you open, the referring website, campaign tags (utm parameters), whether you click an app store link or sign up, and your browser, operating system, device type and language. We can't recognize you on another day and don't link visits to your account.",
       posthogServer:
-        "<strong>Signed in (web and app):</strong> Our server sends each action you take with your account ID and group, but not what you entered. On the web it also sends the pages you open, your browser details and the referring page. Legal basis: our legitimate interest in improving Flatsby (Art. 6(1)(f) GDPR).",
+        "<strong>Signed in (web and app):</strong> Our server sends each action you take with your account ID and group, but not what you entered. On the web it also sends the pages you open, your browser details and the referring page.",
       posthogMobile:
-        "<strong>App:</strong> By default the app also sends PostHog the screens you open, device details, app version and error reports, and once you're signed in your account ID, name and email address. It stores a random ID on your device. PostHog derives your approximate location from your IP address, then discards it. On Android the app reads the install source from Google Play (campaign tags, invite link). Legal basis: our legitimate interest in improving the app (Art. 6(1)(f) GDPR). The switch in the app settings stops this, but not the actions our server sends.",
+        "<strong>App:</strong> By default the app also sends PostHog the screens you open, device details, app version and error reports, and once you're signed in your account ID, name and email address. It stores a random ID on your device. PostHog derives your approximate location from your IP address, then discards it. On Android the app reads the install source from Google Play (campaign tags, invite link). The switch in the app settings stops this, but not the actions our server sends.",
       posthogAi:
         "We also send AI usage metrics (model, tokens, latency, cost), never prompts or responses. See <link>PostHog's privacy policy</link>.",
     },
@@ -188,7 +182,6 @@ export const legal = {
         "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. PostHog deletes analytics events after 12 months. Your PostHog profile and customer records at Autumn and RevenueCat remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
     },
     rights: {
-      intro: "You have these rights:",
       access: "<strong>Access:</strong> get a copy of your data",
       rectification:
         "<strong>Rectification:</strong> have wrong data corrected",
@@ -216,10 +209,6 @@ export const legal = {
       "Flatsby is not meant for children under 16. If you think a child has given us data, contact us.",
     changes:
       "We update this policy when our processing changes. We also tell you about material changes in Flatsby.",
-    contact: {
-      intro: "Questions about privacy or your rights:",
-      email: "<strong>Email:</strong> support@flatsby.com",
-    },
   },
   legalNotice: {
     metaTitle: "Legal Notice - Flatsby",

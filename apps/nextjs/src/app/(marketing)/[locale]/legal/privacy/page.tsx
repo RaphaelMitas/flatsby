@@ -32,7 +32,6 @@ const PATH = "/legal/privacy";
 const PRIVACY_VERSION = "1.3";
 
 const SECTIONS = [
-  { id: "introduction", key: "introduction" },
   { id: "data-controller", key: "controller" },
   { id: "data-collected", key: "collected" },
   { id: "legal-basis", key: "basis" },
@@ -43,7 +42,6 @@ const SECTIONS = [
   { id: "international", key: "international" },
   { id: "children", key: "children" },
   { id: "changes", key: "changes" },
-  { id: "contact", key: "contact" },
 ] as const;
 
 export async function generateMetadata(props: LocaleParams): Promise<Metadata> {
@@ -81,11 +79,6 @@ export default function PrivacyPage() {
               label: t(`toc.${key}`),
             }))}
           />
-
-          <LegalSection id="introduction">
-            <LegalHeading>{heading("introduction")}</LegalHeading>
-            <LegalParagraph>{t("introduction")}</LegalParagraph>
-          </LegalSection>
 
           <LegalSection id="data-controller">
             <LegalHeading>{heading("controller")}</LegalHeading>
@@ -133,7 +126,6 @@ export default function PrivacyPage() {
 
           <LegalSection id="legal-basis">
             <LegalHeading>{heading("basis")}</LegalHeading>
-            <LegalParagraph>{t("basis.intro")}</LegalParagraph>
             <LegalItems
               keys={
                 ["contract", "consent", "interests", "obligations"] as const
@@ -150,7 +142,6 @@ export default function PrivacyPage() {
             <LegalParagraph>{t("groups.body")}</LegalParagraph>
 
             <LegalSubheading>{t("providers.heading")}</LegalSubheading>
-            <LegalParagraph>{t("providers.intro")}</LegalParagraph>
             <LegalList>
               <li>{t.rich("providers.neon", { strong })}</li>
               <li>{t.rich("providers.vercel", { strong })}</li>
@@ -209,7 +200,6 @@ export default function PrivacyPage() {
 
           <LegalSection id="your-rights">
             <LegalHeading>{heading("rights")}</LegalHeading>
-            <LegalParagraph>{t("rights.intro")}</LegalParagraph>
             <LegalItems
               keys={
                 [
@@ -259,15 +249,6 @@ export default function PrivacyPage() {
           <LegalSection id="changes">
             <LegalHeading>{heading("changes")}</LegalHeading>
             <LegalParagraph>{t("changes")}</LegalParagraph>
-          </LegalSection>
-
-          <LegalSection id="contact">
-            <LegalHeading>{heading("contact")}</LegalHeading>
-            <LegalParagraph>{t("contact.intro")}</LegalParagraph>
-            <LegalParagraph>
-              {t.rich("contact.email", { strong })}
-            </LegalParagraph>
-            <OperatorAddress lines={[t("city")]} />
           </LegalSection>
         </CardContent>
       </Card>
