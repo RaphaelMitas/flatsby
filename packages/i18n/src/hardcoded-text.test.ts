@@ -144,7 +144,7 @@ function stringParts(node: Node | null | undefined): string[] {
     case "BinaryExpression":
       return node.operator === "+"
         ? [
-            ...stringParts(node.left.type === "PrivateName" ? null : node.left),
+            ...stringParts(node.left),
             ...stringParts(node.right),
           ]
         : [];
