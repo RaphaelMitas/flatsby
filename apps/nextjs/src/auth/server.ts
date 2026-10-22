@@ -47,10 +47,13 @@ async function onUserCreated(requestHeaders: Headers | undefined) {
   if (!requestHeaders) return;
   try {
     const platform = await signupPlatform();
+    // A session cookie left in the OAuth browser belongs to an earlier account, not this signup
+    const signupHeaders = new Headers(requestHeaders);
+    signupHeaders.delete("cookie");
     after(() =>
       captureVisit(
         "signed_up",
-        requestHeaders,
+        signupHeaders,
         { url: `${env.BETTER_AUTH_URL}/api/auth/callback`, referrer: null },
         { platform },
       ),
