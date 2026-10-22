@@ -382,7 +382,7 @@ export const conversations = createTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     title: text("title"),
-    model: text("model").default("openai/gpt-5.4-mini"),
+    model: text("model"),
     systemPrompt: text("system_prompt"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

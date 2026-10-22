@@ -10,7 +10,7 @@ type ProviderOptions = NonNullable<
   Parameters<typeof streamText>[0]["providerOptions"]
 >;
 
-const CHEAP_AI_MODEL = "openai/gpt-5.4-nano";
+const CHEAP_AI_MODEL = "openai/gpt-6-luna";
 
 const CHAT_PROVIDER_OPTIONS = {
   openai: {
