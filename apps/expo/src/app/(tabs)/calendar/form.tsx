@@ -4,7 +4,13 @@ import { CalendarItemForm } from "~/components/calendar/CalendarItemForm";
 import { GroupGate } from "~/components/GroupGate";
 
 export default function CalendarFormScreen() {
-  const { id, date } = useLocalSearchParams<{ id?: string; date?: string }>();
+  const { id, date, view, start, month } = useLocalSearchParams<{
+    id?: string;
+    date?: string;
+    view?: string;
+    start?: string;
+    month?: string;
+  }>();
 
   return (
     <GroupGate>
@@ -13,6 +19,11 @@ export default function CalendarFormScreen() {
           group={group}
           itemId={id === undefined ? undefined : Number(id)}
           date={date}
+          calendar={{
+            view: view === "month" ? "month" : "list",
+            start: start ?? null,
+            month: month ?? null,
+          }}
         />
       )}
     </GroupGate>

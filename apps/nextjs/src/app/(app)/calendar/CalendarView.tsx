@@ -42,12 +42,12 @@ import { ScrollArea } from "@flatsby/ui/scroll-area";
 import { Sheet, SheetContent, SheetTitle } from "@flatsby/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import {
+  agendaAt,
   describeListRange,
   formatCalendarDate,
-  listAgenda,
   localDate,
-  monthAgenda,
   newEntryDate,
+  otherView,
   positionWindow,
   revealDate,
   showDate,
@@ -144,13 +144,9 @@ function CalendarScreen({
       ...positionWindow(at, today),
     });
   const { data } = useQuery(rangeOf(position));
-  const range = data?.success ? data.data : undefined;
-
   usePrefetchQuery(rangeOf(stepPosition(position, -1, today)));
   usePrefetchQuery(rangeOf(stepPosition(position, 1, today)));
-  usePrefetchQuery(
-    rangeOf(switchView(position, view === "list" ? "month" : "list", today)),
-  );
+  usePrefetchQuery(rangeOf(switchView(position, otherView(position), today)));
 
   const {
     setDone: { mutate: setDone },
@@ -160,14 +156,15 @@ function CalendarScreen({
     update,
   } = useCalendarMutations(group);
 
+  // Looking around keeps a half-filled form; only a detail closes
   const moveTo = (next: CalendarPosition) => {
     setPosition(next);
-    setPanel(null);
+    setPanel((open) => (open?.type === "form" ? open : null));
   };
   const show = (date: string) => moveTo(showDate(position, date, today));
   const step = (delta: number) => moveTo(stepPosition(position, delta, today));
 
-  // An open form or detail keeps the keys; stepping would close it
+  // Arrow keys belong to an open form or detail
   const onArrow = useEffectEvent((delta: number) => {
     if (!panel) step(delta);
   });
@@ -198,17 +195,16 @@ function CalendarScreen({
       )
     );
 
-  const list = range
-    ? listAgenda(range, start, today, meId, member)
+  const agenda = data?.success
+    ? agendaAt(data.data, position, today, meId, member)
     : undefined;
-  const grid = range ? monthAgenda(range, month, meId, member) : undefined;
-  const shown = view === "list" ? list : grid;
 
   const save = async (input: CreateCalendarItemInput, id?: number) => {
     if (id === undefined) {
       // Closing the form first rules out a second submit; the optimistic entry needs its window cached
       const next = revealDate(position, input.startsOn, today);
       moveTo(next);
+      setPanel(null);
       await queryClient
         .query({ ...rangeOf(next), staleTime: "static" })
         .catch(() => undefined);
@@ -367,13 +363,13 @@ function CalendarScreen({
       <TurnBar
         members={members}
         meId={meId}
-        turns={shown?.turns ?? new Map()}
+        turns={agenda?.turns ?? new Map()}
         member={member}
         onChange={setMember}
       />
       {view === "list" ? (
         <CalendarList
-          agenda={list}
+          agenda={agenda}
           dates={weekDays(start)}
           today={today}
           meId={meId}
@@ -385,7 +381,7 @@ function CalendarScreen({
       ) : (
         <MonthGrid
           month={month}
-          days={grid?.days}
+          days={agenda?.days}
           today={today}
           onSelect={(date) =>
             moveTo(showDate({ ...position, view: "list" }, date, today))

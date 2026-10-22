@@ -3,6 +3,7 @@ import type {
   CalendarColor,
   CalendarItemKind,
   CalendarItemView,
+  CalendarPosition,
   EventTime,
   RepeatForm,
   Weekday,
@@ -26,17 +27,16 @@ import {
   formatCalendarDate,
   formEndsOn,
   hasEnded,
-  listWindow,
   localDate,
   maxEvery,
   monthDayChoices,
-  monthGrid,
-  monthOf,
   newRepeatFormFor,
   pickerDate,
+  positionWindow,
   recurrenceOf,
   repeatFormOf,
   repeatUnits,
+  revealDate,
   weekdayName,
   weekdayOf,
   weekdays,
@@ -69,12 +69,15 @@ interface CalendarItemFormProps {
   group: GroupWithAccess;
   itemId: number | undefined;
   date: string | undefined;
+  /** Where the calendar stands, so a new entry's range is cached before the screen shows it */
+  calendar: CalendarPosition;
 }
 
 export function CalendarItemForm({
   group,
   itemId,
   date,
+  calendar,
 }: CalendarItemFormProps) {
   const today = localDate();
   const { data } = useQuery(
@@ -85,7 +88,13 @@ export function CalendarItemForm({
   );
 
   if (itemId === undefined) {
-    return <ItemFields group={group} defaultStart={date ?? today} />;
+    return (
+      <ItemFields
+        group={group}
+        defaultStart={date ?? today}
+        calendar={calendar}
+      />
+    );
   }
   if (!data) {
     return (
@@ -108,6 +117,7 @@ export function CalendarItemForm({
       group={group}
       item={data.data.item}
       defaultStart={data.data.item.startsOn}
+      calendar={calendar}
     />
   );
 }
@@ -116,10 +126,12 @@ function ItemFields({
   group,
   item,
   defaultStart,
+  calendar,
 }: {
   group: GroupWithAccess;
   item?: CalendarItemView;
   defaultStart: string;
+  calendar: CalendarPosition;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -179,22 +191,21 @@ function ItemFields({
       update.mutate({ ...trimmed, id: item.id, today });
       router.dismissTo("/(tabs)/calendar");
     } else {
-      // Leaving first rules out a second submit; the optimistic row needs the range of whichever view shows it cached
+      // Leaving first rules out a second submit; the optimistic row needs the range it lands in cached
       router.dismissTo({
         pathname: "/(tabs)/calendar",
         params: { date: startsOn },
       });
-      await Promise.all(
-        [listWindow(startsOn, localDate()), monthGrid(monthOf(startsOn))].map(
-          (window) =>
-            queryClient
-              .query({
-                ...calendarRangeOptions(group.id, window),
-                staleTime: "static",
-              })
-              .catch(() => undefined),
-        ),
-      );
+      const now = localDate();
+      await queryClient
+        .query({
+          ...calendarRangeOptions(
+            group.id,
+            positionWindow(revealDate(calendar, startsOn, now), now),
+          ),
+          staleTime: "static",
+        })
+        .catch(() => undefined);
       create.mutate(trimmed);
     }
   };

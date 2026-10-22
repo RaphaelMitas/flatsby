@@ -633,7 +633,6 @@ function agendaDays(
 const isOpenTask = ({ item, occurrence }: CalendarEntry) =>
   item.kind === "task" && !occurrence.completedAt;
 
-/** A chore's earlier open days, plus its own day once that has passed too. */
 export const timesMissed = (entry: AgendaEntry, today: string) =>
   isOpenTask(entry)
     ? (entry.missed?.length ?? 0) + (entry.occurrence.date < today ? 1 : 0)
@@ -652,11 +651,11 @@ export const tickInput = (
   skip: done ? missed : undefined,
 });
 
-/** A chore left for days shows once per member, on their latest open day before `before`. */
-function latestOpen(openTasks: CalendarEntry[], before: string) {
+/** A chore left for days shows once per member, on their latest open day up to today. */
+function latestOpen(openTasks: CalendarEntry[], today: string) {
   const due: DueChore[] = [];
   for (const entry of openTasks) {
-    if (entry.occurrence.date >= before) continue;
+    if (entry.occurrence.date > today) continue;
     const seen = due.find(
       ({ item, occurrence }) =>
         item.id === entry.item.id &&
@@ -691,20 +690,22 @@ function agenda(days: AgendaDay[], overdue: DueChore[], member: number | null) {
   };
 }
 
-const HOME_LOOKAHEAD_DAYS = 6;
-const HOME_LOOKBACK_DAYS = MAX_RANGE_DAYS - HOME_LOOKAHEAD_DAYS;
+const LIST_LAST_DAY = 6;
+const LOOKBACK_DAYS = MAX_RANGE_DAYS - LIST_LAST_DAY;
 
-/** Starting today, the list also reaches back for overdue chores: the same window home loads. */
+const listEnd = (start: string) => addDays(start, LIST_LAST_DAY);
+
+/** Starting today, the list also reaches back for overdue chores. */
 export const listWindow = (start: string, today: string) => ({
-  from: start === today ? addDays(today, -HOME_LOOKBACK_DAYS) : start,
-  to: addDays(start, HOME_LOOKAHEAD_DAYS),
+  from: start === today ? addDays(today, -LOOKBACK_DAYS) : start,
+  to: listEnd(start),
 });
 
 export const describeListRange = (
   start: string,
   locale: Intl.LocalesArgument,
 ) =>
-  [start, addDays(start, HOME_LOOKAHEAD_DAYS)]
+  [start, listEnd(start)]
     .map((date) =>
       formatCalendarDate(date, locale, { day: "numeric", month: "short" }),
     )
@@ -718,9 +719,7 @@ export function listAgenda(
   member: number | null,
 ) {
   const due =
-    start === today
-      ? latestOpen(rangeEntries(range, isOpenTask), addDays(today, 1))
-      : [];
+    start === today ? latestOpen(rangeEntries(range, isOpenTask), today) : [];
   // A chore still open today carries its missed days there, so one tick settles them like on home
   const days = agendaDays(range, weekDays(start), meId).map((day) => ({
     ...day,
@@ -736,7 +735,7 @@ export function listAgenda(
   );
 }
 
-export const monthAgenda = (
+const monthAgenda = (
   range: CalendarRange,
   month: string,
   meId: number,
@@ -769,7 +768,6 @@ export function showDate(
   return { ...position, month: month === monthOf(today) ? null : month };
 }
 
-/** Like showDate, but a list that already shows `date` stays where it is. */
 export function revealDate(
   position: CalendarPosition,
   date: string,
@@ -777,14 +775,15 @@ export function revealDate(
 ) {
   const { start } = shownDates(position, today);
   const shown =
-    position.view === "list" &&
-    date >= start &&
-    date <= addDays(start, HOME_LOOKAHEAD_DAYS);
+    position.view === "list" && date >= start && date <= listEnd(start);
   return shown ? position : showDate(position, date, today);
 }
 
 export const showsToday = (position: CalendarPosition) =>
   (position.view === "list" ? position.start : position.month) === null;
+
+export const otherView = ({ view }: CalendarPosition): CalendarView =>
+  view === "list" ? "month" : "list";
 
 export const switchView = (
   position: CalendarPosition,
@@ -817,6 +816,19 @@ export function positionWindow(position: CalendarPosition, today: string) {
   return { from, to };
 }
 
+export function agendaAt(
+  range: CalendarRange,
+  position: CalendarPosition,
+  today: string,
+  meId: number,
+  member: number | null,
+) {
+  const { start, month } = shownDates(position, today);
+  return position.view === "list"
+    ? listAgenda(range, start, today, meId, member)
+    : monthAgenda(range, month, meId, member);
+}
+
 export const newEntryDate = (position: CalendarPosition, today: string) => {
   const { start, month } = shownDates(position, today);
   if (position.view === "list") return start;
@@ -847,7 +859,7 @@ export function homeAgenda(
     (entry) => isOpenTask(entry) && entry.occurrence.turnGroupMemberId === meId,
   );
   return {
-    due: latestOpen(myOpenTasks, addDays(today, 1)),
+    due: latestOpen(myOpenTasks, today),
     nextTurn: myOpenTasks.find(({ occurrence }) => occurrence.date > today),
     nextEvent: entries.find(
       ({ item, occurrence }) =>

@@ -7,13 +7,13 @@ import { usePrefetchQuery, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
+  agendaAt,
   calendarDateSchema,
   describeListRange,
   formatCalendarDate,
-  listAgenda,
   localDate,
-  monthAgenda,
   newEntryDate,
+  otherView,
   positionWindow,
   revealDate,
   showDate,
@@ -27,7 +27,7 @@ import {
 
 import { Button } from "~/lib/ui/button";
 import { Segmented } from "~/lib/ui/segmented";
-import { trpc } from "~/utils/api";
+import { queryClient, trpc } from "~/utils/api";
 import { useNow } from "~/utils/useNow";
 import { CalendarList } from "./CalendarList";
 import { TurnBar, useCalendarPeople } from "./CalendarPeople";
@@ -37,7 +37,12 @@ import { useCalendarMutations } from "./useCalendarMutations";
 export const calendarRangeOptions = (
   groupId: number,
   { from, to }: { from: string; to: string },
-) => trpc.calendar.range.queryOptions({ groupId, from, to });
+) => ({
+  ...trpc.calendar.range.queryOptions({ groupId, from, to }),
+  // Ranges go stale at once here, and a refetch on entering one mid-write would wipe its optimistic patch
+  refetchOnMount: () =>
+    queryClient.isMutating({ mutationKey: trpc.calendar.pathKey() }) === 0,
+});
 
 export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const t = useTranslations("calendar");
@@ -52,47 +57,37 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
     month: null,
   });
   const [member, setMember] = useState<number | null>(null);
-  const { mutate: setDone } = useCalendarMutations(group).setDone;
-
-  const { view } = position;
-  const { start, month } = shownDates(position, today);
-  const rangeOf = (at: CalendarPosition) =>
+  const rangeAt = (at: CalendarPosition) =>
     calendarRangeOptions(group.id, positionWindow(at, today));
-  const { data, refetch } = useQuery(rangeOf(position));
-  const range = data?.success ? data.data : undefined;
-
-  usePrefetchQuery(rangeOf(stepPosition(position, -1, today)));
-  usePrefetchQuery(rangeOf(stepPosition(position, 1, today)));
-  usePrefetchQuery(
-    rangeOf(switchView(position, view === "list" ? "month" : "list", today)),
-  );
-
-  const show = (date: string) => setPosition(showDate(position, date, today));
-  const reveal = (date: string) =>
-    setPosition(revealDate(position, date, today));
-  const showList = (date: string) =>
-    setPosition(showDate({ ...position, view: "list" }, date, today));
+  const { data, refetch } = useQuery(rangeAt(position));
+  usePrefetchQuery(rangeAt(stepPosition(position, -1, today)));
+  usePrefetchQuery(rangeAt(stepPosition(position, 1, today)));
+  usePrefetchQuery(rangeAt(switchView(position, otherView(position), today)));
+  const { start, month } = shownDates(position, today);
+  const agenda = data?.success
+    ? agendaAt(data.data, position, today, people.meId, member)
+    : undefined;
+  const { mutate: setDone } = useCalendarMutations(group).setDone;
+  const { view } = position;
 
   const onLinked = useEffectEvent((date: string) => {
-    if (calendarDateSchema.safeParse(date).success) reveal(date);
+    if (calendarDateSchema.safeParse(date).success)
+      setPosition(revealDate(position, date, today));
     router.setParams({ date: undefined });
   });
   useEffect(() => {
     if (linked) onLinked(linked);
   }, [linked]);
 
-  const list = range
-    ? listAgenda(range, start, today, people.meId, member)
-    : undefined;
-  const grid = range
-    ? monthAgenda(range, month, people.meId, member)
-    : undefined;
-  const shown = view === "list" ? list : grid;
-
   const openForm = () =>
     router.push({
       pathname: "/(tabs)/calendar/form",
-      params: { date: newEntryDate(position, today) },
+      params: {
+        date: newEntryDate(position, today),
+        view,
+        ...(position.start && { start: position.start }),
+        ...(position.month && { month: position.month }),
+      },
     });
 
   return (
@@ -142,7 +137,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             size="sm"
             title={t("today")}
             disabled={showsToday(position)}
-            onPress={() => show(today)}
+            onPress={() => setPosition(showDate(position, today, today))}
           />
           <Button
             testID="calendar-previous"
@@ -170,7 +165,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
       <TurnBar
         group={group}
         people={people}
-        turns={shown?.turns ?? new Map()}
+        turns={agenda?.turns ?? new Map()}
         member={member}
         onChange={setMember}
       />
@@ -181,7 +176,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         </Text>
       ) : view === "list" ? (
         <CalendarList
-          agenda={list}
+          agenda={agenda}
           dates={weekDays(start)}
           today={today}
           people={people}
@@ -204,9 +199,11 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
       ) : (
         <MonthGrid
           month={month}
-          days={grid?.days}
+          days={agenda?.days}
           today={today}
-          onSelect={showList}
+          onSelect={(date) =>
+            setPosition(showDate({ ...position, view: "list" }, date, today))
+          }
         />
       )}
 
