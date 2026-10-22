@@ -10,7 +10,6 @@ export const calendar = {
   all: "All",
   mine: "Mine",
   add: "Add",
-  addSomething: "Add something",
   nothingPlanned: "Nothing planned",
   nothingOnYou: "Nothing on you",
   dayProgress: "{done} of {total} done",

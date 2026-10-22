@@ -4,7 +4,6 @@ import type { GroupWithAccess } from "@flatsby/api";
 import type {
   CalendarEntry,
   CalendarItemView,
-  CalendarRange,
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
 import {
@@ -38,7 +37,6 @@ import {
   monthGrid,
   monthOf,
   monthsOf,
-  shiftMonth,
   spanAround,
   stepFrom,
 } from "@flatsby/validators/calendar";
@@ -57,7 +55,6 @@ type Panel =
   | { type: "detail"; entry: CalendarEntry }
   | { type: "form"; item?: CalendarItemView };
 
-const EMPTY_RANGE: CalendarRange = { items: [], occurrences: [] };
 // Coming back to a tab left open overnight has to move "today" along
 const onReturn = (notify: () => void) => {
   document.addEventListener("visibilitychange", notify);
@@ -138,8 +135,7 @@ function CalendarScreen({
     return { month, range: data?.success ? data.data : undefined };
   });
   const rangeOf = (date: string) =>
-    agendaMonths.find(({ month }) => month === monthOf(date))?.range ??
-    EMPTY_RANGE;
+    agendaMonths.find(({ month }) => month === monthOf(date))?.range;
   const error = results.flatMap(({ data }) =>
     data?.success === false ? [data.error] : [],
   )[0];
@@ -283,13 +279,7 @@ function CalendarScreen({
           }}
           onScrolledTo={setSelected}
           onReachEdge={(month) =>
-            setSpan((current) =>
-              current.first === month
-                ? { ...current, first: shiftMonth(month, -1) }
-                : current.last === month
-                  ? { ...current, last: shiftMonth(month, 1) }
-                  : current,
-            )
+            setSpan((current) => spanAround(`${month}-01`, current))
           }
           onToggle={({ item, occurrence }, done) =>
             setDone.mutate({

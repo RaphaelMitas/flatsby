@@ -65,11 +65,8 @@ export function MonthGrid({
   const t = useTranslations("calendar");
   const locale = useLocale();
   const month = monthOf(selected);
-  const { days } = monthGrid(month);
-  const weeks = Array.from({ length: WEEKS }, (_, week) =>
-    days.slice(week * 7, week * 7 + 7),
-  );
-  const selectedWeek = Math.floor(days.indexOf(selected) / 7);
+  const { weeks } = monthGrid(month);
+  const selectedWeek = weeks.findIndex((week) => week.includes(selected));
   const [closed, setClosed] = useState(false);
 
   useAnimatedReaction(
@@ -294,7 +291,14 @@ const WeekRow = memo(function WeekRow({
   );
 });
 
-/** Lies over the closed month's week; native paging lets it follow the finger and land on whole weeks. */
+const weeksAround = (date: string) => {
+  const first = addDays(weekStart(date), -7 * WEEKS_EACH_WAY);
+  return Array.from({ length: 2 * WEEKS_EACH_WAY + 1 }, (_, index) =>
+    weekDays(addDays(first, 7 * index)),
+  );
+};
+
+/** Lies over the closed month's week. */
 function WeekStrip({
   closed,
   ...row
@@ -305,15 +309,11 @@ function WeekStrip({
   const { selected, today, onSelect } = row;
   const list = useRef<FlatList<string[]>>(null);
   const [width, setWidth] = useState(0);
-  // Fixed at mount, so midnight can't shift every page under the finger
-  const [weeks] = useState(() => {
-    const first = addDays(weekStart(today), -7 * WEEKS_EACH_WAY);
-    return Array.from({ length: 2 * WEEKS_EACH_WAY + 1 }, (_, index) =>
-      weekDays(addDays(first, 7 * index)),
-    );
-  });
+  // Re-centred only when the selection leaves it, so midnight can't shift every page under the finger
+  const [weeks, setWeeks] = useState(() => weeksAround(today));
   const start = weekStart(selected);
   const index = weeks.findIndex((days) => days[0] === start);
+  if (index < 0) setWeeks(weeksAround(start));
 
   // Only a finger picks a week; our own scrolls pass pages nobody chose
   const swiping = useRef(false);
@@ -321,6 +321,10 @@ function WeekStrip({
     if (!swiping.current) return;
     swiping.current = false;
     if (page !== index) onSelect(addDays(selected, 7 * (page - index)));
+  };
+  const landIfSnapped = (x: number) => {
+    const page = Math.round(x / width);
+    if (Math.abs(x - page * width) < 1) land(page);
   };
 
   useEffect(() => {
@@ -368,16 +372,14 @@ function WeekStrip({
               />
             </View>
           )}
-          onScrollBeginDrag={() => {
+          // A slow drag passes page edges too; only where the strip settles after release counts
+          onScrollEndDrag={(event) => {
             swiping.current = true;
+            landIfSnapped(event.nativeEvent.contentOffset.x);
           }}
           scrollEventThrottle={16}
-          onScroll={(event) => {
-            const x = event.nativeEvent.contentOffset.x;
-            const page = Math.round(x / width);
-            // Android reports the end of a page snap late, so land once the strip rests on another week
-            if (page !== index && Math.abs(x - page * width) < 1) land(page);
-          }}
+          // Android reports the end of a page snap late, so land once the strip rests on a week
+          onScroll={(event) => landIfSnapped(event.nativeEvent.contentOffset.x)}
           onMomentumScrollEnd={(event) =>
             land(Math.round(event.nativeEvent.contentOffset.x / width))
           }

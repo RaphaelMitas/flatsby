@@ -37,7 +37,7 @@ interface MonthGridProps {
   ref: Ref<HTMLDivElement>;
   selected: string;
   today: string;
-  rangeOf: (date: string) => CalendarRange;
+  rangeOf: (date: string) => CalendarRange | undefined;
   collapsed: boolean;
   /** Fully closed: the swipeable week strip replaces the grid's week. */
   closed: boolean;
@@ -63,11 +63,8 @@ export function MonthGrid({
   const t = useTranslations("calendar");
   const locale = useLocale();
   const month = monthOf(selected);
-  const { days } = monthGrid(month);
-  const weeks = Array.from({ length: WEEKS }, (_, week) =>
-    days.slice(week * 7, week * 7 + 7),
-  );
-  const selectedWeek = Math.floor(days.indexOf(selected) / 7);
+  const { days, weeks } = monthGrid(month);
+  const selectedWeek = weeks.findIndex((week) => week.includes(selected));
 
   return (
     <div ref={ref} className="flex min-h-0 flex-1 flex-col">
@@ -168,7 +165,8 @@ export function MonthGrid({
                   today={today}
                   rangeOf={rangeOf}
                   onSelect={onSelect}
-                  inert={collapsed && index !== selectedWeek}
+                  // Closed, the strip on top carries this week
+                  inert={collapsed && (closed || index !== selectedWeek)}
                 />
               ))}
             </div>
@@ -193,7 +191,7 @@ interface WeekRowProps {
   month: string;
   selected: string;
   today: string;
-  rangeOf: (date: string) => CalendarRange;
+  rangeOf: (date: string) => CalendarRange | undefined;
   onSelect: (date: string) => void;
   inert?: boolean;
   /** The strip repeats the grid's days, so only the grid carries their test ids. */
@@ -219,6 +217,7 @@ function WeekRow({
     >
       {days.map((day) => {
         const isSelected = day === selected;
+        const range = rangeOf(day);
         return (
           <button
             key={day}
@@ -240,7 +239,7 @@ function WeekRow({
               {Number(day.slice(8))}
             </span>
             <span className="flex h-1.5 gap-0.5">
-              {entriesOn(rangeOf(day), day)
+              {(range ? entriesOn(range, day) : [])
                 .slice(0, MAX_DOTS)
                 .map(({ item, occurrence }) => (
                   <span
@@ -260,7 +259,7 @@ function WeekRow({
   );
 }
 
-/** Lies over the closed month's week and snaps a week at a time, for touch and trackpad swipes. */
+/** Lies over the closed month's week. */
 function WeekStrip({
   closed,
   ...row
@@ -297,13 +296,20 @@ function WeekStrip({
         !closed && "pointer-events-none opacity-0",
       )}
       style={{ top: WEEK_PADDING, scrollbarWidth: "none" }}
-      // The month grid under it carries the same days
       inert={!closed}
-      aria-hidden
     >
       {[-1, 0, 1].map((delta) => {
         const days = weekDays(addDays(start, 7 * delta));
-        return <WeekRow key={days[0]} days={days} testIds={false} {...row} />;
+        return (
+          <WeekRow
+            key={days[0]}
+            days={days}
+            testIds={false}
+            // Tabbing to a neighbour week would scroll it in and swipe the selection
+            inert={delta !== 0}
+            {...row}
+          />
+        );
       })}
     </div>
   );

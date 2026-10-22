@@ -410,6 +410,15 @@ describe("spanAround", () => {
       first: "2026-09",
       last: "2027-01",
     });
+    expect(spanAround("2026-12-01", span)).toBe(span);
+  });
+
+  it("starts over for a far jump instead of loading every month in between", () => {
+    const span = spanAround("2026-12-24");
+    expect(spanAround("2062-03-10", span)).toEqual({
+      first: "2062-02",
+      last: "2062-04",
+    });
   });
 });
 

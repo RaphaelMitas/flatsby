@@ -21,7 +21,6 @@ import {
   monthGrid,
   monthOf,
   monthsOf,
-  shiftMonth,
   spanAround,
   stepFrom,
 } from "@flatsby/validators/calendar";
@@ -55,6 +54,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const [jump, setJump] = useState({ date: start });
   const [span, setSpan] = useState(() => spanAround(start));
   const collapse = useSharedValue(0);
+  const frozen = useSharedValue(true);
   const [collapsed, setCollapsed] = useState(false);
   const agenda = useRef<CalendarAgendaHandle>(null);
   const [mine, setMine] = useState(false);
@@ -87,14 +87,19 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
     },
   );
 
-  const select = useCallback((date: string) => {
-    setSelected(date);
-    // The highlight shows at once; moving the agenda takes far longer to render
-    startTransition(() => {
-      setSpan((current) => spanAround(date, current));
-      setJump({ date });
-    });
-  }, []);
+  const select = useCallback(
+    (date: string) => {
+      // The jump lands in a transition; until then a moving agenda would overwrite the chosen day
+      frozen.set(true);
+      setSelected(date);
+      // The highlight shows at once; moving the agenda takes far longer to render
+      startTransition(() => {
+        setSpan((current) => spanAround(date, current));
+        setJump({ date });
+      });
+    },
+    [frozen],
+  );
 
   useEffect(() => {
     if (!jumpTo) return;
@@ -171,15 +176,10 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             people={people}
             mine={mine}
             collapse={collapse}
+            frozen={frozen}
             onScrolledTo={setSelected}
             onReachEdge={(month) =>
-              setSpan((current) =>
-                current.first === month
-                  ? { ...current, first: shiftMonth(month, -1) }
-                  : current.last === month
-                    ? { ...current, last: shiftMonth(month, 1) }
-                    : current,
-              )
+              setSpan((current) => spanAround(`${month}-01`, current))
             }
             onToggle={(entry, done) =>
               setDone({

@@ -29,7 +29,7 @@ import type { MemberLookup } from "./CalendarPeople";
 import { DoneBy, TurnPill } from "./CalendarPeople";
 import { MONTH_COVER } from "./MonthGrid";
 
-export interface AgendaMonth {
+interface AgendaMonth {
   month: string;
   range: CalendarRange | undefined;
 }
@@ -94,6 +94,8 @@ export function Agenda({
     if (Math.abs(element.scrollTop - target) < 1) return;
     element.scrollTop = target;
     written.current = element.scrollTop;
+    // A wheel step can land in the same scroll event as this write, and the jump mustn't count as scrolling
+    lastTop.current = element.scrollTop;
   }, []);
 
   useLayoutEffect(() => {
@@ -171,7 +173,7 @@ export function Agenda({
     >
       <div ref={content}>
         {months.map(({ month, range }) =>
-          agendaDays(range ?? EMPTY_RANGE, month, meId, mine).map(
+          agendaDays(range, month, meId, mine).map(
             ({ date, entries, summary }) => (
               <section
                 key={date}
@@ -241,8 +243,6 @@ export function Agenda({
     </div>
   );
 }
-
-const EMPTY_RANGE: CalendarRange = { items: [], occurrences: [] };
 
 function EntryRow({
   entry,

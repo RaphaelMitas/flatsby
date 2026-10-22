@@ -348,10 +348,10 @@ export function expandOccurrences(
   return occurrences;
 }
 
-/** Calendar dates carry no time zone, so they format as UTC to keep the day from shifting. */
 // Building a formatter costs milliseconds on Hermes, and a calendar formats hundreds of dates per render
 const formatters = new Map<string, Intl.DateTimeFormat>();
 
+/** Calendar dates carry no time zone, so they format as UTC to keep the day from shifting. */
 export const formatCalendarDate = (
   date: string,
   locale: Intl.LocalesArgument,
@@ -542,25 +542,24 @@ export const shiftMonth = (month: string, delta: number) => {
     .slice(0, 7);
 };
 
-const GRID_DAYS = 42;
+const GRID_WEEKS = 6;
 
 /** Six Monday-first weeks covering `month` ("2026-10"), so the grid never changes height. */
-export function monthGrid(month: string) {
-  const first = toDayNumber(`${month}-01`);
-  const start = first - weekdayIndex(first);
-  const days = Array.from({ length: GRID_DAYS }, (_, i) =>
-    fromDayNumber(start + i),
-  );
-  return { days, from: days[0] ?? month, to: days.at(-1) ?? month };
-}
-
 export const weekStart = (date: string) =>
   addDays(date, -weekdayIndex(toDayNumber(date)));
 
 export const weekDays = (start: string) =>
   Array.from({ length: 7 }, (_, i) => addDays(start, i));
 
-/** Where the grid's arrows land: a week on when collapsed, else the next month's 1st, or today in this month. */
+export function monthGrid(month: string) {
+  const start = weekStart(`${month}-01`);
+  const weeks = Array.from({ length: GRID_WEEKS }, (_, week) =>
+    weekDays(addDays(start, 7 * week)),
+  );
+  const days = weeks.flat();
+  return { days, weeks, from: days[0] ?? month, to: days.at(-1) ?? month };
+}
+
 export function stepFrom(
   selected: string,
   today: string,
@@ -622,17 +621,19 @@ export interface AgendaDay {
 
 /** Every day of `month`, empty ones included. "Mine" keeps events and the tasks that are the member's turn. */
 export function agendaDays(
-  range: CalendarRange,
+  range: CalendarRange | undefined,
   month: string,
   meId: number,
   mine: boolean,
 ): AgendaDay[] {
-  const inMonth = rangeEntries(
-    range,
-    ({ occurrence }) => monthOf(occurrence.date) === month,
-  );
+  const inMonth = range
+    ? rangeEntries(
+        range,
+        ({ occurrence }) => monthOf(occurrence.date) === month,
+      )
+    : [];
   const first = toDayNumber(`${month}-01`);
-  const length = toDayNumber(`${shiftMonth(month, 1)}-01`) - first;
+  const length = monthLength(monthIndexOf(first));
   return Array.from({ length }, (_, i) => {
     const date = fromDayNumber(first + i);
     const entries = inMonth.filter(
@@ -656,13 +657,24 @@ export interface MonthSpan {
   last: string;
 }
 
+const FAR_MONTHS = 12;
+
 /** Grows the loaded months so `date` has a whole month on either side to scroll into. */
 export const spanAround = (date: string, span?: MonthSpan): MonthSpan => {
-  const before = shiftMonth(monthOf(date), -1);
-  const after = shiftMonth(monthOf(date), 1);
+  const month = monthOf(date);
+  const before = shiftMonth(month, -1);
+  const after = shiftMonth(month, 1);
+  // A far jump (a mistyped year, a link) starts over rather than loading every month in between
+  if (
+    !span ||
+    month < shiftMonth(span.first, -FAR_MONTHS) ||
+    month > shiftMonth(span.last, FAR_MONTHS)
+  )
+    return { first: before, last: after };
+  if (span.first <= before && span.last >= after) return span;
   return {
-    first: span && span.first < before ? span.first : before,
-    last: span && span.last > after ? span.last : after,
+    first: span.first < before ? span.first : before,
+    last: span.last > after ? span.last : after,
   };
 };
 

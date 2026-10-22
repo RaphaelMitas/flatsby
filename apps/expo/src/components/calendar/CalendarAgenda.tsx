@@ -26,7 +26,7 @@ import { cn } from "~/lib/utils";
 import { CalendarEntryRow } from "./CalendarEntryRow";
 import { MONTH_COVER } from "./MonthGrid";
 
-export interface AgendaMonth {
+interface AgendaMonth {
   month: string;
   range: CalendarRange | undefined;
 }
@@ -42,7 +42,6 @@ type AgendaRow =
     }
   | { type: "empty" | "loading"; date: string };
 
-const EMPTY_RANGE: CalendarRange = { items: [], occurrences: [] };
 const rowsByRange = new WeakMap<CalendarRange, Map<string, AgendaRow[]>>();
 
 /** A loaded month keeps its rows while its range is unchanged, so a neighbour arriving doesn't re-render every visible row. */
@@ -55,7 +54,7 @@ function monthRows(
   const key = `${month} ${meId} ${mine}`;
   const cached = range && rowsByRange.get(range)?.get(key);
   if (cached) return cached;
-  const rows = agendaDays(range ?? EMPTY_RANGE, month, meId, mine).flatMap(
+  const rows = agendaDays(range, month, meId, mine).flatMap(
     ({ date, summary, entries }): AgendaRow[] => [
       { type: "day", date, summary },
       ...(!range
@@ -78,7 +77,7 @@ function monthRows(
     );
   return rows;
 }
-export const DAY_HEADING_HEIGHT = 60;
+const DAY_HEADING_HEIGHT = 60;
 // A month still loading keeps the height of an empty day, the most common row, so its arrival rarely moves anything
 const EMPTY_ROW_HEIGHT = 28;
 const MAX_SPEED_CHANGE = 60;
@@ -102,6 +101,8 @@ interface CalendarAgendaProps {
   people: CalendarPeople;
   mine: boolean;
   collapse: SharedValue<number>;
+  /** Jumps and FlashList's own corrections scroll too; only the person's scrolling moves the month. */
+  frozen: SharedValue<boolean>;
   onScrolledTo: (date: string) => void;
   onReachEdge: (month: string) => void;
   onToggle: (entry: CalendarEntry, done: boolean) => void;
@@ -116,6 +117,7 @@ export function CalendarAgenda({
   people,
   mine,
   collapse,
+  frozen,
   onScrolledTo,
   onReachEdge,
   onToggle,
@@ -125,8 +127,6 @@ export function CalendarAgenda({
   const list = useRef<FlashListRef<AgendaRow>>(null);
   const scrollable = useAnimatedRef<ComponentType<RefAttributes<Scrollable>>>();
   const offset = useScrollOffset(scrollable);
-  // Jumps and FlashList's own corrections scroll too; only the person's scrolling moves the month
-  const frozen = useSharedValue(true);
   const handledJump = useRef(jump);
   const lastY = useRef(0);
   const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -146,9 +146,10 @@ export function CalendarAgenda({
     (row) => row.type === "day" && row.date === jump.date,
   );
 
-  const onFrame = (y: number, collapsed: number, isFrozen: boolean) => {
+  const onFrame = (y: number, collapsed: number) => {
     lastY.current = y;
-    if (isFrozen) return;
+    // Read here, not in the frame: a tap freezes on this thread, after frames already in flight
+    if (frozen.get()) return;
     // A day owns the pinned heading once its own heading is half under it
     const visibleTop = y + MONTH_COVER - collapsed + DAY_HEADING_HEIGHT / 2;
     for (let i = dayIndices.length - 1; i >= 0; i--) {
@@ -173,7 +174,7 @@ export function CalendarAgenda({
       if (!frozen.get() && !correction)
         collapse.set(Math.min(MONTH_COVER, Math.max(0, collapse.get() + step)));
       // Offset and collapse from the same frame, so the day on screen can't lag a frame behind
-      scheduleOnRN(onFrame, y, collapse.get(), frozen.get());
+      scheduleOnRN(onFrame, y, collapse.get());
     },
   );
 
@@ -191,6 +192,7 @@ export function CalendarAgenda({
 
   const scrollBy = (distance: number) => {
     frozen.set(false);
+    lastStep.set(0);
     list.current?.scrollToOffset({
       offset: lastY.current + distance,
       animated: true,
@@ -282,6 +284,8 @@ export function CalendarAgenda({
       onScrollBeginDrag={() => {
         clearTimeout(settleTimer.current);
         frozen.set(false);
+        // A finger stopping a fling starts from rest, not from the fling's speed
+        lastStep.set(0);
       }}
       // A release without a fling still settles the month, once no momentum follows
       onScrollEndDrag={() => {

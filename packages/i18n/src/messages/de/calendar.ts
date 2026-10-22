@@ -12,7 +12,6 @@ export const calendar = {
   all: "Alle",
   mine: "Meine",
   add: "Hinzufügen",
-  addSomething: "Etwas hinzufügen",
   nothingPlanned: "Nichts geplant",
   nothingOnYou: "Nichts liegt bei dir",
   dayProgress: "{done} von {total} erledigt",

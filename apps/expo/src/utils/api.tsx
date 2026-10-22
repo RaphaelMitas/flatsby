@@ -1,6 +1,7 @@
 import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
-import { QueryClient } from "@tanstack/react-query";
+import { AppState } from "react-native";
+import { focusManager, QueryClient } from "@tanstack/react-query";
 import {
   createTRPCClient,
   httpBatchLink,
@@ -24,6 +25,14 @@ function isUnauthorizedError(error: unknown): boolean {
     data.code === "UNAUTHORIZED"
   );
 }
+
+// React Native has no window focus; coming back to the app refetches what's on screen, so housemates' changes show up
+focusManager.setEventListener((setFocused) => {
+  const subscription = AppState.addEventListener("change", (state) =>
+    setFocused(state === "active"),
+  );
+  return () => subscription.remove();
+});
 
 export const queryClient = new QueryClient({
   defaultOptions: {
