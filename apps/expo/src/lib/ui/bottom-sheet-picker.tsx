@@ -67,13 +67,14 @@ export interface BottomSheetPickerItem {
   disabled?: boolean;
 }
 
-// Context for connecting trigger and sheet
+interface PickerConfig {
+  items: BottomSheetPickerItem[];
+  selectedId?: string;
+  onSelect?: (item: BottomSheetPickerItem) => void;
+}
+
 interface BottomSheetPickerContextValue {
-  openPicker: (config: {
-    items: BottomSheetPickerItem[];
-    selectedId?: string;
-    onSelect?: (item: BottomSheetPickerItem) => void;
-  }) => void;
+  openPicker: (config: PickerConfig) => void;
   closePicker: () => void;
 }
 
@@ -90,52 +91,20 @@ export const useBottomSheetPicker = () => {
   return context;
 };
 
-// Provider component that should be placed high in the component tree
 interface BottomSheetPickerProviderProps {
   children: ReactNode;
 }
-
-// Component that uses the hook inside BottomSheet context
-interface BottomSheetPickerContentProps {
-  items: BottomSheetPickerItem[];
-  renderItem: ({ item }: { item: BottomSheetPickerItem }) => React.ReactElement;
-}
-
-const BottomSheetPickerContent: React.FC<BottomSheetPickerContentProps> = ({
-  items,
-  renderItem,
-}) => (
-  <FlashList
-    className={bottomSheetContentVariants()}
-    data={items}
-    keyExtractor={(item: BottomSheetPickerItem) => item.id}
-    renderItem={renderItem}
-    showsVerticalScrollIndicator={false}
-    nestedScrollEnabled
-  />
-);
 
 export const BottomSheetPickerProvider: React.FC<
   BottomSheetPickerProviderProps
 > = ({ children }) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const [pickerConfig, setPickerConfig] = useState<{
-    items: BottomSheetPickerItem[];
-    selectedId?: string;
-    onSelect?: (item: BottomSheetPickerItem) => void;
-  } | null>(null);
+  const [pickerConfig, setPickerConfig] = useState<PickerConfig | null>(null);
 
-  const openPicker = useCallback(
-    (config: {
-      items: BottomSheetPickerItem[];
-      selectedId?: string;
-      onSelect?: (item: BottomSheetPickerItem) => void;
-    }) => {
-      setPickerConfig(config);
-      bottomSheetRef.current?.present();
-    },
-    [],
-  );
+  const openPicker = useCallback((config: PickerConfig) => {
+    setPickerConfig(config);
+    bottomSheetRef.current?.present();
+  }, []);
 
   const closePicker = useCallback(() => {
     bottomSheetRef.current?.close();
@@ -190,9 +159,13 @@ export const BottomSheetPickerProvider: React.FC<
     <BottomSheetPickerContext.Provider value={contextValue}>
       {children}
       <SheetModal ref={bottomSheetRef} snapPoints={SNAP_POINTS}>
-        <BottomSheetPickerContent
-          items={pickerConfig?.items ?? []}
+        <FlashList
+          className={bottomSheetContentVariants()}
+          data={pickerConfig?.items ?? []}
+          keyExtractor={(item) => item.id}
           renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
         />
       </SheetModal>
     </BottomSheetPickerContext.Provider>

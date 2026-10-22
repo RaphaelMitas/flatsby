@@ -32,8 +32,9 @@ export default function GroupSettingsIndex() {
     setShowDeleteModal(false);
     deleteGroupMutation.mutate({ id: Number(selectedGroupId) });
     router.dismissAll();
-    // Home's stack may still hold screens of the deleted group
     router.navigate("/(tabs)/home");
+    // Pops Home too, which may still hold screens of the deleted group
+    router.dismissAll();
   };
 
   const handleCloseModal = () => {

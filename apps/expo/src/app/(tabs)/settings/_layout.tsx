@@ -1,20 +1,15 @@
 import { Stack } from "expo-router";
 import { useTranslations } from "use-intl";
 
-import {
-  useSolidHeader,
-  useThemeColors,
-  useThemedScreenOptions,
-} from "~/lib/utils";
+import { useThemeColors, useThemedScreenOptions } from "~/lib/utils";
 
 export default function SettingsLayout() {
-  const themedScreenOptions = useThemedScreenOptions();
-  const solidHeader = useSolidHeader();
+  const { screenOptions, solidHeader } = useThemedScreenOptions();
   const { getColor } = useThemeColors();
   const t = useTranslations();
 
   return (
-    <Stack screenOptions={themedScreenOptions}>
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen
         name="index"
         options={{

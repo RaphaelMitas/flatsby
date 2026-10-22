@@ -17,7 +17,7 @@ import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
-import { useSwipeActions, useSwipePressGuard } from "../SwipeActions";
+import { useSwipeActions } from "../SwipeActions";
 import { ShoppingItemDisplay } from "./ShoppingItemDisplay";
 import { getCategoryData } from "./ShoppingListCategory";
 import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
@@ -132,8 +132,7 @@ const ShoppingListItem = ({
     deleteShoppingListItemMutation.mutate({ id: item.id });
   };
 
-  const { onSwipeableOpenStartDrag, pressHandlers } = useSwipePressGuard();
-  const { renderLeftActions, renderRightActions } = useSwipeActions({
+  const { swipeableProps, guardPress } = useSwipeActions({
     leftAction: {
       text: t("common.edit"),
       className: "bg-info",
@@ -156,9 +155,7 @@ const ShoppingListItem = ({
         friction={2}
         leftThreshold={40}
         rightThreshold={40}
-        renderRightActions={renderRightActions}
-        renderLeftActions={renderLeftActions}
-        onSwipeableOpenStartDrag={onSwipeableOpenStartDrag}
+        {...swipeableProps}
         onSwipeableOpen={(direction) => {
           if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
@@ -172,13 +169,13 @@ const ShoppingListItem = ({
         <Pressable
           accessible={e2eAccessibilityOverride()}
           disabled={item.isPending}
-          {...pressHandlers(() => setShowDetails(true))}
+          onPress={guardPress(() => setShowDetails(true))}
         >
           <ShoppingItemDisplay
             name={item.name}
             completed={item.completed}
             categoryId={item.categoryId}
-            onCheckedChange={handleCheckboxToggle}
+            onCheckedChange={guardPress(handleCheckboxToggle)}
             disabled={item.isPending}
             checkboxTestID={`shopping-list-item-checkbox-${item.name}`}
             testID={`shopping-list-item-${item.name}`}

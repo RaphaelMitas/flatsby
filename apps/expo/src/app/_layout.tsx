@@ -24,7 +24,7 @@ import { PostHogProvider } from "posthog-react-native";
 import { InstallReferrerInvite } from "~/components/InstallReferrerInvite";
 import { UpdateNudge } from "~/components/UpdateNudge";
 import { ThemeProvider } from "~/lib/ui/theme";
-import { useSolidHeader, useThemedScreenOptions } from "~/lib/utils";
+import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { isE2ETestingEnabled } from "~/utils/e2e";
 import { IntlProvider } from "~/utils/intl-provider";
@@ -116,8 +116,7 @@ function ScreenTracker() {
 
 const StackLayout = () => {
   const t = useTranslations();
-  const themedScreenOptions = useThemedScreenOptions();
-  const solidHeader = useSolidHeader();
+  const { screenOptions, solidHeader } = useThemedScreenOptions();
   const { data, isPending } = useSession();
   const { hydrated } = useShoppingStore();
   const userId = data?.user.id;
@@ -142,7 +141,7 @@ const StackLayout = () => {
       <Stack
         screenOptions={{
           headerShown: false,
-          ...themedScreenOptions,
+          ...screenOptions,
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

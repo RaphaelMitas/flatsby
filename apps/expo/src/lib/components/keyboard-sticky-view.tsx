@@ -32,8 +32,7 @@ export function AppKeyboardStickyView({
       }
     >
       <KeyboardStickyView
-        // The keyboard rises from the window's bottom edge, but this view
-        // already sits above the tab bar and bottom inset it covers.
+        // The keyboard rises from the window's bottom edge, but this view already sits above what it covers
         offset={{ opened: coveredBelow, closed: 0 }}
         className={className}
         {...props}

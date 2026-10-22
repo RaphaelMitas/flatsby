@@ -2,11 +2,11 @@ import { Stack } from "expo-router";
 import { useTranslations } from "use-intl";
 
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
-import { useSolidHeader } from "~/lib/utils";
+import { useThemedScreenOptions } from "~/lib/utils";
 
 const ManageGroups = () => {
   const t = useTranslations("navigation");
-  const solidHeader = useSolidHeader();
+  const { solidHeader } = useThemedScreenOptions();
   return (
     <>
       <Stack.Screen

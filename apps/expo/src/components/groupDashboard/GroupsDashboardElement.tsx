@@ -32,7 +32,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const { selectedGroupId, setSelectedGroup } = useShoppingStore();
   const isOptimistic = group.id === -1;
 
-  const { renderLeftActions, renderRightActions } = useSwipeActions({
+  const { swipeableProps, guardPress } = useSwipeActions({
     leftAction: {
       text: t("common.edit"),
       className: "bg-info",
@@ -72,8 +72,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         friction={2}
         leftThreshold={40}
         rightThreshold={40}
-        renderLeftActions={renderLeftActions}
-        renderRightActions={renderRightActions}
+        {...swipeableProps}
         onSwipeableOpen={(direction) => {
           if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
@@ -131,7 +130,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
                 variant="outline"
                 size="md"
                 disabled={isOptimistic}
-                onPress={handleGroupSelect}
+                onPress={guardPress(handleGroupSelect)}
                 icon={isSelected ? "chevron-right" : undefined}
               />
             </View>

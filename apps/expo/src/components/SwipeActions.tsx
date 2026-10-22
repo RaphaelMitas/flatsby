@@ -1,4 +1,3 @@
-import type React from "react";
 import type { SharedValue } from "react-native-reanimated";
 import type { ClassNameValue } from "tailwind-merge";
 import { useCallback, useRef } from "react";
@@ -18,40 +17,13 @@ interface SwipeActionsProps {
   rightAction?: SwipeAction;
 }
 
-interface SwipeActionsReturn {
-  renderLeftActions?: (
-    _prog: SharedValue<number>,
-    _drag: SharedValue<number>,
-  ) => React.ReactElement;
-  renderRightActions?: (
-    _prog: SharedValue<number>,
-    _drag: SharedValue<number>,
-  ) => React.ReactElement;
-}
-
-// Gesture Handler 3 doesn't cancel the row's React Native press once a swipe starts, so lifting the finger would also count as a tap.
-export const useSwipePressGuard = () => {
-  const dragged = useRef(false);
-
-  return {
-    onSwipeableOpenStartDrag: () => {
-      dragged.current = true;
-    },
-    pressHandlers: (onPress: () => void) => ({
-      onPressIn: () => {
-        dragged.current = false;
-      },
-      onPress: () => {
-        if (!dragged.current) onPress();
-      },
-    }),
-  };
-};
-
 export const useSwipeActions = ({
   leftAction,
   rightAction,
-}: SwipeActionsProps): SwipeActionsReturn => {
+}: SwipeActionsProps) => {
+  // Gesture Handler 3 still fires presses inside the row when a swipe ends, so ignore them until it springs back
+  const swiping = useRef(false);
+
   const rightActionStyle = useAnimatedStyle(() => {
     return {
       flex: 1,
@@ -117,7 +89,20 @@ export const useSwipeActions = ({
   );
 
   return {
-    renderLeftActions: leftAction ? renderLeftActions : undefined,
-    renderRightActions: rightAction ? renderRightActions : undefined,
+    swipeableProps: {
+      renderLeftActions: leftAction ? renderLeftActions : undefined,
+      renderRightActions: rightAction ? renderRightActions : undefined,
+      onSwipeableOpenStartDrag: () => {
+        swiping.current = true;
+      },
+      onSwipeableClose: () => {
+        swiping.current = false;
+      },
+    },
+    guardPress:
+      <Args extends unknown[]>(onPress: (...args: Args) => void) =>
+      (...args: Args) => {
+        if (!swiping.current) onPress(...args);
+      },
   };
 };

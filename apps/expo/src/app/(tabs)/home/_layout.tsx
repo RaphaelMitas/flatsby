@@ -1,18 +1,17 @@
 import { Stack } from "expo-router";
 import { useTranslations } from "use-intl";
 
-import { useSolidHeader, useThemedScreenOptions } from "~/lib/utils";
+import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function HomeLayout() {
-  const themedScreenOptions = useThemedScreenOptions();
-  const solidHeader = useSolidHeader();
+  const { screenOptions, solidHeader } = useThemedScreenOptions();
   const t = useTranslations("navigation");
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        ...themedScreenOptions,
+        ...screenOptions,
       }}
     >
       <Stack.Screen

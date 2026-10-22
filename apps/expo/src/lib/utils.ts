@@ -1,7 +1,8 @@
 import type { ApiErrorResult } from "@flatsby/api";
 import type { ClassValue } from "clsx";
 import type { useRouter } from "expo-router";
-import { Platform, useColorScheme } from "react-native";
+import { useColorScheme } from "react-native";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -111,30 +112,24 @@ export const useThemeColors = (): {
   };
 };
 
-// For screens without a root scroller, whose content would sit under the transparent iOS glass bar.
-export const useSolidHeader = () => {
-  const { getColor } = useThemeColors();
-
-  return {
-    headerTransparent: false,
-    headerStyle: { backgroundColor: getColor("background") },
-  };
-};
-
 export const useThemedScreenOptions = () => {
   const { getColor } = useThemeColors();
+  // For screens the glass bar would cover badly: content outside a scroller, or pull to refresh
+  const solidHeader = {
+    headerStyle: { backgroundColor: getColor("background") },
+  };
 
   return {
-    // iOS draws the system Liquid Glass bar only when no background is set.
-    headerStyle:
-      Platform.OS === "ios"
-        ? undefined
-        : { backgroundColor: getColor("background") },
-    headerTintColor: getColor("foreground"),
-    // Not transparent: NativeTabs screens sit on a native container that keeps
-    // the system appearance, so anything see-through leaks light in dark mode.
-    contentStyle: {
-      backgroundColor: getColor("background"),
+    solidHeader,
+    screenOptions: {
+      // The system Liquid Glass bar only shows when no background is set.
+      ...(isLiquidGlassAvailable() ? {} : solidHeader),
+      headerTintColor: getColor("foreground"),
+      // Not transparent: NativeTabs screens sit on a native container that keeps
+      // the system appearance, so anything see-through leaks light in dark mode.
+      contentStyle: {
+        backgroundColor: getColor("background"),
+      },
     },
   };
 };
