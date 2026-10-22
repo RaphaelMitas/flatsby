@@ -1,5 +1,5 @@
+import type * as React from "react";
 import type { VariantProps } from "tailwind-variants";
-import * as React from "react";
 import { useEffect } from "react";
 import { View } from "react-native";
 import Animated, {
@@ -15,9 +15,7 @@ const skeletonVariants = tv({
   variants: {
     variant: {
       default: "bg-muted",
-      rounded: "rounded-full bg-muted",
       text: "bg-muted rounded-sm",
-      card: "bg-muted rounded-xl",
     },
     size: {
       xs: "h-3",
@@ -50,67 +48,45 @@ interface SkeletonProps
   extends
     React.ComponentProps<typeof View>,
     VariantProps<typeof skeletonVariants> {
-  animated?: boolean;
   children?: React.ReactNode;
 }
 
-const Skeleton = React.forwardRef<View, SkeletonProps>(
-  (
-    {
-      className,
-      variant,
-      size,
-      width,
-      animated = true,
-      children,
-      style,
-      ...props
-    },
-    ref,
-  ) => {
-    const opacity = useSharedValue(0.5);
+const Skeleton = ({
+  className,
+  variant,
+  size,
+  width,
+  children,
+  style,
+  ...props
+}: SkeletonProps) => {
+  const opacity = useSharedValue(0.5);
 
-    useEffect(() => {
-      if (!animated) {
-        opacity.value = 1;
-        return;
-      }
+  useEffect(() => {
+    opacity.value = withRepeat(withTiming(1, { duration: 1000 }), -1, true);
+  }, [opacity]);
 
-      opacity.value = withRepeat(withTiming(1, { duration: 1000 }), -1, true);
-    }, [animated, opacity]);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
-    const animatedStyle = useAnimatedStyle(() => {
-      return {
-        opacity: animated ? opacity.value : 1,
-      };
-    });
-
-    const ViewComponent = animated ? Animated.View : View;
-
-    return (
-      <ViewComponent
-        ref={ref}
-        className={skeletonVariants({ variant, size, width, className })}
-        style={[style, animatedStyle]}
-        {...props}
-      >
-        {children}
-      </ViewComponent>
-    );
-  },
-);
-
-Skeleton.displayName = "Skeleton";
+  return (
+    <Animated.View
+      className={skeletonVariants({ variant, size, width, className })}
+      style={[style, animatedStyle]}
+      {...props}
+    >
+      {children}
+    </Animated.View>
+  );
+};
 
 // Predefined skeleton components for common use cases
-const SkeletonText = React.forwardRef<
-  View,
-  Omit<SkeletonProps, "variant"> & { lines?: number }
->(({ lines = 1, className, ...props }, ref) => {
+const SkeletonText = ({
+  lines = 1,
+  className,
+  ...props
+}: Omit<SkeletonProps, "variant"> & { lines?: number }) => {
   if (lines === 1) {
-    return (
-      <Skeleton ref={ref} variant="text" className={className} {...props} />
-    );
+    return <Skeleton variant="text" className={className} {...props} />;
   }
 
   return (
@@ -126,73 +102,14 @@ const SkeletonText = React.forwardRef<
       ))}
     </View>
   );
-});
+};
 
-SkeletonText.displayName = "SkeletonText";
-
-const SkeletonAvatar = React.forwardRef<View, Omit<SkeletonProps, "variant">>(
-  ({ size = "xl", className, ...props }, ref) => (
-    <Skeleton
-      ref={ref}
-      variant="rounded"
-      size={size}
-      width={size}
-      className={className}
-      {...props}
-    />
-  ),
-);
-
-SkeletonAvatar.displayName = "SkeletonAvatar";
-
-const SkeletonCard = React.forwardRef<View, Omit<SkeletonProps, "variant">>(
-  ({ className, children, ...props }, ref) => (
-    <Skeleton
-      ref={ref}
-      variant="card"
-      className={`p-6 ${className}`}
-      {...props}
-    >
-      {children ?? (
-        <View className="gap-4">
-          <View className="flex-row items-center gap-4">
-            <SkeletonAvatar size="lg" />
-            <View className="flex-1 gap-2">
-              <SkeletonText size="lg" width="2xl" />
-              <SkeletonText size="sm" width="lg" />
-            </View>
-          </View>
-          <View className="gap-2">
-            <SkeletonText lines={3} />
-          </View>
-        </View>
-      )}
-    </Skeleton>
-  ),
-);
-
-SkeletonCard.displayName = "SkeletonCard";
-
-const SkeletonButton = React.forwardRef<View, Omit<SkeletonProps, "variant">>(
-  ({ size = "lg", width = "lg", className, ...props }, ref) => (
-    <Skeleton
-      ref={ref}
-      variant="default"
-      size={size}
-      width={width}
-      className={`rounded-md ${className}`}
-      {...props}
-    />
-  ),
-);
-
-SkeletonButton.displayName = "SkeletonButton";
-
-const SkeletonList = React.forwardRef<
-  View,
-  Omit<SkeletonProps, "variant"> & { items?: number }
->(({ items = 3, className, ...props }, ref) => (
-  <View ref={ref} className={`gap-4 ${className}`} {...props}>
+const SkeletonList = ({
+  items = 3,
+  className,
+  ...props
+}: Omit<SkeletonProps, "variant"> & { items?: number }) => (
+  <View className={`gap-4 ${className}`} {...props}>
     {Array.from({ length: items }).map((_, index) => (
       <SkeletonText
         size="3xl"
@@ -201,17 +118,6 @@ const SkeletonList = React.forwardRef<
       />
     ))}
   </View>
-));
+);
 
-SkeletonList.displayName = "SkeletonList";
-
-export {
-  Skeleton,
-  SkeletonText,
-  SkeletonAvatar,
-  SkeletonCard,
-  SkeletonButton,
-  SkeletonList,
-  skeletonVariants,
-  type SkeletonProps,
-};
+export { Skeleton, SkeletonText, SkeletonList };

@@ -1,6 +1,6 @@
+import type * as React from "react";
 import type { PressableProps } from "react-native";
 import type { VariantProps } from "tailwind-variants";
-import * as React from "react";
 import { Pressable, Text, View } from "react-native";
 import { tv } from "tailwind-variants";
 
@@ -86,58 +86,43 @@ export interface BadgeProps
   count?: number;
 }
 
-const Badge = React.forwardRef<
-  React.ComponentRef<typeof Pressable>,
-  BadgeProps
->(
-  (
-    {
-      variant,
-      size,
-      icon,
-      label,
-      children,
-      className,
-      onPress,
-      count,
-      ...props
-    },
-    ref,
-  ) => {
-    const { base, text, countBase, countText } = badgeVariants({
-      variant,
-      size,
-    });
-    const content = (
-      <>
-        {icon}
-        {label && <Text className={text()}>{label}</Text>}
-        {children}
-        {count !== undefined && (
-          <View className={countBase()}>
-            <Text className={countText()}>{count}</Text>
-          </View>
-        )}
-      </>
+const Badge = ({
+  variant,
+  size,
+  icon,
+  label,
+  children,
+  className,
+  onPress,
+  count,
+  ...props
+}: BadgeProps) => {
+  const { base, text, countBase, countText } = badgeVariants({
+    variant,
+    size,
+  });
+  const content = (
+    <>
+      {icon}
+      {label && <Text className={text()}>{label}</Text>}
+      {children}
+      {count !== undefined && (
+        <View className={countBase()}>
+          <Text className={countText()}>{count}</Text>
+        </View>
+      )}
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable className={base({ className })} onPress={onPress} {...props}>
+        {content}
+      </Pressable>
     );
+  }
 
-    if (onPress) {
-      return (
-        <Pressable
-          ref={ref}
-          className={base({ className })}
-          onPress={onPress}
-          {...props}
-        >
-          {content}
-        </Pressable>
-      );
-    }
-
-    return <View className={base({ className })}>{content}</View>;
-  },
-);
-
-Badge.displayName = "Badge";
+  return <View className={base({ className })}>{content}</View>;
+};
 
 export { Badge, badgeVariants };

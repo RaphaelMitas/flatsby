@@ -305,9 +305,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
                     variant="primary"
                     size="md"
                     className="flex-1"
-                    onPress={() => {
-                      void form.handleSubmit(handleRename)();
-                    }}
+                    onPress={form.handleSubmit(handleRename)}
                   />
                 </View>
               </View>

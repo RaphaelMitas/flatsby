@@ -1,4 +1,3 @@
-import * as React from "react";
 import { View } from "react-native";
 import { tv } from "tailwind-variants";
 
@@ -20,15 +19,12 @@ interface SeparatorProps {
   orientation?: "horizontal" | "vertical";
 }
 
-const Separator = React.forwardRef<View, SeparatorProps>(
-  ({ className, orientation = "horizontal", ...props }, ref) => (
-    <View
-      ref={ref}
-      className={separatorVariants({ orientation, className })}
-      {...props}
-    />
-  ),
+const Separator = ({
+  className,
+  orientation = "horizontal",
+  ...props
+}: SeparatorProps) => (
+  <View className={separatorVariants({ orientation, className })} {...props} />
 );
-Separator.displayName = "Separator";
 
 export { Separator };

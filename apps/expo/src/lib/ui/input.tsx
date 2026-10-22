@@ -18,37 +18,42 @@ const inputVariants = tv({
 });
 
 interface InputProps extends TextInputProps {
+  ref?: React.Ref<React.ComponentRef<typeof TextInput>>;
   className?: string;
   error?: boolean;
 }
 
-const Input = React.forwardRef<TextInput, InputProps>(
-  ({ className, error, ...props }, ref) => {
-    const [isFocused, setIsFocused] = React.useState(false);
-    const { getColor } = useThemeColors();
+const Input = ({
+  ref,
+  className,
+  error,
+  onFocus,
+  onBlur,
+  ...props
+}: InputProps) => {
+  const [isFocused, setIsFocused] = React.useState(false);
+  const { getColor } = useThemeColors();
 
-    return (
-      <TextInput
-        className={inputVariants({
-          className,
-          error,
-          focused: isFocused,
-        })}
-        ref={ref}
-        onFocus={(e) => {
-          setIsFocused(true);
-          props.onFocus?.(e);
-        }}
-        onBlur={(e) => {
-          setIsFocused(false);
-          props.onBlur?.(e);
-        }}
-        placeholderTextColor={getColor("muted-foreground")}
-        {...props}
-      />
-    );
-  },
-);
-Input.displayName = "Input";
+  return (
+    <TextInput
+      ref={ref}
+      className={inputVariants({
+        className,
+        error,
+        focused: isFocused,
+      })}
+      onFocus={(e) => {
+        setIsFocused(true);
+        onFocus?.(e);
+      }}
+      onBlur={(e) => {
+        setIsFocused(false);
+        onBlur?.(e);
+      }}
+      placeholderTextColor={getColor("muted-foreground")}
+      {...props}
+    />
+  );
+};
 
 export { Input };

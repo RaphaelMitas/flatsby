@@ -8,12 +8,7 @@ export default function CalendarLayout() {
   const t = useTranslations();
 
   return (
-    <Stack
-      initialRouteName="index"
-      screenOptions={{
-        ...themedScreenOptions,
-      }}
-    >
+    <Stack screenOptions={themedScreenOptions}>
       <Stack.Screen
         name="index"
         options={{ title: t("navigation.calendar"), headerShown: false }}

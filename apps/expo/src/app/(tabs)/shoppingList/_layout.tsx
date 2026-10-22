@@ -8,12 +8,7 @@ export default function ShoppingListsLayout() {
   const t = useTranslations("shoppingList");
 
   return (
-    <Stack
-      initialRouteName="index"
-      screenOptions={{
-        ...themedScreenOptions,
-      }}
-    >
+    <Stack screenOptions={themedScreenOptions}>
       <Stack.Screen
         name="index"
         options={{

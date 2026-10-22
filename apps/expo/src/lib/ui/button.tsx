@@ -1,6 +1,6 @@
+import type * as React from "react";
 import type { PressableProps } from "react-native";
 import type { VariantProps } from "tailwind-variants";
-import * as React from "react";
 import { Pressable, Text } from "react-native";
 import { tv } from "tailwind-variants";
 
@@ -67,7 +67,9 @@ const iconVariants = {
 } as const;
 
 interface ButtonProps
-  extends PressableProps, VariantProps<typeof buttonVariants> {
+  extends Omit<PressableProps, "onPress">, VariantProps<typeof buttonVariants> {
+  // Event-free so form.handleSubmit(fn) fits under RN's strict event types
+  onPress?: () => unknown;
   title?: string;
   icon?: IconProps["name"];
   children?: React.ReactNode;
@@ -75,68 +77,57 @@ interface ButtonProps
   numberOfLines?: number;
 }
 
-const Button = React.forwardRef<
-  React.ComponentRef<typeof Pressable>,
-  ButtonProps
->(
-  (
-    {
-      className,
-      variant,
-      size,
-      title,
-      icon,
-      disabled,
-      children,
-      textClassName,
-      numberOfLines,
-      ...props
-    },
-    ref,
-  ) => {
-    return (
-      <Pressable
-        ref={ref}
-        className={buttonVariants({
-          variant: disabled ? "disabled" : variant,
-          size,
-          className,
-        })}
-        disabled={disabled ?? false}
-        {...props}
-      >
-        {icon && (
-          <Icon
-            name={icon}
-            size={16}
-            color={
-              disabled
-                ? iconVariants.disabled
-                : variant === undefined
-                  ? iconVariants.primary
-                  : iconVariants[variant]
-            }
-          />
-        )}
-        {children ??
-          (title && size !== "icon" && (
-            <Text
-              disabled={disabled ?? false}
-              numberOfLines={numberOfLines}
-              className={buttonTextVariants({
-                variant: disabled ? "disabled" : variant,
-                size,
-                className: textClassName,
-              })}
-            >
-              {title}
-            </Text>
-          ))}
-      </Pressable>
-    );
-  },
-);
-
-Button.displayName = "Button";
+const Button = ({
+  className,
+  variant,
+  size,
+  title,
+  icon,
+  disabled,
+  children,
+  textClassName,
+  numberOfLines,
+  ...props
+}: ButtonProps) => {
+  return (
+    <Pressable
+      className={buttonVariants({
+        variant: disabled ? "disabled" : variant,
+        size,
+        className,
+      })}
+      disabled={disabled ?? false}
+      {...props}
+    >
+      {icon && (
+        <Icon
+          name={icon}
+          size={16}
+          color={
+            disabled
+              ? iconVariants.disabled
+              : variant === undefined
+                ? iconVariants.primary
+                : iconVariants[variant]
+          }
+        />
+      )}
+      {children ??
+        (title && size !== "icon" && (
+          <Text
+            disabled={disabled ?? false}
+            numberOfLines={numberOfLines}
+            className={buttonTextVariants({
+              variant: disabled ? "disabled" : variant,
+              size,
+              className: textClassName,
+            })}
+          >
+            {title}
+          </Text>
+        ))}
+    </Pressable>
+  );
+};
 
 export { Button, type ButtonProps, buttonVariants };
