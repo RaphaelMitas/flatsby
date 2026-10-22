@@ -1,38 +1,21 @@
-import type {
-  BottomSheetBackdropProps,
-  BottomSheetModalProps,
-} from "@gorhom/bottom-sheet";
-import type { Ref } from "react";
-import { BottomSheetBackdrop, BottomSheetModal } from "@gorhom/bottom-sheet";
-import { styled } from "nativewind";
-import { tv } from "tailwind-variants";
+import type { BottomSheetProps } from "@expo/ui/community/bottom-sheet";
+import { Platform } from "react-native";
+import { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 
 import { useThemeColors } from "~/lib/utils";
 
-export const bottomSheetVariants = tv({
-  base: "bg-background border-2 border-muted rounded-t-3xl",
-});
-
-const StyledSheet = styled(BottomSheetModal, {
-  className: { target: "backgroundStyle" },
-});
-
-export const renderBackdrop = (props: BottomSheetBackdropProps) => (
-  <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />
-);
-
-export function SheetModal({
-  ref,
-  ...props
-}: BottomSheetModalProps & { ref: Ref<BottomSheetModal> }) {
+export function SheetModal(props: BottomSheetProps) {
   const { getColor } = useThemeColors();
 
   return (
-    <StyledSheet
-      ref={ref}
-      className={bottomSheetVariants()}
-      handleIndicatorStyle={{ backgroundColor: getColor("primary") }}
-      backdropComponent={renderBackdrop}
+    <BottomSheetModal
+      enablePanDownToClose
+      // A background on iOS would replace the system Liquid Glass sheet.
+      backgroundStyle={
+        Platform.OS === "android"
+          ? { backgroundColor: getColor("background") }
+          : undefined
+      }
       {...props}
     />
   );

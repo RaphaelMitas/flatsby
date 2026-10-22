@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+import type { ViewInstance } from "react-native";
 import type { KeyboardStickyViewProps } from "react-native-keyboard-controller";
+import { useRef, useState } from "react";
+import { useWindowDimensions, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface AppKeyboardStickyViewProps extends Omit<
   KeyboardStickyViewProps,
@@ -16,18 +18,28 @@ export function AppKeyboardStickyView({
   className,
   ...props
 }: AppKeyboardStickyViewProps) {
-  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const anchor = useRef<ViewInstance>(null);
+  const [coveredBelow, setCoveredBelow] = useState(0);
 
   return (
-    <KeyboardStickyView
-      // translateY is keyboardHeight + offset, so a positive opened pushes the
-      // form back down, cancelling the bottom inset SafeAreaView reserves for
-      // the tab bar the keyboard now covers.
-      offset={{ opened: insets.bottom, closed: 0 }}
-      className={className}
-      {...props}
+    <View
+      ref={anchor}
+      onLayout={() =>
+        anchor.current?.measureInWindow((_x, y, _width, height) =>
+          setCoveredBelow(Math.max(0, windowHeight - y - height)),
+        )
+      }
     >
-      {children}
-    </KeyboardStickyView>
+      <KeyboardStickyView
+        // The keyboard rises from the window's bottom edge, but this view
+        // already sits above the tab bar and bottom inset it covers.
+        offset={{ opened: coveredBelow, closed: 0 }}
+        className={className}
+        {...props}
+      >
+        {children}
+      </KeyboardStickyView>
+    </View>
   );
 }

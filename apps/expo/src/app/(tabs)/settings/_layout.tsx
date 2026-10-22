@@ -1,10 +1,15 @@
 import { Stack } from "expo-router";
 import { useTranslations } from "use-intl";
 
-import { useThemeColors, useThemedScreenOptions } from "~/lib/utils";
+import {
+  useSolidHeader,
+  useThemeColors,
+  useThemedScreenOptions,
+} from "~/lib/utils";
 
 export default function SettingsLayout() {
   const themedScreenOptions = useThemedScreenOptions();
+  const solidHeader = useSolidHeader();
   const { getColor } = useThemeColors();
   const t = useTranslations();
 
@@ -29,6 +34,7 @@ export default function SettingsLayout() {
         options={{
           title: t("navigation.profile"),
           headerBackTitle: "",
+          ...solidHeader,
         }}
       />
       <Stack.Screen
@@ -45,6 +51,7 @@ export default function SettingsLayout() {
           title: t("settings.items.buyCredits"),
           headerBackTitle: "",
           presentation: "modal",
+          ...solidHeader,
         }}
       />
       <Stack.Screen
@@ -81,6 +88,7 @@ export default function SettingsLayout() {
           title: t("navigation.memberActions"),
           presentation: "modal",
           headerShown: true,
+          ...solidHeader,
         }}
       />
       <Stack.Screen
@@ -96,6 +104,7 @@ export default function SettingsLayout() {
         options={{
           title: t("splitwiseImport.importExpenses"),
           headerBackTitle: "",
+          ...solidHeader,
         }}
       />
     </Stack>

@@ -62,10 +62,12 @@ tags:
     env:
       TARGET_ID: "shopping-lists-group-settings"
       MARKER_ID: "group-settings-details"
+# Centered, or the tap can land on the iOS tab bar floating over the row
 - scrollUntilVisible:
     element:
       id: "group-settings-delete"
     direction: DOWN
+    centerElement: true
 - tapOn:
     id: "group-settings-delete"
 - runFlow:

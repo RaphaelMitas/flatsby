@@ -17,7 +17,7 @@ import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
-import { useSwipeActions } from "../SwipeActions";
+import { useSwipeActions, useSwipePressGuard } from "../SwipeActions";
 import { ShoppingItemDisplay } from "./ShoppingItemDisplay";
 import { getCategoryData } from "./ShoppingListCategory";
 import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
@@ -132,6 +132,7 @@ const ShoppingListItem = ({
     deleteShoppingListItemMutation.mutate({ id: item.id });
   };
 
+  const { onSwipeableOpenStartDrag, pressHandlers } = useSwipePressGuard();
   const { renderLeftActions, renderRightActions } = useSwipeActions({
     leftAction: {
       text: t("common.edit"),
@@ -157,6 +158,7 @@ const ShoppingListItem = ({
         rightThreshold={40}
         renderRightActions={renderRightActions}
         renderLeftActions={renderLeftActions}
+        onSwipeableOpenStartDrag={onSwipeableOpenStartDrag}
         onSwipeableOpen={(direction) => {
           if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
@@ -170,7 +172,7 @@ const ShoppingListItem = ({
         <Pressable
           accessible={e2eAccessibilityOverride()}
           disabled={item.isPending}
-          onPress={() => setShowDetails(true)}
+          {...pressHandlers(() => setShowDetails(true))}
         >
           <ShoppingItemDisplay
             name={item.name}

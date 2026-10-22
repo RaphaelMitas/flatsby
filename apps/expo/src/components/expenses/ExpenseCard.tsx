@@ -14,7 +14,7 @@ import { formatExpenseAmounts } from "@flatsby/validators/expenses/formatting";
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
-import { useSwipeActions } from "../SwipeActions";
+import { useSwipeActions, useSwipePressGuard } from "../SwipeActions";
 import { ExpenseDisplay } from "./ExpenseDisplay";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -101,6 +101,7 @@ export function ExpenseCard({
   const expenseDate = new Date(expense.expenseDate);
   const fromMember = expense.expenseSplits[0]?.groupMember;
 
+  const { onSwipeableOpenStartDrag, pressHandlers } = useSwipePressGuard();
   const { renderLeftActions, renderRightActions } = useSwipeActions({
     leftAction: {
       text: t("common.edit"),
@@ -147,6 +148,7 @@ export function ExpenseCard({
         rightThreshold={40}
         renderLeftActions={renderLeftActions}
         renderRightActions={renderRightActions}
+        onSwipeableOpenStartDrag={onSwipeableOpenStartDrag}
         onSwipeableOpen={(direction) => {
           if (direction === SwipeDirection.RIGHT) {
             swipeableRef.current?.close();
@@ -160,7 +162,7 @@ export function ExpenseCard({
         <Pressable
           testID={`expense-card-${expense.description}`}
           accessible={e2eAccessibilityOverride()}
-          onPress={handleCardPress}
+          {...pressHandlers(handleCardPress)}
           disabled={isOptimistic}
         >
           <ExpenseDisplay

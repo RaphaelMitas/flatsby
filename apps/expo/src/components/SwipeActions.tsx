@@ -1,7 +1,7 @@
 import type React from "react";
 import type { SharedValue } from "react-native-reanimated";
 import type { ClassNameValue } from "tailwind-merge";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { Text, View } from "react-native";
 import Reanimated, { useAnimatedStyle } from "react-native-reanimated";
 
@@ -28,6 +28,25 @@ interface SwipeActionsReturn {
     _drag: SharedValue<number>,
   ) => React.ReactElement;
 }
+
+// Gesture Handler 3 doesn't cancel the row's React Native press once a swipe starts, so lifting the finger would also count as a tap.
+export const useSwipePressGuard = () => {
+  const dragged = useRef(false);
+
+  return {
+    onSwipeableOpenStartDrag: () => {
+      dragged.current = true;
+    },
+    pressHandlers: (onPress: () => void) => ({
+      onPressIn: () => {
+        dragged.current = false;
+      },
+      onPress: () => {
+        if (!dragged.current) onPress();
+      },
+    }),
+  };
+};
 
 export const useSwipeActions = ({
   leftAction,

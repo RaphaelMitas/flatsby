@@ -23,6 +23,7 @@ import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import { useShoppingStore } from "~/utils/shopping-store";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
+import { useSwipePressGuard } from "../SwipeActions";
 
 interface Props {
   shoppingList: Extract<
@@ -246,6 +247,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   );
 
   const isOptimistic = shoppingList.id === -1;
+  const { onSwipeableOpenStartDrag, pressHandlers } = useSwipePressGuard();
 
   return (
     <>
@@ -257,6 +259,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
         rightThreshold={40}
         renderLeftActions={renderLeftActions}
         renderRightActions={renderRightActions}
+        onSwipeableOpenStartDrag={onSwipeableOpenStartDrag}
         onSwipeableOpen={(direction) => {
           if (direction === SwipeDirection.LEFT) {
             swipeableRef.current?.close();
@@ -320,7 +323,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
               isOptimistic && "animate-pulse",
             )}
             disabled={isOptimistic}
-            onPress={handleListPress}
+            {...pressHandlers(handleListPress)}
             activeOpacity={0.7}
           >
             <View className="flex-1">

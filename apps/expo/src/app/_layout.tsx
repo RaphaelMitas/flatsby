@@ -6,7 +6,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
@@ -25,7 +24,7 @@ import { PostHogProvider } from "posthog-react-native";
 import { InstallReferrerInvite } from "~/components/InstallReferrerInvite";
 import { UpdateNudge } from "~/components/UpdateNudge";
 import { ThemeProvider } from "~/lib/ui/theme";
-import { useThemedScreenOptions } from "~/lib/utils";
+import { useSolidHeader, useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { isE2ETestingEnabled } from "~/utils/e2e";
 import { IntlProvider } from "~/utils/intl-provider";
@@ -80,22 +79,20 @@ export default function RootLayout() {
         >
           <KeyboardProvider>
             <SafeAreaProvider>
-              <BottomSheetModalProvider>
-                <ThemeProvider>
-                  <QueryClientProvider client={queryClient}>
-                    <RevenueCatProvider>
-                      <ShoppingStoreProvider>
-                        {/**
+              <ThemeProvider>
+                <QueryClientProvider client={queryClient}>
+                  <RevenueCatProvider>
+                    <ShoppingStoreProvider>
+                      {/**
                        The Stack component displays the current page.
                        It also allows you to configure your screens
                       **/}
-                        <StackLayout />
-                        <StatusBar />
-                      </ShoppingStoreProvider>
-                    </RevenueCatProvider>
-                  </QueryClientProvider>
-                </ThemeProvider>
-              </BottomSheetModalProvider>
+                      <StackLayout />
+                      <StatusBar />
+                    </ShoppingStoreProvider>
+                  </RevenueCatProvider>
+                </QueryClientProvider>
+              </ThemeProvider>
             </SafeAreaProvider>
           </KeyboardProvider>
         </PostHogProvider>
@@ -120,6 +117,7 @@ function ScreenTracker() {
 const StackLayout = () => {
   const t = useTranslations();
   const themedScreenOptions = useThemedScreenOptions();
+  const solidHeader = useSolidHeader();
   const { data, isPending } = useSession();
   const { hydrated } = useShoppingStore();
   const userId = data?.user.id;
@@ -158,6 +156,7 @@ const StackLayout = () => {
             title: t("invite.join.title"),
             presentation: "modal",
             headerShown: true,
+            ...solidHeader,
           }}
         />
         <Stack.Screen name="join/[code]" options={{ presentation: "modal" }} />

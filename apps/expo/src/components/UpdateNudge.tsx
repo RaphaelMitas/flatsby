@@ -1,8 +1,7 @@
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useEffect, useRef, useState } from "react";
 import { AppState, Platform, Text, View } from "react-native";
 import * as ExpoInAppUpdates from "expo-in-app-updates";
-import { BottomSheetView } from "@gorhom/bottom-sheet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
@@ -56,7 +55,7 @@ export function UpdateNudge() {
           void AsyncStorage.setItem(DISMISSED_KEY, storeVersion);
       }}
     >
-      <BottomSheetView className="gap-2 px-4 pb-10">
+      <View className="gap-2 px-4 pb-10">
         <View className="bg-muted size-14 items-center justify-center rounded-2xl">
           <Icon name="flatsby" size={32} color="foreground" />
         </View>
@@ -75,7 +74,7 @@ export function UpdateNudge() {
           variant="ghost"
           onPress={() => sheetRef.current?.dismiss()}
         />
-      </BottomSheetView>
+      </View>
     </SheetModal>
   );
 }

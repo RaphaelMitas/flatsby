@@ -1,10 +1,11 @@
 import { Stack } from "expo-router";
 import { useTranslations } from "use-intl";
 
-import { useThemedScreenOptions } from "~/lib/utils";
+import { useSolidHeader, useThemedScreenOptions } from "~/lib/utils";
 
 export default function HomeLayout() {
   const themedScreenOptions = useThemedScreenOptions();
+  const solidHeader = useSolidHeader();
   const t = useTranslations("navigation");
 
   return (
@@ -27,6 +28,7 @@ export default function HomeLayout() {
           title: t("createGroup"),
           presentation: "modal",
           headerShown: true,
+          ...solidHeader,
         }}
       />
       <Stack.Screen
