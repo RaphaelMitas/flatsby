@@ -20,7 +20,7 @@ tags:
     visible:
       id: "calendar-heading"
     timeout: 15000
-- assertVisible: "Nothing planned for this day"
+- assertVisible: "Nothing planned"
 
 # Weekly task on today, assigned to the only member
 - runFlow:
@@ -86,6 +86,9 @@ tags:
 - tapOn:
     id: "calendar-detail-delete"
 - extendedWaitUntil:
-    visible: "Nothing planned for this day"
+    visible:
+      id: "calendar-heading"
     timeout: 15000
-- assertNotVisible: "Bins out"
+- extendedWaitUntil:
+    notVisible: "Bins out"
+    timeout: 15000

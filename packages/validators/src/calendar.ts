@@ -348,15 +348,26 @@ export function expandOccurrences(
   return occurrences;
 }
 
+// Building a formatter costs milliseconds on Hermes, and a calendar formats hundreds of dates per render
+const formatters = new Map<string, Intl.DateTimeFormat>();
+
 /** Calendar dates carry no time zone, so they format as UTC to keep the day from shifting. */
 export const formatCalendarDate = (
   date: string,
   locale: Intl.LocalesArgument,
   options: Intl.DateTimeFormatOptions,
-) =>
-  new Intl.DateTimeFormat(locale, { ...options, timeZone: "UTC" }).format(
-    Date.parse(`${date}T00:00:00Z`),
-  );
+) => {
+  const key = `${String(locale)} ${JSON.stringify(options)}`;
+  let formatter = formatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, {
+      ...options,
+      timeZone: "UTC",
+    });
+    formatters.set(key, formatter);
+  }
+  return formatter.format(Date.parse(`${date}T00:00:00Z`));
+};
 
 export const weekdayName = (
   day: Weekday,
@@ -531,16 +542,36 @@ export const shiftMonth = (month: string, delta: number) => {
     .slice(0, 7);
 };
 
-const GRID_DAYS = 42;
+const GRID_WEEKS = 6;
+
+export const weekStart = (date: string) =>
+  addDays(date, -weekdayIndex(toDayNumber(date)));
+
+export const weekDays = (start: string) =>
+  Array.from({ length: 7 }, (_, i) => addDays(start, i));
 
 /** Six Monday-first weeks covering `month` ("2026-10"), so the grid never changes height. */
 export function monthGrid(month: string) {
-  const first = toDayNumber(`${month}-01`);
-  const start = first - weekdayIndex(first);
-  const days = Array.from({ length: GRID_DAYS }, (_, i) =>
-    fromDayNumber(start + i),
+  const start = weekStart(`${month}-01`);
+  const weeks = Array.from({ length: GRID_WEEKS }, (_, week) =>
+    weekDays(addDays(start, 7 * week)),
   );
-  return { days, from: days[0] ?? month, to: days.at(-1) ?? month };
+  return {
+    weeks,
+    from: weeks[0]?.[0] ?? month,
+    to: weeks.at(-1)?.at(-1) ?? month,
+  };
+}
+
+export function stepFrom(
+  selected: string,
+  today: string,
+  delta: number,
+  collapsed: boolean,
+) {
+  if (collapsed) return addDays(selected, 7 * delta);
+  const month = shiftMonth(monthOf(selected), delta);
+  return month === monthOf(today) ? today : `${month}-01`;
 }
 
 export interface CalendarEntry {
@@ -582,20 +613,79 @@ function rangeEntries(
     );
 }
 
-/** "Mine" keeps events and the tasks that are the member's turn. */
-export function entriesOn(
-  range: CalendarRange,
-  date: string,
-  mineMemberId?: number,
-): CalendarEntry[] {
-  return rangeEntries(
-    range,
-    ({ item, occurrence }) =>
-      occurrence.date === date &&
-      (mineMemberId === undefined ||
-        item.kind === "event" ||
-        occurrence.turnGroupMemberId === mineMemberId),
-  );
+export const entriesOn = (range: CalendarRange, date: string) =>
+  rangeEntries(range, ({ occurrence }) => occurrence.date === date);
+
+export interface AgendaDay {
+  date: string;
+  entries: CalendarEntry[];
+  summary: ReturnType<typeof daySummary>;
+}
+
+/** Every day of `month`, empty ones included. "Mine" keeps events and the tasks that are the member's turn. */
+export function agendaDays(
+  range: CalendarRange | undefined,
+  month: string,
+  meId: number,
+  mine: boolean,
+): AgendaDay[] {
+  const inMonth = range
+    ? rangeEntries(
+        range,
+        ({ occurrence }) => monthOf(occurrence.date) === month,
+      )
+    : [];
+  const first = toDayNumber(`${month}-01`);
+  const length = monthLength(monthIndexOf(first));
+  return Array.from({ length }, (_, i) => {
+    const date = fromDayNumber(first + i);
+    const entries = inMonth.filter(
+      ({ occurrence }) => occurrence.date === date,
+    );
+    return {
+      date,
+      summary: daySummary(entries, meId),
+      entries: mine
+        ? entries.filter(
+            ({ item, occurrence }) =>
+              item.kind === "event" || occurrence.turnGroupMemberId === meId,
+          )
+        : entries,
+    };
+  });
+}
+
+export interface MonthSpan {
+  first: string;
+  last: string;
+}
+
+const FAR_MONTHS = 12;
+
+/** Grows the loaded months so `date` has a whole month on either side to scroll into. */
+export const spanAround = (date: string, span?: MonthSpan): MonthSpan => {
+  const month = monthOf(date);
+  const before = shiftMonth(month, -1);
+  const after = shiftMonth(month, 1);
+  // A far jump (a mistyped year, a link) starts over rather than loading every month in between
+  if (
+    !span ||
+    month < shiftMonth(span.first, -FAR_MONTHS) ||
+    month > shiftMonth(span.last, FAR_MONTHS)
+  )
+    return { first: before, last: after };
+  if (span.first <= before && span.last >= after) return span;
+  return {
+    first: span.first < before ? span.first : before,
+    last: span.last > after ? span.last : after,
+  };
+};
+
+export function monthsOf({ first, last }: MonthSpan) {
+  const months = [first];
+  while ((months.at(-1) ?? last) < last)
+    months.push(shiftMonth(months.at(-1) ?? last, 1));
+  return months;
 }
 
 export const HOME_LOOKAHEAD_DAYS = 6;

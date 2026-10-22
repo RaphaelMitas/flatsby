@@ -9,6 +9,7 @@ import type {
   Recurrence,
 } from "./calendar";
 import {
+  agendaDays,
   continuedRotation,
   createCalendarItemSchema,
   defaultEndsOn,
@@ -16,19 +17,22 @@ import {
   describeSeries,
   editedEndsOn,
   editedStartsOn,
-  entriesOn,
   expandOccurrences,
   formEndsOn,
   homeAgenda,
   monthDayChoices,
   monthGrid,
+  monthsOf,
   recurrenceOf,
   recurrenceSchema,
   repeatFormOf,
   rewritesPast,
   shiftMonth,
+  spanAround,
   splitEndsOn,
   splitsSeries,
+  weekDays,
+  weekStart,
   withPickedStart,
   withSavedItem,
   withSkipped,
@@ -368,13 +372,19 @@ describe("monthGrid", () => {
     const grid = monthGrid("2026-10");
     expect(grid.from).toBe("2026-09-28");
     expect(grid.to).toBe("2026-11-08");
-    expect(grid.days).toHaveLength(42);
+    expect(grid.weeks.flat()).toHaveLength(42);
     expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+  });
+
+  it("starts a week on the Monday the grid shows first, even from a Sunday", () => {
+    expect(weekStart("2026-10-25")).toBe("2026-10-19");
+    expect(weekStart("2026-10-26")).toBe("2026-10-26");
+    expect(weekDays("2026-12-28").at(-1)).toBe("2027-01-03");
   });
 });
 
-describe("entriesOn", () => {
-  it("keeps events and my turns under Mine", () => {
+describe("agendaDays", () => {
+  it("lists every day of the month and keeps events and my turns under Mine", () => {
     const range = rangeOf(item(null, "2026-10-16", [2]), {
       ...item(null, "2026-10-16"),
       id: 2,
@@ -382,13 +392,33 @@ describe("entriesOn", () => {
       title: "Plumber",
       time: { start: "14:00", end: "15:00" },
     });
-    expect(entriesOn(range, "2026-10-16").map((e) => e.item.title)).toEqual([
-      "Plumber",
-      "Bins",
-    ]);
-    expect(entriesOn(range, "2026-10-16", 1).map((e) => e.item.title)).toEqual([
-      "Plumber",
-    ]);
+    const titles = (mine: boolean) =>
+      agendaDays(range, "2026-10", 1, mine)
+        .find((day) => day.date === "2026-10-16")
+        ?.entries.map((e) => e.item.title);
+    expect(agendaDays(range, "2026-10", 1, false)).toHaveLength(31);
+    expect(titles(false)).toEqual(["Plumber", "Bins"]);
+    expect(titles(true)).toEqual(["Plumber"]);
+  });
+});
+
+describe("spanAround", () => {
+  it("keeps a month on either side", () => {
+    const span = spanAround("2026-12-24");
+    expect(monthsOf(span)).toEqual(["2026-11", "2026-12", "2027-01"]);
+    expect(spanAround("2026-10-01", span)).toEqual({
+      first: "2026-09",
+      last: "2027-01",
+    });
+    expect(spanAround("2026-12-01", span)).toBe(span);
+  });
+
+  it("starts over for a far jump instead of loading every month in between", () => {
+    const span = spanAround("2026-12-24");
+    expect(spanAround("2062-03-10", span)).toEqual({
+      first: "2062-02",
+      last: "2062-04",
+    });
   });
 });
 

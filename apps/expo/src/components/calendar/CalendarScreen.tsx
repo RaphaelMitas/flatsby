@@ -1,28 +1,38 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import { useEffect, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Text, View } from "react-native";
+import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "use-intl";
+import { useQueries } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 
+import { combineMonths } from "@flatsby/api/calendarCache";
 import {
   calendarDateSchema,
   daySummary,
   entriesOn,
-  formatCalendarDate,
   localDate,
   monthGrid,
   monthOf,
-  shiftMonth,
+  monthsOf,
+  spanAround,
+  stepFrom,
 } from "@flatsby/validators/calendar";
 
-import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
+import type { CalendarAgendaHandle } from "./CalendarAgenda";
 import { Button } from "~/lib/ui/button";
 import { Segmented } from "~/lib/ui/segmented";
-import { prefetch, trpc } from "~/utils/api";
-import { CalendarEntryRow } from "./CalendarEntryRow";
+import { trpc } from "~/utils/api";
+import { CalendarAgenda, DayHeading } from "./CalendarAgenda";
 import { useCalendarPeople } from "./CalendarPeople";
-import { MonthGrid } from "./MonthGrid";
+import { MONTH_COVER, MonthGrid } from "./MonthGrid";
 import { useCalendarMutations } from "./useCalendarMutations";
 
 export const calendarRangeOptions = (groupId: number, month: string) => {
@@ -32,53 +42,64 @@ export const calendarRangeOptions = (groupId: number, month: string) => {
 
 export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const t = useTranslations("calendar");
-  const locale = useLocale();
   const router = useRouter();
   const people = useCalendarPeople(group);
   const today = localDate();
-  const [selected, setSelected] = useState(today);
-  const [month, setMonth] = useState(monthOf(today));
-  const [mine, setMine] = useState(false);
   const { date: jumpTo } = useLocalSearchParams<{ date?: string }>();
-  const { setDone } = useCalendarMutations(group);
+  // A link that opens the screen starts on its day; jumping there right after mount races FlashList's first scroll and leaves it blank
+  const linkedOnMount = useRef(jumpTo);
+  const [start] = useState(
+    () => calendarDateSchema.safeParse(jumpTo).data ?? today,
+  );
+  const [selected, setSelected] = useState(start);
+  const [jump, setJump] = useState({ date: start });
+  const [span, setSpan] = useState(() => spanAround(start));
+  const collapse = useSharedValue(0);
+  const [collapsed, setCollapsed] = useState(false);
+  const agenda = useRef<CalendarAgendaHandle>(null);
+  const [mine, setMine] = useState(false);
+  // useMutation's result is new every render, its mutate is not; holding the result would re-render the whole agenda on every selection
+  const { mutate: setDone } = useCalendarMutations(group).setDone;
 
-  const { data, refetch } = useQuery({
-    ...calendarRangeOptions(group.id, month),
-    placeholderData: keepPreviousData,
+  const monthList = monthsOf(span);
+  const { months, error } = useQueries({
+    queries: monthList.map((month) => calendarRangeOptions(group.id, month)),
+    combine: combineMonths(monthList),
   });
-  const range = data?.success ? data.data : undefined;
+  const rangeOf = (date: string) =>
+    months.find(({ month }) => month === monthOf(date))?.range;
+  const range = rangeOf(selected);
 
-  useEffect(() => {
-    prefetch(calendarRangeOptions(group.id, shiftMonth(month, -1)));
-    prefetch(calendarRangeOptions(group.id, shiftMonth(month, 1)));
-  }, [group.id, month]);
+  useAnimatedReaction(
+    () => collapse.get() > MONTH_COVER / 2,
+    (next, previous) => {
+      if (previous !== null && next !== previous)
+        scheduleOnRN(setCollapsed, next);
+    },
+  );
 
-  const select = (date: string) => {
+  const select = useCallback((date: string) => {
+    // The jump lands in a transition; until then a moving agenda would overwrite the chosen day
+    agenda.current?.freeze();
     setSelected(date);
-    setMonth(monthOf(date));
-  };
+    // The highlight shows at once; moving the agenda takes far longer to render
+    startTransition(() => {
+      setSpan((current) => spanAround(date, current));
+      setJump({ date });
+    });
+  }, []);
 
   useEffect(() => {
     if (!jumpTo) return;
-    if (calendarDateSchema.safeParse(jumpTo).success) {
-      setSelected(jumpTo);
-      setMonth(monthOf(jumpTo));
-    }
+    if (
+      jumpTo !== linkedOnMount.current &&
+      calendarDateSchema.safeParse(jumpTo).success
+    )
+      select(jumpTo);
+    linkedOnMount.current = undefined;
     router.setParams({ date: undefined });
-  }, [jumpTo, router]);
+  }, [jumpTo, router, select]);
 
-  const shiftVisibleMonth = (delta: number) => {
-    const next = shiftMonth(month, delta);
-    select(next === monthOf(today) ? today : `${next}-01`);
-  };
-
-  const summary = daySummary(
-    range ? entriesOn(range, selected) : [],
-    people.meId,
-  );
-  const shown = range
-    ? entriesOn(range, selected, mine ? people.meId : undefined)
-    : [];
   const openForm = () =>
     router.push({
       pathname: "/(tabs)/calendar/form",
@@ -87,125 +108,89 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
 
   return (
     <View className="flex-1">
-      <AppScrollView contentContainerClassName="px-4 pb-28" onRefresh={refetch}>
+      <View className="mb-4 flex-row items-center justify-between gap-2 px-4">
         <Text
           testID="calendar-heading"
-          className="text-foreground mb-4 text-3xl font-bold"
+          className="text-foreground text-3xl font-bold"
         >
           {t("title")}
         </Text>
-
-        <MonthGrid
-          month={month}
-          days={monthGrid(month).days}
-          range={range}
-          selected={selected}
-          today={today}
-          onSelect={select}
-          onShiftMonth={shiftVisibleMonth}
+        <Segmented
+          size="sm"
+          value={mine ? "mine" : "all"}
+          onChange={(value) => setMine(value === "mine")}
+          options={[
+            { value: "all", label: t("all"), testID: "calendar-filter-all" },
+            {
+              value: "mine",
+              label: t("mine"),
+              testID: "calendar-filter-mine",
+            },
+          ]}
         />
+      </View>
 
-        <View className="bg-border -mx-4 my-4 h-px" />
-
-        <View className="mb-3 flex-row items-center justify-between gap-2">
-          <View className="flex-1">
-            <View className="flex-row items-baseline gap-2">
-              <Text className="text-foreground text-xl font-bold">
-                {selected === today
-                  ? t("today")
-                  : formatCalendarDate(selected, locale, {
-                      weekday: "long",
-                    })}
-              </Text>
-              <Text className="text-muted-foreground text-base font-medium">
-                {formatCalendarDate(selected, locale, {
-                  day: "numeric",
-                  month: "long",
-                })}
-              </Text>
-            </View>
-            {summary.total > 0 && (
-              <Text
-                testID="calendar-day-progress"
-                className="text-muted-foreground mt-0.5 text-sm"
-              >
-                {t("dayProgress", summary)}
-                {summary.onYou > 0 &&
-                  ` · ${t("onYou", { count: summary.onYou })}`}
-              </Text>
+      <MonthGrid
+        rangeOf={rangeOf}
+        selected={selected}
+        today={today}
+        collapsed={collapsed}
+        onSelect={select}
+        onStep={(delta) => select(stepFrom(selected, today, delta, collapsed))}
+        banner={
+          <DayHeading
+            testID="calendar-current-day"
+            date={selected}
+            today={today}
+            summary={daySummary(
+              range ? entriesOn(range, selected) : [],
+              people.meId,
             )}
-          </View>
-          <Segmented
-            size="sm"
-            value={mine ? "mine" : "all"}
-            onChange={(value) => setMine(value === "mine")}
-            options={[
-              { value: "all", label: t("all"), testID: "calendar-filter-all" },
-              {
-                value: "mine",
-                label: t("mine"),
-                testID: "calendar-filter-mine",
-              },
-            ]}
           />
-        </View>
-
-        {data?.success === false ? (
-          <Text className="text-destructive text-center">
-            {data.error.message}
+        }
+        collapse={collapse}
+        onToggleCollapsed={() => agenda.current?.toggleMonth()}
+      >
+        {error ? (
+          <Text className="text-destructive p-4 text-center">
+            {error.message}
           </Text>
-        ) : shown.length > 0 ? (
-          <View className="border-border overflow-hidden rounded-lg border">
-            {shown.map((entry, index) => (
-              <View
-                key={`${entry.item.id}-${entry.occurrence.date}`}
-                className={index > 0 ? "border-border border-t" : undefined}
-              >
-                <CalendarEntryRow
-                  entry={entry}
-                  people={people}
-                  today={today}
-                  onToggle={(done) =>
-                    setDone.mutate({
-                      groupId: group.id,
-                      itemId: entry.item.id,
-                      date: entry.occurrence.date,
-                      done,
-                    })
-                  }
-                  onOpen={() =>
-                    router.push({
-                      pathname: "/(tabs)/calendar/[itemId]",
-                      params: {
-                        itemId: String(entry.item.id),
-                        // Only an open occurrence can be skipped
-                        ...(!entry.occurrence.completedAt && {
-                          date: entry.occurrence.date,
-                        }),
-                      },
-                    })
-                  }
-                />
-              </View>
-            ))}
-          </View>
         ) : (
-          <View className="border-border items-center gap-3 rounded-lg border p-6">
-            <Text className="text-muted-foreground text-center">
-              {mine ? t("nothingOnYou") : t("nothingPlanned")}
-            </Text>
-            {!mine && (
-              <Button
-                testID="calendar-empty-add-button"
-                variant="outline"
-                icon="plus"
-                title={t("addSomething")}
-                onPress={openForm}
-              />
-            )}
-          </View>
+          <CalendarAgenda
+            ref={agenda}
+            months={months}
+            jump={jump}
+            today={today}
+            people={people}
+            mine={mine}
+            collapse={collapse}
+            onScrolledTo={setSelected}
+            onReachEdge={(month) =>
+              setSpan((current) => spanAround(`${month}-01`, current))
+            }
+            onToggle={(entry, done) =>
+              setDone({
+                groupId: group.id,
+                itemId: entry.item.id,
+                date: entry.occurrence.date,
+                done,
+              })
+            }
+            onOpen={(entry) =>
+              router.push({
+                pathname: "/(tabs)/calendar/[itemId]",
+                params: {
+                  itemId: String(entry.item.id),
+                  // Only an open occurrence can be skipped
+                  ...(!entry.occurrence.completedAt && {
+                    date: entry.occurrence.date,
+                  }),
+                },
+              })
+            }
+          />
         )}
-      </AppScrollView>
+      </MonthGrid>
 
       <View className="absolute right-4 bottom-4">
         <Button
