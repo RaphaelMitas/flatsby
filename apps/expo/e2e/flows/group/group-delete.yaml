@@ -75,8 +75,8 @@ tags:
     env:
       CONFIRM_TEXT: "Spent Group"
 
-# Deleting the selected group lands on Home's group list. It hides the group
-# optimistically, so relaunch to read what the server kept.
+# Lands on Home's group list, which hides the group optimistically. Once it shows,
+# the delete has left the app, so relaunch to read what the server kept.
 - extendedWaitUntil:
     visible:
       id: "group-dashboard-title"

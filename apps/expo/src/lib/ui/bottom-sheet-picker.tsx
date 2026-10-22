@@ -105,18 +105,14 @@ export const BottomSheetPickerProvider: React.FC<
     bottomSheetRef.current?.present();
   }, []);
 
-  const closePicker = useCallback(() => {
-    bottomSheetRef.current?.close();
-  }, []);
-
   const handleItemSelect = useCallback(
     (item: BottomSheetPickerItem) => {
       if (!item.disabled) {
         pickerConfig?.onSelect?.(item);
-        closePicker();
+        bottomSheetRef.current?.close();
       }
     },
-    [pickerConfig, closePicker],
+    [pickerConfig],
   );
 
   const renderItem = useCallback(
