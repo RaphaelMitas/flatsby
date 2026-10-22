@@ -372,6 +372,10 @@ function WeekStrip({
               />
             </View>
           )}
+          // A finger catching a snap gets no momentum end, so each drag starts over
+          onScrollBeginDrag={() => {
+            swiping.current = false;
+          }}
           // A slow drag passes page edges too; only where the strip settles after release counts
           onScrollEndDrag={(event) => {
             swiping.current = true;

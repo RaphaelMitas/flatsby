@@ -21,6 +21,7 @@ import {
 import { ArrowLeft, CalendarDays, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { combineMonths } from "@flatsby/api/calendarCache";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { useMediaQuery } from "@flatsby/ui/hooks/use-media-query";
@@ -129,18 +130,20 @@ function CalendarScreen({
     [trpc, groupId],
   );
   const months = monthsOf(span);
-  const results = useQueries({ queries: months.map(rangeOptions) });
-  const agendaMonths = months.map((month, index) => {
-    const data = results[index]?.data;
-    return { month, range: data?.success ? data.data : undefined };
+  const { months: agendaMonths, error } = useQueries({
+    queries: months.map(rangeOptions),
+    combine: combineMonths(months),
   });
   const rangeOf = (date: string) =>
     agendaMonths.find(({ month }) => month === monthOf(date))?.range;
-  const error = results.flatMap(({ data }) =>
-    data?.success === false ? [data.error] : [],
-  )[0];
-  const { setDone, setSkipped, remove, create, update } =
-    useCalendarMutations(group);
+  // useMutation's result is new every render, its mutate is not; holding the result would re-render the whole agenda on every day scrolled past
+  const {
+    setDone: { mutate: setDone },
+    setSkipped,
+    remove,
+    create,
+    update,
+  } = useCalendarMutations(group);
 
   if (error)
     return (
@@ -282,7 +285,7 @@ function CalendarScreen({
             setSpan((current) => spanAround(`${month}-01`, current))
           }
           onToggle={({ item, occurrence }, done) =>
-            setDone.mutate({
+            setDone({
               groupId,
               itemId: item.id,
               date: occurrence.date,

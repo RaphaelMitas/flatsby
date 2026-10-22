@@ -1,3 +1,4 @@
+import type { AgendaMonth } from "@flatsby/api/calendarCache";
 import type {
   AgendaDay,
   CalendarEntry,
@@ -6,7 +7,13 @@ import type {
 import type { FlashListRef } from "@shopify/flash-list";
 import type { ComponentType, Ref, RefAttributes } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
 import { Text, View } from "react-native";
 import {
   useAnimatedReaction,
@@ -25,11 +32,6 @@ import { Skeleton } from "~/lib/ui/skeleton";
 import { cn } from "~/lib/utils";
 import { CalendarEntryRow } from "./CalendarEntryRow";
 import { MONTH_COVER } from "./MonthGrid";
-
-interface AgendaMonth {
-  month: string;
-  range: CalendarRange | undefined;
-}
 
 type AgendaRow =
   | { type: "day"; date: string; summary: AgendaDay["summary"] }
@@ -90,6 +92,8 @@ interface Scrollable {
 export interface CalendarAgendaHandle {
   /** Scrolls by the rest of the way, so the month opens or closes with the list instead of over it. */
   toggleMonth: () => void;
+  /** Stops scrolling from picking the day until the next drag. */
+  freeze: () => void;
 }
 
 interface CalendarAgendaProps {
@@ -101,8 +105,6 @@ interface CalendarAgendaProps {
   people: CalendarPeople;
   mine: boolean;
   collapse: SharedValue<number>;
-  /** Jumps and FlashList's own corrections scroll too; only the person's scrolling moves the month. */
-  frozen: SharedValue<boolean>;
   onScrolledTo: (date: string) => void;
   onReachEdge: (month: string) => void;
   onToggle: (entry: CalendarEntry, done: boolean) => void;
@@ -117,7 +119,6 @@ export function CalendarAgenda({
   people,
   mine,
   collapse,
-  frozen,
   onScrolledTo,
   onReachEdge,
   onToggle,
@@ -127,6 +128,17 @@ export function CalendarAgenda({
   const list = useRef<FlashListRef<AgendaRow>>(null);
   const scrollable = useAnimatedRef<ComponentType<RefAttributes<Scrollable>>>();
   const offset = useScrollOffset(scrollable);
+  // Jumps and corrections at rest scroll too; only the person's scrolling moves the month
+  const frozen = useSharedValue(true);
+  // The same flag for this thread, where a set on the shared value only lands after the UI thread applies it
+  const frozenHere = useRef(true);
+  const setFrozen = useCallback(
+    (value: boolean) => {
+      frozen.set(value);
+      frozenHere.current = value;
+    },
+    [frozen],
+  );
   const handledJump = useRef(jump);
   const lastY = useRef(0);
   const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -148,8 +160,7 @@ export function CalendarAgenda({
 
   const onFrame = (y: number, collapsed: number) => {
     lastY.current = y;
-    // Read here, not in the frame: a tap freezes on this thread, after frames already in flight
-    if (frozen.get()) return;
+    if (frozenHere.current) return;
     // A day owns the pinned heading once its own heading is half under it
     const visibleTop = y + MONTH_COVER - collapsed + DAY_HEADING_HEIGHT / 2;
     for (let i = dayIndices.length - 1; i >= 0; i--) {
@@ -181,17 +192,17 @@ export function CalendarAgenda({
   useEffect(() => {
     if (handledJump.current === jump || jumpIndex < 0) return;
     handledJump.current = jump;
-    frozen.set(true);
+    setFrozen(true);
     void list.current?.scrollToIndex({
       index: jumpIndex,
       animated: false,
       // FlashList adds viewOffset to the scroll position, so a gap above the day is negative
       viewOffset: -(MONTH_COVER - collapse.get()),
     });
-  }, [jump, jumpIndex, frozen, collapse]);
+  }, [jump, jumpIndex, setFrozen, collapse]);
 
   const scrollBy = (distance: number) => {
-    frozen.set(false);
+    setFrozen(false);
     lastStep.set(0);
     list.current?.scrollToOffset({
       offset: lastY.current + distance,
@@ -204,11 +215,15 @@ export function CalendarAgenda({
       const rest = collapse.get();
       scrollBy(rest > MONTH_COVER / 2 ? -rest : MONTH_COVER - rest);
     },
+    freeze: () => setFrozen(true),
   }));
 
   const settle = () => {
     const rest = collapse.get();
-    if (rest <= 0 || rest >= MONTH_COVER) return;
+    if (rest <= 0 || rest >= MONTH_COVER) {
+      setFrozen(true);
+      return;
+    }
     scrollBy(rest > MONTH_COVER / 2 ? MONTH_COVER - rest : -rest);
   };
 
@@ -283,7 +298,7 @@ export function CalendarAgenda({
       initialScrollIndexParams={{ viewOffset: -MONTH_COVER }}
       onScrollBeginDrag={() => {
         clearTimeout(settleTimer.current);
-        frozen.set(false);
+        setFrozen(false);
         // A finger stopping a fling starts from rest, not from the fling's speed
         lastStep.set(0);
       }}

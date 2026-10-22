@@ -372,7 +372,7 @@ describe("monthGrid", () => {
     const grid = monthGrid("2026-10");
     expect(grid.from).toBe("2026-09-28");
     expect(grid.to).toBe("2026-11-08");
-    expect(grid.days).toHaveLength(42);
+    expect(grid.weeks.flat()).toHaveLength(42);
     expect(shiftMonth("2026-01", -1)).toBe("2025-12");
   });
 
@@ -413,11 +413,19 @@ describe("spanAround", () => {
     expect(spanAround("2026-12-01", span)).toBe(span);
   });
 
-  it("starts over for a far jump instead of loading every month in between", () => {
+  it("drops the far end past seven months, so a far jump doesn't load every month in between", () => {
     const span = spanAround("2026-12-24");
+    expect(spanAround("2027-06-10", span)).toEqual({
+      first: "2027-01",
+      last: "2027-07",
+    });
     expect(spanAround("2062-03-10", span)).toEqual({
-      first: "2062-02",
+      first: "2061-10",
       last: "2062-04",
+    });
+    expect(spanAround("2026-06-10", span)).toEqual({
+      first: "2026-05",
+      last: "2026-11",
     });
   });
 });

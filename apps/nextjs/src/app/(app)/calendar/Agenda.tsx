@@ -1,9 +1,7 @@
 "use client";
 
-import type {
-  CalendarEntry,
-  CalendarRange,
-} from "@flatsby/validators/calendar";
+import type { AgendaMonth } from "@flatsby/api/calendarCache";
+import type { CalendarEntry } from "@flatsby/validators/calendar";
 import type { Ref, RefObject } from "react";
 import {
   useCallback,
@@ -28,11 +26,6 @@ import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colo
 import type { MemberLookup } from "./CalendarPeople";
 import { DoneBy, TurnPill } from "./CalendarPeople";
 import { MONTH_COVER } from "./MonthGrid";
-
-interface AgendaMonth {
-  month: string;
-  range: CalendarRange | undefined;
-}
 
 export interface AgendaHandle {
   /** Scrolls by the rest of the way, so the month opens or closes with the list instead of over it. */

@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQueries } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { combineMonths } from "@flatsby/api/calendarCache";
 import {
   calendarDateSchema,
   daySummary,
@@ -54,7 +55,6 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const [jump, setJump] = useState({ date: start });
   const [span, setSpan] = useState(() => spanAround(start));
   const collapse = useSharedValue(0);
-  const frozen = useSharedValue(true);
   const [collapsed, setCollapsed] = useState(false);
   const agenda = useRef<CalendarAgendaHandle>(null);
   const [mine, setMine] = useState(false);
@@ -62,18 +62,9 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const { mutate: setDone } = useCalendarMutations(group).setDone;
 
   const monthList = monthsOf(span);
-  // combine keeps the result stable between renders, so FlashList only sees new data when a month changes
   const { months, error } = useQueries({
     queries: monthList.map((month) => calendarRangeOptions(group.id, month)),
-    combine: (results) => ({
-      months: monthList.map((month, index) => {
-        const data = results[index]?.data;
-        return { month, range: data?.success ? data.data : undefined };
-      }),
-      error: results.flatMap(({ data }) =>
-        data?.success === false ? [data.error] : [],
-      )[0],
-    }),
+    combine: combineMonths(monthList),
   });
   const rangeOf = (date: string) =>
     months.find(({ month }) => month === monthOf(date))?.range;
@@ -87,19 +78,16 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
     },
   );
 
-  const select = useCallback(
-    (date: string) => {
-      // The jump lands in a transition; until then a moving agenda would overwrite the chosen day
-      frozen.set(true);
-      setSelected(date);
-      // The highlight shows at once; moving the agenda takes far longer to render
-      startTransition(() => {
-        setSpan((current) => spanAround(date, current));
-        setJump({ date });
-      });
-    },
-    [frozen],
-  );
+  const select = useCallback((date: string) => {
+    // The jump lands in a transition; until then a moving agenda would overwrite the chosen day
+    agenda.current?.freeze();
+    setSelected(date);
+    // The highlight shows at once; moving the agenda takes far longer to render
+    startTransition(() => {
+      setSpan((current) => spanAround(date, current));
+      setJump({ date });
+    });
+  }, []);
 
   useEffect(() => {
     if (!jumpTo) return;
@@ -176,7 +164,6 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             people={people}
             mine={mine}
             collapse={collapse}
-            frozen={frozen}
             onScrolledTo={setSelected}
             onReachEdge={(month) =>
               setSpan((current) => spanAround(`${month}-01`, current))

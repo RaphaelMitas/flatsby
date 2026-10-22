@@ -63,7 +63,7 @@ export function MonthGrid({
   const t = useTranslations("calendar");
   const locale = useLocale();
   const month = monthOf(selected);
-  const { days, weeks } = monthGrid(month);
+  const { weeks } = monthGrid(month);
   const selectedWeek = weeks.findIndex((week) => week.includes(selected));
 
   return (
@@ -123,7 +123,7 @@ export function MonthGrid({
         </div>
 
         <div className="grid grid-cols-7">
-          {days.slice(0, 7).map((day) => (
+          {weeks[0]?.map((day) => (
             <div
               key={day}
               className="text-muted-foreground py-1 text-center text-xs font-semibold uppercase"

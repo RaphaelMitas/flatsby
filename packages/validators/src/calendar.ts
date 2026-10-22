@@ -544,20 +544,23 @@ export const shiftMonth = (month: string, delta: number) => {
 
 const GRID_WEEKS = 6;
 
-/** Six Monday-first weeks covering `month` ("2026-10"), so the grid never changes height. */
 export const weekStart = (date: string) =>
   addDays(date, -weekdayIndex(toDayNumber(date)));
 
 export const weekDays = (start: string) =>
   Array.from({ length: 7 }, (_, i) => addDays(start, i));
 
+/** Six Monday-first weeks covering `month` ("2026-10"), so the grid never changes height. */
 export function monthGrid(month: string) {
   const start = weekStart(`${month}-01`);
   const weeks = Array.from({ length: GRID_WEEKS }, (_, week) =>
     weekDays(addDays(start, 7 * week)),
   );
-  const days = weeks.flat();
-  return { days, weeks, from: days[0] ?? month, to: days.at(-1) ?? month };
+  return {
+    weeks,
+    from: weeks[0]?.[0] ?? month,
+    to: weeks.at(-1)?.at(-1) ?? month,
+  };
 }
 
 export function stepFrom(
@@ -657,25 +660,26 @@ export interface MonthSpan {
   last: string;
 }
 
-const FAR_MONTHS = 12;
+// Every loaded month is a live query that each change refetches, so the end away from the date drops off
+const MAX_MONTHS = 7;
+
+const monthsApart = (from: string, to: string) =>
+  monthIndexOf(toDayNumber(`${to}-01`)) -
+  monthIndexOf(toDayNumber(`${from}-01`));
 
 /** Grows the loaded months so `date` has a whole month on either side to scroll into. */
 export const spanAround = (date: string, span?: MonthSpan): MonthSpan => {
   const month = monthOf(date);
   const before = shiftMonth(month, -1);
   const after = shiftMonth(month, 1);
-  // A far jump (a mistyped year, a link) starts over rather than loading every month in between
-  if (
-    !span ||
-    month < shiftMonth(span.first, -FAR_MONTHS) ||
-    month > shiftMonth(span.last, FAR_MONTHS)
-  )
-    return { first: before, last: after };
+  if (!span) return { first: before, last: after };
   if (span.first <= before && span.last >= after) return span;
-  return {
-    first: span.first < before ? span.first : before,
-    last: span.last > after ? span.last : after,
-  };
+  const first = span.first < before ? span.first : before;
+  const last = span.last > after ? span.last : after;
+  if (monthsApart(first, last) < MAX_MONTHS) return { first, last };
+  return after > span.last
+    ? { first: shiftMonth(last, 1 - MAX_MONTHS), last }
+    : { first, last: shiftMonth(first, MAX_MONTHS - 1) };
 };
 
 export function monthsOf({ first, last }: MonthSpan) {
