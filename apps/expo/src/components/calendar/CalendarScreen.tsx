@@ -1,114 +1,124 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { Text, View } from "react-native";
-import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import { useEffect, useState } from "react";
+import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useQueries } from "@tanstack/react-query";
-import { useTranslations } from "use-intl";
+import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "use-intl";
 
-import { combineMonths } from "@flatsby/api/calendarCache";
 import {
+  addDays,
   calendarDateSchema,
-  daySummary,
-  entriesOn,
+  describeListRange,
+  formatCalendarDate,
+  listAgenda,
+  listWindow,
   localDate,
+  monthAgenda,
   monthGrid,
   monthOf,
-  monthsOf,
-  spanAround,
-  stepFrom,
+  shiftMonth,
+  weekDays,
 } from "@flatsby/validators/calendar";
 
-import type { CalendarAgendaHandle } from "./CalendarAgenda";
 import { Button } from "~/lib/ui/button";
 import { Segmented } from "~/lib/ui/segmented";
-import { trpc } from "~/utils/api";
-import { CalendarAgenda, DayHeading } from "./CalendarAgenda";
-import { useCalendarPeople } from "./CalendarPeople";
-import { MONTH_COVER, MonthGrid } from "./MonthGrid";
+import { prefetch, trpc } from "~/utils/api";
+import { CalendarList } from "./CalendarList";
+import { TurnBar, useCalendarPeople } from "./CalendarPeople";
+import { MonthGrid } from "./MonthGrid";
 import { useCalendarMutations } from "./useCalendarMutations";
 
-export const calendarRangeOptions = (groupId: number, month: string) => {
-  const { from, to } = monthGrid(month);
-  return trpc.calendar.range.queryOptions({ groupId, from, to });
-};
+export const calendarRangeOptions = (
+  groupId: number,
+  { from, to }: { from: string; to: string },
+) => trpc.calendar.range.queryOptions({ groupId, from, to });
+
+type CalendarView = "list" | "month";
 
 export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const t = useTranslations("calendar");
+  const locale = useLocale();
   const router = useRouter();
   const people = useCalendarPeople(group);
   const today = localDate();
-  const { date: jumpTo } = useLocalSearchParams<{ date?: string }>();
-  // A link that opens the screen starts on its day; jumping there right after mount races FlashList's first scroll and leaves it blank
-  const linkedOnMount = useRef(jumpTo);
-  const [start] = useState(
-    () => calendarDateSchema.safeParse(jumpTo).data ?? today,
-  );
-  const [selected, setSelected] = useState(start);
-  const [jump, setJump] = useState({ date: start });
-  const [span, setSpan] = useState(() => spanAround(start));
-  const collapse = useSharedValue(0);
-  const [collapsed, setCollapsed] = useState(false);
-  const agenda = useRef<CalendarAgendaHandle>(null);
-  const [mine, setMine] = useState(false);
-  // useMutation's result is new every render, its mutate is not; holding the result would re-render the whole agenda on every selection
+  const { date: linked } = useLocalSearchParams<{ date?: string }>();
+  const [view, setView] = useState<CalendarView>("list");
+  // null follows today, so a screen left open overnight moves on with it
+  const [start, setStart] = useState<string | null>(null);
+  const [month, setMonth] = useState<string | null>(null);
+  const [member, setMember] = useState<number | null>(null);
   const { mutate: setDone } = useCalendarMutations(group).setDone;
 
-  const monthList = monthsOf(span);
-  const { months, error } = useQueries({
-    queries: monthList.map((month) => calendarRangeOptions(group.id, month)),
-    combine: combineMonths(monthList),
-  });
-  const rangeOf = (date: string) =>
-    months.find(({ month }) => month === monthOf(date))?.range;
-  const range = rangeOf(selected);
+  const listStart = start ?? today;
+  const shownMonth = month ?? monthOf(today);
+  const windowOf = (view: CalendarView, step = 0) =>
+    view === "list"
+      ? listWindow(addDays(listStart, 7 * step), today)
+      : monthGrid(shiftMonth(shownMonth, step));
 
-  useAnimatedReaction(
-    () => collapse.get() > MONTH_COVER / 2,
-    (next, previous) => {
-      if (previous !== null && next !== previous)
-        scheduleOnRN(setCollapsed, next);
-    },
+  const { data, refetch } = useQuery(
+    calendarRangeOptions(group.id, windowOf(view)),
   );
+  const range = data?.success ? data.data : undefined;
 
-  const select = useCallback((date: string) => {
-    // The jump lands in a transition; until then a moving agenda would overwrite the chosen day
-    agenda.current?.freeze();
-    setSelected(date);
-    // The highlight shows at once; moving the agenda takes far longer to render
-    startTransition(() => {
-      setSpan((current) => spanAround(date, current));
-      setJump({ date });
-    });
-  }, []);
+  // The neighbouring steps and the other view, so neither stepping nor switching waits on the network
+  const nearby = [
+    windowOf(view, -1),
+    windowOf(view, 1),
+    windowOf(view === "list" ? "month" : "list"),
+  ]
+    .map(({ from, to }) => `${from}/${to}`)
+    .join(" ");
+  useEffect(() => {
+    for (const [from = "", to = ""] of nearby
+      .split(" ")
+      .map((span) => span.split("/"))) {
+      prefetch(calendarRangeOptions(group.id, { from, to }));
+    }
+  }, [group.id, nearby]);
+
+  const showList = (date: string) => {
+    setView("list");
+    setStart(date === today ? null : date);
+  };
 
   useEffect(() => {
-    if (!jumpTo) return;
-    if (
-      jumpTo !== linkedOnMount.current &&
-      calendarDateSchema.safeParse(jumpTo).success
-    )
-      select(jumpTo);
-    linkedOnMount.current = undefined;
+    if (!linked) return;
+    if (calendarDateSchema.safeParse(linked).success) {
+      setView("list");
+      setStart(linked === today ? null : linked);
+    }
     router.setParams({ date: undefined });
-  }, [jumpTo, router, select]);
+  }, [linked, router, today]);
+
+  const atToday =
+    view === "list" ? listStart === today : shownMonth === monthOf(today);
+  const step = (delta: number) =>
+    view === "list"
+      ? showList(addDays(listStart, 7 * delta))
+      : setMonth(shiftMonth(shownMonth, delta));
+
+  const listDates = weekDays(listStart);
+  const list = range
+    ? listAgenda(range, listStart, today, people.meId, member)
+    : undefined;
+  const grid = range
+    ? monthAgenda(range, shownMonth, people.meId, member)
+    : undefined;
+  const shown = view === "list" ? list : grid;
 
   const openForm = () =>
     router.push({
       pathname: "/(tabs)/calendar/form",
-      params: { date: selected },
+      params: {
+        date:
+          view === "list" ? listStart : atToday ? today : `${shownMonth}-01`,
+      },
     });
 
   return (
     <View className="flex-1">
-      <View className="mb-4 flex-row items-center justify-between gap-2 px-4">
+      <View className="mb-2 flex-row items-center justify-between gap-2 px-4">
         <Text
           testID="calendar-heading"
           className="text-foreground text-3xl font-bold"
@@ -117,80 +127,122 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         </Text>
         <Segmented
           size="sm"
-          value={mine ? "mine" : "all"}
-          onChange={(value) => setMine(value === "mine")}
+          value={view}
+          onChange={setView}
           options={[
-            { value: "all", label: t("all"), testID: "calendar-filter-all" },
+            { value: "list", label: t("list"), testID: "calendar-view-list" },
             {
-              value: "mine",
-              label: t("mine"),
-              testID: "calendar-filter-mine",
+              value: "month",
+              label: t("month"),
+              testID: "calendar-view-month",
             },
           ]}
         />
       </View>
 
-      <MonthGrid
-        rangeOf={rangeOf}
-        selected={selected}
-        today={today}
-        collapsed={collapsed}
-        onSelect={select}
-        onStep={(delta) => select(stepFrom(selected, today, delta, collapsed))}
-        banner={
-          <DayHeading
-            testID="calendar-current-day"
-            date={selected}
-            today={today}
-            summary={daySummary(
-              range ? entriesOn(range, selected) : [],
-              people.meId,
-            )}
-          />
-        }
-        collapse={collapse}
-        onToggleCollapsed={() => agenda.current?.toggleMonth()}
-      >
-        {error ? (
-          <Text className="text-destructive p-4 text-center">
-            {error.message}
+      <View className="mb-2 h-10 flex-row items-center justify-between gap-2 px-4">
+        <Pressable
+          testID="calendar-range-title"
+          accessibilityRole="button"
+          disabled={view === "month"}
+          onPress={() => {
+            setMonth(monthOf(listStart));
+            setView("month");
+          }}
+        >
+          <Text className="text-foreground text-lg font-semibold">
+            {view === "list"
+              ? describeListRange(listStart, locale)
+              : formatCalendarDate(`${shownMonth}-01`, locale, {
+                  month: "long",
+                  year: "numeric",
+                })}
           </Text>
-        ) : (
-          <CalendarAgenda
-            ref={agenda}
-            months={months}
-            jump={jump}
-            today={today}
-            people={people}
-            mine={mine}
-            collapse={collapse}
-            onScrolledTo={setSelected}
-            onReachEdge={(month) =>
-              setSpan((current) => spanAround(`${month}-01`, current))
-            }
-            onToggle={(entry, done) =>
-              setDone({
-                groupId: group.id,
-                itemId: entry.item.id,
-                date: entry.occurrence.date,
-                done,
-              })
-            }
-            onOpen={(entry) =>
-              router.push({
-                pathname: "/(tabs)/calendar/[itemId]",
-                params: {
-                  itemId: String(entry.item.id),
-                  // Only an open occurrence can be skipped
-                  ...(!entry.occurrence.completedAt && {
-                    date: entry.occurrence.date,
-                  }),
-                },
-              })
-            }
+        </Pressable>
+        <View className="flex-row items-center gap-1">
+          <Button
+            testID="calendar-today-button"
+            variant="outline"
+            size="sm"
+            title={t("today")}
+            disabled={atToday}
+            onPress={() => (view === "list" ? showList(today) : setMonth(null))}
           />
-        )}
-      </MonthGrid>
+          <Button
+            testID="calendar-previous"
+            variant="ghost"
+            size="sm"
+            icon="chevron-left"
+            accessibilityLabel={
+              view === "list" ? t("previousWeek") : t("previousMonth")
+            }
+            onPress={() => step(-1)}
+          />
+          <Button
+            testID="calendar-next"
+            variant="ghost"
+            size="sm"
+            icon="chevron-right"
+            accessibilityLabel={
+              view === "list" ? t("nextWeek") : t("nextMonth")
+            }
+            onPress={() => step(1)}
+          />
+        </View>
+      </View>
+
+      <TurnBar
+        group={group}
+        people={people}
+        turns={shown?.turns ?? new Map()}
+        member={member}
+        onChange={setMember}
+      />
+
+      {data?.success === false ? (
+        <Text className="text-destructive p-4 text-center">
+          {data.error.message}
+        </Text>
+      ) : view === "list" ? (
+        <CalendarList
+          agenda={list}
+          dates={listDates}
+          today={today}
+          people={people}
+          member={member}
+          onRefresh={refetch}
+          onToggle={(entry, done, skip) =>
+            setDone({
+              groupId: group.id,
+              itemId: entry.item.id,
+              date: entry.occurrence.date,
+              done,
+              // Done once means done now; the days it was left are skipped, not done
+              skip: done ? skip : undefined,
+            })
+          }
+          onOpen={(entry) =>
+            router.push({
+              pathname: "/(tabs)/calendar/[itemId]",
+              params: {
+                itemId: String(entry.item.id),
+                // Only an open occurrence can be skipped
+                ...(!entry.occurrence.completedAt && {
+                  date: entry.occurrence.date,
+                }),
+              },
+            })
+          }
+        />
+      ) : (
+        <MonthGrid
+          month={shownMonth}
+          days={grid?.days}
+          dates={monthGrid(shownMonth).weeks.flat()}
+          today={today}
+          onSelect={showList}
+        />
+      )}
 
       <View className="absolute right-4 bottom-4">
         <Button

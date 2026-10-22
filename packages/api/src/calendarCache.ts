@@ -44,23 +44,6 @@ export interface CalendarPatch {
 
 export type CalendarSnapshot = [QueryKey, unknown][];
 
-export interface AgendaMonth {
-  month: string;
-  range: CalendarRange | undefined;
-}
-
-/** useQueries' combine for one range query per month; its result stays the same object until a month changes. */
-export const combineMonths =
-  (months: string[]) => (results: { data?: ApiResult<CalendarRange> }[]) => ({
-    months: months.map((month, index): AgendaMonth => {
-      const data = results[index]?.data;
-      return { month, range: data?.success ? data.data : undefined };
-    }),
-    error: results.flatMap(({ data }) =>
-      data?.success === false ? [data.error] : [],
-    )[0],
-  });
-
 type FindCachedItem = (id: number) => CalendarItemView | undefined;
 
 export type CalendarPatchFor<TInput> = (

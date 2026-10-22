@@ -7,21 +7,27 @@ import type {
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
 import {
-  useCallback,
+  useEffect,
+  useEffectEvent,
   useMemo,
-  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
 import {
-  useQueries,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, Plus } from "lucide-react";
-import { useTranslations } from "next-intl";
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+} from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
-import { combineMonths } from "@flatsby/api/calendarCache";
+import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { useMediaQuery } from "@flatsby/ui/hooks/use-media-query";
@@ -34,27 +40,34 @@ import { ScrollArea } from "@flatsby/ui/scroll-area";
 import { Sheet, SheetContent, SheetTitle } from "@flatsby/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import {
+  addDays,
+  describeListRange,
+  formatCalendarDate,
+  listAgenda,
+  listWindow,
   localDate,
+  monthAgenda,
   monthGrid,
   monthOf,
-  monthsOf,
-  spanAround,
-  stepFrom,
+  shiftMonth,
+  weekDays,
 } from "@flatsby/validators/calendar";
 
-import type { AgendaHandle } from "./Agenda";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
-import { Agenda } from "./Agenda";
 import { CalendarItemDetail } from "./CalendarItemDetail";
 import { CalendarItemForm } from "./CalendarItemForm";
-import { MONTH_COVER, MonthGrid } from "./MonthGrid";
+import { CalendarList } from "./CalendarList";
+import { TurnBar } from "./CalendarPeople";
+import { MonthGrid } from "./MonthGrid";
 import { useCalendarMutations } from "./useCalendarMutations";
 
 type Panel =
   | { type: "detail"; entry: CalendarEntry }
   | { type: "form"; item?: CalendarItemView };
+
+type CalendarView = "list" | "month";
 
 // Coming back to a tab left open overnight has to move "today" along
 const onReturn = (notify: () => void) => {
@@ -100,19 +113,16 @@ function CalendarScreen({
   today: string;
 }) {
   const t = useTranslations();
+  const locale = useLocale();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const handleApiError = useHandleApiError();
   const isLargeScreen = useMediaQuery("lg");
-  const [selected, setSelected] = useState(today);
-  const [jump, setJump] = useState({ date: today });
-  const [span, setSpan] = useState(() => spanAround(today));
-  const [collapsed, setCollapsed] = useState(false);
-  const [closed, setClosed] = useState(false);
-  const collapse = useRef(0);
-  const monthFrame = useRef<HTMLDivElement>(null);
-  const agenda = useRef<AgendaHandle>(null);
-  const [mine, setMine] = useState(false);
+  const [view, setView] = useState<CalendarView>("month");
+  // null follows today, so a tab left open overnight moves on with it
+  const [start, setStart] = useState<string | null>(null);
+  const [month, setMonth] = useState<string | null>(null);
+  const [member, setMember] = useState<number | null>(null);
   const [panel, setPanel] = useState<Panel | null>(null);
 
   const groupId = group.id;
@@ -121,22 +131,36 @@ function CalendarScreen({
     () => new Map(group.groupMembers.map((member) => [member.id, member])),
     [group.groupMembers],
   );
+  const listStart = start ?? today;
+  const shownMonth = month ?? monthOf(today);
+  const rangeOptions = ({ from, to }: { from: string; to: string }) =>
+    trpc.calendar.range.queryOptions({ groupId, from, to });
+  const windowOf = (view: CalendarView, step = 0) =>
+    view === "list"
+      ? listWindow(addDays(listStart, 7 * step), today)
+      : monthGrid(shiftMonth(shownMonth, step));
 
-  const rangeOptions = useCallback(
-    (month: string) => {
-      const { from, to } = monthGrid(month);
-      return trpc.calendar.range.queryOptions({ groupId, from, to });
-    },
-    [trpc, groupId],
-  );
-  const months = monthsOf(span);
-  const { months: agendaMonths, error } = useQueries({
-    queries: months.map(rangeOptions),
-    combine: combineMonths(months),
-  });
-  const rangeOf = (date: string) =>
-    agendaMonths.find(({ month }) => month === monthOf(date))?.range;
-  // useMutation's result is new every render, its mutate is not; holding the result would re-render the whole agenda on every day scrolled past
+  const { data } = useQuery(rangeOptions(windowOf(view)));
+  const range = data?.success ? data.data : undefined;
+
+  // The neighbouring steps and the other view, so neither stepping nor switching waits on the network
+  const nearby = [
+    windowOf(view, -1),
+    windowOf(view, 1),
+    windowOf(view === "list" ? "month" : "list"),
+  ]
+    .map(({ from, to }) => `${from}/${to}`)
+    .join(" ");
+  useEffect(() => {
+    for (const [from = "", to = ""] of nearby
+      .split(" ")
+      .map((span) => span.split("/"))) {
+      void queryClient.prefetchQuery(
+        trpc.calendar.range.queryOptions({ groupId, from, to }),
+      );
+    }
+  }, [queryClient, trpc, groupId, nearby]);
+
   const {
     setDone: { mutate: setDone },
     setSkipped,
@@ -145,27 +169,69 @@ function CalendarScreen({
     update,
   } = useCalendarMutations(group);
 
-  if (error)
+  const atToday =
+    view === "list" ? listStart === today : shownMonth === monthOf(today);
+  const showList = (date: string) => {
+    setView("list");
+    setStart(date === today ? null : date);
+    setPanel(null);
+  };
+  const step = (delta: number) =>
+    view === "list"
+      ? showList(addDays(listStart, 7 * delta))
+      : setMonth(shiftMonth(shownMonth, delta));
+  const goToday = () => (view === "list" ? showList(today) : setMonth(null));
+
+  const onArrow = useEffectEvent(step);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        (event.target instanceof Element &&
+          event.target.closest(
+            "input, textarea, select, [contenteditable], [role=dialog]",
+          ))
+      )
+        return;
+      if (event.key === "ArrowLeft") onArrow(-1);
+      if (event.key === "ArrowRight") onArrow(1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  if (data?.success === false)
     return (
-      handleApiError(error) ?? (
-        <p className="text-destructive p-4 text-sm">{error.message}</p>
+      handleApiError(data.error) ?? (
+        <p className="text-destructive p-4 text-sm">{data.error.message}</p>
       )
     );
 
-  const selectDay = (date: string) => {
-    setSelected(date);
-    setSpan((current) => spanAround(date, current));
-    setJump({ date });
-    setPanel(null);
-  };
+  const listDates = weekDays(listStart);
+  const list = range
+    ? listAgenda(range, listStart, today, meId, member)
+    : undefined;
+  const grid = range ? monthAgenda(range, shownMonth, meId, member) : undefined;
+  const shown = view === "list" ? list : grid;
+  const defaultDate =
+    view === "list" ? listStart : atToday ? today : `${shownMonth}-01`;
 
   const save = async (input: CreateCalendarItemInput, id?: number) => {
     if (id === undefined) {
-      // Closing the form first rules out a second submit; the optimistic row needs its month cached
-      selectDay(input.startsOn);
+      // Closing the form first rules out a second submit; the optimistic entry needs its window cached
+      setPanel(null);
+      const date = input.startsOn;
+      if (view === "list") showList(date);
+      else setMonth(monthOf(date) === monthOf(today) ? null : monthOf(date));
       await queryClient
         .query({
-          ...rangeOptions(monthOf(input.startsOn)),
+          ...rangeOptions(
+            view === "list"
+              ? listWindow(date, today)
+              : monthGrid(monthOf(date)),
+          ),
           staleTime: "static",
         })
         .catch(() => undefined);
@@ -177,6 +243,8 @@ function CalendarScreen({
   };
 
   const openAdd = () => setPanel({ type: "form" });
+  const openEntry = (entry: CalendarEntry) =>
+    setPanel({ type: "detail", entry });
 
   const panelContent = (current: Panel) => {
     if (current.type === "form")
@@ -186,7 +254,7 @@ function CalendarScreen({
           groupId={groupId}
           members={group.groupMembers}
           item={current.item}
-          defaultDate={selected}
+          defaultDate={defaultDate}
           today={today}
           onCancel={() => setPanel(null)}
           onSubmit={(input) => void save(input, current.item?.id)}
@@ -204,7 +272,7 @@ function CalendarScreen({
         today={today}
         members={members}
         onEdit={(latest) => setPanel({ type: "form", item: latest })}
-        onJump={selectDay}
+        onJump={showList}
         onSkip={() => {
           skip(occurrence.date, true);
           setPanel(null);
@@ -219,7 +287,12 @@ function CalendarScreen({
   };
 
   const calendar = (
-    <div className="mx-auto flex h-full w-full max-w-xl flex-col">
+    <div
+      className={cn(
+        "mx-auto flex h-full w-full flex-col",
+        view === "list" && "max-w-xl",
+      )}
+    >
       <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
         <h2
           className="text-xl font-bold tracking-tight"
@@ -229,15 +302,17 @@ function CalendarScreen({
         </h2>
         <div className="flex items-center gap-2">
           <Tabs
-            value={mine ? "mine" : "all"}
-            onValueChange={(value) => setMine(value === "mine")}
+            value={view}
+            onValueChange={(value) =>
+              setView(value === "list" ? "list" : "month")
+            }
           >
             <TabsList>
-              <TabsTrigger value="all" data-testid="calendar-filter-all">
-                {t("calendar.all")}
+              <TabsTrigger value="list" data-testid="calendar-view-list">
+                {t("calendar.list")}
               </TabsTrigger>
-              <TabsTrigger value="mine" data-testid="calendar-filter-mine">
-                {t("calendar.mine")}
+              <TabsTrigger value="month" data-testid="calendar-view-month">
+                {t("calendar.month")}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -249,56 +324,111 @@ function CalendarScreen({
           )}
         </div>
       </div>
-      <MonthGrid
-        ref={monthFrame}
-        selected={selected}
-        today={today}
-        rangeOf={rangeOf}
-        collapsed={collapsed}
-        closed={closed}
-        onSelect={selectDay}
-        onStep={(delta) =>
-          selectDay(stepFrom(selected, today, delta, collapsed))
-        }
-        onToggleCollapsed={() => agenda.current?.toggleMonth()}
-      >
-        <Agenda
-          months={agendaMonths}
-          ref={agenda}
-          jump={jump}
+      <div className="flex items-center justify-between gap-2 px-4 pb-2">
+        {view === "list" ? (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setMonth(
+                monthOf(listStart) === monthOf(today)
+                  ? null
+                  : monthOf(listStart),
+              );
+              setView("month");
+            }}
+            className="-ml-3 text-lg font-semibold"
+            data-testid="calendar-range-title"
+          >
+            {describeListRange(listStart, locale)}
+          </Button>
+        ) : (
+          <h3
+            className="text-lg font-semibold"
+            data-testid="calendar-range-title"
+          >
+            {formatCalendarDate(`${shownMonth}-01`, locale, {
+              month: "long",
+              year: "numeric",
+            })}
+          </h3>
+        )}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={atToday}
+            onClick={goToday}
+            data-testid="calendar-today-button"
+          >
+            {t("calendar.today")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={
+              view === "list"
+                ? t("calendar.previousWeek")
+                : t("calendar.previousMonth")
+            }
+            onClick={() => step(-1)}
+            data-testid="calendar-previous"
+          >
+            <ChevronLeft />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={
+              view === "list" ? t("calendar.nextWeek") : t("calendar.nextMonth")
+            }
+            onClick={() => step(1)}
+            data-testid="calendar-next"
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+      </div>
+      <TurnBar
+        members={members}
+        meId={meId}
+        turns={shown?.turns ?? new Map()}
+        member={member}
+        onChange={setMember}
+      />
+      {view === "list" ? (
+        <CalendarList
+          agenda={list}
+          dates={listDates}
           today={today}
           meId={meId}
           members={members}
-          mine={mine}
-          collapse={collapse}
-          onCollapse={(value) => {
-            collapse.current = value;
-            monthFrame.current?.style.setProperty(
-              "--month-collapse",
-              `${value}px`,
-            );
-            setCollapsed(value > MONTH_COVER / 2);
-            setClosed(value >= MONTH_COVER - 1);
-          }}
-          onScrolledTo={setSelected}
-          onReachEdge={(month) =>
-            setSpan((current) => spanAround(`${month}-01`, current))
-          }
-          onToggle={({ item, occurrence }, done) =>
+          member={member}
+          onToggle={({ item, occurrence }, done, skip) =>
             setDone({
               groupId,
               itemId: item.id,
               date: occurrence.date,
               done,
+              // Done once means done now; the days it was left are skipped, not done
+              skip: done ? skip : undefined,
             })
           }
-          onOpen={(entry) => setPanel({ type: "detail", entry })}
+          onOpen={openEntry}
         />
-      </MonthGrid>
+      ) : (
+        <MonthGrid
+          month={shownMonth}
+          days={grid?.days}
+          dates={monthGrid(shownMonth).weeks.flat()}
+          today={today}
+          onSelect={showList}
+          onOpen={openEntry}
+        />
+      )}
     </div>
   );
 
-  if (isLargeScreen)
+  if (isLargeScreen && view === "list")
     return (
       <ResizablePanelGroup orientation="horizontal" className="h-full flex-1">
         <ResizablePanel defaultSize={55} minSize={35}>
@@ -341,23 +471,28 @@ function CalendarScreen({
   return (
     <>
       {calendar}
-      <Button
-        size="icon-lg"
-        onClick={openAdd}
-        aria-label={t("calendar.add")}
-        className="fixed right-4 bottom-20 z-40 size-14 rounded-full shadow-lg md:bottom-6"
-        data-testid="calendar-add"
-      >
-        <Plus className="size-6" />
-      </Button>
+      {!isLargeScreen && (
+        <Button
+          size="icon-lg"
+          onClick={openAdd}
+          aria-label={t("calendar.add")}
+          className="fixed right-4 bottom-20 z-40 size-14 rounded-full shadow-lg md:bottom-6"
+          data-testid="calendar-add"
+        >
+          <Plus className="size-6" />
+        </Button>
+      )}
       <Sheet
         open={panel !== null}
         onOpenChange={(open) => !open && setPanel(null)}
       >
         <SheetContent
-          side="bottom"
+          side={isLargeScreen ? "right" : "bottom"}
           aria-describedby={undefined}
-          className="max-h-11/12 overflow-y-auto rounded-t-2xl px-5 pt-6 pb-8"
+          className={cn(
+            "overflow-y-auto px-5 pt-6 pb-8",
+            isLargeScreen ? "w-full sm:max-w-lg" : "max-h-11/12 rounded-t-2xl",
+          )}
         >
           <SheetTitle className="sr-only">{t("calendar.title")}</SheetTitle>
           {panel && panelContent(panel)}

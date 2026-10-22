@@ -48,10 +48,8 @@ test("captures README screenshots", async ({ page, baseURL }) => {
 
   await page.goto("/calendar");
   await expect(
-    page
-      .getByTestId("calendar-agenda-today")
-      .getByTestId("calendar-day-progress"),
-  ).toContainText("1 of 3 done");
+    page.getByTestId("calendar-month").getByText("19:00 Flat dinner"),
+  ).toBeVisible();
   await settle(page);
   await page.screenshot({ path: `${OUT}/web-calendar.png` });
 

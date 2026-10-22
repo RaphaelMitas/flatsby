@@ -17,9 +17,15 @@ test.describe("Calendar", () => {
   }) => {
     const title = "Clean bathroom";
     await authPage.goto("/calendar");
+    // The web opens on the month; the list is where a day's progress shows
+    const openList = async () => {
+      const tab = authPage.getByTestId("calendar-view-list");
+      await waitForHydration(tab);
+      await tab.click();
+    };
 
     const addButton = authPage.getByTestId("calendar-add");
-    await waitForHydration(addButton);
+    await openList();
     await addButton.click();
 
     const form = authPage.getByTestId("calendar-form");
@@ -35,7 +41,7 @@ test.describe("Calendar", () => {
     );
     await form.getByTestId("calendar-form-submit").click();
 
-    // A weekly task shows up on every week of the agenda, so everything is checked on today
+    // A weekly task shows up once in the seven days, so everything is checked on today
     const todaySection = authPage.getByTestId("calendar-agenda-today");
     const progress = todaySection.getByTestId("calendar-day-progress");
     // Saved rows carry their server id; the optimistic one has a negative id
@@ -52,6 +58,7 @@ test.describe("Calendar", () => {
     await ticked;
 
     await authPage.reload();
+    await openList();
     await expect(progress).toHaveText("1 of 1 done");
 
     await row.getByTestId("calendar-entry-open").click();
@@ -73,6 +80,7 @@ test.describe("Calendar", () => {
     await deleted;
 
     await authPage.reload();
+    await openList();
     await expect(todaySection.getByText("Nothing planned")).toBeVisible();
     await expect(row).toHaveCount(0);
   });

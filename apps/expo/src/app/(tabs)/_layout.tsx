@@ -4,7 +4,7 @@ import { NativeTabs } from "expo-router/native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
 import { useTranslations } from "use-intl";
 
-import { localDate, monthsOf, spanAround } from "@flatsby/validators/calendar";
+import { listWindow, localDate } from "@flatsby/validators/calendar";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { calendarRangeOptions } from "~/components/calendar/CalendarScreen";
@@ -65,9 +65,12 @@ export default function TabLayout() {
           },
         ),
       );
-      // The agenda opens with a month either side, and rows loading above today would push it down
-      for (const month of monthsOf(spanAround(localDate())))
-        void prefetch(calendarRangeOptions(selectedGroupId, month));
+      void prefetch(
+        calendarRangeOptions(
+          selectedGroupId,
+          listWindow(localDate(), localDate()),
+        ),
+      );
     }
 
     void prefetch(trpc.group.getUserGroups.queryOptions());

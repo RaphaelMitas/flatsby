@@ -81,3 +81,62 @@ export function DoneBy({ completedBy }: Pick<Occurrence, "completedBy">) {
     </span>
   );
 }
+
+export function TurnBar({
+  members,
+  meId,
+  turns,
+  member,
+  onChange,
+}: {
+  members: MemberLookup;
+  meId: number;
+  turns: Map<number, number>;
+  member: number | null;
+  onChange: (member: number | null) => void;
+}) {
+  const t = useTranslations("calendar");
+  const chip = (selected: boolean) =>
+    cn(
+      "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border text-sm font-medium transition-colors",
+      selected
+        ? "bg-primary text-primary-foreground border-primary"
+        : "hover:bg-muted",
+    );
+  return (
+    <div className="flex gap-1.5 overflow-x-auto px-4 pb-3">
+      <button
+        type="button"
+        aria-pressed={member === null}
+        onClick={() => onChange(null)}
+        className={cn(chip(member === null), "px-3")}
+        data-testid="calendar-filter-all"
+      >
+        {t("all")}
+      </button>
+      {[...members.values()].map(({ id, user }) => (
+        <button
+          key={id}
+          type="button"
+          aria-pressed={member === id}
+          onClick={() => onChange(member === id ? null : id)}
+          className={cn(chip(member === id), "pr-3 pl-1")}
+          data-testid={`calendar-filter-${id}`}
+        >
+          <UserAvatar
+            name={user.name}
+            image={user.image}
+            size="sm"
+            className="text-foreground"
+          />
+          {id === meId ? t("you") : user.name}
+          <span
+            className={member === id ? "opacity-70" : "text-muted-foreground"}
+          >
+            {turns.get(id) ?? 0}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}

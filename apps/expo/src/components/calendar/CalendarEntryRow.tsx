@@ -19,6 +19,7 @@ interface CalendarEntryRowProps {
   entry: CalendarEntry;
   people: CalendarPeople;
   today: string;
+  missed?: string[];
   onToggle: (done: boolean) => void;
   onOpen: () => void;
 }
@@ -27,6 +28,7 @@ export function CalendarEntryRow({
   entry: { item, occurrence },
   people,
   today,
+  missed = [],
   onToggle,
   onOpen,
 }: CalendarEntryRowProps) {
@@ -91,7 +93,10 @@ export function CalendarEntryRow({
             )}
             {overdue && (
               <Text className="text-destructive text-sm">
-                {t("calendar.overdue")} ·
+                {missed.length > 0
+                  ? t("calendar.missed", { count: missed.length + 1 })
+                  : t("calendar.overdue")}{" "}
+                ·
               </Text>
             )}
             {item.recurrence && (

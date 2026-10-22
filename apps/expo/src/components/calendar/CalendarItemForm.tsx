@@ -27,10 +27,10 @@ import {
   formatCalendarDate,
   formEndsOn,
   hasEnded,
+  listWindow,
   localDate,
   maxEvery,
   monthDayChoices,
-  monthOf,
   newRepeatFormFor,
   pickerDate,
   recurrenceOf,
@@ -223,7 +223,7 @@ function ItemFields({
       });
       await queryClient
         .query({
-          ...calendarRangeOptions(group.id, monthOf(startsOn)),
+          ...calendarRangeOptions(group.id, listWindow(startsOn, today)),
           staleTime: "static",
         })
         .catch(() => undefined);
