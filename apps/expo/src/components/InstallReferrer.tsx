@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import * as Application from "expo-application";
 import { usePathname, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { usePostHog } from "posthog-react-native";
 
 import {
   INVITE_REFERRER_KEY,
@@ -13,9 +14,10 @@ import {
 
 const HANDLED_KEY = "install_referrer_handled";
 
-// The web join page passes the invite code through the Play Store install referrer
-export function InstallReferrerInvite() {
+// Play's install referrer carries a web invite code and the store link's utm_source
+export function InstallReferrer() {
   const router = useRouter();
+  const posthog = usePostHog();
   const pathname = usePathname();
   const pathnameRef = useRef(pathname);
 
@@ -38,15 +40,24 @@ export function InstallReferrerInvite() {
       );
       if (referrer === null) return;
       await AsyncStorage.setItem(HANDLED_KEY, "true");
+      const params = new URLSearchParams(referrer);
+      const source = params.get("utm_source");
+      posthog.capture("install_referrer", {
+        utm_source: source,
+        utm_medium: params.get("utm_medium"),
+        utm_campaign: params.get("utm_campaign"),
+        via_invite: params.has(INVITE_REFERRER_KEY),
+        ...(source && { $set_once: { install_source: source } }),
+      });
       const code = inviteCodeSchema.safeParse(
-        new URLSearchParams(referrer).get(INVITE_REFERRER_KEY) ?? "",
+        params.get(INVITE_REFERRER_KEY) ?? "",
       );
       // A link to the same invite may have opened the app already
       if (code.success && pathnameRef.current !== invitePath(code.data)) {
         router.push(invitePath(code.data));
       }
     })();
-  }, [router]);
+  }, [router, posthog]);
 
   return null;
 }

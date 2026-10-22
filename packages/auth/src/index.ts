@@ -22,6 +22,10 @@ export function initAuth(options: {
   appleKeyId: string;
   appleClientSecret: string;
   trustedOrigins: string[];
+  onUserCreated?: (
+    userId: string,
+    headers: Headers | undefined,
+  ) => Promise<void>;
 }) {
   const config = {
     database: drizzleAdapter(db, { provider: "pg" }),
@@ -53,6 +57,18 @@ export function initAuth(options: {
       },
     },
     trustedOrigins: ["flatsby://", "expo://", ...options.trustedOrigins],
+    databaseHooks: {
+      user: {
+        create: {
+          after: async (user, context) => {
+            await options.onUserCreated?.(
+              user.id,
+              context?.headers ?? context?.request?.headers,
+            );
+          },
+        },
+      },
+    },
     user: { modelName: "users" },
     session: {
       modelName: "sessions",

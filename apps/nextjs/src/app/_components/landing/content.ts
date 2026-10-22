@@ -10,6 +10,26 @@ export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${P
 export const GITHUB_URL = "https://github.com/RaphaelMitas/flatsby";
 export const UPDATED = "2026-10-09";
 
+export const APP_STORE_LINK = "/get/ios";
+export const PLAY_STORE_LINK = "/get/android";
+// Campaign tags make the website show up as an install source in App Store Connect and Play Console
+export const STORE_REDIRECTS = new Map([
+  [
+    APP_STORE_LINK,
+    {
+      store: "ios",
+      url: `https://apps.apple.com/app/apple-store/id${APP_STORE_ID}?pt=121729394&ct=flatsby.com&mt=8`,
+    },
+  ],
+  [
+    PLAY_STORE_LINK,
+    {
+      store: "android",
+      url: `${PLAY_STORE_URL}&referrer=${encodeURIComponent("utm_source=flatsby.com")}`,
+    },
+  ],
+]);
+
 export const PLANS = {
   freeCredits: 5000,
   starterPrice: 4.99,

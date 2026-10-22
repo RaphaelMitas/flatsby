@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -22,6 +23,7 @@ import {
 } from "@flatsby/validators/invite";
 
 import { CopyButton } from "~/app/_components/CopyButton";
+import { useAnalytics } from "~/hooks/use-analytics";
 import { useTRPC } from "~/trpc/react";
 
 export const InviteDialog = ({
@@ -57,7 +59,17 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
+  const { capture } = useAnalytics();
   const inviteQuery = useQuery(trpc.invite.get.queryOptions({ groupId }));
+  const isShown = inviteQuery.data?.success === true;
+  const hasCapturedShown = useRef(false);
+
+  // Scanning the QR code or reading out the code leaves no trace, so showing them is what's countable
+  useEffect(() => {
+    if (!isShown || hasCapturedShown.current) return;
+    hasCapturedShown.current = true;
+    capture("invite_shown", { groupId });
+  }, [isShown, capture, groupId]);
 
   const resetMutation = useMutation(
     trpc.invite.reset.mutationOptions({
@@ -110,7 +122,10 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
         <span className="text-muted-foreground min-w-0 flex-1 truncate text-sm">
           {link}
         </span>
-        <CopyButton value={link} />
+        <CopyButton
+          value={link}
+          onCopy={() => capture("invite_shared", { groupId, method: "copy" })}
+        />
       </div>
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">

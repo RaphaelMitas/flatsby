@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Pressable, Share, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -5,6 +6,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { usePostHog } from "posthog-react-native";
 import QRCode from "react-qr-code";
 import { useTranslations } from "use-intl";
 
@@ -27,10 +29,20 @@ export default function InviteScreen() {
   const groupId = Number(selectedGroupId) || 0;
   const router = useRouter();
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   const { data: invite } = useSuspenseQuery(
     trpc.invite.get.queryOptions({ groupId }),
   );
+
+  const hasCapturedShown = useRef(false);
+
+  // Scanning the QR code or reading out the code leaves no trace, so showing them is what's countable
+  useEffect(() => {
+    if (!invite.success || hasCapturedShown.current) return;
+    hasCapturedShown.current = true;
+    posthog.capture("invite_shown", { groupId });
+  }, [invite.success, posthog, groupId]);
 
   const resetMutation = useMutation(
     trpc.invite.reset.mutationOptions({
@@ -80,14 +92,21 @@ export default function InviteScreen() {
           testID="group-invite-share"
           title={t("invite.shareLink")}
           icon="share"
-          onPress={() =>
-            Share.share({
+          onPress={async () => {
+            const result = await Share.share({
               message: t("invite.shareMessage", {
                 group: selectedGroupName ?? "",
                 link,
               }),
-            })
-          }
+            });
+            // Android always reports sharedAction; iOS reports dismissing the sheet
+            if (result.action === Share.sharedAction) {
+              posthog.capture("invite_shared", {
+                groupId,
+                method: "share_sheet",
+              });
+            }
+          }}
         />
         <View className="flex-row items-center justify-between">
           <Text className="text-muted-foreground text-xs">

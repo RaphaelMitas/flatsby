@@ -3,6 +3,7 @@ import { getLocale } from "next-intl/server";
 
 import { locales } from "@flatsby/i18n/locale";
 
+import { NavBeacon } from "~/app/_components/analytics/NavBeacon";
 import {
   rootMetadata,
   RootShell,
@@ -23,6 +24,7 @@ export default async function MarketingLayout(props: {
 }) {
   return (
     <RootShell lang={await getLocale()}>
+      <NavBeacon />
       <NextIntlClientProvider messages={null}>
         {props.children}
       </NextIntlClientProvider>

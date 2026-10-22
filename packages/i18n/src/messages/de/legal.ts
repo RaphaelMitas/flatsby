@@ -135,8 +135,9 @@ export const legal = {
         "Welche Daten automatisch erhoben werden, hängt von der Plattform ab:",
       website: "Website:",
       websiteIp:
-        "IP-Adresse (nur zur Sitzungsverwaltung, keine Weitergabe an Analysedienste)",
-      websiteViews: "Seitenaufrufe und Navigationsmuster (anonymisiert)",
+        "IP-Adresse und User-Agent des Browsers (zum Betrieb der Website und nur zur Bildung einer täglich wechselnden Besucher-ID an PostHog übermittelt, siehe 6.2)",
+      websiteViews:
+        "Seitenaufrufe, die verweisende Website, Kampagnenangaben in Links (etwa utm_source) und Klicks auf App-Store-Links, ohne Cookies",
       mobile: "Mobile App:",
       mobileIp: "IP-Adresse (wird an den Analyseanbieter weitergegeben)",
       mobileDevice: "Gerätetyp, Betriebssystem und App-Version",
@@ -179,9 +180,9 @@ export const legal = {
       posthog:
         "<strong>PostHog (Analyse):</strong> Hilft uns zu verstehen, wie Nutzer mit Flatsby interagieren, damit wir den Dienst verbessern können. Die Datenerhebung unterscheidet sich je nach Plattform:",
       posthogWebsite:
-        "<strong>Website:</strong> Analysedaten werden auf unseren Servern verarbeitet, bevor sie an PostHog gesendet werden. Ihre IP-Adresse wird nicht an PostHog weitergegeben.",
+        "<strong>Website:</strong> Analysedaten werden auf unseren Servern verarbeitet, bevor sie an PostHog gesendet werden, und auf Ihrem Gerät wird nichts gespeichert. Für jeden Besuch bildet PostHog aus Ihrer IP-Adresse, dem User-Agent Ihres Browsers und einem zufälligen Schlüssel, der täglich gelöscht wird, eine Besucher-ID und speichert sie mit der aufgerufenen Seite, der verweisenden Website und Ihrem Browser- und Gerätetyp, aber ohne Ihre IP-Adresse. So können wir Besuche und Registrierungen je Quelle zählen, ohne Sie an einem anderen Tag wiederzuerkennen oder einen Besuch mit Ihrem Konto zu verknüpfen. Rechtsgrundlage ist unser berechtigtes Interesse, zu verstehen, wie Menschen auf Flatsby aufmerksam werden (Art. 6 Abs. 1 lit. f DSGVO). Besuche aus Browsern, die ein Global-Privacy-Control- oder Do-Not-Track-Signal senden, zählen wir nicht, und Sie können jederzeit unter support@flatsby.com widersprechen.",
       posthogMobile:
-        "<strong>Mobile App:</strong> Die App verbindet sich direkt mit PostHog und kann Geräteinformationen (Betriebssystem, App-Version), Bildschirmaufrufe und die IP-Adresse erheben.",
+        "<strong>Mobile App:</strong> Die App verbindet sich direkt mit PostHog und kann Geräteinformationen (Betriebssystem, App-Version), Bildschirmaufrufe und die IP-Adresse erheben. Unter Android erfasst sie außerdem die von Google Play gemeldete Installationsquelle, etwa die Website oder den Einladungslink, über die die App geladen wurde.",
       posthogAi:
         "Nutzungsdaten der KI-Funktionen (etwa welches KI-Modell verwendet wurde, Anzahl der Tokens, Antwortzeit und Kosten) werden ebenfalls über PostHog erfasst, damit wir die KI-Funktionen überwachen und verbessern können. Chatnachrichten, Prompts oder KI-Antworten werden nicht an PostHog weitergegeben. PostHog verarbeitet die Daten auf Servern in der EU. Siehe die <link>Datenschutzerklärung von PostHog</link>.",
     },

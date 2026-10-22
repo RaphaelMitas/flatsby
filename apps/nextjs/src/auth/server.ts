@@ -3,11 +3,15 @@ import "server-only";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { getOAuthState } from "better-auth/api";
 import { importPKCS8, SignJWT } from "jose";
 
+import { captureEvent, posthog } from "@flatsby/api/posthog";
 import { initAuth } from "@flatsby/auth";
 
 import { env } from "~/env";
+import { captureVisit } from "~/utils/page-views";
 
 export const auth = initAuth({
   baseUrl: env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL,
@@ -27,7 +31,42 @@ export const auth = initAuth({
   trustedOrigins: env.VERCEL_BRANCH_URL
     ? [`https://${env.VERCEL_BRANCH_URL}`]
     : [],
+  onUserCreated,
 });
+
+// The Expo client starts OAuth with a deep link as its callback, the web app with a path
+async function signupPlatform() {
+  const callbackURL = (await getOAuthState())?.callbackURL ?? "/";
+  return callbackURL.startsWith("/") || /^https?:/.test(callbackURL)
+    ? "web"
+    : "app";
+}
+
+async function onUserCreated(
+  userId: string,
+  requestHeaders: Headers | undefined,
+) {
+  if (!requestHeaders || !posthog) return;
+  const platform = await signupPlatform();
+  // OAuth calls back in the browser that started sign-in, so this hashes to that browser's visitor
+  after(async () => {
+    captureEvent({
+      distinctId: userId,
+      event: "signed_up",
+      headers: requestHeaders,
+      additionalProperties: { platform },
+    });
+    await Promise.all([
+      captureVisit(
+        "signed_up",
+        requestHeaders,
+        { url: `${env.BETTER_AUTH_URL}/api/auth/callback`, referrer: null },
+        { platform },
+      ),
+      posthog?.flush(),
+    ]);
+  });
+}
 
 export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
