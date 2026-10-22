@@ -79,12 +79,11 @@ tags:
     visible:
       id: "group-dashboard-title"
     timeout: 15000
-# Retried for the same reason as e2e-login's relaunch
-- retry:
-    maxRetries: 2
-    commands:
-      - launchApp
-      - extendedWaitUntil:
-          visible: "E2E Test Group.*"
-          timeout: 30000
+- runFlow:
+    file: ../../subflows/relaunch.yaml
+    env:
+      MARKER_ID: "group-dashboard-title"
+- extendedWaitUntil:
+    visible: "E2E Test Group.*"
+    timeout: 30000
 - assertNotVisible: "Spent Group"

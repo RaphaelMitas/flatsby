@@ -1,0 +1,32 @@
+name: "Android SDK packages"
+description: "Install SDK packages up front, with retries"
+
+inputs:
+  packages:
+    description: "sdkmanager package paths, space separated"
+    default: ""
+  ndk:
+    description: "Also install the NDK version React Native's version catalog pins"
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    # Gradle and the emulator action fetch these themselves with no retry, and
+    # Google's mirror sometimes serves a truncated archive ("Error on ZipFile").
+    # Once installed, their own install is a no-op.
+    - shell: bash
+      env:
+        PACKAGES: ${{ inputs.packages }}
+        NDK: ${{ inputs.ndk }}
+      run: |
+        read -ra pkgs <<< "$PACKAGES"
+        if [ "$NDK" = "true" ]; then
+          pkgs+=("ndk;$(sed -nE 's/^ndkVersion = "(.*)"/\1/p' node_modules/react-native/gradle/libs.versions.toml)")
+        fi
+        for attempt in 1 2 3; do
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "${pkgs[@]}" > /dev/null && exit 0
+          echo "sdkmanager attempt $attempt failed"
+          sleep 15
+        done
+        exit 1

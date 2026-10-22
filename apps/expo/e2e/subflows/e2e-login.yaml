@@ -11,10 +11,8 @@ appId: ${APP_ID}
 # The post-clearState relaunch can stall for minutes on a black screen before
 # the first frame; maxRetries is at Maestro's cap of 3.
 #
-# A failed flow can leave the "Open in Flatsby?" confirmation on the
-# springboard, hiding the login screen, so retries dismiss it first. Only
-# retries: a visibility check that comes back false costs 7s, every flow.
-# (iOS only: Android opens scheme links directly.)
+# Retries first dismiss an "Open in Flatsby?" prompt a failed flow left over
+# the login screen; checking on the first attempt would cost every flow 7s.
 - evalScript: ${output.launchAttempt = 0}
 - retry:
     maxRetries: 3
@@ -50,8 +48,7 @@ appId: ${APP_ID}
 # openLink sits inside the retry: if session setup errors out, the e2e-login
 # screen parks in its error state (run 31255356976, iPad), and only re-firing
 # the link restarts it — re-waiting alone never recovers. iOS sometimes asks
-# to confirm the link, a beat after openLink returns: wait for whichever of
-# the prompt and the done screen shows, and read which it was.
+# to confirm a beat after openLink returns, too late for an immediate check.
 - retry:
     maxRetries: 2
     commands:
@@ -69,14 +66,9 @@ appId: ${APP_ID}
           visible:
             id: "e2e-login-done"
           timeout: 45000
-# Relaunch (keeping state) so the auth client and tRPC links initialize with
-# the injected session + API URL override. Retried: on iOS Maestro sometimes
-# reports a slow cold start as a crash, and a retry with state kept is safe.
-- retry:
-    maxRetries: 2
-    commands:
-      - launchApp
-      - extendedWaitUntil:
-          visible:
-            id: "group-dashboard-title"
-          timeout: 60000
+# Relaunch so the auth client and tRPC links initialize with the injected
+# session + API URL override.
+- runFlow:
+    file: relaunch.yaml
+    env:
+      MARKER_ID: "group-dashboard-title"

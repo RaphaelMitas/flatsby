@@ -47,8 +47,6 @@ export function useInvalidateShoppingList({
   const invalidateSuggestions = useCallback(() => {
     return queryClient.invalidateQueries({
       queryKey: trpc.shoppingList.suggestItems.pathKey(),
-      // Refetching now would flash the last word's suggestions over the next
-      refetchType: "none",
     });
   }, [queryClient]);
 

@@ -201,30 +201,14 @@ jobs:
       - name: Unpack app
         run: tar -xzf Flatsby-app.tar.gz
 
-      # A fresh device, not one of the image's: those come paired with Watch
-      # simulators, and booting a paired iPhone sometimes aborts CoreSimulator
-      # ("Invalid parameter not satisfying: devicePair"). The newest Pro Max on
-      # the newest runtime that has one: an old model boots slowly enough to
-      # time out Maestro's driver, and the flows' tab positions assume its
-      # screen. Booting continues while the stack starts.
-      - name: Create and boot iOS simulator
+      # Pro Max because old models time out Maestro's driver and the flows' tab
+      # positions assume its screen. bootstatus waits in the install step so the
+      # boot overlaps the stack start.
+      - name: Create iOS simulator
         id: sim
-        run: |
-          read -r DEVICE_TYPE RUNTIME < <(xcrun simctl list runtimes available --json | jq -r '
-            [.runtimes[] | select(.platform == "iOS") | . as $runtime
-              | .supportedDeviceTypes[] | select(.name | test("^iPhone [0-9]+ Pro Max$"))
-              | {runtime: $runtime.identifier, type: .identifier,
-                 v: ($runtime.version | split(".") | map(tonumber)),
-                 n: (.name | scan("[0-9]+") | tonumber)}]
-            | sort_by(.v, .n) | last // empty | "\(.type) \(.runtime)"') || true
-          if [ -z "$DEVICE_TYPE" ]; then
-            echo "::error::No iPhone Pro Max simulator available on this image"
-            xcrun simctl list runtimes available
-            exit 1
-          fi
-          UDID=$(xcrun simctl create e2e "$DEVICE_TYPE" "$RUNTIME")
-          xcrun simctl boot "$UDID"
-          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+        uses: ./tooling/github/ios-simulator
+        with:
+          device: "^iPhone [0-9]+ Pro Max$"
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
@@ -289,17 +273,10 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # Gradle would fetch the NDK mid-build with no retry, and Google's
-      # mirror sometimes serves a truncated archive ("Error on ZipFile").
       - name: Install NDK
-        run: |
-          NDK=$(sed -nE 's/^ndkVersion = "(.*)"/\1/p' node_modules/react-native/gradle/libs.versions.toml)
-          for attempt in 1 2 3; do
-            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK" > /dev/null && exit 0
-            echo "NDK $NDK install attempt $attempt failed"
-            sleep 15
-          done
-          exit 1
+        uses: ./tooling/github/android-sdk
+        with:
+          ndk: "true"
 
       - name: Prebuild Android project
         working-directory: apps/expo
@@ -391,17 +368,10 @@ jobs:
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
 
-      # The emulator action installs these itself with no retry, and a failed
-      # download fails the shard; once present, its install is a no-op.
       - name: Install emulator and system image
-        run: |
-          for attempt in 1 2 3; do
-            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install emulator \
-              "system-images;android-34;google_apis;x86_64" > /dev/null && exit 0
-            echo "Install attempt $attempt failed"
-            sleep 15
-          done
-          exit 1
+        uses: ./tooling/github/android-sdk
+        with:
+          packages: emulator system-images;android-34;google_apis;x86_64
 
       # The runner executes every `script` line as a separate `sh -c`, so the
       # install / pre-warm / run / logcat sequence lives in one script file.

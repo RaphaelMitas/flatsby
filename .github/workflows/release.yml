@@ -201,33 +201,23 @@ jobs:
           curl -fsSL https://get.maestro.mobile.dev | bash
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
 
-      # Pro Max first: the App Store's required 6.9" screenshots come from it.
-      - name: Boot iOS simulator
+      # Pro Max: the App Store's required 6.9" screenshots come from it.
+      - name: Create iOS simulator
         id: sim
+        uses: ./tooling/github/ios-simulator
+        with:
+          device: "^iPhone [0-9]+ Pro Max$"
+
+      # A fresh simulator shows the QuickPath swipe-typing tutorial over the
+      # keyboard the second time an input gains focus, which would end up in
+      # the screenshots.
+      - name: Prepare iOS simulator
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
         run: |
-          pick() {
-            xcrun simctl list devices available --json | jq -r --arg re "$1" '
-              [.devices | to_entries[] | select(.key | test("iOS")) | .value[]
-                | select(.name | test($re))
-                | {udid, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
-              | sort_by(.n) | last // {} | .udid // empty'
-          }
-          UDID=$(pick "^iPhone.*Pro Max")
-          [ -z "$UDID" ] && UDID=$(pick "^iPhone")
-          if [ -z "$UDID" ]; then
-            echo "::error::No iPhone simulator available on this image"
-            xcrun simctl list devices available
-            exit 1
-          fi
-          xcrun simctl erase "$UDID"
-          xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID"
           xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
-          # A fresh simulator shows the QuickPath swipe-typing tutorial over
-          # the keyboard the second time an input gains focus, which would
-          # end up in the screenshots.
           xcrun simctl spawn "$UDID" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
-          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
       - name: Clean up status bar and set dark mode for screenshots
         env:
@@ -261,36 +251,28 @@ jobs:
       # App Store review refuses the submission without at least one 13"
       # iPad screenshot (the app supports tablets), so a minimal iPad flow
       # runs after the iPhone captures on its own simulator.
-      - name: Boot iPad simulator
-        id: ipad
+      - name: Shut down iPhone simulator
         env:
           UDID: ${{ steps.sim.outputs.udid }}
+        run: xcrun simctl shutdown "$UDID" || true
+
+      - name: Create iPad simulator
+        id: ipad
+        uses: ./tooling/github/ios-simulator
+        with:
+          device: "^iPad Pro"
+
+      - name: Prepare iPad simulator
+        env:
+          UDID: ${{ steps.ipad.outputs.udid }}
         run: |
-          xcrun simctl shutdown "$UDID" || true
-          pick() {
-            xcrun simctl list devices available --json | jq -r --arg re "$1" '
-              [.devices | to_entries[] | select(.key | test("iOS")) | .value[]
-                | select(.name | test($re))
-                | {udid, n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
-              | sort_by(.n) | last // {} | .udid // empty'
-          }
-          UDID_IPAD=$(pick "^iPad Pro")
-          [ -z "$UDID_IPAD" ] && UDID_IPAD=$(pick "^iPad")
-          if [ -z "$UDID_IPAD" ]; then
-            echo "::error::No iPad simulator available on this image"
-            xcrun simctl list devices available
-            exit 1
-          fi
-          xcrun simctl erase "$UDID_IPAD"
-          xcrun simctl boot "$UDID_IPAD"
-          xcrun simctl bootstatus "$UDID_IPAD"
-          xcrun simctl spawn "$UDID_IPAD" defaults write com.apple.Accessibility ReduceMotionEnabled 1
-          xcrun simctl spawn "$UDID_IPAD" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
-          xcrun simctl ui "$UDID_IPAD" appearance dark
-          xcrun simctl status_bar "$UDID_IPAD" override \
+          xcrun simctl bootstatus "$UDID"
+          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
+          xcrun simctl spawn "$UDID" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
+          xcrun simctl ui "$UDID" appearance dark
+          xcrun simctl status_bar "$UDID" override \
             --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
             --batteryState charged --batteryLevel 100
-          echo "udid=$UDID_IPAD" >> "$GITHUB_OUTPUT"
 
       - name: Install and pre-warm app on iPad
         env:
@@ -390,6 +372,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      - name: Install NDK, emulator and system image
+        uses: ./tooling/github/android-sdk
+        with:
+          ndk: "true"
+          packages: emulator system-images;android-34;google_apis;x86_64
 
       - name: Prebuild Android project
         working-directory: apps/expo

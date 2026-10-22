@@ -3,22 +3,26 @@
 import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { useLocale, useTranslations } from "use-intl";
 
 import { localePath } from "@flatsby/i18n/locale";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { signIn } from "~/utils/auth/auth-client";
+import { signIn, useSession } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
 
 const Login = () => {
   const t = useTranslations();
   const locale = useLocale();
   const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
+  const { data: session } = useSession();
 
   const callbackURL = ExpoLinking.createURL("/");
+
+  // Sign-in only stores the cookie and refetches the session; nothing navigates
+  if (session) return <Redirect href="/" />;
 
   return (
     <View testID="login-screen" className="bg-background flex-1 px-6 py-8">
