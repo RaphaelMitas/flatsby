@@ -1,25 +1,14 @@
 import { z } from "zod/v4";
 
-export const chatModelSchema = z.enum([
-  "openai/gpt-6-luna",
-  "openai/gpt-6.1-sol",
-  "openai/gpt-6-astra",
-  "google/gemini-3.5-flash-lite",
-  "google/gemini-3.8-flash",
-  "google/gemini-4-argon",
-]);
-export type ChatModel = z.infer<typeof chatModelSchema>;
-export const DEFAULT_CHAT_MODEL = "openai/gpt-6-luna" satisfies ChatModel;
-
 interface ChatModelDefinition {
-  id: ChatModel;
+  id: string;
   name: string;
   provider: string;
   supportsTools: boolean;
   pricing: { input: number; output: number };
 }
 
-export const CHAT_MODELS: readonly ChatModelDefinition[] = [
+export const CHAT_MODELS = [
   {
     id: "openai/gpt-6-luna",
     name: "GPT-6 Luna",
@@ -62,7 +51,11 @@ export const CHAT_MODELS: readonly ChatModelDefinition[] = [
     supportsTools: true,
     pricing: { input: 2.0, output: 10.0 },
   },
-];
+] as const satisfies readonly ChatModelDefinition[];
+
+export const chatModelSchema = z.enum(CHAT_MODELS.map((m) => m.id));
+export type ChatModel = z.infer<typeof chatModelSchema>;
+export const DEFAULT_CHAT_MODEL = "openai/gpt-6-luna" satisfies ChatModel;
 
 export function getModelTier(modelId: string): "fast" | "balanced" | "premium" {
   const model = CHAT_MODELS.find((m) => m.id === modelId);

@@ -1,3 +1,4 @@
+import type { ChatModel } from "@flatsby/validators/models";
 import type { LanguageModelUsage, ModelMessage, Tool } from "ai";
 import { captureAiGeneration } from "@posthog/ai";
 import { gateway, generateText, stepCountIs, streamText } from "ai";
@@ -10,26 +11,38 @@ type ProviderOptions = NonNullable<
   Parameters<typeof streamText>[0]["providerOptions"]
 >;
 
-const CHEAP_AI_MODEL = "openai/gpt-6-luna";
+const TITLE_GENERATION_MODEL = "openai/gpt-6-luna";
 
-const CHAT_PROVIDER_OPTIONS = {
-  openai: {
-    reasoningEffort: "none",
-  },
-  google: {
-    thinkingConfig: {
-      thinkingLevel: "low",
+// The consent disclosure names only OpenAI and Google; without this the gateway also routes GPT models to Azure and Bedrock.
+const DISCLOSED_PROVIDERS_ONLY = {
+  gateway: { only: ["openai", "google", "vertex"] },
+} satisfies ProviderOptions;
+
+const REASONING_ALWAYS_ON_MODELS: ReadonlySet<string> = new Set([
+  "openai/gpt-6.1-sol",
+  "openai/gpt-6-astra",
+] satisfies ChatModel[]);
+
+function chatProviderOptions(model: string) {
+  return {
+    ...DISCLOSED_PROVIDERS_ONLY,
+    openai: {
+      reasoningEffort: REASONING_ALWAYS_ON_MODELS.has(model) ? "low" : "none",
     },
-  },
-} as const satisfies ProviderOptions;
+    google: {
+      thinkingConfig: {
+        thinkingLevel: "low",
+      },
+    },
+  } satisfies ProviderOptions;
+}
 
-const CHEAP_AI_PROVIDER_OPTIONS = {
+const TITLE_GENERATION_PROVIDER_OPTIONS = {
+  ...DISCLOSED_PROVIDERS_ONLY,
   openai: {
     reasoningEffort: "none",
   },
-} as const satisfies ProviderOptions;
-
-const TITLE_GENERATION_MODEL = CHEAP_AI_MODEL;
+} satisfies ProviderOptions;
 
 export function getDefaultModel() {
   return DEFAULT_CHAT_MODEL;
@@ -122,7 +135,7 @@ export function streamChatCompletion(
     model: gateway(modelName),
     messages,
     allowSystemInMessages: true,
-    providerOptions: options.providerOptions ?? CHAT_PROVIDER_OPTIONS,
+    providerOptions: options.providerOptions ?? chatProviderOptions(modelName),
     onEnd: (event) => {
       captureGeneration({
         tracing: options.tracing,
@@ -171,7 +184,7 @@ export function streamChatWithTools(
     allowSystemInMessages: true,
     tools: options.tools,
     stopWhen: stepCountIs(maxSteps),
-    providerOptions: options.providerOptions ?? CHAT_PROVIDER_OPTIONS,
+    providerOptions: options.providerOptions ?? chatProviderOptions(modelName),
     onEnd: (event) => {
       captureGeneration({
         tracing: options.tracing,
@@ -215,7 +228,7 @@ export async function generateConversationTitle(
   try {
     const result = await generateText({
       model: gateway(TITLE_GENERATION_MODEL),
-      providerOptions: CHEAP_AI_PROVIDER_OPTIONS,
+      providerOptions: TITLE_GENERATION_PROVIDER_OPTIONS,
       system: systemPrompt,
       prompt: userMessage,
     });
