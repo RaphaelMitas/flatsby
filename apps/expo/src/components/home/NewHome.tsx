@@ -26,6 +26,7 @@ import {
 import type { Nudge } from "./ForYouCard";
 import type { HomeRowProps } from "./HomeRows";
 import { fromPickerTime } from "~/components/calendar/calendarDates";
+import { calendarRangeOptions } from "~/components/calendar/CalendarScreen";
 import { useCalendarMutations } from "~/components/calendar/useCalendarMutations";
 import { settleHref } from "~/components/expenses/settleHref";
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
@@ -101,10 +102,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const [{ data: rangeData }, { data: debtData }, { data: listsData }] =
     useSuspenseQueries({
       queries: [
-        trpc.calendar.range.queryOptions({
-          groupId: group.id,
-          ...listWindow(today, today),
-        }),
+        calendarRangeOptions(group.id, listWindow(today, today)),
         trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
         trpc.shoppingList.getShoppingLists.queryOptions({ groupId: group.id }),
       ],

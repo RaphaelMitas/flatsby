@@ -3,7 +3,6 @@
 import type {
   AgendaDay,
   AgendaEntry,
-  CalendarEntry,
   DueChore,
 } from "@flatsby/validators/calendar";
 import { useRef } from "react";
@@ -35,7 +34,7 @@ interface CalendarListProps {
   members: MemberLookup;
   member: number | null;
   onToggle: (entry: AgendaEntry, done: boolean) => void;
-  onOpen: (entry: CalendarEntry) => void;
+  onOpen: (entry: AgendaEntry) => void;
 }
 
 export function CalendarList({
@@ -211,7 +210,7 @@ function EntryRow({
   meId: number;
   members: MemberLookup;
   onToggle: (entry: AgendaEntry, done: boolean) => void;
-  onOpen: (entry: CalendarEntry) => void;
+  onOpen: (entry: AgendaEntry) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();

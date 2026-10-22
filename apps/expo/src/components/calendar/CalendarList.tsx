@@ -29,7 +29,7 @@ interface CalendarListProps {
   member: number | null;
   onRefresh: () => Promise<unknown>;
   onToggle: (entry: AgendaEntry, done: boolean) => void;
-  onOpen: (entry: CalendarEntry) => void;
+  onOpen: (entry: AgendaEntry) => void;
 }
 
 export function CalendarList({

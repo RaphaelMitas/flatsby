@@ -32,6 +32,7 @@ interface CalendarItemDetailProps {
   itemId: number;
   /** The occurrence that was tapped, which skip acts on */
   date: string | undefined;
+  missed: string[];
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -77,6 +78,7 @@ export function CalendarItemDetail({
   group,
   itemId,
   date,
+  missed,
 }: CalendarItemDetailProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -266,7 +268,7 @@ export function CalendarItemDetail({
           icon="skip-forward"
           title={t("calendar.detail.skip")}
           onPress={() => {
-            skip(date, true);
+            for (const day of [date, ...missed]) skip(day, true);
             router.back();
           }}
         />

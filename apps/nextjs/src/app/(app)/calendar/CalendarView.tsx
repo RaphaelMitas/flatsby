@@ -2,7 +2,7 @@
 
 import type { GroupWithAccess } from "@flatsby/api";
 import type {
-  CalendarEntry,
+  AgendaEntry,
   CalendarItemView,
   CalendarPosition,
   CreateCalendarItemInput,
@@ -71,7 +71,7 @@ import { MonthGrid } from "./MonthGrid";
 import { useCalendarMutations } from "./useCalendarMutations";
 
 type Panel =
-  | { type: "detail"; entry: CalendarEntry }
+  | { type: "detail"; entry: AgendaEntry }
   | { type: "form"; item?: CalendarItemView; date?: string };
 
 // Coming back to a tab left open overnight has to move "today" along
@@ -219,8 +219,7 @@ function CalendarScreen({
 
   const openAdd = () =>
     setPanel({ type: "form", date: newEntryDate(position, today) });
-  const openEntry = (entry: CalendarEntry) =>
-    setPanel({ type: "detail", entry });
+  const openEntry = (entry: AgendaEntry) => setPanel({ type: "detail", entry });
 
   const panelContent = (current: Panel) => {
     if (current.type === "form")
@@ -250,7 +249,9 @@ function CalendarScreen({
         onEdit={(latest) => setPanel({ type: "form", item: latest })}
         onJump={(date) => moveTo(revealDate(position, date, today))}
         onSkip={() => {
-          skip(occurrence.date, true);
+          // A chore left for days is skipped for all of them, or the next one would take its place
+          for (const day of [occurrence.date, ...(current.entry.missed ?? [])])
+            skip(day, true);
           setPanel(null);
         }}
         onUnskip={(date) => skip(date, false)}

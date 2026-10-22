@@ -63,11 +63,7 @@ async function patchCalendar(
   patchFor: (findCachedItem: FindCachedItem) => CalendarPatch,
 ): Promise<CalendarSnapshot> {
   await Promise.all([
-    // An unloaded range has no patch to protect, and cancelling its fetch would leave it empty until the write settles
-    queryClient.cancelQueries({
-      ...filters.ranges,
-      predicate: (query) => query.state.data !== undefined,
-    }),
+    queryClient.cancelQueries(filters.ranges),
     queryClient.cancelQueries(filters.details),
   ]);
   const ranges = queryClient.getQueriesData<ApiResult<CalendarRange>>(
