@@ -16,16 +16,20 @@ export function place(className, styles, parent = document.body) {
 }
 
 // The icon's cat sits in x 0.29-0.71 with its ears at y 0.27; whatever it peeks over cuts it at y `cut`.
-export function placeCat({ size, cut, centerX, bottom }) {
+export function placeCat({ size, cut, centerX, bottom }, parent) {
   const visible = (cut - 0.27) * size;
-  place("cat", {
-    left: `${centerX - size * 0.21}px`,
-    top: `${bottom - visible}px`,
-    width: `${size * 0.42}px`,
-    height: `${visible}px`,
-    backgroundSize: `${size}px ${size}px`,
-    backgroundPosition: `${-size * 0.29}px ${-size * 0.27}px`,
-  });
+  place(
+    "cat",
+    {
+      left: `${centerX - size * 0.21}px`,
+      top: `${bottom - visible}px`,
+      width: `${size * 0.42}px`,
+      height: `${visible}px`,
+      backgroundSize: `${size}px ${size}px`,
+      backgroundPosition: `${-size * 0.29}px ${-size * 0.27}px`,
+    },
+    parent,
+  );
   return visible;
 }
 

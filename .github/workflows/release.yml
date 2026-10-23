@@ -593,8 +593,10 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
 
-      - name: Install Playwright browser
-        run: pnpm -F @flatsby/store-assets exec playwright install --with-deps chromium
+      - name: Install Playwright browser and ffmpeg
+        run: |
+          pnpm -F @flatsby/store-assets exec playwright install --with-deps chromium
+          sudo apt-get install -y --no-install-recommends ffmpeg
 
       - name: Download iOS captures
         if: needs.screenshots-ios.result == 'success'

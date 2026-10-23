@@ -9,9 +9,12 @@
  *   <out>/<platform>/<store-locale>/NN.png   framed phone screenshots, plus
  *                                            the raw ipad-*.png for iOS
  *   <out>/app-store/<store-locale>/{search,header}.png   iOS 27 creative assets
+ *   <out>/app-store/<store-locale>/header.mp4            and the header video
  *   <out>/play/<store-locale>/featureGraphic.png
  * The App Store and Play assets need iPhone captures; they are skipped without.
  */
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { readdirSync, readFileSync } from "node:fs";
 import { copyFile, mkdir, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
@@ -70,7 +73,7 @@ const base = `http://127.0.0.1:${port}`;
 const browser = await chromium.launch();
 const problems = [];
 
-async function shoot(url, viewport, deviceScaleFactor, file) {
+async function open(url, viewport, deviceScaleFactor) {
   const page = await browser.newPage({ viewport, deviceScaleFactor });
   const crashed = new Promise((_, reject) =>
     page.on("pageerror", (e) => reject(new Error(`${url}: ${e.message}`))),
@@ -86,9 +89,65 @@ async function shoot(url, viewport, deviceScaleFactor, file) {
       timeout: 60_000,
     }),
   ]);
+  return page;
+}
+
+async function shoot(url, viewport, deviceScaleFactor, file) {
+  const page = await open(url, viewport, deviceScaleFactor);
   await mkdir(dirname(file), { recursive: true });
   await page.screenshot({ path: file });
   await page.close();
+  console.log(file);
+}
+
+const FPS = 30;
+
+async function record(url, viewport, deviceScaleFactor, file) {
+  const page = await open(url, viewport, deviceScaleFactor);
+  const duration = Number(
+    await page.evaluate(() => document.body.dataset.duration),
+  );
+  await mkdir(dirname(file), { recursive: true });
+  const ffmpeg = spawn(
+    "ffmpeg",
+    [
+      "-y",
+      "-loglevel",
+      "error",
+      "-f",
+      "image2pipe",
+      "-framerate",
+      String(FPS),
+      "-i",
+      "-",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-crf",
+      "18",
+      "-movflags",
+      "+faststart",
+      file,
+    ],
+    { stdio: ["pipe", "inherit", "inherit"] },
+  );
+  const exited = once(ffmpeg, "close");
+  for (let f = 0; f < (duration / 1000) * FPS; f++) {
+    await page.evaluate(
+      (t) => {
+        for (const a of document.getAnimations()) a.currentTime = t;
+      },
+      (f * 1000) / FPS,
+    );
+    if (!ffmpeg.stdin.write(await page.screenshot())) {
+      await once(ffmpeg.stdin, "drain");
+    }
+  }
+  ffmpeg.stdin.end();
+  const [code] = await exited;
+  await page.close();
+  if (code !== 0) throw new Error(`ffmpeg exited with ${code} for ${file}`);
   console.log(file);
 }
 
@@ -142,6 +201,12 @@ for (const platform of readdirSync(capturesDir)) {
         join(outDir, "app-store", storeLocale, `${asset}.png`),
       );
     }
+    await record(
+      `/banners/template.html?asset=header&video&lang=${locale}`,
+      BANNERS.header.viewport,
+      BANNERS.header.scale,
+      join(outDir, "app-store", storeLocale, "header.mp4"),
+    );
     await shoot(
       `/banners/template.html?asset=play&lang=${locale}`,
       { width: 1024, height: 500 },
