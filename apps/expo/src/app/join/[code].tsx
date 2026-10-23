@@ -1,10 +1,4 @@
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -69,8 +63,7 @@ export default function JoinScreen() {
       preview.data.error.type === "NotFoundError");
 
   return (
-    // On iOS this is a sheet, which never reaches the status bar
-    <SafeAreaView edges={Platform.OS === "ios" ? [] : ["top"]}>
+    <SafeAreaView>
       <View className="bg-background flex-1 px-6 pb-6">
         <Pressable onPress={close} className="self-start py-3">
           <Icon name="x" size={24} color="muted-foreground" />
