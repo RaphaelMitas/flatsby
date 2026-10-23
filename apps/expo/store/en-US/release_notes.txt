@@ -1,6 +1,6 @@
-• Try the new home: what needs you today, like your next chore or a debt to settle, right at the top. Switch back anytime in Settings.
-• The calendar is now one scrolling list of every day. Scroll and the month folds into a week you can swipe through.
-• Repeating tasks and events can now end on a date.
-• Saving an expense takes you straight back to the list.
-• Liquid Glass on iOS 26.
+• The calendar is easier to scan: a list of the next seven days, or a month view with every entry written out. Switch next to the title, and swipe to move a week or a month.
+• Missed chores now sit at the top under Overdue. One tick or skip settles every missed day.
+• Filter the calendar by flatmate, with a count of what each still has open.
+• Opening an invite link while signed out no longer interrupts signing in.
+• Shopping list suggestions pick up new items right away.
 • Small fixes and improvements.
