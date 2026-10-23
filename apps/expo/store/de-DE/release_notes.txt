@@ -1,6 +1,6 @@
-• Der Kalender ist übersichtlicher: eine Liste der nächsten sieben Tage oder eine Monatsansicht, in der jeder Eintrag ausgeschrieben ist. Umschalten geht neben dem Titel, Wischen springt eine Woche oder einen Monat weiter.
-• Verpasste Aufgaben stehen jetzt oben unter Überfällig. Einmal abhaken oder überspringen erledigt alle verpassten Tage.
-• Filtere den Kalender nach Mitbewohnern, mit der Zahl ihrer offenen Aufgaben.
+• Der Kalender ist übersichtlicher: eine Liste der nächsten sieben Tage oder eine Monatsansicht. Wischen springt eine Woche oder einen Monat weiter.
+• Verpasste Aufgaben stehen oben unter Überfällig. Einmal abhaken oder überspringen erledigt alle verpassten Tage.
+• Filtere den Kalender nach Mitbewohnern.
 • Ein Einladungslink, den du abgemeldet öffnest, unterbricht die Anmeldung nicht mehr.
 • Einkaufsvorschläge zeigen neue Artikel sofort.
 • Kleine Fehlerbehebungen und Verbesserungen.

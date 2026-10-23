@@ -1,6 +1,6 @@
-• The calendar is easier to scan: a list of the next seven days, or a month view with every entry written out. Switch next to the title, and swipe to move a week or a month.
-• Missed chores now sit at the top under Overdue. One tick or skip settles every missed day.
-• Filter the calendar by flatmate, with a count of what each still has open.
+• The calendar is easier to scan: a list of the next seven days, or a month view. Swipe to move a week or a month.
+• Missed chores sit at the top under Overdue. One tick or skip settles every missed day.
+• Filter the calendar by flatmate.
 • Opening an invite link while signed out no longer interrupts signing in.
 • Shopping list suggestions pick up new items right away.
 • Small fixes and improvements.
