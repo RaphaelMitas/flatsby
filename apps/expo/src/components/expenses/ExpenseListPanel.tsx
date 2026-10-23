@@ -174,8 +174,12 @@ function ExpenseList() {
                 <ExpenseCard
                   expense={item}
                   groupId={selectedGroupId ?? -1}
-                  isSelected={item.id.toString() === expenseId}
-                  onSelect={() => open(`/(tabs)/expenses/${item.id}`)}
+                  isSelected={isLargeScreen && item.id.toString() === expenseId}
+                  onSelect={() =>
+                    item.id.toString() === expenseId
+                      ? router.dismissTo(`/(tabs)/expenses/${item.id}`)
+                      : open(`/(tabs)/expenses/${item.id}`)
+                  }
                   onEdit={() => handleEdit(item)}
                   isNotConverted={isLeftUnconverted(item, groupData.data)}
                 />
