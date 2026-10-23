@@ -30,7 +30,7 @@ export function LandingPage({
       <div className="mx-auto max-w-5xl px-4">
         <ScreenshotImage shot={screenshot(t, "webHome")} />
       </div>
-      <FeaturesSection />
+      <FeaturesSection calendarShot={screenshot(t, "iosCalendar")} />
       <HowItWorksSection />
       <FactsSection />
       <FaqSection items={faq} showAllLink />

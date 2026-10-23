@@ -1,18 +1,20 @@
 export const marketing = {
-  title: "Flatsby: shared shopping list and bill splitting app",
+  title: "Flatshare app: chores, shopping list & bills | Flatsby",
   description:
-    "Free app for flatmates and roommates: one shared shopping list and bills split equally, by percentage, by shares or exact amounts. Web, iPhone and Android.",
-  headline: "Shared shopping lists and bill splitting for flatmates",
+    "Free app for flatmates, without ads: a chore rota where you take turns, shared shopping lists and bills split fairly, rent included. iPhone, Android and web.",
+  headline: "The flatshare app for chores, shopping lists and splitting bills",
   freeOn: "Free on web, iPhone and Android",
   subheadline:
-    "One shopping list for the whole household, expenses split equally, by percentage, by shares or exact amounts, and a running balance of who owes whom. Free on web, iPhone and Android.",
-  ogImageAlt: "Flatsby: shared shopping lists and bill splitting",
+    "Whose turn is the bathroom, what's missing from the fridge, who owes whom? Flatsby answers that for your flatshare or for the two of you. Free, without ads, on iPhone, Android and the web.",
+  ogImageAlt: "Flatsby: chore rota, shopping lists and bill splitting",
   nav: {
     shoppingLists: "Shopping lists",
+    calendar: "Chore rota",
     expenses: "Expenses",
     expenseSplitting: "Expense splitting",
     aiAssistant: "AI assistant",
     splitwiseAlternative: "Splitwise alternative",
+    flatasticAlternative: "Flatastic alternative",
     pricing: "Pricing",
     faq: "FAQ",
     signIn: "Sign In",
@@ -37,21 +39,26 @@ export const marketing = {
   features: {
     heading: "Everything you need to run your household",
     examples: "The lists, expenses and chat below are examples.",
+    calendar: {
+      title: "Chore rota and calendar",
+      body: "Set up chores like cleaning the bathroom or taking out the bins once, and pick who takes turns in which order. Everyone sees when it's their turn, weeks ahead, and the history shows who did what. Events like the house meeting go in the same calendar.",
+      link: "Chore rota app for flatshares",
+    },
     lists: {
       title: "Shared shopping lists",
-      body: "Everyone in the household works from the same lists on the web and on their phone. Whoever is in the shop ticks items off, and everyone else sees it the next time they open the list.",
+      body: "As many lists as you need, sorted by category like the shop. You pick the category yourself, or Flatsby suggests one with AI credits, part of which are free every month. Whoever shops ticks items off. The others see new items once the list reloads: when they open the app or pull the list down.",
     },
     expenses: {
       title: "Expense splitting",
-      body: "Log what you paid and split it equally, by percentage, by shares or by exact amounts. Flatsby keeps a running balance per person and simplifies debts, so fewer payments settle everyone up.",
+      body: "Log what you paid and split it equally, by percentage, by shares or by exact amounts, such as rent by room size or by income. No daily limit on expenses. Flatsby shows who owes whom and works out the fewest payments that settle everyone up. Coming from Splitwise, a CSV import brings your history along.",
     },
     assistant: {
-      title: "AI assistant",
-      body: "On the web, ask about your household in plain language. It reads your lists and expenses, answers with charts and tables, and can add items or expenses for you.",
+      title: "Extra: AI assistant on the web",
+      body: "Ask in plain language, for example how much you spent on groceries last month. It answers with charts and tables, can add items or expenses for you, asks for your consent first and is optional.",
     },
     groups: {
-      title: "Household groups",
-      body: "A group is your household. A group admin shares a link, QR code or short code, and each flatmate joins once they agree. Every list and expense stays inside the group.",
+      title: "One household, every device",
+      body: "Whoever creates the household invites the others with a link, QR code or code. iPhone, Android and browser share the same account and data. You sign in with Google or Apple.",
     },
   },
   steps: {
@@ -84,7 +91,7 @@ export const marketing = {
     whatItIs: {
       label: "What it is",
       value:
-        "A household app for people who live together: shared shopping lists, shared expenses and settling up.",
+        "An app for people who live together: a chore rota with a calendar, shared shopping lists, shared expenses and settling up.",
     },
     audience: {
       label: "Who it is for",
@@ -93,12 +100,12 @@ export const marketing = {
     platforms: {
       label: "Platforms",
       value:
-        "Web at flatsby.com, iPhone and Android. Same account and data everywhere.",
+        "iPhone, Android and the web at flatsby.com, in English and German. Same account and data everywhere.",
     },
     price: {
       label: "Price",
       value:
-        "Free. AI features use monthly credits: {freeCredits, number} free, more on Starter ({starterPrice, number, ::currency/USD} a month) or Pro ({proPrice, number, ::currency/USD} a month on the web, {proAppStorePrice, number, ::currency/USD} in the US App Store).",
+        "Free, without ads and without a member limit. Picking categories yourself is free. You only pay for extra AI credits, which the AI assistant and automatic categories use ({freeCredits, number} a month are free).",
     },
     signIn: { label: "Sign in", value: "Google or Apple account." },
     splitting: {
@@ -109,11 +116,13 @@ export const marketing = {
     switching: { label: "Switching", value: "Imports a Splitwise CSV export." },
     limits: {
       label: "Limits",
-      value: "No member limit. No recurring expenses yet.",
+      value:
+        "No push reminders. No recurring expenses. Not live: other people's changes show up when the app reloads, so when you open it, come back to it or pull down.",
     },
     data: {
       label: "Your data",
-      value: "Export everything or delete your account from settings.",
+      value:
+        "Database and servers in Frankfurt (Neon, Vercel), usage analytics without ad tracking also in Frankfurt (PostHog). The AI assistant only sends data to OpenAI or Google after you consent, and automatic categories send item and expense names to an AI model. Export everything or delete your account in settings at any time.",
     },
     source: {
       label: "Source code",
@@ -124,9 +133,9 @@ export const marketing = {
     heading: "Questions",
     allQuestions: "All questions",
     free: {
-      question: "Is Flatsby free?",
+      question: "Is Flatsby really free and ad-free?",
       answer:
-        "Yes. Shopping lists, expenses, settlements and groups are free, with no member limit. The AI assistant and automatic categories use credits: {freeCredits, number} a month for free, {starterCredits, number} on Starter ({starterPrice, number, ::currency/USD} a month) and {proCredits, number} on Pro ({proPrice, number, ::currency/USD} a month on the web). On iPhone, Pro is {proAppStorePrice, number, ::currency/USD} a month in the US App Store.",
+        "Yes. The chore rota, shopping lists, expenses, settlements and groups are free, without ads and with no member limit. Flatsby only makes money from optional AI credits. The AI assistant and automatic categories use credits: {freeCredits, number} a month for free, {starterCredits, number} on Starter ({starterPrice, number, ::currency/USD} a month) and {proCredits, number} on Pro ({proPrice, number, ::currency/USD} a month on the web). On iPhone, Pro is {proAppStorePrice, number, ::currency/USD} a month in the US App Store.",
     },
     android: {
       question: "Does Flatsby work on Android?",
@@ -136,7 +145,7 @@ export const marketing = {
     splitwise: {
       question: "Can I move my expenses over from Splitwise?",
       answer:
-        "Yes. Export your group from Splitwise as CSV, then upload it under Group settings, Import expenses. You pick the currency and match Splitwise names to your flatmates. Each expense keeps the exact amount every person owed, so percentage splits arrive as amounts. Rows in other currencies or with several payers are skipped, and the preview lists them first.",
+        "Yes. Export your group from Splitwise as CSV, then upload it under Group settings, Import expenses. You pick the currency and match Splitwise names to your flatmates. Each expense keeps the exact amount every person owed, so percentage splits arrive as amounts. Rows in other currencies or with several payers are skipped, and the preview lists them first. There is no import from Tricount.",
     },
     split: {
       question: "How does Flatsby split an expense?",
@@ -161,7 +170,7 @@ export const marketing = {
     realtime: {
       question: "Do shopping lists update in real time?",
       answer:
-        "Not instantly. Everyone shares the same lists, and a flatmate's changes show up when you open the list again or come back to the app or tab.",
+        "Not instantly. Everyone shares the same lists, and a flatmate's changes show up when you open the list again, come back to the app or tab, or pull the list down in the app.",
     },
     assistant: {
       question: "What does the AI assistant do?",
@@ -172,6 +181,16 @@ export const marketing = {
       question: "Who can see my household's data?",
       answer:
         "Inside Flatsby, only members of your group. The hosting, analytics and AI providers listed in the privacy policy process it to run the app. Two features send data through the Vercel AI Gateway. The AI assistant asks for consent first, uses OpenAI or Google models, and its data is not used to train them. Automatic categories send the names of shopping items and expenses to a classification model. You can export all of your data or delete your account from your settings.",
+    },
+    chores: {
+      question: "Can Flatsby run a chore rota?",
+      answer:
+        "Yes. In the calendar you add chores that repeat daily, weekly, monthly or yearly, and pick who takes turns in which order. Everyone sees when it's their turn, and the history shows who did what. Push reminders aren't available yet.",
+    },
+    flatastic: {
+      question: "What is a good Flatastic alternative?",
+      answer:
+        "If you want a chore rota, a shopping list and bill splitting in one app, but without ads, Flatsby is a free alternative for iPhone, Android and the web. If you only want to split costs, Splitwise or Tricount will do, and for the shopping list alone, Bring!.",
     },
     openSource: {
       question: "Is Flatsby open source?",
@@ -196,6 +215,9 @@ export const marketing = {
     webChat: "The AI assistant answering a spending question with a chart",
     iosList: "A shared shopping list on iPhone",
     iosSplit: "Splitting an expense between flatmates on iPhone",
+    iosCalendar:
+      "The chore rota on iPhone: the week's chores and whose turn it is",
+    webCalendar: "The household calendar on the web in month view",
   },
   table: {
     yes: "Yes",
@@ -233,7 +255,7 @@ export const marketing = {
       },
       limits: {
         heading: "What it does not do",
-        body: "There are no reminders or push notifications yet. Lists are for shopping, not for chores or to-dos.",
+        body: "There are no reminders or push notifications yet. Lists are for shopping. For chores, there's the chore rota in the calendar.",
       },
     },
     expenses: {
@@ -343,6 +365,111 @@ export const marketing = {
           "Check the preview. It lists rows it will skip, such as other currencies, expenses with several payers, or splits that don't add up.",
         import:
           "Import. Each expense keeps the exact amount every person owed, so percentage splits arrive as amounts, not percentages.",
+      },
+    },
+    calendar: {
+      title: "Chore rota app for flatshares: free, whose turn? | Flatsby",
+      description:
+        "A flatshare chore rota as an app: chores rotate automatically, everyone sees when it's their turn, and the history shows who did what. Free, without ads.",
+      headline: "The flatshare chore rota where it's clear whose turn it is",
+      intro:
+        "No more “Whose turn was the bathroom again?” In Flatsby you set up your chores once, pick who takes turns, and everyone sees in the app when it's their turn. Free, without ads, on iPhone, Android and the web.",
+      setup: {
+        heading: "Quick to set up",
+        invite:
+          "Create your household and invite flatmates with a link, QR code or code.",
+        tasks:
+          "Add chores: bathroom, kitchen, bins, hallway, whatever comes up.",
+        rotation:
+          "For each chore, pick how often it's due (every few days, on set weekdays, monthly or yearly) and who takes turns in which order. Or leave it open, so anyone can do it.",
+      },
+      mine: {
+        heading: "What's on me?",
+        body: "The week view shows what's due today and in the next few days, and a filter shows only your chores. The app's home page shows what's on you today. Because the order is fixed, you know weeks ahead when it's your turn, handy for shift work or holidays.",
+      },
+      fair: {
+        heading: "Fair, because you can see it",
+        body: "Each chore's history shows who did it and when. Missed dates stay visible as overdue, with a count of how often they were missed, instead of quietly disappearing. If a date doesn't apply, say because everyone is away, you skip it.",
+      },
+      template: {
+        heading: "Printable template or app?",
+        body: "A printed rota is quick to make, but after a few weeks it's out of date: someone moves out, someone goes on holiday, and nobody writes down who already cleaned. In the app the order works itself out, and chores get ticked off in the app instead of on paper.",
+      },
+      events: {
+        heading: "Events in the same calendar",
+        body: "Next to chores you add events: the house meeting, the landlord's visit or when the meter gets read. With a time or all day, once or repeating. The month view shows everything at a glance.",
+      },
+      couples: {
+        heading: "A chore rota for couples and big flatshares",
+        body: "The rota works the same for a couple as for a five-person flatshare: as two, you swap every week or set fixed days. It belongs to the same group as your shopping lists and shared expenses, so it's one app and one invite for everything.",
+      },
+      limits: {
+        heading: "What the chore rota can't do",
+        reminders:
+          "No push reminders: Flatsby doesn't ping you, you see your chores when you open the app.",
+        points: "No points or leaderboards.",
+        swap: "You can't swap chores, only skip them. Whoever covers for someone still ticks the chore off, and the history shows who really did it.",
+        live: "Not live: you see what others ticked off when the app reloads, so when you open it or pull down.",
+        alternatives:
+          "Before you decide, here's what's missing. If reminders or points matter to you, an app like Flatastic or Sweepy may suit you better.",
+      },
+    },
+    flatastic: {
+      title: "Flatastic alternative: free and without ads | Flatsby",
+      description:
+        "Flatsby vs. Flatastic: chore rota, unlimited shopping lists and bill splitting without ads, plus a household calendar. And where Flatastic is ahead.",
+      headline:
+        "A Flatastic alternative without ads and without Premium for everyday flatshare life",
+      intro:
+        "Flatastic is one of the best-known flatshare apps, and rightly so. Flatsby covers everyday flatshare life too, with a chore rota, a shopping list and shared money, but shows no ads and puts none of it behind Premium. On top, there's a calendar for your events.",
+      table: {
+        caption:
+          "Flatsby and Flatastic compared. Flatastic details from the App Store, Google Play and flatastic-app.com, checked on 23 October 2026.",
+        chores: "Chore rota",
+        choresFlatastic: "Yes, with points",
+        reminders: "Push reminders",
+        calendar: "Calendar for events",
+        pinboard: "Pinboard",
+        lists: "Shared shopping list",
+        listsFlatsby: "Yes, unlimited lists",
+        listsFlatastic: "Yes, several lists with Premium",
+        expenses: "Bill splitting",
+        ads: "Ads in the free version",
+        adsFlatastic: "Yes, ad-free from €1.99 a month",
+        history: "Chore history",
+        free: "Free",
+        withPremium: "With Premium",
+        export: "Data export",
+        exportFlatastic: "CSV export with Premium",
+        households: "Several households per account",
+        signIn: "Sign in",
+        signInFlatsby: "Google or Apple",
+        signInFlatastic: "Email and password",
+        platforms: "Platforms",
+      },
+      free: {
+        heading: "What's free in Flatsby",
+        body: "Free: unlimited shopping lists, the chore rota with history, the calendar, expenses and settlements, and the data export. Without ads and with no member limit. Paid plans only add AI credits, for the AI assistant and automatic sorting into categories.",
+      },
+      rent: {
+        heading: "For rent that isn't split evenly",
+        body: "You split expenses equally, by percentage, by shares or by exact amounts, for example rent by room size or by income. Flatsby works out the fewest payments that settle everyone up. There are no recurring expenses, so you add the rent again each month.",
+      },
+      better: {
+        heading: "Where Flatastic is ahead",
+        body: "Flatastic sends push reminders for due chores, awards points for cleaning and has a pinboard. Flatsby does none of that. Flatastic has thousands of ratings in the app stores, and you sign in with email and password instead of Google or Apple. If reminders or points matter to you, stay with Flatastic.",
+      },
+      data: {
+        heading: "Your data",
+        body: "Database and servers are in Frankfurt (Neon, Vercel), and so are usage analytics without ad tracking (PostHog). The AI assistant only sends data to OpenAI or Google after you consent, and automatic categories send item and expense names to an AI model. You can export everything or delete your account in settings. The code is open source, and Flatsby is built by Raphael Mitas, an independent developer in Darmstadt.",
+      },
+      moving: {
+        heading: "Switching from Flatastic to Flatsby",
+        household:
+          "One person creates the household in Flatsby and invites the others with a link, QR code or code.",
+        chores: "Add your chores in the calendar and pick who takes turns.",
+        balances:
+          "Settle your open balances in Flatastic and start Flatsby at zero. There is no import from Flatastic.",
       },
     },
     pricing: {

@@ -1,20 +1,22 @@
 import type { Messages } from "../../messages";
 
 export const marketing = {
-  title: "Flatsby: App für gemeinsame Einkaufslisten und Kostenteilung",
+  title: "WG-App: Putzplan, Einkaufsliste & Kosten teilen | Flatsby",
   description:
-    "Kostenlose App für Mitbewohner und WGs: eine gemeinsame Einkaufsliste und Rechnungen, die gleichmäßig, nach Prozent, nach Anteilen oder mit genauen Beträgen geteilt werden. Web, iPhone und Android.",
-  headline: "Gemeinsame Einkaufslisten und Kostenteilung für Mitbewohner",
+    "Kostenlose WG-App ohne Werbung: ein Putzplan, bei dem ihr euch abwechselt, gemeinsame Einkaufslisten und Kosten teilen, etwa die Miete. iPhone, Android, Web.",
+  headline: "Die WG-App für Putzplan, Einkaufsliste und Kosten teilen",
   freeOn: "Kostenlos im Web, auf dem iPhone und auf Android",
   subheadline:
-    "Eine Einkaufsliste für den ganzen Haushalt, Ausgaben gleichmäßig, nach Prozent, nach Anteilen oder mit genauen Beträgen geteilt, und ein laufender Kontostand, wer wem was schuldet. Kostenlos im Web, auf dem iPhone und auf Android.",
-  ogImageAlt: "Flatsby: gemeinsame Einkaufslisten und Kostenteilung",
+    "Wer ist mit dem Bad dran, was fehlt im Kühlschrank, wer schuldet wem was? Flatsby beantwortet das für eure WG oder euch als Paar. Kostenlos, ohne Werbung, auf iPhone, Android und im Browser.",
+  ogImageAlt: "Flatsby: Putzplan, Einkaufsliste und Kosten teilen",
   nav: {
     shoppingLists: "Einkaufslisten",
+    calendar: "Putzplan",
     expenses: "Ausgaben",
     expenseSplitting: "Kosten teilen",
     aiAssistant: "KI-Assistent",
     splitwiseAlternative: "Splitwise-Alternative",
+    flatasticAlternative: "Flatastic-Alternative",
     pricing: "Preise",
     faq: "FAQ",
     signIn: "Anmelden",
@@ -39,21 +41,26 @@ export const marketing = {
   features: {
     heading: "Alles, was du für deinen Haushalt brauchst",
     examples: "Die Listen, Ausgaben und der Chat unten sind Beispiele.",
+    calendar: {
+      title: "Putzplan und Kalender",
+      body: "Leg Aufgaben wie Bad putzen oder Müll rausbringen einmal an und wähl, wer sich in welcher Reihenfolge abwechselt. Jede Person sieht, wann sie dran ist, auch Wochen im Voraus, und im Verlauf steht, wer was erledigt hat. Termine wie die WG-Versammlung kommen in denselben Kalender.",
+      link: "Putzplan-App für WGs",
+    },
     lists: {
       title: "Gemeinsame Einkaufslisten",
-      body: "Alle im Haushalt arbeiten mit denselben Listen, im Web und auf dem Handy. Wer gerade im Laden ist, hakt Artikel ab, und alle anderen sehen es, sobald sie die Liste das nächste Mal öffnen.",
+      body: "So viele Listen, wie ihr braucht, nach Kategorien sortiert wie im Laden. Die Kategorie wählst du selbst, oder Flatsby schlägt sie mit KI-Credits vor, von denen jeden Monat ein Kontingent kostenlos ist. Wer einkauft, hakt ab. Die anderen sehen neue Artikel, sobald die Liste neu lädt: beim Öffnen der App oder wenn sie die Liste herunterziehen.",
     },
     expenses: {
       title: "Kosten teilen",
-      body: "Trag ein, was du bezahlt hast, und teile es gleichmäßig, nach Prozent, nach Anteilen oder mit genauen Beträgen. Flatsby führt für jede Person einen laufenden Kontostand und vereinfacht die Schulden, damit weniger Zahlungen nötig sind, um alles auszugleichen.",
+      body: "Trag ein, was du bezahlt hast, und teil es gleichmäßig, nach Prozent, nach Anteilen oder mit genauen Beträgen, etwa die Miete nach Zimmergröße oder nach Einkommen. Kein Tageslimit für Ausgaben. Flatsby zeigt, wer wem was schuldet, und rechnet aus, mit welchen wenigen Zahlungen alle wieder bei null sind. Von Splitwise nimmst du deinen Verlauf per CSV-Import mit.",
     },
     assistant: {
-      title: "KI-Assistent",
-      body: "Frag im Web in ganz normaler Sprache nach deinem Haushalt. Er liest deine Listen und Ausgaben, antwortet mit Diagrammen und Tabellen und kann Artikel oder Ausgaben für dich hinzufügen.",
+      title: "Extra: KI-Assistent im Web",
+      body: "Frag in normaler Sprache, etwa wie viel ihr letzten Monat für Lebensmittel ausgegeben habt. Er antwortet mit Diagrammen und Tabellen, kann Artikel oder Ausgaben für dich hinzufügen, fragt vorher nach deiner Einwilligung und ist optional.",
     },
     groups: {
-      title: "Haushaltsgruppen",
-      body: "Eine Gruppe ist dein Haushalt. Ein Gruppenadmin teilt einen Link, QR-Code oder kurzen Code, und jeder Mitbewohner tritt bei, sobald er zustimmt. Jede Liste und jede Ausgabe bleibt in der Gruppe.",
+      title: "Ein Haushalt, alle Geräte",
+      body: "Wer den Haushalt anlegt, lädt die anderen per Link, QR-Code oder Code ein. iPhone, Android und Browser nutzen dasselbe Konto und dieselben Daten. Die Anmeldung läuft über Google oder Apple.",
     },
   },
   steps: {
@@ -86,7 +93,7 @@ export const marketing = {
     whatItIs: {
       label: "Was es ist",
       value:
-        "Eine Haushalts-App für Menschen, die zusammenwohnen: gemeinsame Einkaufslisten, gemeinsame Ausgaben und Ausgleichen.",
+        "Eine App für Menschen, die zusammenwohnen: Putzplan mit Kalender, gemeinsame Einkaufslisten, gemeinsame Ausgaben und Ausgleichen.",
     },
     audience: {
       label: "Für wen",
@@ -96,12 +103,12 @@ export const marketing = {
     platforms: {
       label: "Plattformen",
       value:
-        "Web unter flatsby.com, iPhone und Android. Überall dasselbe Konto und dieselben Daten.",
+        "iPhone, Android und Web unter flatsby.com, auf Deutsch und Englisch. Überall dasselbe Konto und dieselben Daten.",
     },
     price: {
       label: "Preis",
       value:
-        "Kostenlos. KI-Funktionen nutzen monatliche Credits: {freeCredits, number} kostenlos, mehr mit Starter ({starterPrice, number, ::currency/USD} im Monat) oder Pro ({proPrice, number, ::currency/USD} im Monat im Web, {proAppStorePrice, number, ::currency/USD} im US-App-Store).",
+        "Kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Kategorien wählst du kostenlos selbst. Bezahlt wird nur für zusätzliche KI-Credits, mit denen der KI-Assistent und die automatischen Kategorien arbeiten ({freeCredits, number} im Monat sind kostenlos).",
     },
     signIn: { label: "Anmeldung", value: "Google- oder Apple-Konto." },
     splitting: {
@@ -115,11 +122,13 @@ export const marketing = {
     },
     limits: {
       label: "Grenzen",
-      value: "Keine Mitgliederbegrenzung. Noch keine wiederkehrenden Ausgaben.",
+      value:
+        "Keine Push-Erinnerungen. Keine wiederkehrenden Ausgaben. Nicht live: Änderungen der anderen erscheinen, wenn die App neu lädt, also beim Öffnen, beim Zurückkehren oder durch Herunterziehen.",
     },
     data: {
       label: "Deine Daten",
-      value: "Exportiere alles oder lösche dein Konto in den Einstellungen.",
+      value:
+        "Datenbank und Server in Frankfurt (Neon, Vercel), Nutzungsstatistik ohne Werbe-Tracking ebenfalls in Frankfurt (PostHog). Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google, und für die automatischen Kategorien gehen Artikel- und Ausgabennamen an ein KI-Modell. Export und Kontolöschung jederzeit in den Einstellungen.",
     },
     source: {
       label: "Quellcode",
@@ -130,9 +139,9 @@ export const marketing = {
     heading: "Fragen",
     allQuestions: "Alle Fragen",
     free: {
-      question: "Ist Flatsby kostenlos?",
+      question: "Ist Flatsby wirklich kostenlos und werbefrei?",
       answer:
-        "Ja. Einkaufslisten, Ausgaben, Ausgleichszahlungen und Gruppen sind kostenlos, ohne Mitgliederbegrenzung. Der KI-Assistent und die automatischen Kategorien nutzen Credits: {freeCredits, number} im Monat kostenlos, {starterCredits, number} mit Starter ({starterPrice, number, ::currency/USD} im Monat) und {proCredits, number} mit Pro ({proPrice, number, ::currency/USD} im Monat im Web). Auf dem iPhone kostet Pro {proAppStorePrice, number, ::currency/USD} im Monat im US-App-Store.",
+        "Ja. Putzplan, Einkaufslisten, Ausgaben, Ausgleichszahlungen und Gruppen sind kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Geld verdient Flatsby nur mit optionalen KI-Credits. Der KI-Assistent und die automatischen Kategorien nutzen Credits: {freeCredits, number} im Monat kostenlos, {starterCredits, number} mit Starter ({starterPrice, number, ::currency/USD} im Monat) und {proCredits, number} mit Pro ({proPrice, number, ::currency/USD} im Monat im Web). Auf dem iPhone kostet Pro {proAppStorePrice, number, ::currency/USD} im Monat im US-App-Store.",
     },
     android: {
       question: "Funktioniert Flatsby auf Android?",
@@ -142,7 +151,7 @@ export const marketing = {
     splitwise: {
       question: "Kann ich meine Ausgaben aus Splitwise übernehmen?",
       answer:
-        "Ja. Exportiere deine Gruppe in Splitwise als CSV und lade sie dann unter Gruppeneinstellungen, Ausgaben importieren hoch. Du wählst die Währung und ordnest die Namen aus Splitwise deinen Mitbewohnern zu. Jede Ausgabe behält den genauen Betrag, den jede Person geschuldet hat, prozentuale Aufteilungen kommen also als Beträge an. Zeilen in anderen Währungen oder mit mehreren Zahlenden werden übersprungen, und die Vorschau zeigt sie vorher an.",
+        "Ja. Exportiere deine Gruppe in Splitwise als CSV und lade sie dann unter Gruppeneinstellungen, Ausgaben importieren hoch. Du wählst die Währung und ordnest die Namen aus Splitwise deinen Mitbewohnern zu. Jede Ausgabe behält den genauen Betrag, den jede Person geschuldet hat, prozentuale Aufteilungen kommen also als Beträge an. Zeilen in anderen Währungen oder mit mehreren Zahlenden werden übersprungen, und die Vorschau zeigt sie vorher an. Aus Tricount gibt es keinen Import.",
     },
     split: {
       question: "Wie teilt Flatsby eine Ausgabe auf?",
@@ -167,7 +176,7 @@ export const marketing = {
     realtime: {
       question: "Aktualisieren sich Einkaufslisten in Echtzeit?",
       answer:
-        "Nicht sofort. Alle teilen dieselben Listen, und die Änderungen eines Mitbewohners erscheinen, wenn du die Liste erneut öffnest oder zur App oder zum Tab zurückkehrst.",
+        "Nicht sofort. Alle teilen dieselben Listen, und die Änderungen eines Mitbewohners erscheinen, wenn du die Liste erneut öffnest, zur App oder zum Tab zurückkehrst oder die Liste in der App herunterziehst.",
     },
     assistant: {
       question: "Was macht der KI-Assistent?",
@@ -178,6 +187,16 @@ export const marketing = {
       question: "Wer kann die Daten meines Haushalts sehen?",
       answer:
         "Innerhalb von Flatsby nur die Mitglieder deiner Gruppe. Die in der Datenschutzerklärung genannten Hosting-, Analyse- und KI-Anbieter verarbeiten sie, um die App zu betreiben. Zwei Funktionen senden Daten über das Vercel AI Gateway. Der KI-Assistent fragt vorher nach deiner Einwilligung, nutzt Modelle von OpenAI oder Google, und seine Daten werden nicht zum Training dieser Modelle verwendet. Die automatischen Kategorien senden die Namen von Einkaufsartikeln und Ausgaben an ein Klassifizierungsmodell. Du kannst alle deine Daten exportieren oder dein Konto in deinen Einstellungen löschen.",
+    },
+    chores: {
+      question: "Kann Flatsby einen Putzplan führen?",
+      answer:
+        "Ja. Im Kalender legst du Aufgaben an, die sich täglich, wöchentlich, monatlich oder jährlich wiederholen, und wählst, wer sich in welcher Reihenfolge abwechselt. Jede Person sieht, wann sie dran ist, und der Verlauf zeigt, wer was erledigt hat. Push-Erinnerungen gibt es noch nicht.",
+    },
+    flatastic: {
+      question: "Was ist eine gute Flatastic-Alternative?",
+      answer:
+        "Wenn ihr Putzplan, Einkaufsliste und Kosten teilen in einer App wollt, aber ohne Werbung, ist Flatsby eine kostenlose Alternative für iPhone, Android und Web. Wer nur Kosten teilen will, kommt mit Splitwise oder Tricount aus, für die Einkaufsliste allein mit Bring!.",
     },
     openSource: {
       question: "Ist Flatsby Open Source?",
@@ -204,6 +223,9 @@ export const marketing = {
       "Der KI-Assistent beantwortet eine Frage zu Ausgaben mit einem Diagramm",
     iosList: "Eine gemeinsame Einkaufsliste auf dem iPhone",
     iosSplit: "Eine Ausgabe unter Mitbewohnern aufteilen auf dem iPhone",
+    iosCalendar:
+      "Der Putzplan auf dem iPhone: die Woche mit Aufgaben und wer dran ist",
+    webCalendar: "Der WG-Kalender im Web in der Monatsansicht",
   },
   table: {
     yes: "Ja",
@@ -241,7 +263,7 @@ export const marketing = {
       },
       limits: {
         heading: "Was es nicht kann",
-        body: "Es gibt noch keine Erinnerungen oder Push-Benachrichtigungen. Die Listen sind zum Einkaufen gedacht, nicht für Hausarbeit oder To-dos.",
+        body: "Es gibt noch keine Erinnerungen oder Push-Benachrichtigungen. Die Listen sind zum Einkaufen gedacht. Für Hausarbeit gibt es den Putzplan im Kalender.",
       },
     },
     expenses: {
@@ -357,6 +379,111 @@ export const marketing = {
           "Prüf die Vorschau. Sie zeigt die Zeilen, die übersprungen werden, etwa andere Währungen, Ausgaben mit mehreren Zahlenden oder Aufteilungen, die nicht aufgehen.",
         import:
           "Importieren. Jede Ausgabe behält den genauen Betrag, den jede Person geschuldet hat, prozentuale Aufteilungen kommen also als Beträge an, nicht als Prozente.",
+      },
+    },
+    calendar: {
+      title: "Putzplan-App für die WG: kostenlos, wer ist dran? | Flatsby",
+      description:
+        "WG-Putzplan als App: Aufgaben wechseln automatisch durch, jeder sieht, wann er dran ist, und der Verlauf zeigt, wer was erledigt hat. Kostenlos, ohne Werbung.",
+      headline: "Der WG-Putzplan, bei dem klar ist, wer dran ist",
+      intro:
+        "Nie wieder „Wer war eigentlich mit dem Bad dran?“. In Flatsby legt ihr eure Aufgaben einmal an, wählt, wer sich abwechselt, und jede Person sieht in der App, wann sie dran ist. Kostenlos, ohne Werbung, auf iPhone, Android und im Browser.",
+      setup: {
+        heading: "Schnell eingerichtet",
+        invite:
+          "Haushalt anlegen und Mitbewohner per Link, QR-Code oder Code einladen.",
+        tasks: "Aufgaben anlegen: Bad, Küche, Müll, Flur, was eben anfällt.",
+        rotation:
+          "Für jede Aufgabe wählen, wie oft sie ansteht (alle paar Tage, an bestimmten Wochentagen, monatlich oder jährlich) und wer sich in welcher Reihenfolge abwechselt. Oder sie offen lassen, dann kann sie jeder erledigen.",
+      },
+      mine: {
+        heading: "Was liegt bei mir?",
+        body: "Die Wochenansicht zeigt, was heute und in den nächsten Tagen ansteht, und ein Filter zeigt nur deine Aufgaben. Auf der Startseite der App siehst du, was heute bei dir liegt. Weil die Reihenfolge feststeht, weißt du schon Wochen vorher, wann du dran bist, praktisch bei Schichtdienst oder Urlaub.",
+      },
+      fair: {
+        heading: "Fair, weil nachvollziehbar",
+        body: "Der Verlauf jeder Aufgabe zeigt, wer sie wann erledigt hat. Verpasste Termine bleiben als überfällig stehen, mit der Anzahl, wie oft sie verpasst wurden, statt still zu verschwinden. Fällt ein Termin aus, etwa weil alle verreist sind, überspringst du ihn.",
+      },
+      template: {
+        heading: "Putzplan-Vorlage oder App?",
+        body: "Eine ausgedruckte Vorlage ist schnell gemacht, aber nach ein paar Wochen stimmt sie nicht mehr: Jemand zieht aus, jemand fährt in den Urlaub, und keiner trägt ein, wer schon geputzt hat. In der App rechnet sich die Reihenfolge selbst weiter, und abgehakt wird in der App statt auf Papier.",
+      },
+      events: {
+        heading: "Termine im selben Kalender",
+        body: "Neben Aufgaben trägst du Termine ein: die WG-Versammlung, den Besuch des Vermieters oder wann der Zähler abgelesen wird. Mit Uhrzeit oder ganztägig, einmalig oder wiederkehrend. Die Monatsansicht zeigt alles auf einen Blick.",
+      },
+      couples: {
+        heading: "Putzplan für Paare und große WGs",
+        body: "Der Putzplan funktioniert genauso für ein Paar wie für eine Fünfer-WG: Zu zweit wechselt ihr euch wöchentlich ab oder legt feste Tage fest. Er gehört zur selben Gruppe wie eure Einkaufslisten und gemeinsamen Ausgaben, also eine App und eine Einladung für alles.",
+      },
+      limits: {
+        heading: "Was der Putzplan nicht kann",
+        reminders:
+          "Keine Push-Erinnerungen: Flatsby meldet sich nicht von selbst, ihr seht eure Aufgaben, wenn ihr die App öffnet.",
+        points: "Keine Punkte oder Ranglisten.",
+        swap: "Aufgaben tauschen geht nicht, nur überspringen. Wer für jemanden einspringt, hakt die Aufgabe trotzdem ab, und der Verlauf zeigt, wer sie wirklich erledigt hat.",
+        live: "Nicht live: Was andere abhaken, siehst du, wenn die App neu lädt, also beim Öffnen oder durch Herunterziehen.",
+        alternatives:
+          "Bevor ihr euch entscheidet: Das fehlt noch. Wenn euch Erinnerungen oder Punkte wichtig sind, passt eine App wie Flatastic oder Sweepy vielleicht besser.",
+      },
+    },
+    flatastic: {
+      title: "Flatastic-Alternative: kostenlos und ohne Werbung | Flatsby",
+      description:
+        "Flatsby vs. Flatastic: Putzplan, beliebig viele Einkaufslisten und Kosten teilen ohne Werbung, dazu ein WG-Kalender. Und wo Flatastic vorne liegt.",
+      headline:
+        "Eine Flatastic-Alternative ohne Werbung und ohne Premium für den WG-Alltag",
+      intro:
+        "Flatastic ist eine der bekanntesten WG-Apps, und das zu Recht. Flatsby deckt den WG-Alltag ebenfalls ab, Putzplan, Einkaufsliste und gemeinsame Kasse, zeigt aber keine Werbung und sperrt nichts davon hinter Premium. Dazu kommt ein Kalender für eure Termine.",
+      table: {
+        caption:
+          "Flatsby und Flatastic im Vergleich. Angaben zu Flatastic aus dem App Store, von Google Play und flatastic-app.com, geprüft am 23. Oktober 2026.",
+        chores: "Putzplan",
+        choresFlatastic: "Ja, mit Punktesystem",
+        reminders: "Push-Erinnerungen",
+        calendar: "Kalender für Termine",
+        pinboard: "Pinnwand",
+        lists: "Gemeinsame Einkaufsliste",
+        listsFlatsby: "Ja, beliebig viele Listen",
+        listsFlatastic: "Ja, mehrere Listen mit Premium",
+        expenses: "Ausgaben teilen",
+        ads: "Werbung in der kostenlosen Version",
+        adsFlatastic: "Ja, werbefrei ab 1,99 € im Monat",
+        history: "Verlauf des Putzplans",
+        free: "Kostenlos",
+        withPremium: "Mit Premium",
+        export: "Daten exportieren",
+        exportFlatastic: "CSV-Export mit Premium",
+        households: "Mehrere Haushalte pro Konto",
+        signIn: "Anmeldung",
+        signInFlatsby: "Google oder Apple",
+        signInFlatastic: "E-Mail und Passwort",
+        platforms: "Plattformen",
+      },
+      free: {
+        heading: "Was bei Flatsby kostenlos ist",
+        body: "Kostenlos sind: beliebig viele Einkaufslisten, der Putzplan mit Verlauf, der Kalender, Ausgaben und Ausgleichszahlungen und der Datenexport. Ohne Werbung und ohne Mitgliederbegrenzung. Bezahlpläne gibt es nur für zusätzliche KI-Credits, also für den KI-Assistenten und die automatische Sortierung in Kategorien.",
+      },
+      rent: {
+        heading: "Für Mieten, die nicht gleich verteilt sind",
+        body: "Ausgaben teilt ihr gleichmäßig, nach Prozent, nach Anteilen oder mit genauen Beträgen, zum Beispiel die Miete nach Zimmergröße oder nach Einkommen. Flatsby rechnet aus, mit welchen wenigen Zahlungen alle wieder bei null sind. Wiederkehrende Ausgaben gibt es nicht, die Miete tragt ihr jeden Monat neu ein.",
+      },
+      better: {
+        heading: "Wo Flatastic vorne liegt",
+        body: "Flatastic erinnert per Push-Benachrichtigung an fällige Aufgaben, vergibt Punkte fürs Putzen und hat eine Pinnwand. Flatsby kann nichts davon. Flatastic hat Tausende Bewertungen in den App Stores, und du meldest dich mit E-Mail und Passwort an statt mit Google oder Apple. Wenn euch Erinnerungen oder Punkte wichtig sind, bleibt bei Flatastic.",
+      },
+      data: {
+        heading: "Deine Daten",
+        body: "Datenbank und Server stehen in Frankfurt (Neon, Vercel), die Nutzungsstatistik ohne Werbe-Tracking ebenfalls (PostHog). Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google, und für die automatischen Kategorien gehen Artikel- und Ausgabennamen an ein KI-Modell. Du kannst alles exportieren oder dein Konto in den Einstellungen löschen. Der Code ist Open Source, und Flatsby wird von Raphael Mitas gebaut, einem unabhängigen Entwickler aus Darmstadt.",
+      },
+      moving: {
+        heading: "Von Flatastic zu Flatsby wechseln",
+        household:
+          "Eine Person legt in Flatsby den Haushalt an und lädt die anderen per Link, QR-Code oder Code ein.",
+        chores:
+          "Tragt eure Putzaufgaben im Kalender ein und wählt, wer sich abwechselt.",
+        balances:
+          "Gleicht eure offenen Beträge in Flatastic aus und startet in Flatsby bei null. Einen Import aus Flatastic gibt es nicht.",
       },
     },
     pricing: {
