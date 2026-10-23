@@ -1,11 +1,13 @@
 import { Stack } from "expo-router";
 import { useTranslations } from "use-intl";
 
+import { usePaneHeaderShown } from "~/components/splitview/usePaneHeaderShown";
 import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function ExpenseDetailLayout() {
   const { screenOptions, solidHeader } = useThemedScreenOptions();
   const t = useTranslations();
+  const headerShown = usePaneHeaderShown();
   return (
     <Stack
       screenOptions={{
@@ -16,7 +18,7 @@ export default function ExpenseDetailLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen
         options={{
-          headerShown: true,
+          headerShown,
           headerTitle: t("expenses.editExpense"),
           headerBackTitle: t("common.back"),
           ...solidHeader,
