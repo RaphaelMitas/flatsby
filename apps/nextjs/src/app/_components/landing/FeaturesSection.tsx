@@ -1,19 +1,29 @@
 import type { LucideIcon } from "lucide-react";
-import { Bot, ShoppingCart, Users, Wallet } from "lucide-react";
+import Link from "next/link";
+import { Bot, CalendarCheck, ShoppingCart, Users, Wallet } from "lucide-react";
 import {
   NextIntlClientProvider,
+  useLocale,
   useMessages,
   useTranslations,
 } from "next-intl";
 
+import { localePath } from "@flatsby/i18n/locale";
 import { Avatar, AvatarFallback } from "@flatsby/ui/avatar";
 
+import type { Screenshot } from "./pages";
 import { ChatDemo } from "./ChatDemo";
 import { ExpenseDemo } from "./ExpenseDemo";
+import { ScreenshotImage } from "./ScreenshotImage";
 import { ShoppingListDemo } from "./ShoppingListDemo";
 
-export function FeaturesSection() {
+export function FeaturesSection({
+  calendarShot,
+}: {
+  calendarShot: Screenshot;
+}) {
   const t = useTranslations("marketing.features");
+  const locale = useLocale();
   const { expenses, expenseCategories, shoppingCategories, chat, marketing } =
     useMessages();
   // The demos reuse app components, which translate in the browser.
@@ -37,6 +47,24 @@ export function FeaturesSection() {
 
         <NextIntlClientProvider messages={demoMessages}>
           <div className="flex flex-col gap-16 md:gap-24">
+            <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+              <div className="order-1">
+                <ScreenshotImage shot={calendarShot} />
+              </div>
+              <div className="order-2">
+                <FeatureText
+                  icon={CalendarCheck}
+                  title={t("calendar.title")}
+                  body={t("calendar.body")}
+                />
+                <Link
+                  href={localePath(locale, "/features/calendar")}
+                  className="text-primary mt-4 inline-block underline"
+                >
+                  {t("calendar.link")}
+                </Link>
+              </div>
+            </div>
             <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
               <FeatureText
                 className="order-2 md:order-1"
@@ -104,7 +132,7 @@ function FeatureText({
   title,
   body,
 }: {
-  className: string;
+  className?: string;
   icon: LucideIcon;
   title: string;
   body: string;

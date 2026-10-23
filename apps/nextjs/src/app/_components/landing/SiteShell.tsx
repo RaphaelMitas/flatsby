@@ -25,6 +25,7 @@ export function SiteShell({
   const local = (href: string) => localePath(locale, href);
 
   const nav = [
+    { href: local("/features/calendar"), label: t("calendar") },
     { href: local("/features/shopping-lists"), label: t("shoppingLists") },
     { href: local("/features/expenses"), label: t("expenses") },
     {
@@ -39,12 +40,17 @@ export function SiteShell({
     {
       title: t("product"),
       links: [
+        { href: local("/features/calendar"), label: t("calendar") },
         { href: local("/features/shopping-lists"), label: t("shoppingLists") },
         { href: local("/features/expenses"), label: t("expenseSplitting") },
         { href: local("/features/ai-assistant"), label: t("aiAssistant") },
         {
           href: local("/splitwise-alternative"),
           label: t("splitwiseAlternative"),
+        },
+        {
+          href: local("/flatastic-alternative"),
+          label: t("flatasticAlternative"),
         },
         { href: local("/pricing"), label: t("pricing") },
         { href: local("/faq"), label: t("faq") },

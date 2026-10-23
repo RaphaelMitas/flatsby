@@ -78,6 +78,7 @@ export const config = {
     "/features/:path*",
     "/legal/:path*",
     "/splitwise-alternative",
+    "/flatastic-alternative",
     "/pricing",
     "/faq",
     "/auth/login",
