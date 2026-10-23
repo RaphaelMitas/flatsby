@@ -4,6 +4,7 @@ import { useTranslations } from "use-intl";
 
 import { ExpenseListPanel } from "~/components/expenses/ExpenseListPanel";
 import { useMediaQuery } from "~/components/splitview/useMediaQuery";
+import { usePaneHeaderShown } from "~/components/splitview/usePaneHeaderShown";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
@@ -14,10 +15,12 @@ export default function ExpensesIndex() {
   const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
   const isLargeScreen = useMediaQuery("md");
+  const headerShown = usePaneHeaderShown();
 
   if (!selectedGroupId) {
     return (
-      <SafeAreaView>
+      // Without pane headers the layout already pads the top
+      <SafeAreaView edges={headerShown ? ["top"] : []}>
         <View className="flex-1 items-center justify-center gap-4 p-4">
           <Icon name="wallet" size={48} color="muted-foreground" />
           <Text className="text-muted-foreground text-center text-lg font-semibold">
