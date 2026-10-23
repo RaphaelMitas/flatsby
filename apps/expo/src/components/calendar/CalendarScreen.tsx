@@ -34,6 +34,7 @@ import { CalendarList } from "./CalendarList";
 import { TurnBar, useCalendarPeople } from "./CalendarPeople";
 import { setCalendarPosition, useCalendarPosition } from "./calendarPosition";
 import { MonthGrid } from "./MonthGrid";
+import { SwipeSteps } from "./SwipeSteps";
 import { useCalendarMutations } from "./useCalendarMutations";
 
 export const calendarRangeOptions = (
@@ -173,47 +174,55 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         onChange={setMember}
       />
 
-      {data?.success === false ? (
-        <Text className="text-destructive p-4 text-center">
-          {data.error.message}
-        </Text>
-      ) : view === "list" ? (
-        <CalendarList
-          agenda={agenda}
-          dates={weekDays(start)}
-          today={today}
-          people={people}
-          member={member}
-          onRefresh={refetch}
-          onToggle={(entry, done) => setDone(tickInput(group.id, entry, done))}
-          onOpen={(entry) =>
-            router.push({
-              pathname: "/(tabs)/calendar/[itemId]",
-              params: {
-                itemId: String(entry.item.id),
-                // Only an open occurrence can be skipped
-                ...(!entry.occurrence.completedAt && {
-                  date: entry.occurrence.date,
-                  ...(entry.missed?.length
-                    ? { missed: entry.missed.join(",") }
-                    : {}),
-                }),
-              },
-            })
-          }
-        />
-      ) : (
-        <MonthGrid
-          month={month}
-          days={agenda?.days}
-          today={today}
-          onSelect={(date) =>
-            setCalendarPosition(
-              showDate({ ...position, view: "list" }, date, today),
-            )
-          }
-        />
-      )}
+      <SwipeSteps
+        onStep={(delta) =>
+          setCalendarPosition(stepPosition(position, delta, today))
+        }
+      >
+        {data?.success === false ? (
+          <Text className="text-destructive p-4 text-center">
+            {data.error.message}
+          </Text>
+        ) : view === "list" ? (
+          <CalendarList
+            agenda={agenda}
+            dates={weekDays(start)}
+            today={today}
+            people={people}
+            member={member}
+            onRefresh={refetch}
+            onToggle={(entry, done) =>
+              setDone(tickInput(group.id, entry, done))
+            }
+            onOpen={(entry) =>
+              router.push({
+                pathname: "/(tabs)/calendar/[itemId]",
+                params: {
+                  itemId: String(entry.item.id),
+                  // Only an open occurrence can be skipped
+                  ...(!entry.occurrence.completedAt && {
+                    date: entry.occurrence.date,
+                    ...(entry.missed?.length
+                      ? { missed: entry.missed.join(",") }
+                      : {}),
+                  }),
+                },
+              })
+            }
+          />
+        ) : (
+          <MonthGrid
+            month={month}
+            days={agenda?.days}
+            today={today}
+            onSelect={(date) =>
+              setCalendarPosition(
+                showDate({ ...position, view: "list" }, date, today),
+              )
+            }
+          />
+        )}
+      </SwipeSteps>
 
       <View className="absolute right-4 bottom-4">
         <Button

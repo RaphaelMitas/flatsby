@@ -11,6 +11,7 @@ import {
   useEffect,
   useEffectEvent,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -69,6 +70,8 @@ import { CalendarList } from "./CalendarList";
 import { TurnBar } from "./CalendarPeople";
 import { MonthGrid } from "./MonthGrid";
 import { useCalendarMutations } from "./useCalendarMutations";
+
+const SWIPE_DISTANCE = 60;
 
 type Panel =
   | { type: "detail"; entry: AgendaEntry }
@@ -165,6 +168,7 @@ function CalendarScreen({
     );
   };
   const step = (delta: number) => moveTo(stepPosition(position, delta, today));
+  const swipeStart = useRef<{ x: number; y: number } | undefined>(undefined);
 
   // Arrow keys belong to an open form or detail
   const onArrow = useEffectEvent((delta: number) => {
@@ -376,28 +380,47 @@ function CalendarScreen({
         member={member}
         onChange={setMember}
       />
-      {view === "list" ? (
-        <CalendarList
-          agenda={agenda}
-          dates={weekDays(start)}
-          today={today}
-          meId={meId}
-          members={members}
-          member={member}
-          onToggle={(entry, done) => setDone(tickInput(groupId, entry, done))}
-          onOpen={openEntry}
-        />
-      ) : (
-        <MonthGrid
-          month={month}
-          days={agenda?.days}
-          today={today}
-          onSelect={(date) =>
-            moveTo(showDate({ ...position, view: "list" }, date, today))
-          }
-          onOpen={openEntry}
-        />
-      )}
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        onTouchStart={(event) => {
+          const touch = event.touches[0];
+          swipeStart.current = touch && { x: touch.clientX, y: touch.clientY };
+        }}
+        onTouchEnd={(event) => {
+          const from = swipeStart.current;
+          const touch = event.changedTouches[0];
+          if (!from || !touch) return;
+          const dx = touch.clientX - from.x;
+          if (
+            Math.abs(dx) > SWIPE_DISTANCE &&
+            Math.abs(dx) > 2 * Math.abs(touch.clientY - from.y)
+          )
+            step(dx < 0 ? 1 : -1);
+        }}
+      >
+        {view === "list" ? (
+          <CalendarList
+            agenda={agenda}
+            dates={weekDays(start)}
+            today={today}
+            meId={meId}
+            members={members}
+            member={member}
+            onToggle={(entry, done) => setDone(tickInput(groupId, entry, done))}
+            onOpen={openEntry}
+          />
+        ) : (
+          <MonthGrid
+            month={month}
+            days={agenda?.days}
+            today={today}
+            onSelect={(date) =>
+              moveTo(showDate({ ...position, view: "list" }, date, today))
+            }
+            onOpen={openEntry}
+          />
+        )}
+      </div>
     </div>
   );
 
