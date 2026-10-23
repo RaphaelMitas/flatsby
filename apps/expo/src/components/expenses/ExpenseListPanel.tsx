@@ -48,12 +48,14 @@ function ExpenseList() {
   const isLargeScreen = useMediaQuery("md");
   const { expenseId } = useGlobalSearchParams<{ expenseId?: string }>();
   const pathname = usePathname();
-  // Beside the stack, a new pick replaces what the pane shows instead of piling up
+  const inPane = isLargeScreen && pathname !== "/expenses";
+  // Beside the stack, a pick swaps what the pane shows instead of piling up
   const open = (href: Href) =>
-    isLargeScreen && pathname !== "/expenses"
-      ? router.replace(href)
-      : router.push(href);
-  const createExpense = () => open("/(tabs)/expenses/create");
+    inPane ? router.replace(href) : router.push(href);
+  // dismissTo returns to a named screen that is already open, keeping its draft
+  const openScreen = (href: Href) =>
+    inPane ? router.dismissTo(href) : router.push(href);
+  const createExpense = () => openScreen("/(tabs)/expenses/create");
 
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: selectedGroupId ?? -1 }),
@@ -99,17 +101,16 @@ function ExpenseList() {
   const hasExpenses = allExpenses.length > 0;
 
   const handleEdit = (expense: ExpenseWithSplitsAndMembers) => {
-    if (expense.splitMethod === "settlement") {
-      open({
-        pathname: "/(tabs)/expenses/settle",
-        params: { expenseId: expense.id.toString() },
-      });
-    } else {
-      open({
-        pathname: "/(tabs)/expenses/[expenseId]/edit",
-        params: { expenseId: expense.id.toString() },
-      });
-    }
+    const id = expense.id.toString();
+    const isSettlement = expense.splitMethod === "settlement";
+    const path = isSettlement ? "/expenses/settle" : `/expenses/${id}/edit`;
+    if (pathname === path && expenseId === id) return;
+    open({
+      pathname: isSettlement
+        ? "/(tabs)/expenses/settle"
+        : "/(tabs)/expenses/[expenseId]/edit",
+      params: { expenseId: id },
+    });
   };
 
   return (
@@ -127,7 +128,7 @@ function ExpenseList() {
             title={t("expenses.debtOverview")}
             size="md"
             icon="arrow-right"
-            onPress={() => open("/(tabs)/expenses/debts")}
+            onPress={() => openScreen("/(tabs)/expenses/debts")}
           />
           {isLargeScreen && (
             <Button

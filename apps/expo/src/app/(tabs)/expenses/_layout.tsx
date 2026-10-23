@@ -10,7 +10,7 @@ import { TabSafeArea } from "~/lib/ui/safe-area";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useShoppingStore } from "~/utils/shopping-store";
 
-export const unstable_settings = { initialRouteName: "index" };
+export const unstable_settings = { anchor: "index" };
 
 export default function ExpensesLayout() {
   const { screenOptions, solidHeader } = useThemedScreenOptions();
