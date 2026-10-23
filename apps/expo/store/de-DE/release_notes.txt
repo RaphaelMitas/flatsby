@@ -1,6 +1,6 @@
-• Probier die neue Startseite: Was heute ansteht, etwa deine nächste Aufgabe oder eine offene Schuld, steht oben. Zurück geht's jederzeit in den Einstellungen.
-• Der Kalender ist jetzt eine durchgehende Liste. Beim Scrollen klappt der Monat zur Woche zusammen, durch die du wischen kannst.
-• Wiederkehrende Aufgaben und Termine können jetzt an einem Datum enden.
-• Nach dem Speichern einer Ausgabe geht's direkt zur Liste.
-• Liquid Glass unter iOS 26.
+• Der Kalender ist übersichtlicher: eine Liste der nächsten sieben Tage oder eine Monatsansicht, in der jeder Eintrag ausgeschrieben ist. Umschalten geht neben dem Titel, Wischen springt eine Woche oder einen Monat weiter.
+• Verpasste Aufgaben stehen jetzt oben unter Überfällig. Einmal abhaken oder überspringen erledigt alle verpassten Tage.
+• Filtere den Kalender nach Mitbewohnern, mit der Zahl ihrer offenen Aufgaben.
+• Ein Einladungslink, den du abgemeldet öffnest, unterbricht die Anmeldung nicht mehr.
+• Einkaufsvorschläge zeigen neue Artikel sofort.
 • Kleine Fehlerbehebungen und Verbesserungen.
