@@ -17,6 +17,10 @@
         position: absolute;
         z-index: 5;
       }
+      .scene {
+        position: absolute;
+        inset: 0;
+      }
       .crop {
         position: absolute;
         background-color: #09090b;
@@ -33,6 +37,7 @@
       const q = new URLSearchParams(location.search);
       const asset = q.get("asset") ?? "search";
       const lang = q.get("lang") ?? "en";
+      const video = q.has("video");
       const src = (name) => `/captures/ios/${lang}/${name}.png`;
 
       // `card` crops are whole cards, so they keep the card's rounded corner radius.
@@ -82,6 +87,17 @@
               cat: { size: 620, cut: 0.555 },
             },
           ],
+          // The video opens with the app answering each bubble before settling into the banner.
+          intro: {
+            bubbles: [
+              { x: 300, y: 150, rot: -3, size: 52 },
+              { x: 380, y: 520, rot: 3, size: 52 },
+            ],
+            crops: [
+              { region: "internet", x: 1040, y: 110, w: 580 },
+              { region: "oatMilk", x: 1040, y: 530, w: 580 },
+            ],
+          },
         },
         play: {
           width: 1024,
@@ -109,12 +125,15 @@
         .then(async (captions) => {
           const copy = captions[lang][asset];
           const layout = LAYOUTS[asset];
+          const intro = video ? layout.intro : undefined;
           const u = window.innerWidth / layout.width;
           const px = (n) => `${n * u}px`;
           document.documentElement.lang = lang;
 
           const names = new Set(
-            layout.crops.map((c) => REGIONS[c.region].crop),
+            [...layout.crops, ...(intro?.crops ?? [])].map(
+              (c) => REGIONS[c.region].crop,
+            ),
           );
           const [images] = await Promise.all([
             Promise.all(
@@ -125,52 +144,82 @@
             document.fonts.load('600 100px "Inter"'),
           ]);
 
-          for (const c of layout.crops) {
+          const placeCrop = (c, parent) => {
+            const group = place("scene", {}, parent);
             const { crop, card, trim = 0 } = REGIONS[c.region];
             const { naturalWidth, naturalHeight } = images[crop];
             const s = (c.w * u) / (naturalWidth * (1 - 2 * trim));
-            place("crop", {
-              left: px(c.x),
-              top: px(c.y),
-              width: px(c.w),
-              height: `${naturalHeight * s}px`,
-              borderRadius: card ? `${CARD_RADIUS * s}px` : px(c.w * 0.045),
-              boxShadow: `0 ${px(c.w * 0.02)} ${px(c.w * 0.07)} rgba(9, 9, 11, 0.28)`,
-              backgroundImage: `url("${src(crop)}")`,
-              backgroundSize: `${naturalWidth * s}px auto`,
-              backgroundPosition: `${-trim * naturalWidth * s}px 0`,
-            });
+            place(
+              "crop",
+              {
+                left: px(c.x),
+                top: px(c.y),
+                width: px(c.w),
+                height: `${naturalHeight * s}px`,
+                borderRadius: card ? `${CARD_RADIUS * s}px` : px(c.w * 0.045),
+                boxShadow: `0 ${px(c.w * 0.02)} ${px(c.w * 0.07)} rgba(9, 9, 11, 0.28)`,
+                backgroundImage: `url("${src(crop)}")`,
+                backgroundSize: `${naturalWidth * s}px auto`,
+                backgroundPosition: `${-trim * naturalWidth * s}px 0`,
+              },
+              group,
+            );
             if (c.cat) {
               const { size, cut, at = 0.5 } = c.cat;
-              placeCat({
-                size: size * u,
-                cut,
-                centerX: (c.x + c.w * at) * u,
-                bottom: c.y * u,
-              });
+              placeCat(
+                {
+                  size: size * u,
+                  cut,
+                  centerX: (c.x + c.w * at) * u,
+                  bottom: c.y * u,
+                },
+                group,
+              );
             }
-          }
+            return group;
+          };
 
-          layout.bubbles.forEach((b, i) => {
-            const el = place(`bubble${b.out ? " out" : ""}`, {
-              fontSize: px(b.size),
-              top: px(b.y),
-              transform: `rotate(${b.rot}deg)`,
-            });
-            el.textContent = copy.bubbles[i];
+          const placeBubble = (b, text, parent) => {
+            const el = place(
+              `bubble${b.out ? " out" : ""}`,
+              {
+                fontSize: px(b.size),
+                top: px(b.y),
+                transform: `rotate(${b.rot}deg)`,
+              },
+              parent,
+            );
+            el.textContent = text;
             if (b.right !== undefined) el.style.right = px(b.right);
             else el.style.left = px(b.x);
-          });
+            return el;
+          };
+
+          const scene = place("scene", {});
+          const introScene = intro && place("scene", {}, scene);
+          const groups = layout.crops.map((c) => placeCrop(c, scene));
+          const bubbles = layout.bubbles.map((b, i) =>
+            placeBubble(b, copy.bubbles[i], scene),
+          );
 
           const h = layout.headline;
           const h1 = document.createElement("h1");
-          h1.textContent = copy.headline;
+          // Sentences become spans so the video can land them one at a time.
+          const lines = (
+            video ? copy.headline.split(/(?<=\.) /) : [copy.headline]
+          ).map((line) => {
+            const span = document.createElement("span");
+            span.textContent = line;
+            if (video) span.style.display = "inline-block";
+            h1.append(span, " ");
+            return span;
+          });
           Object.assign(h1.style, {
             left: px(h.x),
             top: px(h.y),
             width: px(h.w),
           });
-          document.body.appendChild(h1);
+          scene.appendChild(h1);
           let size = h.size;
           const fit = () => {
             h1.style.fontSize = px(size);
@@ -180,6 +229,117 @@
             );
           };
           while (!fit() && size > h.size * 0.6) size -= 2;
+
+          if (intro) {
+            // Paused animations on an absolute timeline; render.mjs steps currentTime frame by frame.
+            const at = (el, frames, easing = "cubic-bezier(.2,.8,.3,1)") => {
+              const t0 = frames[0][0];
+              const t1 = frames.at(-1)[0];
+              el.animate(
+                frames.map(([t, f]) => ({
+                  ...f,
+                  offset: (t - t0) / (t1 - t0),
+                })),
+                { delay: t0, duration: t1 - t0, fill: "both", easing },
+              ).pause();
+            };
+            const pop = (el, t) => {
+              const rot = el.style.transform;
+              el.style.transformOrigin = el.classList.contains("out")
+                ? "100% 100%"
+                : "0 100%";
+              at(el, [
+                [
+                  t,
+                  {
+                    opacity: 0,
+                    transform: `${rot} scale(.5) translateY(${px(40)})`,
+                  },
+                ],
+                [t + 290, { opacity: 1, transform: `${rot} scale(1.06)` }],
+                [t + 450, { opacity: 1, transform: rot }],
+              ]);
+            };
+
+            intro.bubbles.forEach((b, i) =>
+              pop(placeBubble(b, copy.bubbles[i], introScene), [200, 1900][i]),
+            );
+            intro.crops.forEach((c, i) => {
+              const t = [1000, 2700][i];
+              at(placeCrop(c, introScene), [
+                [t, { opacity: 0, transform: `translateX(${px(120)})` }],
+                [t + 600, { opacity: 1, transform: "none" }],
+              ]);
+            });
+            at(
+              introScene,
+              [
+                [4300, { opacity: 1, transform: "none" }],
+                [
+                  4800,
+                  {
+                    opacity: 0,
+                    transform: `translateY(${px(-60)}) scale(.96)`,
+                  },
+                ],
+              ],
+              "ease-in",
+            );
+
+            bubbles.forEach((el, i) => pop(el, 4800 + i * 250));
+            lines.forEach((el, i) =>
+              at(
+                el,
+                [
+                  [5300 + i * 300, { opacity: 0, transform: "scale(1.3)" }],
+                  [5680 + i * 300, { opacity: 1, transform: "none" }],
+                ],
+                "cubic-bezier(.3,1.4,.5,1)",
+              ),
+            );
+            // The card slides in opaque from below the frame with its cat
+            // half up, and the cat stretches to full height as the card lands.
+            for (const group of groups) {
+              const top = Math.min(
+                ...[...group.children].map(
+                  (e) => e.getBoundingClientRect().top,
+                ),
+              );
+              at(
+                group,
+                [
+                  [
+                    5800,
+                    { transform: `translateY(${window.innerHeight - top}px)` },
+                  ],
+                  [6450, { transform: "none" }],
+                ],
+                "cubic-bezier(.2,1.1,.4,1)",
+              );
+              const cat = group.querySelector(".cat");
+              if (!cat) continue;
+              cat.style.transformOrigin = "50% 100%";
+              at(
+                cat,
+                [
+                  [6180, { transform: "scale(1, .55)" }],
+                  [6360, { transform: "scale(.95, 1.12)" }],
+                  [6540, { transform: "scale(1.02, .97)" }],
+                  [6680, { transform: "none" }],
+                ],
+                "ease-out",
+              );
+            }
+            at(
+              scene,
+              [
+                [9300, { opacity: 1 }],
+                [9900, { opacity: 0 }],
+              ],
+              "ease-in",
+            );
+            document.body.dataset.duration = 10_000;
+          }
           document.body.dataset.ready = "true";
         });
     </script>
