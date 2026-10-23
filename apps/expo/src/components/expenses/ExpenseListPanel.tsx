@@ -1,7 +1,7 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useGlobalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -12,27 +12,41 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useMediaQuery } from "../splitview/useMediaQuery";
 import { ExpenseCard } from "./ExpenseCard";
 
-interface ExpenseListPanelProps {
-  selectedExpenseId: number | null;
-  onSelectExpense: (expenseId: number) => void;
-  onCreateExpense: () => void;
+export function ExpenseListPanel() {
+  const t = useTranslations();
+
+  return (
+    <SafeAreaView>
+      <Suspense
+        fallback={
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" />
+            <Text className="text-muted-foreground mt-4">
+              {t("expenses.loadingExpenses")}
+            </Text>
+          </View>
+        }
+      >
+        <ExpenseList />
+      </Suspense>
+    </SafeAreaView>
+  );
 }
 
-export function ExpenseListPanel({
-  selectedExpenseId,
-  onSelectExpense,
-  onCreateExpense,
-}: ExpenseListPanelProps) {
+function ExpenseList() {
   const router = useRouter();
   const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
-  const isLargeScreen = useMediaQuery("lg");
+  const isLargeScreen = useMediaQuery("md");
+  const { expenseId } = useGlobalSearchParams<{ expenseId?: string }>();
+  const createExpense = () => router.push("/(tabs)/expenses/create");
 
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: selectedGroupId ?? -1 }),
@@ -93,7 +107,7 @@ export function ExpenseListPanel({
 
   return (
     <View className="flex-1 px-4">
-      <View className="mb-6 flex-row items-center justify-between">
+      <View className="mb-6 flex-row flex-wrap items-center justify-between gap-2">
         <Text
           testID="expense-heading"
           className="text-foreground text-3xl font-bold"
@@ -114,7 +128,7 @@ export function ExpenseListPanel({
               title={t("expenses.add")}
               size="md"
               icon="plus"
-              onPress={onCreateExpense}
+              onPress={createExpense}
             />
           )}
         </View>
@@ -135,7 +149,7 @@ export function ExpenseListPanel({
             variant="primary"
             size="lg"
             icon="plus"
-            onPress={onCreateExpense}
+            onPress={createExpense}
           />
         </View>
       ) : (
@@ -153,8 +167,7 @@ export function ExpenseListPanel({
                 <ExpenseCard
                   expense={item}
                   groupId={selectedGroupId ?? -1}
-                  isSelected={item.id === selectedExpenseId}
-                  onSelect={() => onSelectExpense(item.id)}
+                  isSelected={item.id.toString() === expenseId}
                   onEdit={() => handleEdit(item)}
                   isNotConverted={isLeftUnconverted(item, groupData.data)}
                 />
@@ -182,7 +195,7 @@ export function ExpenseListPanel({
             testID="expense-add-button"
             size="icon"
             icon="plus"
-            onPress={onCreateExpense}
+            onPress={createExpense}
           />
         </View>
       )}

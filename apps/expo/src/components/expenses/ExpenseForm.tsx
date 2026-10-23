@@ -72,10 +72,6 @@ function useExchangeRate(
 interface ExpenseFormProps {
   group: GroupWithAccess;
   expense?: ExpenseWithSplitsAndMembers;
-  /** Callback when closing the form (for splitview mode). If not provided, uses router.back() */
-  onClose?: () => void;
-  /** Callback when form is successfully submitted. If not provided, uses router.back() */
-  onSuccess?: (expenseId: number) => void;
   closeOnSubmit?: boolean;
   autoFocus?: boolean;
 }
@@ -83,8 +79,6 @@ interface ExpenseFormProps {
 export function ExpenseForm({
   group,
   expense,
-  onClose,
-  onSuccess,
   closeOnSubmit,
   autoFocus = false,
 }: ExpenseFormProps) {
@@ -302,13 +296,7 @@ export function ExpenseForm({
         if (closeOnSubmit) return;
         form.reset();
         setCurrentStep(1);
-        if (onSuccess) {
-          onSuccess(data.data.id);
-        } else if (onClose) {
-          onClose();
-        } else {
-          router.back();
-        }
+        router.back();
       },
     }),
   );
@@ -403,13 +391,7 @@ export function ExpenseForm({
         }
 
         invalidateAll(expense?.id);
-        if (onSuccess && expense?.id) {
-          onSuccess(expense.id);
-        } else if (onClose) {
-          onClose();
-        } else {
-          router.back();
-        }
+        router.back();
       },
     }),
   );

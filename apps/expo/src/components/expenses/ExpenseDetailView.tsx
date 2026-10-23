@@ -39,17 +39,11 @@ import { useInvalidateExpenses } from "./useInvalidateExpenses";
 interface ExpenseDetailViewProps {
   expenseId: number;
   groupId: number;
-  /** Callback when navigating back (for splitview mode). If not provided, uses router.back() */
-  onBack?: () => void;
-  /** Callback when editing (for splitview mode). If not provided, navigates to edit page */
-  onEdit?: () => void;
 }
 
 export function ExpenseDetailView({
   expenseId,
   groupId,
-  onBack,
-  onEdit,
 }: ExpenseDetailViewProps) {
   const router = useRouter();
   const t = useTranslations();
@@ -110,11 +104,7 @@ export function ExpenseDetailView({
         }
 
         invalidateAll();
-        if (onBack) {
-          onBack();
-        } else {
-          router.back();
-        }
+        router.back();
       },
     }),
   );
@@ -153,16 +143,12 @@ export function ExpenseDetailView({
             testID="expense-edit-button"
             title={t("common.edit")}
             variant="outline"
-            onPress={() => {
-              if (onEdit) {
-                onEdit();
-              } else {
-                router.push({
-                  pathname: "/(tabs)/expenses/[expenseId]/edit",
-                  params: { expenseId: expenseId.toString() },
-                });
-              }
-            }}
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/expenses/[expenseId]/edit",
+                params: { expenseId: expenseId.toString() },
+              })
+            }
             className="flex-1"
             disabled={deleteExpenseMutation.isPending}
             icon="pencil"

@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { useTranslations } from "use-intl";
 
+import { TabSafeArea } from "~/lib/ui/safe-area";
 import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function ShoppingListsLayout() {
@@ -8,23 +9,25 @@ export default function ShoppingListsLayout() {
   const t = useTranslations("shoppingList");
 
   return (
-    <Stack screenOptions={screenOptions}>
-      <Stack.Screen
-        name="index"
-        options={{
-          title: t("yourShoppingList"),
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="edit-item"
-        options={{
-          title: t("editItem"),
-          headerBackTitle: "",
-          presentation: "modal",
-          ...solidHeader,
-        }}
-      />
-    </Stack>
+    <TabSafeArea>
+      <Stack screenOptions={screenOptions}>
+        <Stack.Screen
+          name="index"
+          options={{
+            title: t("yourShoppingList"),
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="edit-item"
+          options={{
+            title: t("editItem"),
+            headerBackTitle: "",
+            presentation: "modal",
+            ...solidHeader,
+          }}
+        />
+      </Stack>
+    </TabSafeArea>
   );
 }

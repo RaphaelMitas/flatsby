@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { useTranslations } from "use-intl";
 
+import { TabSafeArea } from "~/lib/ui/safe-area";
 import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function HomeLayout() {
@@ -8,34 +9,36 @@ export default function HomeLayout() {
   const t = useTranslations("navigation");
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        ...screenOptions,
-      }}
-    >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: t("home"),
+    <TabSafeArea>
+      <Stack
+        screenOptions={{
           headerShown: false,
+          ...screenOptions,
         }}
-      />
-      <Stack.Screen
-        name="create-group"
-        options={{
-          title: t("createGroup"),
-          presentation: "modal",
-          headerShown: true,
-          ...solidHeader,
-        }}
-      />
-      <Stack.Screen
-        name="shopping-lists"
-        options={{
-          headerShown: false,
-        }}
-      />
-    </Stack>
+      >
+        <Stack.Screen
+          name="index"
+          options={{
+            title: t("home"),
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="create-group"
+          options={{
+            title: t("createGroup"),
+            presentation: "modal",
+            headerShown: true,
+            ...solidHeader,
+          }}
+        />
+        <Stack.Screen
+          name="shopping-lists"
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Stack>
+    </TabSafeArea>
   );
 }
