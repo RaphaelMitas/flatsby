@@ -49,7 +49,6 @@ function ExpenseList() {
   const { expenseId } = useGlobalSearchParams<{ expenseId?: string }>();
   const pathname = usePathname();
   const inPane = isLargeScreen && pathname !== "/expenses";
-  // Beside the stack, a pick swaps what the pane shows instead of piling up
   const open = (href: Href) =>
     inPane ? router.replace(href) : router.push(href);
   // dismissTo returns to a named screen that is already open, keeping its draft
