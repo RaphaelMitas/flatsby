@@ -50,6 +50,7 @@ import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
+import { useCloseScreen } from "~/utils/useCloseScreen";
 import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
 import { currencyItems } from "./currencyItems";
@@ -72,17 +73,16 @@ function useExchangeRate(
 interface ExpenseFormProps {
   group: GroupWithAccess;
   expense?: ExpenseWithSplitsAndMembers;
-  closeOnSubmit?: boolean;
   autoFocus?: boolean;
 }
 
 export function ExpenseForm({
   group,
   expense,
-  closeOnSubmit,
   autoFocus = false,
 }: ExpenseFormProps) {
   const router = useRouter();
+  const close = useCloseScreen();
   const t = useTranslations();
   const locale = useLocale();
   const trpcClient = trpc;
@@ -293,10 +293,6 @@ export function ExpenseForm({
         }
 
         invalidateAll();
-        if (closeOnSubmit) return;
-        form.reset();
-        setCurrentStep(1);
-        router.back();
       },
     }),
   );
@@ -391,7 +387,7 @@ export function ExpenseForm({
         }
 
         invalidateAll(expense?.id);
-        router.back();
+        close();
       },
     }),
   );
@@ -429,7 +425,7 @@ export function ExpenseForm({
         splits,
         splitMethod: values.splitMethod,
       });
-      if (closeOnSubmit) router.back();
+      router.back();
     }
   };
 

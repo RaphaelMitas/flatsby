@@ -1,7 +1,8 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
+import type { Href } from "expo-router";
 import { Suspense, useCallback, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { useGlobalSearchParams, useRouter } from "expo-router";
+import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -46,7 +47,13 @@ function ExpenseList() {
   const { selectedGroupId } = useShoppingStore();
   const isLargeScreen = useMediaQuery("md");
   const { expenseId } = useGlobalSearchParams<{ expenseId?: string }>();
-  const createExpense = () => router.push("/(tabs)/expenses/create");
+  const pathname = usePathname();
+  // Beside the stack, a new pick replaces what the pane shows instead of piling up
+  const open = (href: Href) =>
+    isLargeScreen && pathname !== "/expenses"
+      ? router.replace(href)
+      : router.push(href);
+  const createExpense = () => open("/(tabs)/expenses/create");
 
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: selectedGroupId ?? -1 }),
@@ -93,12 +100,12 @@ function ExpenseList() {
 
   const handleEdit = (expense: ExpenseWithSplitsAndMembers) => {
     if (expense.splitMethod === "settlement") {
-      router.push({
+      open({
         pathname: "/(tabs)/expenses/settle",
         params: { expenseId: expense.id.toString() },
       });
     } else {
-      router.push({
+      open({
         pathname: "/(tabs)/expenses/[expenseId]/edit",
         params: { expenseId: expense.id.toString() },
       });
@@ -120,7 +127,7 @@ function ExpenseList() {
             title={t("expenses.debtOverview")}
             size="md"
             icon="arrow-right"
-            onPress={() => router.push(`/(tabs)/expenses/debts`)}
+            onPress={() => open("/(tabs)/expenses/debts")}
           />
           {isLargeScreen && (
             <Button
@@ -168,6 +175,7 @@ function ExpenseList() {
                   expense={item}
                   groupId={selectedGroupId ?? -1}
                   isSelected={item.id.toString() === expenseId}
+                  onSelect={() => open(`/(tabs)/expenses/${item.id}`)}
                   onEdit={() => handleEdit(item)}
                   isNotConverted={isLeftUnconverted(item, groupData.data)}
                 />

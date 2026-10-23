@@ -62,9 +62,6 @@ export default function ExpensesLayout() {
             />
             <Stack.Screen
               name="[expenseId]"
-              // One detail at a time: picking another expense in the list pane
-              // replaces it instead of growing the back stack.
-              dangerouslySingular={() => "expense"}
               options={{
                 headerShown: true,
                 headerTitle: t("expenses.expenseDetails"),

@@ -32,6 +32,7 @@ import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 import { Separator } from "~/lib/ui/separator";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { useCloseScreen } from "~/utils/useCloseScreen";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { RateInfoButton } from "./RateInfoButton";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
@@ -46,6 +47,7 @@ export function ExpenseDetailView({
   groupId,
 }: ExpenseDetailViewProps) {
   const router = useRouter();
+  const close = useCloseScreen();
   const t = useTranslations();
   const locale = useLocale();
   const trpcClient = trpc;
@@ -104,7 +106,7 @@ export function ExpenseDetailView({
         }
 
         invalidateAll();
-        router.back();
+        close();
       },
     }),
   );
