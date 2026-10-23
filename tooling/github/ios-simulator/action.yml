@@ -1,0 +1,39 @@
+name: "iOS simulator"
+description: "Create and start booting a fresh simulator: the newest matching device on the newest runtime that has one"
+
+inputs:
+  device:
+    description: 'Regex for the device type name, e.g. "^iPhone [0-9]+ Pro Max$"'
+    required: true
+
+outputs:
+  udid:
+    description: "The new simulator; run `simctl bootstatus` on it before use"
+    value: ${{ steps.create.outputs.udid }}
+
+runs:
+  using: composite
+  steps:
+    # A fresh device, not one of the image's: those come paired with Watch
+    # simulators, and booting a paired iPhone sometimes aborts CoreSimulator
+    # ("Invalid parameter not satisfying: devicePair").
+    - id: create
+      shell: bash
+      env:
+        DEVICE: ${{ inputs.device }}
+      run: |
+        read -r DEVICE_TYPE RUNTIME < <(xcrun simctl list runtimes available --json | jq -r --arg re "$DEVICE" '
+          [.runtimes[] | select(.platform == "iOS") | . as $runtime
+            | .supportedDeviceTypes[] | select(.name | test($re))
+            | {runtime: $runtime.identifier, type: .identifier,
+               v: ($runtime.version | split(".") | map(tonumber)),
+               n: ([.name | scan("[0-9]+") | tonumber] | first // 0)}]
+          | sort_by(.v, .n) | last // empty | "\(.type) \(.runtime)"') || true
+        if [ -z "$DEVICE_TYPE" ]; then
+          echo "::error::No simulator matching $DEVICE on this image"
+          xcrun simctl list runtimes available
+          exit 1
+        fi
+        UDID=$(xcrun simctl create e2e "$DEVICE_TYPE" "$RUNTIME")
+        xcrun simctl boot "$UDID"
+        echo "udid=$UDID" >> "$GITHUB_OUTPUT"

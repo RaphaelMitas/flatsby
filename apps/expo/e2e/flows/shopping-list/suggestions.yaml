@@ -36,7 +36,9 @@ tags:
 - tapOn:
     id: "shopping-list-add-item-button"
 - extendedWaitUntil:
-    visible: "Milk"
+    visible:
+      id: "shopping-list-item-checkbox-Milk"
+      enabled: true
     timeout: 15000
 
 # Type a prefix -> the suggestion badge appears

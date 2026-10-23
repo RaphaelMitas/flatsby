@@ -1,10 +1,10 @@
 import "~/polyfills";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Stack, usePathname, useSegments } from "expo-router";
+import { router, Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
@@ -110,10 +110,30 @@ function ScreenTracker() {
   return null;
 }
 
+// Sign-in only stores the cookie and refetches; the index route is what leaves
+// login for home or a remembered invite. Mounted with the stack, so a cold
+// start's first session doesn't count as a sign-in.
+function SignInNavigator() {
+  const userId = useSession().data?.user.id;
+  const previousUserId = useRef(userId);
+
+  useEffect(() => {
+    const arrived = userId !== undefined && userId !== previousUserId.current;
+    previousUserId.current = userId;
+    if (!arrived) return;
+    if (router.canDismiss()) router.dismissAll();
+    router.replace("/");
+  }, [userId]);
+
+  return null;
+}
+
 const StackLayout = () => {
   const t = useTranslations();
   const { screenOptions, solidHeader } = useThemedScreenOptions();
   const { data, isPending } = useSession();
+  const [sessionResolved, setSessionResolved] = useState(!isPending);
+  if (!isPending && !sessionResolved) setSessionResolved(true);
   const { hydrated } = useShoppingStore();
   const userId = data?.user.id;
 
@@ -125,13 +145,16 @@ const StackLayout = () => {
   }, [userId]);
 
   // The Expo client restores a cached session into data while it revalidates.
-  if ((isPending && !data) || !hydrated) {
+  // Later refetches (every app focus) set isPending again while signed out,
+  // and blanking then would unmount the screen the user is on.
+  if ((!sessionResolved && !data) || !hydrated) {
     return <View className="bg-background flex-1" />;
   }
 
   return (
     <View className="bg-background flex-1">
       <ScreenTracker />
+      <SignInNavigator />
       <InstallReferrer />
       <UpdateNudge />
       <Stack

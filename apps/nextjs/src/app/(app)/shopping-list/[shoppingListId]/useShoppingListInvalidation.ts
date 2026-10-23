@@ -38,7 +38,10 @@ export function useShoppingListInvalidation(
   const invalidateAll = useCallback(() => {
     void invalidateItems();
     void invalidateCategoryCounts();
-  }, [invalidateItems, invalidateCategoryCounts]);
+    void queryClient.invalidateQueries(
+      trpc.shoppingList.suggestItems.pathFilter(),
+    );
+  }, [queryClient, trpc, invalidateItems, invalidateCategoryCounts]);
 
   return {
     invalidateItems,

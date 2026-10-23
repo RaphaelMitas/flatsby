@@ -173,21 +173,17 @@ tags:
       id: "expense-form-submit"
     timeout: 20000
 # Relaunch so the detail view reads the saved expense, not the optimistic cache
-- launchApp
-- extendedWaitUntil:
-    visible:
-      id: "dashboard-group-picker"
-    timeout: 60000
+- runFlow:
+    file: ../../subflows/relaunch.yaml
+    env:
+      MARKER_ID: "dashboard-group-picker"
 - runFlow:
     file: ../../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-expenses"
       TAB_LABEL: "Expenses"
       TAB_X: "39%"
-- extendedWaitUntil:
-    visible:
-      id: "expense-heading"
-    timeout: 15000
+      MARKER_ID: "expense-heading"
 - tapOn: "Shares groceries"
 - extendedWaitUntil:
     visible:

@@ -26,8 +26,11 @@ tags:
     id: "picker-item-produce"
 - tapOn:
     id: "shopping-list-add-item-button"
+# The optimistic row's checkbox stays disabled until the server confirms it
 - extendedWaitUntil:
-    visible: "Apples"
+    visible:
+      id: "shopping-list-item-checkbox-Apples"
+      enabled: true
     timeout: 15000
 - assertVisible: "Produce"
 

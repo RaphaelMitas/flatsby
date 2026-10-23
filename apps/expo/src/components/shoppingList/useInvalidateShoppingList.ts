@@ -48,7 +48,10 @@ export function useInvalidateShoppingList({
     void invalidateItems();
     void invalidateCategoryCounts();
     void invalidateLists();
-  }, [invalidateItems, invalidateCategoryCounts, invalidateLists]);
+    void queryClient.invalidateQueries(
+      trpc.shoppingList.suggestItems.pathFilter(),
+    );
+  }, [queryClient, invalidateItems, invalidateCategoryCounts, invalidateLists]);
 
   return {
     invalidateItems,

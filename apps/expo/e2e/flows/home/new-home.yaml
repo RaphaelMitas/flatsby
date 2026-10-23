@@ -11,11 +11,10 @@ tags:
       id: "shopping-list-create-button"
     timeout: 15000
 # A relaunch opens the home on the selected group
-- launchApp
-- extendedWaitUntil:
-    visible:
-      id: "home-invite"
-    timeout: 30000
+- runFlow:
+    file: ../../subflows/relaunch.yaml
+    env:
+      MARKER_ID: "home-invite"
 - tapOn:
     id: "home-invite-try"
 - extendedWaitUntil:
@@ -37,11 +36,10 @@ tags:
     timeout: 15000
 
 # The choice survives a relaunch, and switching back returns the classic home
-- launchApp
-- extendedWaitUntil:
-    visible:
-      id: "home-for-you"
-    timeout: 30000
+- runFlow:
+    file: ../../subflows/relaunch.yaml
+    env:
+      MARKER_ID: "home-for-you"
 - scrollUntilVisible:
     element:
       id: "home-switch-back"
