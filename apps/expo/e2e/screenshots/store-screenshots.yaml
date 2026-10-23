@@ -210,10 +210,14 @@ appId: ${APP_ID}
     path: e2e/results/screenshots/${output.locale}/crop-row-bathroom
     cropOn:
       id: "calendar-row-${output.store.bathroom}"
+      childOf:
+        id: "calendar-agenda-today"
 - takeScreenshot:
     path: e2e/results/screenshots/${output.locale}/crop-row-bins
     cropOn:
       id: "calendar-row-${output.store.bins}"
+      childOf:
+        id: "calendar-agenda-today"
 
 # Members screen (reached from the overview's group-settings button); the
 # three seeded members are a read, confirmed by the count header's id.

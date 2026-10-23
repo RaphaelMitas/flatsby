@@ -1,7 +1,7 @@
 import type { GroupWithAccess, ShoppingListSummary } from "@flatsby/api";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Pressable, Text, View } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -10,12 +10,12 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 
 import {
-  addDays,
   formatCalendarDate,
-  HOME_LOOKAHEAD_DAYS,
-  HOME_LOOKBACK_DAYS,
   homeAgenda,
+  listWindow,
   localDate,
+  tickInput,
+  timesMissed,
 } from "@flatsby/validators/calendar";
 import { myDebts } from "@flatsby/validators/expenses/debt";
 import {
@@ -26,6 +26,7 @@ import {
 import type { Nudge } from "./ForYouCard";
 import type { HomeRowProps } from "./HomeRows";
 import { fromPickerTime } from "~/components/calendar/calendarDates";
+import { calendarRangeOptions } from "~/components/calendar/CalendarScreen";
 import { useCalendarMutations } from "~/components/calendar/useCalendarMutations";
 import { settleHref } from "~/components/expenses/settleHref";
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
@@ -36,6 +37,7 @@ import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { useNow } from "~/utils/useNow";
 import { useGroupPicker } from "../dashboard/useGroupPicker";
 import { ForYouCard } from "./ForYouCard";
 import {
@@ -67,19 +69,6 @@ export function NewHome() {
 
 const greetingFor = (hour: number) =>
   hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
-
-// The tab stays mounted for days, so the clock is read on focus and on return to the app
-function useNow() {
-  const [now, setNow] = useState(() => new Date());
-  useFocusEffect(useCallback(() => setNow(new Date()), []));
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") setNow(new Date());
-    });
-    return () => subscription.remove();
-  }, []);
-  return now;
-}
 
 function useSpeech() {
   const [speech, setSpeech] = useState<string | null>(null);
@@ -113,11 +102,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const [{ data: rangeData }, { data: debtData }, { data: listsData }] =
     useSuspenseQueries({
       queries: [
-        trpc.calendar.range.queryOptions({
-          groupId: group.id,
-          from: addDays(today, -HOME_LOOKBACK_DAYS),
-          to: addDays(today, HOME_LOOKAHEAD_DAYS),
-        }),
+        calendarRangeOptions(group.id, listWindow(today, today)),
         trpc.expense.getDebtSummary.queryOptions({ groupId: group.id }),
         trpc.shoppingList.getShoppingLists.queryOptions({ groupId: group.id }),
       ],
@@ -152,7 +137,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const chores = shownChores.map((entry, index): Nudge => ({
     kind: "chore",
     entry,
-    overdue: entry.occurrence.date < today || entry.missed.length > 0,
+    overdue: timesMissed(entry, today) > 0,
     more:
       index === shownChores.length - 1
         ? agenda.due.length - shownChores.length
@@ -301,14 +286,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           stretchKey={stretchKey}
           onCatPress={(pose) => say(t(`home.new.cat.${pose}`))}
           onTick={(entry) => {
-            setDone.mutate({
-              groupId: group.id,
-              itemId: entry.item.id,
-              date: entry.occurrence.date,
-              done: true,
-              // Done once means done now; the days it was left are skipped, not done
-              skip: entry.missed,
-            });
+            setDone.mutate(tickInput(group.id, entry, true));
             setStretchKey((key) => key + 1);
             say(t("home.new.cat.ticked"));
           }}

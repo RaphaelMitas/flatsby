@@ -9,7 +9,6 @@ import type {
   Recurrence,
 } from "./calendar";
 import {
-  agendaDays,
   continuedRotation,
   createCalendarItemSchema,
   defaultEndsOn,
@@ -20,17 +19,17 @@ import {
   expandOccurrences,
   formEndsOn,
   homeAgenda,
+  listAgenda,
   monthDayChoices,
   monthGrid,
-  monthsOf,
   recurrenceOf,
   recurrenceSchema,
   repeatFormOf,
   rewritesPast,
   shiftMonth,
-  spanAround,
   splitEndsOn,
   splitsSeries,
+  timesMissed,
   weekDays,
   weekStart,
   withPickedStart,
@@ -383,42 +382,64 @@ describe("monthGrid", () => {
   });
 });
 
-describe("agendaDays", () => {
-  it("lists every day of the month and keeps events and my turns under Mine", () => {
-    const range = rangeOf(item(null, "2026-10-16", [2]), {
-      ...item(null, "2026-10-16"),
+describe("listAgenda", () => {
+  const daily = { type: "daily", interval: 1 } as const;
+  const range = rangeOf(
+    { ...item(daily, "2026-10-19", [1, 2]), title: "Dishes" },
+    {
+      ...item(null, "2026-10-22"),
       id: 2,
       kind: "event",
       title: "Plumber",
       time: { start: "14:00", end: "15:00" },
-    });
-    const titles = (mine: boolean) =>
-      agendaDays(range, "2026-10", 1, mine)
-        .find((day) => day.date === "2026-10-16")
-        ?.entries.map((e) => e.item.title);
-    expect(agendaDays(range, "2026-10", 1, false)).toHaveLength(31);
-    expect(titles(false)).toEqual(["Plumber", "Bins"]);
-    expect(titles(true)).toEqual(["Plumber"]);
-  });
-});
+    },
+  );
+  const titlesOn = (
+    days: { date: string; entries: { item: { title: string } }[] }[],
+    date: string,
+  ) => days.find((day) => day.date === date)?.entries.map((e) => e.item.title);
 
-describe("spanAround", () => {
-  it("keeps a month on either side", () => {
-    const span = spanAround("2026-12-24");
-    expect(monthsOf(span)).toEqual(["2026-11", "2026-12", "2027-01"]);
-    expect(spanAround("2026-10-01", span)).toEqual({
-      first: "2026-09",
-      last: "2027-01",
-    });
-    expect(spanAround("2026-12-01", span)).toBe(span);
+  it("starts today with the chores left before it, once per member on their latest day", () => {
+    const { overdue, days, turns } = listAgenda(
+      range,
+      "2026-10-21",
+      "2026-10-21",
+      1,
+      null,
+    );
+    expect(days.map((day) => day.date)).toEqual(weekDays("2026-10-21"));
+    expect(
+      overdue.map(({ occurrence, missed }) => [occurrence.date, missed]),
+    ).toEqual([["2026-10-20", []]]);
+    expect(days[0]?.entries.map(({ missed }) => missed)).toEqual([
+      ["2026-10-19"],
+    ]);
+    expect(
+      [overdue[0], days[0]?.entries[0]].map(
+        (entry) => entry && timesMissed(entry, "2026-10-21"),
+      ),
+    ).toEqual([1, 1]);
+    expect(Object.fromEntries(turns)).toEqual({ 1: 4, 2: 4 });
   });
 
-  it("starts over for a far jump instead of loading every month in between", () => {
-    const span = spanAround("2026-12-24");
-    expect(spanAround("2062-03-10", span)).toEqual({
-      first: "2062-02",
-      last: "2062-04",
-    });
+  it("shows no overdue chores on another week", () => {
+    expect(
+      listAgenda(range, "2026-10-28", "2026-10-21", 1, null).overdue,
+    ).toEqual([]);
+  });
+
+  it("narrows to a member's turns but keeps events and every member's count", () => {
+    const { overdue, days, turns } = listAgenda(
+      range,
+      "2026-10-21",
+      "2026-10-21",
+      1,
+      1,
+    );
+    expect(overdue).toEqual([]);
+    expect(titlesOn(days, "2026-10-22")).toEqual(["Plumber"]);
+    expect(titlesOn(days, "2026-10-23")).toEqual(["Dishes"]);
+    expect(turns.get(2)).toBe(4);
   });
 });
 

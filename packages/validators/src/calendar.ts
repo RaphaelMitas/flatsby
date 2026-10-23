@@ -170,6 +170,7 @@ export const setOccurrenceSkippedSchema = z.object({
   itemId: z.number(),
   date: calendarDateSchema,
   skipped: z.boolean(),
+  missed: z.array(calendarDateSchema).max(MAX_RANGE_DAYS).optional(),
 });
 
 const DAY_MS = 86_400_000;
@@ -563,23 +564,12 @@ export function monthGrid(month: string) {
   };
 }
 
-export function stepFrom(
-  selected: string,
-  today: string,
-  delta: number,
-  collapsed: boolean,
-) {
-  if (collapsed) return addDays(selected, 7 * delta);
-  const month = shiftMonth(monthOf(selected), delta);
-  return month === monthOf(today) ? today : `${month}-01`;
-}
-
 export interface CalendarEntry {
   item: CalendarItemView;
   occurrence: Occurrence;
 }
 
-export function daySummary(entries: CalendarEntry[], meId: number) {
+function daySummary(entries: CalendarEntry[], meId: number) {
   const tasks = entries.filter(({ item }) => item.kind === "task");
   return {
     total: tasks.length,
@@ -591,17 +581,13 @@ export function daySummary(entries: CalendarEntry[], meId: number) {
   };
 }
 
-function rangeEntries(
-  range: CalendarRange,
-  keep: (entry: CalendarEntry) => boolean,
-): CalendarEntry[] {
+function rangeEntries(range: CalendarRange): CalendarEntry[] {
   const items = new Map(range.items.map((item) => [item.id, item]));
   return range.occurrences
     .flatMap((occurrence) => {
       const item = items.get(occurrence.itemId);
       return item ? [{ item, occurrence }] : [];
     })
-    .filter(keep)
     .sort(
       (a, b) =>
         a.occurrence.date.localeCompare(b.occurrence.date) ||
@@ -613,87 +599,250 @@ function rangeEntries(
     );
 }
 
-export const entriesOn = (range: CalendarRange, date: string) =>
-  rangeEntries(range, ({ occurrence }) => occurrence.date === date);
-
-export interface AgendaDay {
-  date: string;
-  entries: CalendarEntry[];
-  summary: ReturnType<typeof daySummary>;
-}
-
-/** Every day of `month`, empty ones included. "Mine" keeps events and the tasks that are the member's turn. */
-export function agendaDays(
-  range: CalendarRange | undefined,
-  month: string,
-  meId: number,
-  mine: boolean,
-): AgendaDay[] {
-  const inMonth = range
-    ? rangeEntries(
-        range,
-        ({ occurrence }) => monthOf(occurrence.date) === month,
-      )
-    : [];
-  const first = toDayNumber(`${month}-01`);
-  const length = monthLength(monthIndexOf(first));
-  return Array.from({ length }, (_, i) => {
-    const date = fromDayNumber(first + i);
-    const entries = inMonth.filter(
-      ({ occurrence }) => occurrence.date === date,
-    );
-    return {
-      date,
-      summary: daySummary(entries, meId),
-      entries: mine
-        ? entries.filter(
-            ({ item, occurrence }) =>
-              item.kind === "event" || occurrence.turnGroupMemberId === meId,
-          )
-        : entries,
-    };
-  });
-}
-
-export interface MonthSpan {
-  first: string;
-  last: string;
-}
-
-const FAR_MONTHS = 12;
-
-/** Grows the loaded months so `date` has a whole month on either side to scroll into. */
-export const spanAround = (date: string, span?: MonthSpan): MonthSpan => {
-  const month = monthOf(date);
-  const before = shiftMonth(month, -1);
-  const after = shiftMonth(month, 1);
-  // A far jump (a mistyped year, a link) starts over rather than loading every month in between
-  if (
-    !span ||
-    month < shiftMonth(span.first, -FAR_MONTHS) ||
-    month > shiftMonth(span.last, FAR_MONTHS)
-  )
-    return { first: before, last: after };
-  if (span.first <= before && span.last >= after) return span;
-  return {
-    first: span.first < before ? span.first : before,
-    last: span.last > after ? span.last : after,
-  };
-};
-
-export function monthsOf({ first, last }: MonthSpan) {
-  const months = [first];
-  while ((months.at(-1) ?? last) < last)
-    months.push(shiftMonth(months.at(-1) ?? last, 1));
-  return months;
-}
-
-export const HOME_LOOKAHEAD_DAYS = 6;
-export const HOME_LOOKBACK_DAYS = MAX_RANGE_DAYS - HOME_LOOKAHEAD_DAYS;
-
 export interface DueChore extends CalendarEntry {
   missed: string[];
 }
+
+export type AgendaEntry = CalendarEntry & Partial<DueChore>;
+
+export interface AgendaDay {
+  date: string;
+  entries: AgendaEntry[];
+  summary: ReturnType<typeof daySummary>;
+}
+
+function agendaDays(
+  range: CalendarRange,
+  dates: string[],
+  meId: number,
+): AgendaDay[] {
+  const byDate = new Map(
+    dates.map((date): [string, CalendarEntry[]] => [date, []]),
+  );
+  for (const entry of rangeEntries(range))
+    byDate.get(entry.occurrence.date)?.push(entry);
+  return dates.map((date) => {
+    const entries = byDate.get(date) ?? [];
+    return { date, entries, summary: daySummary(entries, meId) };
+  });
+}
+
+const isOpenTask = ({ item, occurrence }: CalendarEntry) =>
+  item.kind === "task" && !occurrence.completedAt;
+
+export const timesMissed = (entry: AgendaEntry, today: string) =>
+  isOpenTask(entry)
+    ? (entry.missed?.length ?? 0) + (entry.occurrence.date < today ? 1 : 0)
+    : 0;
+
+/** Done once means done now; the days a chore was left are skipped, not done. */
+export const tickInput = (
+  groupId: number,
+  { item, occurrence, missed }: AgendaEntry,
+  done: boolean,
+) => ({
+  groupId,
+  itemId: item.id,
+  date: occurrence.date,
+  done,
+  skip: done ? missed : undefined,
+});
+
+/** A chore left for days shows once per member, on their latest open day up to today. */
+function latestOpen(openTasks: CalendarEntry[], today: string) {
+  const due: DueChore[] = [];
+  for (const entry of openTasks) {
+    if (entry.occurrence.date > today) continue;
+    const seen = due.find(
+      ({ item, occurrence }) =>
+        item.id === entry.item.id &&
+        occurrence.turnGroupMemberId === entry.occurrence.turnGroupMemberId,
+    );
+    if (seen) {
+      seen.missed.push(seen.occurrence.date);
+      seen.occurrence = entry.occurrence;
+    } else {
+      due.push({ ...entry, missed: [] });
+    }
+  }
+  return due;
+}
+
+/** Turn counts cover every member, even when `member` narrows what's shown. */
+function agenda(days: AgendaDay[], overdue: DueChore[], member: number | null) {
+  const turns = new Map<number, number>();
+  for (const entry of [...overdue, ...days.flatMap(({ entries }) => entries)]) {
+    const turn = entry.occurrence.turnGroupMemberId;
+    if (turn !== null && isOpenTask(entry))
+      turns.set(turn, (turns.get(turn) ?? 0) + 1);
+  }
+  const keep = ({ item, occurrence }: CalendarEntry) =>
+    member === null ||
+    item.kind === "event" ||
+    occurrence.turnGroupMemberId === member;
+  return {
+    turns,
+    overdue: overdue.filter(keep),
+    days: days.map((day) => ({ ...day, entries: day.entries.filter(keep) })),
+  };
+}
+
+const LIST_LAST_DAY = 6;
+const LOOKBACK_DAYS = MAX_RANGE_DAYS - LIST_LAST_DAY;
+
+const listEnd = (start: string) => addDays(start, LIST_LAST_DAY);
+
+/** Starting today, the list also reaches back for overdue chores. */
+export const listWindow = (start: string, today: string) => ({
+  from: start === today ? addDays(today, -LOOKBACK_DAYS) : start,
+  to: listEnd(start),
+});
+
+export const describeListRange = (
+  start: string,
+  locale: Intl.LocalesArgument,
+) =>
+  [start, listEnd(start)]
+    .map((date) =>
+      formatCalendarDate(date, locale, { day: "numeric", month: "short" }),
+    )
+    .join(" – ");
+
+export function listAgenda(
+  range: CalendarRange,
+  start: string,
+  today: string,
+  meId: number,
+  member: number | null,
+) {
+  const due =
+    start === today
+      ? latestOpen(rangeEntries(range).filter(isOpenTask), today)
+      : [];
+  // A chore still open today carries its missed days there, so one tick settles them like on home
+  const days = agendaDays(range, weekDays(start), meId).map((day) => ({
+    ...day,
+    entries: day.entries.map(
+      (entry) =>
+        due.find(({ occurrence }) => occurrence === entry.occurrence) ?? entry,
+    ),
+  }));
+  return agenda(
+    days,
+    due.filter(({ occurrence }) => occurrence.date < today),
+    member,
+  );
+}
+
+const monthAgenda = (
+  range: CalendarRange,
+  month: string,
+  meId: number,
+  member: number | null,
+) => agenda(agendaDays(range, monthGrid(month).weeks.flat(), meId), [], member);
+
+export type CalendarView = "list" | "month";
+
+/** A null start or month follows today, so a screen left open overnight moves on with it. */
+export interface CalendarPosition {
+  view: CalendarView;
+  start: string | null;
+  month: string | null;
+}
+
+export const shownDates = (
+  { start, month }: CalendarPosition,
+  today: string,
+) => ({ start: start ?? today, month: month ?? monthOf(today) });
+
+/** The list starts at `date`; the month view moves to the month holding it. */
+export function showDate(
+  position: CalendarPosition,
+  date: string,
+  today: string,
+): CalendarPosition {
+  if (position.view === "list")
+    return { ...position, start: date === today ? null : date };
+  const month = monthOf(date);
+  return { ...position, month: month === monthOf(today) ? null : month };
+}
+
+export function revealDate(
+  position: CalendarPosition,
+  date: string,
+  today: string,
+) {
+  const { start } = shownDates(position, today);
+  const shown =
+    position.view === "list" && date >= start && date <= listEnd(start);
+  return shown ? position : showDate(position, date, today);
+}
+
+export const todayPosition = ({
+  view,
+}: CalendarPosition): CalendarPosition => ({
+  view,
+  start: null,
+  month: null,
+});
+
+export const showsToday = (position: CalendarPosition) =>
+  (position.view === "list" ? position.start : position.month) === null;
+
+export const otherView = ({ view }: CalendarPosition): CalendarView =>
+  view === "list" ? "month" : "list";
+
+export function switchView(
+  position: CalendarPosition,
+  view: CalendarView,
+  today: string,
+): CalendarPosition {
+  if (view === position.view) return position;
+  return view === "month"
+    ? showDate({ ...position, view }, shownDates(position, today).start, today)
+    : { ...position, view };
+}
+
+export function stepPosition(
+  position: CalendarPosition,
+  delta: number,
+  today: string,
+) {
+  const { start, month } = shownDates(position, today);
+  return showDate(
+    position,
+    position.view === "list"
+      ? addDays(start, 7 * delta)
+      : `${shiftMonth(month, delta)}-01`,
+    today,
+  );
+}
+
+export function positionWindow(position: CalendarPosition, today: string) {
+  const { start, month } = shownDates(position, today);
+  if (position.view === "list") return listWindow(start, today);
+  const { from, to } = monthGrid(month);
+  return { from, to };
+}
+
+export function agendaAt(
+  range: CalendarRange,
+  position: CalendarPosition,
+  today: string,
+  meId: number,
+  member: number | null,
+) {
+  const { start, month } = shownDates(position, today);
+  return position.view === "list"
+    ? listAgenda(range, start, today, meId, member)
+    : monthAgenda(range, month, meId, member);
+}
+
+export const newEntryDate = (position: CalendarPosition, today: string) => {
+  const { start, month } = shownDates(position, today);
+  if (position.view === "list") return start;
+  return position.month === null ? today : `${month}-01`;
+};
 
 function notOverYet(
   time: EventTime | null,
@@ -714,28 +863,12 @@ export function homeAgenda(
   now: string,
   meId: number,
 ) {
-  const entries = rangeEntries(range, () => true);
+  const entries = rangeEntries(range);
   const myOpenTasks = entries.filter(
-    ({ item, occurrence }) =>
-      item.kind === "task" &&
-      !occurrence.completedAt &&
-      occurrence.turnGroupMemberId === meId,
+    (entry) => isOpenTask(entry) && entry.occurrence.turnGroupMemberId === meId,
   );
-  // A chore left for days shows once, on its latest open day
-  const due: DueChore[] = [];
-  for (const entry of myOpenTasks) {
-    if (entry.occurrence.date > today) continue;
-    const seen = due.find(({ item }) => item.id === entry.item.id);
-    if (seen) {
-      seen.missed.push(seen.occurrence.date);
-      seen.occurrence = entry.occurrence;
-    } else {
-      due.push({ ...entry, missed: [] });
-    }
-  }
-
   return {
-    due,
+    due: latestOpen(myOpenTasks, today),
     nextTurn: myOpenTasks.find(({ occurrence }) => occurrence.date > today),
     nextEvent: entries.find(
       ({ item, occurrence }) =>

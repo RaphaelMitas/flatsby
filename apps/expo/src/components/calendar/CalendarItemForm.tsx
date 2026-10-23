@@ -7,7 +7,6 @@ import type {
   RepeatForm,
   Weekday,
 } from "@flatsby/validators/calendar";
-import type { ReactNode } from "react";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
@@ -30,12 +29,13 @@ import {
   localDate,
   maxEvery,
   monthDayChoices,
-  monthOf,
   newRepeatFormFor,
   pickerDate,
+  positionWindow,
   recurrenceOf,
   repeatFormOf,
   repeatUnits,
+  revealDate,
   weekdayName,
   weekdayOf,
   weekdays,
@@ -56,47 +56,10 @@ import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { MemberAvatar } from "../expenses/MemberAvatar";
 import { fromPickerTime, pickerTime } from "./calendarDates";
-import { useCalendarPeople } from "./CalendarPeople";
+import { Chip, useCalendarPeople } from "./CalendarPeople";
+import { calendarPosition } from "./calendarPosition";
 import { calendarRangeOptions } from "./CalendarScreen";
 import { useCalendarMutations } from "./useCalendarMutations";
-
-function Chip({
-  label,
-  active,
-  onPress,
-  testID,
-  children,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  testID?: string;
-  children?: ReactNode;
-}) {
-  return (
-    <Pressable
-      testID={testID}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      onPress={onPress}
-      className={cn(
-        "flex-row items-center gap-2 rounded-full border px-3 py-1.5",
-        // Opaque even when inactive: Android drops the radius when a background appears from none (react-native#52415)
-        active ? "border-primary bg-primary" : "border-border bg-background",
-      )}
-    >
-      {children}
-      <Text
-        className={cn(
-          "text-sm font-medium",
-          active ? "text-primary-foreground" : "text-foreground",
-        )}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
 
 function FieldLabel({ children }: { children: string }) {
   return <Label className="mt-6 mb-2">{children}</Label>;
@@ -216,14 +179,18 @@ function ItemFields({
       update.mutate({ ...trimmed, id: item.id, today });
       router.dismissTo("/(tabs)/calendar");
     } else {
-      // Leaving first rules out a second submit; the optimistic row needs its month cached
+      // Leaving first rules out a second submit; the optimistic row needs the range it lands in cached
       router.dismissTo({
         pathname: "/(tabs)/calendar",
         params: { date: startsOn },
       });
+      const now = localDate();
       await queryClient
         .query({
-          ...calendarRangeOptions(group.id, monthOf(startsOn)),
+          ...calendarRangeOptions(
+            group.id,
+            positionWindow(revealDate(calendarPosition(), startsOn, now), now),
+          ),
           staleTime: "static",
         })
         .catch(() => undefined);

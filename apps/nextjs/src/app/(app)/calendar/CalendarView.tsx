@@ -2,26 +2,35 @@
 
 import type { GroupWithAccess } from "@flatsby/api";
 import type {
-  CalendarEntry,
+  AgendaEntry,
   CalendarItemView,
+  CalendarPosition,
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
 import {
-  useCallback,
+  useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
 import {
-  useQueries,
+  usePrefetchQuery,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, Plus } from "lucide-react";
-import { useTranslations } from "next-intl";
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+} from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
-import { combineMonths } from "@flatsby/api/calendarCache";
+import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { useMediaQuery } from "@flatsby/ui/hooks/use-media-query";
@@ -34,27 +43,39 @@ import { ScrollArea } from "@flatsby/ui/scroll-area";
 import { Sheet, SheetContent, SheetTitle } from "@flatsby/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import {
+  agendaAt,
+  describeListRange,
+  formatCalendarDate,
   localDate,
-  monthGrid,
-  monthOf,
-  monthsOf,
-  spanAround,
-  stepFrom,
+  newEntryDate,
+  otherView,
+  positionWindow,
+  revealDate,
+  showDate,
+  shownDates,
+  showsToday,
+  stepPosition,
+  switchView,
+  tickInput,
+  todayPosition,
+  weekDays,
 } from "@flatsby/validators/calendar";
 
-import type { AgendaHandle } from "./Agenda";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { useHandleApiError } from "~/utils";
-import { Agenda } from "./Agenda";
 import { CalendarItemDetail } from "./CalendarItemDetail";
 import { CalendarItemForm } from "./CalendarItemForm";
-import { MONTH_COVER, MonthGrid } from "./MonthGrid";
+import { CalendarList } from "./CalendarList";
+import { TurnBar } from "./CalendarPeople";
+import { MonthGrid } from "./MonthGrid";
 import { useCalendarMutations } from "./useCalendarMutations";
 
+const SWIPE_DISTANCE = 60;
+
 type Panel =
-  | { type: "detail"; entry: CalendarEntry }
-  | { type: "form"; item?: CalendarItemView };
+  | { type: "detail"; entry: AgendaEntry }
+  | { type: "form"; item?: CalendarItemView; date?: string };
 
 // Coming back to a tab left open overnight has to move "today" along
 const onReturn = (notify: () => void) => {
@@ -100,19 +121,17 @@ function CalendarScreen({
   today: string;
 }) {
   const t = useTranslations();
+  const locale = useLocale();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const handleApiError = useHandleApiError();
   const isLargeScreen = useMediaQuery("lg");
-  const [selected, setSelected] = useState(today);
-  const [jump, setJump] = useState({ date: today });
-  const [span, setSpan] = useState(() => spanAround(today));
-  const [collapsed, setCollapsed] = useState(false);
-  const [closed, setClosed] = useState(false);
-  const collapse = useRef(0);
-  const monthFrame = useRef<HTMLDivElement>(null);
-  const agenda = useRef<AgendaHandle>(null);
-  const [mine, setMine] = useState(false);
+  const [position, setPosition] = useState<CalendarPosition>({
+    view: "month",
+    start: null,
+    month: null,
+  });
+  const [member, setMember] = useState<number | null>(null);
   const [panel, setPanel] = useState<Panel | null>(null);
 
   const groupId = group.id;
@@ -121,22 +140,18 @@ function CalendarScreen({
     () => new Map(group.groupMembers.map((member) => [member.id, member])),
     [group.groupMembers],
   );
+  const { view } = position;
+  const { start, month } = shownDates(position, today);
+  const rangeOf = (at: CalendarPosition) =>
+    trpc.calendar.range.queryOptions({
+      groupId,
+      ...positionWindow(at, today),
+    });
+  const { data } = useQuery(rangeOf(position));
+  usePrefetchQuery(rangeOf(stepPosition(position, -1, today)));
+  usePrefetchQuery(rangeOf(stepPosition(position, 1, today)));
+  usePrefetchQuery(rangeOf(switchView(position, otherView(position), today)));
 
-  const rangeOptions = useCallback(
-    (month: string) => {
-      const { from, to } = monthGrid(month);
-      return trpc.calendar.range.queryOptions({ groupId, from, to });
-    },
-    [trpc, groupId],
-  );
-  const months = monthsOf(span);
-  const { months: agendaMonths, error } = useQueries({
-    queries: months.map(rangeOptions),
-    combine: combineMonths(months),
-  });
-  const rangeOf = (date: string) =>
-    agendaMonths.find(({ month }) => month === monthOf(date))?.range;
-  // useMutation's result is new every render, its mutate is not; holding the result would re-render the whole agenda on every day scrolled past
   const {
     setDone: { mutate: setDone },
     setSkipped,
@@ -145,29 +160,59 @@ function CalendarScreen({
     update,
   } = useCalendarMutations(group);
 
-  if (error)
+  // Stepping keeps a half-filled form; a view switch moves the panel to another container, which would remount it empty
+  const moveTo = (next: CalendarPosition) => {
+    setPosition(next);
+    setPanel((open) =>
+      open?.type === "form" && next.view === position.view ? open : null,
+    );
+  };
+  const step = (delta: number) => moveTo(stepPosition(position, delta, today));
+  const swipeStart = useRef<{ x: number; y: number } | undefined>(undefined);
+
+  // Arrow keys belong to an open form or detail
+  const onArrow = useEffectEvent((delta: number) => {
+    if (!panel) step(delta);
+  });
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        (event.target instanceof Element &&
+          event.target.closest(
+            "input, textarea, select, [contenteditable], [role=dialog], [role=tab], [role=separator]",
+          ))
+      )
+        return;
+      if (event.key === "ArrowLeft") onArrow(-1);
+      if (event.key === "ArrowRight") onArrow(1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  if (data?.success === false)
     return (
-      handleApiError(error) ?? (
-        <p className="text-destructive p-4 text-sm">{error.message}</p>
+      handleApiError(data.error) ?? (
+        <p className="text-destructive p-4 text-sm">{data.error.message}</p>
       )
     );
 
-  const selectDay = (date: string) => {
-    setSelected(date);
-    setSpan((current) => spanAround(date, current));
-    setJump({ date });
-    setPanel(null);
-  };
+  const agenda = data?.success
+    ? agendaAt(data.data, position, today, meId, member)
+    : undefined;
 
   const save = async (input: CreateCalendarItemInput, id?: number) => {
     if (id === undefined) {
-      // Closing the form first rules out a second submit; the optimistic row needs its month cached
-      selectDay(input.startsOn);
+      // Closing the form first rules out a second submit; the optimistic entry needs its range cached
+      const next = revealDate(position, input.startsOn, today);
+      moveTo(next);
+      setPanel(null);
       await queryClient
-        .query({
-          ...rangeOptions(monthOf(input.startsOn)),
-          staleTime: "static",
-        })
+        .query({ ...rangeOf(next), staleTime: "static" })
         .catch(() => undefined);
       create.mutate(input);
     } else {
@@ -176,7 +221,9 @@ function CalendarScreen({
     }
   };
 
-  const openAdd = () => setPanel({ type: "form" });
+  const openAdd = () =>
+    setPanel({ type: "form", date: newEntryDate(position, today) });
+  const openEntry = (entry: AgendaEntry) => setPanel({ type: "detail", entry });
 
   const panelContent = (current: Panel) => {
     if (current.type === "form")
@@ -186,15 +233,13 @@ function CalendarScreen({
           groupId={groupId}
           members={group.groupMembers}
           item={current.item}
-          defaultDate={selected}
+          defaultDate={current.date ?? today}
           today={today}
           onCancel={() => setPanel(null)}
           onSubmit={(input) => void save(input, current.item?.id)}
         />
       );
     const { item, occurrence } = current.entry;
-    const skip = (date: string, skipped: boolean) =>
-      setSkipped.mutate({ groupId, itemId: item.id, date, skipped });
     return (
       <CalendarItemDetail
         key={`${item.id}-${occurrence.date}`}
@@ -204,12 +249,21 @@ function CalendarScreen({
         today={today}
         members={members}
         onEdit={(latest) => setPanel({ type: "form", item: latest })}
-        onJump={selectDay}
+        onJump={(date) => moveTo(revealDate(position, date, today))}
         onSkip={() => {
-          skip(occurrence.date, true);
+          // A chore left for days is skipped for all of them, or the next one would take its place
+          setSkipped.mutate({
+            groupId,
+            itemId: item.id,
+            date: occurrence.date,
+            skipped: true,
+            missed: current.entry.missed,
+          });
           setPanel(null);
         }}
-        onUnskip={(date) => skip(date, false)}
+        onUnskip={(date) =>
+          setSkipped.mutate({ groupId, itemId: item.id, date, skipped: false })
+        }
         onDelete={() => {
           remove.mutate({ groupId, id: item.id });
           setPanel(null);
@@ -219,7 +273,12 @@ function CalendarScreen({
   };
 
   const calendar = (
-    <div className="mx-auto flex h-full w-full max-w-xl flex-col">
+    <div
+      className={cn(
+        "mx-auto flex h-full w-full flex-col",
+        view === "list" && "max-w-xl",
+      )}
+    >
       <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
         <h2
           className="text-xl font-bold tracking-tight"
@@ -229,15 +288,23 @@ function CalendarScreen({
         </h2>
         <div className="flex items-center gap-2">
           <Tabs
-            value={mine ? "mine" : "all"}
-            onValueChange={(value) => setMine(value === "mine")}
+            value={view}
+            onValueChange={(value) =>
+              moveTo(
+                switchView(
+                  position,
+                  value === "list" ? "list" : "month",
+                  today,
+                ),
+              )
+            }
           >
             <TabsList>
-              <TabsTrigger value="all" data-testid="calendar-filter-all">
-                {t("calendar.all")}
+              <TabsTrigger value="list" data-testid="calendar-view-list">
+                {t("calendar.list")}
               </TabsTrigger>
-              <TabsTrigger value="mine" data-testid="calendar-filter-mine">
-                {t("calendar.mine")}
+              <TabsTrigger value="month" data-testid="calendar-view-month">
+                {t("calendar.month")}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -249,56 +316,115 @@ function CalendarScreen({
           )}
         </div>
       </div>
-      <MonthGrid
-        ref={monthFrame}
-        selected={selected}
-        today={today}
-        rangeOf={rangeOf}
-        collapsed={collapsed}
-        closed={closed}
-        onSelect={selectDay}
-        onStep={(delta) =>
-          selectDay(stepFrom(selected, today, delta, collapsed))
-        }
-        onToggleCollapsed={() => agenda.current?.toggleMonth()}
+      <div className="flex items-center justify-between gap-2 px-4 pb-2">
+        {view === "list" ? (
+          <Button
+            variant="ghost"
+            onClick={() => moveTo(switchView(position, "month", today))}
+            className="-ml-3 text-lg font-semibold"
+            data-testid="calendar-range-title"
+          >
+            {describeListRange(start, locale)}
+          </Button>
+        ) : (
+          <h3
+            className="text-lg font-semibold"
+            data-testid="calendar-range-title"
+          >
+            {formatCalendarDate(`${month}-01`, locale, {
+              month: "long",
+              year: "numeric",
+            })}
+          </h3>
+        )}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={showsToday(position)}
+            onClick={() => moveTo(todayPosition(position))}
+            data-testid="calendar-today-button"
+          >
+            {t("calendar.today")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={
+              view === "list"
+                ? t("calendar.previousWeek")
+                : t("calendar.previousMonth")
+            }
+            onClick={() => step(-1)}
+            data-testid="calendar-previous"
+          >
+            <ChevronLeft />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={
+              view === "list" ? t("calendar.nextWeek") : t("calendar.nextMonth")
+            }
+            onClick={() => step(1)}
+            data-testid="calendar-next"
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+      </div>
+      <TurnBar
+        members={members}
+        meId={meId}
+        turns={agenda?.turns ?? new Map()}
+        member={member}
+        onChange={setMember}
+      />
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        onTouchStart={(event) => {
+          const touch = event.touches[0];
+          swipeStart.current = touch && { x: touch.clientX, y: touch.clientY };
+        }}
+        onTouchEnd={(event) => {
+          const from = swipeStart.current;
+          const touch = event.changedTouches[0];
+          if (!from || !touch) return;
+          const dx = touch.clientX - from.x;
+          if (
+            Math.abs(dx) > SWIPE_DISTANCE &&
+            Math.abs(dx) > 2 * Math.abs(touch.clientY - from.y)
+          )
+            step(dx < 0 ? 1 : -1);
+        }}
       >
-        <Agenda
-          months={agendaMonths}
-          ref={agenda}
-          jump={jump}
-          today={today}
-          meId={meId}
-          members={members}
-          mine={mine}
-          collapse={collapse}
-          onCollapse={(value) => {
-            collapse.current = value;
-            monthFrame.current?.style.setProperty(
-              "--month-collapse",
-              `${value}px`,
-            );
-            setCollapsed(value > MONTH_COVER / 2);
-            setClosed(value >= MONTH_COVER - 1);
-          }}
-          onScrolledTo={setSelected}
-          onReachEdge={(month) =>
-            setSpan((current) => spanAround(`${month}-01`, current))
-          }
-          onToggle={({ item, occurrence }, done) =>
-            setDone({
-              groupId,
-              itemId: item.id,
-              date: occurrence.date,
-              done,
-            })
-          }
-          onOpen={(entry) => setPanel({ type: "detail", entry })}
-        />
-      </MonthGrid>
+        {view === "list" ? (
+          <CalendarList
+            agenda={agenda}
+            dates={weekDays(start)}
+            today={today}
+            meId={meId}
+            members={members}
+            member={member}
+            onToggle={(entry, done) => setDone(tickInput(groupId, entry, done))}
+            onOpen={openEntry}
+          />
+        ) : (
+          <MonthGrid
+            month={month}
+            days={agenda?.days}
+            today={today}
+            onSelect={(date) =>
+              moveTo(showDate({ ...position, view: "list" }, date, today))
+            }
+            onOpen={openEntry}
+          />
+        )}
+      </div>
     </div>
   );
 
-  if (isLargeScreen)
+  if (isLargeScreen && view === "list")
     return (
       <ResizablePanelGroup orientation="horizontal" className="h-full flex-1">
         <ResizablePanel defaultSize={55} minSize={35}>
@@ -341,23 +467,28 @@ function CalendarScreen({
   return (
     <>
       {calendar}
-      <Button
-        size="icon-lg"
-        onClick={openAdd}
-        aria-label={t("calendar.add")}
-        className="fixed right-4 bottom-20 z-40 size-14 rounded-full shadow-lg md:bottom-6"
-        data-testid="calendar-add"
-      >
-        <Plus className="size-6" />
-      </Button>
+      {!isLargeScreen && (
+        <Button
+          size="icon-lg"
+          onClick={openAdd}
+          aria-label={t("calendar.add")}
+          className="fixed right-4 bottom-20 z-40 size-14 rounded-full shadow-lg md:bottom-6"
+          data-testid="calendar-add"
+        >
+          <Plus className="size-6" />
+        </Button>
+      )}
       <Sheet
         open={panel !== null}
         onOpenChange={(open) => !open && setPanel(null)}
       >
         <SheetContent
-          side="bottom"
+          side={isLargeScreen ? "right" : "bottom"}
           aria-describedby={undefined}
-          className="max-h-11/12 overflow-y-auto rounded-t-2xl px-5 pt-6 pb-8"
+          className={cn(
+            "overflow-y-auto px-5 pt-6 pb-8",
+            isLargeScreen ? "w-full sm:max-w-lg" : "max-h-11/12 rounded-t-2xl",
+          )}
         >
           <SheetTitle className="sr-only">{t("calendar.title")}</SheetTitle>
           {panel && panelContent(panel)}

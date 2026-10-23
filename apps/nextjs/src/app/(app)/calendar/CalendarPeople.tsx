@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
+import { Button } from "@flatsby/ui/button";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 
 export type MemberLookup = Map<number, GroupMemberWithUserInfo>;
@@ -79,5 +80,77 @@ export function DoneBy({ completedBy }: Pick<Occurrence, "completedBy">) {
         />
       )}
     </span>
+  );
+}
+
+export function TurnBar({
+  members,
+  meId,
+  turns,
+  member,
+  onChange,
+}: {
+  members: MemberLookup;
+  meId: number;
+  turns: Map<number, number>;
+  member: number | null;
+  onChange: (member: number | null) => void;
+}) {
+  const t = useTranslations("calendar");
+  return (
+    <div className="flex gap-1.5 overflow-x-auto px-4 pb-3">
+      <Chip
+        selected={member === null}
+        onClick={() => onChange(null)}
+        testId="calendar-filter-all"
+      >
+        {t("all")}
+      </Chip>
+      {[...members.values()]
+        .sort((a, b) => Number(b.id === meId) - Number(a.id === meId))
+        .map(({ id, user }) => (
+          <Chip
+            key={id}
+            selected={member === id}
+            onClick={() => onChange(member === id ? null : id)}
+            testId={`calendar-filter-${id}`}
+          >
+            <UserAvatar
+              name={user.name}
+              image={user.image}
+              size="sm"
+              className="text-foreground"
+            />
+            {id === meId ? t("you") : user.name}
+            <span className="opacity-60">{turns.get(id) ?? 0}</span>
+          </Chip>
+        ))}
+    </div>
+  );
+}
+
+export function Chip({
+  selected,
+  onClick,
+  testId,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  testId?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant={selected ? "default" : "outline"}
+      aria-pressed={selected}
+      onClick={onClick}
+      className="rounded-full"
+      data-testid={testId}
+    >
+      {children}
+    </Button>
   );
 }

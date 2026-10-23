@@ -44,23 +44,6 @@ export interface CalendarPatch {
 
 export type CalendarSnapshot = [QueryKey, unknown][];
 
-export interface AgendaMonth {
-  month: string;
-  range: CalendarRange | undefined;
-}
-
-/** useQueries' combine for one range query per month; its result stays the same object until a month changes. */
-export const combineMonths =
-  (months: string[]) => (results: { data?: ApiResult<CalendarRange> }[]) => ({
-    months: months.map((month, index): AgendaMonth => {
-      const data = results[index]?.data;
-      return { month, range: data?.success ? data.data : undefined };
-    }),
-    error: results.flatMap(({ data }) =>
-      data?.success === false ? [data.error] : [],
-    )[0],
-  });
-
 type FindCachedItem = (id: number) => CalendarItemView | undefined;
 
 export type CalendarPatchFor<TInput> = (
@@ -73,7 +56,7 @@ interface CalendarFilters {
   details: QueryFilters;
 }
 
-/** Applies one change to every cached month and item detail of the group, so nothing on screen lags behind. */
+/** Applies one change to every cached range and item detail of the group, so nothing on screen lags behind. */
 async function patchCalendar(
   queryClient: QueryClient,
   filters: CalendarFilters,
@@ -179,6 +162,18 @@ const asView = (
 // Negative so it never collides with a real id before the refetch lands
 const temporaryId = () => -Date.now();
 
+const skipDays = (
+  range: CalendarRange,
+  itemId: number,
+  dates: string[],
+  window: RangeWindow,
+) =>
+  dates.reduce(
+    (patched, date) =>
+      withSkipped(patched, { itemId, date, skipped: true }, window),
+    range,
+  );
+
 /** The optimistic side of each calendar mutation, shared by both clients. */
 export const calendarPatches = {
   setDone: (
@@ -186,18 +181,15 @@ export const calendarPatches = {
     me: { groupMemberId: number; person: DebtPerson },
   ): CalendarPatch => ({
     range: (range, window) =>
-      (input.done ? (input.skip ?? []) : []).reduce(
-        (patched, date) =>
-          withSkipped(
-            patched,
-            { itemId: input.itemId, date, skipped: true },
-            window,
-          ),
+      skipDays(
         withDone(range, {
           ...input,
           byGroupMemberId: me.groupMemberId,
           by: me.person,
         }),
+        input.itemId,
+        input.done ? (input.skip ?? []) : [],
+        window,
       ),
   }),
 
@@ -205,8 +197,17 @@ export const calendarPatches = {
     itemId: number;
     date: string;
     skipped: boolean;
+    missed?: string[];
   }): CalendarPatch => ({
-    range: (range, window) => withSkipped(range, input, window),
+    range: (range, window) =>
+      input.skipped
+        ? skipDays(
+            range,
+            input.itemId,
+            [input.date, ...(input.missed ?? [])],
+            window,
+          )
+        : withSkipped(range, input, window),
     detail: (detail) => {
       if (detail.item.id !== input.itemId) return detail;
       if (input.skipped)
@@ -238,7 +239,7 @@ export const calendarPatches = {
     input: CreateCalendarItemInput & { id: number; today: string },
     findCachedItem: FindCachedItem,
   ): CalendarPatch => {
-    // A month's cache may not hold the item, yet the edit can still reach into it
+    // A range's cache may not hold the item, yet the edit can still reach into it
     const previous = findCachedItem(input.id);
     if (!previous) return { range: (range) => range };
     const edited = asView(input.id, {

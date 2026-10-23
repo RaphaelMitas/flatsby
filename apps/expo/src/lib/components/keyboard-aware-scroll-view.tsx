@@ -17,11 +17,16 @@ export function AppScrollView({
   contentContainerClassName,
   refreshing = false,
   onRefresh,
+  ref,
   ...props
 }: AppScrollViewProps) {
   const safeAreaInsets = useSafeAreaInsets();
 
-  const renderScrollView = (refreshProps: ListRefreshProps = {}) => (
+  // Pull to refresh tracks the list through its own ref, which mustn't cut off the caller's
+  const renderScrollView = ({
+    ref: refreshRef,
+    ...refreshProps
+  }: ListRefreshProps = {}) => (
     <KeyboardAwareScrollView
       keyboardShouldPersistTaps="handled"
       contentInsetAdjustmentBehavior="automatic"
@@ -30,6 +35,11 @@ export function AppScrollView({
       contentContainerClassName={cn("grow", contentContainerClassName)}
       {...props}
       {...refreshProps}
+      ref={(list) => {
+        refreshRef?.(list);
+        if (typeof ref === "function") ref(list);
+        else if (ref) ref.current = list;
+      }}
     >
       {children}
     </KeyboardAwareScrollView>

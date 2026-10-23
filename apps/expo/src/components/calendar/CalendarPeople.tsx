@@ -1,7 +1,8 @@
 import type { GroupWithAccess } from "@flatsby/api";
 import type { Occurrence } from "@flatsby/validators/calendar";
 import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
-import { Text, View } from "react-native";
+import type { ReactNode } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
 import { cn } from "~/lib/utils";
@@ -92,5 +93,96 @@ export function OccurrenceStatus({
       }
       highlighted={mine}
     />
+  );
+}
+
+export function TurnBar({
+  group,
+  people,
+  turns,
+  member,
+  onChange,
+}: {
+  group: GroupWithAccess;
+  people: CalendarPeople;
+  turns: Map<number, number>;
+  member: number | null;
+  onChange: (member: number | null) => void;
+}) {
+  const t = useTranslations("calendar");
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className="mb-3 grow-0"
+      contentContainerClassName="gap-1.5 px-4"
+    >
+      <Chip
+        testID="calendar-filter-all"
+        label={t("all")}
+        active={member === null}
+        onPress={() => onChange(null)}
+      />
+      {[...group.groupMembers]
+        .sort(
+          (a, b) => Number(b.id === people.meId) - Number(a.id === people.meId),
+        )
+        .map(({ id }) => {
+          const person = people.person(id);
+          return (
+            <Chip
+              key={id}
+              testID={`calendar-filter-${id}`}
+              label={`${id === people.meId ? t("you") : person.name} ${turns.get(id) ?? 0}`}
+              active={member === id}
+              onPress={() => onChange(member === id ? null : id)}
+            >
+              <MemberAvatar
+                person={person}
+                className="-ml-2 h-6 w-6"
+                textClassName="text-xs"
+              />
+            </Chip>
+          );
+        })}
+    </ScrollView>
+  );
+}
+
+export function Chip({
+  label,
+  active,
+  onPress,
+  testID,
+  children,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+  testID?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      className={cn(
+        "flex-row items-center gap-2 rounded-full border px-3 py-1.5",
+        // Opaque even when inactive: Android drops the radius when a background appears from none (react-native#52415)
+        active ? "border-primary bg-primary" : "border-border bg-background",
+      )}
+    >
+      {children}
+      <Text
+        className={cn(
+          "text-sm font-medium",
+          active ? "text-primary-foreground" : "text-foreground",
+        )}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }
