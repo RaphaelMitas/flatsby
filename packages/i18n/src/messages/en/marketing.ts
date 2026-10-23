@@ -105,7 +105,7 @@ export const marketing = {
     price: {
       label: "Price",
       value:
-        "Free, without ads and without a member limit. Picking categories yourself is free. You only pay for extra AI credits, which the AI assistant and automatic categories use ({freeCredits, number} a month are free).",
+        "Free, without ads and without a member limit. Picking categories yourself is free. You only pay for extra AI credits, which the AI assistant and automatic categories use. A monthly allowance is free.",
     },
     signIn: { label: "Sign in", value: "Google or Apple account." },
     splitting: {
@@ -122,7 +122,7 @@ export const marketing = {
     data: {
       label: "Your data",
       value:
-        "Database and servers in Frankfurt (Neon, Vercel), usage analytics without ad tracking also in Frankfurt (PostHog). The AI assistant only sends data to OpenAI or Google after you consent, and automatic categories send item and expense names to an AI model. Export everything or delete your account in settings at any time.",
+        "Database and servers in Frankfurt, with cloud providers in their EU region, and usage analytics without ad tracking. The AI assistant only sends data to OpenAI or Google after you consent. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. Export everything or delete your account in settings at any time, details in the privacy policy.",
     },
     source: {
       label: "Source code",
@@ -461,7 +461,7 @@ export const marketing = {
       },
       data: {
         heading: "Your data",
-        body: "Database and servers are in Frankfurt (Neon, Vercel), and so are usage analytics without ad tracking (PostHog). The AI assistant only sends data to OpenAI or Google after you consent, and automatic categories send item and expense names to an AI model. You can export everything or delete your account in settings. The code is open source, and Flatsby is built by Raphael Mitas, an independent developer in Darmstadt.",
+        body: "Database and servers are in Frankfurt, with cloud providers in their EU region, and usage analytics work without ad tracking. The AI assistant only sends data to OpenAI or Google after you consent. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. You can export everything or delete your account in settings, with details in the privacy policy. The code is open source, and Flatsby is built by Raphael Mitas, an independent developer in Darmstadt.",
       },
       moving: {
         heading: "Switching from Flatastic to Flatsby",

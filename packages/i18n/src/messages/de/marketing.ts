@@ -108,7 +108,7 @@ export const marketing = {
     price: {
       label: "Preis",
       value:
-        "Kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Kategorien wählst du kostenlos selbst. Bezahlt wird nur für zusätzliche KI-Credits, mit denen der KI-Assistent und die automatischen Kategorien arbeiten ({freeCredits, number} im Monat sind kostenlos).",
+        "Kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Kategorien wählst du kostenlos selbst. Bezahlt wird nur für zusätzliche KI-Credits, mit denen der KI-Assistent und die automatischen Kategorien arbeiten. Ein monatliches Kontingent ist kostenlos.",
     },
     signIn: { label: "Anmeldung", value: "Google- oder Apple-Konto." },
     splitting: {
@@ -128,7 +128,7 @@ export const marketing = {
     data: {
       label: "Deine Daten",
       value:
-        "Datenbank und Server in Frankfurt (Neon, Vercel), Nutzungsstatistik ohne Werbe-Tracking ebenfalls in Frankfurt (PostHog). Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google, und für die automatischen Kategorien gehen Artikel- und Ausgabennamen an ein KI-Modell. Export und Kontolöschung jederzeit in den Einstellungen.",
+        "Datenbank und Server in Frankfurt, bei Cloud-Anbietern mit EU-Region, Nutzungsstatistik ohne Werbe-Tracking. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Export und Kontolöschung jederzeit in den Einstellungen, Details in der Datenschutzerklärung.",
     },
     source: {
       label: "Quellcode",
@@ -474,7 +474,7 @@ export const marketing = {
       },
       data: {
         heading: "Deine Daten",
-        body: "Datenbank und Server stehen in Frankfurt (Neon, Vercel), die Nutzungsstatistik ohne Werbe-Tracking ebenfalls (PostHog). Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google, und für die automatischen Kategorien gehen Artikel- und Ausgabennamen an ein KI-Modell. Du kannst alles exportieren oder dein Konto in den Einstellungen löschen. Der Code ist Open Source, und Flatsby wird von Raphael Mitas gebaut, einem unabhängigen Entwickler aus Darmstadt.",
+        body: "Datenbank und Server stehen in Frankfurt, bei Cloud-Anbietern mit EU-Region, die Nutzungsstatistik kommt ohne Werbe-Tracking aus. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Du kannst alles exportieren oder dein Konto in den Einstellungen löschen, Details stehen in der Datenschutzerklärung. Der Code ist Open Source, und Flatsby wird von Raphael Mitas gebaut, einem unabhängigen Entwickler aus Darmstadt.",
       },
       moving: {
         heading: "Von Flatastic zu Flatsby wechseln",
