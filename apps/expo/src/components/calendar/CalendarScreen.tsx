@@ -1,5 +1,8 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import type { CalendarPosition } from "@flatsby/validators/calendar";
+import type {
+  AgendaEntry,
+  CalendarPosition,
+} from "@flatsby/validators/calendar";
 import { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -26,15 +29,16 @@ import {
   weekDays,
 } from "@flatsby/validators/calendar";
 
+import type { CalendarPeople } from "./CalendarPeople";
 import { Button } from "~/lib/ui/button";
 import { Segmented } from "~/lib/ui/segmented";
 import { queryClient, trpc } from "~/utils/api";
 import { useNow } from "~/utils/useNow";
 import { CalendarList } from "./CalendarList";
+import { CalendarPager } from "./CalendarPager";
 import { TurnBar, useCalendarPeople } from "./CalendarPeople";
 import { setCalendarPosition, useCalendarPosition } from "./calendarPosition";
 import { MonthGrid } from "./MonthGrid";
-import { SwipeSteps } from "./SwipeSteps";
 import { useCalendarMutations } from "./useCalendarMutations";
 
 export const calendarRangeOptions = (
@@ -58,16 +62,19 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const { date: linked } = useLocalSearchParams<{ date?: string }>();
   const position = useCalendarPosition();
   const [member, setMember] = useState<number | null>(null);
+  const [page, setPage] = useState(0);
   const rangeAt = (at: CalendarPosition) =>
     calendarRangeOptions(group.id, positionWindow(at, today));
-  const { data, refetch } = useQuery(rangeAt(position));
-  usePrefetchQuery(rangeAt(stepPosition(position, -1, today)));
-  usePrefetchQuery(rangeAt(stepPosition(position, 1, today)));
+  const { data } = useQuery(rangeAt(position));
   usePrefetchQuery(rangeAt(switchView(position, otherView(position), today)));
   const { start, month } = shownDates(position, today);
   const agenda = data?.success
     ? agendaAt(data.data, position, today, people.meId, member)
     : undefined;
+  const step = (delta: number) => {
+    setPage((current) => current + delta);
+    setCalendarPosition(stepPosition(position, delta, today));
+  };
   const { mutate: setDone } = useCalendarMutations(group).setDone;
   const { view } = position;
 
@@ -147,9 +154,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             accessibilityLabel={
               view === "list" ? t("previousWeek") : t("previousMonth")
             }
-            onPress={() =>
-              setCalendarPosition(stepPosition(position, -1, today))
-            }
+            onPress={() => step(-1)}
           />
           <Button
             testID="calendar-next"
@@ -159,9 +164,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
             accessibilityLabel={
               view === "list" ? t("nextWeek") : t("nextMonth")
             }
-            onPress={() =>
-              setCalendarPosition(stepPosition(position, 1, today))
-            }
+            onPress={() => step(1)}
           />
         </View>
       </View>
@@ -174,55 +177,46 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         onChange={setMember}
       />
 
-      <SwipeSteps
-        onStep={(delta) =>
-          setCalendarPosition(stepPosition(position, delta, today))
-        }
-      >
-        {data?.success === false ? (
-          <Text className="text-destructive p-4 text-center">
-            {data.error.message}
-          </Text>
-        ) : view === "list" ? (
-          <CalendarList
-            agenda={agenda}
-            dates={weekDays(start)}
-            today={today}
-            people={people}
-            member={member}
-            onRefresh={refetch}
-            onToggle={(entry, done) =>
-              setDone(tickInput(group.id, entry, done))
-            }
-            onOpen={(entry) =>
-              router.push({
-                pathname: "/(tabs)/calendar/[itemId]",
-                params: {
-                  itemId: String(entry.item.id),
-                  // Only an open occurrence can be skipped
-                  ...(!entry.occurrence.completedAt && {
-                    date: entry.occurrence.date,
-                    ...(entry.missed?.length
-                      ? { missed: entry.missed.join(",") }
-                      : {}),
-                  }),
-                },
-              })
-            }
-          />
-        ) : (
-          <MonthGrid
-            month={month}
-            days={agenda?.days}
-            today={today}
-            onSelect={(date) =>
-              setCalendarPosition(
-                showDate({ ...position, view: "list" }, date, today),
-              )
-            }
-          />
-        )}
-      </SwipeSteps>
+      <CalendarPager
+        page={page}
+        onStep={step}
+        renderPage={(offset) => {
+          const shown =
+            offset === 0 ? position : stepPosition(position, offset, today);
+          return (
+            <CalendarPage
+              groupId={group.id}
+              position={shown}
+              today={today}
+              people={people}
+              member={member}
+              onToggle={(entry, done) =>
+                setDone(tickInput(group.id, entry, done))
+              }
+              onOpen={(entry) =>
+                router.push({
+                  pathname: "/(tabs)/calendar/[itemId]",
+                  params: {
+                    itemId: String(entry.item.id),
+                    // Only an open occurrence can be skipped
+                    ...(!entry.occurrence.completedAt && {
+                      date: entry.occurrence.date,
+                      ...(entry.missed?.length
+                        ? { missed: entry.missed.join(",") }
+                        : {}),
+                    }),
+                  },
+                })
+              }
+              onSelect={(date) =>
+                setCalendarPosition(
+                  showDate({ ...shown, view: "list" }, date, today),
+                )
+              }
+            />
+          );
+        }}
+      />
 
       <View className="absolute right-4 bottom-4">
         <Button
@@ -234,5 +228,59 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         />
       </View>
     </View>
+  );
+}
+
+function CalendarPage({
+  groupId,
+  position,
+  today,
+  people,
+  member,
+  onToggle,
+  onOpen,
+  onSelect,
+}: {
+  groupId: number;
+  position: CalendarPosition;
+  today: string;
+  people: CalendarPeople;
+  member: number | null;
+  onToggle: (entry: AgendaEntry, done: boolean) => void;
+  onOpen: (entry: AgendaEntry) => void;
+  onSelect: (date: string) => void;
+}) {
+  const { data, refetch } = useQuery(
+    calendarRangeOptions(groupId, positionWindow(position, today)),
+  );
+  const { start, month } = shownDates(position, today);
+  const agenda = data?.success
+    ? agendaAt(data.data, position, today, people.meId, member)
+    : undefined;
+
+  if (data?.success === false)
+    return (
+      <Text className="text-destructive p-4 text-center">
+        {data.error.message}
+      </Text>
+    );
+  return position.view === "list" ? (
+    <CalendarList
+      agenda={agenda}
+      dates={weekDays(start)}
+      today={today}
+      people={people}
+      member={member}
+      onRefresh={refetch}
+      onToggle={onToggle}
+      onOpen={onOpen}
+    />
+  ) : (
+    <MonthGrid
+      month={month}
+      days={agenda?.days}
+      today={today}
+      onSelect={onSelect}
+    />
   );
 }
