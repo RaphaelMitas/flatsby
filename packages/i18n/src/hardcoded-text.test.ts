@@ -143,10 +143,7 @@ function stringParts(node: Node | null | undefined): string[] {
       return [...stringParts(node.left), ...stringParts(node.right)];
     case "BinaryExpression":
       return node.operator === "+"
-        ? [
-            ...stringParts(node.left.type === "PrivateName" ? null : node.left),
-            ...stringParts(node.right),
-          ]
+        ? [...stringParts(node.left), ...stringParts(node.right)]
         : [];
     case "TSAsExpression":
     case "TSSatisfiesExpression":
