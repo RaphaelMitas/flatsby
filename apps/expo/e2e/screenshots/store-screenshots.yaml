@@ -206,18 +206,22 @@ appId: ${APP_ID}
     timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/01a-calendar
+# Maestro 2.3.0's childOf sees no rows inside the today section, so the
+# overdue copy of a chore is ruled out by sitting above today's progress line.
 - takeScreenshot:
     path: e2e/results/screenshots/${output.locale}/crop-row-bathroom
     cropOn:
       id: "calendar-row-${output.store.bathroom}"
-      childOf:
-        id: "calendar-agenda-today"
+      below:
+        id: "calendar-day-progress"
+        text: "1 .* 3 .*"
 - takeScreenshot:
     path: e2e/results/screenshots/${output.locale}/crop-row-bins
     cropOn:
       id: "calendar-row-${output.store.bins}"
-      childOf:
-        id: "calendar-agenda-today"
+      below:
+        id: "calendar-day-progress"
+        text: "1 .* 3 .*"
 
 # Members screen (reached from the overview's group-settings button); the
 # three seeded members are a read, confirmed by the count header's id.
