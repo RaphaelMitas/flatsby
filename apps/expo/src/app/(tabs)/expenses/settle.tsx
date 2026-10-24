@@ -1,12 +1,6 @@
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import {
-  Stack,
-  useLocalSearchParams,
-  useNavigation,
-  useRoute,
-  useRouter,
-} from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
@@ -14,6 +8,7 @@ import { SettlementForm } from "~/components/expenses/SettlementForm";
 import { Button } from "~/lib/ui/button";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { useCloseScreen } from "~/utils/useCloseScreen";
 
 export default function SettlePage() {
   const params = useLocalSearchParams<{
@@ -26,24 +21,8 @@ export default function SettlePage() {
   }>();
   const router = useRouter();
   const t = useTranslations();
-  const navigation = useNavigation();
-  const route = useRoute();
   const { selectedGroupId } = useShoppingStore();
-  // a save can resolve after the user left: never pop someone else's screen
-  const close = () => {
-    const stack = navigation.getState();
-    const index = stack?.routes.findIndex(({ key }) => key === route.key) ?? -1;
-    if (!stack || index < 0) return;
-    if (index > 0) {
-      navigation.dispatch({
-        type: "GO_BACK",
-        source: route.key,
-        target: stack.key,
-      });
-    } else if (navigation.isFocused()) {
-      router.back();
-    }
-  };
+  const close = useCloseScreen();
 
   const fromGroupMemberId = params.fromGroupMemberId
     ? parseInt(params.fromGroupMemberId, 10)

@@ -50,6 +50,7 @@ import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
+import { useCloseScreen } from "~/utils/useCloseScreen";
 import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
 import { currencyItems } from "./currencyItems";
@@ -72,23 +73,16 @@ function useExchangeRate(
 interface ExpenseFormProps {
   group: GroupWithAccess;
   expense?: ExpenseWithSplitsAndMembers;
-  /** Callback when closing the form (for splitview mode). If not provided, uses router.back() */
-  onClose?: () => void;
-  /** Callback when form is successfully submitted. If not provided, uses router.back() */
-  onSuccess?: (expenseId: number) => void;
-  closeOnSubmit?: boolean;
   autoFocus?: boolean;
 }
 
 export function ExpenseForm({
   group,
   expense,
-  onClose,
-  onSuccess,
-  closeOnSubmit,
   autoFocus = false,
 }: ExpenseFormProps) {
   const router = useRouter();
+  const close = useCloseScreen();
   const t = useTranslations();
   const locale = useLocale();
   const trpcClient = trpc;
@@ -299,16 +293,6 @@ export function ExpenseForm({
         }
 
         invalidateAll();
-        if (closeOnSubmit) return;
-        form.reset();
-        setCurrentStep(1);
-        if (onSuccess) {
-          onSuccess(data.data.id);
-        } else if (onClose) {
-          onClose();
-        } else {
-          router.back();
-        }
       },
     }),
   );
@@ -403,13 +387,7 @@ export function ExpenseForm({
         }
 
         invalidateAll(expense?.id);
-        if (onSuccess && expense?.id) {
-          onSuccess(expense.id);
-        } else if (onClose) {
-          onClose();
-        } else {
-          router.back();
-        }
+        close();
       },
     }),
   );
@@ -447,7 +425,7 @@ export function ExpenseForm({
         splits,
         splitMethod: values.splitMethod,
       });
-      if (closeOnSubmit) router.back();
+      router.back();
     }
   };
 

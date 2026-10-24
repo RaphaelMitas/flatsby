@@ -108,7 +108,7 @@ export default function ImportExpensesScreen() {
 
   if (bulkCreateMutation.data?.success) {
     return (
-      <SafeAreaView edges={isAndroid ? undefined : ["left"]}>
+      <SafeAreaView edges={isAndroid ? undefined : []}>
         <ScrollView className="m-4">
           <View className="items-center gap-4 py-8">
             <Text className="text-foreground text-xl font-semibold">
