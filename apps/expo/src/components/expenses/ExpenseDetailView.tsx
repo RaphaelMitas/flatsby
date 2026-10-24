@@ -32,6 +32,7 @@ import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 import { Separator } from "~/lib/ui/separator";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { useCloseScreen } from "~/utils/useCloseScreen";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { RateInfoButton } from "./RateInfoButton";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
@@ -39,19 +40,14 @@ import { useInvalidateExpenses } from "./useInvalidateExpenses";
 interface ExpenseDetailViewProps {
   expenseId: number;
   groupId: number;
-  /** Callback when navigating back (for splitview mode). If not provided, uses router.back() */
-  onBack?: () => void;
-  /** Callback when editing (for splitview mode). If not provided, navigates to edit page */
-  onEdit?: () => void;
 }
 
 export function ExpenseDetailView({
   expenseId,
   groupId,
-  onBack,
-  onEdit,
 }: ExpenseDetailViewProps) {
   const router = useRouter();
+  const close = useCloseScreen();
   const t = useTranslations();
   const locale = useLocale();
   const trpcClient = trpc;
@@ -110,11 +106,7 @@ export function ExpenseDetailView({
         }
 
         invalidateAll();
-        if (onBack) {
-          onBack();
-        } else {
-          router.back();
-        }
+        close();
       },
     }),
   );
@@ -153,16 +145,12 @@ export function ExpenseDetailView({
             testID="expense-edit-button"
             title={t("common.edit")}
             variant="outline"
-            onPress={() => {
-              if (onEdit) {
-                onEdit();
-              } else {
-                router.push({
-                  pathname: "/(tabs)/expenses/[expenseId]/edit",
-                  params: { expenseId: expenseId.toString() },
-                });
-              }
-            }}
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/expenses/[expenseId]/edit",
+                params: { expenseId: expenseId.toString() },
+              })
+            }
             className="flex-1"
             disabled={deleteExpenseMutation.isPending}
             icon="pencil"

@@ -1,7 +1,8 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
-import { useCallback, useState } from "react";
+import type { Href } from "expo-router";
+import { Suspense, useCallback, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -12,27 +13,48 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { SafeAreaView } from "~/lib/ui/safe-area";
 import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useMediaQuery } from "../splitview/useMediaQuery";
 import { ExpenseCard } from "./ExpenseCard";
 
-interface ExpenseListPanelProps {
-  selectedExpenseId: number | null;
-  onSelectExpense: (expenseId: number) => void;
-  onCreateExpense: () => void;
+export function ExpenseListPanel() {
+  const t = useTranslations();
+
+  return (
+    <SafeAreaView>
+      <Suspense
+        fallback={
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" />
+            <Text className="text-muted-foreground mt-4">
+              {t("expenses.loadingExpenses")}
+            </Text>
+          </View>
+        }
+      >
+        <ExpenseList />
+      </Suspense>
+    </SafeAreaView>
+  );
 }
 
-export function ExpenseListPanel({
-  selectedExpenseId,
-  onSelectExpense,
-  onCreateExpense,
-}: ExpenseListPanelProps) {
+function ExpenseList() {
   const router = useRouter();
   const t = useTranslations();
   const { selectedGroupId } = useShoppingStore();
-  const isLargeScreen = useMediaQuery("lg");
+  const isLargeScreen = useMediaQuery("md");
+  const { expenseId } = useGlobalSearchParams<{ expenseId?: string }>();
+  const pathname = usePathname();
+  const inPane = isLargeScreen && pathname !== "/expenses";
+  const open = (href: Href) =>
+    inPane ? router.replace(href) : router.push(href);
+  // dismissTo returns to a named screen that is already open, keeping its draft
+  const openScreen = (href: Href) =>
+    inPane ? router.dismissTo(href) : router.push(href);
+  const createExpense = () => openScreen("/(tabs)/expenses/create");
 
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: selectedGroupId ?? -1 }),
@@ -78,22 +100,21 @@ export function ExpenseListPanel({
   const hasExpenses = allExpenses.length > 0;
 
   const handleEdit = (expense: ExpenseWithSplitsAndMembers) => {
-    if (expense.splitMethod === "settlement") {
-      router.push({
-        pathname: "/(tabs)/expenses/settle",
-        params: { expenseId: expense.id.toString() },
-      });
-    } else {
-      router.push({
-        pathname: "/(tabs)/expenses/[expenseId]/edit",
-        params: { expenseId: expense.id.toString() },
-      });
-    }
+    const id = expense.id.toString();
+    const isSettlement = expense.splitMethod === "settlement";
+    const path = isSettlement ? "/expenses/settle" : `/expenses/${id}/edit`;
+    if (pathname === path && expenseId === id) return;
+    open({
+      pathname: isSettlement
+        ? "/(tabs)/expenses/settle"
+        : "/(tabs)/expenses/[expenseId]/edit",
+      params: { expenseId: id },
+    });
   };
 
   return (
     <View className="flex-1 px-4">
-      <View className="mb-6 flex-row items-center justify-between">
+      <View className="mb-6 flex-row flex-wrap items-center justify-between gap-2">
         <Text
           testID="expense-heading"
           className="text-foreground text-3xl font-bold"
@@ -106,7 +127,7 @@ export function ExpenseListPanel({
             title={t("expenses.debtOverview")}
             size="md"
             icon="arrow-right"
-            onPress={() => router.push(`/(tabs)/expenses/debts`)}
+            onPress={() => openScreen("/(tabs)/expenses/debts")}
           />
           {isLargeScreen && (
             <Button
@@ -114,7 +135,7 @@ export function ExpenseListPanel({
               title={t("expenses.add")}
               size="md"
               icon="plus"
-              onPress={onCreateExpense}
+              onPress={createExpense}
             />
           )}
         </View>
@@ -135,7 +156,7 @@ export function ExpenseListPanel({
             variant="primary"
             size="lg"
             icon="plus"
-            onPress={onCreateExpense}
+            onPress={createExpense}
           />
         </View>
       ) : (
@@ -153,8 +174,12 @@ export function ExpenseListPanel({
                 <ExpenseCard
                   expense={item}
                   groupId={selectedGroupId ?? -1}
-                  isSelected={item.id === selectedExpenseId}
-                  onSelect={() => onSelectExpense(item.id)}
+                  isSelected={isLargeScreen && item.id.toString() === expenseId}
+                  onSelect={() =>
+                    item.id.toString() === expenseId
+                      ? router.dismissTo(`/(tabs)/expenses/${item.id}`)
+                      : open(`/(tabs)/expenses/${item.id}`)
+                  }
                   onEdit={() => handleEdit(item)}
                   isNotConverted={isLeftUnconverted(item, groupData.data)}
                 />
@@ -182,7 +207,7 @@ export function ExpenseListPanel({
             testID="expense-add-button"
             size="icon"
             icon="plus"
-            onPress={onCreateExpense}
+            onPress={createExpense}
           />
         </View>
       )}

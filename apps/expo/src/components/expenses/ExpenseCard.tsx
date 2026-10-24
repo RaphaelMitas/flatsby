@@ -5,7 +5,6 @@ import { Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
-import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -24,7 +23,7 @@ interface ExpenseCardProps {
   onEdit: () => void;
   onDelete?: () => void;
   isSelected?: boolean;
-  onSelect?: () => void;
+  onSelect: () => void;
   isNotConverted?: boolean;
 }
 
@@ -37,7 +36,6 @@ export function ExpenseCard({
   onSelect,
   isNotConverted,
 }: ExpenseCardProps) {
-  const router = useRouter();
   const t = useTranslations();
   const locale = useLocale();
   const queryClient = useQueryClient();
@@ -114,14 +112,6 @@ export function ExpenseCard({
     },
   });
 
-  const handleCardPress = () => {
-    if (onSelect) {
-      onSelect();
-    } else {
-      router.push(`/(tabs)/expenses/${expense.id}`);
-    }
-  };
-
   const handleDelete = () => {
     setShowDeleteModal(false);
     swipeableRef.current?.close();
@@ -159,7 +149,7 @@ export function ExpenseCard({
         <Pressable
           testID={`expense-card-${expense.description}`}
           accessible={e2eAccessibilityOverride()}
-          onPress={guardPress(handleCardPress)}
+          onPress={guardPress(onSelect)}
           disabled={isOptimistic}
         >
           <ExpenseDisplay
