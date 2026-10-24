@@ -1,6 +1,6 @@
-• Der Kalender ist übersichtlicher: eine Liste der nächsten sieben Tage oder eine Monatsansicht. Wischen springt eine Woche oder einen Monat weiter.
+• Flatsby unterstützt jetzt das iPhone Duo. Auf breiten Bildschirmen, etwa dem iPad im Hochformat, stehen Ausgabenliste und Details nebeneinander.
+• Das Plus-Menü auf Start öffnet schneller.
+• Der Kalender ist übersichtlicher: die nächsten sieben Tage als Liste oder eine Monatsansicht.
 • Verpasste Aufgaben stehen oben unter Überfällig. Einmal abhaken oder überspringen erledigt alle verpassten Tage.
 • Filtere den Kalender nach Mitbewohnern.
-• Ein Einladungslink, den du abgemeldet öffnest, unterbricht die Anmeldung nicht mehr.
-• Einkaufsvorschläge zeigen neue Artikel sofort.
 • Kleine Fehlerbehebungen und Verbesserungen.
