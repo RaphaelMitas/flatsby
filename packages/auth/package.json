@@ -33,6 +33,7 @@
     "@biomejs/biome": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "prettier": "catalog:",
     "typescript": "catalog:"

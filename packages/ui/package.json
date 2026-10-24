@@ -75,6 +75,7 @@
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tailwind-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "prettier": "catalog:",
     "react": "catalog:react19",
