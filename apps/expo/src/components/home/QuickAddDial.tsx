@@ -38,7 +38,6 @@ export function QuickAddDial({
   const [open, setOpen] = useState(false);
   const [showOthers, setShowOthers] = useState(false);
   const progress = useSharedValue(0);
-  const size = useSharedValue({ width: 0, height: 0 });
 
   useEffect(() => {
     if (!isFocused) setOpen(false);
@@ -51,18 +50,11 @@ export function QuickAddDial({
     if (!open) setShowOthers(false);
   }, [open, progress]);
 
-  // Grows out of the plus in the bottom right corner
-  const cardStyle = useAnimatedStyle(() => {
-    const scale = 0.92 + progress.value * 0.08;
-    return {
-      opacity: progress.value,
-      transform: [
-        { translateX: ((1 - scale) * size.value.width) / 2 },
-        { translateY: ((1 - scale) * size.value.height) / 2 },
-        { scale },
-      ],
-    };
-  });
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transformOrigin: "bottom right",
+    transform: [{ scale: 0.92 + progress.value * 0.08 }],
+  }));
   // bg-black/30 rendered no scrim on the iOS simulator, so the color is inline
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
@@ -100,9 +92,6 @@ export function QuickAddDial({
         pointerEvents={open ? "auto" : "none"}
         accessibilityElementsHidden={!open}
         importantForAccessibility={open ? "auto" : "no-hide-descendants"}
-        onLayout={({ nativeEvent: { layout } }) => {
-          size.value = { width: layout.width, height: layout.height };
-        }}
         layout={LinearTransition}
         style={cardStyle}
         className="bg-card border-border absolute right-4 bottom-24 w-64 rounded-3xl border p-2.5 shadow-xl"
