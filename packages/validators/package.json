@@ -40,6 +40,7 @@
     "@biomejs/biome": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "@types/papaparse": "^5.5.2",
     "@types/react": "catalog:react19",
     "ai": "catalog:",

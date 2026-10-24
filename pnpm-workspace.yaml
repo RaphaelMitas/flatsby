@@ -28,14 +28,15 @@ auditConfig:
     # node-forge <=1.4.0 - no patched release exists; 1.4.0 is npm's latest. Reached
     # via @expo/cli > @expo/code-signing-certificates@0.0.7 (latest), dev tooling only.
     - GHSA-86w9-cpqp-85rv
-    # braces <=3.0.3 - no patched release exists; 3.0.3 is npm's latest. Reached via
-    # metro and @expo/metro-file-map > micromatch@4.0.8 (latest), bundler only.
-    - GHSA-vfj7-8cjw-p6xm
     # decode-uri-component <=0.4.2 - expo-router@57.0.22 pins query-string ^7.1.3,
     # and every 7.x pins decode-uri-component ^0.2.2. The patched 0.5.0 is ESM-only,
     # so an override would break query-string's require(). Clears when expo-router
     # moves to query-string 9.
     - GHSA-vcc3-ghjq-m6fr
+    # zod <4.6.6 - only 4.x is patched and 3.25.76 is the last 3.x. Every @expo/cli
+    # 58.x (latest 58.1.15) depends on zod ^3.25.76, dev tooling only. Clears when
+    # @expo/cli moves to zod 4.
+    - GHSA-mrhx-c7xc-m3w5
 
 catalog:
   "@ai-sdk/provider": ^4.0.29

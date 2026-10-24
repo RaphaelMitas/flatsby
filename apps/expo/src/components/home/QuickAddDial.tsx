@@ -2,12 +2,12 @@ import type { ShoppingListSummary } from "@flatsby/api";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, {
+  Easing,
   FadeIn,
   FadeOut,
   LinearTransition,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { useIsFocused, useRouter } from "expo-router";
@@ -38,7 +38,6 @@ export function QuickAddDial({
   const [open, setOpen] = useState(false);
   const [showOthers, setShowOthers] = useState(false);
   const progress = useSharedValue(0);
-  const size = useSharedValue({ width: 0, height: 0 });
 
   useEffect(() => {
     if (!isFocused) setOpen(false);
@@ -46,30 +45,23 @@ export function QuickAddDial({
 
   useEffect(() => {
     progress.value = open
-      ? withSpring(1, { damping: 16, stiffness: 220 })
-      : withTiming(0, { duration: 160 });
+      ? withTiming(1, { duration: 160, easing: Easing.out(Easing.cubic) })
+      : withTiming(0, { duration: 120 });
     if (!open) setShowOthers(false);
   }, [open, progress]);
 
-  // Grows out of the plus in the bottom right corner
-  const cardStyle = useAnimatedStyle(() => {
-    const scale = 0.2 + progress.value * 0.8;
-    return {
-      opacity: Math.min(progress.value * 3, 1),
-      transform: [
-        { translateX: ((1 - scale) * size.value.width) / 2 },
-        { translateY: ((1 - scale) * size.value.height) / 2 },
-        { scale },
-      ],
-    };
-  });
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transformOrigin: "bottom right",
+    transform: [{ scale: 0.92 + progress.value * 0.08 }],
+  }));
   // bg-black/30 rendered no scrim on the iOS simulator, so the color is inline
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
     backgroundColor: "rgba(0, 0, 0, 0.35)",
   }));
   const plusStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${progress.value * 135}deg` }],
+    transform: [{ rotate: `${progress.value * 45}deg` }],
   }));
 
   const go = (action: () => void) => {
@@ -100,9 +92,6 @@ export function QuickAddDial({
         pointerEvents={open ? "auto" : "none"}
         accessibilityElementsHidden={!open}
         importantForAccessibility={open ? "auto" : "no-hide-descendants"}
-        onLayout={({ nativeEvent: { layout } }) => {
-          size.value = { width: layout.width, height: layout.height };
-        }}
         layout={LinearTransition}
         style={cardStyle}
         className="bg-card border-border absolute right-4 bottom-24 w-64 rounded-3xl border p-2.5 shadow-xl"
