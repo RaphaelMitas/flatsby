@@ -2,12 +2,12 @@ import type { ShoppingListSummary } from "@flatsby/api";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, {
+  Easing,
   FadeIn,
   FadeOut,
   LinearTransition,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { useIsFocused, useRouter } from "expo-router";
@@ -46,16 +46,16 @@ export function QuickAddDial({
 
   useEffect(() => {
     progress.value = open
-      ? withSpring(1, { damping: 16, stiffness: 220 })
-      : withTiming(0, { duration: 160 });
+      ? withTiming(1, { duration: 160, easing: Easing.out(Easing.cubic) })
+      : withTiming(0, { duration: 120 });
     if (!open) setShowOthers(false);
   }, [open, progress]);
 
   // Grows out of the plus in the bottom right corner
   const cardStyle = useAnimatedStyle(() => {
-    const scale = 0.2 + progress.value * 0.8;
+    const scale = 0.92 + progress.value * 0.08;
     return {
-      opacity: Math.min(progress.value * 3, 1),
+      opacity: progress.value,
       transform: [
         { translateX: ((1 - scale) * size.value.width) / 2 },
         { translateY: ((1 - scale) * size.value.height) / 2 },
@@ -69,7 +69,7 @@ export function QuickAddDial({
     backgroundColor: "rgba(0, 0, 0, 0.35)",
   }));
   const plusStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${progress.value * 135}deg` }],
+    transform: [{ rotate: `${progress.value * 45}deg` }],
   }));
 
   const go = (action: () => void) => {
