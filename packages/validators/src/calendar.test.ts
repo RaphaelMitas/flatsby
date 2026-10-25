@@ -526,6 +526,9 @@ describe("event length", () => {
     const fridays: Recurrence = { type: "weekly", interval: 1, days: ["fr"] };
     const weekly = { ...trip, recurrence: fridays };
     expect(describeEventTime(trip, en, "en")).toBe("Fri 18:00 – Sun 12:00");
+    expect(describeEventTime({ ...trip, days: 8 }, en, "en")).toBe(
+      "Fri, Oct 23 18:00 – Fri, Oct 30 12:00",
+    );
     expect(describeEventTime(weekly, en, "en")).toBe("18:00–12:00 +2");
     expect(describeEventTime({ ...weekly, time: null }, en, "en")).toBe(
       "3 days",

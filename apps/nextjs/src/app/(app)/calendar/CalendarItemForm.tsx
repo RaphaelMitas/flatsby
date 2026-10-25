@@ -32,12 +32,11 @@ import {
   describeSeries,
   earliestEndsOn,
   editedStartsOn,
+  eventEndChoices,
   eventSpanOf,
   formatCalendarDate,
   formEndsOn,
   hasEnded,
-  lastDayOf,
-  latestEventEnd,
   maxEvery,
   monthDayChoices,
   newRepeatFormFor,
@@ -47,7 +46,6 @@ import {
   weekdayName,
   weekdayOf,
   weekdays,
-  withOvernight,
   withPickedStart,
   withStart,
 } from "@flatsby/validators/calendar";
@@ -102,6 +100,7 @@ export function CalendarItemForm({
     ? editedStartsOn(item, repeat, pickedStart, today)
     : (pickedStart ?? defaultDate);
   const recurrence = recurrenceOf(repeat, startsOn);
+  const ends = eventEndChoices(startsOn, span);
   const ended = item ? hasEnded(item, today) : false;
   const endsOn = formEndsOn(item, recurrence, pickedEnd, startsOn, today);
   const weekDays = repeat.days ?? [weekdayOf(startsOn)];
@@ -233,9 +232,9 @@ export function CalendarItemForm({
       {!ended && !isTask && (
         <Field label={t("calendar.form.ends")}>
           <DatePopover
-            value={lastDayOf(startsOn, withOvernight(time, span.days))}
-            min={lastDayOf(startsOn, withOvernight(time, 1))}
-            max={latestEventEnd(startsOn)}
+            value={ends.value}
+            min={ends.min}
+            max={ends.max}
             onSelect={(lastDay) =>
               setSpan({ ...span, days: daysBetween(startsOn, lastDay) })
             }

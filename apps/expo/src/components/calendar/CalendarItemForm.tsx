@@ -23,12 +23,11 @@ import {
   describeSeries,
   earliestEndsOn,
   editedStartsOn,
+  eventEndChoices,
   eventSpanOf,
   formatCalendarDate,
   formEndsOn,
   hasEnded,
-  lastDayOf,
-  latestEventEnd,
   localDate,
   maxEvery,
   monthDayChoices,
@@ -42,7 +41,6 @@ import {
   weekdayName,
   weekdayOf,
   weekdays,
-  withOvernight,
   withPickedStart,
   withStart,
 } from "@flatsby/validators/calendar";
@@ -162,6 +160,7 @@ function ItemFields({
   };
 
   const recurrence = recurrenceOf(repeat, startsOn);
+  const ends = eventEndChoices(startsOn, span);
   const ended = item ? hasEnded(item, today) : false;
   const endsOn = formEndsOn(item, recurrence, pickedEnd, startsOn, today);
   const input = {
@@ -307,13 +306,9 @@ function ItemFields({
           <DatePickerField
             testID="calendar-form-event-ends-on"
             label={t("calendar.form.ends")}
-            value={pickerDate(
-              lastDayOf(startsOn, withOvernight(time, span.days)),
-            )}
-            minimumDate={pickerDate(
-              lastDayOf(startsOn, withOvernight(time, 1)),
-            )}
-            maximumDate={pickerDate(latestEventEnd(startsOn))}
+            value={pickerDate(ends.value)}
+            minimumDate={pickerDate(ends.min)}
+            maximumDate={pickerDate(ends.max)}
             onChange={(picked) =>
               setSpan({
                 ...span,

@@ -362,9 +362,6 @@ export const earliestStartReaching = (from: string, days: number) =>
 export const lastDayOf = (start: string, days: number) =>
   addDays(start, days - 1);
 
-export const latestEventEnd = (startsOn: string) =>
-  lastDayOf(startsOn, MAX_EVENT_DAYS);
-
 export function expandOccurrences(
   item: ExpandableItem,
   overrides: OccurrenceOverride[],
@@ -463,6 +460,16 @@ export function withStart(time: EventTime, days: number, start: string) {
 export const daysBetween = (startsOn: string, lastDay: string) =>
   toDayNumber(lastDay) - toDayNumber(startsOn) + 1;
 
+/** The Ends picker of an event form: the shown last day and the range it can move in. */
+export const eventEndChoices = (
+  startsOn: string,
+  { time, days }: ReturnType<typeof eventSpanOf>,
+) => ({
+  value: lastDayOf(startsOn, withOvernight(time, days)),
+  min: lastDayOf(startsOn, withOvernight(time, 1)),
+  max: lastDayOf(startsOn, MAX_EVENT_DAYS),
+});
+
 // A repeating event without `date` has no last day to name, so its length reads as a count
 export function describeEventTime(
   item: Pick<ExpandableItem, "days" | "recurrence" | "startsOn"> & {
@@ -479,20 +486,14 @@ export function describeEventTime(
     return time
       ? `${time.start}–${time.end} +${days - 1}`
       : t("calendar.days", { count: days });
-  const lastDay = lastDayOf(date, days);
-  if (!time)
-    return [date, lastDay]
-      .map((day) =>
-        formatCalendarDate(day, locale, {
-          weekday: "short",
-          day: "numeric",
-          month: "short",
-        }),
-      )
-      .join(" – ");
-  const weekday = (day: string) =>
-    formatCalendarDate(day, locale, { weekday: "short" });
-  return `${weekday(date)} ${time.start} – ${weekday(lastDay)} ${time.end}`;
+  // Weekdays alone repeat once an event runs a week or more
+  const format: Intl.DateTimeFormatOptions =
+    time && days < 7
+      ? { weekday: "short" }
+      : { weekday: "short", day: "numeric", month: "short" };
+  const at = (day: string, clock?: string) =>
+    [formatCalendarDate(day, locale, format), clock].filter(Boolean).join(" ");
+  return `${at(date, time?.start)} – ${at(lastDayOf(date, days), time?.end)}`;
 }
 
 export function describeRecurrence(
