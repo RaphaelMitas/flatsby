@@ -5,9 +5,8 @@ import { db } from "@flatsby/db/client";
 
 import type { ApiError, NotFoundResource } from "../../errors";
 import type { Database as DbClient } from "../../types";
-import { Errors, fromUnknownError } from "../../errors";
+import { Errors, fail, fromUnknownError } from "../../errors";
 
-// A messageKey pins every failure to DatabaseError, skipping fromUnknownError's classification
 const query = <T>(
   operation: string,
   run: (db: DbClient) => Promise<T>,
@@ -26,9 +25,7 @@ const findOneOrFail = <T>(
   run: (db: DbClient) => Promise<T | undefined>,
 ): Effect.Effect<T, ApiError> =>
   Effect.flatMap(query(`find ${resource}`, run), (row) =>
-    row === undefined
-      ? Effect.fail(Errors.notFound(resource))
-      : Effect.succeed(row),
+    row === undefined ? fail.notFound(resource) : Effect.succeed(row),
   );
 
 export class Database extends Context.Service<

@@ -23,18 +23,18 @@ import {
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
 
-import { addMember, getGroupWithAccess, requireAdmin } from "../effect/groups";
+import {
+  addMember,
+  getGroupWithAccess,
+  requireAdmin,
+  requireMember,
+} from "../effect/groups";
 import { runResult } from "../effect/runtime";
 import { CurrentRequest } from "../effect/services/CurrentRequest";
 import { Database } from "../effect/services/Database";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import {
-  DbUtils,
-  findActiveMember,
-  GroupUtils,
-  ValidationUtils,
-} from "../utils";
+import { DbUtils, GroupUtils, ValidationUtils } from "../utils";
 
 const updateGroup = protectedProcedure
   .input(updateGroupSettingsSchema)
@@ -168,7 +168,6 @@ export const groupRouter = createTRPCRouter({
       runResult(
         ctx,
         Effect.gen(function* () {
-          const { user } = yield* CurrentRequest;
           const database = yield* Database;
           const target = yield* database.findOneOrFail("groupMember", (db) =>
             db.query.groupMembers.findFirst({
@@ -178,10 +177,7 @@ export const groupRouter = createTRPCRouter({
               ),
             }),
           );
-          const current = yield* database.findOneOrFail(
-            "groupMembership",
-            (db) => findActiveMember(db, target.groupId, user.id),
-          );
+          const current = yield* requireMember(target.groupId);
           yield* DbUtils.checkAccess(
             current.role === "admin" || current.id === input.memberId,
             "errors.onlyAdminsRemoveMembers",
@@ -290,12 +286,8 @@ export const groupRouter = createTRPCRouter({
       runResult(
         ctx,
         Effect.gen(function* () {
-          const { user } = yield* CurrentRequest;
           const database = yield* Database;
-          const current = yield* database.findOneOrFail(
-            "groupMembership",
-            (db) => findActiveMember(db, input.groupId, user.id),
-          );
+          const current = yield* requireMember(input.groupId);
           yield* DbUtils.checkAccess(
             current.role === "admin",
             "errors.adminRequiredToAddMembers",

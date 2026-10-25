@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import {
   addMemberTx,
   findActiveAdmin,
+  findActiveMember,
   findGroupWithMembers,
   withThisMember,
 } from "../utils";
@@ -27,6 +28,16 @@ export const requireAdmin = Effect.fn("Groups.requireAdmin")(function* (
   const database = yield* Database;
   return yield* database.findOneOrFail("adminMembership", (db) =>
     findActiveAdmin(db, groupId, user.id),
+  );
+});
+
+export const requireMember = Effect.fn("Groups.requireMember")(function* (
+  groupId: number,
+) {
+  const { user } = yield* CurrentRequest;
+  const database = yield* Database;
+  return yield* database.findOneOrFail("groupMembership", (db) =>
+    findActiveMember(db, groupId, user.id),
   );
 });
 

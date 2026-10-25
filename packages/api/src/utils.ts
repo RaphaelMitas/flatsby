@@ -227,20 +227,6 @@ export const GroupUtils = {
     );
   },
 
-  /**
-   * Require user to be an admin of the group, fail if not
-   */
-  requireAdminAccess: (
-    db: Database,
-    groupId: number,
-    userId: string,
-  ): Effect.Effect<GroupMember, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () => findActiveAdmin(db, groupId, userId),
-      "adminMembership",
-    );
-  },
-
   activeAdminWhere: (groupId: number, userId: string) =>
     and(
       eq(groupMembers.userId, userId),
