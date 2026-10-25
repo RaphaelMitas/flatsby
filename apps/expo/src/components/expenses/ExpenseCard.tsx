@@ -1,7 +1,7 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
-import { Pressable } from "react-native";
+import { Alert, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -77,13 +77,18 @@ export function ExpenseCard({
 
         return { previousData };
       },
-      onError: (_error, _variables, context) => {
+      onError: (error, _variables, context) => {
         if (context?.previousData) {
           queryClient.setQueryData(expenseListQueryKey, context.previousData);
         }
+        Alert.alert(t("expenses.deleteFailed"), error.message);
       },
-      onSuccess: (data) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
+          if (context.previousData) {
+            queryClient.setQueryData(expenseListQueryKey, context.previousData);
+          }
+          Alert.alert(t("expenses.deleteFailed"), data.error.message);
           return;
         }
 

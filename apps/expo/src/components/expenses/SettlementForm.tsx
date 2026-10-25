@@ -350,8 +350,11 @@ export function SettlementForm({
           queryClient.setQueryData(expenseQueryKey, context.previousData);
         }
       },
-      onSuccess: (data) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
+          if (context?.previousData && expenseQueryKey) {
+            queryClient.setQueryData(expenseQueryKey, context.previousData);
+          }
           return;
         }
 
