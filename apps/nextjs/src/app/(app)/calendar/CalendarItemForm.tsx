@@ -144,6 +144,15 @@ export function CalendarItemForm({
       ids.includes(id) ? ids.filter((m) => m !== id) : [...ids, id],
     );
 
+  const startPicker = (
+    <DatePopover
+      value={startsOn}
+      max={endsOn}
+      onSelect={pickStart}
+      testId="calendar-form-date"
+    />
+  );
+
   const submit = () => {
     if (canSave) onSubmit(input);
   };
@@ -219,12 +228,7 @@ export function CalendarItemForm({
             recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
           }
         >
-          <DatePopover
-            value={startsOn}
-            max={endsOn}
-            onSelect={pickStart}
-            testId="calendar-form-date"
-          />
+          {startPicker}
         </Field>
       )}
       {!isTask && (
@@ -237,71 +241,68 @@ export function CalendarItemForm({
               onCheckedChange={(allDay) =>
                 setSpan({ ...span, time: allDay ? null : defaultEventTime })
               }
+              data-testid="calendar-form-all-day"
             />
           </div>
           {(!ended || time) && (
-            <div className="flex items-center gap-2">
-              <Label className="w-14 shrink-0">
-                {t("calendar.form.begins")}
-              </Label>
-              {!ended && (
-                <div className="flex-1">
-                  <DatePopover
-                    value={startsOn}
-                    max={endsOn}
-                    onSelect={pickStart}
-                    testId="calendar-form-date"
-                  />
-                </div>
-              )}
-              {time && (
-                <Input
-                  type="time"
-                  aria-label={t("calendar.form.begins")}
-                  value={time.start}
-                  onChange={(event) =>
-                    event.target.value &&
-                    setSpan(withStart(time, span.days, event.target.value))
-                  }
-                  className="w-28"
-                  data-testid="calendar-form-start-time"
-                />
-              )}
-            </div>
-          )}
-          {(!ended || time) && (
-            <div className="flex items-center gap-2">
-              <Label className="w-14 shrink-0">{t("calendar.form.ends")}</Label>
-              {!ended && (
-                <div className="flex-1">
-                  <DatePopover
-                    value={ends.value}
-                    min={ends.min}
-                    max={ends.max}
-                    onSelect={(lastDay) =>
-                      setSpan({ ...span, days: daysBetween(startsOn, lastDay) })
+            <>
+              <div className="flex items-center gap-2">
+                <Label className="w-14 shrink-0">
+                  {t("calendar.form.begins")}
+                </Label>
+                <div className="flex-1">{!ended && startPicker}</div>
+                {time && (
+                  <Input
+                    type="time"
+                    aria-label={t("calendar.form.begins")}
+                    value={time.start}
+                    onChange={(event) =>
+                      event.target.value &&
+                      setSpan(withStart(time, span.days, event.target.value))
                     }
-                    testId="calendar-form-event-ends-on"
+                    className="w-28"
+                    data-testid="calendar-form-start-time"
                   />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="w-14 shrink-0">
+                  {t("calendar.form.ends")}
+                </Label>
+                <div className="flex-1">
+                  {!ended && (
+                    <DatePopover
+                      value={ends.value}
+                      min={ends.min}
+                      max={ends.max}
+                      onSelect={(lastDay) =>
+                        setSpan({
+                          ...span,
+                          days: daysBetween(startsOn, lastDay),
+                        })
+                      }
+                      testId="calendar-form-event-ends-on"
+                    />
+                  )}
                 </div>
-              )}
-              {time && (
-                <Input
-                  type="time"
-                  aria-label={t("calendar.form.ends")}
-                  value={time.end}
-                  onChange={(event) =>
-                    event.target.value &&
-                    setSpan({
-                      ...span,
-                      time: { ...time, end: event.target.value },
-                    })
-                  }
-                  className="w-28"
-                  data-testid="calendar-form-end-time"
-                />
-              )}
-            </div>
+                {time && (
+                  <Input
+                    type="time"
+                    aria-label={t("calendar.form.ends")}
+                    value={time.end}
+                    onChange={(event) =>
+                      event.target.value &&
+                      setSpan({
+                        ...span,
+                        time: { ...time, end: event.target.value },
+                      })
+                    }
+                    className="w-28"
+                    data-testid="calendar-form-end-time"
+                  />
+                )}
+              </div>
+            </>
           )}
         </div>
       )}

@@ -14,6 +14,7 @@ interface DatePickerFieldProps {
   minimumDate?: Date;
   maximumDate?: Date;
   testID?: string;
+  accessibilityLabel?: string;
 }
 
 export function DatePickerField({
@@ -24,6 +25,7 @@ export function DatePickerField({
   minimumDate,
   maximumDate,
   testID,
+  accessibilityLabel,
 }: DatePickerFieldProps) {
   const locale = useLocale();
   const [showPicker, setShowPicker] = useState(false);
@@ -43,9 +45,10 @@ export function DatePickerField({
   if (Platform.OS === "ios") {
     return (
       <View className="gap-2">
-        {label && <Label>{label}</Label>}
+        {!!label && <Label>{label}</Label>}
         <DateTimePicker
           testID={testID}
+          accessibilityLabel={accessibilityLabel}
           value={value}
           mode={mode}
           minimumDate={minimumDate}
@@ -61,9 +64,10 @@ export function DatePickerField({
 
   return (
     <View className="gap-2">
-      {label && <Label>{label}</Label>}
+      {!!label && <Label>{label}</Label>}
       <Pressable
         testID={testID}
+        accessibilityLabel={accessibilityLabel}
         onPress={() => setShowPicker(true)}
         className="border-input bg-background flex h-12 flex-row items-center rounded-lg border px-3"
       >
