@@ -134,11 +134,17 @@
       "matchPackageNames": ["/^react-native-purchases/"]
     },
     {
-      "description": "Bundle every minor/patch/digest bump into a single PR. Must stay last so it overrides the per-library groups above, which then only apply to majors",
+      "description": "Bundle every minor/patch/digest bump into a single PR. Must stay after the per-library groups above so it overrides them, which then only apply to majors",
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch",
       "matchPackageNames": ["*"],
       "matchUpdateTypes": ["minor", "patch", "digest"]
+    },
+    {
+      "description": "@effect/tsgo replaces the TypeScript compiler binary and each release supports specific TypeScript versions, so both move in one PR and the patched typecheck gates it. After the catch-all so it wins for every update type",
+      "groupName": "typescript",
+      "groupSlug": "typescript",
+      "matchPackageNames": ["typescript", "@effect/tsgo"]
     }
   ]
 }
