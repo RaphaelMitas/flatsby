@@ -76,7 +76,7 @@ export type EventTime = z.infer<typeof eventTimeSchema>;
 const MAX_EVENT_DAYS = 365;
 
 // Every item from before zones were recorded was made in Germany
-export const DEFAULT_TIME_ZONE = "Europe/Berlin";
+export const DEFAULT_TIME_ZONE = "Europe/Berlin"; // i18n-ignore
 
 const isTimeZone = (zone: string) => {
   try {
