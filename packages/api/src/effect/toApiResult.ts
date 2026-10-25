@@ -5,14 +5,16 @@ import { Errors, toApiErrorResult } from "../errors";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { ErrorReporter } from "./services/ErrorReporter";
 
-const reportCause = Effect.fnUntraced(function* (cause: Cause.Cause<ApiError>) {
+const reportAndMap = Effect.fnUntraced(function* (
+  cause: Cause.Cause<ApiError>,
+) {
   const { user, path, requestId } = yield* CurrentRequest;
   const reporter = yield* ErrorReporter;
 
   const failure = Cause.findError(cause);
   if (Result.isSuccess(failure)) {
     const error = failure.success;
-    return yield* reporter.capture({
+    yield* reporter.capture({
       error,
       operation: path,
       distinctId: user.id,
@@ -25,27 +27,28 @@ const reportCause = Effect.fnUntraced(function* (cause: Cause.Cause<ApiError>) {
         $issue_name: `${path} ${error._tag}`,
       },
     });
+    return yield* error;
   }
 
   const defect = Cause.findDefect(cause);
   if (Result.isSuccess(defect)) {
-    return yield* reporter.capture({
+    yield* reporter.capture({
       error: defect.success,
       operation: path,
       distinctId: user.id,
       additionalProperties: { kind: "defect", requestId },
     });
+    return yield* Errors.internalServer("operation", defect.success);
   }
+
+  return yield* Effect.failCause(cause);
 });
 
 export const toApiResult = Effect.fnUntraced(function* <A, R>(
   effect: Effect.Effect<A, ApiError, R>,
 ) {
   const result = yield* effect.pipe(
-    Effect.tapCause(reportCause),
-    Effect.catchDefect((defect) =>
-      Effect.fail(Errors.internalServer("operation", defect)),
-    ),
+    Effect.catchCause(reportAndMap),
     Effect.result,
   );
   if (Result.isSuccess(result)) {

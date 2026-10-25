@@ -105,15 +105,18 @@ describe("toApiResult", () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect("reports a cause with a failure and a defect once", () =>
+  it.effect("answers and reports a failure plus a defect as the failure", () =>
     Effect.gen(function* () {
       const failure = Errors.forbidden("errors.mustBeAdmin");
-      yield* toApiResult(
+      const result = yield* toApiResult(
         Effect.failCause(
           Cause.combine(Cause.fail(failure), Cause.die(new Error("boom"))),
         ),
       );
 
+      assert.isFalse(result.success);
+      if (result.success) return;
+      assert.strictEqual(result.error.type, "ForbiddenError");
       const reports = yield* Ref.get(yield* Reports);
       assert.strictEqual(reports.length, 1);
       assert.strictEqual(reports[0]?.error, failure);

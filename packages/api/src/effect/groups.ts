@@ -1,11 +1,10 @@
 import { Effect } from "effect";
 
-import { Errors } from "../errors";
 import {
   addMemberTx,
-  DbUtils,
   findActiveAdmin,
   findGroupWithMembers,
+  withThisMember,
 } from "../utils";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { Database } from "./services/Database";
@@ -17,14 +16,7 @@ export const getGroupWithAccess = Effect.fn("Groups.getGroupWithAccess")(
     const group = yield* database.findOneOrFail("group", (db) =>
       findGroupWithMembers(db, groupId),
     );
-    yield* DbUtils.ensureGroupMember(user.id, group.groupMembers);
-    const thisGroupMember = group.groupMembers.find(
-      (member) => member.userId === user.id,
-    );
-    if (!thisGroupMember) {
-      return yield* Errors.notFound("groupMember", user.id);
-    }
-    return { ...group, thisGroupMember };
+    return yield* withThisMember(group, user.id);
   },
 );
 

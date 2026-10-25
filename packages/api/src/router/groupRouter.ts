@@ -29,7 +29,12 @@ import { CurrentRequest } from "../effect/services/CurrentRequest";
 import { Database } from "../effect/services/Database";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, GroupUtils, ValidationUtils } from "../utils";
+import {
+  DbUtils,
+  findActiveMember,
+  GroupUtils,
+  ValidationUtils,
+} from "../utils";
 
 const updateGroup = protectedProcedure
   .input(updateGroupSettingsSchema)
@@ -175,14 +180,7 @@ export const groupRouter = createTRPCRouter({
           );
           const current = yield* database.findOneOrFail(
             "groupMembership",
-            (db) =>
-              db.query.groupMembers.findFirst({
-                where: and(
-                  eq(groupMembers.userId, user.id),
-                  eq(groupMembers.groupId, target.groupId),
-                  eq(groupMembers.isActive, true),
-                ),
-              }),
+            (db) => findActiveMember(db, target.groupId, user.id),
           );
           yield* DbUtils.checkAccess(
             current.role === "admin" || current.id === input.memberId,
@@ -212,13 +210,13 @@ export const groupRouter = createTRPCRouter({
             );
           }
 
-          // Marks the member inactive instead of deleting, which preserves expense history
           return yield* database.query(
             "remove group member",
             (db) =>
               db.transaction(async (trx) => {
                 await GroupUtils.lockGroup(trx, target.groupId);
                 await GroupUtils.detachMemberFromItems(trx, target.id);
+                // Inactive, not deleted, so expense history survives
                 await trx
                   .update(groupMembers)
                   .set({ isActive: false })
@@ -296,15 +294,7 @@ export const groupRouter = createTRPCRouter({
           const database = yield* Database;
           const current = yield* database.findOneOrFail(
             "groupMembership",
-            (db) =>
-              db.query.groupMembers.findFirst({
-                columns: { role: true },
-                where: and(
-                  eq(groupMembers.groupId, input.groupId),
-                  eq(groupMembers.userId, user.id),
-                  eq(groupMembers.isActive, true),
-                ),
-              }),
+            (db) => findActiveMember(db, input.groupId, user.id),
           );
           yield* DbUtils.checkAccess(
             current.role === "admin",

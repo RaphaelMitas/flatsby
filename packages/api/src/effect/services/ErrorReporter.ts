@@ -9,6 +9,8 @@ export class ErrorReporter extends Context.Service<
   }
 >()("@flatsby/api/effect/services/ErrorReporter") {
   static readonly layer = Layer.succeed(ErrorReporter, {
-    capture: (report) => Effect.sync(() => captureError(report)),
+    // A failing report must never change the response it reports on
+    capture: (report) =>
+      Effect.sync(() => captureError(report)).pipe(Effect.ignoreCause),
   });
 }

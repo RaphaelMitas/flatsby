@@ -33,13 +33,13 @@ export class UnauthorizedError extends Data.TaggedError(
   "UnauthorizedError",
 )<Localized> {}
 
-export class ConflictError extends Data.TaggedError(
-  "ConflictError",
-)<Localized> {}
+export class ConflictError extends Data.TaggedError("ConflictError")<
+  Localized & { readonly cause?: unknown }
+> {}
 
-export class ValidationError extends Data.TaggedError(
-  "ValidationError",
-)<Localized> {}
+export class ValidationError extends Data.TaggedError("ValidationError")<
+  Localized & { readonly cause?: unknown }
+> {}
 
 export class DatabaseError extends Data.TaggedError("DatabaseError")<
   Localized & {
@@ -132,10 +132,14 @@ export const Errors = {
   unauthorized: () =>
     new UnauthorizedError({ messageKey: "errors.unauthorized" }),
 
-  conflict: (messageKey: MessageKey) => new ConflictError({ messageKey }),
+  conflict: (messageKey: MessageKey, cause?: unknown) =>
+    new ConflictError({ messageKey, cause }),
 
-  validation: (messageKey: MessageKey, values?: MessageValues) =>
-    new ValidationError({ messageKey, values }),
+  validation: (
+    messageKey: MessageKey,
+    values?: MessageValues,
+    cause?: unknown,
+  ) => new ValidationError({ messageKey, values, cause }),
 
   database: (
     operation: string,
@@ -216,23 +220,25 @@ export const fromUnknownError = (
       error.message.includes("UNIQUE constraint failed") ||
       error.message.includes("duplicate key value")
     ) {
-      return Errors.conflict("errors.alreadyExists");
+      return Errors.conflict("errors.alreadyExists", error);
     }
 
     if (
       error.message.includes("FOREIGN KEY constraint failed") ||
       error.message.includes("violates foreign key constraint")
     ) {
-      return Errors.validation("errors.invalidReference");
+      return Errors.validation("errors.invalidReference", undefined, error);
     }
 
     if (error.message.includes("NOT NULL constraint failed")) {
       const fieldMatch = /NOT NULL constraint failed: \w+\.(\w+)/.exec(
         error.message,
       );
-      return Errors.validation("errors.fieldRequired", {
-        field: fieldMatch?.[1] ?? "field",
-      });
+      return Errors.validation(
+        "errors.fieldRequired",
+        { field: fieldMatch?.[1] ?? "field" },
+        error,
+      );
     }
 
     // Check for network/connection errors

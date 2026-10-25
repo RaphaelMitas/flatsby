@@ -7,7 +7,7 @@ import type { ApiError, NotFoundResource } from "../../errors";
 import type { Database as DbClient } from "../../types";
 import { Errors, fromUnknownError } from "../../errors";
 
-// With a messageKey every failure is a DatabaseError carrying it, like the hand-written catches it replaces
+// A messageKey pins every failure to DatabaseError, skipping fromUnknownError's classification
 const query = <T>(
   operation: string,
   run: (db: DbClient) => Promise<T>,

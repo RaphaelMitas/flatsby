@@ -20,6 +20,7 @@ import type {
   DbTransaction,
   GroupMember,
   GroupWithAccess,
+  GroupWithMembers,
   Role,
   ShoppingListWithGroup,
   TransactionOperation,
@@ -143,24 +144,7 @@ export const OperationUtils = {
   ): Effect.Effect<GroupWithAccess, ApiError | NotFoundError> => {
     return Effect.flatMap(
       DbUtils.findOneOrFail(() => findGroupWithMembers(db, groupId), "group"),
-      (group) =>
-        Effect.flatMap(
-          DbUtils.ensureGroupMember(userId, group.groupMembers),
-          () => {
-            const thisGroupMember = group.groupMembers.find(
-              (m) => m.userId === userId,
-            );
-
-            if (!thisGroupMember) {
-              return fail.notFound("groupMember", userId);
-            }
-
-            return Effect.succeed({
-              ...group,
-              thisGroupMember,
-            });
-          },
-        ),
+      (group) => withThisMember(group, userId),
     );
   },
 
@@ -244,31 +228,6 @@ export const GroupUtils = {
   },
 
   /**
-   * Get user's role in a group
-   */
-  getUserRole: (
-    db: Database,
-    groupId: number,
-    userId: string,
-  ): Effect.Effect<Pick<GroupMember, "role">, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          columns: {
-            role: true,
-          },
-          where: (members, { and, eq }) =>
-            and(
-              eq(members.groupId, groupId),
-              eq(members.userId, userId),
-              eq(members.isActive, true),
-            ),
-        }),
-      "groupMembership",
-    );
-  },
-
-  /**
    * Require user to be an admin of the group, fail if not
    */
   requireAdminAccess: (
@@ -299,15 +258,7 @@ export const GroupUtils = {
     userId: string,
   ): Effect.Effect<GroupMember, ApiError> => {
     return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(
-              eq(members.userId, userId),
-              eq(members.groupId, groupId),
-              eq(members.isActive, true),
-            ),
-        }),
+      () => findActiveMember(db, groupId, userId),
       "groupMembership",
     );
   },
@@ -406,6 +357,30 @@ export const findGroupWithMembers = (db: Database, groupId: number) =>
         },
       },
     },
+  });
+
+export const withThisMember = (
+  group: GroupWithMembers,
+  userId: string,
+): Effect.Effect<GroupWithAccess, ApiError> =>
+  Effect.flatMap(DbUtils.ensureGroupMember(userId, group.groupMembers), () => {
+    const thisGroupMember = group.groupMembers.find((m) => m.userId === userId);
+    return thisGroupMember
+      ? Effect.succeed({ ...group, thisGroupMember })
+      : fail.notFound("groupMember", userId);
+  });
+
+export const findActiveMember = (
+  db: Database,
+  groupId: number,
+  userId: string,
+) =>
+  db.query.groupMembers.findFirst({
+    where: and(
+      eq(groupMembers.userId, userId),
+      eq(groupMembers.groupId, groupId),
+      eq(groupMembers.isActive, true),
+    ),
   });
 
 export const findActiveAdmin = (
