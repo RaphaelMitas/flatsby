@@ -250,7 +250,7 @@ export function CalendarItemForm({
                 <Label className="w-14 shrink-0">
                   {t("calendar.form.begins")}
                 </Label>
-                <div className="flex-1">{!ended && startPicker}</div>
+                <div className="min-w-0 flex-1">{!ended && startPicker}</div>
                 {time && (
                   <Input
                     type="time"
@@ -260,7 +260,7 @@ export function CalendarItemForm({
                       event.target.value &&
                       setSpan(withStart(time, span.days, event.target.value))
                     }
-                    className="w-28"
+                    className="w-28 shrink-0"
                     data-testid="calendar-form-start-time"
                   />
                 )}
@@ -269,7 +269,7 @@ export function CalendarItemForm({
                 <Label className="w-14 shrink-0">
                   {t("calendar.form.ends")}
                 </Label>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   {!ended && (
                     <DatePopover
                       value={ends.value}
@@ -297,7 +297,7 @@ export function CalendarItemForm({
                         time: { ...time, end: event.target.value },
                       })
                     }
-                    className="w-28"
+                    className="w-28 shrink-0"
                     data-testid="calendar-form-end-time"
                   />
                 )}

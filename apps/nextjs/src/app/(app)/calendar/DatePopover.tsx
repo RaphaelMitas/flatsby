@@ -40,7 +40,9 @@ export function DatePopover({
           data-testid={testId}
         >
           <CalendarIcon />
-          {formatCalendarDate(value, locale, { dateStyle: "long" })}
+          <span className="truncate">
+            {formatCalendarDate(value, locale, { dateStyle: "medium" })}
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
