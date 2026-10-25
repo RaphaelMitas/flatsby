@@ -1,7 +1,8 @@
+import { APP_STORE_URL, PLAY_STORE_URL } from "@flatsby/validators/store";
+
 import type { FaqItem } from "./content";
 import type { ContentPageData, PageSection } from "./pages";
 import {
-  APP_STORE_URL,
   FACTS,
   faqItems,
   FEATURES,
@@ -9,7 +10,6 @@ import {
   HOME_FAQ,
   LEGAL_PAGES,
   PLANS,
-  PLAY_STORE_URL,
   SECTIONS,
   SITE_URL,
   STEPS,

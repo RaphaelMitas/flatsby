@@ -111,13 +111,15 @@ const ShoppingListItem = ({
 
   const handleCheckboxToggle = () => {
     const isLastOpenItem =
-      queryClient
+      selectedCategory === null &&
+      (queryClient
         .getQueryData(itemsQueryKey)
         ?.pages.every(
           (page) =>
             !page.success ||
             page.data.items.every((i) => i.completed || i.id === item.id),
-        ) ?? false;
+        ) ??
+        false);
     updateShoppingListItemMutation.mutate({
       ...item,
       completed: !item.completed,

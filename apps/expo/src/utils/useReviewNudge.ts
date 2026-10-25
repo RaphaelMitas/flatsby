@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
 
-import { APP_STORE_ID, PLAY_STORE_ID } from "@flatsby/validators/store";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@flatsby/validators/store";
 
 import { trpc } from "~/utils/api";
 import { isE2ETestingEnabled } from "~/utils/e2e";
@@ -19,17 +19,17 @@ const ASK_INTERVAL_MS = 120 * DAY_MS;
 
 export type ReviewMoment = "list_cleared" | "expense_created";
 
+// Play has no deep link to the review form
 export const writeReviewUrl =
   Platform.OS === "ios"
-    ? `https://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`
-    : `https://play.google.com/store/apps/details?id=${PLAY_STORE_ID}`;
+    ? `${APP_STORE_URL}?action=write-review`
+    : PLAY_STORE_URL;
 
-// Counts every happy action, and asks the OS for a review only at a moment of success
 export function useReviewNudge() {
   const queryClient = useQueryClient();
   const posthog = usePostHog();
 
-  return async (moment?: ReviewMoment) => {
+  const nudge = async (moment?: ReviewMoment) => {
     if (__DEV__ || isE2ETestingEnabled()) return;
 
     const actions = Number(await AsyncStorage.getItem(ACTIONS_KEY)) + 1;
@@ -42,16 +42,18 @@ export function useReviewNudge() {
     const installedAt = await Application.getInstallationTimeAsync();
     if (Date.now() - installedAt.getTime() < MIN_INSTALL_AGE_MS) return;
 
-    const groups = await queryClient
-      .fetchQuery(trpc.group.getUserGroups.queryOptions())
-      .catch(() => null);
-    if (!groups?.success || !groups.data.some((g) => g.memberCount >= 2))
-      return;
+    const groups = await queryClient.ensureQueryData(
+      trpc.group.getUserGroups.queryOptions(),
+    );
+    if (!groups.success || !groups.data.some((g) => g.memberCount >= 2)) return;
 
     if (!(await StoreReview.hasAction())) return;
 
     await AsyncStorage.setItem(ASKED_AT_KEY, String(Date.now()));
-    posthog.capture("review_prompt_requested", { moment, actions });
     await StoreReview.requestReview();
+    posthog.capture("review_prompt_requested", { moment, actions });
   };
+
+  // The OS rejects when no window is in the foreground, not worth an error report
+  return (moment?: ReviewMoment) => nudge(moment).catch(() => undefined);
 }
