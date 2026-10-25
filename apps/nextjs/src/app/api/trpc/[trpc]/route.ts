@@ -42,7 +42,10 @@ const handler = async (req: NextRequest) => {
         error: error.cause ?? error,
         operation: `trpc.${path}`,
         distinctId: ctx?.session?.user.id,
-        additionalProperties: { trpcCode: error.code },
+        additionalProperties: {
+          trpcCode: error.code,
+          requestId: ctx?.requestId,
+        },
       });
     },
   });

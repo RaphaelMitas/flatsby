@@ -4,7 +4,7 @@ import type { Messages } from "@flatsby/i18n/messages";
 import { Data, Effect } from "effect";
 import { z } from "zod/v4";
 
-import { DrizzleQueryError } from "@flatsby/db";
+import { DrizzleQueryError } from "@flatsby/db/errors";
 import { translatorFor } from "@flatsby/i18n/translator";
 
 import { captureError } from "./lib/posthog";
@@ -293,37 +293,36 @@ export const withErrorHandlingAsResult = async <T>(
 
   const result = await Effect.runPromise(Effect.result(safeEffect));
 
-  if (result._tag === "Success") {
-    return {
-      success: true,
-      data: result.success,
-    };
-  }
-
-  const error = result.failure;
-  return {
-    success: false,
-    error: {
-      type: error._tag,
-      message: translatorFor(locale)(error.messageKey, error.values),
-      name: error.name,
-      details: {
-        messageKey: error.messageKey,
-        ...(error._tag === "NotFoundError" && {
-          identifier: error.identifier,
-        }),
-        ...(error._tag === "DatabaseError" && {
-          operation: error.operation,
-          table: error.table,
-        }),
-        ...(error._tag === "ExternalServiceError" && {
-          service: error.service,
-          operation: error.operation,
-        }),
-        ...(error._tag === "InternalServerError" && {
-          operation: error.operation,
-        }),
-      },
-    },
-  };
+  return result._tag === "Success"
+    ? { success: true, data: result.success }
+    : toApiErrorResult(locale, result.failure);
 };
+
+export const toApiErrorResult = (
+  locale: Locale,
+  error: ApiError,
+): ApiErrorResult => ({
+  success: false,
+  error: {
+    type: error._tag,
+    message: translatorFor(locale)(error.messageKey, error.values),
+    name: error.name,
+    details: {
+      messageKey: error.messageKey,
+      ...(error._tag === "NotFoundError" && {
+        identifier: error.identifier,
+      }),
+      ...(error._tag === "DatabaseError" && {
+        operation: error.operation,
+        table: error.table,
+      }),
+      ...(error._tag === "ExternalServiceError" && {
+        service: error.service,
+        operation: error.operation,
+      }),
+      ...(error._tag === "InternalServerError" && {
+        operation: error.operation,
+      }),
+    },
+  },
+});
