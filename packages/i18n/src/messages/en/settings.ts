@@ -38,6 +38,8 @@ export const settings = {
     legalNoticeSubtitle: "Legal notice (German law)",
     exportData: "Export My Data",
     exportDataSubtitle: "Download your personal data (GDPR)",
+    rateApp: "Rate Flatsby",
+    rateAppSubtitle: "Tell others what you think in the store",
   },
   theme: {
     light: "Light",

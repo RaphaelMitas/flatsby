@@ -6,9 +6,10 @@ import { ThemeProvider } from "next-themes";
 
 import { cn } from "@flatsby/ui";
 import { Toaster } from "@flatsby/ui/toast";
+import { APP_STORE_ID } from "@flatsby/validators/store";
 
 import { AnalyticsProvider } from "~/app/_components/analytics/AnalyticsProvider";
-import { APP_STORE_ID, SITE_URL } from "~/app/_components/landing/content";
+import { SITE_URL } from "~/app/_components/landing/content";
 import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";

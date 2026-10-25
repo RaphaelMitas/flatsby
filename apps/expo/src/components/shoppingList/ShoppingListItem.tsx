@@ -16,6 +16,7 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
+import { useReviewNudge } from "~/utils/useReviewNudge";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ShoppingItemDisplay } from "./ShoppingItemDisplay";
@@ -51,6 +52,7 @@ const ShoppingListItem = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const recordHappyAction = useReviewNudge();
 
   const categoryData = getCategoryData({ categoryId: item.categoryId });
 
@@ -108,10 +110,20 @@ const ShoppingListItem = ({
   );
 
   const handleCheckboxToggle = () => {
+    const isLastOpenItem =
+      queryClient
+        .getQueryData(itemsQueryKey)
+        ?.pages.every(
+          (page) =>
+            !page.success ||
+            page.data.items.every((i) => i.completed || i.id === item.id),
+        ) ?? false;
     updateShoppingListItemMutation.mutate({
       ...item,
       completed: !item.completed,
     });
+    if (!item.completed)
+      void recordHappyAction(isLastOpenItem ? "list_cleared" : undefined);
   };
 
   const handleEdit = () => {

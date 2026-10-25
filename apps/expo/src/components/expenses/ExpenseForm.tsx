@@ -51,6 +51,7 @@ import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { useCloseScreen } from "~/utils/useCloseScreen";
+import { useReviewNudge } from "~/utils/useReviewNudge";
 import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
 import { currencyItems } from "./currencyItems";
@@ -87,6 +88,7 @@ export function ExpenseForm({
   const locale = useLocale();
   const trpcClient = trpc;
   const queryClient = useQueryClient();
+  const recordHappyAction = useReviewNudge();
   const [currentStep, setCurrentStep] = useState(1);
 
   const isEditMode = !!expense;
@@ -293,6 +295,7 @@ export function ExpenseForm({
         }
 
         invalidateAll();
+        void recordHappyAction("expense_created");
       },
     }),
   );

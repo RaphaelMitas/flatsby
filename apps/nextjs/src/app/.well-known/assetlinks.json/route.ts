@@ -1,4 +1,4 @@
-import { PLAY_STORE_ID } from "../../_components/landing/content";
+import { PLAY_STORE_ID } from "@flatsby/validators/store";
 
 export const dynamic = "force-static";
 

@@ -23,12 +23,12 @@ import {
   INVITE_REFERRER_KEY,
   invitePath,
 } from "@flatsby/validators/invite";
+import { PLAY_STORE_ID } from "@flatsby/validators/store";
 
 import type { Platform } from "~/app/_components/landing/platform";
 import { CopyButton } from "~/app/_components/CopyButton";
 import {
   APP_STORE_LINK,
-  PLAY_STORE_ID,
   PLAY_STORE_LINK,
   SITE_URL,
 } from "~/app/_components/landing/content";

@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 
-import { PLAY_STORE_ID, PLAY_STORE_URL } from "./_components/landing/content";
+import { PLAY_STORE_ID } from "@flatsby/validators/store";
+
+import { PLAY_STORE_URL } from "./_components/landing/content";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
