@@ -5,6 +5,7 @@ import { translatorFor } from "@flatsby/i18n/translator";
 import type {
   CalendarItemView,
   CalendarRange,
+  EventTime,
   OccurrenceOverride,
   Recurrence,
 } from "./calendar";
@@ -35,7 +36,8 @@ import {
   timesMissed,
   weekDays,
   weekStart,
-  withEnd,
+  withoutOvernight,
+  withOvernight,
   withPickedStart,
   withSavedItem,
   withSkipped,
@@ -451,52 +453,66 @@ describe("listAgenda", () => {
 describe("event length", () => {
   const en = translatorFor("en");
 
+  const time = (start: string, end: string) => ({ start, end });
+
   it("keeps the length when the start moves, carrying the end across midnight", () => {
-    expect(
-      withStart({ time: { start: "19:00", end: "20:30" }, days: 1 }, "23:00"),
-    ).toEqual({ time: { start: "23:00", end: "00:30" }, days: 2 });
-    expect(
-      withStart({ time: { start: "22:00", end: "02:00" }, days: 2 }, "01:00"),
-    ).toEqual({ time: { start: "01:00", end: "05:00" }, days: 1 });
-    expect(
-      withStart({ time: { start: "18:00", end: "12:00" }, days: 3 }, "20:00"),
-    ).toEqual({ time: { start: "20:00", end: "14:00" }, days: 3 });
+    expect(withStart(time("19:00", "20:30"), 1, "23:00")).toEqual({
+      time: time("23:00", "00:30"),
+      days: 1,
+    });
+    expect(withStart(time("22:00", "02:00"), 1, "01:00")).toEqual({
+      time: time("01:00", "05:00"),
+      days: 1,
+    });
+    expect(withStart(time("18:00", "12:00"), 3, "20:00")).toEqual({
+      time: time("20:00", "14:00"),
+      days: 3,
+    });
   });
 
-  it("reads an end before the start of a one-day event as the next day", () => {
-    const evening = { time: { start: "22:00", end: "23:00" }, days: 1 };
-    expect(withEnd(evening, "02:00").days).toBe(2);
-    expect(withEnd({ ...evening, days: 3 }, "02:00").days).toBe(3);
+  it("stores a one-day event that ends before it starts as two days, and reads it back as one", () => {
+    expect(withOvernight(time("22:00", "02:00"), 1)).toBe(2);
+    expect(withoutOvernight(time("22:00", "02:00"), 2)).toBe(1);
+    expect(withOvernight(time("19:00", "21:00"), 1)).toBe(1);
+    expect(withoutOvernight(time("19:00", "21:00"), 2)).toBe(2);
+    expect(withOvernight(null, 1)).toBe(1);
   });
 
-  it("derives the length older apps leave out from an overnight time", () => {
-    const party = {
+  it("keeps the length older apps leave out, reading their overnight times as before", () => {
+    const party = { time: time("22:00", "02:00"), days: 2 };
+    const event = (eventTime: EventTime | null) => ({
       kind: "event" as const,
-      time: { start: "22:00", end: "02:00" },
-    };
-    expect(editedDays(party)).toBe(2);
-    expect(editedDays({ ...party, time: null })).toBe(1);
-    expect(editedDays({ ...party, time: null }, { days: 4 })).toBe(4);
-    expect(editedDays({ ...party, days: 1, time: null }, { days: 4 })).toBe(1);
-    expect(editedDays({ kind: "task", time: null }, { days: 4 })).toBe(1);
+      time: eventTime,
+    });
+    expect(editedDays(event(time("22:00", "02:00")))).toBe(2);
+    expect(editedDays(event(time("20:00", "23:00")), party)).toBe(1);
+    expect(editedDays(event(time("23:00", "03:00")), party)).toBe(2);
+    expect(editedDays(event(null), { time: null, days: 4 })).toBe(4);
+    expect(
+      editedDays(event(time("19:00", "22:00")), {
+        time: time("19:00", "21:00"),
+        days: 2,
+      }),
+    ).toBe(2);
+    expect(
+      editedDays({ kind: "task", time: null }, { time: null, days: 4 }),
+    ).toBe(1);
   });
 
-  it("rejects a one-day event that ends before it starts, and a task over several days", () => {
+  it("rejects a task over several days", () => {
     const event = {
       groupId: 1,
       kind: "event" as const,
       title: "Party",
       color: "blue" as const,
       startsOn: "2026-10-23",
-      time: { start: "22:00", end: "02:00" },
+      time: time("22:00", "02:00"),
       recurrence: null,
       memberIds: [],
     };
     const valid = (input: object) =>
       createCalendarItemSchema.safeParse({ ...event, ...input }).success;
-    expect(valid({})).toBe(true);
-    expect(valid({ days: 2 })).toBe(true);
-    expect(valid({ days: 1 })).toBe(false);
+    expect(valid({ days: 1 })).toBe(true);
     expect(valid({ kind: "task", time: null, days: 2 })).toBe(false);
   });
 

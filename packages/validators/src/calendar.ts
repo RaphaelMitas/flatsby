@@ -73,9 +73,7 @@ export const eventTimeSchema = z.object({
   end: calendarTimeSchema,
 });
 export type EventTime = z.infer<typeof eventTimeSchema>;
-/** How many calendar days an event touches; its end time falls on the last one. */
-export const MAX_EVENT_DAYS = 365;
-const eventDaysSchema = z.int().min(1).max(MAX_EVENT_DAYS);
+const eventDaysSchema = z.int().min(1).max(365);
 export const calendarItemKindSchema = z.enum(["task", "event"]);
 export type CalendarItemKind = z.infer<typeof calendarItemKindSchema>;
 
@@ -113,7 +111,7 @@ const calendarItemFields = z.object({
   recurrence: recurrenceSchema.nullable(),
   // undefined keeps the stored end; apps up to v0.12.0 leave it out
   endsOn: calendarDateSchema.nullable().optional(),
-  // undefined keeps the stored length; apps up to v0.14.1 leave it out
+  // Read through withOvernight; undefined keeps the stored length, as apps up to v0.14.1 leave it out
   days: eventDaysSchema.optional(),
   memberIds: z.array(z.number()).max(50),
 });
@@ -123,25 +121,28 @@ export const endsBeforeStart = (item: {
   endsOn?: string | null;
 }) => !!item.endsOn && item.endsOn < item.startsOn;
 
-const endsAfterStart = ({ time, days }: z.infer<typeof calendarItemFields>) =>
-  !time || days !== 1 || time.end > time.start;
-
 const isConsistentItem = (item: z.infer<typeof calendarItemFields>) =>
   (item.kind === "task"
     ? item.time === null && (item.days ?? 1) === 1
-    : item.memberIds.length === 0) &&
-  !endsBeforeStart(item) &&
-  endsAfterStart(item);
+    : item.memberIds.length === 0) && !endsBeforeStart(item);
 
-/** Apps up to v0.14.1 leave `days` out and write an overnight event as an end before its start. */
+const runsPastMidnight = (time: EventTime | null) =>
+  time !== null && time.end <= time.start;
+
+// Forms and older apps write an overnight event as one day whose end comes before its start; it's stored as two
+export const withOvernight = (time: EventTime | null, days: number) =>
+  days === 1 && runsPastMidnight(time) ? 2 : days;
+
+export const withoutOvernight = (time: EventTime | null, days: number) =>
+  days === 2 && runsPastMidnight(time) ? 1 : days;
+
 export function editedDays(
   next: Pick<z.infer<typeof calendarItemFields>, "kind" | "time" | "days">,
-  previous?: { days: number },
+  previous?: { time: EventTime | null; days: number },
 ) {
   if (next.kind === "task") return 1;
-  if (next.days !== undefined) return next.days;
-  const overnight = next.time !== null && next.time.end <= next.time.start;
-  return Math.max(previous?.days ?? 1, overnight ? 2 : 1);
+  const kept = previous ? withoutOvernight(previous.time, previous.days) : 1;
+  return withOvernight(next.time, next.days ?? kept);
 }
 
 export const createCalendarItemSchema =
@@ -345,9 +346,10 @@ const openOccurrence = (item: ExpandableItem, date: string): Occurrence => ({
   completedAt: null,
 });
 
-/** The earliest start whose event still reaches `from`. */
-const firstStartIn = (item: Pick<ExpandableItem, "days">, from: string) =>
-  addDays(from, 1 - item.days);
+export const earliestStartReaching = (
+  item: Pick<ExpandableItem, "days">,
+  from: string,
+) => addDays(from, 1 - item.days);
 
 export const lastDayOf = (
   item: Pick<ExpandableItem, "days">,
@@ -364,7 +366,7 @@ export function expandOccurrences(
   const occurrences: Occurrence[] = [];
   for (
     let day = Math.max(
-      toDayNumber(firstStartIn(item, from)),
+      toDayNumber(earliestStartReaching(item, from)),
       toDayNumber(item.startsOn),
     );
     day <= toDayNumber(to);
@@ -432,34 +434,24 @@ const timeOf = (minutes: number) => {
   return [Math.floor(wrapped / 60), wrapped % 60].map(pad).join(":");
 };
 
-export interface TimedSpan {
-  time: EventTime;
-  days: number;
-}
-
 /** Moving the start keeps the event's length, which can carry its end into another day. */
-export function withStart({ time, days }: TimedSpan, start: string): TimedSpan {
+export function withStart(time: EventTime, days: number, start: string) {
   const end =
-    (days - 1) * DAY_MINUTES +
+    (withOvernight(time, days) - 1) * DAY_MINUTES +
     minutesOf(time.end) -
     minutesOf(time.start) +
     minutesOf(start);
+  const moved = { start, end: timeOf(end) };
   return {
-    time: { start, end: timeOf(end) },
-    days: Math.floor(end / DAY_MINUTES) + 1,
+    time: moved,
+    days: withoutOvernight(moved, Math.floor(end / DAY_MINUTES) + 1),
   };
 }
-
-/** An end at or before the start of a one-day event means it runs past midnight. */
-export const withEnd = ({ time, days }: TimedSpan, end: string): TimedSpan => ({
-  time: { ...time, end },
-  days: days === 1 && end <= time.start ? 2 : days,
-});
 
 export const daysBetween = (startsOn: string, lastDay: string) =>
   toDayNumber(lastDay) - toDayNumber(startsOn) + 1;
 
-/** With `date`, a multi-day event names the days it runs; without, its end says how many days later it falls. */
+// Without `date` the end reads as +N days
 export function describeEventTime(
   item: Pick<ExpandableItem, "days"> & { time: EventTime | null },
   t: Translate,
@@ -834,21 +826,14 @@ export interface MonthBar {
 }
 
 export interface MonthCell {
-  date: string;
   /** One per shown lane; null where a bar passes or the lane is empty */
   slots: (AgendaEntry | null)[];
   hidden: number;
 }
 
-const entryKey = ({ item, occurrence }: CalendarEntry) =>
-  `${item.id}-${occurrence.date}`;
-
 /** Lays a week out in lanes, so an event over several days keeps one lane and draws as a single bar. */
 function weekLayout(week: AgendaDay[], lines: number) {
   const lanes = week.map((): (AgendaEntry | null)[] => []);
-  const bars: MonthBar[] = [];
-  const placed = new Set<string>();
-  /** Puts the entry in the lowest lane free on all its columns. */
   const place = (columns: number[], entry: AgendaEntry) => {
     let lane = 0;
     while (columns.some((column) => lanes[column]?.[lane])) lane++;
@@ -858,28 +843,26 @@ function weekLayout(week: AgendaDay[], lines: number) {
     }
     return lane;
   };
-  week.forEach((day, column) => {
-    for (const entry of day.entries) {
-      const key = entryKey(entry);
-      if (entry.item.days === 1 || placed.has(key)) continue;
-      placed.add(key);
-      const covered = week
-        .slice(column)
-        .findIndex((later) => !later.entries.some((e) => entryKey(e) === key));
-      const span = covered === -1 ? week.length - column : covered;
+  const bars = week.flatMap((day, column) =>
+    day.entries.flatMap((entry): MonthBar[] => {
+      const { item, occurrence } = entry;
+      const startsBefore = occurrence.date < day.date;
+      if (item.days === 1 || (startsBefore && column > 0)) return [];
+      const left = daysBetween(day.date, lastDayOf(item, occurrence));
+      const span = Math.min(left, week.length - column);
       const columns = Array.from({ length: span }, (_, i) => column + i);
-      bars.push({
-        entry,
-        column,
-        span,
-        lane: place(columns, entry),
-        startsBefore: entry.occurrence.date < day.date,
-        endsAfter:
-          lastDayOf(entry.item, entry.occurrence) >
-          (week[column + span - 1]?.date ?? day.date),
-      });
-    }
-  });
+      return [
+        {
+          entry,
+          column,
+          span,
+          lane: place(columns, entry),
+          startsBefore,
+          endsAfter: left > span,
+        },
+      ];
+    }),
+  );
   week.forEach((day, column) => {
     for (const entry of day.entries)
       if (entry.item.days === 1) place([column], entry);
@@ -888,23 +871,18 @@ function weekLayout(week: AgendaDay[], lines: number) {
   const limit = lanes.some((used) => used.length > lines) ? lines - 1 : lines;
   return {
     bars: bars.filter((bar) => bar.lane < limit),
-    cells: week.map((day, column): MonthCell => {
-      const used = lanes[column] ?? [];
-      return {
-        date: day.date,
-        slots: Array.from(used.slice(0, limit), (entry) =>
-          entry && entry.item.days === 1 ? entry : null,
-        ),
-        hidden: used.slice(limit).filter(Boolean).length,
-      };
-    }),
+    cells: lanes.map((used): MonthCell => ({
+      slots: Array.from(used.slice(0, limit), (entry) =>
+        entry && entry.item.days === 1 ? entry : null,
+      ),
+      hidden: used.slice(limit).filter(Boolean).length,
+    })),
   };
 }
 
-/** The month grid's weeks, each with its cells' entries in lanes and the bars drawn over them. */
 export const monthWeeks = (days: AgendaDay[], lines: number) =>
   Array.from({ length: Math.ceil(days.length / 7) }, (_, week) =>
-    weekLayout(days.slice(7 * week, 7 * week + 7), Math.max(1, lines)),
+    weekLayout(days.slice(7 * week, 7 * week + 7), lines),
   );
 
 export type CalendarView = "list" | "month";
@@ -1159,7 +1137,7 @@ export function withSkipped(
     change.skipped ||
     !item ||
     !isScheduledOn(item, change.date) ||
-    change.date < firstStartIn(item, from) ||
+    change.date < earliestStartReaching(item, from) ||
     change.date > to
   )
     return { ...range, occurrences };

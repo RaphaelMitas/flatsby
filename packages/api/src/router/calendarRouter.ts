@@ -30,6 +30,7 @@ import {
   calendarRangeSchema,
   continuedRotation,
   createCalendarItemSchema,
+  earliestStartReaching,
   editedDays,
   editedEndsOn,
   endsBeforeStart,
@@ -243,7 +244,6 @@ const itemValues = ({
   days,
 });
 
-// An event starting on this date still runs on the days after it
 const lastDayOf = (date: SQLWrapper) =>
   sql`${date} + ${calendarItems.days} - 1`;
 
@@ -368,9 +368,9 @@ export const calendarRouter = createTRPCRouter({
                   ),
                   between(
                     calendarOccurrences.date,
-                    addDays(
+                    earliestStartReaching(
+                      { days: Math.max(...items.map((item) => item.days)) },
                       input.from,
-                      1 - Math.max(...items.map((item) => item.days)),
                     ),
                     input.to,
                   ),
@@ -405,7 +405,7 @@ export const calendarRouter = createTRPCRouter({
                   eq(calendarOccurrences.itemId, item.id),
                   between(
                     calendarOccurrences.date,
-                    addDays(input.today, 1 - item.days),
+                    earliestStartReaching(item, input.today),
                     until,
                   ),
                 ),

@@ -23,7 +23,6 @@ import { Switch } from "@flatsby/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
-  addDays,
   calendarColors,
   createCalendarItemSchema,
   daysBetween,
@@ -37,6 +36,7 @@ import {
   formatCalendarDate,
   formEndsOn,
   hasEnded,
+  lastDayOf,
   maxEvery,
   monthDayChoices,
   newRepeatFormFor,
@@ -46,7 +46,8 @@ import {
   weekdayName,
   weekdayOf,
   weekdays,
-  withEnd,
+  withoutOvernight,
+  withOvernight,
   withPickedStart,
   withStart,
 } from "@flatsby/validators/calendar";
@@ -82,10 +83,12 @@ export function CalendarItemForm({
     item?.color ?? null,
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
-  const [span, setSpan] = useState<{ time: EventTime | null; days: number }>({
-    time: item?.time ?? null,
-    days: item?.days ?? 1,
-  });
+  const [span, setSpan] = useState<{ time: EventTime | null; days: number }>(
+    () => ({
+      time: item?.time ?? null,
+      days: item ? withoutOvernight(item.time, item.days) : 1,
+    }),
+  );
   const { time } = span;
   const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
     item ? repeatFormOf(item.recurrence) : null,
@@ -235,7 +238,10 @@ export function CalendarItemForm({
       {!ended && !isTask && (
         <Field label={t("calendar.form.ends")}>
           <DatePopover
-            value={addDays(startsOn, span.days - 1)}
+            value={lastDayOf(
+              { days: withOvernight(time, span.days) },
+              { date: startsOn },
+            )}
             min={startsOn}
             onSelect={(lastDay) =>
               setSpan({ ...span, days: daysBetween(startsOn, lastDay) })
@@ -265,9 +271,7 @@ export function CalendarItemForm({
               value={time.start}
               onChange={(event) =>
                 event.target.value &&
-                setSpan(
-                  withStart({ time, days: span.days }, event.target.value),
-                )
+                setSpan(withStart(time, span.days, event.target.value))
               }
               data-testid="calendar-form-start-time"
             />
@@ -279,7 +283,7 @@ export function CalendarItemForm({
               value={time.end}
               onChange={(event) =>
                 event.target.value &&
-                setSpan(withEnd({ time, days: span.days }, event.target.value))
+                setSpan({ ...span, time: { ...time, end: event.target.value } })
               }
               data-testid="calendar-form-end-time"
             />

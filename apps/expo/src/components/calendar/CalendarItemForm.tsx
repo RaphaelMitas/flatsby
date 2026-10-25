@@ -14,7 +14,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
-  addDays,
   calendarColors,
   createCalendarItemSchema,
   daysBetween,
@@ -28,6 +27,7 @@ import {
   formatCalendarDate,
   formEndsOn,
   hasEnded,
+  lastDayOf,
   localDate,
   maxEvery,
   monthDayChoices,
@@ -41,7 +41,8 @@ import {
   weekdayName,
   weekdayOf,
   weekdays,
-  withEnd,
+  withoutOvernight,
+  withOvernight,
   withPickedStart,
   withStart,
 } from "@flatsby/validators/calendar";
@@ -137,10 +138,12 @@ function ItemFields({
     item?.color ?? null,
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
-  const [span, setSpan] = useState<{ time: EventTime | null; days: number }>({
-    time: item?.time ?? null,
-    days: item?.days ?? 1,
-  });
+  const [span, setSpan] = useState<{ time: EventTime | null; days: number }>(
+    () => ({
+      time: item?.time ?? null,
+      days: item ? withoutOvernight(item.time, item.days) : 1,
+    }),
+  );
   const { time } = span;
   const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
     item ? repeatFormOf(item.recurrence) : null,
@@ -309,7 +312,12 @@ function ItemFields({
           <DatePickerField
             testID="calendar-form-event-ends-on"
             label={t("calendar.form.ends")}
-            value={pickerDate(addDays(startsOn, span.days - 1))}
+            value={pickerDate(
+              lastDayOf(
+                { days: withOvernight(time, span.days) },
+                { date: startsOn },
+              ),
+            )}
             minimumDate={pickerDate(startsOn)}
             onChange={(picked) =>
               setSpan({
@@ -341,10 +349,7 @@ function ItemFields({
                     value={pickerTime(time.start)}
                     onChange={(picked) =>
                       setSpan(
-                        withStart(
-                          { time, days: span.days },
-                          fromPickerTime(picked),
-                        ),
+                        withStart(time, span.days, fromPickerTime(picked)),
                       )
                     }
                   />
@@ -356,12 +361,10 @@ function ItemFields({
                     label={t("calendar.form.to")}
                     value={pickerTime(time.end)}
                     onChange={(picked) =>
-                      setSpan(
-                        withEnd(
-                          { time, days: span.days },
-                          fromPickerTime(picked),
-                        ),
-                      )
+                      setSpan({
+                        ...span,
+                        time: { ...time, end: fromPickerTime(picked) },
+                      })
                     }
                   />
                 </View>

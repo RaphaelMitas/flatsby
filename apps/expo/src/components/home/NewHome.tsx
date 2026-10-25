@@ -10,6 +10,7 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 
 import {
+  describeEventTime,
   formatCalendarDate,
   homeAgenda,
   listWindow,
@@ -238,7 +239,15 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
         />
       ),
       label: nextEvent.item.title,
-      value: dayAndTime(nextEvent.occurrence.date, nextEvent.item.time?.start),
+      value:
+        nextEvent.item.days > 1
+          ? describeEventTime(
+              nextEvent.item,
+              t,
+              locale,
+              nextEvent.occurrence.date,
+            )
+          : dayAndTime(nextEvent.occurrence.date, nextEvent.item.time?.start),
       onPress: () => openCalendar(nextEvent.occurrence.date),
     },
     lastList && {
