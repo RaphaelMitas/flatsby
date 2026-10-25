@@ -184,6 +184,25 @@ export function buildPostHogProperties(headers: Headers, page?: PageUrls) {
   );
 }
 
+// DrizzleQueryError's message embeds the query params, which hold user data,
+// and errors like TRPCError copy their cause's message when given none
+function withoutQueryErrors(error: unknown): unknown {
+  if (error instanceof DrizzleQueryError)
+    return withoutQueryErrors(error.cause);
+  if (!(error instanceof Error) || !(error.cause instanceof Error))
+    return error;
+  const cause = withoutQueryErrors(error.cause);
+  if (cause === error.cause) return error;
+  const inherited = error.message === error.cause.message;
+  const copy = new Error(
+    inherited && cause instanceof Error ? cause.message : error.message,
+    { cause },
+  );
+  copy.name = error.name;
+  copy.stack = error.stack?.replace(error.message, () => copy.message);
+  return copy;
+}
+
 export function captureError({
   error,
   operation,
@@ -195,10 +214,7 @@ export function captureError({
   distinctId?: string;
   additionalProperties?: Record<string, unknown>;
 }) {
-  // DrizzleQueryError's message embeds the query params, which hold user data
-  const cause =
-    error instanceof DrizzleQueryError && error.cause ? error.cause : error;
-  const err = cause instanceof Error ? cause : new Error(String(cause));
+  const cause = withoutQueryErrors(error);
 
   if (process.env.NODE_ENV === "development") {
     console.error(`[${operation}]`, cause);
@@ -206,17 +222,10 @@ export function captureError({
 
   if (!posthog) return;
 
-  posthog.capture({
-    distinctId: distinctId ?? "system",
-    event: "$exception",
-    properties: {
-      $exception_type: err.name,
-      $exception_message: err.message,
-      $exception_stack_trace_raw: err.stack,
-      $exception_source: "server",
-      operation,
-      ...additionalProperties,
-    },
+  posthog.captureException(cause, distinctId, {
+    $exception_source: "server",
+    operation,
+    ...additionalProperties,
   });
 }
 
