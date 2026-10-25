@@ -54,6 +54,6 @@ export function useReviewNudge() {
     posthog.capture("review_prompt_requested", { moment, actions });
   };
 
-  // The OS rejects when no window is in the foreground, not worth an error report
+  // A missed nudge is harmless, so no failure should reach error tracking
   return (moment?: ReviewMoment) => nudge(moment).catch(() => undefined);
 }
