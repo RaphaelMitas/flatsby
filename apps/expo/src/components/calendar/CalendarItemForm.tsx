@@ -319,7 +319,7 @@ function ItemFields({
         {!isTask && (!ended || time) && (
           <>
             <View className="flex-row items-center gap-2">
-              <Label className="w-16">{t("calendar.form.begins")}</Label>
+              <Label className="min-w-16">{t("calendar.form.begins")}</Label>
               <View className="flex-1">{!ended && startPicker()}</View>
               {time && (
                 <DatePickerField
@@ -334,7 +334,7 @@ function ItemFields({
               )}
             </View>
             <View className="flex-row items-center gap-2">
-              <Label className="w-16">{t("calendar.form.ends")}</Label>
+              <Label className="min-w-16">{t("calendar.form.ends")}</Label>
               <View className="flex-1">
                 {!ended && (
                   <DatePickerField
