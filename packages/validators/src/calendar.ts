@@ -178,7 +178,6 @@ export function editedDays(
   return withOvernight(next.time, next.days ?? kept);
 }
 
-// Set once from the creating device; edits keep it
 export const createCalendarItemSchema = calendarItemFields
   .extend({ timeZone: timeZoneSchema })
   .refine(isConsistentItem);
