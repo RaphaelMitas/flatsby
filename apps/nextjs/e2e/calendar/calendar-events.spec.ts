@@ -15,6 +15,7 @@ test.describe("Calendar events", () => {
     const form = authPage.getByTestId("calendar-form");
     await form.getByTestId("calendar-form-title").fill(title);
     await form.getByTestId("calendar-form-kind-event").click();
+    await form.getByTestId("calendar-form-all-day").click();
     await form.getByTestId("calendar-form-event-ends-on").click();
     // The picker opens focused on the start day
     await authPage.keyboard.press("ArrowRight");

@@ -7,13 +7,14 @@ import { useThemeColors } from "../utils";
 import { Label } from "./label";
 
 interface DatePickerFieldProps {
-  label: string;
+  label?: string;
   value: Date;
   onChange: (date: Date) => void;
   mode?: "date" | "time";
   minimumDate?: Date;
   maximumDate?: Date;
   testID?: string;
+  accessibilityLabel?: string;
 }
 
 export function DatePickerField({
@@ -24,6 +25,7 @@ export function DatePickerField({
   minimumDate,
   maximumDate,
   testID,
+  accessibilityLabel,
 }: DatePickerFieldProps) {
   const locale = useLocale();
   const [showPicker, setShowPicker] = useState(false);
@@ -43,9 +45,10 @@ export function DatePickerField({
   if (Platform.OS === "ios") {
     return (
       <View className="gap-2">
-        <Label>{label}</Label>
+        {!!label && <Label>{label}</Label>}
         <DateTimePicker
           testID={testID}
+          accessibilityLabel={accessibilityLabel}
           value={value}
           mode={mode}
           minimumDate={minimumDate}
@@ -61,9 +64,13 @@ export function DatePickerField({
 
   return (
     <View className="gap-2">
-      <Label>{label}</Label>
+      {!!label && <Label>{label}</Label>}
       <Pressable
         testID={testID}
+        // A label on a Pressable replaces its text, so the value has to be part of it
+        accessibilityLabel={
+          accessibilityLabel && `${accessibilityLabel}, ${formatted}`
+        }
         onPress={() => setShowPicker(true)}
         className="border-input bg-background flex h-12 flex-row items-center rounded-lg border px-3"
       >

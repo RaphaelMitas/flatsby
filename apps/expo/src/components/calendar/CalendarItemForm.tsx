@@ -217,6 +217,16 @@ function ItemFields({
     if (next.length > 0) changeRepeat({ days: next });
   };
 
+  const startPicker = (label?: string) => (
+    <DatePickerField
+      testID="calendar-form-starts-on"
+      label={label}
+      value={pickerDate(startsOn)}
+      maximumDate={endsOn ? pickerDate(endsOn) : undefined}
+      onChange={(picked) => pickStart(localDate(picked))}
+    />
+  );
+
   const toggleMember = (memberId: number) =>
     setMemberIds(
       memberIds.includes(memberId)
@@ -289,79 +299,73 @@ function ItemFields({
       </View>
 
       <View className="mt-6 gap-4">
-        {!ended && (
-          <DatePickerField
-            testID="calendar-form-starts-on"
-            label={
-              !isTask
-                ? t("calendar.form.begins")
-                : recurrence
-                  ? t("calendar.form.startsOn")
-                  : t("calendar.form.date")
-            }
-            value={pickerDate(startsOn)}
-            maximumDate={endsOn ? pickerDate(endsOn) : undefined}
-            onChange={(picked) => pickStart(localDate(picked))}
-          />
-        )}
-        {!ended && !isTask && (
-          <DatePickerField
-            testID="calendar-form-event-ends-on"
-            label={t("calendar.form.ends")}
-            value={pickerDate(ends.value)}
-            minimumDate={pickerDate(ends.min)}
-            maximumDate={pickerDate(ends.max)}
-            onChange={(picked) =>
-              setSpan({
-                ...span,
-                days: daysBetween(startsOn, localDate(picked)),
-              })
-            }
-          />
-        )}
+        {isTask &&
+          !ended &&
+          startPicker(
+            recurrence ? t("calendar.form.startsOn") : t("calendar.form.date"),
+          )}
         {!isTask && (
+          <View className="flex-row items-center justify-between">
+            <Label>{t("calendar.allDay")}</Label>
+            <Switch
+              testID="calendar-form-all-day"
+              checked={time === null}
+              onCheckedChange={(allDay) =>
+                setSpan({ ...span, time: allDay ? null : defaultEventTime })
+              }
+            />
+          </View>
+        )}
+        {!isTask && (!ended || time) && (
           <>
-            <View className="flex-row items-center justify-between">
-              <Label>{t("calendar.allDay")}</Label>
-              <Switch
-                testID="calendar-form-all-day"
-                checked={time === null}
-                onCheckedChange={(allDay) =>
-                  setSpan({ ...span, time: allDay ? null : defaultEventTime })
-                }
-              />
+            <View className="flex-row items-center gap-2">
+              <Label className="min-w-16">{t("calendar.form.begins")}</Label>
+              <View className="flex-1">{!ended && startPicker()}</View>
+              {time && (
+                <DatePickerField
+                  testID="calendar-form-start-time"
+                  accessibilityLabel={t("calendar.form.begins")}
+                  mode="time"
+                  value={pickerTime(time.start)}
+                  onChange={(picked) =>
+                    setSpan(withStart(time, span.days, fromPickerTime(picked)))
+                  }
+                />
+              )}
             </View>
-            {time !== null && (
-              <View className="flex-row gap-3">
-                <View className="flex-1">
+            <View className="flex-row items-center gap-2">
+              <Label className="min-w-16">{t("calendar.form.ends")}</Label>
+              <View className="flex-1">
+                {!ended && (
                   <DatePickerField
-                    testID="calendar-form-start-time"
-                    mode="time"
-                    label={t("calendar.form.from")}
-                    value={pickerTime(time.start)}
-                    onChange={(picked) =>
-                      setSpan(
-                        withStart(time, span.days, fromPickerTime(picked)),
-                      )
-                    }
-                  />
-                </View>
-                <View className="flex-1">
-                  <DatePickerField
-                    testID="calendar-form-end-time"
-                    mode="time"
-                    label={t("calendar.form.to")}
-                    value={pickerTime(time.end)}
+                    testID="calendar-form-event-ends-on"
+                    value={pickerDate(ends.value)}
+                    minimumDate={pickerDate(ends.min)}
+                    maximumDate={pickerDate(ends.max)}
                     onChange={(picked) =>
                       setSpan({
                         ...span,
-                        time: { ...time, end: fromPickerTime(picked) },
+                        days: daysBetween(startsOn, localDate(picked)),
                       })
                     }
                   />
-                </View>
+                )}
               </View>
-            )}
+              {time && (
+                <DatePickerField
+                  testID="calendar-form-end-time"
+                  accessibilityLabel={t("calendar.form.ends")}
+                  mode="time"
+                  value={pickerTime(time.end)}
+                  onChange={(picked) =>
+                    setSpan({
+                      ...span,
+                      time: { ...time, end: fromPickerTime(picked) },
+                    })
+                  }
+                />
+              )}
+            </View>
           </>
         )}
       </View>
