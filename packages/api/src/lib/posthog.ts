@@ -199,7 +199,7 @@ function withoutQueryErrors(error: unknown): unknown {
     { cause },
   );
   copy.name = error.name;
-  copy.stack = error.stack?.replace(error.message, copy.message);
+  copy.stack = error.stack?.replace(error.message, () => copy.message);
   return copy;
 }
 
