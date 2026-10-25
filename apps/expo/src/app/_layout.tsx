@@ -6,11 +6,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { router, Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
-import { redactInvitePath } from "@flatsby/validators/invite";
-
+import { posthog } from "~/utils/analytics/posthog";
 import { getScreenName } from "~/utils/analytics/screen-names";
 import { queryClient } from "~/utils/api";
 
@@ -26,7 +24,6 @@ import { UpdateNudge } from "~/components/UpdateNudge";
 import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
-import { isE2ETestingEnabled } from "~/utils/e2e";
 import { IntlProvider } from "~/utils/intl-provider";
 import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
 import {
@@ -37,45 +34,14 @@ import {
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 export default function RootLayout() {
-  const posthogDisabled = isE2ETestingEnabled() || __DEV__;
-  const posthogApiKey = String(process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "");
-  if (!posthogApiKey && !posthogDisabled)
-    throw new Error("EXPO_PUBLIC_POSTHOG_API_KEY is not set");
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <IntlProvider>
         <PostHogProvider
-          apiKey={posthogApiKey || "phc-disabled"}
+          client={posthog}
           // expo-router never exposes a NavigationContainer, so PostHog's screen
           // autocapture cannot read navigation state. ScreenTracker does it instead.
           autocapture={{ captureScreens: false }}
-          options={{
-            disabled: posthogDisabled,
-            host: "https://eu.i.posthog.com",
-            // Deep links reach PostHog as screen paths and the "Application Opened" url
-            before_send: (event) =>
-              event && {
-                ...event,
-                properties:
-                  event.properties &&
-                  Object.fromEntries(
-                    Object.entries(event.properties).map(([key, value]) => [
-                      key,
-                      typeof value === "string"
-                        ? redactInvitePath(value)
-                        : value,
-                    ]),
-                  ),
-              },
-            errorTracking: {
-              autocapture: {
-                uncaughtExceptions: true,
-                unhandledRejections: true,
-                console: ["error"],
-              },
-            },
-          }}
         >
           <KeyboardProvider>
             <SafeAreaProvider>
@@ -100,12 +66,11 @@ export default function RootLayout() {
 function ScreenTracker() {
   const pathname = usePathname();
   const segments = useSegments();
-  const posthog = usePostHog();
 
   useEffect(() => {
     const screenName = getScreenName(segments);
     void posthog.screen(screenName, { pathname });
-  }, [pathname, segments, posthog]);
+  }, [pathname, segments]);
 
   return null;
 }

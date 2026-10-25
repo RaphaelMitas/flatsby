@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Text, View } from "react-native";
-import { TRPCClientError } from "@trpc/client";
 import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
@@ -10,6 +9,7 @@ import { Button } from "~/lib/ui/button";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { authClient, signOut } from "~/utils/auth/auth-client";
 import { useHomeVersion } from "~/utils/home-version";
+import { isUnauthorizedError } from "~/utils/report-trpc-error";
 
 export function ErrorBoundary({
   error,
@@ -19,12 +19,7 @@ export function ErrorBoundary({
   retry: () => void;
 }) {
   const t = useTranslations("home");
-  const data: unknown = error instanceof TRPCClientError ? error.data : null;
-  const isUnauthorized =
-    typeof data === "object" &&
-    data !== null &&
-    "code" in data &&
-    data.code === "UNAUTHORIZED";
+  const isUnauthorized = isUnauthorizedError(error);
 
   useEffect(() => {
     if (isUnauthorized) {

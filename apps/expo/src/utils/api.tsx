@@ -1,30 +1,24 @@
 import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { AppState } from "react-native";
-import { focusManager, QueryClient } from "@tanstack/react-query";
 import {
-  createTRPCClient,
-  httpBatchLink,
-  loggerLink,
-  TRPCClientError,
-} from "@trpc/client";
+  focusManager,
+  MutationCache,
+  QueryCache,
+  QueryClient,
+} from "@tanstack/react-query";
+import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
 
 import { authClient } from "./auth/auth-client";
 import { getBaseUrl } from "./base-url";
 import { languageTags } from "./intl-provider";
-
-function isUnauthorizedError(error: unknown): boolean {
-  if (!(error instanceof TRPCClientError)) return false;
-  const data: unknown = error.data;
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "code" in data &&
-    data.code === "UNAUTHORIZED"
-  );
-}
+import {
+  isUnauthorizedError,
+  reportMutationError,
+  reportQueryError,
+} from "./report-trpc-error";
 
 // React Native has no window focus; coming back to the app refetches what's on screen, so housemates' changes show up
 focusManager.setEventListener((setFocused) => {
@@ -35,6 +29,8 @@ focusManager.setEventListener((setFocused) => {
 });
 
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: reportQueryError }),
+  mutationCache: new MutationCache({ onError: reportMutationError }),
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
@@ -81,9 +77,7 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
   client: createTRPCClient({
     links: [
       loggerLink({
-        enabled: (opts) =>
-          process.env.NODE_ENV === "development" ||
-          (opts.direction === "down" && opts.result instanceof Error),
+        enabled: () => process.env.NODE_ENV === "development",
         colorMode: "ansi",
       }),
       httpBatchLink({
