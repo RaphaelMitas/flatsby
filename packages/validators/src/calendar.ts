@@ -460,7 +460,6 @@ export function withStart(time: EventTime, days: number, start: string) {
 export const daysBetween = (startsOn: string, lastDay: string) =>
   toDayNumber(lastDay) - toDayNumber(startsOn) + 1;
 
-/** The Ends picker of an event form: the shown last day and the range it can move in. */
 export const eventEndChoices = (
   startsOn: string,
   { time, days }: ReturnType<typeof eventSpanOf>,
