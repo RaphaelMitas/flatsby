@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Linking, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
 import { Stack } from "expo-router";
 import { useLocale, useTranslations } from "use-intl";
 
-import { localePath } from "@flatsby/i18n/locale";
-
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { signIn } from "~/utils/auth/auth-client";
-import { getBaseUrl } from "~/utils/base-url";
+import { openLegalPage } from "~/utils/legal";
 
 const Login = () => {
   const t = useTranslations();
@@ -90,11 +88,7 @@ const Login = () => {
               terms: (chunks) => (
                 <Text
                   className="underline"
-                  onPress={() =>
-                    Linking.openURL(
-                      `${getBaseUrl()}${localePath(locale, "/legal/terms")}`,
-                    )
-                  }
+                  onPress={() => openLegalPage(locale, "terms")}
                 >
                   {chunks}
                 </Text>
@@ -102,11 +96,7 @@ const Login = () => {
               privacy: (chunks) => (
                 <Text
                   className="underline"
-                  onPress={() =>
-                    Linking.openURL(
-                      `${getBaseUrl()}${localePath(locale, "/legal/privacy")}`,
-                    )
-                  }
+                  onPress={() => openLegalPage(locale, "privacy")}
                 >
                   {chunks}
                 </Text>
@@ -115,11 +105,7 @@ const Login = () => {
           </Text>
           <Text
             className="text-muted-foreground text-center text-xs underline"
-            onPress={() =>
-              Linking.openURL(
-                `${getBaseUrl()}${localePath(locale, "/legal/legal-notice")}`,
-              )
-            }
+            onPress={() => openLegalPage(locale, "legal-notice")}
           >
             {t("navigation.legalNotice")}
           </Text>

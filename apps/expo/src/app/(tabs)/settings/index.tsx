@@ -5,7 +5,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
-import { localeNames, localePath, locales } from "@flatsby/i18n/locale";
+import { localeNames, locales } from "@flatsby/i18n/locale";
 
 import type { Theme } from "~/lib/ui/theme";
 import { SettingsChoiceItem } from "~/components/settings/SettingsChoiceItem";
@@ -22,6 +22,7 @@ import { signOut } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
 import { useHomeVersion } from "~/utils/home-version";
 import { useLocalePreference } from "~/utils/intl-provider";
+import { openLegalPage } from "~/utils/legal";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function SettingsIndex() {
@@ -187,31 +188,19 @@ export default function SettingsIndex() {
             title={t("navigation.termsOfService")}
             subtitle={t("settings.items.termsSubtitle")}
             iconName="file-text"
-            onPress={() =>
-              Linking.openURL(
-                `${getBaseUrl()}${localePath(locale, "/legal/terms")}`,
-              )
-            }
+            onPress={() => openLegalPage(locale, "terms")}
           />
           <SettingsItem
             title={t("navigation.privacyPolicy")}
             subtitle={t("settings.items.privacySubtitle")}
             iconName="shield"
-            onPress={() =>
-              Linking.openURL(
-                `${getBaseUrl()}${localePath(locale, "/legal/privacy")}`,
-              )
-            }
+            onPress={() => openLegalPage(locale, "privacy")}
           />
           <SettingsItem
             title={t("navigation.legalNotice")}
             subtitle={t("settings.items.legalNoticeSubtitle")}
             iconName="info"
-            onPress={() =>
-              Linking.openURL(
-                `${getBaseUrl()}${localePath(locale, "/legal/legal-notice")}`,
-              )
-            }
+            onPress={() => openLegalPage(locale, "legal-notice")}
           />
           <SettingsItem
             title={t("settings.items.exportData")}
