@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { experimental_evaluate as evaluate, gateway } from "ai";
 
+import type { CreditUser } from "./autumn";
 import type { TracingFeature } from "./model-provider";
 import { captureError } from "../lib/posthog";
 import { checkCredits, extractGatewayMetadata, trackAIUsage } from "./autumn";
@@ -9,7 +10,7 @@ import { captureGeneration } from "./model-provider";
 const CLASSIFICATION_MODEL = "typesafe-ai/jev";
 
 interface ClassifyOptions<K extends string> {
-  userId: string;
+  user: CreditUser;
   feature: TracingFeature;
   instructions: string;
   options: readonly { id: K; description: string }[];
@@ -18,7 +19,7 @@ interface ClassifyOptions<K extends string> {
 }
 
 export async function classify<K extends string>({
-  userId,
+  user,
   feature,
   instructions,
   options,
@@ -26,7 +27,7 @@ export async function classify<K extends string>({
   fallback,
 }: ClassifyOptions<K>): Promise<K> {
   const tracing = {
-    distinctId: userId,
+    distinctId: user.id,
     traceId: crypto.randomUUID(),
     feature,
   };
@@ -35,7 +36,7 @@ export async function classify<K extends string>({
   const isOption = (value: string): value is K => ids.has(value);
 
   try {
-    const { allowed } = await checkCredits({ customerId: userId });
+    const { allowed } = await checkCredits(user);
     if (!allowed) return fallback;
 
     const result = await evaluate({
@@ -66,14 +67,14 @@ export async function classify<K extends string>({
 
     try {
       await trackAIUsage({
-        customerId: userId,
+        customerId: user.id,
         cost: extractGatewayMetadata(result.providerMetadata)?.cost,
       });
     } catch (trackingError) {
       captureError({
         error: trackingError,
         operation: `track-${feature}-usage`,
-        distinctId: userId,
+        distinctId: user.id,
       });
     }
 
@@ -87,7 +88,7 @@ export async function classify<K extends string>({
       error,
       latencySeconds: (Date.now() - startTime) / 1000,
     });
-    captureError({ error, operation: feature, distinctId: userId });
+    captureError({ error, operation: feature, distinctId: user.id });
   }
   return fallback;
 }

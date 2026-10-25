@@ -55,9 +55,7 @@ export const userRouter = createTRPCRouter({
     .output(usageDataSchema)
     .query(async ({ ctx }) => {
       try {
-        const result = await checkCredits({
-          customerId: ctx.session.user.id,
-        });
+        const result = await checkCredits(ctx.session.user);
 
         return {
           credits: {
