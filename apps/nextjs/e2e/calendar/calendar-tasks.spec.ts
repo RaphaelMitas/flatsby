@@ -1,15 +1,5 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "../fixtures/auth";
-import { waitForHydration } from "../helpers/hydration";
-
-// The range is refetched once a write settles; reloading any earlier can abort the write
-const writeSettled = (page: Page) =>
-  page.waitForResponse(
-    (response) =>
-      response.url().includes("calendar.range") &&
-      response.request().method() === "GET",
-  );
+import { openCalendarView, writeSettled } from "../helpers/calendar";
 
 test.describe("Calendar", () => {
   test("creates a weekly task with an end, ticks it off and deletes it", async ({
@@ -18,11 +8,7 @@ test.describe("Calendar", () => {
     const title = "Clean bathroom";
     await authPage.goto("/calendar");
     // The web opens on the month; the list is where a day's progress shows
-    const openList = async () => {
-      const tab = authPage.getByTestId("calendar-view-list");
-      await waitForHydration(tab);
-      await tab.click();
-    };
+    const openList = () => openCalendarView(authPage, "list");
 
     const addButton = authPage.getByTestId("calendar-add");
     await openList();

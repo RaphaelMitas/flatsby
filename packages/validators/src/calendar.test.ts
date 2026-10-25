@@ -516,18 +516,22 @@ describe("event length", () => {
     expect(valid({ kind: "task", time: null, days: 2 })).toBe(false);
   });
 
-  it("describes the days an event runs", () => {
+  it("describes the days an event runs, as a count when it repeats", () => {
     const trip = {
-      time: { start: "18:00", end: "12:00" },
+      time: time("18:00", "12:00"),
       days: 3,
+      startsOn: "2026-10-23",
+      recurrence: null,
     };
-    expect(describeEventTime(trip, en, "en")).toBe("18:00–12:00 +2");
-    expect(describeEventTime(trip, en, "en", "2026-10-23")).toBe(
-      "Fri 18:00 – Sun 12:00",
+    const fridays: Recurrence = { type: "weekly", interval: 1, days: ["fr"] };
+    const weekly = { ...trip, recurrence: fridays };
+    expect(describeEventTime(trip, en, "en")).toBe("Fri 18:00 – Sun 12:00");
+    expect(describeEventTime(weekly, en, "en")).toBe("18:00–12:00 +2");
+    expect(describeEventTime({ ...weekly, time: null }, en, "en")).toBe(
+      "3 days",
     );
-    expect(describeEventTime({ time: null, days: 3 }, en, "en")).toBe("3 days");
     expect(
-      describeEventTime({ time: null, days: 3 }, en, "en", "2026-10-30"),
+      describeEventTime({ ...weekly, time: null }, en, "en", "2026-10-30"),
     ).toBe("Fri, Oct 30 – Sun, Nov 1");
   });
 });

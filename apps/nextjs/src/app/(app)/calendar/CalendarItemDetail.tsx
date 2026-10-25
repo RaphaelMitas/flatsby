@@ -104,12 +104,7 @@ export function CalendarItemDetail({
           </Badge>
           {!isTask && (
             <Badge variant="secondary" className={pillClass}>
-              {describeEventTime(
-                item,
-                t,
-                locale,
-                item.recurrence ? undefined : item.startsOn,
-              )}
+              {describeEventTime(item, t, locale)}
             </Badge>
           )}
         </div>

@@ -248,7 +248,13 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
               nextEvent.occurrence.date,
             )
           : dayAndTime(nextEvent.occurrence.date, nextEvent.item.time?.start),
-      onPress: () => openCalendar(nextEvent.occurrence.date),
+      // An event already running opens on today, where the list keeps the overdue chores
+      onPress: () =>
+        openCalendar(
+          nextEvent.occurrence.date < today
+            ? undefined
+            : nextEvent.occurrence.date,
+        ),
     },
     lastList && {
       testID: "home-row-list",

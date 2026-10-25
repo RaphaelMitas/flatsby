@@ -121,7 +121,6 @@ export function MonthGrid({
                         onOpen={onOpen}
                       />
                     ) : (
-                      // Holds the lane a bar passes through
                       <div
                         key={lane}
                         className="shrink-0"
@@ -156,6 +155,7 @@ export function MonthGrid({
                     entry={entry}
                     today={today}
                     onOpen={onOpen}
+                    continued={startsBefore}
                     className={cn(
                       "flex-1",
                       startsBefore && "rounded-l-none",
@@ -176,11 +176,13 @@ function MonthEntry({
   entry,
   today,
   onOpen,
+  continued = false,
   className,
 }: {
   entry: AgendaEntry;
   today: string;
   onOpen: (entry: CalendarEntry) => void;
+  continued?: boolean;
   className?: string;
 }) {
   const { item, occurrence } = entry;
@@ -216,7 +218,7 @@ function MonthEntry({
         />
       )}
       <span className="truncate">
-        {item.time && `${item.time.start} `}
+        {item.time && !continued && `${item.time.start} `}
         {item.title}
       </span>
     </button>

@@ -1,16 +1,7 @@
-import type { Page } from "@playwright/test";
-
 import { addDays, localDate } from "@flatsby/validators/calendar";
 
 import { expect, test } from "../fixtures/auth";
-import { waitForHydration } from "../helpers/hydration";
-
-const writeSettled = (page: Page) =>
-  page.waitForResponse(
-    (response) =>
-      response.url().includes("calendar.range") &&
-      response.request().method() === "GET",
-  );
+import { openCalendarView, writeSettled } from "../helpers/calendar";
 
 test.describe("Calendar events", () => {
   test("an event over three days shows on each of them and as one bar per week", async ({
@@ -19,13 +10,7 @@ test.describe("Calendar events", () => {
     const title = "Ski trip";
     const today = localDate();
     await authPage.goto("/calendar");
-    const openView = async (view: "list" | "month") => {
-      const tab = authPage.getByTestId(`calendar-view-${view}`);
-      await waitForHydration(tab);
-      await tab.click();
-    };
-
-    await openView("list");
+    await openCalendarView(authPage, "list");
     await authPage.getByTestId("calendar-add").click();
     const form = authPage.getByTestId("calendar-form");
     await form.getByTestId("calendar-form-title").fill(title);
@@ -53,7 +38,7 @@ test.describe("Calendar events", () => {
     await saved;
 
     await authPage.reload();
-    await openView("month");
+    await openCalendarView(authPage, "month");
     const bars = authPage
       .getByTestId("calendar-month-entry")
       .filter({ hasText: title });

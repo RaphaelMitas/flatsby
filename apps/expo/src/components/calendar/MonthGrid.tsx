@@ -114,7 +114,6 @@ export function MonthGrid({ month, days, today, onSelect }: MonthGridProps) {
                         today={today}
                       />
                     ) : (
-                      // Holds the lane a bar passes through
                       <View key={lane} style={{ height: LINE_HEIGHT - 1 }} />
                     ),
                   )}
@@ -138,8 +137,10 @@ export function MonthGrid({ month, days, today, onSelect }: MonthGridProps) {
                     top: DATE_HEIGHT + 1 + lane * LINE_HEIGHT,
                   }}
                 >
-                  <EventChip
+                  <MonthEntry
                     entry={entry}
+                    today={today}
+                    continued={startsBefore}
                     className={cn(
                       startsBefore && "rounded-l-none",
                       endsAfter && "rounded-r-none",
@@ -155,33 +156,34 @@ export function MonthGrid({ month, days, today, onSelect }: MonthGridProps) {
   );
 }
 
-function EventChip({
-  entry: { item },
+function MonthEntry({
+  entry,
+  today,
+  continued = false,
   className,
 }: {
   entry: AgendaEntry;
+  today: string;
+  continued?: boolean;
   className?: string;
 }) {
-  return (
-    <Text
-      numberOfLines={1}
-      className={cn(
-        "rounded-sm px-0.5 text-xs font-medium",
-        categoryBgColorMap[item.color],
-        categoryTextColorMap[item.color].default,
-        className,
-      )}
-      style={{ lineHeight: LINE_HEIGHT - 1 }}
-    >
-      {item.time ? `${item.time.start} ` : ""}
-      {item.title}
-    </Text>
-  );
-}
-
-function MonthEntry({ entry, today }: { entry: AgendaEntry; today: string }) {
   const { item, occurrence } = entry;
-  if (item.kind === "event") return <EventChip entry={entry} />;
+  if (item.kind === "event")
+    return (
+      <Text
+        numberOfLines={1}
+        className={cn(
+          "rounded-sm px-0.5 text-xs font-medium",
+          categoryBgColorMap[item.color],
+          categoryTextColorMap[item.color].default,
+          className,
+        )}
+        style={{ lineHeight: LINE_HEIGHT - 1 }}
+      >
+        {item.time && !continued ? `${item.time.start} ` : ""}
+        {item.title}
+      </Text>
+    );
   const done = occurrence.completedAt !== null;
   return (
     <View

@@ -37,6 +37,7 @@ import {
   formEndsOn,
   hasEnded,
   lastDayOf,
+  latestEventEnd,
   maxEvery,
   monthDayChoices,
   newRepeatFormFor,
@@ -238,11 +239,9 @@ export function CalendarItemForm({
       {!ended && !isTask && (
         <Field label={t("calendar.form.ends")}>
           <DatePopover
-            value={lastDayOf(
-              { days: withOvernight(time, span.days) },
-              { date: startsOn },
-            )}
+            value={lastDayOf(startsOn, withOvernight(time, span.days))}
             min={startsOn}
+            max={latestEventEnd(startsOn)}
             onSelect={(lastDay) =>
               setSpan({ ...span, days: daysBetween(startsOn, lastDay) })
             }

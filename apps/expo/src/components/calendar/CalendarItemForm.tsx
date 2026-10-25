@@ -28,6 +28,7 @@ import {
   formEndsOn,
   hasEnded,
   lastDayOf,
+  latestEventEnd,
   localDate,
   maxEvery,
   monthDayChoices,
@@ -313,12 +314,10 @@ function ItemFields({
             testID="calendar-form-event-ends-on"
             label={t("calendar.form.ends")}
             value={pickerDate(
-              lastDayOf(
-                { days: withOvernight(time, span.days) },
-                { date: startsOn },
-              ),
+              lastDayOf(startsOn, withOvernight(time, span.days)),
             )}
             minimumDate={pickerDate(startsOn)}
+            maximumDate={pickerDate(latestEventEnd(startsOn))}
             onChange={(picked) =>
               setSpan({
                 ...span,

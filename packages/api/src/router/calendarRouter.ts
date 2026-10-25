@@ -369,8 +369,8 @@ export const calendarRouter = createTRPCRouter({
                   between(
                     calendarOccurrences.date,
                     earliestStartReaching(
-                      { days: Math.max(...items.map((item) => item.days)) },
                       input.from,
+                      Math.max(...items.map((item) => item.days)),
                     ),
                     input.to,
                   ),
@@ -405,7 +405,7 @@ export const calendarRouter = createTRPCRouter({
                   eq(calendarOccurrences.itemId, item.id),
                   between(
                     calendarOccurrences.date,
-                    earliestStartReaching(item, input.today),
+                    earliestStartReaching(input.today, item.days),
                     until,
                   ),
                 ),

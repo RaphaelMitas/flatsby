@@ -167,12 +167,7 @@ export function CalendarItemDetail({
         {item.kind === "event" && (
           <Badge
             variant="secondary"
-            label={describeEventTime(
-              item,
-              t,
-              locale,
-              item.recurrence ? undefined : item.startsOn,
-            )}
+            label={describeEventTime(item, t, locale)}
           />
         )}
       </View>
