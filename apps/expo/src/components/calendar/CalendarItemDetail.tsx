@@ -165,7 +165,10 @@ export function CalendarItemDetail({
           label={describeSeries(item, today, t, locale)}
         />
         {item.kind === "event" && (
-          <Badge variant="secondary" label={describeEventTime(item.time, t)} />
+          <Badge
+            variant="secondary"
+            label={describeEventTime(item, t, locale)}
+          />
         )}
       </View>
 

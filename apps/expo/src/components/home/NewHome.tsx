@@ -10,6 +10,7 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 
 import {
+  describeEventTime,
   formatCalendarDate,
   homeAgenda,
   listWindow,
@@ -238,8 +239,22 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
         />
       ),
       label: nextEvent.item.title,
-      value: dayAndTime(nextEvent.occurrence.date, nextEvent.item.time?.start),
-      onPress: () => openCalendar(nextEvent.occurrence.date),
+      value:
+        nextEvent.item.days > 1
+          ? describeEventTime(
+              nextEvent.item,
+              t,
+              locale,
+              nextEvent.occurrence.date,
+            )
+          : dayAndTime(nextEvent.occurrence.date, nextEvent.item.time?.start),
+      // An event already running opens on today, where the list keeps the overdue chores
+      onPress: () =>
+        openCalendar(
+          nextEvent.occurrence.date < today
+            ? undefined
+            : nextEvent.occurrence.date,
+        ),
     },
     lastList && {
       testID: "home-row-list",

@@ -24,6 +24,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
+import { DEFAULT_TIME_ZONE } from "@flatsby/validators/calendar";
+
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
  * database instance for multiple projects.
@@ -450,6 +452,12 @@ export const calendarItems = createTable(
     // Wall-clock times, so 19:00 stays 19:00 across DST; null means all day
     startTime: time("start_time"),
     endTime: time("end_time"),
+    // Calendar days an event touches; its end time falls on the last one
+    days: integer("days").default(1).notNull(),
+    // IANA zone of the device that made it; the times above stay wall-clock
+    timeZone: varchar("time_zone", { length: 64 })
+      .default(DEFAULT_TIME_ZONE)
+      .notNull(),
     // null means it happens once
     recurrence: jsonb("recurrence").$type<Recurrence>(),
     createdByGroupMemberId: integer("created_by_group_member_id").references(

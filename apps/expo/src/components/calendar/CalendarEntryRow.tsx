@@ -88,7 +88,7 @@ export function CalendarEntryRow({
           <View className="flex-row items-center gap-1">
             {!isTask && (
               <Text className="text-muted-foreground text-sm">
-                {describeEventTime(item.time, t)} ·
+                {describeEventTime(item, t, locale, occurrence.date)} ·
               </Text>
             )}
             {missed > 0 && (

@@ -64,6 +64,13 @@
       "when": 1792663466593,
       "tag": "0008_drop_chat_model_default",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792921829936,
+      "tag": "0009_calendar_event_days",
+      "breakpoints": true
     }
   ]
 }

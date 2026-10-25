@@ -15,6 +15,8 @@ import { z } from "zod/v4";
 import {
   calendarRangeSchema,
   continuedRotation,
+  DEFAULT_TIME_ZONE,
+  editedDays,
   editedEndsOn,
   isScheduledOn,
   rewritesPast,
@@ -137,26 +139,20 @@ export const calendarMutation = <TInput>(
 
 const asView = (
   id: number,
-  {
-    kind,
-    title,
-    color,
-    startsOn,
-    time,
-    recurrence,
-    endsOn,
-    memberIds,
-  }: CreateCalendarItemInput,
+  input: CreateCalendarItemInput,
+  previous?: CalendarItemView,
 ): CalendarItemView => ({
   id,
-  kind,
-  title,
-  color,
-  startsOn,
-  endsOn: endsOn ?? null,
-  time,
-  recurrence,
-  memberIds,
+  kind: input.kind,
+  title: input.title,
+  color: input.color,
+  startsOn: input.startsOn,
+  endsOn: input.endsOn ?? null,
+  time: input.time,
+  recurrence: input.recurrence,
+  days: editedDays(input, previous),
+  timeZone: previous?.timeZone ?? input.timeZone ?? DEFAULT_TIME_ZONE,
+  memberIds: input.memberIds,
 });
 
 // Negative so it never collides with a real id before the refetch lands
@@ -242,10 +238,11 @@ export const calendarPatches = {
     // A range's cache may not hold the item, yet the edit can still reach into it
     const previous = findCachedItem(input.id);
     if (!previous) return { range: (range) => range };
-    const edited = asView(input.id, {
-      ...input,
-      endsOn: editedEndsOn(previous, input),
-    });
+    const edited = asView(
+      input.id,
+      { ...input, endsOn: editedEndsOn(previous, input) },
+      previous,
+    );
     if (rewritesPast(previous, edited, input.today))
       return { range: (range) => range };
     if (splitsSeries(previous, input, input.today)) {

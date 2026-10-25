@@ -5,6 +5,7 @@ import { translatorFor } from "@flatsby/i18n/translator";
 import type {
   CalendarItemView,
   CalendarRange,
+  EventTime,
   OccurrenceOverride,
   Recurrence,
 } from "./calendar";
@@ -12,8 +13,10 @@ import {
   continuedRotation,
   createCalendarItemSchema,
   defaultEndsOn,
+  describeEventTime,
   describeRecurrence,
   describeSeries,
+  editedDays,
   editedEndsOn,
   editedStartsOn,
   expandOccurrences,
@@ -22,6 +25,7 @@ import {
   listAgenda,
   monthDayChoices,
   monthGrid,
+  monthWeeks,
   recurrenceOf,
   recurrenceSchema,
   repeatFormOf,
@@ -32,6 +36,8 @@ import {
   timesMissed,
   weekDays,
   weekStart,
+  withoutOvernight,
+  withOvernight,
   withPickedStart,
   withSavedItem,
   withSkipped,
@@ -52,6 +58,8 @@ const item = (
   startsOn,
   endsOn: null,
   recurrence,
+  days: 1,
+  timeZone: "Europe/Berlin",
   memberIds,
 });
 
@@ -443,16 +451,190 @@ describe("listAgenda", () => {
   });
 });
 
-describe("withStart", () => {
-  it("keeps the length when the start moves, wrapping past midnight", () => {
-    expect(withStart({ start: "19:00", end: "20:30" }, "23:00")).toEqual({
-      start: "23:00",
-      end: "00:30",
+describe("event length", () => {
+  const en = translatorFor("en");
+
+  const time = (start: string, end: string) => ({ start, end });
+  const party = {
+    groupId: 1,
+    kind: "event" as const,
+    title: "Party",
+    color: "blue" as const,
+    startsOn: "2026-10-23",
+    time: time("22:00", "02:00"),
+    recurrence: null,
+    memberIds: [],
+  };
+
+  it("keeps the length when the start moves, carrying the end across midnight", () => {
+    expect(withStart(time("19:00", "20:30"), 1, "23:00")).toEqual({
+      time: time("23:00", "00:30"),
+      days: 1,
     });
-    expect(withStart({ start: "22:00", end: "02:00" }, "01:00")).toEqual({
-      start: "01:00",
-      end: "05:00",
+    expect(withStart(time("22:00", "02:00"), 1, "01:00")).toEqual({
+      time: time("01:00", "05:00"),
+      days: 1,
     });
+    expect(withStart(time("18:00", "12:00"), 3, "20:00")).toEqual({
+      time: time("20:00", "14:00"),
+      days: 3,
+    });
+    expect(withStart(time("20:00", "00:00"), 1, "21:00")).toEqual({
+      time: time("21:00", "01:00"),
+      days: 1,
+    });
+    expect(withStart(time("20:00", "01:00"), 1, "19:00")).toEqual({
+      time: time("19:00", "00:00"),
+      days: 1,
+    });
+  });
+
+  it("reads an end at 00:00 as the midnight that closes the start day", () => {
+    expect(withOvernight(time("20:00", "00:00"), 1)).toBe(1);
+    expect(withOvernight(time("00:00", "00:00"), 1)).toBe(1);
+    expect(editedDays({ kind: "event", time: time("20:00", "00:00") })).toBe(1);
+  });
+
+  it("stores a one-day event that ends before it starts as two days, and reads it back as one", () => {
+    expect(withOvernight(time("22:00", "02:00"), 1)).toBe(2);
+    expect(withoutOvernight(time("22:00", "02:00"), 2)).toBe(1);
+    expect(withOvernight(time("19:00", "21:00"), 1)).toBe(1);
+    expect(withoutOvernight(time("19:00", "21:00"), 2)).toBe(2);
+    expect(withOvernight(null, 1)).toBe(1);
+  });
+
+  it("keeps the length older apps leave out, reading their overnight times as before", () => {
+    const stored = { time: time("22:00", "02:00"), days: 2 };
+    const event = (eventTime: EventTime | null) => ({
+      kind: "event" as const,
+      time: eventTime,
+    });
+    expect(editedDays(event(time("22:00", "02:00")))).toBe(2);
+    expect(editedDays(event(time("20:00", "23:00")), stored)).toBe(1);
+    expect(editedDays(event(time("23:00", "03:00")), stored)).toBe(2);
+    expect(editedDays(event(null), { time: null, days: 4 })).toBe(4);
+    expect(
+      editedDays(event(time("19:00", "22:00")), {
+        time: time("19:00", "21:00"),
+        days: 2,
+      }),
+    ).toBe(2);
+    expect(
+      editedDays({ kind: "task", time: null }, { time: null, days: 4 }),
+    ).toBe(1);
+  });
+
+  it("rejects a task over several days", () => {
+    const valid = (input: object) =>
+      createCalendarItemSchema.safeParse({ ...party, ...input }).success;
+    expect(valid({ days: 1 })).toBe(true);
+    expect(valid({ kind: "task", time: null, days: 2 })).toBe(false);
+  });
+
+  it("keeps a known zone and drops one the runtime can't read instead of failing", () => {
+    const zoneOf = (timeZone: string) =>
+      createCalendarItemSchema.parse({ ...party, timeZone }).timeZone;
+    expect(zoneOf("America/New_York")).toBe("America/New_York");
+    expect(zoneOf("Mars/Olympus")).toBeUndefined();
+  });
+
+  it("describes the days an event runs, as a count when it repeats", () => {
+    const trip = {
+      time: time("18:00", "12:00"),
+      days: 3,
+      startsOn: "2026-10-23",
+      recurrence: null,
+    };
+    const fridays: Recurrence = { type: "weekly", interval: 1, days: ["fr"] };
+    const weekly = { ...trip, recurrence: fridays };
+    expect(describeEventTime(trip, en, "en")).toBe("Fri 18:00 – Sun 12:00");
+    expect(describeEventTime({ ...trip, days: 8 }, en, "en")).toBe(
+      "Fri, Oct 23 18:00 – Fri, Oct 30 12:00",
+    );
+    expect(describeEventTime(weekly, en, "en")).toBe("18:00–12:00 +2");
+    expect(describeEventTime({ ...weekly, time: null }, en, "en")).toBe(
+      "3 days",
+    );
+    expect(
+      describeEventTime({ ...weekly, time: null }, en, "en", "2026-10-30"),
+    ).toBe("Fri, Oct 30 – Sun, Nov 1");
+  });
+});
+
+describe("events over several days", () => {
+  const trip: CalendarItemView = {
+    ...item(null, "2026-09-29"),
+    id: 2,
+    kind: "event",
+    title: "Trip",
+    days: 4,
+  };
+
+  it("brings an event that started before the window into it", () => {
+    expect(dates(trip)).toEqual(["2026-09-29"]);
+    expect(dates({ ...trip, days: 2 })).toEqual([]);
+    const weekly = {
+      ...trip,
+      recurrence: { type: "weekly", interval: 1, days: ["tu"] },
+    } satisfies CalendarItemView;
+    expect(dates(weekly, [skipped("2026-09-29")])[0]).toBe("2026-10-06");
+  });
+
+  it("brings back an un-skipped day that still reaches the window", () => {
+    const range = withSkipped(
+      { items: [trip], occurrences: [] },
+      { itemId: 2, date: "2026-09-29", skipped: false },
+      window,
+    );
+    expect(range.occurrences.map((o) => o.date)).toEqual(["2026-09-29"]);
+  });
+
+  it("shows on every day it covers and draws as one bar per week", () => {
+    const range: CalendarRange = {
+      items: [trip, item(null, "2026-09-30")],
+      occurrences: [trip, item(null, "2026-09-30")].flatMap((i) =>
+        expandOccurrences(i, [], "2026-09-28", "2026-10-11"),
+      ),
+    };
+    const { days } = listAgenda(range, "2026-09-28", "2026-10-21", 1, null);
+    expect(days.map((day) => day.entries.length)).toEqual([
+      0, 1, 2, 1, 1, 0, 0,
+    ]);
+    const [week] = monthWeeks(days, 3);
+    expect(week?.bars).toMatchObject([
+      { column: 1, span: 4, lane: 0, startsBefore: false, endsAfter: false },
+    ]);
+    expect(
+      week?.cells[2]?.slots.map((slot) => slot?.item.title ?? null),
+    ).toEqual([null, "Bins"]);
+  });
+
+  it("keeps a line for +N across the week when a day overflows", () => {
+    const busy = Array.from({ length: 3 }, (_, i) => ({
+      ...item(null, "2026-09-30"),
+      id: 10 + i,
+    }));
+    const items = [trip, ...busy];
+    const range: CalendarRange = {
+      items,
+      occurrences: items.flatMap((i) =>
+        expandOccurrences(i, [], "2026-09-28", "2026-10-04"),
+      ),
+    };
+    const { days } = listAgenda(range, "2026-09-28", "2026-10-21", 1, null);
+    const [week] = monthWeeks(days, 3);
+    expect(week?.bars).toHaveLength(1);
+    expect(week?.cells.map((cell) => [cell.slots.length, cell.hidden])).toEqual(
+      [
+        [0, 0],
+        [1, 0],
+        [2, 2],
+        [1, 0],
+        [1, 0],
+        [0, 0],
+        [0, 0],
+      ],
+    );
   });
 });
 
@@ -856,6 +1038,7 @@ describe("homeAgenda", () => {
     const party = {
       ...event(8, "Party", "2026-10-21"),
       time: { start: "21:00", end: "01:00" },
+      days: 2,
     };
     const withParty: CalendarRange = {
       items: [party],
@@ -866,5 +1049,16 @@ describe("homeAgenda", () => {
     expect(next("2026-10-21", "22:00")).toBe("Party");
     expect(next("2026-10-22", "00:30")).toBe("Party");
     expect(next("2026-10-22", "02:00")).toBeUndefined();
+  });
+
+  it("keeps an event that ends at midnight until the day is over", () => {
+    const dinner = {
+      ...event(9, "Late dinner", "2026-10-21"),
+      time: { start: "20:00", end: "00:00" },
+    };
+    expect(
+      homeAgenda(rangeOf(dinner), "2026-10-21", "23:30", ME).nextEvent?.item
+        .title,
+    ).toBe("Late dinner");
   });
 });

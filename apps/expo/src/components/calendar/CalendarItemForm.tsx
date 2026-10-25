@@ -3,7 +3,6 @@ import type {
   CalendarColor,
   CalendarItemKind,
   CalendarItemView,
-  EventTime,
   RepeatForm,
   Weekday,
 } from "@flatsby/validators/calendar";
@@ -16,13 +15,17 @@ import { useLocale, useTranslations } from "use-intl";
 import {
   calendarColors,
   createCalendarItemSchema,
+  daysBetween,
   defaultColorFor,
   defaultEndsOn,
   defaultEventTime,
   describeMonthDay,
   describeSeries,
+  deviceTimeZone,
   earliestEndsOn,
   editedStartsOn,
+  eventEndChoices,
+  eventSpanOf,
   formatCalendarDate,
   formEndsOn,
   hasEnded,
@@ -134,7 +137,8 @@ function ItemFields({
     item?.color ?? null,
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
-  const [time, setTime] = useState<EventTime | null>(item?.time ?? null);
+  const [span, setSpan] = useState(() => eventSpanOf(item));
+  const { time } = span;
   const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
     item ? repeatFormOf(item.recurrence) : null,
   );
@@ -157,6 +161,7 @@ function ItemFields({
   };
 
   const recurrence = recurrenceOf(repeat, startsOn);
+  const ends = eventEndChoices(startsOn, span);
   const ended = item ? hasEnded(item, today) : false;
   const endsOn = formEndsOn(item, recurrence, pickedEnd, startsOn, today);
   const input = {
@@ -168,6 +173,8 @@ function ItemFields({
     time: isTask ? null : time,
     recurrence,
     endsOn,
+    days: isTask ? 1 : span.days,
+    timeZone: deviceTimeZone(),
     memberIds: isTask ? memberIds : [],
   };
   const valid = createCalendarItemSchema.safeParse(input).success;
@@ -286,11 +293,30 @@ function ItemFields({
           <DatePickerField
             testID="calendar-form-starts-on"
             label={
-              recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
+              !isTask
+                ? t("calendar.form.begins")
+                : recurrence
+                  ? t("calendar.form.startsOn")
+                  : t("calendar.form.date")
             }
             value={pickerDate(startsOn)}
             maximumDate={endsOn ? pickerDate(endsOn) : undefined}
             onChange={(picked) => pickStart(localDate(picked))}
+          />
+        )}
+        {!ended && !isTask && (
+          <DatePickerField
+            testID="calendar-form-event-ends-on"
+            label={t("calendar.form.ends")}
+            value={pickerDate(ends.value)}
+            minimumDate={pickerDate(ends.min)}
+            maximumDate={pickerDate(ends.max)}
+            onChange={(picked) =>
+              setSpan({
+                ...span,
+                days: daysBetween(startsOn, localDate(picked)),
+              })
+            }
           />
         )}
         {!isTask && (
@@ -301,7 +327,7 @@ function ItemFields({
                 testID="calendar-form-all-day"
                 checked={time === null}
                 onCheckedChange={(allDay) =>
-                  setTime(allDay ? null : defaultEventTime)
+                  setSpan({ ...span, time: allDay ? null : defaultEventTime })
                 }
               />
             </View>
@@ -314,7 +340,9 @@ function ItemFields({
                     label={t("calendar.form.from")}
                     value={pickerTime(time.start)}
                     onChange={(picked) =>
-                      setTime(withStart(time, fromPickerTime(picked)))
+                      setSpan(
+                        withStart(time, span.days, fromPickerTime(picked)),
+                      )
                     }
                   />
                 </View>
@@ -325,7 +353,10 @@ function ItemFields({
                     label={t("calendar.form.to")}
                     value={pickerTime(time.end)}
                     onChange={(picked) =>
-                      setTime({ ...time, end: fromPickerTime(picked) })
+                      setSpan({
+                        ...span,
+                        time: { ...time, end: fromPickerTime(picked) },
+                      })
                     }
                   />
                 </View>
@@ -442,7 +473,7 @@ function ItemFields({
       )}
       {recurrence && !ended && (
         <>
-          <FieldLabel>{t("calendar.form.ends")}</FieldLabel>
+          <FieldLabel>{t("calendar.form.endRepeat")}</FieldLabel>
           <View className="flex-row flex-wrap gap-1.5">
             <Chip
               testID="calendar-form-ends-never"

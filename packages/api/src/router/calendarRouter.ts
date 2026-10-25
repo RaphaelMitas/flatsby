@@ -1,4 +1,4 @@
-import type { SQL } from "@flatsby/db";
+import type { SQL, SQLWrapper } from "@flatsby/db";
 import type { ExpandableItem } from "@flatsby/validators/calendar";
 import type { z } from "zod/v4";
 import { Effect } from "effect";
@@ -15,6 +15,7 @@ import {
   isNull,
   lte,
   or,
+  sql,
 } from "@flatsby/db";
 import {
   calendarItemMembers,
@@ -29,6 +30,8 @@ import {
   calendarRangeSchema,
   continuedRotation,
   createCalendarItemSchema,
+  earliestStartReaching,
+  editedDays,
   editedEndsOn,
   endsBeforeStart,
   expandOccurrences,
@@ -90,6 +93,8 @@ const loadItems = async (db: Database, where: SQL | undefined) =>
         startTime: true,
         endTime: true,
         recurrence: true,
+        days: true,
+        timeZone: true,
       },
       with: {
         members: {
@@ -199,9 +204,11 @@ const writeMembers = async (
     );
 };
 
+type ItemValues = z.infer<typeof createCalendarItemSchema> & { days: number };
+
 const insertItem = async (
   tx: DbTransaction,
-  input: z.infer<typeof createCalendarItemSchema>,
+  input: ItemValues,
   createdByGroupMemberId: number,
 ) => {
   const [created] = await tx
@@ -225,7 +232,9 @@ const itemValues = ({
   time,
   recurrence,
   endsOn,
-}: z.infer<typeof createCalendarItemSchema>) => ({
+  days,
+  timeZone,
+}: ItemValues) => ({
   kind,
   title,
   color,
@@ -234,7 +243,13 @@ const itemValues = ({
   startTime: time?.start ?? null,
   endTime: time?.end ?? null,
   recurrence,
+  days,
+  // Absent on edits, so the zone the item was made in stays
+  ...(timeZone && { timeZone }),
 });
+
+const lastDayOf = (date: SQLWrapper) =>
+  sql`${date} + ${calendarItems.days} - 1`;
 
 const endsOnStill = (endsOn: string | null) =>
   endsOn === null
@@ -337,11 +352,11 @@ export const calendarRouter = createTRPCRouter({
             lte(calendarItems.startsOn, input.to),
             or(
               isNotNull(calendarItems.recurrence),
-              gte(calendarItems.startsOn, input.from),
+              gte(lastDayOf(calendarItems.startsOn), input.from),
             ),
             or(
               isNull(calendarItems.endsOn),
-              gte(calendarItems.endsOn, input.from),
+              gte(lastDayOf(calendarItems.endsOn), input.from),
             ),
           ),
         );
@@ -355,7 +370,14 @@ export const calendarRouter = createTRPCRouter({
                     calendarOccurrences.itemId,
                     items.map((item) => item.id),
                   ),
-                  between(calendarOccurrences.date, input.from, input.to),
+                  between(
+                    calendarOccurrences.date,
+                    earliestStartReaching(
+                      input.from,
+                      Math.max(...items.map((item) => item.days)),
+                    ),
+                    input.to,
+                  ),
                 ),
               );
         return {
@@ -385,7 +407,11 @@ export const calendarRouter = createTRPCRouter({
                 ctx.db,
                 and(
                   eq(calendarOccurrences.itemId, item.id),
-                  between(calendarOccurrences.date, input.today, until),
+                  between(
+                    calendarOccurrences.date,
+                    earliestStartReaching(input.today, item.days),
+                    until,
+                  ),
                 ),
               ),
               loadOverrides(
@@ -421,7 +447,12 @@ export const calendarRouter = createTRPCRouter({
           ensureMembersInGroup(ctx.db, input.groupId, input.memberIds),
           () =>
             DbUtils.transaction(
-              (tx) => insertItem(tx, input, member.id),
+              (tx) =>
+                insertItem(
+                  tx,
+                  { ...input, days: editedDays(input) },
+                  member.id,
+                ),
               "create calendar item",
             )(ctx.db),
         ),
@@ -441,7 +472,11 @@ export const calendarRouter = createTRPCRouter({
             // Tasks and events are different things, so an item can't switch
             if (input.kind !== previous.kind)
               return fail.validation("errors.unexpected");
-            const edited = { ...input, endsOn: editedEndsOn(previous, input) };
+            const edited = {
+              ...input,
+              endsOn: editedEndsOn(previous, input),
+              days: editedDays(input, previous),
+            };
             if (rewritesPast(previous, edited, input.today))
               return fail.conflict("errors.calendarSeriesEnded");
             // An edit without endsOn keeps the stored end, which the new start can pass
@@ -463,6 +498,7 @@ export const calendarRouter = createTRPCRouter({
                   return Errors.conflict("errors.calendarItemChanged");
                 const piece = {
                   ...edited,
+                  timeZone: previous.timeZone,
                   memberIds: continuedRotation(previous, edited),
                 };
                 const next = await insertItem(tx, piece, member.id);

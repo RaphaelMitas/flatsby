@@ -104,7 +104,7 @@ export function CalendarList({
               <span className="flex h-1.5 gap-0.5">
                 {entries.slice(0, MAX_DOTS).map(({ item, occurrence }) => (
                   <span
-                    key={item.id}
+                    key={`${item.id}-${occurrence.date}`}
                     className={cn(
                       "size-1.5 rounded-full",
                       categoryFillColorMap[item.color],
@@ -266,7 +266,11 @@ function EntryRow({
             {item.title}
           </p>
           <p className="text-muted-foreground flex items-center gap-1 truncate text-sm">
-            {!isTask && <span>{describeEventTime(item.time, t)} ·</span>}
+            {!isTask && (
+              <span>
+                {describeEventTime(item, t, locale, occurrence.date)} ·
+              </span>
+            )}
             {missed > 0 && (
               <span className="text-destructive">
                 {t("calendar.missed", { count: missed })} ·

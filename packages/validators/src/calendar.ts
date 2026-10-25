@@ -68,12 +68,36 @@ export type Recurrence = z.infer<typeof recurrenceSchema>;
 
 export const calendarDateSchema = z.iso.date();
 export const calendarTimeSchema = z.iso.time({ precision: -1 });
-/** An end before the start means the event runs past midnight. */
 export const eventTimeSchema = z.object({
   start: calendarTimeSchema,
   end: calendarTimeSchema,
 });
 export type EventTime = z.infer<typeof eventTimeSchema>;
+const MAX_EVENT_DAYS = 365;
+
+// Every item from before zones were recorded was made in Germany
+export const DEFAULT_TIME_ZONE = "Europe/Berlin";
+
+const isTimeZone = (zone: string) => {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// A zone the runtime doesn't know falls back to the default rather than blocking the save
+const timeZoneSchema = z
+  .string()
+  .max(64)
+  .refine(isTimeZone)
+  .optional()
+  .catch(undefined);
+
+export const deviceTimeZone = () =>
+  Intl.DateTimeFormat().resolvedOptions().timeZone;
+const eventDaysSchema = z.int().min(1).max(MAX_EVENT_DAYS);
 export const calendarItemKindSchema = z.enum(["task", "event"]);
 export type CalendarItemKind = z.infer<typeof calendarItemKindSchema>;
 
@@ -111,6 +135,8 @@ const calendarItemFields = z.object({
   recurrence: recurrenceSchema.nullable(),
   // undefined keeps the stored end; apps up to v0.12.0 leave it out
   endsOn: calendarDateSchema.nullable().optional(),
+  // The picked length, see withOvernight; undefined keeps the previous one, as apps up to v0.14.1 leave it out
+  days: eventDaysSchema.optional(),
   memberIds: z.array(z.number()).max(50),
 });
 
@@ -120,11 +146,45 @@ export const endsBeforeStart = (item: {
 }) => !!item.endsOn && item.endsOn < item.startsOn;
 
 const isConsistentItem = (item: z.infer<typeof calendarItemFields>) =>
-  (item.kind === "task" ? item.time === null : item.memberIds.length === 0) &&
-  !endsBeforeStart(item);
+  (item.kind === "task"
+    ? item.time === null && (item.days ?? 1) === 1
+    : item.memberIds.length === 0) && !endsBeforeStart(item);
 
-export const createCalendarItemSchema =
-  calendarItemFields.refine(isConsistentItem);
+// An end at 00:00 is the midnight that closes the day, as other calendars read it
+const endClock = (time: EventTime) =>
+  time.end === "00:00" ? "24:00" : time.end;
+
+const runsPastMidnight = (time: EventTime | null) =>
+  time !== null && endClock(time) <= time.start;
+
+// Forms and older apps write an overnight event as one day ending at or before its start; it's stored as two
+export const withOvernight = (time: EventTime | null, days: number) =>
+  days === 1 && runsPastMidnight(time) ? 2 : days;
+
+export const withoutOvernight = (time: EventTime | null, days: number) =>
+  days === 2 && runsPastMidnight(time) ? 1 : days;
+
+/** The time and picked length an event form starts from. */
+export const eventSpanOf = (item?: {
+  time: EventTime | null;
+  days: number;
+}) => ({
+  time: item?.time ?? null,
+  days: item ? withoutOvernight(item.time, item.days) : 1,
+});
+
+export function editedDays(
+  next: Pick<z.infer<typeof calendarItemFields>, "kind" | "time" | "days">,
+  previous?: { time: EventTime | null; days: number },
+) {
+  if (next.kind === "task") return 1;
+  const kept = previous ? withoutOvernight(previous.time, previous.days) : 1;
+  return withOvernight(next.time, next.days ?? kept);
+}
+
+export const createCalendarItemSchema = calendarItemFields
+  .extend({ timeZone: timeZoneSchema })
+  .refine(isConsistentItem);
 export type CreateCalendarItemInput = z.input<typeof createCalendarItemSchema>;
 
 export const updateCalendarItemSchema = calendarItemFields
@@ -201,6 +261,7 @@ export interface ExpandableItem {
   startsOn: string;
   endsOn: string | null;
   recurrence: Recurrence | null;
+  days: number;
   /** Active members in rotation order */
   memberIds: number[];
 }
@@ -323,6 +384,12 @@ const openOccurrence = (item: ExpandableItem, date: string): Occurrence => ({
   completedAt: null,
 });
 
+export const earliestStartReaching = (from: string, days: number) =>
+  addDays(from, 1 - days);
+
+export const lastDayOf = (start: string, days: number) =>
+  addDays(start, days - 1);
+
 export function expandOccurrences(
   item: ExpandableItem,
   overrides: OccurrenceOverride[],
@@ -332,7 +399,10 @@ export function expandOccurrences(
   const byDate = new Map(overrides.map((o) => [o.date, o]));
   const occurrences: Occurrence[] = [];
   for (
-    let day = Math.max(toDayNumber(from), toDayNumber(item.startsOn));
+    let day = Math.max(
+      toDayNumber(earliestStartReaching(from, item.days)),
+      toDayNumber(item.startsOn),
+    );
     day <= toDayNumber(to);
     day++
   ) {
@@ -398,14 +468,60 @@ const timeOf = (minutes: number) => {
   return [Math.floor(wrapped / 60), wrapped % 60].map(pad).join(":");
 };
 
-/** Moving the start keeps the event's length. */
-export const withStart = (time: EventTime, start: string): EventTime => ({
-  start,
-  end: timeOf(minutesOf(time.end) - minutesOf(time.start) + minutesOf(start)),
+/** Moving the start keeps the event's length, which can carry its end into another day. */
+export function withStart(time: EventTime, days: number, start: string) {
+  const end =
+    (withOvernight(time, days) - 1) * DAY_MINUTES +
+    minutesOf(endClock(time)) -
+    minutesOf(time.start) +
+    minutesOf(start);
+  const moved = { start, end: timeOf(end) };
+  return {
+    time: moved,
+    days: withoutOvernight(
+      moved,
+      Math.min(Math.ceil(end / DAY_MINUTES), MAX_EVENT_DAYS),
+    ),
+  };
+}
+
+export const daysBetween = (startsOn: string, lastDay: string) =>
+  toDayNumber(lastDay) - toDayNumber(startsOn) + 1;
+
+export const eventEndChoices = (
+  startsOn: string,
+  { time, days }: ReturnType<typeof eventSpanOf>,
+) => ({
+  value: lastDayOf(startsOn, withOvernight(time, days)),
+  min: lastDayOf(startsOn, withOvernight(time, 1)),
+  max: lastDayOf(startsOn, MAX_EVENT_DAYS),
 });
 
-export const describeEventTime = (time: EventTime | null, t: Translate) =>
-  time ? `${time.start}–${time.end}` : t("calendar.allDay");
+// A repeating event without `date` has no last day to name, so its length reads as a count
+export function describeEventTime(
+  item: Pick<ExpandableItem, "days" | "recurrence" | "startsOn"> & {
+    time: EventTime | null;
+  },
+  t: Translate,
+  locale: Intl.LocalesArgument,
+  date = item.recurrence ? undefined : item.startsOn,
+) {
+  const { time, days } = item;
+  if (days === 1)
+    return time ? `${time.start}–${time.end}` : t("calendar.allDay");
+  if (!date)
+    return time
+      ? `${time.start}–${time.end} +${days - 1}`
+      : t("calendar.days", { count: days });
+  // Weekdays alone repeat once an event runs a week or more
+  const format: Intl.DateTimeFormatOptions =
+    time && days < 7
+      ? { weekday: "short" }
+      : { weekday: "short", day: "numeric", month: "short" };
+  const at = (day: string, clock?: string) =>
+    [formatCalendarDate(day, locale, format), clock].filter(Boolean).join(" ");
+  return `${at(date, time?.start)} – ${at(lastDayOf(date, days), time?.end)}`;
+}
 
 export function describeRecurrence(
   recurrence: Recurrence | null,
@@ -514,6 +630,7 @@ export interface CalendarItemView extends ExpandableItem {
   color: CalendarColor;
   title: string;
   time: EventTime | null;
+  timeZone: string;
 }
 
 export interface CalendarRange {
@@ -619,8 +736,14 @@ function agendaDays(
   const byDate = new Map(
     dates.map((date): [string, CalendarEntry[]] => [date, []]),
   );
-  for (const entry of rangeEntries(range))
-    byDate.get(entry.occurrence.date)?.push(entry);
+  const first = toDayNumber(dates[0] ?? "");
+  const end = first + dates.length;
+  for (const entry of rangeEntries(range)) {
+    const start = toDayNumber(entry.occurrence.date);
+    const last = Math.min(start + entry.item.days, end);
+    for (let day = Math.max(start, first); day < last; day++)
+      byDate.get(fromDayNumber(day))?.push(entry);
+  }
   return dates.map((date) => {
     const entries = byDate.get(date) ?? [];
     return { date, entries, summary: daySummary(entries, meId) };
@@ -741,6 +864,61 @@ const monthAgenda = (
   member: number | null,
 ) => agenda(agendaDays(range, monthGrid(month).weeks.flat(), meId), [], member);
 
+/** Lays a week out in lanes, so an event over several days keeps one lane and draws as a single bar. */
+function weekLayout(week: AgendaDay[], lines: number) {
+  const lanes = week.map((): (AgendaEntry | null)[] => []);
+  const place = (columns: number[], entry: AgendaEntry) => {
+    let lane = 0;
+    while (columns.some((column) => lanes[column]?.[lane])) lane++;
+    for (const column of columns) {
+      const used = lanes[column];
+      if (used) used[lane] = entry;
+    }
+    return lane;
+  };
+  const bars = week.flatMap((day, column) =>
+    day.entries.flatMap((entry) => {
+      const { item, occurrence } = entry;
+      const startsBefore = occurrence.date < day.date;
+      if (item.days === 1 || (startsBefore && column > 0)) return [];
+      const left = daysBetween(day.date, lastDayOf(occurrence.date, item.days));
+      const span = Math.min(left, week.length - column);
+      const columns = Array.from({ length: span }, (_, i) => column + i);
+      return [
+        {
+          entry,
+          column,
+          span,
+          lane: place(columns, entry),
+          startsBefore,
+          endsAfter: left > span,
+        },
+      ];
+    }),
+  );
+  week.forEach((day, column) => {
+    for (const entry of day.entries)
+      if (entry.item.days === 1) place([column], entry);
+  });
+  // A week where any day overflows keeps a line free for "+N" on all of them, so bars stay level
+  const limit = lanes.some((used) => used.length > lines) ? lines - 1 : lines;
+  return {
+    bars: bars.filter((bar) => bar.lane < limit),
+    cells: lanes.map((used) => ({
+      // One per shown lane; null where a bar passes or the lane is empty
+      slots: Array.from(used.slice(0, limit), (entry) =>
+        entry && entry.item.days === 1 ? entry : null,
+      ),
+      hidden: used.slice(limit).filter(Boolean).length,
+    })),
+  };
+}
+
+export const monthWeeks = (days: AgendaDay[], lines: number) =>
+  Array.from({ length: Math.ceil(days.length / 7) }, (_, week) =>
+    weekLayout(days.slice(7 * week, 7 * week + 7), lines),
+  );
+
 export type CalendarView = "list" | "month";
 
 /** A null start or month follows today, so a screen left open overnight moves on with it. */
@@ -845,15 +1023,13 @@ export const newEntryDate = (position: CalendarPosition, today: string) => {
 };
 
 function notOverYet(
-  time: EventTime | null,
-  date: string,
+  { item, occurrence }: CalendarEntry,
   today: string,
   now: string,
 ) {
-  const overnight = time !== null && time.end <= time.start;
-  if (date > today) return true;
-  if (date === today) return overnight || (time?.end ?? "24:00") > now;
-  return overnight && date === addDays(today, -1) && time.end > now;
+  const lastDay = lastDayOf(occurrence.date, item.days);
+  if (lastDay !== today) return lastDay > today;
+  return (item.time ? endClock(item.time) : "24:00") > now;
 }
 
 /** `now` is the wall-clock time ("HH:MM"), to pass over events that ended today */
@@ -871,9 +1047,7 @@ export function homeAgenda(
     due: latestOpen(myOpenTasks, today),
     nextTurn: myOpenTasks.find(({ occurrence }) => occurrence.date > today),
     nextEvent: entries.find(
-      ({ item, occurrence }) =>
-        item.kind === "event" &&
-        notOverYet(item.time, occurrence.date, today, now),
+      (entry) => entry.item.kind === "event" && notOverYet(entry, today, now),
     ),
   };
 }
@@ -997,7 +1171,7 @@ export function withSkipped(
     change.skipped ||
     !item ||
     !isScheduledOn(item, change.date) ||
-    change.date < from ||
+    change.date < earliestStartReaching(from, item.days) ||
     change.date > to
   )
     return { ...range, occurrences };
