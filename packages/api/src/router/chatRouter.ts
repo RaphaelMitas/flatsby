@@ -338,9 +338,15 @@ export const chatRouter = createTRPCRouter({
       });
     }
 
-    const { allowed } = await checkCredits({
-      customerId: ctx.session.user.id,
-    });
+    const { allowed } = await checkCredits(ctx.session.user).catch(
+      (cause: unknown) => {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: msg("errors.creditCheckFailed"),
+          cause,
+        });
+      },
+    );
 
     if (!allowed) {
       throw new TRPCError({

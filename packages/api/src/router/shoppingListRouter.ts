@@ -29,6 +29,7 @@ import {
   updateShoppingListSchema,
 } from "@flatsby/validators/shopping-list";
 
+import type { CreditUser } from "../utils/autumn";
 import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
@@ -642,7 +643,7 @@ export const shoppingList = createTRPCRouter({
                       // Determine category ID (with AI if needed)
                       input.categoryId === "ai-auto-select"
                         ? Effect.promise(() =>
-                            categorizeItem(ctx.session.user.id, validName),
+                            categorizeItem(ctx.session.user, validName),
                           )
                         : Effect.succeed(input.categoryId),
                       (categoryId) =>
@@ -729,7 +730,7 @@ export const shoppingList = createTRPCRouter({
                     Effect.flatMap(
                       input.categoryId === "ai-auto-select"
                         ? Effect.promise(() =>
-                            categorizeItem(ctx.session.user.id, validName),
+                            categorizeItem(ctx.session.user, validName),
                           )
                         : Effect.succeed(input.categoryId),
                       (categoryId) =>
@@ -945,9 +946,9 @@ const itemCategoryOptions = categoryIds.map((id) => ({
   description: `${names[id]}: ${descriptions[id]}`,
 }));
 
-const categorizeItem = (userId: string, itemName: string) =>
+const categorizeItem = (user: CreditUser, itemName: string) =>
   classify({
-    userId,
+    user,
     feature: "categorize-item",
     instructions:
       "Which grocery category does this shopping list item belong to?", // i18n-ignore: model prompt

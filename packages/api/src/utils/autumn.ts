@@ -1,13 +1,10 @@
+import type { Session } from "@flatsby/auth";
 import type { CheckResponse } from "autumn-js";
-import { TRPCError } from "@trpc/server";
-import { Autumn } from "autumn-js";
+import { Autumn, AutumnError } from "autumn-js";
 import { z } from "zod";
 
 import { env } from "@flatsby/auth/env";
-import { msg } from "@flatsby/i18n/message-key";
 import { AUTUMN_FEATURES, costToCredits } from "@flatsby/validators/billing";
-
-import { captureError } from "../lib/posthog";
 
 const gatewayMetadataSchema = z
   .object({
@@ -27,27 +24,33 @@ export function extractGatewayMetadata(
 
 export const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
 
-export async function checkCredits({
-  customerId,
-}: {
-  customerId: string;
-}): Promise<CheckResponse> {
+const customerNotFoundSchema = z.object({
+  code: z.literal("customer_not_found"),
+});
+
+function isCustomerNotFound(error: unknown): boolean {
+  if (!(error instanceof AutumnError) || error.statusCode !== 404) return false;
   try {
-    const result = await autumn.check({
-      customerId,
-      featureId: AUTUMN_FEATURES.CREDITS,
-    });
-    return result;
+    return customerNotFoundSchema.safeParse(JSON.parse(error.body)).success;
+  } catch {
+    return false;
+  }
+}
+
+export type CreditUser = Pick<Session["user"], "id" | "name" | "email">;
+
+export async function checkCredits(user: CreditUser): Promise<CheckResponse> {
+  const params = { customerId: user.id, featureId: AUTUMN_FEATURES.CREDITS };
+  try {
+    return await autumn.check(params);
   } catch (error) {
-    captureError({
-      error,
-      operation: "billing.checkCredits",
-      distinctId: customerId,
+    if (!isCustomerNotFound(error)) throw error;
+    await autumn.customers.getOrCreate({
+      customerId: user.id,
+      name: user.name,
+      email: user.email,
     });
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: msg("errors.creditCheckFailed"),
-    });
+    return autumn.check(params);
   }
 }
 
