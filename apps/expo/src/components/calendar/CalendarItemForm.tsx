@@ -310,7 +310,9 @@ function ItemFields({
             value={pickerDate(
               lastDayOf(startsOn, withOvernight(time, span.days)),
             )}
-            minimumDate={pickerDate(startsOn)}
+            minimumDate={pickerDate(
+              lastDayOf(startsOn, withOvernight(time, 1)),
+            )}
             maximumDate={pickerDate(latestEventEnd(startsOn))}
             onChange={(picked) =>
               setSpan({

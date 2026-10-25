@@ -234,7 +234,7 @@ export function CalendarItemForm({
         <Field label={t("calendar.form.ends")}>
           <DatePopover
             value={lastDayOf(startsOn, withOvernight(time, span.days))}
-            min={startsOn}
+            min={lastDayOf(startsOn, withOvernight(time, 1))}
             max={latestEventEnd(startsOn)}
             onSelect={(lastDay) =>
               setSpan({ ...span, days: daysBetween(startsOn, lastDay) })
