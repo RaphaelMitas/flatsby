@@ -4,7 +4,7 @@ import type { Messages } from "@flatsby/i18n/messages";
 import { Data, Effect } from "effect";
 import { z } from "zod/v4";
 
-import { DrizzleQueryError } from "@flatsby/db";
+import { DrizzleQueryError } from "@flatsby/db/errors";
 import { translatorFor } from "@flatsby/i18n/translator";
 
 import { captureError } from "./lib/posthog";
@@ -33,13 +33,13 @@ export class UnauthorizedError extends Data.TaggedError(
   "UnauthorizedError",
 )<Localized> {}
 
-export class ConflictError extends Data.TaggedError(
-  "ConflictError",
-)<Localized> {}
+export class ConflictError extends Data.TaggedError("ConflictError")<
+  Localized & { readonly cause?: unknown }
+> {}
 
-export class ValidationError extends Data.TaggedError(
-  "ValidationError",
-)<Localized> {}
+export class ValidationError extends Data.TaggedError("ValidationError")<
+  Localized & { readonly cause?: unknown }
+> {}
 
 export class DatabaseError extends Data.TaggedError("DatabaseError")<
   Localized & {
@@ -132,10 +132,14 @@ export const Errors = {
   unauthorized: () =>
     new UnauthorizedError({ messageKey: "errors.unauthorized" }),
 
-  conflict: (messageKey: MessageKey) => new ConflictError({ messageKey }),
+  conflict: (messageKey: MessageKey, cause?: unknown) =>
+    new ConflictError({ messageKey, cause }),
 
-  validation: (messageKey: MessageKey, values?: MessageValues) =>
-    new ValidationError({ messageKey, values }),
+  validation: (
+    messageKey: MessageKey,
+    values?: MessageValues,
+    cause?: unknown,
+  ) => new ValidationError({ messageKey, values, cause }),
 
   database: (
     operation: string,
@@ -216,23 +220,25 @@ export const fromUnknownError = (
       error.message.includes("UNIQUE constraint failed") ||
       error.message.includes("duplicate key value")
     ) {
-      return Errors.conflict("errors.alreadyExists");
+      return Errors.conflict("errors.alreadyExists", error);
     }
 
     if (
       error.message.includes("FOREIGN KEY constraint failed") ||
       error.message.includes("violates foreign key constraint")
     ) {
-      return Errors.validation("errors.invalidReference");
+      return Errors.validation("errors.invalidReference", undefined, error);
     }
 
     if (error.message.includes("NOT NULL constraint failed")) {
       const fieldMatch = /NOT NULL constraint failed: \w+\.(\w+)/.exec(
         error.message,
       );
-      return Errors.validation("errors.fieldRequired", {
-        field: fieldMatch?.[1] ?? "field",
-      });
+      return Errors.validation(
+        "errors.fieldRequired",
+        { field: fieldMatch?.[1] ?? "field" },
+        error,
+      );
     }
 
     // Check for network/connection errors
@@ -293,37 +299,36 @@ export const withErrorHandlingAsResult = async <T>(
 
   const result = await Effect.runPromise(Effect.result(safeEffect));
 
-  if (result._tag === "Success") {
-    return {
-      success: true,
-      data: result.success,
-    };
-  }
-
-  const error = result.failure;
-  return {
-    success: false,
-    error: {
-      type: error._tag,
-      message: translatorFor(locale)(error.messageKey, error.values),
-      name: error.name,
-      details: {
-        messageKey: error.messageKey,
-        ...(error._tag === "NotFoundError" && {
-          identifier: error.identifier,
-        }),
-        ...(error._tag === "DatabaseError" && {
-          operation: error.operation,
-          table: error.table,
-        }),
-        ...(error._tag === "ExternalServiceError" && {
-          service: error.service,
-          operation: error.operation,
-        }),
-        ...(error._tag === "InternalServerError" && {
-          operation: error.operation,
-        }),
-      },
-    },
-  };
+  return result._tag === "Success"
+    ? { success: true, data: result.success }
+    : toApiErrorResult(locale, result.failure);
 };
+
+export const toApiErrorResult = (
+  locale: Locale,
+  error: ApiError,
+): ApiErrorResult => ({
+  success: false,
+  error: {
+    type: error._tag,
+    message: translatorFor(locale)(error.messageKey, error.values),
+    name: error.name,
+    details: {
+      messageKey: error.messageKey,
+      ...(error._tag === "NotFoundError" && {
+        identifier: error.identifier,
+      }),
+      ...(error._tag === "DatabaseError" && {
+        operation: error.operation,
+        table: error.table,
+      }),
+      ...(error._tag === "ExternalServiceError" && {
+        service: error.service,
+        operation: error.operation,
+      }),
+      ...(error._tag === "InternalServerError" && {
+        operation: error.operation,
+      }),
+    },
+  },
+});
