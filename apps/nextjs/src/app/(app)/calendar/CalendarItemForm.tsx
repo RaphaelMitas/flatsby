@@ -213,14 +213,10 @@ export function CalendarItemForm({
         </div>
       </Field>
 
-      {!ended && (
+      {isTask && !ended && (
         <Field
           label={
-            !isTask
-              ? t("calendar.form.begins")
-              : recurrence
-                ? t("calendar.form.startsOn")
-                : t("calendar.form.date")
+            recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
           }
         >
           <DatePopover
@@ -231,57 +227,82 @@ export function CalendarItemForm({
           />
         </Field>
       )}
-      {!ended && !isTask && (
-        <Field label={t("calendar.form.ends")}>
-          <DatePopover
-            value={ends.value}
-            min={ends.min}
-            max={ends.max}
-            onSelect={(lastDay) =>
-              setSpan({ ...span, days: daysBetween(startsOn, lastDay) })
-            }
-            testId="calendar-form-event-ends-on"
-          />
-        </Field>
-      )}
       {!isTask && (
-        <div className="flex items-center justify-between">
-          <Label htmlFor="calendar-all-day">{t("calendar.allDay")}</Label>
-          <Switch
-            id="calendar-all-day"
-            checked={time === null}
-            onCheckedChange={(allDay) =>
-              setSpan({ ...span, time: allDay ? null : defaultEventTime })
-            }
-          />
-        </div>
-      )}
-      {!isTask && time !== null && (
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t("calendar.form.from")} htmlFor="calendar-start">
-            <Input
-              id="calendar-start"
-              type="time"
-              value={time.start}
-              onChange={(event) =>
-                event.target.value &&
-                setSpan(withStart(time, span.days, event.target.value))
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="calendar-all-day">{t("calendar.allDay")}</Label>
+            <Switch
+              id="calendar-all-day"
+              checked={time === null}
+              onCheckedChange={(allDay) =>
+                setSpan({ ...span, time: allDay ? null : defaultEventTime })
               }
-              data-testid="calendar-form-start-time"
             />
-          </Field>
-          <Field label={t("calendar.form.to")} htmlFor="calendar-end">
-            <Input
-              id="calendar-end"
-              type="time"
-              value={time.end}
-              onChange={(event) =>
-                event.target.value &&
-                setSpan({ ...span, time: { ...time, end: event.target.value } })
-              }
-              data-testid="calendar-form-end-time"
-            />
-          </Field>
+          </div>
+          {(!ended || time) && (
+            <div className="flex items-center gap-2">
+              <Label className="w-14 shrink-0">
+                {t("calendar.form.begins")}
+              </Label>
+              {!ended && (
+                <div className="flex-1">
+                  <DatePopover
+                    value={startsOn}
+                    max={endsOn}
+                    onSelect={pickStart}
+                    testId="calendar-form-date"
+                  />
+                </div>
+              )}
+              {time && (
+                <Input
+                  type="time"
+                  aria-label={t("calendar.form.begins")}
+                  value={time.start}
+                  onChange={(event) =>
+                    event.target.value &&
+                    setSpan(withStart(time, span.days, event.target.value))
+                  }
+                  className="w-28"
+                  data-testid="calendar-form-start-time"
+                />
+              )}
+            </div>
+          )}
+          {(!ended || time) && (
+            <div className="flex items-center gap-2">
+              <Label className="w-14 shrink-0">{t("calendar.form.ends")}</Label>
+              {!ended && (
+                <div className="flex-1">
+                  <DatePopover
+                    value={ends.value}
+                    min={ends.min}
+                    max={ends.max}
+                    onSelect={(lastDay) =>
+                      setSpan({ ...span, days: daysBetween(startsOn, lastDay) })
+                    }
+                    testId="calendar-form-event-ends-on"
+                  />
+                </div>
+              )}
+              {time && (
+                <Input
+                  type="time"
+                  aria-label={t("calendar.form.ends")}
+                  value={time.end}
+                  onChange={(event) =>
+                    event.target.value &&
+                    setSpan({
+                      ...span,
+                      time: { ...time, end: event.target.value },
+                    })
+                  }
+                  className="w-28"
+                  data-testid="calendar-form-end-time"
+                />
+              )}
+            </div>
+          )}
         </div>
       )}
 

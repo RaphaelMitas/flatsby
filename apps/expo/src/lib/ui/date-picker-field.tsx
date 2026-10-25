@@ -7,7 +7,7 @@ import { useThemeColors } from "../utils";
 import { Label } from "./label";
 
 interface DatePickerFieldProps {
-  label: string;
+  label?: string;
   value: Date;
   onChange: (date: Date) => void;
   mode?: "date" | "time";
@@ -43,7 +43,7 @@ export function DatePickerField({
   if (Platform.OS === "ios") {
     return (
       <View className="gap-2">
-        <Label>{label}</Label>
+        {label && <Label>{label}</Label>}
         <DateTimePicker
           testID={testID}
           value={value}
@@ -61,7 +61,7 @@ export function DatePickerField({
 
   return (
     <View className="gap-2">
-      <Label>{label}</Label>
+      {label && <Label>{label}</Label>}
       <Pressable
         testID={testID}
         onPress={() => setShowPicker(true)}

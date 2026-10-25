@@ -169,7 +169,7 @@ export const eventSpanOf = (item?: {
   time: EventTime | null;
   days: number;
 }) => ({
-  time: item?.time ?? null,
+  time: item ? item.time : defaultEventTime,
   days: item ? withoutOvernight(item.time, item.days) : 1,
 });
 

@@ -46,8 +46,6 @@ export const calendar = {
     color: "Color",
     startsOn: "Starts",
     date: "Date",
-    from: "From",
-    to: "To",
     repeat: "Repeat",
     days: "On",
     every: "Every",
