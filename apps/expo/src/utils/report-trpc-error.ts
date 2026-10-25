@@ -6,13 +6,10 @@ import { TRPCClientError } from "@trpc/client";
 import { posthog } from "./analytics/posthog";
 
 export function isUnauthorizedError(error: unknown): boolean {
-  if (!(error instanceof TRPCClientError)) return false;
-  const data: unknown = error.data;
   return (
-    typeof data === "object" &&
-    data !== null &&
-    "code" in data &&
-    data.code === "UNAUTHORIZED"
+    error instanceof TRPCClientError &&
+    isRecord(error.data) &&
+    error.data.code === "UNAUTHORIZED"
   );
 }
 
@@ -49,6 +46,7 @@ export function reportMutationError(
     type: "mutation",
     key: mutation.options.mutationKey,
     input: variables,
+    // The cache calls onError before it counts the final failure
     attempts: mutation.state.failureCount + 1,
   });
 }
@@ -58,18 +56,20 @@ async function reportTRPCError(error: Error, operation: FailedOperation) {
   const trpcError: TRPCClientError<AppRouter> = error;
   const network = await getNetworkStateAsync().catch(() => undefined);
   const path = procedurePath(operation.key);
-  // No data means no tRPC response: the fetch failed or a gateway answered
   const data = trpcError.data;
-  if (!data && network?.isInternetReachable === false) return;
+  // A response tRPC couldn't read is a client bug, not an outage
+  const code =
+    data?.code ??
+    (trpcError.meta?.response ? "UNREADABLE_RESPONSE" : undefined);
+  if (!code && network?.isInternetReachable === false) return;
 
   posthog.captureException(trpcError, {
-    $exception_fingerprint: data
-      ? `trpc:${path}:${data.code}`
-      : "trpc:unreachable",
-    $issue_name: data ? `${path} ${data.code}` : "API unreachable",
+    $exception_fingerprint: code ? `trpc:${path}:${code}` : "trpc:unreachable",
+    $issue_name: code ? `${path} ${code}` : "API unreachable",
     trpc_path: path,
     trpc_type: operation.type,
-    ...(data && { trpc_code: data.code, http_status: data.httpStatus }),
+    ...(code && { trpc_code: code }),
+    ...(data && { http_status: data.httpStatus }),
     input_ids: idsOf(operation.input),
     ...(operation.hadCachedData !== undefined && {
       had_cached_data: operation.hadCachedData,
