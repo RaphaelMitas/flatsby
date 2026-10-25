@@ -1,14 +1,11 @@
 // One source for every fact on the site, so the pages, JSON-LD and .md twins can't disagree.
 
 import { INVITE_REFERRER_KEY } from "@flatsby/validators/invite";
+import { APP_STORE_ID, PLAY_STORE_URL } from "@flatsby/validators/store";
 
 import type { MarketingTranslator } from "./i18n";
 
 export const SITE_URL = "https://www.flatsby.com";
-export const APP_STORE_ID = "6747908544";
-export const APP_STORE_URL = `https://apps.apple.com/app/flatsby/id${APP_STORE_ID}`;
-export const PLAY_STORE_ID = "com.flatcove.app";
-export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${PLAY_STORE_ID}`;
 export const GITHUB_URL = "https://github.com/RaphaelMitas/flatsby";
 export const UPDATED = "2026-10-23";
 

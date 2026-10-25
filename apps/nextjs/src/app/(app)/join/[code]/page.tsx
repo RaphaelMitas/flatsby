@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import { inviteCodeSchema, invitePath } from "@flatsby/validators/invite";
+import { APP_STORE_ID } from "@flatsby/validators/store";
 
-import { APP_STORE_ID } from "~/app/_components/landing/content";
 import { getPlatform } from "~/app/_components/landing/platform";
 import { getSession } from "~/auth/server";
 import { caller } from "~/trpc/server";

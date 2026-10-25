@@ -24,6 +24,7 @@ import { useHomeVersion } from "~/utils/home-version";
 import { useLocalePreference } from "~/utils/intl-provider";
 import { openLegalPage } from "~/utils/legal";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { writeReviewUrl } from "~/utils/useReviewNudge";
 
 export default function SettingsIndex() {
   const t = useTranslations();
@@ -164,6 +165,12 @@ export default function SettingsIndex() {
                 onCheckedChange={handleAnalyticsToggle}
               />
             }
+          />
+          <SettingsItem
+            title={t("settings.items.rateApp")}
+            subtitle={t("settings.items.rateAppSubtitle")}
+            iconName="star"
+            onPress={() => Linking.openURL(writeReviewUrl)}
           />
           <SettingsItem
             title={t("settings.items.logout")}

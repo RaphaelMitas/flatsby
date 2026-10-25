@@ -1,17 +1,11 @@
 import type { Locale } from "@flatsby/i18n/locale";
 
 import { localePath } from "@flatsby/i18n/locale";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@flatsby/validators/store";
 
 import type { FaqItem } from "./content";
 import type { ContentPageData } from "./pages";
-import {
-  APP_STORE_URL,
-  FEATURES,
-  GITHUB_URL,
-  PLAY_STORE_URL,
-  SITE_URL,
-  UPDATED,
-} from "./content";
+import { FEATURES, GITHUB_URL, SITE_URL, UPDATED } from "./content";
 import { marketingTranslator } from "./i18n";
 
 const ORG_ID = `${SITE_URL}/#org`;

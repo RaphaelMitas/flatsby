@@ -41,6 +41,8 @@ export const settings = {
     legalNoticeSubtitle: "Impressum (nach deutschem Recht)",
     exportData: "Meine Daten exportieren",
     exportDataSubtitle: "Deine persönlichen Daten herunterladen (DSGVO)",
+    rateApp: "Flatsby bewerten",
+    rateAppSubtitle: "Sag anderen im Store, was du denkst",
   },
   theme: {
     light: "Hell",
