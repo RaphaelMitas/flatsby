@@ -57,7 +57,7 @@ async function reportTRPCError(error: Error, operation: FailedOperation) {
   const network = await getNetworkStateAsync().catch(() => undefined);
   const path = procedurePath(operation.key);
   const data = trpcError.data;
-  // A response tRPC couldn't read is a client bug, not an outage
+  // JSON without tRPC error data (a proxy's error, a superjson mismatch) still means the server answered
   const code =
     data?.code ??
     (trpcError.meta?.response ? "UNREADABLE_RESPONSE" : undefined);

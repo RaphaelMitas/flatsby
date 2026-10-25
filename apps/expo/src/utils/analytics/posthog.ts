@@ -12,7 +12,6 @@ if (!posthogApiKey && !posthogDisabled)
 export const posthog = new PostHog(posthogApiKey || "phc-disabled", {
   disabled: posthogDisabled,
   host: "https://eu.i.posthog.com",
-  // PostHogProvider only defaults this on when it builds the client itself
   captureAppLifecycleEvents: true,
   // Deep links reach PostHog as screen paths and the "Application Opened" url
   before_send: (event) =>

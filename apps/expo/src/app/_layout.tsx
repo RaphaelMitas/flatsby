@@ -6,7 +6,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { router, Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import { posthog } from "~/utils/analytics/posthog";
@@ -67,12 +66,11 @@ export default function RootLayout() {
 function ScreenTracker() {
   const pathname = usePathname();
   const segments = useSegments();
-  const posthog = usePostHog();
 
   useEffect(() => {
     const screenName = getScreenName(segments);
     void posthog.screen(screenName, { pathname });
-  }, [pathname, segments, posthog]);
+  }, [pathname, segments]);
 
   return null;
 }
