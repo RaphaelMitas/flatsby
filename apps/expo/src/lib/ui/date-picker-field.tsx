@@ -67,7 +67,10 @@ export function DatePickerField({
       {!!label && <Label>{label}</Label>}
       <Pressable
         testID={testID}
-        accessibilityLabel={accessibilityLabel}
+        // A label on a Pressable replaces its text, so the value has to be part of it
+        accessibilityLabel={
+          accessibilityLabel && `${accessibilityLabel}, ${formatted}`
+        }
         onPress={() => setShowPicker(true)}
         className="border-input bg-background flex h-12 flex-row items-center rounded-lg border px-3"
       >

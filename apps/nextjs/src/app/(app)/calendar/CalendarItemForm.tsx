@@ -495,18 +495,10 @@ export function CalendarItemForm({
   );
 }
 
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor?: string;
-  children: ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={htmlFor}>{label}</Label>
+      <Label>{label}</Label>
       {children}
     </div>
   );
