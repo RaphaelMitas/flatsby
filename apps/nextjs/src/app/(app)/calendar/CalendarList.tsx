@@ -104,7 +104,7 @@ export function CalendarList({
               <span className="flex h-1.5 gap-0.5">
                 {entries.slice(0, MAX_DOTS).map(({ item, occurrence }) => (
                   <span
-                    key={item.id}
+                    key={`${item.id}-${occurrence.date}`}
                     className={cn(
                       "size-1.5 rounded-full",
                       categoryFillColorMap[item.color],

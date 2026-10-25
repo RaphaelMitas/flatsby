@@ -1056,12 +1056,9 @@ describe("homeAgenda", () => {
       ...event(9, "Late dinner", "2026-10-21"),
       time: { start: "20:00", end: "00:00" },
     };
-    const range: CalendarRange = {
-      items: [dinner],
-      occurrences: expandOccurrences(dinner, [], window.from, window.to),
-    };
     expect(
-      homeAgenda(range, "2026-10-21", "23:30", ME).nextEvent?.item.title,
+      homeAgenda(rangeOf(dinner), "2026-10-21", "23:30", ME).nextEvent?.item
+        .title,
     ).toBe("Late dinner");
   });
 });

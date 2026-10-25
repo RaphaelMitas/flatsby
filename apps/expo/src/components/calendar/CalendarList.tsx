@@ -230,7 +230,7 @@ function StripDay({
       <View className="h-1.5 flex-row gap-0.5">
         {entries.slice(0, MAX_DOTS).map(({ item, occurrence }) => (
           <View
-            key={item.id}
+            key={`${item.id}-${occurrence.date}`}
             className={cn(
               "h-1.5 w-1.5 rounded-full",
               categoryFillColorMap[item.color],
