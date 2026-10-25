@@ -1,3 +1,4 @@
+import type { Session } from "@flatsby/auth";
 import type { CheckResponse } from "autumn-js";
 import { Autumn, AutumnError } from "autumn-js";
 import { z } from "zod";
@@ -36,11 +37,7 @@ function isCustomerNotFound(error: unknown): boolean {
   }
 }
 
-export interface CreditUser {
-  id: string;
-  name: string;
-  email: string;
-}
+export type CreditUser = Pick<Session["user"], "id" | "name" | "email">;
 
 export async function checkCredits(user: CreditUser): Promise<CheckResponse> {
   const params = { customerId: user.id, featureId: AUTUMN_FEATURES.CREDITS };
