@@ -21,6 +21,7 @@ import {
   defaultEventTime,
   describeMonthDay,
   describeSeries,
+  deviceTimeZone,
   earliestEndsOn,
   editedStartsOn,
   eventEndChoices,
@@ -173,6 +174,7 @@ function ItemFields({
     recurrence,
     endsOn,
     days: isTask ? 1 : span.days,
+    timeZone: deviceTimeZone(),
     memberIds: isTask ? memberIds : [],
   };
   const valid = createCalendarItemSchema.safeParse(input).success;

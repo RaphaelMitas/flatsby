@@ -94,6 +94,7 @@ const loadItems = async (db: Database, where: SQL | undefined) =>
         endTime: true,
         recurrence: true,
         days: true,
+        timeZone: true,
       },
       with: {
         members: {
@@ -232,6 +233,7 @@ const itemValues = ({
   recurrence,
   endsOn,
   days,
+  timeZone,
 }: ItemValues) => ({
   kind,
   title,
@@ -242,6 +244,8 @@ const itemValues = ({
   endTime: time?.end ?? null,
   recurrence,
   days,
+  // Absent on edits, so the zone the item was made in stays
+  ...(timeZone && { timeZone }),
 });
 
 const lastDayOf = (date: SQLWrapper) =>
@@ -494,6 +498,7 @@ export const calendarRouter = createTRPCRouter({
                   return Errors.conflict("errors.calendarItemChanged");
                 const piece = {
                   ...edited,
+                  timeZone: previous.timeZone,
                   memberIds: continuedRotation(previous, edited),
                 };
                 const next = await insertItem(tx, piece, member.id);

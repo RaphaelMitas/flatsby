@@ -74,6 +74,29 @@ export const eventTimeSchema = z.object({
 });
 export type EventTime = z.infer<typeof eventTimeSchema>;
 const MAX_EVENT_DAYS = 365;
+
+// Every item from before zones were recorded was made in Germany
+export const DEFAULT_TIME_ZONE = "Europe/Berlin";
+
+const isTimeZone = (zone: string) => {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// A zone the runtime doesn't know falls back to the default rather than blocking the save
+const timeZoneSchema = z
+  .string()
+  .max(64)
+  .refine(isTimeZone)
+  .optional()
+  .catch(undefined);
+
+export const deviceTimeZone = () =>
+  Intl.DateTimeFormat().resolvedOptions().timeZone;
 const eventDaysSchema = z.int().min(1).max(MAX_EVENT_DAYS);
 export const calendarItemKindSchema = z.enum(["task", "event"]);
 export type CalendarItemKind = z.infer<typeof calendarItemKindSchema>;
@@ -155,8 +178,10 @@ export function editedDays(
   return withOvernight(next.time, next.days ?? kept);
 }
 
-export const createCalendarItemSchema =
-  calendarItemFields.refine(isConsistentItem);
+// Set once from the creating device; edits keep it
+export const createCalendarItemSchema = calendarItemFields
+  .extend({ timeZone: timeZoneSchema })
+  .refine(isConsistentItem);
 export type CreateCalendarItemInput = z.input<typeof createCalendarItemSchema>;
 
 export const updateCalendarItemSchema = calendarItemFields
@@ -602,6 +627,7 @@ export interface CalendarItemView extends ExpandableItem {
   color: CalendarColor;
   title: string;
   time: EventTime | null;
+  timeZone: string;
 }
 
 export interface CalendarRange {

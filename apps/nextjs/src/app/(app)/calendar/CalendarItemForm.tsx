@@ -30,6 +30,7 @@ import {
   defaultEventTime,
   describeMonthDay,
   describeSeries,
+  deviceTimeZone,
   earliestEndsOn,
   editedStartsOn,
   eventEndChoices,
@@ -114,6 +115,7 @@ export function CalendarItemForm({
     recurrence,
     endsOn,
     days: isTask ? 1 : span.days,
+    timeZone: deviceTimeZone(),
     memberIds: isTask ? memberIds : [],
   };
   const canSave = createCalendarItemSchema.safeParse(input).success;

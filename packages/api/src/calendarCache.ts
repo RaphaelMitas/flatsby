@@ -15,6 +15,7 @@ import { z } from "zod/v4";
 import {
   calendarRangeSchema,
   continuedRotation,
+  DEFAULT_TIME_ZONE,
   editedDays,
   editedEndsOn,
   isScheduledOn,
@@ -150,6 +151,7 @@ const asView = (
   time: input.time,
   recurrence: input.recurrence,
   days: editedDays(input, previous),
+  timeZone: previous?.timeZone ?? input.timeZone ?? DEFAULT_TIME_ZONE,
   memberIds: input.memberIds,
 });
 

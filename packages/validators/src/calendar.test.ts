@@ -59,6 +59,7 @@ const item = (
   endsOn: null,
   recurrence,
   days: 1,
+  timeZone: "Europe/Berlin",
   memberIds,
 });
 
@@ -514,6 +515,23 @@ describe("event length", () => {
       createCalendarItemSchema.safeParse({ ...event, ...input }).success;
     expect(valid({ days: 1 })).toBe(true);
     expect(valid({ kind: "task", time: null, days: 2 })).toBe(false);
+  });
+
+  it("keeps a known zone and drops one the runtime can't read instead of failing", () => {
+    const event = {
+      groupId: 1,
+      kind: "event" as const,
+      title: "Party",
+      color: "blue" as const,
+      startsOn: "2026-10-23",
+      time: null,
+      recurrence: null,
+      memberIds: [],
+    };
+    const zoneOf = (timeZone: string) =>
+      createCalendarItemSchema.parse({ ...event, timeZone }).timeZone;
+    expect(zoneOf("America/New_York")).toBe("America/New_York");
+    expect(zoneOf("Mars/Olympus")).toBeUndefined();
   });
 
   it("describes the days an event runs, as a count when it repeats", () => {

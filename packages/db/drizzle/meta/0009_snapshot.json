@@ -1,5 +1,5 @@
 {
-  "id": "5ef5fd44-bfd4-44b2-9d41-fc0d1c52922f",
+  "id": "75d6c6e4-21da-47c1-b124-d671b37be5f2",
   "prevId": "40ab9733-57e2-44bf-aeba-00a209d47171",
   "version": "7",
   "dialect": "postgresql",
@@ -224,6 +224,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": 1
+        },
+        "time_zone": {
+          "name": "time_zone",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Europe/Berlin'"
         },
         "recurrence": {
           "name": "recurrence",
