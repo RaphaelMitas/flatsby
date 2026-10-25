@@ -1,7 +1,7 @@
 import { addDays, localDate } from "@flatsby/validators/calendar";
 
 import { expect, test } from "../fixtures/auth";
-import { openCalendarView, writeSettled } from "../helpers/calendar";
+import { openCalendarView } from "../helpers/calendar";
 
 test.describe("Calendar events", () => {
   test("an event over three days shows on each of them and as one bar per week", async ({
@@ -20,22 +20,21 @@ test.describe("Calendar events", () => {
     await authPage.keyboard.press("ArrowRight");
     await authPage.keyboard.press("ArrowRight");
     await authPage.keyboard.press("Enter");
-    const saved = writeSettled(authPage);
     await form.getByTestId("calendar-form-submit").click();
 
     const section = (date: string) =>
       authPage.getByTestId(
         `calendar-agenda-${date === today ? "today" : date}`,
       );
+    // Only the saved row carries a server id, so reloading after it can't abort the write
     const rows = (date: string) =>
       section(date)
-        .getByTestId(/^calendar-entry--?\d+$/)
+        .getByTestId(/^calendar-entry-\d+$/)
         .filter({ hasText: title });
     for (const day of [0, 1, 2])
       await expect(rows(addDays(today, day))).toHaveCount(1);
     await expect(rows(addDays(today, 3))).toHaveCount(0);
     await expect(rows(addDays(today, 1))).toContainText(" – ");
-    await saved;
 
     await authPage.reload();
     await openCalendarView(authPage, "month");

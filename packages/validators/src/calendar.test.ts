@@ -455,6 +455,16 @@ describe("event length", () => {
   const en = translatorFor("en");
 
   const time = (start: string, end: string) => ({ start, end });
+  const party = {
+    groupId: 1,
+    kind: "event" as const,
+    title: "Party",
+    color: "blue" as const,
+    startsOn: "2026-10-23",
+    time: time("22:00", "02:00"),
+    recurrence: null,
+    memberIds: [],
+  };
 
   it("keeps the length when the start moves, carrying the end across midnight", () => {
     expect(withStart(time("19:00", "20:30"), 1, "23:00")).toEqual({
@@ -469,6 +479,20 @@ describe("event length", () => {
       time: time("20:00", "14:00"),
       days: 3,
     });
+    expect(withStart(time("20:00", "00:00"), 1, "21:00")).toEqual({
+      time: time("21:00", "01:00"),
+      days: 1,
+    });
+    expect(withStart(time("20:00", "01:00"), 1, "19:00")).toEqual({
+      time: time("19:00", "00:00"),
+      days: 1,
+    });
+  });
+
+  it("reads an end at 00:00 as the midnight that closes the start day", () => {
+    expect(withOvernight(time("20:00", "00:00"), 1)).toBe(1);
+    expect(withOvernight(time("00:00", "00:00"), 1)).toBe(1);
+    expect(editedDays({ kind: "event", time: time("20:00", "00:00") })).toBe(1);
   });
 
   it("stores a one-day event that ends before it starts as two days, and reads it back as one", () => {
@@ -480,14 +504,14 @@ describe("event length", () => {
   });
 
   it("keeps the length older apps leave out, reading their overnight times as before", () => {
-    const party = { time: time("22:00", "02:00"), days: 2 };
+    const stored = { time: time("22:00", "02:00"), days: 2 };
     const event = (eventTime: EventTime | null) => ({
       kind: "event" as const,
       time: eventTime,
     });
     expect(editedDays(event(time("22:00", "02:00")))).toBe(2);
-    expect(editedDays(event(time("20:00", "23:00")), party)).toBe(1);
-    expect(editedDays(event(time("23:00", "03:00")), party)).toBe(2);
+    expect(editedDays(event(time("20:00", "23:00")), stored)).toBe(1);
+    expect(editedDays(event(time("23:00", "03:00")), stored)).toBe(2);
     expect(editedDays(event(null), { time: null, days: 4 })).toBe(4);
     expect(
       editedDays(event(time("19:00", "22:00")), {
@@ -501,35 +525,15 @@ describe("event length", () => {
   });
 
   it("rejects a task over several days", () => {
-    const event = {
-      groupId: 1,
-      kind: "event" as const,
-      title: "Party",
-      color: "blue" as const,
-      startsOn: "2026-10-23",
-      time: time("22:00", "02:00"),
-      recurrence: null,
-      memberIds: [],
-    };
     const valid = (input: object) =>
-      createCalendarItemSchema.safeParse({ ...event, ...input }).success;
+      createCalendarItemSchema.safeParse({ ...party, ...input }).success;
     expect(valid({ days: 1 })).toBe(true);
     expect(valid({ kind: "task", time: null, days: 2 })).toBe(false);
   });
 
   it("keeps a known zone and drops one the runtime can't read instead of failing", () => {
-    const event = {
-      groupId: 1,
-      kind: "event" as const,
-      title: "Party",
-      color: "blue" as const,
-      startsOn: "2026-10-23",
-      time: null,
-      recurrence: null,
-      memberIds: [],
-    };
     const zoneOf = (timeZone: string) =>
-      createCalendarItemSchema.parse({ ...event, timeZone }).timeZone;
+      createCalendarItemSchema.parse({ ...party, timeZone }).timeZone;
     expect(zoneOf("America/New_York")).toBe("America/New_York");
     expect(zoneOf("Mars/Olympus")).toBeUndefined();
   });
@@ -1045,5 +1049,19 @@ describe("homeAgenda", () => {
     expect(next("2026-10-21", "22:00")).toBe("Party");
     expect(next("2026-10-22", "00:30")).toBe("Party");
     expect(next("2026-10-22", "02:00")).toBeUndefined();
+  });
+
+  it("keeps an event that ends at midnight until the day is over", () => {
+    const dinner = {
+      ...event(9, "Late dinner", "2026-10-21"),
+      time: { start: "20:00", end: "00:00" },
+    };
+    const range: CalendarRange = {
+      items: [dinner],
+      occurrences: expandOccurrences(dinner, [], window.from, window.to),
+    };
+    expect(
+      homeAgenda(range, "2026-10-21", "23:30", ME).nextEvent?.item.title,
+    ).toBe("Late dinner");
   });
 });

@@ -150,8 +150,12 @@ const isConsistentItem = (item: z.infer<typeof calendarItemFields>) =>
     ? item.time === null && (item.days ?? 1) === 1
     : item.memberIds.length === 0) && !endsBeforeStart(item);
 
+// An end at 00:00 is the midnight that closes the day, as other calendars read it
+const endClock = (time: EventTime) =>
+  time.end === "00:00" ? "24:00" : time.end;
+
 const runsPastMidnight = (time: EventTime | null) =>
-  time !== null && time.end <= time.start;
+  time !== null && endClock(time) <= time.start;
 
 // Forms and older apps write an overnight event as one day ending at or before its start; it's stored as two
 export const withOvernight = (time: EventTime | null, days: number) =>
@@ -468,7 +472,7 @@ const timeOf = (minutes: number) => {
 export function withStart(time: EventTime, days: number, start: string) {
   const end =
     (withOvernight(time, days) - 1) * DAY_MINUTES +
-    minutesOf(time.end) -
+    minutesOf(endClock(time)) -
     minutesOf(time.start) +
     minutesOf(start);
   const moved = { start, end: timeOf(end) };
@@ -476,7 +480,7 @@ export function withStart(time: EventTime, days: number, start: string) {
     time: moved,
     days: withoutOvernight(
       moved,
-      Math.min(Math.floor(end / DAY_MINUTES) + 1, MAX_EVENT_DAYS),
+      Math.min(Math.ceil(end / DAY_MINUTES), MAX_EVENT_DAYS),
     ),
   };
 }
@@ -860,21 +864,6 @@ const monthAgenda = (
   member: number | null,
 ) => agenda(agendaDays(range, monthGrid(month).weeks.flat(), meId), [], member);
 
-interface MonthBar {
-  entry: AgendaEntry;
-  column: number;
-  span: number;
-  lane: number;
-  startsBefore: boolean;
-  endsAfter: boolean;
-}
-
-interface MonthCell {
-  /** One per shown lane; null where a bar passes or the lane is empty */
-  slots: (AgendaEntry | null)[];
-  hidden: number;
-}
-
 /** Lays a week out in lanes, so an event over several days keeps one lane and draws as a single bar. */
 function weekLayout(week: AgendaDay[], lines: number) {
   const lanes = week.map((): (AgendaEntry | null)[] => []);
@@ -888,7 +877,7 @@ function weekLayout(week: AgendaDay[], lines: number) {
     return lane;
   };
   const bars = week.flatMap((day, column) =>
-    day.entries.flatMap((entry): MonthBar[] => {
+    day.entries.flatMap((entry) => {
       const { item, occurrence } = entry;
       const startsBefore = occurrence.date < day.date;
       if (item.days === 1 || (startsBefore && column > 0)) return [];
@@ -915,7 +904,8 @@ function weekLayout(week: AgendaDay[], lines: number) {
   const limit = lanes.some((used) => used.length > lines) ? lines - 1 : lines;
   return {
     bars: bars.filter((bar) => bar.lane < limit),
-    cells: lanes.map((used): MonthCell => ({
+    cells: lanes.map((used) => ({
+      // One per shown lane; null where a bar passes or the lane is empty
       slots: Array.from(used.slice(0, limit), (entry) =>
         entry && entry.item.days === 1 ? entry : null,
       ),
@@ -1039,7 +1029,7 @@ function notOverYet(
 ) {
   const lastDay = lastDayOf(occurrence.date, item.days);
   if (lastDay !== today) return lastDay > today;
-  return (item.time?.end ?? "24:00") > now;
+  return (item.time ? endClock(item.time) : "24:00") > now;
 }
 
 /** `now` is the wall-clock time ("HH:MM"), to pass over events that ended today */
