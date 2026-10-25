@@ -11,11 +11,10 @@ import { trpc } from "~/utils/api";
 import { isE2ETestingEnabled } from "~/utils/e2e";
 
 const ACTIONS_KEY = "review_nudge_actions";
-const ASKED_AT_KEY = "review_nudge_asked_at";
+const ASKED_KEY = "review_nudge_asked";
 const DAY_MS = 86_400_000;
 const MIN_ACTIONS = 10;
 const MIN_INSTALL_AGE_MS = 3 * DAY_MS;
-const ASK_INTERVAL_MS = 120 * DAY_MS;
 
 export type ReviewMoment = "list_cleared" | "expense_created";
 
@@ -36,8 +35,8 @@ export function useReviewNudge() {
     await AsyncStorage.setItem(ACTIONS_KEY, String(actions));
     if (!moment || actions < MIN_ACTIONS) return;
 
-    const askedAt = Number(await AsyncStorage.getItem(ASKED_AT_KEY));
-    if (Date.now() - askedAt < ASK_INTERVAL_MS) return;
+    // Neither store promises to hide the prompt from someone who already rated, so ask once
+    if (await AsyncStorage.getItem(ASKED_KEY)) return;
 
     const installedAt = await Application.getInstallationTimeAsync();
     if (Date.now() - installedAt.getTime() < MIN_INSTALL_AGE_MS) return;
@@ -49,7 +48,7 @@ export function useReviewNudge() {
 
     if (!(await StoreReview.hasAction())) return;
 
-    await AsyncStorage.setItem(ASKED_AT_KEY, String(Date.now()));
+    await AsyncStorage.setItem(ASKED_KEY, "true");
     await StoreReview.requestReview();
     posthog.capture("review_prompt_requested", { moment, actions });
   };
