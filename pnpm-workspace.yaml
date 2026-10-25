@@ -64,6 +64,7 @@ catalog:
   superjson: ^2.2.6
   tailwindcss: ^4.3.3
   turbo: ^2.11.9
+  # exact: each @effect/tsgo release patches specific TypeScript versions
   typescript: 7.0.2
   use-intl: ^4.14.9
   vitest: ^5.0.5
