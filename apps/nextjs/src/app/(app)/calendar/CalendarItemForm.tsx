@@ -6,7 +6,6 @@ import type {
   CalendarItemKind,
   CalendarItemView,
   CreateCalendarItemInput,
-  EventTime,
   RepeatForm,
   Weekday,
 } from "@flatsby/validators/calendar";
@@ -33,6 +32,7 @@ import {
   describeSeries,
   earliestEndsOn,
   editedStartsOn,
+  eventSpanOf,
   formatCalendarDate,
   formEndsOn,
   hasEnded,
@@ -47,7 +47,6 @@ import {
   weekdayName,
   weekdayOf,
   weekdays,
-  withoutOvernight,
   withOvernight,
   withPickedStart,
   withStart,
@@ -84,12 +83,7 @@ export function CalendarItemForm({
     item?.color ?? null,
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
-  const [span, setSpan] = useState<{ time: EventTime | null; days: number }>(
-    () => ({
-      time: item?.time ?? null,
-      days: item ? withoutOvernight(item.time, item.days) : 1,
-    }),
-  );
+  const [span, setSpan] = useState(() => eventSpanOf(item));
   const { time } = span;
   const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
     item ? repeatFormOf(item.recurrence) : null,

@@ -137,6 +137,15 @@ export const withOvernight = (time: EventTime | null, days: number) =>
 export const withoutOvernight = (time: EventTime | null, days: number) =>
   days === 2 && runsPastMidnight(time) ? 1 : days;
 
+/** The time and picked length an event form starts from. */
+export const eventSpanOf = (item?: {
+  time: EventTime | null;
+  days: number;
+}) => ({
+  time: item?.time ?? null,
+  days: item ? withoutOvernight(item.time, item.days) : 1,
+});
+
 export function editedDays(
   next: Pick<z.infer<typeof calendarItemFields>, "kind" | "time" | "days">,
   previous?: { time: EventTime | null; days: number },
@@ -444,7 +453,10 @@ export function withStart(time: EventTime, days: number, start: string) {
   const moved = { start, end: timeOf(end) };
   return {
     time: moved,
-    days: withoutOvernight(moved, Math.floor(end / DAY_MINUTES) + 1),
+    days: withoutOvernight(
+      moved,
+      Math.min(Math.floor(end / DAY_MINUTES) + 1, MAX_EVENT_DAYS),
+    ),
   };
 }
 
@@ -695,9 +707,14 @@ function agendaDays(
   const byDate = new Map(
     dates.map((date): [string, CalendarEntry[]] => [date, []]),
   );
-  for (const entry of rangeEntries(range))
-    for (let day = 0; day < entry.item.days; day++)
-      byDate.get(addDays(entry.occurrence.date, day))?.push(entry);
+  const first = toDayNumber(dates[0] ?? "");
+  const end = first + dates.length;
+  for (const entry of rangeEntries(range)) {
+    const start = toDayNumber(entry.occurrence.date);
+    const last = Math.min(start + entry.item.days, end);
+    for (let day = Math.max(start, first); day < last; day++)
+      byDate.get(fromDayNumber(day))?.push(entry);
+  }
   return dates.map((date) => {
     const entries = byDate.get(date) ?? [];
     return { date, entries, summary: daySummary(entries, meId) };
