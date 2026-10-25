@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import {
   useMutation,
@@ -95,13 +95,18 @@ export function ExpenseDetailView({
 
         return { previousData };
       },
-      onError: (_error, _variables, context) => {
+      onError: (error, _variables, context) => {
         if (context?.previousData) {
           queryClient.setQueryData(expenseListQueryKey, context.previousData);
         }
+        Alert.alert(t("expenses.deleteFailed"), error.message);
       },
-      onSuccess: (data) => {
+      onSuccess: (data, _variables, context) => {
         if (data.success === false) {
+          if (context.previousData) {
+            queryClient.setQueryData(expenseListQueryKey, context.previousData);
+          }
+          Alert.alert(t("expenses.deleteFailed"), data.error.message);
           return;
         }
 
