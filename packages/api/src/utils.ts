@@ -20,6 +20,7 @@ import type {
   DbTransaction,
   GroupMember,
   GroupWithAccess,
+  GroupWithMembers,
   Role,
   ShoppingListWithGroup,
   TransactionOperation,
@@ -142,42 +143,8 @@ export const OperationUtils = {
     userId: string,
   ): Effect.Effect<GroupWithAccess, ApiError | NotFoundError> => {
     return Effect.flatMap(
-      DbUtils.findOneOrFail(
-        () =>
-          db.query.groups.findFirst({
-            where: (groups, { eq }) => eq(groups.id, groupId),
-            with: {
-              groupMembers: {
-                where: (members, { eq }) => eq(members.isActive, true),
-                columns: { id: true, userId: true, role: true, joinedOn: true },
-                with: {
-                  user: {
-                    columns: { email: true, name: true, image: true },
-                  },
-                },
-              },
-            },
-          }),
-        "group",
-      ),
-      (group) =>
-        Effect.flatMap(
-          DbUtils.ensureGroupMember(userId, group.groupMembers),
-          () => {
-            const thisGroupMember = group.groupMembers.find(
-              (m) => m.userId === userId,
-            );
-
-            if (!thisGroupMember) {
-              return fail.notFound("groupMember", userId);
-            }
-
-            return Effect.succeed({
-              ...group,
-              thisGroupMember,
-            });
-          },
-        ),
+      DbUtils.findOneOrFail(() => findGroupWithMembers(db, groupId), "group"),
+      (group) => withThisMember(group, userId),
     );
   },
 
@@ -260,48 +227,6 @@ export const GroupUtils = {
     );
   },
 
-  /**
-   * Get user's role in a group
-   */
-  getUserRole: (
-    db: Database,
-    groupId: number,
-    userId: string,
-  ): Effect.Effect<Pick<GroupMember, "role">, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          columns: {
-            role: true,
-          },
-          where: (members, { and, eq }) =>
-            and(
-              eq(members.groupId, groupId),
-              eq(members.userId, userId),
-              eq(members.isActive, true),
-            ),
-        }),
-      "groupMembership",
-    );
-  },
-
-  /**
-   * Require user to be an admin of the group, fail if not
-   */
-  requireAdminAccess: (
-    db: Database,
-    groupId: number,
-    userId: string,
-  ): Effect.Effect<GroupMember, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: GroupUtils.activeAdminWhere(groupId, userId),
-        }),
-      "adminMembership",
-    );
-  },
-
   activeAdminWhere: (groupId: number, userId: string) =>
     and(
       eq(groupMembers.userId, userId),
@@ -319,15 +244,7 @@ export const GroupUtils = {
     userId: string,
   ): Effect.Effect<GroupMember, ApiError> => {
     return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(
-              eq(members.userId, userId),
-              eq(members.groupId, groupId),
-              eq(members.isActive, true),
-            ),
-        }),
+      () => findActiveMember(db, groupId, userId),
       "groupMembership",
     );
   },
@@ -394,7 +311,6 @@ export const GroupUtils = {
     await tx.delete(groups).where(eq(groups.id, groupId));
   },
 
-  /** Callers check the right to add; `refusal` runs under the group lock, so it sees concurrent removals. */
   addMember: (
     db: Database,
     groupId: number,
@@ -402,36 +318,96 @@ export const GroupUtils = {
     refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
   ): Effect.Effect<number, ApiError> =>
     Effect.flatMap(
-      DbUtils.transaction(async (tx): Promise<number | ApiError> => {
-        await GroupUtils.lockGroup(tx, groupId);
-        const refused = await refusal?.(tx);
-        if (refused) return refused;
-        const existing = await tx.query.groupMembers.findFirst({
-          where: and(
-            eq(groupMembers.groupId, groupId),
-            eq(groupMembers.userId, userId),
-          ),
-          orderBy: desc(groupMembers.isActive),
-        });
-        if (existing?.isActive) return Errors.conflict("errors.alreadyMember");
-        const [member] = existing
-          ? await tx
-              .update(groupMembers)
-              .set({ isActive: true, role: "member" })
-              .where(eq(groupMembers.id, existing.id))
-              .returning({ id: groupMembers.id })
-          : await tx
-              .insert(groupMembers)
-              .values({ groupId, userId, role: "member" })
-              .returning({ id: groupMembers.id });
-        if (!member) throw new Error("Failed to add group member");
-        return member.id;
-      }, "add group member")(db),
+      DbUtils.transaction(
+        (tx) => addMemberTx(tx, groupId, userId, refusal),
+        "add group member",
+      )(db),
       (result): Effect.Effect<number, ApiError> =>
         typeof result === "number"
           ? Effect.succeed(result)
           : Effect.fail(result),
     ),
+};
+
+export const findGroupWithMembers = (db: Database, groupId: number) =>
+  db.query.groups.findFirst({
+    where: (groups, { eq }) => eq(groups.id, groupId),
+    with: {
+      groupMembers: {
+        where: (members, { eq }) => eq(members.isActive, true),
+        columns: { id: true, userId: true, role: true, joinedOn: true },
+        with: {
+          user: {
+            columns: { email: true, name: true, image: true },
+          },
+        },
+      },
+    },
+  });
+
+export const withThisMember = (
+  group: GroupWithMembers,
+  userId: string,
+): Effect.Effect<GroupWithAccess, ApiError> =>
+  Effect.flatMap(DbUtils.ensureGroupMember(userId, group.groupMembers), () => {
+    const thisGroupMember = group.groupMembers.find((m) => m.userId === userId);
+    return thisGroupMember
+      ? Effect.succeed({ ...group, thisGroupMember })
+      : fail.notFound("groupMember", userId);
+  });
+
+export const findActiveMember = (
+  db: Database,
+  groupId: number,
+  userId: string,
+) =>
+  db.query.groupMembers.findFirst({
+    where: and(
+      eq(groupMembers.userId, userId),
+      eq(groupMembers.groupId, groupId),
+      eq(groupMembers.isActive, true),
+    ),
+  });
+
+export const findActiveAdmin = (
+  db: Database,
+  groupId: number,
+  userId: string,
+) =>
+  db.query.groupMembers.findFirst({
+    where: GroupUtils.activeAdminWhere(groupId, userId),
+  });
+
+/** Callers check the right to add; `refusal` runs under the group lock, so it sees concurrent removals. */
+export const addMemberTx = async (
+  tx: DbTransaction,
+  groupId: number,
+  userId: string,
+  refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
+): Promise<number | ApiError> => {
+  await GroupUtils.lockGroup(tx, groupId);
+  const refused = await refusal?.(tx);
+  if (refused) return refused;
+  const existing = await tx.query.groupMembers.findFirst({
+    where: and(
+      eq(groupMembers.groupId, groupId),
+      eq(groupMembers.userId, userId),
+    ),
+    orderBy: desc(groupMembers.isActive),
+  });
+  if (existing?.isActive) return Errors.conflict("errors.alreadyMember");
+  const [member] = existing
+    ? await tx
+        .update(groupMembers)
+        .set({ isActive: true, role: "member" })
+        .where(eq(groupMembers.id, existing.id))
+        .returning({ id: groupMembers.id })
+    : await tx
+        .insert(groupMembers)
+        .values({ groupId, userId, role: "member" })
+        .returning({ id: groupMembers.id });
+  if (!member) throw new Error("Failed to add group member");
+  return member.id;
 };
 
 /** Does not check group access, callers must. */

@@ -44,6 +44,7 @@ export const createTRPCContext = async (opts: {
   authMs: number;
   db: typeof db;
   locale: Locale;
+  requestId: string;
   signal?: AbortSignal;
 }> => {
   const authApi = opts.auth.api;
@@ -58,6 +59,7 @@ export const createTRPCContext = async (opts: {
     authMs: Date.now() - authStart,
     db,
     locale: localeFromHeaders(opts.headers),
+    requestId: crypto.randomUUID(),
     signal: opts.signal,
   };
 };
@@ -81,6 +83,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
           : translateIfKey(translate, shape.message),
       data: {
         ...shape.data,
+        requestId: ctx?.requestId,
         zodError:
           error.cause instanceof ZodError
             ? z.flattenError(
@@ -124,7 +127,7 @@ const timingMiddleware = t.middleware(
     }
 
     const start = Date.now();
-    const result = await next();
+    const result = await next({ ctx: { path } });
     const durationMs = Date.now() - start;
 
     if (t._config.isDev) {
