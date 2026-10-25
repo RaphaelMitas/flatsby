@@ -23,8 +23,10 @@ import { Switch } from "@flatsby/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
+  addDays,
   calendarColors,
   createCalendarItemSchema,
+  daysBetween,
   defaultColorFor,
   defaultEndsOn,
   defaultEventTime,
@@ -44,6 +46,7 @@ import {
   weekdayName,
   weekdayOf,
   weekdays,
+  withEnd,
   withPickedStart,
   withStart,
 } from "@flatsby/validators/calendar";
@@ -79,7 +82,11 @@ export function CalendarItemForm({
     item?.color ?? null,
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
-  const [time, setTime] = useState<EventTime | null>(item?.time ?? null);
+  const [span, setSpan] = useState<{ time: EventTime | null; days: number }>({
+    time: item?.time ?? null,
+    days: item?.days ?? 1,
+  });
+  const { time } = span;
   const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
     item ? repeatFormOf(item.recurrence) : null,
   );
@@ -109,6 +116,7 @@ export function CalendarItemForm({
     time: isTask ? null : time,
     recurrence,
     endsOn,
+    days: isTask ? 1 : span.days,
     memberIds: isTask ? memberIds : [],
   };
   const canSave = createCalendarItemSchema.safeParse(input).success;
@@ -209,7 +217,11 @@ export function CalendarItemForm({
       {!ended && (
         <Field
           label={
-            recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
+            !isTask
+              ? t("calendar.form.begins")
+              : recurrence
+                ? t("calendar.form.startsOn")
+                : t("calendar.form.date")
           }
         >
           <DatePopover
@@ -220,6 +232,18 @@ export function CalendarItemForm({
           />
         </Field>
       )}
+      {!ended && !isTask && (
+        <Field label={t("calendar.form.ends")}>
+          <DatePopover
+            value={addDays(startsOn, span.days - 1)}
+            min={startsOn}
+            onSelect={(lastDay) =>
+              setSpan({ ...span, days: daysBetween(startsOn, lastDay) })
+            }
+            testId="calendar-form-event-ends-on"
+          />
+        </Field>
+      )}
       {!isTask && (
         <div className="flex items-center justify-between">
           <Label htmlFor="calendar-all-day">{t("calendar.allDay")}</Label>
@@ -227,7 +251,7 @@ export function CalendarItemForm({
             id="calendar-all-day"
             checked={time === null}
             onCheckedChange={(allDay) =>
-              setTime(allDay ? null : defaultEventTime)
+              setSpan({ ...span, time: allDay ? null : defaultEventTime })
             }
           />
         </div>
@@ -241,7 +265,9 @@ export function CalendarItemForm({
               value={time.start}
               onChange={(event) =>
                 event.target.value &&
-                setTime(withStart(time, event.target.value))
+                setSpan(
+                  withStart({ time, days: span.days }, event.target.value),
+                )
               }
               data-testid="calendar-form-start-time"
             />
@@ -253,7 +279,7 @@ export function CalendarItemForm({
               value={time.end}
               onChange={(event) =>
                 event.target.value &&
-                setTime({ ...time, end: event.target.value })
+                setSpan(withEnd({ time, days: span.days }, event.target.value))
               }
               data-testid="calendar-form-end-time"
             />
@@ -356,7 +382,7 @@ export function CalendarItemForm({
         </Field>
       )}
       {recurrence && !ended && (
-        <Field label={t("calendar.form.ends")}>
+        <Field label={t("calendar.form.endRepeat")}>
           <div className="flex flex-wrap gap-1.5">
             <Chip
               selected={endsOn === null}

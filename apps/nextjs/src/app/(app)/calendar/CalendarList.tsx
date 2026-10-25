@@ -266,7 +266,11 @@ function EntryRow({
             {item.title}
           </p>
           <p className="text-muted-foreground flex items-center gap-1 truncate text-sm">
-            {!isTask && <span>{describeEventTime(item.time, t)} ·</span>}
+            {!isTask && (
+              <span>
+                {describeEventTime(item, t, locale, occurrence.date)} ·
+              </span>
+            )}
             {missed > 0 && (
               <span className="text-destructive">
                 {t("calendar.missed", { count: missed })} ·

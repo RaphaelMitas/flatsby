@@ -450,6 +450,8 @@ export const calendarItems = createTable(
     // Wall-clock times, so 19:00 stays 19:00 across DST; null means all day
     startTime: time("start_time"),
     endTime: time("end_time"),
+    // Calendar days an event touches; its end time falls on the last one
+    days: integer("days").default(1).notNull(),
     // null means it happens once
     recurrence: jsonb("recurrence").$type<Recurrence>(),
     createdByGroupMemberId: integer("created_by_group_member_id").references(

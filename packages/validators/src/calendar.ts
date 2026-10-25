@@ -68,12 +68,14 @@ export type Recurrence = z.infer<typeof recurrenceSchema>;
 
 export const calendarDateSchema = z.iso.date();
 export const calendarTimeSchema = z.iso.time({ precision: -1 });
-/** An end before the start means the event runs past midnight. */
 export const eventTimeSchema = z.object({
   start: calendarTimeSchema,
   end: calendarTimeSchema,
 });
 export type EventTime = z.infer<typeof eventTimeSchema>;
+/** How many calendar days an event touches; its end time falls on the last one. */
+export const MAX_EVENT_DAYS = 365;
+const eventDaysSchema = z.int().min(1).max(MAX_EVENT_DAYS);
 export const calendarItemKindSchema = z.enum(["task", "event"]);
 export type CalendarItemKind = z.infer<typeof calendarItemKindSchema>;
 
@@ -111,6 +113,8 @@ const calendarItemFields = z.object({
   recurrence: recurrenceSchema.nullable(),
   // undefined keeps the stored end; apps up to v0.12.0 leave it out
   endsOn: calendarDateSchema.nullable().optional(),
+  // undefined keeps the stored length; apps up to v0.14.1 leave it out
+  days: eventDaysSchema.optional(),
   memberIds: z.array(z.number()).max(50),
 });
 
@@ -119,9 +123,26 @@ export const endsBeforeStart = (item: {
   endsOn?: string | null;
 }) => !!item.endsOn && item.endsOn < item.startsOn;
 
+const endsAfterStart = ({ time, days }: z.infer<typeof calendarItemFields>) =>
+  !time || days !== 1 || time.end > time.start;
+
 const isConsistentItem = (item: z.infer<typeof calendarItemFields>) =>
-  (item.kind === "task" ? item.time === null : item.memberIds.length === 0) &&
-  !endsBeforeStart(item);
+  (item.kind === "task"
+    ? item.time === null && (item.days ?? 1) === 1
+    : item.memberIds.length === 0) &&
+  !endsBeforeStart(item) &&
+  endsAfterStart(item);
+
+/** Apps up to v0.14.1 leave `days` out and write an overnight event as an end before its start. */
+export function editedDays(
+  next: Pick<z.infer<typeof calendarItemFields>, "kind" | "time" | "days">,
+  previous?: { days: number },
+) {
+  if (next.kind === "task") return 1;
+  if (next.days !== undefined) return next.days;
+  const overnight = next.time !== null && next.time.end <= next.time.start;
+  return Math.max(previous?.days ?? 1, overnight ? 2 : 1);
+}
 
 export const createCalendarItemSchema =
   calendarItemFields.refine(isConsistentItem);
@@ -201,6 +222,7 @@ export interface ExpandableItem {
   startsOn: string;
   endsOn: string | null;
   recurrence: Recurrence | null;
+  days: number;
   /** Active members in rotation order */
   memberIds: number[];
 }
@@ -323,6 +345,15 @@ const openOccurrence = (item: ExpandableItem, date: string): Occurrence => ({
   completedAt: null,
 });
 
+/** The earliest start whose event still reaches `from`. */
+const firstStartIn = (item: Pick<ExpandableItem, "days">, from: string) =>
+  addDays(from, 1 - item.days);
+
+export const lastDayOf = (
+  item: Pick<ExpandableItem, "days">,
+  occurrence: Pick<Occurrence, "date">,
+) => addDays(occurrence.date, item.days - 1);
+
 export function expandOccurrences(
   item: ExpandableItem,
   overrides: OccurrenceOverride[],
@@ -332,7 +363,10 @@ export function expandOccurrences(
   const byDate = new Map(overrides.map((o) => [o.date, o]));
   const occurrences: Occurrence[] = [];
   for (
-    let day = Math.max(toDayNumber(from), toDayNumber(item.startsOn));
+    let day = Math.max(
+      toDayNumber(firstStartIn(item, from)),
+      toDayNumber(item.startsOn),
+    );
     day <= toDayNumber(to);
     day++
   ) {
@@ -398,14 +432,62 @@ const timeOf = (minutes: number) => {
   return [Math.floor(wrapped / 60), wrapped % 60].map(pad).join(":");
 };
 
-/** Moving the start keeps the event's length. */
-export const withStart = (time: EventTime, start: string): EventTime => ({
-  start,
-  end: timeOf(minutesOf(time.end) - minutesOf(time.start) + minutesOf(start)),
+export interface TimedSpan {
+  time: EventTime;
+  days: number;
+}
+
+/** Moving the start keeps the event's length, which can carry its end into another day. */
+export function withStart({ time, days }: TimedSpan, start: string): TimedSpan {
+  const end =
+    (days - 1) * DAY_MINUTES +
+    minutesOf(time.end) -
+    minutesOf(time.start) +
+    minutesOf(start);
+  return {
+    time: { start, end: timeOf(end) },
+    days: Math.floor(end / DAY_MINUTES) + 1,
+  };
+}
+
+/** An end at or before the start of a one-day event means it runs past midnight. */
+export const withEnd = ({ time, days }: TimedSpan, end: string): TimedSpan => ({
+  time: { ...time, end },
+  days: days === 1 && end <= time.start ? 2 : days,
 });
 
-export const describeEventTime = (time: EventTime | null, t: Translate) =>
-  time ? `${time.start}–${time.end}` : t("calendar.allDay");
+export const daysBetween = (startsOn: string, lastDay: string) =>
+  toDayNumber(lastDay) - toDayNumber(startsOn) + 1;
+
+/** With `date`, a multi-day event names the days it runs; without, its end says how many days later it falls. */
+export function describeEventTime(
+  item: Pick<ExpandableItem, "days"> & { time: EventTime | null },
+  t: Translate,
+  locale: Intl.LocalesArgument,
+  date?: string,
+) {
+  const { time, days } = item;
+  if (days === 1)
+    return time ? `${time.start}–${time.end}` : t("calendar.allDay");
+  if (!date)
+    return time
+      ? `${time.start}–${time.end} +${days - 1}`
+      : t("calendar.days", { count: days });
+  const lastDay = lastDayOf(item, { date });
+  if (!time)
+    return [date, lastDay]
+      .map((day) =>
+        formatCalendarDate(day, locale, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        }),
+      )
+      .join(" – ");
+  const weekday = (day: string) =>
+    formatCalendarDate(day, locale, { weekday: "short" });
+  return `${weekday(date)} ${time.start} – ${weekday(lastDay)} ${time.end}`;
+}
 
 export function describeRecurrence(
   recurrence: Recurrence | null,
@@ -620,7 +702,8 @@ function agendaDays(
     dates.map((date): [string, CalendarEntry[]] => [date, []]),
   );
   for (const entry of rangeEntries(range))
-    byDate.get(entry.occurrence.date)?.push(entry);
+    for (let day = 0; day < entry.item.days; day++)
+      byDate.get(addDays(entry.occurrence.date, day))?.push(entry);
   return dates.map((date) => {
     const entries = byDate.get(date) ?? [];
     return { date, entries, summary: daySummary(entries, meId) };
@@ -741,6 +824,89 @@ const monthAgenda = (
   member: number | null,
 ) => agenda(agendaDays(range, monthGrid(month).weeks.flat(), meId), [], member);
 
+export interface MonthBar {
+  entry: AgendaEntry;
+  column: number;
+  span: number;
+  lane: number;
+  startsBefore: boolean;
+  endsAfter: boolean;
+}
+
+export interface MonthCell {
+  date: string;
+  /** One per shown lane; null where a bar passes or the lane is empty */
+  slots: (AgendaEntry | null)[];
+  hidden: number;
+}
+
+const entryKey = ({ item, occurrence }: CalendarEntry) =>
+  `${item.id}-${occurrence.date}`;
+
+/** Lays a week out in lanes, so an event over several days keeps one lane and draws as a single bar. */
+function weekLayout(week: AgendaDay[], lines: number) {
+  const lanes = week.map((): (AgendaEntry | null)[] => []);
+  const bars: MonthBar[] = [];
+  const placed = new Set<string>();
+  /** Puts the entry in the lowest lane free on all its columns. */
+  const place = (columns: number[], entry: AgendaEntry) => {
+    let lane = 0;
+    while (columns.some((column) => lanes[column]?.[lane])) lane++;
+    for (const column of columns) {
+      const used = lanes[column];
+      if (used) used[lane] = entry;
+    }
+    return lane;
+  };
+  week.forEach((day, column) => {
+    for (const entry of day.entries) {
+      const key = entryKey(entry);
+      if (entry.item.days === 1 || placed.has(key)) continue;
+      placed.add(key);
+      const covered = week
+        .slice(column)
+        .findIndex((later) => !later.entries.some((e) => entryKey(e) === key));
+      const span = covered === -1 ? week.length - column : covered;
+      const columns = Array.from({ length: span }, (_, i) => column + i);
+      bars.push({
+        entry,
+        column,
+        span,
+        lane: place(columns, entry),
+        startsBefore: entry.occurrence.date < day.date,
+        endsAfter:
+          lastDayOf(entry.item, entry.occurrence) >
+          (week[column + span - 1]?.date ?? day.date),
+      });
+    }
+  });
+  week.forEach((day, column) => {
+    for (const entry of day.entries)
+      if (entry.item.days === 1) place([column], entry);
+  });
+  // A week where any day overflows keeps a line free for "+N" on all of them, so bars stay level
+  const limit = lanes.some((used) => used.length > lines) ? lines - 1 : lines;
+  return {
+    bars: bars.filter((bar) => bar.lane < limit),
+    cells: week.map((day, column): MonthCell => {
+      const used = lanes[column] ?? [];
+      return {
+        date: day.date,
+        slots: Array.from(used.slice(0, limit), (entry) =>
+          entry && entry.item.days === 1 ? entry : null,
+        ),
+        hidden: used.slice(limit).filter(Boolean).length,
+      };
+    }),
+  };
+}
+
+/** The month grid's weeks, each with its cells' entries in lanes and the bars drawn over them. */
+export const monthWeeks = (days: AgendaDay[], lines: number) =>
+  Array.from({ length: Math.ceil(days.length / 7) }, (_, week) =>
+    weekLayout(days.slice(7 * week, 7 * week + 7), Math.max(1, lines)),
+  );
+
 export type CalendarView = "list" | "month";
 
 /** A null start or month follows today, so a screen left open overnight moves on with it. */
@@ -845,15 +1011,13 @@ export const newEntryDate = (position: CalendarPosition, today: string) => {
 };
 
 function notOverYet(
-  time: EventTime | null,
-  date: string,
+  { item, occurrence }: CalendarEntry,
   today: string,
   now: string,
 ) {
-  const overnight = time !== null && time.end <= time.start;
-  if (date > today) return true;
-  if (date === today) return overnight || (time?.end ?? "24:00") > now;
-  return overnight && date === addDays(today, -1) && time.end > now;
+  const lastDay = lastDayOf(item, occurrence);
+  if (lastDay !== today) return lastDay > today;
+  return (item.time?.end ?? "24:00") > now;
 }
 
 /** `now` is the wall-clock time ("HH:MM"), to pass over events that ended today */
@@ -871,9 +1035,7 @@ export function homeAgenda(
     due: latestOpen(myOpenTasks, today),
     nextTurn: myOpenTasks.find(({ occurrence }) => occurrence.date > today),
     nextEvent: entries.find(
-      ({ item, occurrence }) =>
-        item.kind === "event" &&
-        notOverYet(item.time, occurrence.date, today, now),
+      (entry) => entry.item.kind === "event" && notOverYet(entry, today, now),
     ),
   };
 }
@@ -997,7 +1159,7 @@ export function withSkipped(
     change.skipped ||
     !item ||
     !isScheduledOn(item, change.date) ||
-    change.date < from ||
+    change.date < firstStartIn(item, from) ||
     change.date > to
   )
     return { ...range, occurrences };

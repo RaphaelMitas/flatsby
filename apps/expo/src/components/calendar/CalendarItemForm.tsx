@@ -14,8 +14,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
+  addDays,
   calendarColors,
   createCalendarItemSchema,
+  daysBetween,
   defaultColorFor,
   defaultEndsOn,
   defaultEventTime,
@@ -39,6 +41,7 @@ import {
   weekdayName,
   weekdayOf,
   weekdays,
+  withEnd,
   withPickedStart,
   withStart,
 } from "@flatsby/validators/calendar";
@@ -134,7 +137,11 @@ function ItemFields({
     item?.color ?? null,
   );
   const [pickedStart, setPickedStart] = useState<string | null>(null);
-  const [time, setTime] = useState<EventTime | null>(item?.time ?? null);
+  const [span, setSpan] = useState<{ time: EventTime | null; days: number }>({
+    time: item?.time ?? null,
+    days: item?.days ?? 1,
+  });
+  const { time } = span;
   const [pickedRepeat, setRepeat] = useState<RepeatForm | null>(() =>
     item ? repeatFormOf(item.recurrence) : null,
   );
@@ -168,6 +175,7 @@ function ItemFields({
     time: isTask ? null : time,
     recurrence,
     endsOn,
+    days: isTask ? 1 : span.days,
     memberIds: isTask ? memberIds : [],
   };
   const valid = createCalendarItemSchema.safeParse(input).success;
@@ -286,11 +294,29 @@ function ItemFields({
           <DatePickerField
             testID="calendar-form-starts-on"
             label={
-              recurrence ? t("calendar.form.startsOn") : t("calendar.form.date")
+              !isTask
+                ? t("calendar.form.begins")
+                : recurrence
+                  ? t("calendar.form.startsOn")
+                  : t("calendar.form.date")
             }
             value={pickerDate(startsOn)}
             maximumDate={endsOn ? pickerDate(endsOn) : undefined}
             onChange={(picked) => pickStart(localDate(picked))}
+          />
+        )}
+        {!ended && !isTask && (
+          <DatePickerField
+            testID="calendar-form-event-ends-on"
+            label={t("calendar.form.ends")}
+            value={pickerDate(addDays(startsOn, span.days - 1))}
+            minimumDate={pickerDate(startsOn)}
+            onChange={(picked) =>
+              setSpan({
+                ...span,
+                days: daysBetween(startsOn, localDate(picked)),
+              })
+            }
           />
         )}
         {!isTask && (
@@ -301,7 +327,7 @@ function ItemFields({
                 testID="calendar-form-all-day"
                 checked={time === null}
                 onCheckedChange={(allDay) =>
-                  setTime(allDay ? null : defaultEventTime)
+                  setSpan({ ...span, time: allDay ? null : defaultEventTime })
                 }
               />
             </View>
@@ -314,7 +340,12 @@ function ItemFields({
                     label={t("calendar.form.from")}
                     value={pickerTime(time.start)}
                     onChange={(picked) =>
-                      setTime(withStart(time, fromPickerTime(picked)))
+                      setSpan(
+                        withStart(
+                          { time, days: span.days },
+                          fromPickerTime(picked),
+                        ),
+                      )
                     }
                   />
                 </View>
@@ -325,7 +356,12 @@ function ItemFields({
                     label={t("calendar.form.to")}
                     value={pickerTime(time.end)}
                     onChange={(picked) =>
-                      setTime({ ...time, end: fromPickerTime(picked) })
+                      setSpan(
+                        withEnd(
+                          { time, days: span.days },
+                          fromPickerTime(picked),
+                        ),
+                      )
                     }
                   />
                 </View>
@@ -442,7 +478,7 @@ function ItemFields({
       )}
       {recurrence && !ended && (
         <>
-          <FieldLabel>{t("calendar.form.ends")}</FieldLabel>
+          <FieldLabel>{t("calendar.form.endRepeat")}</FieldLabel>
           <View className="flex-row flex-wrap gap-1.5">
             <Chip
               testID="calendar-form-ends-never"

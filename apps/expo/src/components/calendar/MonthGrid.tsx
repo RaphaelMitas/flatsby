@@ -1,4 +1,4 @@
-import type { AgendaDay } from "@flatsby/validators/calendar";
+import type { AgendaDay, AgendaEntry } from "@flatsby/validators/calendar";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocale } from "use-intl";
@@ -7,6 +7,7 @@ import {
   formatCalendarDate,
   monthGrid,
   monthOf,
+  monthWeeks,
   timesMissed,
 } from "@flatsby/validators/calendar";
 import {
@@ -31,17 +32,18 @@ interface MonthGridProps {
 
 export function MonthGrid({ month, days, today, onSelect }: MonthGridProps) {
   const locale = useLocale();
-  const dates = monthGrid(month).weeks.flat();
+  const { weeks } = monthGrid(month);
   const [height, setHeight] = useState(0);
   const lines = Math.max(
     1,
     Math.floor((height / WEEKS - DATE_HEIGHT) / LINE_HEIGHT),
   );
+  const layout = days && monthWeeks(days, lines);
 
   return (
     <View className="border-border flex-1 border-t pb-16">
       <View className="border-border flex-row border-b">
-        {dates.slice(0, 7).map((date) => (
+        {weeks[0]?.map((date) => (
           <Text
             key={date}
             className="text-muted-foreground flex-1 py-1 text-center text-xs font-semibold uppercase"
@@ -51,113 +53,161 @@ export function MonthGrid({ month, days, today, onSelect }: MonthGridProps) {
         ))}
       </View>
       <View
-        className="flex-1 flex-row flex-wrap"
+        className="flex-1"
         onLayout={(event) => setHeight(event.nativeEvent.layout.height)}
       >
-        {dates.map((date, index) => {
-          const entries = days?.[index]?.entries ?? [];
-          const shown =
-            entries.length > lines ? entries.slice(0, lines - 1) : entries;
-          return (
-            <Pressable
-              key={date}
-              testID={`calendar-day-${date}`}
-              accessibilityRole="button"
-              accessibilityLabel={formatCalendarDate(date, locale, {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
-              onPress={() => onSelect(date)}
-              className={cn(
-                "border-border active:bg-muted gap-px overflow-hidden border-b px-0.5",
-                index % 7 !== 6 && "border-r",
-                monthOf(date) !== month ? "bg-muted/40" : "bg-background",
-              )}
-              style={{ width: `${100 / 7}%`, height: height / WEEKS }}
-            >
-              <View
-                className="items-center justify-center"
-                style={{ height: DATE_HEIGHT }}
-              >
-                <View
+        {weeks.map((week, weekIndex) => (
+          <View
+            key={week[0]}
+            className="flex-row"
+            style={{ height: height / WEEKS }}
+          >
+            {week.map((date, column) => {
+              const cell = layout?.[weekIndex]?.cells[column];
+              return (
+                <Pressable
+                  key={date}
+                  testID={`calendar-day-${date}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={formatCalendarDate(date, locale, {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                  })}
+                  onPress={() => onSelect(date)}
                   className={cn(
-                    "h-5 min-w-5 items-center justify-center rounded-full px-1",
-                    date === today ? "bg-primary" : "bg-transparent",
+                    "border-border active:bg-muted gap-px overflow-hidden border-b px-0.5",
+                    column !== 6 && "border-r",
+                    monthOf(date) !== month ? "bg-muted/40" : "bg-background",
                   )}
+                  style={{ width: `${100 / 7}%` }}
                 >
-                  <Text
-                    className={cn(
-                      "text-xs font-semibold",
-                      date === today
-                        ? "text-primary-foreground"
-                        : monthOf(date) === month
-                          ? "text-foreground"
-                          : "text-muted-foreground",
-                    )}
-                  >
-                    {Number(date.slice(8))}
-                  </Text>
-                </View>
-              </View>
-              {shown.map((entry) => {
-                const { item, occurrence } = entry;
-                const done = occurrence.completedAt !== null;
-                const key = `${item.id}-${occurrence.date}`;
-                if (item.kind === "event")
-                  return (
-                    <Text
-                      key={key}
-                      numberOfLines={1}
-                      className={cn(
-                        "rounded-sm px-0.5 text-xs font-medium",
-                        categoryBgColorMap[item.color],
-                        categoryTextColorMap[item.color].default,
-                      )}
-                      style={{ lineHeight: LINE_HEIGHT - 1 }}
-                    >
-                      {item.time ? `${item.time.start} ` : ""}
-                      {item.title}
-                    </Text>
-                  );
-                return (
                   <View
-                    key={key}
-                    className="flex-row items-center gap-0.5"
-                    style={{ height: LINE_HEIGHT - 1 }}
+                    className="items-center justify-center"
+                    style={{ height: DATE_HEIGHT }}
                   >
                     <View
                       className={cn(
-                        "h-1.5 w-1.5 rounded-full",
-                        categoryFillColorMap[item.color],
-                        done && "opacity-25",
-                      )}
-                    />
-                    <Text
-                      numberOfLines={1}
-                      className={cn(
-                        "flex-1 text-xs",
-                        done
-                          ? "text-muted-foreground line-through"
-                          : timesMissed(entry, today) > 0
-                            ? "text-destructive"
-                            : "text-foreground",
+                        "h-5 min-w-5 items-center justify-center rounded-full px-1",
+                        date === today ? "bg-primary" : "bg-transparent",
                       )}
                     >
-                      {item.title}
-                    </Text>
+                      <Text
+                        className={cn(
+                          "text-xs font-semibold",
+                          date === today
+                            ? "text-primary-foreground"
+                            : monthOf(date) === month
+                              ? "text-foreground"
+                              : "text-muted-foreground",
+                        )}
+                      >
+                        {Number(date.slice(8))}
+                      </Text>
+                    </View>
                   </View>
-                );
-              })}
-              {shown.length < entries.length && (
-                <Text className="text-muted-foreground px-0.5 text-xs">
-                  +{entries.length - shown.length}
-                </Text>
-              )}
-            </Pressable>
-          );
-        })}
+                  {cell?.slots.map((entry, lane) =>
+                    entry ? (
+                      <MonthEntry
+                        key={`${entry.item.id}-${entry.occurrence.date}`}
+                        entry={entry}
+                        today={today}
+                      />
+                    ) : (
+                      // Holds the lane a bar passes through
+                      <View key={lane} style={{ height: LINE_HEIGHT - 1 }} />
+                    ),
+                  )}
+                  {!!cell?.hidden && (
+                    <Text className="text-muted-foreground px-0.5 text-xs">
+                      +{cell.hidden}
+                    </Text>
+                  )}
+                </Pressable>
+              );
+            })}
+            {layout?.[weekIndex]?.bars.map(
+              ({ entry, column, span, lane, startsBefore, endsAfter }) => (
+                <View
+                  key={`${entry.item.id}-${entry.occurrence.date}`}
+                  pointerEvents="none"
+                  className="absolute px-0.5"
+                  style={{
+                    left: `${(100 * column) / 7}%`,
+                    width: `${(100 * span) / 7}%`,
+                    top: DATE_HEIGHT + 1 + lane * LINE_HEIGHT,
+                  }}
+                >
+                  <EventChip
+                    entry={entry}
+                    className={cn(
+                      startsBefore && "rounded-l-none",
+                      endsAfter && "rounded-r-none",
+                    )}
+                  />
+                </View>
+              ),
+            )}
+          </View>
+        ))}
       </View>
+    </View>
+  );
+}
+
+function EventChip({
+  entry: { item },
+  className,
+}: {
+  entry: AgendaEntry;
+  className?: string;
+}) {
+  return (
+    <Text
+      numberOfLines={1}
+      className={cn(
+        "rounded-sm px-0.5 text-xs font-medium",
+        categoryBgColorMap[item.color],
+        categoryTextColorMap[item.color].default,
+        className,
+      )}
+      style={{ lineHeight: LINE_HEIGHT - 1 }}
+    >
+      {item.time ? `${item.time.start} ` : ""}
+      {item.title}
+    </Text>
+  );
+}
+
+function MonthEntry({ entry, today }: { entry: AgendaEntry; today: string }) {
+  const { item, occurrence } = entry;
+  if (item.kind === "event") return <EventChip entry={entry} />;
+  const done = occurrence.completedAt !== null;
+  return (
+    <View
+      className="flex-row items-center gap-0.5"
+      style={{ height: LINE_HEIGHT - 1 }}
+    >
+      <View
+        className={cn(
+          "h-1.5 w-1.5 rounded-full",
+          categoryFillColorMap[item.color],
+          done && "opacity-25",
+        )}
+      />
+      <Text
+        numberOfLines={1}
+        className={cn(
+          "flex-1 text-xs",
+          done
+            ? "text-muted-foreground line-through"
+            : timesMissed(entry, today) > 0
+              ? "text-destructive"
+              : "text-foreground",
+        )}
+      >
+        {item.title}
+      </Text>
     </View>
   );
 }
