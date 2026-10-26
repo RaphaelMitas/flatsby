@@ -40,8 +40,6 @@ export {
   DbUtils,
   // Validation utilities
   ValidationUtils,
-  // Common operation patterns
-  OperationUtils,
   // Migration helpers
   effectify,
 } from "./utils";
@@ -70,7 +68,6 @@ export type {
   ShoppingList,
   ShoppingListInfiniteData,
   ShoppingListSummary,
-  ShoppingListWithGroup,
   TransactionOperation,
   User,
 } from "./types";

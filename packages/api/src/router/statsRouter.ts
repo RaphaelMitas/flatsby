@@ -10,9 +10,10 @@ import {
   shoppingLists,
 } from "@flatsby/db/schema";
 
-import { withErrorHandlingAsResult } from "../errors";
+import { getGroupWithAccess } from "../effect/groups";
+import { runResult } from "../effect/runtime";
+import { Database } from "../effect/services/Database";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { OperationUtils, safeDbOperation } from "../utils";
 
 function thirtyDaysAgo(): Date {
   const date = new Date();
@@ -31,92 +32,88 @@ const homeStatsInputSchema = z.object({
 export const statsRouter = createTRPCRouter({
   getHomeStats: protectedProcedure
     .input(homeStatsInputSchema)
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          OperationUtils.getGroupWithAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            safeDbOperation(async () => {
-              const cutoffDate = thirtyDaysAgo();
+    .query(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getGroupWithAccess(input.groupId);
+          const database = yield* Database;
+          return yield* database.query("fetch home stats", async (db) => {
+            const cutoffDate = thirtyDaysAgo();
 
-              const [spendingResult, itemsCompletedResult, chatMessagesResult] =
-                await Promise.all([
-                  ctx.db
-                    .select({
-                      total: sql<string>`coalesce(sum(${ledgerAmount}), 0)`,
-                      currency: ledgerCurrency,
-                    })
-                    .from(expenses)
-                    .where(
-                      and(
-                        eq(expenses.groupId, input.groupId),
-                        gte(expenses.expenseDate, cutoffDate),
-                      ),
-                    )
-                    .groupBy(ledgerCurrency),
-
-                  ctx.db
-                    .select({
-                      count: sql<string>`count(*)`,
-                    })
-                    .from(shoppingListItems)
-                    .innerJoin(
-                      shoppingLists,
-                      eq(shoppingListItems.shoppingListId, shoppingLists.id),
-                    )
-                    .where(
-                      and(
-                        eq(shoppingLists.groupId, input.groupId),
-                        eq(shoppingListItems.completed, true),
-                        gte(shoppingListItems.completedAt, cutoffDate),
-                      ),
+            const [spendingResult, itemsCompletedResult, chatMessagesResult] =
+              await Promise.all([
+                db
+                  .select({
+                    total: sql<string>`coalesce(sum(${ledgerAmount}), 0)`,
+                    currency: ledgerCurrency,
+                  })
+                  .from(expenses)
+                  .where(
+                    and(
+                      eq(expenses.groupId, input.groupId),
+                      gte(expenses.expenseDate, cutoffDate),
                     ),
+                  )
+                  .groupBy(ledgerCurrency),
 
-                  ctx.db
-                    .select({
-                      count: sql<string>`count(*)`,
-                    })
-                    .from(chatMessages)
-                    .innerJoin(
-                      conversations,
-                      eq(chatMessages.conversationId, conversations.id),
-                    )
-                    .where(
-                      and(
-                        eq(conversations.userId, ctx.session.user.id),
-                        eq(chatMessages.role, "user"),
-                        gte(chatMessages.createdAt, cutoffDate),
-                      ),
+                db
+                  .select({
+                    count: sql<string>`count(*)`,
+                  })
+                  .from(shoppingListItems)
+                  .innerJoin(
+                    shoppingLists,
+                    eq(shoppingListItems.shoppingListId, shoppingLists.id),
+                  )
+                  .where(
+                    and(
+                      eq(shoppingLists.groupId, input.groupId),
+                      eq(shoppingListItems.completed, true),
+                      gte(shoppingListItems.completedAt, cutoffDate),
                     ),
-                ]);
+                  ),
 
-              const spending = spendingResult.map((row) => ({
-                totalInCents: parseInt(row.total, 10),
-                currency: row.currency,
-              }));
+                db
+                  .select({
+                    count: sql<string>`count(*)`,
+                  })
+                  .from(chatMessages)
+                  .innerJoin(
+                    conversations,
+                    eq(chatMessages.conversationId, conversations.id),
+                  )
+                  .where(
+                    and(
+                      eq(conversations.userId, ctx.session.user.id),
+                      eq(chatMessages.role, "user"),
+                      gte(chatMessages.createdAt, cutoffDate),
+                    ),
+                  ),
+              ]);
 
-              const itemsCompleted = parseInt(
-                itemsCompletedResult[0]?.count ?? "0",
-                10,
-              );
+            const spending = spendingResult.map((row) => ({
+              totalInCents: parseInt(row.total, 10),
+              currency: row.currency,
+            }));
 
-              const messagesCount = parseInt(
-                chatMessagesResult[0]?.count ?? "0",
-                10,
-              );
+            const itemsCompleted = parseInt(
+              itemsCompletedResult[0]?.count ?? "0",
+              10,
+            );
 
-              return {
-                spending,
-                itemsCompleted,
-                chatMessages: messagesCount,
-              };
-            }, "fetch home stats"),
-        ),
-      );
-    }),
+            const messagesCount = parseInt(
+              chatMessagesResult[0]?.count ?? "0",
+              10,
+            );
+
+            return {
+              spending,
+              itemsCompleted,
+              chatMessages: messagesCount,
+            };
+          });
+        }),
+      ),
+    ),
 });

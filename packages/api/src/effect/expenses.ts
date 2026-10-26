@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { eq } from "@flatsby/db";
 import { expenses } from "@flatsby/db/schema";
 
-import { DbUtils } from "../utils";
+import { requireMemberIn } from "./groups";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { Database } from "./services/Database";
 
@@ -19,16 +19,16 @@ export const getExpenseWithAccess = Effect.fn("Expenses.getExpenseWithAccess")(
             with: {
               groupMembers: {
                 where: (members, { eq }) => eq(members.isActive, true),
-                columns: { userId: true },
+                columns: { userId: true, isActive: true },
               },
             },
           },
         },
       }),
     );
-    yield* DbUtils.ensureGroupMember(
-      user.id,
+    yield* requireMemberIn(
       expense.group.groupMembers,
+      user.id,
       "errors.noExpenseAccess",
     );
     return expense;
