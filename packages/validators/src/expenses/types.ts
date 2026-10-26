@@ -15,6 +15,8 @@ export type SplitMethod = (typeof SPLIT_METHODS)[number];
 
 export const MAX_SHARES = 1000;
 
+export const MAX_EXPENSE_DESCRIPTION_LENGTH = 512;
+
 /** percentage is in basis points (100% = 10000) */
 export interface ExpenseSplit {
   groupMemberId: number;

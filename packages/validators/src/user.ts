@@ -4,6 +4,8 @@ import { msg } from "@flatsby/i18n/message-key";
 
 import { chatModelSchema } from "./models";
 
+export const MAX_CONSENT_VERSION_LENGTH = 20;
+
 export const userNameSchema = z
   .string()
   .min(1, {
@@ -55,7 +57,7 @@ export type UpdateUserNameFormValues = z.infer<typeof updateUserNameFormSchema>;
 export const updateConsentInputSchema = z.object({
   termsAccepted: z.boolean(),
   privacyAccepted: z.boolean(),
-  version: z.string().max(20),
+  version: z.string().max(MAX_CONSENT_VERSION_LENGTH),
 });
 export type UpdateConsentInput = z.infer<typeof updateConsentInputSchema>;
 
@@ -65,7 +67,7 @@ export type UpdateConsentInput = z.infer<typeof updateConsentInputSchema>;
  */
 export const updateAIConsentInputSchema = z.object({
   accepted: z.boolean(),
-  version: z.string().max(20),
+  version: z.string().max(MAX_CONSENT_VERSION_LENGTH),
 });
 export type UpdateAIConsentInput = z.infer<typeof updateAIConsentInputSchema>;
 

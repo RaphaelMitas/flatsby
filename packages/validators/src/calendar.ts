@@ -77,6 +77,7 @@ const MAX_EVENT_DAYS = 365;
 
 // Every item from before zones were recorded was made in Germany
 export const DEFAULT_TIME_ZONE = "Europe/Berlin"; // i18n-ignore
+export const MAX_TIME_ZONE_LENGTH = 64;
 
 const isTimeZone = (zone: string) => {
   try {
@@ -90,7 +91,7 @@ const isTimeZone = (zone: string) => {
 // A zone the runtime doesn't know falls back to the default rather than blocking the save
 const timeZoneSchema = z
   .string()
-  .max(64)
+  .max(MAX_TIME_ZONE_LENGTH)
   .refine(isTimeZone)
   .optional()
   .catch(undefined);
@@ -119,11 +120,15 @@ export type CalendarColor = z.infer<typeof calendarColorSchema>;
 export const defaultColorFor = (kind: CalendarItemKind): CalendarColor =>
   kind === "event" ? "blue" : "gray";
 
+export const MAX_CALENDAR_TITLE_LENGTH = 256;
+
 export const calendarItemTitleSchema = z
   .string()
   .trim()
   .min(1, { message: msg("calendar.validation.titleRequired") })
-  .max(256, { message: msg("calendar.validation.titleTooLong") });
+  .max(MAX_CALENDAR_TITLE_LENGTH, {
+    message: msg("calendar.validation.titleTooLong"),
+  });
 
 const calendarItemFields = z.object({
   groupId: z.number(),

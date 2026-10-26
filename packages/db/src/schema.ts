@@ -24,7 +24,15 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { DEFAULT_TIME_ZONE } from "@flatsby/validators/calendar";
+import {
+  DEFAULT_TIME_ZONE,
+  MAX_CALENDAR_TITLE_LENGTH,
+  MAX_TIME_ZONE_LENGTH,
+} from "@flatsby/validators/calendar";
+import { MAX_EXPENSE_DESCRIPTION_LENGTH } from "@flatsby/validators/expenses/types";
+import { MAX_GROUP_NAME_LENGTH } from "@flatsby/validators/group";
+import { INVITE_CODE_LENGTH } from "@flatsby/validators/invite";
+import { MAX_CONSENT_VERSION_LENGTH } from "@flatsby/validators/user";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -50,12 +58,18 @@ export const users = createTable("user", {
   lastToolsEnabled: boolean("last_tools_enabled"),
   // Legal consent tracking
   termsAcceptedAt: timestamp("terms_accepted_at"),
-  termsVersion: varchar("terms_version", { length: 20 }),
+  termsVersion: varchar("terms_version", {
+    length: MAX_CONSENT_VERSION_LENGTH,
+  }),
   privacyAcceptedAt: timestamp("privacy_accepted_at"),
-  privacyVersion: varchar("privacy_version", { length: 20 }),
+  privacyVersion: varchar("privacy_version", {
+    length: MAX_CONSENT_VERSION_LENGTH,
+  }),
   // AI consent tracking
   aiConsentAcceptedAt: timestamp("ai_consent_accepted_at"),
-  aiConsentVersion: varchar("ai_consent_version", { length: 20 }),
+  aiConsentVersion: varchar("ai_consent_version", {
+    length: MAX_CONSENT_VERSION_LENGTH,
+  }),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -130,7 +144,7 @@ export const groupMemberRoleEnum = pgEnum("group_member_role", [
 // Create a pgTable that maps to a table in your DB
 export const groups = createTable("groups", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 256 }).notNull(),
+  name: varchar("name", { length: MAX_GROUP_NAME_LENGTH }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   profilePicture: text("profilePicture"),
   currency: varchar("currency", { length: 3 })
@@ -163,7 +177,7 @@ export const groupInvites = createTable("group_invites", {
   groupId: integer("group_id")
     .primaryKey()
     .references(() => groups.id, { onDelete: "cascade" }),
-  code: varchar("code", { length: 8 }).notNull().unique(),
+  code: varchar("code", { length: INVITE_CODE_LENGTH }).notNull().unique(),
   createdByMemberId: integer("created_by_member_id")
     .notNull()
     .references(() => groupMembers.id, { onDelete: "cascade" }),
@@ -306,7 +320,9 @@ export const expenses = createTable(
     // Both set when the expense counts toward debts in another currency
     convertedAmountInCents: integer("converted_amount_in_cents"),
     convertedCurrency: varchar("converted_currency", { length: 3 }),
-    description: varchar("description", { length: 512 }).notNull(),
+    description: varchar("description", {
+      length: MAX_EXPENSE_DESCRIPTION_LENGTH,
+    }).notNull(),
     category: varchar("category", { length: 100 }).notNull(),
     subcategory: varchar("subcategory", { length: 100 }).notNull(),
     expenseDate: timestamp("expenseDate").defaultNow().notNull(),
@@ -445,7 +461,7 @@ export const calendarItems = createTable(
       .notNull()
       .references(() => groups.id, { onDelete: "cascade" }),
     kind: varchar("kind", { length: 16 }).$type<CalendarItemKind>().notNull(),
-    title: varchar("title", { length: 256 }).notNull(),
+    title: varchar("title", { length: MAX_CALENDAR_TITLE_LENGTH }).notNull(),
     color: varchar("color", { length: 16 }).$type<CalendarColor>().notNull(),
     startsOn: date("starts_on", { mode: "string" }).notNull(),
     endsOn: date("ends_on", { mode: "string" }),
@@ -455,7 +471,7 @@ export const calendarItems = createTable(
     // Calendar days an event touches; its end time falls on the last one
     days: integer("days").default(1).notNull(),
     // IANA zone of the device that made it; the times above stay wall-clock
-    timeZone: varchar("time_zone", { length: 64 })
+    timeZone: varchar("time_zone", { length: MAX_TIME_ZONE_LENGTH })
       .default(DEFAULT_TIME_ZONE)
       .notNull(),
     // null means it happens once

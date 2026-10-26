@@ -9,12 +9,14 @@ import {
 } from "./shopping-list";
 import { userEmailSchema, userImageSchema, userNameSchema } from "./user";
 
+export const MAX_GROUP_NAME_LENGTH = 256;
+
 export const groupNameSchema = z
   .string()
   .min(1, {
     message: msg("group.validation.nameRequired"),
   })
-  .max(256, {
+  .max(MAX_GROUP_NAME_LENGTH, {
     message: msg("group.validation.nameTooLong"),
   });
 
