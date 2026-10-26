@@ -7,7 +7,12 @@ import { z } from "zod/v4";
 import { msg } from "@flatsby/i18n/message-key";
 
 import { expenseSubcategoryIdSchema } from "./categories";
-import { CURRENCY_CODES, MAX_SHARES, SPLIT_METHODS } from "./types";
+import {
+  CURRENCY_CODES,
+  MAX_EXPENSE_DESCRIPTION_LENGTH,
+  MAX_SHARES,
+  SPLIT_METHODS,
+} from "./types";
 import { validateSplits } from "./validation";
 
 /**
@@ -38,7 +43,7 @@ export const expenseSchema = z.object({
   currency: currencyCodeSchema,
   convertedAmountInCents: amountInCentsSchema.nullish(),
   convertedCurrency: currencyCodeSchema.nullish(),
-  description: z.string().max(512),
+  description: z.string().max(MAX_EXPENSE_DESCRIPTION_LENGTH),
   subcategory: expenseSubcategoryIdSchema.optional(),
   expenseDate: z.date(),
   splits: z

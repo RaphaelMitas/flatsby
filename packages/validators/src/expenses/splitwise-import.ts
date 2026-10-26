@@ -11,6 +11,7 @@ import type { CurrencyCode } from "./types";
 import { expenseSubcategories, expenseSubcategoryIdSchema } from "./categories";
 import { decimalToCents } from "./conversion";
 import { currencyCodeSchema, expenseSplitSchema } from "./schemas";
+import { MAX_EXPENSE_DESCRIPTION_LENGTH } from "./types";
 
 const splitwiseSubcategoryByCategory = new Map<string, ExpenseSubcategoryId>(
   Object.entries({
@@ -379,7 +380,7 @@ export const bulkCreateExpensesSchema = z.object({
         paidByGroupMemberId: z.number().min(1),
         amountInCents: z.number().int().min(1),
         currency: currencyCodeSchema,
-        description: z.string().max(512).optional(),
+        description: z.string().max(MAX_EXPENSE_DESCRIPTION_LENGTH).optional(),
         subcategory: expenseSubcategoryIdSchema.optional(),
         expenseDate: z.date(),
         splits: z.array(expenseSplitSchema).min(1),
