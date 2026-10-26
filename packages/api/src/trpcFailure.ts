@@ -4,7 +4,8 @@ import { z } from "zod/v4";
 
 import type { AppRouter } from "./root";
 
-const MAX_ID_LENGTH = 64;
+const inputIdKey = z.string().max(64).regex(/Id$/);
+const inputIdValue = z.union([z.string().max(64), z.number()]);
 
 export const trpcFailureSchema = z.object({
   path: z.string().max(200),
@@ -12,10 +13,7 @@ export const trpcFailureSchema = z.object({
   // Absent when the server never answered
   code: z.string().max(50).optional(),
   httpStatus: z.number().int().optional(),
-  inputIds: z.record(
-    z.string().max(MAX_ID_LENGTH).regex(/Id$/),
-    z.union([z.string().max(MAX_ID_LENGTH), z.number()]),
-  ),
+  inputIds: z.record(inputIdKey, inputIdValue),
   attempts: z.number().int().min(0).max(100),
   hadCachedData: z.boolean().optional(),
 });
@@ -113,10 +111,8 @@ function idsOf(input: unknown): Record<string, string | number> {
   return Object.fromEntries(
     Object.entries(input).filter(
       (entry): entry is [string, string | number] =>
-        entry[0].endsWith("Id") &&
-        (typeof entry[1] === "string"
-          ? entry[1].length <= MAX_ID_LENGTH
-          : Number.isFinite(entry[1])),
+        inputIdKey.safeParse(entry[0]).success &&
+        inputIdValue.safeParse(entry[1]).success,
     ),
   );
 }

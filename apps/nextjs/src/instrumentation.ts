@@ -2,7 +2,7 @@ import type { Instrumentation } from "next";
 
 import { captureError, posthog } from "@flatsby/api/posthog";
 
-export const onRequestError: Instrumentation.onRequestError = async (
+export const onRequestError: Instrumentation.onRequestError = (
   error,
   _request,
   context,
@@ -15,5 +15,6 @@ export const onRequestError: Instrumentation.onRequestError = async (
       render_source: context.renderSource,
     },
   });
-  await posthog?.flush();
+  // Next holds a failing route's response until this returns, so send without waiting
+  void posthog?.flush();
 };

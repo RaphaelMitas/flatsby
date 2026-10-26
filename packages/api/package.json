@@ -46,6 +46,7 @@
     "@flatsby/i18n": "workspace:*",
     "@flatsby/validators": "workspace:*",
     "@posthog/ai": "8.14.1",
+    "@posthog/core": "^1.59.1",
     "@trpc/server": "catalog:",
     "ai": "catalog:",
     "effect": "^4.0.5",

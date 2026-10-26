@@ -2,12 +2,7 @@ import { z } from "zod/v4";
 
 import { trpcFailureSchema } from "@flatsby/api/trpcFailure";
 
-export const MAX_LENGTH = {
-  name: 200,
-  message: 2000,
-  stack: 10_000,
-  url: 2048,
-};
+import { MAX_LENGTH } from "~/utils/error-beacon";
 
 export const errorReportSchema = z.object({
   name: z.string().max(MAX_LENGTH.name),
