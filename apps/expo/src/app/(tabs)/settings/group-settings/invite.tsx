@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Pressable, Share, Text, View } from "react-native";
-import { useRouter } from "expo-router";
 import {
   useMutation,
   useQueryClient,
@@ -10,6 +9,7 @@ import { usePostHog } from "posthog-react-native";
 import QRCode from "react-qr-code";
 import { useTranslations } from "use-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import {
   formatInviteCode,
   inviteDaysLeft,
@@ -18,7 +18,6 @@ import {
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -27,7 +26,6 @@ export default function InviteScreen() {
   const t = useTranslations();
   const { selectedGroupId, selectedGroupName } = useShoppingStore();
   const groupId = Number(selectedGroupId) || 0;
-  const router = useRouter();
   const queryClient = useQueryClient();
   const posthog = usePostHog();
 
@@ -56,10 +54,11 @@ export default function InviteScreen() {
   );
 
   if (!invite.success) {
-    return handleApiError({ router, error: invite.error });
+    return null;
   }
 
   const link = inviteLink(getBaseUrl(), invite.data.code);
+  const resetFailure = failureOf(resetMutation, t("invite.resetFailed"));
 
   return (
     <AppScrollView
@@ -123,9 +122,9 @@ export default function InviteScreen() {
             </Text>
           </Pressable>
         </View>
-        {(resetMutation.isError || resetMutation.data?.success === false) && (
+        {resetFailure !== undefined && (
           <Text className="text-destructive text-center text-sm">
-            {t("invite.resetFailed")}
+            {resetFailure}
           </Text>
         )}
       </View>

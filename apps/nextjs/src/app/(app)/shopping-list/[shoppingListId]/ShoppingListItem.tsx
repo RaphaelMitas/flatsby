@@ -20,6 +20,7 @@ import {
   TrailingActions,
 } from "react-swipeable-list";
 
+import { resultMutation } from "@flatsby/api/resultMutation";
 import {
   removeShoppingListItemFromCache,
   updateShoppingListItemInCache,
@@ -82,55 +83,43 @@ const ShoppingListItem = ({
   );
 
   const updateShoppingListItemMutation = useMutation(
-    trpc.shoppingList.updateShoppingListItem.mutationOptions({
-      onMutate: async (variables) => {
-        await queryClient.cancelQueries({ queryKey: itemsQueryKey });
-        const previousItems = queryClient.getQueryData(itemsQueryKey);
-        queryClient.setQueryData(itemsQueryKey, (old) =>
-          updateShoppingListItemInCache(old, variables),
-        );
-        return { queryKey: itemsQueryKey, previousItems };
-      },
-      onError: (_err, _variables, context) => {
-        if (context) {
-          queryClient.setQueryData(context.queryKey, context.previousItems);
-        }
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          queryClient.setQueryData(context.queryKey, context.previousItems);
-        }
-      },
-      onSettled: () => {
-        invalidateAll();
-      },
-    }),
+    trpc.shoppingList.updateShoppingListItem.mutationOptions(
+      resultMutation({
+        onMutate: async (variables) => {
+          await queryClient.cancelQueries({ queryKey: itemsQueryKey });
+          const previousItems = queryClient.getQueryData(itemsQueryKey);
+          queryClient.setQueryData(itemsQueryKey, (old) =>
+            updateShoppingListItemInCache(old, variables),
+          );
+          return { queryKey: itemsQueryKey, previousItems };
+        },
+        rollback: ({ queryKey, previousItems }) =>
+          queryClient.setQueryData(queryKey, previousItems),
+        onSettled: () => {
+          invalidateAll();
+        },
+      }),
+    ),
   );
 
   const deleteShoppingListItemMutation = useMutation(
-    trpc.shoppingList.deleteShoppingListItem.mutationOptions({
-      onMutate: async ({ id }) => {
-        await queryClient.cancelQueries({ queryKey: itemsQueryKey });
-        const previousItems = queryClient.getQueryData(itemsQueryKey);
-        queryClient.setQueryData(itemsQueryKey, (old) =>
-          removeShoppingListItemFromCache(old, id),
-        );
-        return { queryKey: itemsQueryKey, previousItems };
-      },
-      onError: (_err, _variables, context) => {
-        if (context) {
-          queryClient.setQueryData(context.queryKey, context.previousItems);
-        }
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          queryClient.setQueryData(context.queryKey, context.previousItems);
-        }
-      },
-      onSettled: () => {
-        invalidateAll();
-      },
-    }),
+    trpc.shoppingList.deleteShoppingListItem.mutationOptions(
+      resultMutation({
+        onMutate: async ({ id }) => {
+          await queryClient.cancelQueries({ queryKey: itemsQueryKey });
+          const previousItems = queryClient.getQueryData(itemsQueryKey);
+          queryClient.setQueryData(itemsQueryKey, (old) =>
+            removeShoppingListItemFromCache(old, id),
+          );
+          return { queryKey: itemsQueryKey, previousItems };
+        },
+        rollback: ({ queryKey, previousItems }) =>
+          queryClient.setQueryData(queryKey, previousItems),
+        onSettled: () => {
+          invalidateAll();
+        },
+      }),
+    ),
   );
 
   const createdByMember = groupMembers.find(

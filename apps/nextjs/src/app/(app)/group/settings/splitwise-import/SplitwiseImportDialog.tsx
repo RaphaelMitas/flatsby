@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { cn } from "@flatsby/ui";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -65,6 +66,7 @@ export function SplitwiseImportDialog({
   onOpenChange,
 }: SplitwiseImportDialogProps) {
   const t = useTranslations("splitwiseImport");
+  const tCommon = useTranslations("common");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const wizard = useSplitwiseImport();
@@ -156,13 +158,7 @@ export function SplitwiseImportDialog({
             wizard={wizard}
             onImport={handleImport}
             isPending={bulkCreateMutation.isPending}
-            error={
-              bulkCreateMutation.isError
-                ? bulkCreateMutation.error.message
-                : bulkCreateMutation.data?.success === false
-                  ? bulkCreateMutation.data.error.message
-                  : null
-            }
+            error={failureOf(bulkCreateMutation, tCommon("unknownError"))}
           />
         )}
       </DialogContent>
@@ -465,7 +461,7 @@ function StepConfirm({
   wizard: WizardReturn;
   onImport: () => void;
   isPending: boolean;
-  error: string | null;
+  error: string | undefined;
 }) {
   const t = useTranslations("splitwiseImport");
   const tCommon = useTranslations("common");

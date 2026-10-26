@@ -10,6 +10,7 @@ import { Pencil, Trash } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
+import { resultMutation } from "@flatsby/api/resultMutation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,151 +64,110 @@ export function ShoppingListDashboardItem({
     },
   });
 
-  const handleDeleteError = (
-    groupId: number,
-    previousLists: ApiResult<ShoppingListSummary[]> | undefined,
-    errorMessage: string,
-  ) => {
-    if (previousLists) {
-      queryClient.setQueryData(
-        trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
-        previousLists,
-      );
-    }
-    toast.error(t("shoppingList.delete.failed"), {
-      description: errorMessage,
-    });
-  };
+  const restoreLists = ({
+    groupId,
+    previousLists,
+  }: {
+    groupId: number;
+    previousLists: ApiResult<ShoppingListSummary[]> | undefined;
+  }) =>
+    queryClient.setQueryData(
+      trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
+      previousLists,
+    );
 
   const deleteMutation = useMutation(
-    trpc.shoppingList.deleteShoppingList.mutationOptions({
-      onMutate: async ({ groupId, shoppingListId }) => {
-        await queryClient.cancelQueries(
-          trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
-        );
-
-        const previousLists = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
-        );
-
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              success: true as const,
-              data: old.data.filter((item) => item.id !== shoppingListId),
-            };
-          },
-        );
-
-        return { previousLists };
-      },
-      onSuccess: (data, variables, context) => {
-        if (!data.success) {
-          handleDeleteError(
-            variables.groupId,
-            context.previousLists,
-            data.error.message,
+    trpc.shoppingList.deleteShoppingList.mutationOptions(
+      resultMutation({
+        onMutate: async ({ groupId, shoppingListId }) => {
+          await queryClient.cancelQueries(
+            trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
           );
-          return;
-        }
-        void queryClient.invalidateQueries(
-          trpc.shoppingList.getShoppingLists.queryOptions({
-            groupId: variables.groupId,
+
+          const previousLists = queryClient.getQueryData(
+            trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
+          );
+
+          queryClient.setQueryData(
+            trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
+            (old) => {
+              if (!old?.success) return old;
+              return {
+                success: true as const,
+                data: old.data.filter((item) => item.id !== shoppingListId),
+              };
+            },
+          );
+
+          return { groupId, previousLists };
+        },
+        rollback: restoreLists,
+        onFailure: (message) =>
+          toast.error(t("shoppingList.delete.failed"), {
+            description: message,
           }),
-        );
-      },
-      onError: (error, variables, context) => {
-        handleDeleteError(
-          variables.groupId,
-          context?.previousLists,
-          error.message,
-        );
-      },
-    }),
-  );
-
-  const handleRenameError = (
-    groupId: number | undefined,
-    previousLists: ApiResult<ShoppingListSummary[]> | undefined,
-    errorMessage: string,
-  ) => {
-    if (groupId && previousLists) {
-      queryClient.setQueryData(
-        trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
-        previousLists,
-      );
-    }
-    toast.error(t("shoppingList.renameFailed"), {
-      description: errorMessage,
-    });
-  };
-
-  const renameMutation = useMutation(
-    trpc.shoppingList.changeShoppingListName.mutationOptions({
-      onMutate: (data) => {
-        if (!groupId) return { previousLists: undefined, groupId: undefined };
-
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
-        );
-
-        const previousLists = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingLists.queryOptions({ groupId }).queryKey,
-        );
-
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingLists.queryOptions({ groupId }).queryKey,
-          (old) => {
-            if (!old?.success) {
-              return old;
-            }
-
-            return {
-              success: true as const,
-              data: old.data.map((item) =>
-                item.id === list.id ? { ...item, name: data.name } : item,
-              ),
-            };
-          },
-        );
-
-        return { previousLists, groupId };
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          handleRenameError(
-            context.groupId,
-            context.previousLists,
-            data.error.message,
-          );
-          return;
-        }
-
-        toast.success(t("shoppingList.renamed"));
-        if (context.groupId) {
+        onSuccess: (_data, variables) => {
           void queryClient.invalidateQueries(
             trpc.shoppingList.getShoppingLists.queryOptions({
-              groupId: context.groupId,
+              groupId: variables.groupId,
             }),
           );
-        }
-      },
-      onError: (error, _variables, context) => {
-        const errorMessage = Object.entries(
-          error.data?.zodError?.fieldErrors ?? {},
-        )
-          .map(([_, errors]) => errors?.map((error) => error).join(", "))
-          .join(", ");
+        },
+      }),
+    ),
+  );
 
-        handleRenameError(
-          context?.groupId,
-          context?.previousLists,
-          errorMessage.length > 0 ? errorMessage : t("common.unknownError"),
-        );
-      },
-    }),
+  const renameMutation = useMutation(
+    trpc.shoppingList.changeShoppingListName.mutationOptions(
+      resultMutation({
+        onMutate: (data) => {
+          if (!groupId) return;
+
+          void queryClient.cancelQueries(
+            trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
+          );
+
+          const previousLists = queryClient.getQueryData(
+            trpc.shoppingList.getShoppingLists.queryOptions({ groupId })
+              .queryKey,
+          );
+
+          queryClient.setQueryData(
+            trpc.shoppingList.getShoppingLists.queryOptions({ groupId })
+              .queryKey,
+            (old) => {
+              if (!old?.success) {
+                return old;
+              }
+
+              return {
+                success: true as const,
+                data: old.data.map((item) =>
+                  item.id === list.id ? { ...item, name: data.name } : item,
+                ),
+              };
+            },
+          );
+
+          return { groupId, previousLists };
+        },
+        rollback: restoreLists,
+        onFailure: (message) =>
+          toast.error(t("shoppingList.renameFailed"), {
+            description: message ?? t("common.unknownError"),
+          }),
+        onSuccess: (_data, _variables, context) => {
+          toast.success(t("shoppingList.renamed"));
+          if (context) {
+            void queryClient.invalidateQueries(
+              trpc.shoppingList.getShoppingLists.queryOptions({
+                groupId: context.groupId,
+              }),
+            );
+          }
+        },
+      }),
+    ),
   );
 
   const handleDelete = () => {

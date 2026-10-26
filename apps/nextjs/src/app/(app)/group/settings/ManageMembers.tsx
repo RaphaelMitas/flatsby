@@ -10,6 +10,7 @@ import {
 import { AlertCircle, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
@@ -30,7 +31,6 @@ import {
 } from "@flatsby/ui/select";
 
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { InviteDialog } from "./InviteDialog";
 
 interface ManageMembersProps {
@@ -40,14 +40,13 @@ interface ManageMembersProps {
 const ManageMembers = ({ groupId }: ManageMembersProps) => {
   const t = useTranslations();
   const trpc = useTRPC();
-  const handleApiError = useHandleApiError();
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
   if (!group.success) {
-    return handleApiError(group.error);
+    return null;
   }
 
   const isAdmin = group.data.thisGroupMember.role === "admin";
@@ -136,6 +135,14 @@ const MemberCard = ({
       },
     }),
   );
+  const removeFailure = failureOf(
+    removeGroupMemberMutation,
+    t("group.members.removeFailed"),
+  );
+  const roleUpdateFailure = failureOf(
+    updateMemberRoleMutation,
+    t("group.members.roleUpdateFailed"),
+  );
 
   return (
     <div id="manage-members" className="flex flex-col gap-4">
@@ -223,22 +230,11 @@ const MemberCard = ({
           </Popover>
         )}
       </div>
-      {(removeGroupMemberMutation.isError ||
-        removeGroupMemberMutation.data?.success === false) && (
+      {removeFailure && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>
-            {removeGroupMemberMutation.data?.success === false
-              ? removeGroupMemberMutation.data.error.type
-              : (removeGroupMemberMutation.error?.data?.code ??
-                t("common.error"))}
-          </AlertTitle>
-          <AlertDescription>
-            {removeGroupMemberMutation.data?.success === false
-              ? removeGroupMemberMutation.data.error.message
-              : (removeGroupMemberMutation.error?.message ??
-                t("group.members.removeFailed"))}
-          </AlertDescription>
+          <AlertTitle>{t("common.error")}</AlertTitle>
+          <AlertDescription>{removeFailure}</AlertDescription>
         </Alert>
       )}
       {removeGroupMemberMutation.isSuccess &&
@@ -248,22 +244,11 @@ const MemberCard = ({
             <AlertTitle>{t("group.members.removed")}</AlertTitle>
           </Alert>
         )}
-      {(updateMemberRoleMutation.isError ||
-        updateMemberRoleMutation.data?.success === false) && (
+      {roleUpdateFailure && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>
-            {updateMemberRoleMutation.data?.success === false
-              ? updateMemberRoleMutation.data.error.type
-              : (updateMemberRoleMutation.error?.data?.code ??
-                t("common.error"))}
-          </AlertTitle>
-          <AlertDescription>
-            {updateMemberRoleMutation.data?.success === false
-              ? updateMemberRoleMutation.data.error.message
-              : (updateMemberRoleMutation.error?.message ??
-                t("group.members.roleUpdateFailed"))}
-          </AlertDescription>
+          <AlertTitle>{t("common.error")}</AlertTitle>
+          <AlertDescription>{roleUpdateFailure}</AlertDescription>
         </Alert>
       )}
       {updateMemberRoleMutation.isSuccess &&

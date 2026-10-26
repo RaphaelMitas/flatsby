@@ -30,6 +30,7 @@ import {
 } from "@flatsby/validators/calendar";
 
 import type { ApiResult } from "./errors";
+import { resultMutation } from "./resultMutation";
 
 // A tRPC query key is [path, { input, type }]
 const rangeKeySchema = z.tuple([
@@ -100,42 +101,28 @@ async function patchCalendar(
   return [...ranges, ...details];
 }
 
-const restoreCalendar = (
-  queryClient: QueryClient,
-  snapshot: CalendarSnapshot = [],
-) => {
-  for (const [key, cached] of snapshot) queryClient.setQueryData(key, cached);
-};
-
-/** Mutation callbacks for one calendar write; `onFailure` gets null when the request itself failed. */
+/** Mutation callbacks for one calendar write. */
 export const calendarMutation = <TInput>(
   queryClient: QueryClient,
   filters: CalendarFilters,
   patchFor: CalendarPatchFor<TInput>,
-  onFailure: (message: string | null) => void,
-) => ({
-  onMutate: (input: TInput) =>
-    patchCalendar(queryClient, filters, (findCachedItem) =>
-      patchFor(input, findCachedItem),
-    ),
-  onError: (_error: unknown, _input: TInput, snapshot?: CalendarSnapshot) => {
-    restoreCalendar(queryClient, snapshot);
-    onFailure(null);
-  },
-  onSuccess: (
-    result: ApiResult<unknown>,
-    _input: TInput,
-    snapshot?: CalendarSnapshot,
-  ) => {
-    if (result.success) return;
-    restoreCalendar(queryClient, snapshot);
-    onFailure(result.error.message);
-  },
-  onSettled: () => {
-    void queryClient.invalidateQueries(filters.ranges);
-    void queryClient.invalidateQueries(filters.details);
-  },
-});
+  onFailure: (message: string | undefined) => void,
+) =>
+  resultMutation({
+    onMutate: (input: TInput) =>
+      patchCalendar(queryClient, filters, (findCachedItem) =>
+        patchFor(input, findCachedItem),
+      ),
+    rollback: (snapshot) => {
+      for (const [key, cached] of snapshot)
+        queryClient.setQueryData(key, cached);
+    },
+    onFailure,
+    onSettled: () => {
+      void queryClient.invalidateQueries(filters.ranges);
+      void queryClient.invalidateQueries(filters.details);
+    },
+  });
 
 const asView = (
   id: number,

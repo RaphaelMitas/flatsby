@@ -1,4 +1,3 @@
-import type { ApiResult, GroupWithAccess } from "@flatsby/api";
 import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -10,13 +9,14 @@ import {
 } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
+
 import type { RouterOutputs } from "~/utils/api";
 import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { setMemberActionCallbacks } from "./member-actions";
@@ -93,70 +93,60 @@ export default function MembersScreen() {
     }),
   );
 
-  const onUpdateMemberRoleError = (
-    previousGroup: ApiResult<GroupWithAccess> | undefined,
-  ) => {
-    queryClient.setQueryData(
-      trpc.group.getGroup.queryKey({
-        id: Number(selectedGroupId) || 0,
-      }),
-      previousGroup,
-    );
-  };
-
   const updateMemberRoleMutation = useMutation(
-    trpc.group.updateMemberRole.mutationOptions({
-      onMutate: (data) => {
-        void queryClient.cancelQueries(
-          trpc.group.getGroup.queryOptions({
-            id: Number(selectedGroupId) || 0,
-          }),
-        );
+    trpc.group.updateMemberRole.mutationOptions(
+      resultMutation({
+        onMutate: (data) => {
+          void queryClient.cancelQueries(
+            trpc.group.getGroup.queryOptions({
+              id: Number(selectedGroupId) || 0,
+            }),
+          );
 
-        const previousGroup = queryClient.getQueryData(
-          trpc.group.getGroup.queryKey({
-            id: Number(selectedGroupId) || 0,
-          }),
-        );
+          const previousGroup = queryClient.getQueryData(
+            trpc.group.getGroup.queryKey({
+              id: Number(selectedGroupId) || 0,
+            }),
+          );
 
-        queryClient.setQueryData(
-          trpc.group.getGroup.queryKey({
-            id: Number(selectedGroupId) || 0,
-          }),
-          (old) => {
-            if (!old?.success) return old;
-            return {
-              success: true as const,
-              data: {
-                ...old.data,
-                groupMembers: old.data.groupMembers.map((member) =>
-                  member.id === data.memberId
-                    ? { ...member, role: data.newRole }
-                    : member,
-                ),
-              },
-            };
-          },
-        );
+          queryClient.setQueryData(
+            trpc.group.getGroup.queryKey({
+              id: Number(selectedGroupId) || 0,
+            }),
+            (old) => {
+              if (!old?.success) return old;
+              return {
+                success: true as const,
+                data: {
+                  ...old.data,
+                  groupMembers: old.data.groupMembers.map((member) =>
+                    member.id === data.memberId
+                      ? { ...member, role: data.newRole }
+                      : member,
+                  ),
+                },
+              };
+            },
+          );
 
-        return { previousGroup };
-      },
-      onError: (_error, _variables, context) => {
-        onUpdateMemberRoleError(context?.previousGroup);
-      },
-      onSuccess: (data, _variables, context) => {
-        if (!data.success) {
-          onUpdateMemberRoleError(context.previousGroup);
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.group.getGroup.queryOptions({
-            id: Number(selectedGroupId) || 0,
-          }),
-        );
-      },
-    }),
+          return { previousGroup };
+        },
+        rollback: ({ previousGroup }) =>
+          queryClient.setQueryData(
+            trpc.group.getGroup.queryKey({
+              id: Number(selectedGroupId) || 0,
+            }),
+            previousGroup,
+          ),
+        onSuccess: () => {
+          void queryClient.invalidateQueries(
+            trpc.group.getGroup.queryOptions({
+              id: Number(selectedGroupId) || 0,
+            }),
+          );
+        },
+      }),
+    ),
   );
 
   const removeGroupMemberMutation = useMutation(
@@ -201,8 +191,17 @@ export default function MembersScreen() {
     });
   };
 
+  const roleUpdateFailure = failureOf(
+    updateMemberRoleMutation,
+    t("group.members.roleUpdateFailed"),
+  );
+  const removeFailure = failureOf(
+    removeGroupMemberMutation,
+    t("group.members.removeFailed"),
+  );
+
   if (!group.success) {
-    return handleApiError({ router, error: group.error });
+    return null;
   }
 
   const renderMemberItem = ({ item }: { item: GroupMemberWithUser }) => (
@@ -263,45 +262,23 @@ export default function MembersScreen() {
       </View>
 
       {/* Error Alerts for Member Actions */}
-      {(updateMemberRoleMutation.isError ||
-        updateMemberRoleMutation.data?.success === false) && (
+      {roleUpdateFailure !== undefined && (
         <View className="px-4 py-2">
           <TimedAlert
             variant="destructive"
-            title={
-              updateMemberRoleMutation.data?.success === false
-                ? updateMemberRoleMutation.data.error.type
-                : (updateMemberRoleMutation.error?.data?.code ??
-                  t("common.error"))
-            }
-            description={
-              updateMemberRoleMutation.data?.success === false
-                ? updateMemberRoleMutation.data.error.message
-                : (updateMemberRoleMutation.error?.message ??
-                  t("group.members.roleUpdateFailed"))
-            }
+            title={t("common.error")}
+            description={roleUpdateFailure}
             onDismiss={() => updateMemberRoleMutation.reset()}
           />
         </View>
       )}
 
-      {(removeGroupMemberMutation.isError ||
-        removeGroupMemberMutation.data?.success === false) && (
+      {removeFailure !== undefined && (
         <View className="px-4 py-2">
           <TimedAlert
             variant="destructive"
-            title={
-              removeGroupMemberMutation.data?.success === false
-                ? removeGroupMemberMutation.data.error.type
-                : (removeGroupMemberMutation.error?.data?.code ??
-                  t("common.error"))
-            }
-            description={
-              removeGroupMemberMutation.data?.success === false
-                ? removeGroupMemberMutation.data.error.message
-                : (removeGroupMemberMutation.error?.message ??
-                  t("group.members.removeFailed"))
-            }
+            title={t("common.error")}
+            description={removeFailure}
             onDismiss={() => removeGroupMemberMutation.reset()}
           />
         </View>

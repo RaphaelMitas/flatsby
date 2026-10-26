@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
+import { resultMutation } from "@flatsby/api/resultMutation";
 import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import {
   formatCurrencyFromCents,
@@ -30,7 +31,6 @@ import {
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 import { Separator } from "~/lib/ui/separator";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useCloseScreen } from "~/utils/useCloseScreen";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
@@ -64,56 +64,48 @@ export function ExpenseDetailView({
   const { expenseListQueryKey, invalidateAll } = useInvalidateExpenses(groupId);
 
   const deleteExpenseMutation = useMutation(
-    trpcClient.expense.deleteExpense.mutationOptions({
-      onMutate: async (input) => {
-        // Cancel any outgoing queries
-        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
+    trpcClient.expense.deleteExpense.mutationOptions(
+      resultMutation({
+        onMutate: async (input) => {
+          // Cancel any outgoing queries
+          await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
-        // Snapshot the previous value
-        const previousData = queryClient.getQueryData(expenseListQueryKey);
+          // Snapshot the previous value
+          const previousData = queryClient.getQueryData(expenseListQueryKey);
 
-        // Optimistically remove the expense from the list
-        queryClient.setQueryData(expenseListQueryKey, (old) => {
-          if (!old) return old;
+          // Optimistically remove the expense from the list
+          queryClient.setQueryData(expenseListQueryKey, (old) => {
+            if (!old) return old;
 
-          const updatedPages = old.pages.map((page) => {
-            if (page.success === false) return page;
+            const updatedPages = old.pages.map((page) => {
+              if (page.success === false) return page;
 
-            return {
-              ...page,
-              data: {
-                ...page.data,
-                items: page.data.items.filter(
-                  (item) => item.id !== input.expenseId,
-                ),
-              },
-            };
+              return {
+                ...page,
+                data: {
+                  ...page.data,
+                  items: page.data.items.filter(
+                    (item) => item.id !== input.expenseId,
+                  ),
+                },
+              };
+            });
+
+            return { ...old, pages: updatedPages };
           });
 
-          return { ...old, pages: updatedPages };
-        });
-
-        return { previousData };
-      },
-      onError: (error, _variables, context) => {
-        if (context?.previousData) {
-          queryClient.setQueryData(expenseListQueryKey, context.previousData);
-        }
-        Alert.alert(t("expenses.deleteFailed"), error.message);
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          if (context.previousData) {
-            queryClient.setQueryData(expenseListQueryKey, context.previousData);
-          }
-          Alert.alert(t("expenses.deleteFailed"), data.error.message);
-          return;
-        }
-
-        invalidateAll();
-        close();
-      },
-    }),
+          return { previousData };
+        },
+        rollback: ({ previousData }) =>
+          queryClient.setQueryData(expenseListQueryKey, previousData),
+        onFailure: (message) =>
+          Alert.alert(t("expenses.deleteFailed"), message),
+        onSuccess: () => {
+          invalidateAll();
+          close();
+        },
+      }),
+    ),
   );
 
   const handleDelete = () => {
@@ -122,17 +114,11 @@ export function ExpenseDetailView({
   };
 
   if (!expenseData.success) {
-    return handleApiError({
-      router,
-      error: expenseData.error,
-    });
+    return null;
   }
 
   if (!groupData.success) {
-    return handleApiError({
-      router,
-      error: groupData.error,
-    });
+    return null;
   }
 
   const expense = expenseData.data;

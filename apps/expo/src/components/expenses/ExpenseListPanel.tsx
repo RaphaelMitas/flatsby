@@ -14,7 +14,6 @@ import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useMediaQuery } from "../splitview/useMediaQuery";
@@ -83,10 +82,7 @@ function ExpenseList() {
   }, [refetch]);
 
   if (!groupData.success) {
-    return handleApiError({
-      router,
-      error: groupData.error,
-    });
+    return null;
   }
 
   const allExpenses =

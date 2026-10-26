@@ -19,7 +19,6 @@ import { Label } from "@flatsby/ui/label";
 
 import { useUpdateGroup } from "~/hooks/use-update-group";
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { UpdateGroupAlert } from "./UpdateGroupAlert";
 
 interface GroupDetailsProps {
@@ -29,7 +28,6 @@ interface GroupDetailsProps {
 const GroupDetails = ({ groupId }: GroupDetailsProps) => {
   const t = useTranslations();
   const trpc = useTRPC();
-  const handleApiError = useHandleApiError();
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
@@ -47,7 +45,7 @@ const GroupDetails = ({ groupId }: GroupDetailsProps) => {
   const groupNameMutation = useUpdateGroup(groupId);
 
   if (!group.success) {
-    return handleApiError(group.error);
+    return null;
   }
 
   const isAdmin = group.data.thisGroupMember.role === "admin";

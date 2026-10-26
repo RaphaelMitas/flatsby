@@ -17,13 +17,12 @@ import {
 import { Button } from "~/lib/ui/button";
 import { Label } from "~/lib/ui/label";
 import { Switch } from "~/lib/ui/switch";
-import { cn, handleApiError } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useUpdateGroup } from "~/utils/useUpdateGroup";
 
 export default function ExpenseSettingsScreen() {
-  const router = useRouter();
   const { selectedGroupId } = useShoppingStore();
 
   const { data: group } = useSuspenseQuery(
@@ -33,7 +32,7 @@ export default function ExpenseSettingsScreen() {
   );
 
   if (!group.success) {
-    return handleApiError({ router, error: group.error });
+    return null;
   }
 
   return <ExpenseSettingsForm key={group.data.id} group={group.data} />;

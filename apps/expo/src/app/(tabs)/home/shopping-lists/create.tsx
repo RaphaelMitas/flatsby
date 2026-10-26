@@ -1,10 +1,10 @@
-import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { Alert, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { resultMutation } from "@flatsby/api/resultMutation";
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
@@ -23,77 +23,70 @@ export default function CreateShoppingList() {
   const queryClient = useQueryClient();
   const groupIdNumber = groupId ? parseInt(groupId, 10) : 0;
 
-  const onCreateShoppingListError = (
-    previousLists: ApiResult<ShoppingListSummary[]> | undefined,
-    message?: string,
-  ) => {
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingLists.queryKey({
-        groupId: groupIdNumber,
-      }),
-      previousLists,
-    );
-    Alert.alert(t("common.error"), message ?? t("shoppingList.createFailed"));
-  };
-
   const createShoppingListMutation = useMutation(
-    trpc.shoppingList.createShoppingList.mutationOptions({
-      onMutate: (data) => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getShoppingLists.queryOptions({
-            groupId: groupIdNumber,
-          }),
-        );
+    trpc.shoppingList.createShoppingList.mutationOptions(
+      resultMutation({
+        onMutate: (data) => {
+          void queryClient.cancelQueries(
+            trpc.shoppingList.getShoppingLists.queryOptions({
+              groupId: groupIdNumber,
+            }),
+          );
 
-        const previousLists = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingLists.queryKey({
-            groupId: groupIdNumber,
-          }),
-        );
+          const previousLists = queryClient.getQueryData(
+            trpc.shoppingList.getShoppingLists.queryKey({
+              groupId: groupIdNumber,
+            }),
+          );
 
-        const newShoppingList = {
-          ...data,
-          id: -1,
-          uncheckedItemLength: 0,
-          description: null,
-          icon: null,
-        };
+          const newShoppingList = {
+            ...data,
+            id: -1,
+            uncheckedItemLength: 0,
+            description: null,
+            icon: null,
+          };
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingLists.queryKey({
-            groupId: groupIdNumber,
-          }),
-          (old) => {
-            if (!old?.success) {
-              return old;
-            }
+          queryClient.setQueryData(
+            trpc.shoppingList.getShoppingLists.queryKey({
+              groupId: groupIdNumber,
+            }),
+            (old) => {
+              if (!old?.success) {
+                return old;
+              }
 
-            return {
-              success: true as const,
-              data: [...old.data, newShoppingList],
-            };
-          },
-        );
-        router.back();
+              return {
+                success: true as const,
+                data: [...old.data, newShoppingList],
+              };
+            },
+          );
+          router.back();
 
-        return { previousLists };
-      },
-      onError: (_error, _variables, context) => {
-        onCreateShoppingListError(context?.previousLists);
-      },
-      onSuccess: (data, _variables, context) => {
-        if (!data.success) {
-          onCreateShoppingListError(context.previousLists, data.error.message);
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.shoppingList.getShoppingLists.queryOptions({
-            groupId: groupIdNumber,
-          }),
-        );
-      },
-    }),
+          return { previousLists };
+        },
+        rollback: ({ previousLists }) =>
+          queryClient.setQueryData(
+            trpc.shoppingList.getShoppingLists.queryKey({
+              groupId: groupIdNumber,
+            }),
+            previousLists,
+          ),
+        onFailure: (message) =>
+          Alert.alert(
+            t("common.error"),
+            message ?? t("shoppingList.createFailed"),
+          ),
+        onSuccess: () => {
+          void queryClient.invalidateQueries(
+            trpc.shoppingList.getShoppingLists.queryOptions({
+              groupId: groupIdNumber,
+            }),
+          );
+        },
+      }),
+    ),
   );
 
   const form = useForm({

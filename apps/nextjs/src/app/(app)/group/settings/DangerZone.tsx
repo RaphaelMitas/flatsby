@@ -6,6 +6,7 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { LoaderCircle, TriangleAlertIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import {
@@ -19,7 +20,6 @@ import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
 
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 
 interface DangerZoneProps {
   groupId: number;
@@ -30,7 +30,6 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
   const [groupNameInput, setGroupNameInput] = useState("");
   const router = useRouter();
   const trpc = useTRPC();
-  const handleApiError = useHandleApiError();
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
@@ -44,10 +43,14 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
   );
 
   if (!group.success) {
-    return handleApiError(group.error);
+    return null;
   }
 
   const isAdmin = group.data.thisGroupMember.role === "admin";
+  const deleteFailure = failureOf(
+    deleteGroupMutation,
+    t("group.delete.failed"),
+  );
 
   return (
     <Card className="w-full">
@@ -96,21 +99,10 @@ export default function DangerZone({ groupId }: DangerZoneProps) {
                 )}
               </Button>
             </div>
-            {(deleteGroupMutation.isError ||
-              deleteGroupMutation.data?.success === false) && (
+            {deleteFailure && (
               <Alert variant="destructive" className="w-full">
-                <AlertTitle>
-                  {deleteGroupMutation.data?.success === false
-                    ? deleteGroupMutation.data.error.type
-                    : (deleteGroupMutation.error?.data?.code ??
-                      t("common.unknownError"))}
-                </AlertTitle>
-                <AlertDescription>
-                  {deleteGroupMutation.data?.success === false
-                    ? deleteGroupMutation.data.error.message
-                    : (deleteGroupMutation.error?.message ??
-                      t("group.delete.failed"))}
-                </AlertDescription>
+                <AlertTitle>{t("common.error")}</AlertTitle>
+                <AlertDescription>{deleteFailure}</AlertDescription>
               </Alert>
             )}
           </div>

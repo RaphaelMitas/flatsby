@@ -6,7 +6,6 @@ import { useTranslations } from "use-intl";
 
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import GroupsDashboardElement from "./GroupsDashboardElement";
 
@@ -21,7 +20,7 @@ export function GroupsDashboard() {
   } = useSuspenseQuery(trpc.group.getUserGroups.queryOptions());
 
   if (!groups.success) {
-    return handleApiError({ router, error: groups.error });
+    return null;
   }
 
   return (

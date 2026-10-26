@@ -7,6 +7,7 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
@@ -23,7 +24,6 @@ import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { ShoppingListDashboardItem } from "./ShoppingListDashboardItem";
 
 interface ShoppingListDashboardProps {
@@ -38,7 +38,6 @@ export const ShoppingListDashboard = ({
   const router = useRouter();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
-  const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id;
 
@@ -85,12 +84,16 @@ export const ShoppingListDashboard = ({
   }
 
   if (!shoppingLists.success) {
-    return handleApiError(shoppingLists.error);
+    return null;
   }
 
   const allLists = shoppingLists.data;
   const displayedLists = limit ? allLists.slice(0, limit) : allLists;
   const isLimitedView = limit !== undefined;
+  const createFailure = failureOf(
+    createNewListMutation,
+    t("shoppingList.create.failed"),
+  );
 
   return (
     <div className="mt-4 flex flex-1 flex-col gap-4">
@@ -153,22 +156,11 @@ export const ShoppingListDashboard = ({
               </Button>
             </form>
           </Form>
-          {(createNewListMutation.isError ||
-            createNewListMutation.data?.success === false) && (
+          {createFailure && (
             <Alert className="mt-2" variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>
-                {createNewListMutation.data?.success === false
-                  ? createNewListMutation.data.error.type
-                  : (createNewListMutation.error?.data?.code ??
-                    t("common.error"))}
-              </AlertTitle>
-              <AlertDescription>
-                {createNewListMutation.data?.success === false
-                  ? createNewListMutation.data.error.message
-                  : (createNewListMutation.error?.message ??
-                    t("shoppingList.create.failed"))}
-              </AlertDescription>
+              <AlertTitle>{t("common.error")}</AlertTitle>
+              <AlertDescription>{createFailure}</AlertDescription>
             </Alert>
           )}
         </>

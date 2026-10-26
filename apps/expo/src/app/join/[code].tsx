@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { inviteCodeSchema, invitePath } from "@flatsby/validators/invite";
 
 import { MemberAvatar } from "~/components/expenses/MemberAvatar";
@@ -57,6 +58,7 @@ export default function JoinScreen() {
   };
 
   const invite = preview.data?.success ? preview.data.data : null;
+  const joinFailure = failureOf(join, t("invite.join.joinFailed"));
   const expired =
     !parsed.success ||
     (preview.data?.success === false &&
@@ -135,11 +137,9 @@ export default function JoinScreen() {
             </View>
 
             <View className="gap-3">
-              {(join.isError || join.data?.success === false) && (
+              {joinFailure !== undefined && (
                 <Text className="text-destructive text-center text-sm">
-                  {join.data?.success === false
-                    ? join.data.error.message
-                    : t("invite.join.joinFailed")}
+                  {joinFailure}
                 </Text>
               )}
               {!session ? (

@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import QRCode from "react-qr-code";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Button } from "@flatsby/ui/button";
 import {
   Dialog,
@@ -98,8 +99,7 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
   }
 
   const link = inviteLink(window.location.origin, invite.code);
-  const resetFailed =
-    resetMutation.isError || resetMutation.data?.success === false;
+  const resetFailure = failureOf(resetMutation, t("invite.resetFailed"));
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
@@ -141,8 +141,8 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
           {t("invite.resetLink")}
         </Button>
       </div>
-      {resetFailed && (
-        <p className="text-destructive text-sm">{t("invite.resetFailed")}</p>
+      {resetFailure && (
+        <p className="text-destructive text-sm">{resetFailure}</p>
       )}
     </div>
   );

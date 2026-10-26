@@ -14,7 +14,6 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { ExpenseCard } from "./ExpenseCard";
 
 interface ExpenseListPanelProps {
@@ -31,7 +30,6 @@ export function ExpenseListPanel({
   const trpc = useTRPC();
   const t = useTranslations();
   const { currentGroup } = useGroupContext();
-  const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id ?? 0;
 
@@ -55,7 +53,7 @@ export function ExpenseListPanel({
   );
 
   if (!groupData.success) {
-    return handleApiError(groupData.error);
+    return null;
   }
 
   const allExpenses =

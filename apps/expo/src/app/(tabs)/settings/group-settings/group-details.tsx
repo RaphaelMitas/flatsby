@@ -1,7 +1,6 @@
 import type { GroupFormValues } from "@flatsby/validators/group";
 import { useState } from "react";
 import { Text, View } from "react-native";
-import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
@@ -15,14 +14,12 @@ import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useUpdateGroup } from "~/utils/useUpdateGroup";
 
 export default function GroupDetailsScreen() {
   const t = useTranslations();
-  const router = useRouter();
   const { selectedGroupId } = useShoppingStore();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
@@ -62,7 +59,7 @@ export default function GroupDetailsScreen() {
   };
 
   if (!group.success) {
-    return handleApiError({ router, error: group.error });
+    return null;
   }
 
   const isAdmin = group.data.thisGroupMember.role === "admin";

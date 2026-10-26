@@ -10,6 +10,7 @@ import {
 import { LoaderCircle, TriangleAlertIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import {
@@ -50,6 +51,10 @@ export default function DeleteUser() {
   const handleDeleteUser = () => {
     deleteUserMutation.mutate();
   };
+  const deleteFailure = failureOf(
+    deleteUserMutation,
+    t("settings.danger.unknownError"),
+  );
 
   return (
     <Card className="w-full">
@@ -115,18 +120,10 @@ export default function DeleteUser() {
                 )}
               </Button>
             </div>
-            {(deleteUserMutation.isError ||
-              (deleteUserMutation.data &&
-                !deleteUserMutation.data.success)) && (
+            {deleteFailure && (
               <Alert variant="destructive" className="w-full">
                 <AlertTitle>{t("settings.danger.deletionFailed")}</AlertTitle>
-                <AlertDescription>
-                  {deleteUserMutation.isError
-                    ? deleteUserMutation.error.message
-                    : !deleteUserMutation.data.success
-                      ? deleteUserMutation.data.error.message
-                      : t("settings.danger.unknownError")}
-                </AlertDescription>
+                <AlertDescription>{deleteFailure}</AlertDescription>
               </Alert>
             )}
           </div>

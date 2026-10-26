@@ -9,7 +9,6 @@ import { useTranslations } from "use-intl";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
@@ -38,7 +37,7 @@ export default function MemberActionsScreen() {
   );
 
   if (!group.success) {
-    return handleApiError({ router, error: group.error });
+    return null;
   }
 
   const groupMember = group.data.groupMembers.find(

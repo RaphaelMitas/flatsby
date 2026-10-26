@@ -12,7 +12,6 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { PeekingCat } from "~/app/_components/peeking-cat";
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 
 function useCountUp(target: number, duration = 500) {
   const [value, setValue] = useState(0);
@@ -96,7 +95,6 @@ function HomeStatsInner() {
   const locale = useLocale();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
-  const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id ?? 0;
 
@@ -113,15 +111,15 @@ function HomeStatsInner() {
   );
 
   if (!groupData.success) {
-    return handleApiError(groupData.error);
+    return null;
   }
 
   if (!debtData.success) {
-    return handleApiError(debtData.error);
+    return null;
   }
 
   if (!statsData.success) {
-    return handleApiError(statsData.error);
+    return null;
   }
 
   const currentGroupMemberId = groupData.data.thisGroupMember.id;

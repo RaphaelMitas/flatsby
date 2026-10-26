@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
+import { resultMutation } from "@flatsby/api/resultMutation";
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
@@ -165,235 +166,219 @@ export function ExpenseForm({
   }, [expense, group.groupMembers]);
 
   const createExpenseMutation = useMutation(
-    trpcClient.expense.createExpense.mutationOptions({
-      onMutate: async (input) => {
-        // Cancel any outgoing queries
-        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
+    trpcClient.expense.createExpense.mutationOptions(
+      resultMutation({
+        onMutate: async (input) => {
+          // Cancel any outgoing queries
+          await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
-        // Snapshot the previous value
-        const previousData = queryClient.getQueryData(expenseListQueryKey);
+          // Snapshot the previous value
+          const previousData = queryClient.getQueryData(expenseListQueryKey);
 
-        // Get the paidBy and createdBy members for the optimistic expense
-        const paidByMember = group.groupMembers.find(
-          (m) => m.id === input.paidByGroupMemberId,
-        );
-        const currentMember = group.thisGroupMember;
+          // Get the paidBy and createdBy members for the optimistic expense
+          const paidByMember = group.groupMembers.find(
+            (m) => m.id === input.paidByGroupMemberId,
+          );
+          const currentMember = group.thisGroupMember;
 
-        // Optimistically add the new expense
-        queryClient.setQueryData(expenseListQueryKey, (old) => {
-          if (!old) return old;
+          // Optimistically add the new expense
+          queryClient.setQueryData(expenseListQueryKey, (old) => {
+            if (!old) return old;
 
-          const optimisticExpense = {
-            id: Date.now(),
-            groupId: group.id,
-            paidByGroupMemberId: input.paidByGroupMemberId,
-            amountInCents: input.amountInCents,
-            currency: input.currency,
-            convertedAmountInCents: input.convertedAmountInCents ?? null,
-            convertedCurrency: input.convertedCurrency ?? null,
-            description: input.description,
-            category: getSubcategoryGroup(input.subcategory),
-            subcategory: input.subcategory ?? "other",
-            expenseDate: input.expenseDate,
-            createdByGroupMemberId: currentMember.id,
-            splitMethod: input.splitMethod,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            paidByGroupMember: paidByMember
-              ? {
-                  id: paidByMember.id,
-                  groupId: group.id,
-                  userId: paidByMember.userId,
-                  role: paidByMember.role,
-                  joinedOn: paidByMember.joinedOn,
-                  user: paidByMember.user,
-                }
-              : {
-                  id: input.paidByGroupMemberId,
-                  groupId: group.id,
-                  userId: "",
-                  role: "member" as const,
-                  joinedOn: new Date(),
-                  user: { email: "", name: t("common.unknown"), image: null },
-                },
-            createdByGroupMember: {
-              id: currentMember.id,
+            const optimisticExpense = {
+              id: Date.now(),
               groupId: group.id,
-              userId: currentMember.userId,
-              role: currentMember.role,
-              joinedOn: currentMember.joinedOn,
-              user: currentMember.user,
-            },
-            expenseSplits: input.splits.map((split, index) => {
-              const member = group.groupMembers.find(
-                (m) => m.id === split.groupMemberId,
-              );
-              return {
-                id: Date.now() + index,
-                createdAt: new Date(),
-                expenseId: Date.now(),
-                groupMemberId: split.groupMemberId,
-                amountInCents: split.amountInCents,
-                percentage: split.percentage,
-                shares: split.shares ?? null,
-                groupMember: member
-                  ? {
-                      id: member.id,
-                      groupId: group.id,
-                      userId: member.userId,
-                      role: member.role,
-                      joinedOn: member.joinedOn,
-                      user: member.user,
-                    }
-                  : {
-                      id: split.groupMemberId,
-                      groupId: group.id,
-                      userId: "",
-                      role: "member" as const,
-                      joinedOn: new Date(),
-                      user: {
-                        email: "",
-                        name: t("common.unknown"),
-                        image: null,
+              paidByGroupMemberId: input.paidByGroupMemberId,
+              amountInCents: input.amountInCents,
+              currency: input.currency,
+              convertedAmountInCents: input.convertedAmountInCents ?? null,
+              convertedCurrency: input.convertedCurrency ?? null,
+              description: input.description,
+              category: getSubcategoryGroup(input.subcategory),
+              subcategory: input.subcategory ?? "other",
+              expenseDate: input.expenseDate,
+              createdByGroupMemberId: currentMember.id,
+              splitMethod: input.splitMethod,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              paidByGroupMember: paidByMember
+                ? {
+                    id: paidByMember.id,
+                    groupId: group.id,
+                    userId: paidByMember.userId,
+                    role: paidByMember.role,
+                    joinedOn: paidByMember.joinedOn,
+                    user: paidByMember.user,
+                  }
+                : {
+                    id: input.paidByGroupMemberId,
+                    groupId: group.id,
+                    userId: "",
+                    role: "member" as const,
+                    joinedOn: new Date(),
+                    user: { email: "", name: t("common.unknown"), image: null },
+                  },
+              createdByGroupMember: {
+                id: currentMember.id,
+                groupId: group.id,
+                userId: currentMember.userId,
+                role: currentMember.role,
+                joinedOn: currentMember.joinedOn,
+                user: currentMember.user,
+              },
+              expenseSplits: input.splits.map((split, index) => {
+                const member = group.groupMembers.find(
+                  (m) => m.id === split.groupMemberId,
+                );
+                return {
+                  id: Date.now() + index,
+                  createdAt: new Date(),
+                  expenseId: Date.now(),
+                  groupMemberId: split.groupMemberId,
+                  amountInCents: split.amountInCents,
+                  percentage: split.percentage,
+                  shares: split.shares ?? null,
+                  groupMember: member
+                    ? {
+                        id: member.id,
+                        groupId: group.id,
+                        userId: member.userId,
+                        role: member.role,
+                        joinedOn: member.joinedOn,
+                        user: member.user,
+                      }
+                    : {
+                        id: split.groupMemberId,
+                        groupId: group.id,
+                        userId: "",
+                        role: "member" as const,
+                        joinedOn: new Date(),
+                        user: {
+                          email: "",
+                          name: t("common.unknown"),
+                          image: null,
+                        },
                       },
-                    },
-              };
-            }),
-            isPending: true,
-          };
+                };
+              }),
+              isPending: true,
+            };
 
-          const updatedPages = old.pages.map((page, pageIndex) => {
-            if (page.success === false) return page;
-            if (pageIndex !== 0) return page;
+            const updatedPages = old.pages.map((page, pageIndex) => {
+              if (page.success === false) return page;
+              if (pageIndex !== 0) return page;
+
+              return {
+                ...page,
+                data: {
+                  ...page.data,
+                  items: [optimisticExpense, ...page.data.items],
+                },
+              };
+            });
+
+            return { ...old, pages: updatedPages };
+          });
+
+          return { previousData };
+        },
+        rollback: ({ previousData }) =>
+          queryClient.setQueryData(expenseListQueryKey, previousData),
+        onFailure: (message) =>
+          Alert.alert(t("expenses.createFailed"), message),
+        onSuccess: () => {
+          invalidateAll();
+          void recordHappyAction("expense_created");
+        },
+      }),
+    ),
+  );
+
+  const updateExpenseMutation = useMutation(
+    trpcClient.expense.updateExpense.mutationOptions(
+      resultMutation({
+        onMutate: async (input) => {
+          if (!expense || !expenseQueryKey) return;
+          // Cancel any outgoing queries
+          await queryClient.cancelQueries(
+            trpcClient.expense.getExpense.queryOptions({
+              expenseId: expense.id,
+            }),
+          );
+
+          // Snapshot the previous value
+          const previousData = queryClient.getQueryData(expenseQueryKey);
+
+          // Optimistically update the expense in the list
+          queryClient.setQueryData(expenseQueryKey, (old) => {
+            if (!old || old.success === false) return old;
 
             return {
-              ...page,
+              success: true as const,
               data: {
-                ...page.data,
-                items: [optimisticExpense, ...page.data.items],
+                ...old.data,
+                ...input,
+                category: input.subcategory
+                  ? getSubcategoryGroup(input.subcategory)
+                  : old.data.category,
+                subcategory: input.subcategory ?? old.data.subcategory,
+                expenseSplits: input.splits
+                  ? input.splits.map((split, index) => {
+                      const member = group.groupMembers.find(
+                        (m) => m.id === split.groupMemberId,
+                      );
+                      const existingSplit = expense.expenseSplits.find(
+                        (s) => s.groupMemberId === split.groupMemberId,
+                      );
+                      const splits = {
+                        ...split,
+                        shares: split.shares ?? null,
+                        id: Date.now() + index,
+                        createdAt: new Date(),
+                        expenseId: expense.id,
+                        groupMember: member
+                          ? { ...member, groupId: group.id }
+                          : existingSplit
+                            ? {
+                                id: existingSplit.groupMember.id,
+                                groupId: group.id,
+                                userId: "",
+                                role: "member" as const,
+                                joinedOn: new Date(),
+                                user: existingSplit.groupMember.user,
+                              }
+                            : {
+                                id: split.groupMemberId,
+                                groupId: group.id,
+                                userId: "",
+                                role: "member" as const,
+                                joinedOn: new Date(),
+                                user: {
+                                  email: "",
+                                  name: t("common.unknown"),
+                                  image: null,
+                                },
+                              },
+                      };
+                      return splits;
+                    })
+                  : old.data.expenseSplits,
               },
             };
           });
 
-          return { ...old, pages: updatedPages };
-        });
-
-        return { previousData };
-      },
-      onError: (_error, _variables, context) => {
-        if (context?.previousData) {
-          queryClient.setQueryData(expenseListQueryKey, context.previousData);
-        }
-        Alert.alert(t("common.error"), t("expenses.createFailed"));
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          if (context.previousData) {
-            queryClient.setQueryData(expenseListQueryKey, context.previousData);
-          }
-          Alert.alert(t("expenses.createFailed"), data.error.message);
-          return;
-        }
-
-        invalidateAll();
-        void recordHappyAction("expense_created");
-      },
-    }),
-  );
-
-  const updateExpenseMutation = useMutation(
-    trpcClient.expense.updateExpense.mutationOptions({
-      onMutate: async (input) => {
-        if (!expense || !expenseQueryKey) return;
-        // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpcClient.expense.getExpense.queryOptions({
-            expenseId: expense.id,
-          }),
-        );
-
-        // Snapshot the previous value
-        const previousData = queryClient.getQueryData(expenseQueryKey);
-
-        // Optimistically update the expense in the list
-        queryClient.setQueryData(expenseQueryKey, (old) => {
-          if (!old || old.success === false) return old;
-
-          return {
-            success: true as const,
-            data: {
-              ...old.data,
-              ...input,
-              category: input.subcategory
-                ? getSubcategoryGroup(input.subcategory)
-                : old.data.category,
-              subcategory: input.subcategory ?? old.data.subcategory,
-              expenseSplits: input.splits
-                ? input.splits.map((split, index) => {
-                    const member = group.groupMembers.find(
-                      (m) => m.id === split.groupMemberId,
-                    );
-                    const existingSplit = expense.expenseSplits.find(
-                      (s) => s.groupMemberId === split.groupMemberId,
-                    );
-                    const splits = {
-                      ...split,
-                      shares: split.shares ?? null,
-                      id: Date.now() + index,
-                      createdAt: new Date(),
-                      expenseId: expense.id,
-                      groupMember: member
-                        ? { ...member, groupId: group.id }
-                        : existingSplit
-                          ? {
-                              id: existingSplit.groupMember.id,
-                              groupId: group.id,
-                              userId: "",
-                              role: "member" as const,
-                              joinedOn: new Date(),
-                              user: existingSplit.groupMember.user,
-                            }
-                          : {
-                              id: split.groupMemberId,
-                              groupId: group.id,
-                              userId: "",
-                              role: "member" as const,
-                              joinedOn: new Date(),
-                              user: {
-                                email: "",
-                                name: t("common.unknown"),
-                                image: null,
-                              },
-                            },
-                    };
-                    return splits;
-                  })
-                : old.data.expenseSplits,
-            },
-          };
-        });
-
-        return { previousData };
-      },
-      onError: (_error, _variables, context) => {
-        if (context?.previousData && expenseQueryKey) {
-          queryClient.setQueryData(expenseQueryKey, context.previousData);
-        }
-        Alert.alert(t("common.error"), t("expenses.updateFailed"));
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          if (context?.previousData && expenseQueryKey) {
-            queryClient.setQueryData(expenseQueryKey, context.previousData);
-          }
-          Alert.alert(t("common.error"), data.error.message);
-          return;
-        }
-
-        invalidateAll(expense?.id);
-        close();
-      },
-    }),
+          return { queryKey: expenseQueryKey, previousData };
+        },
+        rollback: ({ queryKey, previousData }) =>
+          queryClient.setQueryData(queryKey, previousData),
+        onFailure: (message) =>
+          Alert.alert(t("common.error"), message ?? t("expenses.updateFailed")),
+        onSuccess: () => {
+          invalidateAll(expense?.id);
+          close();
+        },
+      }),
+    ),
   );
 
   const onSubmit = (values: ExpenseValues) => {

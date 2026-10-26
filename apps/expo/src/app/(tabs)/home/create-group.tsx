@@ -1,10 +1,10 @@
-import type { ApiResult, GroupWithMemberCount } from "@flatsby/api";
 import type { GroupFormValues } from "@flatsby/validators/group";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { resultMutation } from "@flatsby/api/resultMutation";
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { groupFormSchema } from "@flatsby/validators/group";
 
@@ -21,57 +21,52 @@ export default function CreateGroup() {
   };
   const queryClient = useQueryClient();
 
-  const onCreateGroupError = (
-    previousGroups: ApiResult<GroupWithMemberCount[]> | undefined,
-  ) => {
-    queryClient.setQueryData(
-      trpc.group.getUserGroups.queryKey(),
-      previousGroups,
-    );
-  };
-
   const createGroupMutation = useMutation(
-    trpc.group.createGroup.mutationOptions({
-      onMutate: ({ name }) => {
-        void queryClient.cancelQueries(trpc.group.getUserGroups.queryOptions());
+    trpc.group.createGroup.mutationOptions(
+      resultMutation({
+        onMutate: ({ name }) => {
+          void queryClient.cancelQueries(
+            trpc.group.getUserGroups.queryOptions(),
+          );
 
-        const previousGroups = queryClient.getQueryData(
-          trpc.group.getUserGroups.queryKey(),
-        );
+          const previousGroups = queryClient.getQueryData(
+            trpc.group.getUserGroups.queryKey(),
+          );
 
-        const newGroup = {
-          id: -1,
-          name: name,
-          createdAt: new Date(),
-          profilePicture: null,
-          memberCount: 1,
-        };
-
-        queryClient.setQueryData(trpc.group.getUserGroups.queryKey(), (old) => {
-          if (!old?.success) return old;
-          return {
-            success: true as const,
-            data: [...old.data, newGroup],
+          const newGroup = {
+            id: -1,
+            name: name,
+            createdAt: new Date(),
+            profilePicture: null,
+            memberCount: 1,
           };
-        });
-        router.back();
 
-        return { previousGroups };
-      },
-      onError: (_error, _variables, context) => {
-        onCreateGroupError(context?.previousGroups);
-      },
-      onSuccess: (data, _variables, context) => {
-        if (!data.success) {
-          onCreateGroupError(context.previousGroups);
-          return;
-        }
+          queryClient.setQueryData(
+            trpc.group.getUserGroups.queryKey(),
+            (old) => {
+              if (!old?.success) return old;
+              return {
+                success: true as const,
+                data: [...old.data, newGroup],
+              };
+            },
+          );
+          router.back();
 
-        void queryClient.invalidateQueries(
-          trpc.group.getUserGroups.queryOptions(),
-        );
-      },
-    }),
+          return { previousGroups };
+        },
+        rollback: ({ previousGroups }) =>
+          queryClient.setQueryData(
+            trpc.group.getUserGroups.queryKey(),
+            previousGroups,
+          ),
+        onSuccess: () => {
+          void queryClient.invalidateQueries(
+            trpc.group.getUserGroups.queryOptions(),
+          );
+        },
+      }),
+    ),
   );
 
   const form = useForm({

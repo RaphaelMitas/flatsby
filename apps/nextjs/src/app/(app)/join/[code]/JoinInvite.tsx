@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Play } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
@@ -124,12 +125,7 @@ export function JoinInvite({
   }
 
   const signInHref = `/auth/login?next=${invitePath(code)}`;
-  const joinError =
-    join.data?.success === false
-      ? join.data.error.message
-      : join.isError
-        ? t("invite.join.joinFailed")
-        : null;
+  const joinError = failureOf(join, t("invite.join.joinFailed"));
 
   return (
     <Card className="flex w-full max-w-sm flex-col items-center gap-3 p-8 text-center">
