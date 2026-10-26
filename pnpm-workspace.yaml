@@ -86,6 +86,7 @@ catalogs:
 
 linkWorkspacePackages: true
 
+# Renovate waits 2 days: it ages only the parent package, platform binaries often publish later
 minimumReleaseAge: 1440
 
 nodeLinker: hoisted
