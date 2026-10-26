@@ -155,10 +155,6 @@ export type {
   GroupDebtSummary,
 } from "@flatsby/validators/expenses/types";
 
-// Utility types for database operations
-export type DatabaseOperation<T> = () => Promise<T>;
-export type TransactionOperation<T> = (trx: DbTransaction) => Promise<T>;
-
 // Role types
 export type Role = "admin" | "member";
 

@@ -25,31 +25,11 @@ export type { AppRouter, RouterInputs, RouterOutputs };
 
 export { captureError } from "./lib/posthog";
 
-// Export new error handling utilities
-export {
-  // Error types and factories
-  Errors,
-  fail,
-  fromUnknownError,
-  // Main utilities
-  safeDbOperation,
-} from "./errors";
-
-export {
-  // Database utilities
-  DbUtils,
-  // Validation utilities
-  ValidationUtils,
-  // Migration helpers
-  effectify,
-} from "./utils";
-
-export type { ApiError, ApiResult, ApiErrorResult } from "./errors";
+export type { ApiResult, ApiErrorResult } from "./errors";
 
 // Export database and query types
 export type {
   Database,
-  DatabaseOperation,
   DbTransaction,
   ExpenseInfiniteData,
   ExpenseWithSplitsAndMembers,
@@ -68,6 +48,5 @@ export type {
   ShoppingList,
   ShoppingListInfiniteData,
   ShoppingListSummary,
-  TransactionOperation,
   User,
 } from "./types";

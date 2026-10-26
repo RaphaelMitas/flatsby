@@ -7,8 +7,6 @@ import { z } from "zod/v4";
 import { DrizzleQueryError } from "@flatsby/db/errors";
 import { translatorFor } from "@flatsby/i18n/translator";
 
-import { captureError } from "./lib/posthog";
-
 type MessageValues = Record<string, string | number>;
 
 interface Localized {
@@ -266,42 +264,6 @@ export const fromUnknownError = (
 
   // Fallback to internal server error
   return Errors.internalServer(operation, error);
-};
-
-/**
- * Utility to safely execute database operations with error conversion
- */
-export const safeDbOperation = <T>(
-  operation: () => Promise<T>,
-  operationName: string,
-  tableName?: string,
-): Effect.Effect<T, ApiError> => {
-  return Effect.tryPromise({
-    try: operation,
-    catch: (error) => {
-      const operation = `${operationName}${tableName ? ` on ${tableName}` : ""}`;
-      captureError({ error, operation });
-      return fromUnknownError(error, operation);
-    },
-  });
-};
-
-/**
- * Convert Effect to a Result-like object with more detailed error info
- */
-export const withErrorHandlingAsResult = async <T>(
-  locale: Locale,
-  effect: Effect.Effect<T, ApiError>,
-): Promise<ApiResult<T>> => {
-  const safeEffect = Effect.catchDefect(effect, (defect) => {
-    return Effect.fail(fromUnknownError(defect, "operation"));
-  });
-
-  const result = await Effect.runPromise(Effect.result(safeEffect));
-
-  return result._tag === "Success"
-    ? { success: true, data: result.success }
-    : toApiErrorResult(locale, result.failure);
 };
 
 export const toApiErrorResult = (
