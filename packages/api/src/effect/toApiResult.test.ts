@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Context, Effect, Layer, Ref } from "effect";
 
+import { DrizzleQueryError } from "@flatsby/db/errors";
 import { translatorFor } from "@flatsby/i18n/translator";
 
 import { Errors } from "../errors";
@@ -74,6 +75,47 @@ describe("toApiResult", () => {
         $exception_fingerprint:
           "group.getGroup:NotFoundError:errors.notFound.group",
         $issue_name: "group.getGroup NotFoundError",
+      });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect("groups a system failure by operation and error code", () =>
+    Effect.gen(function* () {
+      const failure = Errors.database(
+        "update group",
+        undefined,
+        new DrizzleQueryError(
+          "q",
+          [],
+          Object.assign(new Error("x"), { code: "40P01" }),
+        ),
+        "errors.updateRoleFailed",
+      );
+      const result = yield* toApiResult(Effect.fail(failure));
+
+      assert.deepStrictEqual(result, {
+        success: false,
+        error: {
+          type: "DatabaseError",
+          message: translatorFor("de")("errors.updateRoleFailed"),
+          name: "DatabaseError",
+          details: {
+            messageKey: "errors.updateRoleFailed",
+            operation: "update group",
+            table: undefined,
+          },
+        },
+      });
+      const reports = yield* Ref.get(yield* Reports);
+      assert.strictEqual(reports.length, 1);
+      assert.deepStrictEqual(reports[0]?.additionalProperties, {
+        kind: "system",
+        requestId: "request-1",
+        error_type: "DatabaseError",
+        message_key: "errors.updateRoleFailed",
+        $exception_fingerprint:
+          "group.getGroup:DatabaseError:update group:40P01",
+        $issue_name: "group.getGroup DatabaseError (update group)",
       });
     }).pipe(Effect.provide(TestLayer)),
   );

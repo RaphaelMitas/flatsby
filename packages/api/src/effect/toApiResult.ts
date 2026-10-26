@@ -1,9 +1,51 @@
-import { Cause, Effect, Result } from "effect";
+import { Cause, Effect, Predicate, Result } from "effect";
 
 import type { ApiError, ApiResult } from "../errors";
 import { Errors, toApiErrorResult } from "../errors";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { ErrorReporter } from "./services/ErrorReporter";
+
+const findCode = (cause: unknown): string | undefined => {
+  if (Predicate.hasProperty(cause, "code") && Predicate.isString(cause.code))
+    return cause.code;
+  return Predicate.hasProperty(cause, "cause")
+    ? findCode(cause.cause)
+    : undefined;
+};
+
+const grouping = (
+  path: string,
+  error: ApiError,
+): { kind: string; $exception_fingerprint: string; $issue_name: string } => {
+  switch (error._tag) {
+    case "NotFoundError":
+    case "ForbiddenError":
+    case "UnauthorizedError":
+    case "ValidationError":
+    case "ConflictError":
+      return {
+        kind: "expected",
+        $exception_fingerprint: `${path}:${error._tag}:${error.messageKey}`,
+        $issue_name: `${path} ${error._tag}`,
+      };
+    // Stack grouping would merge these, they're built in a few shared catches
+    case "DatabaseError":
+    case "ExternalServiceError":
+    case "InternalServerError":
+      return {
+        kind: "system",
+        $exception_fingerprint: [
+          path,
+          error._tag,
+          error.operation,
+          findCode(error.cause),
+        ]
+          .filter(Predicate.isNotUndefined)
+          .join(":"),
+        $issue_name: `${path} ${error._tag} (${error.operation ?? "unknown"})`,
+      };
+  }
+};
 
 const reportAndMap = Effect.fnUntraced(function* (
   cause: Cause.Cause<ApiError>,
@@ -19,12 +61,10 @@ const reportAndMap = Effect.fnUntraced(function* (
       operation: path,
       distinctId: user.id,
       additionalProperties: {
-        kind: "expected",
+        ...grouping(path, error),
         requestId,
         error_type: error._tag,
         message_key: error.messageKey,
-        $exception_fingerprint: `${path}:${error._tag}:${error.messageKey}`,
-        $issue_name: `${path} ${error._tag}`,
       },
     });
     return yield* error;
