@@ -7,7 +7,11 @@ import { fail } from "../errors";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { Database } from "./services/Database";
 import { ErrorReporter } from "./services/ErrorReporter";
-import { firstReturned, getListInGroupWithAccess } from "./shoppingLists";
+import {
+  firstReturned,
+  getListInGroupWithAccess,
+  setLastUsed,
+} from "./shoppingLists";
 import { toApiResult } from "./toApiResult";
 
 // The real client validates DATABASE_URL on import, which would fail a local run without env vars
@@ -61,6 +65,29 @@ describe("getListInGroupWithAccess", () => {
         "groupMembership",
       ]);
     }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe("setLastUsed", () => {
+  it.effect.each([
+    { groupId: 1, shoppingListId: null, lookup: "groupMembership" },
+    { groupId: 1, shoppingListId: 2, lookup: "groupMembership" },
+    { groupId: null, shoppingListId: 2, lookup: "shoppingList" },
+  ] satisfies {
+    groupId: number | null;
+    shoppingListId: number | null;
+    lookup: NotFoundResource;
+  }[])(
+    "refuses groupId $groupId and list $shoppingListId without writing",
+    ({ groupId, shoppingListId, lookup }) =>
+      Effect.gen(function* () {
+        const result = yield* toApiResult(setLastUsed(groupId, shoppingListId));
+
+        assert.isFalse(result.success);
+        if (result.success) return;
+        assert.strictEqual(result.error.type, "NotFoundError");
+        assert.deepStrictEqual(yield* Ref.get(yield* Lookups), [lookup]);
+      }).pipe(Effect.provide(TestLayer)),
   );
 });
 

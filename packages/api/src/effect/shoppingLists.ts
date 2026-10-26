@@ -5,6 +5,7 @@ import {
   groupMembers,
   shoppingListItems,
   shoppingLists,
+  users,
 } from "@flatsby/db/schema";
 
 import { fail } from "../errors";
@@ -28,6 +29,65 @@ export const getListInGroupWithAccess = Effect.fn(
     }),
   );
   return { member, list };
+});
+
+export const getListWithAccess = Effect.fn("ShoppingLists.getListWithAccess")(
+  function* (listId: number) {
+    const { user } = yield* CurrentRequest;
+    const database = yield* Database;
+    const list = yield* database.findOneOrFail("shoppingList", (db) =>
+      db.query.shoppingLists.findFirst({
+        where: eq(shoppingLists.id, listId),
+        columns: { id: true },
+        with: {
+          group: {
+            columns: { id: true },
+            with: {
+              groupMembers: {
+                where: and(
+                  eq(groupMembers.userId, user.id),
+                  eq(groupMembers.isActive, true),
+                ),
+              },
+            },
+          },
+        },
+      }),
+    );
+    return yield* requireMemberIn(
+      list.group.groupMembers,
+      user.id,
+      "errors.notGroupMember",
+    );
+  },
+);
+
+export const setLastUsed = Effect.fn("ShoppingLists.setLastUsed")(function* (
+  groupId: number | null,
+  shoppingListId: number | null,
+) {
+  if (shoppingListId === null) {
+    if (groupId !== null) yield* requireMember(groupId);
+  } else if (groupId === null) {
+    yield* getListWithAccess(shoppingListId);
+  } else {
+    yield* getListInGroupWithAccess(groupId, shoppingListId);
+  }
+  const { user } = yield* CurrentRequest;
+  const database = yield* Database;
+  const updated = yield* database.query("update last used preferences", (db) =>
+    db
+      .update(users)
+      .set(
+        groupId === null && shoppingListId !== null
+          ? { lastShoppingListUsed: shoppingListId }
+          : { lastGroupUsed: groupId, lastShoppingListUsed: shoppingListId },
+      )
+      .where(eq(users.id, user.id))
+      .returning({ id: users.id }),
+  );
+  const { id } = yield* firstReturned(updated);
+  return id;
 });
 
 export const getShoppingListItemWithAccess = Effect.fn(
