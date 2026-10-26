@@ -5,7 +5,7 @@ import { Array as Arr, Effect } from "effect";
 import { z } from "zod/v4";
 
 import { and, desc, eq, inArray, lt, or } from "@flatsby/db";
-import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
+import { expenses, expenseSplits } from "@flatsby/db/schema";
 import { messages } from "@flatsby/i18n/messages";
 import {
   expenseSubcategories,
@@ -32,16 +32,18 @@ import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/valida
 
 import type { ApiError } from "../errors";
 import type { CreditUser } from "../utils/autumn";
-import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
+import { getExpenseWithAccess } from "../effect/expenses";
+import {
+  getGroupWithAccess,
+  requireActiveMembers,
+  requireActiveMembersIn,
+} from "../effect/groups";
+import { runResult } from "../effect/runtime";
+import { Database } from "../effect/services/Database";
+import { Errors, fail, getApiResultZod } from "../errors";
 import { captureError, captureEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import {
-  DbUtils,
-  fetchGroupDebtSummary,
-  GroupUtils,
-  OperationUtils,
-  safeDbOperation,
-} from "../utils";
+import { fetchGroupDebtSummary, GroupUtils } from "../utils";
 import { classify } from "../utils/classify";
 
 /**
@@ -63,17 +65,6 @@ function validateExpenseSplitsEffect(
   }
 
   return fail.validation(result.userMessage);
-}
-
-function ensureActiveMembers(
-  activeMembers: { id: number }[],
-  memberIds: Iterable<number>,
-): Effect.Effect<void, ApiError> {
-  const activeIds = new Set(activeMembers.map((m) => m.id));
-  for (const memberId of memberIds) {
-    if (!activeIds.has(memberId)) return fail.notFound("groupMember");
-  }
-  return Effect.succeed(undefined);
 }
 
 const PAIR_ACTIVITY_PAGE = 5;
@@ -135,458 +126,349 @@ export const expenseRouter = createTRPCRouter({
         input.amountInCents,
       );
       const isSettlement = input.splitMethod === "settlement";
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          OperationUtils.getGroupWithAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          (group) =>
-            Effect.flatMap(
-              validateExpenseSplitsEffect(
-                input.amountInCents,
-                splits,
-                input.splitMethod,
-              ),
-              () =>
-                Effect.flatMap(
-                  ensureActiveMembers(group.groupMembers, [
-                    input.paidByGroupMemberId,
-                    ...splits.map((split) => split.groupMemberId),
-                  ]),
-                  () =>
-                    Effect.flatMap(
-                      Effect.promise(() =>
-                        subcategoryForNewExpense(ctx.session.user, input),
-                      ),
-                      (subcategory) =>
-                        Effect.tap(
-                          DbUtils.transaction(async (trx) => {
-                            const expenseResult = await trx
-                              .insert(expenses)
-                              .values({
-                                groupId: input.groupId,
-                                paidByGroupMemberId: input.paidByGroupMemberId,
-                                amountInCents: input.amountInCents,
-                                currency: input.currency,
-                                convertedAmountInCents: isSettlement
-                                  ? null
-                                  : (input.convertedAmountInCents ?? null),
-                                convertedCurrency: isSettlement
-                                  ? null
-                                  : (input.convertedCurrency ?? null),
-                                description: input.description,
-                                category: getSubcategoryGroup(subcategory),
-                                subcategory,
-                                expenseDate: input.expenseDate,
-                                createdByGroupMemberId:
-                                  group.thisGroupMember.id,
-                                splitMethod: input.splitMethod,
-                              })
-                              .returning();
+      return runResult(
+        ctx,
+        Effect.gen(function* () {
+          const group = yield* getGroupWithAccess(input.groupId);
+          yield* validateExpenseSplitsEffect(
+            input.amountInCents,
+            splits,
+            input.splitMethod,
+          );
+          yield* requireActiveMembersIn(group.groupMembers, [
+            input.paidByGroupMemberId,
+            ...splits.map((split) => split.groupMemberId),
+          ]);
+          const subcategory = yield* Effect.promise(() =>
+            subcategoryForNewExpense(ctx.session.user, input),
+          );
+          const database = yield* Database;
+          const created = yield* database.query(
+            "transaction: create expense with splits",
+            (db) =>
+              db.transaction(async (trx) => {
+                const expenseResult = await trx
+                  .insert(expenses)
+                  .values({
+                    groupId: input.groupId,
+                    paidByGroupMemberId: input.paidByGroupMemberId,
+                    amountInCents: input.amountInCents,
+                    currency: input.currency,
+                    convertedAmountInCents: isSettlement
+                      ? null
+                      : (input.convertedAmountInCents ?? null),
+                    convertedCurrency: isSettlement
+                      ? null
+                      : (input.convertedCurrency ?? null),
+                    description: input.description,
+                    category: getSubcategoryGroup(subcategory),
+                    subcategory,
+                    expenseDate: input.expenseDate,
+                    createdByGroupMemberId: group.thisGroupMember.id,
+                    splitMethod: input.splitMethod,
+                  })
+                  .returning();
 
-                            const expense = expenseResult[0];
-                            if (!expense) {
-                              throw new Error("Failed to create expense");
-                            }
+                const expense = expenseResult[0];
+                if (!expense) {
+                  throw new Error("Failed to create expense");
+                }
 
-                            await trx.insert(expenseSplits).values(
-                              splits.map((split) => ({
-                                expenseId: expense.id,
-                                groupMemberId: split.groupMemberId,
-                                amountInCents: split.amountInCents,
-                                percentage: split.percentage,
-                                shares: split.shares,
-                              })),
-                            );
+                await trx.insert(expenseSplits).values(
+                  splits.map((split) => ({
+                    expenseId: expense.id,
+                    groupMemberId: split.groupMemberId,
+                    amountInCents: split.amountInCents,
+                    percentage: split.percentage,
+                    shares: split.shares,
+                  })),
+                );
 
-                            return { ...expense, splits };
-                          }, "create expense with splits")(ctx.db),
-                          () =>
-                            Effect.sync(() => {
-                              // Chat and app builds before conversion never send the field, so they'd all count as kept
-                              if (
-                                input.currency !== group.currency &&
-                                input.convertedCurrency !== undefined &&
-                                !isSettlement
-                              ) {
-                                captureEvent({
-                                  distinctId: ctx.session.user.id,
-                                  event: "foreign_expense_created",
-                                  headers: ctx.headers,
-                                  additionalProperties: {
-                                    converted: input.convertedCurrency != null,
-                                    currency: input.currency,
-                                    groupCurrency: group.currency,
-                                  },
-                                });
-                              }
-                            }),
-                        ),
-                    ),
-                ),
-            ),
-        ),
+                return { ...expense, splits };
+              }),
+          );
+          // Chat and app builds before conversion never send the field, so they'd all count as kept
+          if (
+            input.currency !== group.currency &&
+            input.convertedCurrency !== undefined &&
+            !isSettlement
+          ) {
+            captureEvent({
+              distinctId: ctx.session.user.id,
+              event: "foreign_expense_created",
+              headers: ctx.headers,
+              additionalProperties: {
+                converted: input.convertedCurrency != null,
+                currency: input.currency,
+                groupCurrency: group.currency,
+              },
+            });
+          }
+          return created;
+        }),
       );
     }),
 
   updateExpense: protectedProcedure
     .input(updateExpenseSchema)
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Get expense with group access check (filter active members only)
-          DbUtils.findOneOrFail(
-            () =>
-              ctx.db.query.expenses.findFirst({
-                where: eq(expenses.id, input.expenseId),
-                with: {
-                  group: {
-                    with: {
-                      groupMembers: {
-                        where: (members, { eq }) => eq(members.isActive, true),
-                        columns: { userId: true },
-                      },
-                    },
-                  },
-                },
-              }),
-            "expense",
-          ),
-          (expense) =>
-            Effect.flatMap(
-              DbUtils.ensureGroupMember(
-                ctx.session.user.id,
-                expense.group.groupMembers,
-                "errors.noExpenseAccess",
-              ),
-              () =>
-                Effect.flatMap(
-                  // Verify group members if updating (must be active)
-                  input.paidByGroupMemberId || input.splits
-                    ? Effect.forEach(
-                        [
-                          ...(input.paidByGroupMemberId
-                            ? [{ groupMemberId: input.paidByGroupMemberId }]
-                            : []),
-                          ...(input.splits ?? []),
-                        ],
-                        ({ groupMemberId }) =>
-                          DbUtils.findOneOrFail(
-                            () =>
-                              ctx.db.query.groupMembers.findFirst({
-                                where: and(
-                                  eq(groupMembers.id, groupMemberId),
-                                  eq(groupMembers.groupId, expense.groupId),
-                                ),
-                              }),
-                            "groupMember",
-                          ),
-                        { concurrency: "unbounded" },
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const expense = yield* getExpenseWithAccess(input.expenseId);
+          const database = yield* Database;
+          const storedSplits = yield* database.query(
+            "find expense split members",
+            (db) =>
+              db
+                .select({ groupMemberId: expenseSplits.groupMemberId })
+                .from(expenseSplits)
+                .where(eq(expenseSplits.expenseId, expense.id)),
+          );
+          // Members who left stay on their old expenses, so only newly assigned ones must be active
+          const alreadyOnExpense = new Set([
+            expense.paidByGroupMemberId,
+            ...storedSplits.map((split) => split.groupMemberId),
+          ]);
+          yield* requireActiveMembers(
+            expense.groupId,
+            [
+              ...(input.paidByGroupMemberId ? [input.paidByGroupMemberId] : []),
+              ...(input.splits ?? []).map((split) => split.groupMemberId),
+            ].filter((id) => !alreadyOnExpense.has(id)),
+          );
+          const result = yield* database.query(
+            "transaction: update expense",
+            (db) =>
+              db.transaction(async (trx) => {
+                // Serializes edits so a re-split never starts from splits another edit replaced
+                const [locked] = await trx
+                  .select({
+                    splitMethod: expenses.splitMethod,
+                    amountInCents: expenses.amountInCents,
+                    currency: expenses.currency,
+                  })
+                  .from(expenses)
+                  .where(eq(expenses.id, input.expenseId))
+                  .for("update");
+                if (!locked) throw new Error("Expense was deleted");
+
+                const method =
+                  input.splitMethod ??
+                  splitMethodSchema.parse(locked.splitMethod);
+                const amountInCents =
+                  input.amountInCents ?? locked.amountInCents;
+                // A new method or amount without splits re-splits the stored members, as the editors would
+                const source =
+                  input.splits ??
+                  (input.splitMethod !== undefined ||
+                  input.amountInCents !== undefined
+                    ? splitsForTotal(
+                        editableSplitMethod(method),
+                        await trx.query.expenseSplits.findMany({
+                          where: eq(expenseSplits.expenseId, input.expenseId),
+                        }),
+                        amountInCents,
                       )
-                    : Effect.succeed(undefined),
-                  () =>
-                    Effect.flatMap(
-                      DbUtils.transaction(async (trx) => {
-                        // Serializes edits so a re-split never starts from splits another edit replaced
-                        const [locked] = await trx
-                          .select({
-                            splitMethod: expenses.splitMethod,
-                            amountInCents: expenses.amountInCents,
-                            currency: expenses.currency,
-                          })
-                          .from(expenses)
-                          .where(eq(expenses.id, input.expenseId))
-                          .for("update");
-                        if (!locked) throw new Error("Expense was deleted");
+                    : null);
+                const splitsToWrite =
+                  source && splitsForStorage(method, source, amountInCents);
+                const check =
+                  splitsToWrite &&
+                  validateExpenseSplitsStrict(
+                    amountInCents,
+                    splitsToWrite,
+                    method,
+                  );
+                if (check && !check.valid) return { invalid: check };
 
-                        const method =
-                          input.splitMethod ??
-                          splitMethodSchema.parse(locked.splitMethod);
-                        const amountInCents =
-                          input.amountInCents ?? locked.amountInCents;
-                        // A new method or amount without splits re-splits the stored members, as the editors would
-                        const source =
-                          input.splits ??
-                          (input.splitMethod !== undefined ||
-                          input.amountInCents !== undefined
-                            ? splitsForTotal(
-                                editableSplitMethod(method),
-                                await trx.query.expenseSplits.findMany({
-                                  where: eq(
-                                    expenseSplits.expenseId,
-                                    input.expenseId,
-                                  ),
-                                }),
-                                amountInCents,
-                              )
-                            : null);
-                        const splitsToWrite =
-                          source &&
-                          splitsForStorage(method, source, amountInCents);
-                        const check =
-                          splitsToWrite &&
-                          validateExpenseSplitsStrict(
-                            amountInCents,
-                            splitsToWrite,
-                            method,
-                          );
-                        if (check && !check.valid) return { invalid: check };
+                const updateData: Partial<typeof expenses.$inferInsert> = {};
+                if (input.paidByGroupMemberId !== undefined) {
+                  updateData.paidByGroupMemberId = input.paidByGroupMemberId;
+                }
+                if (input.amountInCents !== undefined) {
+                  updateData.amountInCents = input.amountInCents;
+                }
+                if (input.currency !== undefined) {
+                  updateData.currency = input.currency;
+                }
+                const currency = input.currency ?? locked.currency;
+                if (
+                  input.convertedAmountInCents !== undefined ||
+                  input.convertedCurrency !== undefined
+                ) {
+                  const converts =
+                    method !== "settlement" &&
+                    input.convertedCurrency != null &&
+                    input.convertedCurrency !== currency;
+                  updateData.convertedAmountInCents = converts
+                    ? input.convertedAmountInCents
+                    : null;
+                  updateData.convertedCurrency = converts
+                    ? input.convertedCurrency
+                    : null;
+                } else if (
+                  method === "settlement" ||
+                  amountInCents !== locked.amountInCents ||
+                  currency !== locked.currency
+                ) {
+                  // App builds before conversion never send the converted fields, and a stale converted amount would count instead
+                  updateData.convertedAmountInCents = null;
+                  updateData.convertedCurrency = null;
+                }
+                if (input.description !== undefined) {
+                  updateData.description = input.description;
+                }
+                if (input.subcategory !== undefined) {
+                  updateData.subcategory = input.subcategory;
+                  updateData.category = getSubcategoryGroup(input.subcategory);
+                }
+                if (input.expenseDate !== undefined) {
+                  updateData.expenseDate = input.expenseDate;
+                }
+                if (input.splitMethod !== undefined) {
+                  updateData.splitMethod = input.splitMethod;
+                }
 
-                        const updateData: Partial<
-                          typeof expenses.$inferInsert
-                        > = {};
-                        if (input.paidByGroupMemberId !== undefined) {
-                          updateData.paidByGroupMemberId =
-                            input.paidByGroupMemberId;
-                        }
-                        if (input.amountInCents !== undefined) {
-                          updateData.amountInCents = input.amountInCents;
-                        }
-                        if (input.currency !== undefined) {
-                          updateData.currency = input.currency;
-                        }
-                        const currency = input.currency ?? locked.currency;
-                        if (
-                          input.convertedAmountInCents !== undefined ||
-                          input.convertedCurrency !== undefined
-                        ) {
-                          const converts =
-                            method !== "settlement" &&
-                            input.convertedCurrency != null &&
-                            input.convertedCurrency !== currency;
-                          updateData.convertedAmountInCents = converts
-                            ? input.convertedAmountInCents
-                            : null;
-                          updateData.convertedCurrency = converts
-                            ? input.convertedCurrency
-                            : null;
-                        } else if (
-                          method === "settlement" ||
-                          amountInCents !== locked.amountInCents ||
-                          currency !== locked.currency
-                        ) {
-                          // App builds before conversion never send the converted fields, and a stale converted amount would count instead
-                          updateData.convertedAmountInCents = null;
-                          updateData.convertedCurrency = null;
-                        }
-                        if (input.description !== undefined) {
-                          updateData.description = input.description;
-                        }
-                        if (input.subcategory !== undefined) {
-                          updateData.subcategory = input.subcategory;
-                          updateData.category = getSubcategoryGroup(
-                            input.subcategory,
-                          );
-                        }
-                        if (input.expenseDate !== undefined) {
-                          updateData.expenseDate = input.expenseDate;
-                        }
-                        if (input.splitMethod !== undefined) {
-                          updateData.splitMethod = input.splitMethod;
-                        }
+                if (Object.keys(updateData).length > 0) {
+                  await trx
+                    .update(expenses)
+                    .set(updateData)
+                    .where(eq(expenses.id, input.expenseId));
+                }
 
-                        if (Object.keys(updateData).length > 0) {
-                          await trx
-                            .update(expenses)
-                            .set(updateData)
-                            .where(eq(expenses.id, input.expenseId));
-                        }
-
-                        if (splitsToWrite) {
-                          await trx
-                            .delete(expenseSplits)
-                            .where(
-                              eq(expenseSplits.expenseId, input.expenseId),
-                            );
-
-                          await trx.insert(expenseSplits).values(
-                            splitsToWrite.map((split) => ({
-                              expenseId: input.expenseId,
-                              groupMemberId: split.groupMemberId,
-                              amountInCents: split.amountInCents,
-                              percentage: split.percentage,
-                              shares: split.shares,
-                            })),
-                          );
-                        }
-
-                        return { splits: splitsToWrite };
-                      }, "update expense")(ctx.db),
-                      (result) =>
-                        result.invalid
-                          ? fail.validation(result.invalid.userMessage)
-                          : Effect.succeed({
-                              success: true,
-                              splits: result.splits,
-                            }),
-                    ),
-                ),
-            ),
-        ),
-      );
-    }),
-
-  deleteExpense: protectedProcedure
-    .input(deleteExpenseSchema)
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Get expense with group access check (filter active members only)
-          DbUtils.findOneOrFail(
-            () =>
-              ctx.db.query.expenses.findFirst({
-                where: eq(expenses.id, input.expenseId),
-                with: {
-                  group: {
-                    with: {
-                      groupMembers: {
-                        where: (members, { eq }) => eq(members.isActive, true),
-                        columns: { userId: true },
-                      },
-                    },
-                  },
-                },
-              }),
-            "expense",
-          ),
-          (expense) =>
-            Effect.flatMap(
-              DbUtils.ensureGroupMember(
-                ctx.session.user.id,
-                expense.group.groupMembers,
-                "errors.noExpenseAccess",
-              ),
-              () =>
-                // Hard delete expense and its splits in transaction
-                DbUtils.transaction(async (trx) => {
-                  // Delete splits first (foreign key constraint)
+                if (splitsToWrite) {
                   await trx
                     .delete(expenseSplits)
                     .where(eq(expenseSplits.expenseId, input.expenseId));
 
-                  // Delete expense
-                  await trx
-                    .delete(expenses)
-                    .where(eq(expenses.id, input.expenseId));
+                  await trx.insert(expenseSplits).values(
+                    splitsToWrite.map((split) => ({
+                      expenseId: input.expenseId,
+                      groupMemberId: split.groupMemberId,
+                      amountInCents: split.amountInCents,
+                      percentage: split.percentage,
+                      shares: split.shares,
+                    })),
+                  );
+                }
 
-                  return { success: true };
-                }, "delete expense and splits")(ctx.db),
-            ),
-        ),
-      );
-    }),
+                return { splits: splitsToWrite };
+              }),
+          );
+          if (result.invalid) {
+            return yield* Errors.validation(result.invalid.userMessage);
+          }
+          return { success: true, splits: result.splits };
+        }),
+      ),
+    ),
+
+  deleteExpense: protectedProcedure
+    .input(deleteExpenseSchema)
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getExpenseWithAccess(input.expenseId);
+          const database = yield* Database;
+          return yield* database.query(
+            "transaction: delete expense and splits",
+            (db) =>
+              db.transaction(async (trx) => {
+                // Delete splits first (foreign key constraint)
+                await trx
+                  .delete(expenseSplits)
+                  .where(eq(expenseSplits.expenseId, input.expenseId));
+
+                await trx
+                  .delete(expenses)
+                  .where(eq(expenses.id, input.expenseId));
+
+                return { success: true };
+              }),
+          );
+        }),
+      ),
+    ),
 
   getExpense: protectedProcedure
     .input(z.object({ expenseId: z.number() }))
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Get expense with group access check (filter active members only)
-          DbUtils.findOneOrFail(
-            () =>
-              ctx.db.query.expenses.findFirst({
-                where: eq(expenses.id, input.expenseId),
-                with: {
-                  group: {
-                    with: {
-                      groupMembers: {
-                        where: (members, { eq }) => eq(members.isActive, true),
-                        columns: { userId: true },
+    .query(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getExpenseWithAccess(input.expenseId);
+          const database = yield* Database;
+          const expense = yield* database.findOneOrFail("expense", (db) =>
+            db.query.expenses.findFirst({
+              where: eq(expenses.id, input.expenseId),
+              with: {
+                paidByGroupMember: {
+                  columns: {
+                    id: true,
+                    groupId: true,
+                    userId: true,
+                    role: true,
+                    joinedOn: true,
+                  },
+                  with: {
+                    user: {
+                      columns: {
+                        email: true,
+                        name: true,
+                        image: true,
                       },
                     },
                   },
                 },
-              }),
-            "expense",
-          ),
-          (expense) =>
-            Effect.flatMap(
-              DbUtils.ensureGroupMember(
-                ctx.session.user.id,
-                expense.group.groupMembers,
-                "errors.noExpenseAccess",
-              ),
-              () =>
-                Effect.map(
-                  DbUtils.findOneOrFail(
-                    () =>
-                      ctx.db.query.expenses.findFirst({
-                        where: eq(expenses.id, input.expenseId),
-                        with: {
-                          paidByGroupMember: {
-                            columns: {
-                              id: true,
-                              groupId: true,
-                              userId: true,
-                              role: true,
-                              joinedOn: true,
-                            },
-                            with: {
-                              user: {
-                                columns: {
-                                  email: true,
-                                  name: true,
-                                  image: true,
-                                },
-                              },
-                            },
-                          },
-                          createdByGroupMember: {
-                            columns: {
-                              id: true,
-                              groupId: true,
-                              userId: true,
-                              role: true,
-                              joinedOn: true,
-                            },
-                            with: {
-                              user: {
-                                columns: {
-                                  email: true,
-                                  name: true,
-                                  image: true,
-                                },
-                              },
-                            },
-                          },
-                          expenseSplits: {
-                            with: {
-                              groupMember: {
-                                columns: {
-                                  id: true,
-                                  groupId: true,
-                                  userId: true,
-                                  role: true,
-                                  joinedOn: true,
-                                },
-                                with: {
-                                  user: {
-                                    columns: {
-                                      email: true,
-                                      name: true,
-                                      image: true,
-                                    },
-                                  },
-                                },
-                              },
-                            },
+                createdByGroupMember: {
+                  columns: {
+                    id: true,
+                    groupId: true,
+                    userId: true,
+                    role: true,
+                    joinedOn: true,
+                  },
+                  with: {
+                    user: {
+                      columns: {
+                        email: true,
+                        name: true,
+                        image: true,
+                      },
+                    },
+                  },
+                },
+                expenseSplits: {
+                  with: {
+                    groupMember: {
+                      columns: {
+                        id: true,
+                        groupId: true,
+                        userId: true,
+                        role: true,
+                        joinedOn: true,
+                      },
+                      with: {
+                        user: {
+                          columns: {
+                            email: true,
+                            name: true,
+                            image: true,
                           },
                         },
-                      }),
-                    "expense",
-                  ),
-                  (exp) => withDerivedCategory(exp, ctx.session.user.id),
-                ),
-            ),
-        ),
-      );
-    }),
+                      },
+                    },
+                  },
+                },
+              },
+            }),
+          );
+          return withDerivedCategory(expense, ctx.session.user.id);
+        }),
+      ),
+    ),
 
   getGroupExpenses: protectedProcedure
     .input(
@@ -596,131 +478,121 @@ export const expenseRouter = createTRPCRouter({
         limit: z.number().int().min(1).max(100).default(50),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Get group with access check
-          OperationUtils.getGroupWithAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            // Get expenses with pagination
-            safeDbOperation(async () => {
-              const expensesList = await ctx.db.query.expenses.findMany({
-                where: input.cursor
-                  ? and(
-                      eq(expenses.groupId, input.groupId),
-                      or(
-                        lt(expenses.expenseDate, input.cursor.date),
-                        and(
-                          eq(expenses.expenseDate, input.cursor.date),
-                          lt(expenses.id, input.cursor.id),
-                        ),
+    .query(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getGroupWithAccess(input.groupId);
+          const database = yield* Database;
+          return yield* database.query("fetch group expenses", async (db) => {
+            const expensesList = await db.query.expenses.findMany({
+              where: input.cursor
+                ? and(
+                    eq(expenses.groupId, input.groupId),
+                    or(
+                      lt(expenses.expenseDate, input.cursor.date),
+                      and(
+                        eq(expenses.expenseDate, input.cursor.date),
+                        lt(expenses.id, input.cursor.id),
                       ),
-                    )
-                  : eq(expenses.groupId, input.groupId),
-                limit: input.limit + 1,
-                orderBy: (expenses, { desc }) => [
-                  desc(expenses.expenseDate),
-                  desc(expenses.id),
-                ],
-                with: {
-                  paidByGroupMember: {
-                    columns: {
-                      id: true,
-                      groupId: true,
-                      userId: true,
-                      role: true,
-                      joinedOn: true,
-                    },
-                    with: {
-                      user: {
-                        columns: { email: true, name: true, image: true },
-                      },
+                    ),
+                  )
+                : eq(expenses.groupId, input.groupId),
+              limit: input.limit + 1,
+              orderBy: (expenses, { desc }) => [
+                desc(expenses.expenseDate),
+                desc(expenses.id),
+              ],
+              with: {
+                paidByGroupMember: {
+                  columns: {
+                    id: true,
+                    groupId: true,
+                    userId: true,
+                    role: true,
+                    joinedOn: true,
+                  },
+                  with: {
+                    user: {
+                      columns: { email: true, name: true, image: true },
                     },
                   },
-                  createdByGroupMember: {
-                    columns: {
-                      id: true,
-                      groupId: true,
-                      userId: true,
-                      role: true,
-                      joinedOn: true,
-                    },
-                    with: {
-                      user: {
-                        columns: { email: true, name: true, image: true },
-                      },
+                },
+                createdByGroupMember: {
+                  columns: {
+                    id: true,
+                    groupId: true,
+                    userId: true,
+                    role: true,
+                    joinedOn: true,
+                  },
+                  with: {
+                    user: {
+                      columns: { email: true, name: true, image: true },
                     },
                   },
-                  expenseSplits: {
-                    with: {
-                      groupMember: {
-                        columns: {
-                          id: true,
-                          groupId: true,
-                          userId: true,
-                          role: true,
-                          joinedOn: true,
-                        },
-                        with: {
-                          user: {
-                            columns: {
-                              email: true,
-                              name: true,
-                              image: true,
-                            },
+                },
+                expenseSplits: {
+                  with: {
+                    groupMember: {
+                      columns: {
+                        id: true,
+                        groupId: true,
+                        userId: true,
+                        role: true,
+                        joinedOn: true,
+                      },
+                      with: {
+                        user: {
+                          columns: {
+                            email: true,
+                            name: true,
+                            image: true,
                           },
                         },
                       },
                     },
                   },
                 },
-              });
+              },
+            });
 
-              const hasMore = expensesList.length > input.limit;
-              const items = hasMore
-                ? expensesList.slice(0, input.limit)
-                : expensesList;
-              const lastItem = items[items.length - 1];
-              const nextCursor =
-                hasMore && lastItem
-                  ? { date: lastItem.expenseDate, id: lastItem.id }
-                  : undefined;
+            const hasMore = expensesList.length > input.limit;
+            const items = hasMore
+              ? expensesList.slice(0, input.limit)
+              : expensesList;
+            const lastItem = items[items.length - 1];
+            const nextCursor =
+              hasMore && lastItem
+                ? { date: lastItem.expenseDate, id: lastItem.id }
+                : undefined;
 
-              return {
-                items: items.map((item) =>
-                  withDerivedCategory(item, ctx.session.user.id),
-                ),
-                nextCursor,
-              };
-            }, "fetch group expenses"),
-        ),
-      );
-    }),
+            return {
+              items: items.map((item) =>
+                withDerivedCategory(item, ctx.session.user.id),
+              ),
+              nextCursor,
+            };
+          });
+        }),
+      ),
+    ),
 
   getDebtSummary: protectedProcedure
     .input(z.object({ groupId: z.number() }))
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          OperationUtils.getGroupWithAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            safeDbOperation(
-              () => fetchGroupDebtSummary(ctx.db, input.groupId),
-              "fetch expenses for debt summary",
-            ),
-        ),
-      );
-    }),
+    .query(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getGroupWithAccess(input.groupId);
+          const database = yield* Database;
+          return yield* database.query(
+            "fetch expenses for debt summary",
+            (db) => fetchGroupDebtSummary(db, input.groupId),
+          );
+        }),
+      ),
+    ),
 
   getExchangeRate: protectedProcedure
     .input(
@@ -739,208 +611,193 @@ export const expenseRouter = createTRPCRouter({
     .output(getApiResultZod(pairActivitySchema))
     .query(async ({ ctx, input }) => {
       const [a, b] = input.groupMemberIds;
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          OperationUtils.getGroupWithAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            safeDbOperation(async () => {
-              const rows = await ctx.db
-                .select({
-                  id: expenses.id,
-                  description: expenses.description,
-                  expenseDate: expenses.expenseDate,
-                  currency: expenses.currency,
-                  convertedAmountInCents: expenses.convertedAmountInCents,
-                  convertedCurrency: expenses.convertedCurrency,
-                  paidByGroupMemberId: expenses.paidByGroupMemberId,
-                  amountInCents: expenses.amountInCents,
-                  pairMemberId: expenseSplits.groupMemberId,
-                  splitMethod: expenses.splitMethod,
-                })
-                .from(expenses)
-                .innerJoin(
-                  expenseSplits,
-                  eq(expenseSplits.expenseId, expenses.id),
-                )
-                .where(
-                  and(
-                    eq(expenses.groupId, input.groupId),
-                    or(
-                      and(
-                        eq(expenses.paidByGroupMemberId, a),
-                        eq(expenseSplits.groupMemberId, b),
-                      ),
-                      and(
-                        eq(expenses.paidByGroupMemberId, b),
-                        eq(expenseSplits.groupMemberId, a),
-                      ),
+      return runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getGroupWithAccess(input.groupId);
+          const database = yield* Database;
+          return yield* database.query("fetch pair activity", async (db) => {
+            const rows = await db
+              .select({
+                id: expenses.id,
+                description: expenses.description,
+                expenseDate: expenses.expenseDate,
+                currency: expenses.currency,
+                convertedAmountInCents: expenses.convertedAmountInCents,
+                convertedCurrency: expenses.convertedCurrency,
+                paidByGroupMemberId: expenses.paidByGroupMemberId,
+                amountInCents: expenses.amountInCents,
+                pairMemberId: expenseSplits.groupMemberId,
+                splitMethod: expenses.splitMethod,
+              })
+              .from(expenses)
+              .innerJoin(
+                expenseSplits,
+                eq(expenseSplits.expenseId, expenses.id),
+              )
+              .where(
+                and(
+                  eq(expenses.groupId, input.groupId),
+                  or(
+                    and(
+                      eq(expenses.paidByGroupMemberId, a),
+                      eq(expenseSplits.groupMemberId, b),
                     ),
-                    input.cursor &&
-                      or(
-                        lt(expenses.expenseDate, input.cursor.date),
-                        and(
-                          eq(expenses.expenseDate, input.cursor.date),
-                          lt(expenses.id, input.cursor.id),
-                        ),
-                      ),
+                    and(
+                      eq(expenses.paidByGroupMemberId, b),
+                      eq(expenseSplits.groupMemberId, a),
+                    ),
                   ),
-                )
-                .orderBy(desc(expenses.expenseDate), desc(expenses.id))
-                .limit(PAIR_ACTIVITY_PAGE + 1);
-              const items = rows.slice(0, PAIR_ACTIVITY_PAGE);
-              const last = items.at(-1);
-              // A converted expense's pair share depends on every split's rounding
-              const splits =
-                items.length > 0
-                  ? await ctx.db.query.expenseSplits.findMany({
-                      where: inArray(
-                        expenseSplits.expenseId,
-                        items.map((row) => row.id),
+                  input.cursor &&
+                    or(
+                      lt(expenses.expenseDate, input.cursor.date),
+                      and(
+                        eq(expenses.expenseDate, input.cursor.date),
+                        lt(expenses.id, input.cursor.id),
                       ),
-                      columns: {
-                        expenseId: true,
-                        groupMemberId: true,
-                        amountInCents: true,
-                      },
-                    })
-                  : [];
-              return {
-                items: items.map(({ splitMethod, pairMemberId, ...row }) => {
-                  const ledger = inLedgerCurrency({
-                    ...row,
-                    expenseSplits: splits.filter(
-                      (split) => split.expenseId === row.id,
                     ),
-                  });
-                  return {
-                    ...row,
-                    amountInCents: ledger.amountInCents,
-                    currency: ledger.currency,
-                    pairAmountInCents:
-                      ledger.expenseSplits.find(
-                        (split) => split.groupMemberId === pairMemberId,
-                      )?.amountInCents ?? 0,
-                    isSettlement: splitMethod === "settlement",
-                  };
-                }),
-                nextCursor:
-                  rows.length > PAIR_ACTIVITY_PAGE && last
-                    ? { date: last.expenseDate, id: last.id }
-                    : undefined,
-              };
-            }, "fetch pair activity"),
-        ),
+                ),
+              )
+              .orderBy(desc(expenses.expenseDate), desc(expenses.id))
+              .limit(PAIR_ACTIVITY_PAGE + 1);
+            const items = rows.slice(0, PAIR_ACTIVITY_PAGE);
+            const last = items.at(-1);
+            // A converted expense's pair share depends on every split's rounding
+            const splits =
+              items.length > 0
+                ? await db.query.expenseSplits.findMany({
+                    where: inArray(
+                      expenseSplits.expenseId,
+                      items.map((row) => row.id),
+                    ),
+                    columns: {
+                      expenseId: true,
+                      groupMemberId: true,
+                      amountInCents: true,
+                    },
+                  })
+                : [];
+            return {
+              items: items.map(({ splitMethod, pairMemberId, ...row }) => {
+                const ledger = inLedgerCurrency({
+                  ...row,
+                  expenseSplits: splits.filter(
+                    (split) => split.expenseId === row.id,
+                  ),
+                });
+                return {
+                  ...row,
+                  amountInCents: ledger.amountInCents,
+                  currency: ledger.currency,
+                  pairAmountInCents:
+                    ledger.expenseSplits.find(
+                      (split) => split.groupMemberId === pairMemberId,
+                    )?.amountInCents ?? 0,
+                  isSettlement: splitMethod === "settlement",
+                };
+              }),
+              nextCursor:
+                rows.length > PAIR_ACTIVITY_PAGE && last
+                  ? { date: last.expenseDate, id: last.id }
+                  : undefined,
+            };
+          });
+        }),
       );
     }),
 
   deleteAllGroupExpenses: protectedProcedure
     .input(z.object({ groupId: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          OperationUtils.getGroupWithAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            DbUtils.transaction(
-              async (trx) => ({
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getGroupWithAccess(input.groupId);
+          const database = yield* Database;
+          return yield* database.query(
+            "transaction: delete all group expenses",
+            (db) =>
+              db.transaction(async (trx) => ({
                 deletedCount: await GroupUtils.deleteGroupExpenses(
                   trx,
                   input.groupId,
                 ),
-              }),
-              "delete all group expenses",
-            )(ctx.db),
-        ),
-      );
-    }),
+              })),
+          );
+        }),
+      ),
+    ),
 
   bulkCreateExpenses: protectedProcedure
     .input(bulkCreateExpensesSchema)
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          OperationUtils.getGroupWithAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          (group) =>
-            Effect.flatMap(
-              ensureActiveMembers(
-                group.groupMembers,
-                input.expenses.flatMap((expense) => [
-                  expense.paidByGroupMemberId,
-                  ...expense.splits.map((split) => split.groupMemberId),
-                ]),
-              ),
-              () =>
-                Effect.flatMap(
-                  Effect.forEach(input.expenses, (expense) =>
-                    validateExpenseSplitsEffect(
-                      expense.amountInCents,
-                      expense.splits,
-                      expense.splitMethod,
-                    ),
-                  ),
-                  () =>
-                    DbUtils.transaction(async (trx) => {
-                      for (const batch of Arr.chunksOf(
-                        input.expenses,
-                        BULK_INSERT_BATCH,
-                      )) {
-                        const created = await trx
-                          .insert(expenses)
-                          .values(
-                            batch.map((expense) => ({
-                              groupId: input.groupId,
-                              paidByGroupMemberId: expense.paidByGroupMemberId,
-                              amountInCents: expense.amountInCents,
-                              currency: expense.currency,
-                              description: expense.description ?? "",
-                              category: getSubcategoryGroup(
-                                expense.subcategory,
-                              ),
-                              subcategory: expense.subcategory ?? "other",
-                              expenseDate: expense.expenseDate,
-                              createdByGroupMemberId: group.thisGroupMember.id,
-                              splitMethod: expense.splitMethod,
-                            })),
-                          )
-                          .returning({ id: expenses.id });
-
-                        if (created.length !== batch.length) {
-                          throw new Error("Failed to create all expenses");
-                        }
-
-                        await trx.insert(expenseSplits).values(
-                          Arr.zip(batch, created).flatMap(([expense, { id }]) =>
-                            expense.splits.map((split) => ({
-                              expenseId: id,
-                              groupMemberId: split.groupMemberId,
-                              amountInCents: split.amountInCents,
-                              percentage: split.percentage,
-                            })),
-                          ),
-                        );
-                      }
-
-                      return { importedCount: input.expenses.length };
-                    }, "bulk create expenses")(ctx.db),
-                ),
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const group = yield* getGroupWithAccess(input.groupId);
+          yield* requireActiveMembersIn(
+            group.groupMembers,
+            input.expenses.flatMap((expense) => [
+              expense.paidByGroupMemberId,
+              ...expense.splits.map((split) => split.groupMemberId),
+            ]),
+          );
+          yield* Effect.forEach(input.expenses, (expense) =>
+            validateExpenseSplitsEffect(
+              expense.amountInCents,
+              expense.splits,
+              expense.splitMethod,
             ),
-        ),
-      );
-    }),
+          );
+          const database = yield* Database;
+          return yield* database.query(
+            "transaction: bulk create expenses",
+            (db) =>
+              db.transaction(async (trx) => {
+                for (const batch of Arr.chunksOf(
+                  input.expenses,
+                  BULK_INSERT_BATCH,
+                )) {
+                  const created = await trx
+                    .insert(expenses)
+                    .values(
+                      batch.map((expense) => ({
+                        groupId: input.groupId,
+                        paidByGroupMemberId: expense.paidByGroupMemberId,
+                        amountInCents: expense.amountInCents,
+                        currency: expense.currency,
+                        description: expense.description ?? "",
+                        category: getSubcategoryGroup(expense.subcategory),
+                        subcategory: expense.subcategory ?? "other",
+                        expenseDate: expense.expenseDate,
+                        createdByGroupMemberId: group.thisGroupMember.id,
+                        splitMethod: expense.splitMethod,
+                      })),
+                    )
+                    .returning({ id: expenses.id });
+
+                  if (created.length !== batch.length) {
+                    throw new Error("Failed to create all expenses");
+                  }
+
+                  await trx.insert(expenseSplits).values(
+                    Arr.zip(batch, created).flatMap(([expense, { id }]) =>
+                      expense.splits.map((split) => ({
+                        expenseId: id,
+                        groupMemberId: split.groupMemberId,
+                        amountInCents: split.amountInCents,
+                        percentage: split.percentage,
+                      })),
+                    ),
+                  );
+                }
+
+                return { importedCount: input.expenses.length };
+              }),
+          );
+        }),
+      ),
+    ),
 });
 
 const expenseSubcategoryOptions = expenseSubcategories.map((sub) => ({
