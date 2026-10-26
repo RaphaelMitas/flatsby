@@ -7,8 +7,8 @@ import {
   shoppingLists,
 } from "@flatsby/db/schema";
 
-import { Errors, fail } from "../errors";
-import { requireMember } from "./groups";
+import { fail } from "../errors";
+import { requireMember, requireMemberIn } from "./groups";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { Database } from "./services/Database";
 
@@ -57,8 +57,11 @@ export const getShoppingListItemWithAccess = Effect.fn(
       },
     }),
   );
-  const [member] = item.shoppingList.group.groupMembers;
-  if (!member) return yield* Errors.forbidden("errors.notGroupMember");
+  const member = yield* requireMemberIn(
+    item.shoppingList.group.groupMembers,
+    user.id,
+    "errors.notGroupMember",
+  );
   return { item, member };
 });
 

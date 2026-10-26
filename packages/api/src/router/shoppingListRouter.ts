@@ -33,7 +33,7 @@ import {
 } from "@flatsby/validators/shopping-list";
 
 import type { CreditUser } from "../utils/autumn";
-import { requireMember } from "../effect/groups";
+import { requireMember, requireMemberIn } from "../effect/groups";
 import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
 import {
@@ -43,7 +43,7 @@ import {
 } from "../effect/shoppingLists";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, ValidationUtils } from "../utils";
+import { ValidationUtils } from "../utils";
 import { classify } from "../utils/classify";
 
 export const shoppingList = createTRPCRouter({
@@ -305,9 +305,9 @@ export const shoppingList = createTRPCRouter({
                 },
               }),
           );
-          yield* DbUtils.ensureGroupMember(
-            ctx.session.user.id,
+          yield* requireMemberIn(
             shoppingList.group.groupMembers,
+            ctx.session.user.id,
             "errors.notGroupMember",
           );
           const updated = yield* database.query(

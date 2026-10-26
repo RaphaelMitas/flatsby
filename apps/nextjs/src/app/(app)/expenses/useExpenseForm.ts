@@ -459,6 +459,7 @@ export function useExpenseForm({
         userId: "",
         role: "member" as const,
         joinedOn: new Date(),
+        isActive: false,
         user: s.groupMember.user,
       }));
     return [...group.groupMembers, ...inactiveMembers];

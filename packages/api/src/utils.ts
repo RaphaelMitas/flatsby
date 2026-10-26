@@ -14,15 +14,12 @@ import {
 } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 
-import type { ApiError, NotFoundError, NotFoundResource } from "./errors";
+import type { ApiError, NotFoundResource } from "./errors";
 import type {
   Database,
   DbTransaction,
   GroupMember,
-  GroupWithAccess,
-  GroupWithMembers,
   Role,
-  ShoppingListWithGroup,
   TransactionOperation,
 } from "./types";
 import { Errors, fail, safeDbOperation } from "./errors";
@@ -52,18 +49,6 @@ export const DbUtils = {
     messageKey: MessageKey,
   ): Effect.Effect<void, ApiError> => {
     return hasAccess ? Effect.succeed(undefined) : fail.forbidden(messageKey);
-  },
-
-  /**
-   * Ensure user is a member of a group
-   */
-  ensureGroupMember: (
-    userId: string,
-    groupMembers: Pick<GroupMember, "userId">[],
-    messageKey: MessageKey = "errors.mustBeGroupMember",
-  ): Effect.Effect<void, ApiError> => {
-    const isMember = groupMembers.some((member) => member.userId === userId);
-    return DbUtils.checkAccess(isMember, messageKey);
   },
 
   /**
@@ -126,63 +111,6 @@ export const ValidationUtils = {
     return value.trim().length > 0
       ? Effect.succeed(value)
       : fail.validation(`errors.empty.${field}`);
-  },
-};
-
-/**
- * Common operation patterns
- */
-export const OperationUtils = {
-  /**
-   * Get group with membership check
-   */
-  getGroupWithAccess: (
-    db: Database,
-    groupId: number,
-    userId: string,
-  ): Effect.Effect<GroupWithAccess, ApiError | NotFoundError> => {
-    return Effect.flatMap(
-      DbUtils.findOneOrFail(() => findGroupWithMembers(db, groupId), "group"),
-      (group) => withThisMember(group, userId),
-    );
-  },
-
-  /**
-   * Get shopping list with access check
-   */
-  getShoppingListWithAccess: (
-    db: Database,
-    listId: number,
-    userId: string,
-  ): Effect.Effect<ShoppingListWithGroup, ApiError> => {
-    return Effect.flatMap(
-      DbUtils.findOneOrFail(
-        () =>
-          db.query.shoppingLists.findFirst({
-            where: (lists, { eq }) => eq(lists.id, listId),
-            with: {
-              group: {
-                with: {
-                  groupMembers: {
-                    where: (members, { eq }) => eq(members.isActive, true),
-                    columns: { userId: true },
-                  },
-                },
-              },
-            },
-          }),
-        "shoppingList",
-      ),
-      (list) =>
-        Effect.map(
-          DbUtils.ensureGroupMember(
-            userId,
-            list.group.groupMembers,
-            "errors.noShoppingListAccess",
-          ),
-          () => list,
-        ),
-    );
   },
 };
 
@@ -284,7 +212,13 @@ export const findGroupWithMembers = (db: Database, groupId: number) =>
     with: {
       groupMembers: {
         where: (members, { eq }) => eq(members.isActive, true),
-        columns: { id: true, userId: true, role: true, joinedOn: true },
+        columns: {
+          id: true,
+          userId: true,
+          role: true,
+          joinedOn: true,
+          isActive: true,
+        },
         with: {
           user: {
             columns: { email: true, name: true, image: true },
@@ -292,17 +226,6 @@ export const findGroupWithMembers = (db: Database, groupId: number) =>
         },
       },
     },
-  });
-
-export const withThisMember = (
-  group: GroupWithMembers,
-  userId: string,
-): Effect.Effect<GroupWithAccess, ApiError> =>
-  Effect.flatMap(DbUtils.ensureGroupMember(userId, group.groupMembers), () => {
-    const thisGroupMember = group.groupMembers.find((m) => m.userId === userId);
-    return thisGroupMember
-      ? Effect.succeed({ ...group, thisGroupMember })
-      : fail.notFound("groupMember", userId);
   });
 
 export const findActiveMember = (

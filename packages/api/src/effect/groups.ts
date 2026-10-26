@@ -1,3 +1,4 @@
+import type { MessageKey } from "@flatsby/i18n/message-key";
 import { Effect } from "effect";
 
 import { and, eq, inArray } from "@flatsby/db";
@@ -9,7 +10,6 @@ import {
   findActiveAdmin,
   findActiveMember,
   findGroupWithMembers,
-  withThisMember,
 } from "../utils";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { Database } from "./services/Database";
@@ -21,7 +21,12 @@ export const getGroupWithAccess = Effect.fn("Groups.getGroupWithAccess")(
     const group = yield* database.findOneOrFail("group", (db) =>
       findGroupWithMembers(db, groupId),
     );
-    return yield* withThisMember(group, user.id);
+    const thisGroupMember = yield* requireMemberIn(
+      group.groupMembers,
+      user.id,
+      "errors.mustBeGroupMember",
+    );
+    return { ...group, thisGroupMember };
   },
 );
 
@@ -59,11 +64,26 @@ export const addMember = Effect.fn("Groups.addMember")(function* (
   return result;
 });
 
+export const requireMemberIn = <
+  M extends { userId: string; isActive: boolean },
+>(
+  members: readonly M[],
+  userId: string,
+  messageKey: MessageKey,
+) => {
+  const member = members.find((m) => m.userId === userId && m.isActive);
+  return member
+    ? Effect.succeed(member)
+    : Effect.fail(Errors.forbidden(messageKey));
+};
+
 export const requireActiveMembersIn = (
-  activeMembers: readonly { id: number }[],
+  members: readonly { id: number; isActive: boolean }[],
   memberIds: Iterable<number>,
 ) => {
-  const active = new Set(activeMembers.map((member) => member.id));
+  const active = new Set(
+    members.filter((member) => member.isActive).map((member) => member.id),
+  );
   return [...memberIds].every((id) => active.has(id))
     ? Effect.void
     : Effect.fail(Errors.notFound("groupMember"));
@@ -76,7 +96,7 @@ export const requireActiveMembers = Effect.fn("Groups.requireActiveMembers")(
     const database = yield* Database;
     const members = yield* database.query("check group members", (db) =>
       db
-        .select({ id: groupMembers.id })
+        .select({ id: groupMembers.id, isActive: groupMembers.isActive })
         .from(groupMembers)
         .where(
           and(

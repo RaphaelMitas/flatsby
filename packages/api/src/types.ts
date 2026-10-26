@@ -45,7 +45,7 @@ export type NewShoppingListItem = typeof shoppingListItems.$inferInsert;
 // Query result types for common operations
 export type GroupMemberWithUserInfo = Pick<
   GroupMember,
-  "id" | "userId" | "role" | "joinedOn"
+  "id" | "userId" | "role" | "joinedOn" | "isActive"
 > & {
   user: Pick<User, "email" | "name" | "image">;
 };
@@ -91,12 +91,6 @@ export type ShoppingListInfiniteData = InfiniteData<
   ApiResult<ShoppingListPage>,
   number | null
 >;
-
-export type ShoppingListWithGroup = ShoppingList & {
-  group: {
-    groupMembers: Pick<GroupMember, "userId">[];
-  };
-};
 
 export type GroupWithMemberCount = Pick<
   Group,
