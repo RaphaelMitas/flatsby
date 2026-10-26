@@ -266,7 +266,7 @@ function keepOnlyUtmParams(url: string) {
     for (const key of [...parsed.searchParams.keys()]) {
       if (!key.startsWith("utm_")) parsed.searchParams.delete(key);
     }
-    return `${parsed.origin}${parsed.pathname}${parsed.search}`;
+    return parsed.href.replace(/#.*/, "");
   } catch {
     return null;
   }
