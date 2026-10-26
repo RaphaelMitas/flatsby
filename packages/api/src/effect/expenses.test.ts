@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Context, Effect, Layer, Ref } from "effect";
+import { vi } from "vitest";
 
 import { fail } from "../errors";
 import { getExpenseWithAccess } from "./expenses";
@@ -7,6 +8,9 @@ import { CurrentRequest } from "./services/CurrentRequest";
 import { Database } from "./services/Database";
 import { ErrorReporter } from "./services/ErrorReporter";
 import { toApiResult } from "./toApiResult";
+
+// The real client validates DATABASE_URL on import, which would fail a local run without env vars
+vi.mock("@flatsby/db/client", () => ({ db: {} }));
 
 type Report = Parameters<ErrorReporter["Service"]["capture"]>[0];
 
