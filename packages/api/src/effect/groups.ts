@@ -4,6 +4,8 @@ import { Effect } from "effect";
 import { and, eq, inArray } from "@flatsby/db";
 import { groupMembers } from "@flatsby/db/schema";
 
+import type { ApiError } from "../errors";
+import type { DbTransaction } from "../types";
 import { Errors } from "../errors";
 import {
   addMemberTx,
@@ -53,10 +55,11 @@ export const requireMember = Effect.fn("Groups.requireMember")(function* (
 export const addMember = Effect.fn("Groups.addMember")(function* (
   groupId: number,
   userId: string,
+  refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
 ) {
   const database = yield* Database;
   const result = yield* database.query("transaction: add group member", (db) =>
-    db.transaction((tx) => addMemberTx(tx, groupId, userId)),
+    db.transaction((tx) => addMemberTx(tx, groupId, userId, refusal)),
   );
   if (typeof result !== "number") {
     return yield* result;
