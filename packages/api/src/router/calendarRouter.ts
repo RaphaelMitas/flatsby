@@ -21,7 +21,6 @@ import {
   calendarItemMembers,
   calendarItems,
   calendarOccurrences,
-  groupMembers,
 } from "@flatsby/db/schema";
 import {
   addDays,
@@ -45,41 +44,17 @@ import {
   updateCalendarItemSchema,
 } from "@flatsby/validators/calendar";
 
-import type { ApiError } from "../errors";
-import type { Database, DbTransaction, GroupMember } from "../types";
-import {
-  ConflictError,
-  Errors,
-  fail,
-  safeDbOperation,
-  withErrorHandlingAsResult,
-} from "../errors";
+import type { Database as DbClient, DbTransaction } from "../types";
+import { requireActiveMembers, requireMember } from "../effect/groups";
+import { runResult } from "../effect/runtime";
+import { Database } from "../effect/services/Database";
+import { ConflictError, Errors } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, GroupUtils } from "../utils";
 
 const UPCOMING_COUNT = 5;
 const HISTORY_COUNT = 8;
 
-interface MemberContext {
-  locale: Parameters<typeof withErrorHandlingAsResult>[0];
-  db: Database;
-  session: { user: { id: string } };
-}
-
-const asMember = <T>(
-  ctx: MemberContext,
-  groupId: number,
-  run: (member: GroupMember) => Effect.Effect<T, ApiError>,
-) =>
-  withErrorHandlingAsResult(
-    ctx.locale,
-    Effect.flatMap(
-      GroupUtils.requireMemberAccess(ctx.db, groupId, ctx.session.user.id),
-      run,
-    ),
-  );
-
-const loadItems = async (db: Database, where: SQL | undefined) =>
+const loadItems = async (db: DbClient, where: SQL | undefined) =>
   (
     await db.query.calendarItems.findMany({
       where,
@@ -118,7 +93,7 @@ const loadItems = async (db: Database, where: SQL | undefined) =>
   }));
 
 const loadOverrides = async (
-  db: Database,
+  db: DbClient,
   where: SQL | undefined,
   limit?: number,
 ) =>
@@ -146,45 +121,22 @@ const loadOverrides = async (
     completedBy: completedByGroupMember?.user ?? null,
   }));
 
-const findItem = (db: Database, groupId: number, id: number) =>
-  DbUtils.findOneOrFail(
-    async () =>
+const findItem = Effect.fn("Calendar.findItem")(function* (
+  groupId: number,
+  id: number,
+) {
+  const database = yield* Database;
+  return yield* database.findOneOrFail(
+    "calendarItem",
+    async (db) =>
       (
         await loadItems(
           db,
           and(eq(calendarItems.id, id), eq(calendarItems.groupId, groupId)),
         )
       )[0],
-    "calendarItem",
   );
-
-const ensureMembersInGroup = (
-  db: Database,
-  groupId: number,
-  memberIds: number[],
-) =>
-  Effect.flatMap(
-    safeDbOperation(
-      () =>
-        memberIds.length === 0
-          ? Promise.resolve([])
-          : db
-              .select({ id: groupMembers.id })
-              .from(groupMembers)
-              .where(
-                and(
-                  inArray(groupMembers.id, memberIds),
-                  eq(groupMembers.groupId, groupId),
-                  eq(groupMembers.isActive, true),
-                ),
-              ),
-      "check calendar members",
-    ),
-    (found) =>
-      found.length === new Set(memberIds).size
-        ? Effect.void
-        : fail.notFound("groupMember"),
-  );
+});
 
 const writeMembers = async (
   tx: DbTransaction,
@@ -265,7 +217,7 @@ const occurrenceOf = (itemId: number, date: string) =>
 type OccurrenceRow = typeof calendarOccurrences.$inferInsert;
 
 const upsertOccurrences = (
-  db: Database | DbTransaction,
+  db: DbClient | DbTransaction,
   rows: OccurrenceRow[],
   set: Partial<OccurrenceRow>,
   setWhere?: SQL,
@@ -281,7 +233,7 @@ const upsertOccurrences = (
 
 // The days come from the client's cache: a day someone ticked since stays done
 const skipOpenDays = async (
-  db: Database | DbTransaction,
+  db: DbClient | DbTransaction,
   itemId: number,
   dates: string[],
 ) => {
@@ -296,7 +248,7 @@ const skipOpenDays = async (
 
 // A row that is neither done nor skipped says nothing the rule doesn't
 const pruneOccurrence = (
-  db: Database | DbTransaction,
+  db: DbClient | DbTransaction,
   itemId: number,
   date: string,
 ) =>
@@ -343,68 +295,77 @@ const carryOccurrences = async (
 
 export const calendarRouter = createTRPCRouter({
   range: protectedProcedure.input(calendarRangeSchema).query(({ ctx, input }) =>
-    asMember(ctx, input.groupId, () =>
-      safeDbOperation(async () => {
-        const items = await loadItems(
-          ctx.db,
-          and(
-            eq(calendarItems.groupId, input.groupId),
-            lte(calendarItems.startsOn, input.to),
-            or(
-              isNotNull(calendarItems.recurrence),
-              gte(lastDayOf(calendarItems.startsOn), input.from),
+    runResult(
+      ctx,
+      Effect.gen(function* () {
+        yield* requireMember(input.groupId);
+        const database = yield* Database;
+        return yield* database.query("load calendar range", async (db) => {
+          const items = await loadItems(
+            db,
+            and(
+              eq(calendarItems.groupId, input.groupId),
+              lte(calendarItems.startsOn, input.to),
+              or(
+                isNotNull(calendarItems.recurrence),
+                gte(lastDayOf(calendarItems.startsOn), input.from),
+              ),
+              or(
+                isNull(calendarItems.endsOn),
+                gte(lastDayOf(calendarItems.endsOn), input.from),
+              ),
             ),
-            or(
-              isNull(calendarItems.endsOn),
-              gte(lastDayOf(calendarItems.endsOn), input.from),
-            ),
-          ),
-        );
-        const overrides =
-          items.length === 0
-            ? []
-            : await loadOverrides(
-                ctx.db,
-                and(
-                  inArray(
-                    calendarOccurrences.itemId,
-                    items.map((item) => item.id),
-                  ),
-                  between(
-                    calendarOccurrences.date,
-                    earliestStartReaching(
-                      input.from,
-                      Math.max(...items.map((item) => item.days)),
+          );
+          const overrides =
+            items.length === 0
+              ? []
+              : await loadOverrides(
+                  db,
+                  and(
+                    inArray(
+                      calendarOccurrences.itemId,
+                      items.map((item) => item.id),
                     ),
-                    input.to,
+                    between(
+                      calendarOccurrences.date,
+                      earliestStartReaching(
+                        input.from,
+                        Math.max(...items.map((item) => item.days)),
+                      ),
+                      input.to,
+                    ),
                   ),
-                ),
-              );
-        return {
-          items,
-          occurrences: items.flatMap((item) =>
-            expandOccurrences(
-              item,
-              overrides.filter((row) => row.itemId === item.id),
-              input.from,
-              input.to,
+                );
+          return {
+            items,
+            occurrences: items.flatMap((item) =>
+              expandOccurrences(
+                item,
+                overrides.filter((row) => row.itemId === item.id),
+                input.from,
+                input.to,
+              ),
             ),
-          ),
-        };
-      }, "load calendar range"),
+          };
+        });
+      }),
     ),
   ),
 
   item: protectedProcedure
     .input(calendarItemDetailSchema)
     .query(({ ctx, input }) =>
-      asMember(ctx, input.groupId, () =>
-        Effect.flatMap(findItem(ctx.db, input.groupId, input.id), (item) =>
-          safeDbOperation(async () => {
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* requireMember(input.groupId);
+          const item = yield* findItem(input.groupId, input.id);
+          const database = yield* Database;
+          return yield* database.query("load calendar item", async (db) => {
             const until = addDays(input.today, LONGEST_GAP_DAYS);
             const [ahead, history] = await Promise.all([
               loadOverrides(
-                ctx.db,
+                db,
                 and(
                   eq(calendarOccurrences.itemId, item.id),
                   between(
@@ -415,7 +376,7 @@ export const calendarRouter = createTRPCRouter({
                 ),
               ),
               loadOverrides(
-                ctx.db,
+                db,
                 eq(calendarOccurrences.itemId, item.id),
                 HISTORY_COUNT,
               ),
@@ -434,183 +395,210 @@ export const calendarRouter = createTRPCRouter({
                 }),
               ),
             };
-          }, "load calendar item"),
-        ),
+          });
+        }),
       ),
     ),
 
   create: protectedProcedure
     .input(createCalendarItemSchema)
     .mutation(({ ctx, input }) =>
-      asMember(ctx, input.groupId, (member) =>
-        Effect.flatMap(
-          ensureMembersInGroup(ctx.db, input.groupId, input.memberIds),
-          () =>
-            DbUtils.transaction(
-              (tx) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const member = yield* requireMember(input.groupId);
+          yield* requireActiveMembers(input.groupId, input.memberIds);
+          const database = yield* Database;
+          return yield* database.query(
+            "transaction: create calendar item",
+            (db) =>
+              db.transaction((tx) =>
                 insertItem(
                   tx,
                   { ...input, days: editedDays(input) },
                   member.id,
                 ),
-              "create calendar item",
-            )(ctx.db),
-        ),
+              ),
+          );
+        }),
       ),
     ),
 
   update: protectedProcedure
     .input(updateCalendarItemSchema)
     .mutation(({ ctx, input }) =>
-      asMember(ctx, input.groupId, (member) =>
-        Effect.flatMap(
-          Effect.zip(
-            findItem(ctx.db, input.groupId, input.id),
-            ensureMembersInGroup(ctx.db, input.groupId, input.memberIds),
-          ),
-          ([previous]) => {
-            // Tasks and events are different things, so an item can't switch
-            if (input.kind !== previous.kind)
-              return fail.validation("errors.unexpected");
-            const edited = {
-              ...input,
-              endsOn: editedEndsOn(previous, input),
-              days: editedDays(input, previous),
-            };
-            if (rewritesPast(previous, edited, input.today))
-              return fail.conflict("errors.calendarSeriesEnded");
-            // An edit without endsOn keeps the stored end, which the new start can pass
-            if (endsBeforeStart(edited))
-              return fail.conflict("errors.calendarSeriesReplaced");
-            const saved = DbUtils.transaction(async (tx) => {
-              if (splitsSeries(previous, input, input.today)) {
-                const [ended] = await tx
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const member = yield* requireMember(input.groupId);
+          const previous = yield* findItem(input.groupId, input.id);
+          yield* requireActiveMembers(input.groupId, input.memberIds);
+          // Tasks and events are different things, so an item can't switch
+          if (input.kind !== previous.kind) {
+            return yield* Errors.validation("errors.unexpected");
+          }
+          const edited = {
+            ...input,
+            endsOn: editedEndsOn(previous, input),
+            days: editedDays(input, previous),
+          };
+          if (rewritesPast(previous, edited, input.today)) {
+            return yield* Errors.conflict("errors.calendarSeriesEnded");
+          }
+          // An edit without endsOn keeps the stored end, which the new start can pass
+          if (endsBeforeStart(edited)) {
+            return yield* Errors.conflict("errors.calendarSeriesReplaced");
+          }
+          const database = yield* Database;
+          const result = yield* database.query(
+            "transaction: update calendar item",
+            (db) =>
+              db.transaction(async (tx) => {
+                if (splitsSeries(previous, input, input.today)) {
+                  const [ended] = await tx
+                    .update(calendarItems)
+                    .set({ endsOn: splitEndsOn(previous, input.startsOn) })
+                    .where(
+                      and(
+                        eq(calendarItems.id, previous.id),
+                        endsOnStill(previous.endsOn),
+                      ),
+                    )
+                    .returning({ id: calendarItems.id });
+                  if (!ended)
+                    return Errors.conflict("errors.calendarItemChanged");
+                  const piece = {
+                    ...edited,
+                    timeZone: previous.timeZone,
+                    memberIds: continuedRotation(previous, edited),
+                  };
+                  const next = await insertItem(tx, piece, member.id);
+                  await carryOccurrences(tx, previous.id, {
+                    ...piece,
+                    ...next,
+                  });
+                  return next;
+                }
+                const [updated] = await tx
                   .update(calendarItems)
-                  .set({ endsOn: splitEndsOn(previous, input.startsOn) })
+                  .set(itemValues(edited))
                   .where(
                     and(
-                      eq(calendarItems.id, previous.id),
+                      eq(calendarItems.id, input.id),
                       endsOnStill(previous.endsOn),
                     ),
                   )
                   .returning({ id: calendarItems.id });
-                if (!ended)
+                if (!updated)
                   return Errors.conflict("errors.calendarItemChanged");
-                const piece = {
-                  ...edited,
-                  timeZone: previous.timeZone,
-                  memberIds: continuedRotation(previous, edited),
-                };
-                const next = await insertItem(tx, piece, member.id);
-                await carryOccurrences(tx, previous.id, { ...piece, ...next });
-                return next;
-              }
-              const [updated] = await tx
-                .update(calendarItems)
-                .set(itemValues(edited))
-                .where(
-                  and(
-                    eq(calendarItems.id, input.id),
-                    endsOnStill(previous.endsOn),
-                  ),
-                )
-                .returning({ id: calendarItems.id });
-              if (!updated)
-                return Errors.conflict("errors.calendarItemChanged");
-              await writeMembers(tx, input.id, input.memberIds);
-              await carryOccurrences(tx, input.id, edited);
-              return { id: input.id };
-            }, "update calendar item")(ctx.db);
-            return Effect.flatMap(saved, (result) =>
-              result instanceof ConflictError
-                ? Effect.fail(result)
-                : Effect.succeed(result),
-            );
-          },
-        ),
+                await writeMembers(tx, input.id, input.memberIds);
+                await carryOccurrences(tx, input.id, edited);
+                return { id: input.id };
+              }),
+          );
+          if (result instanceof ConflictError) {
+            return yield* result;
+          }
+          return result;
+        }),
       ),
     ),
 
   delete: protectedProcedure
     .input(calendarItemRefSchema)
     .mutation(({ ctx, input }) =>
-      asMember(ctx, input.groupId, () =>
-        Effect.flatMap(findItem(ctx.db, input.groupId, input.id), (item) =>
-          safeDbOperation(
-            () =>
-              ctx.db
-                .delete(calendarItems)
-                .where(eq(calendarItems.id, item.id))
-                .then(() => ({ id: item.id })),
-            "delete calendar item",
-          ),
-        ),
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* requireMember(input.groupId);
+          const item = yield* findItem(input.groupId, input.id);
+          const database = yield* Database;
+          yield* database.query("delete calendar item", (db) =>
+            db.delete(calendarItems).where(eq(calendarItems.id, item.id)),
+          );
+          return { id: item.id };
+        }),
       ),
     ),
 
   setDone: protectedProcedure
     .input(setOccurrenceDoneSchema)
     .mutation(({ ctx, input }) =>
-      asMember(ctx, input.groupId, (member) =>
-        Effect.flatMap(
-          findItem(ctx.db, input.groupId, input.itemId),
-          (item) => {
-            const skip = input.done ? (input.skip ?? []) : [];
-            if (item.kind !== "task" || (skip.length > 0 && !item.recurrence))
-              return fail.validation("errors.unexpected");
-            if (
-              input.done &&
-              [input.date, ...skip].some((date) => !isScheduledOn(item, date))
-            )
-              return fail.conflict("errors.calendarDateNotScheduled");
-            return DbUtils.transaction(async (tx) => {
-              const completion = input.done
-                ? {
-                    completedByGroupMemberId: member.id,
-                    completedAt: new Date(),
-                  }
-                : { completedByGroupMemberId: null, completedAt: null };
-              await upsertOccurrences(
-                tx,
-                [{ itemId: item.id, date: input.date, ...completion }],
-                completion,
-              );
-              await pruneOccurrence(tx, item.id, input.date);
-              await skipOpenDays(tx, item.id, skip);
-              return { itemId: item.id, date: input.date };
-            }, "set calendar occurrence done")(ctx.db);
-          },
-        ),
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const member = yield* requireMember(input.groupId);
+          const item = yield* findItem(input.groupId, input.itemId);
+          const skip = input.done ? (input.skip ?? []) : [];
+          if (item.kind !== "task" || (skip.length > 0 && !item.recurrence)) {
+            return yield* Errors.validation("errors.unexpected");
+          }
+          if (
+            input.done &&
+            [input.date, ...skip].some((date) => !isScheduledOn(item, date))
+          ) {
+            return yield* Errors.conflict("errors.calendarDateNotScheduled");
+          }
+          const database = yield* Database;
+          yield* database.query(
+            "transaction: set calendar occurrence done",
+            (db) =>
+              db.transaction(async (tx) => {
+                const completion = input.done
+                  ? {
+                      completedByGroupMemberId: member.id,
+                      completedAt: new Date(),
+                    }
+                  : { completedByGroupMemberId: null, completedAt: null };
+                await upsertOccurrences(
+                  tx,
+                  [{ itemId: item.id, date: input.date, ...completion }],
+                  completion,
+                );
+                await pruneOccurrence(tx, item.id, input.date);
+                await skipOpenDays(tx, item.id, skip);
+              }),
+          );
+          return { itemId: item.id, date: input.date };
+        }),
       ),
     ),
 
   setSkipped: protectedProcedure
     .input(setOccurrenceSkippedSchema)
     .mutation(({ ctx, input }) =>
-      asMember(ctx, input.groupId, () =>
-        Effect.flatMap(
-          findItem(ctx.db, input.groupId, input.itemId),
-          (item) => {
-            if (!item.recurrence) return fail.validation("errors.unexpected");
-            const skip = input.skipped
-              ? [input.date, ...(input.missed ?? [])]
-              : [];
-            if (skip.some((date) => !isScheduledOn(item, date)))
-              return fail.conflict("errors.calendarDateNotScheduled");
-            return DbUtils.transaction(async (tx) => {
-              if (input.skipped) await skipOpenDays(tx, item.id, skip);
-              else {
-                await upsertOccurrences(
-                  tx,
-                  [{ itemId: item.id, date: input.date, skipped: false }],
-                  { skipped: false },
-                );
-                await pruneOccurrence(tx, item.id, input.date);
-              }
-              return { itemId: item.id, date: input.date };
-            }, "set calendar occurrence skipped")(ctx.db);
-          },
-        ),
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* requireMember(input.groupId);
+          const item = yield* findItem(input.groupId, input.itemId);
+          if (!item.recurrence) {
+            return yield* Errors.validation("errors.unexpected");
+          }
+          const skip = input.skipped
+            ? [input.date, ...(input.missed ?? [])]
+            : [];
+          if (skip.some((date) => !isScheduledOn(item, date))) {
+            return yield* Errors.conflict("errors.calendarDateNotScheduled");
+          }
+          const database = yield* Database;
+          yield* database.query(
+            "transaction: set calendar occurrence skipped",
+            (db) =>
+              db.transaction(async (tx) => {
+                if (input.skipped) await skipOpenDays(tx, item.id, skip);
+                else {
+                  await upsertOccurrences(
+                    tx,
+                    [{ itemId: item.id, date: input.date, skipped: false }],
+                    { skipped: false },
+                  );
+                  await pruneOccurrence(tx, item.id, input.date);
+                }
+              }),
+          );
+          return { itemId: item.id, date: input.date };
+        }),
       ),
     ),
 });
