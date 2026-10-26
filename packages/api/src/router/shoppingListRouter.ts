@@ -353,15 +353,12 @@ export const shoppingList = createTRPCRouter({
             "fetch shopping list items",
             (db) =>
               db.query.shoppingListItems.findMany({
-                where: input.categoryId
-                  ? and(
-                      eq(
-                        shoppingListItems.shoppingListId,
-                        input.shoppingListId,
-                      ),
-                      eq(shoppingListItems.categoryId, input.categoryId),
-                    )
-                  : eq(shoppingListItems.shoppingListId, input.shoppingListId),
+                where: and(
+                  eq(shoppingListItems.shoppingListId, input.shoppingListId),
+                  input.categoryId
+                    ? eq(shoppingListItems.categoryId, input.categoryId)
+                    : undefined,
+                ),
                 columns: {
                   id: true,
                   name: true,
@@ -603,7 +600,7 @@ export const shoppingList = createTRPCRouter({
         Effect.gen(function* () {
           yield* requireMember(input.groupId);
           const database = yield* Database;
-          const rows = yield* database.query("suggest items", (db) =>
+          return yield* database.query("suggest items", (db) =>
             db
               .select({
                 name: sql<string>`min(${shoppingListItems.name})`,
@@ -625,11 +622,6 @@ export const shoppingList = createTRPCRouter({
               .orderBy(desc(count(shoppingListItems.id)))
               .limit(8),
           );
-          return rows.map((row) => ({
-            name: row.name,
-            frequency: row.frequency,
-            categoryId: row.categoryId,
-          }));
         }),
       );
     }),
