@@ -30,14 +30,17 @@ import {
 } from "@flatsby/validators/shopping-list";
 
 import type { CreditUser } from "../utils/autumn";
-import { fail, getApiResultZod, withErrorHandlingAsResult } from "../errors";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { requireMember } from "../effect/groups";
+import { runResult } from "../effect/runtime";
+import { Database } from "../effect/services/Database";
 import {
-  DbUtils,
-  GroupUtils,
-  safeDbOperation,
-  ValidationUtils,
-} from "../utils";
+  firstReturned,
+  getListInGroupWithAccess,
+  getShoppingListItemWithAccess,
+} from "../effect/shoppingLists";
+import { Errors, getApiResultZod } from "../errors";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { DbUtils, ValidationUtils } from "../utils";
 import { classify } from "../utils/classify";
 
 export const shoppingList = createTRPCRouter({
@@ -48,37 +51,18 @@ export const shoppingList = createTRPCRouter({
         shoppingListId: z.number(),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Verify user is member of group
-          GroupUtils.requireMemberAccess(
-            ctx.db,
+    .query(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const { list } = yield* getListInGroupWithAccess(
             input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            Effect.map(
-              // Get shopping list name
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.shoppingLists.findFirst({
-                    where: and(
-                      eq(shoppingLists.id, input.shoppingListId),
-                      eq(shoppingLists.groupId, input.groupId),
-                    ),
-                    columns: {
-                      name: true,
-                    },
-                  }),
-                "shoppingList",
-              ),
-              (shoppingList) => shoppingList.name,
-            ),
-        ),
-      );
-    }),
+            input.shoppingListId,
+          );
+          return list.name;
+        }),
+      ),
+    ),
 
   getShoppingLists: protectedProcedure
     .input(
@@ -86,110 +70,77 @@ export const shoppingList = createTRPCRouter({
         groupId: z.number(),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Verify group membership and fetch shopping lists
-          GroupUtils.requireMemberAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            Effect.map(
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.groups.findFirst({
-                    where: eq(groups.id, input.groupId),
-                    columns: {
-                      id: true,
-                    },
-                    with: {
-                      shoppingLists: {
-                        columns: {
-                          id: true,
-                          name: true,
-                          icon: true,
-                          description: true,
-                        },
-                        with: {
-                          shoppingListItems: {
-                            columns: {
-                              completed: true,
-                            },
-                            where: eq(shoppingListItems.completed, false),
-                          },
-                        },
-                      },
-                    },
-                  }),
-                "group",
-              ),
-              (group) => {
-                // Transform shopping lists with unchecked item counts
-                const shoppingLists = group.shoppingLists.map((list) => {
-                  const uncheckedItemLength = list.shoppingListItems.length;
-
-                  return {
-                    id: list.id,
-                    name: list.name,
-                    description: list.description,
-                    icon: list.icon,
-                    uncheckedItemLength,
-                  };
-                });
-
-                return shoppingLists;
+    .query(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* requireMember(input.groupId);
+          const database = yield* Database;
+          const group = yield* database.findOneOrFail("group", (db) =>
+            db.query.groups.findFirst({
+              where: eq(groups.id, input.groupId),
+              columns: {
+                id: true,
               },
-            ),
-        ),
-      );
-    }),
+              with: {
+                shoppingLists: {
+                  columns: {
+                    id: true,
+                    name: true,
+                    icon: true,
+                    description: true,
+                  },
+                  with: {
+                    shoppingListItems: {
+                      columns: {
+                        completed: true,
+                      },
+                      where: eq(shoppingListItems.completed, false),
+                    },
+                  },
+                },
+              },
+            }),
+          );
+          return group.shoppingLists.map((list) => ({
+            id: list.id,
+            name: list.name,
+            description: list.description,
+            icon: list.icon,
+            uncheckedItemLength: list.shoppingListItems.length,
+          }));
+        }),
+      ),
+    ),
 
   createShoppingList: protectedProcedure
     .input(createShoppingListSchema)
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Validate input name
-          ValidationUtils.notEmpty(input.name, "shoppingListName"),
-          (validName) =>
-            Effect.flatMap(
-              // Check if user is member of group
-              GroupUtils.requireMemberAccess(
-                ctx.db,
-                input.groupId,
-                ctx.session.user.id,
-              ),
-              () =>
-                // Create shopping list
-                Effect.map(
-                  safeDbOperation(
-                    () =>
-                      ctx.db
-                        .insert(shoppingLists)
-                        .values({
-                          groupId: input.groupId,
-                          name: validName,
-                          icon: input.icon,
-                          description: input.description,
-                        })
-                        .returning({ id: shoppingLists.id }),
-                    "create shopping list",
-                  ),
-                  (result) => {
-                    if (!result[0]) {
-                      throw new Error("Failed to create shopping list");
-                    }
-                    return { shoppingListId: result[0].id };
-                  },
-                ),
-            ),
-        ),
-      );
-    }),
+    .mutation(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const name = yield* ValidationUtils.notEmpty(
+            input.name,
+            "shoppingListName",
+          );
+          yield* requireMember(input.groupId);
+          const database = yield* Database;
+          const created = yield* database.query("create shopping list", (db) =>
+            db
+              .insert(shoppingLists)
+              .values({
+                groupId: input.groupId,
+                name,
+                icon: input.icon,
+                description: input.description,
+              })
+              .returning({ id: shoppingLists.id }),
+          );
+          const { id } = yield* firstReturned(created);
+          return { shoppingListId: id };
+        }),
+      ),
+    ),
 
   getShoppingList: protectedProcedure
     .input(
@@ -237,188 +188,139 @@ export const shoppingList = createTRPCRouter({
         }),
       ),
     )
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Verify group membership and get current member info
-          GroupUtils.getUserMembership(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          (groupMemberRes) =>
-            Effect.map(
-              // Get shopping list with active group members
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.shoppingLists.findFirst({
-                    where: and(
-                      eq(shoppingLists.id, input.shoppingListId),
-                      eq(shoppingLists.groupId, input.groupId),
-                    ),
+    .query(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const member = yield* requireMember(input.groupId);
+          const database = yield* Database;
+          const shoppingList = yield* database.findOneOrFail(
+            "shoppingList",
+            (db) =>
+              db.query.shoppingLists.findFirst({
+                where: and(
+                  eq(shoppingLists.id, input.shoppingListId),
+                  eq(shoppingLists.groupId, input.groupId),
+                ),
+                with: {
+                  group: {
+                    columns: {
+                      id: true,
+                    },
                     with: {
-                      group: {
+                      groupMembers: {
+                        where: (members, { eq }) => eq(members.isActive, true),
                         columns: {
                           id: true,
                         },
                         with: {
-                          groupMembers: {
-                            where: (members, { eq }) =>
-                              eq(members.isActive, true),
+                          user: {
                             columns: {
-                              id: true,
-                            },
-                            with: {
-                              user: {
-                                columns: {
-                                  email: true,
-                                  name: true,
-                                  image: true,
-                                },
-                              },
+                              email: true,
+                              name: true,
+                              image: true,
                             },
                           },
                         },
                       },
                     },
-                  }),
-                "shoppingList",
-              ),
-              (shoppingList) => ({
-                shoppingList,
-                currentMember: groupMemberRes,
+                  },
+                },
               }),
-            ),
-        ),
-      );
-    }),
+          );
+          const self = shoppingList.group.groupMembers.find(
+            (groupMember) => groupMember.id === member.id,
+          );
+          if (!self) return yield* Errors.notFound("groupMembership");
+          return {
+            shoppingList,
+            currentMember: { ...member, user: self.user },
+          };
+        }),
+      ),
+    ),
 
   deleteShoppingList: protectedProcedure
     .input(deleteShoppingListSchema)
     .output(getApiResultZod(z.object({ success: z.boolean() })))
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Verify user is member of group
-          GroupUtils.requireMemberAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            Effect.flatMap(
-              // Check if shopping list exists in this group
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.shoppingLists.findFirst({
-                    where: and(
-                      eq(shoppingLists.id, input.shoppingListId),
-                      eq(shoppingLists.groupId, input.groupId),
-                    ),
-                    columns: {
-                      id: true,
-                    },
-                  }),
-                "shoppingList",
-              ),
-              () =>
-                // Delete shopping list and all items in transaction
-                Effect.map(
-                  DbUtils.transaction(async (trx) => {
-                    // Clear lastShoppingListUsed references from users
-                    await trx
-                      .update(users)
-                      .set({ lastShoppingListUsed: null })
-                      .where(
-                        eq(users.lastShoppingListUsed, input.shoppingListId),
-                      );
-
-                    // Delete all shopping list items
-                    await trx
-                      .delete(shoppingListItems)
-                      .where(
-                        eq(
-                          shoppingListItems.shoppingListId,
-                          input.shoppingListId,
-                        ),
-                      );
-
-                    // Delete the shopping list itself
-                    await trx
-                      .delete(shoppingLists)
-                      .where(eq(shoppingLists.id, input.shoppingListId));
-
-                    return { success: true };
-                  }, "delete shopping list and all items")(ctx.db),
-                  (result) => result,
-                ),
-            ),
-        ),
-      );
-    }),
+    .mutation(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getListInGroupWithAccess(input.groupId, input.shoppingListId);
+          const database = yield* Database;
+          return yield* database.query(
+            "transaction: delete shopping list and all items",
+            (db) =>
+              db.transaction(async (trx) => {
+                await trx
+                  .update(users)
+                  .set({ lastShoppingListUsed: null })
+                  .where(eq(users.lastShoppingListUsed, input.shoppingListId));
+                await trx
+                  .delete(shoppingListItems)
+                  .where(
+                    eq(shoppingListItems.shoppingListId, input.shoppingListId),
+                  );
+                await trx
+                  .delete(shoppingLists)
+                  .where(eq(shoppingLists.id, input.shoppingListId));
+                return { success: true };
+              }),
+          );
+        }),
+      ),
+    ),
 
   changeShoppingListName: protectedProcedure
     .input(updateShoppingListSchema)
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Validate input name
-          ValidationUtils.notEmpty(input.name, "shoppingListName"),
-          (validName) =>
-            Effect.flatMap(
-              // Get shopping list with group information and verify user access
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.shoppingLists.findFirst({
-                    where: eq(shoppingLists.id, input.shoppingListId),
+    .mutation(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const name = yield* ValidationUtils.notEmpty(
+            input.name,
+            "shoppingListName",
+          );
+          const database = yield* Database;
+          const shoppingList = yield* database.findOneOrFail(
+            "shoppingList",
+            (db) =>
+              db.query.shoppingLists.findFirst({
+                where: eq(shoppingLists.id, input.shoppingListId),
+                with: {
+                  group: {
                     with: {
-                      group: {
-                        with: {
-                          groupMembers: {
-                            where: and(
-                              eq(groupMembers.userId, ctx.session.user.id),
-                              eq(groupMembers.isActive, true),
-                            ),
-                          },
-                        },
+                      groupMembers: {
+                        where: and(
+                          eq(groupMembers.userId, ctx.session.user.id),
+                          eq(groupMembers.isActive, true),
+                        ),
                       },
                     },
-                  }),
-                "shoppingList",
-              ),
-              (shoppingList) =>
-                Effect.flatMap(
-                  DbUtils.ensureGroupMember(
-                    ctx.session.user.id,
-                    shoppingList.group.groupMembers,
-                    "errors.notGroupMember",
-                  ),
-                  () =>
-                    Effect.map(
-                      safeDbOperation(
-                        () =>
-                          ctx.db
-                            .update(shoppingLists)
-                            .set({ name: validName })
-                            .where(eq(shoppingLists.id, input.shoppingListId))
-                            .returning({ id: shoppingLists.id }),
-                        "update shopping list name",
-                      ),
-                      (result) => {
-                        if (!result[0]) {
-                          throw new Error("Shopping list not found");
-                        }
-                        return { shoppingListId: result[0].id };
-                      },
-                    ),
-                ),
-            ),
-        ),
-      );
-    }),
+                  },
+                },
+              }),
+          );
+          yield* DbUtils.ensureGroupMember(
+            ctx.session.user.id,
+            shoppingList.group.groupMembers,
+            "errors.notGroupMember",
+          );
+          const updated = yield* database.query(
+            "update shopping list name",
+            (db) =>
+              db
+                .update(shoppingLists)
+                .set({ name })
+                .where(eq(shoppingLists.id, input.shoppingListId))
+                .returning({ id: shoppingLists.id }),
+          );
+          const { id } = yield* firstReturned(updated);
+          return { shoppingListId: id };
+        }),
+      ),
+    ),
 
   getShoppingListItems: protectedProcedure
     .input(
@@ -438,99 +340,62 @@ export const shoppingList = createTRPCRouter({
         }),
       ),
     )
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Verify user is member of group
-          GroupUtils.requireMemberAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            Effect.flatMap(
-              // Check if shopping list exists in this group
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.shoppingLists.findFirst({
-                    where: and(
-                      eq(shoppingLists.id, input.shoppingListId),
-                      eq(shoppingLists.groupId, input.groupId),
-                    ),
-                    columns: {
-                      id: true,
-                    },
-                  }),
-                "shoppingList",
-              ),
-              () =>
-                // Fetch shopping list items with pagination
-                Effect.map(
-                  safeDbOperation(
-                    () =>
-                      ctx.db.query.shoppingListItems.findMany({
-                        where: input.categoryId
-                          ? and(
-                              eq(
-                                shoppingListItems.shoppingListId,
-                                input.shoppingListId,
-                              ),
-                              eq(
-                                shoppingListItems.categoryId,
-                                input.categoryId,
-                              ),
-                            )
-                          : eq(
-                              shoppingListItems.shoppingListId,
-                              input.shoppingListId,
-                            ),
-                        columns: {
-                          id: true,
-                          name: true,
-                          completed: true,
-                          createdAt: true,
-                          categoryId: true,
-                          completedAt: true,
-                          completedByGroupMemberId: true,
-                          createdByGroupMemberId: true,
-                        },
-                        orderBy: (item, { desc }) => [
-                          desc(item.completedAt),
-                          desc(item.createdAt),
-                        ],
-                        limit: input.limit + 1,
-                        offset: input.cursor,
-                      }),
-                    "fetch shopping list items",
-                  ),
-                  (items) => {
-                    // Handle pagination
-                    let nextOffset: number | undefined;
+    .query(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getListInGroupWithAccess(input.groupId, input.shoppingListId);
+          const database = yield* Database;
+          const items = yield* database.query(
+            "fetch shopping list items",
+            (db) =>
+              db.query.shoppingListItems.findMany({
+                where: input.categoryId
+                  ? and(
+                      eq(
+                        shoppingListItems.shoppingListId,
+                        input.shoppingListId,
+                      ),
+                      eq(shoppingListItems.categoryId, input.categoryId),
+                    )
+                  : eq(shoppingListItems.shoppingListId, input.shoppingListId),
+                columns: {
+                  id: true,
+                  name: true,
+                  completed: true,
+                  createdAt: true,
+                  categoryId: true,
+                  completedAt: true,
+                  completedByGroupMemberId: true,
+                  createdByGroupMemberId: true,
+                },
+                orderBy: (item, { desc }) => [
+                  desc(item.completedAt),
+                  desc(item.createdAt),
+                ],
+                limit: input.limit + 1,
+                offset: input.cursor,
+              }),
+          );
 
-                    if (items.length > input.limit) {
-                      items.pop();
-                      nextOffset = input.cursor + input.limit;
-                    }
+          let nextCursor: number | undefined;
+          if (items.length > input.limit) {
+            items.pop();
+            nextCursor = input.cursor + input.limit;
+          }
 
-                    // Transform items with proper categoryId
-                    const itemsWithCategoryId = items.map((item) => ({
-                      ...item,
-                      categoryId: isCategoryIdWithAiAutoSelect(item.categoryId)
-                        ? item.categoryId
-                        : "other",
-                    }));
-
-                    return {
-                      items: itemsWithCategoryId,
-                      nextCursor: nextOffset,
-                    };
-                  },
-                ),
-            ),
-        ),
-      );
-    }),
+          return {
+            items: items.map((item) => ({
+              ...item,
+              categoryId: isCategoryIdWithAiAutoSelect(item.categoryId)
+                ? item.categoryId
+                : "other",
+            })),
+            nextCursor,
+          };
+        }),
+      ),
+    ),
 
   getCategoryCounts: protectedProcedure
     .input(
@@ -540,308 +405,150 @@ export const shoppingList = createTRPCRouter({
       }),
     )
     .output(getApiResultZod(categoryCountsSchema))
-    .query(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Verify user is member of group
-          GroupUtils.requireMemberAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            Effect.flatMap(
-              // Check if shopping list exists in this group
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.shoppingLists.findFirst({
-                    where: and(
-                      eq(shoppingLists.id, input.shoppingListId),
-                      eq(shoppingLists.groupId, input.groupId),
-                    ),
-                    columns: {
-                      id: true,
-                    },
-                  }),
-                "shoppingList",
-              ),
-              () =>
-                // Get category counts for unchecked items
-                Effect.map(
-                  safeDbOperation(
-                    () =>
-                      ctx.db
-                        .select({
-                          categoryId: shoppingListItems.categoryId,
-                          count: count(shoppingListItems.id),
-                        })
-                        .from(shoppingListItems)
-                        .where(
-                          and(
-                            eq(
-                              shoppingListItems.shoppingListId,
-                              input.shoppingListId,
-                            ),
-                            eq(shoppingListItems.completed, false),
-                          ),
-                        )
-                        .groupBy(shoppingListItems.categoryId),
-                    "get category counts",
-                  ),
-                  (results) => {
-                    const counts: Record<string, number> = {};
-                    let total = 0;
-
-                    for (const row of results) {
-                      counts[row.categoryId] = row.count;
-                      total += row.count;
-                    }
-
-                    return { counts, total };
-                  },
+    .query(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getListInGroupWithAccess(input.groupId, input.shoppingListId);
+          const database = yield* Database;
+          const rows = yield* database.query("get category counts", (db) =>
+            db
+              .select({
+                categoryId: shoppingListItems.categoryId,
+                count: count(shoppingListItems.id),
+              })
+              .from(shoppingListItems)
+              .where(
+                and(
+                  eq(shoppingListItems.shoppingListId, input.shoppingListId),
+                  eq(shoppingListItems.completed, false),
                 ),
-            ),
-        ),
-      );
-    }),
+              )
+              .groupBy(shoppingListItems.categoryId),
+          );
+
+          const counts: Record<string, number> = {};
+          let total = 0;
+          for (const row of rows) {
+            counts[row.categoryId] = row.count;
+            total += row.count;
+          }
+          return { counts, total };
+        }),
+      ),
+    ),
 
   createShoppingListItem: protectedProcedure
     .input(createShoppingListItemSchema)
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Validate input name
-          ValidationUtils.notEmpty(input.name, "shoppingListItemName"),
-          (validName) =>
-            Effect.flatMap(
-              // Verify user is member of group
-              GroupUtils.getUserMembership(
-                ctx.db,
-                input.groupId,
-                ctx.session.user.id,
-              ),
-              (groupMemberRes) =>
-                Effect.flatMap(
-                  // Verify shopping list exists in this group
-                  DbUtils.findOneOrFail(
-                    () =>
-                      ctx.db.query.shoppingLists.findFirst({
-                        where: and(
-                          eq(shoppingLists.id, input.shoppingListId),
-                          eq(shoppingLists.groupId, input.groupId),
-                        ),
-                        columns: {
-                          id: true,
-                        },
-                      }),
-                    "shoppingList",
-                  ),
-                  () =>
-                    Effect.flatMap(
-                      // Determine category ID (with AI if needed)
-                      input.categoryId === "ai-auto-select"
-                        ? Effect.promise(() =>
-                            categorizeItem(ctx.session.user, validName),
-                          )
-                        : Effect.succeed(input.categoryId),
-                      (categoryId) =>
-                        // Create shopping list item
-                        Effect.map(
-                          safeDbOperation(
-                            () =>
-                              ctx.db
-                                .insert(shoppingListItems)
-                                .values({
-                                  shoppingListId: input.shoppingListId,
-                                  name: validName,
-                                  categoryId: categoryId,
-                                  completed: false,
-                                  createdByGroupMemberId: groupMemberRes.id,
-                                  createdAt: new Date(),
-                                })
-                                .returning({ id: shoppingListItems.id }),
-                            "create shopping list item",
-                          ),
-                          (result) => {
-                            if (!result[0]) {
-                              throw new Error(
-                                "Failed to create shopping list item",
-                              );
-                            }
-                            return result[0].id;
-                          },
-                        ),
-                    ),
-                ),
-            ),
-        ),
-      );
-    }),
+    .mutation(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const name = yield* ValidationUtils.notEmpty(
+            input.name,
+            "shoppingListItemName",
+          );
+          const { member } = yield* getListInGroupWithAccess(
+            input.groupId,
+            input.shoppingListId,
+          );
+          const categoryId =
+            input.categoryId === "ai-auto-select"
+              ? yield* Effect.promise(() =>
+                  categorizeItem(ctx.session.user, name),
+                )
+              : input.categoryId;
+          const database = yield* Database;
+          const created = yield* database.query(
+            "create shopping list item",
+            (db) =>
+              db
+                .insert(shoppingListItems)
+                .values({
+                  shoppingListId: input.shoppingListId,
+                  name,
+                  categoryId,
+                  completed: false,
+                  createdByGroupMemberId: member.id,
+                  createdAt: new Date(),
+                })
+                .returning({ id: shoppingListItems.id }),
+          );
+          const { id } = yield* firstReturned(created);
+          return id;
+        }),
+      ),
+    ),
 
   updateShoppingListItem: protectedProcedure
     .input(updateShoppingListItemSchema)
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Validate input name
-          ValidationUtils.notEmpty(input.name, "shoppingListItemName"),
-          (validName) =>
-            Effect.flatMap(
-              // Find shopping list item with group membership verification
-              DbUtils.findOneOrFail(
-                () =>
-                  ctx.db.query.shoppingListItems.findFirst({
-                    where: eq(shoppingListItems.id, input.id),
-                    with: {
-                      shoppingList: {
-                        with: {
-                          group: {
-                            columns: {
-                              id: true,
-                            },
-                            with: {
-                              groupMembers: {
-                                where: and(
-                                  eq(groupMembers.userId, ctx.session.user.id),
-                                  eq(groupMembers.isActive, true),
-                                ),
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  }),
-                "shoppingListItem",
-              ),
-              (shoppingListItem) =>
-                Effect.flatMap(
-                  shoppingListItem.shoppingList.group.groupMembers.length > 0 &&
-                    shoppingListItem.shoppingList.group.groupMembers[0]
-                    ? Effect.succeed(
-                        shoppingListItem.shoppingList.group.groupMembers[0],
-                      )
-                    : fail.forbidden("errors.notGroupMember"),
+    .mutation(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const name = yield* ValidationUtils.notEmpty(
+            input.name,
+            "shoppingListItemName",
+          );
+          const { item, member } = yield* getShoppingListItemWithAccess(
+            input.id,
+          );
+          const categoryId =
+            input.categoryId === "ai-auto-select"
+              ? yield* Effect.promise(() =>
+                  categorizeItem(ctx.session.user, name),
+                )
+              : input.categoryId;
 
-                  (groupMemberRes) =>
-                    Effect.flatMap(
-                      input.categoryId === "ai-auto-select"
-                        ? Effect.promise(() =>
-                            categorizeItem(ctx.session.user, validName),
-                          )
-                        : Effect.succeed(input.categoryId),
-                      (categoryId) =>
-                        Effect.map(
-                          safeDbOperation(() => {
-                            const updateData: Partial<
-                              typeof shoppingListItems.$inferInsert
-                            > = {
-                              name: validName,
-                              categoryId: categoryId,
-                              completed: input.completed,
-                            };
+          const updateData: Partial<typeof shoppingListItems.$inferInsert> = {
+            name,
+            categoryId,
+            completed: input.completed,
+          };
+          if (item.completed !== input.completed) {
+            updateData.completedByGroupMemberId = input.completed
+              ? member.id
+              : null;
+            updateData.completedAt = input.completed ? new Date() : null;
+          }
 
-                            if (
-                              shoppingListItem.completed !== input.completed
-                            ) {
-                              if (input.completed) {
-                                updateData.completedByGroupMemberId =
-                                  groupMemberRes.id;
-                                updateData.completedAt = new Date();
-                              } else {
-                                updateData.completedByGroupMemberId = null;
-                                updateData.completedAt = null;
-                              }
-                            }
-
-                            return ctx.db
-                              .update(shoppingListItems)
-                              .set(updateData)
-                              .where(eq(shoppingListItems.id, input.id))
-                              .returning({ id: shoppingListItems.id });
-                          }, "update shopping list item"),
-                          (result) => {
-                            if (!result[0]) {
-                              throw new Error(
-                                "Failed to update shopping list item",
-                              );
-                            }
-                            return result[0].id;
-                          },
-                        ),
-                    ),
-                ),
-            ),
-        ),
-      );
-    }),
+          const database = yield* Database;
+          const updated = yield* database.query(
+            "update shopping list item",
+            (db) =>
+              db
+                .update(shoppingListItems)
+                .set(updateData)
+                .where(eq(shoppingListItems.id, input.id))
+                .returning({ id: shoppingListItems.id }),
+          );
+          const { id } = yield* firstReturned(updated);
+          return id;
+        }),
+      ),
+    ),
 
   deleteShoppingListItem: protectedProcedure
     .input(deleteShoppingListItemSchema)
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Find shopping list item with group membership verification
-          DbUtils.findOneOrFail(
-            () =>
-              ctx.db.query.shoppingListItems.findFirst({
-                where: eq(shoppingListItems.id, input.id),
-                with: {
-                  shoppingList: {
-                    with: {
-                      group: {
-                        columns: {
-                          id: true,
-                        },
-                        with: {
-                          groupMembers: {
-                            where: and(
-                              eq(groupMembers.userId, ctx.session.user.id),
-                              eq(groupMembers.isActive, true),
-                            ),
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              }),
-            "shoppingListItem",
-          ),
-          (shoppingListItem) =>
-            Effect.flatMap(
-              // Verify user is member of the group
-              DbUtils.ensureGroupMember(
-                ctx.session.user.id,
-                shoppingListItem.shoppingList.group.groupMembers,
-                "errors.notGroupMember",
-              ),
-              () =>
-                // Delete shopping list item
-                Effect.map(
-                  safeDbOperation(
-                    () =>
-                      ctx.db
-                        .delete(shoppingListItems)
-                        .where(eq(shoppingListItems.id, input.id))
-                        .returning({ id: shoppingListItems.id }),
-                    "delete shopping list item",
-                  ),
-                  (result) => {
-                    if (!result[0]) {
-                      throw new Error("Failed to delete shopping list item");
-                    }
-                    return result[0].id;
-                  },
-                ),
-            ),
-        ),
-      );
-    }),
+    .mutation(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getShoppingListItemWithAccess(input.id);
+          const database = yield* Database;
+          const deleted = yield* database.query(
+            "delete shopping list item",
+            (db) =>
+              db
+                .delete(shoppingListItems)
+                .where(eq(shoppingListItems.id, input.id))
+                .returning({ id: shoppingListItems.id }),
+          );
+          const { id } = yield* firstReturned(deleted);
+          return id;
+        }),
+      ),
+    ),
 
   updateLastUsed: protectedProcedure
     .input(
@@ -850,92 +557,79 @@ export const shoppingList = createTRPCRouter({
         shoppingListId: z.number().nullable(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.map(
-          // Update user's last used preferences
-          safeDbOperation(() => {
-            const updateData: Record<string, number | string | null> = {};
-            if (input.groupId !== null) {
-              updateData.lastGroupUsed = input.groupId;
-              // Reset lastShoppingListUsed if only groupId is provided
-              if (input.shoppingListId === null) {
-                updateData.lastShoppingListUsed = null;
-              }
-            }
-            if (input.shoppingListId !== null) {
-              updateData.lastShoppingListUsed = input.shoppingListId;
-            }
-            if (input.groupId === null && input.shoppingListId === null) {
-              updateData.lastGroupUsed = null;
+    .mutation(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const updateData: Record<string, number | string | null> = {};
+          if (input.groupId !== null) {
+            updateData.lastGroupUsed = input.groupId;
+            if (input.shoppingListId === null) {
               updateData.lastShoppingListUsed = null;
             }
+          }
+          if (input.shoppingListId !== null) {
+            updateData.lastShoppingListUsed = input.shoppingListId;
+          }
+          if (input.groupId === null && input.shoppingListId === null) {
+            updateData.lastGroupUsed = null;
+            updateData.lastShoppingListUsed = null;
+          }
 
-            return ctx.db
-              .update(users)
-              .set(updateData)
-              .where(eq(users.id, ctx.session.user.id))
-              .returning({ id: users.id });
-          }, "update last used preferences"),
-          (result) => {
-            if (!result[0]) {
-              throw new Error("Failed to update last used values");
-            }
-            return result[0].id;
-          },
-        ),
-      );
-    }),
+          const database = yield* Database;
+          const updated = yield* database.query(
+            "update last used preferences",
+            (db) =>
+              db
+                .update(users)
+                .set(updateData)
+                .where(eq(users.id, ctx.session.user.id))
+                .returning({ id: users.id }),
+          );
+          const { id } = yield* firstReturned(updated);
+          return id;
+        }),
+      ),
+    ),
 
   suggestItems: protectedProcedure
     .input(suggestItemsSchema)
     .output(getApiResultZod(z.array(suggestItemsOutputSchema)))
-    .query(async ({ ctx, input }) => {
+    .query(({ ctx, input }) => {
       const escaped = input.query.replace(/%/g, "\\%").replace(/_/g, "\\_");
-
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          GroupUtils.requireMemberAccess(
-            ctx.db,
-            input.groupId,
-            ctx.session.user.id,
-          ),
-          () =>
-            Effect.map(
-              safeDbOperation(
-                () =>
-                  ctx.db
-                    .select({
-                      name: sql<string>`min(${shoppingListItems.name})`,
-                      frequency: count(shoppingListItems.id),
-                      categoryId: sql<CategoryId>`mode() WITHIN GROUP (ORDER BY ${shoppingListItems.categoryId})`,
-                    })
-                    .from(shoppingListItems)
-                    .innerJoin(
-                      shoppingLists,
-                      eq(shoppingListItems.shoppingListId, shoppingLists.id),
-                    )
-                    .where(
-                      and(
-                        eq(shoppingLists.groupId, input.groupId),
-                        ilike(shoppingListItems.name, `%${escaped}%`),
-                      ),
-                    )
-                    .groupBy(sql`lower(${shoppingListItems.name})`)
-                    .orderBy(desc(count(shoppingListItems.id)))
-                    .limit(8),
-                "suggest items",
-              ),
-              (results) =>
-                results.map((row) => ({
-                  name: row.name,
-                  frequency: row.frequency,
-                  categoryId: row.categoryId,
-                })),
-            ),
-        ),
+      return runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* requireMember(input.groupId);
+          const database = yield* Database;
+          const rows = yield* database.query("suggest items", (db) =>
+            db
+              .select({
+                name: sql<string>`min(${shoppingListItems.name})`,
+                frequency: count(shoppingListItems.id),
+                categoryId: sql<CategoryId>`mode() WITHIN GROUP (ORDER BY ${shoppingListItems.categoryId})`,
+              })
+              .from(shoppingListItems)
+              .innerJoin(
+                shoppingLists,
+                eq(shoppingListItems.shoppingListId, shoppingLists.id),
+              )
+              .where(
+                and(
+                  eq(shoppingLists.groupId, input.groupId),
+                  ilike(shoppingListItems.name, `%${escaped}%`),
+                ),
+              )
+              .groupBy(sql`lower(${shoppingListItems.name})`)
+              .orderBy(desc(count(shoppingListItems.id)))
+              .limit(8),
+          );
+          return rows.map((row) => ({
+            name: row.name,
+            frequency: row.frequency,
+            categoryId: row.categoryId,
+          }));
+        }),
       );
     }),
 });

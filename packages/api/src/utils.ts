@@ -24,7 +24,6 @@ import type {
   Role,
   ShoppingListWithGroup,
   TransactionOperation,
-  User,
 } from "./types";
 import { Errors, fail, safeDbOperation } from "./errors";
 
@@ -191,42 +190,6 @@ export const OperationUtils = {
  * Group membership and access control utilities
  */
 export const GroupUtils = {
-  /**
-   * Get user's membership info in a group (with full user details)
-   */
-  getUserMembership: (
-    db: Database,
-    groupId: number,
-    userId: string,
-  ): Effect.Effect<
-    GroupMember & {
-      user: Pick<User, "email" | "name" | "image">;
-    },
-    ApiError
-  > => {
-    return DbUtils.findOneOrFail(
-      () =>
-        db.query.groupMembers.findFirst({
-          where: (members, { and, eq }) =>
-            and(
-              eq(members.userId, userId),
-              eq(members.groupId, groupId),
-              eq(members.isActive, true),
-            ),
-          with: {
-            user: {
-              columns: {
-                email: true,
-                name: true,
-                image: true,
-              },
-            },
-          },
-        }),
-      "groupMembership",
-    );
-  },
-
   activeAdminWhere: (groupId: number, userId: string) =>
     and(
       eq(groupMembers.userId, userId),
@@ -234,20 +197,6 @@ export const GroupUtils = {
       eq(groupMembers.role, "admin"),
       eq(groupMembers.isActive, true),
     ),
-
-  /**
-   * Require user to be a member of the group (any role)
-   */
-  requireMemberAccess: (
-    db: Database,
-    groupId: number,
-    userId: string,
-  ): Effect.Effect<GroupMember, ApiError> => {
-    return DbUtils.findOneOrFail(
-      () => findActiveMember(db, groupId, userId),
-      "groupMembership",
-    );
-  },
 
   /** Serializes membership changes in a group; call it first inside the transaction. */
   lockGroup: (tx: DbTransaction, groupId: number) =>
