@@ -4,6 +4,8 @@ import { z } from "zod/v4";
 
 import type { AppRouter } from "./root";
 
+const MAX_ID_LENGTH = 64;
+
 export const trpcFailureSchema = z.object({
   path: z.string().max(200),
   type: z.enum(["query", "mutation"]),
@@ -11,22 +13,14 @@ export const trpcFailureSchema = z.object({
   code: z.string().max(50).optional(),
   httpStatus: z.number().int().optional(),
   inputIds: z.record(
-    z.string().max(64).regex(/Id$/),
-    z.union([z.string().max(64), z.number()]),
+    z.string().max(MAX_ID_LENGTH).regex(/Id$/),
+    z.union([z.string().max(MAX_ID_LENGTH), z.number()]),
   ),
   attempts: z.number().int().min(0).max(100),
   hadCachedData: z.boolean().optional(),
 });
 
 export type TRPCFailure = z.infer<typeof trpcFailureSchema>;
-
-interface FailedOperation {
-  type: TRPCFailure["type"];
-  key: readonly unknown[] | undefined;
-  input: unknown;
-  attempts: number;
-  hadCachedData?: boolean;
-}
 
 export function isUnauthorizedError(error: unknown): boolean {
   return (
@@ -39,18 +33,17 @@ export function isUnauthorizedError(error: unknown): boolean {
 export function trpcFailureCaches(
   report: (error: Error, failure: TRPCFailure) => void,
 ) {
-  const reportIfTRPC = (error: Error, operation: FailedOperation) => {
-    const failure = toFailure(error, operation);
-    if (failure) report(error, failure);
-  };
   return {
     queryCache: new QueryCache({
       onError: (error, query) => {
+        const answer = classify(error);
+        if (!answer) return;
         const keyMeta = query.queryKey[1];
-        reportIfTRPC(error, {
+        report(error, {
+          ...answer,
+          path: procedurePath(query.queryKey),
           type: "query",
-          key: query.queryKey,
-          input: isRecord(keyMeta) ? keyMeta.input : undefined,
+          inputIds: idsOf(isRecord(keyMeta) ? keyMeta.input : undefined),
           // The cache counts the final failure before it calls onError
           attempts: query.state.fetchFailureCount,
           hadCachedData: query.state.data !== undefined,
@@ -59,10 +52,13 @@ export function trpcFailureCaches(
     }),
     mutationCache: new MutationCache({
       onError: (error, variables, _onMutateResult, mutation) => {
-        reportIfTRPC(error, {
+        const answer = classify(error);
+        if (!answer) return;
+        report(error, {
+          ...answer,
+          path: procedurePath(mutation.options.mutationKey),
           type: "mutation",
-          key: mutation.options.mutationKey,
-          input: variables,
+          inputIds: idsOf(variables),
           // The cache calls onError before it counts the final failure
           attempts: mutation.state.failureCount + 1,
         });
@@ -71,10 +67,7 @@ export function trpcFailureCaches(
   };
 }
 
-function toFailure(
-  error: Error,
-  operation: FailedOperation,
-): TRPCFailure | undefined {
+function classify(error: Error) {
   if (!(error instanceof TRPCClientError) || isUnauthorizedError(error)) {
     return undefined;
   }
@@ -85,15 +78,9 @@ function toFailure(
   const answered =
     trpcError.meta?.response !== undefined ||
     trpcError.cause instanceof SyntaxError;
-  const code = data?.code ?? (answered ? "UNREADABLE_RESPONSE" : undefined);
   return {
-    path: procedurePath(operation.key),
-    type: operation.type,
-    code,
+    code: data?.code ?? (answered ? "UNREADABLE_RESPONSE" : undefined),
     httpStatus: data?.httpStatus,
-    inputIds: idsOf(operation.input),
-    attempts: operation.attempts,
-    hadCachedData: operation.hadCachedData,
   };
 }
 
@@ -127,7 +114,9 @@ function idsOf(input: unknown): Record<string, string | number> {
     Object.entries(input).filter(
       (entry): entry is [string, string | number] =>
         entry[0].endsWith("Id") &&
-        (typeof entry[1] === "string" || typeof entry[1] === "number"),
+        (typeof entry[1] === "string"
+          ? entry[1].length <= MAX_ID_LENGTH
+          : Number.isFinite(entry[1])),
     ),
   );
 }

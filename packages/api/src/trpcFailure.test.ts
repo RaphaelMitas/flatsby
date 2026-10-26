@@ -29,10 +29,11 @@ async function failQuery(error: Error, input: unknown) {
 }
 
 describe("trpcFailureCaches", () => {
-  it("reports a failed query with its code and only the ID inputs", async () => {
+  it("reports a failed query with its code and only the valid ID inputs", async () => {
     const reports = await failQuery(serverError("NOT_FOUND", 404), {
       groupId: 7,
       memberId: "m-1",
+      shoppingListId: Number.NaN,
       name: "Flat",
     });
     expect(reports).toEqual([

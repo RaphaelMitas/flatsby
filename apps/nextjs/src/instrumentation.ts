@@ -1,8 +1,8 @@
 import type { Instrumentation } from "next";
 
-import { captureError } from "@flatsby/api/posthog";
+import { captureError, posthog } from "@flatsby/api/posthog";
 
-export const onRequestError: Instrumentation.onRequestError = (
+export const onRequestError: Instrumentation.onRequestError = async (
   error,
   _request,
   context,
@@ -15,4 +15,5 @@ export const onRequestError: Instrumentation.onRequestError = (
       render_source: context.renderSource,
     },
   });
+  await posthog?.flush();
 };
