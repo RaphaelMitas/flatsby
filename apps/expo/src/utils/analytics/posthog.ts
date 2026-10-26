@@ -13,9 +13,17 @@ export const posthog = new PostHog(posthogApiKey || "phc-disabled", {
   disabled: posthogDisabled,
   host: "https://eu.i.posthog.com",
   captureAppLifecycleEvents: true,
-  // Deep links reach PostHog as screen paths and the "Application Opened" url
-  before_send: (event) =>
-    event && {
+  before_send: [
+    // The query and mutation caches report tRPC errors, so error boundaries and rejected mutateAsync calls would report them twice
+    (event) =>
+      event.event === "$exception" &&
+      !event.properties?.trpc_path &&
+      firstExceptionType(event.properties?.$exception_list) ===
+        "TRPCClientError"
+        ? null
+        : event,
+    // Deep links reach PostHog as screen paths and the "Application Opened" url
+    (event) => ({
       ...event,
       properties:
         event.properties &&
@@ -25,7 +33,8 @@ export const posthog = new PostHog(posthogApiKey || "phc-disabled", {
             typeof value === "string" ? redactInvitePath(value) : value,
           ]),
         ),
-    },
+    }),
+  ],
   errorTracking: {
     autocapture: {
       uncaughtExceptions: true,
@@ -34,3 +43,12 @@ export const posthog = new PostHog(posthogApiKey || "phc-disabled", {
     },
   },
 });
+
+function firstExceptionType(exceptionList: unknown) {
+  const first: unknown = Array.isArray(exceptionList)
+    ? exceptionList[0]
+    : undefined;
+  return typeof first === "object" && first !== null && "type" in first
+    ? first.type
+    : undefined;
+}

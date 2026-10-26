@@ -1,24 +1,20 @@
 import type { AppRouter } from "@flatsby/api";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { AppState } from "react-native";
-import {
-  focusManager,
-  MutationCache,
-  QueryCache,
-  QueryClient,
-} from "@tanstack/react-query";
+import { focusManager, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
 
+import {
+  isUnauthorizedError,
+  trpcFailureCaches,
+} from "@flatsby/api/trpcFailure";
+
 import { authClient } from "./auth/auth-client";
 import { getBaseUrl } from "./base-url";
 import { languageTags } from "./intl-provider";
-import {
-  isUnauthorizedError,
-  reportMutationError,
-  reportQueryError,
-} from "./report-trpc-error";
+import { reportTRPCFailure } from "./report-trpc-error";
 
 // React Native has no window focus; coming back to the app refetches what's on screen, so housemates' changes show up
 focusManager.setEventListener((setFocused) => {
@@ -29,8 +25,7 @@ focusManager.setEventListener((setFocused) => {
 });
 
 export const queryClient = new QueryClient({
-  queryCache: new QueryCache({ onError: reportQueryError }),
-  mutationCache: new MutationCache({ onError: reportMutationError }),
+  ...trpcFailureCaches(reportTRPCFailure),
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {

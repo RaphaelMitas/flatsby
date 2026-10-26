@@ -27,6 +27,10 @@
     "./shoppingListItemsCache": {
       "types": "./dist/shoppingListItemsCache.d.ts",
       "default": "./src/shoppingListItemsCache.ts"
+    },
+    "./trpcFailure": {
+      "types": "./dist/trpcFailure.d.ts",
+      "default": "./src/trpcFailure.ts"
     }
   },
   "license": "MIT",
@@ -46,6 +50,7 @@
     "@flatsby/i18n": "workspace:*",
     "@flatsby/validators": "workspace:*",
     "@posthog/ai": "8.14.1",
+    "@posthog/core": "^1.59.1",
     "@trpc/server": "catalog:",
     "ai": "catalog:",
     "effect": "^4.0.5",
@@ -66,6 +71,7 @@
   "peerDependencies": {
     "@tanstack/react-pacer": "*",
     "@tanstack/react-query": "catalog:",
+    "@trpc/client": "catalog:",
     "react": "catalog:react19"
   },
   "prettier": "@flatsby/prettier-config"
