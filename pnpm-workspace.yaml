@@ -86,7 +86,7 @@ catalogs:
 
 linkWorkspacePackages: true
 
-# Renovate waits 2 days: it ages only the parent package, platform binaries often publish later
+# Keep renovate.json minimumReleaseAge above this: Renovate ages only the parent, pnpm also its later-published platform binaries
 minimumReleaseAge: 1440
 
 nodeLinker: hoisted

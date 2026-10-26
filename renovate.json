@@ -13,7 +13,7 @@
   "labels": ["dependencies"],
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
-    "description": "One bundled PR for all security fixes. Renovate exempts vulnerability alerts from prConcurrentLimit, so this ships even when the 2-PR budget is full; minimumReleaseAge is cleared so fixes are not held for a day",
+    "description": "One bundled PR for all security fixes. Renovate exempts vulnerability alerts from prConcurrentLimit, so this ships even when the 2-PR budget is full; minimumReleaseAge is cleared so Renovate does not hold fixes back",
     "enabled": true,
     "groupName": "security-fixes",
     "groupSlug": "security-fixes",
