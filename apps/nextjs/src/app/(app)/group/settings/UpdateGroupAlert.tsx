@@ -3,6 +3,7 @@
 import { AlertCircle, CircleCheckBig } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 
 import type { useUpdateGroup } from "~/hooks/use-update-group";
@@ -15,21 +16,13 @@ export function UpdateGroupAlert({
   successTitle: string;
 }) {
   const t = useTranslations();
-  if (mutation.isError || mutation.data?.success === false) {
+  const failure = failureOf(mutation, t("group.expenseSettings.saveFailed"));
+  if (failure !== undefined) {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>
-          {mutation.data?.success === false
-            ? mutation.data.error.type
-            : (mutation.error?.data?.code ?? t("common.unknownError"))}
-        </AlertTitle>
-        <AlertDescription>
-          {mutation.data?.success === false
-            ? mutation.data.error.message
-            : (mutation.error?.message ??
-              t("group.expenseSettings.saveFailed"))}
-        </AlertDescription>
+        <AlertTitle>{t("common.error")}</AlertTitle>
+        <AlertDescription>{failure}</AlertDescription>
       </Alert>
     );
   }

@@ -23,7 +23,7 @@ import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Segmented } from "~/lib/ui/segmented";
-import { cn, handleApiError } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { ConvertCurrencyBanner } from "./ConvertCurrencyBanner";
 import { DirectDebts } from "./DirectDebts";
@@ -57,12 +57,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
     setRefreshing(false);
   }, [invalidateDebtSummary]);
 
-  if (!debtData.success) {
-    return handleApiError({ router, error: debtData.error });
-  }
-  if (!groupData.success) {
-    return handleApiError({ router, error: groupData.error });
-  }
+  if (!debtData.success || !groupData.success) return null;
 
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;

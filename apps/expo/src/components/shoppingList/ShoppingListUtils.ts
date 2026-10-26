@@ -2,6 +2,7 @@ import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { updateShoppingListItemInCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
@@ -129,28 +130,21 @@ export const useUpdateShoppingListItemMutation = ({
   );
 
   return useMutation(
-    trpc.shoppingList.updateShoppingListItem.mutationOptions({
-      onMutate: async (variables) => {
-        await queryClient.cancelQueries({ queryKey: itemsQueryKey });
-        const previousItems = queryClient.getQueryData(itemsQueryKey);
-        queryClient.setQueryData(itemsQueryKey, (old) =>
-          updateShoppingListItemInCache(old, variables),
-        );
-        return { queryKey: itemsQueryKey, previousItems };
-      },
-      onError: (_err, _variables, context) => {
-        if (context) {
-          queryClient.setQueryData(context.queryKey, context.previousItems);
-        }
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          queryClient.setQueryData(context.queryKey, context.previousItems);
-        }
-      },
-      onSettled: () => {
-        invalidateAll();
-      },
-    }),
+    trpc.shoppingList.updateShoppingListItem.mutationOptions(
+      resultMutation({
+        onMutate: async (variables) => {
+          await queryClient.cancelQueries({ queryKey: itemsQueryKey });
+          const previousItems = queryClient.getQueryData(itemsQueryKey);
+          queryClient.setQueryData(itemsQueryKey, (old) =>
+            updateShoppingListItemInCache(old, variables),
+          );
+          return [{ queryKey: itemsQueryKey, previous: previousItems }];
+        },
+        rollback: restoreSnapshot(queryClient),
+        onSettled: () => {
+          invalidateAll();
+        },
+      }),
+    ),
   );
 };

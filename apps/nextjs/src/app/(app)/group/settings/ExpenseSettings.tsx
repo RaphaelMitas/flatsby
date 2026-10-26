@@ -32,19 +32,17 @@ import {
 
 import { useUpdateGroup } from "~/hooks/use-update-group";
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { UpdateGroupAlert } from "./UpdateGroupAlert";
 
 const ExpenseSettings = ({ groupId }: { groupId: number }) => {
   const trpc = useTRPC();
-  const handleApiError = useHandleApiError();
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
   if (!group.success) {
-    return handleApiError(group.error);
+    return null;
   }
 
   return <ExpenseSettingsForm key={groupId} group={group.data} />;

@@ -8,7 +8,6 @@ import { useTranslations } from "use-intl";
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import { SafeAreaView } from "~/lib/ui/safe-area";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import ShoppingListDashboardElement from "./ShoppingListDashboardElement";
@@ -66,10 +65,7 @@ function ShoppingListsDashboardInner() {
   );
 
   if (!shoppingLists.success) {
-    return handleApiError({
-      router,
-      error: shoppingLists.error,
-    });
+    return null;
   }
 
   return (

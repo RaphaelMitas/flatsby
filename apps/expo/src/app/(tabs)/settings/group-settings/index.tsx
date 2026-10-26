@@ -9,7 +9,6 @@ import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { SafeAreaView } from "~/lib/ui/safe-area";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useDeleteGroup } from "~/utils/useDeleteGroup";
@@ -46,7 +45,7 @@ export default function GroupSettingsIndex() {
   };
 
   if (!group.success) {
-    return handleApiError({ router, error: group.error });
+    return null;
   }
 
   return (

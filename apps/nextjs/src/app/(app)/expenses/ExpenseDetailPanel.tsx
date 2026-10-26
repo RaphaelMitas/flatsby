@@ -9,6 +9,7 @@ import {
 import { Receipt } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +28,6 @@ import { toast } from "@flatsby/ui/toast";
 import type { ExpenseAction } from "./useExpenseSelection";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { ExpenseDetailContent } from "./ExpenseDetailContent";
 import { ExpenseFormInline } from "./ExpenseFormInline";
 import { useExpenseInvalidation } from "./useExpenseInvalidation";
@@ -51,7 +51,6 @@ export function ExpenseDetailPanel({
   const t = useTranslations();
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
-  const handleApiError = useHandleApiError();
   const isLargeScreen = useMediaQuery("lg");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -65,62 +64,51 @@ export function ExpenseDetailPanel({
     useExpenseInvalidation(groupId);
 
   const deleteExpenseMutation = useMutation(
-    trpc.expense.deleteExpense.mutationOptions({
-      onMutate: async (input) => {
-        await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
+    trpc.expense.deleteExpense.mutationOptions(
+      resultMutation({
+        onMutate: async (input) => {
+          await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
-        const previousData = queryClient.getQueryData(expenseListQueryKey);
+          const previousData = queryClient.getQueryData(expenseListQueryKey);
 
-        queryClient.setQueryData(expenseListQueryKey, (old) => {
-          if (!old) return old;
+          queryClient.setQueryData(expenseListQueryKey, (old) => {
+            if (!old) return old;
 
-          const updatedPages = old.pages.map((page) => {
-            if (page.success === false) return page;
+            const updatedPages = old.pages.map((page) => {
+              if (page.success === false) return page;
 
-            return {
-              ...page,
-              data: {
-                ...page.data,
-                items: page.data.items.filter(
-                  (item) => item.id !== input.expenseId,
-                ),
-              },
-            };
+              return {
+                ...page,
+                data: {
+                  ...page.data,
+                  items: page.data.items.filter(
+                    (item) => item.id !== input.expenseId,
+                  ),
+                },
+              };
+            });
+
+            return { ...old, pages: updatedPages };
           });
 
-          return { ...old, pages: updatedPages };
-        });
-
-        return { previousData };
-      },
-      onError: (error, _variables, context) => {
-        if (context?.previousData) {
-          queryClient.setQueryData(expenseListQueryKey, context.previousData);
-        }
-        toast.error(t("expenses.deleteFailed"), {
-          description: error.message,
-        });
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          if (context.previousData) {
-            queryClient.setQueryData(expenseListQueryKey, context.previousData);
-          }
+          return [{ queryKey: expenseListQueryKey, previous: previousData }];
+        },
+        rollback: restoreSnapshot(queryClient),
+        onFailure: (message) =>
           toast.error(t("expenses.deleteFailed"), {
-            description: data.error.message,
-          });
-          return;
-        }
-
-        toast.success(t("expenses.deleteSuccess"));
-        invalidateAll();
-        onBack();
-      },
-    }),
+            description: message ?? t("errors.unexpected"),
+          }),
+        onSuccess: () => {
+          toast.success(t("expenses.deleteSuccess"));
+          invalidateAll();
+          onBack();
+        },
+      }),
+    ),
   );
 
   if (!groupData.success) {
-    return handleApiError(groupData.error);
+    return null;
   }
 
   // Show create form
@@ -203,14 +191,13 @@ function ExpenseDetailPanelContent({
 }: ExpenseDetailPanelContentProps) {
   const trpc = useTRPC();
   const t = useTranslations();
-  const handleApiError = useHandleApiError();
 
   const { data: expenseData } = useSuspenseQuery(
     trpc.expense.getExpense.queryOptions({ expenseId }),
   );
 
   if (!expenseData.success) {
-    return handleApiError(expenseData.error);
+    return null;
   }
 
   const expense = expenseData.data;

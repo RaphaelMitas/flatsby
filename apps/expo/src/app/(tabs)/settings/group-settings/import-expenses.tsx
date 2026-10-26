@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImport";
@@ -25,7 +26,6 @@ import {
 import { Button } from "~/lib/ui/button";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
@@ -103,7 +103,7 @@ export default function ImportExpensesScreen() {
   );
 
   if (!group.success) {
-    return handleApiError({ router, error: group.error });
+    return null;
   }
 
   if (bulkCreateMutation.data?.success) {
@@ -129,6 +129,8 @@ export default function ImportExpensesScreen() {
       </SafeAreaView>
     );
   }
+
+  const importFailure = failureOf(bulkCreateMutation, tCommon("unknownError"));
 
   return (
     <BottomSheetPickerProvider>
@@ -340,17 +342,11 @@ export default function ImportExpensesScreen() {
                 </Text>
               </View>
 
-              {(bulkCreateMutation.isError ||
-                bulkCreateMutation.data?.success === false) && (
+              {importFailure !== undefined && (
                 <TimedAlert
                   variant="destructive"
                   title={t("importFailed")}
-                  description={
-                    bulkCreateMutation.data?.success === false
-                      ? bulkCreateMutation.data.error.message
-                      : (bulkCreateMutation.error?.message ??
-                        tCommon("unknownError"))
-                  }
+                  description={importFailure}
                 />
               )}
 

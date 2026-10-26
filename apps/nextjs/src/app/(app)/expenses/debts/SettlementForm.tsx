@@ -18,6 +18,11 @@ import { AlertCircle, LoaderCircle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
+import {
+  failureOf,
+  restoreSnapshot,
+  resultMutation,
+} from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import {
@@ -58,7 +63,6 @@ import {
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { CurrencyInput } from "~/components/CurrencyInput";
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { useExpenseInvalidation } from "../useExpenseInvalidation";
 
 export interface SettlementPrefill {
@@ -77,7 +81,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const locale = useLocale();
   const queryClient = useQueryClient();
   const { currentGroup } = useGroupContext();
-  const handleApiError = useHandleApiError();
 
   const groupId = currentGroup?.id ?? 0;
   const isBlank = !prefill;
@@ -127,173 +130,163 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     : null;
 
   const createSettlementMutation = useMutation(
-    trpc.expense.createExpense.mutationOptions({
-      onMutate: async (input) => {
-        await Promise.all([
-          queryClient.cancelQueries({ queryKey: expenseListQueryKey }),
-          queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
-        ]);
+    trpc.expense.createExpense.mutationOptions(
+      resultMutation({
+        onMutate: async (input) => {
+          await Promise.all([
+            queryClient.cancelQueries({ queryKey: expenseListQueryKey }),
+            queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
+          ]);
 
-        const previousData = queryClient.getQueryData(expenseListQueryKey);
-        const previousDebtSummary =
-          queryClient.getQueryData(debtSummaryQueryKey);
+          const previousData = queryClient.getQueryData(expenseListQueryKey);
+          const previousDebtSummary =
+            queryClient.getQueryData(debtSummaryQueryKey);
 
-        if (previousDebtSummary?.success) {
-          const optimistic: typeof previousDebtSummary = {
-            success: true,
-            data: applySettlement(previousDebtSummary.data, {
-              fromGroupMemberId: input.paidByGroupMemberId,
-              toGroupMemberId: input.splits[0]?.groupMemberId ?? 0,
-              currency: input.currency,
+          if (previousDebtSummary?.success) {
+            const optimistic: typeof previousDebtSummary = {
+              success: true,
+              data: applySettlement(previousDebtSummary.data, {
+                fromGroupMemberId: input.paidByGroupMemberId,
+                toGroupMemberId: input.splits[0]?.groupMemberId ?? 0,
+                currency: input.currency,
+                amountInCents: input.amountInCents,
+              }),
+            };
+            queryClient.setQueryData(debtSummaryQueryKey, optimistic);
+          }
+
+          // Get the paidBy and toMember for the optimistic settlement
+          const paidByMember = membersForOptimistic.find(
+            (m) => m.id === input.paidByGroupMemberId,
+          );
+          const splitMember = membersForOptimistic.find(
+            (m) => m.id === input.splits[0]?.groupMemberId,
+          );
+
+          // Optimistically add the new settlement
+          queryClient.setQueryData(expenseListQueryKey, (old) => {
+            if (!old) return old;
+
+            const optimisticSettlement: ExpenseWithSplitsAndMembers & {
+              isPending: true;
+            } = {
+              id: Date.now(),
+              groupId,
+              paidByGroupMemberId: input.paidByGroupMemberId,
               amountInCents: input.amountInCents,
-            }),
-          };
-          queryClient.setQueryData(debtSummaryQueryKey, optimistic);
-        }
-
-        // Get the paidBy and toMember for the optimistic settlement
-        const paidByMember = membersForOptimistic.find(
-          (m) => m.id === input.paidByGroupMemberId,
-        );
-        const splitMember = membersForOptimistic.find(
-          (m) => m.id === input.splits[0]?.groupMemberId,
-        );
-
-        // Optimistically add the new settlement
-        queryClient.setQueryData(expenseListQueryKey, (old) => {
-          if (!old) return old;
-
-          const optimisticSettlement: ExpenseWithSplitsAndMembers & {
-            isPending: true;
-          } = {
-            id: Date.now(),
-            groupId,
-            paidByGroupMemberId: input.paidByGroupMemberId,
-            amountInCents: input.amountInCents,
-            currency: input.currency,
-            convertedAmountInCents: null,
-            convertedCurrency: null,
-            description: input.description,
-            category: "other",
-            subcategory: "other",
-            expenseDate: input.expenseDate,
-            createdByGroupMemberId: currentMember?.id ?? 0,
-            splitMethod: "settlement",
-            createdAt: new Date(),
-            paidByGroupMember: paidByMember
-              ? {
-                  id: paidByMember.id,
-                  groupId,
-                  userId: paidByMember.userId,
-                  role: paidByMember.role,
-                  joinedOn: paidByMember.joinedOn,
-                  user: paidByMember.user,
-                }
-              : {
-                  id: input.paidByGroupMemberId,
-                  groupId,
-                  userId: "",
-                  role: "member" as const,
-                  joinedOn: new Date(),
-                  user: { email: "", name: t("common.unknown"), image: null },
-                },
-            createdByGroupMember: currentMember
-              ? {
-                  id: currentMember.id,
-                  groupId,
-                  userId: currentMember.userId,
-                  role: currentMember.role,
-                  joinedOn: currentMember.joinedOn,
-                  user: currentMember.user,
-                }
-              : {
-                  id: 0,
-                  groupId,
-                  userId: "",
-                  role: "member" as const,
-                  joinedOn: new Date(),
-                  user: { email: "", name: t("common.unknown"), image: null },
-                },
-            expenseSplits: input.splits.map((split, index) => ({
-              id: Date.now() + index,
+              currency: input.currency,
+              convertedAmountInCents: null,
+              convertedCurrency: null,
+              description: input.description,
+              category: "other",
+              subcategory: "other",
+              expenseDate: input.expenseDate,
+              createdByGroupMemberId: currentMember?.id ?? 0,
+              splitMethod: "settlement",
               createdAt: new Date(),
-              expenseId: Date.now(),
-              groupMemberId: split.groupMemberId,
-              amountInCents: split.amountInCents,
-              percentage: split.percentage,
-              shares: null,
-              groupMember: splitMember
+              paidByGroupMember: paidByMember
                 ? {
-                    id: splitMember.id,
+                    id: paidByMember.id,
                     groupId,
-                    userId: splitMember.userId,
-                    role: splitMember.role,
-                    joinedOn: splitMember.joinedOn,
-                    user: splitMember.user,
+                    userId: paidByMember.userId,
+                    role: paidByMember.role,
+                    joinedOn: paidByMember.joinedOn,
+                    user: paidByMember.user,
                   }
                 : {
-                    id: split.groupMemberId,
+                    id: input.paidByGroupMemberId,
                     groupId,
                     userId: "",
                     role: "member" as const,
                     joinedOn: new Date(),
                     user: { email: "", name: t("common.unknown"), image: null },
                   },
-            })),
-            isPending: true,
-          };
-
-          const updatedPages = old.pages.map((page, pageIndex) => {
-            if (page.success === false) return page;
-            if (pageIndex !== 0) return page;
-
-            return {
-              ...page,
-              data: {
-                ...page.data,
-                items: [optimisticSettlement, ...page.data.items],
-              },
+              createdByGroupMember: currentMember
+                ? {
+                    id: currentMember.id,
+                    groupId,
+                    userId: currentMember.userId,
+                    role: currentMember.role,
+                    joinedOn: currentMember.joinedOn,
+                    user: currentMember.user,
+                  }
+                : {
+                    id: 0,
+                    groupId,
+                    userId: "",
+                    role: "member" as const,
+                    joinedOn: new Date(),
+                    user: { email: "", name: t("common.unknown"), image: null },
+                  },
+              expenseSplits: input.splits.map((split, index) => ({
+                id: Date.now() + index,
+                createdAt: new Date(),
+                expenseId: Date.now(),
+                groupMemberId: split.groupMemberId,
+                amountInCents: split.amountInCents,
+                percentage: split.percentage,
+                shares: null,
+                groupMember: splitMember
+                  ? {
+                      id: splitMember.id,
+                      groupId,
+                      userId: splitMember.userId,
+                      role: splitMember.role,
+                      joinedOn: splitMember.joinedOn,
+                      user: splitMember.user,
+                    }
+                  : {
+                      id: split.groupMemberId,
+                      groupId,
+                      userId: "",
+                      role: "member" as const,
+                      joinedOn: new Date(),
+                      user: {
+                        email: "",
+                        name: t("common.unknown"),
+                        image: null,
+                      },
+                    },
+              })),
+              isPending: true,
             };
+
+            const updatedPages = old.pages.map((page, pageIndex) => {
+              if (page.success === false) return page;
+              if (pageIndex !== 0) return page;
+
+              return {
+                ...page,
+                data: {
+                  ...page.data,
+                  items: [optimisticSettlement, ...page.data.items],
+                },
+              };
+            });
+
+            return { ...old, pages: updatedPages };
           });
 
-          return { ...old, pages: updatedPages };
-        });
-
-        return { previousData, previousDebtSummary };
-      },
-      onError: (error, _variables, context) => {
-        if (context) {
-          queryClient.setQueryData(expenseListQueryKey, context.previousData);
-          queryClient.setQueryData(
-            debtSummaryQueryKey,
-            context.previousDebtSummary,
-          );
-        }
-        toast.error(t("debts.recordFailed"), {
-          description: error.message,
-        });
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          queryClient.setQueryData(expenseListQueryKey, context.previousData);
-          queryClient.setQueryData(
-            debtSummaryQueryKey,
-            context.previousDebtSummary,
-          );
+          return [
+            { queryKey: expenseListQueryKey, previous: previousData },
+            { queryKey: debtSummaryQueryKey, previous: previousDebtSummary },
+          ];
+        },
+        rollback: restoreSnapshot(queryClient),
+        onFailure: (message) =>
           toast.error(t("debts.recordFailed"), {
-            description: data.error.message,
-          });
-          return;
-        }
-
-        toast.success(t("debts.recordSuccess"));
-        onClose();
-      },
-      onSettled: () => {
-        void invalidateList();
-        void invalidateDebtSummary();
-      },
-    }),
+            description: message ?? t("errors.unexpected"),
+          }),
+        onSuccess: () => {
+          toast.success(t("debts.recordSuccess"));
+          onClose();
+        },
+        onSettled: () => {
+          void invalidateList();
+          void invalidateDebtSummary();
+        },
+      }),
+    ),
   );
 
   const onSubmit = (values: SettlementFormValues) => {
@@ -321,7 +314,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const currency = form.watch("currency");
 
   if (!groupData.success) {
-    return handleApiError(groupData.error);
+    return null;
   }
 
   const groupMembers = groupData.data.groupMembers;
@@ -343,6 +336,10 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
 
   const isPending = createSettlementMutation.isPending;
+  const failure = failureOf(
+    createSettlementMutation,
+    t("expenses.genericError"),
+  );
 
   return (
     <Sheet open onOpenChange={(open) => !open && !isPending && onClose()}>
@@ -507,17 +504,11 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
             />
 
             {/* Error Display */}
-            {(createSettlementMutation.isError ||
-              createSettlementMutation.data?.success === false) && (
+            {failure && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>{t("common.error")}</AlertTitle>
-                <AlertDescription>
-                  {createSettlementMutation.data?.success === false
-                    ? createSettlementMutation.data.error.message
-                    : (createSettlementMutation.error?.message ??
-                      t("expenses.genericError"))}
-                </AlertDescription>
+                <AlertDescription>{failure}</AlertDescription>
               </Alert>
             )}
 

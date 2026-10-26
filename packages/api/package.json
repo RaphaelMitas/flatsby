@@ -20,6 +20,10 @@
       "types": "./dist/lib/posthog.d.ts",
       "default": "./src/lib/posthog.ts"
     },
+    "./resultMutation": {
+      "types": "./dist/resultMutation.d.ts",
+      "default": "./src/resultMutation.ts"
+    },
     "./shoppingListItemsCache": {
       "types": "./dist/shoppingListItemsCache.d.ts",
       "default": "./src/shoppingListItemsCache.ts"

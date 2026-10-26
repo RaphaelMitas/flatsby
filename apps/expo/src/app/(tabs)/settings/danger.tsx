@@ -3,6 +3,8 @@ import { Text, View } from "react-native";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
+
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Button } from "~/lib/ui/button";
@@ -39,6 +41,10 @@ export default function DangerScreen() {
   };
 
   const isConfirmationValid = confirmationInput === user.email;
+  const deleteFailure = failureOf(
+    deleteUserMutation,
+    t("settings.danger.unknownError"),
+  );
 
   return (
     <SafeAreaView>
@@ -132,18 +138,11 @@ export default function DangerScreen() {
           )}
 
           {/* Error Display */}
-          {(deleteUserMutation.isError ||
-            (deleteUserMutation.data && !deleteUserMutation.data.success)) && (
+          {deleteFailure !== undefined && (
             <Alert variant="destructive" className="mt-4">
               <Icon name="circle-alert" size={16} />
               <AlertTitle>{t("settings.danger.deletionFailed")}</AlertTitle>
-              <AlertDescription>
-                {deleteUserMutation.isError
-                  ? deleteUserMutation.error.message
-                  : !deleteUserMutation.data.success
-                    ? deleteUserMutation.data.error.message
-                    : t("settings.danger.unknownError")}
-              </AlertDescription>
+              <AlertDescription>{deleteFailure}</AlertDescription>
             </Alert>
           )}
         </Alert>

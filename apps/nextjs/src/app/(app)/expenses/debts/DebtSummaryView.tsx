@@ -27,7 +27,6 @@ import {
 import type { SettlementPrefill } from "./SettlementForm";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { ConversionBanner } from "./ConversionBanner";
 import { DebtHero } from "./DebtHero";
 import { DirectDebtsCard } from "./DirectDebtsCard";
@@ -40,7 +39,6 @@ export function DebtSummaryView() {
   const t = useTranslations();
   const locale = useLocale();
   const { currentGroup } = useGroupContext();
-  const handleApiError = useHandleApiError();
   const [settling, setSettling] = useState<SettlementPrefill | "blank" | null>(
     null,
   );
@@ -55,12 +53,7 @@ export function DebtSummaryView() {
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  if (!debtData.success) {
-    return handleApiError(debtData.error);
-  }
-  if (!groupData.success) {
-    return handleApiError(groupData.error);
-  }
+  if (!debtData.success || !groupData.success) return null;
 
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;

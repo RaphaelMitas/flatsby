@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import { Calendar } from "@flatsby/ui/calendar";
@@ -85,6 +86,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     splits,
     amountInCents,
   ).length;
+  const failure =
+    failureOf(createExpenseMutation, t("expenses.genericError")) ??
+    failureOf(updateExpenseMutation, t("expenses.genericError"));
 
   return (
     <Form {...form}>
@@ -396,22 +400,11 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
           </div>
         )}
 
-        {(createExpenseMutation.isError ||
-          updateExpenseMutation.isError ||
-          createExpenseMutation.data?.success === false ||
-          updateExpenseMutation.data?.success === false) && (
+        {failure && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>{t("common.error")}</AlertTitle>
-            <AlertDescription>
-              {createExpenseMutation.data?.success === false
-                ? createExpenseMutation.data.error.message
-                : updateExpenseMutation.data?.success === false
-                  ? updateExpenseMutation.data.error.message
-                  : (createExpenseMutation.error?.message ??
-                    updateExpenseMutation.error?.message ??
-                    t("expenses.genericError"))}
-            </AlertDescription>
+            <AlertDescription>{failure}</AlertDescription>
           </Alert>
         )}
 

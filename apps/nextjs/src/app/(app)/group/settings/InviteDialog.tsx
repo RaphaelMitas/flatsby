@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import QRCode from "react-qr-code";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Button } from "@flatsby/ui/button";
 import {
   Dialog,
@@ -82,24 +83,18 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
     }),
   );
 
-  if (inviteQuery.isError || inviteQuery.data?.success === false) {
-    return (
-      <p className="text-destructive text-sm">
-        {inviteQuery.data?.success === false
-          ? inviteQuery.data.error.message
-          : t("invite.loadFailed")}
-      </p>
-    );
+  const loadFailure = failureOf(inviteQuery, t("invite.loadFailed"));
+  if (loadFailure !== undefined) {
+    return <p className="text-destructive text-sm">{loadFailure}</p>;
   }
 
-  const invite = inviteQuery.data?.data;
+  const invite = inviteQuery.data?.success ? inviteQuery.data.data : undefined;
   if (!invite) {
     return <Skeleton className="mx-auto h-64 w-48" />;
   }
 
   const link = inviteLink(window.location.origin, invite.code);
-  const resetFailed =
-    resetMutation.isError || resetMutation.data?.success === false;
+  const resetFailure = failureOf(resetMutation, t("invite.resetFailed"));
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
@@ -141,8 +136,8 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
           {t("invite.resetLink")}
         </Button>
       </div>
-      {resetFailed && (
-        <p className="text-destructive text-sm">{t("invite.resetFailed")}</p>
+      {resetFailure && (
+        <p className="text-destructive text-sm">{resetFailure}</p>
       )}
     </div>
   );

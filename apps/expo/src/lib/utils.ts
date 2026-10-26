@@ -1,12 +1,8 @@
-import type { ApiErrorResult } from "@flatsby/api";
 import type { ClassValue } from "clsx";
-import type { useRouter } from "expo-router";
 import { useColorScheme } from "react-native";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-
-import { signOut } from "~/utils/auth/auth-client";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -132,18 +128,4 @@ export const useThemedScreenOptions = () => {
       },
     },
   };
-};
-
-export const handleApiError = ({
-  router,
-  error,
-}: {
-  router: ReturnType<typeof useRouter>;
-  error: ApiErrorResult["error"];
-}) => {
-  if (error.type === "UnauthorizedError") {
-    void signOut();
-    router.push("/auth/login");
-  }
-  return null;
 };

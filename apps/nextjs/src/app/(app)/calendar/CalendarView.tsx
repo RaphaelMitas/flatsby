@@ -63,7 +63,6 @@ import {
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { CalendarItemDetail } from "./CalendarItemDetail";
 import { CalendarItemForm } from "./CalendarItemForm";
 import { CalendarList } from "./CalendarList";
@@ -89,7 +88,6 @@ const onReturn = (notify: () => void) => {
 
 export function CalendarView() {
   const trpc = useTRPC();
-  const handleApiError = useHandleApiError();
   const { currentGroup } = useGroupContext();
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: currentGroup?.id ?? 0 }),
@@ -97,7 +95,7 @@ export function CalendarView() {
   // "Today" is the viewer's local day, which the server can't know while rendering
   const today = useSyncExternalStore(onReturn, localDate, () => null);
 
-  if (!groupData.success) return handleApiError(groupData.error);
+  if (!groupData.success) return null;
   if (!today)
     return (
       <div className="flex h-full items-center justify-center">
@@ -124,7 +122,6 @@ function CalendarScreen({
   const locale = useLocale();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const handleApiError = useHandleApiError();
   const isLargeScreen = useMediaQuery("lg");
   const [position, setPosition] = useState<CalendarPosition>({
     view: "month",
@@ -195,11 +192,7 @@ function CalendarScreen({
   }, []);
 
   if (data?.success === false)
-    return (
-      handleApiError(data.error) ?? (
-        <p className="text-destructive p-4 text-sm">{data.error.message}</p>
-      )
-    );
+    return <p className="text-destructive p-4 text-sm">{data.error.message}</p>;
 
   const agenda = data?.success
     ? agendaAt(data.data, position, today, meId, member)

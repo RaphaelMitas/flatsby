@@ -1,4 +1,3 @@
-import type { ShoppingListInfiniteData } from "@flatsby/api";
 import type {
   CategoryId,
   CategoryIdWithAiAutoSelect,
@@ -18,6 +17,7 @@ import {
 } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
@@ -73,6 +73,11 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     }),
   );
 
+  const itemsOptions = shoppingListItemsOptions(
+    groupId,
+    shoppingListId,
+    selectedCategory ?? undefined,
+  );
   const {
     data: itemsData,
     fetchNextPage,
@@ -81,11 +86,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     refetch: refetchItems,
     isRefetching: isRefetchingItems,
   } = useInfiniteQuery({
-    ...shoppingListItemsOptions(
-      groupId,
-      shoppingListId,
-      selectedCategory ?? undefined,
-    ),
+    ...itemsOptions,
     placeholderData: keepPreviousData,
   });
 
@@ -172,97 +173,76 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     allItems.length,
   ]);
 
-  const onMutateShoppingListItemError = (
-    previousItems: ShoppingListInfiniteData | undefined,
-  ) => {
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-        groupId,
-        shoppingListId,
-        limit: PAGE_SIZE.shoppingListItems,
-        categoryId: selectedCategory ?? undefined,
-      }),
-      previousItems,
-    );
-  };
-
   const createShoppingListItemMutation = useMutation(
-    trpc.shoppingList.createShoppingListItem.mutationOptions({
-      onMutate: async ({ name, categoryId }) => {
-        await queryClient.cancelQueries({
-          queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-        });
+    trpc.shoppingList.createShoppingListItem.mutationOptions(
+      resultMutation({
+        onMutate: async ({ name, categoryId }) => {
+          await queryClient.cancelQueries({
+            queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
+              groupId,
+              shoppingListId,
+              limit: PAGE_SIZE.shoppingListItems,
+              categoryId: selectedCategory ?? undefined,
+            }),
+          });
 
-        const previousItems = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-        );
+          const previousItems = queryClient.getQueryData(
+            trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
+              groupId,
+              shoppingListId,
+              limit: PAGE_SIZE.shoppingListItems,
+              categoryId: selectedCategory ?? undefined,
+            }),
+          );
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-            groupId,
-            shoppingListId,
-            limit: PAGE_SIZE.shoppingListItems,
-            categoryId: selectedCategory ?? undefined,
-          }),
-          (old) => {
-            if (!old) return old;
+          queryClient.setQueryData(
+            trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
+              groupId,
+              shoppingListId,
+              limit: PAGE_SIZE.shoppingListItems,
+              categoryId: selectedCategory ?? undefined,
+            }),
+            (old) => {
+              if (!old) return old;
 
-            const updatedPages = old.pages.map((page, index) => {
-              if (page.success === false) return page;
+              const updatedPages = old.pages.map((page, index) => {
+                if (page.success === false) return page;
 
-              const newItem = {
-                id: Date.now(),
-                name,
-                categoryId,
-                createdAt: new Date(),
-                completed: false,
-                createdByGroupMemberId: currentMember?.id ?? null,
-                completedByGroupMemberId: null,
-                completedAt: null,
-                createdByGroupMember: currentMember,
-                completedByGroupMember: null,
-                isPending: true,
-              };
+                const newItem = {
+                  id: Date.now(),
+                  name,
+                  categoryId,
+                  createdAt: new Date(),
+                  completed: false,
+                  createdByGroupMemberId: currentMember?.id ?? null,
+                  completedByGroupMemberId: null,
+                  completedAt: null,
+                  createdByGroupMember: currentMember,
+                  completedByGroupMember: null,
+                  isPending: true,
+                };
 
-              return {
-                ...page,
-                data: {
-                  ...page.data,
-                  items:
-                    index === 0
-                      ? [newItem, ...page.data.items]
-                      : page.data.items,
-                },
-              };
-            });
+                return {
+                  ...page,
+                  data: {
+                    ...page.data,
+                    items:
+                      index === 0
+                        ? [newItem, ...page.data.items]
+                        : page.data.items,
+                  },
+                };
+              });
 
-            return { ...old, pages: updatedPages };
-          },
-        );
-        return { previousItems };
-      },
-      onError: (_err, _variables, context) => {
-        onMutateShoppingListItemError(context?.previousItems);
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          onMutateShoppingListItemError(context.previousItems);
-          return;
-        }
-
-        invalidateAll();
-      },
-    }),
+              return { ...old, pages: updatedPages };
+            },
+          );
+          return [{ queryKey: itemsOptions.queryKey, previous: previousItems }];
+        },
+        rollback: restoreSnapshot(queryClient),
+        onSuccess: () => invalidateAll(),
+      }),
+    ),
   );
 
   const handleSubmit = (values: {

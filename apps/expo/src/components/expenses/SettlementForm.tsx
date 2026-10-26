@@ -16,6 +16,11 @@ import {
 import { useForm, useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
+import {
+  failureOf,
+  restoreSnapshot,
+  resultMutation,
+} from "@flatsby/api/resultMutation";
 import { applySettlement, pairDebt } from "@flatsby/validators/expenses/debt";
 import {
   formatCurrencyFromCents,
@@ -157,214 +162,202 @@ export function SettlementForm({
     : null;
 
   const createSettlementMutation = useMutation(
-    trpc.expense.createExpense.mutationOptions({
-      onMutate: async (input) => {
-        await Promise.all([
-          queryClient.cancelQueries({ queryKey: expenseListQueryKey }),
-          queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
-        ]);
+    trpc.expense.createExpense.mutationOptions(
+      resultMutation({
+        onMutate: async (input) => {
+          await Promise.all([
+            queryClient.cancelQueries({ queryKey: expenseListQueryKey }),
+            queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
+          ]);
 
-        const previousData = queryClient.getQueryData(expenseListQueryKey);
-        const previousDebtSummary =
-          queryClient.getQueryData(debtSummaryQueryKey);
+          const previousData = queryClient.getQueryData(expenseListQueryKey);
+          const previousDebtSummary =
+            queryClient.getQueryData(debtSummaryQueryKey);
 
-        const receiverId = input.splits[0]?.groupMemberId;
-        if (receiverId !== undefined) {
-          queryClient.setQueryData(debtSummaryQueryKey, (old) => {
-            if (!old || old.success === false) return old;
-            return {
-              success: true as const,
-              data: applySettlement(old.data, {
-                fromGroupMemberId: input.paidByGroupMemberId,
-                toGroupMemberId: receiverId,
-                currency: input.currency,
-                amountInCents: input.amountInCents,
-              }),
-            };
-          });
-        }
+          const receiverId = input.splits[0]?.groupMemberId;
+          if (receiverId !== undefined) {
+            queryClient.setQueryData(debtSummaryQueryKey, (old) => {
+              if (!old || old.success === false) return old;
+              return {
+                success: true as const,
+                data: applySettlement(old.data, {
+                  fromGroupMemberId: input.paidByGroupMemberId,
+                  toGroupMemberId: receiverId,
+                  currency: input.currency,
+                  amountInCents: input.amountInCents,
+                }),
+              };
+            });
+          }
 
-        // Get the paidBy and toMember for the optimistic settlement
-        const paidByMember = membersForOptimistic.find(
-          (m) => m.id === input.paidByGroupMemberId,
-        );
-        const splitMember = membersForOptimistic.find(
-          (m) => m.id === input.splits[0]?.groupMemberId,
-        );
+          // Get the paidBy and toMember for the optimistic settlement
+          const paidByMember = membersForOptimistic.find(
+            (m) => m.id === input.paidByGroupMemberId,
+          );
+          const splitMember = membersForOptimistic.find(
+            (m) => m.id === input.splits[0]?.groupMemberId,
+          );
 
-        // Optimistically add the new settlement
-        queryClient.setQueryData(expenseListQueryKey, (old) => {
-          if (!old) return old;
+          // Optimistically add the new settlement
+          queryClient.setQueryData(expenseListQueryKey, (old) => {
+            if (!old) return old;
 
-          const optimisticSettlement: ExpenseWithSplitsAndMembers = {
-            id: Date.now(),
-            groupId,
-            paidByGroupMemberId: input.paidByGroupMemberId,
-            amountInCents: input.amountInCents,
-            currency: input.currency,
-            convertedAmountInCents: null,
-            convertedCurrency: null,
-            description: input.description,
-            category: "other",
-            subcategory: "other",
-            expenseDate: input.expenseDate,
-            createdByGroupMemberId: currentMember?.id ?? 0,
-            splitMethod: "settlement",
-            createdAt: new Date(),
-            paidByGroupMember: paidByMember
-              ? {
-                  id: paidByMember.id,
-                  groupId,
-                  userId: paidByMember.userId,
-                  role: paidByMember.role,
-                  joinedOn: paidByMember.joinedOn,
-                  user: paidByMember.user,
-                }
-              : {
-                  id: input.paidByGroupMemberId,
-                  groupId,
-                  userId: "",
-                  role: "member" as const,
-                  joinedOn: new Date(),
-                  user: { email: "", name: t("common.unknown"), image: null },
-                },
-            createdByGroupMember: currentMember
-              ? {
-                  id: currentMember.id,
-                  groupId,
-                  userId: currentMember.userId,
-                  role: currentMember.role,
-                  joinedOn: currentMember.joinedOn,
-                  user: currentMember.user,
-                }
-              : {
-                  id: 0,
-                  groupId,
-                  userId: "",
-                  role: "member" as const,
-                  joinedOn: new Date(),
-                  user: { email: "", name: t("common.unknown"), image: null },
-                },
-            expenseSplits: input.splits.map((split, index) => ({
-              id: Date.now() + index,
+            const optimisticSettlement: ExpenseWithSplitsAndMembers = {
+              id: Date.now(),
+              groupId,
+              paidByGroupMemberId: input.paidByGroupMemberId,
+              amountInCents: input.amountInCents,
+              currency: input.currency,
+              convertedAmountInCents: null,
+              convertedCurrency: null,
+              description: input.description,
+              category: "other",
+              subcategory: "other",
+              expenseDate: input.expenseDate,
+              createdByGroupMemberId: currentMember?.id ?? 0,
+              splitMethod: "settlement",
               createdAt: new Date(),
-              expenseId: Date.now(),
-              groupMemberId: split.groupMemberId,
-              amountInCents: split.amountInCents,
-              percentage: split.percentage,
-              shares: null,
-              groupMember: splitMember
+              paidByGroupMember: paidByMember
                 ? {
-                    id: splitMember.id,
+                    id: paidByMember.id,
                     groupId,
-                    userId: splitMember.userId,
-                    role: splitMember.role,
-                    joinedOn: splitMember.joinedOn,
-                    user: splitMember.user,
+                    userId: paidByMember.userId,
+                    role: paidByMember.role,
+                    joinedOn: paidByMember.joinedOn,
+                    user: paidByMember.user,
                   }
                 : {
-                    id: split.groupMemberId,
+                    id: input.paidByGroupMemberId,
                     groupId,
                     userId: "",
                     role: "member" as const,
                     joinedOn: new Date(),
                     user: { email: "", name: t("common.unknown"), image: null },
                   },
-            })),
-          };
+              createdByGroupMember: currentMember
+                ? {
+                    id: currentMember.id,
+                    groupId,
+                    userId: currentMember.userId,
+                    role: currentMember.role,
+                    joinedOn: currentMember.joinedOn,
+                    user: currentMember.user,
+                  }
+                : {
+                    id: 0,
+                    groupId,
+                    userId: "",
+                    role: "member" as const,
+                    joinedOn: new Date(),
+                    user: { email: "", name: t("common.unknown"), image: null },
+                  },
+              expenseSplits: input.splits.map((split, index) => ({
+                id: Date.now() + index,
+                createdAt: new Date(),
+                expenseId: Date.now(),
+                groupMemberId: split.groupMemberId,
+                amountInCents: split.amountInCents,
+                percentage: split.percentage,
+                shares: null,
+                groupMember: splitMember
+                  ? {
+                      id: splitMember.id,
+                      groupId,
+                      userId: splitMember.userId,
+                      role: splitMember.role,
+                      joinedOn: splitMember.joinedOn,
+                      user: splitMember.user,
+                    }
+                  : {
+                      id: split.groupMemberId,
+                      groupId,
+                      userId: "",
+                      role: "member" as const,
+                      joinedOn: new Date(),
+                      user: {
+                        email: "",
+                        name: t("common.unknown"),
+                        image: null,
+                      },
+                    },
+              })),
+            };
 
-          const updatedPages = old.pages.map((page, pageIndex) => {
-            if (page.success === false) return page;
-            if (pageIndex !== 0) return page;
+            const updatedPages = old.pages.map((page, pageIndex) => {
+              if (page.success === false) return page;
+              if (pageIndex !== 0) return page;
+
+              return {
+                ...page,
+                data: {
+                  ...page.data,
+                  items: [optimisticSettlement, ...page.data.items],
+                },
+              };
+            });
+
+            return { ...old, pages: updatedPages };
+          });
+
+          return [
+            { queryKey: expenseListQueryKey, previous: previousData },
+            { queryKey: debtSummaryQueryKey, previous: previousDebtSummary },
+          ];
+        },
+        rollback: restoreSnapshot(queryClient),
+        onSuccess: () => {
+          onClose();
+          form.reset();
+        },
+        onSettled: () => {
+          void invalidateList();
+          void invalidateDebtSummary();
+        },
+      }),
+    ),
+  );
+
+  const updateSettlementMutation = useMutation(
+    trpc.expense.updateExpense.mutationOptions(
+      resultMutation({
+        onMutate: async (input) => {
+          if (!expense || !expenseQueryKey) return;
+          // Cancel any outgoing queries
+          await queryClient.cancelQueries(
+            trpc.expense.getExpense.queryOptions({
+              expenseId: expense.id,
+            }),
+          );
+
+          const previousData = queryClient.getQueryData(expenseQueryKey);
+
+          // Optimistically update the settlement in the list
+          queryClient.setQueryData(expenseQueryKey, (old) => {
+            if (!old || old.success === false) return old;
 
             return {
-              ...page,
+              success: true as const,
               data: {
-                ...page.data,
-                items: [optimisticSettlement, ...page.data.items],
+                ...old.data,
+                ...input,
+                category: old.data.category,
+                subcategory: old.data.subcategory,
               },
             };
           });
 
-          return { ...old, pages: updatedPages };
-        });
-
-        return {
-          rollback: () => {
-            queryClient.setQueryData(expenseListQueryKey, previousData);
-            queryClient.setQueryData(debtSummaryQueryKey, previousDebtSummary);
-          },
-        };
-      },
-      onError: (_error, _variables, context) => {
-        context?.rollback();
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          context.rollback();
-          return;
-        }
-
-        onClose();
-        form.reset();
-      },
-      onSettled: () => {
-        void invalidateList();
-        void invalidateDebtSummary();
-      },
-    }),
-  );
-
-  const updateSettlementMutation = useMutation(
-    trpc.expense.updateExpense.mutationOptions({
-      onMutate: async (input) => {
-        if (!expense || !expenseQueryKey) return;
-        // Cancel any outgoing queries
-        await queryClient.cancelQueries(
-          trpc.expense.getExpense.queryOptions({
-            expenseId: expense.id,
-          }),
-        );
-
-        const previousData = queryClient.getQueryData(expenseQueryKey);
-
-        // Optimistically update the settlement in the list
-        queryClient.setQueryData(expenseQueryKey, (old) => {
-          if (!old || old.success === false) return old;
-
-          return {
-            success: true as const,
-            data: {
-              ...old.data,
-              ...input,
-              category: old.data.category,
-              subcategory: old.data.subcategory,
-            },
-          };
-        });
-
-        return { previousData };
-      },
-      onError: (_error, _variables, context) => {
-        if (context?.previousData && expenseQueryKey) {
-          queryClient.setQueryData(expenseQueryKey, context.previousData);
-        }
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          if (context?.previousData && expenseQueryKey) {
-            queryClient.setQueryData(expenseQueryKey, context.previousData);
-          }
-          return;
-        }
-
-        void queryClient.invalidateQueries({
-          queryKey: expenseQueryKey,
-        });
-        void invalidateDebtSummary();
-        onClose();
-      },
-    }),
+          return [{ queryKey: expenseQueryKey, previous: previousData }];
+        },
+        rollback: restoreSnapshot(queryClient),
+        onSuccess: () => {
+          void queryClient.invalidateQueries({
+            queryKey: expenseQueryKey,
+          });
+          void invalidateDebtSummary();
+          onClose();
+        },
+      }),
+    ),
   );
 
   const onSubmit = (values: SettlementFormValues) => {
@@ -432,20 +425,9 @@ export function SettlementForm({
   const isPending =
     createSettlementMutation.isPending || updateSettlementMutation.isPending;
 
-  const hasError =
-    createSettlementMutation.isError ||
-    updateSettlementMutation.isError ||
-    createSettlementMutation.data?.success === false ||
-    updateSettlementMutation.data?.success === false;
-
   const errorMessage =
-    createSettlementMutation.data?.success === false
-      ? createSettlementMutation.data.error.message
-      : updateSettlementMutation.data?.success === false
-        ? updateSettlementMutation.data.error.message
-        : (createSettlementMutation.error?.message ??
-          updateSettlementMutation.error?.message ??
-          t("expenses.genericError"));
+    failureOf(createSettlementMutation, t("expenses.genericError")) ??
+    failureOf(updateSettlementMutation, t("expenses.genericError"));
 
   return (
     <BottomSheetPickerProvider>
@@ -607,7 +589,7 @@ export function SettlementForm({
               />
             </View>
             {/* Error Display */}
-            {hasError && (
+            {errorMessage !== undefined && (
               <Alert variant="destructive">
                 <AlertTitle variant="destructive">
                   {t("common.error")}

@@ -1,4 +1,3 @@
-import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useCallback, useRef, useState } from "react";
@@ -10,6 +9,7 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import type { RouterOutputs } from "~/utils/api";
@@ -39,6 +39,9 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   const swipeableRef = useRef<SwipeableMethods>(null);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const listsQueryKey = trpc.shoppingList.getShoppingLists.queryKey({
+    groupId,
+  });
 
   const form = useForm({
     schema: shoppingListFormSchema,
@@ -47,121 +50,100 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
     },
   });
 
-  const onMutateShoppingListError = (
-    previousLists: ApiResult<ShoppingListSummary[]> | undefined,
-  ) => {
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingLists.queryKey({
-        groupId,
-      }),
-      previousLists,
-    );
-  };
-
   const deleteShoppingListMutation = useMutation(
-    trpc.shoppingList.deleteShoppingList.mutationOptions({
-      onMutate: () => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getShoppingLists.queryOptions({
-            groupId,
-          }),
-        );
+    trpc.shoppingList.deleteShoppingList.mutationOptions(
+      resultMutation({
+        onMutate: () => {
+          void queryClient.cancelQueries(
+            trpc.shoppingList.getShoppingLists.queryOptions({
+              groupId,
+            }),
+          );
 
-        const previousLists = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingLists.queryKey({
-            groupId,
-          }),
-        );
+          const previousLists = queryClient.getQueryData(
+            trpc.shoppingList.getShoppingLists.queryKey({
+              groupId,
+            }),
+          );
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingLists.queryKey({
-            groupId,
-          }),
-          (old) => {
-            if (!old?.success) {
-              return old;
-            }
+          queryClient.setQueryData(
+            trpc.shoppingList.getShoppingLists.queryKey({
+              groupId,
+            }),
+            (old) => {
+              if (!old?.success) {
+                return old;
+              }
 
-            return {
-              success: true as const,
-              data: old.data.filter((list) => list.id !== shoppingList.id),
-            };
-          },
-        );
+              return {
+                success: true as const,
+                data: old.data.filter((list) => list.id !== shoppingList.id),
+              };
+            },
+          );
 
-        return { previousLists };
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          onMutateShoppingListError(context.previousLists);
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.shoppingList.getShoppingLists.queryOptions({
-            groupId,
-          }),
-        );
-      },
-      onError: (_error, _variables, context) => {
-        onMutateShoppingListError(context?.previousLists);
-      },
-    }),
+          return [{ queryKey: listsQueryKey, previous: previousLists }];
+        },
+        rollback: restoreSnapshot(queryClient),
+        onSuccess: () => {
+          void queryClient.invalidateQueries(
+            trpc.shoppingList.getShoppingLists.queryOptions({
+              groupId,
+            }),
+          );
+        },
+      }),
+    ),
   );
 
   const renameShoppingListMutation = useMutation(
-    trpc.shoppingList.changeShoppingListName.mutationOptions({
-      onMutate: (data) => {
-        void queryClient.cancelQueries(
-          trpc.shoppingList.getShoppingLists.queryOptions({
-            groupId,
-          }),
-        );
+    trpc.shoppingList.changeShoppingListName.mutationOptions(
+      resultMutation({
+        onMutate: (data) => {
+          void queryClient.cancelQueries(
+            trpc.shoppingList.getShoppingLists.queryOptions({
+              groupId,
+            }),
+          );
 
-        const previousLists = queryClient.getQueryData(
-          trpc.shoppingList.getShoppingLists.queryKey({
-            groupId,
-          }),
-        );
+          const previousLists = queryClient.getQueryData(
+            trpc.shoppingList.getShoppingLists.queryKey({
+              groupId,
+            }),
+          );
 
-        queryClient.setQueryData(
-          trpc.shoppingList.getShoppingLists.queryKey({
-            groupId,
-          }),
-          (old) => {
-            if (!old?.success) {
-              return old;
-            }
+          queryClient.setQueryData(
+            trpc.shoppingList.getShoppingLists.queryKey({
+              groupId,
+            }),
+            (old) => {
+              if (!old?.success) {
+                return old;
+              }
 
-            return {
-              success: true as const,
-              data: old.data.map((list) =>
-                list.id === shoppingList.id
-                  ? { ...list, name: data.name }
-                  : list,
-              ),
-            };
-          },
-        );
+              return {
+                success: true as const,
+                data: old.data.map((list) =>
+                  list.id === shoppingList.id
+                    ? { ...list, name: data.name }
+                    : list,
+                ),
+              };
+            },
+          );
 
-        return { previousLists };
-      },
-      onSuccess: (data, _variables, context) => {
-        if (data.success === false) {
-          onMutateShoppingListError(context.previousLists);
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.shoppingList.getShoppingLists.queryOptions({
-            groupId,
-          }),
-        );
-      },
-      onError: (_error, _variables, context) => {
-        onMutateShoppingListError(context?.previousLists);
-      },
-    }),
+          return [{ queryKey: listsQueryKey, previous: previousLists }];
+        },
+        rollback: restoreSnapshot(queryClient),
+        onSuccess: () => {
+          void queryClient.invalidateQueries(
+            trpc.shoppingList.getShoppingLists.queryOptions({
+              groupId,
+            }),
+          );
+        },
+      }),
+    ),
   );
 
   const handleRename = useCallback(

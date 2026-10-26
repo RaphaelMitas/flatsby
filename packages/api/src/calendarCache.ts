@@ -5,11 +5,7 @@ import type {
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
 import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
-import type {
-  QueryClient,
-  QueryFilters,
-  QueryKey,
-} from "@tanstack/react-query";
+import type { QueryClient, QueryFilters } from "@tanstack/react-query";
 import { z } from "zod/v4";
 
 import {
@@ -30,6 +26,8 @@ import {
 } from "@flatsby/validators/calendar";
 
 import type { ApiResult } from "./errors";
+import type { QuerySnapshot } from "./resultMutation";
+import { restoreSnapshot, resultMutation } from "./resultMutation";
 
 // A tRPC query key is [path, { input, type }]
 const rangeKeySchema = z.tuple([
@@ -43,8 +41,6 @@ export interface CalendarPatch {
   range: (range: CalendarRange, window: RangeWindow) => CalendarRange;
   detail?: (detail: CalendarItemDetail) => CalendarItemDetail;
 }
-
-export type CalendarSnapshot = [QueryKey, unknown][];
 
 type FindCachedItem = (id: number) => CalendarItemView | undefined;
 
@@ -63,7 +59,7 @@ async function patchCalendar(
   queryClient: QueryClient,
   filters: CalendarFilters,
   patchFor: (findCachedItem: FindCachedItem) => CalendarPatch,
-): Promise<CalendarSnapshot> {
+): Promise<QuerySnapshot> {
   await Promise.all([
     queryClient.cancelQueries(filters.ranges),
     queryClient.cancelQueries(filters.details),
@@ -97,45 +93,30 @@ async function patchCalendar(
       if (cached?.success)
         queryClient.setQueryData(key, { ...cached, data: detail(cached.data) });
     }
-  return [...ranges, ...details];
+  return [...ranges, ...details].map(([queryKey, previous]) => ({
+    queryKey,
+    previous,
+  }));
 }
 
-const restoreCalendar = (
-  queryClient: QueryClient,
-  snapshot: CalendarSnapshot = [],
-) => {
-  for (const [key, cached] of snapshot) queryClient.setQueryData(key, cached);
-};
-
-/** Mutation callbacks for one calendar write; `onFailure` gets null when the request itself failed. */
 export const calendarMutation = <TInput>(
   queryClient: QueryClient,
   filters: CalendarFilters,
   patchFor: CalendarPatchFor<TInput>,
-  onFailure: (message: string | null) => void,
-) => ({
-  onMutate: (input: TInput) =>
-    patchCalendar(queryClient, filters, (findCachedItem) =>
-      patchFor(input, findCachedItem),
-    ),
-  onError: (_error: unknown, _input: TInput, snapshot?: CalendarSnapshot) => {
-    restoreCalendar(queryClient, snapshot);
-    onFailure(null);
-  },
-  onSuccess: (
-    result: ApiResult<unknown>,
-    _input: TInput,
-    snapshot?: CalendarSnapshot,
-  ) => {
-    if (result.success) return;
-    restoreCalendar(queryClient, snapshot);
-    onFailure(result.error.message);
-  },
-  onSettled: () => {
-    void queryClient.invalidateQueries(filters.ranges);
-    void queryClient.invalidateQueries(filters.details);
-  },
-});
+  onFailure: (message: string | undefined) => void,
+) =>
+  resultMutation({
+    onMutate: (input: TInput) =>
+      patchCalendar(queryClient, filters, (findCachedItem) =>
+        patchFor(input, findCachedItem),
+      ),
+    rollback: restoreSnapshot(queryClient),
+    onFailure,
+    onSettled: () => {
+      void queryClient.invalidateQueries(filters.ranges);
+      void queryClient.invalidateQueries(filters.details);
+    },
+  });
 
 const asView = (
   id: number,

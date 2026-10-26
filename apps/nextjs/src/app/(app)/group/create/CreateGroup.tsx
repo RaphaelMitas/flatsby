@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { failureOf } from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
@@ -41,6 +42,7 @@ export function CreateGroup() {
       },
     }),
   );
+  const createFailure = failureOf(groupMutation, t("errors.unexpected"));
 
   return (
     <div className="p-8">
@@ -76,13 +78,11 @@ export function CreateGroup() {
               value={groupName}
               disabled={groupMutation.isPending}
             />
-            {groupMutation.isError && (
+            {createFailure && (
               <Alert className="mt-2" variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>{groupMutation.error.data?.code}</AlertTitle>
-                <AlertDescription>
-                  {groupMutation.error.message}
-                </AlertDescription>
+                <AlertTitle>{t("common.error")}</AlertTitle>
+                <AlertDescription>{createFailure}</AlertDescription>
               </Alert>
             )}
           </div>

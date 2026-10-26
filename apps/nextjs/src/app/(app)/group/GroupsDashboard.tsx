@@ -9,7 +9,6 @@ import { useTranslations } from "next-intl";
 import { Button } from "@flatsby/ui/button";
 
 import { useTRPC } from "~/trpc/react";
-import { useHandleApiError } from "~/utils";
 import { GroupsDashboardElement } from "./GroupsDashboardElement";
 import { JoinWithCodeDialog } from "./JoinWithCodeDialog";
 
@@ -18,7 +17,6 @@ export function GroupsDashboard() {
   const trpc = useTRPC();
   const [joinOpen, setJoinOpen] = useState(false);
   const router = useRouter();
-  const handleApiError = useHandleApiError();
 
   const { data: groups, status } = useSuspenseQuery(
     trpc.group.getUserGroups.queryOptions(),
@@ -33,7 +31,7 @@ export function GroupsDashboard() {
   );
 
   if (!groups.success) {
-    return handleApiError(groups.error);
+    return null;
   }
 
   const handleSelectGroup = (groupId: number) => {

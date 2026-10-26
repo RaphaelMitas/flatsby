@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { removeShoppingListItemFromCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
@@ -77,29 +78,22 @@ const ShoppingListItem = ({
   );
 
   const deleteShoppingListItemMutation = useMutation(
-    trpc.shoppingList.deleteShoppingListItem.mutationOptions({
-      onMutate: async ({ id }) => {
-        await queryClient.cancelQueries({ queryKey: itemsQueryKey });
-        const previousItems = queryClient.getQueryData(itemsQueryKey);
-        queryClient.setQueryData(itemsQueryKey, (old) =>
-          removeShoppingListItemFromCache(old, id),
-        );
-        return { queryKey: itemsQueryKey, previousItems };
-      },
-      onError: (_err, _variables, context) => {
-        if (context) {
-          queryClient.setQueryData(context.queryKey, context.previousItems);
-        }
-      },
-      onSuccess: (data, _variables, context) => {
-        if (!data.success) {
-          queryClient.setQueryData(context.queryKey, context.previousItems);
-        }
-      },
-      onSettled: () => {
-        invalidateAll();
-      },
-    }),
+    trpc.shoppingList.deleteShoppingListItem.mutationOptions(
+      resultMutation({
+        onMutate: async ({ id }) => {
+          await queryClient.cancelQueries({ queryKey: itemsQueryKey });
+          const previousItems = queryClient.getQueryData(itemsQueryKey);
+          queryClient.setQueryData(itemsQueryKey, (old) =>
+            removeShoppingListItemFromCache(old, id),
+          );
+          return [{ queryKey: itemsQueryKey, previous: previousItems }];
+        },
+        rollback: restoreSnapshot(queryClient),
+        onSettled: () => {
+          invalidateAll();
+        },
+      }),
+    ),
   );
 
   const createdByMember = groupMembers.find(

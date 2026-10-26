@@ -7,7 +7,6 @@ import { useTranslations } from "use-intl";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
-import { handleApiError } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useHomeVersion } from "~/utils/home-version";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -81,7 +80,7 @@ function DashboardContent() {
   }
 
   if (!userWithGroups.success) {
-    return handleApiError({ router, error: userWithGroups.error });
+    return null;
   }
 
   return (
