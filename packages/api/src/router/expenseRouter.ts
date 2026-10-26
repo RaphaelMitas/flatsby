@@ -216,11 +216,27 @@ export const expenseRouter = createTRPCRouter({
         ctx,
         Effect.gen(function* () {
           const expense = yield* getExpenseWithAccess(input.expenseId);
-          yield* requireActiveMembers(expense.groupId, [
-            ...(input.paidByGroupMemberId ? [input.paidByGroupMemberId] : []),
-            ...(input.splits ?? []).map((split) => split.groupMemberId),
-          ]);
           const database = yield* Database;
+          const storedSplits = yield* database.query(
+            "find expense split members",
+            (db) =>
+              db
+                .select({ groupMemberId: expenseSplits.groupMemberId })
+                .from(expenseSplits)
+                .where(eq(expenseSplits.expenseId, expense.id)),
+          );
+          // Members who left stay on their old expenses, so only newly assigned ones must be active
+          const alreadyOnExpense = new Set([
+            expense.paidByGroupMemberId,
+            ...storedSplits.map((split) => split.groupMemberId),
+          ]);
+          yield* requireActiveMembers(
+            expense.groupId,
+            [
+              ...(input.paidByGroupMemberId ? [input.paidByGroupMemberId] : []),
+              ...(input.splits ?? []).map((split) => split.groupMemberId),
+            ].filter((id) => !alreadyOnExpense.has(id)),
+          );
           const result = yield* database.query(
             "transaction: update expense",
             (db) =>
