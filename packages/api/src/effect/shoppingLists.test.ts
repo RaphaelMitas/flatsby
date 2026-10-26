@@ -13,12 +13,13 @@ import {
 } from "./shoppingLists";
 import { toApiResult } from "./toApiResult";
 
-// The real client validates DATABASE_URL on import; list 2 sits in a foreign group, so an existence-only check fails
+// The real client validates DATABASE_URL on import, which would fail a local run without env vars
 vi.mock("@flatsby/db/client", () => ({
   db: {
     query: {
       groupMembers: { findFirst: () => Promise.resolve(undefined) },
       shoppingLists: {
+        // Foreign group, so a lookup that only checks existence fails the test
         findFirst: () =>
           Promise.resolve({ id: 2, group: { id: 9, groupMembers: [] } }),
       },
