@@ -31,19 +31,19 @@ import {
   userSchema,
 } from "@flatsby/validators/user";
 
-import {
-  Errors,
-  fail,
-  getApiResultZod,
-  withErrorHandlingAsResult,
-} from "../errors";
-import { captureError } from "../lib/posthog";
+import { run, runResult } from "../effect/runtime";
+import { Database } from "../effect/services/Database";
+import { report } from "../effect/toApiResult";
+import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, GroupUtils, safeDbOperation } from "../utils";
+import { GroupUtils } from "../utils";
 import { autumn, checkCredits } from "../utils/autumn";
 
-// i18n-ignore: plan names are Autumn product names like "Pro", not copy
-const freePlanName = "Free";
+const freePlan = {
+  planId: PLAN_IDS.FREE,
+  // i18n-ignore: plan names are Autumn product names like "Pro", not copy
+  planName: "Free",
+};
 
 export const userRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
@@ -51,52 +51,49 @@ export const userRouter = createTRPCRouter({
     return user;
   }),
 
-  getUsage: protectedProcedure
-    .output(usageDataSchema)
-    .query(async ({ ctx }) => {
-      try {
-        const result = await checkCredits(ctx.session.user);
-
-        return {
+  getUsage: protectedProcedure.output(usageDataSchema).query(async ({ ctx }) =>
+    run(
+      ctx,
+      Effect.tryPromise({
+        try: () => checkCredits(ctx.session.user),
+        catch: (cause) =>
+          Errors.externalService("autumn", "check credits", cause),
+      }).pipe(
+        Effect.map((result) => ({
           credits: {
             balance: result.balance?.remaining ?? 0,
             usage: result.balance?.usage ?? 0,
           },
-        };
-      } catch (error) {
-        captureError({
-          error,
-          operation: "user.getUsage",
-          distinctId: ctx.session.user.id,
-        });
-        return { credits: null };
-      }
-    }),
+        })),
+        Effect.catch((error) => Effect.as(report(error), { credits: null })),
+      ),
+    ),
+  ),
 
   getSubscription: protectedProcedure
     .output(subscriptionDataSchema)
-    .query(async ({ ctx }) => {
-      try {
-        const customer = await autumn.customers.getOrCreate({
-          customerId: ctx.session.user.id,
-          name: ctx.session.user.name,
-          email: ctx.session.user.email,
-          expand: ["subscriptions.plan"],
-        });
-        const activeSub = getCurrentSubscription(customer.subscriptions);
-        return {
-          planId: activeSub?.planId ?? PLAN_IDS.FREE,
-          planName: activeSub?.plan?.name ?? freePlanName,
-        };
-      } catch (error) {
-        captureError({
-          error,
-          operation: "user.getSubscription",
-          distinctId: ctx.session.user.id,
-        });
-        return { planId: PLAN_IDS.FREE, planName: freePlanName };
-      }
-    }),
+    .query(async ({ ctx }) =>
+      run(
+        ctx,
+        Effect.tryPromise({
+          try: async () => {
+            const customer = await autumn.customers.getOrCreate({
+              customerId: ctx.session.user.id,
+              name: ctx.session.user.name,
+              email: ctx.session.user.email,
+              expand: ["subscriptions.plan"],
+            });
+            const activeSub = getCurrentSubscription(customer.subscriptions);
+            return {
+              planId: activeSub?.planId ?? freePlan.planId,
+              planName: activeSub?.plan?.name ?? freePlan.planName,
+            };
+          },
+          catch: (cause) =>
+            Errors.externalService("autumn", "get customer", cause),
+        }).pipe(Effect.catch((error) => Effect.as(report(error), freePlan))),
+      ),
+    ),
 
   getCurrentUserWithGroups: protectedProcedure
     .output(
@@ -114,13 +111,15 @@ export const userRouter = createTRPCRouter({
         }),
       ),
     )
-    .query(async ({ ctx }) => {
-      return await withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.map(
-          safeDbOperation(
-            () =>
-              ctx.db.query.groupMembers.findMany({
+    .query(async ({ ctx }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const database = yield* Database;
+          const groups = yield* database.query(
+            "fetch user groups on groupMembers",
+            (db) =>
+              db.query.groupMembers.findMany({
                 columns: {},
                 where: and(
                   eq(groupMembers.userId, ctx.session.user.id),
@@ -142,26 +141,22 @@ export const userRouter = createTRPCRouter({
                   },
                 },
               }),
-            "fetch user groups",
-            "groupMembers",
-          ),
-          (groups) => {
-            const user = groups[0]?.user;
-            return {
-              user: user
-                ? {
-                    ...user,
-                    lastChatModelUsed: chatModelSchema.safeParse(
-                      user.lastChatModelUsed,
-                    ).data,
-                  }
-                : undefined,
-              groups: groups.map((g) => g.group),
-            };
-          },
-        ),
-      );
-    }),
+          );
+          const user = groups[0]?.user;
+          return {
+            user: user
+              ? {
+                  ...user,
+                  lastChatModelUsed: chatModelSchema.safeParse(
+                    user.lastChatModelUsed,
+                  ).data,
+                }
+              : undefined,
+            groups: groups.map((g) => g.group),
+          };
+        }),
+      ),
+    ),
 
   updateUserName: protectedProcedure
     .input(updateUserNameFormSchema)
@@ -170,189 +165,193 @@ export const userRouter = createTRPCRouter({
         z.object({ user: z.array(userSchema.pick({ id: true })) }),
       ),
     )
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(
-          // Validate input
-          input.name.trim().length > 0
-            ? Effect.succeed(input.name.trim())
-            : fail.validation("errors.invalidName"),
-          (validName) =>
-            // Perform the update with better error handling
-            Effect.tryPromise({
-              try: async () => {
-                const res = await ctx.db
-                  .update(users)
-                  .set({ name: validName })
-                  .where(eq(users.id, ctx.session.user.id))
-                  .returning({ id: users.id });
-                return { user: res };
-              },
-              catch: (error) =>
-                Errors.database(
-                  "update user name",
-                  "users",
-                  error,
-                  "errors.updateNameFailed",
-                ),
-            }),
-        ),
-      );
-    }),
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const name = input.name.trim();
+          if (name.length === 0) {
+            return yield* Errors.validation("errors.invalidName");
+          }
+          const database = yield* Database;
+          const user = yield* database.query(
+            "update user name",
+            (db) =>
+              db
+                .update(users)
+                .set({ name })
+                .where(eq(users.id, ctx.session.user.id))
+                .returning({ id: users.id }),
+            { messageKey: "errors.updateNameFailed", table: "users" },
+          );
+          return { user };
+        }),
+      ),
+    ),
 
   deleteUser: protectedProcedure
     .output(getApiResultZod(z.object({ success: z.boolean() })))
-    .mutation(async ({ ctx }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        DbUtils.transaction(async (trx) => {
-          const user = ctx.session.user;
+    .mutation(async ({ ctx }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const database = yield* Database;
+          return yield* database.query(
+            "transaction: delete user and cleanup related data",
+            (db) =>
+              db.transaction(async (trx) => {
+                const user = ctx.session.user;
 
-          // Lock groups before updating users, the order deleteGroup uses, so the two can't deadlock
-          const userGroups = await trx
-            .selectDistinct({ groupId: groupMembers.groupId })
-            .from(groupMembers)
-            .where(eq(groupMembers.userId, user.id))
-            .orderBy(groupMembers.groupId);
-          for (const { groupId } of userGroups) {
-            await GroupUtils.lockGroup(trx, groupId);
-          }
+                // Lock groups before updating users, the order deleteGroup uses, so the two can't deadlock
+                const userGroups = await trx
+                  .selectDistinct({ groupId: groupMembers.groupId })
+                  .from(groupMembers)
+                  .where(eq(groupMembers.userId, user.id))
+                  .orderBy(groupMembers.groupId);
+                for (const { groupId } of userGroups) {
+                  await GroupUtils.lockGroup(trx, groupId);
+                }
 
-          // Clear user's last used references
-          await trx
-            .update(users)
-            .set({ lastGroupUsed: null, lastShoppingListUsed: null })
-            .where(eq(users.id, user.id));
+                // Clear user's last used references
+                await trx
+                  .update(users)
+                  .set({ lastGroupUsed: null, lastShoppingListUsed: null })
+                  .where(eq(users.id, user.id));
 
-          // Fetch all group memberships of the user, including related data
-          const userGroupMemberships = await trx.query.groupMembers.findMany({
-            where: eq(groupMembers.userId, user.id),
-            columns: {
-              id: true,
-              groupId: true,
-              role: true,
-              joinedOn: true,
-            },
-            with: {
-              group: {
-                columns: { id: true },
-                with: {
-                  groupMembers: {
-                    where: ne(groupMembers.userId, user.id),
+                // Fetch all group memberships of the user, including related data
+                const userGroupMemberships =
+                  await trx.query.groupMembers.findMany({
+                    where: eq(groupMembers.userId, user.id),
                     columns: {
                       id: true,
+                      groupId: true,
                       role: true,
                       joinedOn: true,
                     },
-                  },
-                },
-              },
-            },
-          });
+                    with: {
+                      group: {
+                        columns: { id: true },
+                        with: {
+                          groupMembers: {
+                            where: ne(groupMembers.userId, user.id),
+                            columns: {
+                              id: true,
+                              role: true,
+                              joinedOn: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  });
 
-          // Process each group membership
-          for (const membership of userGroupMemberships) {
-            const { id: groupMemberId, groupId, role, group } = membership;
-            const isAdmin = role === "admin";
+                // Process each group membership
+                for (const membership of userGroupMemberships) {
+                  const {
+                    id: groupMemberId,
+                    groupId,
+                    role,
+                    group,
+                  } = membership;
+                  const isAdmin = role === "admin";
 
-            const otherMembers = group.groupMembers;
-            const otherAdmins = otherMembers.filter(
-              (member) => member.role === "admin",
-            );
+                  const otherMembers = group.groupMembers;
+                  const otherAdmins = otherMembers.filter(
+                    (member) => member.role === "admin",
+                  );
 
-            if (otherMembers.length > 0) {
-              await GroupUtils.detachMemberFromItems(trx, groupMemberId);
-            }
-            if (isAdmin) {
-              if (otherAdmins.length > 0) {
-                // There are other admins, so we can safely remove the user
-                // Remove the user's membership
-                await trx
-                  .delete(groupMembers)
-                  .where(eq(groupMembers.id, groupMemberId));
-              } else if (otherMembers.length > 0) {
-                // The user is the last admin but there are other members
-                // Promote the member who joined first to admin
-                const sortedMembers = otherMembers.sort((a, b) =>
-                  a.joinedOn < b.joinedOn ? -1 : 1,
-                );
-                const newAdmin = sortedMembers[0];
+                  if (otherMembers.length > 0) {
+                    await GroupUtils.detachMemberFromItems(trx, groupMemberId);
+                  }
+                  if (isAdmin) {
+                    if (otherAdmins.length > 0) {
+                      // There are other admins, so we can safely remove the user
+                      // Remove the user's membership
+                      await trx
+                        .delete(groupMembers)
+                        .where(eq(groupMembers.id, groupMemberId));
+                    } else if (otherMembers.length > 0) {
+                      // The user is the last admin but there are other members
+                      // Promote the member who joined first to admin
+                      const sortedMembers = otherMembers.sort((a, b) =>
+                        a.joinedOn < b.joinedOn ? -1 : 1,
+                      );
+                      const newAdmin = sortedMembers[0];
 
-                if (newAdmin?.id === undefined) {
-                  throw new Error("Couldn't find a new admin");
+                      if (newAdmin?.id === undefined) {
+                        throw new Error("Couldn't find a new admin");
+                      }
+                      await trx
+                        .update(groupMembers)
+                        .set({ role: "admin" })
+                        .where(eq(groupMembers.id, newAdmin.id));
+
+                      await trx
+                        .delete(groupMembers)
+                        .where(eq(groupMembers.id, groupMemberId));
+                    } else {
+                      // The user is the last member and admin
+                      await GroupUtils.deleteGroupData(trx, groupId);
+                    }
+                  } else {
+                    // The user is not an admin, simply remove their membership
+                    await trx
+                      .delete(groupMembers)
+                      .where(eq(groupMembers.id, groupMemberId));
+                  }
                 }
-                await trx
-                  .update(groupMembers)
-                  .set({ role: "admin" })
-                  .where(eq(groupMembers.id, newAdmin.id));
 
-                await trx
-                  .delete(groupMembers)
-                  .where(eq(groupMembers.id, groupMemberId));
-              } else {
-                // The user is the last member and admin
-                await GroupUtils.deleteGroupData(trx, groupId);
-              }
-            } else {
-              // The user is not an admin, simply remove their membership
-              await trx
-                .delete(groupMembers)
-                .where(eq(groupMembers.id, groupMemberId));
-            }
-          }
+                // Finally, delete the user
+                if (user.email)
+                  await trx
+                    .delete(verificationTokens)
+                    .where(eq(verificationTokens.identifier, user.email));
+                await trx.delete(accounts).where(eq(accounts.userId, user.id));
+                await trx.delete(sessions).where(eq(sessions.userId, user.id));
+                await trx.delete(users).where(eq(users.id, user.id));
 
-          // Finally, delete the user
-          if (user.email)
-            await trx
-              .delete(verificationTokens)
-              .where(eq(verificationTokens.identifier, user.email));
-          await trx.delete(accounts).where(eq(accounts.userId, user.id));
-          await trx.delete(sessions).where(eq(sessions.userId, user.id));
-          await trx.delete(users).where(eq(users.id, user.id));
-
-          return { success: true };
-        }, "delete user and cleanup related data")(ctx.db),
-      );
-    }),
+                return { success: true };
+              }),
+          );
+        }),
+      ),
+    ),
 
   updateConsent: protectedProcedure
     .input(updateConsentInputSchema)
     .output(getApiResultZod(z.object({ success: z.boolean() })))
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.tryPromise({
-          try: async () => {
-            const now = new Date();
-            const updateData: Record<string, unknown> = {};
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const database = yield* Database;
+          return yield* database.query(
+            "update consent",
+            async (db) => {
+              const now = new Date();
+              const updateData: Record<string, unknown> = {};
 
-            if (input.termsAccepted) {
-              updateData.termsAcceptedAt = now;
-              updateData.termsVersion = input.version;
-            }
-            if (input.privacyAccepted) {
-              updateData.privacyAcceptedAt = now;
-              updateData.privacyVersion = input.version;
-            }
+              if (input.termsAccepted) {
+                updateData.termsAcceptedAt = now;
+                updateData.termsVersion = input.version;
+              }
+              if (input.privacyAccepted) {
+                updateData.privacyAcceptedAt = now;
+                updateData.privacyVersion = input.version;
+              }
 
-            await ctx.db
-              .update(users)
-              .set(updateData)
-              .where(eq(users.id, ctx.session.user.id));
+              await db
+                .update(users)
+                .set(updateData)
+                .where(eq(users.id, ctx.session.user.id));
 
-            return { success: true };
-          },
-          catch: (error) =>
-            Errors.database(
-              "update consent",
-              "users",
-              error,
-              "errors.updateConsentFailed",
-            ),
+              return { success: true };
+            },
+            { messageKey: "errors.updateConsentFailed", table: "users" },
+          );
         }),
-      );
-    }),
+      ),
+    ),
 
   getAIConsentStatus: protectedProcedure
     .output(
@@ -383,182 +382,182 @@ export const userRouter = createTRPCRouter({
   updateAIConsent: protectedProcedure
     .input(updateAIConsentInputSchema)
     .output(getApiResultZod(z.object({ success: z.boolean() })))
-    .mutation(async ({ ctx, input }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.tryPromise({
-          try: async () => {
-            if (input.accepted) {
-              await ctx.db
-                .update(users)
-                .set({
-                  aiConsentAcceptedAt: new Date(),
-                  aiConsentVersion: input.version,
-                })
-                .where(eq(users.id, ctx.session.user.id));
-            }
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const database = yield* Database;
+          return yield* database.query(
+            "update AI consent",
+            async (db) => {
+              if (input.accepted) {
+                await db
+                  .update(users)
+                  .set({
+                    aiConsentAcceptedAt: new Date(),
+                    aiConsentVersion: input.version,
+                  })
+                  .where(eq(users.id, ctx.session.user.id));
+              }
 
-            return { success: true };
-          },
-          catch: (error) =>
-            Errors.database(
-              "update AI consent",
-              "users",
-              error,
-              "errors.updateAiConsentFailed",
-            ),
+              return { success: true };
+            },
+            { messageKey: "errors.updateAiConsentFailed", table: "users" },
+          );
         }),
-      );
-    }),
+      ),
+    ),
 
   exportUserData: protectedProcedure
     .output(getApiResultZod(userDataExportSchema))
-    .query(async ({ ctx }) => {
-      return withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.tryPromise({
-          try: async () => {
-            const userId = ctx.session.user.id;
+    .query(async ({ ctx }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const database = yield* Database;
+          return yield* database.query(
+            "export user data",
+            async (db) => {
+              const userId = ctx.session.user.id;
 
-            const user = await ctx.db.query.users.findFirst({
-              where: eq(users.id, userId),
-              columns: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                createdAt: true,
-                termsAcceptedAt: true,
-                termsVersion: true,
-                privacyAcceptedAt: true,
-                privacyVersion: true,
-                aiConsentAcceptedAt: true,
-                aiConsentVersion: true,
-              },
-            });
-
-            if (!user) {
-              throw new Error("User not found");
-            }
-
-            const signInMethods = await ctx.db.query.accounts.findMany({
-              where: eq(accounts.userId, userId),
-              columns: { providerId: true, accountId: true, createdAt: true },
-            });
-
-            const userSessions = await ctx.db.query.sessions.findMany({
-              where: eq(sessions.userId, userId),
-              columns: {
-                createdAt: true,
-                expiresAt: true,
-                ipAddress: true,
-                userAgent: true,
-              },
-            });
-
-            // Removed or departed members keep an inactive row; they must not export that household.
-            const userGroups = await ctx.db.query.groupMembers.findMany({
-              where: and(
-                eq(groupMembers.userId, userId),
-                eq(groupMembers.isActive, true),
-              ),
-              columns: {
-                id: true,
-                role: true,
-                joinedOn: true,
-              },
-              with: {
-                group: {
-                  columns: {
-                    id: true,
-                    name: true,
-                  },
-                  with: {
-                    groupMembers: {
-                      columns: { id: true, isActive: true },
-                      with: { user: { columns: { name: true } } },
-                    },
-                  },
+              const user = await db.query.users.findFirst({
+                where: eq(users.id, userId),
+                columns: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                  createdAt: true,
+                  termsAcceptedAt: true,
+                  termsVersion: true,
+                  privacyAcceptedAt: true,
+                  privacyVersion: true,
+                  aiConsentAcceptedAt: true,
+                  aiConsentVersion: true,
                 },
-              },
-            });
+              });
 
-            const groupIds = userGroups.map((g) => g.group.id);
-            const memberIds = userGroups.map((g) => g.id);
+              if (!user) {
+                throw new Error("User not found");
+              }
 
-            const userShoppingLists =
-              groupIds.length > 0
-                ? await ctx.db.query.shoppingLists.findMany({
-                    where: inArray(shoppingLists.groupId, groupIds),
+              const signInMethods = await db.query.accounts.findMany({
+                where: eq(accounts.userId, userId),
+                columns: { providerId: true, accountId: true, createdAt: true },
+              });
+
+              const userSessions = await db.query.sessions.findMany({
+                where: eq(sessions.userId, userId),
+                columns: {
+                  createdAt: true,
+                  expiresAt: true,
+                  ipAddress: true,
+                  userAgent: true,
+                },
+              });
+
+              // Removed or departed members keep an inactive row; they must not export that household.
+              const userGroups = await db.query.groupMembers.findMany({
+                where: and(
+                  eq(groupMembers.userId, userId),
+                  eq(groupMembers.isActive, true),
+                ),
+                columns: {
+                  id: true,
+                  role: true,
+                  joinedOn: true,
+                },
+                with: {
+                  group: {
                     columns: {
                       id: true,
                       name: true,
-                      groupId: true,
                     },
                     with: {
-                      shoppingListItems: {
-                        columns: {
-                          id: true,
-                          name: true,
-                          categoryId: true,
-                          completed: true,
-                          createdAt: true,
-                          completedAt: true,
-                          createdByGroupMemberId: true,
-                          completedByGroupMemberId: true,
-                        },
+                      groupMembers: {
+                        columns: { id: true, isActive: true },
+                        with: { user: { columns: { name: true } } },
                       },
                     },
-                  })
-                : [];
+                  },
+                },
+              });
 
-            // Settlements are expenses too, so this also covers them.
-            const userExpenses =
-              memberIds.length > 0
-                ? await ctx.db.query.expenses.findMany({
-                    where: or(
-                      inArray(expenses.paidByGroupMemberId, memberIds),
-                      inArray(expenses.createdByGroupMemberId, memberIds),
-                      inArray(
-                        expenses.id,
-                        ctx.db
-                          .select({ id: expenseSplits.expenseId })
-                          .from(expenseSplits)
-                          .where(
-                            inArray(expenseSplits.groupMemberId, memberIds),
-                          ),
+              const groupIds = userGroups.map((g) => g.group.id);
+              const memberIds = userGroups.map((g) => g.id);
+
+              const userShoppingLists =
+                groupIds.length > 0
+                  ? await db.query.shoppingLists.findMany({
+                      where: inArray(shoppingLists.groupId, groupIds),
+                      columns: {
+                        id: true,
+                        name: true,
+                        groupId: true,
+                      },
+                      with: {
+                        shoppingListItems: {
+                          columns: {
+                            id: true,
+                            name: true,
+                            categoryId: true,
+                            completed: true,
+                            createdAt: true,
+                            completedAt: true,
+                            createdByGroupMemberId: true,
+                            completedByGroupMemberId: true,
+                          },
+                        },
+                      },
+                    })
+                  : [];
+
+              // Settlements are expenses too, so this also covers them.
+              const userExpenses =
+                memberIds.length > 0
+                  ? await db.query.expenses.findMany({
+                      where: or(
+                        inArray(expenses.paidByGroupMemberId, memberIds),
+                        inArray(expenses.createdByGroupMemberId, memberIds),
+                        inArray(
+                          expenses.id,
+                          db
+                            .select({ id: expenseSplits.expenseId })
+                            .from(expenseSplits)
+                            .where(
+                              inArray(expenseSplits.groupMemberId, memberIds),
+                            ),
+                        ),
                       ),
-                    ),
-                    columns: {
-                      id: true,
-                      groupId: true,
-                      description: true,
-                      amountInCents: true,
-                      currency: true,
-                      convertedAmountInCents: true,
-                      convertedCurrency: true,
-                      category: true,
-                      subcategory: true,
-                      splitMethod: true,
-                      expenseDate: true,
-                      paidByGroupMemberId: true,
-                      createdByGroupMemberId: true,
-                    },
-                    with: {
-                      expenseSplits: {
-                        columns: {
-                          groupMemberId: true,
-                          amountInCents: true,
-                          percentage: true,
-                          shares: true,
+                      columns: {
+                        id: true,
+                        groupId: true,
+                        description: true,
+                        amountInCents: true,
+                        currency: true,
+                        convertedAmountInCents: true,
+                        convertedCurrency: true,
+                        category: true,
+                        subcategory: true,
+                        splitMethod: true,
+                        expenseDate: true,
+                        paidByGroupMemberId: true,
+                        createdByGroupMemberId: true,
+                      },
+                      with: {
+                        expenseSplits: {
+                          columns: {
+                            groupMemberId: true,
+                            amountInCents: true,
+                            percentage: true,
+                            shares: true,
+                          },
                         },
                       },
-                    },
-                  })
-                : [];
+                    })
+                  : [];
 
-            const userConversations = await ctx.db.query.conversations.findMany(
-              {
+              const userConversations = await db.query.conversations.findMany({
                 where: and(
                   eq(conversations.userId, userId),
                   isNull(conversations.deletedAt),
@@ -579,47 +578,41 @@ export const userRouter = createTRPCRouter({
                     orderBy: (message, { asc }) => [asc(message.createdAt)],
                   },
                 },
-              },
-            );
+              });
 
-            return {
-              exportedAt: new Date(),
-              user,
-              signInMethods,
-              sessions: userSessions,
-              groups: userGroups.map((g) => ({
-                id: g.group.id,
-                name: g.group.name,
-                memberId: g.id,
-                role: g.role,
-                joinedOn: g.joinedOn,
-                members: g.group.groupMembers.map((m) => ({
-                  memberId: m.id,
-                  name: m.user.name,
-                  active: m.isActive,
+              return {
+                exportedAt: new Date(),
+                user,
+                signInMethods,
+                sessions: userSessions,
+                groups: userGroups.map((g) => ({
+                  id: g.group.id,
+                  name: g.group.name,
+                  memberId: g.id,
+                  role: g.role,
+                  joinedOn: g.joinedOn,
+                  members: g.group.groupMembers.map((m) => ({
+                    memberId: m.id,
+                    name: m.user.name,
+                    active: m.isActive,
+                  })),
                 })),
-              })),
-              shoppingLists: userShoppingLists.map((sl) => ({
-                id: sl.id,
-                name: sl.name,
-                groupId: sl.groupId,
-                items: sl.shoppingListItems,
-              })),
-              expenses: userExpenses.map(({ expenseSplits, ...expense }) => ({
-                ...expense,
-                splits: expenseSplits,
-              })),
-              conversations: userConversations,
-            };
-          },
-          catch: (error) =>
-            Errors.database(
-              "export user data",
-              "users",
-              error,
-              "errors.exportDataFailed",
-            ),
+                shoppingLists: userShoppingLists.map((sl) => ({
+                  id: sl.id,
+                  name: sl.name,
+                  groupId: sl.groupId,
+                  items: sl.shoppingListItems,
+                })),
+                expenses: userExpenses.map(({ expenseSplits, ...expense }) => ({
+                  ...expense,
+                  splits: expenseSplits,
+                })),
+                conversations: userConversations,
+              };
+            },
+            { messageKey: "errors.exportDataFailed", table: "users" },
+          );
         }),
-      );
-    }),
+      ),
+    ),
 });

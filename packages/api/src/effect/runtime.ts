@@ -11,17 +11,19 @@ const runtime = ManagedRuntime.make(
   Layer.mergeAll(Database.layer, ErrorReporter.layer),
 );
 
-export const runResult = <A>(
-  ctx: {
-    session: { user: { id: string } };
-    locale: Locale;
-    path: string;
-    requestId: string;
-  },
-  effect: Effect.Effect<A, ApiError, Database | CurrentRequest>,
-): Promise<ApiResult<A>> =>
+interface RequestContext {
+  session: { user: { id: string } };
+  locale: Locale;
+  path: string;
+  requestId: string;
+}
+
+export const run = <A>(
+  ctx: RequestContext,
+  effect: Effect.Effect<A, never, Database | ErrorReporter | CurrentRequest>,
+): Promise<A> =>
   runtime.runPromise(
-    toApiResult(effect).pipe(
+    effect.pipe(
       Effect.provideService(CurrentRequest, {
         user: ctx.session.user,
         locale: ctx.locale,
@@ -30,3 +32,8 @@ export const runResult = <A>(
       }),
     ),
   );
+
+export const runResult = <A>(
+  ctx: RequestContext,
+  effect: Effect.Effect<A, ApiError, Database | CurrentRequest>,
+): Promise<ApiResult<A>> => run(ctx, toApiResult(effect));

@@ -10,13 +10,13 @@ import { Errors, fail, fromUnknownError } from "../../errors";
 const query = <T>(
   operation: string,
   run: (db: DbClient) => Promise<T>,
-  options?: { messageKey?: MessageKey },
+  options?: { messageKey: MessageKey; table?: string },
 ): Effect.Effect<T, ApiError> =>
   Effect.tryPromise({
     try: () => run(db),
     catch: (cause) =>
-      options?.messageKey
-        ? Errors.database(operation, undefined, cause, options.messageKey)
+      options
+        ? Errors.database(operation, options.table, cause, options.messageKey)
         : fromUnknownError(cause, operation),
   });
 

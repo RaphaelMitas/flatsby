@@ -47,31 +47,35 @@ const grouping = (
   }
 };
 
+export const report = Effect.fnUntraced(function* (error: ApiError) {
+  const { user, path, requestId } = yield* CurrentRequest;
+  const reporter = yield* ErrorReporter;
+  yield* reporter.capture({
+    error,
+    operation: path,
+    distinctId: user.id,
+    additionalProperties: {
+      ...grouping(path, error),
+      requestId,
+      error_type: error._tag,
+      message_key: error.messageKey,
+    },
+  });
+});
+
 const reportAndMap = Effect.fnUntraced(function* (
   cause: Cause.Cause<ApiError>,
 ) {
-  const { user, path, requestId } = yield* CurrentRequest;
-  const reporter = yield* ErrorReporter;
-
   const failure = Cause.findError(cause);
   if (Result.isSuccess(failure)) {
-    const error = failure.success;
-    yield* reporter.capture({
-      error,
-      operation: path,
-      distinctId: user.id,
-      additionalProperties: {
-        ...grouping(path, error),
-        requestId,
-        error_type: error._tag,
-        message_key: error.messageKey,
-      },
-    });
-    return yield* error;
+    yield* report(failure.success);
+    return yield* failure.success;
   }
 
   const defect = Cause.findDefect(cause);
   if (Result.isSuccess(defect)) {
+    const { user, path, requestId } = yield* CurrentRequest;
+    const reporter = yield* ErrorReporter;
     yield* reporter.capture({
       error: defect.success,
       operation: path,
