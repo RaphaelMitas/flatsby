@@ -1,5 +1,9 @@
 import { Effect } from "effect";
 
+import { and, eq, inArray } from "@flatsby/db";
+import { groupMembers } from "@flatsby/db/schema";
+
+import { Errors } from "../errors";
 import {
   addMemberTx,
   findActiveAdmin,
@@ -54,3 +58,34 @@ export const addMember = Effect.fn("Groups.addMember")(function* (
   }
   return result;
 });
+
+export const requireActiveMembersIn = (
+  activeMembers: readonly { id: number }[],
+  memberIds: Iterable<number>,
+) => {
+  const active = new Set(activeMembers.map((member) => member.id));
+  return [...memberIds].every((id) => active.has(id))
+    ? Effect.void
+    : Effect.fail(Errors.notFound("groupMember"));
+};
+
+export const requireActiveMembers = Effect.fn("Groups.requireActiveMembers")(
+  function* (groupId: number, memberIds: Iterable<number>) {
+    const ids = [...new Set(memberIds)];
+    if (ids.length === 0) return;
+    const database = yield* Database;
+    const members = yield* database.query("check group members", (db) =>
+      db
+        .select({ id: groupMembers.id })
+        .from(groupMembers)
+        .where(
+          and(
+            inArray(groupMembers.id, ids),
+            eq(groupMembers.groupId, groupId),
+            eq(groupMembers.isActive, true),
+          ),
+        ),
+    );
+    return yield* requireActiveMembersIn(members, ids);
+  },
+);

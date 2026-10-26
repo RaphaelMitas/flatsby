@@ -21,7 +21,6 @@ import {
   calendarItemMembers,
   calendarItems,
   calendarOccurrences,
-  groupMembers,
 } from "@flatsby/db/schema";
 import {
   addDays,
@@ -46,7 +45,7 @@ import {
 } from "@flatsby/validators/calendar";
 
 import type { Database as DbClient, DbTransaction } from "../types";
-import { requireMember } from "../effect/groups";
+import { requireActiveMembers, requireMember } from "../effect/groups";
 import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
 import { ConflictError, Errors } from "../errors";
@@ -138,28 +137,6 @@ const findItem = Effect.fn("Calendar.findItem")(function* (
       )[0],
   );
 });
-
-const ensureMembersInGroup = Effect.fn("Calendar.ensureMembersInGroup")(
-  function* (groupId: number, memberIds: number[]) {
-    if (memberIds.length === 0) return;
-    const database = yield* Database;
-    const found = yield* database.query("check calendar members", (db) =>
-      db
-        .select({ id: groupMembers.id })
-        .from(groupMembers)
-        .where(
-          and(
-            inArray(groupMembers.id, memberIds),
-            eq(groupMembers.groupId, groupId),
-            eq(groupMembers.isActive, true),
-          ),
-        ),
-    );
-    if (found.length !== new Set(memberIds).size) {
-      return yield* Errors.notFound("groupMember");
-    }
-  },
-);
 
 const writeMembers = async (
   tx: DbTransaction,
@@ -430,7 +407,7 @@ export const calendarRouter = createTRPCRouter({
         ctx,
         Effect.gen(function* () {
           const member = yield* requireMember(input.groupId);
-          yield* ensureMembersInGroup(input.groupId, input.memberIds);
+          yield* requireActiveMembers(input.groupId, input.memberIds);
           const database = yield* Database;
           return yield* database.query(
             "transaction: create calendar item",
@@ -455,7 +432,7 @@ export const calendarRouter = createTRPCRouter({
         Effect.gen(function* () {
           const member = yield* requireMember(input.groupId);
           const previous = yield* findItem(input.groupId, input.id);
-          yield* ensureMembersInGroup(input.groupId, input.memberIds);
+          yield* requireActiveMembers(input.groupId, input.memberIds);
           // Tasks and events are different things, so an item can't switch
           if (input.kind !== previous.kind) {
             return yield* Errors.validation("errors.unexpected");
