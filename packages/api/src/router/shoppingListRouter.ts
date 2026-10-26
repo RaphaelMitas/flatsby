@@ -7,7 +7,6 @@ import { z } from "zod/v4";
 
 import { and, count, desc, eq, ilike, sql } from "@flatsby/db";
 import {
-  groupMembers,
   groups,
   shoppingListItems,
   shoppingLists,
@@ -33,13 +32,15 @@ import {
 } from "@flatsby/validators/shopping-list";
 
 import type { CreditUser } from "../utils/autumn";
-import { requireMember, requireMemberIn } from "../effect/groups";
+import { requireMember } from "../effect/groups";
 import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
 import {
   firstReturned,
   getListInGroupWithAccess,
+  getListWithAccess,
   getShoppingListItemWithAccess,
+  setLastUsed,
 } from "../effect/shoppingLists";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -285,31 +286,8 @@ export const shoppingList = createTRPCRouter({
             input.name,
             "shoppingListName",
           );
+          yield* getListWithAccess(input.shoppingListId);
           const database = yield* Database;
-          const shoppingList = yield* database.findOneOrFail(
-            "shoppingList",
-            (db) =>
-              db.query.shoppingLists.findFirst({
-                where: eq(shoppingLists.id, input.shoppingListId),
-                with: {
-                  group: {
-                    with: {
-                      groupMembers: {
-                        where: and(
-                          eq(groupMembers.userId, ctx.session.user.id),
-                          eq(groupMembers.isActive, true),
-                        ),
-                      },
-                    },
-                  },
-                },
-              }),
-          );
-          yield* requireMemberIn(
-            shoppingList.group.groupMembers,
-            ctx.session.user.id,
-            "errors.notGroupMember",
-          );
           const updated = yield* database.query(
             "update shopping list name",
             (db) =>
@@ -556,38 +534,7 @@ export const shoppingList = createTRPCRouter({
       }),
     )
     .mutation(({ ctx, input }) =>
-      runResult(
-        ctx,
-        Effect.gen(function* () {
-          const updateData: Record<string, number | string | null> = {};
-          if (input.groupId !== null) {
-            updateData.lastGroupUsed = input.groupId;
-            if (input.shoppingListId === null) {
-              updateData.lastShoppingListUsed = null;
-            }
-          }
-          if (input.shoppingListId !== null) {
-            updateData.lastShoppingListUsed = input.shoppingListId;
-          }
-          if (input.groupId === null && input.shoppingListId === null) {
-            updateData.lastGroupUsed = null;
-            updateData.lastShoppingListUsed = null;
-          }
-
-          const database = yield* Database;
-          const updated = yield* database.query(
-            "update last used preferences",
-            (db) =>
-              db
-                .update(users)
-                .set(updateData)
-                .where(eq(users.id, ctx.session.user.id))
-                .returning({ id: users.id }),
-          );
-          const { id } = yield* firstReturned(updated);
-          return id;
-        }),
-      ),
+      runResult(ctx, setLastUsed(input.groupId, input.shoppingListId)),
     ),
 
   suggestItems: protectedProcedure
