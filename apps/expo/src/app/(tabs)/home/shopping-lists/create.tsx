@@ -22,6 +22,9 @@ export default function CreateShoppingList() {
   };
   const queryClient = useQueryClient();
   const groupIdNumber = groupId ? parseInt(groupId, 10) : 0;
+  const listsQueryKey = trpc.shoppingList.getShoppingLists.queryKey({
+    groupId: groupIdNumber,
+  });
 
   const createShoppingListMutation = useMutation(
     trpc.shoppingList.createShoppingList.mutationOptions(
@@ -64,14 +67,7 @@ export default function CreateShoppingList() {
           );
           router.back();
 
-          return [
-            {
-              queryKey: trpc.shoppingList.getShoppingLists.queryKey({
-                groupId: groupIdNumber,
-              }),
-              previous: previousLists,
-            },
-          ];
+          return [{ queryKey: listsQueryKey, previous: previousLists }];
         },
         rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>

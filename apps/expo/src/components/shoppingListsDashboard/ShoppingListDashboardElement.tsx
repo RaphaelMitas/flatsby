@@ -39,6 +39,9 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
   const swipeableRef = useRef<SwipeableMethods>(null);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const listsQueryKey = trpc.shoppingList.getShoppingLists.queryKey({
+    groupId,
+  });
 
   const form = useForm({
     schema: shoppingListFormSchema,
@@ -79,14 +82,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
             },
           );
 
-          return [
-            {
-              queryKey: trpc.shoppingList.getShoppingLists.queryKey({
-                groupId,
-              }),
-              previous: previousLists,
-            },
-          ];
+          return [{ queryKey: listsQueryKey, previous: previousLists }];
         },
         rollback: restoreSnapshot(queryClient),
         onSuccess: () => {
@@ -136,14 +132,7 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
             },
           );
 
-          return [
-            {
-              queryKey: trpc.shoppingList.getShoppingLists.queryKey({
-                groupId,
-              }),
-              previous: previousLists,
-            },
-          ];
+          return [{ queryKey: listsQueryKey, previous: previousLists }];
         },
         rollback: restoreSnapshot(queryClient),
         onSuccess: () => {

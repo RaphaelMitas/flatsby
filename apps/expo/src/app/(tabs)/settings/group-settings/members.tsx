@@ -90,6 +90,9 @@ export default function MembersScreen() {
   const { selectedGroupId } = useShoppingStore();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const groupQueryKey = trpc.group.getGroup.queryKey({
+    id: Number(selectedGroupId) || 0,
+  });
 
   const { data: group } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({
@@ -133,14 +136,7 @@ export default function MembersScreen() {
             },
           );
 
-          return [
-            {
-              queryKey: trpc.group.getGroup.queryKey({
-                id: Number(selectedGroupId) || 0,
-              }),
-              previous: previousGroup,
-            },
-          ];
+          return [{ queryKey: groupQueryKey, previous: previousGroup }];
         },
         rollback: restoreSnapshot(queryClient),
         onSuccess: () => {

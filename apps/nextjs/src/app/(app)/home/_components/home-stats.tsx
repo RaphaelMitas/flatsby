@@ -110,17 +110,8 @@ function HomeStatsInner() {
     trpc.stats.getHomeStats.queryOptions({ groupId }),
   );
 
-  if (!groupData.success) {
+  if (!groupData.success || !debtData.success || !statsData.success)
     return null;
-  }
-
-  if (!debtData.success) {
-    return null;
-  }
-
-  if (!statsData.success) {
-    return null;
-  }
 
   const currentGroupMemberId = groupData.data.thisGroupMember.id;
   const memberBalances =

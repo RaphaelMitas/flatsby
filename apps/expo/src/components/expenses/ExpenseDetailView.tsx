@@ -115,13 +115,7 @@ export function ExpenseDetailView({
     setShowDeleteDialog(false);
   };
 
-  if (!expenseData.success) {
-    return null;
-  }
-
-  if (!groupData.success) {
-    return null;
-  }
+  if (!expenseData.success || !groupData.success) return null;
 
   const expense = expenseData.data;
 

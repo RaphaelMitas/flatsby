@@ -73,6 +73,11 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     }),
   );
 
+  const itemsOptions = shoppingListItemsOptions(
+    groupId,
+    shoppingListId,
+    selectedCategory ?? undefined,
+  );
   const {
     data: itemsData,
     fetchNextPage,
@@ -81,11 +86,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     refetch: refetchItems,
     isRefetching: isRefetchingItems,
   } = useInfiniteQuery({
-    ...shoppingListItemsOptions(
-      groupId,
-      shoppingListId,
-      selectedCategory ?? undefined,
-    ),
+    ...itemsOptions,
     placeholderData: keepPreviousData,
   });
 
@@ -236,19 +237,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               return { ...old, pages: updatedPages };
             },
           );
-          return [
-            {
-              queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
-                {
-                  groupId,
-                  shoppingListId,
-                  limit: PAGE_SIZE.shoppingListItems,
-                  categoryId: selectedCategory ?? undefined,
-                },
-              ),
-              previous: previousItems,
-            },
-          ];
+          return [{ queryKey: itemsOptions.queryKey, previous: previousItems }];
         },
         rollback: restoreSnapshot(queryClient),
         onSuccess: () => invalidateAll(),

@@ -87,12 +87,7 @@ const ShoppingListInner = ({
     }),
   );
 
-  const {
-    data: itemsData,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery(
+  const itemsOptions =
     trpc.shoppingList.getShoppingListItems.infiniteQueryOptions(
       {
         groupId,
@@ -104,8 +99,13 @@ const ShoppingListInner = ({
         getNextPageParam: (lastPage) =>
           lastPage.success === true ? lastPage.data.nextCursor : null,
       },
-    ),
-  );
+    );
+  const {
+    data: itemsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery(itemsOptions);
 
   const { shoppingList, currentMember } =
     shoppingListData.success === true
@@ -190,19 +190,7 @@ const ShoppingListInner = ({
               return { ...old, pages: updatedPages };
             },
           );
-          return [
-            {
-              queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
-                {
-                  groupId,
-                  shoppingListId,
-                  limit: PAGE_SIZE.shoppingListItems,
-                  categoryId: selectedCategory ?? undefined,
-                },
-              ),
-              previous: previousItems,
-            },
-          ];
+          return [{ queryKey: itemsOptions.queryKey, previous: previousItems }];
         },
         rollback: restoreSnapshot(queryClient),
         onSuccess: () => invalidateAll(),

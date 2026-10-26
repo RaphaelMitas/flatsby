@@ -53,12 +53,7 @@ export function DebtSummaryView() {
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  if (!debtData.success) {
-    return null;
-  }
-  if (!groupData.success) {
-    return null;
-  }
+  if (!debtData.success || !groupData.success) return null;
 
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
