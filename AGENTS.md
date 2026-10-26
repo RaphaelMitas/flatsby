@@ -82,9 +82,10 @@ schemas using `zod/v4`. If you changed a shape in one place and not here, the ot
 client will find out at runtime.
 - **The schema.** `packages/db/`. Schema changes need a generated migration, not just
 a push.
-- **Group scoping.** Every query that reads group data goes through
-`DbUtils.ensureGroupMember` in `packages/api/src/utils.ts`. There is no group-scoped
-procedure middleware, so this is enforced per router and easy to forget. Forgetting
+- **Group scoping.** Every query that reads group data goes through a membership
+check in `packages/api/src/effect/groups.ts`: `requireMember` or `getGroupWithAccess`
+when you have a group id, `requireMemberIn` when the members came with the row. There
+is no group-scoped procedure middleware, so this is enforced per router and easy to forget. Forgetting
 it leaks one household's data to another.
 - **Optimistic paths.** If a mutation has an `onMutate`, changing its input or output
 means changing the optimistic update too.
