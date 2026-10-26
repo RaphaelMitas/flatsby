@@ -1,6 +1,5 @@
 "use client";
 
-import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { useState } from "react";
 import Link from "next/link";
@@ -10,7 +9,7 @@ import { Pencil, Trash } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,18 +63,6 @@ export function ShoppingListDashboardItem({
     },
   });
 
-  const restoreLists = ({
-    groupId,
-    previousLists,
-  }: {
-    groupId: number;
-    previousLists: ApiResult<ShoppingListSummary[]> | undefined;
-  }) =>
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
-      previousLists,
-    );
-
   const deleteMutation = useMutation(
     trpc.shoppingList.deleteShoppingList.mutationOptions(
       resultMutation({
@@ -99,12 +86,19 @@ export function ShoppingListDashboardItem({
             },
           );
 
-          return { groupId, previousLists };
+          return [
+            {
+              queryKey: trpc.shoppingList.getShoppingLists.queryKey({
+                groupId,
+              }),
+              previous: previousLists,
+            },
+          ];
         },
-        rollback: restoreLists,
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
           toast.error(t("shoppingList.delete.failed"), {
-            description: message,
+            description: message ?? t("errors.unexpected"),
           }),
         onSuccess: (_data, variables) => {
           void queryClient.invalidateQueries(
@@ -149,20 +143,25 @@ export function ShoppingListDashboardItem({
             },
           );
 
-          return { groupId, previousLists };
+          return [
+            {
+              queryKey: trpc.shoppingList.getShoppingLists.queryKey({
+                groupId,
+              }),
+              previous: previousLists,
+            },
+          ];
         },
-        rollback: restoreLists,
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
           toast.error(t("shoppingList.renameFailed"), {
-            description: message ?? t("common.unknownError"),
+            description: message ?? t("errors.unexpected"),
           }),
-        onSuccess: (_data, _variables, context) => {
+        onSuccess: () => {
           toast.success(t("shoppingList.renamed"));
-          if (context) {
+          if (groupId) {
             void queryClient.invalidateQueries(
-              trpc.shoppingList.getShoppingLists.queryOptions({
-                groupId: context.groupId,
-              }),
+              trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
             );
           }
         },

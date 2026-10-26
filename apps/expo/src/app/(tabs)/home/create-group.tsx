@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { groupFormSchema } from "@flatsby/validators/group";
 
@@ -53,13 +53,14 @@ export default function CreateGroup() {
           );
           router.back();
 
-          return { previousGroups };
+          return [
+            {
+              queryKey: trpc.group.getUserGroups.queryKey(),
+              previous: previousGroups,
+            },
+          ];
         },
-        rollback: ({ previousGroups }) =>
-          queryClient.setQueryData(
-            trpc.group.getUserGroups.queryKey(),
-            previousGroups,
-          ),
+        rollback: restoreSnapshot(queryClient),
         onSuccess: () => {
           void queryClient.invalidateQueries(
             trpc.group.getUserGroups.queryOptions(),

@@ -83,17 +83,12 @@ const InviteContent = ({ groupId }: { groupId: number }) => {
     }),
   );
 
-  if (inviteQuery.isError || inviteQuery.data?.success === false) {
-    return (
-      <p className="text-destructive text-sm">
-        {inviteQuery.data?.success === false
-          ? inviteQuery.data.error.message
-          : t("invite.loadFailed")}
-      </p>
-    );
+  const loadFailure = failureOf(inviteQuery, t("invite.loadFailed"));
+  if (loadFailure !== undefined) {
+    return <p className="text-destructive text-sm">{loadFailure}</p>;
   }
 
-  const invite = inviteQuery.data?.data;
+  const invite = inviteQuery.data?.success ? inviteQuery.data.data : undefined;
   if (!invite) {
     return <Skeleton className="mx-auto h-64 w-48" />;
   }

@@ -20,7 +20,7 @@ import {
   TrailingActions,
 } from "react-swipeable-list";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import {
   removeShoppingListItemFromCache,
   updateShoppingListItemInCache,
@@ -91,10 +91,9 @@ const ShoppingListItem = ({
           queryClient.setQueryData(itemsQueryKey, (old) =>
             updateShoppingListItemInCache(old, variables),
           );
-          return { queryKey: itemsQueryKey, previousItems };
+          return [{ queryKey: itemsQueryKey, previous: previousItems }];
         },
-        rollback: ({ queryKey, previousItems }) =>
-          queryClient.setQueryData(queryKey, previousItems),
+        rollback: restoreSnapshot(queryClient),
         onSettled: () => {
           invalidateAll();
         },
@@ -111,10 +110,9 @@ const ShoppingListItem = ({
           queryClient.setQueryData(itemsQueryKey, (old) =>
             removeShoppingListItemFromCache(old, id),
           );
-          return { queryKey: itemsQueryKey, previousItems };
+          return [{ queryKey: itemsQueryKey, previous: previousItems }];
         },
-        rollback: ({ queryKey, previousItems }) =>
-          queryClient.setQueryData(queryKey, previousItems),
+        rollback: restoreSnapshot(queryClient),
         onSettled: () => {
           invalidateAll();
         },

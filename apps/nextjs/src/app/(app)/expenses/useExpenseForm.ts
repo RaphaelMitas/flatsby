@@ -12,7 +12,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { toast } from "@flatsby/ui/toast";
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
@@ -237,12 +237,13 @@ export function useExpenseForm({
             return { ...old, pages: updatedPages };
           });
 
-          return { previousData };
+          return [{ queryKey: expenseListQueryKey, previous: previousData }];
         },
-        rollback: ({ previousData }) =>
-          queryClient.setQueryData(expenseListQueryKey, previousData),
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
-          toast.error(t("expenses.createFailed"), { description: message }),
+          toast.error(t("expenses.createFailed"), {
+            description: message ?? t("errors.unexpected"),
+          }),
         onSuccess: (created) => {
           toast.success(t("expenses.createSuccess"));
           invalidateAll();
@@ -326,12 +327,13 @@ export function useExpenseForm({
             };
           });
 
-          return { queryKey: expenseQueryKey, previousData };
+          return [{ queryKey: expenseQueryKey, previous: previousData }];
         },
-        rollback: ({ queryKey, previousData }) =>
-          queryClient.setQueryData(queryKey, previousData),
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
-          toast.error(t("expenses.updateFailed"), { description: message }),
+          toast.error(t("expenses.updateFailed"), {
+            description: message ?? t("errors.unexpected"),
+          }),
         onSuccess: () => {
           toast.success(t("expenses.updateSuccess"));
           invalidateAll(expense?.id);

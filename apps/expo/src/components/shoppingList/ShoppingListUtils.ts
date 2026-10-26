@@ -2,7 +2,7 @@ import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { updateShoppingListItemInCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
@@ -138,10 +138,9 @@ export const useUpdateShoppingListItemMutation = ({
           queryClient.setQueryData(itemsQueryKey, (old) =>
             updateShoppingListItemInCache(old, variables),
           );
-          return { queryKey: itemsQueryKey, previousItems };
+          return [{ queryKey: itemsQueryKey, previous: previousItems }];
         },
-        rollback: ({ queryKey, previousItems }) =>
-          queryClient.setQueryData(queryKey, previousItems),
+        rollback: restoreSnapshot(queryClient),
         onSettled: () => {
           invalidateAll();
         },

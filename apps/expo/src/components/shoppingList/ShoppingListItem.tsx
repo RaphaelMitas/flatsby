@@ -10,7 +10,7 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { removeShoppingListItemFromCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
@@ -86,10 +86,9 @@ const ShoppingListItem = ({
           queryClient.setQueryData(itemsQueryKey, (old) =>
             removeShoppingListItemFromCache(old, id),
           );
-          return { queryKey: itemsQueryKey, previousItems };
+          return [{ queryKey: itemsQueryKey, previous: previousItems }];
         },
-        rollback: ({ queryKey, previousItems }) =>
-          queryClient.setQueryData(queryKey, previousItems),
+        rollback: restoreSnapshot(queryClient),
         onSettled: () => {
           invalidateAll();
         },

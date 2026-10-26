@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 
 import { trpc } from "~/utils/api";
 
@@ -24,10 +24,9 @@ export function useUpdateGroup(groupId: number) {
               },
             };
           });
-          return { previousGroup };
+          return [{ queryKey: groupQueryKey, previous: previousGroup }];
         },
-        rollback: ({ previousGroup }) =>
-          queryClient.setQueryData(groupQueryKey, previousGroup),
+        rollback: restoreSnapshot(queryClient),
         onSettled: () => {
           void queryClient.invalidateQueries({ queryKey: groupQueryKey });
           void queryClient.invalidateQueries(

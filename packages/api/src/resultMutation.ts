@@ -1,4 +1,14 @@
+import type { QueryClient, QueryKey } from "@tanstack/react-query";
+
 import type { ApiResult } from "./errors";
+
+export type QuerySnapshot = { queryKey: QueryKey; previous: unknown }[];
+
+export const restoreSnapshot =
+  (queryClient: QueryClient) => (snapshot: QuerySnapshot) => {
+    for (const { queryKey, previous } of snapshot)
+      queryClient.setQueryData(queryKey, previous);
+  };
 
 interface ResultMutationOptions<TData, TInput, TContext> {
   onMutate?: (input: TInput) => TContext | Promise<TContext>;
@@ -9,7 +19,7 @@ interface ResultMutationOptions<TData, TInput, TContext> {
   onSettled?: () => void;
 }
 
-/** Mutation callbacks that roll back and report both ways a procedure fails: it throws, or it returns `success: false`. */
+/** Procedures fail two ways: they throw, or return `success: false`. */
 export const resultMutation = <TData, TInput, TContext = undefined>({
   onMutate,
   rollback,
@@ -33,7 +43,6 @@ export const resultMutation = <TData, TInput, TContext = undefined>({
   };
 };
 
-/** The message to show when a mutation or query failed either way, otherwise undefined. */
 export const failureOf = (
   { data, error }: { data?: ApiResult<unknown>; error: unknown },
   fallback: string,

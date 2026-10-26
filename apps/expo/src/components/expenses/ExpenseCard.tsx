@@ -8,7 +8,7 @@ import ReanimatedSwipeable, {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { formatExpenseAmounts } from "@flatsby/validators/expenses/formatting";
 
 import { trpc } from "~/utils/api";
@@ -77,12 +77,14 @@ export function ExpenseCard({
             return { ...old, pages: updatedPages };
           });
 
-          return { previousData };
+          return [{ queryKey: expenseListQueryKey, previous: previousData }];
         },
-        rollback: ({ previousData }) =>
-          queryClient.setQueryData(expenseListQueryKey, previousData),
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
-          Alert.alert(t("expenses.deleteFailed"), message),
+          Alert.alert(
+            t("expenses.deleteFailed"),
+            message ?? t("errors.unexpected"),
+          ),
         onSuccess: () => {
           invalidateAll();
           onDelete?.();

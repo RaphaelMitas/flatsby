@@ -18,7 +18,11 @@ import { AlertCircle, LoaderCircle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
-import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
+import {
+  failureOf,
+  restoreSnapshot,
+  resultMutation,
+} from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import {
@@ -263,14 +267,16 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
             return { ...old, pages: updatedPages };
           });
 
-          return { previousData, previousDebtSummary };
+          return [
+            { queryKey: expenseListQueryKey, previous: previousData },
+            { queryKey: debtSummaryQueryKey, previous: previousDebtSummary },
+          ];
         },
-        rollback: ({ previousData, previousDebtSummary }) => {
-          queryClient.setQueryData(expenseListQueryKey, previousData);
-          queryClient.setQueryData(debtSummaryQueryKey, previousDebtSummary);
-        },
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
-          toast.error(t("debts.recordFailed"), { description: message }),
+          toast.error(t("debts.recordFailed"), {
+            description: message ?? t("errors.unexpected"),
+          }),
         onSuccess: () => {
           toast.success(t("debts.recordSuccess"));
           onClose();

@@ -17,7 +17,7 @@ import {
 } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
@@ -236,18 +236,21 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               return { ...old, pages: updatedPages };
             },
           );
-          return { previousItems };
+          return [
+            {
+              queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
+                {
+                  groupId,
+                  shoppingListId,
+                  limit: PAGE_SIZE.shoppingListItems,
+                  categoryId: selectedCategory ?? undefined,
+                },
+              ),
+              previous: previousItems,
+            },
+          ];
         },
-        rollback: ({ previousItems }) =>
-          queryClient.setQueryData(
-            trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-              groupId,
-              shoppingListId,
-              limit: PAGE_SIZE.shoppingListItems,
-              categoryId: selectedCategory ?? undefined,
-            }),
-            previousItems,
-          ),
+        rollback: restoreSnapshot(queryClient),
         onSuccess: () => invalidateAll(),
       }),
     ),

@@ -9,7 +9,11 @@ import {
 } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
+import {
+  failureOf,
+  restoreSnapshot,
+  resultMutation,
+} from "@flatsby/api/resultMutation";
 
 import type { RouterOutputs } from "~/utils/api";
 import { TimedAlert } from "~/components/TimedAlert";
@@ -129,15 +133,16 @@ export default function MembersScreen() {
             },
           );
 
-          return { previousGroup };
+          return [
+            {
+              queryKey: trpc.group.getGroup.queryKey({
+                id: Number(selectedGroupId) || 0,
+              }),
+              previous: previousGroup,
+            },
+          ];
         },
-        rollback: ({ previousGroup }) =>
-          queryClient.setQueryData(
-            trpc.group.getGroup.queryKey({
-              id: Number(selectedGroupId) || 0,
-            }),
-            previousGroup,
-          ),
+        rollback: restoreSnapshot(queryClient),
         onSuccess: () => {
           void queryClient.invalidateQueries(
             trpc.group.getGroup.queryOptions({

@@ -1,4 +1,3 @@
-import type { ApiResult, ShoppingListSummary } from "@flatsby/api";
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useCallback, useRef, useState } from "react";
@@ -10,7 +9,7 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import type { RouterOutputs } from "~/utils/api";
@@ -48,18 +47,6 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
     },
   });
 
-  const restoreLists = ({
-    previousLists,
-  }: {
-    previousLists: ApiResult<ShoppingListSummary[]> | undefined;
-  }) =>
-    queryClient.setQueryData(
-      trpc.shoppingList.getShoppingLists.queryKey({
-        groupId,
-      }),
-      previousLists,
-    );
-
   const deleteShoppingListMutation = useMutation(
     trpc.shoppingList.deleteShoppingList.mutationOptions(
       resultMutation({
@@ -92,9 +79,16 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
             },
           );
 
-          return { previousLists };
+          return [
+            {
+              queryKey: trpc.shoppingList.getShoppingLists.queryKey({
+                groupId,
+              }),
+              previous: previousLists,
+            },
+          ];
         },
-        rollback: restoreLists,
+        rollback: restoreSnapshot(queryClient),
         onSuccess: () => {
           void queryClient.invalidateQueries(
             trpc.shoppingList.getShoppingLists.queryOptions({
@@ -142,9 +136,16 @@ const ShoppingListDashboardElement = ({ shoppingList, groupId }: Props) => {
             },
           );
 
-          return { previousLists };
+          return [
+            {
+              queryKey: trpc.shoppingList.getShoppingLists.queryKey({
+                groupId,
+              }),
+              previous: previousLists,
+            },
+          ];
         },
-        rollback: restoreLists,
+        rollback: restoreSnapshot(queryClient),
         onSuccess: () => {
           void queryClient.invalidateQueries(
             trpc.shoppingList.getShoppingLists.queryOptions({

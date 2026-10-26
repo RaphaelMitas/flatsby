@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
@@ -64,15 +64,16 @@ export default function CreateShoppingList() {
           );
           router.back();
 
-          return { previousLists };
+          return [
+            {
+              queryKey: trpc.shoppingList.getShoppingLists.queryKey({
+                groupId: groupIdNumber,
+              }),
+              previous: previousLists,
+            },
+          ];
         },
-        rollback: ({ previousLists }) =>
-          queryClient.setQueryData(
-            trpc.shoppingList.getShoppingLists.queryKey({
-              groupId: groupIdNumber,
-            }),
-            previousLists,
-          ),
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
           Alert.alert(
             t("common.error"),

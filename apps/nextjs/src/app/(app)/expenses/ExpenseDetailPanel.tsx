@@ -9,7 +9,7 @@ import {
 import { Receipt } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -91,12 +91,13 @@ export function ExpenseDetailPanel({
             return { ...old, pages: updatedPages };
           });
 
-          return { previousData };
+          return [{ queryKey: expenseListQueryKey, previous: previousData }];
         },
-        rollback: ({ previousData }) =>
-          queryClient.setQueryData(expenseListQueryKey, previousData),
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
-          toast.error(t("expenses.deleteFailed"), { description: message }),
+          toast.error(t("expenses.deleteFailed"), {
+            description: message ?? t("errors.unexpected"),
+          }),
         onSuccess: () => {
           toast.success(t("expenses.deleteSuccess"));
           invalidateAll();

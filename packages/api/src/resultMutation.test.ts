@@ -1,7 +1,8 @@
+import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 
 import type { ApiResult } from "./errors";
-import { failureOf, resultMutation } from "./resultMutation";
+import { failureOf, restoreSnapshot, resultMutation } from "./resultMutation";
 
 const setup = () => {
   const callbacks = {
@@ -70,5 +71,19 @@ describe("failureOf", () => {
         "fallback",
       ),
     ).toBeUndefined();
+  });
+});
+
+describe("restoreSnapshot", () => {
+  it("puts every snapshotted query back", () => {
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(["list"], "optimistic");
+    queryClient.setQueryData(["debts"], "optimistic");
+    restoreSnapshot(queryClient)([
+      { queryKey: ["list"], previous: "before" },
+      { queryKey: ["debts"], previous: "before" },
+    ]);
+    expect(queryClient.getQueryData(["list"])).toBe("before");
+    expect(queryClient.getQueryData(["debts"])).toBe("before");
   });
 });

@@ -18,7 +18,7 @@ import {
 import { useTranslations } from "next-intl";
 import { InView } from "react-intersection-observer";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { cn } from "@flatsby/ui";
 import { CategoryFilter, CategoryFilterSidebar } from "@flatsby/ui/categories";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
@@ -190,18 +190,21 @@ const ShoppingListInner = ({
               return { ...old, pages: updatedPages };
             },
           );
-          return { previousItems };
+          return [
+            {
+              queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
+                {
+                  groupId,
+                  shoppingListId,
+                  limit: PAGE_SIZE.shoppingListItems,
+                  categoryId: selectedCategory ?? undefined,
+                },
+              ),
+              previous: previousItems,
+            },
+          ];
         },
-        rollback: ({ previousItems }) =>
-          queryClient.setQueryData(
-            trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-              groupId,
-              shoppingListId,
-              limit: PAGE_SIZE.shoppingListItems,
-              categoryId: selectedCategory ?? undefined,
-            }),
-            previousItems,
-          ),
+        rollback: restoreSnapshot(queryClient),
         onSuccess: () => invalidateAll(),
       }),
     ),

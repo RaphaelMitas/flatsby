@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
+import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
@@ -280,12 +280,14 @@ export function ExpenseForm({
             return { ...old, pages: updatedPages };
           });
 
-          return { previousData };
+          return [{ queryKey: expenseListQueryKey, previous: previousData }];
         },
-        rollback: ({ previousData }) =>
-          queryClient.setQueryData(expenseListQueryKey, previousData),
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
-          Alert.alert(t("expenses.createFailed"), message),
+          Alert.alert(
+            t("expenses.createFailed"),
+            message ?? t("errors.unexpected"),
+          ),
         onSuccess: () => {
           invalidateAll();
           void recordHappyAction("expense_created");
@@ -367,10 +369,9 @@ export function ExpenseForm({
             };
           });
 
-          return { queryKey: expenseQueryKey, previousData };
+          return [{ queryKey: expenseQueryKey, previous: previousData }];
         },
-        rollback: ({ queryKey, previousData }) =>
-          queryClient.setQueryData(queryKey, previousData),
+        rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
           Alert.alert(t("common.error"), message ?? t("expenses.updateFailed")),
         onSuccess: () => {

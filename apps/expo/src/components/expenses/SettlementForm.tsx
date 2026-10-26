@@ -16,7 +16,11 @@ import {
 import { useForm, useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
-import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
+import {
+  failureOf,
+  restoreSnapshot,
+  resultMutation,
+} from "@flatsby/api/resultMutation";
 import { applySettlement, pairDebt } from "@flatsby/validators/expenses/debt";
 import {
   formatCurrencyFromCents,
@@ -295,12 +299,12 @@ export function SettlementForm({
             return { ...old, pages: updatedPages };
           });
 
-          return { previousData, previousDebtSummary };
+          return [
+            { queryKey: expenseListQueryKey, previous: previousData },
+            { queryKey: debtSummaryQueryKey, previous: previousDebtSummary },
+          ];
         },
-        rollback: ({ previousData, previousDebtSummary }) => {
-          queryClient.setQueryData(expenseListQueryKey, previousData);
-          queryClient.setQueryData(debtSummaryQueryKey, previousDebtSummary);
-        },
+        rollback: restoreSnapshot(queryClient),
         onSuccess: () => {
           onClose();
           form.reset();
@@ -342,10 +346,9 @@ export function SettlementForm({
             };
           });
 
-          return { queryKey: expenseQueryKey, previousData };
+          return [{ queryKey: expenseQueryKey, previous: previousData }];
         },
-        rollback: ({ queryKey, previousData }) =>
-          queryClient.setQueryData(queryKey, previousData),
+        rollback: restoreSnapshot(queryClient),
         onSuccess: () => {
           void queryClient.invalidateQueries({
             queryKey: expenseQueryKey,
