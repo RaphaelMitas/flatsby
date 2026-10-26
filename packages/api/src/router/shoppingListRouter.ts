@@ -1,4 +1,7 @@
-import type { CategoryId } from "@flatsby/validators/categories";
+import type {
+  CategoryId,
+  CategoryIdWithAiAutoSelect,
+} from "@flatsby/validators/categories";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
@@ -452,12 +455,11 @@ export const shoppingList = createTRPCRouter({
             input.groupId,
             input.shoppingListId,
           );
-          const categoryId =
-            input.categoryId === "ai-auto-select"
-              ? yield* Effect.promise(() =>
-                  categorizeItem(ctx.session.user, name),
-                )
-              : input.categoryId;
+          const categoryId = yield* categoryFor(
+            ctx.session.user,
+            input.categoryId,
+            name,
+          );
           const database = yield* Database;
           const created = yield* database.query(
             "create shopping list item",
@@ -493,12 +495,11 @@ export const shoppingList = createTRPCRouter({
           const { item, member } = yield* getShoppingListItemWithAccess(
             input.id,
           );
-          const categoryId =
-            input.categoryId === "ai-auto-select"
-              ? yield* Effect.promise(() =>
-                  categorizeItem(ctx.session.user, name),
-                )
-              : input.categoryId;
+          const categoryId = yield* categoryFor(
+            ctx.session.user,
+            input.categoryId,
+            name,
+          );
 
           const updateData: Partial<typeof shoppingListItems.$inferInsert> = {
             name,
@@ -640,13 +641,21 @@ const itemCategoryOptions = categoryIds.map((id) => ({
   description: `${names[id]}: ${descriptions[id]}`,
 }));
 
-const categorizeItem = (user: CreditUser, itemName: string) =>
-  classify({
-    user,
-    feature: "categorize-item",
-    instructions:
-      "Which grocery category does this shopping list item belong to?", // i18n-ignore: model prompt
-    options: itemCategoryOptions,
-    input: itemName,
-    fallback: "other",
-  });
+const categoryFor = (
+  user: CreditUser,
+  categoryId: CategoryIdWithAiAutoSelect,
+  itemName: string,
+) =>
+  categoryId === "ai-auto-select"
+    ? Effect.promise(() =>
+        classify({
+          user,
+          feature: "categorize-item",
+          instructions:
+            "Which grocery category does this shopping list item belong to?", // i18n-ignore: model prompt
+          options: itemCategoryOptions,
+          input: itemName,
+          fallback: "other",
+        }),
+      )
+    : Effect.succeed(categoryId);

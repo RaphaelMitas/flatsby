@@ -7,7 +7,7 @@ import {
   shoppingLists,
 } from "@flatsby/db/schema";
 
-import { Errors } from "../errors";
+import { Errors, fail } from "../errors";
 import { requireMember } from "./groups";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { Database } from "./services/Database";
@@ -66,6 +66,6 @@ export const getShoppingListItemWithAccess = Effect.fn(
 export const firstReturned = <T>(rows: readonly T[]) => {
   const [row] = rows;
   return row === undefined
-    ? Effect.fail(Errors.internalServer("operation"))
+    ? fail.internalServer("operation")
     : Effect.succeed(row);
 };
