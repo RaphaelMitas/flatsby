@@ -45,6 +45,16 @@ const freePlan = {
   planName: "Free",
 };
 
+const autumnOr = <A, B>(
+  operation: string,
+  request: () => Promise<A>,
+  fallback: B,
+) =>
+  Effect.tryPromise({
+    try: request,
+    catch: (cause) => Errors.externalService("autumn", operation, cause),
+  }).pipe(Effect.catch((error) => Effect.as(report(error), fallback)));
+
 export const userRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
     const user = ctx.session.user;
@@ -54,18 +64,18 @@ export const userRouter = createTRPCRouter({
   getUsage: protectedProcedure.output(usageDataSchema).query(async ({ ctx }) =>
     run(
       ctx,
-      Effect.tryPromise({
-        try: () => checkCredits(ctx.session.user),
-        catch: (cause) =>
-          Errors.externalService("autumn", "check credits", cause),
-      }).pipe(
-        Effect.map((result) => ({
-          credits: {
-            balance: result.balance?.remaining ?? 0,
-            usage: result.balance?.usage ?? 0,
-          },
-        })),
-        Effect.catch((error) => Effect.as(report(error), { credits: null })),
+      autumnOr(
+        "check credits",
+        async () => {
+          const result = await checkCredits(ctx.session.user);
+          return {
+            credits: {
+              balance: result.balance?.remaining ?? 0,
+              usage: result.balance?.usage ?? 0,
+            },
+          };
+        },
+        { credits: null },
       ),
     ),
   ),
@@ -75,8 +85,9 @@ export const userRouter = createTRPCRouter({
     .query(async ({ ctx }) =>
       run(
         ctx,
-        Effect.tryPromise({
-          try: async () => {
+        autumnOr(
+          "get customer",
+          async () => {
             const customer = await autumn.customers.getOrCreate({
               customerId: ctx.session.user.id,
               name: ctx.session.user.name,
@@ -89,9 +100,8 @@ export const userRouter = createTRPCRouter({
               planName: activeSub?.plan?.name ?? freePlan.planName,
             };
           },
-          catch: (cause) =>
-            Errors.externalService("autumn", "get customer", cause),
-        }).pipe(Effect.catch((error) => Effect.as(report(error), freePlan))),
+          freePlan,
+        ),
       ),
     ),
 
