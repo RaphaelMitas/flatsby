@@ -1,6 +1,5 @@
-• Flatsby now supports iPhone Duo. On wider screens, like an iPad in portrait or an Android foldable, expenses show the list and details side by side.
-• The plus menu on Home opens faster.
-• The calendar is easier to scan: a list of the next seven days, or a month view. Swipe to move a week or a month.
-• Missed chores sit at the top under Overdue. One tick or skip settles every missed day.
-• Filter the calendar by flatmate.
+• Events can run over several days, like a trip or a weekend away. Repeating events keep their length every time.
+• The event form shows each date next to its time, and new events start at 19:00 instead of all day.
+• On Android, a list scroll no longer stops dead when your finger drifts sideways.
+• Automatic categories and the AI assistant work even if you never opened the credits screen.
 • Small fixes and improvements.
