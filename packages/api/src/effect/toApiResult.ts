@@ -28,7 +28,7 @@ const grouping = (
         $exception_fingerprint: `${path}:${error._tag}:${error.messageKey}`,
         $issue_name: `${path} ${error._tag}`,
       };
-    // Stacks can't split these: every DatabaseError is built in the same catch
+    // Stack grouping would merge these, they're built in a few shared catches
     case "DatabaseError":
     case "ExternalServiceError":
     case "InternalServerError":
