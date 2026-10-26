@@ -29,24 +29,10 @@ export type { ApiResult, ApiErrorResult } from "./errors";
 
 // Export database and query types
 export type {
-  Database,
-  DbTransaction,
-  ExpenseInfiniteData,
   ExpenseWithSplitsAndMembers,
-  Group,
-  GroupDebtSummary,
-  GroupMember,
-  GroupMemberDetails,
-  GroupMemberWithGroup,
-  GroupMemberWithGroupMinimal,
-  GroupMemberWithUser,
   GroupMemberWithUserInfo,
   GroupWithAccess,
   GroupWithMemberCount,
-  GroupWithMembers,
-  Role,
-  ShoppingList,
   ShoppingListInfiniteData,
   ShoppingListSummary,
-  User,
 } from "./types";

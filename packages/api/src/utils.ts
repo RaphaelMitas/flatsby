@@ -18,9 +18,6 @@ import type { ApiError } from "./errors";
 import type { Database, DbTransaction, GroupMember, Role } from "./types";
 import { Errors, fail } from "./errors";
 
-/**
- * Database operation utilities
- */
 export const DbUtils = {
   /**
    * Check if user has access to a resource
