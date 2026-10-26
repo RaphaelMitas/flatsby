@@ -27,7 +27,6 @@ export { captureError } from "./lib/posthog";
 
 export type { ApiResult, ApiErrorResult } from "./errors";
 
-// Export database and query types
 export type {
   ExpenseWithSplitsAndMembers,
   GroupMemberWithUserInfo,
