@@ -54,11 +54,9 @@ export const getListWithAccess = Effect.fn("ShoppingLists.getListWithAccess")(
         },
       }),
     );
-    return yield* requireMemberIn(
-      list.group.groupMembers,
-      user.id,
-      "errors.notGroupMember",
-    );
+    const [member] = list.group.groupMembers;
+    // Same answer as a missing list, so non-members can't probe which ids exist
+    return member ?? (yield* fail.notFound("shoppingList"));
   },
 );
 

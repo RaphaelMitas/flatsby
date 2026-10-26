@@ -2,6 +2,8 @@ import { assert, describe, it } from "@effect/vitest";
 import { Context, Effect, Layer, Ref } from "effect";
 import { vi } from "vitest";
 
+import { db } from "@flatsby/db/client";
+
 import type { NotFoundResource } from "../errors";
 import { fail } from "../errors";
 import { CurrentRequest } from "./services/CurrentRequest";
@@ -14,8 +16,18 @@ import {
 } from "./shoppingLists";
 import { toApiResult } from "./toApiResult";
 
-// The real client validates DATABASE_URL on import, which would fail a local run without env vars
-vi.mock("@flatsby/db/client", () => ({ db: {} }));
+// The real client validates DATABASE_URL on import; this one sees list 2 in a group the user isn't in
+vi.mock("@flatsby/db/client", () => ({
+  db: {
+    query: {
+      groupMembers: { findFirst: () => Promise.resolve(undefined) },
+      shoppingLists: {
+        findFirst: () =>
+          Promise.resolve({ id: 2, group: { id: 9, groupMembers: [] } }),
+      },
+    },
+  },
+}));
 
 class Lookups extends Context.Service<Lookups, Ref.Ref<NotFoundResource[]>>()(
   "test/Lookups",
@@ -39,9 +51,14 @@ const TestLayer = Layer.succeed(ErrorReporter, {
         const lookups = yield* Lookups;
         return Database.of({
           query: () => Effect.die(new Error("query is not expected")),
-          findOneOrFail: (resource) =>
+          findOneOrFail: (resource, run) =>
             Ref.update(lookups, (all) => [...all, resource]).pipe(
-              Effect.andThen(fail.notFound(resource)),
+              Effect.andThen(Effect.promise(() => run(db))),
+              Effect.flatMap((row) =>
+                row === undefined
+                  ? fail.notFound(resource)
+                  : Effect.succeed(row),
+              ),
             ),
         });
       }),
