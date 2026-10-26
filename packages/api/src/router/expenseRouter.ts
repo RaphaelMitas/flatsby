@@ -5,7 +5,7 @@ import { Array as Arr, Effect } from "effect";
 import { z } from "zod/v4";
 
 import { and, desc, eq, inArray, lt, or } from "@flatsby/db";
-import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
+import { expenses, expenseSplits } from "@flatsby/db/schema";
 import { messages } from "@flatsby/i18n/messages";
 import {
   expenseSubcategories,
@@ -33,7 +33,11 @@ import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/valida
 import type { ApiError } from "../errors";
 import type { CreditUser } from "../utils/autumn";
 import { getExpenseWithAccess } from "../effect/expenses";
-import { getGroupWithAccess } from "../effect/groups";
+import {
+  getGroupWithAccess,
+  requireActiveMembers,
+  requireActiveMembersIn,
+} from "../effect/groups";
 import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
 import { Errors, fail, getApiResultZod } from "../errors";
@@ -61,17 +65,6 @@ function validateExpenseSplitsEffect(
   }
 
   return fail.validation(result.userMessage);
-}
-
-function ensureActiveMembers(
-  activeMembers: { id: number }[],
-  memberIds: Iterable<number>,
-): Effect.Effect<void, ApiError> {
-  const activeIds = new Set(activeMembers.map((m) => m.id));
-  for (const memberId of memberIds) {
-    if (!activeIds.has(memberId)) return fail.notFound("groupMember");
-  }
-  return Effect.succeed(undefined);
 }
 
 const PAIR_ACTIVITY_PAGE = 5;
@@ -142,7 +135,7 @@ export const expenseRouter = createTRPCRouter({
             splits,
             input.splitMethod,
           );
-          yield* ensureActiveMembers(group.groupMembers, [
+          yield* requireActiveMembersIn(group.groupMembers, [
             input.paidByGroupMemberId,
             ...splits.map((split) => split.groupMemberId),
           ]);
@@ -223,25 +216,11 @@ export const expenseRouter = createTRPCRouter({
         ctx,
         Effect.gen(function* () {
           const expense = yield* getExpenseWithAccess(input.expenseId);
+          yield* requireActiveMembers(expense.groupId, [
+            ...(input.paidByGroupMemberId ? [input.paidByGroupMemberId] : []),
+            ...(input.splits ?? []).map((split) => split.groupMemberId),
+          ]);
           const database = yield* Database;
-          yield* Effect.forEach(
-            [
-              ...(input.paidByGroupMemberId
-                ? [{ groupMemberId: input.paidByGroupMemberId }]
-                : []),
-              ...(input.splits ?? []),
-            ],
-            ({ groupMemberId }) =>
-              database.findOneOrFail("groupMember", (db) =>
-                db.query.groupMembers.findFirst({
-                  where: and(
-                    eq(groupMembers.id, groupMemberId),
-                    eq(groupMembers.groupId, expense.groupId),
-                  ),
-                }),
-              ),
-            { concurrency: "unbounded" },
-          );
           const result = yield* database.query(
             "transaction: update expense",
             (db) =>
@@ -740,7 +719,7 @@ export const expenseRouter = createTRPCRouter({
         ctx,
         Effect.gen(function* () {
           const group = yield* getGroupWithAccess(input.groupId);
-          yield* ensureActiveMembers(
+          yield* requireActiveMembersIn(
             group.groupMembers,
             input.expenses.flatMap((expense) => [
               expense.paidByGroupMemberId,
