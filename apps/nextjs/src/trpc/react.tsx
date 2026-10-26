@@ -1,6 +1,7 @@
 "use client";
 
 import type { AppRouter } from "@flatsby/api";
+import type { TRPCFailure } from "@flatsby/api/trpcFailure";
 import type { QueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -12,7 +13,10 @@ import {
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import SuperJSON from "superjson";
 
+import { trpcFailureCaches } from "@flatsby/api/trpcFailure";
+
 import { env } from "~/env";
+import { sendErrorReport } from "~/utils/error-beacon";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton: QueryClient | undefined;
@@ -23,9 +27,16 @@ const getQueryClient = () => {
   } else {
     // Browser: use singleton pattern to keep the same query client
     // biome-ignore lint/suspicious/noAssignInExpressions: lazy singleton initialization
-    return (clientQueryClientSingleton ??= createQueryClient());
+    return (clientQueryClientSingleton ??= createQueryClient(
+      trpcFailureCaches(reportTRPCFailure),
+    ));
   }
 };
+
+function reportTRPCFailure(error: Error, failure: TRPCFailure) {
+  if (!failure.code && !navigator.onLine) return;
+  sendErrorReport(error, "trpc", failure);
+}
 
 export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
 

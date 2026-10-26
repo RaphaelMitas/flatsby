@@ -3,18 +3,12 @@ import { after } from "next/server";
 import { z } from "zod/v4";
 
 import { captureVisit } from "~/utils/page-views";
+import { isSameOrigin } from "~/utils/same-origin";
 
 const navigationSchema = z.object({
   url: z.url().max(2048),
   referrer: z.url().max(2048).nullable(),
 });
-
-// Other sites could otherwise make their visitors' browsers report page views here
-function isSameOrigin(request: NextRequest) {
-  const site = request.headers.get("sec-fetch-site");
-  if (site !== null) return site === "same-origin";
-  return request.headers.get("origin") === request.nextUrl.origin;
-}
 
 export async function POST(request: NextRequest) {
   if (!isSameOrigin(request)) return new Response(null, { status: 403 });

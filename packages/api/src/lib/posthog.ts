@@ -4,6 +4,7 @@ import {
   detectDevice,
   detectDeviceType,
   detectOS,
+  ErrorTracking,
 } from "@posthog/core";
 import { PostHog } from "posthog-node";
 
@@ -229,15 +230,44 @@ export function captureError({
   });
 }
 
+// posthog-node only parses V8 stacks, Firefox and Safari write theirs differently
+const browserErrors = new ErrorTracking.ErrorPropertiesBuilder(
+  [new ErrorTracking.ErrorCoercer()],
+  ErrorTracking.createDefaultStackParser(),
+);
+
+export interface BrowserError {
+  name: string;
+  message: string;
+  stack?: string;
+  mechanism: "onerror" | "onunhandledrejection" | "trpc";
+}
+
+export function browserExceptionProperties({
+  name,
+  message,
+  stack,
+  mechanism,
+}: BrowserError) {
+  const error = new Error(message);
+  error.name = name;
+  error.stack = stack ?? "";
+  return browserErrors.buildFromUnknown(error, {
+    mechanism: { type: mechanism, handled: mechanism === "trpc" },
+  });
+}
+
 export function captureEvent({
   distinctId,
   event,
   headers,
+  page,
   additionalProperties,
 }: {
   distinctId: string;
   event: string;
   headers: Headers;
+  page?: PageUrls;
   additionalProperties?: Record<string, unknown>;
 }) {
   if (!posthog) return;
@@ -245,7 +275,7 @@ export function captureEvent({
     distinctId,
     event,
     properties: {
-      ...buildPostHogProperties(headers),
+      ...buildPostHogProperties(headers, page),
       ...additionalProperties,
     },
   });

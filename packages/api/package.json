@@ -23,6 +23,10 @@
     "./shoppingListItemsCache": {
       "types": "./dist/shoppingListItemsCache.d.ts",
       "default": "./src/shoppingListItemsCache.ts"
+    },
+    "./trpcFailure": {
+      "types": "./dist/trpcFailure.d.ts",
+      "default": "./src/trpcFailure.ts"
     }
   },
   "license": "MIT",
@@ -62,6 +66,7 @@
   "peerDependencies": {
     "@tanstack/react-pacer": "*",
     "@tanstack/react-query": "catalog:",
+    "@trpc/client": "catalog:",
     "react": "catalog:react19"
   },
   "prettier": "@flatsby/prettier-config"
