@@ -86,7 +86,7 @@ catalogs:
 
 linkWorkspacePackages: true
 
-# Keep renovate.json minimumReleaseAge above this: Renovate ages only the parent, pnpm also its later-published platform binaries
+# Keep renovate.json minimumReleaseAge a day above this: Renovate ages only the parent, pnpm also its later-published platform binaries
 minimumReleaseAge: 1440
 
 nodeLinker: hoisted
