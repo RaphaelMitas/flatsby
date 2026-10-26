@@ -1,6 +1,5 @@
 • Termine können mehrere Tage dauern, etwa eine Reise oder ein Wochenende weg. Wiederholte Termine behalten ihre Länge.
 • Die Uhrzeit steht neben dem Datum, und neue Termine beginnen um 19:00 statt ganztägig.
-• Bewerte Flatsby in den Einstellungen.
 • Auf Android scrollen Listen weiter, auch wenn der Finger seitlich abrutscht.
 • Automatische Kategorien und der KI-Assistent laufen auch, wenn du die Credits-Seite nie geöffnet hast.
 • Kleine Fehlerbehebungen und Verbesserungen.

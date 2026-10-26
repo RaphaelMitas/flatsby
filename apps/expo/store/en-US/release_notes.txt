@@ -1,6 +1,5 @@
 • Events can run over several days, like a trip or a weekend away. Repeating events keep their length every time.
 • The event form shows each date next to its time, and new events start at 19:00 instead of all day.
-• Rate Flatsby from Settings.
 • On Android, a list scroll no longer stops dead when your finger drifts sideways.
 • Automatic categories and the AI assistant work even if you never opened the credits screen.
 • Small fixes and improvements.
