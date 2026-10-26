@@ -20,7 +20,7 @@
     "dev": "bash scripts/setup-adb-reverse.sh; turbo watch dev --continue",
     "dev:next": "turbo watch dev -F @flatsby/nextjs...",
     "lint:ws": "pnpm dlx sherif@latest",
-    "postinstall": "pnpm lint:ws",
+    "postinstall": "pnpm lint:ws && effect-tsgo patch",
     "release": "node scripts/release.mjs",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
@@ -29,6 +29,7 @@
     "op-prod": "op run --no-masking --environment hwryn4byznprvfoes7jqfujbfu --"
   },
   "devDependencies": {
+    "@effect/tsgo": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "prettier": "catalog:",
     "turbo": "catalog:",
