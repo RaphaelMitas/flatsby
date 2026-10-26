@@ -2,10 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { Context, Effect, Layer, Ref } from "effect";
 import { vi } from "vitest";
 
-import { db } from "@flatsby/db/client";
-
 import type { NotFoundResource } from "../errors";
-import { fail } from "../errors";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { Database } from "./services/Database";
 import { ErrorReporter } from "./services/ErrorReporter";
@@ -16,7 +13,7 @@ import {
 } from "./shoppingLists";
 import { toApiResult } from "./toApiResult";
 
-// The real client validates DATABASE_URL on import; this one sees list 2 in a group the user isn't in
+// The real client validates DATABASE_URL on import; list 2 sits in a foreign group, so an existence-only check fails
 vi.mock("@flatsby/db/client", () => ({
   db: {
     query: {
@@ -49,20 +46,16 @@ const TestLayer = Layer.succeed(ErrorReporter, {
       Database,
       Effect.gen(function* () {
         const lookups = yield* Lookups;
+        const real = yield* Database;
         return Database.of({
           query: () => Effect.die(new Error("query is not expected")),
           findOneOrFail: (resource, run) =>
             Ref.update(lookups, (all) => [...all, resource]).pipe(
-              Effect.andThen(Effect.promise(() => run(db))),
-              Effect.flatMap((row) =>
-                row === undefined
-                  ? fail.notFound(resource)
-                  : Effect.succeed(row),
-              ),
+              Effect.andThen(real.findOneOrFail(resource, run)),
             ),
         });
       }),
-    ),
+    ).pipe(Layer.provide(Database.layer)),
   ),
   Layer.provideMerge(Layer.effect(Lookups, Ref.make<NotFoundResource[]>([]))),
 );
