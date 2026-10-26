@@ -5,7 +5,7 @@ import type { ApiError, ApiResult } from "../errors";
 import { CurrentRequest } from "./services/CurrentRequest";
 import { Database } from "./services/Database";
 import { ErrorReporter } from "./services/ErrorReporter";
-import { toApiResult } from "./toApiResult";
+import { toApiResult, toApiResultAs } from "./toApiResult";
 
 const runtime = ManagedRuntime.make(
   Layer.mergeAll(Database.layer, ErrorReporter.layer),
@@ -37,3 +37,21 @@ export const runResult = <A>(
   ctx: RequestContext,
   effect: Effect.Effect<A, ApiError, Database | CurrentRequest>,
 ): Promise<ApiResult<A>> => run(ctx, toApiResult(effect));
+
+export const runPublicResult = <A>(
+  ctx: Omit<RequestContext, "session"> & {
+    session: RequestContext["session"] | null;
+  },
+  effect: Effect.Effect<A, ApiError, Database>,
+): Promise<ApiResult<A>> =>
+  runtime.runPromise(
+    toApiResultAs(
+      {
+        user: ctx.session?.user,
+        locale: ctx.locale,
+        path: ctx.path,
+        requestId: ctx.requestId,
+      },
+      effect,
+    ),
+  );

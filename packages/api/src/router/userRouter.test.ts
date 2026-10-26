@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { initAuth } from "@flatsby/auth";
-import { db } from "@flatsby/db/client";
-
+import { testContext, testUser } from "./testContext";
 import { userRouter } from "./userRouter";
 
 // The real client validates DATABASE_URL on import, which would fail a local run without env vars
@@ -17,48 +15,7 @@ vi.mock("../utils/autumn", () => ({
   },
 }));
 
-const now = new Date();
-
-const caller = userRouter.createCaller({
-  authApi: initAuth({
-    baseUrl: "http://localhost:3000",
-    productionUrl: "http://localhost:3000",
-    secret: "test-secret-that-is-long-enough-for-better-auth",
-    nodeEnv: "test",
-    googleClientId: "",
-    googleClientSecret: "",
-    appleServiceId: "",
-    appleBundleId: "",
-    applePrivateKey: "",
-    appleTeamId: "",
-    appleKeyId: "",
-    appleClientSecret: "",
-    trustedOrigins: [],
-  }).api,
-  headers: new Headers(),
-  session: {
-    session: {
-      id: "session-1",
-      token: "token-1",
-      userId: "user-1",
-      expiresAt: now,
-      createdAt: now,
-      updatedAt: now,
-    },
-    user: {
-      id: "user-1",
-      name: "Test User",
-      email: "test@example.com",
-      emailVerified: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-  },
-  authMs: 0,
-  db,
-  locale: "en",
-  requestId: "request-1",
-});
+const caller = userRouter.createCaller(testContext(testUser));
 
 describe("userRouter when Autumn fails", () => {
   it("answers getUsage without credits", async () => {

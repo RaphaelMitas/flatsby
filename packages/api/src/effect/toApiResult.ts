@@ -47,57 +47,67 @@ const grouping = (
   }
 };
 
-export const report = Effect.fnUntraced(function* (error: ApiError) {
-  const { user, path, requestId } = yield* CurrentRequest;
+type Requester = Omit<CurrentRequest["Service"], "user"> & {
+  readonly user?: CurrentRequest["Service"]["user"];
+};
+
+const capture = Effect.fnUntraced(function* (
+  { user, path, requestId }: Requester,
+  error: unknown,
+  properties: Record<string, unknown>,
+) {
   const reporter = yield* ErrorReporter;
   yield* reporter.capture({
     error,
     operation: path,
-    distinctId: user.id,
-    additionalProperties: {
-      ...grouping(path, error),
-      requestId,
-      error_type: error._tag,
-      message_key: error.messageKey,
-    },
+    distinctId: user?.id,
+    additionalProperties: { ...properties, requestId },
   });
 });
 
+const reportAs = (requester: Requester, error: ApiError) =>
+  capture(requester, error, {
+    ...grouping(requester.path, error),
+    error_type: error._tag,
+    message_key: error.messageKey,
+  });
+
+export const report = (error: ApiError) =>
+  CurrentRequest.use((request) => reportAs(request, error));
+
 const reportAndMap = Effect.fnUntraced(function* (
+  requester: Requester,
   cause: Cause.Cause<ApiError>,
 ) {
   const failure = Cause.findError(cause);
   if (Result.isSuccess(failure)) {
-    yield* report(failure.success);
+    yield* reportAs(requester, failure.success);
     return yield* failure.success;
   }
 
   const defect = Cause.findDefect(cause);
   if (Result.isSuccess(defect)) {
-    const { user, path, requestId } = yield* CurrentRequest;
-    const reporter = yield* ErrorReporter;
-    yield* reporter.capture({
-      error: defect.success,
-      operation: path,
-      distinctId: user.id,
-      additionalProperties: { kind: "defect", requestId },
-    });
+    yield* capture(requester, defect.success, { kind: "defect" });
     return yield* Errors.internalServer("operation", defect.success);
   }
 
   return yield* Effect.failCause(cause);
 });
 
-export const toApiResult = Effect.fnUntraced(function* <A, R>(
+/** Takes the request explicitly so public procedures can report a signed-out visitor. */
+export const toApiResultAs = Effect.fnUntraced(function* <A, R>(
+  requester: Requester,
   effect: Effect.Effect<A, ApiError, R>,
 ) {
   const result = yield* effect.pipe(
-    Effect.catchCause(reportAndMap),
+    Effect.catchCause((cause) => reportAndMap(requester, cause)),
     Effect.result,
   );
   if (Result.isSuccess(result)) {
     return { success: true, data: result.success } satisfies ApiResult<A>;
   }
-  const { locale } = yield* CurrentRequest;
-  return toApiErrorResult(locale, result.failure);
+  return toApiErrorResult(requester.locale, result.failure);
 });
+
+export const toApiResult = <A, R>(effect: Effect.Effect<A, ApiError, R>) =>
+  CurrentRequest.use((request) => toApiResultAs(request, effect));

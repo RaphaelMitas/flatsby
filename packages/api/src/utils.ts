@@ -14,33 +14,11 @@ import {
 } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 
-import type { ApiError, NotFoundResource } from "./errors";
-import type {
-  Database,
-  DbTransaction,
-  GroupMember,
-  Role,
-  TransactionOperation,
-} from "./types";
-import { Errors, fail, safeDbOperation } from "./errors";
+import type { ApiError } from "./errors";
+import type { Database, DbTransaction, GroupMember, Role } from "./types";
+import { Errors, fail } from "./errors";
 
-/**
- * Database operation utilities
- */
 export const DbUtils = {
-  /**
-   * Find a single record or fail with NotFound error
-   */
-  findOneOrFail: <T>(
-    operation: () => Promise<T | undefined>,
-    resource: NotFoundResource,
-  ): Effect.Effect<T, ApiError> => {
-    return Effect.flatMap(
-      safeDbOperation(operation, `find ${resource}`),
-      (result) => (result ? Effect.succeed(result) : fail.notFound(resource)),
-    );
-  },
-
   /**
    * Check if user has access to a resource
    */
@@ -83,18 +61,6 @@ export const DbUtils = {
       "errors.cannotRemoveLastAdmin",
     );
   },
-
-  /**
-   * Safe transaction wrapper
-   */
-  transaction:
-    <T>(operation: TransactionOperation<T>, operationName: string) =>
-    (db: Database): Effect.Effect<T, ApiError> => {
-      return safeDbOperation(
-        () => db.transaction(operation),
-        `transaction: ${operationName}`,
-      );
-    },
 };
 
 /**
@@ -187,23 +153,6 @@ export const GroupUtils = {
     await tx.delete(shoppingLists).where(eq(shoppingLists.groupId, groupId));
     await tx.delete(groups).where(eq(groups.id, groupId));
   },
-
-  addMember: (
-    db: Database,
-    groupId: number,
-    userId: string,
-    refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
-  ): Effect.Effect<number, ApiError> =>
-    Effect.flatMap(
-      DbUtils.transaction(
-        (tx) => addMemberTx(tx, groupId, userId, refusal),
-        "add group member",
-      )(db),
-      (result): Effect.Effect<number, ApiError> =>
-        typeof result === "number"
-          ? Effect.succeed(result)
-          : Effect.fail(result),
-    ),
 };
 
 export const findGroupWithMembers = (db: Database, groupId: number) =>
@@ -301,15 +250,3 @@ export const fetchGroupDebtSummary = async (db: Database, groupId: number) =>
       },
     }),
   );
-
-export { safeDbOperation };
-
-/**
- * Helper to convert a simple async function to Effect with error handling
- */
-export const effectify = <T>(
-  asyncFn: () => Promise<T>,
-  operationName: string,
-): Effect.Effect<T, ApiError> => {
-  return safeDbOperation(asyncFn, operationName);
-};

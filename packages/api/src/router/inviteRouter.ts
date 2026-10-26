@@ -10,10 +10,13 @@ import {
   inviteExpiresAt,
 } from "@flatsby/validators/invite";
 
-import type { Database } from "../types";
-import { Errors, withErrorHandlingAsResult } from "../errors";
+import { addMember } from "../effect/groups";
+import { runPublicResult, runResult } from "../effect/runtime";
+import { CurrentRequest } from "../effect/services/CurrentRequest";
+import { Database } from "../effect/services/Database";
+import { Errors } from "../errors";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { DbUtils, GroupUtils } from "../utils";
+import { GroupUtils } from "../utils";
 
 const generateCode = () =>
   Array.from(
@@ -24,106 +27,99 @@ const generateCode = () =>
 const liveInviteWhere = (code: string) =>
   and(eq(groupInvites.code, code), gt(groupInvites.expiresAt, new Date()));
 
-const issueInvite = (
-  db: Database,
+const issueInvite = Effect.fn("Invites.issueInvite")(function* (
   groupId: number,
-  userId: string,
   { onlyIfExpired }: { onlyIfExpired: boolean },
-) =>
-  DbUtils.findOneOrFail(
-    () =>
-      db.transaction(async (tx) => {
-        await GroupUtils.lockGroup(tx, groupId);
-        const admin = await tx.query.groupMembers.findFirst({
-          where: GroupUtils.activeAdminWhere(groupId, userId),
-          columns: { id: true },
+) {
+  const { user } = yield* CurrentRequest;
+  const database = yield* Database;
+  return yield* database.findOneOrFail("adminMembership", (db) =>
+    db.transaction(async (tx) => {
+      await GroupUtils.lockGroup(tx, groupId);
+      const admin = await tx.query.groupMembers.findFirst({
+        where: GroupUtils.activeAdminWhere(groupId, user.id),
+        columns: { id: true },
+      });
+      if (!admin) return undefined;
+      const invite = {
+        code: generateCode(),
+        createdByMemberId: admin.id,
+        expiresAt: inviteExpiresAt(),
+      };
+      const [issued] = await tx
+        .insert(groupInvites)
+        .values({ groupId, ...invite })
+        .onConflictDoUpdate({
+          target: groupInvites.groupId,
+          set: invite,
+          setWhere: onlyIfExpired
+            ? lte(groupInvites.expiresAt, new Date())
+            : undefined,
+        })
+        .returning({
+          code: groupInvites.code,
+          expiresAt: groupInvites.expiresAt,
         });
-        if (!admin) return undefined;
-        const invite = {
-          code: generateCode(),
-          createdByMemberId: admin.id,
-          expiresAt: inviteExpiresAt(),
-        };
-        const [issued] = await tx
-          .insert(groupInvites)
-          .values({ groupId, ...invite })
-          .onConflictDoUpdate({
-            target: groupInvites.groupId,
-            set: invite,
-            setWhere: onlyIfExpired
-              ? lte(groupInvites.expiresAt, new Date())
-              : undefined,
-          })
-          .returning({
-            code: groupInvites.code,
-            expiresAt: groupInvites.expiresAt,
-          });
-        return (
-          issued ??
-          (await tx.query.groupInvites.findFirst({
-            where: eq(groupInvites.groupId, groupId),
-            columns: { code: true, expiresAt: true },
-          }))
-        );
-      }),
-    "adminMembership",
+      return (
+        issued ??
+        (await tx.query.groupInvites.findFirst({
+          where: eq(groupInvites.groupId, groupId),
+          columns: { code: true, expiresAt: true },
+        }))
+      );
+    }),
   );
+});
 
 // Expired, reset and made-up codes all fail the same way, so a code reveals nothing.
-const findLiveInvite = (db: Database, code: string) =>
-  DbUtils.findOneOrFail(
-    () =>
-      db.query.groupInvites.findFirst({
-        where: liveInviteWhere(code),
-        with: {
-          group: {
-            columns: { id: true, name: true, profilePicture: true },
-            with: {
-              groupMembers: {
-                where: (members, { eq }) => eq(members.isActive, true),
-                columns: { userId: true },
-                with: { user: { columns: { name: true, image: true } } },
-              },
+const findLiveInvite = Effect.fn("Invites.findLiveInvite")(function* (
+  code: string,
+) {
+  const database = yield* Database;
+  return yield* database.findOneOrFail("invite", (db) =>
+    db.query.groupInvites.findFirst({
+      where: liveInviteWhere(code),
+      with: {
+        group: {
+          columns: { id: true, name: true, profilePicture: true },
+          with: {
+            groupMembers: {
+              where: (members, { eq }) => eq(members.isActive, true),
+              columns: { userId: true },
+              with: { user: { columns: { name: true, image: true } } },
             },
           },
-          createdByMember: {
-            with: { user: { columns: { name: true } } },
-          },
         },
-      }),
-    "invite",
+        createdByMember: {
+          with: { user: { columns: { name: true } } },
+        },
+      },
+    }),
   );
+});
 
 export const inviteRouter = createTRPCRouter({
   // A query that writes: an admin opening the sheet after expiry should see a fresh code, not a dead one.
-  get: protectedProcedure.input(groupIdInputSchema).query(({ ctx, input }) =>
-    withErrorHandlingAsResult(
-      ctx.locale,
-      issueInvite(ctx.db, input.groupId, ctx.session.user.id, {
-        onlyIfExpired: true,
-      }),
+  get: protectedProcedure
+    .input(groupIdInputSchema)
+    .query(({ ctx, input }) =>
+      runResult(ctx, issueInvite(input.groupId, { onlyIfExpired: true })),
     ),
-  ),
 
   reset: protectedProcedure
     .input(groupIdInputSchema)
     .mutation(({ ctx, input }) =>
-      withErrorHandlingAsResult(
-        ctx.locale,
-        issueInvite(ctx.db, input.groupId, ctx.session.user.id, {
-          onlyIfExpired: false,
-        }),
-      ),
+      runResult(ctx, issueInvite(input.groupId, { onlyIfExpired: false })),
     ),
 
   /** Public so the join page can show who is inviting before sign-in. */
   preview: publicProcedure
     .input(inviteCodeInputSchema)
     .query(({ ctx, input }) =>
-      withErrorHandlingAsResult(
-        ctx.locale,
+      runPublicResult(
+        ctx,
         Effect.map(
-          findLiveInvite(ctx.db, input.code),
+          findLiveInvite(input.code),
           ({ group, createdByMember }) => ({
             groupId: group.id,
             groupName: group.name,
@@ -142,26 +138,24 @@ export const inviteRouter = createTRPCRouter({
   join: protectedProcedure
     .input(inviteCodeInputSchema)
     .mutation(({ ctx, input }) =>
-      withErrorHandlingAsResult(
-        ctx.locale,
-        Effect.flatMap(findLiveInvite(ctx.db, input.code), ({ group }) =>
-          GroupUtils.addMember(
-            ctx.db,
-            group.id,
-            ctx.session.user.id,
-            async (tx) =>
-              (await tx.query.groupInvites.findFirst({
-                where: liveInviteWhere(input.code),
-                columns: { groupId: true },
-              }))
-                ? undefined
-                : Errors.notFound("invite"),
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const { user } = yield* CurrentRequest;
+          const { group } = yield* findLiveInvite(input.code);
+          yield* addMember(group.id, user.id, async (tx) =>
+            (await tx.query.groupInvites.findFirst({
+              where: liveInviteWhere(input.code),
+              columns: { groupId: true },
+            }))
+              ? undefined
+              : Errors.notFound("invite"),
           ).pipe(
             // A stale preview from another tab or device still offers Join, so joining again just opens the group
             Effect.catchTag("ConflictError", () => Effect.void),
-            Effect.as({ groupId: group.id, groupName: group.name }),
-          ),
-        ),
+          );
+          return { groupId: group.id, groupName: group.name };
+        }),
       ),
     ),
 });

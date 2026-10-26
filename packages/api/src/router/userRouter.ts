@@ -153,10 +153,22 @@ export const userRouter = createTRPCRouter({
               }),
           );
           const user = groups[0]?.user;
+          // Leaving a group keeps these ids, and old rows were written unchecked
+          const activeGroupIds = new Set(groups.map(({ group }) => group.id));
           return {
             user: user
               ? {
                   ...user,
+                  lastGroupUsed:
+                    user.lastGroupUsed !== null &&
+                    activeGroupIds.has(user.lastGroupUsed.id)
+                      ? user.lastGroupUsed
+                      : null,
+                  lastShoppingListUsed:
+                    user.lastShoppingListUsed !== null &&
+                    activeGroupIds.has(user.lastShoppingListUsed.groupId)
+                      ? user.lastShoppingListUsed
+                      : null,
                   lastChatModelUsed: chatModelSchema.safeParse(
                     user.lastChatModelUsed,
                   ).data,
