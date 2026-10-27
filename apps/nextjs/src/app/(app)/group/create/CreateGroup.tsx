@@ -55,7 +55,7 @@ export function CreateGroup() {
       <div className="p-8">
         <div className="bg-muted mx-auto flex max-w-md flex-col gap-4 rounded-lg p-8 shadow-lg">
           <div className="text-center">
-            <h1 className="text-2xl font-bold" data-testid="group-invite-title">
+            <h1 className="text-2xl font-bold">
               {t("invite.title", { group: created.name })}
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">

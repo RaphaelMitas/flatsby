@@ -85,7 +85,7 @@ export default function CreateGroup() {
             trpc.user.getCurrentUserWithGroups.queryOptions(),
           );
           setSelectedGroup(groupId, name);
-          // Cancelled while pending: keep the group, don't pull the user away
+          // Cancelled while pending: the group still exists and is selected, but stay put
           if (navigation.isFocused()) router.replace("/(tabs)/home/invite");
         },
       }),
