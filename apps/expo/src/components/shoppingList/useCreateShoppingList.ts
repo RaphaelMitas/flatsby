@@ -2,9 +2,9 @@ import { Alert } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { resultMutation } from "@flatsby/api/resultMutation";
 import {
   applyListsPatch,
-  shoppingListsMutation,
   shoppingListsPatches,
 } from "@flatsby/api/shoppingListsCache";
 
@@ -19,27 +19,24 @@ export function useCreateShoppingList(groupId: number) {
 
   return useMutation(
     trpc.shoppingList.createShoppingList.mutationOptions(
-      shoppingListsMutation(
-        queryClient,
-        listsKey,
-        shoppingListsPatches.create,
-        {
-          onFailure: (message) =>
-            Alert.alert(
-              t("common.error"),
-              message ?? t("shoppingList.createFailed"),
-            ),
-          // The list tab can only open the new list once the cache holds its real id
-          onSuccess: ({ shoppingListId }, { name }) => {
-            applyListsPatch(
-              queryClient,
-              listsKey,
-              shoppingListsPatches.saved({ shoppingListId }),
-            );
-            setSelectedShoppingList(shoppingListId, name);
-          },
+      resultMutation({
+        onFailure: (message) =>
+          Alert.alert(
+            t("common.error"),
+            message ?? t("shoppingList.createFailed"),
+          ),
+        // The Shopping tab can only open the new list once the cache holds it
+        onSuccess: async ({ shoppingListId }, { name }) => {
+          await queryClient.cancelQueries({ queryKey: listsKey });
+          applyListsPatch(
+            queryClient,
+            listsKey,
+            shoppingListsPatches.added({ id: shoppingListId, name }),
+          );
+          setSelectedShoppingList(shoppingListId, name);
+          void queryClient.invalidateQueries({ queryKey: listsKey });
         },
-      ),
+      }),
     ),
   );
 }

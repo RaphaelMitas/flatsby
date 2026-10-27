@@ -4,12 +4,7 @@ import type { ApiResult } from "./errors";
 
 export type QuerySnapshot = { queryKey: QueryKey; previous: unknown }[];
 
-/** Id of a row created optimistically, until the server returns the real one */
 export const PENDING_ID = -1;
-
-export const savedRows = <T extends { id: number }>(
-  result: ApiResult<T[]> | undefined,
-) => (result?.success ? result.data.filter(({ id }) => id !== PENDING_ID) : []);
 
 export const restoreSnapshot =
   (queryClient: QueryClient) => (snapshot: QuerySnapshot) => {

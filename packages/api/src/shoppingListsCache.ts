@@ -2,7 +2,7 @@ import type { QueryClient, QueryKey } from "@tanstack/react-query";
 
 import type { ApiResult } from "./errors";
 import type { ShoppingListSummary } from "./types";
-import { PENDING_ID, restoreSnapshot, resultMutation } from "./resultMutation";
+import { restoreSnapshot, resultMutation } from "./resultMutation";
 
 type ListsPatch = (lists: ShoppingListSummary[]) => ShoppingListSummary[];
 
@@ -15,26 +15,13 @@ export const applyListsPatch = (
     old?.success ? { ...old, data: patch(old.data) } : old,
   );
 
-/** The optimistic side of each list mutation, shared by both clients. */
 export const shoppingListsPatches = {
-  create:
-    ({ name }: { name: string }): ListsPatch =>
+  added:
+    ({ id, name }: { id: number; name: string }): ListsPatch =>
     (lists) => [
-      ...lists,
-      {
-        id: PENDING_ID,
-        name,
-        uncheckedItemLength: 0,
-        description: null,
-        icon: null,
-      },
+      ...lists.filter((list) => list.id !== id),
+      { id, name, uncheckedItemLength: 0, description: null, icon: null },
     ],
-  saved:
-    ({ shoppingListId }: { shoppingListId: number }): ListsPatch =>
-    (lists) =>
-      lists.map((list) =>
-        list.id === PENDING_ID ? { ...list, id: shoppingListId } : list,
-      ),
   rename:
     ({
       shoppingListId,

@@ -1,5 +1,4 @@
 export const shoppingList = {
-  allLists: "All Lists",
   createFailed: "Failed to create shopping list",
   createShoppingList: "Create Shopping List",
   editItem: "Edit Item",

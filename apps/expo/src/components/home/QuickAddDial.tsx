@@ -30,7 +30,6 @@ export function QuickAddDial({
 }) {
   const t = useTranslations("home.new.dial");
   const tActions = useTranslations("home.quickActions");
-  const tLists = useTranslations("shoppingList");
   const router = useRouter();
   const isFocused = useIsFocused();
   const [open, setOpen] = useState(false);
@@ -67,7 +66,6 @@ export function QuickAddDial({
     action();
   };
   const openList = (list: ShoppingListSummary) => go(() => onOpenList(list));
-  const openAllLists = () => go(() => router.navigate("/(tabs)/shoppingList"));
 
   return (
     <>
@@ -122,19 +120,6 @@ export function QuickAddDial({
           />
         </View>
 
-        {last && others.length === 0 && (
-          <Pressable
-            testID="home-dial-all-lists"
-            onPress={openAllLists}
-            className="mt-1 flex-row items-center gap-2.5 px-2 pt-2.5 pb-2"
-          >
-            <Icon name="list" size={19} color="foreground" />
-            <Text className="text-foreground flex-1 font-medium">
-              {tLists("allLists")}
-            </Text>
-            <Icon name="chevron-right" size={16} color="muted-foreground" />
-          </Pressable>
-        )}
         {others.length > 0 && (
           <Pressable
             testID="home-dial-other-lists"
@@ -176,16 +161,6 @@ export function QuickAddDial({
                 </Pressable>
               </Animated.View>
             ))}
-            <Pressable
-              testID="home-dial-all-lists"
-              onPress={openAllLists}
-              className="bg-card active:bg-muted flex-row items-center gap-2 rounded-xl py-2 pr-2 pl-9"
-            >
-              <Text className="text-muted-foreground flex-1">
-                {tLists("allLists")}
-              </Text>
-              <Icon name="chevron-right" size={14} color="muted-foreground" />
-            </Pressable>
           </ScrollView>
         )}
 
@@ -213,7 +188,7 @@ export function QuickAddDial({
         ) : (
           <Pressable
             testID="home-dial-new-list"
-            onPress={() => go(() => router.push("/(tabs)/shoppingList/create"))}
+            onPress={() => go(() => router.navigate("/(tabs)/shoppingList"))}
             className="border-border mt-2 flex-row items-center gap-3 rounded-2xl border border-dashed p-3"
           >
             <Icon name="list-plus" size={20} color="foreground" />

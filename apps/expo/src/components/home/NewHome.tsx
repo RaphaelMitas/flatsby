@@ -9,7 +9,6 @@ import {
 } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
-import { savedRows } from "@flatsby/api/resultMutation";
 import {
   describeEventTime,
   formatCalendarDate,
@@ -115,7 +114,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const { owe, owed } = debtData.success
     ? myDebts(debtData.data, meId, group.currency)
     : { owe: [], owed: [] };
-  const lists = savedRows(listsData);
+  const lists = listsData.success ? listsData.data : [];
   const selectedList = lists.find(({ id }) => id === selectedShoppingListId);
   const lastList = selectedList ?? lists[0];
 

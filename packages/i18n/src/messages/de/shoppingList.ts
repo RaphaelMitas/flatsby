@@ -1,7 +1,6 @@
 import type { Messages } from "../../messages";
 
 export const shoppingList = {
-  allLists: "Alle Listen",
   createFailed: "Einkaufsliste konnte nicht erstellt werden",
   createShoppingList: "Einkaufsliste erstellen",
   editItem: "Artikel bearbeiten",

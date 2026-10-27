@@ -4,8 +4,6 @@ import { Link } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { savedRows } from "@flatsby/api/resultMutation";
-
 import { FirstList } from "~/components/shoppingList/FirstList";
 import ShoppingList from "~/components/shoppingList/ShoppingList";
 import { ListSwitcher } from "~/components/switcher/ListSwitcher";
@@ -34,19 +32,30 @@ function ListTab({ groupId }: { groupId: number }) {
     selectedShoppingListId,
     selectedShoppingListName,
     setSelectedShoppingList,
+    clearSelectedShoppingList,
   } = useShoppingStore();
   const { data } = useSuspenseQuery(
     trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
   );
-  const lists = savedRows(data);
+  const lists = data.success ? data.data : [];
   const selected = lists.find(({ id }) => id === selectedShoppingListId);
   // Only a list the user picked becomes the last used one
   const current = selected ?? lists[0];
 
+  // Keeps the tab label in step when the picked list is renamed or deleted elsewhere
   useEffect(() => {
-    if (selected && selected.name !== selectedShoppingListName)
+    if (!data.success || selectedShoppingListId === null) return;
+    if (!selected) clearSelectedShoppingList();
+    else if (selected.name !== selectedShoppingListName)
       setSelectedShoppingList(selected.id, selected.name);
-  }, [selected, selectedShoppingListName, setSelectedShoppingList]);
+  }, [
+    data.success,
+    selected,
+    selectedShoppingListId,
+    selectedShoppingListName,
+    setSelectedShoppingList,
+    clearSelectedShoppingList,
+  ]);
 
   if (!data.success) return null;
   if (!current) return <FirstList groupId={groupId} />;
@@ -57,7 +66,11 @@ function ListTab({ groupId }: { groupId: number }) {
         <ListSwitcher lists={lists} current={current} />
       </View>
       <Suspense fallback={<ListSkeleton />}>
-        <ShoppingList groupId={groupId} shoppingListId={current.id} />
+        <ShoppingList
+          key={current.id}
+          groupId={groupId}
+          shoppingListId={current.id}
+        />
       </Suspense>
     </>
   );
