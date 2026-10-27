@@ -1,13 +1,12 @@
 import { ImageResponse } from "next/og";
 
+import { initials } from "@flatsby/ui/lib/initials";
+
 import { ogImageSize, SiteOgCard } from "~/app/_components/landing/SiteOgCard";
 import { loadInvite } from "./loadInvite";
 
 export const size = ogImageSize;
 export const contentType = "image/png";
-
-// ImageResponse defaults to a year-long immutable cache, which would keep a reset invite's group on the card
-const options = { ...size, headers: { "cache-control": "no-store" } };
 
 const avatar = {
   display: "flex",
@@ -16,15 +15,13 @@ const avatar = {
   borderRadius: 9999,
 };
 
-const initials = (name: string) => name.substring(0, 2).toUpperCase();
-
 export default async function Image({
   params,
 }: {
   params: Promise<{ code: string }>;
 }) {
   const { preview } = await loadInvite((await params).code);
-  if (!preview) return new ImageResponse(<SiteOgCard />, options);
+  if (!preview) return new ImageResponse(<SiteOgCard />, size);
 
   return new ImageResponse(
     <div
@@ -60,6 +57,7 @@ export default async function Image({
           lineHeight: 1.1,
           textAlign: "center",
           lineClamp: 2,
+          wordBreak: "break-word",
         }}
       >
         {preview.groupName}
@@ -99,6 +97,6 @@ export default async function Image({
         Flatsby
       </div>
     </div>,
-    options,
+    size,
   );
 }

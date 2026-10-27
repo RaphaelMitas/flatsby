@@ -157,29 +157,16 @@ test.describe("Group Management", () => {
     await memberPage.context().close();
   });
 
-  test("reset link kills the old code", async ({ authPage }) => {
-    await createAndSelectGroup(authPage, uniqueGroupName());
-    const oldCode = await openInvite(authPage);
-
-    await authPage.getByRole("button", { name: "Reset link" }).click();
-    await expect(authPage.getByTestId("group-invite-code")).not.toHaveText(
-      oldCode,
-    );
-
-    await authPage.goto(`/join/${oldCode}`);
-    await expect(authPage.getByTestId("join-invite-expired")).toBeVisible();
-  });
-
-  test("link crawlers get a group card until the link is reset", async ({
+  test("reset link kills the old code and its link card", async ({
     authPage,
     request,
   }) => {
     const groupName = uniqueGroupName();
     await createAndSelectGroup(authPage, groupName);
-    const code = await openInvite(authPage);
+    const oldCode = await openInvite(authPage);
 
     const crawl = async () => {
-      const response = await request.get(`/join/${code}`, {
+      const response = await request.get(`/join/${oldCode}`, {
         headers: {
           "user-agent": "WhatsApp/2.24.20.79 A",
           "accept-language": "en",
@@ -204,10 +191,12 @@ test.describe("Group Management", () => {
 
     await authPage.getByRole("button", { name: "Reset link" }).click();
     await expect(authPage.getByTestId("group-invite-code")).not.toHaveText(
-      code,
+      oldCode,
     );
 
     expect((await crawl()).title).toBe("This invite has expired");
+    await authPage.goto(`/join/${oldCode}`);
+    await expect(authPage.getByTestId("join-invite-expired")).toBeVisible();
   });
 
   test("change group name", async ({ authPage }) => {
