@@ -14,8 +14,8 @@ const isRestored = (query: Query) =>
   query.state.dataUpdatedAt > 0 && query.state.dataUpdatedAt < launchedAt;
 
 // A failed refetch keeps its old dataUpdatedAt, so it would show the pill on every focus
-const failedThisLaunch = (query: Query) =>
-  query.state.errorUpdatedAt >= launchedAt;
+const failedRefresh = (query: Query) =>
+  isRestored(query) && query.state.errorUpdatedAt >= launchedAt;
 
 export function CacheRefreshPill() {
   const t = useTranslations("common");
@@ -23,31 +23,27 @@ export function CacheRefreshPill() {
   const queryClient = useQueryClient();
   const refreshing =
     useIsFetching({
-      predicate: (query) => isRestored(query) && !failedThisLaunch(query),
+      predicate: (query) => isRestored(query) && !failedRefresh(query),
     }) > 0;
   const [wasRefreshing, setWasRefreshing] = useState(refreshing);
-  const [done, setDone] = useState(false);
+  const [showUpToDate, setShowUpToDate] = useState(false);
 
   if (refreshing !== wasRefreshing) {
     setWasRefreshing(refreshing);
-    // A failed refetch keeps its old data, which is not up to date
     if (!refreshing) {
-      setDone(
-        !queryClient
-          .getQueryCache()
-          .getAll()
-          .some((query) => isRestored(query) && failedThisLaunch(query)),
+      setShowUpToDate(
+        !queryClient.getQueryCache().getAll().some(failedRefresh),
       );
     }
   }
 
   useEffect(() => {
-    if (!done) return;
-    const timeout = setTimeout(() => setDone(false), 1000);
+    if (!showUpToDate) return;
+    const timeout = setTimeout(() => setShowUpToDate(false), 1000);
     return () => clearTimeout(timeout);
-  }, [done]);
+  }, [showUpToDate]);
 
-  if (!refreshing && !done) return null;
+  if (!refreshing && !showUpToDate) return null;
 
   return (
     <Animated.View

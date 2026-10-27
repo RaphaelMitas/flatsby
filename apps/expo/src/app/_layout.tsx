@@ -111,8 +111,9 @@ const StackLayout = () => {
 
   // Cached errors from a revoked session would sign the next login out again.
   // By now TabLayout's Redirect has unmounted the tabs; clearing under them
-  // re-suspends their queries and crashes SwiftUI. Waiting for the restore
-  // keeps it from bringing a signed-out user's cache back afterwards.
+  // re-suspends their queries and crashes SwiftUI. Waiting for restore and
+  // session keeps a late restore from undoing the clear and a pending session
+  // from wiping a signed-in cache.
   useEffect(() => {
     if (!isRestoring && sessionResolved && !userId) clearQueryCache();
   }, [isRestoring, sessionResolved, userId]);

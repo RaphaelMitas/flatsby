@@ -56,18 +56,16 @@ const storagePersister = createAsyncStoragePersister({
 export const persistOptions = {
   persister: {
     ...storagePersister,
-    // Until mutations and their refetches settle, the cache can hold optimistic writes
+    // Saving only settled state keeps optimistic writes and paused mutations off disk
     persistClient: (client) =>
       queryClient.isMutating() > 0 || queryClient.isFetching() > 0
         ? undefined
         : storagePersister.persistClient(client),
   },
   maxAge: CACHE_MAX_AGE,
-  // maxAge only dates the whole save, so without this a query viewed once stays forever
   dehydrateOptions: {
-    // Not the default success check: an offline refetch error would drop the data it keeps
+    // By age, not success: a failed refetch keeps its data, and maxAge only dates the whole save
     shouldDehydrateQuery: (query) =>
-      query.state.data !== undefined &&
       query.state.dataUpdatedAt > Date.now() - CACHE_MAX_AGE,
   },
   // New JS can expect a different data shape than the cache it would restore
