@@ -1067,7 +1067,6 @@ export interface EveningReminder {
   open: DueChore[];
 }
 
-/** Every evening before a day with a turn of mine or an event; my chores still open by then ride along */
 export function eveningReminders(
   range: CalendarRange,
   from: string,

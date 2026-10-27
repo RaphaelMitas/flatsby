@@ -20,15 +20,25 @@ import {
 
 import { calendarRangeOptions } from "~/components/calendar/calendarRangeOptions";
 import { trpc } from "./api";
+import { useSession } from "./auth/auth-client";
 import { useShoppingStore } from "./shopping-store";
 import { storedChoice } from "./stored-choice";
 import { useNow } from "./useNow";
 
-const reminderChoice = storedChoice("evening-reminders", (saved) =>
-  saved === "on" || saved === "off" ? saved : "undecided",
+// Stored with the user id, so someone else signing in on this phone is asked again
+const reminderChoice = storedChoice(
+  "evening-reminders",
+  (saved) => saved ?? "",
 );
 
-export const useReminderChoice = reminderChoice.useValue;
+/** null until the stored choice and the session are read */
+export function useReminderChoice() {
+  const stored = reminderChoice.useValue();
+  const userId = useSession().data?.user.id;
+  if (stored === null || !userId) return null;
+  if (stored === `on:${userId}`) return "on";
+  return stored === `off:${userId}` ? "off" : "undecided";
+}
 
 const REMINDER_HOUR = 19;
 const CHANNEL_ID = "evening-reminders";
@@ -59,9 +69,7 @@ interface Reminder {
   request: NotificationRequestInput & { identifier: string };
 }
 
-// Runs one at a time, so two quick changes can't interleave. Scheduling an
-// identifier again replaces it, so only the stale ones are cancelled after,
-// and a run cut short never leaves the phone without reminders.
+// Scheduling an identifier again replaces it, so only stale ones are cancelled after
 let queue = Promise.resolve();
 const reschedule = (reminders: Reminder[], channel: string) => {
   queue = queue
@@ -72,12 +80,11 @@ const reschedule = (reminders: Reminder[], channel: string) => {
         (await Notifications.getPermissionsAsync()).granted
       ) {
         await ensureChannel(channel);
-        // iOS throws on a time already past
         const now = new Date();
         for (const { at, request } of reminders) {
-          if (at <= now) continue;
-          await Notifications.scheduleNotificationAsync(request);
+          // Android may still deliver tonight's late; iOS throws on a time already past
           kept.add(request.identifier);
+          if (at > now) await Notifications.scheduleNotificationAsync(request);
         }
       }
       for (const {
@@ -92,10 +99,11 @@ const reschedule = (reminders: Reminder[], channel: string) => {
 export function useReminderSwitch(source: "calendar" | "settings") {
   const posthog = usePostHog();
   const t = useTranslations("calendar.reminders");
+  const userId = useSession().data?.user.id;
 
   const choose = (next: "on" | "off") => {
     posthog.capture("evening_reminders_changed", { to: next, source });
-    reminderChoice.save(next);
+    if (userId) reminderChoice.save(`${next}:${userId}`);
   };
 
   const enable = async () => {
@@ -123,9 +131,10 @@ const titles = (entries: CalendarEntry[]) =>
     )
     .join(", ");
 
-/** signedIn is undefined while the session loads */
-export function useEveningReminders(signedIn: boolean | undefined) {
+export function useEveningReminders() {
   const t = useTranslations("calendar.reminders");
+  const session = useSession();
+  const signedIn = session.isPending ? undefined : Boolean(session.data?.user);
   const router = useRouter();
   const { selectedGroupId, setSelectedGroup } = useShoppingStore();
   const choice = useReminderChoice();
@@ -205,9 +214,6 @@ export function useEveningReminders(signedIn: boolean | undefined) {
         : null;
 
   const sync = useEffectEvent((target: string | null) => {
-    // Someone else signing in on this phone is asked again
-    if (signedIn === false && choice !== null && choice !== "undecided")
-      reminderChoice.save("undecided");
     if (target !== null)
       reschedule(target === "off" ? [] : (reminders ?? []), t("channel"));
   });

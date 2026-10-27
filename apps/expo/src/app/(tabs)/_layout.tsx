@@ -30,9 +30,7 @@ export default function TabLayout() {
   const t = useTranslations("navigation");
 
   usePostHogIdentify();
-  useEveningReminders(
-    session.isPending ? undefined : Boolean(session.data?.user),
-  );
+  useEveningReminders();
 
   useEffect(() => {
     if (!session.data?.user) {

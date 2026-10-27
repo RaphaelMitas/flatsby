@@ -12,7 +12,6 @@ import { Button } from "~/lib/ui/button";
 import { Card, CardContent } from "~/lib/ui/card";
 import { useReminderSwitch } from "~/utils/evening-reminders";
 
-/** Asked once, when the next week holds a turn of mine */
 export function ReminderAsk({
   range,
   today,
