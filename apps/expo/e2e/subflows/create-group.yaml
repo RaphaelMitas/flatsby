@@ -19,6 +19,8 @@ appId: ${APP_ID}
     timeout: 15000
 - tapOn:
     id: "group-invite-done"
+# Home shows the name in the group picker button, which iOS reads as one label
+# together with its icon glyph, so match it as a substring
 - extendedWaitUntil:
-    visible: ${GROUP_NAME}
+    visible: ".*${GROUP_NAME}.*"
     timeout: 15000
