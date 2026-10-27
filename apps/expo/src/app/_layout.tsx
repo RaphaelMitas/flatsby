@@ -111,10 +111,11 @@ const StackLayout = () => {
 
   // Cached errors from a revoked session would sign the next login out again.
   // By now TabLayout's Redirect has unmounted the tabs; clearing under them
-  // re-suspends their queries and crashes SwiftUI.
+  // re-suspends their queries and crashes SwiftUI. Waiting for the restore
+  // keeps it from bringing a signed-out user's cache back afterwards.
   useEffect(() => {
-    if (!userId) queryClient.clear();
-  }, [userId]);
+    if (!isRestoring && sessionResolved && !userId) queryClient.clear();
+  }, [isRestoring, sessionResolved, userId]);
 
   // The Expo client restores a cached session into data while it revalidates.
   // Later refetches (every app focus) set isPending again while signed out,

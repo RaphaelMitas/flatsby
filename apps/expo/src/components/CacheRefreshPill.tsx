@@ -14,11 +14,15 @@ const launchedAt = Date.now();
 const isRestored = (query: Query) =>
   query.state.dataUpdatedAt > 0 && query.state.dataUpdatedAt < launchedAt;
 
+// Once a refetch failed, later focus refetches of that query stay silent
+const isRefreshable = (query: Query) =>
+  isRestored(query) && query.state.status === "success";
+
 export function CacheRefreshPill() {
   const t = useTranslations("common");
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const refreshing = useIsFetching({ predicate: isRestored }) > 0;
+  const refreshing = useIsFetching({ predicate: isRefreshable }) > 0;
   const [wasRefreshing, setWasRefreshing] = useState(refreshing);
   const [done, setDone] = useState(false);
 

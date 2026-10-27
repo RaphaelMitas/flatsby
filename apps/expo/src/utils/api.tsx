@@ -29,7 +29,7 @@ focusManager.setEventListener((setFocused) => {
   return () => subscription.remove();
 });
 
-// A cold start the next day should still open on the last data, not a spinner
+// Also the gcTime: a query collected sooner never reaches the persisted cache
 const CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 export const queryClient = new QueryClient({
@@ -47,17 +47,24 @@ export const queryClient = new QueryClient({
   },
 });
 
+const storagePersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  serialize: superjson.stringify,
+  deserialize: superjson.parse,
+});
+
 export const persistOptions = {
-  persister: createAsyncStoragePersister({
-    storage: AsyncStorage,
-    serialize: superjson.stringify,
-    deserialize: superjson.parse,
-  }),
+  persister: {
+    ...storagePersister,
+    // An optimistic write saved mid-mutation would restore as if the server had it
+    persistClient: (client) =>
+      queryClient.isMutating() > 0
+        ? undefined
+        : storagePersister.persistClient(client),
+  },
   maxAge: CACHE_MAX_AGE,
   // New JS can expect a different data shape than the cache it would restore
   buster: Updates.updateId ?? Application.nativeApplicationVersion ?? "",
-  // Restored paused mutations have no mutationFn to resume with
-  dehydrateOptions: { shouldDehydrateMutation: () => false },
 } satisfies Omit<PersistQueryClientOptions, "queryClient">;
 
 // biome-ignore lint/suspicious/noExplicitAny: generic constraint must accept any query options shape
