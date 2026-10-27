@@ -1,22 +1,68 @@
 "use client";
 
+import type { LoginAttempt, LoginProvider } from "@flatsby/validators/login";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
 import { Stack } from "expo-router";
+import { uuidv7 } from "@posthog/core";
+import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
+
+import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { signIn } from "~/utils/auth/auth-client";
+import { authClient, signIn } from "~/utils/auth/auth-client";
 import { openLegalPage } from "~/utils/legal";
 
 const Login = () => {
   const t = useTranslations();
   const locale = useLocale();
-  const [loading, setLoading] = useState<"apple" | "google" | "false">("false");
+  const posthog = usePostHog();
+  const [loading, setLoading] = useState<LoginProvider | "false">("false");
 
   const callbackURL = ExpoLinking.createURL("/");
+
+  const signInWith = async (provider: LoginProvider) => {
+    const attemptId = uuidv7();
+    const attempt = { provider, platform: "app", attempt_id: attemptId };
+    posthog.capture("login_provider_tapped", attempt);
+    setLoading(provider);
+    const failed = (errorCode: string) =>
+      posthog.capture("login_failed", {
+        ...attempt,
+        stage: "start",
+        error_code: errorCode,
+      });
+    try {
+      const { error } = await signIn
+        .social({
+          provider,
+          callbackURL,
+          additionalData: {
+            login: {
+              attemptId,
+              distinctId: posthog.optedOut
+                ? undefined
+                : posthog.getDistinctId(),
+            } satisfies LoginAttempt,
+          },
+        })
+        .catch((thrown: unknown) => {
+          failed(thrownFailureCode(thrown));
+          throw thrown;
+        });
+      if (error) return failed(startFailureCode(error));
+      // The Expo plugin drops the browser's result, so whether a session came back is all we can know
+      const session = await authClient.getSession();
+      if (!session.data && !session.error) {
+        posthog.capture("login_cancelled", { ...attempt, stage: "sheet" });
+      }
+    } finally {
+      setLoading("false");
+    }
+  };
 
   return (
     <View testID="login-screen" className="bg-background flex-1 px-6 py-8">
@@ -42,14 +88,7 @@ const Login = () => {
         <View className="w-full gap-4">
           <Button
             testID="sign-in-google-button"
-            onPress={async () => {
-              setLoading("google");
-              await signIn.social({
-                provider: "google",
-                callbackURL,
-              });
-              setLoading("false");
-            }}
+            onPress={() => signInWith("google")}
             disabled={loading !== "false"}
             className="w-full py-4"
             title={
@@ -62,14 +101,7 @@ const Login = () => {
 
           <Button
             testID="sign-in-apple-button"
-            onPress={async () => {
-              setLoading("apple");
-              await signIn.social({
-                provider: "apple",
-                callbackURL,
-              });
-              setLoading("false");
-            }}
+            onPress={() => signInWith("apple")}
             disabled={loading !== "false"}
             className="w-full py-4"
             title={
