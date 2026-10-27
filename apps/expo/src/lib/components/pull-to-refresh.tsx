@@ -74,7 +74,7 @@ function useListOffset() {
   return { attachList, offset };
 }
 
-// Only the user's own pull spins; polls and background refetches stay invisible.
+// Only the user's own pull shows as refreshing; polls and background refetches stay invisible.
 function useOwnRefresh(onRefresh: () => Promise<unknown>) {
   const [pulled, setPulled] = useState(false);
   const refresh = () => {

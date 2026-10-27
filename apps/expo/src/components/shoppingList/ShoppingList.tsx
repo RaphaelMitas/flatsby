@@ -63,7 +63,11 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     trpc.shoppingList.getShoppingList.queryOptions({ groupId, shoppingListId }),
   );
 
-  const poll = useLivePolling(trpc.shoppingList.pathKey());
+  // A deleted list stays selected, and polling it would only collect errors
+  const poll = useLivePolling(
+    trpc.shoppingList.pathKey(),
+    shoppingListData.success,
+  );
 
   const { data: categoryCountsData, refetch: refetchCategoryCounts } = useQuery(
     {
