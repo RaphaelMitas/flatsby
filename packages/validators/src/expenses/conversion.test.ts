@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isExchangeRateFinal } from "./useExpenseConversion";
+import { isExchangeRateFinal } from "./conversion";
 
 describe("isExchangeRateFinal", () => {
   it("keeps a rate fetched during its UTC day provisional", () => {

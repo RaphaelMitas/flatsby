@@ -13,6 +13,7 @@ import { useLocale, useTranslations } from "use-intl";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
+import { isExchangeRateFinal } from "@flatsby/validators/expenses/conversion";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
@@ -22,10 +23,7 @@ import {
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
-import {
-  isExchangeRateFinal,
-  useExpenseConversion,
-} from "@flatsby/validators/expenses/useExpenseConversion";
+import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";

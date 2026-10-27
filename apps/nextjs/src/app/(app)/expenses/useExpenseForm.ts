@@ -15,6 +15,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { toast } from "@flatsby/ui/toast";
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
+import { isExchangeRateFinal } from "@flatsby/validators/expenses/conversion";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
@@ -23,10 +24,7 @@ import {
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
-import {
-  isExchangeRateFinal,
-  useExpenseConversion,
-} from "@flatsby/validators/expenses/useExpenseConversion";
+import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
 
 import { useTRPC } from "~/trpc/react";
 import { useExpenseInvalidation } from "./useExpenseInvalidation";
