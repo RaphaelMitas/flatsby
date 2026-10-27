@@ -1,6 +1,11 @@
 import type { AppRouter } from "@flatsby/api";
+import type { PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { AppState } from "react-native";
+import * as Application from "expo-application";
+import * as Updates from "expo-updates";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { focusManager, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
@@ -24,10 +29,14 @@ focusManager.setEventListener((setFocused) => {
   return () => subscription.remove();
 });
 
+// A cold start the next day should still open on the last data, not a spinner
+const CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
 export const queryClient = new QueryClient({
   ...trpcFailureCaches(reportTRPCFailure),
   defaultOptions: {
     queries: {
+      gcTime: CACHE_MAX_AGE,
       retry: (failureCount, error) => {
         if (isUnauthorizedError(error)) {
           return false;
@@ -37,6 +46,19 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+export const persistOptions = {
+  persister: createAsyncStoragePersister({
+    storage: AsyncStorage,
+    serialize: superjson.stringify,
+    deserialize: superjson.parse,
+  }),
+  maxAge: CACHE_MAX_AGE,
+  // New JS can expect a different data shape than the cache it would restore
+  buster: Updates.updateId ?? Application.nativeApplicationVersion ?? "",
+  // Restored paused mutations have no mutationFn to resume with
+  dehydrateOptions: { shouldDehydrateMutation: () => false },
+} satisfies Omit<PersistQueryClientOptions, "queryClient">;
 
 // biome-ignore lint/suspicious/noExplicitAny: generic constraint must accept any query options shape
 export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(

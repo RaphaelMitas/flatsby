@@ -10,15 +10,17 @@ import { useTranslations } from "use-intl";
 
 import { posthog } from "~/utils/analytics/posthog";
 import { getScreenName } from "~/utils/analytics/screen-names";
-import { queryClient } from "~/utils/api";
+import { persistOptions, queryClient } from "~/utils/api";
 
 import "../styles.css";
 import "~/lib/nativewind-setup";
 
 import { KeyboardProvider } from "react-native-keyboard-controller";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { useIsRestoring } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { PostHogProvider } from "posthog-react-native";
 
+import { CacheRefreshPill } from "~/components/CacheRefreshPill";
 import { InstallReferrer } from "~/components/InstallReferrer";
 import { UpdateNudge } from "~/components/UpdateNudge";
 import { ThemeProvider } from "~/lib/ui/theme";
@@ -46,14 +48,17 @@ export default function RootLayout() {
           <KeyboardProvider>
             <SafeAreaProvider>
               <ThemeProvider>
-                <QueryClientProvider client={queryClient}>
+                <PersistQueryClientProvider
+                  client={queryClient}
+                  persistOptions={persistOptions}
+                >
                   <RevenueCatProvider>
                     <ShoppingStoreProvider>
                       <StackLayout />
                       <StatusBar />
                     </ShoppingStoreProvider>
                   </RevenueCatProvider>
-                </QueryClientProvider>
+                </PersistQueryClientProvider>
               </ThemeProvider>
             </SafeAreaProvider>
           </KeyboardProvider>
@@ -100,6 +105,8 @@ const StackLayout = () => {
   const [sessionResolved, setSessionResolved] = useState(!isPending);
   if (!isPending && !sessionResolved) setSessionResolved(true);
   const { hydrated } = useShoppingStore();
+  // Suspense queries mounted mid-restore would fetch instead of using the cache
+  const isRestoring = useIsRestoring();
   const userId = data?.user.id;
 
   // Cached errors from a revoked session would sign the next login out again.
@@ -112,7 +119,7 @@ const StackLayout = () => {
   // The Expo client restores a cached session into data while it revalidates.
   // Later refetches (every app focus) set isPending again while signed out,
   // and blanking then would unmount the screen the user is on.
-  if ((!sessionResolved && !data) || !hydrated) {
+  if ((!sessionResolved && !data) || !hydrated || isRestoring) {
     return <View className="bg-background flex-1" />;
   }
 
@@ -144,6 +151,7 @@ const StackLayout = () => {
         />
         <Stack.Screen name="join/[code]" options={{ presentation: "modal" }} />
       </Stack>
+      <CacheRefreshPill />
     </View>
   );
 };
