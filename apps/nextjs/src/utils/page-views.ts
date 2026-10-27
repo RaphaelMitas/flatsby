@@ -39,11 +39,17 @@ export async function captureVisit(
   });
 }
 
-// A cookie whose session is gone would otherwise read as signed in and drop the event
+// isVisitor drops any request with a session cookie, stale or another account's
 export function withoutCookie(headers: Headers) {
   const signedOut = new Headers(headers);
   signedOut.delete("cookie");
   return signedOut;
+}
+
+// The query and hash can carry free text, like the first chat message
+export function pageWithoutQuery(url: string) {
+  const { origin, pathname } = new URL(url);
+  return { url: origin + pathname, referrer: null };
 }
 
 export async function captureFor(

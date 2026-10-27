@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { OAuthCallback } from "@flatsby/auth";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -41,8 +42,13 @@ export const auth = initAuth({
 });
 
 // The Expo client starts OAuth with a deep link as its callback, the web app with a path
-const oauthPlatform = (callbackURL: string) =>
-  callbackURL.startsWith("/") || /^https?:/.test(callbackURL) ? "web" : "app";
+function oauthPlatform(state: { callbackURL: string } | null) {
+  if (!state) return undefined;
+  const { callbackURL } = state;
+  return callbackURL.startsWith("/") || /^https?:/.test(callbackURL)
+    ? "web"
+    : "app";
+}
 
 const callbackPage = {
   url: `${env.BETTER_AUTH_URL}/api/auth/callback`,
@@ -53,8 +59,7 @@ const callbackPage = {
 async function onUserCreated(requestHeaders: Headers | undefined) {
   if (!requestHeaders) return;
   try {
-    const state = await getOAuthState();
-    const platform = oauthPlatform(state?.callbackURL ?? "/");
+    const platform = oauthPlatform(await getOAuthState());
     after(() =>
       captureVisit("signed_up", withoutCookie(requestHeaders), callbackPage, {
         platform,
@@ -66,22 +71,17 @@ async function onUserCreated(requestHeaders: Headers | undefined) {
   }
 }
 
-// The app passes its PostHog id along, so its events join the install; web stays cookieless
 async function onOAuthCallback({
   providerId,
   redirect,
   headers,
-}: {
-  providerId: string;
-  redirect: URL;
-  headers: Headers | undefined;
-}) {
+}: OAuthCallback) {
   const provider = loginProviderSchema.safeParse(providerId);
   if (!headers || !provider.success) return;
   try {
     const state = await getOAuthState();
     const attempt = loginAttemptSchema.safeParse(state?.login);
-    const platform = state ? oauthPlatform(state.callbackURL) : undefined;
+    const platform = oauthPlatform(state);
     const { event, ...outcome } = callbackOutcome(redirect);
     const properties = {
       ...outcome,
@@ -91,6 +91,7 @@ async function onOAuthCallback({
       // Like the app's own events before sign-in, so $identify still merges them into the account
       $process_person_profile: false,
     };
+    // Web stays cookieless; the app's id joins the callback to its install
     const distinctId =
       platform === "app" ? attempt.data?.distinctId : undefined;
     after(() =>

@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 export const loginProviderSchema = z.enum(["google", "apple"]);
 export type LoginProvider = z.infer<typeof loginProviderSchema>;
 
-// Rides the OAuth state as additionalData, so the callback's event lands on the person who tapped
+// Rides the OAuth state as additionalData from the tap to the callback
 export const loginAttemptSchema = z.object({
   attemptId: z.uuid(),
   // A bad id only loses the person, not the attempt
@@ -13,7 +13,6 @@ export const loginAttemptSchema = z.object({
     .optional()
     .catch(undefined),
 });
-export type LoginAttempt = z.infer<typeof loginAttemptSchema>;
 
 // Anyone can open the callback with ?error=<text>, so only code-shaped values reach analytics
 export const loginErrorCode = (code: string | null | undefined) => {

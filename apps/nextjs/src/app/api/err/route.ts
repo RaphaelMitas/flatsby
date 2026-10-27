@@ -6,7 +6,7 @@ import { trpcFailureProperties } from "@flatsby/api/trpcFailure";
 import type { ErrorReport } from "./report";
 import { auth } from "~/auth/server";
 import { handleBeacon } from "~/utils/beacon";
-import { captureFor } from "~/utils/page-views";
+import { captureFor, pageWithoutQuery } from "~/utils/page-views";
 import { errorReportSchema } from "./report";
 
 export const POST = (request: NextRequest) =>
@@ -15,9 +15,7 @@ export const POST = (request: NextRequest) =>
   );
 
 async function capture(headers: Headers, report: ErrorReport) {
-  const { origin, pathname } = new URL(report.url);
-  // The query and hash can carry free text, like the first chat message
-  const page = { url: origin + pathname, referrer: null };
+  const page = pageWithoutQuery(report.url);
   const properties = {
     ...browserExceptionProperties(report),
     ...(report.trpc && trpcFailureProperties(report.trpc)),

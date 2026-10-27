@@ -18,7 +18,8 @@ import type { LoginEvent } from "~/app/api/login/event";
 import { signIn } from "~/auth/client";
 
 function sendLoginEvent(event: LoginEvent) {
-  navigator.sendBeacon("/api/login", JSON.stringify(event));
+  // Firefox drops sendBeacon when beacon.enabled is off, and sign-in must still start
+  navigator.sendBeacon?.("/api/login", JSON.stringify(event));
 }
 
 const Login = ({ callbackURL }: { callbackURL: string }) => {

@@ -8,6 +8,12 @@ import { oAuthProxy, testUtils } from "better-auth/plugins";
 
 import { db } from "@flatsby/db/client";
 
+export interface OAuthCallback {
+  providerId: string;
+  redirect: URL;
+  headers: Headers | undefined;
+}
+
 export function initAuth(options: {
   baseUrl: string;
   productionUrl: string;
@@ -24,11 +30,7 @@ export function initAuth(options: {
   appleClientSecret: string;
   trustedOrigins: string[];
   onUserCreated?: (headers: Headers | undefined) => Promise<void>;
-  onOAuthCallback?: (callback: {
-    providerId: string;
-    redirect: URL;
-    headers: Headers | undefined;
-  }) => Promise<void>;
+  onOAuthCallback?: (callback: OAuthCallback) => Promise<void>;
 }) {
   const config = {
     database: drizzleAdapter(db, { provider: "pg" }),
@@ -61,7 +63,7 @@ export function initAuth(options: {
     },
     trustedOrigins: ["flatsby://", "expo://", ...options.trustedOrigins],
     hooks: {
-      // Success and every error leave the callback as a redirect, the outcome is in its location
+      // Every outcome Better Auth handles leaves the callback as a redirect, so it's read from the location
       after: createAuthMiddleware(async (ctx) => {
         const providerId = ctx.params?.id;
         const location = ctx.context.responseHeaders?.get("location");
