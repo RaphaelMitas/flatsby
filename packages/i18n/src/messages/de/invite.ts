@@ -22,6 +22,9 @@ export const invite = {
     lookAlikes: "O und 0 sowie I und 1 gelten als gleich",
     continue: "Weiter",
     invitedYouTo: "Einladung von {name}",
+    cardTitle: "{name} hat dich zu {group} eingeladen",
+    cardDescription:
+      "{members} · Einkaufslisten, Ausgaben und Putzplan zusammen.",
     consent:
       "Die Mitglieder sehen deinen Namen und dein Profilbild, und du siehst die Listen und Ausgaben der Gruppe.",
     join: "{group} beitreten",

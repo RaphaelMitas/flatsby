@@ -18,6 +18,9 @@ export const invite = {
     lookAlikes: "O and 0, I and 1 are treated the same",
     continue: "Continue",
     invitedYouTo: "{name} invited you to",
+    cardTitle: "{name} invited you to {group}",
+    cardDescription:
+      "{members} · Shopping lists, expenses and chores, together.",
     consent:
       "Members will see your name and profile picture, and you'll see the group's lists and expenses.",
     join: "Join {group}",

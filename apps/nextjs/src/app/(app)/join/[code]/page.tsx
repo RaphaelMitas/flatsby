@@ -1,47 +1,72 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
-import { inviteCodeSchema, invitePath } from "@flatsby/validators/invite";
+import { invitePath } from "@flatsby/validators/invite";
 import { APP_STORE_ID } from "@flatsby/validators/store";
 
 import { getPlatform } from "~/app/_components/landing/platform";
 import { getSession } from "~/auth/server";
-import { caller } from "~/trpc/server";
 import { JoinInvite } from "./JoinInvite";
+import { loadInvite } from "./loadInvite";
 
-export const metadata: Metadata = {
-  robots: { index: false },
-  itunes: null,
-};
-
-export default async function JoinPage({
-  params,
-}: {
+interface JoinPageProps {
   params: Promise<{ code: string }>;
-}) {
-  const parsed = inviteCodeSchema.safeParse((await params).code);
-  const [session, preview, platform] = await Promise.all([
+}
+
+export async function generateMetadata({
+  params,
+}: JoinPageProps): Promise<Metadata> {
+  const [{ code, preview }, t] = await Promise.all([
+    loadInvite((await params).code),
+    getTranslations(),
+  ]);
+  const title = preview
+    ? t("invite.join.cardTitle", {
+        name: preview.invitedBy,
+        group: preview.groupName,
+      })
+    : t("invite.join.expiredTitle");
+  const description = preview
+    ? t("invite.join.cardDescription", {
+        members: t("group.memberCount", { count: preview.memberCount }),
+      })
+    : t("invite.join.expiredHint");
+
+  return {
+    title,
+    description,
+    robots: { index: false },
+    itunes: null,
+    openGraph: {
+      title,
+      description,
+      url: code ? invitePath(code) : undefined,
+      siteName: "Flatsby",
+      type: "website",
+    },
+  };
+}
+
+export default async function JoinPage({ params }: JoinPageProps) {
+  const [session, { code, preview }, platform] = await Promise.all([
     getSession(),
-    parsed.success ? caller.invite.preview({ code: parsed.data }) : null,
+    params.then((p) => loadInvite(p.code)),
     getPlatform(),
   ]);
-
-  if (preview?.success === false && preview.error.type !== "NotFoundError") {
-    throw new Error(preview.error.message);
-  }
 
   return (
     <main className="bg-muted flex h-dvh overflow-y-auto p-4">
       {/* generateMetadata would stream this into <body>; React hoists it into <head> from here */}
-      {parsed.success && (
+      {code && (
         <meta
           name="apple-itunes-app"
-          content={`app-id=${APP_STORE_ID}, app-argument=flatsby:/${invitePath(parsed.data)}`}
+          content={`app-id=${APP_STORE_ID}, app-argument=flatsby:/${invitePath(code)}`}
         />
       )}
       <div className="m-auto flex w-full justify-center">
         <JoinInvite
-          code={parsed.data ?? ""}
-          preview={preview?.success ? preview.data : null}
+          code={code ?? ""}
+          preview={preview}
           signedIn={!!session?.user}
           platform={platform}
         />
