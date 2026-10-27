@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { callbackOutcome, loginErrorCode } from "./login";
+import { callbackOutcome, loginAttemptSchema, loginErrorCode } from "./login";
 
 const redirect = (query: string) =>
   new URL(`https://www.flatsby.com/api/auth/error${query}`);
@@ -45,4 +45,18 @@ describe("loginErrorCode", () => {
   ])("replaces %j with other", (code) => {
     expect(loginErrorCode(code)).toBe("other");
   });
+});
+
+describe("loginAttemptSchema", () => {
+  const attemptId = "019a2b3c-4d5e-7f00-8a00-000000000000";
+
+  it.each(["", "someone@example.com"])(
+    "keeps the attempt when the distinct id is %j",
+    (distinctId) => {
+      expect(loginAttemptSchema.parse({ attemptId, distinctId })).toEqual({
+        attemptId,
+        distinctId: undefined,
+      });
+    },
+  );
 });

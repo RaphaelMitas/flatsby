@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { handleBeacon } from "~/utils/beacon";
-import { captureVisit } from "~/utils/page-views";
+import { captureVisit, withoutCookie } from "~/utils/page-views";
 import { loginEventSchema } from "./event";
 
 export const POST = (request: NextRequest) =>
@@ -9,7 +9,7 @@ export const POST = (request: NextRequest) =>
     const { origin, pathname } = new URL(url);
     return captureVisit(
       event,
-      request.headers,
+      withoutCookie(request.headers),
       { url: origin + pathname, referrer: null },
       {
         ...properties,

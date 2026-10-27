@@ -9,7 +9,7 @@ import { uuidv7 } from "@posthog/core";
 import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
-import { startFailureCode } from "@flatsby/validators/login";
+import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -41,11 +41,16 @@ const Login = () => {
           provider,
           callbackURL,
           additionalData: {
-            login: { attemptId, distinctId: posthog.getDistinctId() },
+            login: {
+              attemptId,
+              distinctId: posthog.optedOut
+                ? undefined
+                : posthog.getDistinctId(),
+            },
           },
         })
         .catch((thrown: unknown) => {
-          failed(thrown instanceof TypeError ? "network" : "exception");
+          failed(thrownFailureCode(thrown));
           throw thrown;
         });
       if (error) return failed(startFailureCode(error));

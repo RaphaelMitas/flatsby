@@ -3,6 +3,7 @@
 import type { LoginProvider } from "@flatsby/validators/login";
 import { useState } from "react";
 import Link from "next/link";
+import { uuidv7 } from "@posthog/core";
 import { useLocale, useTranslations } from "next-intl";
 
 import { localePath } from "@flatsby/i18n/locale";
@@ -11,7 +12,7 @@ import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import GoogleIcon from "@flatsby/ui/custom/icons/GoogleIcon";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
-import { startFailureCode } from "@flatsby/validators/login";
+import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
 
 import type { LoginEvent } from "~/app/api/login/event";
 import { signIn } from "~/auth/client";
@@ -28,7 +29,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
   const signInWith = async (provider: LoginProvider) => {
     const attempt = {
       provider,
-      attempt_id: crypto.randomUUID(),
+      attempt_id: uuidv7(),
       url: window.location.href,
     };
     sendLoginEvent({ ...attempt, event: "login_provider_tapped" });
@@ -47,7 +48,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
           additionalData: { login: { attemptId: attempt.attempt_id } },
         })
         .catch((thrown: unknown) => {
-          failed(thrown instanceof TypeError ? "network" : "exception");
+          failed(thrownFailureCode(thrown));
           throw thrown;
         });
       if (error) failed(startFailureCode(error));

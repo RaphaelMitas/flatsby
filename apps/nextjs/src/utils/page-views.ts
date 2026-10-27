@@ -1,7 +1,7 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { isbot } from "isbot";
 
-import { captureCookieless } from "@flatsby/api/posthog";
+import { captureCookieless, captureEvent, posthog } from "@flatsby/api/posthog";
 
 function isVisitor(headers: Headers) {
   const userAgent = headers.get("user-agent");
@@ -37,4 +37,31 @@ export async function captureVisit(
       ...additionalProperties,
     },
   });
+}
+
+// A cookie whose session is gone would otherwise read as signed in and drop the event
+export function withoutCookie(headers: Headers) {
+  const signedOut = new Headers(headers);
+  signedOut.delete("cookie");
+  return signedOut;
+}
+
+export async function captureFor(
+  distinctId: string | undefined,
+  event: string,
+  headers: Headers,
+  page: { url: string; referrer: string | null },
+  properties: Record<string, unknown>,
+) {
+  if (!distinctId) {
+    return captureVisit(event, withoutCookie(headers), page, properties);
+  }
+  captureEvent({
+    distinctId,
+    event,
+    headers,
+    page,
+    additionalProperties: properties,
+  });
+  await posthog?.flush();
 }

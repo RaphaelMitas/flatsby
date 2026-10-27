@@ -65,15 +65,18 @@ export function initAuth(options: {
       after: createAuthMiddleware(async (ctx) => {
         const providerId = ctx.params?.id;
         const location = ctx.context.responseHeaders?.get("location");
-        if (!ctx.path.startsWith("/callback/") || !providerId || !location) {
+        // Apple's form_post arrives as a POST that only forwards to the GET callback
+        if (
+          !ctx.path.startsWith("/callback/") ||
+          ctx.method === "POST" ||
+          !providerId ||
+          !location
+        ) {
           return;
         }
-        const redirect = new URL(location, ctx.context.baseURL);
-        // A preview's sign-in only passes through production, the preview finishes it
-        if (redirect.pathname.endsWith("/oauth-proxy-callback")) return;
         await options.onOAuthCallback?.({
           providerId,
-          redirect,
+          redirect: new URL(location, ctx.context.baseURL),
           headers: ctx.headers ?? ctx.request?.headers,
         });
       }),

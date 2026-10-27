@@ -571,6 +571,9 @@ importers:
       '@flatsby/validators':
         specifier: workspace:*
         version: link:../../packages/validators
+      '@posthog/core':
+        specifier: ^1.59.1
+        version: 1.59.1
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
         version: 0.13.11(typescript@7.0.2)(zod@4.6.7)

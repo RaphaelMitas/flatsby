@@ -6,7 +6,12 @@ export type LoginProvider = z.infer<typeof loginProviderSchema>;
 // Rides the OAuth state as additionalData, so the callback's event lands on the person who tapped
 export const loginAttemptSchema = z.object({
   attemptId: z.uuid(),
-  distinctId: z.string().min(1).max(200).optional(),
+  // A bad id only loses the person, not the attempt
+  distinctId: z
+    .string()
+    .regex(/^[\w-]{1,64}$/)
+    .optional()
+    .catch(undefined),
 });
 export type LoginAttempt = z.infer<typeof loginAttemptSchema>;
 
@@ -19,7 +24,10 @@ export const loginErrorCode = (code: string | null | undefined) => {
 export const startFailureCode = (error: { code?: string; status: number }) =>
   loginErrorCode(error.code ?? `http_${error.status}`);
 
-// Google and Apple send these when the user declines on their own page
+// fetch rejects with a TypeError when the request never reaches the server
+export const thrownFailureCode = (thrown: unknown) =>
+  thrown instanceof TypeError ? "network" : "exception";
+
 const PROVIDER_CANCEL_CODES = new Set([
   "access_denied",
   "user_cancelled_authorize",
