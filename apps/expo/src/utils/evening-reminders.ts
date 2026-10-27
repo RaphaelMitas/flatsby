@@ -214,6 +214,9 @@ export function useEveningReminders() {
         : null;
 
   const sync = useEffectEvent((target: string | null) => {
+    // The next account on this phone shouldn't see the last one's chores
+    if (signedIn === false)
+      Notifications.dismissAllNotificationsAsync().catch(console.error);
     if (target !== null)
       reschedule(target === "off" ? [] : (reminders ?? []), t("channel"));
   });
