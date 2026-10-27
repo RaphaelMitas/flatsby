@@ -10,7 +10,7 @@ import { useTranslations } from "use-intl";
 
 import { posthog } from "~/utils/analytics/posthog";
 import { getScreenName } from "~/utils/analytics/screen-names";
-import { persistOptions, queryClient } from "~/utils/api";
+import { clearQueryCache, persistOptions, queryClient } from "~/utils/api";
 
 import "../styles.css";
 import "~/lib/nativewind-setup";
@@ -114,7 +114,7 @@ const StackLayout = () => {
   // re-suspends their queries and crashes SwiftUI. Waiting for the restore
   // keeps it from bringing a signed-out user's cache back afterwards.
   useEffect(() => {
-    if (!isRestoring && sessionResolved && !userId) queryClient.clear();
+    if (!isRestoring && sessionResolved && !userId) clearQueryCache();
   }, [isRestoring, sessionResolved, userId]);
 
   // The Expo client restores a cached session into data while it revalidates.

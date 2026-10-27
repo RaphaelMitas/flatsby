@@ -8,7 +8,6 @@ import { useTranslations } from "use-intl";
 
 import Icon from "~/lib/ui/custom/icons/Icon";
 
-// Data from before this launch can only have come from the persisted cache
 const launchedAt = Date.now();
 
 const isRestored = (query: Query) =>
