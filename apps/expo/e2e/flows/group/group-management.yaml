@@ -3,7 +3,7 @@ tags:
   - group
 ---
 # Mirrors apps/nextjs/e2e/group/group-management.spec.ts:
-# create group via UI, group appears in dashboard, change group name.
+# create group via UI, change group name.
 - runFlow: ../../subflows/e2e-login.yaml
 
 # Create a group via the UI
@@ -12,7 +12,7 @@ tags:
     env:
       GROUP_NAME: "Maestro Group"
 
-# Creating selects the new group, so change its name via group settings
+# Creating selects the new group, no need to pick it from the list
 - tapOn:
     id: "dashboard-group-settings"
 - extendedWaitUntil:

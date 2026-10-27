@@ -18,7 +18,10 @@ export function InviteFlatmatesCard() {
   const t = useTranslations("invite.solo");
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
-  const [dismissed, setDismissed] = useState<boolean>();
+  const [dismissal, setDismissal] = useState<{
+    groupId: number;
+    dismissed: boolean;
+  }>();
   const { data: groups } = useQuery(trpc.group.getUserGroups.queryOptions());
   const groupId = currentGroup?.id;
   const memberCount = groups?.success
@@ -27,13 +30,22 @@ export function InviteFlatmatesCard() {
 
   useEffect(() => {
     if (groupId === undefined) return;
-    setDismissed(localStorage.getItem(dismissedKey(groupId)) !== null);
+    setDismissal({
+      groupId,
+      dismissed: localStorage.getItem(dismissedKey(groupId)) !== null,
+    });
   }, [groupId]);
 
-  if (!currentGroup || memberCount !== 1 || dismissed !== false) return null;
+  if (
+    !currentGroup ||
+    memberCount !== 1 ||
+    dismissal?.groupId !== currentGroup.id ||
+    dismissal.dismissed
+  )
+    return null;
 
   const dismiss = () => {
-    setDismissed(true);
+    setDismissal({ groupId: currentGroup.id, dismissed: true });
     localStorage.setItem(dismissedKey(currentGroup.id), "true");
   };
 

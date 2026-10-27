@@ -36,12 +36,7 @@ export function GroupsDashboard() {
   }
 
   if (groups.data.length === 0) {
-    return (
-      <>
-        <StartOrJoin onJoin={() => setJoinOpen(true)} />
-        <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
-      </>
-    );
+    return <StartOrJoin />;
   }
 
   const handleSelectGroup = (groupId: number) => {

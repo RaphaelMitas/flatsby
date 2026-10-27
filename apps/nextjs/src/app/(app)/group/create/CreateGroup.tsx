@@ -13,20 +13,10 @@ import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@flatsby/ui/select";
-import {
-  CURRENCY_CODES,
-  isCurrencyCode,
-} from "@flatsby/validators/expenses/types";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { InviteContent } from "~/app/(app)/group/settings/InviteDialog";
+import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
 
 export function CreateGroup() {
@@ -49,7 +39,8 @@ export function CreateGroup() {
         void queryClient.invalidateQueries(
           trpc.group.getUserGroups.queryOptions(),
         );
-        await switchGroup(data.data.groupId);
+        // The group exists either way; failing here would invite a duplicate create
+        await switchGroup(data.data.groupId).catch(() => undefined);
         setCreated({ id: data.data.groupId, name });
       },
     }),
@@ -121,28 +112,14 @@ export function CreateGroup() {
             <Label htmlFor="group-create-currency">
               {t("group.expenseSettings.currency")}
             </Label>
-            <Select
+            <CurrencySelect
+              id="group-create-currency"
+              className="w-full"
+              data-testid="group-create-currency"
               value={currency}
-              onValueChange={(value) => {
-                if (isCurrencyCode(value)) setCurrency(value);
-              }}
+              onChange={setCurrency}
               disabled={groupMutation.isPending}
-            >
-              <SelectTrigger
-                id="group-create-currency"
-                className="w-full"
-                data-testid="group-create-currency"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCY_CODES.map((code) => (
-                  <SelectItem key={code} value={code}>
-                    {code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
             <p className="text-muted-foreground text-sm">
               {t("group.create.currencyHint")}
             </p>

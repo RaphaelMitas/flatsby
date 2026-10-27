@@ -55,13 +55,11 @@ import {
   settleOutstandingLabel,
 } from "@flatsby/validators/expenses/formatting";
 import { settlementFormSchema } from "@flatsby/validators/expenses/schemas";
-import {
-  CURRENCY_CODES,
-  isCurrencyCode,
-} from "@flatsby/validators/expenses/types";
+import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { CurrencyInput } from "~/components/CurrencyInput";
+import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
 import { useExpenseInvalidation } from "../useExpenseInvalidation";
 
@@ -460,28 +458,12 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                   <FormControl>
                     <div className="flex items-center gap-2">
                       {isBlank ? (
-                        <Select
+                        <CurrencySelect
+                          className="w-24"
+                          data-testid="settlement-currency-select"
                           value={currency}
-                          onValueChange={(value) => {
-                            if (isCurrencyCode(value)) {
-                              form.setValue("currency", value);
-                            }
-                          }}
-                        >
-                          <SelectTrigger
-                            className="w-24"
-                            data-testid="settlement-currency-select"
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CURRENCY_CODES.map((code) => (
-                              <SelectItem key={code} value={code}>
-                                {code}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={(value) => form.setValue("currency", value)}
+                        />
                       ) : (
                         <span className="text-muted-foreground">
                           {currency}

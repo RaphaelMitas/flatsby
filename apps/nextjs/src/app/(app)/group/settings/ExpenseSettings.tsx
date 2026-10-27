@@ -17,19 +17,9 @@ import {
   CardTitle,
 } from "@flatsby/ui/card";
 import { Label } from "@flatsby/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@flatsby/ui/select";
 import { Switch } from "@flatsby/ui/switch";
-import {
-  CURRENCY_CODES,
-  isCurrencyCode,
-} from "@flatsby/validators/expenses/types";
 
+import { CurrencySelect } from "~/components/CurrencySelect";
 import { useUpdateGroup } from "~/hooks/use-update-group";
 import { useTRPC } from "~/trpc/react";
 import { UpdateGroupAlert } from "./UpdateGroupAlert";
@@ -96,28 +86,14 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
             <Label htmlFor="group-currency">
               {t("group.expenseSettings.currency")}
             </Label>
-            <Select
+            <CurrencySelect
+              id="group-currency"
+              className="w-full md:w-48"
+              data-testid="group-currency-select"
               value={currency}
-              onValueChange={(value) => {
-                if (isCurrencyCode(value)) setCurrency(value);
-              }}
+              onChange={setCurrency}
               disabled={!isEditable}
-            >
-              <SelectTrigger
-                id="group-currency"
-                className="w-full md:w-48"
-                data-testid="group-currency-select"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCY_CODES.map((code) => (
-                  <SelectItem key={code} value={code}>
-                    {code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
             {currency !== group.currency && (
               <p className="text-warning text-sm">
                 {t("group.expenseSettings.convertedStayIn", {

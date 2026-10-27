@@ -3,7 +3,7 @@ import type { GroupFormValues } from "@flatsby/validators/group";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { getLocales } from "expo-localization";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
@@ -36,6 +36,7 @@ const deviceCurrency = (): CurrencyCode => {
 export default function CreateGroup() {
   const t = useTranslations();
   const queryClient = useQueryClient();
+  const navigation = useNavigation();
   const { setSelectedGroup } = useShoppingStore();
   const [currency, setCurrency] = useState(deviceCurrency);
 
@@ -83,8 +84,12 @@ export default function CreateGroup() {
           void queryClient.invalidateQueries(
             trpc.group.getUserGroups.queryOptions(),
           );
+          void queryClient.invalidateQueries(
+            trpc.user.getCurrentUserWithGroups.queryOptions(),
+          );
           setSelectedGroup(groupId, name);
-          router.replace("/(tabs)/home/invite");
+          // Cancelled while pending: keep the group, don't pull the user away
+          if (navigation.isFocused()) router.replace("/(tabs)/home/invite");
         },
       }),
     ),

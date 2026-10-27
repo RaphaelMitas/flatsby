@@ -1,6 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, House, KeyRound } from "lucide-react";
@@ -9,9 +10,11 @@ import { useTranslations } from "next-intl";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 
 import { useTRPC } from "~/trpc/react";
+import { JoinWithCodeDialog } from "./JoinWithCodeDialog";
 
-export function StartOrJoin({ onJoin }: { onJoin: () => void }) {
+export function StartOrJoin() {
   const t = useTranslations("group.onboarding");
+  const [joinOpen, setJoinOpen] = useState(false);
   const trpc = useTRPC();
   const { data } = useQuery(trpc.user.getCurrentUserWithGroups.queryOptions());
   const firstName = data?.success ? data.data.user?.name.split(" ")[0] : "";
@@ -42,9 +45,10 @@ export function StartOrJoin({ onJoin }: { onJoin: () => void }) {
           icon={KeyRound}
           title={t("join")}
           hint={t("joinHint")}
-          onClick={onJoin}
+          onClick={() => setJoinOpen(true)}
         />
       </div>
+      <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
     </section>
   );
 }
