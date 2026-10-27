@@ -117,6 +117,18 @@ export const calendar = {
     delete: "Löschen",
     confirmDelete: "Nochmal drücken, um es samt Verlauf zu löschen",
   },
+  reminders: {
+    askTitle: "Am Abend vorher erinnern?",
+    askBody:
+      "{day} bist du mit {title} dran. Wir sagen dir am Abend vorher um 19 Uhr Bescheid.",
+    turnOn: "Ja, erinnern",
+    notNow: "Nicht jetzt",
+    turnsTomorrow: "Morgen bist du dran: {titles}",
+    tomorrow: "Morgen: {titles}",
+    also: "Außerdem: {titles}",
+    stillOpen: "Noch offen: {titles}",
+    channel: "Erinnerungen am Abend",
+  },
   validation: {
     titleRequired: "Gib ihm einen Namen",
     titleTooLong: "Der Name ist zu lang",

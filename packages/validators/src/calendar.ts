@@ -1057,6 +1057,43 @@ export function homeAgenda(
   };
 }
 
+export interface EveningReminder {
+  evening: string;
+  turns: CalendarEntry[];
+  events: CalendarEntry[];
+  open: DueChore[];
+}
+
+/** Every evening before a day with a turn of mine or an event; my chores still open by then ride along */
+export function eveningReminders(
+  range: CalendarRange,
+  from: string,
+  to: string,
+  meId: number,
+) {
+  const entries = rangeEntries(range);
+  const mine = entries.filter(
+    (entry) => isOpenTask(entry) && entry.occurrence.turnGroupMemberId === meId,
+  );
+  const reminders: EveningReminder[] = [];
+  for (let evening = from; evening < to; evening = addDays(evening, 1)) {
+    const tomorrow = addDays(evening, 1);
+    const on = ({ occurrence }: CalendarEntry) => occurrence.date === tomorrow;
+    const turns = mine.filter(on);
+    const events = entries.filter(
+      (entry) => entry.item.kind === "event" && on(entry),
+    );
+    if (turns.length > 0 || events.length > 0)
+      reminders.push({
+        evening,
+        turns,
+        events,
+        open: latestOpen(mine, evening),
+      });
+  }
+  return reminders;
+}
+
 type Schedule = Pick<ExpandableItem, "startsOn" | "recurrence">;
 type Series = Schedule & Pick<ExpandableItem, "endsOn">;
 

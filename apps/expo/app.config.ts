@@ -154,6 +154,14 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ["expo-font", { fonts: ["./assets/fonts/lucide.ttf"] }],
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/adaptive-icon.png",
+        // Reminders are scheduled on the device, so no APNs entitlement
+        enableRemoteNotifications: false,
+      },
+    ],
   ],
 });
 

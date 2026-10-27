@@ -27,7 +27,7 @@ import {
 import type { Nudge } from "./ForYouCard";
 import type { HomeRowProps } from "./HomeRows";
 import { fromPickerTime } from "~/components/calendar/calendarDates";
-import { calendarRangeOptions } from "~/components/calendar/CalendarScreen";
+import { calendarRangeOptions } from "~/components/calendar/calendarRangeOptions";
 import { useCalendarMutations } from "~/components/calendar/useCalendarMutations";
 import { settleHref } from "~/components/expenses/settleHref";
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";

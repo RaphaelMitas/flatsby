@@ -14,6 +14,7 @@ import {
   calendarDateSchema,
   describeListRange,
   formatCalendarDate,
+  listWindow,
   localDate,
   newEntryDate,
   otherView,
@@ -32,26 +33,17 @@ import {
 import type { CalendarPeople } from "./CalendarPeople";
 import { Button } from "~/lib/ui/button";
 import { Segmented } from "~/lib/ui/segmented";
-import { queryClient, trpc } from "~/utils/api";
+import { isE2ETestingEnabled } from "~/utils/e2e";
+import { useReminderChoice } from "~/utils/evening-reminders";
 import { useNow } from "~/utils/useNow";
 import { CalendarList } from "./CalendarList";
 import { CalendarPager } from "./CalendarPager";
 import { TurnBar, useCalendarPeople } from "./CalendarPeople";
 import { setCalendarPosition, useCalendarPosition } from "./calendarPosition";
+import { calendarRangeOptions } from "./calendarRangeOptions";
 import { MonthGrid } from "./MonthGrid";
+import { ReminderAsk } from "./ReminderAsk";
 import { useCalendarMutations } from "./useCalendarMutations";
-
-export const calendarRangeOptions = (
-  groupId: number,
-  { from, to }: { from: string; to: string },
-) => ({
-  ...trpc.calendar.range.queryOptions({ groupId, from, to }),
-  // Refetching a range mid-write would wipe its optimistic patch
-  staleTime: () =>
-    queryClient.isMutating({ mutationKey: trpc.calendar.pathKey() }) > 0
-      ? Number.POSITIVE_INFINITY
-      : 0,
-});
 
 export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const t = useTranslations("calendar");
@@ -76,6 +68,12 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
     setCalendarPosition(stepPosition(position, delta, today));
   };
   const { mutate: setDone } = useCalendarMutations(group).setDone;
+  // Store screenshots and e2e flows never see the ask
+  const asking = useReminderChoice() === "undecided" && !isE2ETestingEnabled();
+  const { data: upcoming } = useQuery({
+    ...calendarRangeOptions(group.id, listWindow(today, today)),
+    enabled: asking,
+  });
   const { view } = position;
 
   const onLinked = useEffectEvent((date: string) => {
@@ -168,6 +166,10 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
           />
         </View>
       </View>
+
+      {asking && upcoming?.success && (
+        <ReminderAsk range={upcoming.data} today={today} meId={people.meId} />
+      )}
 
       <TurnBar
         group={group}
