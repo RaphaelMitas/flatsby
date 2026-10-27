@@ -21,14 +21,7 @@ export function QuickActions() {
           className="min-w-0 flex-1"
           numberOfLines={1}
           textClassName="shrink"
-          onPress={() =>
-            router.push(
-              selectedShoppingListName
-                ? "/(tabs)/shoppingList"
-                : "/(tabs)/home/shopping-lists",
-              { withAnchor: true },
-            )
-          }
+          onPress={() => router.navigate("/(tabs)/shoppingList")}
         />
         <Button
           variant="outline"

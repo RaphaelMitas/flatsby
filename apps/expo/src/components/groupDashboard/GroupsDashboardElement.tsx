@@ -59,7 +59,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
 
   const handleGroupSelect = () => {
     setSelectedGroup(group.id, group.name);
-    router.push("/(tabs)/home/shopping-lists");
+    router.navigate("/(tabs)/home");
   };
 
   const isSelected = selectedGroupId === group.id;

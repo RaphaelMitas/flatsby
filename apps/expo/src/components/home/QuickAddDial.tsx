@@ -17,13 +17,11 @@ import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import Icon from "~/lib/ui/custom/icons/Icon";
 
 export function QuickAddDial({
-  groupId,
   last,
   lastUsed,
   others,
   onOpenList,
 }: {
-  groupId: number;
   last: ShoppingListSummary | undefined;
   /** False right after a group switch, when the list is just the first one */
   lastUsed: boolean;
@@ -69,8 +67,7 @@ export function QuickAddDial({
     action();
   };
   const openList = (list: ShoppingListSummary) => go(() => onOpenList(list));
-  const openAllLists = () =>
-    go(() => router.push("/(tabs)/home/shopping-lists"));
+  const openAllLists = () => go(() => router.navigate("/(tabs)/shoppingList"));
 
   return (
     <>
@@ -216,14 +213,7 @@ export function QuickAddDial({
         ) : (
           <Pressable
             testID="home-dial-new-list"
-            onPress={() =>
-              go(() =>
-                router.push({
-                  pathname: "/(tabs)/home/shopping-lists/create",
-                  params: { groupId: String(groupId) },
-                }),
-              )
-            }
+            onPress={() => go(() => router.push("/(tabs)/shoppingList/create"))}
             className="border-border mt-2 flex-row items-center gap-3 rounded-2xl border border-dashed p-3"
           >
             <Icon name="list-plus" size={20} color="foreground" />

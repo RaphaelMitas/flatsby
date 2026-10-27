@@ -19,6 +19,24 @@ export default function ShoppingListsLayout() {
           }}
         />
         <Stack.Screen
+          name="create"
+          options={{
+            title: t("createShoppingList"),
+            headerBackTitle: "",
+            presentation: "modal",
+            ...solidHeader,
+          }}
+        />
+        <Stack.Screen
+          name="edit-list"
+          options={{
+            title: t("switcher.editTitle"),
+            headerBackTitle: "",
+            presentation: "modal",
+            ...solidHeader,
+          }}
+        />
+        <Stack.Screen
           name="edit-item"
           options={{
             title: t("editItem"),

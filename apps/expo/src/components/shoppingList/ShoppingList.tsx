@@ -326,22 +326,22 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   };
 
   return (
-    <>
-      {shoppingList && (
-        <View className="p-4">
-          <Text
-            testID="shopping-list-title"
-            className="text-foreground text-center text-xl font-semibold"
-          >
-            {shoppingList.name}
-          </Text>
+    <BottomSheetPickerProvider>
+      <View className="flex-1 flex-col md:flex-row">
+        {/* Sidebar - hidden on mobile, shown on md+ */}
+        <View className="hidden md:flex">
+          <CategoryFilterSidebar
+            counts={categoryCounts}
+            total={categoryTotal}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
         </View>
-      )}
-      <BottomSheetPickerProvider>
-        <View className="flex-1 flex-col md:flex-row">
-          {/* Sidebar - hidden on mobile, shown on md+ */}
-          <View className="hidden md:flex">
-            <CategoryFilterSidebar
+
+        <View className="flex-1">
+          {/* Pills - shown on mobile, hidden on md+ */}
+          <View className="flex md:hidden">
+            <CategoryFilterPills
               counts={categoryCounts}
               total={categoryTotal}
               selectedCategory={selectedCategory}
@@ -349,49 +349,37 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             />
           </View>
 
-          <View className="flex-1">
-            {/* Pills - shown on mobile, hidden on md+ */}
-            <View className="flex md:hidden">
-              <CategoryFilterPills
-                counts={categoryCounts}
-                total={categoryTotal}
-                selectedCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
+          <PullToRefresh refreshing={isRefreshing} onRefresh={handleRefresh}>
+            {(refreshProps) => (
+              <FlashList
+                {...refreshProps}
+                ref={(list) => {
+                  listRef.current = list;
+                  refreshProps.ref?.(list);
+                }}
+                // Keeping the old top row in place would push a freshly added item above the viewport.
+                maintainVisibleContentPosition={{ disabled: true }}
+                className="flex-1"
+                data={flashListData}
+                renderItem={renderItem}
+                getItemType={getItemType}
+                keyExtractor={(item) => item.id}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                keyboardDismissMode="on-drag"
+                keyboardShouldPersistTaps="handled"
               />
-            </View>
-
-            <PullToRefresh refreshing={isRefreshing} onRefresh={handleRefresh}>
-              {(refreshProps) => (
-                <FlashList
-                  {...refreshProps}
-                  ref={(list) => {
-                    listRef.current = list;
-                    refreshProps.ref?.(list);
-                  }}
-                  // Keeping the old top row in place would push a freshly added item above the viewport.
-                  maintainVisibleContentPosition={{ disabled: true }}
-                  className="flex-1"
-                  data={flashListData}
-                  renderItem={renderItem}
-                  getItemType={getItemType}
-                  keyExtractor={(item) => item.id}
-                  onEndReached={handleLoadMore}
-                  onEndReachedThreshold={0.5}
-                  keyboardDismissMode="on-drag"
-                  keyboardShouldPersistTaps="handled"
-                />
-              )}
-            </PullToRefresh>
-            <AppKeyboardStickyView>
-              <ShoppingListItemAddForm
-                onSubmit={handleSubmit}
-                groupId={groupId}
-              />
-            </AppKeyboardStickyView>
-          </View>
+            )}
+          </PullToRefresh>
+          <AppKeyboardStickyView>
+            <ShoppingListItemAddForm
+              onSubmit={handleSubmit}
+              groupId={groupId}
+            />
+          </AppKeyboardStickyView>
         </View>
-      </BottomSheetPickerProvider>
-    </>
+      </View>
+    </BottomSheetPickerProvider>
   );
 };
 

@@ -98,10 +98,10 @@ export default function TabLayout() {
       <NativeTabs.Trigger
         name="shoppingList"
         testID="tab-shopping-list"
-        hidden={!selectedShoppingListId}
+        hidden={!selectedGroupId}
       >
         <NativeTabs.Trigger.Label>
-          {selectedShoppingListName ?? t("shoppingList")}
+          {selectedShoppingListName ?? t("shopping")}
         </NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           src={shoppingBasketIcon}

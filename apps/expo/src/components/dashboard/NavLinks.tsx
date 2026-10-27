@@ -38,7 +38,7 @@ export function NavLinks() {
     <View className="gap-4">
       <NavLinkItem
         testID="dashboard-shopping-lists-link"
-        href="/(tabs)/home/shopping-lists"
+        href="/(tabs)/shoppingList"
         iconName="shopping-cart"
         label={t("home.shoppingLists")}
       />

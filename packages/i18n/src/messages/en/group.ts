@@ -15,6 +15,9 @@ export const group = {
     selectGroup: "Select Group",
     title: "Your Groups",
   },
+  switcher: {
+    title: "Your groups",
+  },
   onboarding: {
     greeting: "Hi {name}.",
     question: "Starting a group or joining one?",
@@ -32,8 +35,6 @@ export const group = {
     importExpensesSubtitle: "Import from Splitwise CSV",
     members: "Members",
     membersSubtitle: "Manage your group members",
-    selectShoppingList: "Select Shopping List",
-    selectShoppingListSubtitle: "Select, create, and edit shopping lists",
   },
   details: {
     adminOnly: "Only group administrators can edit group details.",

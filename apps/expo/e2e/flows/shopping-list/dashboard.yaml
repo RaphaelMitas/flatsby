@@ -3,40 +3,47 @@ tags:
   - shopping-list
 ---
 # Mirrors apps/nextjs/e2e/shopping-list/shopping-list-dashboard.spec.ts:
-# empty state, creating a list, and navigating into it.
+# a group without lists starts on the first-list page, then lists switch from
+# the title.
 - runFlow: ../../subflows/e2e-login.yaml
 
-- tapOn:
-    id: "group-select-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-create-button"
-    timeout: 15000
-# Fresh group has no lists yet
-- assertVisible: "No shopping lists yet"
+- runFlow:
+    file: ../../subflows/create-shopping-list.yaml
+    env:
+      LIST_NAME: "Groceries List"
+- assertVisible:
+    id: "shopping-list-title"
+- assertVisible: "Groceries List"
 
-# Create a new list and navigate into it
+# A second list from the switcher opens once it exists
 - tapOn:
-    id: "shopping-list-create-button"
+    id: "shopping-list-title"
+- tapOn:
+    id: "list-switcher-new"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-create-input"
     timeout: 15000
 - tapOn:
     id: "shopping-list-create-input"
-- inputText: "Groceries List"
+- inputText: "Second List"
 - tapOn:
     id: "shopping-list-create-submit"
 - extendedWaitUntil:
-    visible:
-      id: "shopping-list-dashboard-link"
+    visible: "Second List"
     timeout: 15000
+
+# Switch back from the sheet
 - tapOn:
-    id: "shopping-list-dashboard-link"
+    id: "shopping-list-title"
 - extendedWaitUntil:
     visible:
-      id: "shopping-list-item-input"
+      id: "list-switcher"
     timeout: 15000
-- assertVisible:
-    id: "shopping-list-title"
-    text: "Groceries List"
+- tapOn: "Groceries List"
+- extendedWaitUntil:
+    notVisible:
+      id: "list-switcher"
+    timeout: 15000
+- assertVisible: "Groceries List"
+- assertNotVisible: "Second List"

@@ -9,11 +9,25 @@ export async function createShoppingList(
   name = `E2E List ${Date.now()}`,
 ): Promise<number> {
   await page.goto("/shopping-list");
-  const createInput = page.getByTestId("shopping-list-create-input");
-  await waitForHydration(createInput);
-  await createInput.fill(name);
-  await page.getByTestId("shopping-list-create-button").click();
-  await page.waitForURL(/\/shopping-list\/\d+/);
+  const firstListInput = page.getByTestId("first-list-input");
+  const switcher = page.getByTestId("shopping-list-switcher");
+  await expect(firstListInput.or(switcher)).toBeVisible();
+  const before = page.url();
+
+  if (await firstListInput.isVisible()) {
+    await waitForHydration(firstListInput);
+    await firstListInput.fill(name);
+    await page.getByTestId("first-list-create").click();
+  } else {
+    await waitForHydration(switcher);
+    await switcher.click();
+    await page.getByTestId("shopping-list-switcher-new").click();
+    await page.getByTestId("shopping-list-create-input").fill(name);
+    await page.getByTestId("shopping-list-create-submit").click();
+  }
+  await page.waitForURL(
+    (url) => url.href !== before && /\/shopping-list\/\d+$/.test(url.pathname),
+  );
   await page
     .getByTestId("shopping-list-item-input")
     .waitFor({ state: "visible" });

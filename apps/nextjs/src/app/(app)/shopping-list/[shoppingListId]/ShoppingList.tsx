@@ -26,6 +26,7 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
+import { ListSwitcher } from "./ListSwitcher";
 import ShoppingListItem from "./ShoppingListItem";
 import { ShoppingListItemAddForm } from "./ShoppingListItemAddForm";
 import { groupShoppingList } from "./ShoppingListUtils";
@@ -262,9 +263,13 @@ const ShoppingListInner = ({
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {shoppingList && (
-          <h2 className="text-center text-lg font-semibold">
-            {shoppingList.name}
-          </h2>
+          <div className="px-4">
+            <ListSwitcher
+              groupId={groupId}
+              shoppingListId={shoppingListId}
+              name={shoppingList.name}
+            />
+          </div>
         )}
 
         {/* Pills - shown on mobile, hidden on md+ */}

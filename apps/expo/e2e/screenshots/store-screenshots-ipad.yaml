@@ -21,32 +21,19 @@ appId: ${APP_ID}
       text: ${output.store.group}
     timeout: 45000
 
-# Into the group: the shopping-lists overview with the seeded list card.
+# Into the group, then the List tab, which opens the seeded list with its
+# categorised items.
 - runFlow:
     file: ../subflows/tap-until.yaml
     env:
       TARGET_ID: "group-select-button"
-      MARKER_ID: "shopping-list-create-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-lists-group-name"
-      text: ${output.store.group}
-    timeout: 45000
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-dashboard-link"
-    timeout: 45000
-- extendedWaitUntil:
-    visible: ${output.store.itemsLeft}
-    timeout: 45000
-- waitForAnimationToEnd
-- takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-06-shopping-lists
-
-# The seeded list with its categorised items.
+      MARKER_ID: "dashboard-group-picker"
 - runFlow:
-    file: ../subflows/tap-until.yaml
+    file: ../subflows/tap-tab.yaml
     env:
-      TARGET_ID: "shopping-list-dashboard-link"
+      TAB_ID: "tab-shopping-list"
+      TAB_LABEL: ${output.store.tabShopping}
+      TAB_X: "39%"
       MARKER_ID: "shopping-list-item-input"
 - extendedWaitUntil:
     visible:
@@ -58,6 +45,24 @@ appId: ${APP_ID}
     timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-02-shopping-list
+
+# The list switcher over the list; picking the open list closes it again.
+- runFlow:
+    file: ../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-list-title"
+      MARKER_ID: "list-switcher"
+- extendedWaitUntil:
+    visible: ${output.store.itemsLeft}
+    timeout: 45000
+- waitForAnimationToEnd
+- takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-06-shopping-lists
+- tapOn:
+    id: "list-switcher-item-.*"
+- extendedWaitUntil:
+    notVisible:
+      id: "list-switcher"
+    timeout: 20000
 
 # Expenses. On a tablet this is a split view: the list on the left, a detail
 # panel on the right, with the add button in the header rather than a FAB —
@@ -162,37 +167,18 @@ appId: ${APP_ID}
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-01a-calendar
 
-# Members screen, reached from the overview's group-settings button. If a
-# stray back popped the Home stack to its root, re-enter via the dashboard's
-# nav link rather than losing the round.
-- retry:
-    maxRetries: 2
-    commands:
-      - runFlow:
-          file: ../subflows/tap-tab.yaml
-          env:
-            TAB_ID: "tab-home"
-            TAB_LABEL: ${output.store.tabHome}
-            TAB_X: "30%"
-            MARKER_ID: "dashboard-shopping-lists-link|shopping-lists-group-settings"
-      - runFlow:
-          when:
-            visible:
-              id: "dashboard-shopping-lists-link"
-          commands:
-            - runFlow:
-                file: ../subflows/tap-until.yaml
-                env:
-                  TARGET_ID: "dashboard-shopping-lists-link"
-                  MARKER_ID: "shopping-lists-group-settings"
-      - extendedWaitUntil:
-          visible:
-            id: "shopping-lists-group-settings"
-          timeout: 20000
+# Members screen, through the home's group-settings button.
+- runFlow:
+    file: ../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: ${output.store.tabHome}
+      TAB_X: "30%"
+      MARKER_ID: "dashboard-group-settings"
 - runFlow:
     file: ../subflows/tap-until.yaml
     env:
-      TARGET_ID: "shopping-lists-group-settings"
+      TARGET_ID: "dashboard-group-settings"
       MARKER_ID: "group-settings-members"
 - runFlow:
     file: ../subflows/tap-until.yaml
@@ -206,23 +192,14 @@ appId: ${APP_ID}
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-05-add-member
 
-# Home root: the stats dashboard with the seeded totals, one pop below the
-# overview.
+# Home root: the stats dashboard with the seeded totals.
 - runFlow:
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-home"
       TAB_LABEL: ${output.store.tabHome}
       TAB_X: "30%"
-      MARKER_ID: "shopping-lists-group-name"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-lists-group-name"
-      text: ${output.store.group}
-    timeout: 20000
-- swipe:
-    start: "1%, 50%"
-    end: "70%, 50%"
+      MARKER_ID: "dashboard-group-picker"
 - extendedWaitUntil:
     visible:
       id: "dashboard-group-picker"

@@ -1,30 +1,26 @@
 appId: ${APP_ID}
 ---
 # Shared subflow: from the authenticated group dashboard, selects the fixture
-# group, creates a shopping list named ${LIST_NAME}, and navigates into it.
+# group, opens the List tab and creates the group's first list, ${LIST_NAME}.
 - tapOn:
     id: "group-select-button"
 - extendedWaitUntil:
     visible:
-      id: "shopping-list-create-button"
+      id: "dashboard-group-picker"
     timeout: 15000
+- runFlow:
+    file: tap-tab.yaml
+    env:
+      TAB_ID: "tab-shopping-list"
+      TAB_LABEL: "Shopping"
+      TAB_X: "30%"
+      MARKER_ID: "first-list-title"
 - tapOn:
-    id: "shopping-list-create-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-create-input"
-    timeout: 15000
-- tapOn:
-    id: "shopping-list-create-input"
+    id: "first-list-input"
 - inputText: ${LIST_NAME}
+- hideKeyboard
 - tapOn:
-    id: "shopping-list-create-submit"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-dashboard-link"
-    timeout: 15000
-- tapOn:
-    id: "shopping-list-dashboard-link"
+    id: "first-list-create"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-item-input"

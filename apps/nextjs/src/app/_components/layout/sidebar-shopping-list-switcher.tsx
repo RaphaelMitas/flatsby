@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ import {
 } from "@flatsby/ui/sidebar";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
+import { CreateListDialog } from "~/app/(app)/shopping-list/ListDialogs";
 import { useTRPC } from "~/trpc/react";
 
 export function SidebarShoppingListSwitcher() {
@@ -24,6 +26,7 @@ export function SidebarShoppingListSwitcher() {
   const pathname = usePathname();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
+  const [creating, setCreating] = useState(false);
 
   // Get shopping lists for current group
   const { data: shoppingListsData, isLoading } = useQuery({
@@ -36,8 +39,6 @@ export function SidebarShoppingListSwitcher() {
   const shoppingLists =
     shoppingListsData?.success === true ? shoppingListsData.data : [];
 
-  // Check if on shopping list dashboard or detail page
-  const isShoppingListDashboard = pathname === "/shopping-list";
   const shoppingListMatch = /\/shopping-list\/(\d+)/.exec(pathname);
   const currentShoppingListId = shoppingListMatch?.[1]
     ? parseInt(shoppingListMatch[1], 10)
@@ -54,14 +55,11 @@ export function SidebarShoppingListSwitcher() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              asChild
-              isActive={isShoppingListDashboard}
-              tooltip={t("allLists")}
+              tooltip={t("switcher.newList")}
+              onClick={() => setCreating(true)}
             >
-              <Link href="/shopping-list">
-                <Plus />
-                <span>{t("allLists")}</span>
-              </Link>
+              <Plus />
+              <span>{t("switcher.newList")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
@@ -97,6 +95,11 @@ export function SidebarShoppingListSwitcher() {
             ))
           )}
         </SidebarMenu>
+        <CreateListDialog
+          groupId={currentGroup.id}
+          open={creating}
+          onOpenChange={setCreating}
+        />
       </SidebarGroupContent>
     </SidebarGroup>
   );

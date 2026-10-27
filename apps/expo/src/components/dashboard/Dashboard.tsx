@@ -13,10 +13,10 @@ import { useShoppingStore } from "~/utils/shopping-store";
 import { GroupsDashboard } from "../groupDashboard/GroupsDashboard";
 import { HomeInvite } from "../home/HomeSwitch";
 import { InviteFlatmatesCard } from "../home/InviteFlatmatesCard";
+import { GroupSwitcher } from "../switcher/GroupSwitcher";
 import { HomeStats } from "./HomeStats";
 import { NavLinks } from "./NavLinks";
 import { QuickActions } from "./QuickActions";
-import { useGroupPicker } from "./useGroupPicker";
 
 export function Dashboard() {
   const t = useTranslations("home");
@@ -54,8 +54,7 @@ function DashboardContent() {
   const t = useTranslations();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const openGroupPicker = useGroupPicker();
-  const { selectedGroupId, selectedGroupName } = useShoppingStore();
+  const { selectedGroupId } = useShoppingStore();
   const { version: homeVersion } = useHomeVersion();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -92,18 +91,12 @@ function DashboardContent() {
     >
       <View className="flex flex-col gap-6 p-2">
         <View className="flex flex-row items-center justify-between gap-2">
-          <Button
-            testID="dashboard-group-picker"
-            className="flex-1"
-            onPress={openGroupPicker}
-            variant="outline"
-            title={selectedGroupName ?? t("home.selectGroup")}
-            icon="chevron-down"
-          />
+          <GroupSwitcher testID="dashboard-group-picker" className="flex-1" />
           <Button
             testID="dashboard-group-settings"
-            title={t("navigation.groupSettings")}
+            accessibilityLabel={t("navigation.groupSettings")}
             variant="outline"
+            size="icon"
             icon="settings"
             onPress={() =>
               router.navigate("/(tabs)/settings/group-settings", {
