@@ -7,8 +7,13 @@ import { after } from "next/server";
 import { getOAuthState } from "better-auth/api";
 import { importPKCS8, SignJWT } from "jose";
 
-import { captureError } from "@flatsby/api/posthog";
+import { captureError, captureEvent, posthog } from "@flatsby/api/posthog";
 import { initAuth } from "@flatsby/auth";
+import {
+  callbackOutcome,
+  loginAttemptSchema,
+  loginProviderSchema,
+} from "@flatsby/validators/login";
 
 import { env } from "~/env";
 import { captureVisit } from "~/utils/page-views";
@@ -32,10 +37,11 @@ export const auth = initAuth({
     ? [`https://${env.VERCEL_BRANCH_URL}`]
     : [],
   onUserCreated,
+  onOAuthCallback,
 });
 
 // The Expo client starts OAuth with a deep link as its callback, the web app with a path
-async function signupPlatform() {
+async function oauthPlatform() {
   const callbackURL = (await getOAuthState())?.callbackURL ?? "/";
   return callbackURL.startsWith("/") || /^https?:/.test(callbackURL)
     ? "web"
@@ -46,21 +52,74 @@ async function signupPlatform() {
 async function onUserCreated(requestHeaders: Headers | undefined) {
   if (!requestHeaders) return;
   try {
-    const platform = await signupPlatform();
-    // A session cookie left in the OAuth browser belongs to an earlier account, not this signup
-    const signupHeaders = new Headers(requestHeaders);
-    signupHeaders.delete("cookie");
+    const platform = await oauthPlatform();
     after(() =>
-      captureVisit(
-        "signed_up",
-        signupHeaders,
-        { url: `${env.BETTER_AUTH_URL}/api/auth/callback`, referrer: null },
-        { platform },
-      ),
+      captureVisit("signed_up", withoutCookie(requestHeaders), callbackPage, {
+        platform,
+      }),
     );
   } catch (error) {
     // A throw here would fail a signup Better Auth already committed
     captureError({ error, operation: "auth.onUserCreated" });
+  }
+}
+
+const callbackPage = {
+  url: `${env.BETTER_AUTH_URL}/api/auth/callback`,
+  referrer: null,
+};
+
+// A session cookie left in the OAuth browser belongs to an earlier account, not this sign-in
+function withoutCookie(requestHeaders: Headers) {
+  const headers = new Headers(requestHeaders);
+  headers.delete("cookie");
+  return headers;
+}
+
+// The app passes its PostHog id along, so its events join the install; web stays cookieless
+async function onOAuthCallback({
+  providerId,
+  redirect,
+  headers,
+}: {
+  providerId: string;
+  redirect: URL;
+  headers: Headers | undefined;
+}) {
+  const provider = loginProviderSchema.safeParse(providerId);
+  if (!headers || !provider.success) return;
+  try {
+    const state = await getOAuthState();
+    const attempt = loginAttemptSchema.safeParse(state?.login);
+    const { event, ...outcome } = callbackOutcome(redirect);
+    const properties = {
+      ...outcome,
+      provider: provider.data,
+      platform: state ? await oauthPlatform() : undefined,
+      attempt_id: attempt.data?.attemptId,
+    };
+    const distinctId = attempt.data?.distinctId;
+    after(async () => {
+      if (!distinctId) {
+        return captureVisit(
+          event,
+          withoutCookie(headers),
+          callbackPage,
+          properties,
+        );
+      }
+      captureEvent({
+        distinctId,
+        event,
+        headers,
+        page: callbackPage,
+        additionalProperties: properties,
+      });
+      await posthog?.flush();
+    });
+  } catch (error) {
+    // A throw here would fail the sign-in itself
+    captureError({ error, operation: "auth.onOAuthCallback" });
   }
 }
 

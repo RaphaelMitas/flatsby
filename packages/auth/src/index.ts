@@ -2,6 +2,7 @@ import type { BetterAuthOptions } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { oAuthProxy, testUtils } from "better-auth/plugins";
 
@@ -23,6 +24,11 @@ export function initAuth(options: {
   appleClientSecret: string;
   trustedOrigins: string[];
   onUserCreated?: (headers: Headers | undefined) => Promise<void>;
+  onOAuthCallback?: (callback: {
+    providerId: string;
+    redirect: URL;
+    headers: Headers | undefined;
+  }) => Promise<void>;
 }) {
   const config = {
     database: drizzleAdapter(db, { provider: "pg" }),
@@ -54,6 +60,24 @@ export function initAuth(options: {
       },
     },
     trustedOrigins: ["flatsby://", "expo://", ...options.trustedOrigins],
+    hooks: {
+      // Success and every error leave the callback as a redirect, the outcome is in its location
+      after: createAuthMiddleware(async (ctx) => {
+        const providerId = ctx.params?.id;
+        const location = ctx.context.responseHeaders?.get("location");
+        if (!ctx.path.startsWith("/callback/") || !providerId || !location) {
+          return;
+        }
+        const redirect = new URL(location, ctx.context.baseURL);
+        // A preview's sign-in only passes through production, the preview finishes it
+        if (redirect.pathname.endsWith("/oauth-proxy-callback")) return;
+        await options.onOAuthCallback?.({
+          providerId,
+          redirect,
+          headers: ctx.headers ?? ctx.request?.headers,
+        });
+      }),
+    },
     databaseHooks: {
       user: {
         create: {
