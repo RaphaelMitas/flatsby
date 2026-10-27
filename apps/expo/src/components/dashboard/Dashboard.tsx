@@ -60,6 +60,7 @@ function DashboardContent() {
         trpc.user.getCurrentUserWithGroups.pathFilter(),
       ),
       queryClient.invalidateQueries(trpc.group.getGroup.pathFilter()),
+      queryClient.invalidateQueries(trpc.group.getUserGroups.pathFilter()),
       queryClient.invalidateQueries(trpc.expense.getDebtSummary.pathFilter()),
       queryClient.invalidateQueries(trpc.stats.getHomeStats.pathFilter()),
     ]);
