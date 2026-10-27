@@ -1,6 +1,6 @@
 import type { DebtKind } from "@flatsby/validators/expenses/debt";
 import type { DebtEntry } from "@flatsby/validators/expenses/types";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -41,7 +41,6 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const t = useTranslations();
   const locale = useLocale();
   const { invalidateDebtSummary } = useInvalidateExpenses(groupId);
-  const [refreshing, setRefreshing] = useState(false);
   const [kind, setKind] = useState<DebtKind>("direct");
 
   const { data: debtData } = useSuspenseQuery(
@@ -50,12 +49,6 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await invalidateDebtSummary();
-    setRefreshing(false);
-  }, [invalidateDebtSummary]);
 
   if (!debtData.success || !groupData.success) return null;
 
@@ -70,11 +63,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   const openSettle = (debt: DebtEntry) => router.push(settleHref(debt, kind));
 
   return (
-    <AppScrollView
-      className="flex-1"
-      refreshing={refreshing}
-      onRefresh={handleRefresh}
-    >
+    <AppScrollView className="flex-1" onRefresh={invalidateDebtSummary}>
       <View testID="debt-summary-title" className="w-full gap-2 p-4">
         {bannerCurrencies && (
           <ConvertCurrencyBanner

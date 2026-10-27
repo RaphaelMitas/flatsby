@@ -7,6 +7,7 @@ import { updateShoppingListItemInCache } from "@flatsby/api/shoppingListItemsCac
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
+import { holdWhileMutating } from "~/utils/live-query";
 import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
 type SectionKey = "today" | "last7Days" | "older";
@@ -91,6 +92,7 @@ export const shoppingListItemsOptions = (
     {
       getNextPageParam: (lastPage) =>
         lastPage.success === true ? lastPage.data.nextCursor : null,
+      staleTime: holdWhileMutating(trpc.shoppingList.pathKey()),
     },
   );
 

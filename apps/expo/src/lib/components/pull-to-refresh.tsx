@@ -40,7 +40,6 @@ export interface ListRefreshProps {
 }
 
 interface PullToRefreshProps {
-  refreshing: boolean;
   onRefresh: () => Promise<unknown>;
   children: (listProps: ListRefreshProps) => ReactNode;
   parentPaddingX?: number;
@@ -53,16 +52,7 @@ interface ScenePullProps extends PullToRefreshProps {
 export function PullToRefresh(props: PullToRefreshProps) {
   const Scene = season.RefreshScene;
 
-  if (!Scene) {
-    return props.children({
-      refreshControl: (
-        <RefreshControl
-          refreshing={props.refreshing}
-          onRefresh={() => void props.onRefresh()}
-        />
-      ),
-    });
-  }
+  if (!Scene) return <PlainPull {...props} />;
 
   return Platform.OS === "ios" ? (
     <BouncePull {...props} Scene={Scene} />
@@ -84,7 +74,7 @@ function useListOffset() {
   return { attachList, offset };
 }
 
-// Only the user's own pull shows the scene; background refetches from sync stay invisible.
+// Only the user's own pull spins; polls and background refetches stay invisible.
 function useOwnRefresh(onRefresh: () => Promise<unknown>) {
   const [pulled, setPulled] = useState(false);
   const refresh = () => {
@@ -92,6 +82,15 @@ function useOwnRefresh(onRefresh: () => Promise<unknown>) {
     return onRefresh().finally(() => setPulled(false));
   };
   return { pulled, refresh };
+}
+
+function PlainPull({ onRefresh, children }: PullToRefreshProps) {
+  const { pulled, refresh } = useOwnRefresh(onRefresh);
+  return children({
+    refreshControl: (
+      <RefreshControl refreshing={pulled} onRefresh={() => void refresh()} />
+    ),
+  });
 }
 
 function SceneBackdrop({

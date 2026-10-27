@@ -13,11 +13,9 @@ export function GroupsDashboard() {
   const t = useTranslations();
   const router = useRouter();
 
-  const {
-    data: groups,
-    refetch,
-    isRefetching,
-  } = useSuspenseQuery(trpc.group.getUserGroups.queryOptions());
+  const { data: groups, refetch } = useSuspenseQuery(
+    trpc.group.getUserGroups.queryOptions(),
+  );
 
   if (!groups.success) {
     return null;
@@ -56,11 +54,7 @@ export function GroupsDashboard() {
           />
         </View>
       )}
-      <PullToRefresh
-        refreshing={isRefetching}
-        onRefresh={refetch}
-        parentPaddingX={16}
-      >
+      <PullToRefresh onRefresh={refetch} parentPaddingX={16}>
         {(refreshProps) => (
           <FlashList
             {...refreshProps}
