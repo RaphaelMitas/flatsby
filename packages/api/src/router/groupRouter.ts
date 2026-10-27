@@ -251,7 +251,7 @@ export const groupRouter = createTRPCRouter({
               db.transaction(async (trx) => {
                 const [group] = await trx
                   .insert(groups)
-                  .values({ name })
+                  .values({ name, currency: input.currency })
                   .returning({ id: groups.id });
 
                 if (!group) {

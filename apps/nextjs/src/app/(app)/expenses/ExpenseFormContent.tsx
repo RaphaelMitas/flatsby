@@ -44,10 +44,10 @@ import {
   editableSplitMethod,
   finalizeSplits,
 } from "@flatsby/validators/expenses/split-editing";
-import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 
 import type { UseExpenseFormReturn } from "./useExpenseForm";
 import { CurrencyInput } from "~/components/CurrencyInput";
+import { CurrencySelect } from "~/components/CurrencySelect";
 import { ConversionField } from "./ConversionField";
 import { ExpenseCategorySelector } from "./ExpenseCategorySelector";
 import { SplitEditor } from "./SplitEditor";
@@ -163,24 +163,12 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                             control={form.control}
                             name="currency"
                             render={({ field: currencyField }) => (
-                              <Select
+                              <CurrencySelect
+                                className="w-24"
+                                data-testid="expense-form-currency"
                                 value={currencyField.value}
-                                onValueChange={currencyField.onChange}
-                              >
-                                <SelectTrigger
-                                  className="w-24"
-                                  data-testid="expense-form-currency"
-                                >
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {CURRENCY_CODES.map((code) => (
-                                    <SelectItem key={code} value={code}>
-                                      {code}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                                onChange={currencyField.onChange}
+                              />
                             )}
                           />
                           <CurrencyInput

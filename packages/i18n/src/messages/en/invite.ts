@@ -9,6 +9,12 @@ export const invite = {
   resetLink: "Reset link",
   resetFailed: "Couldn't reset the link. Try again.",
   loadFailed: "Couldn't load the invite. Try again.",
+  done: "Done",
+  solo: {
+    title: "It's just you so far",
+    body: "Flatsby is made for the whole flat. Share the invite with your flatmates.",
+    dismiss: "Dismiss",
+  },
   expiresIn:
     "{days, plural, =1 {Expires within a day} other {Expires in # days}}",
   join: {
@@ -18,6 +24,9 @@ export const invite = {
     lookAlikes: "O and 0, I and 1 are treated the same",
     continue: "Continue",
     invitedYouTo: "{name} invited you to",
+    cardTitle: "{name} invited you to {group}",
+    cardDescription:
+      "{members} · Shopping lists, expenses and chores, together.",
     consent:
       "Members will see your name and profile picture, and you'll see the group's lists and expenses.",
     join: "Join {group}",

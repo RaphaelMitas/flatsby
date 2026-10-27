@@ -5,10 +5,15 @@ export const uniqueGroupName = () => `E2E Group ${Date.now()}`;
 
 export async function submitCreateGroupForm(page: Page, name: string) {
   await page.goto("/group/create");
+  const done = page.getByTestId("group-invite-done");
   await expect(async () => {
     if (new URL(page.url()).pathname === "/home") return;
-    await page.getByTestId("group-create-name-input").fill(name);
-    await page.getByTestId("group-create-submit").click();
+    // Once created, the invite step replaces the form, so a retry must not create again
+    if (!(await done.isVisible())) {
+      await page.getByTestId("group-create-name-input").fill(name);
+      await page.getByTestId("group-create-submit").click();
+    }
+    await done.click({ timeout: 10000 });
     await page.waitForURL("/home", { timeout: 10000 });
   }).toPass({ timeout: 45000 });
 }

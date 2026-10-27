@@ -6,17 +6,24 @@ export const group = {
   nameLabel: "Gruppenname",
   namePlaceholder: "Gruppennamen eingeben",
   create: {
+    currencyHint: "Du kannst sie später in den Gruppeneinstellungen ändern.",
     description: "Gib einen Namen für deine neue Gruppe ein.",
     namePlaceholder: "Gib deinen Gruppennamen ein",
     submit: "Erstellen",
     title: "Gruppe erstellen",
   },
   dashboard: {
-    empty: "Noch keine Gruppen",
     goToGroup: "Zur Gruppe",
-    notAMember: "Du bist noch in keiner Gruppe.",
     selectGroup: "Gruppe auswählen",
     title: "Deine Gruppen",
+  },
+  onboarding: {
+    greeting: "Hi {name}.",
+    question: "Gründest du eine Gruppe oder trittst du einer bei?",
+    start: "Neue Gruppe gründen",
+    startHint: "Danach lädst du deine Mitbewohner ein",
+    join: "Ich habe eine Einladung",
+    joinHint: "Gib den Code aus deiner Einladung ein",
   },
   settings: {
     changeGroup: "Gruppe wechseln",

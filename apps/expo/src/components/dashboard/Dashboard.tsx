@@ -12,6 +12,7 @@ import { useHomeVersion } from "~/utils/home-version";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { GroupsDashboard } from "../groupDashboard/GroupsDashboard";
 import { HomeInvite } from "../home/HomeSwitch";
+import { InviteFlatmatesCard } from "../home/InviteFlatmatesCard";
 import { HomeStats } from "./HomeStats";
 import { NavLinks } from "./NavLinks";
 import { QuickActions } from "./QuickActions";
@@ -103,6 +104,8 @@ function DashboardContent() {
             }
           />
         </View>
+
+        <InviteFlatmatesCard groupId={selectedGroupId} />
 
         {homeVersion === "undecided" && <HomeInvite />}
 
