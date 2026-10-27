@@ -67,7 +67,9 @@ function useExchangeRate(
   return useQuery(
     trpc.expense.getExchangeRate.queryOptions(input, {
       enabled,
-      staleTime: Infinity,
+      // Before the ECB publishes, "latest" is an older day's rate, and the cache now outlives the day
+      staleTime: (query) =>
+        query.state.data?.date === input.day ? Infinity : 0,
     }),
   );
 }
