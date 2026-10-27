@@ -157,15 +157,44 @@ test.describe("Group Management", () => {
     await memberPage.context().close();
   });
 
-  test("reset link kills the old code", async ({ authPage }) => {
-    await createAndSelectGroup(authPage, uniqueGroupName());
+  test("reset link kills the old code and its link card", async ({
+    authPage,
+    request,
+  }) => {
+    const groupName = uniqueGroupName();
+    await createAndSelectGroup(authPage, groupName);
     const oldCode = await openInvite(authPage);
+
+    const crawl = async () => {
+      const response = await request.get(`/join/${oldCode}`, {
+        headers: {
+          "user-agent": "WhatsApp/2.24.20.79 A",
+          "accept-language": "en",
+        },
+      });
+      const html = await response.text();
+      const head = html.slice(0, html.indexOf("</head>"));
+      const og = (property: string) =>
+        head.match(
+          new RegExp(`<meta property="og:${property}" content="([^"]*)"`),
+        )?.[1];
+      return { title: og("title"), image: og("image") };
+    };
+
+    const live = await crawl();
+    expect(live.title).toContain(`invited you to ${groupName}`);
+    const { pathname, search } = new URL(live.image ?? "");
+    const image = await request.get(`${pathname}${search}`);
+    expect(image.headers()["content-type"]).toBe("image/png");
+    // WhatsApp drops og:images over 600KB
+    expect((await image.body()).length).toBeLessThan(600_000);
 
     await authPage.getByRole("button", { name: "Reset link" }).click();
     await expect(authPage.getByTestId("group-invite-code")).not.toHaveText(
       oldCode,
     );
 
+    expect((await crawl()).title).toBe("This invite has expired");
     await authPage.goto(`/join/${oldCode}`);
     await expect(authPage.getByTestId("join-invite-expired")).toBeVisible();
   });
