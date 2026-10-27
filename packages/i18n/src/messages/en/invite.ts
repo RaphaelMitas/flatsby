@@ -9,6 +9,12 @@ export const invite = {
   resetLink: "Reset link",
   resetFailed: "Couldn't reset the link. Try again.",
   loadFailed: "Couldn't load the invite. Try again.",
+  done: "Done",
+  solo: {
+    title: "It's just you so far",
+    body: "Flatsby is made for the whole flat. Share the invite with your flatmates.",
+    dismiss: "Dismiss",
+  },
   expiresIn:
     "{days, plural, =1 {Expires within a day} other {Expires in # days}}",
   join: {

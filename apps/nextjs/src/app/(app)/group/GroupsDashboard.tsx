@@ -11,6 +11,7 @@ import { Button } from "@flatsby/ui/button";
 import { useTRPC } from "~/trpc/react";
 import { GroupsDashboardElement } from "./GroupsDashboardElement";
 import { JoinWithCodeDialog } from "./JoinWithCodeDialog";
+import { StartOrJoin } from "./StartOrJoin";
 
 export function GroupsDashboard() {
   const t = useTranslations();
@@ -18,7 +19,7 @@ export function GroupsDashboard() {
   const [joinOpen, setJoinOpen] = useState(false);
   const router = useRouter();
 
-  const { data: groups, status } = useSuspenseQuery(
+  const { data: groups } = useSuspenseQuery(
     trpc.group.getUserGroups.queryOptions(),
   );
 
@@ -32,6 +33,15 @@ export function GroupsDashboard() {
 
   if (!groups.success) {
     return null;
+  }
+
+  if (groups.data.length === 0) {
+    return (
+      <>
+        <StartOrJoin onJoin={() => setJoinOpen(true)} />
+        <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
+      </>
+    );
   }
 
   const handleSelectGroup = (groupId: number) => {
@@ -65,34 +75,18 @@ export function GroupsDashboard() {
           <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
         </div>
 
-        {status === "success" && groups.data.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-4">
-            <div className="text-center text-lg font-semibold">
-              {t("group.dashboard.notAMember")}
-            </div>
-            <Button asChild className="mx-auto grid max-w-6xl gap-2">
-              <Link
-                href="/group/create"
-                data-testid="group-empty-create-button"
-              >
-                {t("group.create.title")}
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {groups.data.map((group) => (
-              <GroupsDashboardElement
-                key={group.id}
-                groupId={group.id}
-                groupName={group.name}
-                memberCount={group.memberCount}
-                onSelect={handleSelectGroup}
-                disabled={selectGroup.isPending}
-              />
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {groups.data.map((group) => (
+            <GroupsDashboardElement
+              key={group.id}
+              groupId={group.id}
+              groupName={group.name}
+              memberCount={group.memberCount}
+              onSelect={handleSelectGroup}
+              disabled={selectGroup.isPending}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

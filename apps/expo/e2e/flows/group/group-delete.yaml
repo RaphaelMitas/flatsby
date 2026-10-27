@@ -10,6 +10,19 @@ tags:
     file: ../../subflows/create-group.yaml
     env:
       GROUP_NAME: "Delete Me Group"
+# Creating selected the group, so reach the group list through its settings
+- tapOn:
+    id: "dashboard-group-settings"
+- extendedWaitUntil:
+    visible:
+      id: "group-settings-change-group"
+    timeout: 15000
+- tapOn:
+    id: "group-settings-change-group"
+- extendedWaitUntil:
+    visible:
+      id: "group-dashboard-title"
+    timeout: 15000
 - swipe:
     from:
       text: "Delete Me Group"
@@ -29,13 +42,6 @@ tags:
     file: ../../subflows/create-group.yaml
     env:
       GROUP_NAME: "Spent Group"
-- tapOn:
-    id: "group-select-button"
-    index: 1
-- extendedWaitUntil:
-    visible:
-      id: "shopping-lists-group-settings"
-    timeout: 15000
 - runFlow:
     file: ../../subflows/tap-tab.yaml
     env:
@@ -54,11 +60,11 @@ tags:
       TAB_ID: "tab-home"
       TAB_LABEL: "Home"
       TAB_X: "41%"
-      MARKER_ID: "shopping-lists-group-settings"
+      MARKER_ID: "dashboard-group-settings"
 - runFlow:
     file: ../../subflows/tap-until.yaml
     env:
-      TARGET_ID: "shopping-lists-group-settings"
+      TARGET_ID: "dashboard-group-settings"
       MARKER_ID: "group-settings-details"
 # Centered, or the tap can land on the iOS tab bar floating over the row
 - scrollUntilVisible:

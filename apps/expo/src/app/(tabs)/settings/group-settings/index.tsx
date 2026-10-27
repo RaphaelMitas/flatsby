@@ -97,6 +97,7 @@ export default function GroupSettingsIndex() {
         <SettingsSection title={t("group.settings.changeGroup")}>
           <Link href="/settings/manage-groups" asChild>
             <SettingsItem
+              testID="group-settings-change-group"
               title={t("group.settings.changeGroup")}
               subtitle={t("group.settings.changeGroupSubtitle")}
               iconName="arrow-left-right"

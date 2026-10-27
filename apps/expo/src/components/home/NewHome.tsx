@@ -50,6 +50,7 @@ import {
   PersonLead,
 } from "./HomeRows";
 import { SwitchBack } from "./HomeSwitch";
+import { InviteFlatmatesCard } from "./InviteFlatmatesCard";
 import { QuickAddDial } from "./QuickAddDial";
 
 export function NewHome() {
@@ -309,6 +310,8 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             router.push(settleHref(debt, "direct"), { withAnchor: true })
           }
         />
+
+        <InviteFlatmatesCard groupId={group.id} className="mt-6" />
 
         {rows.length > 0 && (
           <HomeRows title={t("home.new.household")}>

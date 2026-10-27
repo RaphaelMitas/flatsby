@@ -6,7 +6,7 @@ import { useThemedScreenOptions } from "~/lib/utils";
 
 export default function HomeLayout() {
   const { screenOptions, solidHeader } = useThemedScreenOptions();
-  const t = useTranslations("navigation");
+  const t = useTranslations();
 
   return (
     <TabSafeArea>
@@ -19,14 +19,23 @@ export default function HomeLayout() {
         <Stack.Screen
           name="index"
           options={{
-            title: t("home"),
+            title: t("navigation.home"),
             headerShown: false,
           }}
         />
         <Stack.Screen
           name="create-group"
           options={{
-            title: t("createGroup"),
+            title: t("navigation.createGroup"),
+            presentation: "modal",
+            headerShown: true,
+            ...solidHeader,
+          }}
+        />
+        <Stack.Screen
+          name="invite"
+          options={{
+            title: t("invite.open"),
             presentation: "modal",
             headerShown: true,
             ...solidHeader,
