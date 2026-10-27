@@ -61,8 +61,6 @@ export const shoppingListsMutation = <TData, TInput>(
     },
     rollback: restoreSnapshot(queryClient),
     onFailure,
-    onSuccess: (data: TData, input: TInput) => {
-      onSuccess?.(data, input);
-      void queryClient.invalidateQueries({ queryKey: listsKey });
-    },
+    onSuccess,
+    onSettled: () => void queryClient.invalidateQueries({ queryKey: listsKey }),
   });

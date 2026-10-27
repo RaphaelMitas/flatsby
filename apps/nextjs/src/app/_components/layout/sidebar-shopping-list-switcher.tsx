@@ -28,7 +28,6 @@ export function SidebarShoppingListSwitcher() {
   const { currentGroup } = useGroupContext();
   const [creating, setCreating] = useState(false);
 
-  // Get shopping lists for current group
   const { data: shoppingListsData, isLoading } = useQuery({
     ...trpc.shoppingList.getShoppingLists.queryOptions({
       groupId: currentGroup?.id ?? 0,

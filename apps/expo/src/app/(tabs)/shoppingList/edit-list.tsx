@@ -24,8 +24,7 @@ export default function EditShoppingList() {
   const queryClient = useQueryClient();
   const { listId } = useLocalSearchParams<{ listId: string }>();
   const shoppingListId = Number(listId);
-  const { selectedGroupId, selectedShoppingListId, clearSelectedShoppingList } =
-    useShoppingStore();
+  const { selectedGroupId } = useShoppingStore();
   const groupId = selectedGroupId ?? 0;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -84,7 +83,6 @@ export default function EditShoppingList() {
 
   const handleDelete = () => {
     setShowDeleteModal(false);
-    if (shoppingListId === selectedShoppingListId) clearSelectedShoppingList();
     deleteMutation.mutate({ groupId, shoppingListId });
     router.back();
   };

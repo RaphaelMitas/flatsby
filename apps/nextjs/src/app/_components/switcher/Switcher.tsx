@@ -12,13 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@flatsby/ui/dropdown-menu";
 
-export interface SwitcherItem {
+interface SwitcherItem {
   id: number;
   title: string;
   subtitle: string;
 }
 
-export interface SwitcherAction {
+interface SwitcherAction {
   testId: string;
   icon: LucideIcon;
   title: string;

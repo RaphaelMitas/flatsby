@@ -10,13 +10,13 @@ import { e2eAccessibilityOverride } from "~/utils/e2e";
 
 const SNAP_POINTS = ["50%", "80%"];
 
-export interface SwitcherItem {
+interface SwitcherItem {
   id: number;
   title: string;
   subtitle: string;
 }
 
-export interface SwitcherAction {
+interface SwitcherAction {
   testID: string;
   icon: IconProps["name"];
   title: string;

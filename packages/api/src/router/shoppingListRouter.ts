@@ -94,6 +94,7 @@ export const shoppingList = createTRPCRouter({
                     icon: true,
                     description: true,
                   },
+                  orderBy: (list, { asc }) => asc(list.id),
                   with: {
                     shoppingListItems: {
                       columns: {

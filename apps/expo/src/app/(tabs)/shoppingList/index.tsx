@@ -65,7 +65,13 @@ function ListTab({ groupId }: { groupId: number }) {
       <View className="px-4 pt-2 pb-1">
         <ListSwitcher lists={lists} current={current} />
       </View>
-      <Suspense fallback={<ListSkeleton />}>
+      <Suspense
+        fallback={
+          <View className="flex-1 p-8">
+            <SkeletonList items={8} />
+          </View>
+        }
+      >
         <ShoppingList
           key={current.id}
           groupId={groupId}

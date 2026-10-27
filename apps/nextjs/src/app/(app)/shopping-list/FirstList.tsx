@@ -1,6 +1,8 @@
 "use client";
 
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ShoppingBasket } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -11,6 +13,7 @@ import { Button } from "@flatsby/ui/button";
 import { Form } from "@flatsby/ui/form";
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
+import { useGroupContext } from "~/app/_components/context/group-context";
 import { ListNameField, useCreateList } from "./ListDialogs";
 
 const PRESETS = ["groceries", "drugstore", "hardware"] as const;
@@ -23,7 +26,14 @@ export function FirstList({
   groupName: string;
 }) {
   const t = useTranslations("shoppingList");
+  const router = useRouter();
+  const { currentGroup } = useGroupContext();
   const createList = useCreateList(groupId);
+
+  // This page was rendered for one group; a switch in the sidebar needs a fresh render
+  useEffect(() => {
+    if (currentGroup && currentGroup.id !== groupId) router.refresh();
+  }, [currentGroup, groupId, router]);
   const failure = failureOf(createList, t("create.failed"));
   const form = useForm<ShoppingListFormValues>({
     resolver: zodResolver(shoppingListFormSchema),
