@@ -56,7 +56,7 @@ import { useCloseScreen } from "~/utils/useCloseScreen";
 import { useReviewNudge } from "~/utils/useReviewNudge";
 import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
-import { currencyItems } from "./currencyItems";
+import { CurrencyPicker } from "./CurrencyPicker";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
 import { SplitEditor } from "./SplitEditor";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
@@ -556,14 +556,10 @@ export function ExpenseForm({
                               control={form.control}
                               name="currency"
                               render={({ field: currencyField }) => (
-                                <BottomSheetPickerTrigger
+                                <CurrencyPicker
                                   testID="expense-form-currency"
-                                  items={currencyItems}
-                                  selectedId={currencyField.value}
-                                  onSelect={(item) => {
-                                    currencyField.onChange(item.id);
-                                  }}
-                                  triggerTitle={currencyField.value}
+                                  value={currencyField.value}
+                                  onChange={currencyField.onChange}
                                 />
                               )}
                             />

@@ -22,10 +22,13 @@ export function InviteFlatmatesCard() {
     groupId: number;
     dismissed: boolean;
   }>();
-  const { data: groups } = useQuery(trpc.group.getUserGroups.queryOptions());
   const groupId = currentGroup?.id;
-  const memberCount = groups?.success
-    ? groups.data.find(({ id }) => id === groupId)?.memberCount
+  const { data: group } = useQuery({
+    ...trpc.group.getGroup.queryOptions({ id: groupId ?? 0 }),
+    enabled: groupId !== undefined,
+  });
+  const memberCount = group?.success
+    ? group.data.groupMembers.length
     : undefined;
 
   useEffect(() => {

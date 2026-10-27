@@ -12,7 +12,7 @@ tags:
     env:
       GROUP_NAME: "Maestro Group"
 
-# Creating selects the new group, no need to pick it from the list
+# Change group name via group settings
 - tapOn:
     id: "dashboard-group-settings"
 - extendedWaitUntil:

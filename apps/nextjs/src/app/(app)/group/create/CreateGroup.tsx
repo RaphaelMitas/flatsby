@@ -39,6 +39,9 @@ export function CreateGroup() {
         void queryClient.invalidateQueries(
           trpc.group.getUserGroups.queryOptions(),
         );
+        void queryClient.invalidateQueries(
+          trpc.user.getCurrentUserWithGroups.queryOptions(),
+        );
         // The group exists either way; failing here would invite a duplicate create
         await switchGroup(data.data.groupId).catch(() => undefined);
         setCreated({ id: data.data.groupId, name });

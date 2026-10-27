@@ -16,11 +16,8 @@ import { translateIfKey } from "@flatsby/i18n/message-key";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 import { groupFormSchema } from "@flatsby/validators/group";
 
-import { currencyItems } from "~/components/expenses/currencyItems";
-import {
-  BottomSheetPickerProvider,
-  BottomSheetPickerTrigger,
-} from "~/lib/ui/bottom-sheet-picker";
+import { CurrencyPicker } from "~/components/expenses/CurrencyPicker";
+import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
@@ -140,14 +137,10 @@ export default function CreateGroup() {
             <Label className="mt-2">
               {t("group.expenseSettings.currency")}
             </Label>
-            <BottomSheetPickerTrigger
+            <CurrencyPicker
               testID="group-create-currency"
-              items={currencyItems}
-              selectedId={currency}
-              onSelect={(item) => {
-                if (isCurrencyCode(item.id)) setCurrency(item.id);
-              }}
-              triggerTitle={currency}
+              value={currency}
+              onChange={setCurrency}
             />
             <Text className="text-muted-foreground text-sm">
               {t("group.create.currencyHint")}

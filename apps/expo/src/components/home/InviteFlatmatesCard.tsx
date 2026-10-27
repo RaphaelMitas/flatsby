@@ -25,9 +25,11 @@ export function InviteFlatmatesCard({
     groupId: number;
     dismissed: boolean;
   }>();
-  const { data: groups } = useQuery(trpc.group.getUserGroups.queryOptions());
-  const memberCount = groups?.success
-    ? groups.data.find(({ id }) => id === groupId)?.memberCount
+  const { data: group } = useQuery(
+    trpc.group.getGroup.queryOptions({ id: groupId }),
+  );
+  const memberCount = group?.success
+    ? group.data.groupMembers.length
     : undefined;
 
   useEffect(() => {

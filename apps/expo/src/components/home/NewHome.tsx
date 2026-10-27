@@ -155,6 +155,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries(trpc.calendar.range.pathFilter()),
+      queryClient.invalidateQueries(trpc.group.getGroup.pathFilter()),
       queryClient.invalidateQueries(trpc.expense.getDebtSummary.pathFilter()),
       queryClient.invalidateQueries(
         trpc.shoppingList.getShoppingLists.pathFilter(),
