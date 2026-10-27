@@ -1,6 +1,6 @@
 "use client";
 
-import type { LoginProvider } from "@flatsby/validators/login";
+import type { LoginAttempt, LoginProvider } from "@flatsby/validators/login";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
@@ -46,7 +46,7 @@ const Login = () => {
               distinctId: posthog.optedOut
                 ? undefined
                 : posthog.getDistinctId(),
-            },
+            } satisfies LoginAttempt,
           },
         })
         .catch((thrown: unknown) => {

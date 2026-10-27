@@ -1,6 +1,6 @@
 "use client";
 
-import type { LoginProvider } from "@flatsby/validators/login";
+import type { LoginAttempt, LoginProvider } from "@flatsby/validators/login";
 import { useState } from "react";
 import Link from "next/link";
 import { uuidv7 } from "@posthog/core";
@@ -46,7 +46,9 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
         .social({
           provider,
           callbackURL,
-          additionalData: { login: { attemptId: attempt.attempt_id } },
+          additionalData: {
+            login: { attemptId: attempt.attempt_id } satisfies LoginAttempt,
+          },
         })
         .catch((thrown: unknown) => {
           failed(thrownFailureCode(thrown));

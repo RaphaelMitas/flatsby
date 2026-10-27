@@ -7,7 +7,7 @@ const redirect = (query: string) =>
 
 describe("callbackOutcome", () => {
   it("reads a redirect without an error as a sign-in", () => {
-    expect(callbackOutcome(new URL("flatsby:///?cookie=x"))).toEqual({
+    expect(callbackOutcome(new URL("flatsby:///"))).toEqual({
       event: "login_succeeded",
     });
   });

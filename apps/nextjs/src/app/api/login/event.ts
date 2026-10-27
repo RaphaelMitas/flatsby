@@ -2,8 +2,10 @@ import { z } from "zod/v4";
 
 import { loginErrorCode, loginProviderSchema } from "@flatsby/validators/login";
 
+import { MAX_LENGTH } from "~/utils/error-beacon";
+
 const attempt = {
-  url: z.url().max(2048),
+  url: z.url().max(MAX_LENGTH.url),
   provider: loginProviderSchema,
   attempt_id: z.uuid(),
 };
