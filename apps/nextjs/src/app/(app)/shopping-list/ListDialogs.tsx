@@ -156,7 +156,13 @@ export function CreateListDialog({
   const failure = failureOf(createList, t("shoppingList.create.failed"));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) createList.reset();
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{t("shoppingList.createShoppingList")}</DialogTitle>
