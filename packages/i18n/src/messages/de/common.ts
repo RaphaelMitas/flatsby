@@ -26,7 +26,7 @@ export const common = {
   unknown: "Unbekannt",
   unknownError: "Unbekannter Fehler",
   updating: "Wird aktualisiert...",
-  upToDate: "Aktuell",
+  upToDate: "Alles aktuell",
   select: "Auswählen",
   previousSlide: "Vorherige Folie",
   nextSlide: "Nächste Folie",
