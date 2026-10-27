@@ -758,6 +758,11 @@ function agendaDays(
 const isOpenTask = ({ item, occurrence }: CalendarEntry) =>
   item.kind === "task" && !occurrence.completedAt;
 
+const myOpenTasks = (entries: CalendarEntry[], meId: number) =>
+  entries.filter(
+    (entry) => isOpenTask(entry) && entry.occurrence.turnGroupMemberId === meId,
+  );
+
 export const timesMissed = (entry: AgendaEntry, today: string) =>
   isOpenTask(entry)
     ? (entry.missed?.length ?? 0) + (entry.occurrence.date < today ? 1 : 0)
@@ -1045,12 +1050,10 @@ export function homeAgenda(
   meId: number,
 ) {
   const entries = rangeEntries(range);
-  const myOpenTasks = entries.filter(
-    (entry) => isOpenTask(entry) && entry.occurrence.turnGroupMemberId === meId,
-  );
+  const mine = myOpenTasks(entries, meId);
   return {
-    due: latestOpen(myOpenTasks, today),
-    nextTurn: myOpenTasks.find(({ occurrence }) => occurrence.date > today),
+    due: latestOpen(mine, today),
+    nextTurn: mine.find(({ occurrence }) => occurrence.date > today),
     nextEvent: entries.find(
       (entry) => entry.item.kind === "event" && notOverYet(entry, today, now),
     ),
@@ -1072,9 +1075,7 @@ export function eveningReminders(
   meId: number,
 ) {
   const entries = rangeEntries(range);
-  const mine = entries.filter(
-    (entry) => isOpenTask(entry) && entry.occurrence.turnGroupMemberId === meId,
-  );
+  const mine = myOpenTasks(entries, meId);
   const reminders: EveningReminder[] = [];
   for (let evening = from; evening < to; evening = addDays(evening, 1)) {
     const tomorrow = addDays(evening, 1);

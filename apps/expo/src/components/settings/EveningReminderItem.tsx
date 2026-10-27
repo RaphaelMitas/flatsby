@@ -32,7 +32,9 @@ export function EveningReminderItem() {
     return () => subscription.remove();
   }, []);
 
-  const blocked = choice === "on" && permission?.granted === false;
+  const blocked =
+    permission?.granted === false &&
+    (choice === "on" || !permission.canAskAgain);
   const checked = choice === "on" && permission?.granted === true;
   const toggle = () => {
     if (checked) disable();

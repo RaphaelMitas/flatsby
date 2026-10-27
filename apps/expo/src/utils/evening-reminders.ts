@@ -28,7 +28,6 @@ const reminderChoice = storedChoice("evening-reminders", (saved) =>
   saved === "on" || saved === "off" ? saved : "undecided",
 );
 
-/** null until the stored choice is read */
 export const useReminderChoice = reminderChoice.useValue;
 
 const REMINDER_HOUR = 19;
@@ -55,17 +54,37 @@ const ensureChannel = (name: string) =>
       })
     : Promise.resolve(null);
 
-// Cancel-and-reschedule runs one at a time, so two quick changes can't interleave
+interface Reminder {
+  at: Date;
+  request: NotificationRequestInput & { identifier: string };
+}
+
+// Runs one at a time, so two quick changes can't interleave. Scheduling an
+// identifier again replaces it, so only the stale ones are cancelled after,
+// and a run cut short never leaves the phone without reminders.
 let queue = Promise.resolve();
-const reschedule = (requests: NotificationRequestInput[], channel: string) => {
+const reschedule = (reminders: Reminder[], channel: string) => {
   queue = queue
     .then(async () => {
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      if (requests.length === 0) return;
-      if (!(await Notifications.getPermissionsAsync()).granted) return;
-      await ensureChannel(channel);
-      for (const request of requests)
-        await Notifications.scheduleNotificationAsync(request);
+      const kept = new Set<string>();
+      if (
+        reminders.length > 0 &&
+        (await Notifications.getPermissionsAsync()).granted
+      ) {
+        await ensureChannel(channel);
+        // iOS throws on a time already past
+        const now = new Date();
+        for (const { at, request } of reminders) {
+          if (at <= now) continue;
+          await Notifications.scheduleNotificationAsync(request);
+          kept.add(request.identifier);
+        }
+      }
+      for (const {
+        identifier,
+      } of await Notifications.getAllScheduledNotificationsAsync())
+        if (!kept.has(identifier))
+          await Notifications.cancelScheduledNotificationAsync(identifier);
     })
     .catch(console.error);
 };
@@ -98,16 +117,13 @@ export function useReminderSwitch(source: "calendar" | "settings") {
 }
 
 const titles = (entries: CalendarEntry[]) =>
-  entries.map(({ item }) => item.title).join(", ");
-
-const eventTitles = (entries: CalendarEntry[]) =>
   entries
     .map(({ item }) =>
       item.time ? `${item.time.start} ${item.title}` : item.title,
     )
     .join(", ");
 
-/** Keeps the evening reminders of every group in step with the calendar; signedIn is undefined while the session loads */
+/** signedIn is undefined while the session loads */
 export function useEveningReminders(signedIn: boolean | undefined) {
   const t = useTranslations("calendar.reminders");
   const router = useRouter();
@@ -149,11 +165,11 @@ export function useEveningReminders(signedIn: boolean | undefined) {
       const head =
         turns.length > 0
           ? t("turnsTomorrow", { titles: titles(turns) })
-          : t("tomorrow", { titles: eventTitles(events) });
+          : t("tomorrow", { titles: titles(events) });
       const body = [
         turns.length > 0 &&
           events.length > 0 &&
-          t("also", { titles: eventTitles(events) }),
+          t("also", { titles: titles(events) }),
         open.length > 0 && t("stillOpen", { titles: titles(open) }),
       ].filter(Boolean);
       const at = pickerDate(evening);
@@ -172,8 +188,8 @@ export function useEveningReminders(signedIn: boolean | undefined) {
             date: at,
             channelId: CHANNEL_ID,
           },
-        } satisfies NotificationRequestInput,
-      };
+        },
+      } satisfies Reminder;
     });
   });
   const reminders =
@@ -188,19 +204,15 @@ export function useEveningReminders(signedIn: boolean | undefined) {
         ? JSON.stringify(reminders)
         : null;
 
-  // Runs again on every return to the app, which also picks up permission granted in the phone's settings
-  const sync = useEffectEvent((target: string | null, now: Date) => {
-    if (target === null) return;
-    reschedule(
-      target === "off"
-        ? []
-        : (reminders ?? [])
-            .filter(({ at }) => at > now)
-            .map(({ request }) => request),
-      t("channel"),
-    );
+  const sync = useEffectEvent((target: string | null) => {
+    // Someone else signing in on this phone is asked again
+    if (signedIn === false && choice !== null && choice !== "undecided")
+      reminderChoice.save("undecided");
+    if (target !== null)
+      reschedule(target === "off" ? [] : (reminders ?? []), t("channel"));
   });
-  useEffect(() => sync(target, now), [target, now]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: now runs it again on every return to the app, which picks up permission granted in the phone's settings
+  useEffect(() => sync(target), [target, now]);
 
   const response = Notifications.useLastNotificationResponse();
   const openTapped = useEffectEvent((data: unknown, loaded: typeof groups) => {
