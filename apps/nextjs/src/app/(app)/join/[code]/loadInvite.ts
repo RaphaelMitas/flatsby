@@ -9,11 +9,9 @@ export const loadInvite = cache(async (param: string) => {
   if (!parsed.success) return { code: null, preview: null };
 
   const preview = await caller.invite.preview({ code: parsed.data });
-  if (!preview.success && preview.error.type !== "NotFoundError") {
+  if (preview.success) return { code: parsed.data, preview: preview.data };
+  if (preview.error.type !== "NotFoundError") {
     throw new Error(preview.error.message);
   }
-  return {
-    code: parsed.data,
-    preview: preview.success ? preview.data : null,
-  };
+  return { code: parsed.data, preview: null };
 });
