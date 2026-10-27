@@ -14,7 +14,6 @@ import {
   calendarDateSchema,
   describeListRange,
   formatCalendarDate,
-  listWindow,
   localDate,
   newEntryDate,
   otherView,
@@ -70,10 +69,6 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const { mutate: setDone } = useCalendarMutations(group).setDone;
   // Store screenshots and e2e flows never see the ask
   const asking = useReminderChoice() === "undecided" && !isE2ETestingEnabled();
-  const { data: upcoming } = useQuery({
-    ...calendarRangeOptions(group.id, listWindow(today, today)),
-    enabled: asking,
-  });
   const { view } = position;
 
   const onLinked = useEffectEvent((date: string) => {
@@ -167,8 +162,8 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         </View>
       </View>
 
-      {asking && upcoming?.success && (
-        <ReminderAsk range={upcoming.data} today={today} meId={people.meId} />
+      {asking && (
+        <ReminderAsk groupId={group.id} meId={people.meId} today={today} />
       )}
 
       <TurnBar

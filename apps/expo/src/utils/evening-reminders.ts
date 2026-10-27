@@ -41,6 +41,10 @@ export function useReminderChoice() {
 }
 
 const REMINDER_HOUR = 19;
+
+/** Tonight's reminder is gone once it's past the hour */
+export const firstEvening = (today: string, now: Date) =>
+  now.getHours() >= REMINDER_HOUR ? addDays(today, 1) : today;
 const CHANNEL_ID = "evening-reminders";
 
 const tapSchema = z.object({ groupId: z.number(), date: calendarDateSchema });
@@ -214,9 +218,6 @@ export function useEveningReminders() {
         : null;
 
   const sync = useEffectEvent((target: string | null) => {
-    // The next account on this phone shouldn't see the last one's chores
-    if (signedIn === false)
-      Notifications.dismissAllNotificationsAsync().catch(console.error);
     if (target !== null)
       reschedule(target === "off" ? [] : (reminders ?? []), t("channel"));
   });

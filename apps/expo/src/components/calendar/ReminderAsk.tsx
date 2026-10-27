@@ -1,5 +1,5 @@
-import type { CalendarRange } from "@flatsby/validators/calendar";
 import { Text, View } from "react-native";
+import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
@@ -10,26 +10,31 @@ import {
 
 import { Button } from "~/lib/ui/button";
 import { Card, CardContent } from "~/lib/ui/card";
-import { useReminderSwitch } from "~/utils/evening-reminders";
+import { firstEvening, useReminderSwitch } from "~/utils/evening-reminders";
+import { calendarRangeOptions } from "./calendarRangeOptions";
 
 export function ReminderAsk({
-  range,
-  today,
+  groupId,
   meId,
+  today,
 }: {
-  range: CalendarRange;
-  today: string;
+  groupId: number;
   meId: number;
+  today: string;
 }) {
   const t = useTranslations("calendar.reminders");
   const locale = useLocale();
   const { enable, disable } = useReminderSwitch("calendar");
-  const [turn] = eveningReminders(
-    range,
-    today,
-    listWindow(today, today).to,
-    meId,
-  ).flatMap(({ turns }) => turns);
+  const window = listWindow(today, today);
+  const { data } = useQuery(calendarRangeOptions(groupId, window));
+  const [turn] = data?.success
+    ? eveningReminders(
+        data.data,
+        firstEvening(today, new Date()),
+        window.to,
+        meId,
+      ).flatMap(({ turns }) => turns)
+    : [];
   if (!turn) return null;
 
   return (
