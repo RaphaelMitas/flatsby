@@ -23,6 +23,7 @@ export const common = {
   unknown: "Unknown",
   unknownError: "Unknown error",
   updating: "Updating...",
+  upToDate: "Up to date",
   select: "Select",
   previousSlide: "Previous slide",
   nextSlide: "Next slide",

@@ -1,6 +1,11 @@
 import type { AppRouter } from "@flatsby/api";
+import type { PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { AppState } from "react-native";
+import * as Application from "expo-application";
+import * as Updates from "expo-updates";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { focusManager, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
@@ -24,10 +29,14 @@ focusManager.setEventListener((setFocused) => {
   return () => subscription.remove();
 });
 
+const CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
 export const queryClient = new QueryClient({
   ...trpcFailureCaches(reportTRPCFailure),
   defaultOptions: {
     queries: {
+      // A collected query drops out of the persisted cache on the next save
+      gcTime: CACHE_MAX_AGE,
       retry: (failureCount, error) => {
         if (isUnauthorizedError(error)) {
           return false;
@@ -37,6 +46,37 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+const storagePersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  serialize: superjson.stringify,
+  deserialize: superjson.parse,
+});
+
+export const persistOptions = {
+  persister: {
+    ...storagePersister,
+    // Saving only settled state keeps optimistic writes and paused mutations off disk
+    persistClient: (client) =>
+      queryClient.isMutating() > 0 || queryClient.isFetching() > 0
+        ? undefined
+        : storagePersister.persistClient(client),
+  },
+  maxAge: CACHE_MAX_AGE,
+  dehydrateOptions: {
+    // By age, not success: a failed refetch keeps its data, and maxAge only dates the whole save
+    shouldDehydrateQuery: (query) =>
+      query.state.dataUpdatedAt > Date.now() - CACHE_MAX_AGE,
+  },
+  // New JS can expect a different data shape than the cache it would restore
+  buster: Updates.updateId ?? Application.nativeApplicationVersion ?? "",
+} satisfies Omit<PersistQueryClientOptions, "queryClient">;
+
+export function clearQueryCache() {
+  queryClient.clear();
+  // Right after a restore the persister isn't subscribed yet, so the clear wouldn't reach disk
+  void storagePersister.removeClient();
+}
 
 // biome-ignore lint/suspicious/noExplicitAny: generic constraint must accept any query options shape
 export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(

@@ -13,6 +13,7 @@ import { useLocale, useTranslations } from "use-intl";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
+import { isExchangeRateFinal } from "@flatsby/validators/expenses/conversion";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
@@ -67,7 +68,10 @@ function useExchangeRate(
   return useQuery(
     trpc.expense.getExchangeRate.queryOptions(input, {
       enabled,
-      staleTime: Infinity,
+      staleTime: (query) =>
+        isExchangeRateFinal(input.day, query.state.dataUpdatedAt)
+          ? Infinity
+          : 0,
     }),
   );
 }

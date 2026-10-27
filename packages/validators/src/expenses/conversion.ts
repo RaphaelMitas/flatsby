@@ -2,7 +2,12 @@
 // Conversion Utilities - Cents ↔ Decimal, and between currencies
 // ============================================================================
 
+import { addDays } from "../calendar";
 import { distributeShareAmounts } from "./distribution";
+
+// Until a day is over in UTC the server serves "latest", which can be an older day's rate
+export const isExchangeRateFinal = (day: string, fetchedAt: number) =>
+  fetchedAt >= Date.parse(`${addDays(day, 1)}T00:00:00Z`);
 
 /**
  * Convert cents to decimal for display
