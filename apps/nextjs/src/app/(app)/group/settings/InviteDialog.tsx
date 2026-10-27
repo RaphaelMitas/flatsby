@@ -55,7 +55,7 @@ export const InviteDialog = ({
   );
 };
 
-const InviteContent = ({ groupId }: { groupId: number }) => {
+export const InviteContent = ({ groupId }: { groupId: number }) => {
   const t = useTranslations();
   const trpc = useTRPC();
   const queryClient = useQueryClient();

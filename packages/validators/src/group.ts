@@ -32,7 +32,9 @@ export const groupSchema = z.object({
 export const groupFormSchema = groupSchema.pick({ name: true });
 export type GroupFormValues = z.infer<typeof groupFormSchema>;
 
-export const createGroupSchema = groupSchema.pick({ name: true });
+export const createGroupSchema = groupSchema
+  .pick({ name: true, currency: true })
+  .partial({ currency: true });
 
 export const updateGroupSchema = groupSchema.pick({ name: true, id: true });
 

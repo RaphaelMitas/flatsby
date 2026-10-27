@@ -43,7 +43,7 @@ import { Form, FormControl, FormField, FormMessage } from "~/lib/ui/form";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
-import { currencyItems } from "./currencyItems";
+import { CurrencyPicker } from "./CurrencyPicker";
 import { MemberAvatar } from "./MemberAvatar";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -552,13 +552,9 @@ export function SettlementForm({
                         <Text className="text-foreground">{field.value}</Text>
                       </View>
                     ) : (
-                      <BottomSheetPickerTrigger
-                        items={currencyItems}
-                        selectedId={field.value}
-                        onSelect={(item) => {
-                          field.onChange(item.id);
-                        }}
-                        triggerTitle={field.value}
+                      <CurrencyPicker
+                        value={field.value}
+                        onChange={field.onChange}
                       />
                     )}
                     <FormMessage />

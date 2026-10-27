@@ -5,15 +5,10 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { isCurrencyCode } from "@flatsby/validators/expenses/types";
-
-import { currencyItems } from "~/components/expenses/currencyItems";
+import { CurrencyPicker } from "~/components/expenses/CurrencyPicker";
 import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import {
-  BottomSheetPickerProvider,
-  BottomSheetPickerTrigger,
-} from "~/lib/ui/bottom-sheet-picker";
+import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import { Label } from "~/lib/ui/label";
 import { Switch } from "~/lib/ui/switch";
@@ -96,14 +91,10 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
           <View className="gap-4">
             <View className="gap-2">
               <Label>{t("group.expenseSettings.currency")}</Label>
-              <BottomSheetPickerTrigger
+              <CurrencyPicker
                 testID="group-currency-picker"
-                items={currencyItems}
-                selectedId={currency}
-                onSelect={(item) => {
-                  if (isCurrencyCode(item.id)) setCurrency(item.id);
-                }}
-                triggerTitle={currency}
+                value={currency}
+                onChange={setCurrency}
                 disabled={!isEditable}
               />
               {currency !== group.currency && (
