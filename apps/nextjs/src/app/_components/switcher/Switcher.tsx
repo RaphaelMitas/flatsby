@@ -39,7 +39,6 @@ export function Switcher({
   moreLabel,
   actions,
   disabled,
-  className,
 }: {
   testId: string;
   icon: LucideIcon;
@@ -54,17 +53,13 @@ export function Switcher({
   moreLabel?: (item: SwitcherItem) => string;
   actions: SwitcherAction[];
   disabled?: boolean;
-  className?: string;
 }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         data-testid={testId}
         disabled={disabled}
-        className={cn(
-          "bg-card hover:bg-muted flex w-full min-w-0 items-center gap-3 rounded-2xl border p-2.5 text-left shadow-sm transition-colors",
-          className,
-        )}
+        className="bg-card hover:bg-muted flex w-full min-w-0 items-center gap-3 rounded-2xl border p-2.5 text-left shadow-sm transition-colors"
       >
         <span className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
           <Icon className="size-5" />

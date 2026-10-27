@@ -46,13 +46,6 @@ export default function EditShoppingList() {
         shoppingListsPatches.rename,
         {
           onFailure: alertFailure(t("shoppingList.renameFailed")),
-          onSuccess: () =>
-            void queryClient.invalidateQueries(
-              trpc.shoppingList.getShoppingList.queryFilter({
-                groupId,
-                shoppingListId,
-              }),
-            ),
         },
       ),
     ),
@@ -77,7 +70,7 @@ export default function EditShoppingList() {
   });
 
   const handleRename = ({ name }: ShoppingListFormValues) => {
-    renameMutation.mutate({ shoppingListId, name });
+    if (name !== list?.name) renameMutation.mutate({ shoppingListId, name });
     router.back();
   };
 
