@@ -10,6 +10,12 @@ interface ExchangeRateQuery {
   isError: boolean;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Until a day is over in UTC the server serves "latest", which can be an older day's rate
+export const isExchangeRateFinal = (day: string, fetchedAt: number) =>
+  fetchedAt >= Date.parse(day) + DAY_MS;
+
 function localDay(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");

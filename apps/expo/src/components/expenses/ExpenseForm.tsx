@@ -22,7 +22,10 @@ import {
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
-import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
+import {
+  isExchangeRateFinal,
+  useExpenseConversion,
+} from "@flatsby/validators/expenses/useExpenseConversion";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -67,9 +70,10 @@ function useExchangeRate(
   return useQuery(
     trpc.expense.getExchangeRate.queryOptions(input, {
       enabled,
-      // Before the ECB publishes, "latest" is an older day's rate, and the cache now outlives the day
       staleTime: (query) =>
-        query.state.data?.date === input.day ? Infinity : 0,
+        isExchangeRateFinal(input.day, query.state.dataUpdatedAt)
+          ? Infinity
+          : 0,
     }),
   );
 }

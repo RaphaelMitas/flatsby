@@ -23,7 +23,10 @@ import {
   splitsForTotal,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
-import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
+import {
+  isExchangeRateFinal,
+  useExpenseConversion,
+} from "@flatsby/validators/expenses/useExpenseConversion";
 
 import { useTRPC } from "~/trpc/react";
 import { useExpenseInvalidation } from "./useExpenseInvalidation";
@@ -44,7 +47,10 @@ function useExchangeRate(
   return useQuery(
     trpc.expense.getExchangeRate.queryOptions(input, {
       enabled,
-      staleTime: Infinity,
+      staleTime: (query) =>
+        isExchangeRateFinal(input.day, query.state.dataUpdatedAt)
+          ? Infinity
+          : 0,
     }),
   );
 }
