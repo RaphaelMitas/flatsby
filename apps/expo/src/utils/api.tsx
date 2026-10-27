@@ -6,11 +6,7 @@ import * as Application from "expo-application";
 import * as Updates from "expo-updates";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import {
-  defaultShouldDehydrateQuery,
-  focusManager,
-  QueryClient,
-} from "@tanstack/react-query";
+import { focusManager, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
@@ -33,13 +29,13 @@ focusManager.setEventListener((setFocused) => {
   return () => subscription.remove();
 });
 
-// Also the gcTime: a collected query drops out of the persisted cache on the next save
 const CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 export const queryClient = new QueryClient({
   ...trpcFailureCaches(reportTRPCFailure),
   defaultOptions: {
     queries: {
+      // A collected query drops out of the persisted cache on the next save
       gcTime: CACHE_MAX_AGE,
       retry: (failureCount, error) => {
         if (isUnauthorizedError(error)) {
@@ -69,8 +65,9 @@ export const persistOptions = {
   maxAge: CACHE_MAX_AGE,
   // maxAge only dates the whole save, so without this a query viewed once stays forever
   dehydrateOptions: {
+    // Not the default success check: an offline refetch error would drop the data it keeps
     shouldDehydrateQuery: (query) =>
-      defaultShouldDehydrateQuery(query) &&
+      query.state.data !== undefined &&
       query.state.dataUpdatedAt > Date.now() - CACHE_MAX_AGE,
   },
   // New JS can expect a different data shape than the cache it would restore
@@ -79,7 +76,7 @@ export const persistOptions = {
 
 export function clearQueryCache() {
   queryClient.clear();
-  // Before the restore finishes the persister isn't subscribed, so the clear wouldn't reach disk
+  // Right after a restore the persister isn't subscribed yet, so the clear wouldn't reach disk
   void storagePersister.removeClient();
 }
 

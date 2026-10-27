@@ -13,15 +13,18 @@ const launchedAt = Date.now();
 const isRestored = (query: Query) =>
   query.state.dataUpdatedAt > 0 && query.state.dataUpdatedAt < launchedAt;
 
-// Once a refetch failed, later focus refetches of that query stay silent
-const isRefreshable = (query: Query) =>
-  isRestored(query) && query.state.status === "success";
+// A failed refetch keeps its old dataUpdatedAt, so it would show the pill on every focus
+const failedThisLaunch = (query: Query) =>
+  query.state.errorUpdatedAt >= launchedAt;
 
 export function CacheRefreshPill() {
   const t = useTranslations("common");
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const refreshing = useIsFetching({ predicate: isRefreshable }) > 0;
+  const refreshing =
+    useIsFetching({
+      predicate: (query) => isRestored(query) && !failedThisLaunch(query),
+    }) > 0;
   const [wasRefreshing, setWasRefreshing] = useState(refreshing);
   const [done, setDone] = useState(false);
 
@@ -33,7 +36,7 @@ export function CacheRefreshPill() {
         !queryClient
           .getQueryCache()
           .getAll()
-          .some((query) => isRestored(query) && query.state.status === "error"),
+          .some((query) => isRestored(query) && failedThisLaunch(query)),
       );
     }
   }
