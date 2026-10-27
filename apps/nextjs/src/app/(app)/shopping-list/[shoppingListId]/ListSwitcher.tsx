@@ -31,8 +31,7 @@ export function ListSwitcher({
   const { data } = useQuery(
     trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
   );
-  // A list still being created has a placeholder id and can't be opened yet
-  const lists = (data?.success ? data.data : []).filter(({ id }) => id > 0);
+  const lists = data?.success ? data.data : [];
   const current = lists.find(({ id }) => id === shoppingListId);
   const itemsLeft = (count: number) => t("itemsLeft", { count });
 

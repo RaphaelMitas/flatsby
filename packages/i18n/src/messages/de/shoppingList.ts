@@ -14,7 +14,6 @@ export const shoppingList = {
   noListsYet: "Noch keine Einkaufslisten",
   noMoreItems: "Keine weiteren Artikel",
   purchasedItems: "Gekaufte Artikel",
-  rename: "Umbenennen",
   renameFailed: "Einkaufsliste konnte nicht umbenannt werden",
   renamePlaceholder: "Neuen Namen eingeben",
   selectGroupToView: "Wähle eine Gruppe, um ihre Einkaufsliste zu sehen",

@@ -2,15 +2,14 @@ import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { Pressable, Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
-import { translateIfKey } from "@flatsby/i18n/message-key";
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
-import { Input } from "~/lib/ui/input";
+import { Form, useForm } from "~/lib/ui/form";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { ListNameField } from "./ListNameField";
 import { useCreateShoppingList } from "./useCreateShoppingList";
 
 const PRESETS = ["groceries", "drugstore", "hardware"] as const;
@@ -43,30 +42,11 @@ export function FirstList({ groupId }: { groupId: number }) {
         </Text>
       </View>
       <Form {...form}>
-        <FormField
-          name="name"
+        <ListNameField
           control={form.control}
-          render={({ field }) => (
-            <FormControl>
-              <Input
-                testID="first-list-input"
-                value={field.value}
-                onChangeText={field.onChange}
-                onBlur={field.onBlur}
-                placeholder={t("shoppingList.listNameLabel")}
-                error={!!form.formState.errors.name}
-                maxLength={
-                  shoppingListFormSchema.shape.name.maxLength ?? undefined
-                }
-              />
-            </FormControl>
-          )}
+          testID="first-list-input"
+          placeholder={t("shoppingList.listNameLabel")}
         />
-        {form.formState.errors.name && (
-          <Text className="text-destructive">
-            {translateIfKey(t, form.formState.errors.name.message ?? "")}
-          </Text>
-        )}
         <View className="flex-row flex-wrap justify-center gap-2">
           {PRESETS.map((preset) => (
             <Pressable

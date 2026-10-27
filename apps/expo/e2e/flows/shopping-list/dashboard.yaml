@@ -33,7 +33,6 @@ tags:
     visible: "Second List"
     timeout: 15000
 
-# Switch back from the sheet
 - tapOn:
     id: "shopping-list-title"
 - extendedWaitUntil:

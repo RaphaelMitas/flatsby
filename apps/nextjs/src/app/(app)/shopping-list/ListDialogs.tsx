@@ -1,6 +1,7 @@
 "use client";
 
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
+import type { Control } from "react-hook-form";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,11 +10,11 @@ import { Trash } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
+import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
 import {
-  failureOf,
-  restoreSnapshot,
-  resultMutation,
-} from "@flatsby/api/resultMutation";
+  shoppingListsMutation,
+  shoppingListsPatches,
+} from "@flatsby/api/shoppingListsCache";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,7 +64,42 @@ export function useCreateList(groupId: number) {
   );
 }
 
-export function ListNameForm({
+export function ListNameField({
+  control,
+  testId,
+  placeholder,
+  autoFocus,
+}: {
+  control: Control<ShoppingListFormValues>;
+  testId: string;
+  placeholder: string;
+  autoFocus?: boolean;
+}) {
+  return (
+    <FormField
+      control={control}
+      name="name"
+      render={({ field }) => (
+        <FormItem>
+          <FormControl>
+            <Input
+              {...field}
+              data-testid={testId}
+              autoFocus={autoFocus}
+              placeholder={placeholder}
+              maxLength={
+                shoppingListFormSchema.shape.name.maxLength ?? undefined
+              }
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function ListNameForm({
   defaultName,
   submitLabel,
   testId,
@@ -88,25 +124,11 @@ export function ListNameForm({
         onSubmit={form.handleSubmit(({ name }) => onSubmit(name.trim()))}
         className="flex flex-col gap-3"
       >
-        <FormField
+        <ListNameField
           control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input
-                  {...field}
-                  data-testid={`${testId}-input`}
-                  autoFocus
-                  placeholder={t("namePlaceholder")}
-                  maxLength={
-                    shoppingListFormSchema.shape.name.maxLength ?? undefined
-                  }
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          testId={`${testId}-input`}
+          placeholder={t("namePlaceholder")}
+          autoFocus
         />
         <Button
           type="submit"
@@ -147,7 +169,7 @@ export function CreateListDialog({
           onSubmit={(name) =>
             createList.mutate(
               { groupId, name },
-              { onSuccess: () => onOpenChange(false) },
+              { onSuccess: ({ success }) => success && onOpenChange(false) },
             )
           }
         />
@@ -173,74 +195,53 @@ export function EditListDialog({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const listsQuery = trpc.shoppingList.getShoppingLists.queryOptions({
-    groupId,
-  });
-
-  const updateLists = (
-    update: <T extends { id: number; name: string }>(lists: T[]) => T[],
-  ) => {
-    void queryClient.cancelQueries(listsQuery);
-    const previous = queryClient.getQueryData(listsQuery.queryKey);
-    queryClient.setQueryData(listsQuery.queryKey, (old) =>
-      old?.success ? { success: true as const, data: update(old.data) } : old,
-    );
-    return [{ queryKey: listsQuery.queryKey, previous }];
-  };
+  const listsKey = trpc.shoppingList.getShoppingLists.queryKey({ groupId });
+  const toastFailure = (title: string) => (message: string | undefined) =>
+    toast.error(title, { description: message ?? t("errors.unexpected") });
 
   const renameMutation = useMutation(
     trpc.shoppingList.changeShoppingListName.mutationOptions(
-      resultMutation({
-        onMutate: ({ shoppingListId, name }) =>
-          updateLists((all) =>
-            all.map((item) =>
-              item.id === shoppingListId ? { ...item, name } : item,
+      shoppingListsMutation(
+        queryClient,
+        listsKey,
+        shoppingListsPatches.rename,
+        {
+          onFailure: toastFailure(t("shoppingList.renameFailed")),
+          onSuccess: (_data, { shoppingListId }) =>
+            void queryClient.invalidateQueries(
+              trpc.shoppingList.getShoppingList.queryFilter({
+                groupId,
+                shoppingListId,
+              }),
             ),
-          ),
-        rollback: restoreSnapshot(queryClient),
-        onFailure: (message) =>
-          toast.error(t("shoppingList.renameFailed"), {
-            description: message ?? t("errors.unexpected"),
-          }),
-        onSuccess: (_data, { shoppingListId }) => {
-          void queryClient.invalidateQueries(listsQuery);
-          void queryClient.invalidateQueries(
-            trpc.shoppingList.getShoppingList.queryFilter({
-              groupId,
-              shoppingListId,
-            }),
-          );
         },
-      }),
+      ),
     ),
   );
 
   const deleteMutation = useMutation(
     trpc.shoppingList.deleteShoppingList.mutationOptions(
-      resultMutation({
-        onMutate: ({ shoppingListId }) =>
-          updateLists((all) =>
-            all.filter((item) => item.id !== shoppingListId),
-          ),
-        rollback: restoreSnapshot(queryClient),
-        onFailure: (message) =>
-          toast.error(t("shoppingList.delete.failed"), {
-            description: message ?? t("errors.unexpected"),
-          }),
-        onSuccess: () => {
-          void queryClient.invalidateQueries(listsQuery);
+      shoppingListsMutation(
+        queryClient,
+        listsKey,
+        shoppingListsPatches.remove,
+        {
+          onFailure: toastFailure(t("shoppingList.delete.failed")),
         },
-      }),
+      ),
     ),
   );
 
   if (!list) return null;
 
   const handleDelete = () => {
-    // The server picks the next list, so it must not still see this one
+    // /shopping-list redirects to the last used list, so leave only once this one is gone
     deleteMutation.mutate(
       { groupId, shoppingListId: list.id },
-      { onSuccess: () => isOpenList && router.push("/shopping-list") },
+      {
+        onSuccess: ({ success }) =>
+          success && isOpenList && router.push("/shopping-list"),
+      },
     );
     setConfirmDelete(false);
     onOpenChange(false);

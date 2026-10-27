@@ -11,7 +11,6 @@ export const shoppingList = {
   noListsYet: "No shopping lists yet",
   noMoreItems: "No more items to load",
   purchasedItems: "Purchased Items",
-  rename: "Rename",
   renameFailed: "Error renaming shopping list",
   renamePlaceholder: "Enter new name",
   selectGroupToView: "Select a group to view its shopping list",

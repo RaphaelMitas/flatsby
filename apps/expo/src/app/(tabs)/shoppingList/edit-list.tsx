@@ -1,18 +1,20 @@
 import type { ShoppingListFormValues } from "@flatsby/validators/shopping-list";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Alert, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
-import { translateIfKey } from "@flatsby/i18n/message-key";
+import {
+  shoppingListsMutation,
+  shoppingListsPatches,
+} from "@flatsby/api/shoppingListsCache";
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
 import DeleteConfirmationModal from "~/components/DeleteConfirmationModal";
+import { ListNameField } from "~/components/shoppingList/ListNameField";
 import { Button } from "~/lib/ui/button";
-import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
-import { Input } from "~/lib/ui/input";
+import { Form, useForm } from "~/lib/ui/form";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -22,75 +24,51 @@ export default function EditShoppingList() {
   const queryClient = useQueryClient();
   const { listId } = useLocalSearchParams<{ listId: string }>();
   const shoppingListId = Number(listId);
-  const {
-    selectedGroupId,
-    selectedShoppingListId,
-    setSelectedShoppingList,
-    clearSelectedShoppingList,
-  } = useShoppingStore();
+  const { selectedGroupId, selectedShoppingListId, clearSelectedShoppingList } =
+    useShoppingStore();
   const groupId = selectedGroupId ?? 0;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const listsQuery = trpc.shoppingList.getShoppingLists.queryOptions({
-    groupId,
-  });
-  const { data: lists } = useQuery(listsQuery);
+  const listsKey = trpc.shoppingList.getShoppingLists.queryKey({ groupId });
+  const { data: lists } = useQuery(
+    trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
+  );
   const list = lists?.success
     ? lists.data.find(({ id }) => id === shoppingListId)
     : undefined;
-
-  const updateLists = (
-    update: <T extends { id: number; name: string }>(lists: T[]) => T[],
-  ) => {
-    void queryClient.cancelQueries(listsQuery);
-    const previous = queryClient.getQueryData(listsQuery.queryKey);
-    queryClient.setQueryData(listsQuery.queryKey, (old) =>
-      old?.success ? { success: true as const, data: update(old.data) } : old,
-    );
-    return [{ queryKey: listsQuery.queryKey, previous }];
-  };
+  const alertFailure = (fallback: string) => (message: string | undefined) =>
+    Alert.alert(t("common.error"), message ?? fallback);
 
   const renameMutation = useMutation(
     trpc.shoppingList.changeShoppingListName.mutationOptions(
-      resultMutation({
-        onMutate: ({ name }) => {
-          if (shoppingListId === selectedShoppingListId)
-            setSelectedShoppingList(shoppingListId, name);
-          return updateLists((all) =>
-            all.map((item) =>
-              item.id === shoppingListId ? { ...item, name } : item,
+      shoppingListsMutation(
+        queryClient,
+        listsKey,
+        shoppingListsPatches.rename,
+        {
+          onFailure: alertFailure(t("shoppingList.renameFailed")),
+          onSuccess: () =>
+            void queryClient.invalidateQueries(
+              trpc.shoppingList.getShoppingList.queryFilter({
+                groupId,
+                shoppingListId,
+              }),
             ),
-          );
         },
-        rollback: restoreSnapshot(queryClient),
-        onSuccess: () => {
-          void queryClient.invalidateQueries(listsQuery);
-          void queryClient.invalidateQueries(
-            trpc.shoppingList.getShoppingList.queryFilter({
-              groupId,
-              shoppingListId,
-            }),
-          );
-        },
-      }),
+      ),
     ),
   );
 
   const deleteMutation = useMutation(
     trpc.shoppingList.deleteShoppingList.mutationOptions(
-      resultMutation({
-        onMutate: () => {
-          if (shoppingListId === selectedShoppingListId)
-            clearSelectedShoppingList();
-          return updateLists((all) =>
-            all.filter((item) => item.id !== shoppingListId),
-          );
+      shoppingListsMutation(
+        queryClient,
+        listsKey,
+        shoppingListsPatches.remove,
+        {
+          onFailure: alertFailure(t("shoppingList.delete.failed")),
         },
-        rollback: restoreSnapshot(queryClient),
-        onSuccess: () => {
-          void queryClient.invalidateQueries(listsQuery);
-        },
-      }),
+      ),
     ),
   );
 
@@ -106,6 +84,7 @@ export default function EditShoppingList() {
 
   const handleDelete = () => {
     setShowDeleteModal(false);
+    if (shoppingListId === selectedShoppingListId) clearSelectedShoppingList();
     deleteMutation.mutate({ groupId, shoppingListId });
     router.back();
   };
@@ -116,30 +95,11 @@ export default function EditShoppingList() {
     <View className="bg-background flex-1 gap-2 p-4">
       <Form {...form}>
         <Label htmlFor="name">{t("shoppingList.listNameLabel")}</Label>
-        <FormField
-          name="name"
+        <ListNameField
           control={form.control}
-          render={({ field }) => (
-            <FormControl>
-              <Input
-                testID="shopping-list-rename-input"
-                value={field.value}
-                onChangeText={field.onChange}
-                onBlur={field.onBlur}
-                placeholder={t("shoppingList.renamePlaceholder")}
-                error={!!form.formState.errors.name}
-                maxLength={
-                  shoppingListFormSchema.shape.name.maxLength ?? undefined
-                }
-              />
-            </FormControl>
-          )}
+          testID="shopping-list-rename-input"
+          placeholder={t("shoppingList.renamePlaceholder")}
         />
-        {form.formState.errors.name && (
-          <Text className="text-destructive">
-            {translateIfKey(t, form.formState.errors.name.message ?? "")}
-          </Text>
-        )}
         <Button
           testID="shopping-list-rename-save"
           title={t("common.save")}

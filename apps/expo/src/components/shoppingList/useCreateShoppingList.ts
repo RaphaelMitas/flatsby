@@ -2,7 +2,11 @@ import { Alert } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
+import {
+  applyListsPatch,
+  shoppingListsMutation,
+  shoppingListsPatches,
+} from "@flatsby/api/shoppingListsCache";
 
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -11,46 +15,31 @@ export function useCreateShoppingList(groupId: number) {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const { setSelectedShoppingList } = useShoppingStore();
-  const listsQuery = trpc.shoppingList.getShoppingLists.queryOptions({
-    groupId,
-  });
+  const listsKey = trpc.shoppingList.getShoppingLists.queryKey({ groupId });
 
   return useMutation(
     trpc.shoppingList.createShoppingList.mutationOptions(
-      resultMutation({
-        onMutate: (data) => {
-          void queryClient.cancelQueries(listsQuery);
-          const previous = queryClient.getQueryData(listsQuery.queryKey);
-          queryClient.setQueryData(listsQuery.queryKey, (old) => {
-            if (!old?.success) return old;
-            return {
-              success: true as const,
-              data: [
-                ...old.data,
-                {
-                  ...data,
-                  id: -1,
-                  uncheckedItemLength: 0,
-                  description: null,
-                  icon: null,
-                },
-              ],
-            };
-          });
-          return [{ queryKey: listsQuery.queryKey, previous }];
+      shoppingListsMutation(
+        queryClient,
+        listsKey,
+        shoppingListsPatches.create,
+        {
+          onFailure: (message) =>
+            Alert.alert(
+              t("common.error"),
+              message ?? t("shoppingList.createFailed"),
+            ),
+          // The list tab can only open the new list once the cache holds its real id
+          onSuccess: ({ shoppingListId }, { name }) => {
+            applyListsPatch(
+              queryClient,
+              listsKey,
+              shoppingListsPatches.saved({ shoppingListId }),
+            );
+            setSelectedShoppingList(shoppingListId, name);
+          },
         },
-        rollback: restoreSnapshot(queryClient),
-        onFailure: (message) =>
-          Alert.alert(
-            t("common.error"),
-            message ?? t("shoppingList.createFailed"),
-          ),
-        // Opening the list needs its real id, so selection waits for the server
-        onSuccess: ({ shoppingListId }, { name }) => {
-          void queryClient.invalidateQueries(listsQuery);
-          setSelectedShoppingList(shoppingListId, name);
-        },
-      }),
+      ),
     ),
   );
 }

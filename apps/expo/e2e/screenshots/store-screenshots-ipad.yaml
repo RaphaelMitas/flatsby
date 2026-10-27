@@ -21,8 +21,7 @@ appId: ${APP_ID}
       text: ${output.store.group}
     timeout: 45000
 
-# Into the group, then the List tab, which opens the seeded list with its
-# categorised items.
+# The Shopping tab opens straight into the seeded list.
 - runFlow:
     file: ../subflows/tap-until.yaml
     env:
@@ -46,7 +45,7 @@ appId: ${APP_ID}
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-02-shopping-list
 
-# The list switcher over the list; picking the open list closes it again.
+# The list switcher, as in store-screenshots.yaml.
 - runFlow:
     file: ../subflows/tap-until.yaml
     env:

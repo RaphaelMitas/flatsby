@@ -8,17 +8,10 @@ import { useForm } from "react-hook-form";
 
 import { failureOf } from "@flatsby/api/resultMutation";
 import { Button } from "@flatsby/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@flatsby/ui/form";
-import { Input } from "@flatsby/ui/input";
+import { Form } from "@flatsby/ui/form";
 import { shoppingListFormSchema } from "@flatsby/validators/shopping-list";
 
-import { useCreateList } from "./ListDialogs";
+import { ListNameField, useCreateList } from "./ListDialogs";
 
 const PRESETS = ["groceries", "drugstore", "hardware"] as const;
 
@@ -53,24 +46,10 @@ export function FirstList({
           )}
           className="flex w-full flex-col gap-3"
         >
-          <FormField
+          <ListNameField
             control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    {...field}
-                    data-testid="first-list-input"
-                    placeholder={t("listNameLabel")}
-                    maxLength={
-                      shoppingListFormSchema.shape.name.maxLength ?? undefined
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            testId="first-list-input"
+            placeholder={t("listNameLabel")}
           />
           <div className="flex flex-wrap justify-center gap-2">
             {PRESETS.map((preset) => (

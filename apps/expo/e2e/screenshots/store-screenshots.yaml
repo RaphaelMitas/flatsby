@@ -31,7 +31,7 @@ appId: ${APP_ID}
       text: ${output.store.group}
     timeout: 45000
 
-# Into the group, then the List tab, which opens the seeded list.
+# The Shopping tab opens straight into the seeded list.
 - runFlow:
     file: ../subflows/tap-until.yaml
     env:

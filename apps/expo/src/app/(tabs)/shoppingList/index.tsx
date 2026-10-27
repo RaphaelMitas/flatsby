@@ -4,6 +4,8 @@ import { Link } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { savedRows } from "@flatsby/api/resultMutation";
+
 import { FirstList } from "~/components/shoppingList/FirstList";
 import ShoppingList from "~/components/shoppingList/ShoppingList";
 import { ListSwitcher } from "~/components/switcher/ListSwitcher";
@@ -28,20 +30,23 @@ function ListSkeleton() {
 }
 
 function ListTab({ groupId }: { groupId: number }) {
-  const { selectedShoppingListId, setSelectedShoppingList } =
-    useShoppingStore();
+  const {
+    selectedShoppingListId,
+    selectedShoppingListName,
+    setSelectedShoppingList,
+  } = useShoppingStore();
   const { data } = useSuspenseQuery(
     trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
   );
-  // A list still being created has a placeholder id and can't be opened yet
-  const lists = (data.success ? data.data : []).filter(({ id }) => id > 0);
-  const current =
-    lists.find(({ id }) => id === selectedShoppingListId) ?? lists[0];
+  const lists = savedRows(data);
+  const selected = lists.find(({ id }) => id === selectedShoppingListId);
+  // Only a list the user picked becomes the last used one
+  const current = selected ?? lists[0];
 
   useEffect(() => {
-    if (current && current.id !== selectedShoppingListId)
-      setSelectedShoppingList(current.id, current.name);
-  }, [current, selectedShoppingListId, setSelectedShoppingList]);
+    if (selected && selected.name !== selectedShoppingListName)
+      setSelectedShoppingList(selected.id, selected.name);
+  }, [selected, selectedShoppingListName, setSelectedShoppingList]);
 
   if (!data.success) return null;
   if (!current) return <FirstList groupId={groupId} />;

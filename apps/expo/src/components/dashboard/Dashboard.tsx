@@ -5,7 +5,6 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import { trpc } from "~/utils/api";
 import { useHomeVersion } from "~/utils/home-version";
@@ -37,16 +36,8 @@ export function Dashboard() {
         </View>
       }
     >
-      <DashboardWithGroup />
-    </Suspense>
-  );
-}
-
-function DashboardWithGroup() {
-  return (
-    <BottomSheetPickerProvider>
       <DashboardContent />
-    </BottomSheetPickerProvider>
+    </Suspense>
   );
 }
 

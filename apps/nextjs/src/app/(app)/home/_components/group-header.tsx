@@ -25,8 +25,7 @@ export function GroupHeader() {
     return null;
   }
 
-  // A group still being created has a placeholder id and can't be selected yet
-  const groups = (data?.success ? data.data : []).filter(({ id }) => id > 0);
+  const groups = data?.success ? data.data : [];
   const memberCount = (count: number) => t("group.memberCount", { count });
   const current = groups.find(({ id }) => id === currentGroup.id);
 
