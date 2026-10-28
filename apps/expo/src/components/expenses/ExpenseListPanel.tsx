@@ -1,6 +1,6 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import type { Href } from "expo-router";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
@@ -74,12 +74,6 @@ function ExpenseList() {
       },
     ),
   );
-
-  const [refreshing, setRefreshing] = useState(false);
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    return refetch().finally(() => setRefreshing(false));
-  }, [refetch]);
 
   if (!groupData.success) {
     return null;
@@ -156,11 +150,7 @@ function ExpenseList() {
           />
         </View>
       ) : (
-        <PullToRefresh
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          parentPaddingX={16}
-        >
+        <PullToRefresh onRefresh={refetch} parentPaddingX={16}>
           {(refreshProps) => (
             <FlashList
               {...refreshProps}

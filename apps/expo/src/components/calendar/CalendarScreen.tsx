@@ -32,7 +32,8 @@ import {
 import type { CalendarPeople } from "./CalendarPeople";
 import { Button } from "~/lib/ui/button";
 import { Segmented } from "~/lib/ui/segmented";
-import { queryClient, trpc } from "~/utils/api";
+import { trpc } from "~/utils/api";
+import { holdWhileMutating } from "~/utils/live-query";
 import { useNow } from "~/utils/useNow";
 import { CalendarList } from "./CalendarList";
 import { CalendarPager } from "./CalendarPager";
@@ -46,11 +47,7 @@ export const calendarRangeOptions = (
   { from, to }: { from: string; to: string },
 ) => ({
   ...trpc.calendar.range.queryOptions({ groupId, from, to }),
-  // Refetching a range mid-write would wipe its optimistic patch
-  staleTime: () =>
-    queryClient.isMutating({ mutationKey: trpc.calendar.pathKey() }) > 0
-      ? Number.POSITIVE_INFINITY
-      : 0,
+  staleTime: holdWhileMutating(trpc.calendar.pathKey()),
 });
 
 export function CalendarScreen({ group }: { group: GroupWithAccess }) {
