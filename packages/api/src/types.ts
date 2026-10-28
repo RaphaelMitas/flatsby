@@ -43,11 +43,18 @@ export type NewShoppingList = typeof shoppingLists.$inferInsert;
 export type NewShoppingListItem = typeof shoppingListItems.$inferInsert;
 
 // Query result types for common operations
+export interface MemberUser {
+  name: string;
+  email: string | null;
+  image: string | null;
+}
+
 export type GroupMemberWithUserInfo = Pick<
   GroupMember,
   "id" | "userId" | "role" | "joinedOn" | "isActive"
 > & {
-  user: Pick<User, "email" | "name" | "image">;
+  user: MemberUser;
+  placeholderName: string | null;
 };
 
 export type GroupWithMembers = Group & {
@@ -62,7 +69,7 @@ export type GroupMemberWithUser = Pick<
   GroupMember,
   "id" | "groupId" | "userId" | "role" | "joinedOn"
 > & {
-  user: Pick<User, "email" | "name" | "image">;
+  user: MemberUser;
 };
 
 export type GroupMemberWithGroup = GroupMember & {
@@ -118,12 +125,7 @@ export type ExpenseWithSplits = Expense & {
 };
 
 export type ExpenseSplitWithMember = ExpenseSplit & {
-  groupMember: Pick<
-    GroupMember,
-    "id" | "groupId" | "userId" | "role" | "joinedOn"
-  > & {
-    user: Pick<User, "email" | "name" | "image">;
-  };
+  groupMember: GroupMemberWithUser;
 };
 
 export type ExpenseWithSplitsAndMembers = Omit<

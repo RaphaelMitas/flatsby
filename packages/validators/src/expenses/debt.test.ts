@@ -679,10 +679,10 @@ describe("pairDebt", () => {
 
 const person = personLookup(
   [
-    { id: YOU, user: { name: "Ruffy" } },
-    { id: LENA, user: { name: "Lena" } },
-    { id: MAX, user: { name: "Max" } },
-    { id: SOPHIE, user: { name: "Sophie" } },
+    { id: YOU, userId: "ruffy", user: { name: "Ruffy" } },
+    { id: LENA, userId: "lena", user: { name: "Lena" } },
+    { id: MAX, userId: "max", user: { name: "Max" } },
+    { id: SOPHIE, userId: "sophie", user: { name: "Sophie" } },
   ],
   YOU,
   t,

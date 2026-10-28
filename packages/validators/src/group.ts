@@ -55,17 +55,30 @@ export const groupMemberEmailSchema = z.email({
   message: msg("group.validation.invalidEmail"),
 });
 
+export const MAX_PLACEHOLDER_NAME_LENGTH = 64;
+
+export const placeholderNameSchema = z
+  .string()
+  .trim()
+  .min(1, { message: msg("group.placeholders.nameRequired") })
+  .max(MAX_PLACEHOLDER_NAME_LENGTH, {
+    message: msg("group.placeholders.nameTooLong"),
+  });
+
 export const groupMemberSchema = z.object({
   id: z.number(),
   groupId: z.number(),
-  userId: z.string(),
+  userId: z.string().nullable(),
   role: groupMemberRoleSchema,
   joinedOn: z.date(),
 });
 export type GroupMember = z.infer<typeof groupMemberSchema>;
 
+export const isPlaceholder = (member: { userId: string | null }) =>
+  member.userId === null;
+
 export const groupMemberUserSchema = z.object({
-  email: userEmailSchema,
+  email: userEmailSchema.nullable(),
   name: userNameSchema.nullable(),
   image: userImageSchema,
 });
@@ -87,6 +100,22 @@ export type RemoveGroupMemberInput = z.infer<
   typeof removeGroupMemberInputSchema
 >;
 
+export const addPlaceholderInputSchema = z.object({
+  groupId: z.number(),
+  name: placeholderNameSchema,
+});
+export type AddPlaceholderInput = z.infer<typeof addPlaceholderInputSchema>;
+
+export const renamePlaceholderInputSchema = z.object({
+  memberId: z.number(),
+  name: placeholderNameSchema,
+});
+export type RenamePlaceholderInput = z.infer<
+  typeof renamePlaceholderInputSchema
+>;
+
+export const undoClaimInputSchema = z.object({ memberId: z.number() });
+
 export const addGroupMemberInputSchema = z.object({
   groupId: z.number(),
   memberEmail: groupMemberEmailSchema,
@@ -95,7 +124,7 @@ export type AddGroupMemberInput = z.infer<typeof addGroupMemberInputSchema>;
 
 // Activity validators
 export const activityUserSchema = z.object({
-  email: userEmailSchema,
+  email: userEmailSchema.nullable(),
   name: userNameSchema,
   image: userImageSchema,
 });

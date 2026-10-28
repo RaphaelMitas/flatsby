@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import { Card, CardContent } from "@flatsby/ui/card";
+import { isPlaceholder } from "@flatsby/validators/group";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { InviteDialog } from "~/app/(app)/group/settings/InviteDialog";
@@ -28,7 +29,7 @@ export function InviteFlatmatesCard() {
     enabled: groupId !== undefined,
   });
   const memberCount = group?.success
-    ? group.data.groupMembers.length
+    ? group.data.groupMembers.filter((member) => !isPlaceholder(member)).length
     : undefined;
 
   useEffect(() => {

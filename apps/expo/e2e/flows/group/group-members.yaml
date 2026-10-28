@@ -25,6 +25,28 @@ tags:
     visible:
       id: "group-invite-button"
     timeout: 15000
+
+# Anna has no account yet; the second user claims her spot below
+- scrollUntilVisible:
+    element:
+      id: "placeholder-name-input"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "placeholder-name-input"
+- inputText: "Anna"
+- tapOn:
+    id: "placeholder-add-button"
+# The optimistic row stays disabled until the server returns its id
+- extendedWaitUntil:
+    visible:
+      id: "placeholder-row-Anna"
+      enabled: true
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "group-invite-button"
+    direction: UP
 - tapOn:
     id: "group-invite-button"
 - extendedWaitUntil:
@@ -64,9 +86,37 @@ tags:
     visible:
       id: "join-invite-button"
     timeout: 15000
+# Joining as new is preselected; picking Anna renames the button
+- assertVisible:
+    id: "join-claim-new"
+- tapOn:
+    id: "join-claim-option-.*"
+- assertVisible:
+    id: "join-invite-button"
+    text: "Join as Anna"
 - tapOn:
     id: "join-invite-button"
 - extendedWaitUntil:
     visible:
       id: "dashboard-group-picker"
     timeout: 20000
+
+# The claim took over Anna's row: two members, and Anna is no longer pending
+- tapOn:
+    id: "dashboard-group-settings"
+- extendedWaitUntil:
+    visible:
+      id: "group-settings-members"
+    timeout: 15000
+- tapOn:
+    id: "group-settings-members"
+- extendedWaitUntil:
+    visible:
+      id: "group-members-count-2"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "placeholder-name-input"
+    direction: DOWN
+- assertNotVisible:
+    id: "placeholder-row-Anna"

@@ -27,7 +27,6 @@ import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseCon
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import {
   BottomSheetPickerProvider,
   BottomSheetPickerTrigger,
@@ -58,6 +57,7 @@ import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
 import { CurrencyPicker } from "./CurrencyPicker";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
+import { MemberAvatar, memberPerson } from "./MemberAvatar";
 import { SplitEditor } from "./SplitEditor";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -160,11 +160,12 @@ export function ExpenseForm({
       .filter((s) => !activeIds.has(s.groupMemberId))
       .map((s) => ({
         id: s.groupMember.id,
-        userId: "",
+        userId: s.groupMember.userId,
         role: "member" as const,
         joinedOn: new Date(),
         isActive: false,
         user: s.groupMember.user,
+        placeholderName: null,
       }));
     return [...group.groupMembers, ...inactiveMembers];
   }, [expense, group.groupMembers]);
@@ -483,12 +484,7 @@ export function ExpenseForm({
     (member) => ({
       id: member.id.toString(),
       title: member.user.name,
-      icon: (
-        <Avatar className="h-6 w-6">
-          <AvatarImage src={member.user.image ?? undefined} />
-          <AvatarFallback>{member.user.name.charAt(0)}</AvatarFallback>
-        </Avatar>
-      ),
+      icon: <MemberAvatar person={memberPerson(member)} className="h-6 w-6" />,
     }),
   );
 

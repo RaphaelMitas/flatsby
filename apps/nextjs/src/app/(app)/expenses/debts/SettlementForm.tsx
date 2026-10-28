@@ -404,10 +404,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               ) : (
                 <div className="bg-muted flex items-center justify-between rounded-lg p-4">
                   <div className="flex items-center gap-3">
-                    <UserAvatar
-                      name={fromMember.name}
-                      image={fromMember.image}
-                    />
+                    <UserAvatar {...fromMember} />
                     <div>
                       <p className="text-muted-foreground text-sm">
                         {t("debts.paying")}
@@ -558,11 +555,16 @@ function MemberSelect({
       </FormControl>
       <SelectContent>
         {members.map((member) => {
-          const { name, image } = person(member.id);
+          const { name, image, placeholder } = person(member.id);
           return (
             <SelectItem key={member.id} value={String(member.id)}>
               <div className="flex items-center gap-2">
-                <UserAvatar name={name} image={image} size="xs" />
+                <UserAvatar
+                  name={name}
+                  image={image}
+                  placeholder={placeholder}
+                  size="xs"
+                />
                 {name}
               </div>
             </SelectItem>

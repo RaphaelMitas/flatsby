@@ -1,7 +1,17 @@
 import { Effect } from "effect";
 import z from "zod/v4";
 
-import { alias, and, count, eq, inArray, isNull } from "@flatsby/db";
+import {
+  alias,
+  and,
+  count,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  ne,
+  sql,
+} from "@flatsby/db";
 import {
   expenses,
   groupInvites,
@@ -14,15 +24,19 @@ import {
 import {
   activityItemSchema,
   addGroupMemberInputSchema,
+  addPlaceholderInputSchema,
   createGroupSchema,
   deleteGroupSchema,
   getRecentActivityInputSchema,
   groupSchema,
   removeGroupMemberInputSchema,
+  renamePlaceholderInputSchema,
+  undoClaimInputSchema,
   updateGroupSettingsSchema,
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
 
+import type { DbTransaction } from "../types";
 import {
   addMember,
   getGroupWithAccess,
@@ -34,7 +48,13 @@ import { CurrentRequest } from "../effect/services/CurrentRequest";
 import { Database } from "../effect/services/Database";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { DbUtils, GroupUtils, ValidationUtils } from "../utils";
+import {
+  DbUtils,
+  GroupUtils,
+  memberUserColumns,
+  ValidationUtils,
+  withMemberUser,
+} from "../utils";
 
 const updateGroup = protectedProcedure
   .input(updateGroupSettingsSchema)
@@ -63,6 +83,41 @@ const updateGroup = protectedProcedure
     ),
   );
 
+const findActivePlaceholder = Effect.fn("Groups.findActivePlaceholder")(
+  function* (memberId: number) {
+    const database = yield* Database;
+    return yield* database.findOneOrFail("groupMember", (db) =>
+      db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.id, memberId),
+          isNull(groupMembers.userId),
+          eq(groupMembers.isActive, true),
+        ),
+      }),
+    );
+  },
+);
+
+// Two Annas would make "Ich bin Anna" ambiguous when one of them joins
+const placeholderNameTaken = async (
+  tx: DbTransaction,
+  groupId: number,
+  name: string,
+  exceptMemberId?: number,
+) =>
+  (await tx.query.groupMembers.findFirst({
+    where: and(
+      eq(groupMembers.groupId, groupId),
+      isNull(groupMembers.userId),
+      eq(groupMembers.isActive, true),
+      sql`lower(${groupMembers.name}) = lower(${name})`,
+      exceptMemberId === undefined
+        ? undefined
+        : ne(groupMembers.id, exceptMemberId),
+    ),
+    columns: { id: true },
+  })) !== undefined;
+
 export const groupRouter = createTRPCRouter({
   getUserGroups: protectedProcedure.query(async ({ ctx }) =>
     runResult(
@@ -81,7 +136,7 @@ export const groupRouter = createTRPCRouter({
                 name: groups.name,
                 createdAt: groups.createdAt,
                 profilePicture: groups.profilePicture,
-                memberCount: count(gmAll.userId),
+                memberCount: count(gmAll.id),
               })
               .from(groups)
               .innerJoin(
@@ -142,6 +197,9 @@ export const groupRouter = createTRPCRouter({
             targetMember.group.groupMembers,
             "errors.adminRequiredToChangeRoles",
           );
+          if (targetMember.userId === null && input.newRole === "admin") {
+            return yield* Errors.forbidden("errors.placeholderCannotBeAdmin");
+          }
           yield* DbUtils.ensureNotLastAdmin(
             input.memberId,
             targetMember.role,
@@ -217,6 +275,8 @@ export const groupRouter = createTRPCRouter({
                   .update(groupMembers)
                   .set({ isActive: false })
                   .where(eq(groupMembers.id, target.id));
+                // A placeholder can't use a link, so removing one keeps the link the WG was just sent
+                if (target.userId === null) return { success: true };
                 // Removal kills the live link so they can't rejoin; leaving only kills links the leaver created
                 await trx
                   .delete(groupInvites)
@@ -302,6 +362,117 @@ export const groupRouter = createTRPCRouter({
       ),
     ),
 
+  addPlaceholder: protectedProcedure
+    .input(addPlaceholderInputSchema)
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* requireMember(input.groupId);
+          const database = yield* Database;
+          const memberId = yield* database.query("add placeholder", (db) =>
+            db.transaction(async (tx) => {
+              await GroupUtils.lockGroup(tx, input.groupId);
+              if (await placeholderNameTaken(tx, input.groupId, input.name)) {
+                return Errors.conflict("errors.placeholderNameTaken");
+              }
+              const [member] = await tx
+                .insert(groupMembers)
+                .values({
+                  groupId: input.groupId,
+                  name: input.name,
+                  role: "member",
+                })
+                .returning({ id: groupMembers.id });
+              if (!member) throw new Error("Failed to add placeholder");
+              return member.id;
+            }),
+          );
+          if (typeof memberId !== "number") return yield* memberId;
+          return { memberId };
+        }),
+      ),
+    ),
+
+  renamePlaceholder: protectedProcedure
+    .input(renamePlaceholderInputSchema)
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const target = yield* findActivePlaceholder(input.memberId);
+          yield* requireMember(target.groupId);
+          const database = yield* Database;
+          const refused = yield* database.query("rename placeholder", (db) =>
+            db.transaction(async (tx) => {
+              await GroupUtils.lockGroup(tx, target.groupId);
+              if (
+                await placeholderNameTaken(
+                  tx,
+                  target.groupId,
+                  input.name,
+                  target.id,
+                )
+              ) {
+                return Errors.conflict("errors.placeholderNameTaken");
+              }
+              await tx
+                .update(groupMembers)
+                .set({ name: input.name })
+                .where(
+                  and(
+                    eq(groupMembers.id, target.id),
+                    isNull(groupMembers.userId),
+                  ),
+                );
+            }),
+          );
+          if (refused) return yield* refused;
+          return { memberId: target.id };
+        }),
+      ),
+    ),
+
+  undoClaim: protectedProcedure
+    .input(undoClaimInputSchema)
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const database = yield* Database;
+          const target = yield* database.findOneOrFail("groupMember", (db) =>
+            db.query.groupMembers.findFirst({
+              where: and(
+                eq(groupMembers.id, input.memberId),
+                isNotNull(groupMembers.userId),
+                isNotNull(groupMembers.name),
+                eq(groupMembers.isActive, true),
+              ),
+            }),
+          );
+          yield* requireAdmin(target.groupId);
+          if (target.role === "admin") {
+            return yield* Errors.forbidden("errors.placeholderCannotBeAdmin");
+          }
+          yield* database.query("undo claim", (db) =>
+            db.transaction(async (tx) => {
+              await GroupUtils.lockGroup(tx, target.groupId);
+              await tx
+                .update(groupMembers)
+                .set({ userId: null })
+                .where(
+                  and(
+                    eq(groupMembers.id, target.id),
+                    eq(groupMembers.role, "member"),
+                  ),
+                );
+            }),
+          );
+          return { memberId: target.id };
+        }),
+      ),
+    ),
+
   updateGroup,
   /** @deprecated app builds before group currency call this */
   changeGroupName: updateGroup,
@@ -346,11 +517,7 @@ export const groupRouter = createTRPCRouter({
                 orderBy: (expenses, { desc }) => [desc(expenses.createdAt)],
                 with: {
                   createdByGroupMember: {
-                    with: {
-                      user: {
-                        columns: { email: true, name: true, image: true },
-                      },
-                    },
+                    with: { user: { columns: memberUserColumns } },
                   },
                 },
                 columns: {
@@ -386,18 +553,10 @@ export const groupRouter = createTRPCRouter({
                       ],
                       with: {
                         createdByGroupMember: {
-                          with: {
-                            user: {
-                              columns: { email: true, name: true, image: true },
-                            },
-                          },
+                          with: { user: { columns: memberUserColumns } },
                         },
                         completedByGroupMember: {
-                          with: {
-                            user: {
-                              columns: { email: true, name: true, image: true },
-                            },
-                          },
+                          with: { user: { columns: memberUserColumns } },
                         },
                         shoppingList: { columns: { name: true } },
                       },
@@ -419,7 +578,7 @@ export const groupRouter = createTRPCRouter({
             type: "expense" as const,
             id: `expense-${expense.id}`,
             timestamp: expense.createdAt,
-            user: expense.createdByGroupMember.user,
+            user: withMemberUser(expense.createdByGroupMember).user,
             data: {
               expenseId: expense.id,
               amountInCents:
@@ -442,7 +601,7 @@ export const groupRouter = createTRPCRouter({
                       type: "shopping_item_created" as const,
                       id: `shopping-item-created-${item.id}`,
                       timestamp: item.createdAt,
-                      user: item.createdByGroupMember.user,
+                      user: withMemberUser(item.createdByGroupMember).user,
                       data,
                     },
                   ]
@@ -455,7 +614,7 @@ export const groupRouter = createTRPCRouter({
                       type: "shopping_item_completed" as const,
                       id: `shopping-item-completed-${item.id}`,
                       timestamp: item.completedAt,
-                      user: item.completedByGroupMember.user,
+                      user: withMemberUser(item.completedByGroupMember).user,
                       data,
                     },
                   ]

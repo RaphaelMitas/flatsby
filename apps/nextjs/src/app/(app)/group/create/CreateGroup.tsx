@@ -16,6 +16,7 @@ import { Label } from "@flatsby/ui/label";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { InviteContent } from "~/app/(app)/group/settings/InviteDialog";
+import { PlaceholderMembers } from "~/app/(app)/group/settings/PlaceholderMembers";
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
 
@@ -63,6 +64,11 @@ export function CreateGroup() {
             </p>
           </div>
           <InviteContent groupId={created.id} />
+          <PlaceholderMembers
+            groupId={created.id}
+            title={t("group.placeholders.inviteStepTitle")}
+            hint={t("group.placeholders.inviteStepHint")}
+          />
           <Button
             variant="outline"
             data-testid="group-invite-done"

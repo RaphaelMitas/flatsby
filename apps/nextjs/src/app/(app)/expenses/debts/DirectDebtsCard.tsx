@@ -116,7 +116,7 @@ function DirectDebtRow({
   const t = useTranslations("debts");
   const locale = useLocale();
   const { groupMemberId, amounts, direction } = counterpart;
-  const { name, image } = person(groupMemberId);
+  const { name, image, placeholder } = person(groupMemberId);
 
   return (
     <div data-testid="direct-debt-row">
@@ -128,7 +128,12 @@ function DirectDebtRow({
           aria-expanded={onToggle && expanded}
           className="flex min-w-0 flex-1 items-center gap-3 text-left"
         >
-          <UserAvatar name={name} image={image} size="lg" />
+          <UserAvatar
+            name={name}
+            image={image}
+            placeholder={placeholder}
+            size="lg"
+          />
           <div className="min-w-0">
             <div className="flex items-center gap-1 font-semibold">
               <span className="truncate">{name}</span>
@@ -288,7 +293,7 @@ function PairActivityLine({
 
   return (
     <li className="flex items-center gap-3 py-2 text-sm">
-      <UserAvatar name={payer.name} image={payer.image} size="sm" />
+      <UserAvatar {...payer} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="truncate">{title}</p>
         <p className="text-muted-foreground text-xs">{subtitle}</p>

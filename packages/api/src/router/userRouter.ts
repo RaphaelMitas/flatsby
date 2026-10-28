@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, eq, inArray, isNull, ne, or } from "@flatsby/db";
+import { and, eq, inArray, isNotNull, isNull, ne, or } from "@flatsby/db";
 import {
   accounts,
   conversations,
@@ -36,7 +36,7 @@ import { Database } from "../effect/services/Database";
 import { report } from "../effect/toApiResult";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { GroupUtils } from "../utils";
+import { GroupUtils, memberUserColumns, withMemberUser } from "../utils";
 import { autumn, checkCredits } from "../utils/autumn";
 
 const freePlan = {
@@ -255,7 +255,11 @@ export const userRouter = createTRPCRouter({
                         columns: { id: true },
                         with: {
                           groupMembers: {
-                            where: ne(groupMembers.userId, user.id),
+                            // Placeholders can't take over a group, so only people count as others
+                            where: and(
+                              isNotNull(groupMembers.userId),
+                              ne(groupMembers.userId, user.id),
+                            ),
                             columns: {
                               id: true,
                               role: true,
@@ -497,8 +501,8 @@ export const userRouter = createTRPCRouter({
                     },
                     with: {
                       groupMembers: {
-                        columns: { id: true, isActive: true },
-                        with: { user: { columns: { name: true } } },
+                        columns: { id: true, name: true, isActive: true },
+                        with: { user: { columns: memberUserColumns } },
                       },
                     },
                   },
@@ -615,7 +619,7 @@ export const userRouter = createTRPCRouter({
                   joinedOn: g.joinedOn,
                   members: g.group.groupMembers.map((m) => ({
                     memberId: m.id,
-                    name: m.user.name,
+                    name: withMemberUser(m).user.name,
                     active: m.isActive,
                   })),
                 })),

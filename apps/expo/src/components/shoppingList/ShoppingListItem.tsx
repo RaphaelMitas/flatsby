@@ -29,7 +29,6 @@ export interface ShoppingListItemProps {
     id: number;
     user: {
       name: string | null;
-      email: string;
       image: string | null;
     };
   }[];

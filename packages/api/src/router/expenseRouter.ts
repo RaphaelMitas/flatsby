@@ -31,6 +31,7 @@ import { bulkCreateExpensesSchema } from "@flatsby/validators/expenses/splitwise
 import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
 
 import type { ApiError } from "../errors";
+import type { Database as DbClient } from "../types";
 import type { CreditUser } from "../utils/autumn";
 import { getExpenseWithAccess } from "../effect/expenses";
 import {
@@ -43,7 +44,12 @@ import { Database } from "../effect/services/Database";
 import { Errors, fail, getApiResultZod } from "../errors";
 import { captureError, captureEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { fetchGroupDebtSummary, GroupUtils } from "../utils";
+import {
+  fetchGroupDebtSummary,
+  GroupUtils,
+  memberUserColumns,
+  withMemberUser,
+} from "../utils";
 import { classify } from "../utils/classify";
 
 /**
@@ -94,6 +100,45 @@ async function fetchExchangeRate(from: string, to: string, day: string) {
     clearTimeout(timeout);
   }
 }
+
+const expenseMemberWith = {
+  columns: {
+    id: true,
+    groupId: true,
+    userId: true,
+    name: true,
+    role: true,
+    joinedOn: true,
+  },
+  with: { user: { columns: memberUserColumns } },
+} as const;
+
+const expenseMembersWith = {
+  paidByGroupMember: expenseMemberWith,
+  createdByGroupMember: expenseMemberWith,
+  expenseSplits: { with: { groupMember: expenseMemberWith } },
+} as const;
+
+const findExpense = (db: DbClient, expenseId: number) =>
+  db.query.expenses.findFirst({
+    where: eq(expenses.id, expenseId),
+    with: expenseMembersWith,
+  });
+
+const withExpenseMembers = ({
+  paidByGroupMember,
+  createdByGroupMember,
+  expenseSplits,
+  ...expense
+}: NonNullable<Awaited<ReturnType<typeof findExpense>>>) => ({
+  ...expense,
+  paidByGroupMember: withMemberUser(paidByGroupMember),
+  createdByGroupMember: withMemberUser(createdByGroupMember),
+  expenseSplits: expenseSplits.map(({ groupMember, ...split }) => ({
+    ...split,
+    groupMember: withMemberUser(groupMember),
+  })),
+});
 
 function withDerivedCategory<T extends { id: number; subcategory: string }>(
   row: T,
@@ -401,71 +446,12 @@ export const expenseRouter = createTRPCRouter({
           yield* getExpenseWithAccess(input.expenseId);
           const database = yield* Database;
           const expense = yield* database.findOneOrFail("expense", (db) =>
-            db.query.expenses.findFirst({
-              where: eq(expenses.id, input.expenseId),
-              with: {
-                paidByGroupMember: {
-                  columns: {
-                    id: true,
-                    groupId: true,
-                    userId: true,
-                    role: true,
-                    joinedOn: true,
-                  },
-                  with: {
-                    user: {
-                      columns: {
-                        email: true,
-                        name: true,
-                        image: true,
-                      },
-                    },
-                  },
-                },
-                createdByGroupMember: {
-                  columns: {
-                    id: true,
-                    groupId: true,
-                    userId: true,
-                    role: true,
-                    joinedOn: true,
-                  },
-                  with: {
-                    user: {
-                      columns: {
-                        email: true,
-                        name: true,
-                        image: true,
-                      },
-                    },
-                  },
-                },
-                expenseSplits: {
-                  with: {
-                    groupMember: {
-                      columns: {
-                        id: true,
-                        groupId: true,
-                        userId: true,
-                        role: true,
-                        joinedOn: true,
-                      },
-                      with: {
-                        user: {
-                          columns: {
-                            email: true,
-                            name: true,
-                            image: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            }),
+            findExpense(db, input.expenseId),
           );
-          return withDerivedCategory(expense, ctx.session.user.id);
+          return withDerivedCategory(
+            withExpenseMembers(expense),
+            ctx.session.user.id,
+          );
         }),
       ),
     ),
@@ -503,58 +489,7 @@ export const expenseRouter = createTRPCRouter({
                 desc(expenses.expenseDate),
                 desc(expenses.id),
               ],
-              with: {
-                paidByGroupMember: {
-                  columns: {
-                    id: true,
-                    groupId: true,
-                    userId: true,
-                    role: true,
-                    joinedOn: true,
-                  },
-                  with: {
-                    user: {
-                      columns: { email: true, name: true, image: true },
-                    },
-                  },
-                },
-                createdByGroupMember: {
-                  columns: {
-                    id: true,
-                    groupId: true,
-                    userId: true,
-                    role: true,
-                    joinedOn: true,
-                  },
-                  with: {
-                    user: {
-                      columns: { email: true, name: true, image: true },
-                    },
-                  },
-                },
-                expenseSplits: {
-                  with: {
-                    groupMember: {
-                      columns: {
-                        id: true,
-                        groupId: true,
-                        userId: true,
-                        role: true,
-                        joinedOn: true,
-                      },
-                      with: {
-                        user: {
-                          columns: {
-                            email: true,
-                            name: true,
-                            image: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
+              with: expenseMembersWith,
             });
 
             const hasMore = expensesList.length > input.limit;
@@ -569,7 +504,10 @@ export const expenseRouter = createTRPCRouter({
 
             return {
               items: items.map((item) =>
-                withDerivedCategory(item, ctx.session.user.id),
+                withDerivedCategory(
+                  withExpenseMembers(item),
+                  ctx.session.user.id,
+                ),
               ),
               nextCursor,
             };

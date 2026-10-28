@@ -1,6 +1,8 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { waitForHydration } from "./hydration";
+
 export const uniqueGroupName = () => `E2E Group ${Date.now()}`;
 
 export async function submitCreateGroupForm(page: Page, name: string) {
@@ -56,4 +58,20 @@ export async function deleteCurrentGroup(page: Page) {
   const deleteButton = page.getByTestId("group-delete-confirm-button");
   await deleteButton.click();
   await page.waitForURL("/group");
+}
+
+export async function addPlaceholder(page: Page, name: string) {
+  await page.goto("/group/settings");
+  const input = page.getByTestId("placeholder-name-input");
+  await waitForHydration(input);
+  await input.fill(name);
+  // The member list refetches once the add settles; navigating earlier aborts it
+  const saved = page.waitForResponse(
+    (response) =>
+      response.url().includes("group.getGroup") &&
+      response.request().method() === "GET",
+  );
+  await page.getByTestId("placeholder-add-button").click();
+  await expect(page.getByTestId(`placeholder-row-${name}`)).toBeVisible();
+  await saved;
 }

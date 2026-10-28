@@ -12,14 +12,15 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Badge } from "@flatsby/ui/badge";
 import { Card } from "@flatsby/ui/card";
 import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   formatExpenseAmounts,
   formatExpenseDateShort,
 } from "@flatsby/validators/expenses/formatting";
+import { isPlaceholder } from "@flatsby/validators/group";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -103,30 +104,22 @@ export function ExpenseCard({
             <div className="flex items-center gap-2">
               {settlementCounterparty && (
                 <>
-                  <Avatar className="h-5 w-5">
-                    <AvatarImage
-                      alt={settlementCounterparty.user.name}
-                      src={settlementCounterparty.user.image ?? undefined}
-                    />
-                    <AvatarFallback className="text-xs">
-                      {settlementCounterparty.user.name
-                        .substring(0, 2)
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    name={settlementCounterparty.user.name}
+                    image={settlementCounterparty.user.image}
+                    placeholder={isPlaceholder(settlementCounterparty)}
+                    size="xs"
+                  />
                   <span>{settlementCounterparty.user.name}</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
-              <Avatar className="h-5 w-5">
-                <AvatarImage
-                  alt={paidByName}
-                  src={expense.paidByGroupMember.user.image ?? undefined}
-                />
-                <AvatarFallback className="text-xs">
-                  {paidByName.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                name={paidByName}
+                image={expense.paidByGroupMember.user.image}
+                placeholder={isPlaceholder(expense.paidByGroupMember)}
+                size="xs"
+              />
               <span className="truncate">
                 {expense.splitMethod === "settlement"
                   ? paidByName

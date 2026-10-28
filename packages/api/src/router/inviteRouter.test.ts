@@ -3,10 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { inviteRouter } from "./inviteRouter";
 import { testContext, testUser } from "./testContext";
 
-const { fakeDb, fakeTx } = vi.hoisted(() => {
+const { fakeDb, fakeTx, claimed } = vi.hoisted(() => {
+  const claimed = vi.fn();
   const fakeTx = {
     select: () => ({
       from: () => ({ where: () => ({ for: () => Promise.resolve([]) }) }),
+    }),
+    update: () => ({
+      set: () => ({ where: () => ({ returning: claimed }) }),
     }),
     query: {
       groupInvites: { findFirst: vi.fn() },
@@ -14,6 +18,7 @@ const { fakeDb, fakeTx } = vi.hoisted(() => {
     },
   };
   return {
+    claimed,
     fakeTx,
     fakeDb: {
       query: { groupInvites: { findFirst: vi.fn() } },
@@ -54,6 +59,37 @@ describe("invite.preview", () => {
       },
     });
   });
+
+  it("shows placeholders only to a signed-in joiner, and never as members", async () => {
+    fakeDb.query.groupInvites.findFirst.mockResolvedValue({
+      group: {
+        id: 3,
+        name: "Flat",
+        profilePicture: null,
+        groupMembers: [
+          { id: 1, userId: "user-2", name: null, user: { name: "Ruffy" } },
+          { id: 2, userId: null, name: "Anna", user: null },
+        ],
+      },
+      createdByMember: { name: null, user: { name: "Ruffy" } },
+    });
+    const preview = (user: typeof testUser | null) =>
+      inviteRouter.createCaller(testContext(user)).preview({ code });
+
+    await expect(preview(null)).resolves.toMatchObject({
+      success: true,
+      data: { memberCount: 1, placeholders: [], isMember: false },
+    });
+    await expect(preview(testUser)).resolves.toMatchObject({
+      success: true,
+      data: {
+        memberCount: 1,
+        members: [{ name: "Ruffy" }],
+        placeholders: [{ id: 2, name: "Anna" }],
+        isMember: false,
+      },
+    });
+  });
 });
 
 describe("invite.join", () => {
@@ -78,5 +114,47 @@ describe("invite.join", () => {
       },
     });
     expect(fakeTx.query.groupMembers.findFirst).not.toHaveBeenCalled();
+  });
+});
+
+describe("invite.join with a placeholder", () => {
+  const claim = () =>
+    inviteRouter
+      .createCaller(testContext(testUser))
+      .join({ code, placeholderId: 2 });
+
+  beforeEach(() => {
+    fakeTx.query.groupMembers.findFirst.mockResolvedValue(undefined);
+  });
+
+  it("takes over the placeholder", async () => {
+    claimed.mockResolvedValue([{ id: 2 }]);
+
+    await expect(claim()).resolves.toEqual({
+      success: true,
+      data: { groupId: 3, groupName: "Flat" },
+    });
+  });
+
+  it("tells the second of two joiners that the spot is gone", async () => {
+    claimed.mockResolvedValue([]);
+
+    await expect(claim()).resolves.toMatchObject({
+      success: false,
+      error: {
+        type: "ConflictError",
+        details: { messageKey: "errors.placeholderTaken" },
+      },
+    });
+  });
+
+  it("leaves the placeholder alone when the joiner is already a member", async () => {
+    fakeTx.query.groupMembers.findFirst.mockResolvedValue({
+      id: 1,
+      isActive: true,
+    });
+
+    await expect(claim()).resolves.toMatchObject({ success: true });
+    expect(claimed).not.toHaveBeenCalled();
   });
 });

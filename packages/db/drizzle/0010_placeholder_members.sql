@@ -1,0 +1,3 @@
+ALTER TABLE "flat-cove_group_members" ALTER COLUMN "userId" DROP NOT NULL;--> statement-breakpoint
+ALTER TABLE "flat-cove_group_members" ADD COLUMN "name" varchar(64);--> statement-breakpoint
+ALTER TABLE "flat-cove_group_members" ADD CONSTRAINT "group_members_user_or_name" CHECK ("flat-cove_group_members"."userId" is not null or "flat-cove_group_members"."name" is not null);

@@ -15,8 +15,14 @@ appId: ${APP_ID}
     id: "group-create-submit"
 - extendedWaitUntil:
     visible:
-      id: "group-invite-done"
+      id: "group-invite-code"
     timeout: 15000
+# Done sits below the placeholder names, off screen on small devices
+- scrollUntilVisible:
+    element:
+      id: "group-invite-done"
+    direction: DOWN
+    centerElement: true
 - tapOn:
     id: "group-invite-done"
 # Home shows the name in the group picker button, which iOS reads as one label

@@ -2,7 +2,7 @@ import type { MessageKey } from "@flatsby/i18n/message-key";
 import type { Messages } from "@flatsby/i18n/messages";
 import { Effect } from "effect";
 
-import { and, desc, eq, inArray } from "@flatsby/db";
+import { and, desc, eq, inArray, isNull } from "@flatsby/db";
 import {
   expenses,
   expenseSplits,
@@ -15,7 +15,13 @@ import {
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
 
 import type { ApiError } from "./errors";
-import type { Database, DbTransaction, GroupMember, Role } from "./types";
+import type {
+  Database,
+  DbTransaction,
+  GroupMember,
+  MemberUser,
+  Role,
+} from "./types";
 import { Errors, fail } from "./errors";
 
 export const DbUtils = {
@@ -155,8 +161,31 @@ export const GroupUtils = {
   },
 };
 
-export const findGroupWithMembers = (db: Database, groupId: number) =>
-  db.query.groups.findFirst({
+export const memberUserColumns = {
+  email: true,
+  name: true,
+  image: true,
+} as const;
+
+export const memberName = (member: {
+  name: string | null;
+  user: { name: string } | null;
+}) => member.user?.name ?? member.name ?? "";
+
+/** Placeholders have no user, so they get one built from their name; released apps read `member.user` unguarded. */
+export const withMemberUser = <
+  M extends { name: string | null; user: MemberUser | null },
+>({
+  name,
+  user,
+  ...member
+}: M): Omit<M, "user" | "name"> & { user: MemberUser } => ({
+  ...member,
+  user: user ?? { name: name ?? "", email: null, image: null },
+});
+
+export const findGroupWithMembers = async (db: Database, groupId: number) => {
+  const group = await db.query.groups.findFirst({
     where: (groups, { eq }) => eq(groups.id, groupId),
     with: {
       groupMembers: {
@@ -164,18 +193,25 @@ export const findGroupWithMembers = (db: Database, groupId: number) =>
         columns: {
           id: true,
           userId: true,
+          name: true,
           role: true,
           joinedOn: true,
           isActive: true,
         },
-        with: {
-          user: {
-            columns: { email: true, name: true, image: true },
-          },
-        },
+        with: { user: { columns: memberUserColumns } },
       },
     },
   });
+  return (
+    group && {
+      ...group,
+      groupMembers: group.groupMembers.map((member) => ({
+        ...withMemberUser(member),
+        placeholderName: member.name,
+      })),
+    }
+  );
+};
 
 export const findActiveMember = (
   db: Database,
@@ -205,6 +241,7 @@ export const addMemberTx = async (
   groupId: number,
   userId: string,
   refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
+  placeholderId?: number,
 ): Promise<number | ApiError> => {
   await GroupUtils.lockGroup(tx, groupId);
   const refused = await refusal?.(tx);
@@ -217,6 +254,21 @@ export const addMemberTx = async (
     orderBy: desc(groupMembers.isActive),
   });
   if (existing?.isActive) return Errors.conflict("errors.alreadyMember");
+  if (placeholderId !== undefined) {
+    const [claimed] = await tx
+      .update(groupMembers)
+      .set({ userId })
+      .where(
+        and(
+          eq(groupMembers.id, placeholderId),
+          eq(groupMembers.groupId, groupId),
+          isNull(groupMembers.userId),
+          eq(groupMembers.isActive, true),
+        ),
+      )
+      .returning({ id: groupMembers.id });
+    return claimed?.id ?? Errors.conflict("errors.placeholderTaken");
+  }
   const [member] = existing
     ? await tx
         .update(groupMembers)

@@ -16,9 +16,9 @@ import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImport";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
+import { MemberAvatar, memberPerson } from "~/components/expenses/MemberAvatar";
 import { TimedAlert } from "~/components/TimedAlert";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import {
   BottomSheetPickerProvider,
   BottomSheetPickerTrigger,
@@ -89,15 +89,8 @@ export default function ImportExpensesScreen() {
     () =>
       (group.success ? group.data.groupMembers : []).map((m) => ({
         id: String(m.id),
-        title: m.user.name || m.user.email,
-        icon: (
-          <Avatar className="h-6 w-6">
-            <AvatarImage src={m.user.image ?? undefined} />
-            <AvatarFallback>
-              {(m.user.name || m.user.email).charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-        ),
+        title: m.user.name,
+        icon: <MemberAvatar person={memberPerson(m)} className="h-6 w-6" />,
       })),
     [group],
   );

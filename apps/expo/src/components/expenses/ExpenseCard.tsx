@@ -16,6 +16,7 @@ import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ExpenseDisplay } from "./ExpenseDisplay";
+import { memberPerson } from "./MemberAvatar";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface ExpenseCardProps {
@@ -94,7 +95,6 @@ export function ExpenseCard({
   );
 
   const splitCount = expense.expenseSplits.length;
-  const paidByName = expense.paidByGroupMember.user.name;
   const amounts = formatExpenseAmounts(expense, locale);
   const expenseDate = new Date(expense.expenseDate);
   const fromMember = expense.expenseSplits[0]?.groupMember;
@@ -156,14 +156,12 @@ export function ExpenseCard({
             amounts={amounts}
             isNotConverted={isNotConverted}
             description={expense.description}
-            paidByName={paidByName}
-            paidByImage={expense.paidByGroupMember.user.image}
+            paidBy={memberPerson(expense.paidByGroupMember)}
             expenseDate={expenseDate}
             splitMethod={expense.splitMethod}
             splitCount={splitCount}
             subcategory={expense.subcategory}
-            fromName={fromMember?.user.name}
-            fromImage={fromMember?.user.image}
+            from={fromMember && memberPerson(fromMember)}
             isSelected={isSelected}
           />
         </Pressable>

@@ -62,6 +62,7 @@ const TOOLS_SYSTEM_PROMPT = `You have 3 tools to help users manage their househo
 WORKFLOW GUIDELINES:
 - When user asks about something ambiguous (e.g., "add eggs"), use showUI selector to ask which shopping list
 - For expense operations, use searchData with displayToUser: false to get groupMembers when you need member IDs
+- Members with userId null are placeholders: flatmates added by name who have no account yet. They can pay, be in splits and settle debts like anyone else, but they can't be admins
 - Before delete operations, use showUI confirmation with destructive: true
 - Use showUI chart to visualize expense breakdowns or debt summaries
 - searchData results with displayToUser: true are shown in the UI - don't repeat that data in your response

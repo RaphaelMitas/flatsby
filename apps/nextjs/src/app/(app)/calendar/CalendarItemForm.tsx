@@ -51,6 +51,7 @@ import {
   withStart,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
+import { isPlaceholder } from "@flatsby/validators/group";
 
 import { Chip } from "./CalendarPeople";
 import { DatePopover } from "./DatePopover";
@@ -447,6 +448,7 @@ export function CalendarItemForm({
                   <UserAvatar
                     name={member.user.name}
                     image={member.user.image}
+                    placeholder={isPlaceholder(member)}
                     size="xs"
                   />
                   {member.user.name}

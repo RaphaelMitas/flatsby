@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Pressable, Share, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import {
   useMutation,
   useQueryClient,
@@ -16,11 +16,13 @@ import {
   inviteLink,
 } from "@flatsby/validators/invite";
 
+import { PlaceholderMembers } from "~/components/members/PlaceholderMembers";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { trpc } from "~/utils/api";
 import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { useShareInvite } from "./useShareInvite";
 
 export function InviteScreen({ onDone }: { onDone?: () => void }) {
   const t = useTranslations();
@@ -28,6 +30,7 @@ export function InviteScreen({ onDone }: { onDone?: () => void }) {
   const groupId = Number(selectedGroupId) || 0;
   const queryClient = useQueryClient();
   const posthog = usePostHog();
+  const shareInvite = useShareInvite();
 
   const { data: invite } = useSuspenseQuery(
     trpc.invite.get.queryOptions({ groupId }),
@@ -75,7 +78,7 @@ export function InviteScreen({ onDone }: { onDone?: () => void }) {
         {t("invite.scanWithCamera")}
       </Text>
       <View className="rounded-lg bg-white p-3">
-        <QRCode value={link} size={180} />
+        <QRCode value={link} size={120} />
       </View>
       <Text className="text-muted-foreground text-xs">
         {t("invite.orEnterCode")}
@@ -91,30 +94,8 @@ export function InviteScreen({ onDone }: { onDone?: () => void }) {
           testID="group-invite-share"
           title={t("invite.shareLink")}
           icon="share"
-          onPress={async () => {
-            const result = await Share.share({
-              message: t("invite.shareMessage", {
-                group: selectedGroupName ?? "",
-                link,
-              }),
-            });
-            // Android always reports sharedAction; iOS reports dismissing the sheet
-            if (result.action === Share.sharedAction) {
-              posthog.capture("invite_shared", {
-                groupId,
-                method: "share_sheet",
-              });
-            }
-          }}
+          onPress={shareInvite}
         />
-        {onDone && (
-          <Button
-            testID="group-invite-done"
-            title={t("invite.done")}
-            variant="outline"
-            onPress={onDone}
-          />
-        )}
         <View className="flex-row items-center justify-between">
           <Text className="text-muted-foreground text-xs">
             {t("invite.expiresIn", {
@@ -136,6 +117,22 @@ export function InviteScreen({ onDone }: { onDone?: () => void }) {
           </Text>
         )}
       </View>
+      <View className="w-full">
+        <PlaceholderMembers
+          groupId={groupId}
+          title={t("group.placeholders.inviteStepTitle")}
+          hint={t("group.placeholders.inviteStepHint")}
+        />
+      </View>
+      {onDone && (
+        <Button
+          testID="group-invite-done"
+          title={t("invite.done")}
+          variant="outline"
+          className="w-full"
+          onPress={onDone}
+        />
+      )}
     </AppScrollView>
   );
 }

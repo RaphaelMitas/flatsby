@@ -185,24 +185,30 @@ export function formatSplitPortion({
 export interface DebtPerson {
   name: string;
   image: string | null;
+  placeholder?: boolean;
 }
 
 export type PersonLookup = (groupMemberId: number) => DebtPerson;
 
 export function personLookup(
-  members: { id: number; user: { name: string; image?: string | null } }[],
+  members: {
+    id: number;
+    userId: string | null;
+    user: { name: string; image?: string | null };
+  }[],
   meId: number,
   t: Translate,
 ): PersonLookup {
   const byId = new Map(members.map((member) => [member.id, member]));
   return (groupMemberId) => {
-    const user = byId.get(groupMemberId)?.user;
+    const member = byId.get(groupMemberId);
     return {
       name:
         groupMemberId === meId
           ? t("debts.you")
-          : (user?.name ?? t("common.unknown")),
-      image: user?.image ?? null,
+          : (member?.user.name ?? t("common.unknown")),
+      image: member?.user.image ?? null,
+      placeholder: member?.userId === null,
     };
   };
 }

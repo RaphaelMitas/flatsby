@@ -44,7 +44,7 @@ import {
 } from "../effect/shoppingLists";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { ValidationUtils } from "../utils";
+import { memberUserColumns, ValidationUtils, withMemberUser } from "../utils";
 import { classify } from "../utils/classify";
 
 export const shoppingList = createTRPCRouter({
@@ -170,7 +170,7 @@ export const shoppingList = createTRPCRouter({
                 z.object({
                   id: z.number(),
                   user: z.object({
-                    email: z.string().email(),
+                    email: z.string().email().nullable(),
                     name: z.string().min(1, "User name cannot be empty"),
                     image: z.string().nullable(),
                   }),
@@ -181,11 +181,11 @@ export const shoppingList = createTRPCRouter({
           currentMember: z.object({
             id: z.number(),
             groupId: z.number(),
-            userId: z.string(),
+            userId: z.string().nullable(),
             role: z.string(),
             joinedOn: z.date(),
             user: z.object({
-              email: z.string().email(),
+              email: z.string().email().nullable(),
               name: z.string().min(1, "User name cannot be empty"),
               image: z.string().nullable(),
             }),
@@ -215,30 +215,25 @@ export const shoppingList = createTRPCRouter({
                     with: {
                       groupMembers: {
                         where: (members, { eq }) => eq(members.isActive, true),
-                        columns: {
-                          id: true,
-                        },
-                        with: {
-                          user: {
-                            columns: {
-                              email: true,
-                              name: true,
-                              image: true,
-                            },
-                          },
-                        },
+                        columns: { id: true, name: true },
+                        with: { user: { columns: memberUserColumns } },
                       },
                     },
                   },
                 },
               }),
           );
-          const self = shoppingList.group.groupMembers.find(
+          const groupMembers =
+            shoppingList.group.groupMembers.map(withMemberUser);
+          const self = groupMembers.find(
             (groupMember) => groupMember.id === member.id,
           );
           if (!self) return yield* Errors.notFound("groupMembership");
           return {
-            shoppingList,
+            shoppingList: {
+              ...shoppingList,
+              group: { ...shoppingList.group, groupMembers },
+            },
             currentMember: { ...member, user: self.user },
           };
         }),
