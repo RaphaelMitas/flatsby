@@ -1,11 +1,11 @@
 import { Suspense, useCallback, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { Button } from "~/lib/ui/button";
+import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
 import { useHomeVersion } from "~/utils/home-version";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -82,20 +82,21 @@ function DashboardContent() {
       onRefresh={handleRefresh}
     >
       <View className="flex flex-col gap-6 p-2">
-        <View className="flex flex-row items-center justify-between gap-2">
+        <View className="flex flex-row items-stretch gap-2">
           <GroupSwitcher testID="dashboard-group-picker" className="flex-1" />
-          <Button
+          <Pressable
             testID="dashboard-group-settings"
+            accessibilityRole="button"
             accessibilityLabel={t("navigation.groupSettings")}
-            variant="outline"
-            size="icon"
-            icon="settings"
             onPress={() =>
               router.navigate("/(tabs)/settings/group-settings", {
                 withAnchor: true,
               })
             }
-          />
+            className="border-border bg-card active:bg-muted aspect-square items-center justify-center rounded-2xl border shadow-sm"
+          >
+            <Icon name="settings" size={20} color="foreground" />
+          </Pressable>
         </View>
 
         <InviteFlatmatesCard groupId={selectedGroupId} />

@@ -16,6 +16,7 @@ interface SwitcherItem {
   id: number;
   title: string;
   subtitle: string;
+  more?: { label: string; onSelect: () => void };
 }
 
 interface SwitcherAction {
@@ -35,8 +36,6 @@ export function Switcher({
   items,
   selectedId,
   onSelect,
-  onMore,
-  moreLabel,
   actions,
   disabled,
 }: {
@@ -49,8 +48,6 @@ export function Switcher({
   items: SwitcherItem[];
   selectedId: number | null;
   onSelect: (item: SwitcherItem) => void;
-  onMore?: (item: SwitcherItem) => void;
-  moreLabel?: (item: SwitcherItem) => string;
   actions: SwitcherAction[];
   disabled?: boolean;
 }) {
@@ -109,11 +106,11 @@ export function Switcher({
                 </span>
                 {current && <Check className="size-4" />}
               </DropdownMenuItem>
-              {onMore && (
+              {item.more && (
                 <DropdownMenuItem
                   data-testid={`${testId}-more-${item.id}`}
-                  aria-label={moreLabel?.(item)}
-                  onSelect={() => onMore(item)}
+                  aria-label={item.more.label}
+                  onSelect={item.more.onSelect}
                   className="size-9 justify-center rounded-xl p-0"
                 >
                   <Ellipsis className="text-muted-foreground size-4" />

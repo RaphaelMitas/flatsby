@@ -5,6 +5,7 @@ import { Pressable, Text } from "react-native";
 import { tv } from "tailwind-variants";
 
 import type { IconProps } from "./custom/icons/Icon";
+import type { ColorName } from "~/lib/utils";
 import Icon from "./custom/icons/Icon";
 
 const buttonVariants = tv({
@@ -72,6 +73,7 @@ interface ButtonProps
   onPress?: () => unknown;
   title?: string;
   icon?: IconProps["name"];
+  iconColor?: ColorName;
   children?: React.ReactNode;
   textClassName?: string;
   numberOfLines?: number;
@@ -83,6 +85,7 @@ const Button = ({
   size,
   title,
   icon,
+  iconColor,
   disabled,
   children,
   textClassName,
@@ -106,9 +109,10 @@ const Button = ({
           color={
             disabled
               ? iconVariants.disabled
-              : variant === undefined
-                ? iconVariants.primary
-                : iconVariants[variant]
+              : (iconColor ??
+                (variant === undefined
+                  ? iconVariants.primary
+                  : iconVariants[variant]))
           }
         />
       )}

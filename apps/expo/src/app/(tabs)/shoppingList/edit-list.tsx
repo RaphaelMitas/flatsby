@@ -103,6 +103,7 @@ export default function EditShoppingList() {
         title={t("shoppingList.delete.title")}
         variant="ghost"
         icon="trash-2"
+        iconColor="destructive"
         textClassName="text-destructive"
         className="mt-6"
         onPress={() => setShowDeleteModal(true)}

@@ -30,16 +30,17 @@ export function ListSwitcher({
         id: list.id,
         title: list.name,
         subtitle: itemsLeft(list.uncheckedItemLength),
+        more: {
+          label: t("switcher.moreFor", { name: list.name }),
+          onPress: () =>
+            router.push({
+              pathname: "/(tabs)/shoppingList/edit-list",
+              params: { listId: list.id },
+            }),
+        },
       }))}
       selectedId={current.id}
       onSelect={(list) => setSelectedShoppingList(list.id, list.title)}
-      onMore={(list) =>
-        router.push({
-          pathname: "/(tabs)/shoppingList/edit-list",
-          params: { listId: list.id },
-        })
-      }
-      moreLabel={(list) => t("switcher.moreFor", { name: list.title })}
       actions={[
         {
           testID: "list-switcher-new",

@@ -14,6 +14,7 @@ interface SwitcherItem {
   id: number;
   title: string;
   subtitle: string;
+  more?: { label: string; onPress: () => void };
 }
 
 interface SwitcherAction {
@@ -34,8 +35,6 @@ export function Switcher({
   items,
   selectedId,
   onSelect,
-  onMore,
-  moreLabel,
   actions,
   className,
 }: {
@@ -49,8 +48,6 @@ export function Switcher({
   items: SwitcherItem[];
   selectedId: number | null;
   onSelect: (item: SwitcherItem) => void;
-  onMore?: (item: SwitcherItem) => void;
-  moreLabel?: (item: SwitcherItem) => string;
   actions: SwitcherAction[];
   className?: string;
 }) {
@@ -140,12 +137,12 @@ export function Switcher({
                     <Icon name="check" size={18} color="foreground" />
                   )}
                 </Pressable>
-                {onMore && (
+                {item.more && (
                   <Pressable
                     testID={`${sheetTestID}-more-${item.id}`}
-                    accessibilityLabel={moreLabel?.(item)}
+                    accessibilityLabel={item.more.label}
                     hitSlop={8}
-                    onPress={closeThen(() => onMore(item))}
+                    onPress={closeThen(item.more.onPress)}
                     className="size-10 items-center justify-center"
                   >
                     <Icon name="ellipsis" size={18} color="muted-foreground" />

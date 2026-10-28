@@ -30,7 +30,7 @@ export function GroupHeader() {
   const current = groups.find(({ id }) => id === currentGroup.id);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-stretch gap-3">
       <Switcher
         testId="home-group-switcher"
         icon={House}
@@ -41,6 +41,14 @@ export function GroupHeader() {
           id: group.id,
           title: group.name,
           subtitle: memberCount(group.memberCount),
+          // Settings act on the selected group, so only its own row offers them
+          more:
+            group.id === currentGroup.id
+              ? {
+                  label: t("navigation.groupSettings"),
+                  onSelect: () => router.push("/group/settings"),
+                }
+              : undefined,
         }))}
         selectedId={currentGroup.id}
         onSelect={async (group) => {
@@ -69,9 +77,9 @@ export function GroupHeader() {
       <Link
         href="/group/settings"
         aria-label={t("navigation.groupSettings")}
-        className="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-9 shrink-0 items-center justify-center rounded-md border shadow-sm"
+        className="bg-card hover:bg-muted flex aspect-square shrink-0 items-center justify-center rounded-2xl border shadow-sm transition-colors"
       >
-        <Settings className="h-4 w-4" />
+        <Settings className="size-5" />
       </Link>
       <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
     </div>
