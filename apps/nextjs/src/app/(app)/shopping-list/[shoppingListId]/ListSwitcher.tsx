@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { Switcher } from "~/app/_components/switcher/Switcher";
+import { SwitcherSettingsButton } from "~/app/_components/switcher/SwitcherSettingsButton";
 import { useTRPC } from "~/trpc/react";
 import { EditListDialog } from "../ListDialogs";
 
@@ -35,7 +36,7 @@ export function ListSwitcher({
   const itemsLeft = (count: number) => t("itemsLeft", { count });
 
   return (
-    <>
+    <div className="flex items-stretch gap-3">
       <Switcher
         testId="shopping-list-switcher"
         icon={ShoppingBasket}
@@ -70,6 +71,13 @@ export function ListSwitcher({
           },
         ]}
       />
+      <SwitcherSettingsButton
+        testId="shopping-list-settings"
+        label={t("switcher.editTitle")}
+        onClick={() =>
+          setEditing({ id: shoppingListId, name: current?.name ?? name })
+        }
+      />
       <EditListDialog
         groupId={groupId}
         list={editing}
@@ -78,6 +86,6 @@ export function ListSwitcher({
           if (!open) setEditing(null);
         }}
       />
-    </>
+    </div>
   );
 }

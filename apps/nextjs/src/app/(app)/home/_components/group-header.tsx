@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { House, KeyRound, Plus, Settings } from "lucide-react";
+import { House, KeyRound, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { Switcher } from "~/app/_components/switcher/Switcher";
+import { SwitcherSettingsButton } from "~/app/_components/switcher/SwitcherSettingsButton";
 import { JoinWithCodeDialog } from "~/app/(app)/group/JoinWithCodeDialog";
 import { useTRPC } from "~/trpc/react";
 
@@ -74,13 +74,11 @@ export function GroupHeader() {
         disabled={isSwitching}
       />
 
-      <Link
+      <SwitcherSettingsButton
+        testId="home-group-settings"
+        label={t("navigation.groupSettings")}
         href="/group/settings"
-        aria-label={t("navigation.groupSettings")}
-        className="bg-card hover:bg-muted flex aspect-square shrink-0 items-center justify-center rounded-2xl border shadow-sm transition-colors"
-      >
-        <Settings className="size-5" />
-      </Link>
+      />
       <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
     </div>
   );

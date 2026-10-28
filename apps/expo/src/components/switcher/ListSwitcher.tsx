@@ -8,9 +8,11 @@ import { Switcher } from "./Switcher";
 export function ListSwitcher({
   lists,
   current,
+  className,
 }: {
   lists: ShoppingListSummary[];
   current: ShoppingListSummary;
+  className?: string;
 }) {
   const t = useTranslations("shoppingList");
   const router = useRouter();
@@ -49,6 +51,7 @@ export function ListSwitcher({
           onPress: () => router.push("/(tabs)/shoppingList/create"),
         },
       ]}
+      className={className}
     />
   );
 }
