@@ -18,6 +18,7 @@ import { notFound } from "./de/notFound";
 import { settings } from "./de/settings";
 import { shoppingCategories } from "./de/shoppingCategories";
 import { shoppingList } from "./de/shoppingList";
+import { siri } from "./de/siri";
 import { splitwiseImport } from "./de/splitwiseImport";
 
 export const de = {
@@ -31,6 +32,7 @@ export const de = {
   invite,
   shoppingList,
   shoppingCategories,
+  siri,
   expenses,
   expenseCategories,
   debts,

@@ -1,3 +1,4 @@
+import { requireOptionalNativeModule } from "expo";
 import * as SecureStore from "expo-secure-store";
 import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
@@ -14,5 +15,10 @@ export const authClient = createAuthClient({
     }),
   ],
 });
+
+// Siri adds items from Swift with this session, so it needs the same server
+requireOptionalNativeModule<{ setApiBaseUrl: (url: string) => void }>(
+  "FlatsbySiri",
+)?.setApiBaseUrl(getBaseUrl());
 
 export const { signIn, signOut, useSession } = authClient;

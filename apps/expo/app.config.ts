@@ -115,6 +115,7 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
     tsconfigPaths: true,
     typedRoutes: true,
     reactCompiler: true,
+    inlineModules: { watchedDirectories: ["siri"] },
   },
   updates: {
     url: "https://u.expo.dev/f7e9d15f-497c-4f4e-ac97-f59a14638cdd",

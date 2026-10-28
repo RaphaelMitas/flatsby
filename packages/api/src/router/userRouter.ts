@@ -112,7 +112,9 @@ export const userRouter = createTRPCRouter({
           user: userSchema
             .extend({
               lastGroupUsed: groupSchema.nullable(),
-              lastShoppingListUsed: shoppingListSchema.nullable(),
+              lastShoppingListUsed: shoppingListSchema
+                .extend({ groupId: z.number() })
+                .nullable(),
             })
             .optional(),
           groups: z.array(

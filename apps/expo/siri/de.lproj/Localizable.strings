@@ -1,0 +1,8 @@
+"Add to Shopping List" = "Zur Einkaufsliste hinzufügen";
+"Adds an item to the shopping list you last used in Flatsby." = "Fügt einen Artikel zu der Einkaufsliste hinzu, die du zuletzt in Flatsby benutzt hast.";
+"Item" = "Artikel";
+"What should go on the list?" = "Was soll auf die Liste?";
+"%@ is now on %@." = "%1$@ steht jetzt auf „%2$@“.";
+"Open Flatsby to sign in." = "Öffne Flatsby, um dich anzumelden.";
+"Open a shopping list in Flatsby first." = "Öffne zuerst eine Einkaufsliste in Flatsby.";
+"Flatsby couldn't add that. Try again in the app." = "Flatsby konnte das nicht hinzufügen. Versuch es in der App noch mal.";

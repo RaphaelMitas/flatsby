@@ -33,6 +33,7 @@ import {
   groupShoppingList,
   shoppingListItemsOptions,
 } from "./ShoppingListUtils";
+import { countHandAddedItem, SiriTip } from "./SiriTip";
 import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
 interface ShoppingListProps {
@@ -259,6 +260,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       groupId,
       shoppingListId,
     });
+    countHandAddedItem();
     listRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
@@ -376,6 +378,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
                   maintainVisibleContentPosition={{ disabled: true }}
                   className="flex-1"
                   data={flashListData}
+                  ListHeaderComponent={<SiriTip />}
                   renderItem={renderItem}
                   getItemType={getItemType}
                   keyExtractor={(item) => item.id}
