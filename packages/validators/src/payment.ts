@@ -75,7 +75,7 @@ export function parsePaypalHandle(value: string) {
     .replace(/^www\./i, "")
     .replace(/^(paypal\.me|paypal\.com\/paypalme)\//i, "")
     .replace(/^@/, "")
-    .split("/")[0];
+    .split(/[/?#]/)[0];
   return handle && PAYPAL_HANDLE_SHAPE.test(handle) ? handle : null;
 }
 
@@ -109,6 +109,14 @@ export const paymentDetailsSchema = z.object({
   paypalHandle: z.string().nullable(),
 });
 type PaymentDetails = z.infer<typeof paymentDetailsSchema>;
+
+export const memberPaymentDetailsInputSchema = z.object({
+  groupId: z.number(),
+  groupMemberId: z.number(),
+});
+export type MemberPaymentDetailsInput = z.infer<
+  typeof memberPaymentDetailsInputSchema
+>;
 
 // Missing keeps what's stored, null clears it
 export const updatePaymentDetailsInputSchema = z.object({
@@ -209,6 +217,36 @@ export function paymentOptions(
 }
 
 export type PaymentOptions = ReturnType<typeof paymentOptions>;
+
+type SettlePaymentView =
+  | { kind: "ownCode"; girocode: string }
+  | { kind: "addYours" }
+  | { kind: "hidden" }
+  | { kind: "unavailable" }
+  | { kind: "pay"; reference: string; girocode: string | null };
+
+export function settlePaymentView(
+  options: PaymentOptions,
+  {
+    amountInCents,
+    groupName,
+    receiverIsMe,
+  }: { amountInCents: number; groupName: string; receiverIsMe: boolean },
+): SettlePaymentView {
+  const reference = settlementReference(groupName);
+  const girocode = options.bank?.girocode
+    ? girocodePayload({ ...options.bank, amountInCents, reference })
+    : null;
+  if (receiverIsMe) {
+    if (girocode) return { kind: "ownCode", girocode };
+    return options.payable || options.euroOnly
+      ? { kind: "hidden" }
+      : { kind: "addYours" };
+  }
+  return options.payable
+    ? { kind: "pay", reference, girocode }
+    : { kind: "unavailable" };
+}
 
 export function girocodePayload({
   accountHolder,

@@ -23,7 +23,10 @@ import {
   updateGroupSettingsSchema,
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
-import { paymentDetailsSchema } from "@flatsby/validators/payment";
+import {
+  memberPaymentDetailsInputSchema,
+  paymentDetailsSchema,
+} from "@flatsby/validators/payment";
 
 import {
   addMember,
@@ -112,7 +115,7 @@ export const groupRouter = createTRPCRouter({
     ),
 
   getMemberPaymentDetails: protectedProcedure
-    .input(z.object({ groupId: z.number(), groupMemberId: z.number() }))
+    .input(memberPaymentDetailsInputSchema)
     .output(getApiResultZod(paymentDetailsSchema.nullable()))
     .query(async ({ ctx, input }) =>
       runResult(

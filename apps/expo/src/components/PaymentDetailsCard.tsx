@@ -41,10 +41,7 @@ export function PaymentDetailsCard({ userName }: { userName: string }) {
   const queryClient = useQueryClient();
   const [notice, setNotice] = useState<"saved" | "removed" | null>(null);
 
-  const { data } = useSuspenseQuery({
-    ...trpc.user.getPaymentDetails.queryOptions(),
-    meta: { persist: false },
-  });
+  const { data } = useSuspenseQuery(trpc.user.getPaymentDetails.queryOptions());
   const stored = data.success ? data.data : null;
 
   const form = useForm({
@@ -63,7 +60,7 @@ export function PaymentDetailsCard({ userName }: { userName: string }) {
             queryKey: trpc.group.getMemberPaymentDetails.pathKey(),
           });
           form.reset(paymentDetailsFormValues(details, userName));
-          setNotice(stored && !details ? "removed" : "saved");
+          setNotice(details ? "saved" : stored ? "removed" : null);
         },
       }),
     ),

@@ -9,9 +9,8 @@ import { useLocale, useTranslations } from "use-intl";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
   formatIban,
-  girocodePayload,
   paypalMeUrl,
-  settlementReference,
+  settlePaymentView,
 } from "@flatsby/validators/payment";
 
 import { Button } from "~/lib/ui/button";
@@ -40,7 +39,7 @@ export function SettlementPayment({
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
-  const { bank, paypalHandle, payable, euroOnly } = options;
+  const { bank, paypalHandle, euroOnly } = options;
   const [method, setMethod] = useState<"bank" | "paypal">(
     bank ? "bank" : "paypal",
   );
@@ -51,29 +50,30 @@ export function SettlementPayment({
     currency,
     locale,
   });
-  const reference = settlementReference(groupName);
-  const girocode = bank?.girocode
-    ? girocodePayload({ ...bank, amountInCents, reference })
-    : null;
+  const view = settlePaymentView(options, {
+    amountInCents,
+    groupName,
+    receiverIsMe,
+  });
 
-  if (receiverIsMe) {
-    if (girocode) {
-      return (
-        <View
-          testID="settle-own-girocode"
-          className="border-border items-center gap-3 rounded-lg border p-4"
-        >
-          <Text className="text-foreground font-semibold">
-            {t("debts.pay.letScan", { name: payerName })}
-          </Text>
-          <Girocode value={girocode} size={160} />
-          <Text className="text-muted-foreground text-sm">
-            {t("debts.pay.yourCode", { amount })}
-          </Text>
-        </View>
-      );
-    }
-    if (payable || euroOnly) return null;
+  if (view.kind === "ownCode") {
+    return (
+      <View
+        testID="settle-own-girocode"
+        className="border-border items-center gap-3 rounded-lg border p-4"
+      >
+        <Text className="text-foreground font-semibold">
+          {t("debts.pay.letScan", { name: payerName })}
+        </Text>
+        <Girocode value={view.girocode} size={160} />
+        <Text className="text-muted-foreground text-sm">
+          {t("debts.pay.yourCode", { amount })}
+        </Text>
+      </View>
+    );
+  }
+  if (view.kind === "hidden") return null;
+  if (view.kind === "addYours") {
     return (
       <View
         testID="settle-pay-add-yours"
@@ -92,7 +92,7 @@ export function SettlementPayment({
     );
   }
 
-  if (!payable) {
+  if (view.kind === "unavailable") {
     return (
       <Text
         testID="settle-pay-no-details"
@@ -105,6 +105,7 @@ export function SettlementPayment({
     );
   }
 
+  const { reference, girocode } = view;
   const shown = bank && paypalHandle ? method : bank ? "bank" : "paypal";
 
   return (

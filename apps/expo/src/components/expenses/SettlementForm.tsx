@@ -125,10 +125,13 @@ export function SettlementForm({
     name: "amountInCents",
   });
 
+  const myMemberId = groupData.success ? groupData.data.thisGroupMember.id : -1;
+  const involvesMe =
+    watchedFromMemberId === myMemberId || watchedToMemberId === myMemberId;
   const payment = usePaymentOptions(
     (input) => trpc.group.getMemberPaymentDetails.queryOptions(input),
     groupId,
-    isEditMode ? -1 : watchedToMemberId,
+    involvesMe && !isEditMode ? watchedToMemberId : -1,
     watchedCurrency,
   );
 
@@ -439,7 +442,6 @@ export function SettlementForm({
   const isPending =
     createSettlementMutation.isPending || updateSettlementMutation.isPending;
 
-  const involvesMe = watchedFromMemberId === meId || watchedToMemberId === meId;
   const payingWithDetails =
     watchedFromMemberId === meId && payment?.payable === true;
 
@@ -602,7 +604,7 @@ export function SettlementForm({
                 )}
               />
             </View>
-            {payment && pair && involvesMe && (
+            {payment && pair && (
               <SettlementPayment
                 key={`${watchedToMemberId}-${watchedCurrency}`}
                 options={payment}

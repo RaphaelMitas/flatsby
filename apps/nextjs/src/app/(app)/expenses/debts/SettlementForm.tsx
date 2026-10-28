@@ -314,10 +314,11 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const currency = form.watch("currency");
   const amountInCents = form.watch("amountInCents");
 
+  const involvesMe = fromGroupMemberId === meId || toGroupMemberId === meId;
   const payment = usePaymentOptions(
     (input) => trpc.group.getMemberPaymentDetails.queryOptions(input),
     groupId,
-    toGroupMemberId,
+    involvesMe ? toGroupMemberId : 0,
     currency,
   );
 
@@ -344,7 +345,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
 
   const isPending = createSettlementMutation.isPending;
-  const involvesMe = fromGroupMemberId === meId || toGroupMemberId === meId;
   const payingWithDetails =
     fromGroupMemberId === meId && payment?.payable === true;
   const failure = failureOf(
@@ -498,8 +498,9 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               )}
             />
 
-            {payment && fromGroupMemberId > 0 && involvesMe && (
+            {payment && fromGroupMemberId > 0 && (
               <SettlementPayment
+                key={`${toGroupMemberId}-${currency}`}
                 options={payment}
                 payerName={fromMember.name}
                 receiverName={toMember.name}

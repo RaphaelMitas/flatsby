@@ -67,11 +67,8 @@ export function PaymentDetails() {
             queryKey: trpc.group.getMemberPaymentDetails.pathKey(),
           });
           form.reset(paymentDetailsFormValues(details, user.name));
-          toast.success(
-            stored && !details
-              ? t("settings.payment.removed")
-              : t("settings.payment.saved"),
-          );
+          if (details) toast.success(t("settings.payment.saved"));
+          else if (stored) toast.success(t("settings.payment.removed"));
         },
         onFailure: (message) =>
           toast.error(message ?? t("errors.updatePaymentDetailsFailed")),

@@ -1,3 +1,4 @@
+import type { MemberPaymentDetailsInput } from "@flatsby/validators/payment";
 import { useQuery } from "@tanstack/react-query";
 
 import { paymentOptions } from "@flatsby/validators/payment";
@@ -5,11 +6,6 @@ import { paymentOptions } from "@flatsby/validators/payment";
 import type { RouterOutputs } from "..";
 
 type MemberPaymentDetails = RouterOutputs["group"]["getMemberPaymentDetails"];
-
-interface MemberPaymentDetailsInput {
-  groupId: number;
-  groupMemberId: number;
-}
 
 export function usePaymentOptions<
   TOptions extends { queryKey: readonly unknown[] },

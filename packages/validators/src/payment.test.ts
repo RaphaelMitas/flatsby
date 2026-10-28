@@ -10,6 +10,7 @@ import {
   paymentOptions,
   paypalMeUrl,
   settlementReference,
+  settlePaymentView,
 } from "./payment";
 
 describe("isValidIban", () => {
@@ -45,6 +46,7 @@ describe("parsePaypalHandle", () => {
     "paypal.me/ruffy",
     "https://www.paypal.me/ruffy/12EUR",
     "https://www.paypal.com/paypalme/ruffy",
+    "https://paypal.me/ruffy?country.x=DE&locale.x=de_DE",
   ])("reads %s", (value) => {
     expect(parsePaypalHandle(value)).toBe("ruffy");
   });
@@ -148,6 +150,27 @@ describe("paymentOptions", () => {
   it("offers no code to an account outside the EEA", () => {
     const swiss = { ...details, iban: "CH9300762011623852957" };
     expect(paymentOptions(swiss, "EUR").bank?.girocode).toBe(false);
+  });
+});
+
+describe("settlePaymentView", () => {
+  const ibanOnly = {
+    accountHolder: "Ruffy",
+    iban: "DE89370400440532013000",
+    paypalHandle: null,
+  };
+  const context = { amountInCents: 1500, groupName: "WG", receiverIsMe: true };
+
+  it("doesn't ask a receiver with an IBAN to add one on a non-euro debt", () => {
+    expect(
+      settlePaymentView(paymentOptions(ibanOnly, "USD"), context).kind,
+    ).toBe("hidden");
+  });
+
+  it("shows the receiver their own code for a euro debt", () => {
+    expect(
+      settlePaymentView(paymentOptions(ibanOnly, "EUR"), context).kind,
+    ).toBe("ownCode");
   });
 });
 

@@ -11,9 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
   formatIban,
-  girocodePayload,
   paypalMeUrl,
-  settlementReference,
+  settlePaymentView,
 } from "@flatsby/validators/payment";
 
 import { CopyButton } from "~/app/_components/CopyButton";
@@ -39,34 +38,35 @@ export function SettlementPayment({
 }: SettlementPaymentProps) {
   const t = useTranslations("debts.pay");
   const locale = useLocale();
-  const { bank, paypalHandle, payable, euroOnly } = options;
+  const { bank, paypalHandle, euroOnly } = options;
 
   const amount = formatCurrencyFromCents({
     cents: amountInCents,
     currency,
     locale,
   });
-  const reference = settlementReference(groupName);
-  const girocode = bank?.girocode
-    ? girocodePayload({ ...bank, amountInCents, reference })
-    : null;
+  const view = settlePaymentView(options, {
+    amountInCents,
+    groupName,
+    receiverIsMe,
+  });
 
-  if (receiverIsMe) {
-    if (girocode) {
-      return (
-        <div
-          className="flex flex-col items-center gap-3 rounded-lg border p-4"
-          data-testid="settle-own-girocode"
-        >
-          <p className="font-semibold">{t("letScan", { name: payerName })}</p>
-          <Girocode value={girocode} size={160} />
-          <p className="text-muted-foreground text-sm">
-            {t("yourCode", { amount })}
-          </p>
-        </div>
-      );
-    }
-    if (payable || euroOnly) return null;
+  if (view.kind === "ownCode") {
+    return (
+      <div
+        className="flex flex-col items-center gap-3 rounded-lg border p-4"
+        data-testid="settle-own-girocode"
+      >
+        <p className="font-semibold">{t("letScan", { name: payerName })}</p>
+        <Girocode value={view.girocode} size={160} />
+        <p className="text-muted-foreground text-sm">
+          {t("yourCode", { amount })}
+        </p>
+      </div>
+    );
+  }
+  if (view.kind === "hidden") return null;
+  if (view.kind === "addYours") {
     return (
       <div
         className="flex items-center gap-3 rounded-lg border border-dashed p-3"
@@ -80,7 +80,7 @@ export function SettlementPayment({
     );
   }
 
-  if (!payable) {
+  if (view.kind === "unavailable") {
     return (
       <p
         className="text-muted-foreground text-center text-sm"
@@ -91,6 +91,7 @@ export function SettlementPayment({
     );
   }
 
+  const { reference, girocode } = view;
   const bankPanel = bank && (
     <div className="flex flex-col gap-3">
       {girocode && (
