@@ -63,24 +63,26 @@ export function SettlementPayment({
       <p className="font-semibold">
         {receiverIsMe ? t("yourPaypal") : t("paypalOf", { name: receiverName })}
       </p>
-      <p className="text-muted-foreground text-sm">
-        {t("paypalHint", { amount })}
-      </p>
       {url && (
-        <div className="flex items-center gap-2">
-          <Button
-            asChild
-            variant="outline"
-            className="flex-1"
-            data-testid="settle-paypal-button"
-          >
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4" />
-              {t("openPaypal")}
-            </a>
-          </Button>
-          <CopyButton value={url} />
-        </div>
+        <>
+          <p className="text-muted-foreground text-sm">
+            {t("paypalHint", { amount })}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              asChild
+              variant="outline"
+              className="flex-1"
+              data-testid="settle-paypal-button"
+            >
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4" />
+                {t("openPaypal")}
+              </a>
+            </Button>
+            <CopyButton value={url} />
+          </div>
+        </>
       )}
     </div>
   );

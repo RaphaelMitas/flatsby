@@ -6,7 +6,9 @@ import { centsToDecimal } from "./expenses/conversion";
 
 export const MAX_PAYPAL_HANDLE_LENGTH = 20;
 
-const PAYPAL_HANDLE_SHAPE = /^[A-Za-z0-9]{1,20}$/;
+const PAYPAL_HANDLE_SHAPE = new RegExp(
+  `^[A-Za-z0-9]{1,${MAX_PAYPAL_HANDLE_LENGTH}}$`,
+);
 
 export function parsePaypalHandle(value: string) {
   const handle = value

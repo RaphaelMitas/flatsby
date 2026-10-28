@@ -68,32 +68,34 @@ export function SettlementPayment({
           ? t("debts.pay.yourPaypal")
           : t("debts.pay.paypalOf", { name: receiverName })}
       </Text>
-      <Text className="text-muted-foreground text-sm">
-        {t("debts.pay.paypalHint", { amount })}
-      </Text>
       {url && (
-        <View className="flex-row gap-2">
-          <Button
-            testID="settle-paypal-button"
-            title={t("debts.pay.openPaypal")}
-            icon="external-link"
-            variant="outline"
-            className="flex-1"
-            onPress={() => Linking.openURL(url)}
-          />
-          <Button
-            testID="settle-paypal-share"
-            title={t("debts.pay.share")}
-            icon="share"
-            variant="outline"
-            className="flex-1"
-            onPress={() =>
-              Share.share({
-                message: t("debts.pay.shareMessage", { amount, url }),
-              })
-            }
-          />
-        </View>
+        <>
+          <Text className="text-muted-foreground text-sm">
+            {t("debts.pay.paypalHint", { amount })}
+          </Text>
+          <View className="flex-row gap-2">
+            <Button
+              testID="settle-paypal-button"
+              title={t("debts.pay.openPaypal")}
+              icon="external-link"
+              variant="outline"
+              className="flex-1"
+              onPress={() => Linking.openURL(url)}
+            />
+            <Button
+              testID="settle-paypal-share"
+              title={t("debts.pay.share")}
+              icon="share"
+              variant="outline"
+              className="flex-1"
+              onPress={() =>
+                Share.share({
+                  message: t("debts.pay.shareMessage", { amount, url }),
+                })
+              }
+            />
+          </View>
+        </>
       )}
     </View>
   );
