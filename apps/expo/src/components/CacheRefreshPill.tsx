@@ -22,6 +22,7 @@ import { useTranslations } from "use-intl";
 import { inShoppingListQueue } from "@flatsby/api/shoppingListQueue";
 
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { trpc } from "~/utils/api";
 import { useIsOnline } from "~/utils/live-query";
 
 const launchedAt = Date.now();
@@ -40,6 +41,7 @@ export function CacheRefreshPill() {
   const queryClient = useQueryClient();
   const online = useIsOnline();
   const queued = useIsMutating({ predicate: inShoppingListQueue });
+  const listFetching = useIsFetching(trpc.shoppingList.pathFilter()) > 0;
   const restoring =
     useIsFetching({
       predicate: (query) => isRestored(query) && !failedRefresh(query),
@@ -57,7 +59,7 @@ export function CacheRefreshPill() {
     setDismissed(false);
     setReplaying(online && queued > 0);
   }
-  if (replaying && queued === 0) setReplaying(false);
+  if (replaying && queued === 0 && !listFetching) setReplaying(false);
 
   if (refreshing !== wasRefreshing) {
     setWasRefreshing(refreshing);

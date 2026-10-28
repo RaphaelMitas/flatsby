@@ -51,7 +51,10 @@ export default function RootLayout() {
                 <PersistQueryClientProvider
                   client={queryClient}
                   persistOptions={persistOptions}
-                  onSuccess={() => queryClient.resumePausedMutations()}
+                  // Returning the promise would keep the app blank until the whole queue has synced
+                  onSuccess={() => {
+                    void queryClient.resumePausedMutations();
+                  }}
                 >
                   <RevenueCatProvider>
                     <ShoppingStoreProvider>

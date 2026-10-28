@@ -6,6 +6,7 @@ import {
   onlineManager,
   QueryClient,
 } from "@tanstack/react-query";
+import { TRPCClientError } from "@trpc/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ApiResult } from "./errors";
@@ -55,7 +56,12 @@ const setup = (send: Parameters<typeof shoppingListQueue>[0]["send"]) => {
       update: [["shoppingList", "updateShoppingListItem"]],
       delete: [["shoppingList", "deleteShoppingListItem"]],
     },
-    items: { queryKey: [["shoppingList", "getShoppingListItems"]] },
+    items: (list) => ({
+      queryKey: [
+        ["shoppingList", "getShoppingListItems"],
+        ...(list ? [{ input: list, type: "infinite" }] : []),
+      ],
+    }),
     refetch: { queryKey: [["shoppingList"]] },
     currentMemberId: () => 3,
     send,
@@ -71,7 +77,10 @@ const cachedItems = (queryClient: QueryClient) =>
 const settled = (queryClient: QueryClient) =>
   vi.waitFor(() => expect(queryClient.isMutating()).toBe(0));
 
-afterEach(() => onlineManager.setOnline(true));
+afterEach(() => {
+  onlineManager.setOnline(true);
+  vi.useRealTimers();
+});
 
 describe("shoppingListQueue", () => {
   it("replays an item added and ticked offline after a restart, against its real id", async () => {
@@ -129,9 +138,12 @@ describe("shoppingListQueue", () => {
 
   it("keeps the rest of the queue when the server refuses a tick on a deleted item", async () => {
     onlineManager.setOnline(false);
+    const update = vi.fn(async ({ id }: { id: number }) =>
+      id === 5 ? notFound : ok(id),
+    );
     const { queryClient, queue } = setup({
       create: vi.fn(),
-      update: vi.fn(async ({ id }) => (id === 5 ? notFound : ok(id))),
+      update,
       delete: vi.fn(),
     });
     queryClient.setQueryData(
@@ -148,10 +160,33 @@ describe("shoppingListQueue", () => {
     onlineManager.setOnline(true);
     await settled(queryClient);
 
+    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ id: 6 }));
     expect(cachedItems(queryClient)?.find((i) => i.id === 6)?.completed).toBe(
       true,
     );
     expect(invalidate).toHaveBeenCalledTimes(1);
+    queryClient.unmount();
+  });
+
+  it("never sends a change still waiting to retry once sign-out has cleared the cache", async () => {
+    vi.useFakeTimers();
+    const update = vi.fn(async () => {
+      throw new TRPCClientError("Network request failed");
+    });
+    const { queryClient, queue } = setup({
+      create: vi.fn(),
+      update,
+      delete: vi.fn(),
+    });
+
+    new MutationObserver(queryClient, queue.update)
+      .mutate({ ...item(5, "Milk"), completed: true })
+      .catch(() => undefined);
+    await vi.waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+    queryClient.clear();
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(update).toHaveBeenCalledTimes(1);
     queryClient.unmount();
   });
 });

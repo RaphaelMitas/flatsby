@@ -1,3 +1,4 @@
+import type { CategoryId } from "@flatsby/validators/categories";
 import type {
   createShoppingListItemSchema,
   deleteShoppingListItemSchema,
@@ -12,7 +13,7 @@ import type {
   QueryFilters,
   QueryKey,
 } from "@tanstack/react-query";
-import { z } from "zod/v4";
+import type { z } from "zod/v4";
 
 import type { ApiResult } from "./errors";
 import type { ShoppingListInfiniteData } from "./types";
@@ -31,9 +32,10 @@ type DeleteInput = z.infer<typeof deleteShoppingListItemSchema>;
 interface ShoppingListQueueOptions {
   queryClient: QueryClient;
   keys: { create: MutationKey; update: MutationKey; delete: MutationKey };
-  /** Every cached items query, whatever list or category it shows */
-  items: QueryFilters;
-  /** What to refetch once the queue is empty */
+  items: (list?: {
+    shoppingListId: number;
+    categoryId?: CategoryId;
+  }) => QueryFilters;
   refetch: QueryFilters;
   currentMemberId: (list: {
     groupId: number;
@@ -51,19 +53,9 @@ const QUEUE_SCOPE = "shopping-list-items";
 // Lives in the query cache so it reaches disk in the same save that drops the synced create
 const TEMPORARY_IDS_KEY: QueryKey = ["shopping-list-temporary-ids"];
 
-// A tRPC query key is [path, { input, type }]
-const itemsKeySchema = z.tuple([
-  z.unknown(),
-  z.object({ input: z.object({ shoppingListId: z.number() }) }),
-]);
-
 export const inShoppingListQueue = (mutation: Mutation) =>
   mutation.options.scope?.id === QUEUE_SCOPE;
 
-/**
- * Item changes run one at a time in the order they were made, wait for the
- * network, and replay after a restart from the defaults registered here.
- */
 export const shoppingListQueue = ({
   queryClient,
   keys,
@@ -78,23 +70,30 @@ export const shoppingListQueue = ({
     retry: (_failureCount: number, error: unknown) => neverAnswered(error),
   } satisfies Pick<MutationOptions, "scope" | "networkMode" | "retry">;
 
-  // A temporary id only reaches the server once the create ahead of it in the queue has synced
+  // clear() on sign-out leaves a waiting retry running, and it would send with the next account's cookie
+  const whileQueued =
+    <TInput>(request: (input: TInput) => Promise<ApiResult<number>>) =>
+    (input: TInput) =>
+      queryClient
+        .getMutationCache()
+        .getAll()
+        .some((mutation) => mutation.state.variables === input)
+        ? request(input)
+        : Promise.reject(new Error("Dropped from the shopping list queue"));
+
+  // The queue runs the create first, so its real id is mapped by the time a later change sends
   const realId = (id: number) =>
     queryClient.getQueryData<Record<number, number>>(TEMPORARY_IDS_KEY)?.[id] ??
     id;
 
   const patchItems = async (
+    filters: QueryFilters,
     patch: (
       data: ShoppingListInfiniteData | undefined,
-      key: QueryKey,
     ) => ShoppingListInfiniteData | undefined,
   ) => {
-    await queryClient.cancelQueries(items);
-    for (const [
-      key,
-      data,
-    ] of queryClient.getQueriesData<ShoppingListInfiniteData>(items))
-      queryClient.setQueryData(key, patch(data, key));
+    await queryClient.cancelQueries(filters);
+    queryClient.setQueriesData<ShoppingListInfiniteData>(filters, patch);
   };
 
   // Refetching between queued changes would show the server without the rest of the queue
@@ -106,7 +105,7 @@ export const shoppingListQueue = ({
   const create = {
     ...queued,
     mutationKey: keys.create,
-    mutationFn: send.create,
+    mutationFn: whileQueued(send.create),
     ...resultMutation({
       onMutate: async (input: CreateInput) => {
         // Negative so it never collides with a real id
@@ -122,13 +121,19 @@ export const shoppingListQueue = ({
           completedAt: null,
           isPending: true,
         };
-        // Every category filter too, the server may still pick another category
-        await patchItems((data, key) =>
-          itemsKeySchema.safeParse(key).data?.[1].input.shoppingListId ===
-          input.shoppingListId
-            ? addShoppingListItemToCache(data, item)
-            : data,
-        );
+        const { shoppingListId, categoryId } = input;
+        const add = (data: ShoppingListInfiniteData | undefined) =>
+          addShoppingListItemToCache(data, item);
+        // An auto-selected category is only known once the server answers
+        if (categoryId === "ai-auto-select")
+          await patchItems(items({ shoppingListId }), add);
+        else {
+          await patchItems(
+            items({ shoppingListId, categoryId: undefined }),
+            add,
+          );
+          await patchItems(items({ shoppingListId, categoryId }), add);
+        }
         return id;
       },
       onSuccess: (id: number, _input: CreateInput, temporaryId: number) =>
@@ -143,11 +148,14 @@ export const shoppingListQueue = ({
   const update = {
     ...queued,
     mutationKey: keys.update,
-    mutationFn: (input: UpdateInput) =>
+    mutationFn: whileQueued((input: UpdateInput) =>
       send.update({ ...input, id: realId(input.id) }),
+    ),
     ...resultMutation({
       onMutate: (input: UpdateInput) =>
-        patchItems((data) => updateShoppingListItemInCache(data, input)),
+        patchItems(items(), (data) =>
+          updateShoppingListItemInCache(data, input),
+        ),
       onSettled,
     }),
   };
@@ -155,10 +163,14 @@ export const shoppingListQueue = ({
   const remove = {
     ...queued,
     mutationKey: keys.delete,
-    mutationFn: (input: DeleteInput) => send.delete({ id: realId(input.id) }),
+    mutationFn: whileQueued((input: DeleteInput) =>
+      send.delete({ id: realId(input.id) }),
+    ),
     ...resultMutation({
       onMutate: (input: DeleteInput) =>
-        patchItems((data) => removeShoppingListItemFromCache(data, input.id)),
+        patchItems(items(), (data) =>
+          removeShoppingListItemFromCache(data, input.id),
+        ),
       onSettled,
     }),
   };

@@ -70,11 +70,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     },
   );
 
-  const itemsOptions = shoppingListItemsOptions(
-    groupId,
-    shoppingListId,
-    selectedCategory ?? undefined,
-  );
   const {
     data: itemsData,
     fetchNextPage,
@@ -82,7 +77,11 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     isFetchingNextPage,
     refetch: refetchItems,
   } = useInfiniteQuery({
-    ...itemsOptions,
+    ...shoppingListItemsOptions(
+      groupId,
+      shoppingListId,
+      selectedCategory ?? undefined,
+    ),
     placeholderData: keepPreviousData,
     refetchInterval: poll(5_000),
   });

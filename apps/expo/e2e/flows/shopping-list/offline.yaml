@@ -2,11 +2,9 @@ appId: ${APP_ID}
 tags:
   - shopping-list
 ---
-# Tick an item and add and tick another in airplane mode, restart while still
-# offline, then reconnect and check the server got both ticks. Android only:
-# the iOS simulator has no airplane mode. The API comes in over adb reverse,
-# which airplane mode leaves up, so this tests what the app does with the
-# offline signal, not a dropped connection.
+# Android only: the iOS simulator has no airplane mode.
+# adb reverse survives airplane mode, so this tests the offline signal, not a
+# dropped connection.
 - runFlow:
     when:
       platform: Android
@@ -16,19 +14,11 @@ tags:
           file: ../../subflows/create-shopping-list.yaml
           env:
             LIST_NAME: "Offline List"
-      - tapOn:
-          id: "shopping-list-item-input"
-      - inputText: "Apples"
-      - tapOn:
-          id: "shopping-list-category-picker"
-      - extendedWaitUntil:
-          visible:
-            id: "picker-item-produce"
-          timeout: 20000
-      - tapOn:
-          id: "picker-item-produce"
-      - tapOn:
-          id: "shopping-list-add-item-button"
+      - runFlow:
+          file: ../../subflows/add-shopping-list-item.yaml
+          env:
+            ITEM_NAME: "Apples"
+            CATEGORY: "produce"
       - extendedWaitUntil:
           visible:
             id: "shopping-list-item-checkbox-Apples"
@@ -48,19 +38,11 @@ tags:
           timeout: 10000
 
       # Added offline, so it only has a temporary id until the queue replays
-      - tapOn:
-          id: "shopping-list-item-input"
-      - inputText: "Bread"
-      - tapOn:
-          id: "shopping-list-category-picker"
-      - extendedWaitUntil:
-          visible:
-            id: "picker-item-produce"
-          timeout: 20000
-      - tapOn:
-          id: "picker-item-produce"
-      - tapOn:
-          id: "shopping-list-add-item-button"
+      - runFlow:
+          file: ../../subflows/add-shopping-list-item.yaml
+          env:
+            ITEM_NAME: "Bread"
+            CATEGORY: "bakery"
       - tapOn:
           id: "shopping-list-item-checkbox-Bread"
       - extendedWaitUntil:

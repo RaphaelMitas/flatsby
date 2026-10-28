@@ -4,14 +4,17 @@ import type { ShoppingListInfiniteData } from "./types";
 
 const mapItems = (
   data: ShoppingListInfiniteData | undefined,
-  map: (items: ShoppingListItem[]) => ShoppingListItem[],
+  map: (items: ShoppingListItem[], pageIndex: number) => ShoppingListItem[],
 ) =>
   data && {
     ...data,
-    pages: data.pages.map((page) =>
+    pages: data.pages.map((page, pageIndex) =>
       page.success === false
         ? page
-        : { ...page, data: { ...page.data, items: map(page.data.items) } },
+        : {
+            ...page,
+            data: { ...page.data, items: map(page.data.items, pageIndex) },
+          },
     ),
   };
 
@@ -42,18 +45,10 @@ export const updateShoppingListItemInCache = (
 export const addShoppingListItemToCache = (
   data: ShoppingListInfiniteData | undefined,
   item: ShoppingListItem,
-): ShoppingListInfiniteData | undefined =>
-  data && {
-    ...data,
-    pages: data.pages.map((page, index) =>
-      index > 0 || page.success === false
-        ? page
-        : {
-            ...page,
-            data: { ...page.data, items: [item, ...page.data.items] },
-          },
-    ),
-  };
+) =>
+  mapItems(data, (items, pageIndex) =>
+    pageIndex === 0 ? [item, ...items] : items,
+  );
 
 export const removeShoppingListItemFromCache = (
   data: ShoppingListInfiniteData | undefined,

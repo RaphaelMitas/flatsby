@@ -10,10 +10,8 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
-import { PAGE_SIZE } from "@flatsby/validators/pagination";
-
 import { cn } from "~/lib/utils";
-import { shoppingListMutations, trpc } from "~/utils/api";
+import { shoppingListMutations } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import { useIsOnline } from "~/utils/live-query";
 import { useReviewNudge } from "~/utils/useReviewNudge";
@@ -21,6 +19,7 @@ import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ShoppingItemDisplay } from "./ShoppingItemDisplay";
 import { getCategoryData } from "./ShoppingListCategory";
+import { shoppingListItemsOptions } from "./ShoppingListUtils";
 
 export interface ShoppingListItemProps {
   groupId: number;
@@ -59,15 +58,6 @@ const ShoppingListItem = ({
     shoppingListMutations.update,
   );
 
-  const itemsQueryKey = trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
-    {
-      groupId,
-      shoppingListId,
-      limit: PAGE_SIZE.shoppingListItems,
-      categoryId: selectedCategory ?? undefined,
-    },
-  );
-
   const deleteShoppingListItemMutation = useMutation(
     shoppingListMutations.delete,
   );
@@ -83,7 +73,9 @@ const ShoppingListItem = ({
     const isLastOpenItem =
       selectedCategory === null &&
       (queryClient
-        .getQueryData(itemsQueryKey)
+        .getQueryData(
+          shoppingListItemsOptions(groupId, shoppingListId).queryKey,
+        )
         ?.pages.every(
           (page) =>
             !page.success ||

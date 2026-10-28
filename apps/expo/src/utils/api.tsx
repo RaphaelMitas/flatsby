@@ -156,7 +156,8 @@ export const shoppingListMutations = shoppingListQueue({
     update: trpc.shoppingList.updateShoppingListItem.mutationKey(),
     delete: trpc.shoppingList.deleteShoppingListItem.mutationKey(),
   },
-  items: trpc.shoppingList.getShoppingListItems.pathFilter(),
+  items: (list) =>
+    trpc.shoppingList.getShoppingListItems.infiniteQueryFilter(list),
   refetch: trpc.shoppingList.pathFilter(),
   currentMemberId: ({ groupId, shoppingListId }) => {
     const cached = queryClient.getQueryData(
@@ -165,12 +166,9 @@ export const shoppingListMutations = shoppingListQueue({
     return cached?.success ? cached.data.currentMember.id : null;
   },
   send: {
-    create: (input) =>
-      trpcClient.shoppingList.createShoppingListItem.mutate(input),
-    update: (input) =>
-      trpcClient.shoppingList.updateShoppingListItem.mutate(input),
-    delete: (input) =>
-      trpcClient.shoppingList.deleteShoppingListItem.mutate(input),
+    create: trpcClient.shoppingList.createShoppingListItem.mutate,
+    update: trpcClient.shoppingList.updateShoppingListItem.mutate,
+    delete: trpcClient.shoppingList.deleteShoppingListItem.mutate,
   },
 });
 
