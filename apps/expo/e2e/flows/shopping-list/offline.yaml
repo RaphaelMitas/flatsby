@@ -1,6 +1,13 @@
 appId: ${APP_ID}
 tags:
   - shopping-list
+# A failed run would otherwise leave the emulator offline for the rerun
+onFlowComplete:
+  - runFlow:
+      when:
+        platform: Android
+      commands:
+        - setAirplaneMode: disabled
 ---
 # Android only: the iOS simulator has no airplane mode.
 # adb reverse survives airplane mode, so this tests the offline signal, not a
@@ -53,10 +60,10 @@ tags:
           visible: "Offline · 3 changes sync later"
           timeout: 10000
 
+      # A swipe UP from the pill's id never dismissed it on CI; these points start inside the pill
       - swipe:
-          from:
-            id: "sync-pill"
-          direction: UP
+          start: "50%, 8%"
+          end: "50%, 2%"
       - extendedWaitUntil:
           notVisible:
             id: "sync-pill"
