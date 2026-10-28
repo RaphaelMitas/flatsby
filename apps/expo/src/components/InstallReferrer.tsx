@@ -46,6 +46,7 @@ export function InstallReferrer() {
         utm_medium: params.get("utm_medium"),
         utm_campaign: params.get("utm_campaign"),
         via_invite: params.has(INVITE_REFERRER_KEY),
+        via_ad: params.has("gclid"),
       });
       const code = inviteCodeSchema.safeParse(
         params.get(INVITE_REFERRER_KEY) ?? "",
