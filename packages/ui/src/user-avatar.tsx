@@ -2,6 +2,7 @@
 
 import { cn } from ".";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+import { initials } from "./lib/initials";
 
 const sizeConfig = {
   xs: { className: "h-5 w-5", letters: 1, textClass: "text-[10px]" },
@@ -28,12 +29,13 @@ export function UserAvatar({
   className,
 }: UserAvatarProps) {
   const config = sizeConfig[size];
-  const initials = name.substring(0, config.letters).toUpperCase();
 
   return (
     <Avatar className={cn(config.className, className)}>
       <AvatarImage src={image ?? undefined} alt={name} />
-      <AvatarFallback className={config.textClass}>{initials}</AvatarFallback>
+      <AvatarFallback className={config.textClass}>
+        {initials(name, config.letters)}
+      </AvatarFallback>
     </Avatar>
   );
 }

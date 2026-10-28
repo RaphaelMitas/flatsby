@@ -13,6 +13,12 @@ export const invite = {
     "Der Link konnte nicht zurückgesetzt werden. Bitte versuch es noch einmal.",
   loadFailed:
     "Die Einladung konnte nicht geladen werden. Bitte versuch es noch einmal.",
+  done: "Fertig",
+  solo: {
+    title: "Bisher nur du",
+    body: "Flatsby ist für die ganze WG gemacht. Teil die Einladung mit deinen Mitbewohnern.",
+    dismiss: "Ausblenden",
+  },
   expiresIn:
     "{days, plural, =1 {Läuft innerhalb eines Tages ab} other {Läuft in # Tagen ab}}",
   join: {
@@ -22,6 +28,9 @@ export const invite = {
     lookAlikes: "O und 0 sowie I und 1 gelten als gleich",
     continue: "Weiter",
     invitedYouTo: "Einladung von {name}",
+    cardTitle: "{name} hat dich zu {group} eingeladen",
+    cardDescription:
+      "{members} · Einkaufslisten, Ausgaben und Putzplan zusammen.",
     consent:
       "Die Mitglieder sehen deinen Namen und dein Profilbild, und du siehst die Listen und Ausgaben der Gruppe.",
     join: "{group} beitreten",

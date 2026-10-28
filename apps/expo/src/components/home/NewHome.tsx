@@ -50,6 +50,7 @@ import {
   PersonLead,
 } from "./HomeRows";
 import { SwitchBack } from "./HomeSwitch";
+import { InviteFlatmatesCard } from "./InviteFlatmatesCard";
 import { QuickAddDial } from "./QuickAddDial";
 
 export function NewHome() {
@@ -154,6 +155,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries(trpc.calendar.range.pathFilter()),
+      queryClient.invalidateQueries(trpc.group.getGroup.pathFilter()),
       queryClient.invalidateQueries(trpc.expense.getDebtSummary.pathFilter()),
       queryClient.invalidateQueries(
         trpc.shoppingList.getShoppingLists.pathFilter(),
@@ -309,6 +311,8 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             router.push(settleHref(debt, "direct"), { withAnchor: true })
           }
         />
+
+        <InviteFlatmatesCard groupId={group.id} className="mt-6" />
 
         {rows.length > 0 && (
           <HomeRows title={t("home.new.household")}>

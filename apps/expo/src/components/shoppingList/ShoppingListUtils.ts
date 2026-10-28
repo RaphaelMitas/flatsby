@@ -1,12 +1,14 @@
 import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import superjson from "superjson";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { updateShoppingListItemInCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
+import { holdWhileMutating } from "~/utils/live-query";
 import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
 type SectionKey = "today" | "last7Days" | "older";
@@ -91,6 +93,12 @@ export const shoppingListItemsOptions = (
     {
       getNextPageParam: (lastPage) =>
         lastPage.success === true ? lastPage.data.nextCursor : null,
+      staleTime: holdWhileMutating(trpc.shoppingList.pathKey()),
+      // Item dates defeat the default sharing, so every unchanged poll would re-render every row
+      structuralSharing: (previous, next) =>
+        superjson.stringify(previous) === superjson.stringify(next)
+          ? previous
+          : next,
     },
   );
 

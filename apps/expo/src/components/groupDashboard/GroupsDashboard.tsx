@@ -8,19 +8,22 @@ import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import { trpc } from "~/utils/api";
 import GroupsDashboardElement from "./GroupsDashboardElement";
+import { StartOrJoin } from "./StartOrJoin";
 
 export function GroupsDashboard() {
   const t = useTranslations();
   const router = useRouter();
 
-  const {
-    data: groups,
-    refetch,
-    isRefetching,
-  } = useSuspenseQuery(trpc.group.getUserGroups.queryOptions());
+  const { data: groups, refetch } = useSuspenseQuery(
+    trpc.group.getUserGroups.queryOptions(),
+  );
 
   if (!groups.success) {
     return null;
+  }
+
+  if (groups.data.length === 0) {
+    return <StartOrJoin />;
   }
 
   return (
@@ -43,24 +46,7 @@ export function GroupsDashboard() {
         />
       </View>
 
-      {groups.data.length === 0 && (
-        <View className="flex flex-col items-center justify-center gap-4">
-          <Text className="text-foreground text-center text-lg font-semibold">
-            {t("group.dashboard.empty")}
-          </Text>
-          <Button
-            title={t("group.create.title")}
-            variant="primary"
-            size="lg"
-            onPress={() => router.push("/(tabs)/home/create-group")}
-          />
-        </View>
-      )}
-      <PullToRefresh
-        refreshing={isRefetching}
-        onRefresh={refetch}
-        parentPaddingX={16}
-      >
+      <PullToRefresh onRefresh={refetch} parentPaddingX={16}>
         {(refreshProps) => (
           <FlashList
             {...refreshProps}

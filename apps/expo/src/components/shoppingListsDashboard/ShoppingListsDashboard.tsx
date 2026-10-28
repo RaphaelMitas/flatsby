@@ -54,11 +54,7 @@ function ShoppingListsDashboardInner() {
   const router = useRouter();
   const { selectedGroupId, selectedGroupName } = useShoppingStore();
 
-  const {
-    data: shoppingLists,
-    refetch,
-    isRefetching,
-  } = useSuspenseQuery(
+  const { data: shoppingLists, refetch } = useSuspenseQuery(
     trpc.shoppingList.getShoppingLists.queryOptions({
       groupId: selectedGroupId ?? -1,
     }),
@@ -119,11 +115,7 @@ function ShoppingListsDashboardInner() {
             </Text>
           </View>
         ) : (
-          <PullToRefresh
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            parentPaddingX={16}
-          >
+          <PullToRefresh onRefresh={refetch} parentPaddingX={16}>
             {(refreshProps) => (
               <FlashList
                 {...refreshProps}

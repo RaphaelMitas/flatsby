@@ -24,6 +24,7 @@ import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { trpc } from "~/utils/api";
+import { useLivePolling } from "~/utils/live-query";
 import { CategoryFilterPills } from "./CategoryFilter/CategoryFilterPills";
 import { CategoryFilterSidebar } from "./CategoryFilter/CategoryFilterSidebar";
 import ShoppingListItem from "./ShoppingListItem";
@@ -62,15 +63,20 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     trpc.shoppingList.getShoppingList.queryOptions({ groupId, shoppingListId }),
   );
 
-  const {
-    data: categoryCountsData,
-    refetch: refetchCategoryCounts,
-    isRefetching: isRefetchingCategoryCounts,
-  } = useQuery(
-    trpc.shoppingList.getCategoryCounts.queryOptions({
-      groupId,
-      shoppingListId,
-    }),
+  // A deleted list stays selected, and polling it would only collect errors
+  const poll = useLivePolling(
+    trpc.shoppingList.pathKey(),
+    shoppingListData.success,
+  );
+
+  const { data: categoryCountsData, refetch: refetchCategoryCounts } = useQuery(
+    {
+      ...trpc.shoppingList.getCategoryCounts.queryOptions({
+        groupId,
+        shoppingListId,
+      }),
+      refetchInterval: poll(30_000),
+    },
   );
 
   const itemsOptions = shoppingListItemsOptions(
@@ -84,18 +90,16 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     hasNextPage,
     isFetchingNextPage,
     refetch: refetchItems,
-    isRefetching: isRefetchingItems,
   } = useInfiniteQuery({
     ...itemsOptions,
     placeholderData: keepPreviousData,
+    refetchInterval: poll(5_000),
   });
 
   const handleRefresh = useCallback(
     () => Promise.all([refetchItems(), refetchCategoryCounts()]),
     [refetchItems, refetchCategoryCounts],
   );
-
-  const isRefreshing = isRefetchingItems || isRefetchingCategoryCounts;
 
   const { shoppingList, currentMember } =
     shoppingListData.success === true
@@ -360,7 +364,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
               />
             </View>
 
-            <PullToRefresh refreshing={isRefreshing} onRefresh={handleRefresh}>
+            <PullToRefresh onRefresh={handleRefresh}>
               {(refreshProps) => (
                 <FlashList
                   {...refreshProps}

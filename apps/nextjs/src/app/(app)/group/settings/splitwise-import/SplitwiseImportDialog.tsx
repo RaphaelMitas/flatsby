@@ -46,12 +46,9 @@ import {
 } from "@flatsby/ui/table";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import {
-  CURRENCY_CODES,
-  isCurrencyCode,
-} from "@flatsby/validators/expenses/types";
 import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImport";
 
+import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
 
 interface SplitwiseImportDialogProps {
@@ -247,23 +244,7 @@ function StepFile({
 
       <div className="space-y-2">
         <Label>{t("currencyToImport")}</Label>
-        <Select
-          value={wizard.currency}
-          onValueChange={(val) => {
-            if (isCurrencyCode(val)) wizard.setCurrency(val);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {CURRENCY_CODES.map((code) => (
-              <SelectItem key={code} value={code}>
-                {code}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <CurrencySelect value={wizard.currency} onChange={wizard.setCurrency} />
       </div>
 
       {wizard.parsed && (
