@@ -40,11 +40,16 @@ import { useTRPC } from "~/trpc/react";
 
 export function PaypalHandleCard() {
   const trpc = useTRPC();
+  const { data } = useSuspenseQuery(trpc.user.getPaypalHandle.queryOptions());
+  // An empty form after a failed load would clear the stored name on Save
+  if (!data.success) return null;
+  return <PaypalHandleForm stored={data.data} />;
+}
+
+function PaypalHandleForm({ stored }: { stored: string | null }) {
+  const trpc = useTRPC();
   const t = useTranslations();
   const queryClient = useQueryClient();
-
-  const { data } = useSuspenseQuery(trpc.user.getPaypalHandle.queryOptions());
-  const stored = data.success ? data.data : null;
 
   const form = useForm({
     resolver: zodResolver(paypalHandleInputSchema),

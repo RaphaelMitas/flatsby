@@ -34,8 +34,9 @@ import { trpc } from "~/utils/api";
 // Loads on its own so the rest of Profile never waits on it, offline included
 export function PaypalHandleCard() {
   const { data } = useQuery(trpc.user.getPaypalHandle.queryOptions());
-  if (!data) return null;
-  return <PaypalHandleForm stored={data.success ? data.data : null} />;
+  // An empty form after a failed load would clear the stored name on Save
+  if (!data?.success) return null;
+  return <PaypalHandleForm stored={data.data} />;
 }
 
 function PaypalHandleForm({ stored }: { stored: string | null }) {
