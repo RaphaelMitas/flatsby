@@ -55,7 +55,6 @@ export function CacheRefreshPill() {
 
   if (online !== wasOnline) {
     setWasOnline(online);
-    // A dismissed pill comes back the next time the network drops
     setDismissed(false);
     setReplaying(online && queued > 0);
   }

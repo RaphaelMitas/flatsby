@@ -62,7 +62,6 @@ tags:
             id: "sync-pill"
           timeout: 10000
 
-      # The queue and the ticks have to survive a restart
       - runFlow:
           file: ../../subflows/relaunch.yaml
           env:

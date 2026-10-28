@@ -12,7 +12,7 @@ export interface ShoppingItemDisplayProps {
   name: string;
   completed: boolean;
   categoryId: CategoryIdWithAiAutoSelect | null;
-  onCheckedChange?: (checked: boolean) => void;
+  onCheckedChange: (checked: boolean) => void;
   unsynced?: boolean;
   className?: string;
   checkboxTestID?: string;
@@ -41,7 +41,6 @@ export function ShoppingItemDisplay({
           testID={checkboxTestID}
           checked={completed}
           onCheckedChange={onCheckedChange}
-          disabled={!onCheckedChange}
         />
         <View className="flex-1">
           <Text

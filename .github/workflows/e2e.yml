@@ -175,7 +175,7 @@ jobs:
           - shard: sl-browse
             areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
           - shard: sl-manage
-            areas: shopping-list/management shopping-list/suggestions shopping-list/offline
+            areas: shopping-list/management shopping-list/suggestions
           - shard: expenses
             areas: expenses
     env:
