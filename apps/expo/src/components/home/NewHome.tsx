@@ -1,6 +1,6 @@
 import type { GroupWithAccess, ShoppingListSummary } from "@flatsby/api";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import {
   useInfiniteQuery,
@@ -27,19 +27,18 @@ import {
 import type { Nudge } from "./ForYouCard";
 import type { HomeRowProps } from "./HomeRows";
 import { fromPickerTime } from "~/components/calendar/calendarDates";
-import { calendarRangeOptions } from "~/components/calendar/CalendarScreen";
+import { calendarRangeOptions } from "~/components/calendar/calendarRangeOptions";
 import { useCalendarMutations } from "~/components/calendar/useCalendarMutations";
 import { settleHref } from "~/components/expenses/settleHref";
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
 import { GroupGate } from "~/components/GroupGate";
 import { shoppingListItemsOptions } from "~/components/shoppingList/ShoppingListUtils";
+import { GroupSwitcher } from "~/components/switcher/GroupSwitcher";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
-import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useNow } from "~/utils/useNow";
-import { useGroupPicker } from "../dashboard/useGroupPicker";
 import { ForYouCard } from "./ForYouCard";
 import {
   CountLead,
@@ -89,7 +88,6 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const openGroupPicker = useGroupPicker();
   const { selectedShoppingListId, setSelectedShoppingList } =
     useShoppingStore();
   const { setDone } = useCalendarMutations(group);
@@ -116,10 +114,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const { owe, owed } = debtData.success
     ? myDebts(debtData.data, meId, group.currency)
     : { owe: [], owed: [] };
-  // A list still being created has a placeholder id and can't be opened yet
-  const lists = (listsData.success ? listsData.data : []).filter(
-    ({ id }) => id > 0,
-  );
+  const lists = listsData.success ? listsData.data : [];
   const selectedList = lists.find(({ id }) => id === selectedShoppingListId);
   const lastList = selectedList ?? lists[0];
 
@@ -156,6 +151,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     Promise.all([
       queryClient.invalidateQueries(trpc.calendar.range.pathFilter()),
       queryClient.invalidateQueries(trpc.group.getGroup.pathFilter()),
+      queryClient.invalidateQueries(trpc.group.getUserGroups.pathFilter()),
       queryClient.invalidateQueries(trpc.expense.getDebtSummary.pathFilter()),
       queryClient.invalidateQueries(
         trpc.shoppingList.getShoppingLists.pathFilter(),
@@ -274,16 +270,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   return (
     <View className="flex-1">
       <AppScrollView contentContainerClassName="px-5 pb-32" onRefresh={refresh}>
-        <Pressable
-          testID="home-group-picker"
-          onPress={openGroupPicker}
-          className="flex-row items-center gap-1 self-start py-2"
-        >
-          <Text className="text-muted-foreground text-sm font-semibold">
-            {group.name}
-          </Text>
-          <Icon name="chevron-down" size={15} color="muted-foreground" />
-        </Pressable>
+        <GroupSwitcher testID="home-group-picker" className="mt-2 mb-4" />
 
         <View className="pr-20">
           <Text
@@ -326,7 +313,6 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       </AppScrollView>
 
       <QuickAddDial
-        groupId={group.id}
         last={lastList}
         lastUsed={selectedList !== undefined}
         others={lists.filter((list) => list !== lastList)}

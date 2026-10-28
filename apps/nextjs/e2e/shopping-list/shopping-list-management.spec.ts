@@ -5,70 +5,54 @@ import {
 } from "../helpers/shopping-list";
 
 test.describe("Shopping List Management", () => {
-  test("Rename List: user can change the name of an existing shopping list from the dashboard", async ({
+  test("Rename List: renaming from the switcher updates the open list", async ({
     authPage,
   }) => {
     const listId = await createShoppingList(authPage);
 
-    await authPage.goto("/shopping-list");
-
-    const renameButton = authPage.getByTestId(
-      `shopping-list-dashboard-rename-${listId}`,
-    );
-    await expect(renameButton).toBeVisible();
-    await renameButton.click();
+    const switcher = authPage.getByTestId("shopping-list-switcher");
+    await switcher.click();
+    await authPage.getByTestId(`shopping-list-switcher-more-${listId}`).click();
 
     const newListName = `Renamed List ${Date.now()}`;
     await authPage.getByTestId("shopping-list-rename-input").fill(newListName);
-    await authPage.getByTestId("shopping-list-rename-save").click();
+    await authPage.getByTestId("shopping-list-rename-submit").click();
 
-    await expect(authPage.getByText(newListName).first()).toBeVisible({
-      timeout: 10000,
-    });
-
-    const listLink = authPage.getByTestId(
-      `shopping-list-dashboard-link-${listId}`,
-    );
-    await expect(listLink).toBeVisible();
-    await expect(listLink).toContainText(newListName);
+    await expect(switcher).toContainText(newListName, { timeout: 10000 });
   });
 
-  test("Delete List: deleting a list removes it from the dashboard and cleans up associated items", async ({
+  test("Delete List: deleting the open list leaves it and removes its items", async ({
     authPage,
   }) => {
+    const keptName = `Kept ${Date.now()}`;
+    const keptId = await createShoppingList(authPage, keptName);
     const listId = await createShoppingList(authPage);
 
     const itemName = `Item ${Date.now()}`;
     await addShoppingListItem(authPage, itemName);
 
-    await authPage.goto("/shopping-list");
-
-    const deleteButton = authPage.getByTestId(
-      `shopping-list-dashboard-delete-${listId}`,
-    );
-    await expect(deleteButton).toBeVisible();
-    await deleteButton.click();
+    await authPage.getByTestId("shopping-list-switcher").click();
+    await authPage.getByTestId(`shopping-list-switcher-more-${listId}`).click();
+    await authPage.getByTestId("shopping-list-delete").click();
 
     const dialog = authPage.getByTestId("shopping-list-delete-dialog");
     await expect(dialog).toBeVisible({ timeout: 10000 });
     await expect(dialog.getByText("Delete Shopping List")).toBeVisible();
     await expect(
-      dialog.getByText("Are you sure you want to delete"),
-    ).toBeVisible();
-    await expect(
       dialog.getByText("This action cannot be undone"),
     ).toBeVisible();
-
     await dialog.getByRole("button", { name: "Delete" }).click();
 
-    await expect(dialog).not.toBeVisible();
-
-    const listLink = authPage.getByTestId(
-      `shopping-list-dashboard-link-${listId}`,
+    await authPage.waitForURL(`/shopping-list/${keptId}`);
+    await expect(authPage.getByTestId("shopping-list-switcher")).toContainText(
+      keptName,
     );
-    await expect(listLink).not.toBeVisible();
-
     await expect(authPage.getByText(itemName)).not.toBeVisible();
+
+    await authPage.getByTestId("shopping-list-switcher").click();
+    await expect(
+      authPage.getByTestId(`shopping-list-switcher-item-${listId}`),
+    ).toHaveCount(0);
   });
 
   test("Category Filtering: selecting a category filter only shows items belonging to that category", async ({

@@ -9,7 +9,7 @@ Before any functional test runs, the system must ensure a valid session.
 
 ## 🛒 Shopping List Tests
 Tests focused on the collaborative management of shopping items.
-- [Shopping List Dashboard](docs/e2e-test-specs/shopping-list-dashboard.md)
+- [Shopping List Switcher](docs/e2e-test-specs/shopping-list-dashboard.md)
 - [Shopping List Items](docs/e2e-test-specs/shopping-list-items.md)
 - [Shopping List Management](docs/e2e-test-specs/shopping-list-management.md)
 - [Shopping List Suggestions](docs/e2e-test-specs/shopping-list-suggestions.md)

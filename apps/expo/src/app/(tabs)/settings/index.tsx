@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { localeNames, locales } from "@flatsby/i18n/locale";
 
 import type { Theme } from "~/lib/ui/theme";
+import { EveningReminderItem } from "~/components/settings/EveningReminderItem";
 import { SettingsChoiceItem } from "~/components/settings/SettingsChoiceItem";
 import { SettingsHeader } from "~/components/settings/SettingsHeader";
 import { SettingsItem } from "~/components/settings/SettingsItem";
@@ -119,6 +120,9 @@ export default function SettingsIndex() {
               { value: "new", label: t("settings.items.homeNew") },
             ]}
           />
+        </SettingsSection>
+        <SettingsSection title={t("settings.sections.notifications")}>
+          <EveningReminderItem />
         </SettingsSection>
         <SettingsSection title={t("settings.sections.groups")}>
           <Link href="/settings/manage-groups" asChild>

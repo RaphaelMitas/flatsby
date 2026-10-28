@@ -114,6 +114,11 @@
       "matchPackageNames": ["/^@types//"]
     },
     {
+      "description": "@types/node tracks the runtime major in .nvmrc (CI and Vercel run Node 24). Raise together with .nvmrc and engines",
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<25"
+    },
+    {
       "description": "Group React Native Vector Icons",
       "groupName": "react-native-vector-icons",
       "matchPackageNames": ["/^@react-native-vector-icons//"]

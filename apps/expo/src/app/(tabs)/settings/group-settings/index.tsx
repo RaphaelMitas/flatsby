@@ -78,13 +78,6 @@ export default function GroupSettingsIndex() {
               iconName="wallet"
             />
           </Link>
-          <Link href="/(tabs)/home/shopping-lists" asChild>
-            <SettingsItem
-              title={t("group.settings.selectShoppingList")}
-              subtitle={t("group.settings.selectShoppingListSubtitle")}
-              iconName="shopping-cart"
-            />
-          </Link>
           <Link href="/(tabs)/settings/group-settings/import-expenses" asChild>
             <SettingsItem
               title={t("group.settings.importExpenses")}

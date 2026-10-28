@@ -19,6 +19,7 @@ import {
   editedDays,
   editedEndsOn,
   editedStartsOn,
+  eveningReminders,
   expandOccurrences,
   formEndsOn,
   homeAgenda,
@@ -1060,5 +1061,52 @@ describe("homeAgenda", () => {
       homeAgenda(rangeOf(dinner), "2026-10-21", "23:30", ME).nextEvent?.item
         .title,
     ).toBe("Late dinner");
+  });
+});
+
+describe("eveningReminders", () => {
+  const ME = 1;
+  const dishes: CalendarItemView = {
+    ...item({ type: "daily", interval: 1 }, "2026-10-20", [ME, 2]),
+    title: "Dishes",
+  };
+  const party: CalendarItemView = {
+    ...item(null, "2026-10-23"),
+    id: 2,
+    kind: "event",
+    title: "Party",
+    time: { start: "19:00", end: "23:00" },
+  };
+  const summary = (overrides: OccurrenceOverride[] = []) =>
+    eveningReminders(
+      {
+        items: [dishes, party],
+        occurrences: [
+          ...expandOccurrences(dishes, overrides, window.from, window.to),
+          ...expandOccurrences(party, [], window.from, window.to),
+        ],
+      },
+      "2026-10-21",
+      "2026-10-25",
+      ME,
+    ).map(({ evening, turns, events, open }) => [
+      evening,
+      turns.map(({ item }) => item.title),
+      events.map(({ item }) => item.title),
+      open.map(({ occurrence }) => occurrence.date),
+    ]);
+
+  it("reminds the evening before each of my turns and each event, with my chores still open", () => {
+    expect(summary()).toEqual([
+      ["2026-10-21", ["Dishes"], [], ["2026-10-20"]],
+      ["2026-10-22", [], ["Party"], ["2026-10-22"]],
+      ["2026-10-23", ["Dishes"], [], ["2026-10-22"]],
+    ]);
+  });
+
+  it("drops a turn ticked early and chores already done", () => {
+    expect(
+      summary([done("2026-10-20"), done("2026-10-22"), done("2026-10-24")]),
+    ).toEqual([["2026-10-22", [], ["Party"], []]]);
   });
 });

@@ -3,7 +3,6 @@ export const home = {
   createGroup: "Create group",
   loadingDashboard: "Loading dashboard...",
   retry: "Retry",
-  selectGroup: "select group",
   shoppingLists: "Shopping lists",
   somethingWentWrong: "Something went wrong",
   new: {

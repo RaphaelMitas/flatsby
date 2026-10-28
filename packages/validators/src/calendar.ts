@@ -758,6 +758,11 @@ function agendaDays(
 const isOpenTask = ({ item, occurrence }: CalendarEntry) =>
   item.kind === "task" && !occurrence.completedAt;
 
+const myOpenTasks = (entries: CalendarEntry[], meId: number) =>
+  entries.filter(
+    (entry) => isOpenTask(entry) && entry.occurrence.turnGroupMemberId === meId,
+  );
+
 export const timesMissed = (entry: AgendaEntry, today: string) =>
   isOpenTask(entry)
     ? (entry.missed?.length ?? 0) + (entry.occurrence.date < today ? 1 : 0)
@@ -1045,16 +1050,48 @@ export function homeAgenda(
   meId: number,
 ) {
   const entries = rangeEntries(range);
-  const myOpenTasks = entries.filter(
-    (entry) => isOpenTask(entry) && entry.occurrence.turnGroupMemberId === meId,
-  );
+  const mine = myOpenTasks(entries, meId);
   return {
-    due: latestOpen(myOpenTasks, today),
-    nextTurn: myOpenTasks.find(({ occurrence }) => occurrence.date > today),
+    due: latestOpen(mine, today),
+    nextTurn: mine.find(({ occurrence }) => occurrence.date > today),
     nextEvent: entries.find(
       (entry) => entry.item.kind === "event" && notOverYet(entry, today, now),
     ),
   };
+}
+
+export interface EveningReminder {
+  evening: string;
+  turns: CalendarEntry[];
+  events: CalendarEntry[];
+  open: DueChore[];
+}
+
+export function eveningReminders(
+  range: CalendarRange,
+  from: string,
+  to: string,
+  meId: number,
+) {
+  const entries = rangeEntries(range);
+  const mine = myOpenTasks(entries, meId);
+  const reminders: EveningReminder[] = [];
+  for (let evening = from; evening < to; evening = addDays(evening, 1)) {
+    const tomorrow = addDays(evening, 1);
+    const on = ({ occurrence }: CalendarEntry) => occurrence.date === tomorrow;
+    const turns = mine.filter(on);
+    const events = entries.filter(
+      (entry) => entry.item.kind === "event" && on(entry),
+    );
+    if (turns.length > 0 || events.length > 0)
+      reminders.push({
+        evening,
+        turns,
+        events,
+        open: latestOpen(mine, evening),
+      });
+  }
+  return reminders;
 }
 
 type Schedule = Pick<ExpandableItem, "startsOn" | "recurrence">;

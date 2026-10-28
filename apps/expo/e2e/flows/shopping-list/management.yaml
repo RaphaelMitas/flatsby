@@ -3,37 +3,19 @@ tags:
   - shopping-list
 ---
 # Mirrors apps/nextjs/e2e/shopping-list/shopping-list-management.spec.ts:
-# rename a list from the dashboard, then delete a list (with typed
+# rename a list from the switcher, then delete the open list (with typed
 # confirmation). Like the web spec, deletion targets a freshly created list.
 - runFlow: ../../subflows/e2e-login.yaml
 
-# Select group, create a list, but stay on the lists dashboard
-- tapOn:
-    id: "group-select-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-create-button"
-    timeout: 15000
-- tapOn:
-    id: "shopping-list-create-button"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-create-input"
-    timeout: 15000
-- tapOn:
-    id: "shopping-list-create-input"
-- inputText: "Rename Me"
-- tapOn:
-    id: "shopping-list-create-submit"
-- extendedWaitUntil:
-    visible: "Rename Me"
-    timeout: 15000
+- runFlow:
+    file: ../../subflows/create-shopping-list.yaml
+    env:
+      LIST_NAME: "Rename Me"
 
-# Rename: swipe right on the list row to reveal the inline rename form
-- swipe:
-    from:
-      text: "Rename Me"
-    direction: RIGHT
+# Rename through the row's ⋯ in the switcher
+- tapOn:
+    id: "shopping-list-title"
+- tapOn: "More for Rename Me"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-rename-input"
@@ -64,9 +46,11 @@ tags:
           visible: "Renamed List"
           timeout: 15000
 
-# Create a second list to exercise deletion
+# Create a second list to exercise deletion; it opens once created
 - tapOn:
-    id: "shopping-list-create-button"
+    id: "shopping-list-title"
+- tapOn:
+    id: "list-switcher-new"
 - extendedWaitUntil:
     visible:
       id: "shopping-list-create-input"
@@ -80,18 +64,29 @@ tags:
     visible: "Doomed List"
     timeout: 15000
 
-# Delete: swipe left on the list row, type the name in the dialog, confirm
-- swipe:
-    from:
-      text: "Doomed List"
-    direction: LEFT
+# Delete the open list, type the name in the dialog, confirm
+- tapOn:
+    id: "shopping-list-title"
+- tapOn: "More for Doomed List"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-delete"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-delete"
 - runFlow:
     file: ../../subflows/confirm-delete.yaml
     env:
       CONFIRM_TEXT: "Doomed List"
 
-# Only the deleted list is gone
+# Only the deleted list is gone, and the tab falls back to the other one.
+# Checked in the switcher, not by bare text: the tab label carries the open
+# list's name, and on iOS CI "Doomed List" lingered after the screen updated.
 - extendedWaitUntil:
-    notVisible: "Doomed List"
+    visible: "0 items left · 1 list"
     timeout: 15000
 - assertVisible: "Renamed List"
+- tapOn:
+    id: "shopping-list-title"
+- assertVisible: "More for Renamed List"
+- assertNotVisible: "More for Doomed List"

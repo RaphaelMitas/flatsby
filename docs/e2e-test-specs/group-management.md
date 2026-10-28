@@ -21,3 +21,4 @@ Verify the complete lifecycle of a group from creation through member management
 15. **Delete Group**: Verify that an admin can delete the group and all associated data (shopping lists, items, conversations) is removed.
 16. **Deleted Group Inaccessible**: Verify that after group deletion, no former members can access the group and it disappears from all dashboards.
 17. **Delete Group Clears User References**: Verify that deleting a group nulls out `lastGroupUsed` and `lastShoppingListUsed` references on affected users.
+18. **Switch Groups**: Verify that picking another group in the home's group switcher makes it the current group.
