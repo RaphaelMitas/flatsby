@@ -1,5 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
@@ -52,6 +52,7 @@ export function Switcher({
   className?: string;
 }) {
   const sheetRef = useRef<BottomSheetModal>(null);
+  const [picked, setPicked] = useState<number | null>(null);
   const closeThen = (run: () => void) => () => {
     sheetRef.current?.dismiss();
     run();
@@ -63,7 +64,10 @@ export function Switcher({
         testID={barTestID}
         accessible={e2eAccessibilityOverride()}
         accessibilityRole="button"
-        onPress={() => sheetRef.current?.present()}
+        onPress={() => {
+          setPicked(null);
+          sheetRef.current?.present();
+        }}
         className={cn(
           "border-border bg-card active:bg-muted flex-row items-center gap-3 rounded-2xl border p-2.5 shadow-sm",
           className,
@@ -101,13 +105,17 @@ export function Switcher({
           </View>
 
           {items.map((item) => {
-            const current = item.id === selectedId;
+            const current = item.id === (picked ?? selectedId);
             return (
               <View key={item.id} className="flex-row items-center">
                 <Pressable
                   testID={`${sheetTestID}-item-${item.id}`}
                   accessible={e2eAccessibilityOverride()}
-                  onPress={closeThen(() => onSelect(item))}
+                  onPress={() => {
+                    setPicked(item.id);
+                    // iOS animates the sheet out for a while; let the new check paint first
+                    requestAnimationFrame(closeThen(() => onSelect(item)));
+                  }}
                   className="flex-1 flex-row items-center gap-3 p-2"
                 >
                   <View
