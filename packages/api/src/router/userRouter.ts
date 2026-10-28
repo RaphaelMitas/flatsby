@@ -256,13 +256,16 @@ export const userRouter = createTRPCRouter({
             (db) => findPaymentDetails(db, userId),
             options,
           );
+          const iban =
+            input.iban === undefined ? (stored?.iban ?? null) : input.iban;
           const details = {
-            accountHolder:
-              input.accountHolder === undefined
+            // The holder only names the IBAN's account, so it never outlives it
+            accountHolder: iban
+              ? input.accountHolder === undefined
                 ? (stored?.accountHolder ?? null)
-                : input.accountHolder,
-            iban:
-              input.iban === undefined ? (stored?.iban ?? null) : input.iban,
+                : input.accountHolder
+              : null,
+            iban,
             paypalHandle:
               input.paypalHandle === undefined
                 ? (stored?.paypalHandle ?? null)

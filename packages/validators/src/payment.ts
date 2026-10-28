@@ -170,9 +170,7 @@ export const paymentDetailsInput = (
   const accountHolder = values.accountHolder.trim();
   return {
     ...(dirty.iban && { iban, accountHolder: iban ? accountHolder : null }),
-    ...(dirty.accountHolder &&
-      !dirty.iban &&
-      accountHolder && { accountHolder }),
+    ...(dirty.accountHolder && !dirty.iban && iban && { accountHolder }),
     ...(dirty.paypalHandle && {
       paypalHandle: values.paypalHandle.trim() || null,
     }),

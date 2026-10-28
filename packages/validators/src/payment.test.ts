@@ -174,6 +174,10 @@ describe("paymentDetailsInput", () => {
     });
   });
 
+  it("sends no account holder without an IBAN", () => {
+    expect(paymentDetailsInput(values, { accountHolder: true })).toEqual({});
+  });
+
   it("clears the account holder along with the IBAN", () => {
     expect(paymentDetailsInput(values, { iban: true })).toEqual({
       iban: null,
