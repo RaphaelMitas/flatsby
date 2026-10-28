@@ -68,9 +68,9 @@ export function PaymentDetails() {
           });
           form.reset(paymentDetailsFormValues(details, user.name));
           toast.success(
-            details
-              ? t("settings.payment.saved")
-              : t("settings.payment.removed"),
+            stored && !details
+              ? t("settings.payment.removed")
+              : t("settings.payment.saved"),
           );
         },
         onFailure: (message) =>
@@ -80,7 +80,7 @@ export function PaymentDetails() {
   );
 
   const save = (values: PaymentDetailsFormValues) =>
-    mutation.mutate(paymentDetailsInput(values));
+    mutation.mutate(paymentDetailsInput(values, form.formState.dirtyFields));
 
   return (
     <Card data-testid="payment-details-card">
@@ -176,7 +176,7 @@ export function PaymentDetails() {
                   }
                   data-testid="payment-remove-button"
                 >
-                  {t("settings.payment.remove")}
+                  {t("common.remove")}
                 </Button>
               )}
               <Button
@@ -187,7 +187,7 @@ export function PaymentDetails() {
                 {mutation.isPending ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : (
-                  t("settings.payment.save")
+                  t("common.save")
                 )}
               </Button>
             </div>

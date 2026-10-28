@@ -92,7 +92,7 @@ tags:
 - tapOn:
     id: "settlement-cancel-button"
 
-# GiroCode only carries euro, so the USD debt with Max offers PayPal alone
+# SEPA only carries euro, so the USD debt with Max offers PayPal alone
 - extendedWaitUntil:
     visible:
       id: "debt-summary-title"

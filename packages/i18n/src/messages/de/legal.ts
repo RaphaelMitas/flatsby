@@ -156,7 +156,7 @@ export const legal = {
     },
     groups: {
       heading: "Ihre Gruppen",
-      body: "Mitglieder Ihrer Gruppen sehen Ihren Namen, Ihre E-Mail-Adresse, Ihr Profilbild und was Sie in der Gruppe anlegen. Wenn Sie Zahlungsdaten hinterlegen, sehen sie diese beim Abrechnen mit Ihnen.",
+      body: "Mitglieder Ihrer Gruppen sehen Ihren Namen, Ihre E-Mail-Adresse, Ihr Profilbild und was Sie in der Gruppe anlegen. Wenn Sie Zahlungsdaten hinterlegen, können sie diese sehen, um Sie zu bezahlen.",
     },
     providers: {
       heading: "Dienstleister",

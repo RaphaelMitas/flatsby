@@ -6,6 +6,7 @@ import {
   isValidIban,
   parsePaypalHandle,
   paymentDetailsFormSchema,
+  paymentDetailsInput,
   paymentOptions,
   paypalMeUrl,
   settlementReference,
@@ -90,14 +91,29 @@ describe("girocodePayload", () => {
     );
   });
 
-  it("stays within 331 bytes at every field's limit", () => {
+  it("cuts the reference to stay within 331 bytes", () => {
     const payload = girocodePayload({
-      accountHolder: "Ü".repeat(70),
-      iban: `MT${"9".repeat(29)}`,
+      accountHolder: "€".repeat(70),
+      iban: `MT${"9".repeat(32)}`,
       amountInCents: 99_999_999_999,
       reference: settlementReference("W".repeat(200)),
     });
-    expect(new TextEncoder().encode(payload).length).toBeLessThanOrEqual(331);
+    expect(payload?.startsWith("BCD\n002")).toBe(true);
+    expect(new TextEncoder().encode(payload ?? "").length).toBeLessThanOrEqual(
+      331,
+    );
+  });
+
+  it("gives no code for an amount EPC069-12 can't carry", () => {
+    const fields = {
+      accountHolder: "Lena Schneider",
+      iban: "DE89370400440532013000",
+      reference: "Flatsby",
+    };
+    expect(girocodePayload({ ...fields, amountInCents: 0 })).toBeNull();
+    expect(
+      girocodePayload({ ...fields, amountInCents: 100_000_000_000 }),
+    ).toBeNull();
   });
 });
 
@@ -124,6 +140,7 @@ describe("paymentOptions", () => {
     expect(paymentOptions(details, "USD")).toEqual({
       bank: null,
       paypalHandle: "lenaschn",
+      payable: true,
       euroOnly: true,
     });
   });
@@ -131,6 +148,27 @@ describe("paymentOptions", () => {
   it("offers no code to an account outside the EEA", () => {
     const swiss = { ...details, iban: "CH9300762011623852957" };
     expect(paymentOptions(swiss, "EUR").bank?.girocode).toBe(false);
+  });
+});
+
+describe("paymentDetailsInput", () => {
+  const values = {
+    accountHolder: "Ruffy",
+    iban: "",
+    paypalHandle: "ruffy",
+  };
+
+  it("leaves fields it didn't edit to what's stored", () => {
+    expect(paymentDetailsInput(values, { paypalHandle: true })).toEqual({
+      paypalHandle: "ruffy",
+    });
+  });
+
+  it("clears the account holder along with the IBAN", () => {
+    expect(paymentDetailsInput(values, { iban: true })).toEqual({
+      iban: null,
+      accountHolder: null,
+    });
   });
 });
 

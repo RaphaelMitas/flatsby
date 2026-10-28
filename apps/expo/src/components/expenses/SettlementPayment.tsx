@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
 import QRCode from "react-qr-code";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -11,7 +10,6 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 import {
   formatIban,
   girocodePayload,
-  paymentOptions,
   paypalMeUrl,
   settlementReference,
 } from "@flatsby/validators/payment";
@@ -19,22 +17,6 @@ import {
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Segmented } from "~/lib/ui/segmented";
-import { trpc } from "~/utils/api";
-
-export function usePaymentOptions(
-  groupId: number,
-  receiverId: number,
-  currency: string,
-) {
-  const { data } = useQuery({
-    ...trpc.group.getMemberPaymentDetails.queryOptions({
-      groupId,
-      groupMemberId: receiverId,
-    }),
-    enabled: receiverId > 0,
-  });
-  return data?.success ? paymentOptions(data.data, currency) : undefined;
-}
 
 interface SettlementPaymentProps {
   options: PaymentOptions;
@@ -58,7 +40,7 @@ export function SettlementPayment({
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
-  const { bank, paypalHandle, euroOnly } = options;
+  const { bank, paypalHandle, payable, euroOnly } = options;
   const [method, setMethod] = useState<"bank" | "paypal">(
     bank ? "bank" : "paypal",
   );
@@ -70,10 +52,9 @@ export function SettlementPayment({
     locale,
   });
   const reference = settlementReference(groupName);
-  const girocode =
-    bank?.girocode && amountInCents > 0
-      ? girocodePayload({ ...bank, amountInCents, reference })
-      : null;
+  const girocode = bank?.girocode
+    ? girocodePayload({ ...bank, amountInCents, reference })
+    : null;
 
   if (receiverIsMe) {
     if (girocode) {
@@ -92,7 +73,7 @@ export function SettlementPayment({
         </View>
       );
     }
-    if (bank || paypalHandle) return null;
+    if (payable || euroOnly) return null;
     return (
       <View
         testID="settle-pay-add-yours"
@@ -111,7 +92,7 @@ export function SettlementPayment({
     );
   }
 
-  if (!bank && !paypalHandle) {
+  if (!payable) {
     return (
       <Text
         testID="settle-pay-no-details"
@@ -211,18 +192,19 @@ export function SettlementPayment({
           <Text className="text-muted-foreground text-sm">
             {t("debts.pay.paypalHint", { amount })}
           </Text>
-          <Button
-            testID="settle-paypal-button"
-            title={t("debts.pay.openPaypal")}
-            icon="external-link"
-            variant="outline"
-            disabled={amountInCents <= 0}
-            onPress={() =>
-              Linking.openURL(
-                paypalMeUrl(paypalHandle, amountInCents, currency),
-              )
-            }
-          />
+          {amountInCents > 0 && (
+            <Button
+              testID="settle-paypal-button"
+              title={t("debts.pay.openPaypal")}
+              icon="external-link"
+              variant="outline"
+              onPress={() =>
+                Linking.openURL(
+                  paypalMeUrl(paypalHandle, amountInCents, currency),
+                )
+              }
+            />
+          )}
           {euroOnly && (
             <Text className="text-muted-foreground text-xs">
               {t("debts.pay.euroOnly")}
@@ -282,7 +264,7 @@ function PaymentRow({
         <Button
           size="sm"
           variant="outline"
-          title={copied ? t("debts.pay.copied") : t("debts.pay.copy")}
+          title={copied ? t("common.copied") : t("common.copy")}
           onPress={() => copy(copyValue)}
         />
       )}

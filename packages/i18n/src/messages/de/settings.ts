@@ -91,8 +91,6 @@ export const settings = {
     paypalPlaceholder: "deinname",
     paypalHint: "Du kannst auch den ganzen Link einfügen.",
     paypalSignup: "Noch keinen PayPal.me-Link? Hier erstellen",
-    save: "Speichern",
-    remove: "Entfernen",
     saved: "Zahlungsdaten gespeichert.",
     removed: "Zahlungsdaten entfernt.",
     ibanInvalid: "Diese IBAN stimmt nicht. Prüf sie auf Tippfehler.",

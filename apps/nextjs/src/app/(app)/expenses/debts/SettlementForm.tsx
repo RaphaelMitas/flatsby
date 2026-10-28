@@ -18,6 +18,7 @@ import { AlertCircle, LoaderCircle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
+import { usePaymentOptions } from "@flatsby/api/hooks/usePaymentOptions";
 import {
   failureOf,
   restoreSnapshot,
@@ -62,7 +63,7 @@ import { CurrencyInput } from "~/components/CurrencyInput";
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
 import { useExpenseInvalidation } from "../useExpenseInvalidation";
-import { SettlementPayment, usePaymentOptions } from "./SettlementPayment";
+import { SettlementPayment } from "./SettlementPayment";
 
 export interface SettlementPrefill {
   debt: DebtEntry;
@@ -313,7 +314,12 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const currency = form.watch("currency");
   const amountInCents = form.watch("amountInCents");
 
-  const payment = usePaymentOptions(groupId, toGroupMemberId, currency);
+  const payment = usePaymentOptions(
+    (input) => trpc.group.getMemberPaymentDetails.queryOptions(input),
+    groupId,
+    toGroupMemberId,
+    currency,
+  );
 
   if (!groupData.success) {
     return null;
@@ -338,8 +344,9 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
 
   const isPending = createSettlementMutation.isPending;
+  const involvesMe = fromGroupMemberId === meId || toGroupMemberId === meId;
   const payingWithDetails =
-    fromGroupMemberId === meId && !!(payment?.bank ?? payment?.paypalHandle);
+    fromGroupMemberId === meId && payment?.payable === true;
   const failure = failureOf(
     createSettlementMutation,
     t("expenses.genericError"),
@@ -491,7 +498,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               )}
             />
 
-            {payment && fromGroupMemberId > 0 && toGroupMemberId > 0 && (
+            {payment && fromGroupMemberId > 0 && involvesMe && (
               <SettlementPayment
                 options={payment}
                 payerName={fromMember.name}

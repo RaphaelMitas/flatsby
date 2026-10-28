@@ -88,8 +88,6 @@ export const settings = {
     paypalPlaceholder: "yourname",
     paypalHint: "Pasting the full link works too.",
     paypalSignup: "No PayPal.me link yet? Create one",
-    save: "Save",
-    remove: "Remove",
     saved: "Payment details saved.",
     removed: "Payment details removed.",
     ibanInvalid: "This IBAN isn't valid. Check for a typo.",

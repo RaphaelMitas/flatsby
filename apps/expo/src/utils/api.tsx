@@ -66,6 +66,7 @@ export const persistOptions = {
   dehydrateOptions: {
     // By age, not success: a failed refetch keeps its data, and maxAge only dates the whole save
     shouldDehydrateQuery: (query) =>
+      query.meta?.persist !== false &&
       query.state.dataUpdatedAt > Date.now() - CACHE_MAX_AGE,
   },
   // New JS can expect a different data shape than the cache it would restore

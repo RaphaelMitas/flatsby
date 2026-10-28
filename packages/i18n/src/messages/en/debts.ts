@@ -57,13 +57,10 @@ export const debts = {
   pay: {
     title: "Pay {name}",
     bankTransfer: "Bank transfer",
-    bankTransferHint: "IBAN, GiroCode",
     paypal: "PayPal",
     to: "To",
     iban: "IBAN",
     reference: "Reference",
-    copy: "Copy",
-    copied: "Copied",
     showCode: "Show code for another phone",
     hideCode: "Hide code",
     scanHint: "Scan with your banking app. Amount and reference are filled in.",

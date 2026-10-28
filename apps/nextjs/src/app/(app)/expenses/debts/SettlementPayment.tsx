@@ -2,40 +2,21 @@
 
 import type { PaymentOptions } from "@flatsby/validators/payment";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { Copy, ExternalLink, Landmark, Wallet } from "lucide-react";
+import { ExternalLink, Landmark, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import QRCode from "react-qr-code";
 
 import { Button } from "@flatsby/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
-import { toast } from "@flatsby/ui/toast";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
   formatIban,
   girocodePayload,
-  paymentOptions,
   paypalMeUrl,
   settlementReference,
 } from "@flatsby/validators/payment";
 
-import { useTRPC } from "~/trpc/react";
-
-export function usePaymentOptions(
-  groupId: number,
-  receiverId: number,
-  currency: string,
-) {
-  const trpc = useTRPC();
-  const { data } = useQuery({
-    ...trpc.group.getMemberPaymentDetails.queryOptions({
-      groupId,
-      groupMemberId: receiverId,
-    }),
-    enabled: receiverId > 0,
-  });
-  return data?.success ? paymentOptions(data.data, currency) : undefined;
-}
+import { CopyButton } from "~/app/_components/CopyButton";
 
 interface SettlementPaymentProps {
   options: PaymentOptions;
@@ -58,7 +39,7 @@ export function SettlementPayment({
 }: SettlementPaymentProps) {
   const t = useTranslations("debts.pay");
   const locale = useLocale();
-  const { bank, paypalHandle, euroOnly } = options;
+  const { bank, paypalHandle, payable, euroOnly } = options;
 
   const amount = formatCurrencyFromCents({
     cents: amountInCents,
@@ -66,10 +47,9 @@ export function SettlementPayment({
     locale,
   });
   const reference = settlementReference(groupName);
-  const girocode =
-    bank?.girocode && amountInCents > 0
-      ? girocodePayload({ ...bank, amountInCents, reference })
-      : null;
+  const girocode = bank?.girocode
+    ? girocodePayload({ ...bank, amountInCents, reference })
+    : null;
 
   if (receiverIsMe) {
     if (girocode) {
@@ -86,7 +66,7 @@ export function SettlementPayment({
         </div>
       );
     }
-    if (bank || paypalHandle) return null;
+    if (payable || euroOnly) return null;
     return (
       <div
         className="flex items-center gap-3 rounded-lg border border-dashed p-3"
@@ -100,7 +80,7 @@ export function SettlementPayment({
     );
   }
 
-  if (!bank && !paypalHandle) {
+  if (!payable) {
     return (
       <p
         className="text-muted-foreground text-center text-sm"
@@ -215,13 +195,6 @@ function PaymentRow({
   testId?: string;
   mono?: boolean;
 }) {
-  const t = useTranslations("debts.pay");
-
-  const copy = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-    toast.success(t("copied"));
-  };
-
   return (
     <div className="flex items-center gap-2">
       <span className="text-muted-foreground w-24 shrink-0 text-xs">
@@ -235,17 +208,7 @@ function PaymentRow({
       >
         {value}
       </span>
-      {copyValue !== undefined && (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onClick={() => copy(copyValue)}
-          aria-label={`${t("copy")} ${label}`}
-        >
-          <Copy className="h-4 w-4" />
-        </Button>
-      )}
+      {copyValue !== undefined && <CopyButton value={copyValue} />}
     </div>
   );
 }

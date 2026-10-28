@@ -149,7 +149,7 @@ export const legal = {
     },
     groups: {
       heading: "Your Groups",
-      body: "Members of your groups see your name, email address, profile picture and what you add to the group. If you add payment details, they see them when they settle up with you.",
+      body: "Members of your groups see your name, email address, profile picture and what you add to the group. If you add payment details, they can see them so they can pay you.",
     },
     providers: {
       heading: "Service Providers",

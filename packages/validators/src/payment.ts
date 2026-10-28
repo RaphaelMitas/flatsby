@@ -7,6 +7,9 @@ export const MAX_ACCOUNT_HOLDER_LENGTH = 70;
 export const MAX_IBAN_LENGTH = 34;
 export const MAX_PAYPAL_HANDLE_LENGTH = 20;
 const MAX_REFERENCE_LENGTH = 70;
+// EPC069-12 caps the whole payload and the amount
+const MAX_GIROCODE_BYTES = 331;
+const MAX_GIROCODE_CENTS = 99_999_999_999;
 
 const IBAN_SHAPE = /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/;
 const PAYPAL_HANDLE_SHAPE = /^[A-Za-z0-9]{1,20}$/;
@@ -46,7 +49,7 @@ const EEA_COUNTRIES = new Set([
   "SK",
 ]);
 
-export const normalizeIban = (value: string) =>
+const normalizeIban = (value: string) =>
   value.replace(/\s+/g, "").toUpperCase();
 
 export const formatIban = (iban: string) =>
@@ -76,12 +79,12 @@ export function parsePaypalHandle(value: string) {
   return handle && PAYPAL_HANDLE_SHAPE.test(handle) ? handle : null;
 }
 
-export const isValidAccountHolder = (value: string) =>
+const isValidAccountHolder = (value: string) =>
   value.trim().length > 0 &&
   value.trim().length <= MAX_ACCOUNT_HOLDER_LENGTH &&
   !CONTROL_CHARACTERS.test(value);
 
-export const accountHolderSchema = z
+const accountHolderSchema = z
   .string()
   .trim()
   .refine(isValidAccountHolder, {
@@ -93,7 +96,7 @@ export const ibanSchema = z
   .transform(normalizeIban)
   .refine(isValidIban, { message: msg("settings.payment.ibanInvalid") });
 
-export const paypalHandleSchema = z
+const paypalHandleSchema = z
   .string()
   .transform((value) => parsePaypalHandle(value) ?? "")
   .refine((handle) => handle.length > 0, {
@@ -105,7 +108,7 @@ export const paymentDetailsSchema = z.object({
   iban: z.string().nullable(),
   paypalHandle: z.string().nullable(),
 });
-export type PaymentDetails = z.infer<typeof paymentDetailsSchema>;
+type PaymentDetails = z.infer<typeof paymentDetailsSchema>;
 
 // Missing keeps what's stored, null clears it
 export const updatePaymentDetailsInputSchema = z.object({
@@ -151,12 +154,21 @@ export const paymentDetailsFormValues = (
   paypalHandle: details?.paypalHandle ?? "",
 });
 
-export const paymentDetailsInput = (values: PaymentDetailsFormValues) => {
+// Only what was edited, so a form showing stale data can't clear a newer save
+export const paymentDetailsInput = (
+  values: PaymentDetailsFormValues,
+  dirty: Partial<Record<keyof PaymentDetailsFormValues, boolean>>,
+) => {
   const iban = values.iban.trim() || null;
+  const accountHolder = values.accountHolder.trim();
   return {
-    accountHolder: iban ? values.accountHolder.trim() : null,
-    iban,
-    paypalHandle: values.paypalHandle.trim() || null,
+    ...(dirty.iban && { iban, accountHolder: iban ? accountHolder : null }),
+    ...(dirty.accountHolder &&
+      !dirty.iban &&
+      accountHolder && { accountHolder }),
+    ...(dirty.paypalHandle && {
+      paypalHandle: values.paypalHandle.trim() || null,
+    }),
   };
 };
 
@@ -184,12 +196,14 @@ export function paymentOptions(
 ) {
   const { accountHolder, iban, paypalHandle } = details ?? {};
   const isEuro = currency === "EUR";
+  const bank =
+    isEuro && iban && accountHolder
+      ? { iban, accountHolder, girocode: EEA_COUNTRIES.has(iban.slice(0, 2)) }
+      : null;
   return {
-    bank:
-      isEuro && iban && accountHolder
-        ? { iban, accountHolder, girocode: EEA_COUNTRIES.has(iban.slice(0, 2)) }
-        : null,
+    bank,
     paypalHandle: paypalHandle ?? null,
+    payable: !!bank || !!paypalHandle,
     euroOnly: !isEuro && !!iban,
   };
 }
@@ -207,7 +221,8 @@ export function girocodePayload({
   amountInCents: number;
   reference: string;
 }) {
-  return [
+  if (amountInCents < 1 || amountInCents > MAX_GIROCODE_CENTS) return null;
+  const fields = [
     "BCD",
     "002",
     "1",
@@ -218,8 +233,10 @@ export function girocodePayload({
     `EUR${amountOf(amountInCents)}`,
     "",
     "",
-    reference,
   ].join("\n");
+  // The reference is ASCII, so it can be cut to the bytes the name leaves over
+  const room = MAX_GIROCODE_BYTES - new TextEncoder().encode(fields).length - 1;
+  return room > 0 ? `${fields}\n${reference.slice(0, room).trim()}` : null;
 }
 
 export const paypalMeUrl = (

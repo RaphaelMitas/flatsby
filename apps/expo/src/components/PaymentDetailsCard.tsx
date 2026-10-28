@@ -41,7 +41,10 @@ export function PaymentDetailsCard({ userName }: { userName: string }) {
   const queryClient = useQueryClient();
   const [notice, setNotice] = useState<"saved" | "removed" | null>(null);
 
-  const { data } = useSuspenseQuery(trpc.user.getPaymentDetails.queryOptions());
+  const { data } = useSuspenseQuery({
+    ...trpc.user.getPaymentDetails.queryOptions(),
+    meta: { persist: false },
+  });
   const stored = data.success ? data.data : null;
 
   const form = useForm({
@@ -60,7 +63,7 @@ export function PaymentDetailsCard({ userName }: { userName: string }) {
             queryKey: trpc.group.getMemberPaymentDetails.pathKey(),
           });
           form.reset(paymentDetailsFormValues(details, userName));
-          setNotice(details ? "saved" : "removed");
+          setNotice(stored && !details ? "removed" : "saved");
         },
       }),
     ),
@@ -70,7 +73,7 @@ export function PaymentDetailsCard({ userName }: { userName: string }) {
 
   const save = (values: PaymentDetailsFormValues) => {
     setNotice(null);
-    mutation.mutate(paymentDetailsInput(values));
+    mutation.mutate(paymentDetailsInput(values, form.formState.dirtyFields));
   };
 
   const remove = () => {
@@ -171,7 +174,7 @@ export function PaymentDetailsCard({ userName }: { userName: string }) {
                 <Button
                   testID="payment-remove-button"
                   variant="outline"
-                  title={t("settings.payment.remove")}
+                  title={t("common.remove")}
                   disabled={mutation.isPending}
                   onPress={remove}
                   className="flex-1"
@@ -181,9 +184,7 @@ export function PaymentDetailsCard({ userName }: { userName: string }) {
                 testID="payment-save-button"
                 icon={mutation.isPending ? "loader" : "save"}
                 title={
-                  mutation.isPending
-                    ? t("common.saving")
-                    : t("settings.payment.save")
+                  mutation.isPending ? t("common.saving") : t("common.save")
                 }
                 disabled={mutation.isPending}
                 onPress={form.handleSubmit(save)}

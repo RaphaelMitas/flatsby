@@ -16,6 +16,7 @@ import {
 import { useForm, useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
+import { usePaymentOptions } from "@flatsby/api/hooks/usePaymentOptions";
 import {
   failureOf,
   restoreSnapshot,
@@ -45,7 +46,7 @@ import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
 import { CurrencyPicker } from "./CurrencyPicker";
 import { MemberAvatar } from "./MemberAvatar";
-import { SettlementPayment, usePaymentOptions } from "./SettlementPayment";
+import { SettlementPayment } from "./SettlementPayment";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface SettlementFormProps {
@@ -125,6 +126,7 @@ export function SettlementForm({
   });
 
   const payment = usePaymentOptions(
+    (input) => trpc.group.getMemberPaymentDetails.queryOptions(input),
     groupId,
     isEditMode ? -1 : watchedToMemberId,
     watchedCurrency,
@@ -437,8 +439,9 @@ export function SettlementForm({
   const isPending =
     createSettlementMutation.isPending || updateSettlementMutation.isPending;
 
+  const involvesMe = watchedFromMemberId === meId || watchedToMemberId === meId;
   const payingWithDetails =
-    watchedFromMemberId === meId && !!(payment?.bank ?? payment?.paypalHandle);
+    watchedFromMemberId === meId && payment?.payable === true;
 
   const errorMessage =
     failureOf(createSettlementMutation, t("expenses.genericError")) ??
@@ -599,8 +602,9 @@ export function SettlementForm({
                 )}
               />
             </View>
-            {payment && pair && (
+            {payment && pair && involvesMe && (
               <SettlementPayment
+                key={`${watchedToMemberId}-${watchedCurrency}`}
                 options={payment}
                 payerName={pair.payer.name}
                 receiverName={pair.receiver.name}
