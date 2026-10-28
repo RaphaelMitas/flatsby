@@ -161,7 +161,7 @@ jobs:
         with:
           name: ccache-macos
           path: ccache.tar.gz
-          # Only native-cache misses upload it now, and release.yml reads it too.
+          # Only native-cache misses refresh it, so it has to outlive a run of JS-only PRs.
           retention-days: 14
 
       # tar keeps the executable bits that upload-artifact's zip would strip.
