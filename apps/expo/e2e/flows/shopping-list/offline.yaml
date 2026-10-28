@@ -65,9 +65,14 @@ tags:
       - runFlow:
           file: ../../subflows/relaunch.yaml
           env:
-            MARKER_ID: "shopping-list-dashboard-link"
-      - tapOn:
-          id: "shopping-list-dashboard-link"
+            MARKER_ID: "dashboard-group-picker"
+      - runFlow:
+          file: ../../subflows/tap-tab.yaml
+          env:
+            TAB_ID: "tab-shopping-list"
+            TAB_LABEL: "Shopping"
+            TAB_X: "30%"
+            MARKER_ID: "shopping-list-item-input"
       - extendedWaitUntil:
           visible:
             id: "shopping-list-item-Bread-unsynced"
