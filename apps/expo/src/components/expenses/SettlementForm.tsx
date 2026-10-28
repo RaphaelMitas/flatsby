@@ -10,13 +10,13 @@ import { Text, View } from "react-native";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
-import { usePaymentOptions } from "@flatsby/api/hooks/usePaymentOptions";
 import {
   failureOf,
   restoreSnapshot,
@@ -125,14 +125,13 @@ export function SettlementForm({
     name: "amountInCents",
   });
 
-  const meId = groupData.success ? groupData.data.thisGroupMember.id : -1;
-  const involvesMe = watchedFromMemberId === meId || watchedToMemberId === meId;
-  const payment = usePaymentOptions(
-    (input) => trpc.group.getMemberPaymentDetails.queryOptions(input),
-    groupId,
-    involvesMe && !isEditMode ? watchedToMemberId : -1,
-    watchedCurrency,
-  );
+  const { data: paypal } = useQuery({
+    ...trpc.group.getMemberPaypalHandle.queryOptions({
+      groupId,
+      groupMemberId: watchedToMemberId,
+    }),
+    enabled: !isEditMode && watchedToMemberId > 0,
+  });
 
   const isPrefilled = source !== undefined;
   const debtBetween = (from: number, to: number, currency?: string) =>
@@ -419,6 +418,7 @@ export function SettlementForm({
   }
 
   const groupMembers = groupData.data.groupMembers;
+  const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupMembers, meId, t);
   const isMember = (id: number) => groupMembers.some((m) => m.id === id);
   const pair =
@@ -440,8 +440,8 @@ export function SettlementForm({
   const isPending =
     createSettlementMutation.isPending || updateSettlementMutation.isPending;
 
-  const payingWithDetails =
-    watchedFromMemberId === meId && payment?.payable === true;
+  const payingWithPaypal =
+    watchedFromMemberId === meId && paypal?.success === true && !!paypal.data;
 
   const errorMessage =
     failureOf(createSettlementMutation, t("expenses.genericError")) ??
@@ -602,16 +602,13 @@ export function SettlementForm({
                 )}
               />
             </View>
-            {payment && pair && (
+            {paypal?.success && pair && (
               <SettlementPayment
-                key={`${watchedToMemberId}-${watchedCurrency}`}
-                options={payment}
-                payerName={pair.payer.name}
+                paypalHandle={paypal.data}
                 receiverName={pair.receiver.name}
                 receiverIsMe={watchedToMemberId === meId}
                 amountInCents={watchedAmount}
                 currency={watchedCurrency}
-                groupName={groupData.data.name}
               />
             )}
 
@@ -646,7 +643,7 @@ export function SettlementForm({
                       : t("debts.recording")
                     : isEditMode
                       ? t("debts.updateSettlement")
-                      : payingWithDetails
+                      : payingWithPaypal
                         ? t("debts.pay.paidRecord")
                         : t("debts.recordSettlement")
                 }

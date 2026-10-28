@@ -83,19 +83,16 @@ export const settings = {
   payment: {
     title: "Geld bekommen",
     description:
-      "Optional. Leute in deinen Gruppen sehen das, wenn sie mit dir abrechnen, sonst niemand.",
-    accountHolder: "Kontoinhaber",
-    accountHolderHint: "Der Name, auf den dein Konto läuft.",
-    iban: "IBAN",
+      "Optional. So können dir Mitbewohner per PayPal Geld zurückgeben.",
+    visibleTitle: "Für alle in deinen Gruppen sichtbar",
+    visibleBody:
+      "Alle Mitglieder deiner Gruppen sehen deinen PayPal.me-Namen beim Abrechnen.",
     paypal: "PayPal.me",
     paypalPlaceholder: "deinname",
     paypalHint: "Du kannst auch den ganzen Link einfügen.",
     paypalSignup: "Noch keinen PayPal.me-Link? Hier erstellen",
-    saved: "Zahlungsdaten gespeichert.",
-    removed: "Zahlungsdaten entfernt.",
-    ibanInvalid: "Diese IBAN stimmt nicht. Prüf sie auf Tippfehler.",
-    accountHolderInvalid:
-      "Gib den Namen auf dem Konto ein, höchstens 70 Zeichen.",
+    saved: "PayPal.me-Name gespeichert.",
+    removed: "PayPal.me-Name entfernt.",
     paypalInvalid: "Gib deinen PayPal.me-Namen ein, z. B. paypal.me/deinname.",
   },
   danger: {

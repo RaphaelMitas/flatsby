@@ -32,11 +32,7 @@ import {
 import { MAX_EXPENSE_DESCRIPTION_LENGTH } from "@flatsby/validators/expenses/types";
 import { MAX_GROUP_NAME_LENGTH } from "@flatsby/validators/group";
 import { INVITE_CODE_LENGTH } from "@flatsby/validators/invite";
-import {
-  MAX_ACCOUNT_HOLDER_LENGTH,
-  MAX_IBAN_LENGTH,
-  MAX_PAYPAL_HANDLE_LENGTH,
-} from "@flatsby/validators/payment";
+import { MAX_PAYPAL_HANDLE_LENGTH } from "@flatsby/validators/payment";
 import { MAX_CONSENT_VERSION_LENGTH } from "@flatsby/validators/user";
 
 /**
@@ -75,6 +71,7 @@ export const users = createTable("user", {
   aiConsentVersion: varchar("ai_consent_version", {
     length: MAX_CONSENT_VERSION_LENGTH,
   }),
+  paypalHandle: varchar("paypal_handle", { length: MAX_PAYPAL_HANDLE_LENGTH }),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -90,19 +87,6 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     references: [shoppingLists.id],
   }),
 }));
-
-// Kept out of the user row so no user join can reach the IBAN by accident
-export const userPaymentDetails = createTable("user_payment_details", {
-  userId: text("user_id")
-    .primaryKey()
-    .references(() => users.id),
-  accountHolder: varchar("account_holder", {
-    length: MAX_ACCOUNT_HOLDER_LENGTH,
-  }),
-  iban: varchar("iban", { length: MAX_IBAN_LENGTH }),
-  paypalHandle: varchar("paypal_handle", { length: MAX_PAYPAL_HANDLE_LENGTH }),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
 export const accounts = createTable("account", {
   id: text("id").primaryKey(),

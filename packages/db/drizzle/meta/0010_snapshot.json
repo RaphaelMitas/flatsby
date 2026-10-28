@@ -1,5 +1,5 @@
 {
-  "id": "85e555a8-defb-46f7-be19-b8e7c2839fc3",
+  "id": "e2a53b59-1fa1-48f5-b9f8-8ffb1ea96a24",
   "prevId": "75d6c6e4-21da-47c1-b124-d671b37be5f2",
   "version": "7",
   "dialect": "postgresql",
@@ -1325,60 +1325,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.flat-cove_user_payment_details": {
-      "name": "flat-cove_user_payment_details",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "account_holder": {
-          "name": "account_holder",
-          "type": "varchar(70)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "iban": {
-          "name": "iban",
-          "type": "varchar(34)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "paypal_handle": {
-          "name": "paypal_handle",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "flat-cove_user_payment_details_user_id_flat-cove_user_id_fk": {
-          "name": "flat-cove_user_payment_details_user_id_flat-cove_user_id_fk",
-          "tableFrom": "flat-cove_user_payment_details",
-          "tableTo": "flat-cove_user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.flat-cove_user": {
       "name": "flat-cove_user",
       "schema": "",
@@ -1481,6 +1427,12 @@
         },
         "ai_consent_version": {
           "name": "ai_consent_version",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paypal_handle": {
+          "name": "paypal_handle",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": false

@@ -4,7 +4,7 @@ tags:
 ---
 # Seeded group (E2E_SEED=debts): Max owes you EUR 42.50, Sophie EUR 18.00, you
 # owe Lena EUR 30.00 and Max USD 15.00. Settling Sophie in full drops her row.
-# Lena and Max added an IBAN and a PayPal.me name, Sophie and you didn't.
+# Lena and Max added a PayPal.me name, Sophie and you didn't.
 - runFlow:
     file: ../../subflows/e2e-login.yaml
     env:
@@ -74,25 +74,14 @@ tags:
 - tapOn: "Record EUR payment with Lena"
 - extendedWaitUntil:
     visible:
-      id: "settle-pay-iban"
+      id: "settle-paypal-button"
     timeout: 15000
 - assertVisible:
-    id: "settle-pay-iban"
-    text: "DE89 3704 0044 0532 0130 00"
-- tapOn:
-    id: "settle-pay-show-code"
-- assertVisible:
-    id: "settle-girocode"
-- tapOn:
-    id: "settle-pay-show-code"
-- tapOn:
-    id: "settle-pay-method-paypal"
-- assertVisible:
-    id: "settle-paypal-button"
+    id: "settle-paypal-share"
 - tapOn:
     id: "settlement-cancel-button"
 
-# SEPA only carries euro, so the USD debt with Max offers PayPal alone
+# PayPal takes the debt's own currency
 - extendedWaitUntil:
     visible:
       id: "debt-summary-title"
@@ -102,9 +91,5 @@ tags:
     visible:
       id: "settle-paypal-button"
     timeout: 15000
-- assertNotVisible:
-    id: "settle-pay-method-bank"
-- assertNotVisible:
-    id: "settle-girocode"
 - tapOn:
     id: "settlement-cancel-button"

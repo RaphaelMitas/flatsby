@@ -9,7 +9,6 @@ import {
   groups,
   shoppingListItems,
   shoppingLists,
-  userPaymentDetails,
   users,
 } from "@flatsby/db/schema";
 import {
@@ -23,10 +22,7 @@ import {
   updateGroupSettingsSchema,
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
-import {
-  memberPaymentDetailsInputSchema,
-  paymentDetailsSchema,
-} from "@flatsby/validators/payment";
+import { memberPaypalHandleInputSchema } from "@flatsby/validators/payment";
 
 import {
   addMember,
@@ -114,29 +110,22 @@ export const groupRouter = createTRPCRouter({
       runResult(ctx, getGroupWithAccess(input.id)),
     ),
 
-  getMemberPaymentDetails: protectedProcedure
-    .input(memberPaymentDetailsInputSchema)
-    .output(getApiResultZod(paymentDetailsSchema.nullable()))
+  getMemberPaypalHandle: protectedProcedure
+    .input(memberPaypalHandleInputSchema)
+    .output(getApiResultZod(z.string().nullable()))
     .query(async ({ ctx, input }) =>
       runResult(
         ctx,
         Effect.gen(function* () {
           yield* requireMember(input.groupId);
           const database = yield* Database;
-          const [details] = yield* database.query(
-            "fetch member payment details",
+          const [member] = yield* database.query(
+            "fetch member paypal handle",
             (db) =>
               db
-                .select({
-                  accountHolder: userPaymentDetails.accountHolder,
-                  iban: userPaymentDetails.iban,
-                  paypalHandle: userPaymentDetails.paypalHandle,
-                })
+                .select({ paypalHandle: users.paypalHandle })
                 .from(groupMembers)
-                .innerJoin(
-                  userPaymentDetails,
-                  eq(userPaymentDetails.userId, groupMembers.userId),
-                )
+                .innerJoin(users, eq(users.id, groupMembers.userId))
                 .where(
                   and(
                     eq(groupMembers.id, input.groupMemberId),
@@ -145,7 +134,7 @@ export const groupRouter = createTRPCRouter({
                   ),
                 ),
           );
-          return details ?? null;
+          return member?.paypalHandle ?? null;
         }),
       ),
     ),

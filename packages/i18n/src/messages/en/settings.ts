@@ -79,19 +79,16 @@ export const settings = {
   },
   payment: {
     title: "Getting paid",
-    description:
-      "Optional. People in your groups see this when they settle up with you, nowhere else.",
-    accountHolder: "Account holder",
-    accountHolderHint: "The name your bank has on the account.",
-    iban: "IBAN",
+    description: "Optional. Lets housemates pay you back with PayPal.",
+    visibleTitle: "Visible to everyone in your groups",
+    visibleBody:
+      "Every member of your groups can see your PayPal.me name when they settle up.",
     paypal: "PayPal.me",
     paypalPlaceholder: "yourname",
     paypalHint: "Pasting the full link works too.",
     paypalSignup: "No PayPal.me link yet? Create one",
-    saved: "Payment details saved.",
-    removed: "Payment details removed.",
-    ibanInvalid: "This IBAN isn't valid. Check for a typo.",
-    accountHolderInvalid: "Enter the name on the account, up to 70 characters.",
+    saved: "PayPal.me name saved.",
+    removed: "PayPal.me name removed.",
     paypalInvalid: "Enter your PayPal.me name, like paypal.me/yourname.",
   },
   danger: {

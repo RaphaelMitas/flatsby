@@ -50,30 +50,25 @@ test.describe("Account Management", () => {
     await deleteAccount(authPage, testUser.email);
   });
 
-  test("saves payment details and deletes them with the account", async ({
+  test("saves a PayPal.me name and deletes it with the account", async ({
     authPage,
     testUser,
   }) => {
     await authPage.goto("/user-settings");
 
     const card = authPage.getByTestId("payment-details-card");
-    const iban = card.getByTestId("payment-iban-input");
-    await waitForHydration(iban);
-    await card.getByTestId("payment-account-holder-input").fill("Test Holder");
-    await iban.fill("DE89 3704 0044 0532 0130 01");
+    const paypal = card.getByTestId("payment-paypal-input");
+    await waitForHydration(paypal);
+    await paypal.fill("example.com/testholder");
     await card.getByTestId("payment-save-button").click();
-    await expect(card).toContainText("This IBAN isn't valid");
+    await expect(card).toContainText("Enter your PayPal.me name");
 
-    await iban.fill("de89 3704 0044 0532 0130 00");
-    await card.getByTestId("payment-paypal-input").fill("paypal.me/testholder");
+    await paypal.fill("https://paypal.me/testholder");
     await card.getByTestId("payment-save-button").click();
-    await expect(authPage.getByText("Payment details saved.")).toBeVisible();
+    await expect(authPage.getByText("PayPal.me name saved.")).toBeVisible();
 
     await authPage.reload();
-    await expect(iban).toHaveValue("DE89 3704 0044 0532 0130 00");
-    await expect(card.getByTestId("payment-paypal-input")).toHaveValue(
-      "testholder",
-    );
+    await expect(paypal).toHaveValue("testholder");
 
     await deleteAccount(authPage, testUser.email);
   });

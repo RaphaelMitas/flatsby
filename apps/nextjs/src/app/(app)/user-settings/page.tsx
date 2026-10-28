@@ -21,7 +21,7 @@ import { PaymentDetails } from "./PaymentDetails";
 
 export default async function Page() {
   prefetch(trpc.user.getCurrentUser.queryOptions());
-  prefetch(trpc.user.getPaymentDetails.queryOptions());
+  prefetch(trpc.user.getPaypalHandle.queryOptions());
   const t = await getTranslations("settings.page");
   const preference = (await cookies()).get(localeCookie)?.value;
   return (

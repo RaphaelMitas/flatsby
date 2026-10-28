@@ -54,8 +54,8 @@ export const errors = {
     "Unable to remove group member at this time. Please try again.",
   updateNameFailed:
     "Unable to update your name at this time. Please try again.",
-  updatePaymentDetailsFailed:
-    "Unable to save your payment details at this time. Please try again.",
+  updatePaypalHandleFailed:
+    "Unable to save your PayPal.me name at this time. Please try again.",
   updateConsentFailed:
     "Unable to update consent at this time. Please try again.",
   updateAiConsentFailed:

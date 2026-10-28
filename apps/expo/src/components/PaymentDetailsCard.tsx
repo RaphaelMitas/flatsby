@@ -1,7 +1,3 @@
-import type {
-  PaymentDetails,
-  PaymentDetailsFormValues,
-} from "@flatsby/validators/payment";
 import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,13 +5,12 @@ import { useTranslations } from "use-intl";
 
 import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
 import {
-  paymentDetailsFormSchema,
-  paymentDetailsFormValues,
-  paymentDetailsInput,
   PAYPAL_ME_SIGNUP_URL,
+  paypalHandleFormSchema,
 } from "@flatsby/validators/payment";
 
 import { TimedAlert } from "~/components/TimedAlert";
+import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Button } from "~/lib/ui/button";
 import {
   Card,
@@ -24,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/lib/ui/card";
+import Icon from "~/lib/ui/custom/icons/Icon";
 import {
   Form,
   FormControl,
@@ -36,60 +32,44 @@ import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 
 // Loads on its own so the rest of Profile never waits on it, offline included
-export function PaymentDetailsCard({ userName }: { userName: string }) {
-  const { data } = useQuery(trpc.user.getPaymentDetails.queryOptions());
+export function PaymentDetailsCard() {
+  const { data } = useQuery(trpc.user.getPaypalHandle.queryOptions());
   if (!data) return null;
-  return (
-    <PaymentDetailsForm
-      stored={data.success ? data.data : null}
-      userName={userName}
-    />
-  );
+  return <PaypalHandleForm stored={data.success ? data.data : null} />;
 }
 
-function PaymentDetailsForm({
-  stored,
-  userName,
-}: {
-  stored: PaymentDetails | null;
-  userName: string;
-}) {
+function PaypalHandleForm({ stored }: { stored: string | null }) {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const [notice, setNotice] = useState<"saved" | "removed" | null>(null);
 
   const form = useForm({
-    schema: paymentDetailsFormSchema,
-    defaultValues: paymentDetailsFormValues(stored, userName),
+    schema: paypalHandleFormSchema,
+    defaultValues: { paypalHandle: stored ?? "" },
   });
 
   const mutation = useMutation(
-    trpc.user.updatePaymentDetails.mutationOptions(
+    trpc.user.updatePaypalHandle.mutationOptions(
       resultMutation({
-        onSuccess: (details) => {
+        onSuccess: (paypalHandle) => {
           void queryClient.invalidateQueries(
-            trpc.user.getPaymentDetails.queryFilter(),
+            trpc.user.getPaypalHandle.queryFilter(),
           );
           void queryClient.invalidateQueries({
-            queryKey: trpc.group.getMemberPaymentDetails.pathKey(),
+            queryKey: trpc.group.getMemberPaypalHandle.pathKey(),
           });
-          form.reset(paymentDetailsFormValues(details, userName));
-          setNotice(details ? "saved" : stored ? "removed" : null);
+          form.reset({ paypalHandle: paypalHandle ?? "" });
+          setNotice(paypalHandle ? "saved" : stored ? "removed" : null);
         },
       }),
     ),
   );
 
-  const failure = failureOf(mutation, t("errors.updatePaymentDetailsFailed"));
+  const failure = failureOf(mutation, t("errors.updatePaypalHandleFailed"));
 
-  const save = (values: PaymentDetailsFormValues) => {
+  const save = (paypalHandle: string | null) => {
     setNotice(null);
-    mutation.mutate(paymentDetailsInput(values, form.formState.dirtyFields));
-  };
-
-  const remove = () => {
-    setNotice(null);
-    mutation.mutate({ accountHolder: null, iban: null, paypalHandle: null });
+    mutation.mutate({ paypalHandle });
   };
 
   return (
@@ -98,55 +78,20 @@ function PaymentDetailsForm({
         <CardTitle>{t("settings.payment.title")}</CardTitle>
         <CardDescription>{t("settings.payment.description")}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="gap-4">
         <Form {...form}>
           <View className="gap-4">
-            <FormField
-              name="accountHolder"
-              control={form.control}
-              render={({ field }) => (
-                <View className="gap-2">
-                  <Label>{t("settings.payment.accountHolder")}</Label>
-                  <FormControl>
-                    <Input
-                      testID="payment-account-holder-input"
-                      value={field.value}
-                      onChangeText={field.onChange}
-                      onBlur={field.onBlur}
-                      autoCapitalize="words"
-                      autoComplete="name"
-                      error={!!form.formState.errors.accountHolder}
-                    />
-                  </FormControl>
-                  <Text className="text-muted-foreground text-xs">
-                    {t("settings.payment.accountHolderHint")}
-                  </Text>
-                  <FormMessage />
-                </View>
-              )}
-            />
-            <FormField
-              name="iban"
-              control={form.control}
-              render={({ field }) => (
-                <View className="gap-2">
-                  <Label>{t("settings.payment.iban")}</Label>
-                  <FormControl>
-                    <Input
-                      testID="payment-iban-input"
-                      value={field.value}
-                      onChangeText={field.onChange}
-                      onBlur={field.onBlur}
-                      autoCapitalize="characters"
-                      autoCorrect={false}
-                      className="font-mono"
-                      error={!!form.formState.errors.iban}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </View>
-              )}
-            />
+            <Alert variant="info">
+              <View className="flex-row items-center gap-2">
+                <Icon name="eye" size={16} color="info" />
+                <AlertTitle variant="info" className="mb-0 flex-1">
+                  {t("settings.payment.visibleTitle")}
+                </AlertTitle>
+              </View>
+              <AlertDescription className="mt-1">
+                {t("settings.payment.visibleBody")}
+              </AlertDescription>
+            </Alert>
             <FormField
               name="paypalHandle"
               control={form.control}
@@ -187,7 +132,7 @@ function PaymentDetailsForm({
                   variant="outline"
                   title={t("common.remove")}
                   disabled={mutation.isPending}
-                  onPress={remove}
+                  onPress={() => save(null)}
                   className="flex-1"
                 />
               )}
@@ -198,7 +143,9 @@ function PaymentDetailsForm({
                   mutation.isPending ? t("common.saving") : t("common.save")
                 }
                 disabled={mutation.isPending}
-                onPress={form.handleSubmit(save)}
+                onPress={form.handleSubmit(({ paypalHandle }) =>
+                  save(paypalHandle.trim() || null),
+                )}
                 className="flex-1"
               />
             </View>

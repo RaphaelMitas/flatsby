@@ -19,7 +19,6 @@ import {
   sessions,
   shoppingListItems,
   shoppingLists,
-  userPaymentDetails,
   users,
 } from "@flatsby/db/schema";
 import { isLocale } from "@flatsby/i18n/locale";
@@ -534,20 +533,14 @@ async function seedDebtsScenario(groupId: number, you: number) {
   }
   const [lenaUser, maxUser] = seededUsers;
   if (!lenaUser || !maxUser) throw new Error("Failed to create seeded users");
-  await db.insert(userPaymentDetails).values([
-    {
-      userId: lenaUser.userId,
-      accountHolder: "Lena Schneider",
-      iban: "DE89370400440532013000",
-      paypalHandle: "lenaschneider",
-    },
-    {
-      userId: maxUser.userId,
-      accountHolder: "Max Weber",
-      iban: "AT611904300234573201",
-      paypalHandle: "maxweber",
-    },
-  ]);
+  await db
+    .update(users)
+    .set({ paypalHandle: "lenaschneider" })
+    .where(eq(users.id, lenaUser.userId));
+  await db
+    .update(users)
+    .set({ paypalHandle: "maxweber" })
+    .where(eq(users.id, maxUser.userId));
 
   const debts = [
     { debtor: max, creditor: you, cents: 4250, description: "Groceries" },
@@ -794,9 +787,6 @@ export async function DELETE() {
   }
 
   if (userIds.length > 0) {
-    await db
-      .delete(userPaymentDetails)
-      .where(inArray(userPaymentDetails.userId, userIds));
     await db.delete(sessions).where(inArray(sessions.userId, userIds));
     await db.delete(accounts).where(inArray(accounts.userId, userIds));
     await db.delete(users).where(inArray(users.id, userIds));

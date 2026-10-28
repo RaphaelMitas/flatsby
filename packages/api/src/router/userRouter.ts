@@ -10,7 +10,6 @@ import {
   groupMembers,
   sessions,
   shoppingLists,
-  userPaymentDetails,
   users,
   verificationTokens,
 } from "@flatsby/db/schema";
@@ -23,10 +22,7 @@ import {
 } from "@flatsby/validators/billing";
 import { groupSchema } from "@flatsby/validators/group";
 import { chatModelSchema } from "@flatsby/validators/models";
-import {
-  paymentDetailsSchema,
-  updatePaymentDetailsInputSchema,
-} from "@flatsby/validators/payment";
+import { updatePaypalHandleInputSchema } from "@flatsby/validators/payment";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
 import {
   updateAIConsentInputSchema,
@@ -36,7 +32,6 @@ import {
   userSchema,
 } from "@flatsby/validators/user";
 
-import type { Database as DbClient } from "../types";
 import { run, runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
 import { report } from "../effect/toApiResult";
@@ -60,12 +55,6 @@ const autumnOr = <A, B>(
     try: request,
     catch: (cause) => Errors.externalService("autumn", operation, cause),
   }).pipe(Effect.catch((error) => Effect.as(report(error), fallback)));
-
-const findPaymentDetails = (db: DbClient, userId: string) =>
-  db.query.userPaymentDetails.findFirst({
-    where: eq(userPaymentDetails.userId, userId),
-    columns: { accountHolder: true, iban: true, paypalHandle: true },
-  });
 
 export const userRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
@@ -223,83 +212,42 @@ export const userRouter = createTRPCRouter({
       ),
     ),
 
-  getPaymentDetails: protectedProcedure
-    .output(getApiResultZod(paymentDetailsSchema.nullable()))
+  getPaypalHandle: protectedProcedure
+    .output(getApiResultZod(z.string().nullable()))
     .query(async ({ ctx }) =>
       runResult(
         ctx,
         Effect.gen(function* () {
           const database = yield* Database;
-          const details = yield* database.query("fetch payment details", (db) =>
-            findPaymentDetails(db, ctx.session.user.id),
+          const user = yield* database.query("fetch paypal handle", (db) =>
+            db.query.users.findFirst({
+              where: eq(users.id, ctx.session.user.id),
+              columns: { paypalHandle: true },
+            }),
           );
-          return details ?? null;
+          return user?.paypalHandle ?? null;
         }),
       ),
     ),
 
-  updatePaymentDetails: protectedProcedure
-    .input(updatePaymentDetailsInputSchema)
-    .output(getApiResultZod(paymentDetailsSchema.nullable()))
+  updatePaypalHandle: protectedProcedure
+    .input(updatePaypalHandleInputSchema)
+    .output(getApiResultZod(z.string().nullable()))
     .mutation(async ({ ctx, input }) =>
       runResult(
         ctx,
         Effect.gen(function* () {
-          const userId = ctx.session.user.id;
           const database = yield* Database;
-          const options = {
-            messageKey: "errors.updatePaymentDetailsFailed",
-            table: "user_payment_details",
-          } as const;
-          const stored = yield* database.query(
-            "fetch payment details",
-            (db) => findPaymentDetails(db, userId),
-            options,
-          );
-          const iban =
-            input.iban === undefined ? (stored?.iban ?? null) : input.iban;
-          const details = {
-            // The holder only names the IBAN's account, so it never outlives it
-            accountHolder: iban
-              ? input.accountHolder === undefined
-                ? (stored?.accountHolder ?? null)
-                : input.accountHolder
-              : null,
-            iban,
-            paypalHandle:
-              input.paypalHandle === undefined
-                ? (stored?.paypalHandle ?? null)
-                : input.paypalHandle,
-          };
-          if (details.iban && !details.accountHolder) {
-            return yield* Errors.validation(
-              "settings.payment.accountHolderInvalid",
-            );
-          }
-          if (!details.iban && !details.paypalHandle) {
-            yield* database.query(
-              "delete payment details",
-              (db) =>
-                db
-                  .delete(userPaymentDetails)
-                  .where(eq(userPaymentDetails.userId, userId)),
-              options,
-            );
-            return null;
-          }
           yield* database.query(
-            "save payment details",
+            "update paypal handle",
             (db) =>
               db
-                .insert(userPaymentDetails)
-                .values({ userId, ...details })
-                .onConflictDoUpdate({
-                  target: userPaymentDetails.userId,
-                  set: { ...details, updatedAt: new Date() },
-                }),
-            options,
+                .update(users)
+                .set({ paypalHandle: input.paypalHandle })
+                .where(eq(users.id, ctx.session.user.id)),
+            { messageKey: "errors.updatePaypalHandleFailed", table: "users" },
           );
-          return details;
+          return input.paypalHandle;
         }),
       ),
     ),
@@ -421,9 +369,6 @@ export const userRouter = createTRPCRouter({
                   await trx
                     .delete(verificationTokens)
                     .where(eq(verificationTokens.identifier, user.email));
-                await trx
-                  .delete(userPaymentDetails)
-                  .where(eq(userPaymentDetails.userId, user.id));
                 await trx.delete(accounts).where(eq(accounts.userId, user.id));
                 await trx.delete(sessions).where(eq(sessions.userId, user.id));
                 await trx.delete(users).where(eq(users.id, user.id));
@@ -552,15 +497,13 @@ export const userRouter = createTRPCRouter({
                   privacyVersion: true,
                   aiConsentAcceptedAt: true,
                   aiConsentVersion: true,
+                  paypalHandle: true,
                 },
               });
 
               if (!user) {
                 throw new Error("User not found");
               }
-
-              const paymentDetails =
-                (await findPaymentDetails(db, userId)) ?? null;
 
               const signInMethods = await db.query.accounts.findMany({
                 where: eq(accounts.userId, userId),
@@ -704,7 +647,6 @@ export const userRouter = createTRPCRouter({
               return {
                 exportedAt: new Date(),
                 user,
-                paymentDetails,
                 signInMethods,
                 sessions: userSessions,
                 groups: userGroups.map((g) => ({

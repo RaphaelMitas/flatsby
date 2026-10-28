@@ -11,6 +11,7 @@ import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -18,7 +19,6 @@ import { AlertCircle, LoaderCircle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
-import { usePaymentOptions } from "@flatsby/api/hooks/usePaymentOptions";
 import {
   failureOf,
   restoreSnapshot,
@@ -314,13 +314,13 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const currency = form.watch("currency");
   const amountInCents = form.watch("amountInCents");
 
-  const involvesMe = fromGroupMemberId === meId || toGroupMemberId === meId;
-  const payment = usePaymentOptions(
-    (input) => trpc.group.getMemberPaymentDetails.queryOptions(input),
-    groupId,
-    involvesMe ? toGroupMemberId : 0,
-    currency,
-  );
+  const { data: paypal } = useQuery({
+    ...trpc.group.getMemberPaypalHandle.queryOptions({
+      groupId,
+      groupMemberId: toGroupMemberId,
+    }),
+    enabled: toGroupMemberId > 0,
+  });
 
   if (!groupData.success) {
     return null;
@@ -345,8 +345,8 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
 
   const isPending = createSettlementMutation.isPending;
-  const payingWithDetails =
-    fromGroupMemberId === meId && payment?.payable === true;
+  const payingWithPaypal =
+    fromGroupMemberId === meId && paypal?.success === true && !!paypal.data;
   const failure = failureOf(
     createSettlementMutation,
     t("expenses.genericError"),
@@ -498,16 +498,13 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               )}
             />
 
-            {payment && fromGroupMemberId > 0 && (
+            {paypal?.success && fromGroupMemberId > 0 && (
               <SettlementPayment
-                key={`${toGroupMemberId}-${currency}`}
-                options={payment}
-                payerName={fromMember.name}
+                paypalHandle={paypal.data}
                 receiverName={toMember.name}
                 receiverIsMe={toGroupMemberId === meId}
                 amountInCents={amountInCents}
                 currency={currency}
-                groupName={groupData.data.name}
               />
             )}
 
@@ -543,7 +540,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                     {t("debts.recording")}
                   </>
-                ) : payingWithDetails ? (
+                ) : payingWithPaypal ? (
                   t("debts.pay.paidRecord")
                 ) : (
                   t("debts.recordSettlement")

@@ -108,8 +108,7 @@ export const legal = {
       picture: "Your profile picture (Google only)",
       identifier: "Your Google or Apple account ID",
       plan: "Your plan, purchases and AI credit balance",
-      payment:
-        "If you add them: the account holder name, IBAN and PayPal.me name you get paid with",
+      payment: "If you add it: the PayPal.me name you get paid with",
     },
     userContent: {
       heading: "Your Content",
@@ -149,7 +148,7 @@ export const legal = {
     },
     groups: {
       heading: "Your Groups",
-      body: "Members of your groups see your name, email address, profile picture and what you add to the group. If you add payment details, they can see them so they can pay you.",
+      body: "Members of your groups see your name, email address, profile picture and what you add to the group. If you add a PayPal.me name, they can see it so they can pay you.",
     },
     providers: {
       heading: "Service Providers",

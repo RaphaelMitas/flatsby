@@ -162,7 +162,7 @@ export default function ProfileScreen() {
           </CardContent>
         </Card>
 
-        <PaymentDetailsCard userName={user.name} />
+        <PaymentDetailsCard />
       </AppScrollView>
     </SafeAreaView>
   );

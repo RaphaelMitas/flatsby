@@ -1,17 +1,17 @@
 "use client";
 
-import type { PaymentDetailsFormValues } from "@flatsby/validators/payment";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { LoaderCircle } from "lucide-react";
+import { Eye, LoaderCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
 import { resultMutation } from "@flatsby/api/resultMutation";
+import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -32,10 +32,8 @@ import {
 import { Input } from "@flatsby/ui/input";
 import { toast } from "@flatsby/ui/toast";
 import {
-  paymentDetailsFormSchema,
-  paymentDetailsFormValues,
-  paymentDetailsInput,
   PAYPAL_ME_SIGNUP_URL,
+  paypalHandleFormSchema,
 } from "@flatsby/validators/payment";
 
 import { useTRPC } from "~/trpc/react";
@@ -45,39 +43,36 @@ export function PaymentDetails() {
   const t = useTranslations();
   const queryClient = useQueryClient();
 
-  const { data: user } = useSuspenseQuery(
-    trpc.user.getCurrentUser.queryOptions(),
-  );
-  const { data } = useSuspenseQuery(trpc.user.getPaymentDetails.queryOptions());
+  const { data } = useSuspenseQuery(trpc.user.getPaypalHandle.queryOptions());
   const stored = data.success ? data.data : null;
 
-  const form = useForm<PaymentDetailsFormValues>({
-    resolver: zodResolver(paymentDetailsFormSchema),
-    defaultValues: paymentDetailsFormValues(stored, user.name),
+  const form = useForm({
+    resolver: zodResolver(paypalHandleFormSchema),
+    defaultValues: { paypalHandle: stored ?? "" },
   });
 
   const mutation = useMutation(
-    trpc.user.updatePaymentDetails.mutationOptions(
+    trpc.user.updatePaypalHandle.mutationOptions(
       resultMutation({
-        onSuccess: (details) => {
+        onSuccess: (paypalHandle) => {
           void queryClient.invalidateQueries(
-            trpc.user.getPaymentDetails.queryFilter(),
+            trpc.user.getPaypalHandle.queryFilter(),
           );
           void queryClient.invalidateQueries({
-            queryKey: trpc.group.getMemberPaymentDetails.pathKey(),
+            queryKey: trpc.group.getMemberPaypalHandle.pathKey(),
           });
-          form.reset(paymentDetailsFormValues(details, user.name));
-          if (details) toast.success(t("settings.payment.saved"));
+          form.reset({ paypalHandle: paypalHandle ?? "" });
+          if (paypalHandle) toast.success(t("settings.payment.saved"));
           else if (stored) toast.success(t("settings.payment.removed"));
         },
         onFailure: (message) =>
-          toast.error(message ?? t("errors.updatePaymentDetailsFailed")),
+          toast.error(message ?? t("errors.updatePaypalHandleFailed")),
       }),
     ),
   );
 
-  const save = (values: PaymentDetailsFormValues) =>
-    mutation.mutate(paymentDetailsInput(values, form.formState.dirtyFields));
+  const save = (paypalHandle: string | null) =>
+    mutation.mutate({ paypalHandle });
 
   return (
     <Card data-testid="payment-details-card">
@@ -87,73 +82,44 @@ export function PaymentDetails() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(save)} className="grid gap-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="accountHolder"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("settings.payment.accountHolder")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        autoComplete="name"
-                        data-testid="payment-account-holder-input"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      {t("settings.payment.accountHolderHint")}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="paypalHandle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("settings.payment.paypal")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t("settings.payment.paypalPlaceholder")}
-                        autoCapitalize="none"
-                        data-testid="payment-paypal-input"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      {t("settings.payment.paypalHint")}{" "}
-                      <a
-                        href={PAYPAL_ME_SIGNUP_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary underline"
-                      >
-                        {t("settings.payment.paypalSignup")}
-                      </a>
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <form
+            onSubmit={form.handleSubmit(({ paypalHandle }) =>
+              save(paypalHandle.trim() || null),
+            )}
+            className="grid gap-4"
+          >
+            <Alert variant="info" data-testid="payment-visibility-notice">
+              <Eye className="h-4 w-4" />
+              <AlertTitle>{t("settings.payment.visibleTitle")}</AlertTitle>
+              <AlertDescription>
+                {t("settings.payment.visibleBody")}
+              </AlertDescription>
+            </Alert>
             <FormField
               control={form.control}
-              name="iban"
+              name="paypalHandle"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("settings.payment.iban")}</FormLabel>
+                  <FormLabel>{t("settings.payment.paypal")}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      autoCapitalize="characters"
-                      spellCheck={false}
-                      className="font-mono"
-                      data-testid="payment-iban-input"
+                      placeholder={t("settings.payment.paypalPlaceholder")}
+                      autoCapitalize="none"
+                      data-testid="payment-paypal-input"
                     />
                   </FormControl>
+                  <FormDescription>
+                    {t("settings.payment.paypalHint")}{" "}
+                    <a
+                      href={PAYPAL_ME_SIGNUP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline"
+                    >
+                      {t("settings.payment.paypalSignup")}
+                    </a>
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -164,13 +130,7 @@ export function PaymentDetails() {
                   type="button"
                   variant="outline"
                   disabled={mutation.isPending}
-                  onClick={() =>
-                    mutation.mutate({
-                      accountHolder: null,
-                      iban: null,
-                      paypalHandle: null,
-                    })
-                  }
+                  onClick={() => save(null)}
                   data-testid="payment-remove-button"
                 >
                   {t("common.remove")}
