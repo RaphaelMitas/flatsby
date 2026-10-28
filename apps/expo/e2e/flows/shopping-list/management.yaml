@@ -79,8 +79,14 @@ tags:
     env:
       CONFIRM_TEXT: "Doomed List"
 
-# Only the deleted list is gone, and the tab falls back to the other one
+# Only the deleted list is gone, and the tab falls back to the other one.
+# Checked in the switcher, not by bare text: the tab label carries the open
+# list's name, and on iOS CI "Doomed List" lingered after the screen updated.
 - extendedWaitUntil:
-    notVisible: "Doomed List"
+    visible: "0 items left · 1 list"
     timeout: 15000
 - assertVisible: "Renamed List"
+- tapOn:
+    id: "shopping-list-title"
+- assertVisible: "More for Renamed List"
+- assertNotVisible: "More for Doomed List"
