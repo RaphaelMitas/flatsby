@@ -50,7 +50,7 @@ runs:
       run: |
         set -euo pipefail
         if [ "$RUNNER_OS" = "macOS" ]; then
-          brew install postgresql@17
+          brew install --verbose postgresql@17
           PG_BIN="$(brew --prefix postgresql@17)/bin"
           "$PG_BIN/initdb" -D "$RUNNER_TEMP/pgdata" -U postgres --auth=trust \
             --encoding=UTF8 --locale=C

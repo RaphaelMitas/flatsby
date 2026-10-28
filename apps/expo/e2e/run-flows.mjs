@@ -116,7 +116,7 @@ function runFlow({ file, locale }, index) {
   reinstallDriver = status !== 0;
   collectTakeScreenshots(debugDir, locale);
   // Step screenshots and hierarchy dumps are only worth keeping for failures.
-  if (status === 0) rmSync(debugDir, { recursive: true, force: true });
+  // probe: keep passing flows' maestro.log and command timings
   return status ?? 1;
 }
 
