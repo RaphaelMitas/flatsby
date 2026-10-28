@@ -66,6 +66,7 @@ test.describe("Account Management", () => {
     await paypal.fill("https://paypal.me/testholder");
     await card.getByTestId("payment-save-button").click();
     await expect(authPage.getByText("PayPal.me name saved.")).toBeVisible();
+    await expect(paypal).toHaveValue("testholder");
 
     await authPage.reload();
     await expect(paypal).toHaveValue("testholder");

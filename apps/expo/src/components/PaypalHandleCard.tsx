@@ -59,7 +59,11 @@ function PaypalHandleForm({ stored }: { stored: string | null }) {
             trpc.user.getPaypalHandle.queryFilter(),
           );
           void queryClient.invalidateQueries(trpc.group.getGroup.pathFilter());
-          form.reset({ paypalHandle: paypalHandle ?? "" });
+          // reset() applies resetOptions too, which would keep the raw pasted link
+          form.reset(
+            { paypalHandle: paypalHandle ?? "" },
+            { keepDirtyValues: false },
+          );
           setNotice(paypalHandle ? "saved" : stored ? "removed" : null);
         },
       }),

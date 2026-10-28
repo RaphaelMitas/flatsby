@@ -66,7 +66,11 @@ function PaypalHandleForm({ stored }: { stored: string | null }) {
             trpc.user.getPaypalHandle.queryFilter(),
           );
           void queryClient.invalidateQueries(trpc.group.getGroup.pathFilter());
-          form.reset({ paypalHandle: paypalHandle ?? "" });
+          // reset() applies resetOptions too, which would keep the raw pasted link
+          form.reset(
+            { paypalHandle: paypalHandle ?? "" },
+            { keepDirtyValues: false },
+          );
           if (paypalHandle) toast.success(t("settings.payment.saved"));
           else if (stored) toast.success(t("settings.payment.removed"));
         },
