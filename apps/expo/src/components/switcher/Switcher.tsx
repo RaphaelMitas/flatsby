@@ -56,7 +56,7 @@ export function Switcher({
   selectedId: number | null;
   onSelect: (item: SwitcherItem) => void;
   actions: SwitcherAction[];
-  settings?: SwitcherSettings;
+  settings: SwitcherSettings;
   className?: string;
 }) {
   const sheetRef = useRef<BottomSheetModal>(null);
@@ -95,17 +95,15 @@ export function Switcher({
             <Icon name="chevrons-up-down" size={16} color="foreground" />
           </View>
         </Pressable>
-        {settings && (
-          <Pressable
-            testID={settings.testID}
-            accessibilityRole="button"
-            accessibilityLabel={settings.label}
-            onPress={settings.onPress}
-            className="border-border bg-card active:bg-muted aspect-square items-center justify-center rounded-2xl border shadow-sm"
-          >
-            <Icon name="settings" size={20} color="foreground" />
-          </Pressable>
-        )}
+        <Pressable
+          testID={settings.testID}
+          accessibilityRole="button"
+          accessibilityLabel={settings.label}
+          onPress={settings.onPress}
+          className="border-border bg-card active:bg-muted aspect-square items-center justify-center rounded-2xl border shadow-sm"
+        >
+          <Icon name="settings" size={20} color="foreground" />
+        </Pressable>
       </View>
       <SheetModal ref={sheetRef} snapPoints={SNAP_POINTS}>
         <ScrollView

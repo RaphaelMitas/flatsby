@@ -28,8 +28,11 @@ export function GroupSwitcher({
   );
   const memberCount = (count: number) => t("group.memberCount", { count });
   const current = groups.find(({ id }) => id === selectedGroupId);
-  const openSettings = () =>
-    router.navigate("/(tabs)/settings/group-settings", { withAnchor: true });
+  const settings = {
+    label: t("navigation.groupSettings"),
+    onPress: () =>
+      router.navigate("/(tabs)/settings/group-settings", { withAnchor: true }),
+  };
 
   return (
     <Switcher
@@ -44,13 +47,7 @@ export function GroupSwitcher({
         title: group.name,
         subtitle: memberCount(group.memberCount),
         // Settings act on the selected group, so only its own row offers them
-        more:
-          group.id === selectedGroupId
-            ? {
-                label: t("navigation.groupSettings"),
-                onPress: openSettings,
-              }
-            : undefined,
+        more: group.id === selectedGroupId ? settings : undefined,
       }))}
       selectedId={selectedGroupId}
       onSelect={(group) => {
@@ -71,11 +68,7 @@ export function GroupSwitcher({
           onPress: () => router.push("/join"),
         },
       ]}
-      settings={{
-        testID: settingsTestID,
-        label: t("navigation.groupSettings"),
-        onPress: openSettings,
-      }}
+      settings={{ ...settings, testID: settingsTestID }}
       className={className}
     />
   );
