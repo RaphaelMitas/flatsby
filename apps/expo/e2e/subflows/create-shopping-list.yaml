@@ -18,7 +18,9 @@ appId: ${APP_ID}
 - tapOn:
     id: "first-list-input"
 - inputText: ${LIST_NAME}
-- hideKeyboard
+# Tap a neutral text to dismiss the keyboard (hideKeyboard fails on iOS)
+- tapOn:
+    id: "first-list-title"
 - tapOn:
     id: "first-list-create"
 - extendedWaitUntil:
