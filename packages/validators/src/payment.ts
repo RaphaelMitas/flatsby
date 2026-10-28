@@ -13,7 +13,7 @@ const MAX_GIROCODE_CENTS = 99_999_999_999;
 
 const IBAN_SHAPE = /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/;
 const PAYPAL_HANDLE_SHAPE = /^[A-Za-z0-9]{1,20}$/;
-const CONTROL_CHARACTERS = /\p{Cc}/u;
+const LINE_BREAKING_CHARACTERS = /[\p{Cc}\p{Zl}\p{Zp}]/u;
 
 // EPC069-12 keeps the BIC mandatory for SEPA members outside the EEA, and we never ask for one
 const EEA_COUNTRIES = new Set([
@@ -81,7 +81,7 @@ export function parsePaypalHandle(value: string) {
 const isValidAccountHolder = (value: string) =>
   value.trim().length > 0 &&
   value.trim().length <= MAX_ACCOUNT_HOLDER_LENGTH &&
-  !CONTROL_CHARACTERS.test(value);
+  !LINE_BREAKING_CHARACTERS.test(value);
 
 const accountHolderSchema = z
   .string()

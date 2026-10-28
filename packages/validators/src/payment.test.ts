@@ -56,6 +56,15 @@ describe("parsePaypalHandle", () => {
 });
 
 describe("paymentDetailsFormSchema", () => {
+  it("rejects a line separator in the account holder", () => {
+    const result = paymentDetailsFormSchema.safeParse({
+      accountHolder: "Lena\u2028DE89370400440532013000",
+      iban: "DE89370400440532013000",
+      paypalHandle: "",
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("needs an account holder once there is an IBAN", () => {
     const result = paymentDetailsFormSchema.safeParse({
       accountHolder: " ",
@@ -152,32 +161,6 @@ describe("paymentOptions", () => {
   });
 });
 
-describe("settlePaymentView", () => {
-  const ibanOnly = {
-    accountHolder: "Ruffy",
-    iban: "DE89370400440532013000",
-    paypalHandle: null,
-  };
-  const context = {
-    amountInCents: 1500,
-    currency: "USD",
-    groupName: "WG",
-    receiverIsMe: true,
-  };
-
-  it("doesn't ask a receiver with an IBAN to add one on a non-euro debt", () => {
-    expect(
-      settlePaymentView(paymentOptions(ibanOnly, "USD"), context).kind,
-    ).toBe("hidden");
-  });
-
-  it("shows the receiver their own code for a euro debt", () => {
-    expect(
-      settlePaymentView(paymentOptions(ibanOnly, "EUR"), context).kind,
-    ).toBe("ownCode");
-  });
-});
-
 describe("paymentDetailsInput", () => {
   const values = {
     accountHolder: "Ruffy",
@@ -199,25 +182,43 @@ describe("paymentDetailsInput", () => {
   });
 });
 
-describe("settlePaymentView PayPal link", () => {
+describe("settlePaymentView", () => {
+  const ibanOnly = {
+    accountHolder: "Ruffy",
+    iban: "DE89370400440532013000",
+    paypalHandle: null,
+  };
   const paypalOnly = { accountHolder: null, iban: null, paypalHandle: "max" };
-  const context = { currency: "USD", groupName: "WG", receiverIsMe: false };
-
-  it("puts the amount and currency after the handle", () => {
-    const view = settlePaymentView(paymentOptions(paypalOnly, "USD"), {
-      ...context,
-      amountInCents: 1500,
+  const view = (
+    details: typeof ibanOnly | typeof paypalOnly,
+    currency: string,
+    amountInCents: number,
+    receiverIsMe: boolean,
+  ) =>
+    settlePaymentView(paymentOptions(details, currency), {
+      amountInCents,
+      currency,
+      groupName: "WG",
+      receiverIsMe,
     });
-    expect(view.kind === "pay" && view.paypalUrl).toBe(
+
+  it("doesn't ask a receiver with an IBAN to add one on a non-euro debt", () => {
+    expect(view(ibanOnly, "USD", 1500, true).kind).toBe("hidden");
+  });
+
+  it("shows the receiver their own code for a euro debt", () => {
+    expect(view(ibanOnly, "EUR", 1500, true).kind).toBe("ownCode");
+  });
+
+  it("puts the amount and currency after the PayPal handle", () => {
+    const pay = view(paypalOnly, "USD", 1500, false);
+    expect(pay.kind === "pay" && pay.paypalUrl).toBe(
       "https://paypal.me/max/15.00USD",
     );
   });
 
-  it("offers no link before there is an amount", () => {
-    const view = settlePaymentView(paymentOptions(paypalOnly, "USD"), {
-      ...context,
-      amountInCents: 0,
-    });
-    expect(view.kind === "pay" && view.paypalUrl).toBeNull();
+  it("offers no PayPal link before there is an amount", () => {
+    const pay = view(paypalOnly, "USD", 0, false);
+    expect(pay.kind === "pay" && pay.paypalUrl).toBeNull();
   });
 });
