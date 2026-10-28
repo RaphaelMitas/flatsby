@@ -1,61 +1,50 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "../fixtures/auth";
 import { waitForHydration } from "../helpers/hydration";
+import { createShoppingList } from "../helpers/shopping-list";
 
-test.describe("Shopping List Dashboard", () => {
-  test("displays existing shopping lists on the dashboard", async ({
+test.describe("Shopping List Switcher", () => {
+  test("a group without lists starts on the first-list page and opens the new list", async ({
     authPage,
-  }: {
-    authPage: Page;
   }) => {
     await authPage.goto("/shopping-list");
-    await authPage.waitForURL("/shopping-list");
+    await expect(authPage.getByTestId("first-list-title")).toBeVisible();
 
-    await expect(
-      authPage.getByTestId("shopping-list-create-input"),
-    ).toBeVisible();
-    await expect(
-      authPage.getByTestId("shopping-list-create-button"),
-    ).toBeVisible();
+    const preset = authPage.getByTestId("first-list-preset-groceries");
+    await waitForHydration(preset);
+    await preset.click();
+    await expect(authPage.getByTestId("first-list-input")).toHaveValue(
+      "Groceries",
+    );
+    await authPage.getByTestId("first-list-create").click();
+
+    await authPage.waitForURL(/\/shopping-list\/\d+$/);
+    await expect(authPage.getByTestId("shopping-list-switcher")).toContainText(
+      "Groceries",
+    );
   });
 
-  test("creates a new shopping list and navigates into it", async ({
-    authPage,
-  }: {
-    authPage: Page;
-  }) => {
+  test("/shopping-list opens the last used list", async ({ authPage }) => {
+    const firstId = await createShoppingList(authPage, `First ${Date.now()}`);
+    const secondId = await createShoppingList(authPage, `Second ${Date.now()}`);
+    expect(secondId).not.toBe(firstId);
+
     await authPage.goto("/shopping-list");
-    await authPage.waitForURL("/shopping-list");
-
-    const listName = `Test List ${Date.now()}`;
-
-    const createInput = authPage.getByTestId("shopping-list-create-input");
-    await waitForHydration(createInput);
-    await createInput.fill(listName);
-    await authPage.getByTestId("shopping-list-create-button").click();
-
-    await authPage.waitForURL(/\/shopping-list\/\d+/);
-
-    const finalUrl = authPage.url();
-    expect(finalUrl).toMatch(/\/shopping-list\/\d+$/);
+    await authPage.waitForURL(`/shopping-list/${secondId}`);
   });
 
-  test("shows empty state when no shopping lists exist", async ({
-    authPage,
-  }: {
-    authPage: Page;
-  }) => {
-    await authPage.goto("/shopping-list");
-    await authPage.waitForURL("/shopping-list");
+  test("switching lists from the switcher", async ({ authPage }) => {
+    const firstName = `First ${Date.now()}`;
+    const firstId = await createShoppingList(authPage, firstName);
+    await createShoppingList(authPage, `Second ${Date.now()}`);
 
-    const listItems = authPage.getByTestId(/^shopping-list-dashboard-link-/);
-    const count = await listItems.count();
+    const switcher = authPage.getByTestId("shopping-list-switcher");
+    await waitForHydration(switcher);
+    await switcher.click();
+    await authPage
+      .getByTestId(`shopping-list-switcher-item-${firstId}`)
+      .click();
 
-    if (count === 0) {
-      await expect(
-        authPage.getByTestId("shopping-list-create-input"),
-      ).toBeVisible();
-    }
+    await authPage.waitForURL(`/shopping-list/${firstId}`);
+    await expect(switcher).toContainText(firstName);
   });
 });

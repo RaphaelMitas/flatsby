@@ -8,6 +8,8 @@ import ReanimatedSwipeable, {
 import { useRouter } from "expo-router";
 import { useTranslations } from "use-intl";
 
+import { PENDING_ID } from "@flatsby/api/resultMutation";
+
 import type { RouterOutputs } from "~/utils/api";
 import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
@@ -30,7 +32,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const swipeableRef = useRef<SwipeableMethods>(null);
   const router = useRouter();
   const { selectedGroupId, setSelectedGroup } = useShoppingStore();
-  const isOptimistic = group.id === -1;
+  const isOptimistic = group.id === PENDING_ID;
 
   const { swipeableProps, guardPress } = useSwipeActions({
     leftAction: {
@@ -59,7 +61,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
 
   const handleGroupSelect = () => {
     setSelectedGroup(group.id, group.name);
-    router.push("/(tabs)/home/shopping-lists");
+    router.navigate("/(tabs)/home");
   };
 
   const isSelected = selectedGroupId === group.id;

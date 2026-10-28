@@ -1,9 +1,9 @@
-# Shopping List Dashboard
+# Shopping List Switcher
 
 ## Goal
-Verify that users can view their lists and create new ones.
+Verify that users land on a list, can start their first one, and can switch between lists.
 
 ## Test Cases
-1. **Dashboard Loading**: Verify the user is redirected to the dashboard and can see a list of existing shopping lists.
-2. **Create New List**: Verify that entering a name and submitting the "Create List" form adds a new list to the dashboard and redirects the user into that list.
-3. **Empty State**: Verify the UI correctly displays when no shopping lists have been created yet.
+1. **First List**: Verify that a group without lists shows the first-list page, that a preset fills the name, and that creating opens the new list.
+2. **Last Used List**: Verify that opening the shopping lists goes to the last used list.
+3. **Switching Lists**: Verify that picking another list in the switcher opens it.

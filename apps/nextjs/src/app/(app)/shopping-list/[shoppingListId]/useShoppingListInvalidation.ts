@@ -41,7 +41,10 @@ export function useShoppingListInvalidation(
     void queryClient.invalidateQueries(
       trpc.shoppingList.suggestItems.pathFilter(),
     );
-  }, [queryClient, trpc, invalidateItems, invalidateCategoryCounts]);
+    void queryClient.invalidateQueries(
+      trpc.shoppingList.getShoppingLists.queryFilter({ groupId }),
+    );
+  }, [queryClient, trpc, groupId, invalidateItems, invalidateCategoryCounts]);
 
   return {
     invalidateItems,

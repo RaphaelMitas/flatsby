@@ -33,7 +33,6 @@ test("captures README screenshots", async ({ page, baseURL }) => {
   await page.screenshot({ path: `${OUT}/web-home.png` });
 
   await page.goto("/shopping-list");
-  await page.getByText("Groceries").first().click();
   await page.waitForURL(/\/shopping-list\/\d+/);
   await expect(page.getByText("Apples").first()).toBeVisible();
   await expect(page.getByText("Paper Towels").first()).toBeVisible();

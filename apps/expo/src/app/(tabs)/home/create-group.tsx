@@ -9,6 +9,7 @@ import { useTranslations } from "use-intl";
 
 import {
   failureOf,
+  PENDING_ID,
   restoreSnapshot,
   resultMutation,
 } from "@flatsby/api/resultMutation";
@@ -50,7 +51,7 @@ export default function CreateGroup() {
           );
 
           const newGroup = {
-            id: -1,
+            id: PENDING_ID,
             name: name,
             createdAt: new Date(),
             profilePicture: null,

@@ -167,6 +167,9 @@ export default function MembersScreen() {
             groupId: Number(selectedGroupId) || 0,
           }),
         );
+        void queryClient.invalidateQueries(
+          trpc.group.getUserGroups.queryOptions(),
+        );
       },
     }),
   );

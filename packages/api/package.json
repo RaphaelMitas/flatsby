@@ -24,6 +24,10 @@
       "types": "./dist/resultMutation.d.ts",
       "default": "./src/resultMutation.ts"
     },
+    "./shoppingListsCache": {
+      "types": "./dist/shoppingListsCache.d.ts",
+      "default": "./src/shoppingListsCache.ts"
+    },
     "./shoppingListItemsCache": {
       "types": "./dist/shoppingListItemsCache.d.ts",
       "default": "./src/shoppingListItemsCache.ts"

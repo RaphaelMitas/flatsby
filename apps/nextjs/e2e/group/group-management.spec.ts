@@ -199,6 +199,21 @@ test.describe("Group Management", () => {
     await expect(authPage.getByTestId("join-invite-expired")).toBeVisible();
   });
 
+  test("switching groups from the home switcher", async ({ authPage }) => {
+    const groupName = uniqueGroupName();
+    await createAndSelectGroup(authPage, groupName);
+
+    const switcher = authPage.getByTestId("home-group-switcher");
+    await waitForHydration(switcher);
+    await expect(switcher).toContainText(groupName);
+
+    await switcher.click();
+    await authPage.getByRole("menuitem", { name: /E2E Test Group/ }).click();
+
+    await expect(switcher).toContainText("E2E Test Group");
+    await expect(switcher).not.toContainText(groupName);
+  });
+
   test("change group name", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     const newName = `${groupName} Updated`;

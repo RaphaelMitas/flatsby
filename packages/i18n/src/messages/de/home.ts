@@ -5,7 +5,6 @@ export const home = {
   createGroup: "Gruppe erstellen",
   loadingDashboard: "Übersicht wird geladen...",
   retry: "Erneut versuchen",
-  selectGroup: "Gruppe auswählen",
   shoppingLists: "Einkaufslisten",
   somethingWentWrong: "Etwas ist schiefgelaufen",
   new: {

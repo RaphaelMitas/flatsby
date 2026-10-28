@@ -4,6 +4,8 @@ import type { ApiResult } from "./errors";
 
 export type QuerySnapshot = { queryKey: QueryKey; previous: unknown }[];
 
+export const PENDING_ID = -1;
+
 export const restoreSnapshot =
   (queryClient: QueryClient) => (snapshot: QuerySnapshot) => {
     for (const { queryKey, previous } of snapshot)

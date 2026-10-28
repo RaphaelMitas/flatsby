@@ -31,7 +31,6 @@ export const navigation = {
   privacy: "Datenschutz",
   selectGroup: "Gruppe auswählen",
   shopping: "Einkaufen",
-  shoppingList: "Einkaufsliste",
   sidebar: "Seitenleiste",
   sidebarDescription: "Zeigt die mobile Seitenleiste an.",
   terms: "Nutzungsbedingungen",
