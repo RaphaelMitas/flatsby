@@ -10,7 +10,6 @@ import { Text, View } from "react-native";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
-  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -123,14 +122,6 @@ export function SettlementForm({
   const watchedAmount = useWatch({
     control: form.control,
     name: "amountInCents",
-  });
-
-  const { data: paypal } = useQuery({
-    ...trpc.group.getMemberPaypalHandle.queryOptions({
-      groupId,
-      groupMemberId: watchedToMemberId,
-    }),
-    enabled: !isEditMode && watchedToMemberId > 0,
   });
 
   const isPrefilled = source !== undefined;
@@ -440,8 +431,10 @@ export function SettlementForm({
   const isPending =
     createSettlementMutation.isPending || updateSettlementMutation.isPending;
 
-  const payingWithPaypal =
-    watchedFromMemberId === meId && paypal?.success === true && !!paypal.data;
+  const receiverPaypal =
+    groupMembers.find((member) => member.id === watchedToMemberId)?.user
+      .paypalHandle ?? null;
+  const payingWithPaypal = watchedFromMemberId === meId && !!receiverPaypal;
 
   const errorMessage =
     failureOf(createSettlementMutation, t("expenses.genericError")) ??
@@ -602,9 +595,9 @@ export function SettlementForm({
                 )}
               />
             </View>
-            {paypal?.success && pair && (
+            {!isEditMode && pair && (
               <SettlementPayment
-                paypalHandle={paypal.data}
+                paypalHandle={receiverPaypal}
                 receiverName={pair.receiver.name}
                 receiverIsMe={watchedToMemberId === meId}
                 amountInCents={watchedAmount}

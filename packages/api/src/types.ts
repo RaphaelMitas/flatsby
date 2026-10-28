@@ -47,7 +47,9 @@ export type GroupMemberWithUserInfo = Pick<
   GroupMember,
   "id" | "userId" | "role" | "joinedOn" | "isActive"
 > & {
-  user: Pick<User, "email" | "name" | "image">;
+  // Former members rebuilt from expense splits come without it
+  user: Pick<User, "email" | "name" | "image"> &
+    Partial<Pick<User, "paypalHandle">>;
 };
 
 export type GroupWithMembers = Group & {

@@ -11,7 +11,7 @@ import { useTranslations } from "use-intl";
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { updateUserNameFormSchema } from "@flatsby/validators/user";
 
-import { PaymentDetailsCard } from "~/components/PaymentDetailsCard";
+import { PaypalHandleCard } from "~/components/PaypalHandleCard";
 import { ProfileSection } from "~/components/ProfileSection";
 import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -162,7 +162,7 @@ export default function ProfileScreen() {
           </CardContent>
         </Card>
 
-        <PaymentDetailsCard />
+        <PaypalHandleCard />
       </AppScrollView>
     </SafeAreaView>
   );

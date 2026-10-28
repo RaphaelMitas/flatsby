@@ -22,7 +22,6 @@ import {
   updateGroupSettingsSchema,
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
-import { memberPaypalHandleInputSchema } from "@flatsby/validators/payment";
 
 import {
   addMember,
@@ -108,35 +107,6 @@ export const groupRouter = createTRPCRouter({
     .input(groupSchema.pick({ id: true }))
     .query(async ({ ctx, input }) =>
       runResult(ctx, getGroupWithAccess(input.id)),
-    ),
-
-  getMemberPaypalHandle: protectedProcedure
-    .input(memberPaypalHandleInputSchema)
-    .output(getApiResultZod(z.string().nullable()))
-    .query(async ({ ctx, input }) =>
-      runResult(
-        ctx,
-        Effect.gen(function* () {
-          yield* requireMember(input.groupId);
-          const database = yield* Database;
-          const [member] = yield* database.query(
-            "fetch member paypal handle",
-            (db) =>
-              db
-                .select({ paypalHandle: users.paypalHandle })
-                .from(groupMembers)
-                .innerJoin(users, eq(users.id, groupMembers.userId))
-                .where(
-                  and(
-                    eq(groupMembers.id, input.groupMemberId),
-                    eq(groupMembers.groupId, input.groupId),
-                    eq(groupMembers.isActive, true),
-                  ),
-                ),
-          );
-          return member?.paypalHandle ?? null;
-        }),
-      ),
     ),
 
   updateMemberRole: protectedProcedure

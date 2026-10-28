@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   parsePaypalHandle,
+  paypalHandleInputSchema,
   paypalMeUrl,
-  updatePaypalHandleInputSchema,
 } from "./payment";
 
 describe("parsePaypalHandle", () => {
@@ -23,19 +23,24 @@ describe("parsePaypalHandle", () => {
   });
 });
 
-describe("updatePaypalHandleInputSchema", () => {
+describe("paypalHandleInputSchema", () => {
   it("stores the handle out of a pasted link", () => {
     expect(
-      updatePaypalHandleInputSchema.parse({
+      paypalHandleInputSchema.parse({
         paypalHandle: "https://paypal.me/ruffy",
       }),
     ).toEqual({ paypalHandle: "ruffy" });
   });
 
+  it("clears it when blank", () => {
+    expect(paypalHandleInputSchema.parse({ paypalHandle: " " })).toEqual({
+      paypalHandle: "",
+    });
+  });
+
   it("rejects what isn't a PayPal.me name", () => {
     expect(
-      updatePaypalHandleInputSchema.safeParse({ paypalHandle: "not a name" })
-        .success,
+      paypalHandleInputSchema.safeParse({ paypalHandle: "not a name" }).success,
     ).toBe(false);
   });
 });

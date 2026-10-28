@@ -11,7 +11,6 @@ import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
-  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -314,14 +313,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const currency = form.watch("currency");
   const amountInCents = form.watch("amountInCents");
 
-  const { data: paypal } = useQuery({
-    ...trpc.group.getMemberPaypalHandle.queryOptions({
-      groupId,
-      groupMemberId: toGroupMemberId,
-    }),
-    enabled: toGroupMemberId > 0,
-  });
-
   if (!groupData.success) {
     return null;
   }
@@ -345,8 +336,10 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
 
   const isPending = createSettlementMutation.isPending;
-  const payingWithPaypal =
-    fromGroupMemberId === meId && paypal?.success === true && !!paypal.data;
+  const receiverPaypal =
+    groupMembers.find((member) => member.id === toGroupMemberId)?.user
+      .paypalHandle ?? null;
+  const payingWithPaypal = fromGroupMemberId === meId && !!receiverPaypal;
   const failure = failureOf(
     createSettlementMutation,
     t("expenses.genericError"),
@@ -498,9 +491,9 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               )}
             />
 
-            {paypal?.success && fromGroupMemberId > 0 && (
+            {fromGroupMemberId > 0 && toGroupMemberId > 0 && (
               <SettlementPayment
-                paypalHandle={paypal.data}
+                paypalHandle={receiverPaypal}
                 receiverName={toMember.name}
                 receiverIsMe={toGroupMemberId === meId}
                 amountInCents={amountInCents}

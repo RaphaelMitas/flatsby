@@ -170,7 +170,12 @@ export const findGroupWithMembers = (db: Database, groupId: number) =>
         },
         with: {
           user: {
-            columns: { email: true, name: true, image: true },
+            columns: {
+              email: true,
+              name: true,
+              image: true,
+              paypalHandle: true,
+            },
           },
         },
       },

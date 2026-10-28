@@ -6,7 +6,7 @@ import { useTranslations } from "use-intl";
 import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
 import {
   PAYPAL_ME_SIGNUP_URL,
-  paypalHandleFormSchema,
+  paypalHandleInputSchema,
 } from "@flatsby/validators/payment";
 
 import { TimedAlert } from "~/components/TimedAlert";
@@ -32,7 +32,7 @@ import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 
 // Loads on its own so the rest of Profile never waits on it, offline included
-export function PaymentDetailsCard() {
+export function PaypalHandleCard() {
   const { data } = useQuery(trpc.user.getPaypalHandle.queryOptions());
   if (!data) return null;
   return <PaypalHandleForm stored={data.success ? data.data : null} />;
@@ -44,8 +44,10 @@ function PaypalHandleForm({ stored }: { stored: string | null }) {
   const [notice, setNotice] = useState<"saved" | "removed" | null>(null);
 
   const form = useForm({
-    schema: paypalHandleFormSchema,
-    defaultValues: { paypalHandle: stored ?? "" },
+    schema: paypalHandleInputSchema,
+    // Follows a newer save from another device without dropping what's being typed
+    values: { paypalHandle: stored ?? "" },
+    resetOptions: { keepDirtyValues: true },
   });
 
   const mutation = useMutation(
@@ -55,9 +57,7 @@ function PaypalHandleForm({ stored }: { stored: string | null }) {
           void queryClient.invalidateQueries(
             trpc.user.getPaypalHandle.queryFilter(),
           );
-          void queryClient.invalidateQueries({
-            queryKey: trpc.group.getMemberPaypalHandle.pathKey(),
-          });
+          void queryClient.invalidateQueries(trpc.group.getGroup.pathFilter());
           form.reset({ paypalHandle: paypalHandle ?? "" });
           setNotice(paypalHandle ? "saved" : stored ? "removed" : null);
         },
@@ -67,7 +67,7 @@ function PaypalHandleForm({ stored }: { stored: string | null }) {
 
   const failure = failureOf(mutation, t("errors.updatePaypalHandleFailed"));
 
-  const save = (paypalHandle: string | null) => {
+  const save = (paypalHandle: string) => {
     setNotice(null);
     mutation.mutate({ paypalHandle });
   };
@@ -132,7 +132,7 @@ function PaypalHandleForm({ stored }: { stored: string | null }) {
                   variant="outline"
                   title={t("common.remove")}
                   disabled={mutation.isPending}
-                  onPress={() => save(null)}
+                  onPress={() => save("")}
                   className="flex-1"
                 />
               )}
@@ -144,7 +144,7 @@ function PaypalHandleForm({ stored }: { stored: string | null }) {
                 }
                 disabled={mutation.isPending}
                 onPress={form.handleSubmit(({ paypalHandle }) =>
-                  save(paypalHandle.trim() || null),
+                  save(paypalHandle),
                 )}
                 className="flex-1"
               />

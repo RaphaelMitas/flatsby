@@ -17,7 +17,7 @@ import DeleteUser from "./DeleteUser";
 import ExportUserData from "./ExportUserData";
 import { LanguageSettings } from "./LanguageSettings";
 import ManageUser from "./ManageUser";
-import { PaymentDetails } from "./PaymentDetails";
+import { PaypalHandleCard } from "./PaypalHandleCard";
 
 export default async function Page() {
   prefetch(trpc.user.getCurrentUser.queryOptions());
@@ -36,7 +36,7 @@ export default async function Page() {
           </h1>
         </div>
         <ManageUser />
-        <PaymentDetails />
+        <PaypalHandleCard />
         <LanguageSettings
           preference={preference && isLocale(preference) ? preference : null}
         />

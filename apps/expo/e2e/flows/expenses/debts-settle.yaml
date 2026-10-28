@@ -81,7 +81,6 @@ tags:
 - tapOn:
     id: "settlement-cancel-button"
 
-# PayPal takes the debt's own currency
 - extendedWaitUntil:
     visible:
       id: "debt-summary-title"

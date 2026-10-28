@@ -2,6 +2,8 @@ import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
 
+import { centsToDecimal } from "./expenses/conversion";
+
 export const MAX_PAYPAL_HANDLE_LENGTH = 20;
 
 const PAYPAL_HANDLE_SHAPE = /^[A-Za-z0-9]{1,20}$/;
@@ -17,28 +19,18 @@ export function parsePaypalHandle(value: string) {
   return handle && PAYPAL_HANDLE_SHAPE.test(handle) ? handle : null;
 }
 
-export const memberPaypalHandleInputSchema = z.object({
-  groupId: z.number(),
-  groupMemberId: z.number(),
-});
-
-// null clears it
-export const updatePaypalHandleInputSchema = z.object({
-  paypalHandle: z
-    .string()
-    .transform((value) => parsePaypalHandle(value) ?? "")
-    .refine((handle) => handle.length > 0, {
+// Blank clears it
+export const paypalHandleInputSchema = z.object({
+  paypalHandle: z.string().transform((value, ctx) => {
+    if (!value.trim()) return "";
+    const handle = parsePaypalHandle(value);
+    if (handle) return handle;
+    ctx.addIssue({
+      code: "custom",
       message: msg("settings.payment.paypalInvalid"),
-    })
-    .nullable(),
-});
-
-export const paypalHandleFormSchema = z.object({
-  paypalHandle: z
-    .string()
-    .refine((value) => !value.trim() || parsePaypalHandle(value) !== null, {
-      message: msg("settings.payment.paypalInvalid"),
-    }),
+    });
+    return z.NEVER;
+  }),
 });
 
 export const paypalMeUrl = (
@@ -47,7 +39,7 @@ export const paypalMeUrl = (
   currency: string,
 ) =>
   amountInCents > 0
-    ? `https://paypal.me/${handle}/${(amountInCents / 100).toFixed(2)}${currency}`
+    ? `https://paypal.me/${handle}/${centsToDecimal(amountInCents).toFixed(2)}${currency}`
     : null;
 
 export const PAYPAL_ME_SIGNUP_URL = "https://www.paypal.com/paypalme/";

@@ -33,12 +33,12 @@ import { Input } from "@flatsby/ui/input";
 import { toast } from "@flatsby/ui/toast";
 import {
   PAYPAL_ME_SIGNUP_URL,
-  paypalHandleFormSchema,
+  paypalHandleInputSchema,
 } from "@flatsby/validators/payment";
 
 import { useTRPC } from "~/trpc/react";
 
-export function PaymentDetails() {
+export function PaypalHandleCard() {
   const trpc = useTRPC();
   const t = useTranslations();
   const queryClient = useQueryClient();
@@ -47,8 +47,10 @@ export function PaymentDetails() {
   const stored = data.success ? data.data : null;
 
   const form = useForm({
-    resolver: zodResolver(paypalHandleFormSchema),
-    defaultValues: { paypalHandle: stored ?? "" },
+    resolver: zodResolver(paypalHandleInputSchema),
+    // Follows a newer save from another tab without dropping what's being typed
+    values: { paypalHandle: stored ?? "" },
+    resetOptions: { keepDirtyValues: true },
   });
 
   const mutation = useMutation(
@@ -58,9 +60,7 @@ export function PaymentDetails() {
           void queryClient.invalidateQueries(
             trpc.user.getPaypalHandle.queryFilter(),
           );
-          void queryClient.invalidateQueries({
-            queryKey: trpc.group.getMemberPaypalHandle.pathKey(),
-          });
+          void queryClient.invalidateQueries(trpc.group.getGroup.pathFilter());
           form.reset({ paypalHandle: paypalHandle ?? "" });
           if (paypalHandle) toast.success(t("settings.payment.saved"));
           else if (stored) toast.success(t("settings.payment.removed"));
@@ -71,8 +71,7 @@ export function PaymentDetails() {
     ),
   );
 
-  const save = (paypalHandle: string | null) =>
-    mutation.mutate({ paypalHandle });
+  const save = (paypalHandle: string) => mutation.mutate({ paypalHandle });
 
   return (
     <Card data-testid="payment-details-card">
@@ -84,7 +83,7 @@ export function PaymentDetails() {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(({ paypalHandle }) =>
-              save(paypalHandle.trim() || null),
+              save(paypalHandle),
             )}
             className="grid gap-4"
           >
@@ -130,7 +129,7 @@ export function PaymentDetails() {
                   type="button"
                   variant="outline"
                   disabled={mutation.isPending}
-                  onClick={() => save(null)}
+                  onClick={() => save("")}
                   data-testid="payment-remove-button"
                 >
                   {t("common.remove")}
