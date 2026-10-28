@@ -31,9 +31,9 @@ private struct AddedItemSnippet: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(alignment: .firstTextBaseline) {
-        Text(list.listName).font(.headline)
+        Text(list.listName).font(.headline).lineLimit(1).layoutPriority(1)
         Spacer()
-        Text(list.groupName).font(.footnote).foregroundStyle(.secondary)
+        Text(list.groupName).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
       }
       Divider()
       HStack(spacing: 10) {
@@ -41,6 +41,7 @@ private struct AddedItemSnippet: View {
         Text(item).fontWeight(.semibold)
       }
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
     .padding()
   }
 }
