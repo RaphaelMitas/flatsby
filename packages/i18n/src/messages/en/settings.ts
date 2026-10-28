@@ -8,6 +8,7 @@ export const settings = {
     usage: "Usage",
     appearance: "Appearance",
     groups: "Groups",
+    notifications: "Notifications",
     account: "Account",
     legal: "Legal",
   },
@@ -40,6 +41,9 @@ export const settings = {
     exportDataSubtitle: "Download your personal data (GDPR)",
     rateApp: "Rate Flatsby",
     rateAppSubtitle: "Tell others what you think in the store",
+    eveningReminder: "The evening before",
+    eveningReminderSubtitle: "7 pm, when tomorrow holds something for you",
+    eveningReminderBlocked: "Turned off in your phone's settings",
   },
   theme: {
     light: "Light",

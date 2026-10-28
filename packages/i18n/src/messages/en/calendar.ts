@@ -114,6 +114,18 @@ export const calendar = {
     delete: "Delete",
     confirmDelete: "Press again to delete it and its history",
   },
+  reminders: {
+    askTitle: "Remind you the evening before?",
+    askBody:
+      "You're up for {title} on {day}. We'll let you know at 7 pm the evening before.",
+    turnOn: "Yes, remind me",
+    notNow: "Not now",
+    turnsTomorrow: "Your turn tomorrow: {titles}",
+    tomorrow: "Tomorrow: {titles}",
+    also: "Also: {titles}",
+    stillOpen: "Still open: {titles}",
+    channel: "Evening reminders",
+  },
   validation: {
     titleRequired: "Give it a name",
     titleTooLong: "That name is too long",

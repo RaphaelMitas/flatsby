@@ -99,7 +99,10 @@ export function CalendarEntryRow({
             {item.recurrence && (
               <Icon name="repeat" size={12} color="muted-foreground" />
             )}
-            <Text numberOfLines={1} className="text-muted-foreground text-sm">
+            <Text
+              numberOfLines={1}
+              className="text-muted-foreground shrink text-sm"
+            >
               {describeRecurrence(item.recurrence, t, locale)}
             </Text>
           </View>
