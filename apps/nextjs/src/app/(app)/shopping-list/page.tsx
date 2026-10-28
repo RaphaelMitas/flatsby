@@ -26,6 +26,7 @@ export default async function ShoppingListPage() {
       <FirstList
         groupId={groupId}
         groupName={user?.lastGroupUsed?.name ?? ""}
+        isFirst
       />
     </div>
   );

@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { Switcher } from "~/app/_components/switcher/Switcher";
 import { useTRPC } from "~/trpc/react";
-import { CreateListDialog, EditListDialog } from "../ListDialogs";
+import { EditListDialog } from "../ListDialogs";
 
 export function ListSwitcher({
   groupId,
@@ -24,7 +24,6 @@ export function ListSwitcher({
   const trpc = useTRPC();
   const router = useRouter();
   const { currentGroup } = useGroupContext();
-  const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<{ id: number; name: string } | null>(
     null,
   );
@@ -65,14 +64,9 @@ export function ListSwitcher({
             testId: "shopping-list-switcher-new",
             icon: Plus,
             title: t("switcher.newList"),
-            onSelect: () => setCreating(true),
+            onSelect: () => router.push("/shopping-list/new"),
           },
         ]}
-      />
-      <CreateListDialog
-        groupId={groupId}
-        open={creating}
-        onOpenChange={setCreating}
       />
       <EditListDialog
         groupId={groupId}

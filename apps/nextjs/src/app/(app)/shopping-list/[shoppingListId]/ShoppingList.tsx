@@ -263,7 +263,7 @@ const ShoppingListInner = ({
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {shoppingList && (
-          <div className="px-4">
+          <div className="px-4 pb-3">
             <ListSwitcher
               groupId={groupId}
               shoppingListId={shoppingListId}

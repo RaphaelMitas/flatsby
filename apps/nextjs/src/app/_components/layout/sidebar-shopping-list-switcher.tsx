@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +17,6 @@ import {
 } from "@flatsby/ui/sidebar";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
-import { CreateListDialog } from "~/app/(app)/shopping-list/ListDialogs";
 import { useTRPC } from "~/trpc/react";
 
 export function SidebarShoppingListSwitcher() {
@@ -26,7 +24,6 @@ export function SidebarShoppingListSwitcher() {
   const pathname = usePathname();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
-  const [creating, setCreating] = useState(false);
 
   const { data: shoppingListsData, isLoading } = useQuery({
     ...trpc.shoppingList.getShoppingLists.queryOptions({
@@ -54,11 +51,14 @@ export function SidebarShoppingListSwitcher() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
+              asChild
+              isActive={pathname === "/shopping-list/new"}
               tooltip={t("switcher.newList")}
-              onClick={() => setCreating(true)}
             >
-              <Plus />
-              <span>{t("switcher.newList")}</span>
+              <Link href="/shopping-list/new">
+                <Plus />
+                <span>{t("switcher.newList")}</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
@@ -94,11 +94,6 @@ export function SidebarShoppingListSwitcher() {
             ))
           )}
         </SidebarMenu>
-        <CreateListDialog
-          groupId={currentGroup.id}
-          open={creating}
-          onOpenChange={setCreating}
-        />
       </SidebarGroupContent>
     </SidebarGroup>
   );

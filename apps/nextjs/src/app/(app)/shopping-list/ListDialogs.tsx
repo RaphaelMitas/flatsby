@@ -10,7 +10,7 @@ import { Trash } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
-import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
+import { resultMutation } from "@flatsby/api/resultMutation";
 import {
   shoppingListsMutation,
   shoppingListsPatches,
@@ -139,49 +139,6 @@ function ListNameForm({
         </Button>
       </form>
     </Form>
-  );
-}
-
-export function CreateListDialog({
-  groupId,
-  open,
-  onOpenChange,
-}: {
-  groupId: number;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const t = useTranslations();
-  const createList = useCreateList(groupId);
-  const failure = failureOf(createList, t("shoppingList.create.failed"));
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) createList.reset();
-        onOpenChange(next);
-      }}
-    >
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>{t("shoppingList.createShoppingList")}</DialogTitle>
-        </DialogHeader>
-        <ListNameForm
-          defaultName=""
-          submitLabel={t("shoppingList.create.submit")}
-          testId="shopping-list-create"
-          pending={createList.isPending}
-          onSubmit={(name) =>
-            createList.mutate(
-              { groupId, name },
-              { onSuccess: ({ success }) => success && onOpenChange(false) },
-            )
-          }
-        />
-        {failure && <p className="text-destructive text-sm">{failure}</p>}
-      </DialogContent>
-    </Dialog>
   );
 }
 

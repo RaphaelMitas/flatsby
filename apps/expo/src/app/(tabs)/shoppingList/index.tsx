@@ -62,7 +62,7 @@ function ListTab({ groupId }: { groupId: number }) {
 
   return (
     <>
-      <View className="px-4 pt-2 pb-1">
+      <View className="px-4 pt-2 pb-3">
         <ListSwitcher lists={lists} current={current} />
       </View>
       <Suspense

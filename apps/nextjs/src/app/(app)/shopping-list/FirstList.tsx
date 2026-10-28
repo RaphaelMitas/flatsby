@@ -21,9 +21,11 @@ const PRESETS = ["groceries", "drugstore", "hardware"] as const;
 export function FirstList({
   groupId,
   groupName,
+  isFirst,
 }: {
   groupId: number;
   groupName: string;
+  isFirst: boolean;
 }) {
   const t = useTranslations("shoppingList");
   const router = useRouter();
@@ -44,7 +46,7 @@ export function FirstList({
     <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-4 p-6 text-center">
       <ShoppingBasket className="text-muted-foreground size-12" />
       <h1 className="text-xl font-bold" data-testid="first-list-title">
-        {t("firstList.title")}
+        {isFirst ? t("firstList.title") : t("switcher.newList")}
       </h1>
       <p className="text-muted-foreground text-sm">
         {t("firstList.body", { group: groupName })}

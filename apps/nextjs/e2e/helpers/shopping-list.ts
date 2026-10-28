@@ -14,17 +14,15 @@ export async function createShoppingList(
   await expect(firstListInput.or(switcher)).toBeVisible();
   const before = page.url();
 
-  if (await firstListInput.isVisible()) {
-    await waitForHydration(firstListInput);
-    await firstListInput.fill(name);
-    await page.getByTestId("first-list-create").click();
-  } else {
+  if (!(await firstListInput.isVisible())) {
     await waitForHydration(switcher);
     await switcher.click();
     await page.getByTestId("shopping-list-switcher-new").click();
-    await page.getByTestId("shopping-list-create-input").fill(name);
-    await page.getByTestId("shopping-list-create-submit").click();
+    await page.waitForURL("/shopping-list/new");
   }
+  await waitForHydration(firstListInput);
+  await firstListInput.fill(name);
+  await page.getByTestId("first-list-create").click();
   await page.waitForURL(
     (url) => url.href !== before && /\/shopping-list\/\d+$/.test(url.pathname),
   );
