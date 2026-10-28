@@ -95,7 +95,6 @@ export const group = {
     invite: "Invite {name}",
     rename: "Rename",
     renameTitle: "Rename {name}",
-    save: "Save",
     claimedFrom: "Took {name}'s spot",
     undoClaim: "Turn back into “{name}”",
     undoClaimHint: "{user} loses access. The expenses stay with {name}.",

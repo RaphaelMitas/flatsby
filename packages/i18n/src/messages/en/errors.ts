@@ -45,6 +45,7 @@ export const errors = {
   placeholderTaken: "This spot isn't available anymore",
   placeholderNameTaken: "Someone with this name is already listed",
   placeholderCannotBeAdmin: "Only people who have joined can be admins",
+  adminClaimCannotBeUndone: "An admin can't be turned back into a placeholder",
   alreadyExists: "This item already exists",
   invalidReference: "Invalid reference to related data",
   fieldRequired: "{field} is required",

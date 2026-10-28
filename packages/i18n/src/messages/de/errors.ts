@@ -48,6 +48,8 @@ export const errors = {
   placeholderTaken: "Dieser Platz ist nicht mehr frei",
   placeholderNameTaken: "Jemand mit diesem Namen ist schon eingetragen",
   placeholderCannotBeAdmin: "Nur beigetretene Mitglieder können Admin sein",
+  adminClaimCannotBeUndone:
+    "Ein Admin kann nicht wieder zum Platzhalter werden",
   alreadyExists: "Das gibt es bereits",
   invalidReference: "Ungültiger Verweis auf zugehörige Daten",
   fieldRequired: "{field} ist erforderlich",

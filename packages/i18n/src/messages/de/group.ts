@@ -96,7 +96,6 @@ export const group = {
     invite: "{name} einladen",
     rename: "Umbenennen",
     renameTitle: "{name} umbenennen",
-    save: "Speichern",
     claimedFrom: "Hat den Platz von {name} übernommen",
     undoClaim: "Wieder „{name}“ daraus machen",
     undoClaimHint:

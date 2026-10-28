@@ -49,6 +49,7 @@ import { Database } from "../effect/services/Database";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
+  activePlaceholderWhere,
   DbUtils,
   GroupUtils,
   memberUserColumns,
@@ -96,8 +97,7 @@ const withFreePlaceholderName = <T>(
     const taken = await tx.query.groupMembers.findFirst({
       where: and(
         eq(groupMembers.groupId, groupId),
-        isNull(groupMembers.userId),
-        eq(groupMembers.isActive, true),
+        activePlaceholderWhere(),
         sql`lower(${groupMembers.placeholderName}) = lower(${name})`,
         exceptMemberId === undefined
           ? undefined
@@ -416,11 +416,7 @@ export const groupRouter = createTRPCRouter({
           const database = yield* Database;
           const target = yield* database.findOneOrFail("groupMember", (db) =>
             db.query.groupMembers.findFirst({
-              where: and(
-                eq(groupMembers.id, input.memberId),
-                isNull(groupMembers.userId),
-                eq(groupMembers.isActive, true),
-              ),
+              where: activePlaceholderWhere(input.memberId),
             }),
           );
           yield* requireMember(target.groupId);
@@ -434,13 +430,7 @@ export const groupRouter = createTRPCRouter({
                 const [renamed] = await tx
                   .update(groupMembers)
                   .set({ placeholderName: input.name })
-                  .where(
-                    and(
-                      eq(groupMembers.id, target.id),
-                      isNull(groupMembers.userId),
-                      eq(groupMembers.isActive, true),
-                    ),
-                  )
+                  .where(activePlaceholderWhere(target.id))
                   .returning({ id: groupMembers.id });
                 return renamed
                   ? undefined
@@ -475,7 +465,7 @@ export const groupRouter = createTRPCRouter({
           }
           yield* requireAdmin(target.groupId);
           if (target.role === "admin") {
-            return yield* Errors.forbidden("errors.placeholderCannotBeAdmin");
+            return yield* Errors.forbidden("errors.adminClaimCannotBeUndone");
           }
           const refused = yield* database.query("undo claim", (db) =>
             withFreePlaceholderName(

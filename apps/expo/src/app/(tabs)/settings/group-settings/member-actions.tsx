@@ -204,7 +204,7 @@ export default function MemberActionsScreen() {
               </Text>
               <PlaceholderNameField
                 defaultName={groupMember.user.name}
-                submitLabel={t("group.placeholders.save")}
+                submitLabel={t("common.save")}
                 inputTestID="member-rename-input"
                 buttonTestID="member-rename-save"
                 autoFocus

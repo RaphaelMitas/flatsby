@@ -331,7 +331,7 @@ export const MemberCard = ({
           </DialogHeader>
           <PlaceholderNameForm
             defaultName={groupMember.user.name}
-            submitLabel={t("group.placeholders.save")}
+            submitLabel={t("common.save")}
             inputTestId="placeholder-rename-input"
             buttonTestId="placeholder-rename-button"
             autoFocus

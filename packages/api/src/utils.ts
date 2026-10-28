@@ -236,6 +236,13 @@ export const findActiveAdmin = (
     where: GroupUtils.activeAdminWhere(groupId, userId),
   });
 
+export const activePlaceholderWhere = (memberId?: number) =>
+  and(
+    memberId === undefined ? undefined : eq(groupMembers.id, memberId),
+    isNull(groupMembers.userId),
+    eq(groupMembers.isActive, true),
+  );
+
 /** Callers check the right to add; `refusal` runs under the group lock, so it sees concurrent removals. */
 export const addMemberTx = async (
   tx: DbTransaction,
@@ -261,10 +268,8 @@ export const addMemberTx = async (
       .set({ userId })
       .where(
         and(
-          eq(groupMembers.id, placeholderId),
+          activePlaceholderWhere(placeholderId),
           eq(groupMembers.groupId, groupId),
-          isNull(groupMembers.userId),
-          eq(groupMembers.isActive, true),
         ),
       )
       .returning({ id: groupMembers.id });

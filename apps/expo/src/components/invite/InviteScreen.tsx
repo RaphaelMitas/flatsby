@@ -67,6 +67,16 @@ export function InviteScreen({
   }
 
   const link = inviteLink(getBaseUrl(), invite.data.code);
+  // Sits below the names when they show, so naming flatmates comes first
+  const doneButton = onDone && (
+    <Button
+      testID="group-invite-done"
+      title={t("invite.done")}
+      variant="outline"
+      className="w-full"
+      onPress={onDone}
+    />
+  );
   const resetFailure = failureOf(resetMutation, t("invite.resetFailed"));
 
   return (
@@ -102,6 +112,7 @@ export function InviteScreen({
           icon="share"
           onPress={() => shareInvite(invite.data.code)}
         />
+        {!withPlaceholders && doneButton}
         <View className="flex-row items-center justify-between">
           <Text className="text-muted-foreground text-xs">
             {t("invite.expiresIn", {
@@ -132,15 +143,7 @@ export function InviteScreen({
           />
         </View>
       )}
-      {onDone && (
-        <Button
-          testID="group-invite-done"
-          title={t("invite.done")}
-          variant="outline"
-          className="w-full"
-          onPress={onDone}
-        />
-      )}
+      {withPlaceholders && doneButton}
     </AppScrollView>
   );
 }
