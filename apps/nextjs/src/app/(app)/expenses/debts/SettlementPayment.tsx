@@ -9,11 +9,7 @@ import QRCode from "react-qr-code";
 import { Button } from "@flatsby/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import {
-  formatIban,
-  paypalMeUrl,
-  settlePaymentView,
-} from "@flatsby/validators/payment";
+import { formatIban, settlePaymentView } from "@flatsby/validators/payment";
 
 import { CopyButton } from "~/app/_components/CopyButton";
 
@@ -47,6 +43,7 @@ export function SettlementPayment({
   });
   const view = settlePaymentView(options, {
     amountInCents,
+    currency,
     groupName,
     receiverIsMe,
   });
@@ -91,7 +88,7 @@ export function SettlementPayment({
     );
   }
 
-  const { reference, girocode } = view;
+  const { reference, girocode, paypalUrl } = view;
   const bankPanel = bank && (
     <div className="flex flex-col gap-3">
       {girocode && (
@@ -126,13 +123,9 @@ export function SettlementPayment({
       <p className="text-muted-foreground text-sm">
         {t("paypalHint", { amount })}
       </p>
-      {amountInCents > 0 && (
+      {paypalUrl && (
         <Button asChild variant="outline" data-testid="settle-paypal-button">
-          <a
-            href={paypalMeUrl(paypalHandle, amountInCents, currency)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href={paypalUrl} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="h-4 w-4" />
             {t("openPaypal")}
           </a>

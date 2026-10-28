@@ -7,11 +7,7 @@ import QRCode from "react-qr-code";
 import { useLocale, useTranslations } from "use-intl";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import {
-  formatIban,
-  paypalMeUrl,
-  settlePaymentView,
-} from "@flatsby/validators/payment";
+import { formatIban, settlePaymentView } from "@flatsby/validators/payment";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -40,9 +36,7 @@ export function SettlementPayment({
   const locale = useLocale();
   const router = useRouter();
   const { bank, paypalHandle, euroOnly } = options;
-  const [method, setMethod] = useState<"bank" | "paypal">(
-    bank ? "bank" : "paypal",
-  );
+  const [method, setMethod] = useState<"bank" | "paypal">("bank");
   const [showCode, setShowCode] = useState(false);
 
   const amount = formatCurrencyFromCents({
@@ -52,6 +46,7 @@ export function SettlementPayment({
   });
   const view = settlePaymentView(options, {
     amountInCents,
+    currency,
     groupName,
     receiverIsMe,
   });
@@ -105,8 +100,80 @@ export function SettlementPayment({
     );
   }
 
-  const { reference, girocode } = view;
-  const shown = bank && paypalHandle ? method : bank ? "bank" : "paypal";
+  const { reference, girocode, paypalUrl } = view;
+
+  const bankPanel = bank && (
+    <View>
+      <PaymentRow label={t("debts.pay.to")} value={bank.accountHolder} />
+      <PaymentRow
+        label={t("debts.pay.iban")}
+        value={formatIban(bank.iban)}
+        copyValue={bank.iban}
+        testID="settle-pay-iban"
+        mono
+      />
+      <PaymentRow
+        label={t("debts.pay.reference")}
+        value={reference}
+        copyValue={reference}
+      />
+      {girocode ? (
+        <>
+          <Pressable
+            testID="settle-pay-show-code"
+            accessibilityRole="button"
+            onPress={() => setShowCode((open) => !open)}
+            className="border-border flex-row items-center justify-between border-t pt-3"
+          >
+            <Text className="text-foreground text-sm font-medium">
+              {showCode ? t("debts.pay.hideCode") : t("debts.pay.showCode")}
+            </Text>
+            <Icon
+              name={showCode ? "chevron-up" : "chevron-down"}
+              size={18}
+              color="muted-foreground"
+            />
+          </Pressable>
+          {showCode && (
+            <View className="items-center gap-2 pt-3">
+              <Girocode value={girocode} size={180} />
+              <Text className="text-muted-foreground text-center text-xs">
+                {t("debts.pay.scanHint")}
+              </Text>
+            </View>
+          )}
+        </>
+      ) : (
+        !bank.girocode && (
+          <Text className="text-muted-foreground pt-2 text-xs">
+            {t("debts.pay.eeaOnly")}
+          </Text>
+        )
+      )}
+    </View>
+  );
+
+  const paypalPanel = paypalHandle && (
+    <View className="gap-3">
+      <Text className="text-muted-foreground text-sm">
+        {t("debts.pay.paypalHint", { amount })}
+      </Text>
+      {paypalUrl && (
+        <Button
+          testID="settle-paypal-button"
+          title={t("debts.pay.openPaypal")}
+          icon="external-link"
+          variant="outline"
+          onPress={() => Linking.openURL(paypalUrl)}
+        />
+      )}
+      {euroOnly && (
+        <Text className="text-muted-foreground text-xs">
+          {t("debts.pay.euroOnly")}
+        </Text>
+      )}
+    </View>
+  );
 
   return (
     <View
@@ -116,7 +183,7 @@ export function SettlementPayment({
       <Text className="text-foreground font-semibold">
         {t("debts.pay.title", { name: receiverName })}
       </Text>
-      {bank && paypalHandle && (
+      {bankPanel && paypalPanel && (
         <Segmented
           value={method}
           onChange={setMethod}
@@ -137,82 +204,11 @@ export function SettlementPayment({
         />
       )}
 
-      {shown === "bank" && bank && (
-        <View>
-          <PaymentRow label={t("debts.pay.to")} value={bank.accountHolder} />
-          <PaymentRow
-            label={t("debts.pay.iban")}
-            value={formatIban(bank.iban)}
-            copyValue={bank.iban}
-            testID="settle-pay-iban"
-            mono
-          />
-          <PaymentRow
-            label={t("debts.pay.reference")}
-            value={reference}
-            copyValue={reference}
-          />
-          {girocode ? (
-            <>
-              <Pressable
-                testID="settle-pay-show-code"
-                accessibilityRole="button"
-                onPress={() => setShowCode((shown) => !shown)}
-                className="border-border flex-row items-center justify-between border-t pt-3"
-              >
-                <Text className="text-foreground text-sm font-medium">
-                  {showCode ? t("debts.pay.hideCode") : t("debts.pay.showCode")}
-                </Text>
-                <Icon
-                  name={showCode ? "chevron-up" : "chevron-down"}
-                  size={18}
-                  color="muted-foreground"
-                />
-              </Pressable>
-              {showCode && (
-                <View className="items-center gap-2 pt-3">
-                  <Girocode value={girocode} size={180} />
-                  <Text className="text-muted-foreground text-center text-xs">
-                    {t("debts.pay.scanHint")}
-                  </Text>
-                </View>
-              )}
-            </>
-          ) : (
-            !bank.girocode && (
-              <Text className="text-muted-foreground pt-2 text-xs">
-                {t("debts.pay.eeaOnly")}
-              </Text>
-            )
-          )}
-        </View>
-      )}
-
-      {shown === "paypal" && paypalHandle && (
-        <View className="gap-3">
-          <Text className="text-muted-foreground text-sm">
-            {t("debts.pay.paypalHint", { amount })}
-          </Text>
-          {amountInCents > 0 && (
-            <Button
-              testID="settle-paypal-button"
-              title={t("debts.pay.openPaypal")}
-              icon="external-link"
-              variant="outline"
-              onPress={() =>
-                Linking.openURL(
-                  paypalMeUrl(paypalHandle, amountInCents, currency),
-                )
-              }
-            />
-          )}
-          {euroOnly && (
-            <Text className="text-muted-foreground text-xs">
-              {t("debts.pay.euroOnly")}
-            </Text>
-          )}
-        </View>
-      )}
+      {bankPanel && paypalPanel
+        ? method === "bank"
+          ? bankPanel
+          : paypalPanel
+        : (bankPanel ?? paypalPanel)}
     </View>
   );
 }

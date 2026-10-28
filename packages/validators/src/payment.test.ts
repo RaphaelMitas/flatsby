@@ -8,7 +8,6 @@ import {
   paymentDetailsFormSchema,
   paymentDetailsInput,
   paymentOptions,
-  paypalMeUrl,
   settlementReference,
   settlePaymentView,
 } from "./payment";
@@ -159,7 +158,12 @@ describe("settlePaymentView", () => {
     iban: "DE89370400440532013000",
     paypalHandle: null,
   };
-  const context = { amountInCents: 1500, groupName: "WG", receiverIsMe: true };
+  const context = {
+    amountInCents: 1500,
+    currency: "USD",
+    groupName: "WG",
+    receiverIsMe: true,
+  };
 
   it("doesn't ask a receiver with an IBAN to add one on a non-euro debt", () => {
     expect(
@@ -195,10 +199,25 @@ describe("paymentDetailsInput", () => {
   });
 });
 
-describe("paypalMeUrl", () => {
+describe("settlePaymentView PayPal link", () => {
+  const paypalOnly = { accountHolder: null, iban: null, paypalHandle: "max" };
+  const context = { currency: "USD", groupName: "WG", receiverIsMe: false };
+
   it("puts the amount and currency after the handle", () => {
-    expect(paypalMeUrl("lenaschn", 1500, "USD")).toBe(
-      "https://paypal.me/lenaschn/15.00USD",
+    const view = settlePaymentView(paymentOptions(paypalOnly, "USD"), {
+      ...context,
+      amountInCents: 1500,
+    });
+    expect(view.kind === "pay" && view.paypalUrl).toBe(
+      "https://paypal.me/max/15.00USD",
     );
+  });
+
+  it("offers no link before there is an amount", () => {
+    const view = settlePaymentView(paymentOptions(paypalOnly, "USD"), {
+      ...context,
+      amountInCents: 0,
+    });
+    expect(view.kind === "pay" && view.paypalUrl).toBeNull();
   });
 });

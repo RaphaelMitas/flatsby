@@ -125,9 +125,8 @@ export function SettlementForm({
     name: "amountInCents",
   });
 
-  const myMemberId = groupData.success ? groupData.data.thisGroupMember.id : -1;
-  const involvesMe =
-    watchedFromMemberId === myMemberId || watchedToMemberId === myMemberId;
+  const meId = groupData.success ? groupData.data.thisGroupMember.id : -1;
+  const involvesMe = watchedFromMemberId === meId || watchedToMemberId === meId;
   const payment = usePaymentOptions(
     (input) => trpc.group.getMemberPaymentDetails.queryOptions(input),
     groupId,
@@ -420,7 +419,6 @@ export function SettlementForm({
   }
 
   const groupMembers = groupData.data.groupMembers;
-  const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupMembers, meId, t);
   const isMember = (id: number) => groupMembers.some((m) => m.id === id);
   const pair =

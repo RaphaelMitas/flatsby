@@ -52,8 +52,7 @@ const EEA_COUNTRIES = new Set([
 const normalizeIban = (value: string) =>
   value.replace(/\s+/g, "").toUpperCase();
 
-export const formatIban = (iban: string) =>
-  normalizeIban(iban).replace(/(.{4})(?=.)/g, "$1 ");
+export const formatIban = (iban: string) => iban.replace(/(.{4})(?=.)/g, "$1 ");
 
 export function isValidIban(iban: string) {
   if (!IBAN_SHAPE.test(iban)) return false;
@@ -223,15 +222,26 @@ type SettlePaymentView =
   | { kind: "addYours" }
   | { kind: "hidden" }
   | { kind: "unavailable" }
-  | { kind: "pay"; reference: string; girocode: string | null };
+  | {
+      kind: "pay";
+      reference: string;
+      girocode: string | null;
+      paypalUrl: string | null;
+    };
 
 export function settlePaymentView(
   options: PaymentOptions,
   {
     amountInCents,
+    currency,
     groupName,
     receiverIsMe,
-  }: { amountInCents: number; groupName: string; receiverIsMe: boolean },
+  }: {
+    amountInCents: number;
+    currency: string;
+    groupName: string;
+    receiverIsMe: boolean;
+  },
 ): SettlePaymentView {
   const reference = settlementReference(groupName);
   const girocode = options.bank?.girocode
@@ -243,9 +253,12 @@ export function settlePaymentView(
       ? { kind: "hidden" }
       : { kind: "addYours" };
   }
-  return options.payable
-    ? { kind: "pay", reference, girocode }
-    : { kind: "unavailable" };
+  if (!options.payable) return { kind: "unavailable" };
+  const paypalUrl =
+    options.paypalHandle && amountInCents > 0
+      ? paypalMeUrl(options.paypalHandle, amountInCents, currency)
+      : null;
+  return { kind: "pay", reference, girocode, paypalUrl };
 }
 
 export function girocodePayload({
@@ -277,10 +290,7 @@ export function girocodePayload({
   return room > 0 ? `${fields}\n${reference.slice(0, room).trim()}` : null;
 }
 
-export const paypalMeUrl = (
-  handle: string,
-  amountInCents: number,
-  currency: string,
-) => `https://paypal.me/${handle}/${amountOf(amountInCents)}${currency}`;
+const paypalMeUrl = (handle: string, amountInCents: number, currency: string) =>
+  `https://paypal.me/${handle}/${amountOf(amountInCents)}${currency}`;
 
 export const PAYPAL_ME_SIGNUP_URL = "https://www.paypal.com/paypalme/";
