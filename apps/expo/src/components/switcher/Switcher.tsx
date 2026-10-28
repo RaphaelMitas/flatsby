@@ -91,8 +91,8 @@ export function Switcher({
           contentContainerClassName="gap-1 px-4 pb-10"
           showsVerticalScrollIndicator={false}
         >
-          <View className="flex-row items-baseline justify-between px-1 pb-2">
-            <Text className="text-foreground text-xl font-extrabold">
+          <View className="flex-row items-center gap-2 px-1 pb-2">
+            <Text className="text-foreground flex-1 text-xl font-extrabold">
               {sheetTitle}
             </Text>
             {caption && (
