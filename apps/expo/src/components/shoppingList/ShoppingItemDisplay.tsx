@@ -4,6 +4,7 @@ import { useTranslations } from "use-intl";
 
 import { Card, CardContent } from "~/lib/ui/card";
 import { Checkbox } from "~/lib/ui/checkbox";
+import Icon from "~/lib/ui/custom/icons/Icon";
 import { cn } from "~/lib/utils";
 import { getCategoryData } from "./ShoppingListCategory";
 
@@ -11,8 +12,8 @@ export interface ShoppingItemDisplayProps {
   name: string;
   completed: boolean;
   categoryId: CategoryIdWithAiAutoSelect | null;
-  onCheckedChange?: (checked: boolean) => void;
-  disabled?: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  unsynced?: boolean;
   className?: string;
   checkboxTestID?: string;
   testID?: string;
@@ -23,7 +24,7 @@ export function ShoppingItemDisplay({
   completed,
   categoryId,
   onCheckedChange,
-  disabled,
+  unsynced,
   className,
   checkboxTestID,
   testID,
@@ -40,7 +41,6 @@ export function ShoppingItemDisplay({
           testID={checkboxTestID}
           checked={completed}
           onCheckedChange={onCheckedChange}
-          disabled={disabled ?? !onCheckedChange}
         />
         <View className="flex-1">
           <Text
@@ -54,6 +54,11 @@ export function ShoppingItemDisplay({
             {name}
           </Text>
         </View>
+        {unsynced && (
+          <View testID={testID && `${testID}-unsynced`}>
+            <Icon name="clock" size={14} color="muted-foreground" />
+          </View>
+        )}
         {categoryData && (
           <View className="flex-row items-center gap-2">
             {categoryData.icon}

@@ -1,16 +1,23 @@
 import type { AppRouter } from "@flatsby/api";
 import type { PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
+import type { NetworkState } from "expo-network";
 import { AppState } from "react-native";
 import * as Application from "expo-application";
+import { addNetworkStateListener, getNetworkStateAsync } from "expo-network";
 import * as Updates from "expo-updates";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { focusManager, QueryClient } from "@tanstack/react-query";
+import {
+  focusManager,
+  onlineManager,
+  QueryClient,
+} from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
 
+import { shoppingListQueue } from "@flatsby/api/shoppingListQueue";
 import {
   isUnauthorizedError,
   trpcFailureCaches,
@@ -29,6 +36,15 @@ focusManager.setEventListener((setFocused) => {
   return () => subscription.remove();
 });
 
+onlineManager.setEventListener((setOnline) => {
+  // Not isInternetReachable: Android wants a validated internet path, which a LAN-only server never gives
+  const update = ({ isConnected }: NetworkState) =>
+    setOnline(isConnected !== false);
+  void getNetworkStateAsync().then(update);
+  const subscription = addNetworkStateListener(update);
+  return () => subscription.remove();
+});
+
 const CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 export const queryClient = new QueryClient({
@@ -44,6 +60,8 @@ export const queryClient = new QueryClient({
         return failureCount < 3;
       },
     },
+    // Only the shopping list queue waits for the network, other forms keep failing fast offline
+    mutations: { networkMode: "always" },
   },
 });
 
@@ -56,9 +74,10 @@ const storagePersister = createAsyncStoragePersister({
 export const persistOptions = {
   persister: {
     ...storagePersister,
-    // Saving only settled state keeps optimistic writes and paused mutations off disk
+    // A paused mutation replays from disk, one in flight may already have reached the server
     persistClient: (client) =>
-      queryClient.isMutating() > 0 || queryClient.isFetching() > 0
+      queryClient.isMutating({ predicate: (m) => !m.state.isPaused }) > 0 ||
+      queryClient.isFetching() > 0
         ? undefined
         : storagePersister.persistClient(client),
   },
@@ -105,27 +124,52 @@ async function getHeaders() {
   return headers;
 }
 
+const trpcClient = createTRPCClient<AppRouter>({
+  links: [
+    loggerLink({
+      enabled: () => process.env.NODE_ENV === "development",
+      colorMode: "ansi",
+    }),
+    httpBatchLink({
+      transformer: superjson,
+      url: `${getBaseUrl()}/api/trpc`,
+      headers: getHeaders,
+      // iOS would append its own stored cookies to the Cookie header from getHeaders
+      fetch: (url, options) => fetch(url, { ...options, credentials: "omit" }),
+    }),
+  ],
+});
+
 /**
  * A set of typesafe hooks for consuming your API.
  */
 export const trpc = createTRPCOptionsProxy<AppRouter>({
-  client: createTRPCClient({
-    links: [
-      loggerLink({
-        enabled: () => process.env.NODE_ENV === "development",
-        colorMode: "ansi",
-      }),
-      httpBatchLink({
-        transformer: superjson,
-        url: `${getBaseUrl()}/api/trpc`,
-        headers: getHeaders,
-        // iOS would append its own stored cookies to the Cookie header from getHeaders
-        fetch: (url, options) =>
-          fetch(url, { ...options, credentials: "omit" }),
-      }),
-    ],
-  }),
+  client: trpcClient,
   queryClient,
+});
+
+// Registered before the cache restores, so changes queued before a restart can replay
+export const shoppingListMutations = shoppingListQueue({
+  queryClient,
+  keys: {
+    create: trpc.shoppingList.createShoppingListItem.mutationKey(),
+    update: trpc.shoppingList.updateShoppingListItem.mutationKey(),
+    delete: trpc.shoppingList.deleteShoppingListItem.mutationKey(),
+  },
+  items: (list) =>
+    trpc.shoppingList.getShoppingListItems.infiniteQueryFilter(list),
+  refetch: trpc.shoppingList.pathFilter(),
+  currentMemberId: ({ groupId, shoppingListId }) => {
+    const cached = queryClient.getQueryData(
+      trpc.shoppingList.getShoppingList.queryKey({ groupId, shoppingListId }),
+    );
+    return cached?.success ? cached.data.currentMember.id : null;
+  },
+  send: {
+    create: trpcClient.shoppingList.createShoppingListItem.mutate,
+    update: trpcClient.shoppingList.updateShoppingListItem.mutate,
+    delete: trpcClient.shoppingList.deleteShoppingListItem.mutate,
+  },
 });
 
 export type { RouterInputs, RouterOutputs } from "@flatsby/api";

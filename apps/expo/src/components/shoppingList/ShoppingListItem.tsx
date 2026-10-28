@@ -10,20 +10,16 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
-import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
-import { removeShoppingListItemFromCache } from "@flatsby/api/shoppingListItemsCache";
-import { PAGE_SIZE } from "@flatsby/validators/pagination";
-
 import { cn } from "~/lib/utils";
-import { trpc } from "~/utils/api";
+import { shoppingListMutations } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
+import { useIsOnline } from "~/utils/live-query";
 import { useReviewNudge } from "~/utils/useReviewNudge";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ShoppingItemDisplay } from "./ShoppingItemDisplay";
 import { getCategoryData } from "./ShoppingListCategory";
-import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
-import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
+import { shoppingListItemsOptions } from "./ShoppingListUtils";
 
 export interface ShoppingListItemProps {
   groupId: number;
@@ -56,44 +52,14 @@ const ShoppingListItem = ({
   const recordHappyAction = useReviewNudge();
 
   const categoryData = getCategoryData({ categoryId: item.categoryId });
+  const online = useIsOnline();
 
-  const { invalidateAll } = useInvalidateShoppingList({
-    groupId,
-    shoppingListId,
-  });
-
-  const updateShoppingListItemMutation = useUpdateShoppingListItemMutation({
-    groupId,
-    shoppingListId,
-    selectedCategory,
-  });
-
-  const itemsQueryKey = trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
-    {
-      groupId,
-      shoppingListId,
-      limit: PAGE_SIZE.shoppingListItems,
-      categoryId: selectedCategory ?? undefined,
-    },
+  const updateShoppingListItemMutation = useMutation(
+    shoppingListMutations.update,
   );
 
   const deleteShoppingListItemMutation = useMutation(
-    trpc.shoppingList.deleteShoppingListItem.mutationOptions(
-      resultMutation({
-        onMutate: async ({ id }) => {
-          await queryClient.cancelQueries({ queryKey: itemsQueryKey });
-          const previousItems = queryClient.getQueryData(itemsQueryKey);
-          queryClient.setQueryData(itemsQueryKey, (old) =>
-            removeShoppingListItemFromCache(old, id),
-          );
-          return [{ queryKey: itemsQueryKey, previous: previousItems }];
-        },
-        rollback: restoreSnapshot(queryClient),
-        onSettled: () => {
-          invalidateAll();
-        },
-      }),
-    ),
+    shoppingListMutations.delete,
   );
 
   const createdByMember = groupMembers.find(
@@ -107,7 +73,9 @@ const ShoppingListItem = ({
     const isLastOpenItem =
       selectedCategory === null &&
       (queryClient
-        .getQueryData(itemsQueryKey)
+        .getQueryData(
+          shoppingListItemsOptions(groupId, shoppingListId).queryKey,
+        )
         ?.pages.every(
           (page) =>
             !page.success ||
@@ -159,7 +127,6 @@ const ShoppingListItem = ({
     <>
       <ReanimatedSwipeable
         ref={swipeableRef}
-        enabled={!item.isPending}
         friction={2}
         leftThreshold={40}
         rightThreshold={40}
@@ -176,7 +143,6 @@ const ShoppingListItem = ({
       >
         <Pressable
           accessible={e2eAccessibilityOverride()}
-          disabled={item.isPending}
           onPress={guardPress(() => setShowDetails(true))}
         >
           <ShoppingItemDisplay
@@ -184,7 +150,7 @@ const ShoppingListItem = ({
             completed={item.completed}
             categoryId={item.categoryId}
             onCheckedChange={guardPress(handleCheckboxToggle)}
-            disabled={item.isPending}
+            unsynced={item.isPending && !online}
             checkboxTestID={`shopping-list-item-checkbox-${item.name}`}
             testID={`shopping-list-item-${item.name}`}
           />

@@ -116,6 +116,7 @@ const KNOWN_COMMANDS = new Set([
   "pressKey",
   "travel",
   "setLocation",
+  "setAirplaneMode",
 ]);
 
 function* iterateSelectors(value) {

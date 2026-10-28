@@ -1,6 +1,7 @@
 import type { MutationKey } from "@tanstack/react-query";
+import { useSyncExternalStore } from "react";
 import { useIsFocused } from "expo-router";
-import { useIsMutating } from "@tanstack/react-query";
+import { onlineManager, useIsMutating } from "@tanstack/react-query";
 
 import { queryClient } from "./api";
 
@@ -14,3 +15,9 @@ export function useLivePolling(mutationKey: MutationKey, active: boolean) {
   return (interval: number) =>
     active && isFocused && !isMutating ? interval : false;
 }
+
+export const useIsOnline = () =>
+  useSyncExternalStore(
+    (onChange) => onlineManager.subscribe(onChange),
+    () => onlineManager.isOnline(),
+  );

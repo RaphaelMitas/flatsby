@@ -27,6 +27,8 @@ export const common = {
   unknownError: "Unbekannter Fehler",
   updating: "Wird aktualisiert...",
   upToDate: "Aktuell",
+  offline:
+    "{count, plural, =0 {Offline} one {Offline · # Änderung ausstehend} other {Offline · # Änderungen ausstehend}}",
   select: "Auswählen",
   previousSlide: "Vorherige Folie",
   nextSlide: "Nächste Folie",

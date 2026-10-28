@@ -19,6 +19,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import { onlineManager } from "@tanstack/react-query";
 
 import type { RefreshSceneProps } from "~/lib/seasonal/season";
 import { season } from "~/lib/seasonal/season";
@@ -78,6 +79,8 @@ function useListOffset() {
 function useOwnRefresh(onRefresh: () => Promise<unknown>) {
   const [pulled, setPulled] = useState(false);
   const refresh = () => {
+    // An offline refetch pauses until the network is back, which would hold the pull that long
+    if (!onlineManager.isOnline()) return Promise.resolve();
     setPulled(true);
     return onRefresh().finally(() => setPulled(false));
   };
