@@ -27,6 +27,7 @@
     "@flatsby/i18n": "workspace:*",
     "@flatsby/ui": "workspace:*",
     "@flatsby/validators": "workspace:*",
+    "@posthog/core": "^1.59.1",
     "@t3-oss/env-nextjs": "catalog:",
     "@tanstack/react-pacer": "^0.24.1",
     "@tanstack/react-query": "catalog:",

@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useState } from "react";
+import { Suspense } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
@@ -47,15 +47,13 @@ function DashboardContent() {
   const queryClient = useQueryClient();
   const { selectedGroupId } = useShoppingStore();
   const { version: homeVersion } = useHomeVersion();
-  const [refreshing, setRefreshing] = useState(false);
 
   const { data: userWithGroups } = useSuspenseQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await Promise.all([
+  const handleRefresh = () =>
+    Promise.all([
       queryClient.invalidateQueries(
         trpc.user.getCurrentUserWithGroups.pathFilter(),
       ),
@@ -64,8 +62,6 @@ function DashboardContent() {
       queryClient.invalidateQueries(trpc.expense.getDebtSummary.pathFilter()),
       queryClient.invalidateQueries(trpc.stats.getHomeStats.pathFilter()),
     ]);
-    setRefreshing(false);
-  }, [queryClient]);
 
   if (!selectedGroupId) {
     return null;
@@ -76,11 +72,7 @@ function DashboardContent() {
   }
 
   return (
-    <AppScrollView
-      className="flex-1"
-      refreshing={refreshing}
-      onRefresh={handleRefresh}
-    >
+    <AppScrollView className="flex-1" onRefresh={handleRefresh}>
       <View className="flex flex-col gap-6 p-2">
         <View className="flex flex-row items-stretch gap-2">
           <GroupSwitcher testID="dashboard-group-picker" className="flex-1" />

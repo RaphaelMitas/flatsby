@@ -10,12 +10,11 @@ export function usePostHogIdentify() {
 
   useEffect(() => {
     if (posthog.optedOut) return;
-    if (!userId || !session.data?.user.email || !session.data.user.name) return;
+    if (!userId || !session.data?.user.email) return;
 
-    posthog.identify(userId, {
-      email: session.data.user.email,
-      name: session.data.user.name,
-    });
+    // Apple leaves the name empty when the user doesn't share it
+    const { email, name } = session.data.user;
+    posthog.identify(userId, name ? { email, name } : { email });
     // only run once
   }, [userId]);
 }
