@@ -64,6 +64,10 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: xcode-27
     timeout-minutes: 45
+    # app.config.ts reads it, and the fingerprint, prebuild, the expo-constants
+    # build phase and the JS bundle all evaluate app.config.ts.
+    env:
+      E2E_TESTING: "true"
     steps:
       - uses: actions/checkout@v7
 
@@ -79,9 +83,37 @@ jobs:
           sudo xcode-select -s "$(ls -d /Applications/Xcode_27*.app | sort -V | tail -1)"
           xcodebuild -version
 
+      # The native build only changes with the fingerprint, so a PR that
+      # touches JS alone swaps its bundle into a cached build. The fingerprint
+      # hashes the evaluated config and native packages' package.json, not
+      # app.config.ts or patches/, so those are keyed on top.
+      - name: Native build cache key
+        id: native
+        working-directory: apps/expo
+        env:
+          FILES: ${{ hashFiles('.github/workflows/e2e.yml', 'apps/expo/app.config.ts', 'patches/**') }}
+        run: |
+          FINGERPRINT=$(pnpm exec fingerprint fingerprint:generate --platform ios | jq -er .hash)
+          KEY=$(echo "$FINGERPRINT $FILES $(xcodebuild -version | tail -1)" | shasum | cut -c1-16)
+          echo "name=e2e-native-ios-$KEY" >> "$GITHUB_OUTPUT"
+
+      - name: Restore native build
+        id: cached
+        uses: ./tooling/github/restore-artifact
+        with:
+          name: ${{ steps.native.outputs.name }}
+          dir: .
+
+      - name: Repack cached build with this JS
+        id: repack
+        if: steps.cached.outputs.hit == 'true'
+        continue-on-error: true
+        run: apps/expo/e2e/repack.sh ios Flatsby.app
+
       # CCACHE_BINARY has to be a real env var: React Native's ccache-clang.sh
       # execs it, and the build setting CocoaPods writes never reaches it.
       - name: Setup ccache
+        if: steps.repack.outcome != 'success'
         run: |
           brew install ccache
           {
@@ -90,41 +122,29 @@ jobs:
             echo "CCACHE_MAXSIZE=3G"
           } >> "$GITHUB_ENV"
 
-      # actions/cache scopes entries to the branch that wrote them, so PRs
-      # would never share a pool and release.yml on main could not read one;
-      # artifacts are visible repo-wide, so the pool travels as one.
-      - name: Restore ccache from artifact
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ART_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=ccache-macos&per_page=5" \
-            --jq '[.artifacts[] | select(.expired == false)][0].id // empty')
-          if [ -z "$ART_ID" ]; then
-            echo "No ccache artifact available; building cold"
-            exit 0
-          fi
-          gh api "repos/${{ github.repository }}/actions/artifacts/$ART_ID/zip" > /tmp/ccache.zip \
-            && unzip -q -o /tmp/ccache.zip -d /tmp/ccache-artifact \
-            && tar -xzf /tmp/ccache-artifact/ccache.tar.gz -C "$HOME" \
-            && echo "Restored ccache from artifact $ART_ID" \
-            || echo "ccache artifact $ART_ID unusable; building cold"
+      - name: Restore ccache
+        if: steps.repack.outcome != 'success'
+        uses: ./tooling/github/restore-artifact
+        with:
+          name: ccache-macos
+          dir: "~"
 
       - name: Prebuild iOS project
+        if: steps.repack.outcome != 'success'
         working-directory: apps/expo
         run: pnpm expo prebuild --platform ios --no-install
-        env:
-          E2E_TESTING: "true"
 
       - name: Install CocoaPods dependencies
+        if: steps.repack.outcome != 'success'
         working-directory: apps/expo/ios
         run: pod install
         env:
           LANG: en_US.UTF-8
 
-      # E2E_TESTING again: the expo-constants build phase re-evaluates
-      # app.config.ts during xcodebuild. CODE_SIGNING_ALLOWED=NO would be the
-      # obvious flag but strips keychain entitlements, crashing secure-store.
+      # CODE_SIGNING_ALLOWED=NO would be the obvious flag but strips keychain
+      # entitlements, crashing secure-store.
       - name: Build app for simulator
+        if: steps.repack.outcome != 'success'
         working-directory: apps/expo/ios
         run: |
           set -o pipefail
@@ -134,13 +154,15 @@ jobs:
             -derivedDataPath build CODE_SIGN_IDENTITY=- \
             ARCHS=arm64 ONLY_ACTIVE_ARCH=YES build | xcbeautify
           ccache --show-stats
-        env:
-          E2E_TESTING: "true"
+          rm -rf "$GITHUB_WORKSPACE/Flatsby.app"
+          mv build/Build/Products/Release-iphonesimulator/Flatsby.app "$GITHUB_WORKSPACE/"
 
       - name: Pack ccache for next run
+        if: steps.repack.outcome != 'success'
         run: tar -C "$HOME" -czf ccache.tar.gz .ccache
 
       - name: Upload ccache artifact
+        if: steps.repack.outcome != 'success'
         uses: actions/upload-artifact@v7
         with:
           name: ccache-macos
@@ -148,8 +170,16 @@ jobs:
           retention-days: 3
 
       # tar keeps the executable bits that upload-artifact's zip would strip.
-      - name: Pack app for test shards
-        run: tar -C apps/expo/ios/build/Build/Products/Release-iphonesimulator -czf Flatsby-app.tar.gz Flatsby.app
+      - name: Pack app
+        run: tar -czf Flatsby-app.tar.gz Flatsby.app
+
+      - name: Upload native build for later runs
+        if: steps.repack.outcome != 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.native.outputs.name }}
+          path: Flatsby-app.tar.gz
+          retention-days: 14
 
       - name: Upload app artifact
         uses: actions/upload-artifact@v7
@@ -185,6 +215,15 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Pro Max because old models time out Maestro's driver and the flows' tab
+      # positions assume its screen. The first boot takes minutes, so it starts
+      # before everything else and bootstatus waits in the install step.
+      - name: Create iOS simulator
+        id: sim
+        uses: ./tooling/github/ios-simulator
+        with:
+          device: "^iPhone [0-9]+ Pro Max$"
+
       - name: Setup
         uses: ./tooling/github/setup
 
@@ -200,15 +239,6 @@ jobs:
 
       - name: Unpack app
         run: tar -xzf Flatsby-app.tar.gz
-
-      # Pro Max because old models time out Maestro's driver and the flows' tab
-      # positions assume its screen. bootstatus waits in the install step so the
-      # boot overlaps the stack start.
-      - name: Create iOS simulator
-        id: sim
-        uses: ./tooling/github/ios-simulator
-        with:
-          device: "^iPhone [0-9]+ Pro Max$"
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
@@ -262,6 +292,10 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # app.config.ts reads it, and the fingerprint, prebuild, the expo-constants
+    # Gradle task and the JS bundle all evaluate app.config.ts.
+    env:
+      E2E_TESTING: "true"
     steps:
       - uses: actions/checkout@v7
 
@@ -273,43 +307,81 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # Same scheme as e2e-ios-build. The cached build keeps the bundle images
+      # Gradle compiled, which repack.sh checks the new bundle against.
+      - name: Native build cache key
+        id: native
+        working-directory: apps/expo
+        env:
+          FILES: ${{ hashFiles('.github/workflows/e2e.yml', 'apps/expo/app.config.ts', 'patches/**', 'tooling/github/android-sdk/**') }}
+        run: |
+          FINGERPRINT=$(pnpm exec fingerprint fingerprint:generate --platform android | jq -er .hash)
+          KEY=$(echo "$FINGERPRINT $FILES" | shasum | cut -c1-16)
+          echo "name=e2e-native-android-$KEY" >> "$GITHUB_OUTPUT"
+
+      - name: Restore native build
+        id: cached
+        uses: ./tooling/github/restore-artifact
+        with:
+          name: ${{ steps.native.outputs.name }}
+          dir: .
+
+      - name: Repack cached build with this JS
+        id: repack
+        if: steps.cached.outputs.hit == 'true'
+        continue-on-error: true
+        run: apps/expo/e2e/repack.sh android app-release.apk bundle-res
+
       - name: Install NDK
+        if: steps.repack.outcome != 'success'
         uses: ./tooling/github/android-sdk
         with:
           ndk: "true"
 
       - name: Prebuild Android project
+        if: steps.repack.outcome != 'success'
         working-directory: apps/expo
         run: pnpm expo prebuild --platform android --no-install
-        env:
-          E2E_TESTING: "true"
 
       # The template's 512m Metaspace cap OOMs the daemon mid-build; a later
       # duplicate key in gradle.properties wins, so appending overrides it.
       - name: Raise Gradle memory limits
+        if: steps.repack.outcome != 'success'
         working-directory: apps/expo/android
         run: printf '\norg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g\n' >> gradle.properties
 
-      # E2E_TESTING again: the expo-constants Gradle task re-evaluates
-      # app.config.ts during the build. x86_64 only — that's what the CI
-      # emulator runs, and skipping the other ABIs halves native compile time.
-      # Release builds sign with the debug keystore in the Expo template, so
-      # the APK installs on the emulator as-is. lintVital is excluded: release
-      # lint adds nothing to a throwaway e2e APK and is the heaviest Metaspace
-      # consumer.
+      # x86_64 only: that's what the CI emulator runs, and skipping the other
+      # ABIs halves native compile time. Release builds sign with the debug
+      # keystore in the Expo template, so the APK installs on the emulator
+      # as-is. lintVital is excluded: release lint adds nothing to a throwaway
+      # e2e APK and is the heaviest Metaspace consumer.
       - name: Build APK for emulator
+        if: steps.repack.outcome != 'success'
         working-directory: apps/expo/android
         run: |
           ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon \
             -x lintVitalRelease -x lintVitalAnalyzeRelease -x lintVitalReportRelease
-        env:
-          E2E_TESTING: "true"
+          mv app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/"
+          rm -rf "$GITHUB_WORKSPACE/bundle-res"
+          cp -R app/build/generated/res/react/release "$GITHUB_WORKSPACE/bundle-res"
+
+      - name: Pack native build for later runs
+        if: steps.repack.outcome != 'success'
+        run: tar -czf android-native.tar.gz app-release.apk bundle-res
+
+      - name: Upload native build for later runs
+        if: steps.repack.outcome != 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.native.outputs.name }}
+          path: android-native.tar.gz
+          retention-days: 14
 
       - name: Upload app artifact
         uses: actions/upload-artifact@v7
         with:
           name: android-e2e-app
-          path: apps/expo/android/app/build/outputs/apk/release/app-release.apk
+          path: app-release.apk
           retention-days: 1
 
   e2e-android:
