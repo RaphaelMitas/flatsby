@@ -17,26 +17,18 @@ allowBuilds:
 # patched release. Re-check with `pnpm audit` and drop entries as upstream ships.
 auditConfig:
   ignoreGhsas:
-    # esbuild <=0.24.2 - drizzle-kit@0.31.10 (latest) > @esbuild-kit/esm-loader >
+    # esbuild <=0.24.2 - drizzle-kit@0.31.11 (latest) > @esbuild-kit/esm-loader >
     # @esbuild-kit/core-utils@3.3.2, which pins ~0.18.20. The @esbuild-kit packages
     # are deprecated (folded into tsx); clears when drizzle-kit drops esm-loader.
     - GHSA-67mh-4wv8-2f99
-    # uuid <11.1.1 - xcode@3.0.1 (latest) pins ^7.0.3, and @expo/config-plugins
-    # still depends on xcode ^3.0.1 as of 57.x. Reached via the direct dependency
-    # @react-native-vector-icons/lucide@13.1.2 (also latest).
-    - GHSA-w5hq-g745-h8pq
-    # node-forge <=1.4.0 - no patched release exists; 1.4.0 is npm's latest. Reached
-    # via @expo/cli > @expo/code-signing-certificates@0.0.7 (latest), dev tooling only.
-    - GHSA-86w9-cpqp-85rv
-    # decode-uri-component <=0.4.2 - expo-router@57.0.22 pins query-string ^7.1.3,
-    # and every 7.x pins decode-uri-component ^0.2.2. The patched 0.5.0 is ESM-only,
-    # so an override would break query-string's require(). Clears when expo-router
-    # moves to query-string 9.
-    - GHSA-vcc3-ghjq-m6fr
     # zod <4.6.6 - only 4.x is patched and 3.25.76 is the last 3.x. Every @expo/cli
-    # 58.x (latest 58.1.15) depends on zod ^3.25.76, dev tooling only. Clears when
+    # 58.x (latest 58.1.16) depends on zod ^3.25.76, dev tooling only. Clears when
     # @expo/cli moves to zod 4.
     - GHSA-mrhx-c7xc-m3w5
+    # deepmerge <=4.3.1 - no patched release exists; 4.3.1 is npm's latest and
+    # unchanged since 2023. Reached via @expo/config@58.0.8 (latest) merging app
+    # config at build time, never untrusted input.
+    - GHSA-gcqx-w48m-w2h4
 
 catalog:
   "@ai-sdk/provider": ^4.0.29
