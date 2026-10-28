@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { useRouter } from "expo-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
@@ -12,7 +11,6 @@ import { GroupsDashboard } from "../groupDashboard/GroupsDashboard";
 import { HomeInvite } from "../home/HomeSwitch";
 import { InviteFlatmatesCard } from "../home/InviteFlatmatesCard";
 import { GroupSwitcher } from "../switcher/GroupSwitcher";
-import { SwitcherSettingsButton } from "../switcher/SwitcherSettingsButton";
 import { HomeStats } from "./HomeStats";
 import { NavLinks } from "./NavLinks";
 import { QuickActions } from "./QuickActions";
@@ -42,8 +40,6 @@ export function Dashboard() {
 }
 
 function DashboardContent() {
-  const t = useTranslations();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const { selectedGroupId } = useShoppingStore();
   const { version: homeVersion } = useHomeVersion();
@@ -74,18 +70,7 @@ function DashboardContent() {
   return (
     <AppScrollView className="flex-1" onRefresh={handleRefresh}>
       <View className="flex flex-col gap-6 p-2">
-        <View className="flex flex-row items-stretch gap-2">
-          <GroupSwitcher testID="dashboard-group-picker" className="flex-1" />
-          <SwitcherSettingsButton
-            testID="dashboard-group-settings"
-            label={t("navigation.groupSettings")}
-            onPress={() =>
-              router.navigate("/(tabs)/settings/group-settings", {
-                withAnchor: true,
-              })
-            }
-          />
-        </View>
+        <GroupSwitcher testIDPrefix="dashboard-group" />
 
         <InviteFlatmatesCard groupId={selectedGroupId} />
 
