@@ -175,7 +175,7 @@ jobs:
           - shard: sl-browse
             areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
           - shard: sl-manage
-            areas: shopping-list/management shopping-list/suggestions
+            areas: shopping-list/management shopping-list/suggestions shopping-list/offline
           - shard: expenses
             areas: expenses
     env:
@@ -329,7 +329,7 @@ jobs:
           - shard: sl-browse
             areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
           - shard: sl-manage
-            areas: shopping-list/management shopping-list/suggestions
+            areas: shopping-list/management shopping-list/suggestions shopping-list/offline
           - shard: expenses
             areas: expenses
     env:

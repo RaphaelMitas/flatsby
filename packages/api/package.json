@@ -28,6 +28,10 @@
       "types": "./dist/shoppingListItemsCache.d.ts",
       "default": "./src/shoppingListItemsCache.ts"
     },
+    "./shoppingListQueue": {
+      "types": "./dist/shoppingListQueue.d.ts",
+      "default": "./src/shoppingListQueue.ts"
+    },
     "./trpcFailure": {
       "types": "./dist/trpcFailure.d.ts",
       "default": "./src/trpcFailure.ts"

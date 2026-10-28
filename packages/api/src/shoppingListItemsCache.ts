@@ -39,6 +39,22 @@ export const updateShoppingListItemInCache = (
     ),
   );
 
+export const addShoppingListItemToCache = (
+  data: ShoppingListInfiniteData | undefined,
+  item: ShoppingListItem,
+): ShoppingListInfiniteData | undefined =>
+  data && {
+    ...data,
+    pages: data.pages.map((page, index) =>
+      index > 0 || page.success === false
+        ? page
+        : {
+            ...page,
+            data: { ...page.data, items: [item, ...page.data.items] },
+          },
+    ),
+  };
+
 export const removeShoppingListItemFromCache = (
   data: ShoppingListInfiniteData | undefined,
   id: number,

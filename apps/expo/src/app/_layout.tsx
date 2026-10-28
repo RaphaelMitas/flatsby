@@ -51,6 +51,7 @@ export default function RootLayout() {
                 <PersistQueryClientProvider
                   client={queryClient}
                   persistOptions={persistOptions}
+                  onSuccess={() => queryClient.resumePausedMutations()}
                 >
                   <RevenueCatProvider>
                     <ShoppingStoreProvider>
