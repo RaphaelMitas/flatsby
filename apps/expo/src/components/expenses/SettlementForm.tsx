@@ -45,6 +45,7 @@ import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
 import { CurrencyPicker } from "./CurrencyPicker";
 import { MemberAvatar } from "./MemberAvatar";
+import { SettlementPayment, usePaymentOptions } from "./SettlementPayment";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface SettlementFormProps {
@@ -117,6 +118,17 @@ export function SettlementForm({
   });
 
   const watchedCurrency = useWatch({ control: form.control, name: "currency" });
+
+  const watchedAmount = useWatch({
+    control: form.control,
+    name: "amountInCents",
+  });
+
+  const payment = usePaymentOptions(
+    groupId,
+    isEditMode ? -1 : watchedToMemberId,
+    watchedCurrency,
+  );
 
   const isPrefilled = source !== undefined;
   const debtBetween = (from: number, to: number, currency?: string) =>
@@ -425,6 +437,9 @@ export function SettlementForm({
   const isPending =
     createSettlementMutation.isPending || updateSettlementMutation.isPending;
 
+  const payingWithDetails =
+    watchedFromMemberId === meId && !!(payment?.bank ?? payment?.paypalHandle);
+
   const errorMessage =
     failureOf(createSettlementMutation, t("expenses.genericError")) ??
     failureOf(updateSettlementMutation, t("expenses.genericError"));
@@ -584,6 +599,18 @@ export function SettlementForm({
                 )}
               />
             </View>
+            {payment && pair && (
+              <SettlementPayment
+                options={payment}
+                payerName={pair.payer.name}
+                receiverName={pair.receiver.name}
+                receiverIsMe={watchedToMemberId === meId}
+                amountInCents={watchedAmount}
+                currency={watchedCurrency}
+                groupName={groupData.data.name}
+              />
+            )}
+
             {/* Error Display */}
             {errorMessage !== undefined && (
               <Alert variant="destructive">
@@ -599,6 +626,7 @@ export function SettlementForm({
             {/* Submit Button */}
             <View className="border-border flex-row gap-2 border-t pt-4">
               <Button
+                testID="settlement-cancel-button"
                 title={t("common.cancel")}
                 variant="outline"
                 onPress={onClose}
@@ -614,7 +642,9 @@ export function SettlementForm({
                       : t("debts.recording")
                     : isEditMode
                       ? t("debts.updateSettlement")
-                      : t("debts.recordSettlement")
+                      : payingWithDetails
+                        ? t("debts.pay.paidRecord")
+                        : t("debts.recordSettlement")
                 }
                 onPress={form.handleSubmit(onSubmit)}
                 disabled={isPending}

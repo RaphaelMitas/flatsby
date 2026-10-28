@@ -9,6 +9,7 @@ import {
   groups,
   shoppingListItems,
   shoppingLists,
+  userPaymentDetails,
   users,
 } from "@flatsby/db/schema";
 import {
@@ -22,6 +23,7 @@ import {
   updateGroupSettingsSchema,
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
+import { paymentDetailsSchema } from "@flatsby/validators/payment";
 
 import {
   addMember,
@@ -107,6 +109,42 @@ export const groupRouter = createTRPCRouter({
     .input(groupSchema.pick({ id: true }))
     .query(async ({ ctx, input }) =>
       runResult(ctx, getGroupWithAccess(input.id)),
+    ),
+
+  getMemberPaymentDetails: protectedProcedure
+    .input(z.object({ groupId: z.number(), groupMemberId: z.number() }))
+    .output(getApiResultZod(paymentDetailsSchema.nullable()))
+    .query(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* requireMember(input.groupId);
+          const database = yield* Database;
+          const [details] = yield* database.query(
+            "fetch member payment details",
+            (db) =>
+              db
+                .select({
+                  accountHolder: userPaymentDetails.accountHolder,
+                  iban: userPaymentDetails.iban,
+                  paypalHandle: userPaymentDetails.paypalHandle,
+                })
+                .from(groupMembers)
+                .innerJoin(
+                  userPaymentDetails,
+                  eq(userPaymentDetails.userId, groupMembers.userId),
+                )
+                .where(
+                  and(
+                    eq(groupMembers.id, input.groupMemberId),
+                    eq(groupMembers.groupId, input.groupId),
+                    eq(groupMembers.isActive, true),
+                  ),
+                ),
+          );
+          return details ?? null;
+        }),
+      ),
     ),
 
   updateMemberRole: protectedProcedure

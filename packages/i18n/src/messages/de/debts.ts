@@ -56,4 +56,31 @@ export const debts = {
   updateSettlement: "Ausgleich aktualisieren",
   recordSuccess: "Ausgleich erfasst",
   recordFailed: "Ausgleich konnte nicht erfasst werden",
+  pay: {
+    title: "{name} bezahlen",
+    bankTransfer: "Überweisung",
+    bankTransferHint: "IBAN, GiroCode",
+    paypal: "PayPal",
+    to: "An",
+    iban: "IBAN",
+    reference: "Verwendungszweck",
+    copy: "Kopieren",
+    copied: "Kopiert",
+    showCode: "Code für ein anderes Handy zeigen",
+    hideCode: "Code ausblenden",
+    scanHint:
+      "Scan ihn mit deiner Banking-App. Betrag und Verwendungszweck sind schon ausgefüllt.",
+    euroOnly: "GiroCode geht nur mit Euro.",
+    eeaOnly: "GiroCode geht nur mit Konten im EWR.",
+    openPaypal: "PayPal öffnen",
+    paypalHint:
+      "Öffnet PayPal mit {amount}. Komm danach zurück und erfass die Zahlung.",
+    noDetails: "{name} hat keine Bank- oder PayPal-Daten hinterlegt.",
+    addYours:
+      "Hinterleg deine IBAN oder PayPal, dann können Mitbewohner dich mit einem Scan bezahlen.",
+    add: "Hinzufügen",
+    letScan: "Lass {name} das scannen",
+    yourCode: "Dein GiroCode über {amount}",
+    paidRecord: "Bezahlt, jetzt erfassen",
+  },
 } satisfies Messages["debts"];

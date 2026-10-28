@@ -62,6 +62,7 @@ import { CurrencyInput } from "~/components/CurrencyInput";
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
 import { useExpenseInvalidation } from "../useExpenseInvalidation";
+import { SettlementPayment, usePaymentOptions } from "./SettlementPayment";
 
 export interface SettlementPrefill {
   debt: DebtEntry;
@@ -310,6 +311,9 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const fromGroupMemberId = form.watch("fromGroupMemberId");
   const toGroupMemberId = form.watch("toGroupMemberId");
   const currency = form.watch("currency");
+  const amountInCents = form.watch("amountInCents");
+
+  const payment = usePaymentOptions(groupId, toGroupMemberId, currency);
 
   if (!groupData.success) {
     return null;
@@ -334,6 +338,8 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
 
   const isPending = createSettlementMutation.isPending;
+  const payingWithDetails =
+    fromGroupMemberId === meId && !!(payment?.bank ?? payment?.paypalHandle);
   const failure = failureOf(
     createSettlementMutation,
     t("expenses.genericError"),
@@ -485,6 +491,18 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               )}
             />
 
+            {payment && fromGroupMemberId > 0 && toGroupMemberId > 0 && (
+              <SettlementPayment
+                options={payment}
+                payerName={fromMember.name}
+                receiverName={toMember.name}
+                receiverIsMe={toGroupMemberId === meId}
+                amountInCents={amountInCents}
+                currency={currency}
+                groupName={groupData.data.name}
+              />
+            )}
+
             {/* Error Display */}
             {failure && (
               <Alert variant="destructive">
@@ -517,6 +535,8 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                     {t("debts.recording")}
                   </>
+                ) : payingWithDetails ? (
+                  t("debts.pay.paidRecord")
                 ) : (
                   t("debts.recordSettlement")
                 )}

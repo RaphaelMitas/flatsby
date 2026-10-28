@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { msg } from "@flatsby/i18n/message-key";
 
 import { chatModelSchema } from "./models";
+import { paymentDetailsSchema } from "./payment";
 
 export const MAX_CONSENT_VERSION_LENGTH = 20;
 
@@ -89,6 +90,7 @@ export const userDataExportSchema = z.object({
     aiConsentAcceptedAt: z.date().nullable(),
     aiConsentVersion: z.string().nullable(),
   }),
+  paymentDetails: paymentDetailsSchema.nullable(),
   signInMethods: z.array(
     z.object({
       providerId: z.string(),

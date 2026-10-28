@@ -77,6 +77,25 @@ export const settings = {
     uploadNew: "Upload New",
     featureComingSoon: "feature coming soon!",
   },
+  payment: {
+    title: "Getting paid",
+    description:
+      "Optional. People in your groups see this when they settle up with you, nowhere else.",
+    accountHolder: "Account holder",
+    accountHolderHint: "The name your bank has on the account.",
+    iban: "IBAN",
+    paypal: "PayPal.me",
+    paypalPlaceholder: "yourname",
+    paypalHint: "Pasting the full link works too.",
+    paypalSignup: "No PayPal.me link yet? Create one",
+    save: "Save",
+    remove: "Remove",
+    saved: "Payment details saved.",
+    removed: "Payment details removed.",
+    ibanInvalid: "This IBAN isn't valid. Check for a typo.",
+    accountHolderInvalid: "Enter the name on the account, up to 70 characters.",
+    paypalInvalid: "Enter your PayPal.me name, like paypal.me/yourname.",
+  },
   danger: {
     description:
       "Actions in this section are irreversible. Please proceed with caution.",

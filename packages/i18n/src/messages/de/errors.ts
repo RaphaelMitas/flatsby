@@ -58,6 +58,8 @@ export const errors = {
     "Das Mitglied konnte gerade nicht entfernt werden. Bitte versuch es noch einmal.",
   updateNameFailed:
     "Dein Name konnte gerade nicht geändert werden. Bitte versuch es noch einmal.",
+  updatePaymentDetailsFailed:
+    "Deine Zahlungsdaten konnten gerade nicht gespeichert werden. Bitte versuch es noch einmal.",
   updateConsentFailed:
     "Deine Einwilligung konnte gerade nicht gespeichert werden. Bitte versuch es noch einmal.",
   updateAiConsentFailed:

@@ -80,6 +80,26 @@ export const settings = {
     uploadNew: "Neues hochladen",
     featureComingSoon: "Funktion kommt bald!",
   },
+  payment: {
+    title: "Geld bekommen",
+    description:
+      "Optional. Leute in deinen Gruppen sehen das, wenn sie mit dir abrechnen, sonst niemand.",
+    accountHolder: "Kontoinhaber",
+    accountHolderHint: "Der Name, auf den dein Konto läuft.",
+    iban: "IBAN",
+    paypal: "PayPal.me",
+    paypalPlaceholder: "deinname",
+    paypalHint: "Du kannst auch den ganzen Link einfügen.",
+    paypalSignup: "Noch keinen PayPal.me-Link? Hier erstellen",
+    save: "Speichern",
+    remove: "Entfernen",
+    saved: "Zahlungsdaten gespeichert.",
+    removed: "Zahlungsdaten entfernt.",
+    ibanInvalid: "Diese IBAN stimmt nicht. Prüf sie auf Tippfehler.",
+    accountHolderInvalid:
+      "Gib den Namen auf dem Konto ein, höchstens 70 Zeichen.",
+    paypalInvalid: "Gib deinen PayPal.me-Namen ein, z. B. paypal.me/deinname.",
+  },
   danger: {
     description:
       "Aktionen in diesem Bereich lassen sich nicht rückgängig machen. Sei bitte vorsichtig.",

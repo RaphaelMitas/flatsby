@@ -17,9 +17,11 @@ import DeleteUser from "./DeleteUser";
 import ExportUserData from "./ExportUserData";
 import { LanguageSettings } from "./LanguageSettings";
 import ManageUser from "./ManageUser";
+import { PaymentDetails } from "./PaymentDetails";
 
 export default async function Page() {
   prefetch(trpc.user.getCurrentUser.queryOptions());
+  prefetch(trpc.user.getPaymentDetails.queryOptions());
   const t = await getTranslations("settings.page");
   const preference = (await cookies()).get(localeCookie)?.value;
   return (
@@ -34,6 +36,7 @@ export default async function Page() {
           </h1>
         </div>
         <ManageUser />
+        <PaymentDetails />
         <LanguageSettings
           preference={preference && isLocale(preference) ? preference : null}
         />

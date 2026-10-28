@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "../fixtures/auth";
 import { createTestExpense } from "../helpers/expenses";
+import { waitForHydration } from "../helpers/hydration";
 
 test.describe("Account Management", () => {
   test("access account deletion settings", async ({ authPage }) => {
@@ -46,6 +47,34 @@ test.describe("Account Management", () => {
     authPage,
     testUser,
   }) => {
+    await deleteAccount(authPage, testUser.email);
+  });
+
+  test("saves payment details and deletes them with the account", async ({
+    authPage,
+    testUser,
+  }) => {
+    await authPage.goto("/user-settings");
+
+    const card = authPage.getByTestId("payment-details-card");
+    const iban = card.getByTestId("payment-iban-input");
+    await waitForHydration(iban);
+    await card.getByTestId("payment-account-holder-input").fill("Test Holder");
+    await iban.fill("DE89 3704 0044 0532 0130 01");
+    await card.getByTestId("payment-save-button").click();
+    await expect(card).toContainText("This IBAN isn't valid");
+
+    await iban.fill("de89 3704 0044 0532 0130 00");
+    await card.getByTestId("payment-paypal-input").fill("paypal.me/testholder");
+    await card.getByTestId("payment-save-button").click();
+    await expect(authPage.getByText("Payment details saved.")).toBeVisible();
+
+    await authPage.reload();
+    await expect(iban).toHaveValue("DE89 3704 0044 0532 0130 00");
+    await expect(card.getByTestId("payment-paypal-input")).toHaveValue(
+      "testholder",
+    );
+
     await deleteAccount(authPage, testUser.email);
   });
 

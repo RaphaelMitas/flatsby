@@ -5,7 +5,8 @@ import { waitForHydration } from "../helpers/hydration";
 
 // seed=debts: Max owes you €42.50, Sophie owes you €18.00, you owe Lena
 // €30.00 and Max $15.00; among the others Max owes Lena €25.00, Sophie owes
-// Max €12.00 and Lena €8.00.
+// Max €12.00 and Lena €8.00. Lena and Max added an IBAN and a PayPal.me
+// name, Sophie and you didn't.
 async function openSeededDebts(page: Page, baseURL: string | undefined) {
   await createAuthSession(page, baseURL, { seed: "debts" });
   await page.goto("/expenses/debts");
@@ -89,6 +90,58 @@ test.describe("Debt & Settlements", () => {
     await page.reload();
     await expect(directDebtRow(page, "Max")).toBeVisible();
     await expect(sophie).toHaveCount(0);
+  });
+
+  test("paying Lena shows her GiroCode and PayPal link", async ({
+    page,
+    baseURL,
+  }) => {
+    await openSeededDebts(page, baseURL);
+
+    const settle = page.getByRole("button", {
+      name: "Record EUR payment with Lena",
+    });
+    await waitForHydration(settle);
+    await settle.click();
+
+    const form = page.getByTestId("settlement-form");
+    const pay = form.getByTestId("settle-pay-card");
+    await expect(pay.getByTestId("settle-girocode")).toBeVisible();
+    await expect(pay.getByTestId("settle-pay-iban")).toHaveText(
+      "DE89 3704 0044 0532 0130 00",
+    );
+    await expect(form.getByTestId("settlement-record-button")).toHaveText(
+      "I've paid, record it",
+    );
+
+    await pay.getByTestId("settle-pay-method-paypal").click();
+    await expect(pay.getByTestId("settle-paypal-button")).toHaveAttribute(
+      "href",
+      "https://paypal.me/lenaschneider/30.00EUR",
+    );
+  });
+
+  test("a USD debt offers PayPal but no GiroCode", async ({
+    page,
+    baseURL,
+  }) => {
+    await openSeededDebts(page, baseURL);
+
+    const settle = page.getByRole("button", {
+      name: "Record USD payment with Max",
+    });
+    await waitForHydration(settle);
+    await settle.click();
+
+    const pay = page
+      .getByTestId("settlement-form")
+      .getByTestId("settle-pay-card");
+    await expect(pay.getByTestId("settle-paypal-button")).toHaveAttribute(
+      "href",
+      "https://paypal.me/maxweber/15.00USD",
+    );
+    await expect(pay.getByTestId("settle-girocode")).toHaveCount(0);
+    await expect(pay.getByTestId("settle-pay-method-bank")).toHaveCount(0);
   });
 
   test("shows the debts between others, actual and simplified", async ({
