@@ -49,7 +49,8 @@ function collectTestIDs() {
 
   for (const file of files) {
     const src = readFileSync(file, "utf8");
-    for (const m of src.matchAll(/testID=\{?["'`]([^"'`}]+)["'`]\}?/g)) {
+    // includes testIDs passed via props, e.g. dismissTestID="..."
+    for (const m of src.matchAll(/[tT]estID=\{?["'`]([^"'`}]+)["'`]\}?/g)) {
       ids.add(m[1]);
     }
     // object-key testIDs, e.g. tabBarButtonTestID: "tab-home" or Segmented options
