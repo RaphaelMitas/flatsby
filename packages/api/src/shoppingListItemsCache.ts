@@ -50,6 +50,15 @@ export const addShoppingListItemToCache = (
     pageIndex === 0 ? [item, ...items] : items,
   );
 
+export const replaceShoppingListItemIdInCache = (
+  data: ShoppingListInfiniteData | undefined,
+  from: number,
+  to: number,
+) =>
+  mapItems(data, (items) =>
+    items.map((item) => (item.id === from ? { ...item, id: to } : item)),
+  );
+
 export const removeShoppingListItemFromCache = (
   data: ShoppingListInfiniteData | undefined,
   id: number,

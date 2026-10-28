@@ -168,6 +168,38 @@ describe("shoppingListQueue", () => {
     queryClient.unmount();
   });
 
+  it("applies an edit made under the temporary id after the create has synced", async () => {
+    onlineManager.setOnline(false);
+    const { queryClient, queue } = setup({
+      create: vi.fn(async () => ok(42)),
+      update: vi.fn(async ({ id }: { id: number }) => ok(id)),
+      delete: vi.fn(),
+    });
+    queryClient.setQueryData(itemsKey, page([]));
+    void new MutationObserver(queryClient, queue.create).mutate({
+      groupId: 1,
+      shoppingListId: 7,
+      name: "Milk",
+      categoryId: "dairy",
+    });
+    await vi.waitFor(() => expect(cachedItems(queryClient)).toHaveLength(1));
+    const [added] = cachedItems(queryClient) ?? [];
+    if (!added) throw new Error("no optimistic item");
+    onlineManager.setOnline(true);
+    await settled(queryClient);
+
+    void new MutationObserver(queryClient, queue.update).mutate({
+      ...added,
+      name: "Oat milk",
+    });
+    await settled(queryClient);
+
+    expect(cachedItems(queryClient)).toMatchObject([
+      { id: 42, name: "Oat milk" },
+    ]);
+    queryClient.unmount();
+  });
+
   it("never sends a change still waiting to retry once sign-out has cleared the cache", async () => {
     vi.useFakeTimers();
     const update = vi.fn(async () => {

@@ -21,6 +21,7 @@ import { resultMutation } from "./resultMutation";
 import {
   addShoppingListItemToCache,
   removeShoppingListItemFromCache,
+  replaceShoppingListItemIdInCache,
   updateShoppingListItemInCache,
 } from "./shoppingListItemsCache";
 import { neverAnswered } from "./trpcFailure";
@@ -136,11 +137,15 @@ export const shoppingListQueue = ({
         }
         return id;
       },
-      onSuccess: (id: number, _input: CreateInput, temporaryId: number) =>
+      onSuccess: (id: number, _input: CreateInput, temporaryId: number) => {
         queryClient.setQueryData<Record<number, number>>(
           TEMPORARY_IDS_KEY,
           (ids) => ({ ...ids, [temporaryId]: id }),
-        ),
+        );
+        queryClient.setQueriesData<ShoppingListInfiniteData>(items(), (data) =>
+          replaceShoppingListItemIdInCache(data, temporaryId, id),
+        );
+      },
       onSettled,
     }),
   };
@@ -151,13 +156,12 @@ export const shoppingListQueue = ({
     mutationFn: whileQueued((input: UpdateInput) =>
       send.update({ ...input, id: realId(input.id) }),
     ),
-    ...resultMutation({
-      onMutate: (input: UpdateInput) =>
-        patchItems(items(), (data) =>
-          updateShoppingListItemInCache(data, input),
-        ),
-      onSettled,
-    }),
+    // An edit form opened before the create synced still holds the temporary id
+    onMutate: (input: UpdateInput) =>
+      patchItems(items(), (data) =>
+        updateShoppingListItemInCache(data, { ...input, id: realId(input.id) }),
+      ),
+    onSettled,
   };
 
   const remove = {
@@ -166,13 +170,11 @@ export const shoppingListQueue = ({
     mutationFn: whileQueued((input: DeleteInput) =>
       send.delete({ id: realId(input.id) }),
     ),
-    ...resultMutation({
-      onMutate: (input: DeleteInput) =>
-        patchItems(items(), (data) =>
-          removeShoppingListItemFromCache(data, input.id),
-        ),
-      onSettled,
-    }),
+    onMutate: (input: DeleteInput) =>
+      patchItems(items(), (data) =>
+        removeShoppingListItemFromCache(data, realId(input.id)),
+      ),
+    onSettled,
   };
 
   queryClient.setMutationDefaults(create.mutationKey, create);
