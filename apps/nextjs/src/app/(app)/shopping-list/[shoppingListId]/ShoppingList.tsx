@@ -263,7 +263,8 @@ const ShoppingListInner = ({
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {shoppingList && (
-          <div className="px-4 pb-3">
+          // A flex parent gives the bar a definite height, which the square settings button sizes from
+          <div className="flex flex-col px-4 pb-3">
             <ListSwitcher
               groupId={groupId}
               shoppingListId={shoppingListId}
