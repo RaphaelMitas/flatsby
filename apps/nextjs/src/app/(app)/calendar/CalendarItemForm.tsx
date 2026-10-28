@@ -1,5 +1,3 @@
-"use client";
-
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import type {
   CalendarColor,
@@ -51,10 +49,12 @@ import {
   withStart,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
-import { isPlaceholder } from "@flatsby/validators/group";
+import { memberPerson } from "@flatsby/validators/expenses/formatting";
 
 import { Chip } from "./CalendarPeople";
 import { DatePopover } from "./DatePopover";
+
+("use client");
 
 interface CalendarItemFormProps {
   groupId: number;
@@ -445,12 +445,7 @@ export function CalendarItemForm({
                   onClick={() => toggleMember(member.id)}
                   testId={`calendar-form-member-${member.id}`}
                 >
-                  <UserAvatar
-                    name={member.user.name}
-                    image={member.user.image}
-                    placeholder={isPlaceholder(member)}
-                    size="xs"
-                  />
+                  <UserAvatar {...memberPerson(member)} size="xs" />
                   {member.user.name}
                   {position >= 0 && memberIds.length > 1 && (
                     <span className="bg-info text-info-foreground grid size-4 place-items-center rounded-full text-xs">

@@ -109,7 +109,7 @@ const loadOverrides = async (
       },
       with: {
         completedByGroupMember: {
-          columns: { name: true },
+          columns: { placeholderName: true },
           with: { user: { columns: { name: true, image: true } } },
         },
       },

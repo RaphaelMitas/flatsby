@@ -11,12 +11,15 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 import { CURRENCY_CODES } from "@flatsby/validators/expenses/types";
 import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImport";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
-import { MemberAvatar, memberPerson } from "~/components/expenses/MemberAvatar";
+import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import { TimedAlert } from "~/components/TimedAlert";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import {

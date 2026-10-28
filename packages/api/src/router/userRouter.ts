@@ -36,7 +36,7 @@ import { Database } from "../effect/services/Database";
 import { report } from "../effect/toApiResult";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { GroupUtils, memberUserColumns, withMemberUser } from "../utils";
+import { GroupUtils, memberName, memberUserColumns } from "../utils";
 import { autumn, checkCredits } from "../utils/autumn";
 
 const freePlan = {
@@ -249,6 +249,7 @@ export const userRouter = createTRPCRouter({
                       groupId: true,
                       role: true,
                       joinedOn: true,
+                      placeholderName: true,
                     },
                     with: {
                       group: {
@@ -278,8 +279,19 @@ export const userRouter = createTRPCRouter({
                     groupId,
                     role,
                     group,
+                    placeholderName,
                   } = membership;
                   const isAdmin = role === "admin";
+                  // A claimed spot turns back into its placeholder, so the history it came with stays
+                  const leaveGroup = () =>
+                    placeholderName === null
+                      ? trx
+                          .delete(groupMembers)
+                          .where(eq(groupMembers.id, groupMemberId))
+                      : trx
+                          .update(groupMembers)
+                          .set({ userId: null, role: "member" })
+                          .where(eq(groupMembers.id, groupMemberId));
 
                   const otherMembers = group.groupMembers;
                   const otherAdmins = otherMembers.filter(
@@ -293,9 +305,7 @@ export const userRouter = createTRPCRouter({
                     if (otherAdmins.length > 0) {
                       // There are other admins, so we can safely remove the user
                       // Remove the user's membership
-                      await trx
-                        .delete(groupMembers)
-                        .where(eq(groupMembers.id, groupMemberId));
+                      await leaveGroup();
                     } else if (otherMembers.length > 0) {
                       // The user is the last admin but there are other members
                       // Promote the member who joined first to admin
@@ -312,18 +322,14 @@ export const userRouter = createTRPCRouter({
                         .set({ role: "admin" })
                         .where(eq(groupMembers.id, newAdmin.id));
 
-                      await trx
-                        .delete(groupMembers)
-                        .where(eq(groupMembers.id, groupMemberId));
+                      await leaveGroup();
                     } else {
                       // The user is the last member and admin
                       await GroupUtils.deleteGroupData(trx, groupId);
                     }
                   } else {
                     // The user is not an admin, simply remove their membership
-                    await trx
-                      .delete(groupMembers)
-                      .where(eq(groupMembers.id, groupMemberId));
+                    await leaveGroup();
                   }
                 }
 
@@ -501,7 +507,11 @@ export const userRouter = createTRPCRouter({
                     },
                     with: {
                       groupMembers: {
-                        columns: { id: true, name: true, isActive: true },
+                        columns: {
+                          id: true,
+                          placeholderName: true,
+                          isActive: true,
+                        },
                         with: { user: { columns: memberUserColumns } },
                       },
                     },
@@ -619,7 +629,7 @@ export const userRouter = createTRPCRouter({
                   joinedOn: g.joinedOn,
                   members: g.group.groupMembers.map((m) => ({
                     memberId: m.id,
-                    name: withMemberUser(m).user.name,
+                    name: memberName(m),
                     active: m.isActive,
                   })),
                 })),

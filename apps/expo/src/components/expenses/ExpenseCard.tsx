@@ -9,14 +9,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
-import { formatExpenseAmounts } from "@flatsby/validators/expenses/formatting";
+import {
+  formatExpenseAmounts,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
 import { ExpenseDisplay } from "./ExpenseDisplay";
-import { memberPerson } from "./MemberAvatar";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface ExpenseCardProps {

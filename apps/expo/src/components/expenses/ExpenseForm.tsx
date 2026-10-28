@@ -15,7 +15,10 @@ import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { isExchangeRateFinal } from "@flatsby/validators/expenses/conversion";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
   editableSplitMethod,
@@ -57,7 +60,7 @@ import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
 import { CurrencyPicker } from "./CurrencyPicker";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
-import { MemberAvatar, memberPerson } from "./MemberAvatar";
+import { MemberAvatar } from "./MemberAvatar";
 import { SplitEditor } from "./SplitEditor";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -159,12 +162,8 @@ export function ExpenseForm({
     const inactiveMembers = expense.expenseSplits
       .filter((s) => !activeIds.has(s.groupMemberId))
       .map((s) => ({
-        id: s.groupMember.id,
-        userId: s.groupMember.userId,
-        role: "member" as const,
-        joinedOn: new Date(),
+        ...s.groupMember,
         isActive: false,
-        user: s.groupMember.user,
         placeholderName: null,
       }));
     return [...group.groupMembers, ...inactiveMembers];

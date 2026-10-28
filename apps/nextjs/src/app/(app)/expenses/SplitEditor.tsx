@@ -1,5 +1,3 @@
-"use client";
-
 import type { GroupWithAccess } from "@flatsby/api";
 import type { ConvertibleExpense } from "@flatsby/validators/expenses/conversion";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
@@ -22,11 +20,16 @@ import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 import { isPlaceholder } from "@flatsby/validators/group";
 
 import { CurrencyInput } from "~/components/CurrencyInput";
+
+("use client");
 
 const SPLIT_METHOD_OPTIONS = [
   { method: "equal", Icon: Equal },
@@ -131,11 +134,7 @@ export function SplitEditor({
                   className="flex h-auto flex-col items-center gap-2 py-3"
                   data-testid={`split-member-${member.id}`}
                 >
-                  <UserAvatar
-                    name={member.user.name}
-                    image={member.user.image}
-                    placeholder={isPlaceholder(member)}
-                  />
+                  <UserAvatar {...memberPerson(member)} />
                   <span className="w-full truncate text-xs">
                     {member.user.name}
                   </span>

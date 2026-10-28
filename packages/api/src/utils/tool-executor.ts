@@ -286,7 +286,7 @@ export async function executeSearchData(
             eq(groupMembers.groupId, groupId),
             eq(groupMembers.isActive, true),
           ),
-          columns: { id: true, name: true },
+          columns: { id: true, placeholderName: true },
           with: { user: { columns: { name: true } } },
         }),
       ]);

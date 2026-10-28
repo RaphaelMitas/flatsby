@@ -1,5 +1,3 @@
-"use client";
-
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -46,12 +44,16 @@ import {
   TableRow,
 } from "@flatsby/ui/table";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImport";
-import { isPlaceholder } from "@flatsby/validators/group";
 
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
+
+("use client");
 
 interface SplitwiseImportDialogProps {
   groupId: number;
@@ -307,12 +309,7 @@ function StepMapping({
               {members.map((m) => (
                 <SelectItem key={m.id} value={m.id.toString()}>
                   <div className="flex items-center gap-2">
-                    <UserAvatar
-                      name={m.user.name}
-                      image={m.user.image}
-                      placeholder={isPlaceholder(m)}
-                      size="xs"
-                    />
+                    <UserAvatar {...memberPerson(m)} size="xs" />
                     {m.user.name}
                   </div>
                 </SelectItem>

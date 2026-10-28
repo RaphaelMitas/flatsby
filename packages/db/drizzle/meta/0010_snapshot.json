@@ -1,5 +1,5 @@
 {
-  "id": "eeaf7ef1-420c-4d09-8176-cf5e17a5c464",
+  "id": "e05d2f35-cee9-47bb-9af2-96fcb7c899a5",
   "prevId": "75d6c6e4-21da-47c1-b124-d671b37be5f2",
   "version": "7",
   "dialect": "postgresql",
@@ -919,8 +919,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "name": {
-          "name": "name",
+        "placeholder_name": {
+          "name": "placeholder_name",
           "type": "varchar(64)",
           "primaryKey": false,
           "notNull": false
@@ -1002,7 +1002,7 @@
       "checkConstraints": {
         "group_members_user_or_name": {
           "name": "group_members_user_or_name",
-          "value": "\"flat-cove_group_members\".\"userId\" is not null or \"flat-cove_group_members\".\"name\" is not null"
+          "value": "\"flat-cove_group_members\".\"userId\" is not null or \"flat-cove_group_members\".\"placeholder_name\" is not null"
         }
       },
       "isRLSEnabled": false

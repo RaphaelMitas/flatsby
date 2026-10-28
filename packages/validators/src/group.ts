@@ -77,6 +77,12 @@ export type GroupMember = z.infer<typeof groupMemberSchema>;
 export const isPlaceholder = (member: { userId: string | null }) =>
   member.userId === null;
 
+export const placeholderUser = (name: string) => ({
+  name,
+  email: null,
+  image: null,
+});
+
 export const groupMemberUserSchema = z.object({
   email: userEmailSchema.nullable(),
   name: userNameSchema.nullable(),

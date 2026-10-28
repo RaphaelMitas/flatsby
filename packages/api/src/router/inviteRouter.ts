@@ -17,7 +17,7 @@ import { CurrentRequest } from "../effect/services/CurrentRequest";
 import { Database } from "../effect/services/Database";
 import { Errors } from "../errors";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { GroupUtils, memberUserColumns, withMemberUser } from "../utils";
+import { GroupUtils, memberName, memberUserColumns } from "../utils";
 
 const generateCode = () =>
   Array.from(
@@ -86,7 +86,7 @@ const findLiveInvite = Effect.fn("Invites.findLiveInvite")(function* (
           with: {
             groupMembers: {
               where: (members, { eq }) => eq(members.isActive, true),
-              columns: { id: true, userId: true, name: true },
+              columns: { id: true, userId: true, placeholderName: true },
               with: { user: { columns: memberUserColumns } },
             },
           },
@@ -127,7 +127,7 @@ export const inviteRouter = createTRPCRouter({
             groupId: group.id,
             groupName: group.name,
             profilePicture: group.profilePicture,
-            invitedBy: withMemberUser(createdByMember).user.name,
+            invitedBy: memberName(createdByMember),
             memberCount: joined.length,
             members: joined.slice(0, 3),
             isMember: group.groupMembers.some(
@@ -135,8 +135,10 @@ export const inviteRouter = createTRPCRouter({
             ),
             // Names are only for the person about to join, not for link previews
             placeholders: ctx.session
-              ? group.groupMembers.flatMap(({ id, userId, name }) =>
-                  userId === null && name !== null ? [{ id, name }] : [],
+              ? group.groupMembers.flatMap(({ id, userId, placeholderName }) =>
+                  userId === null && placeholderName !== null
+                    ? [{ id, name: placeholderName }]
+                    : [],
                 )
               : [],
           };

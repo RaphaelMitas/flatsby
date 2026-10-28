@@ -1,16 +1,19 @@
-import type { QueryClient, QueryKey } from "@tanstack/react-query";
+import type {
+  QueryClient,
+  QueryFilters,
+  QueryKey,
+} from "@tanstack/react-query";
 
-import type { ApiResult } from "./errors";
+import { placeholderUser } from "@flatsby/validators/group";
+
 import type { GroupMemberWithUserInfo, GroupWithAccess } from "./types";
-import { restoreSnapshot, resultMutation } from "./resultMutation";
+import { optimisticMutation } from "./resultMutation";
 
 type MembersPatch = (
   members: GroupMemberWithUserInfo[],
 ) => GroupMemberWithUserInfo[];
 
 let lastPendingId = 0;
-
-const placeholderUser = (name: string) => ({ name, email: null, image: null });
 
 export const groupMembersPatches = {
   added:
@@ -49,38 +52,22 @@ export const groupMembersPatches = {
       ),
 };
 
-/** Optimistic changes to `group.getGroup`'s member list, rolled back if the server refuses. */
 export const groupMembersMutation = <TData, TInput>(
   queryClient: QueryClient,
   groupKey: QueryKey,
   patchFor: (input: TInput) => MembersPatch,
-  {
-    onFailure,
-    onSuccess,
-  }: {
+  options?: {
     onFailure?: (message: string | undefined) => void;
     onSuccess?: (data: TData, input: TInput) => void;
-  } = {},
+    invalidate?: QueryFilters[];
+  },
 ) =>
-  resultMutation({
-    onMutate: async (input: TInput) => {
-      await queryClient.cancelQueries({ queryKey: groupKey });
-      const previous = queryClient.getQueryData(groupKey);
-      queryClient.setQueryData<ApiResult<GroupWithAccess>>(groupKey, (old) =>
-        old?.success
-          ? {
-              ...old,
-              data: {
-                ...old.data,
-                groupMembers: patchFor(input)(old.data.groupMembers),
-              },
-            }
-          : old,
-      );
-      return [{ queryKey: groupKey, previous }];
-    },
-    rollback: restoreSnapshot(queryClient),
-    onFailure,
-    onSuccess,
-    onSettled: () => void queryClient.invalidateQueries({ queryKey: groupKey }),
-  });
+  optimisticMutation<TData, TInput, GroupWithAccess>(
+    queryClient,
+    groupKey,
+    (input) => (group) => ({
+      ...group,
+      groupMembers: patchFor(input)(group.groupMembers),
+    }),
+    options,
+  );

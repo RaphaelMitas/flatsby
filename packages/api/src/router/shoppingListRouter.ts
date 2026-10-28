@@ -215,7 +215,7 @@ export const shoppingList = createTRPCRouter({
                     with: {
                       groupMembers: {
                         where: (members, { eq }) => eq(members.isActive, true),
-                        columns: { id: true, name: true },
+                        columns: { id: true, placeholderName: true },
                         with: { user: { columns: memberUserColumns } },
                       },
                     },

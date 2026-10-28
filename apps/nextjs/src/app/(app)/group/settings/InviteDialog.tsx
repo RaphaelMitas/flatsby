@@ -30,20 +30,27 @@ import { useTRPC } from "~/trpc/react";
 export const InviteDialog = ({
   groupId,
   groupName,
+  open,
+  onOpenChange,
 }: {
   groupId: number;
   groupName: string;
+  /** Controlled dialogs are opened by their caller and bring no trigger */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) => {
   const t = useTranslations();
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button data-testid="group-invite-button" className="w-full md:w-fit">
-          <Plus className="mr-2 h-4 w-4" />
-          {t("invite.open")}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {open === undefined && (
+        <DialogTrigger asChild>
+          <Button data-testid="group-invite-button" className="w-full md:w-fit">
+            <Plus className="mr-2 h-4 w-4" />
+            {t("invite.open")}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{t("invite.title", { group: groupName })}</DialogTitle>

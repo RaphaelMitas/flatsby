@@ -18,10 +18,12 @@ export function PlaceholderMembers({
   groupId,
   title,
   hint,
+  withActions,
 }: {
   groupId: number;
   title: string;
   hint?: string;
+  withActions?: boolean;
 }) {
   const t = useTranslations();
   const trpc = useTRPC();
@@ -38,10 +40,7 @@ export function PlaceholderMembers({
           toast.error(t("common.error"), {
             description: message ?? t("errors.unexpected"),
           }),
-        onSuccess: () =>
-          void queryClient.invalidateQueries(
-            trpc.group.getUserGroups.queryFilter(),
-          ),
+        invalidate: [trpc.group.getUserGroups.queryFilter()],
       }),
     ),
   );
@@ -58,8 +57,10 @@ export function PlaceholderMembers({
         <MemberCard
           key={member.id}
           groupId={groupId}
+          groupName={group.data.name}
           groupMember={member}
           currentUserGroupMember={group.data.thisGroupMember}
+          withActions={withActions}
         />
       ))}
       <PlaceholderNameForm

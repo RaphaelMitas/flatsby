@@ -55,6 +55,7 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
                 <MemberCard
                   key={groupMember.id}
                   groupId={groupId}
+                  groupName={group.data.name}
                   groupMember={groupMember}
                   currentUserGroupMember={group.data.thisGroupMember}
                 />

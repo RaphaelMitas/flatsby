@@ -1,10 +1,16 @@
-import type { QueryClient, QueryKey } from "@tanstack/react-query";
+import type {
+  QueryClient,
+  QueryFilters,
+  QueryKey,
+} from "@tanstack/react-query";
 
 import type { ApiResult } from "./errors";
 
 export type QuerySnapshot = { queryKey: QueryKey; previous: unknown }[];
 
 export const PENDING_ID = -1;
+
+export const isPendingId = (id: number) => id < 0;
 
 export const restoreSnapshot =
   (queryClient: QueryClient) => (snapshot: QuerySnapshot) => {
@@ -53,3 +59,35 @@ export const failureOf = (
   if (error) return fallback;
   return undefined;
 };
+
+export const optimisticMutation = <TData, TInput, TCached>(
+  queryClient: QueryClient,
+  queryKey: QueryKey,
+  patchFor: (input: TInput) => (cached: TCached) => TCached,
+  {
+    onFailure,
+    onSuccess,
+    invalidate = [],
+  }: {
+    onFailure?: (message: string | undefined) => void;
+    onSuccess?: (data: TData, input: TInput) => void;
+    invalidate?: QueryFilters[];
+  } = {},
+) =>
+  resultMutation({
+    onMutate: async (input: TInput) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData<ApiResult<TCached>>(queryKey, (old) =>
+        old?.success ? { ...old, data: patchFor(input)(old.data) } : old,
+      );
+      return [{ queryKey, previous }];
+    },
+    rollback: restoreSnapshot(queryClient),
+    onFailure,
+    onSuccess,
+    onSettled: () => {
+      for (const filters of [{ queryKey }, ...invalidate])
+        void queryClient.invalidateQueries(filters);
+    },
+  });

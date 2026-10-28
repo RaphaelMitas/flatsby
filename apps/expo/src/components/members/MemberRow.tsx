@@ -2,9 +2,11 @@ import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import { Pressable, Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
+import { memberPerson } from "@flatsby/validators/expenses/formatting";
+
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { cn } from "~/lib/utils";
-import { MemberAvatar, memberPerson } from "../expenses/MemberAvatar";
+import { MemberAvatar } from "../expenses/MemberAvatar";
 
 export function MemberRow({
   member,

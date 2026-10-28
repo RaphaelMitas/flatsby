@@ -1,5 +1,3 @@
-"use client";
-
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
 import {
@@ -19,8 +17,10 @@ import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   formatExpenseAmounts,
   formatExpenseDateShort,
+  memberPerson,
 } from "@flatsby/validators/expenses/formatting";
-import { isPlaceholder } from "@flatsby/validators/group";
+
+("use client");
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -105,9 +105,7 @@ export function ExpenseCard({
               {settlementCounterparty && (
                 <>
                   <UserAvatar
-                    name={settlementCounterparty.user.name}
-                    image={settlementCounterparty.user.image}
-                    placeholder={isPlaceholder(settlementCounterparty)}
+                    {...memberPerson(settlementCounterparty)}
                     size="xs"
                   />
                   <span>{settlementCounterparty.user.name}</span>
@@ -115,9 +113,8 @@ export function ExpenseCard({
                 </>
               )}
               <UserAvatar
+                {...memberPerson(expense.paidByGroupMember)}
                 name={paidByName}
-                image={expense.paidByGroupMember.user.image}
-                placeholder={isPlaceholder(expense.paidByGroupMember)}
                 size="xs"
               />
               <span className="truncate">

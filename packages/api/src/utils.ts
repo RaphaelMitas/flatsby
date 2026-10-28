@@ -13,6 +13,7 @@ import {
   users,
 } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
+import { placeholderUser } from "@flatsby/validators/group";
 
 import type { ApiError } from "./errors";
 import type {
@@ -168,20 +169,20 @@ export const memberUserColumns = {
 } as const;
 
 export const memberName = (member: {
-  name: string | null;
+  placeholderName: string | null;
   user: { name: string } | null;
-}) => member.user?.name ?? member.name ?? "";
+}) => member.user?.name ?? member.placeholderName ?? "";
 
 /** Placeholders have no user, so they get one built from their name; released apps read `member.user` unguarded. */
 export const withMemberUser = <
-  M extends { name: string | null; user: MemberUser | null },
+  M extends { placeholderName: string | null; user: MemberUser | null },
 >({
-  name,
+  placeholderName,
   user,
   ...member
-}: M): Omit<M, "user" | "name"> & { user: MemberUser } => ({
+}: M): Omit<M, "user" | "placeholderName"> & { user: MemberUser } => ({
   ...member,
-  user: user ?? { name: name ?? "", email: null, image: null },
+  user: user ?? placeholderUser(placeholderName ?? ""),
 });
 
 export const findGroupWithMembers = async (db: Database, groupId: number) => {
@@ -193,7 +194,7 @@ export const findGroupWithMembers = async (db: Database, groupId: number) => {
         columns: {
           id: true,
           userId: true,
-          name: true,
+          placeholderName: true,
           role: true,
           joinedOn: true,
           isActive: true,
@@ -207,7 +208,7 @@ export const findGroupWithMembers = async (db: Database, groupId: number) => {
       ...group,
       groupMembers: group.groupMembers.map((member) => ({
         ...withMemberUser(member),
-        placeholderName: member.name,
+        placeholderName: member.placeholderName,
       })),
     }
   );

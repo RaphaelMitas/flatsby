@@ -36,7 +36,7 @@ import {
   updateMemberRoleInputSchema,
 } from "@flatsby/validators/group";
 
-import type { DbTransaction } from "../types";
+import type { Database as DbClient, DbTransaction } from "../types";
 import {
   addMember,
   getGroupWithAccess,
@@ -83,40 +83,30 @@ const updateGroup = protectedProcedure
     ),
   );
 
-const findActivePlaceholder = Effect.fn("Groups.findActivePlaceholder")(
-  function* (memberId: number) {
-    const database = yield* Database;
-    return yield* database.findOneOrFail("groupMember", (db) =>
-      db.query.groupMembers.findFirst({
-        where: and(
-          eq(groupMembers.id, memberId),
-          isNull(groupMembers.userId),
-          eq(groupMembers.isActive, true),
-        ),
-      }),
-    );
-  },
-);
-
-// Two Annas would make "Ich bin Anna" ambiguous when one of them joins
-const placeholderNameTaken = async (
-  tx: DbTransaction,
+// Two Annas would make "I'm Anna" ambiguous when one of them joins
+const withFreePlaceholderName = <T>(
+  db: DbClient,
   groupId: number,
   name: string,
-  exceptMemberId?: number,
+  exceptMemberId: number | undefined,
+  write: (tx: DbTransaction) => Promise<T>,
 ) =>
-  (await tx.query.groupMembers.findFirst({
-    where: and(
-      eq(groupMembers.groupId, groupId),
-      isNull(groupMembers.userId),
-      eq(groupMembers.isActive, true),
-      sql`lower(${groupMembers.name}) = lower(${name})`,
-      exceptMemberId === undefined
-        ? undefined
-        : ne(groupMembers.id, exceptMemberId),
-    ),
-    columns: { id: true },
-  })) !== undefined;
+  db.transaction(async (tx) => {
+    await GroupUtils.lockGroup(tx, groupId);
+    const taken = await tx.query.groupMembers.findFirst({
+      where: and(
+        eq(groupMembers.groupId, groupId),
+        isNull(groupMembers.userId),
+        eq(groupMembers.isActive, true),
+        sql`lower(${groupMembers.placeholderName}) = lower(${name})`,
+        exceptMemberId === undefined
+          ? undefined
+          : ne(groupMembers.id, exceptMemberId),
+      ),
+      columns: { id: true },
+    });
+    return taken ? Errors.conflict("errors.placeholderNameTaken") : write(tx);
+  });
 
 export const groupRouter = createTRPCRouter({
   getUserGroups: protectedProcedure.query(async ({ ctx }) =>
@@ -136,7 +126,7 @@ export const groupRouter = createTRPCRouter({
                 name: groups.name,
                 createdAt: groups.createdAt,
                 profilePicture: groups.profilePicture,
-                memberCount: count(gmAll.id),
+                memberCount: count(gmAll.userId),
               })
               .from(groups)
               .innerJoin(
@@ -197,25 +187,33 @@ export const groupRouter = createTRPCRouter({
             targetMember.group.groupMembers,
             "errors.adminRequiredToChangeRoles",
           );
-          if (targetMember.userId === null && input.newRole === "admin") {
-            return yield* Errors.forbidden("errors.placeholderCannotBeAdmin");
-          }
           yield* DbUtils.ensureNotLastAdmin(
             input.memberId,
             targetMember.role,
             input.newRole,
             targetMember.group.groupMembers,
           );
-          return yield* database.query(
+          const updated = yield* database.query(
             "update member role",
             (db) =>
               db
                 .update(groupMembers)
                 .set({ role: input.newRole })
-                .where(eq(groupMembers.id, input.memberId))
+                .where(
+                  and(
+                    eq(groupMembers.id, input.memberId),
+                    input.newRole === "admin"
+                      ? isNotNull(groupMembers.userId)
+                      : undefined,
+                  ),
+                )
                 .returning({ id: groupMembers.id }),
             { messageKey: "errors.updateRoleFailed" },
           );
+          if (updated.length === 0) {
+            return yield* Errors.forbidden("errors.placeholderCannotBeAdmin");
+          }
+          return updated;
         }),
       ),
     ),
@@ -264,18 +262,30 @@ export const groupRouter = createTRPCRouter({
             );
           }
 
-          return yield* database.query(
+          const removed = yield* database.query(
             "remove group member",
             (db) =>
               db.transaction(async (trx) => {
                 await GroupUtils.lockGroup(trx, target.groupId);
-                await GroupUtils.detachMemberFromItems(trx, target.id);
                 // Inactive, not deleted, so expense history survives
-                await trx
+                const [deactivated] = await trx
                   .update(groupMembers)
                   .set({ isActive: false })
-                  .where(eq(groupMembers.id, target.id));
-                // A placeholder can't use a link, so removing one keeps the link the WG was just sent
+                  .where(
+                    and(
+                      eq(groupMembers.id, target.id),
+                      eq(groupMembers.isActive, true),
+                      target.userId === null
+                        ? isNull(groupMembers.userId)
+                        : eq(groupMembers.userId, target.userId),
+                    ),
+                  )
+                  .returning({ id: groupMembers.id });
+                // Someone claimed or released the spot since it was read
+                if (!deactivated)
+                  return Errors.conflict("errors.placeholderTaken");
+                await GroupUtils.detachMemberFromItems(trx, target.id);
+                // A placeholder can't use a link, so keep the one the group was just sent
                 if (target.userId === null) return { success: true };
                 // Removal kills the live link so they can't rejoin; leaving only kills links the leaver created
                 await trx
@@ -292,6 +302,8 @@ export const groupRouter = createTRPCRouter({
               }),
             { messageKey: "errors.removeMemberFailed" },
           );
+          if (!("success" in removed)) return yield* removed;
+          return removed;
         }),
       ),
     ),
@@ -371,22 +383,24 @@ export const groupRouter = createTRPCRouter({
           yield* requireMember(input.groupId);
           const database = yield* Database;
           const memberId = yield* database.query("add placeholder", (db) =>
-            db.transaction(async (tx) => {
-              await GroupUtils.lockGroup(tx, input.groupId);
-              if (await placeholderNameTaken(tx, input.groupId, input.name)) {
-                return Errors.conflict("errors.placeholderNameTaken");
-              }
-              const [member] = await tx
-                .insert(groupMembers)
-                .values({
-                  groupId: input.groupId,
-                  name: input.name,
-                  role: "member",
-                })
-                .returning({ id: groupMembers.id });
-              if (!member) throw new Error("Failed to add placeholder");
-              return member.id;
-            }),
+            withFreePlaceholderName(
+              db,
+              input.groupId,
+              input.name,
+              undefined,
+              async (tx) => {
+                const [member] = await tx
+                  .insert(groupMembers)
+                  .values({
+                    groupId: input.groupId,
+                    placeholderName: input.name,
+                    role: "member",
+                  })
+                  .returning({ id: groupMembers.id });
+                if (!member) throw new Error("Failed to add placeholder");
+                return member.id;
+              },
+            ),
           );
           if (typeof memberId !== "number") return yield* memberId;
           return { memberId };
@@ -400,32 +414,40 @@ export const groupRouter = createTRPCRouter({
       runResult(
         ctx,
         Effect.gen(function* () {
-          const target = yield* findActivePlaceholder(input.memberId);
-          yield* requireMember(target.groupId);
           const database = yield* Database;
-          const refused = yield* database.query("rename placeholder", (db) =>
-            db.transaction(async (tx) => {
-              await GroupUtils.lockGroup(tx, target.groupId);
-              if (
-                await placeholderNameTaken(
-                  tx,
-                  target.groupId,
-                  input.name,
-                  target.id,
-                )
-              ) {
-                return Errors.conflict("errors.placeholderNameTaken");
-              }
-              await tx
-                .update(groupMembers)
-                .set({ name: input.name })
-                .where(
-                  and(
-                    eq(groupMembers.id, target.id),
-                    isNull(groupMembers.userId),
-                  ),
-                );
+          const target = yield* database.findOneOrFail("groupMember", (db) =>
+            db.query.groupMembers.findFirst({
+              where: and(
+                eq(groupMembers.id, input.memberId),
+                isNull(groupMembers.userId),
+                eq(groupMembers.isActive, true),
+              ),
             }),
+          );
+          yield* requireMember(target.groupId);
+          const refused = yield* database.query("rename placeholder", (db) =>
+            withFreePlaceholderName(
+              db,
+              target.groupId,
+              input.name,
+              target.id,
+              async (tx) => {
+                const [renamed] = await tx
+                  .update(groupMembers)
+                  .set({ placeholderName: input.name })
+                  .where(
+                    and(
+                      eq(groupMembers.id, target.id),
+                      isNull(groupMembers.userId),
+                      eq(groupMembers.isActive, true),
+                    ),
+                  )
+                  .returning({ id: groupMembers.id });
+                return renamed
+                  ? undefined
+                  : Errors.conflict("errors.placeholderTaken");
+              },
+            ),
           );
           if (refused) return yield* refused;
           return { memberId: target.id };
@@ -444,30 +466,44 @@ export const groupRouter = createTRPCRouter({
             db.query.groupMembers.findFirst({
               where: and(
                 eq(groupMembers.id, input.memberId),
-                isNotNull(groupMembers.userId),
-                isNotNull(groupMembers.name),
                 eq(groupMembers.isActive, true),
               ),
             }),
           );
+          const { userId, placeholderName } = target;
+          if (userId === null || placeholderName === null) {
+            return yield* Errors.notFound("groupMember", input.memberId);
+          }
           yield* requireAdmin(target.groupId);
           if (target.role === "admin") {
             return yield* Errors.forbidden("errors.placeholderCannotBeAdmin");
           }
-          yield* database.query("undo claim", (db) =>
-            db.transaction(async (tx) => {
-              await GroupUtils.lockGroup(tx, target.groupId);
-              await tx
-                .update(groupMembers)
-                .set({ userId: null })
-                .where(
-                  and(
-                    eq(groupMembers.id, target.id),
-                    eq(groupMembers.role, "member"),
-                  ),
-                );
-            }),
+          const refused = yield* database.query("undo claim", (db) =>
+            withFreePlaceholderName(
+              db,
+              target.groupId,
+              placeholderName,
+              target.id,
+              async (tx) => {
+                const [undone] = await tx
+                  .update(groupMembers)
+                  .set({ userId: null })
+                  .where(
+                    and(
+                      eq(groupMembers.id, target.id),
+                      eq(groupMembers.userId, userId),
+                      eq(groupMembers.role, "member"),
+                      eq(groupMembers.isActive, true),
+                    ),
+                  )
+                  .returning({ id: groupMembers.id });
+                return undone
+                  ? undefined
+                  : Errors.notFound("groupMember", target.id);
+              },
+            ),
           );
+          if (refused) return yield* refused;
           return { memberId: target.id };
         }),
       ),

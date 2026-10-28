@@ -86,9 +86,11 @@ tags:
     visible:
       id: "join-invite-button"
     timeout: 15000
-# Joining as new is preselected; picking Anna renames the button
 - assertVisible:
     id: "join-claim-new"
+- assertNotVisible:
+    id: "join-invite-button"
+    text: "Join as .*"
 - tapOn:
     id: "join-claim-option-.*"
 - assertVisible:
@@ -101,7 +103,7 @@ tags:
       id: "dashboard-group-picker"
     timeout: 20000
 
-# The claim took over Anna's row: two members, and Anna is no longer pending
+# The claim takes over Anna's row, so the count stays at two
 - tapOn:
     id: "dashboard-group-settings"
 - extendedWaitUntil:

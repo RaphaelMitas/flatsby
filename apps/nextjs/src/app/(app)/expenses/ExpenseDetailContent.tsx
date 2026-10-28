@@ -1,5 +1,3 @@
-"use client";
-
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import { Calendar, Edit, Handshake, Trash2, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -23,10 +21,12 @@ import {
   formatExpenseAmounts,
   formatExpenseDateLong,
   formatSplitPortion,
+  memberPerson,
 } from "@flatsby/validators/expenses/formatting";
-import { isPlaceholder } from "@flatsby/validators/group";
 
 import { RateSourceInfo } from "./RateSourceInfo";
+
+("use client");
 
 interface ExpenseDetailContentProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -115,11 +115,7 @@ export function ExpenseDetailContent({
           {expense.splitMethod === "settlement" && expense.expenseSplits[0] && (
             <div className="flex items-center gap-3">
               <UserAvatar
-                name={expense.expenseSplits[0].groupMember.user.name}
-                image={expense.expenseSplits[0].groupMember.user.image}
-                placeholder={isPlaceholder(
-                  expense.expenseSplits[0].groupMember,
-                )}
+                {...memberPerson(expense.expenseSplits[0].groupMember)}
                 size="lg"
               />
               <div>
@@ -135,9 +131,7 @@ export function ExpenseDetailContent({
 
           <div className="flex items-center gap-3">
             <UserAvatar
-              name={expense.paidByGroupMember.user.name}
-              image={expense.paidByGroupMember.user.image}
-              placeholder={isPlaceholder(expense.paidByGroupMember)}
+              {...memberPerson(expense.paidByGroupMember)}
               size="lg"
             />
             <div>
@@ -223,11 +217,7 @@ export function ExpenseDetailContent({
                   <div key={split.id}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <UserAvatar
-                          name={member.user.name}
-                          image={member.user.image}
-                          placeholder={isPlaceholder(member)}
-                        />
+                        <UserAvatar {...memberPerson(member)} />
                         <div>
                           <p className="font-medium">{member.user.name}</p>
                           <p className="text-muted-foreground text-xs">
@@ -261,11 +251,7 @@ export function ExpenseDetailContent({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <UserAvatar
-              name={expense.createdByGroupMember.user.name}
-              image={expense.createdByGroupMember.user.image}
-              placeholder={isPlaceholder(expense.createdByGroupMember)}
-            />
+            <UserAvatar {...memberPerson(expense.createdByGroupMember)} />
             <div>
               <p className="text-muted-foreground text-sm">
                 {t("expenses.createdBy")}

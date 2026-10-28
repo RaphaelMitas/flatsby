@@ -15,6 +15,7 @@ import {
   formatExpenseAmounts,
   formatExpenseDateLong,
   formatSplitPortion,
+  memberPerson,
 } from "@flatsby/validators/expenses/formatting";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -33,7 +34,7 @@ import { Separator } from "~/lib/ui/separator";
 import { trpc } from "~/utils/api";
 import { useCloseScreen } from "~/utils/useCloseScreen";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
-import { MemberAvatar, memberPerson } from "./MemberAvatar";
+import { MemberAvatar } from "./MemberAvatar";
 import { RateInfoButton } from "./RateInfoButton";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 

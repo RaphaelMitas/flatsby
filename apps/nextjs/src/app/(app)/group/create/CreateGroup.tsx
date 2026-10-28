@@ -68,6 +68,7 @@ export function CreateGroup() {
             groupId={created.id}
             title={t("group.placeholders.inviteStepTitle")}
             hint={t("group.placeholders.inviteStepHint")}
+            withActions={false}
           />
           <Button
             variant="outline"

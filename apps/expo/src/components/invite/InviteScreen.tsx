@@ -24,7 +24,13 @@ import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useShareInvite } from "./useShareInvite";
 
-export function InviteScreen({ onDone }: { onDone?: () => void }) {
+export function InviteScreen({
+  onDone,
+  withPlaceholders,
+}: {
+  onDone?: () => void;
+  withPlaceholders?: boolean;
+}) {
   const t = useTranslations();
   const { selectedGroupId, selectedGroupName } = useShoppingStore();
   const groupId = Number(selectedGroupId) || 0;
@@ -78,7 +84,7 @@ export function InviteScreen({ onDone }: { onDone?: () => void }) {
         {t("invite.scanWithCamera")}
       </Text>
       <View className="rounded-lg bg-white p-3">
-        <QRCode value={link} size={120} />
+        <QRCode value={link} size={withPlaceholders ? 120 : 180} />
       </View>
       <Text className="text-muted-foreground text-xs">
         {t("invite.orEnterCode")}
@@ -117,13 +123,15 @@ export function InviteScreen({ onDone }: { onDone?: () => void }) {
           </Text>
         )}
       </View>
-      <View className="w-full">
-        <PlaceholderMembers
-          groupId={groupId}
-          title={t("group.placeholders.inviteStepTitle")}
-          hint={t("group.placeholders.inviteStepHint")}
-        />
-      </View>
+      {withPlaceholders && (
+        <View className="w-full">
+          <PlaceholderMembers
+            groupId={groupId}
+            title={t("group.placeholders.inviteStepTitle")}
+            hint={t("group.placeholders.inviteStepHint")}
+          />
+        </View>
+      )}
       {onDone && (
         <Button
           testID="group-invite-done"

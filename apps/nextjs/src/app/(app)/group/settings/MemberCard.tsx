@@ -11,7 +11,7 @@ import {
   groupMembersMutation,
   groupMembersPatches,
 } from "@flatsby/api/groupMembersCache";
-import { failureOf } from "@flatsby/api/resultMutation";
+import { failureOf, isPendingId } from "@flatsby/api/resultMutation";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import {
   AlertDialog,
@@ -40,19 +40,25 @@ import {
 } from "@flatsby/ui/select";
 import { toast } from "@flatsby/ui/toast";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
+import { memberPerson } from "@flatsby/validators/expenses/formatting";
 import { isPlaceholder } from "@flatsby/validators/group";
 
 import { useTRPC } from "~/trpc/react";
+import { InviteDialog } from "./InviteDialog";
 import { PlaceholderNameForm } from "./PlaceholderNameForm";
 
 export const MemberCard = ({
   groupId,
+  groupName,
   groupMember,
   currentUserGroupMember,
+  withActions = true,
 }: {
   groupId: number;
+  groupName: string;
   groupMember: GroupMemberWithUserInfo;
   currentUserGroupMember: GroupMemberWithUserInfo;
+  withActions?: boolean;
 }) => {
   const t = useTranslations();
   const trpc = useTRPC();
@@ -60,21 +66,24 @@ export const MemberCard = ({
   const router = useRouter();
   const [renaming, setRenaming] = useState(false);
   const [confirmUndo, setConfirmUndo] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const isUserAdmin = groupMember.role === "admin";
   const isCurrentUser = groupMember.id === currentUserGroupMember.id;
   const isCurrentUserAdmin = currentUserGroupMember.role === "admin";
   const placeholder = isPlaceholder(groupMember);
   const claimedFrom = placeholder ? null : groupMember.placeholderName;
-  // Optimistic rows carry negative ids until the server has created them
-  const isSaved = groupMember.id > 0;
   const groupKey = trpc.group.getGroup.queryKey({ id: groupId });
   const toastFailure = (message: string | undefined) =>
     toast.error(t("common.error"), {
       description: message ?? t("errors.unexpected"),
     });
-  // Expenses embed member names, so they go stale when a member changes identity
-  const invalidateExpenses = () =>
-    void queryClient.invalidateQueries(trpc.expense.pathFilter());
+  // These embed member names, so they go stale when a member changes identity
+  const memberNameQueries = [
+    trpc.expense.pathFilter(),
+    trpc.calendar.pathFilter(),
+    trpc.shoppingList.getShoppingList.pathFilter(),
+    trpc.group.getRecentActivity.pathFilter(),
+  ];
 
   const updateMemberRoleMutation = useMutation(
     trpc.group.updateMemberRole.mutationOptions({
@@ -111,7 +120,7 @@ export const MemberCard = ({
     trpc.group.renamePlaceholder.mutationOptions(
       groupMembersMutation(queryClient, groupKey, groupMembersPatches.renamed, {
         onFailure: toastFailure,
-        onSuccess: invalidateExpenses,
+        invalidate: memberNameQueries,
       }),
     ),
   );
@@ -121,7 +130,7 @@ export const MemberCard = ({
         queryClient,
         groupKey,
         groupMembersPatches.claimUndone,
-        { onFailure: toastFailure, onSuccess: invalidateExpenses },
+        { onFailure: toastFailure, invalidate: memberNameQueries },
       ),
     ),
   );
@@ -135,7 +144,8 @@ export const MemberCard = ({
   );
 
   const canRemove = isCurrentUserAdmin || isCurrentUser;
-  const hasActions = isSaved && (placeholder || canRemove);
+  const hasActions =
+    withActions && !isPendingId(groupMember.id) && (placeholder || canRemove);
   const removeButton = canRemove && (
     <Button
       className="w-full"
@@ -160,12 +170,7 @@ export const MemberCard = ({
     >
       <div className="flex items-center justify-between">
         <div className="flex w-full max-w-64 items-center gap-4">
-          <UserAvatar
-            name={groupMember.user.name}
-            image={groupMember.user.image}
-            placeholder={placeholder}
-            size="lg"
-          />
+          <UserAvatar {...memberPerson(groupMember)} size="lg" />
           <div className="w-full pr-2">
             <div className="flex items-center gap-2 truncate font-medium">
               <div className="inline truncate font-medium">
@@ -190,14 +195,28 @@ export const MemberCard = ({
             <PopoverContent align="end">
               <div className="bg-card flex w-full max-w-md flex-col gap-4 rounded-lg p-6">
                 {placeholder ? (
-                  <Button
-                    className="w-full"
-                    variant="outline"
-                    data-testid="member-action-rename"
-                    onClick={() => setRenaming(true)}
-                  >
-                    {t("group.placeholders.rename")}
-                  </Button>
+                  <>
+                    {isCurrentUserAdmin && (
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        data-testid="member-action-invite"
+                        onClick={() => setInviting(true)}
+                      >
+                        {t("group.placeholders.invite", {
+                          name: groupMember.user.name,
+                        })}
+                      </Button>
+                    )}
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      data-testid="member-action-rename"
+                      onClick={() => setRenaming(true)}
+                    >
+                      {t("group.placeholders.rename")}
+                    </Button>
+                  </>
                 ) : (
                   <>
                     {claimedFrom !== null && (
@@ -289,6 +308,14 @@ export const MemberCard = ({
             <AlertTitle>{t("group.members.roleUpdated")}</AlertTitle>
           </Alert>
         )}
+      {inviting && (
+        <InviteDialog
+          groupId={groupId}
+          groupName={groupName}
+          open
+          onOpenChange={setInviting}
+        />
+      )}
       <Dialog open={renaming} onOpenChange={setRenaming}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>

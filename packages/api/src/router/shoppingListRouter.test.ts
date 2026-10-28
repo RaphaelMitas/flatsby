@@ -71,7 +71,7 @@ describe("shoppingList.getShoppingList", () => {
       id: 1,
       groupId: 3,
       userId: testUser.id,
-      name: null,
+      placeholderName: null,
       role: "admin",
       joinedOn,
       isActive: true,
@@ -88,10 +88,10 @@ describe("shoppingList.getShoppingList", () => {
         groupMembers: [
           {
             id: 1,
-            name: null,
+            placeholderName: null,
             user: { email: testUser.email, name: testUser.name, image: null },
           },
-          { id: 2, name: "Anna", user: null },
+          { id: 2, placeholderName: "Anna", user: null },
         ],
       },
     });

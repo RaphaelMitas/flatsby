@@ -168,8 +168,10 @@ export const groupMembers = createTable(
       .references(() => groups.id),
     // null for a placeholder, a flatmate added by name who has no account yet
     userId: text("userId"),
-    // The name a placeholder was added under, kept after a claim so it can be undone
-    name: varchar("name", { length: MAX_PLACEHOLDER_NAME_LENGTH }),
+    // kept after a claim so it can be undone
+    placeholderName: varchar("placeholder_name", {
+      length: MAX_PLACEHOLDER_NAME_LENGTH,
+    }),
     role: groupMemberRoleEnum("role").notNull(),
     joinedOn: timestamp("joinedOn").defaultNow().notNull(),
     isActive: boolean("is_active").default(true).notNull(),
@@ -179,7 +181,7 @@ export const groupMembers = createTable(
     index("group_members_user_idx").on(table.userId),
     check(
       "group_members_user_or_name",
-      sql`${table.userId} is not null or ${table.name} is not null`,
+      sql`${table.userId} is not null or ${table.placeholderName} is not null`,
     ),
   ],
 );

@@ -106,7 +106,7 @@ const expenseMemberWith = {
     id: true,
     groupId: true,
     userId: true,
-    name: true,
+    placeholderName: true,
     role: true,
     joinedOn: true,
   },

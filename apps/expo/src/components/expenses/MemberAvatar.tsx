@@ -9,18 +9,6 @@ interface MemberAvatarProps {
   textClassName?: string;
 }
 
-export const memberPerson = ({
-  userId,
-  user,
-}: {
-  userId: string | null;
-  user: { name: string; image: string | null };
-}): DebtPerson => ({
-  name: user.name,
-  image: user.image,
-  placeholder: userId === null,
-});
-
 export function MemberAvatar({
   person,
   className,

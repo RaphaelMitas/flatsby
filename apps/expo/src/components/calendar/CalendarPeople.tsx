@@ -5,8 +5,10 @@ import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
+import { memberPerson } from "@flatsby/validators/expenses/formatting";
+
 import { cn } from "~/lib/utils";
-import { MemberAvatar, memberPerson } from "../expenses/MemberAvatar";
+import { MemberAvatar } from "../expenses/MemberAvatar";
 
 export interface CalendarPeople {
   meId: number;

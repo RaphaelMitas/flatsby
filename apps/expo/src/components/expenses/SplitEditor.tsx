@@ -8,7 +8,10 @@ import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
 import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
@@ -23,7 +26,7 @@ import {
 import { Input } from "~/lib/ui/input";
 import { Separator } from "~/lib/ui/separator";
 import { CurrencyInput } from "./CurrencyInput";
-import { MemberAvatar, memberPerson } from "./MemberAvatar";
+import { MemberAvatar } from "./MemberAvatar";
 
 const SPLIT_METHOD_OPTIONS = [
   { method: "equal", icon: "equal" },

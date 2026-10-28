@@ -67,11 +67,16 @@ describe("invite.preview", () => {
         name: "Flat",
         profilePicture: null,
         groupMembers: [
-          { id: 1, userId: "user-2", name: null, user: { name: "Ruffy" } },
-          { id: 2, userId: null, name: "Anna", user: null },
+          {
+            id: 1,
+            userId: "user-2",
+            placeholderName: null,
+            user: { name: "Ruffy" },
+          },
+          { id: 2, userId: null, placeholderName: "Anna", user: null },
         ],
       },
-      createdByMember: { name: null, user: { name: "Ruffy" } },
+      createdByMember: { placeholderName: null, user: { name: "Ruffy" } },
     });
     const preview = (user: typeof testUser | null) =>
       inviteRouter.createCaller(testContext(user)).preview({ code });

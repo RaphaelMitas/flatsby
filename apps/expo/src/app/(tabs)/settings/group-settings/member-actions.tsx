@@ -16,16 +16,13 @@ import {
   groupMembersMutation,
   groupMembersPatches,
 } from "@flatsby/api/groupMembersCache";
-import {
-  isPlaceholder,
-  MAX_PLACEHOLDER_NAME_LENGTH,
-  placeholderNameSchema,
-} from "@flatsby/validators/group";
+import { memberPerson } from "@flatsby/validators/expenses/formatting";
+import { isPlaceholder } from "@flatsby/validators/group";
 
-import { MemberAvatar, memberPerson } from "~/components/expenses/MemberAvatar";
+import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import { useShareInvite } from "~/components/invite/useShareInvite";
+import { PlaceholderNameField } from "~/components/members/PlaceholderNameField";
 import { Button } from "~/lib/ui/button";
-import { Input } from "~/lib/ui/input";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
@@ -48,7 +45,7 @@ export default function MemberActionsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const shareInvite = useShareInvite();
-  const [newName, setNewName] = useState<string>();
+  const [renaming, setRenaming] = useState(false);
 
   const groupKey = trpc.group.getGroup.queryKey({
     id: Number(selectedGroupId) || 0,
@@ -61,14 +58,18 @@ export default function MemberActionsScreen() {
 
   const alertFailure = (message: string | undefined) =>
     Alert.alert(t("common.error"), message ?? t("errors.unexpected"));
-  // Expenses embed member names, so they go stale when a member changes identity
-  const invalidateExpenses = () =>
-    void queryClient.invalidateQueries(trpc.expense.pathFilter());
+  // These embed member names, so they go stale when a member changes identity
+  const memberNameQueries = [
+    trpc.expense.pathFilter(),
+    trpc.calendar.pathFilter(),
+    trpc.shoppingList.getShoppingList.pathFilter(),
+    trpc.group.getRecentActivity.pathFilter(),
+  ];
   const renameMutation = useMutation(
     trpc.group.renamePlaceholder.mutationOptions(
       groupMembersMutation(queryClient, groupKey, groupMembersPatches.renamed, {
         onFailure: alertFailure,
-        onSuccess: invalidateExpenses,
+        invalidate: memberNameQueries,
       }),
     ),
   );
@@ -78,7 +79,7 @@ export default function MemberActionsScreen() {
         queryClient,
         groupKey,
         groupMembersPatches.claimUndone,
-        { onFailure: alertFailure, onSuccess: invalidateExpenses },
+        { onFailure: alertFailure, invalidate: memberNameQueries },
       ),
     ),
   );
@@ -117,11 +118,9 @@ export default function MemberActionsScreen() {
     router.back();
   };
 
-  const handleRename = () => {
-    const parsed = placeholderNameSchema.safeParse(newName);
-    if (!parsed.success) return;
-    if (parsed.data !== groupMember.user.name) {
-      renameMutation.mutate({ memberId: groupMember.id, name: parsed.data });
+  const handleRename = (name: string) => {
+    if (name !== groupMember.user.name) {
+      renameMutation.mutate({ memberId: groupMember.id, name });
     }
     router.back();
   };
@@ -181,38 +180,30 @@ export default function MemberActionsScreen() {
               onPress={shareInvite}
             />
           )}
-          {newName === undefined ? (
-            <Button
-              testID="member-action-rename"
-              title={t("group.placeholders.rename")}
-              icon="pencil"
-              variant="outline"
-              onPress={() => setNewName(groupMember.user.name)}
-            />
-          ) : (
+          {renaming ? (
             <>
               <Text className="text-foreground text-sm font-medium">
                 {t("group.placeholders.renameTitle", {
                   name: groupMember.user.name,
                 })}
               </Text>
-              <Input
-                testID="member-rename-input"
-                value={newName}
-                onChangeText={setNewName}
-                maxLength={MAX_PLACEHOLDER_NAME_LENGTH}
+              <PlaceholderNameField
+                defaultName={groupMember.user.name}
+                submitLabel={t("group.placeholders.save")}
+                inputTestID="member-rename-input"
+                buttonTestID="member-rename-save"
                 autoFocus
-                returnKeyType="done"
-                onSubmitEditing={handleRename}
-                submitBehavior="submit"
-              />
-              <Button
-                testID="member-rename-save"
-                title={t("group.placeholders.save")}
-                disabled={newName.trim() === ""}
-                onPress={handleRename}
+                onSubmit={handleRename}
               />
             </>
+          ) : (
+            <Button
+              testID="member-action-rename"
+              title={t("group.placeholders.rename")}
+              icon="pencil"
+              variant="outline"
+              onPress={() => setRenaming(true)}
+            />
           )}
         </View>
       )}
