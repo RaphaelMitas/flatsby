@@ -1,13 +1,12 @@
 import { Suspense, useEffect } from "react";
 import { Text, View } from "react-native";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { FirstList } from "~/components/shoppingList/FirstList";
 import ShoppingList from "~/components/shoppingList/ShoppingList";
 import { ListSwitcher } from "~/components/switcher/ListSwitcher";
-import { SwitcherSettingsButton } from "~/components/switcher/SwitcherSettingsButton";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
@@ -29,7 +28,6 @@ function ListSkeleton() {
 }
 
 function ListTab({ groupId }: { groupId: number }) {
-  const t = useTranslations();
   const {
     selectedShoppingListId,
     selectedShoppingListName,
@@ -64,19 +62,11 @@ function ListTab({ groupId }: { groupId: number }) {
 
   return (
     <>
-      <View className="flex-row items-stretch gap-2 px-4 pt-2 pb-3">
-        <ListSwitcher lists={lists} current={current} className="flex-1" />
-        <SwitcherSettingsButton
-          testID="shopping-list-settings"
-          label={t("shoppingList.switcher.editTitle")}
-          onPress={() =>
-            router.push({
-              pathname: "/(tabs)/shoppingList/edit-list",
-              params: { listId: current.id },
-            })
-          }
-        />
-      </View>
+      <ListSwitcher
+        lists={lists}
+        current={current}
+        className="px-4 pt-2 pb-3"
+      />
       <Suspense
         fallback={
           <View className="flex-1 p-8">

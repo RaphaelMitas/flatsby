@@ -270,7 +270,11 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   return (
     <View className="flex-1">
       <AppScrollView contentContainerClassName="px-5 pb-32" onRefresh={refresh}>
-        <GroupSwitcher testID="home-group-picker" className="mt-2 mb-4" />
+        <GroupSwitcher
+          testID="home-group-picker"
+          settingsTestID="home-group-settings"
+          className="mt-2 mb-4"
+        />
 
         <View className="pr-20">
           <Text

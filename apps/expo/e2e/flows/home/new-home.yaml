@@ -23,6 +23,8 @@ tags:
     timeout: 15000
 # A fresh group has no chores and no debts
 - assertVisible: "Nothing needs you."
+- assertVisible:
+    id: "home-group-settings"
 - runFlow:
     file: ../../subflows/tap-until.yaml
     env:
