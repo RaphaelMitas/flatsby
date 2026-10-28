@@ -81,7 +81,9 @@ export function SettlementPayment({
           size="sm"
           variant="outline"
           title={t("debts.pay.add")}
-          onPress={() => router.push("/settings/profile")}
+          onPress={() =>
+            router.navigate("/(tabs)/settings/profile", { withAnchor: true })
+          }
         />
       </View>
     );
