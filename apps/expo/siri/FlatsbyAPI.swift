@@ -13,12 +13,14 @@ enum FlatsbyAPIError: Error, CustomLocalizedStringResourceConvertible {
   case signedOut
   case noList
   case failed
+  case unconfirmed
 
   var localizedStringResource: LocalizedStringResource {
     switch self {
     case .signedOut: "Open Flatsby to sign in."
     case .noList: "Open a shopping list in Flatsby first."
     case .failed: "Flatsby couldn't add that. Try again in the app."
+    case .unconfirmed: "Flatsby didn't confirm that. Check the list before you try again."
     }
   }
 }
@@ -41,11 +43,11 @@ enum FlatsbyAPI {
   }
 
   private static func call<Output: Decodable>(_ procedure: String, body: Data? = nil) async throws -> Output {
-    guard
-      let base = UserDefaults.standard.string(forKey: baseUrlKey),
-      let url = URL(string: "\(base)/api/trpc/\(procedure)"),
-      let cookie = sessionCookie()
-    else { throw FlatsbyAPIError.signedOut }
+    // Unset until the app's JS has run once on this build
+    let base = UserDefaults.standard.string(forKey: baseUrlKey) ?? "https://www.flatsby.com"
+    guard let url = URL(string: "\(base)/api/trpc/\(procedure)"), let cookie = sessionCookie() else {
+      throw FlatsbyAPIError.signedOut
+    }
 
     var request = URLRequest(url: url)
     request.setValue(cookie, forHTTPHeaderField: "Cookie")
@@ -59,14 +61,22 @@ enum FlatsbyAPI {
     // iOS would add its own stored cookies next to the session cookie
     request.httpShouldHandleCookies = false
 
-    let (data, response) = try await URLSession.shared.data(for: request)
-    if (response as? HTTPURLResponse)?.statusCode == 401 { throw FlatsbyAPIError.signedOut }
-    let result = try JSONDecoder().decode(TRPCResponse<ApiResult<Output>>.self, from: data).result.data.json
+    let result: ApiResult<Output>
+    do {
+      let (data, response) = try await URLSession.shared.data(for: request)
+      if (response as? HTTPURLResponse)?.statusCode == 401 { throw FlatsbyAPIError.signedOut }
+      result = try JSONDecoder().decode(TRPCResponse<ApiResult<Output>>.self, from: data).result.data.json
+    } catch let error as FlatsbyAPIError {
+      throw error
+    } catch {
+      // A write whose answer got lost may still have landed on the server
+      throw body == nil ? FlatsbyAPIError.failed : FlatsbyAPIError.unconfirmed
+    }
     guard result.success, let output = result.data else { throw FlatsbyAPIError.failed }
     return output
   }
 
-  // Where expo-secure-store keeps the @better-auth/expo cookie jar: `${storagePrefix}_cookie`
+  // expo-secure-store's service names ("app" is its legacy alias); the account is better-auth's `${storagePrefix}_cookie`
   private static func sessionCookie() -> String? {
     let jar = ["app:no-auth", "app"].lazy.compactMap(keychainItem).first
     guard let jar, let cookies = try? JSONDecoder().decode([String: StoredCookie].self, from: jar) else { return nil }

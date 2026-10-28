@@ -1,12 +1,11 @@
 import { useEffect } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text } from "react-native";
 import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
+import { TipCard } from "~/components/TipCard";
 import { useBottomSheetPicker } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
-import { Card, CardContent } from "~/lib/ui/card";
-import Icon from "~/lib/ui/custom/icons/Icon";
 import { useHomeVersion } from "~/utils/home-version";
 
 export function HomeInvite() {
@@ -19,31 +18,20 @@ export function HomeInvite() {
   }, [posthog]);
 
   return (
-    <Card testID="home-invite">
-      <CardContent className="gap-3 p-4">
-        <View className="flex-row items-start gap-2">
-          <View className="flex-1 gap-1">
-            <Text className="text-foreground text-base font-bold">
-              {t("title")}
-            </Text>
-            <Text className="text-muted-foreground text-sm">{t("body")}</Text>
-          </View>
-          <Pressable
-            testID="home-invite-dismiss"
-            accessibilityLabel={t("dismiss")}
-            hitSlop={8}
-            onPress={() => switchTo("classic", "invite")}
-          >
-            <Icon name="x" size={18} color="muted-foreground" />
-          </Pressable>
-        </View>
-        <Button
-          testID="home-invite-try"
-          title={t("try")}
-          onPress={() => switchTo("new", "invite")}
-        />
-      </CardContent>
-    </Card>
+    <TipCard
+      testID="home-invite"
+      dismissTestID="home-invite-dismiss"
+      title={t("title")}
+      body={t("body")}
+      dismissLabel={t("dismiss")}
+      onDismiss={() => switchTo("classic", "invite")}
+    >
+      <Button
+        testID="home-invite-try"
+        title={t("try")}
+        onPress={() => switchTo("new", "invite")}
+      />
+    </TipCard>
   );
 }
 

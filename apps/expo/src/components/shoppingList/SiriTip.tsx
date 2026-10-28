@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslations } from "use-intl";
 
-import { Card, CardContent } from "~/lib/ui/card";
-import Icon from "~/lib/ui/custom/icons/Icon";
+import { TipCard } from "~/components/TipCard";
 import { isE2ETestingEnabled } from "~/utils/e2e";
 
 const HAND_ADDS_KEY = "siri_tip_hand_adds";
 const DISMISSED_KEY = "siri_tip_dismissed";
 const MIN_HAND_ADDS = 3;
 
+// After three adds it would appear in the middle of the e2e shopping list flows
 const enabled = Platform.OS === "ios" && !isE2ETestingEnabled();
 
 export function countHandAddedItem() {
@@ -46,23 +46,12 @@ export function SiriTip() {
   };
 
   return (
-    <Card className="mx-4 mt-2 mb-2">
-      <CardContent className="flex-row items-start gap-2 p-4">
-        <View className="flex-1 gap-1">
-          <Text className="text-foreground text-base font-bold">
-            {t("title")}
-          </Text>
-          <Text className="text-muted-foreground text-sm">{t("body")}</Text>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("dismiss")}
-          hitSlop={8}
-          onPress={dismiss}
-        >
-          <Icon name="x" size={18} color="muted-foreground" />
-        </Pressable>
-      </CardContent>
-    </Card>
+    <TipCard
+      className="mx-4 mt-2 mb-2"
+      title={t("title")}
+      body={t("body")}
+      dismissLabel={t("dismiss")}
+      onDismiss={dismiss}
+    />
   );
 }

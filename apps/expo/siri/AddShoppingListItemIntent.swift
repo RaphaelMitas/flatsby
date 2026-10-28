@@ -14,15 +14,8 @@ struct AddShoppingListItemIntent: AppIntent {
     let name = item.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !name.isEmpty else { throw $item.needsValueError() }
 
-    let list: ShoppingListTarget
-    do {
-      list = try await FlatsbyAPI.lastUsedList()
-      try await FlatsbyAPI.addItem(name, to: list)
-    } catch let error as FlatsbyAPIError {
-      throw error
-    } catch {
-      throw FlatsbyAPIError.failed
-    }
+    let list = try await FlatsbyAPI.lastUsedList()
+    try await FlatsbyAPI.addItem(name, to: list)
 
     return .result(
       dialog: "\(name) is now on \(list.listName).",
