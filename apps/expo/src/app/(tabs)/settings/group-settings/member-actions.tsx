@@ -131,6 +131,15 @@ export default function MemberActionsScreen() {
     router.back();
   };
 
+  // A cached code can be dead after a removal or a reset elsewhere
+  const handleInvite = async () => {
+    const invite = await queryClient
+      .fetchQuery(trpc.invite.get.queryOptions({ groupId: group.data.id }))
+      .catch(() => undefined);
+    if (invite?.success) await shareInvite(invite.data.code);
+    else alertFailure(invite?.error.message);
+  };
+
   const handleUndoClaim = (name: string) =>
     Alert.alert(
       t("group.placeholders.undoClaim", { name }),
@@ -183,7 +192,7 @@ export default function MemberActionsScreen() {
               })}
               icon="share"
               variant="outline"
-              onPress={shareInvite}
+              onPress={handleInvite}
             />
           )}
           {renaming ? (

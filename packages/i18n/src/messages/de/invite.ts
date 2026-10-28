@@ -41,7 +41,7 @@ export const invite = {
     iAm: "Ich bin {name}",
     imNew: "Nein, ich bin neu hier",
     joinAs: "Als {name} beitreten",
-    placeholderTaken: "{name} ist gerade schon beigetreten. Wähl noch einmal.",
+    placeholderTaken: "{name} ist nicht mehr frei. Wähl noch einmal.",
     notNow: "Nicht jetzt",
     alreadyMember: "Du bist schon in {group}",
     expiredTitle: "Diese Einladung ist abgelaufen",

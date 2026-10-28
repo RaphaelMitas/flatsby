@@ -114,7 +114,6 @@ export function ExpenseCard({
               )}
               <UserAvatar
                 {...memberPerson(expense.paidByGroupMember)}
-                name={paidByName}
                 size="xs"
               />
               <span className="truncate">

@@ -1,31 +1,23 @@
 import { Share } from "react-native";
-import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import { inviteLink } from "@flatsby/validators/invite";
 
-import { trpc } from "~/utils/api";
 import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export function useShareInvite() {
   const t = useTranslations();
-  const queryClient = useQueryClient();
   const posthog = usePostHog();
   const { selectedGroupId, selectedGroupName } = useShoppingStore();
   const groupId = Number(selectedGroupId) || 0;
 
-  return async () => {
-    // A cached code can be dead after a removal or a reset elsewhere
-    const invite = await queryClient.fetchQuery(
-      trpc.invite.get.queryOptions({ groupId }),
-    );
-    if (!invite.success) return;
+  return async (code: string) => {
     const result = await Share.share({
       message: t("invite.shareMessage", {
         group: selectedGroupName ?? "",
-        link: inviteLink(getBaseUrl(), invite.data.code),
+        link: inviteLink(getBaseUrl(), code),
       }),
     });
     // Android always reports sharedAction; iOS reports dismissing the sheet

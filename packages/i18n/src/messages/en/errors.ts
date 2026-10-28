@@ -42,7 +42,7 @@ export const errors = {
   unauthorized: "You must be logged in to access this resource",
   invalidInviteCode: "That isn't a valid invite code",
   alreadyMember: "This user is already a member of the group",
-  placeholderTaken: "Someone just took this spot",
+  placeholderTaken: "This spot isn't available anymore",
   placeholderNameTaken: "Someone with this name is already listed",
   placeholderCannotBeAdmin: "Only people who have joined can be admins",
   alreadyExists: "This item already exists",

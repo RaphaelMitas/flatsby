@@ -49,7 +49,7 @@ export default function JoinScreen() {
 
   const invite = preview.data?.success ? preview.data.data : null;
   const claim = invite?.placeholders.find(({ id }) => id === picked?.id);
-  // Someone else claimed the picked spot, seen on a refetch or a refused join
+  // The picked spot left the preview, claimed or removed since
   const takenName = invite && picked && !claim ? picked.name : undefined;
 
   const join = useMutation(
@@ -188,7 +188,10 @@ export default function JoinScreen() {
                           testID={`join-claim-option-${id}`}
                           selected={claim?.id === id}
                           disabled={join.isPending}
-                          onPress={() => setPicked({ id, name })}
+                          onPress={() => {
+                            join.reset();
+                            setPicked({ id, name });
+                          }}
                         >
                           <MemberAvatar
                             person={{ name, image: null, placeholder: true }}
@@ -204,7 +207,10 @@ export default function JoinScreen() {
                         testID="join-claim-new"
                         selected={claim === undefined}
                         disabled={join.isPending}
-                        onPress={() => setPicked(undefined)}
+                        onPress={() => {
+                          join.reset();
+                          setPicked(undefined);
+                        }}
                       >
                         <Text className="text-foreground text-sm">
                           {t("invite.join.imNew")}

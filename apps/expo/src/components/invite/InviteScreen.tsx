@@ -100,7 +100,7 @@ export function InviteScreen({
           testID="group-invite-share"
           title={t("invite.shareLink")}
           icon="share"
-          onPress={shareInvite}
+          onPress={() => shareInvite(invite.data.code)}
         />
         <View className="flex-row items-center justify-between">
           <Text className="text-muted-foreground text-xs">

@@ -37,7 +37,7 @@ export const invite = {
     iAm: "I'm {name}",
     imNew: "No, I'm new here",
     joinAs: "Join as {name}",
-    placeholderTaken: "{name} just joined. Pick again.",
+    placeholderTaken: "{name} isn't available anymore. Pick again.",
     notNow: "Not now",
     alreadyMember: "You're already in {group}",
     expiredTitle: "This invite has expired",

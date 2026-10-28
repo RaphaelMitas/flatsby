@@ -27,22 +27,10 @@ tags:
     timeout: 15000
 
 # The second user claims Anna's spot below
-- scrollUntilVisible:
-    element:
-      id: "placeholder-name-input"
-    direction: DOWN
-    centerElement: true
-- tapOn:
-    id: "placeholder-name-input"
-- inputText: "Anna"
-- tapOn:
-    id: "placeholder-add-button"
-# The optimistic row stays disabled until the server returns its id
-- extendedWaitUntil:
-    visible:
-      id: "placeholder-row-Anna"
-      enabled: true
-    timeout: 15000
+- runFlow:
+    file: ../../subflows/add-placeholder.yaml
+    env:
+      NAME: "Anna"
 - scrollUntilVisible:
     element:
       id: "group-invite-button"
