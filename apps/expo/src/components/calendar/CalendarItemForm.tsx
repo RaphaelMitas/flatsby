@@ -61,7 +61,7 @@ import { MemberAvatar } from "../expenses/MemberAvatar";
 import { fromPickerTime, pickerTime } from "./calendarDates";
 import { Chip, useCalendarPeople } from "./CalendarPeople";
 import { calendarPosition } from "./calendarPosition";
-import { calendarRangeOptions } from "./CalendarScreen";
+import { calendarRangeOptions } from "./calendarRangeOptions";
 import { useCalendarMutations } from "./useCalendarMutations";
 
 function FieldLabel({ children }: { children: string }) {
