@@ -29,7 +29,7 @@ runs:
       run: |
         DIR="${DIR/#\~/$HOME}"
         # Only artifacts from this repo's own runs: a fork's run can upload under any name.
-        ART_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=$NAME&per_page=5" \
+        ART_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=$NAME&per_page=100" \
           --jq '[.artifacts[] | select(.expired == false and .workflow_run.head_repository_id == .workflow_run.repository_id)][0].id // empty') \
           || ART_ID=""
         if [ -z "$ART_ID" ]; then

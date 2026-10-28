@@ -161,7 +161,8 @@ jobs:
         with:
           name: ccache-macos
           path: ccache.tar.gz
-          retention-days: 3
+          # Only native-cache misses upload it now, and release.yml reads it too.
+          retention-days: 14
 
       # tar keeps the executable bits that upload-artifact's zip would strip.
       - name: Pack app
