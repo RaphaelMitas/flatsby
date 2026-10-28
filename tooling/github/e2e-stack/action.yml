@@ -37,9 +37,7 @@ runs:
 
     # Ephemeral and per job: every job gets a pristine schema, so shards never
     # see each other's rows. Linux runners have Docker, macOS runners do not.
-    # On macOS, Zonky's prebuilt binaries take seconds where `brew install`
-    # stalled for minutes behind the booting simulator. They ship no client
-    # tools, so single-user mode creates the database.
+    # Zonky's binaries, not brew: brew install stalls for minutes behind the booting simulator.
     - name: Start Postgres
       shell: bash
       env:
@@ -60,6 +58,7 @@ runs:
           PG_BIN="$RUNNER_TEMP/postgres/bin"
           "$PG_BIN/initdb" -D "$RUNNER_TEMP/pgdata" -U postgres --auth=trust \
             --encoding=UTF8 --locale=C
+          # Zonky ships no createdb.
           echo "CREATE DATABASE flatsby" \
             | "$PG_BIN/postgres" --single -D "$RUNNER_TEMP/pgdata" postgres \
               >> "$RUNNER_TEMP/postgres.log" 2>&1

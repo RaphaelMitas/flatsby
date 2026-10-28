@@ -64,8 +64,7 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: xcode-27
     timeout-minutes: 45
-    # app.config.ts reads it, and the fingerprint, prebuild, the expo-constants
-    # build phase and the JS bundle all evaluate app.config.ts.
+    # Read by app.config.ts, which the fingerprint, prebuild, build and bundle all evaluate.
     env:
       E2E_TESTING: "true"
     steps:
@@ -83,10 +82,7 @@ jobs:
           sudo xcode-select -s "$(ls -d /Applications/Xcode_27*.app | sort -V | tail -1)"
           xcodebuild -version
 
-      # The native build only changes with the fingerprint, so a PR that
-      # touches JS alone swaps its bundle into a cached build. The fingerprint
-      # hashes the evaluated config and native packages' package.json, not
-      # app.config.ts or patches/, so those are keyed on top.
+      # The fingerprint hashes the evaluated config, not app.config.ts or patches/.
       - name: Native build cache key
         id: native
         working-directory: apps/expo
@@ -102,13 +98,13 @@ jobs:
         uses: ./tooling/github/restore-artifact
         with:
           name: ${{ steps.native.outputs.name }}
-          dir: .
+          dir: ${{ runner.temp }}/native
 
       - name: Repack cached build with this JS
         id: repack
         if: steps.cached.outputs.hit == 'true'
         continue-on-error: true
-        run: apps/expo/e2e/repack.sh ios Flatsby.app
+        run: apps/expo/e2e/repack.sh ios "$RUNNER_TEMP/native/Flatsby.app"
 
       # CCACHE_BINARY has to be a real env var: React Native's ccache-clang.sh
       # execs it, and the build setting CocoaPods writes never reaches it.
@@ -154,12 +150,10 @@ jobs:
             -derivedDataPath build CODE_SIGN_IDENTITY=- \
             ARCHS=arm64 ONLY_ACTIVE_ARCH=YES build | xcbeautify
           ccache --show-stats
-          rm -rf "$GITHUB_WORKSPACE/Flatsby.app"
-          mv build/Build/Products/Release-iphonesimulator/Flatsby.app "$GITHUB_WORKSPACE/"
-
-      - name: Pack ccache for next run
-        if: steps.repack.outcome != 'success'
-        run: tar -C "$HOME" -czf ccache.tar.gz .ccache
+          tar -C "$HOME" -czf "$GITHUB_WORKSPACE/ccache.tar.gz" .ccache
+          rm -rf "$RUNNER_TEMP/native/Flatsby.app"
+          mkdir -p "$RUNNER_TEMP/native"
+          mv build/Build/Products/Release-iphonesimulator/Flatsby.app "$RUNNER_TEMP/native/"
 
       - name: Upload ccache artifact
         if: steps.repack.outcome != 'success'
@@ -171,7 +165,7 @@ jobs:
 
       # tar keeps the executable bits that upload-artifact's zip would strip.
       - name: Pack app
-        run: tar -czf Flatsby-app.tar.gz Flatsby.app
+        run: tar -C "$RUNNER_TEMP/native" -czf Flatsby-app.tar.gz Flatsby.app
 
       - name: Upload native build for later runs
         if: steps.repack.outcome != 'success'
@@ -292,8 +286,7 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    # app.config.ts reads it, and the fingerprint, prebuild, the expo-constants
-    # Gradle task and the JS bundle all evaluate app.config.ts.
+    # Read by app.config.ts, which the fingerprint, prebuild, build and bundle all evaluate.
     env:
       E2E_TESTING: "true"
     steps:
@@ -307,8 +300,6 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # Same scheme as e2e-ios-build. The cached build keeps the bundle images
-      # Gradle compiled, which repack.sh checks the new bundle against.
       - name: Native build cache key
         id: native
         working-directory: apps/expo
@@ -324,13 +315,13 @@ jobs:
         uses: ./tooling/github/restore-artifact
         with:
           name: ${{ steps.native.outputs.name }}
-          dir: .
+          dir: ${{ runner.temp }}/native
 
       - name: Repack cached build with this JS
         id: repack
         if: steps.cached.outputs.hit == 'true'
         continue-on-error: true
-        run: apps/expo/e2e/repack.sh android app-release.apk bundle-res
+        run: apps/expo/e2e/repack.sh android "$RUNNER_TEMP/native/app-release.apk" "$RUNNER_TEMP/native/bundle-res"
 
       - name: Install NDK
         if: steps.repack.outcome != 'success'
@@ -361,13 +352,11 @@ jobs:
         run: |
           ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon \
             -x lintVitalRelease -x lintVitalAnalyzeRelease -x lintVitalReportRelease
-          mv app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/"
-          rm -rf "$GITHUB_WORKSPACE/bundle-res"
-          cp -R app/build/generated/res/react/release "$GITHUB_WORKSPACE/bundle-res"
-
-      - name: Pack native build for later runs
-        if: steps.repack.outcome != 'success'
-        run: tar -czf android-native.tar.gz app-release.apk bundle-res
+          rm -rf "$RUNNER_TEMP/native"
+          mkdir "$RUNNER_TEMP/native"
+          mv app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/native/"
+          cp -R app/build/generated/res/react/release "$RUNNER_TEMP/native/bundle-res"
+          tar -C "$RUNNER_TEMP/native" -czf "$GITHUB_WORKSPACE/android-native.tar.gz" app-release.apk bundle-res
 
       - name: Upload native build for later runs
         if: steps.repack.outcome != 'success'
@@ -381,7 +370,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: android-e2e-app
-          path: app-release.apk
+          path: ${{ runner.temp }}/native/app-release.apk
           retention-days: 1
 
   e2e-android:
