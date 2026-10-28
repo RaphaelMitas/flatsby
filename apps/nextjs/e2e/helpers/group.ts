@@ -60,17 +60,20 @@ export async function deleteCurrentGroup(page: Page) {
   await page.waitForURL("/group");
 }
 
+// The member list refetches once a member change settles; navigating earlier aborts it
+export const groupRefetched = (page: Page) =>
+  page.waitForResponse(
+    (response) =>
+      response.url().includes("group.getGroup") &&
+      response.request().method() === "GET",
+  );
+
 export async function addPlaceholder(page: Page, name: string) {
   await page.goto("/group/settings");
   const input = page.getByTestId("placeholder-name-input");
   await waitForHydration(input);
   await input.fill(name);
-  // The member list refetches once the add settles; navigating earlier aborts it
-  const saved = page.waitForResponse(
-    (response) =>
-      response.url().includes("group.getGroup") &&
-      response.request().method() === "GET",
-  );
+  const saved = groupRefetched(page);
   await page.getByTestId("placeholder-add-button").click();
   await expect(page.getByTestId(`placeholder-row-${name}`)).toBeVisible();
   await saved;

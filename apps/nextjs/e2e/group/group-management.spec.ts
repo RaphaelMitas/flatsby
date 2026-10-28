@@ -6,6 +6,7 @@ import {
   addPlaceholder,
   createAndSelectGroup,
   deleteCurrentGroup,
+  groupRefetched,
   submitCreateGroupForm,
   uniqueGroupName,
 } from "../helpers/group";
@@ -216,12 +217,7 @@ test.describe("Group Management", () => {
     await memberActions.click();
     await expect(authPage.getByText("Took Anna's spot")).toBeVisible();
     await authPage.getByTestId("member-action-undo-claim").click();
-    // The member list refetches once the undo settles; reloading earlier aborts it
-    const settled = authPage.waitForResponse(
-      (response) =>
-        response.url().includes("group.getGroup") &&
-        response.request().method() === "GET",
-    );
+    const settled = groupRefetched(authPage);
     await authPage.getByTestId("member-undo-claim-confirm").click();
 
     await expect(authPage.getByTestId("placeholder-row-Anna")).toBeVisible();

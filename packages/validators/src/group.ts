@@ -86,18 +86,6 @@ export const placeholderUser = (name: string) => ({
   image: null,
 });
 
-export const groupMemberUserSchema = z.object({
-  email: userEmailSchema.nullable(),
-  name: userNameSchema.nullable(),
-  image: userImageSchema,
-});
-export type GroupMemberUser = z.infer<typeof groupMemberUserSchema>;
-
-export const groupMemberWithUserSchema = groupMemberSchema.extend({
-  user: groupMemberUserSchema,
-});
-export type GroupMemberWithUser = z.infer<typeof groupMemberWithUserSchema>;
-
 export const updateMemberRoleInputSchema = z.object({
   memberId: z.number(),
   newRole: groupMemberRoleSchema,

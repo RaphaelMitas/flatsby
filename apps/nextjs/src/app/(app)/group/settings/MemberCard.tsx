@@ -314,14 +314,12 @@ export const MemberCard = ({
             <AlertTitle>{t("group.members.roleUpdated")}</AlertTitle>
           </Alert>
         )}
-      {inviting && (
-        <InviteDialog
-          groupId={groupId}
-          groupName={groupName}
-          open
-          onOpenChange={setInviting}
-        />
-      )}
+      <InviteDialog
+        groupId={groupId}
+        groupName={groupName}
+        open={inviting}
+        onOpenChange={setInviting}
+      />
       <Dialog open={renaming} onOpenChange={setRenaming}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>

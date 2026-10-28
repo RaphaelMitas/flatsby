@@ -17,7 +17,7 @@ import { CurrentRequest } from "../effect/services/CurrentRequest";
 import { Database } from "../effect/services/Database";
 import { Errors } from "../errors";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { GroupUtils, memberName, memberUserColumns } from "../utils";
+import { GroupUtils, memberName } from "../utils";
 
 const generateCode = () =>
   Array.from(
@@ -87,12 +87,12 @@ const findLiveInvite = Effect.fn("Invites.findLiveInvite")(function* (
             groupMembers: {
               where: (members, { eq }) => eq(members.isActive, true),
               columns: { id: true, userId: true, placeholderName: true },
-              with: { user: { columns: memberUserColumns } },
+              with: { user: { columns: { name: true, image: true } } },
             },
           },
         },
         createdByMember: {
-          with: { user: { columns: memberUserColumns } },
+          with: { user: { columns: { name: true } } },
         },
       },
     }),
@@ -121,7 +121,7 @@ export const inviteRouter = createTRPCRouter({
         ctx,
         Effect.map(findLiveInvite(input.code), ({ group, createdByMember }) => {
           const joined = group.groupMembers.flatMap(({ user }) =>
-            user ? [{ name: user.name, image: user.image }] : [],
+            user ? [user] : [],
           );
           return {
             groupId: group.id,

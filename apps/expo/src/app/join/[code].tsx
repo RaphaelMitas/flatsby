@@ -36,8 +36,7 @@ export default function JoinScreen() {
     ...trpc.invite.preview.queryOptions({ code }),
     enabled: parsed.success,
   });
-  const [claimId, setClaimId] = useState<number>();
-  const [takenName, setTakenName] = useState<string>();
+  const [picked, setPicked] = useState<{ id: number; name: string }>();
 
   const openGroup = (groupId: number, groupName: string) => {
     void queryClient.invalidateQueries(trpc.group.getUserGroups.queryFilter());
@@ -49,7 +48,9 @@ export default function JoinScreen() {
   };
 
   const invite = preview.data?.success ? preview.data.data : null;
-  const claim = invite?.placeholders.find(({ id }) => id === claimId);
+  const claim = invite?.placeholders.find(({ id }) => id === picked?.id);
+  // Someone else claimed the picked spot, seen on a refetch or a refused join
+  const takenName = invite && picked && !claim ? picked.name : undefined;
 
   const join = useMutation(
     trpc.invite.join.mutationOptions({
@@ -59,8 +60,6 @@ export default function JoinScreen() {
           return;
         }
         if (data.error.details.messageKey !== "errors.placeholderTaken") return;
-        setTakenName(claim?.name);
-        setClaimId(undefined);
         void queryClient.invalidateQueries(
           trpc.invite.preview.queryFilter({ code }),
         );
@@ -188,7 +187,8 @@ export default function JoinScreen() {
                           key={id}
                           testID={`join-claim-option-${id}`}
                           selected={claim?.id === id}
-                          onPress={() => setClaimId(id)}
+                          disabled={join.isPending}
+                          onPress={() => setPicked({ id, name })}
                         >
                           <MemberAvatar
                             person={{ name, image: null, placeholder: true }}
@@ -203,7 +203,8 @@ export default function JoinScreen() {
                       <ClaimOption
                         testID="join-claim-new"
                         selected={claim === undefined}
-                        onPress={() => setClaimId(undefined)}
+                        disabled={join.isPending}
+                        onPress={() => setPicked(undefined)}
                       >
                         <Text className="text-foreground text-sm">
                           {t("invite.join.imNew")}
@@ -221,7 +222,7 @@ export default function JoinScreen() {
                     disabled={join.isPending || preview.isFetching}
                     icon={join.isPending ? "loader" : undefined}
                     onPress={() => {
-                      setTakenName(undefined);
+                      setPicked(claim);
                       join.mutate({ code, placeholderId: claim?.id });
                     }}
                   />
@@ -243,11 +244,13 @@ export default function JoinScreen() {
 function ClaimOption({
   testID,
   selected,
+  disabled,
   onPress,
   children,
 }: {
   testID: string;
   selected: boolean;
+  disabled: boolean;
   onPress: () => void;
   children: ReactNode;
 }) {
@@ -255,7 +258,8 @@ function ClaimOption({
     <Pressable
       testID={testID}
       accessibilityRole="radio"
-      accessibilityState={{ checked: selected }}
+      accessibilityState={{ checked: selected, disabled }}
+      disabled={disabled}
       onPress={onPress}
       className={cn(
         "bg-background flex-row items-center gap-3 rounded-xl border-2 p-3",

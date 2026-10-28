@@ -103,7 +103,7 @@ tags:
       id: "dashboard-group-picker"
     timeout: 20000
 
-# The claim takes over Anna's row, so the count stays at two
+# The claim takes over Anna's row, so she leaves the placeholder list
 - tapOn:
     id: "dashboard-group-settings"
 - extendedWaitUntil:
