@@ -189,10 +189,12 @@ export interface DebtPerson {
   placeholder?: boolean;
 }
 
-export const memberPerson = (member: {
+interface PersonMember {
   userId: string | null;
   user: { name: string; image?: string | null };
-}): DebtPerson => ({
+}
+
+export const memberPerson = (member: PersonMember): DebtPerson => ({
   name: member.user.name,
   image: member.user.image ?? null,
   placeholder: isPlaceholder(member),
@@ -201,11 +203,7 @@ export const memberPerson = (member: {
 export type PersonLookup = (groupMemberId: number) => DebtPerson;
 
 export function personLookup(
-  members: {
-    id: number;
-    userId: string | null;
-    user: { name: string; image?: string | null };
-  }[],
+  members: (PersonMember & { id: number })[],
   meId: number,
   t: Translate,
 ): PersonLookup {

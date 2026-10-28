@@ -17,7 +17,8 @@ export function useShareInvite() {
   const groupId = Number(selectedGroupId) || 0;
 
   return async () => {
-    const invite = await queryClient.ensureQueryData(
+    // A cached code can be dead after a removal or a reset elsewhere
+    const invite = await queryClient.fetchQuery(
       trpc.invite.get.queryOptions({ groupId }),
     );
     if (!invite.success) return;

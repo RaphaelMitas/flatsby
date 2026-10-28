@@ -27,7 +27,6 @@ import {
   memberPerson,
 } from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
-import { isPlaceholder } from "@flatsby/validators/group";
 
 import { CurrencyInput } from "~/components/CurrencyInput";
 
@@ -179,9 +178,9 @@ export function SplitEditor({
                 <div key={split.groupMemberId} className="space-y-2">
                   <div className="flex items-center gap-2">
                     <UserAvatar
-                      name={memberName}
-                      image={member?.user.image}
-                      placeholder={member && isPlaceholder(member)}
+                      {...(member
+                        ? memberPerson(member)
+                        : { name: memberName })}
                       size="sm"
                     />
                     <span className="flex-1 text-sm font-medium">
