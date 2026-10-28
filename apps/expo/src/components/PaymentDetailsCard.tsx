@@ -1,11 +1,10 @@
-import type { PaymentDetailsFormValues } from "@flatsby/validators/payment";
+import type {
+  PaymentDetails,
+  PaymentDetailsFormValues,
+} from "@flatsby/validators/payment";
 import { useState } from "react";
 import { Linking, Text, View } from "react-native";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
@@ -36,13 +35,28 @@ import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 
+// Loads on its own so the rest of Profile never waits on it, offline included
 export function PaymentDetailsCard({ userName }: { userName: string }) {
+  const { data } = useQuery(trpc.user.getPaymentDetails.queryOptions());
+  if (!data) return null;
+  return (
+    <PaymentDetailsForm
+      stored={data.success ? data.data : null}
+      userName={userName}
+    />
+  );
+}
+
+function PaymentDetailsForm({
+  stored,
+  userName,
+}: {
+  stored: PaymentDetails | null;
+  userName: string;
+}) {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const [notice, setNotice] = useState<"saved" | "removed" | null>(null);
-
-  const { data } = useSuspenseQuery(trpc.user.getPaymentDetails.queryOptions());
-  const stored = data.success ? data.data : null;
 
   const form = useForm({
     schema: paymentDetailsFormSchema,

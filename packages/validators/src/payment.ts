@@ -107,7 +107,7 @@ export const paymentDetailsSchema = z.object({
   iban: z.string().nullable(),
   paypalHandle: z.string().nullable(),
 });
-type PaymentDetails = z.infer<typeof paymentDetailsSchema>;
+export type PaymentDetails = z.infer<typeof paymentDetailsSchema>;
 
 export const memberPaymentDetailsInputSchema = z.object({
   groupId: z.number(),
