@@ -200,6 +200,35 @@ describe("shoppingListQueue", () => {
     queryClient.unmount();
   });
 
+  it("never sends the temporary id of an item whose create was refused", async () => {
+    onlineManager.setOnline(false);
+    const update = vi.fn(async ({ id }: { id: number }) => ok(id));
+    const { queryClient, queue } = setup({
+      create: vi.fn(async () => notFound),
+      update,
+      delete: vi.fn(),
+    });
+    queryClient.setQueryData(itemsKey, page([]));
+    void new MutationObserver(queryClient, queue.create).mutate({
+      groupId: 1,
+      shoppingListId: 7,
+      name: "Oat milk",
+      categoryId: "dairy",
+    });
+    await vi.waitFor(() => expect(cachedItems(queryClient)).toHaveLength(1));
+    const [added] = cachedItems(queryClient) ?? [];
+    if (!added) throw new Error("no optimistic item");
+    new MutationObserver(queryClient, queue.update)
+      .mutate({ ...added, completed: true })
+      .catch(() => undefined);
+
+    onlineManager.setOnline(true);
+    await settled(queryClient);
+
+    expect(update).not.toHaveBeenCalled();
+    queryClient.unmount();
+  });
+
   it("never sends a change still waiting to retry once sign-out has cleared the cache", async () => {
     vi.useFakeTimers();
     const update = vi.fn(async () => {

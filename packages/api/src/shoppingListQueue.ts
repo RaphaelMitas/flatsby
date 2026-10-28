@@ -87,6 +87,13 @@ export const shoppingListQueue = ({
     queryClient.getQueryData<Record<number, number>>(TEMPORARY_IDS_KEY)?.[id] ??
     id;
 
+  // Still temporary at send time means the server refused the create, so there is nothing to change
+  const serverId = (id: number) => {
+    const resolved = realId(id);
+    if (resolved < 0) throw new Error("The item was never created");
+    return resolved;
+  };
+
   const patchItems = async (
     filters: QueryFilters,
     patch: (
@@ -154,7 +161,7 @@ export const shoppingListQueue = ({
     ...queued,
     mutationKey: keys.update,
     mutationFn: whileQueued((input: UpdateInput) =>
-      send.update({ ...input, id: realId(input.id) }),
+      send.update({ ...input, id: serverId(input.id) }),
     ),
     // An edit form opened before the create synced still holds the temporary id
     onMutate: (input: UpdateInput) =>
@@ -168,7 +175,7 @@ export const shoppingListQueue = ({
     ...queued,
     mutationKey: keys.delete,
     mutationFn: whileQueued((input: DeleteInput) =>
-      send.delete({ id: realId(input.id) }),
+      send.delete({ id: serverId(input.id) }),
     ),
     onMutate: (input: DeleteInput) =>
       patchItems(items(), (data) =>
