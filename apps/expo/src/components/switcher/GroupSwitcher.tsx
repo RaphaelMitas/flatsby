@@ -1,15 +1,12 @@
-import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { PENDING_ID } from "@flatsby/api/resultMutation";
 
-import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { Switcher } from "./Switcher";
-import { SwitcherSettingsButton } from "./SwitcherSettingsButton";
 
 export function GroupSwitcher({
   testIDPrefix,
@@ -33,53 +30,51 @@ export function GroupSwitcher({
     router.navigate("/(tabs)/settings/group-settings", { withAnchor: true });
 
   return (
-    <View className={cn("flex-row items-stretch gap-2", className)}>
-      <Switcher
-        barTestID={`${testIDPrefix}-picker`}
-        sheetTestID="group-switcher"
-        icon="house"
-        title={current?.name ?? selectedGroupName ?? ""}
-        subtitle={current ? memberCount(current.memberCount) : ""}
-        sheetTitle={t("group.switcher.title")}
-        items={groups.map((group) => ({
-          id: group.id,
-          title: group.name,
-          subtitle: memberCount(group.memberCount),
-          // Settings act on the selected group, so only its own row offers them
-          more:
-            group.id === selectedGroupId
-              ? {
-                  label: t("navigation.groupSettings"),
-                  onPress: openSettings,
-                }
-              : undefined,
-        }))}
-        selectedId={selectedGroupId}
-        onSelect={(group) => {
-          if (group.id !== selectedGroupId)
-            setSelectedGroup(group.id, group.title);
-        }}
-        actions={[
-          {
-            testID: "group-switcher-create",
-            icon: "plus",
-            title: t("home.createGroup"),
-            onPress: () => router.push("/(tabs)/home/create-group"),
-          },
-          {
-            testID: "group-switcher-join",
-            icon: "key-round",
-            title: t("invite.join.withCode"),
-            onPress: () => router.push("/join"),
-          },
-        ]}
-        className="flex-1"
-      />
-      <SwitcherSettingsButton
-        testID={`${testIDPrefix}-settings`}
-        label={t("navigation.groupSettings")}
-        onPress={openSettings}
-      />
-    </View>
+    <Switcher
+      barTestID={`${testIDPrefix}-picker`}
+      sheetTestID="group-switcher"
+      icon="house"
+      title={current?.name ?? selectedGroupName ?? ""}
+      subtitle={current ? memberCount(current.memberCount) : ""}
+      sheetTitle={t("group.switcher.title")}
+      items={groups.map((group) => ({
+        id: group.id,
+        title: group.name,
+        subtitle: memberCount(group.memberCount),
+        // Settings act on the selected group, so only its own row offers them
+        more:
+          group.id === selectedGroupId
+            ? {
+                label: t("navigation.groupSettings"),
+                onPress: openSettings,
+              }
+            : undefined,
+      }))}
+      selectedId={selectedGroupId}
+      onSelect={(group) => {
+        if (group.id !== selectedGroupId)
+          setSelectedGroup(group.id, group.title);
+      }}
+      actions={[
+        {
+          testID: "group-switcher-create",
+          icon: "plus",
+          title: t("home.createGroup"),
+          onPress: () => router.push("/(tabs)/home/create-group"),
+        },
+        {
+          testID: "group-switcher-join",
+          icon: "key-round",
+          title: t("invite.join.withCode"),
+          onPress: () => router.push("/join"),
+        },
+      ]}
+      settings={{
+        testID: `${testIDPrefix}-settings`,
+        label: t("navigation.groupSettings"),
+        onPress: openSettings,
+      }}
+      className={className}
+    />
   );
 }

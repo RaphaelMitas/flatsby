@@ -18,6 +18,11 @@ export function ListSwitcher({
   const router = useRouter();
   const { selectedGroupName, setSelectedShoppingList } = useShoppingStore();
   const itemsLeft = (count: number) => t("itemsLeft", { count });
+  const editList = (listId: number) =>
+    router.push({
+      pathname: "/(tabs)/shoppingList/edit-list",
+      params: { listId },
+    });
 
   return (
     <Switcher
@@ -34,11 +39,7 @@ export function ListSwitcher({
         subtitle: itemsLeft(list.uncheckedItemLength),
         more: {
           label: t("switcher.moreFor", { name: list.name }),
-          onPress: () =>
-            router.push({
-              pathname: "/(tabs)/shoppingList/edit-list",
-              params: { listId: list.id },
-            }),
+          onPress: () => editList(list.id),
         },
       }))}
       selectedId={current.id}
@@ -51,6 +52,11 @@ export function ListSwitcher({
           onPress: () => router.push("/(tabs)/shoppingList/create"),
         },
       ]}
+      settings={{
+        testID: "shopping-list-settings",
+        label: t("switcher.editTitle"),
+        onPress: () => editList(current.id),
+      }}
       className={className}
     />
   );

@@ -55,26 +55,19 @@ export const useSwipeActions = ({
   // Gesture Handler 3 fires presses inside the row as a swipe ends, so ignore them until the row closes
   const swiping = useRef(false);
 
+  const renderPanel = (
+    action: SwipeAction | undefined,
+    align: "start" | "end",
+  ) =>
+    action &&
+    ((progress: SharedValue<number>) => (
+      <SwipeActionPanel action={action} progress={progress} align={align} />
+    ));
+
   return {
     swipeableProps: {
-      renderLeftActions: leftAction
-        ? (progress: SharedValue<number>) => (
-            <SwipeActionPanel
-              action={leftAction}
-              progress={progress}
-              align="start"
-            />
-          )
-        : undefined,
-      renderRightActions: rightAction
-        ? (progress: SharedValue<number>) => (
-            <SwipeActionPanel
-              action={rightAction}
-              progress={progress}
-              align="end"
-            />
-          )
-        : undefined,
+      renderLeftActions: renderPanel(leftAction, "start"),
+      renderRightActions: renderPanel(rightAction, "end"),
       onSwipeableOpenStartDrag: () => {
         swiping.current = true;
       },

@@ -17,6 +17,12 @@ interface SwitcherItem {
   more?: { label: string; onPress: () => void };
 }
 
+interface SwitcherSettings {
+  testID: string;
+  label: string;
+  onPress: () => void;
+}
+
 interface SwitcherAction {
   testID: string;
   icon: IconProps["name"];
@@ -36,6 +42,7 @@ export function Switcher({
   selectedId,
   onSelect,
   actions,
+  settings,
   className,
 }: {
   barTestID: string;
@@ -49,6 +56,7 @@ export function Switcher({
   selectedId: number | null;
   onSelect: (item: SwitcherItem) => void;
   actions: SwitcherAction[];
+  settings?: SwitcherSettings;
   className?: string;
 }) {
   const sheetRef = useRef<BottomSheetModal>(null);
@@ -60,35 +68,45 @@ export function Switcher({
 
   return (
     <>
-      <Pressable
-        testID={barTestID}
-        accessible={e2eAccessibilityOverride()}
-        accessibilityRole="button"
-        onPress={() => {
-          setPicked(null);
-          sheetRef.current?.present();
-        }}
-        className={cn(
-          "border-border bg-card active:bg-muted flex-row items-center gap-3 rounded-2xl border p-2.5 shadow-sm",
-          className,
-        )}
-      >
-        <View className="bg-primary size-10 items-center justify-center rounded-xl">
-          <Icon name={icon} size={20} color="primary-foreground" />
-        </View>
-        <View className="flex-1">
-          <Text
-            className="text-foreground text-base font-bold"
-            numberOfLines={1}
+      <View className={cn("flex-row items-stretch gap-2", className)}>
+        <Pressable
+          testID={barTestID}
+          accessible={e2eAccessibilityOverride()}
+          accessibilityRole="button"
+          onPress={() => {
+            setPicked(null);
+            sheetRef.current?.present();
+          }}
+          className="border-border bg-card active:bg-muted flex-1 flex-row items-center gap-3 rounded-2xl border p-2.5 shadow-sm"
+        >
+          <View className="bg-primary size-10 items-center justify-center rounded-xl">
+            <Icon name={icon} size={20} color="primary-foreground" />
+          </View>
+          <View className="flex-1">
+            <Text
+              className="text-foreground text-base font-bold"
+              numberOfLines={1}
+            >
+              {title}
+            </Text>
+            <Text className="text-muted-foreground text-xs">{subtitle}</Text>
+          </View>
+          <View className="bg-muted size-8 items-center justify-center rounded-full">
+            <Icon name="chevrons-up-down" size={16} color="foreground" />
+          </View>
+        </Pressable>
+        {settings && (
+          <Pressable
+            testID={settings.testID}
+            accessibilityRole="button"
+            accessibilityLabel={settings.label}
+            onPress={settings.onPress}
+            className="border-border bg-card active:bg-muted aspect-square items-center justify-center rounded-2xl border shadow-sm"
           >
-            {title}
-          </Text>
-          <Text className="text-muted-foreground text-xs">{subtitle}</Text>
-        </View>
-        <View className="bg-muted size-8 items-center justify-center rounded-full">
-          <Icon name="chevrons-up-down" size={16} color="foreground" />
-        </View>
-      </Pressable>
+            <Icon name="settings" size={20} color="foreground" />
+          </Pressable>
+        )}
+      </View>
       <SheetModal ref={sheetRef} snapPoints={SNAP_POINTS}>
         <ScrollView
           testID={sheetTestID}
