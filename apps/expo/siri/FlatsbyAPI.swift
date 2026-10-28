@@ -43,7 +43,7 @@ enum FlatsbyAPI {
   }
 
   private static func call<Output: Decodable>(_ procedure: String, body: Data? = nil) async throws -> Output {
-    // Unset until the app's JS has run once on this build
+    // Unset until the app has been opened once
     let base = UserDefaults.standard.string(forKey: baseUrlKey) ?? "https://www.flatsby.com"
     guard let url = URL(string: "\(base)/api/trpc/\(procedure)"), let cookie = sessionCookie() else {
       throw FlatsbyAPIError.signedOut
@@ -64,7 +64,10 @@ enum FlatsbyAPI {
     let result: ApiResult<Output>
     do {
       let (data, response) = try await URLSession.shared.data(for: request)
-      if (response as? HTTPURLResponse)?.statusCode == 401 { throw FlatsbyAPIError.signedOut }
+      let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+      if status == 401 { throw FlatsbyAPIError.signedOut }
+      // Refused before anything was written, e.g. a name longer than the validator allows
+      if (400..<500).contains(status) { throw FlatsbyAPIError.failed }
       result = try JSONDecoder().decode(TRPCResponse<ApiResult<Output>>.self, from: data).result.data.json
     } catch let error as FlatsbyAPIError {
       throw error
@@ -76,7 +79,7 @@ enum FlatsbyAPI {
     return output
   }
 
-  // expo-secure-store's service names ("app" is its legacy alias); the account is better-auth's `${storagePrefix}_cookie`
+  // expo-secure-store's service names ("app" is its legacy alias)
   private static func sessionCookie() -> String? {
     let jar = ["app:no-auth", "app"].lazy.compactMap(keychainItem).first
     guard let jar, let cookies = try? JSONDecoder().decode([String: StoredCookie].self, from: jar) else { return nil }
@@ -91,6 +94,7 @@ enum FlatsbyAPI {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,
+      // better-auth's `${storagePrefix}_cookie`
       kSecAttrAccount as String: Data("flatsby_cookie".utf8),
       kSecReturnData as String: true,
       kSecMatchLimit as String: kSecMatchLimitOne,

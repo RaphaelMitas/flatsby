@@ -10,7 +10,7 @@ const HAND_ADDS_KEY = "siri_tip_hand_adds";
 const DISMISSED_KEY = "siri_tip_dismissed";
 const MIN_HAND_ADDS = 3;
 
-// After three adds it would appear in the middle of the e2e shopping list flows
+// It would pop up mid-flow in the e2e shopping list tests
 const enabled = Platform.OS === "ios" && !isE2ETestingEnabled();
 
 export function countHandAddedItem() {
