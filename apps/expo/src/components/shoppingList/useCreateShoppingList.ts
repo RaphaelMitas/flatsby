@@ -2,11 +2,8 @@ import { Alert } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { resultMutation } from "@flatsby/api/resultMutation";
-import {
-  applyListsPatch,
-  shoppingListsPatches,
-} from "@flatsby/api/shoppingListsCache";
+import { patchResultQuery, resultMutation } from "@flatsby/api/resultMutation";
+import { shoppingListsPatches } from "@flatsby/api/shoppingListsCache";
 
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -28,7 +25,7 @@ export function useCreateShoppingList(groupId: number) {
         // The Shopping tab can only open the new list once the cache holds it
         onSuccess: async ({ shoppingListId }, { name }) => {
           await queryClient.cancelQueries({ queryKey: listsKey });
-          applyListsPatch(
+          patchResultQuery(
             queryClient,
             listsKey,
             shoppingListsPatches.added({ id: shoppingListId, name }),

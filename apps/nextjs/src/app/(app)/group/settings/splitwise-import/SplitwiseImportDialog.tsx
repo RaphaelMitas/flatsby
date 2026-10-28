@@ -1,3 +1,5 @@
+"use client";
+
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -52,8 +54,6 @@ import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImp
 
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
-
-("use client");
 
 interface SplitwiseImportDialogProps {
   groupId: number;

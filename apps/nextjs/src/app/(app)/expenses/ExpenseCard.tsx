@@ -1,3 +1,5 @@
+"use client";
+
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import Link from "next/link";
 import {
@@ -19,8 +21,6 @@ import {
   formatExpenseDateShort,
   memberPerson,
 } from "@flatsby/validators/expenses/formatting";
-
-("use client");
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;

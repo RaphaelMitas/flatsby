@@ -196,7 +196,6 @@ tags:
     rightOf: "2 of 2 shares"
 
 # --- Split with a placeholder ---
-# Anna has no account, yet a new expense splits with her like with anyone
 - runFlow:
     file: ../../subflows/tap-tab.yaml
     env:

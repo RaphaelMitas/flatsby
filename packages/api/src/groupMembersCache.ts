@@ -1,11 +1,8 @@
-import type {
-  QueryClient,
-  QueryFilters,
-  QueryKey,
-} from "@tanstack/react-query";
+import type { QueryClient, QueryKey } from "@tanstack/react-query";
 
 import { placeholderUser } from "@flatsby/validators/group";
 
+import type { OptimisticOptions } from "./resultMutation";
 import type { GroupMemberWithUserInfo, GroupWithAccess } from "./types";
 import { optimisticMutation } from "./resultMutation";
 
@@ -56,11 +53,7 @@ export const groupMembersMutation = <TData, TInput>(
   queryClient: QueryClient,
   groupKey: QueryKey,
   patchFor: (input: TInput) => MembersPatch,
-  options?: {
-    onFailure?: (message: string | undefined) => void;
-    onSuccess?: (data: TData, input: TInput) => void;
-    invalidate?: QueryFilters[];
-  },
+  options?: OptimisticOptions<TData, TInput>,
 ) =>
   optimisticMutation<TData, TInput, GroupWithAccess>(
     queryClient,

@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { isPlaceholder } from "@flatsby/validators/group";
+import { hasJoined } from "@flatsby/validators/group";
 
 import { Button } from "~/lib/ui/button";
 import { Card, CardContent } from "~/lib/ui/card";
@@ -31,7 +31,7 @@ export function InviteFlatmatesCard({
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
   const memberCount = group?.success
-    ? group.data.groupMembers.filter((member) => !isPlaceholder(member)).length
+    ? group.data.groupMembers.filter(hasJoined).length
     : undefined;
 
   useEffect(() => {

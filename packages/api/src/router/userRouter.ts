@@ -36,7 +36,7 @@ import { Database } from "../effect/services/Database";
 import { report } from "../effect/toApiResult";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { GroupUtils, memberName, memberUserColumns } from "../utils";
+import { GroupUtils, memberName } from "../utils";
 import { autumn, checkCredits } from "../utils/autumn";
 
 const freePlan = {
@@ -249,7 +249,6 @@ export const userRouter = createTRPCRouter({
                       groupId: true,
                       role: true,
                       joinedOn: true,
-                      placeholderName: true,
                     },
                     with: {
                       group: {
@@ -279,19 +278,8 @@ export const userRouter = createTRPCRouter({
                     groupId,
                     role,
                     group,
-                    placeholderName,
                   } = membership;
                   const isAdmin = role === "admin";
-                  // A claimed spot turns back into its placeholder, so the history it came with stays
-                  const leaveGroup = () =>
-                    placeholderName === null
-                      ? trx
-                          .delete(groupMembers)
-                          .where(eq(groupMembers.id, groupMemberId))
-                      : trx
-                          .update(groupMembers)
-                          .set({ userId: null, role: "member" })
-                          .where(eq(groupMembers.id, groupMemberId));
 
                   const otherMembers = group.groupMembers;
                   const otherAdmins = otherMembers.filter(
@@ -305,7 +293,9 @@ export const userRouter = createTRPCRouter({
                     if (otherAdmins.length > 0) {
                       // There are other admins, so we can safely remove the user
                       // Remove the user's membership
-                      await leaveGroup();
+                      await trx
+                        .delete(groupMembers)
+                        .where(eq(groupMembers.id, groupMemberId));
                     } else if (otherMembers.length > 0) {
                       // The user is the last admin but there are other members
                       // Promote the member who joined first to admin
@@ -322,14 +312,18 @@ export const userRouter = createTRPCRouter({
                         .set({ role: "admin" })
                         .where(eq(groupMembers.id, newAdmin.id));
 
-                      await leaveGroup();
+                      await trx
+                        .delete(groupMembers)
+                        .where(eq(groupMembers.id, groupMemberId));
                     } else {
                       // The user is the last member and admin
                       await GroupUtils.deleteGroupData(trx, groupId);
                     }
                   } else {
                     // The user is not an admin, simply remove their membership
-                    await leaveGroup();
+                    await trx
+                      .delete(groupMembers)
+                      .where(eq(groupMembers.id, groupMemberId));
                   }
                 }
 
@@ -512,7 +506,7 @@ export const userRouter = createTRPCRouter({
                           placeholderName: true,
                           isActive: true,
                         },
-                        with: { user: { columns: memberUserColumns } },
+                        with: { user: { columns: { name: true } } },
                       },
                     },
                   },

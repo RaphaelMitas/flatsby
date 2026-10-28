@@ -40,7 +40,6 @@ export function PlaceholderMembers({
           toast.error(t("common.error"), {
             description: message ?? t("errors.unexpected"),
           }),
-        invalidate: [trpc.group.getUserGroups.queryFilter()],
       }),
     ),
   );

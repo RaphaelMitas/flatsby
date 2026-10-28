@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
-import { isPlaceholder } from "@flatsby/validators/group";
+import { hasJoined } from "@flatsby/validators/group";
 
 import { useTRPC } from "~/trpc/react";
 import { InviteDialog } from "./InviteDialog";
@@ -49,17 +49,15 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
             <InviteDialog groupId={groupId} groupName={group.data.name} />
           )}
           <div className="grid gap-4">
-            {group.data.groupMembers
-              .filter((member) => !isPlaceholder(member))
-              .map((groupMember) => (
-                <MemberCard
-                  key={groupMember.id}
-                  groupId={groupId}
-                  groupName={group.data.name}
-                  groupMember={groupMember}
-                  currentUserGroupMember={group.data.thisGroupMember}
-                />
-              ))}
+            {group.data.groupMembers.filter(hasJoined).map((groupMember) => (
+              <MemberCard
+                key={groupMember.id}
+                groupId={groupId}
+                groupName={group.data.name}
+                groupMember={groupMember}
+                currentUserGroupMember={group.data.thisGroupMember}
+              />
+            ))}
           </div>
           <PlaceholderMembers
             groupId={groupId}

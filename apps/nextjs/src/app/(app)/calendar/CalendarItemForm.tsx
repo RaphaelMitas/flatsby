@@ -1,3 +1,5 @@
+"use client";
+
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import type {
   CalendarColor,
@@ -53,8 +55,6 @@ import { memberPerson } from "@flatsby/validators/expenses/formatting";
 
 import { Chip } from "./CalendarPeople";
 import { DatePopover } from "./DatePopover";
-
-("use client");
 
 interface CalendarItemFormProps {
   groupId: number;

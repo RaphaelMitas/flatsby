@@ -22,7 +22,7 @@ import type {
 } from "@flatsby/validators/chat/tools";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 
-import { and, asc, desc, eq } from "@flatsby/db";
+import { and, asc, desc, eq, isNotNull } from "@flatsby/db";
 import {
   expenses,
   groupMembers,
@@ -334,6 +334,7 @@ export async function executeSearchData(
         where: and(
           eq(groupMembers.groupId, groupId),
           eq(groupMembers.isActive, true),
+          isNotNull(groupMembers.userId),
         ),
       });
 

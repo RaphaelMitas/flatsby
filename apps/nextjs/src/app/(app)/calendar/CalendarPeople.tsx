@@ -1,3 +1,5 @@
+"use client";
+
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import type { Occurrence } from "@flatsby/validators/calendar";
 import type { ReactNode } from "react";
@@ -7,8 +9,6 @@ import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { memberPerson } from "@flatsby/validators/expenses/formatting";
-
-("use client");
 
 export type MemberLookup = Map<number, GroupMemberWithUserInfo>;
 

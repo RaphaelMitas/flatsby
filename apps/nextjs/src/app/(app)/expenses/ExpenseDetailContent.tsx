@@ -1,3 +1,5 @@
+"use client";
+
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import { Calendar, Edit, Handshake, Trash2, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -25,8 +27,6 @@ import {
 } from "@flatsby/validators/expenses/formatting";
 
 import { RateSourceInfo } from "./RateSourceInfo";
-
-("use client");
 
 interface ExpenseDetailContentProps {
   expense: ExpenseWithSplitsAndMembers;

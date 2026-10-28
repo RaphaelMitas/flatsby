@@ -130,7 +130,13 @@ export const MemberCard = ({
         queryClient,
         groupKey,
         groupMembersPatches.claimUndone,
-        { onFailure: toastFailure, invalidate: memberNameQueries },
+        {
+          onFailure: toastFailure,
+          invalidate: [
+            ...memberNameQueries,
+            trpc.group.getUserGroups.queryFilter(),
+          ],
+        },
       ),
     ),
   );

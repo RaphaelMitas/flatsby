@@ -14,7 +14,7 @@ import {
   restoreSnapshot,
   resultMutation,
 } from "@flatsby/api/resultMutation";
-import { isPlaceholder } from "@flatsby/validators/group";
+import { hasJoined } from "@flatsby/validators/group";
 
 import { MemberRow } from "~/components/members/MemberRow";
 import { PlaceholderMembers } from "~/components/members/PlaceholderMembers";
@@ -150,9 +150,7 @@ export default function MembersScreen() {
 
   const me = group.data.thisGroupMember;
   const isAdmin = me.role === "admin";
-  const joinedMembers = group.data.groupMembers.filter(
-    (member) => !isPlaceholder(member),
-  );
+  const joinedMembers = group.data.groupMembers.filter(hasJoined);
 
   return (
     <AppScrollView>

@@ -41,7 +41,6 @@ export function PlaceholderMembers({
     trpc.group.addPlaceholder.mutationOptions(
       groupMembersMutation(queryClient, groupKey, groupMembersPatches.added, {
         onFailure: (message) => setFailure(message ?? t("errors.unexpected")),
-        invalidate: [trpc.group.getUserGroups.queryFilter()],
       }),
     ),
   );

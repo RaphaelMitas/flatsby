@@ -60,6 +60,21 @@ export const failureOf = (
   return undefined;
 };
 
+export const patchResultQuery = <TCached>(
+  queryClient: QueryClient,
+  queryKey: QueryKey,
+  patch: (cached: TCached) => TCached,
+) =>
+  queryClient.setQueryData<ApiResult<TCached>>(queryKey, (old) =>
+    old?.success ? { ...old, data: patch(old.data) } : old,
+  );
+
+export interface OptimisticOptions<TData, TInput> {
+  onFailure?: (message: string | undefined) => void;
+  onSuccess?: (data: TData, input: TInput) => void;
+  invalidate?: QueryFilters[];
+}
+
 export const optimisticMutation = <TData, TInput, TCached>(
   queryClient: QueryClient,
   queryKey: QueryKey,
@@ -68,19 +83,13 @@ export const optimisticMutation = <TData, TInput, TCached>(
     onFailure,
     onSuccess,
     invalidate = [],
-  }: {
-    onFailure?: (message: string | undefined) => void;
-    onSuccess?: (data: TData, input: TInput) => void;
-    invalidate?: QueryFilters[];
-  } = {},
+  }: OptimisticOptions<TData, TInput> = {},
 ) =>
   resultMutation({
     onMutate: async (input: TInput) => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData(queryKey);
-      queryClient.setQueryData<ApiResult<TCached>>(queryKey, (old) =>
-        old?.success ? { ...old, data: patchFor(input)(old.data) } : old,
-      );
+      patchResultQuery(queryClient, queryKey, patchFor(input));
       return [{ queryKey, previous }];
     },
     rollback: restoreSnapshot(queryClient),

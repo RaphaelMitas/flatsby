@@ -1,19 +1,10 @@
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
 
-import type { ApiResult } from "./errors";
+import type { OptimisticOptions } from "./resultMutation";
 import type { ShoppingListSummary } from "./types";
 import { optimisticMutation } from "./resultMutation";
 
 type ListsPatch = (lists: ShoppingListSummary[]) => ShoppingListSummary[];
-
-export const applyListsPatch = (
-  queryClient: QueryClient,
-  listsKey: QueryKey,
-  patch: ListsPatch,
-) =>
-  queryClient.setQueryData<ApiResult<ShoppingListSummary[]>>(listsKey, (old) =>
-    old?.success ? { ...old, data: patch(old.data) } : old,
-  );
 
 export const shoppingListsPatches = {
   added:
@@ -44,10 +35,7 @@ export const shoppingListsMutation = <TData, TInput>(
   queryClient: QueryClient,
   listsKey: QueryKey,
   patchFor: (input: TInput) => ListsPatch,
-  options: {
-    onFailure: (message: string | undefined) => void;
-    onSuccess?: (data: TData, input: TInput) => void;
-  },
+  options: OptimisticOptions<TData, TInput>,
 ) =>
   optimisticMutation<TData, TInput, ShoppingListSummary[]>(
     queryClient,

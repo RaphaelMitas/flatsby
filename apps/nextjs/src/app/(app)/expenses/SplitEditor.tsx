@@ -1,3 +1,5 @@
+"use client";
+
 import type { GroupWithAccess } from "@flatsby/api";
 import type { ConvertibleExpense } from "@flatsby/validators/expenses/conversion";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
@@ -28,8 +30,6 @@ import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 import { isPlaceholder } from "@flatsby/validators/group";
 
 import { CurrencyInput } from "~/components/CurrencyInput";
-
-("use client");
 
 const SPLIT_METHOD_OPTIONS = [
   { method: "equal", Icon: Equal },

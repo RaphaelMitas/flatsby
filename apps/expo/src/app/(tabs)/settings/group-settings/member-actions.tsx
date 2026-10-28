@@ -79,7 +79,13 @@ export default function MemberActionsScreen() {
         queryClient,
         groupKey,
         groupMembersPatches.claimUndone,
-        { onFailure: alertFailure, invalidate: memberNameQueries },
+        {
+          onFailure: alertFailure,
+          invalidate: [
+            ...memberNameQueries,
+            trpc.group.getUserGroups.queryFilter(),
+          ],
+        },
       ),
     ),
   );

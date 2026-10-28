@@ -26,7 +26,7 @@ tags:
       id: "group-invite-button"
     timeout: 15000
 
-# Anna has no account yet; the second user claims her spot below
+# The second user claims Anna's spot below
 - scrollUntilVisible:
     element:
       id: "placeholder-name-input"

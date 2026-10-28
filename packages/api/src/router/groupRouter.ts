@@ -274,7 +274,6 @@ export const groupRouter = createTRPCRouter({
                   .where(
                     and(
                       eq(groupMembers.id, target.id),
-                      eq(groupMembers.isActive, true),
                       target.userId === null
                         ? isNull(groupMembers.userId)
                         : eq(groupMembers.userId, target.userId),
@@ -285,7 +284,7 @@ export const groupRouter = createTRPCRouter({
                 if (!deactivated)
                   return Errors.conflict("errors.placeholderTaken");
                 await GroupUtils.detachMemberFromItems(trx, target.id);
-                // A placeholder can't use a link, so keep the one the group was just sent
+                // A placeholder never held the link, so the group's live one stays
                 if (target.userId === null) return { success: true };
                 // Removal kills the live link so they can't rejoin; leaving only kills links the leaver created
                 await trx
