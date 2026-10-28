@@ -210,15 +210,10 @@ jobs:
         with:
           device: "^iPhone [0-9]+ Pro Max$"
 
-      - name: "Probe: sample CPU and time the simulator boot"
-        env:
-          UDID: ${{ steps.sim.outputs.udid }}
+      - name: "Probe: quiet diagnosticd and sample load"
         run: |
-          DIAG=apps/expo/e2e/results/diagnostics
-          mkdir -p "$DIAG"
-          date -u +"%T boot requested" > "$DIAG/boot.log"
-          nohup bash -c "xcrun simctl bootstatus $UDID > /dev/null 2>&1; date -u +'%T boot complete'" >> "$DIAG/boot.log" 2>&1 &
-          nohup bash -c 'while true; do echo "=== $(date -u +%T)"; top -l 2 -s 1 -n 10 -o cpu -stats pid,command,cpu,mem | awk "/^Processes/{n++} n==2"; sleep 15; done' > "$DIAG/top.log" 2>&1 &
+          nohup bash apps/expo/e2e/probe-load.sh "${{ steps.sim.outputs.udid }}" \
+            "$PWD/apps/expo/e2e/results/diagnostics" > /dev/null 2>&1 &
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
