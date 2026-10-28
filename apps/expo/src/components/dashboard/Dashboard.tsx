@@ -70,7 +70,10 @@ function DashboardContent() {
   return (
     <AppScrollView className="flex-1" onRefresh={handleRefresh}>
       <View className="flex flex-col gap-6 p-2">
-        <GroupSwitcher testIDPrefix="dashboard-group" />
+        <GroupSwitcher
+          testID="dashboard-group-picker"
+          settingsTestID="dashboard-group-settings"
+        />
 
         <InviteFlatmatesCard groupId={selectedGroupId} />
 

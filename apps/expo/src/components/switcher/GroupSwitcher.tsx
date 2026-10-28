@@ -9,10 +9,12 @@ import { useShoppingStore } from "~/utils/shopping-store";
 import { Switcher } from "./Switcher";
 
 export function GroupSwitcher({
-  testIDPrefix,
+  testID,
+  settingsTestID,
   className,
 }: {
-  testIDPrefix: string;
+  testID: string;
+  settingsTestID: string;
   className?: string;
 }) {
   const t = useTranslations();
@@ -31,7 +33,7 @@ export function GroupSwitcher({
 
   return (
     <Switcher
-      barTestID={`${testIDPrefix}-picker`}
+      barTestID={testID}
       sheetTestID="group-switcher"
       icon="house"
       title={current?.name ?? selectedGroupName ?? ""}
@@ -70,7 +72,7 @@ export function GroupSwitcher({
         },
       ]}
       settings={{
-        testID: `${testIDPrefix}-settings`,
+        testID: settingsTestID,
         label: t("navigation.groupSettings"),
         onPress: openSettings,
       }}
