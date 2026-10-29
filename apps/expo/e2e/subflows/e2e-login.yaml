@@ -1,8 +1,9 @@
 appId: ${APP_ID}
 ---
 # Shared subflow: creates an isolated e2e user + session and relaunches the
-# app authenticated. Mirrors the web suite's fixtures/auth.ts. Overwrites
-# maestro.copiedText.
+# app authenticated, or with E2E_SIGNED_OUT only points the app at
+# E2E_API_URL and relaunches on the login screen. Mirrors the web suite's
+# fixtures/auth.ts. Overwrites maestro.copiedText.
 #
 # Requires env vars (passed via `maestro test -e`):
 #   E2E_API_URL            - the server to test against
