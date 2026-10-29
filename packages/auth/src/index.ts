@@ -102,6 +102,8 @@ export function initAuth(options: {
         "/sign-in/email-otp": { window: 60, max: 10 },
         // Flatmates on one Wi-Fi share an IP; the per-address cap still bounds mail to any one inbox
         [SEND_CODE_PATH]: { window: 60, max: 10 },
+        // The built-in 3 per 10s now counts across instances, which a household signing in together would hit
+        "/sign-in/social": { window: 60, max: 10 },
       },
     },
     socialProviders: {

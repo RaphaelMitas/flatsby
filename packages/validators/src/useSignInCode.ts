@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { msg } from "@flatsby/i18n/message-key";
 
-import type { AuthError } from "./login";
+import type { AuthError, LoginFailureStage } from "./login";
 import type { SignedInUser } from "./user";
 import {
   codeFromText,
@@ -28,7 +28,10 @@ export interface SignInCodeClient {
   }>;
 }
 
-export type OnCodeFailed = (stage: "start" | "code", errorCode: string) => void;
+export type OnCodeFailed = (
+  stage: LoginFailureStage,
+  errorCode: string,
+) => void;
 
 async function requestSignInCode(
   client: SignInCodeClient,

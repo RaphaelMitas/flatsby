@@ -1,6 +1,10 @@
 import { z } from "zod/v4";
 
-import { loginErrorCode, loginMethodSchema } from "@flatsby/validators/login";
+import {
+  loginErrorCode,
+  loginFailureStageSchema,
+  loginMethodSchema,
+} from "@flatsby/validators/login";
 
 import { MAX_LENGTH } from "~/utils/error-beacon";
 
@@ -18,7 +22,7 @@ export const loginEventSchema = z.discriminatedUnion("event", [
   z.object({
     ...attempt,
     event: z.literal("login_failed"),
-    stage: z.enum(["start", "code"]).default("start"),
+    stage: loginFailureStageSchema.default("start"),
     error_code: z.string().transform(loginErrorCode),
   }),
   z.object({

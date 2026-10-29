@@ -10,6 +10,9 @@ export const loginMethodSchema = z.enum([
   "email",
 ]);
 
+export const loginFailureStageSchema = z.enum(["start", "code"]);
+export type LoginFailureStage = z.infer<typeof loginFailureStageSchema>;
+
 export const SIGN_IN_CODE_LENGTH = 6;
 export const SIGN_IN_CODE_GROUP = SIGN_IN_CODE_LENGTH / 2;
 export const SIGN_IN_CODE_RESEND_SECONDS = 30;
