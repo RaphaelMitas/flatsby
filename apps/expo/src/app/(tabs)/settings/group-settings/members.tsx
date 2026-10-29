@@ -34,7 +34,7 @@ export default function MembersScreen() {
     id: Number(selectedGroupId) || 0,
   });
 
-  const { data: group } = useSuspenseQuery(
+  const { data: group, refetch } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({
       id: Number(selectedGroupId) || 0,
     }),
@@ -153,7 +153,7 @@ export default function MembersScreen() {
   const joinedMembers = group.data.groupMembers.filter(hasJoined);
 
   return (
-    <AppScrollView>
+    <AppScrollView onRefresh={refetch}>
       {/* Header */}
       <View className="bg-background px-4 py-6">
         <Text className="text-foreground text-2xl font-bold">
