@@ -85,7 +85,7 @@ function ScreenTracker() {
 }
 
 // Sign-in only stores the cookie and refetches; the index route is what leaves
-// login for home or a remembered invite. Mounted with the stack, so a cold
+// login for home, the name step, or a remembered invite. Mounted with the stack, so a cold
 // start's first session doesn't count as a sign-in.
 function SignInNavigator() {
   const userId = useSession().data?.user.id;
