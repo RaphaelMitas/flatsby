@@ -3,9 +3,11 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { createAuthSession } from "../fixtures/auth";
+import { waitForHydration } from "../helpers/hydration";
 
 async function requestCode(page: Page, email: string) {
   await page.goto("/auth/login");
+  await waitForHydration(page.getByTestId("auth-login-email-button"));
   await page.getByTestId("auth-login-email-input").fill(email);
   await page.getByTestId("auth-login-email-button").click();
   await expect(page.getByTestId("auth-code-step")).toBeVisible();
@@ -32,6 +34,7 @@ test.describe("Email code sign-in", () => {
       email.split("@")[0] ?? "",
     );
 
+    await waitForHydration(page.getByTestId("auth-name-continue"));
     await page.getByTestId("auth-name-input").fill("Code User");
     await page.getByTestId("auth-name-continue").click();
     // A new account has no household yet, so the app offers to create or join one

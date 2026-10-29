@@ -1,12 +1,7 @@
 "use client";
 
-import type { MessageKey } from "@flatsby/i18n/message-key";
-import type {
-  LoginAttempt,
-  LoginMethod,
-  LoginProvider,
-} from "@flatsby/validators/login";
-import { useState } from "react";
+import type { LoginAttempt, LoginProvider } from "@flatsby/validators/login";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { uuidv7 } from "@posthog/core";
 import { useLocale, useTranslations } from "next-intl";
@@ -20,8 +15,7 @@ import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
 import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
-import { userEmailSchema } from "@flatsby/validators/user";
-import { requestSignInCode } from "@flatsby/validators/useSignInCode";
+import { useSendSignInCode } from "@flatsby/validators/useSignInCode";
 
 import type { EmailAttempt } from "./EmailCode";
 import { signIn, signInCode } from "~/auth/client";
@@ -31,10 +25,33 @@ import { sendLoginEvent } from "./send-login-event";
 const Login = ({ callbackURL }: { callbackURL: string }) => {
   const t = useTranslations();
   const locale = useLocale();
-  const [loading, setLoading] = useState<LoginMethod | "false">("false");
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState<MessageKey | null>(null);
+  const [loading, setLoading] = useState<LoginProvider | "false">("false");
   const [codeAttempt, setCodeAttempt] = useState<EmailAttempt | null>(null);
+  const emailEvent = useRef<EmailAttempt["event"]>({
+    provider: "email",
+    attempt_id: "",
+    url: "",
+  });
+  const emailStep = useSendSignInCode({
+    client: signInCode,
+    onTapped: () => {
+      emailEvent.current = {
+        provider: "email",
+        attempt_id: uuidv7(),
+        url: window.location.href,
+      };
+      sendLoginEvent({ ...emailEvent.current, event: "login_provider_tapped" });
+    },
+    onFailed: (stage, errorCode) =>
+      sendLoginEvent({
+        ...emailEvent.current,
+        event: "login_failed",
+        stage,
+        error_code: errorCode,
+      }),
+    onSent: (email) => setCodeAttempt({ email, event: emailEvent.current }),
+  });
+  const busy = loading !== "false" || emailStep.sending;
 
   const signInWith = async (provider: LoginProvider) => {
     const attempt = {
@@ -69,42 +86,6 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
     }
   };
 
-  const sendCode = async () => {
-    const parsed = userEmailSchema.safeParse(email.trim());
-    if (!parsed.success) {
-      setEmailError("settings.validation.emailInvalid");
-      return;
-    }
-    const attempt: EmailAttempt = {
-      email: parsed.data,
-      event: {
-        provider: "email",
-        attempt_id: uuidv7(),
-        url: window.location.href,
-      },
-    };
-    sendLoginEvent({ ...attempt.event, event: "login_provider_tapped" });
-    setEmailError(null);
-    setLoading("email");
-    const failure = await requestSignInCode(
-      signInCode,
-      parsed.data,
-      (stage, errorCode) =>
-        sendLoginEvent({
-          ...attempt.event,
-          event: "login_failed",
-          stage,
-          error_code: errorCode,
-        }),
-    );
-    setLoading("false");
-    if (failure) {
-      setEmailError(failure);
-      return;
-    }
-    setCodeAttempt(attempt);
-  };
-
   return (
     <div className="bg-background flex h-screen w-full items-center justify-center">
       <div className="bg-muted flex w-full max-w-sm flex-col gap-6 rounded-lg p-8">
@@ -134,36 +115,37 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                 noValidate
                 onSubmit={(event) => {
                   event.preventDefault();
-                  void sendCode();
+                  void emailStep.send();
                 }}
               >
                 <Input
                   type="email"
-                  name="email"
                   autoComplete="username email"
                   inputMode="email"
                   aria-label={t("auth.login.email")}
-                  aria-invalid={emailError !== null}
+                  aria-invalid={emailStep.error !== null}
                   placeholder={t("auth.login.emailPlaceholder")}
                   className="bg-background"
                   data-testid="auth-login-email-input"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  value={emailStep.email}
+                  onChange={(event) =>
+                    emailStep.changeEmail(event.target.value)
+                  }
                 />
-                {emailError && (
+                {emailStep.error && (
                   <p
                     className="text-destructive text-sm"
                     data-testid="auth-login-email-error"
                   >
-                    {t(emailError)}
+                    {t(emailStep.error)}
                   </p>
                 )}
                 <Button
                   type="submit"
                   data-testid="auth-login-email-button"
-                  disabled={loading !== "false"}
+                  disabled={busy}
                 >
-                  {loading === "email" ? (
+                  {emailStep.sending ? (
                     <>
                       <LoadingSpinner className="mr-2" />
                       {t("auth.login.sendingCode")}
@@ -185,7 +167,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                   className="flex-1"
                   data-testid="auth-login-google-button"
                   onClick={() => signInWith("google")}
-                  disabled={loading !== "false"}
+                  disabled={busy}
                 >
                   {loading === "google" ? (
                     <LoadingSpinner className="mr-2" />
@@ -200,7 +182,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                   className="flex-1"
                   data-testid="auth-login-apple-button"
                   onClick={() => signInWith("apple")}
-                  disabled={loading !== "false"}
+                  disabled={busy}
                 >
                   {loading === "apple" ? (
                     <LoadingSpinner className="mr-2" />

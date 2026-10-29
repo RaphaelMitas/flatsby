@@ -2,7 +2,7 @@ appId: ${APP_ID}
 tags:
   - auth
 ---
-# Mirrors apps/nextjs/e2e/auth/email-code.spec.ts
+# Mirrors the sign-up test in apps/nextjs/e2e/auth/email-code.spec.ts
 - runFlow:
     file: ../../subflows/e2e-login.yaml
     env:

@@ -18,7 +18,7 @@ import {
 import { Input } from "~/lib/ui/input";
 import { trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
-import { finishNameStep } from "~/utils/auth/name-step";
+import { finishNameStep } from "~/utils/auth/post-login-path";
 
 export default function NameScreen() {
   const t = useTranslations();

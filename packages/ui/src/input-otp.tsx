@@ -85,11 +85,8 @@ function InputOTPGroups({
   invalid?: boolean;
   slotClassName?: string;
 }) {
-  const groups = Array.from({ length: Math.ceil(length / groupSize) }, (_, g) =>
-    Array.from(
-      { length: Math.min(groupSize, length - g * groupSize) },
-      (_, i) => g * groupSize + i,
-    ),
+  const groups = Array.from({ length: length / groupSize }, (_, g) =>
+    Array.from({ length: groupSize }, (_, i) => g * groupSize + i),
   );
   return groups.map((slots, group) => (
     <React.Fragment key={slots.join()}>

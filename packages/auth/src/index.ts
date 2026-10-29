@@ -7,11 +7,15 @@ import { nextCookies } from "better-auth/next-js";
 import { emailOTP, oAuthProxy, testUtils } from "better-auth/plugins";
 
 import { db } from "@flatsby/db/client";
+import { SIGN_IN_CODE_TTL_SECONDS } from "@flatsby/validators/login";
 import { defaultUserName } from "@flatsby/validators/user";
 
 import { allowSignInCode } from "./sign-in-code-limit";
 
 const SEND_CODE_PATH = "/email-otp/send-verification-otp";
+
+// Better Auth logs a failed send and answers success, so the after hook turns it back into an error
+const failedSends = new WeakSet<Request>();
 
 export interface SignInCode {
   email: string;
@@ -57,16 +61,22 @@ export function initAuth(options: {
       }),
       expo(),
       emailOTP({
-        expiresIn: 300,
+        expiresIn: SIGN_IN_CODE_TTL_SECONDS,
         storeOTP: "encrypted",
         // A resend after a slow first email keeps that email's code valid
         resendStrategy: "reuse",
-        sendVerificationOTP: ({ email, otp }, ctx) =>
-          options.sendSignInCode({
-            email,
-            code: otp,
-            headers: ctx?.headers ?? ctx?.request?.headers,
-          }),
+        sendVerificationOTP: async ({ email, otp }, ctx) => {
+          try {
+            await options.sendSignInCode({
+              email,
+              code: otp,
+              headers: ctx?.headers ?? ctx?.request?.headers,
+            });
+          } catch (error) {
+            if (ctx?.request) failedSends.add(ctx.request);
+            throw error;
+          }
+        },
       }),
       nextCookies(),
       ...(options.enableTestUtils ? [testUtils()] : []),
@@ -85,8 +95,12 @@ export function initAuth(options: {
       enabled: limitRequests,
       storage: "database",
       modelName: "rateLimits",
-      // Every app open checks the session; a write per check buys nothing
-      customRules: { "/get-session": false },
+      customRules: {
+        // Every app open checks the session; a write per check buys nothing
+        "/get-session": false,
+        // Above the 3 tries a code allows, so a 4th wrong code reads as spent rather than rate limited
+        "/sign-in/email-otp": { window: 60, max: 10 },
+      },
     },
     socialProviders: {
       google: {
@@ -118,8 +132,14 @@ export function initAuth(options: {
           throw new APIError("TOO_MANY_REQUESTS");
         }
       }),
-      // Every outcome Better Auth handles leaves the callback as a redirect, so it's read from the location
       after: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === SEND_CODE_PATH) {
+          if (ctx.request && failedSends.has(ctx.request)) {
+            throw new APIError("BAD_GATEWAY", { code: "SEND_FAILED" });
+          }
+          return;
+        }
+        // Every outcome Better Auth handles leaves the callback as a redirect, so it's read from the location
         const providerId = ctx.params?.id;
         const location = ctx.context.responseHeaders?.get("location");
         // Apple's form_post arrives as a POST that only forwards to the GET callback

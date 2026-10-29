@@ -16,13 +16,8 @@ const CodeInput = ({
   error,
   ...props
 }: CodeInputProps) => {
-  const groups = Array.from(
-    { length: Math.ceil(length / groupSize) },
-    (_, group) =>
-      Array.from(
-        { length: Math.min(groupSize, length - group * groupSize) },
-        (_, i) => group * groupSize + i,
-      ),
+  const groups = Array.from({ length: length / groupSize }, (_, group) =>
+    Array.from({ length: groupSize }, (_, i) => group * groupSize + i),
   );
 
   return (
@@ -58,10 +53,12 @@ const CodeInput = ({
       ))}
       <TextInput
         value={value}
+        // A paste always appends, so the caller's last-digits rule finds it
+        selection={{ start: value.length, end: value.length }}
         autoCorrect={false}
         caretHidden
         selectionColor="transparent"
-        // Transparent text instead of opacity-0, which iOS excludes from touches, so tap and long-press paste still land
+        // iOS drops touches on opacity-0, so tap and long-press paste need transparent text
         className="absolute inset-0 text-transparent"
         {...props}
       />

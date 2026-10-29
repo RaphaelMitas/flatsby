@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   callbackOutcome,
+  codeFromText,
   isRetryableCodeError,
   loginAttemptSchema,
   loginErrorCode,
@@ -89,5 +90,17 @@ describe("signInCodeError", () => {
     expect(
       isRetryableCodeError({ code: "TOO_MANY_ATTEMPTS", status: 403 }),
     ).toBe(false);
+  });
+});
+
+describe("codeFromText", () => {
+  it.each([
+    ["123456", "123456"],
+    ["Code: 123456", "123456"],
+    ["Sign in:\n\n123456\n\nThe code expires in 5 minutes.", "123456"],
+    ["12884568", "884568"],
+    ["12", "12"],
+  ])("reads %j as %j", (text, code) => {
+    expect(codeFromText(text)).toBe(code);
   });
 });

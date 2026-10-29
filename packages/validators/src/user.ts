@@ -21,7 +21,7 @@ export const userEmailSchema = z.email({
 
 export const userImageSchema = z.string().optional().nullable();
 
-// Email codes and Apple's hidden name bring no name, so the address stands in until the user picks one
+// Email codes and Apple's hidden name bring no name, so the address's local part stands in
 export const defaultUserName = (email: string) => email.split("@")[0] || email;
 
 // Wide enough for a phone clock that runs a few minutes off

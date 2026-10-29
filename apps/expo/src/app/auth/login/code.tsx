@@ -15,7 +15,7 @@ import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { CodeInput } from "~/lib/ui/code-input";
 import { signInCode } from "~/utils/auth/auth-client";
-import { askForName } from "~/utils/auth/name-step";
+import { askForName } from "~/utils/auth/post-login-path";
 
 export default function CodeScreen() {
   const t = useTranslations();
@@ -28,7 +28,6 @@ export default function CodeScreen() {
   const attempt = { provider: "email", platform: "app", attempt_id: attemptId };
   const signedIn = useRef(false);
 
-  // Signing in refreshes the session, and the root layout leaves login from there
   const { code, change, error, expired, resent, busy, waitSeconds, resend } =
     useSignInCode({
       email,

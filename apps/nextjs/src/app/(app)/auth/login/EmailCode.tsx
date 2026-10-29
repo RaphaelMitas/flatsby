@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect, useEffectEvent, useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { InputOTP, InputOTPGroups } from "@flatsby/ui/input-otp";
 import {
+  codeFromText,
+  digitsOnly,
   SIGN_IN_CODE_GROUP,
   SIGN_IN_CODE_LENGTH,
 } from "@flatsby/validators/login";
@@ -20,8 +23,6 @@ export interface EmailAttempt {
   event: { provider: "email"; attempt_id: string; url: string };
 }
 
-const digitsOnly = (text: string) => text.replace(/\D/g, "");
-
 export default function EmailCode({
   attempt,
   callbackURL,
@@ -33,6 +34,7 @@ export default function EmailCode({
 }) {
   const t = useTranslations();
   const { email } = attempt;
+  const signedIn = useRef(false);
   const { code, change, error, expired, resent, busy, waitSeconds, resend } =
     useSignInCode({
       email,
@@ -45,6 +47,7 @@ export default function EmailCode({
           error_code: errorCode,
         }),
       onSignedIn: (user) => {
+        signedIn.current = true;
         sendLoginEvent({ ...attempt.event, event: "login_succeeded" });
         window.location.assign(
           asksForName(user)
@@ -53,6 +56,21 @@ export default function EmailCode({
         );
       },
     });
+
+  const cancel = () =>
+    sendLoginEvent({
+      ...attempt.event,
+      event: "login_cancelled",
+      stage: "code",
+    });
+  // Closing the tab counts as giving up, like leaving the app's code screen
+  const leave = useEffectEvent(() => {
+    if (!signedIn.current) cancel();
+  });
+  useEffect(() => {
+    window.addEventListener("pagehide", leave);
+    return () => window.removeEventListener("pagehide", leave);
+  }, []);
 
   return (
     <div className="flex flex-col gap-4" data-testid="auth-code-step">
@@ -70,8 +88,8 @@ export default function EmailCode({
       {/* input-otp splices a paste in at the cursor, so a whole code replaces what was typed instead */}
       <div
         onPasteCapture={(event) => {
-          const pasted = digitsOnly(event.clipboardData.getData("text"));
-          if (pasted.length < SIGN_IN_CODE_LENGTH) return;
+          const pasted = event.clipboardData.getData("text");
+          if (codeFromText(pasted).length < SIGN_IN_CODE_LENGTH) return;
           event.preventDefault();
           event.stopPropagation();
           change(pasted);
@@ -87,7 +105,7 @@ export default function EmailCode({
           maxLength={SIGN_IN_CODE_LENGTH}
           value={code}
           onChange={change}
-          disabled={busy || expired}
+          disabled={expired}
           containerClassName="justify-center"
         >
           <InputOTPGroups
@@ -134,11 +152,7 @@ export default function EmailCode({
           className="text-muted-foreground"
           data-testid="auth-code-change-email"
           onClick={() => {
-            sendLoginEvent({
-              ...attempt.event,
-              event: "login_cancelled",
-              stage: "code",
-            });
+            cancel();
             onChangeEmail();
           }}
         >

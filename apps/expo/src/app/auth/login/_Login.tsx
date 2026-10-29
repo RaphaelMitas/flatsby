@@ -1,12 +1,7 @@
 "use client";
 
-import type { MessageKey } from "@flatsby/i18n/message-key";
-import type {
-  LoginAttempt,
-  LoginMethod,
-  LoginProvider,
-} from "@flatsby/validators/login";
-import { useState } from "react";
+import type { LoginAttempt, LoginProvider } from "@flatsby/validators/login";
+import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
 import { Stack, useRouter } from "expo-router";
@@ -15,8 +10,7 @@ import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
-import { userEmailSchema } from "@flatsby/validators/user";
-import { requestSignInCode } from "@flatsby/validators/useSignInCode";
+import { useSendSignInCode } from "@flatsby/validators/useSignInCode";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
@@ -31,9 +25,32 @@ const Login = () => {
   const locale = useLocale();
   const posthog = usePostHog();
   const router = useRouter();
-  const [loading, setLoading] = useState<LoginMethod | "false">("false");
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState<MessageKey | null>(null);
+  const [loading, setLoading] = useState<LoginProvider | "false">("false");
+  const emailAttemptId = useRef("");
+  const emailAttempt = () => ({
+    provider: "email",
+    platform: "app",
+    attempt_id: emailAttemptId.current,
+  });
+  const emailStep = useSendSignInCode({
+    client: signInCode,
+    onTapped: () => {
+      emailAttemptId.current = uuidv7();
+      posthog.capture("login_provider_tapped", emailAttempt());
+    },
+    onFailed: (stage, errorCode) =>
+      posthog.capture("login_failed", {
+        ...emailAttempt(),
+        stage,
+        error_code: errorCode,
+      }),
+    onSent: (email) =>
+      router.push({
+        pathname: "/auth/login/code",
+        params: { email, attemptId: emailAttemptId.current },
+      }),
+  });
+  const busy = loading !== "false" || emailStep.sending;
 
   const callbackURL = ExpoLinking.createURL("/");
 
@@ -77,43 +94,6 @@ const Login = () => {
     }
   };
 
-  const sendCode = async () => {
-    if (loading !== "false") return;
-    const parsed = userEmailSchema.safeParse(email.trim());
-    if (!parsed.success) {
-      setEmailError("settings.validation.emailInvalid");
-      return;
-    }
-    const attemptId = uuidv7();
-    const attempt = {
-      provider: "email",
-      platform: "app",
-      attempt_id: attemptId,
-    };
-    posthog.capture("login_provider_tapped", attempt);
-    setEmailError(null);
-    setLoading("email");
-    const failure = await requestSignInCode(
-      signInCode,
-      parsed.data,
-      (stage, errorCode) =>
-        posthog.capture("login_failed", {
-          ...attempt,
-          stage,
-          error_code: errorCode,
-        }),
-    );
-    setLoading("false");
-    if (failure) {
-      setEmailError(failure);
-      return;
-    }
-    router.push({
-      pathname: "/auth/login/code",
-      params: { email: parsed.data, attemptId },
-    });
-  };
-
   return (
     <View testID="login-screen" className="bg-background flex-1">
       <Stack.Screen options={{ headerShown: false }} />
@@ -141,12 +121,9 @@ const Login = () => {
           <View className="gap-2">
             <Input
               testID="sign-in-email-input"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                setEmailError(null);
-              }}
-              onSubmitEditing={() => void sendCode()}
+              value={emailStep.email}
+              onChangeText={emailStep.changeEmail}
+              onSubmitEditing={() => void emailStep.send()}
               placeholder={t("auth.login.emailPlaceholder")}
               accessibilityLabel={t("auth.login.email")}
               keyboardType="email-address"
@@ -155,28 +132,28 @@ const Login = () => {
               autoComplete="email"
               textContentType="username"
               returnKeyType="send"
-              error={emailError !== null}
+              error={emailStep.error !== null}
             />
-            {emailError && (
+            {emailStep.error && (
               <Text
                 testID="sign-in-email-error"
                 className="text-destructive text-sm"
               >
-                {t(emailError)}
+                {t(emailStep.error)}
               </Text>
             )}
           </View>
           <Button
             testID="sign-in-email-button"
-            onPress={() => sendCode()}
-            disabled={loading !== "false"}
+            onPress={() => emailStep.send()}
+            disabled={busy}
             className="w-full py-4"
             title={
-              loading === "email"
+              emailStep.sending
                 ? t("auth.login.sendingCode")
                 : t("auth.login.continueWithEmail")
             }
-            icon={loading === "email" ? "loader" : undefined}
+            icon={emailStep.sending ? "loader" : undefined}
           />
 
           <View className="flex-row items-center gap-3">
@@ -191,7 +168,7 @@ const Login = () => {
             testID="sign-in-google-button"
             variant="outline"
             onPress={() => signInWith("google")}
-            disabled={loading !== "false"}
+            disabled={busy}
             className="w-full py-4"
             title={
               loading === "google"
@@ -205,7 +182,7 @@ const Login = () => {
             testID="sign-in-apple-button"
             variant="outline"
             onPress={() => signInWith("apple")}
-            disabled={loading !== "false"}
+            disabled={busy}
             className="w-full py-4"
             title={
               loading === "apple"

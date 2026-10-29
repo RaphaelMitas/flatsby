@@ -14,6 +14,22 @@ export type LoginMethod = z.infer<typeof loginMethodSchema>;
 export const SIGN_IN_CODE_LENGTH = 6;
 export const SIGN_IN_CODE_GROUP = SIGN_IN_CODE_LENGTH / 2;
 export const SIGN_IN_CODE_RESEND_SECONDS = 30;
+export const SIGN_IN_CODE_TTL_SECONDS = 5 * 60;
+
+export const digitsOnly = (text: string) => text.replace(/\D/g, "");
+
+// A pasted email carries other digits, so a standalone six-digit run beats the last six digits
+export function codeFromText(text: string) {
+  const standalone = new RegExp(`(?<!\\d)\\d{${SIGN_IN_CODE_LENGTH}}(?!\\d)`);
+  return (
+    standalone.exec(text)?.[0] ?? digitsOnly(text).slice(-SIGN_IN_CODE_LENGTH)
+  );
+}
+
+export interface AuthError {
+  code?: string;
+  status: number;
+}
 
 const CODE_ERRORS = new Map([
   ["INVALID_OTP", msg("auth.code.invalid")],
@@ -21,16 +37,14 @@ const CODE_ERRORS = new Map([
   ["TOO_MANY_ATTEMPTS", msg("auth.code.tooManyAttempts")],
 ]);
 
-export function signInCodeError(error: { code?: string; status: number }) {
+export function signInCodeError(error: AuthError) {
   if (error.status === 429) return msg("auth.code.tooManyRequests");
   return CODE_ERRORS.get(error.code ?? "") ?? msg("auth.code.failed");
 }
 
 // Expired or exhausted codes need a new one; a rate limit only needs a pause
-export const isRetryableCodeError = (error: {
-  code?: string;
-  status: number;
-}) => error.code === "INVALID_OTP" || error.status === 429;
+export const isRetryableCodeError = (error: AuthError) =>
+  error.code === "INVALID_OTP" || error.status === 429;
 
 export const loginAttemptSchema = z.object({
   attemptId: z.uuid(),
@@ -49,7 +63,7 @@ export const loginErrorCode = (code: string | null | undefined) => {
   return lower && /^[a-z0-9_]{1,64}$/.test(lower) ? lower : "other";
 };
 
-export const startFailureCode = (error: { code?: string; status: number }) =>
+export const startFailureCode = (error: AuthError) =>
   loginErrorCode(error.code ?? `http_${error.status}`);
 
 // fetch rejects with a TypeError when the request never reaches the server

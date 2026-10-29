@@ -16,7 +16,7 @@ const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
 export async function sendSignInCode({ email, code, headers }: SignInCode) {
   if (!resend) {
-    // e2e reads the code from the database instead
+    // e2e runs a production build without Resend and reads the code from the database
     if (env.NODE_ENV === "production" && !env.E2E_TESTING) {
       throw new Error("RESEND_API_KEY is not set");
     }
