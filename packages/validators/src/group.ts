@@ -101,15 +101,11 @@ export const addPlaceholderInputSchema = z.object({
   groupId: z.number(),
   name: placeholderNameSchema,
 });
-export type AddPlaceholderInput = z.infer<typeof addPlaceholderInputSchema>;
 
 export const renamePlaceholderInputSchema = z.object({
   memberId: z.number(),
   name: placeholderNameSchema,
 });
-export type RenamePlaceholderInput = z.infer<
-  typeof renamePlaceholderInputSchema
->;
 
 export const undoClaimInputSchema = z.object({ memberId: z.number() });
 
