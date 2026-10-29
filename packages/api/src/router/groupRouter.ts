@@ -379,7 +379,7 @@ export const groupRouter = createTRPCRouter({
       runResult(
         ctx,
         Effect.gen(function* () {
-          yield* requireMember(input.groupId);
+          yield* requireAdmin(input.groupId);
           const database = yield* Database;
           const memberId = yield* database.query("add placeholder", (db) =>
             withFreePlaceholderName(
@@ -419,7 +419,7 @@ export const groupRouter = createTRPCRouter({
               where: activePlaceholderWhere(input.memberId),
             }),
           );
-          yield* requireMember(target.groupId);
+          yield* requireAdmin(target.groupId);
           const refused = yield* database.query("rename placeholder", (db) =>
             withFreePlaceholderName(
               db,

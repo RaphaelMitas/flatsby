@@ -151,7 +151,9 @@ export const MemberCard = ({
 
   const canRemove = isCurrentUserAdmin || isCurrentUser;
   const hasActions =
-    withActions && !isPendingId(groupMember.id) && (placeholder || canRemove);
+    withActions &&
+    !isPendingId(groupMember.id) &&
+    (placeholder ? isCurrentUserAdmin : canRemove);
   const removeButton = canRemove && (
     <Button
       className="w-full"
@@ -202,18 +204,16 @@ export const MemberCard = ({
               <div className="bg-card flex w-full max-w-md flex-col gap-4 rounded-lg p-6">
                 {placeholder ? (
                   <>
-                    {isCurrentUserAdmin && (
-                      <Button
-                        className="w-full"
-                        variant="outline"
-                        data-testid="member-action-invite"
-                        onClick={() => setInviting(true)}
-                      >
-                        {t("group.placeholders.invite", {
-                          name: groupMember.user.name,
-                        })}
-                      </Button>
-                    )}
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      data-testid="member-action-invite"
+                      onClick={() => setInviting(true)}
+                    >
+                      {t("group.placeholders.invite", {
+                        name: groupMember.user.name,
+                      })}
+                    </Button>
                     <Button
                       className="w-full"
                       variant="outline"

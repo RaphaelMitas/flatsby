@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { inviteRouter } from "./inviteRouter";
 import { testContext, testUser } from "./testContext";
 
-const { fakeDb, fakeTx, claimed } = vi.hoisted(() => {
+const { fakeDb, fakeTx, claimed, inserted } = vi.hoisted(() => {
   const claimed = vi.fn();
+  const inserted = vi.fn(() => Promise.resolve([{ id: 9 }]));
   const fakeTx = {
     select: () => ({
       from: () => ({ where: () => ({ for: () => Promise.resolve([]) }) }),
@@ -12,13 +13,15 @@ const { fakeDb, fakeTx, claimed } = vi.hoisted(() => {
     update: () => ({
       set: () => ({ where: () => ({ returning: claimed }) }),
     }),
+    insert: () => ({ values: () => ({ returning: inserted }) }),
     query: {
       groupInvites: { findFirst: vi.fn() },
-      groupMembers: { findFirst: vi.fn() },
+      groupMembers: { findMany: vi.fn() },
     },
   };
   return {
     claimed,
+    inserted,
     fakeTx,
     fakeDb: {
       query: { groupInvites: { findFirst: vi.fn() } },
@@ -39,10 +42,9 @@ beforeEach(() => {
     createdByMember: { user: { name: "Ruffy" } },
   });
   fakeTx.query.groupInvites.findFirst.mockResolvedValue({ groupId: 3 });
-  fakeTx.query.groupMembers.findFirst.mockResolvedValue({
-    id: 1,
-    isActive: true,
-  });
+  fakeTx.query.groupMembers.findMany.mockResolvedValue([
+    { id: 1, isActive: true, placeholderName: null },
+  ]);
 });
 
 describe("invite.preview", () => {
@@ -118,7 +120,21 @@ describe("invite.join", () => {
         details: { messageKey: "errors.notFound.invite" },
       },
     });
-    expect(fakeTx.query.groupMembers.findFirst).not.toHaveBeenCalled();
+    expect(fakeTx.query.groupMembers.findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("invite.join after being removed", () => {
+  it("starts fresh instead of reviving a spot they had claimed", async () => {
+    fakeTx.query.groupMembers.findMany.mockResolvedValue([
+      { id: 2, isActive: false, placeholderName: "Anna" },
+    ]);
+
+    await expect(
+      inviteRouter.createCaller(testContext(testUser)).join({ code }),
+    ).resolves.toMatchObject({ success: true });
+    expect(inserted).toHaveBeenCalled();
+    expect(claimed).not.toHaveBeenCalled();
   });
 });
 
@@ -129,7 +145,7 @@ describe("invite.join with a placeholder", () => {
       .join({ code, placeholderId: 2 });
 
   beforeEach(() => {
-    fakeTx.query.groupMembers.findFirst.mockResolvedValue(undefined);
+    fakeTx.query.groupMembers.findMany.mockResolvedValue([]);
   });
 
   it("takes over the placeholder", async () => {
@@ -154,10 +170,9 @@ describe("invite.join with a placeholder", () => {
   });
 
   it("leaves the placeholder alone when the joiner is already a member", async () => {
-    fakeTx.query.groupMembers.findFirst.mockResolvedValue({
-      id: 1,
-      isActive: true,
-    });
+    fakeTx.query.groupMembers.findMany.mockResolvedValue([
+      { id: 1, isActive: true, placeholderName: null },
+    ]);
 
     await expect(claim()).resolves.toMatchObject({ success: true });
     expect(claimed).not.toHaveBeenCalled();

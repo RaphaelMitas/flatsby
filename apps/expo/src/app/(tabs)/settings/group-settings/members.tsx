@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
-import { FlashList } from "@shopify/flash-list";
 import {
   useMutation,
   useQueryClient,
@@ -178,7 +177,7 @@ export default function MembersScreen() {
       )}
 
       {/* Members List */}
-      <View className="bg-background flex-1">
+      <View className="bg-background">
         <View className="flex-row items-center justify-between px-4 py-3">
           <Text
             testID={`group-members-count-${joinedMembers.length}`}
@@ -187,24 +186,20 @@ export default function MembersScreen() {
             {t("group.members.listTitle", { count: joinedMembers.length })}
           </Text>
         </View>
-        <View className="flex-1">
-          <FlashList
-            data={joinedMembers}
-            renderItem={({ item }) => (
-              <MemberRow
-                member={item}
-                className="px-4"
-                onPress={
-                  isAdmin || item.id === me.id
-                    ? () => handleMemberPress(item.id)
-                    : undefined
-                }
-              />
-            )}
-            ItemSeparatorComponent={() => <View className="bg-border h-px" />}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
+        {joinedMembers.map((member, index) => (
+          <View key={member.id}>
+            {index > 0 && <View className="bg-border h-px" />}
+            <MemberRow
+              member={member}
+              className="px-4"
+              onPress={
+                isAdmin || member.id === me.id
+                  ? () => handleMemberPress(member.id)
+                  : undefined
+              }
+            />
+          </View>
+        ))}
       </View>
 
       <View className="px-4 py-3">

@@ -2,7 +2,7 @@ import type { MessageKey } from "@flatsby/i18n/message-key";
 import type { Messages } from "@flatsby/i18n/messages";
 import { Effect } from "effect";
 
-import { and, desc, eq, inArray, isNull } from "@flatsby/db";
+import { and, eq, inArray, isNull } from "@flatsby/db";
 import {
   expenses,
   expenseSplits,
@@ -254,14 +254,15 @@ export const addMemberTx = async (
   await GroupUtils.lockGroup(tx, groupId);
   const refused = await refusal?.(tx);
   if (refused) return refused;
-  const existing = await tx.query.groupMembers.findFirst({
+  const rows = await tx.query.groupMembers.findMany({
     where: and(
       eq(groupMembers.groupId, groupId),
       eq(groupMembers.userId, userId),
     ),
-    orderBy: desc(groupMembers.isActive),
   });
-  if (existing?.isActive) return Errors.conflict("errors.alreadyMember");
+  if (rows.some((row) => row.isActive)) {
+    return Errors.conflict("errors.alreadyMember");
+  }
   if (placeholderId !== undefined) {
     const [claimed] = await tx
       .update(groupMembers)
@@ -275,6 +276,8 @@ export const addMemberTx = async (
       .returning({ id: groupMembers.id });
     return claimed?.id ?? Errors.conflict("errors.placeholderTaken");
   }
+  // A spot they once claimed keeps its placeholder's history, so it never comes back with them
+  const existing = rows.find((row) => row.placeholderName === null);
   const [member] = existing
     ? await tx
         .update(groupMembers)

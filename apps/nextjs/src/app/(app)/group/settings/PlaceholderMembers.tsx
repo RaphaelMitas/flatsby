@@ -45,6 +45,9 @@ export function PlaceholderMembers({
   );
 
   if (!group?.success) return null;
+  const placeholders = group.data.groupMembers.filter(isPlaceholder);
+  const isAdmin = group.data.thisGroupMember.role === "admin";
+  if (!isAdmin && placeholders.length === 0) return null;
 
   return (
     <div className="grid gap-4">
@@ -52,7 +55,7 @@ export function PlaceholderMembers({
         <p className="text-muted-foreground text-sm font-semibold">{title}</p>
         {hint && <p className="text-muted-foreground text-sm">{hint}</p>}
       </div>
-      {group.data.groupMembers.filter(isPlaceholder).map((member) => (
+      {placeholders.map((member) => (
         <MemberCard
           key={member.id}
           groupId={groupId}
@@ -62,12 +65,14 @@ export function PlaceholderMembers({
           withActions={withActions}
         />
       ))}
-      <PlaceholderNameForm
-        submitLabel={t("group.placeholders.add")}
-        inputTestId="placeholder-name-input"
-        buttonTestId="placeholder-add-button"
-        onSubmit={(name) => addMutation.mutate({ groupId, name })}
-      />
+      {isAdmin && (
+        <PlaceholderNameForm
+          submitLabel={t("group.placeholders.add")}
+          inputTestId="placeholder-name-input"
+          buttonTestId="placeholder-add-button"
+          onSubmit={(name) => addMutation.mutate({ groupId, name })}
+        />
+      )}
     </div>
   );
 }

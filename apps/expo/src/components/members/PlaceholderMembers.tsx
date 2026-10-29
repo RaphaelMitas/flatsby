@@ -36,6 +36,7 @@ export function PlaceholderMembers({
   const placeholders = group?.success
     ? group.data.groupMembers.filter(isPlaceholder)
     : [];
+  const isAdmin = group?.success && group.data.thisGroupMember.role === "admin";
 
   const addMutation = useMutation(
     trpc.group.addPlaceholder.mutationOptions(
@@ -44,6 +45,8 @@ export function PlaceholderMembers({
       }),
     ),
   );
+
+  if (!isAdmin && placeholders.length === 0) return null;
 
   return (
     <View className="gap-2">
@@ -56,24 +59,26 @@ export function PlaceholderMembers({
             member={member}
             testID={`placeholder-row-${member.user.name}`}
             onPress={
-              onPressMember && !isPendingId(member.id)
+              isAdmin && onPressMember && !isPendingId(member.id)
                 ? () => onPressMember(member.id)
                 : undefined
             }
           />
         ))}
       </View>
-      <PlaceholderNameField
-        placeholder={t("group.placeholders.namePlaceholder")}
-        submitLabel={t("group.placeholders.add")}
-        submitIcon="plus"
-        inputTestID="placeholder-name-input"
-        buttonTestID="placeholder-add-button"
-        onSubmit={(name) => {
-          setFailure(undefined);
-          addMutation.mutate({ groupId, name });
-        }}
-      />
+      {isAdmin && (
+        <PlaceholderNameField
+          placeholder={t("group.placeholders.namePlaceholder")}
+          submitLabel={t("group.placeholders.add")}
+          submitIcon="plus"
+          inputTestID="placeholder-name-input"
+          buttonTestID="placeholder-add-button"
+          onSubmit={(name) => {
+            setFailure(undefined);
+            addMutation.mutate({ groupId, name });
+          }}
+        />
+      )}
       {failure !== undefined && (
         <Text className="text-destructive text-sm">{failure}</Text>
       )}

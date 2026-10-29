@@ -182,19 +182,17 @@ export default function MemberActionsScreen() {
         </View>
       </View>
 
-      {placeholder && (
+      {placeholder && isCurrentUserAdmin && (
         <View className="mb-6 gap-3">
-          {isCurrentUserAdmin && (
-            <Button
-              testID="member-action-invite"
-              title={t("group.placeholders.invite", {
-                name: groupMember.user.name,
-              })}
-              icon="share"
-              variant="outline"
-              onPress={handleInvite}
-            />
-          )}
+          <Button
+            testID="member-action-invite"
+            title={t("group.placeholders.invite", {
+              name: groupMember.user.name,
+            })}
+            icon="share"
+            variant="outline"
+            onPress={handleInvite}
+          />
           {renaming ? (
             <>
               <Text className="text-foreground text-sm font-medium">
