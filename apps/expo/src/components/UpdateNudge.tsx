@@ -18,8 +18,13 @@ export function UpdateNudge() {
   const posthog = usePostHog();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [storeVersion, setStoreVersion] = useState<string | null>(null);
+  const updatePressed = useRef(false);
 
   useEffect(() => {
+    if (__DEV__ && process.env.EXPO_PUBLIC_FORCE_UPDATE_NUDGE === "true") {
+      setStoreVersion("dev");
+      return;
+    }
     if (__DEV__ || isE2ETestingEnabled()) return;
     const check = async () => {
       const update = await ExpoInAppUpdates.checkForUpdate().catch(() => null);
@@ -44,15 +49,21 @@ export function UpdateNudge() {
 
   const update = () => {
     posthog.capture("update_nudge_update", { storeVersion });
-    void ExpoInAppUpdates.startUpdate(true);
+    updatePressed.current = true;
+    sheetRef.current?.dismiss();
   };
 
   return (
     <SheetModal
       ref={sheetRef}
       onDismiss={() => {
-        if (storeVersion)
+        // iOS can't present the App Store sheet while ours is still presented.
+        if (updatePressed.current) {
+          updatePressed.current = false;
+          void ExpoInAppUpdates.startUpdate(true);
+        } else if (storeVersion) {
           void AsyncStorage.setItem(DISMISSED_KEY, storeVersion);
+        }
       }}
     >
       <View className="gap-2 px-4 pb-10">
