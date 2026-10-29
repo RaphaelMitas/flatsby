@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { msg } from "@flatsby/i18n/message-key";
 
 import type { AuthError } from "./login";
+import type { SignedInUser } from "./user";
 import {
   codeFromText,
   isRetryableCodeError,
@@ -15,12 +16,6 @@ import {
   thrownFailureCode,
 } from "./login";
 import { userEmailSchema } from "./user";
-
-export interface SignedInUser {
-  name: string;
-  email: string;
-  createdAt: Date;
-}
 
 export interface SignInCodeClient {
   send: (email: string) => Promise<{ error: AuthError | null }>;
@@ -65,9 +60,11 @@ export function useSendSignInCode({
   const [email, setEmail] = useState("");
   const [error, setError] = useState<MessageKey | null>(null);
   const [sending, setSending] = useState(false);
+  // A return key and a tap can land in the same tick, before state catches up
+  const inFlight = useRef(false);
 
   const send = async () => {
-    if (sending) return;
+    if (inFlight.current) return;
     const parsed = userEmailSchema.safeParse(email.trim());
     if (!parsed.success) {
       setError(msg("settings.validation.emailInvalid"));
@@ -75,8 +72,10 @@ export function useSendSignInCode({
     }
     onTapped();
     setError(null);
+    inFlight.current = true;
     setSending(true);
     const failure = await requestSignInCode(client, parsed.data, onFailed);
+    inFlight.current = false;
     setSending(false);
     setError(failure);
     if (!failure) onSent(parsed.data);

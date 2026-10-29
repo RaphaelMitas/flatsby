@@ -10,7 +10,7 @@ import { db } from "@flatsby/db/client";
 import { SIGN_IN_CODE_TTL_SECONDS } from "@flatsby/validators/login";
 import { defaultUserName } from "@flatsby/validators/user";
 
-import { allowSignInCode, refundSignInCode } from "./sign-in-code-limit";
+import { allowSignInCode } from "./sign-in-code-limit";
 
 const SEND_CODE_PATH = "/email-otp/send-verification-otp";
 
@@ -137,7 +137,6 @@ export function initAuth(options: {
       after: createAuthMiddleware(async (ctx) => {
         if (ctx.path === SEND_CODE_PATH) {
           if (ctx.request && failedSends.has(ctx.request)) {
-            if (limitRequests) await refundSignInCode(ctx.body.email);
             throw new APIError("BAD_GATEWAY", { code: "SEND_FAILED" });
           }
           return;

@@ -9,7 +9,6 @@ export const loginMethodSchema = z.enum([
   ...loginProviderSchema.options,
   "email",
 ]);
-export type LoginMethod = z.infer<typeof loginMethodSchema>;
 
 export const SIGN_IN_CODE_LENGTH = 6;
 export const SIGN_IN_CODE_GROUP = SIGN_IN_CODE_LENGTH / 2;

@@ -41,6 +41,9 @@ export default function NameScreen() {
         void queryClient.invalidateQueries(
           trpc.user.getCurrentUser.queryOptions(),
         );
+        void queryClient.invalidateQueries(
+          trpc.user.getCurrentUserWithGroups.queryOptions(),
+        );
         finishNameStep();
         await session.refetch();
         router.replace("/");

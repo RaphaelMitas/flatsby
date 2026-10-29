@@ -38,10 +38,13 @@ export const defaultUserName = (email: string) => email.split("@")[0] || email;
 // Wide enough for a phone clock that runs a few minutes off
 const JUST_CREATED_MS = 10 * 60 * 1000;
 
-export const asksForName = (
-  user: { name: string; email: string; createdAt: Date },
-  now = Date.now(),
-) =>
+export interface SignedInUser {
+  name: string;
+  email: string;
+  createdAt: Date;
+}
+
+export const asksForName = (user: SignedInUser, now = Date.now()) =>
   now - new Date(user.createdAt).getTime() < JUST_CREATED_MS &&
   user.name === defaultUserName(user.email);
 

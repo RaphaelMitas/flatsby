@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { eq, sql } from "@flatsby/db";
+import { sql } from "@flatsby/db";
 import { db } from "@flatsby/db/client";
 import { signInCodeRequests } from "@flatsby/db/schema";
 import { inboxOf } from "@flatsby/validators/user";
@@ -24,12 +24,4 @@ export async function allowSignInCode(email: string) {
     })
     .returning({ count: signInCodeRequests.count });
   return (row?.count ?? 0) <= MAX_CODES_PER_HOUR;
-}
-
-// A send that failed on our side mustn't use up the person's hour
-export async function refundSignInCode(email: string) {
-  await db
-    .update(signInCodeRequests)
-    .set({ count: sql`greatest(${signInCodeRequests.count} - 1, 0)` })
-    .where(eq(signInCodeRequests.emailHash, inboxHash(email)));
 }
