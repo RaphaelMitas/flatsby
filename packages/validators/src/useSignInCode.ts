@@ -148,7 +148,7 @@ export function useSignInCode({
         }
         onFailed("code", startFailureCode(signInError));
         setCode("");
-        // Better Auth sweeps expired codes, so one past its lifetime comes back as wrong instead of expired
+        // Better Auth sweeps expired codes, so one past its lifetime can come back as wrong instead of expired
         const pastLifetime =
           Date.now() > sentAt + SIGN_IN_CODE_TTL_SECONDS * 1000;
         if (pastLifetime && signInError.code === "INVALID_OTP") {

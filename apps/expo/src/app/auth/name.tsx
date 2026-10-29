@@ -33,7 +33,7 @@ export default function NameScreen() {
 
   const updateName = useMutation(
     trpc.user.updateUserName.mutationOptions({
-      onSuccess: async (result) => {
+      onSuccess: (result) => {
         if (!result.success) {
           form.setError("name", { message: result.error.message });
           return;
@@ -45,7 +45,7 @@ export default function NameScreen() {
           trpc.user.getCurrentUserWithGroups.queryOptions(),
         );
         finishNameStep();
-        await session.refetch();
+        void session.refetch();
         router.replace("/");
       },
       onError: (err) => form.setError("name", { message: err.message }),

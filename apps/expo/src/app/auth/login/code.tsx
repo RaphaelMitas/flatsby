@@ -88,7 +88,6 @@ export default function CodeScreen() {
           length={SIGN_IN_CODE_LENGTH}
           groupSize={SIGN_IN_CODE_GROUP}
           error={error !== null}
-          editable={!expired}
           onChangeText={change}
           autoFocus
           keyboardType="number-pad"

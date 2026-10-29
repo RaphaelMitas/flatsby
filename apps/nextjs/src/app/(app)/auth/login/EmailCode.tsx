@@ -64,9 +64,9 @@ export default function EmailCode({
       event: "login_cancelled",
       stage: "code",
     });
-  // Closing the tab counts as giving up, like leaving the app's code screen
-  const leave = useEffectEvent(() => {
-    if (!signedIn.current) cancel();
+  // Closing the tab counts as giving up, like leaving the app's code screen; a page kept in the back cache may return
+  const leave = useEffectEvent((event: PageTransitionEvent) => {
+    if (!event.persisted && !signedIn.current) cancel();
   });
   useEffect(() => {
     window.addEventListener("pagehide", leave);
@@ -108,7 +108,6 @@ export default function EmailCode({
           maxLength={SIGN_IN_CODE_LENGTH}
           value={code}
           onChange={change}
-          disabled={expired}
           containerClassName="justify-center"
         >
           <InputOTPGroups
