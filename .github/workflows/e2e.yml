@@ -210,15 +210,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Pro Max because old models time out Maestro's driver and the flows' tab
-      # positions assume its screen. The first boot takes minutes, so it starts
-      # before everything else and bootstatus waits in the install step.
-      - name: Create iOS simulator
-        id: sim
-        uses: ./tooling/github/ios-simulator
-        with:
-          device: "^iPhone [0-9]+ Pro Max$"
-
       - name: Setup
         uses: ./tooling/github/setup
 
@@ -234,6 +225,16 @@ jobs:
 
       - name: Unpack app
         run: tar -xzf Flatsby-app.tar.gz
+
+      # Pro Max because old models time out Maestro's driver and the flows' tab
+      # positions assume its screen. bootstatus waits in the install step so the
+      # boot overlaps the stack start; booting before pnpm install instead slows
+      # the install from ~1.5 to 7-12 min.
+      - name: Create iOS simulator
+        id: sim
+        uses: ./tooling/github/ios-simulator
+        with:
+          device: "^iPhone [0-9]+ Pro Max$"
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
