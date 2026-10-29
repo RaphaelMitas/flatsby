@@ -20,6 +20,7 @@ import { PlaceholderMembers } from "~/components/members/PlaceholderMembers";
 import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
+import { Separator } from "~/lib/ui/separator";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { setMemberActionCallbacks } from "./member-actions";
@@ -188,7 +189,7 @@ export default function MembersScreen() {
         </View>
         {joinedMembers.map((member, index) => (
           <View key={member.id}>
-            {index > 0 && <View className="bg-border h-px" />}
+            {index > 0 && <Separator />}
             <MemberRow
               member={member}
               className="px-4"

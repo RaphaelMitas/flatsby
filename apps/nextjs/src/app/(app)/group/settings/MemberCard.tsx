@@ -150,10 +150,7 @@ export const MemberCard = ({
   );
 
   const canRemove = isCurrentUserAdmin || isCurrentUser;
-  const hasActions =
-    withActions &&
-    !isPendingId(groupMember.id) &&
-    (placeholder ? isCurrentUserAdmin : canRemove);
+  const hasActions = withActions && !isPendingId(groupMember.id) && canRemove;
   const removeButton = canRemove && (
     <Button
       className="w-full"

@@ -104,9 +104,5 @@ tags:
     visible:
       id: "group-members-count-2"
     timeout: 15000
-- scrollUntilVisible:
-    element:
-      id: "placeholder-name-input"
-    direction: DOWN
 - assertNotVisible:
     id: "placeholder-row-Anna"
