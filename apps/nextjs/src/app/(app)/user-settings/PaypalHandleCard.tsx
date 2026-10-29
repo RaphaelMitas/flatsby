@@ -108,6 +108,7 @@ export function PaypalHandleCard() {
                   <FormControl>
                     <Input
                       {...field}
+                      disabled={mutation.isPending}
                       placeholder={t("settings.payment.paypalPlaceholder")}
                       autoCapitalize="none"
                       data-testid="payment-paypal-input"

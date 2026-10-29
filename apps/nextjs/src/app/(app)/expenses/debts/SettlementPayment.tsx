@@ -14,6 +14,7 @@ interface SettlementPaymentProps {
   paypalHandle: string | null;
   receiverName: string;
   receiverIsMe: boolean;
+  payerIsMe: boolean;
   amountInCents: number;
   currency: string;
 }
@@ -22,6 +23,7 @@ export function SettlementPayment({
   paypalHandle,
   receiverName,
   receiverIsMe,
+  payerIsMe,
   amountInCents,
   currency,
 }: SettlementPaymentProps) {
@@ -65,21 +67,25 @@ export function SettlementPayment({
       </p>
       {url && (
         <>
-          <p className="text-muted-foreground text-sm">
-            {t("paypalHint", { amount })}
-          </p>
+          {payerIsMe && (
+            <p className="text-muted-foreground text-sm">
+              {t("paypalHint", { amount })}
+            </p>
+          )}
           <div className="flex items-center gap-2">
-            <Button
-              asChild
-              variant="outline"
-              className="flex-1"
-              data-testid="settle-paypal-button"
-            >
-              <a href={url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4" />
-                {t("openPaypal")}
-              </a>
-            </Button>
+            {payerIsMe && (
+              <Button
+                asChild
+                variant="outline"
+                className="flex-1"
+                data-testid="settle-paypal-button"
+              >
+                <a href={url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4" />
+                  {t("openPaypal")}
+                </a>
+              </Button>
+            )}
             <CopyButton value={url} />
           </div>
         </>

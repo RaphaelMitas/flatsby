@@ -11,6 +11,7 @@ interface SettlementPaymentProps {
   paypalHandle: string | null;
   receiverName: string;
   receiverIsMe: boolean;
+  payerIsMe: boolean;
   amountInCents: number;
   currency: string;
 }
@@ -19,6 +20,7 @@ export function SettlementPayment({
   paypalHandle,
   receiverName,
   receiverIsMe,
+  payerIsMe,
   amountInCents,
   currency,
 }: SettlementPaymentProps) {
@@ -70,18 +72,22 @@ export function SettlementPayment({
       </Text>
       {url && (
         <>
-          <Text className="text-muted-foreground text-sm">
-            {t("debts.pay.paypalHint", { amount })}
-          </Text>
+          {payerIsMe && (
+            <Text className="text-muted-foreground text-sm">
+              {t("debts.pay.paypalHint", { amount })}
+            </Text>
+          )}
           <View className="flex-row gap-2">
-            <Button
-              testID="settle-paypal-button"
-              title={t("debts.pay.openPaypal")}
-              icon="external-link"
-              variant="outline"
-              className="flex-1"
-              onPress={() => Linking.openURL(url)}
-            />
+            {payerIsMe && (
+              <Button
+                testID="settle-paypal-button"
+                title={t("debts.pay.openPaypal")}
+                icon="external-link"
+                variant="outline"
+                className="flex-1"
+                onPress={() => Linking.openURL(url)}
+              />
+            )}
             <Button
               testID="settle-paypal-share"
               title={t("debts.pay.share")}

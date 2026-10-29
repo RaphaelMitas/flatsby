@@ -130,6 +130,24 @@ test.describe("Debt & Settlements", () => {
     ).toContainText("You haven't added a PayPal.me link.");
   });
 
+  test("recording Max paying Lena offers her link, not a PayPal button", async ({
+    page,
+    baseURL,
+  }) => {
+    await openSeededDebts(page, baseURL);
+
+    const record = page.getByTestId("debt-others-record").first();
+    await waitForHydration(record);
+    await record.click();
+
+    const card = page
+      .getByTestId("settlement-form")
+      .getByTestId("settle-pay-card");
+    await expect(card).toContainText("Lena's PayPal");
+    await expect(card.getByRole("button", { name: "Copy" })).toBeVisible();
+    await expect(card.getByTestId("settle-paypal-button")).toHaveCount(0);
+  });
+
   test("shows the debts between others, actual and simplified", async ({
     page,
     baseURL,

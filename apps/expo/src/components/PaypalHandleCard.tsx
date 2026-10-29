@@ -112,6 +112,7 @@ export function PaypalHandleCard() {
                       placeholder={t("settings.payment.paypalPlaceholder")}
                       autoCapitalize="none"
                       autoCorrect={false}
+                      editable={!mutation.isPending}
                       error={!!form.formState.errors.paypalHandle}
                     />
                   </FormControl>

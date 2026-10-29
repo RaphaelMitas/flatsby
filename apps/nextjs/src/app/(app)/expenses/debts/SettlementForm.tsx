@@ -336,11 +336,13 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
 
   const isPending = createSettlementMutation.isPending;
-  const receiverPaypal =
-    groupMembers.find((member) => member.id === toGroupMemberId)?.user
-      .paypalHandle ?? null;
-  const payingWithPaypal =
-    fromGroupMemberId === meId && amountInCents > 0 && !!receiverPaypal;
+  const receiver = groupMembers.find((member) => member.id === toGroupMemberId);
+  const receiverPaypal = receiver?.user.paypalHandle ?? null;
+  const bothMembers =
+    !!receiver &&
+    groupMembers.some((member) => member.id === fromGroupMemberId);
+  const payerIsMe = fromGroupMemberId === meId;
+  const payingWithPaypal = payerIsMe && amountInCents > 0 && !!receiverPaypal;
   const failure = failureOf(
     createSettlementMutation,
     t("expenses.genericError"),
@@ -492,11 +494,12 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               )}
             />
 
-            {fromGroupMemberId > 0 && toGroupMemberId > 0 && (
+            {bothMembers && (
               <SettlementPayment
                 paypalHandle={receiverPaypal}
                 receiverName={toMember.name}
                 receiverIsMe={toGroupMemberId === meId}
+                payerIsMe={payerIsMe}
                 amountInCents={amountInCents}
                 currency={currency}
               />

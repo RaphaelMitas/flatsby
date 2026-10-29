@@ -434,8 +434,8 @@ export function SettlementForm({
   const receiverPaypal =
     groupMembers.find((member) => member.id === watchedToMemberId)?.user
       .paypalHandle ?? null;
-  const payingWithPaypal =
-    watchedFromMemberId === meId && watchedAmount > 0 && !!receiverPaypal;
+  const payerIsMe = watchedFromMemberId === meId;
+  const payingWithPaypal = payerIsMe && watchedAmount > 0 && !!receiverPaypal;
 
   const errorMessage =
     failureOf(createSettlementMutation, t("expenses.genericError")) ??
@@ -601,6 +601,7 @@ export function SettlementForm({
                 paypalHandle={receiverPaypal}
                 receiverName={pair.receiver.name}
                 receiverIsMe={watchedToMemberId === meId}
+                payerIsMe={payerIsMe}
                 amountInCents={watchedAmount}
                 currency={watchedCurrency}
               />
