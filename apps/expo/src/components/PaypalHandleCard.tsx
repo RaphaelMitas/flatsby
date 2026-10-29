@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Linking, Text, View } from "react-native";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { failureOf, resultMutation } from "@flatsby/api/resultMutation";
@@ -31,18 +35,14 @@ import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 
-// Loads on its own so the rest of Profile never waits on it, offline included
 export function PaypalHandleCard() {
-  const { data } = useQuery(trpc.user.getPaypalHandle.queryOptions());
-  // An empty form after a failed load would clear the stored name on Save
-  if (!data?.success) return null;
-  return <PaypalHandleForm stored={data.data} />;
-}
-
-function PaypalHandleForm({ stored }: { stored: string | null }) {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const [notice, setNotice] = useState<"saved" | "removed" | null>(null);
+  const { data: user } = useSuspenseQuery(
+    trpc.user.getCurrentUser.queryOptions(),
+  );
+  const stored = user.paypalHandle ?? null;
 
   const form = useForm({
     schema: paypalHandleInputSchema,
@@ -56,7 +56,7 @@ function PaypalHandleForm({ stored }: { stored: string | null }) {
       resultMutation({
         onSuccess: (paypalHandle) => {
           void queryClient.invalidateQueries(
-            trpc.user.getPaypalHandle.queryFilter(),
+            trpc.user.getCurrentUser.queryFilter(),
           );
           void queryClient.invalidateQueries(trpc.group.getGroup.pathFilter());
           // reset() applies resetOptions too, which would keep the raw pasted link

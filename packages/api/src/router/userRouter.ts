@@ -212,24 +212,6 @@ export const userRouter = createTRPCRouter({
       ),
     ),
 
-  getPaypalHandle: protectedProcedure
-    .output(getApiResultZod(z.string().nullable()))
-    .query(async ({ ctx }) =>
-      runResult(
-        ctx,
-        Effect.gen(function* () {
-          const database = yield* Database;
-          const user = yield* database.query("fetch paypal handle", (db) =>
-            db.query.users.findFirst({
-              where: eq(users.id, ctx.session.user.id),
-              columns: { paypalHandle: true },
-            }),
-          );
-          return user?.paypalHandle ?? null;
-        }),
-      ),
-    ),
-
   updatePaypalHandle: protectedProcedure
     .input(paypalHandleInputSchema)
     .output(getApiResultZod(z.string().nullable()))

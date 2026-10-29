@@ -40,16 +40,12 @@ import { useTRPC } from "~/trpc/react";
 
 export function PaypalHandleCard() {
   const trpc = useTRPC();
-  const { data } = useSuspenseQuery(trpc.user.getPaypalHandle.queryOptions());
-  // An empty form after a failed load would clear the stored name on Save
-  if (!data.success) return null;
-  return <PaypalHandleForm stored={data.data} />;
-}
-
-function PaypalHandleForm({ stored }: { stored: string | null }) {
-  const trpc = useTRPC();
   const t = useTranslations();
   const queryClient = useQueryClient();
+  const { data: user } = useSuspenseQuery(
+    trpc.user.getCurrentUser.queryOptions(),
+  );
+  const stored = user.paypalHandle ?? null;
 
   const form = useForm({
     resolver: zodResolver(paypalHandleInputSchema),
@@ -63,7 +59,7 @@ function PaypalHandleForm({ stored }: { stored: string | null }) {
       resultMutation({
         onSuccess: (paypalHandle) => {
           void queryClient.invalidateQueries(
-            trpc.user.getPaypalHandle.queryFilter(),
+            trpc.user.getCurrentUser.queryFilter(),
           );
           void queryClient.invalidateQueries(trpc.group.getGroup.pathFilter());
           // reset() applies resetOptions too, which would keep the raw pasted link
