@@ -1,0 +1,50 @@
+name: "Restore artifact"
+description: "Unpack the newest unexpired artifact with this name, from any run in the repo"
+
+# actions/cache scopes entries to the branch that wrote them, so PRs would
+# never share a pool and release.yml on main could not read one; artifacts are
+# visible repo-wide. Each artifact holds one tar.gz.
+inputs:
+  name:
+    description: "Artifact name"
+    required: true
+  dir:
+    description: "Directory the tar.gz unpacks into; a leading ~ is the home directory"
+    required: true
+
+outputs:
+  hit:
+    description: '"true" when an artifact was restored'
+    value: ${{ steps.restore.outputs.hit }}
+
+runs:
+  using: composite
+  steps:
+    - id: restore
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        NAME: ${{ inputs.name }}
+        DIR: ${{ inputs.dir }}
+      run: |
+        DIR="${DIR/#\~/$HOME}"
+        # Only artifacts from this repo's own runs: a fork's run can upload under any name.
+        ART_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=$NAME&per_page=100" \
+          --jq '[.artifacts[] | select(.expired == false and .workflow_run.head_repository_id == .workflow_run.repository_id)][0].id // empty') \
+          || ART_ID=""
+        if [ -z "$ART_ID" ]; then
+          echo "No $NAME artifact available"
+          echo "hit=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        TMP=$(mktemp -d)
+        if gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ART_ID/zip" > "$TMP/artifact.zip" \
+          && unzip -q "$TMP/artifact.zip" -d "$TMP/unzipped" \
+          && mkdir -p "$DIR" \
+          && tar -xzf "$TMP"/unzipped/*.tar.gz -C "$DIR"; then
+          echo "Restored $NAME from artifact $ART_ID"
+          echo "hit=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "$NAME artifact $ART_ID unusable"
+          echo "hit=false" >> "$GITHUB_OUTPUT"
+        fi
