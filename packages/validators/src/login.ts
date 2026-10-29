@@ -1,7 +1,33 @@
 import { z } from "zod/v4";
 
+import { msg } from "@flatsby/i18n/message-key";
+
 export const loginProviderSchema = z.enum(["google", "apple"]);
 export type LoginProvider = z.infer<typeof loginProviderSchema>;
+
+export const loginMethodSchema = z.enum([
+  ...loginProviderSchema.options,
+  "email",
+]);
+export type LoginMethod = z.infer<typeof loginMethodSchema>;
+
+export const SIGN_IN_CODE_LENGTH = 6;
+export const SIGN_IN_CODE_RESEND_SECONDS = 30;
+
+const CODE_ERRORS = new Map([
+  ["INVALID_OTP", msg("auth.code.invalid")],
+  ["OTP_EXPIRED", msg("auth.code.expired")],
+  ["TOO_MANY_ATTEMPTS", msg("auth.code.tooManyAttempts")],
+]);
+
+export function signInCodeError(error: { code?: string; status: number }) {
+  if (error.status === 429) return msg("auth.code.tooManyRequests");
+  return CODE_ERRORS.get(error.code ?? "") ?? msg("auth.code.failed");
+}
+
+// Only a wrong code can be retried; the others need a new code
+export const isRetryableCodeError = (error: { code?: string }) =>
+  error.code === "INVALID_OTP";
 
 export const loginAttemptSchema = z.object({
   attemptId: z.uuid(),

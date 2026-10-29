@@ -146,6 +146,7 @@ export default function PrivacyPage() {
               <li>{t.rich("providers.neon", { strong })}</li>
               <li>{t.rich("providers.vercel", { strong })}</li>
               <li>{t.rich("providers.auth", { strong })}</li>
+              <li>{t.rich("providers.resend", { strong })}</li>
               <li>{t.rich("providers.billing", { strong })}</li>
               <li>{t.rich("providers.expo", { strong })}</li>
               <li>{t.rich("providers.stores", { strong })}</li>

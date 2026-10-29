@@ -1,0 +1,72 @@
+import type { TextInputProps } from "react-native";
+import { Text, TextInput, View } from "react-native";
+
+interface CodeInputProps extends TextInputProps {
+  value: string;
+  length: number;
+  groupSize: number;
+  error?: boolean;
+}
+
+// One invisible input over the slots, so paste and the keyboard's code suggestion fill every slot at once; callers trim what lands
+const CodeInput = ({
+  value,
+  length,
+  groupSize,
+  error,
+  ...props
+}: CodeInputProps) => {
+  const groups = Array.from(
+    { length: Math.ceil(length / groupSize) },
+    (_, group) =>
+      Array.from(
+        { length: Math.min(groupSize, length - group * groupSize) },
+        (_, i) => group * groupSize + i,
+      ),
+  );
+
+  return (
+    <View className="relative flex-row items-center justify-center gap-2">
+      {groups.map((slots, group) => (
+        <View key={slots[0]} className="flex-row items-center gap-2">
+          {group > 0 && (
+            <Text className="text-muted-foreground font-bold">–</Text>
+          )}
+          <View
+            className={`flex-row overflow-hidden rounded-lg border ${
+              error ? "border-destructive" : "border-border"
+            }`}
+          >
+            {slots.map((index, i) => (
+              <View
+                key={index}
+                className={`h-12 w-9 items-center justify-center ${
+                  i > 0 ? "border-border border-l" : ""
+                } ${index === value.length ? "bg-muted" : "bg-background"}`}
+              >
+                <Text
+                  className={`font-mono text-xl font-bold ${
+                    error ? "text-destructive" : "text-foreground"
+                  }`}
+                >
+                  {value[index]}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
+      <TextInput
+        value={value}
+        autoCorrect={false}
+        caretHidden
+        selectionColor="transparent"
+        // Transparent text instead of opacity-0, which iOS excludes from touches, so tap and long-press paste still land
+        className="absolute inset-0 text-transparent"
+        {...props}
+      />
+    </View>
+  );
+};
+
+export { CodeInput };

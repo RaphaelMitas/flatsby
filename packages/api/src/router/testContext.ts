@@ -32,6 +32,7 @@ export const testContext = (
     appleKeyId: "",
     appleClientSecret: "",
     trustedOrigins: [],
+    sendSignInCode: async () => undefined,
   }).api,
   headers: new Headers(),
   session: user && {

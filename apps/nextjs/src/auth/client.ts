@@ -1,9 +1,14 @@
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
-type AuthClient = ReturnType<typeof createAuthClient>;
+type AuthClient = ReturnType<
+  typeof createAuthClient<{ plugins: [ReturnType<typeof emailOTPClient>] }>
+>;
 
-export const authClient: AuthClient = createAuthClient();
+export const authClient: AuthClient = createAuthClient({
+  plugins: [emailOTPClient()],
+});
 
 export const signIn: AuthClient["signIn"] = authClient.signIn;
 export const signOut: AuthClient["signOut"] = authClient.signOut;

@@ -7,6 +7,7 @@ import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { relations } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   date,
   index,
@@ -132,6 +133,20 @@ export const verificationTokens = createTable("verification_token", {
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
+});
+
+export const rateLimits = createTable("rate_limit", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+});
+
+// Better Auth only limits per IP, so sign-in codes are also counted per address
+export const signInCodeRequests = createTable("sign_in_code_request", {
+  emailHash: text("email_hash").primaryKey(),
+  count: integer("count").notNull(),
+  windowStart: timestamp("window_start").notNull(),
 });
 // end auth
 

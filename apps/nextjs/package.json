@@ -48,6 +48,7 @@
     "react-intersection-observer": "^11.0.1",
     "react-qr-code": "catalog:",
     "react-swipeable-list": "^1.10.0",
+    "resend": "^6.35.0",
     "superjson": "catalog:",
     "zod": "catalog:"
   },

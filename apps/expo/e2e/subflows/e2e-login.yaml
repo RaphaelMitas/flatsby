@@ -44,7 +44,7 @@ appId: ${APP_ID}
 # untagged fixed identities race — each seed deactivates the other
 # platform's memberships mid-capture (release run 31267306819).
 - evalScript: "${output.e2eEmail = typeof E2E_USER_EMAIL !== 'undefined' ? (typeof E2E_SEED !== 'undefined' ? E2E_USER_EMAIL.replace('@', '-' + maestro.platform.toLowerCase() + '@') : E2E_USER_EMAIL) : undefined}"
-- evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + (typeof E2E_USER_NAME !== 'undefined' ? '&name=' + encodeURIComponent(E2E_USER_NAME) : '') + (output.e2eEmail ? '&email=' + encodeURIComponent(output.e2eEmail) : '') + (typeof E2E_SEED !== 'undefined' ? '&seed=' + encodeURIComponent(E2E_SEED) : '') + (typeof E2E_LOCALE !== 'undefined' ? '&locale=' + encodeURIComponent(E2E_LOCALE) : '')}"
+- evalScript: "${output.e2eLoginLink = 'flatsby://e2e-login?apiUrl=' + encodeURIComponent(E2E_API_URL) + (typeof E2E_USER_NAME !== 'undefined' ? '&name=' + encodeURIComponent(E2E_USER_NAME) : '') + (output.e2eEmail ? '&email=' + encodeURIComponent(output.e2eEmail) : '') + (typeof E2E_SEED !== 'undefined' ? '&seed=' + encodeURIComponent(E2E_SEED) : '') + (typeof E2E_LOCALE !== 'undefined' ? '&locale=' + encodeURIComponent(E2E_LOCALE) : '') + (typeof E2E_SIGNED_OUT !== 'undefined' ? '&signedOut=1' : '')}"
 # openLink sits inside the retry: if session setup errors out, the e2e-login
 # screen parks in its error state (run 31255356976, iPad), and only re-firing
 # the link restarts it — re-waiting alone never recovers. iOS sometimes asks
@@ -68,8 +68,8 @@ appId: ${APP_ID}
             id: "e2e-login-done"
           timeout: 45000
 # Relaunch so the auth client and tRPC links initialize with the injected
-# session + API URL override.
+# session + API URL override. E2E_SIGNED_OUT stores only the API URL.
 - runFlow:
     file: relaunch.yaml
     env:
-      MARKER_ID: "group-dashboard-title"
+      MARKER_ID: "${typeof E2E_SIGNED_OUT !== 'undefined' ? 'login-screen' : 'group-dashboard-title'}"

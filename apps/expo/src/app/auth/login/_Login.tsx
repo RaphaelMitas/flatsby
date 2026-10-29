@@ -1,18 +1,30 @@
 "use client";
 
-import type { LoginAttempt, LoginProvider } from "@flatsby/validators/login";
+import type { MessageKey } from "@flatsby/i18n/message-key";
+import type {
+  LoginAttempt,
+  LoginMethod,
+  LoginProvider,
+} from "@flatsby/validators/login";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { uuidv7 } from "@posthog/core";
 import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
-import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
+import {
+  signInCodeError,
+  startFailureCode,
+  thrownFailureCode,
+} from "@flatsby/validators/login";
+import { userEmailSchema } from "@flatsby/validators/user";
 
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { Input } from "~/lib/ui/input";
 import { authClient, signIn } from "~/utils/auth/auth-client";
 import { openLegalPage } from "~/utils/legal";
 
@@ -20,7 +32,10 @@ const Login = () => {
   const t = useTranslations();
   const locale = useLocale();
   const posthog = usePostHog();
-  const [loading, setLoading] = useState<LoginProvider | "false">("false");
+  const router = useRouter();
+  const [loading, setLoading] = useState<LoginMethod | "false">("false");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<MessageKey | null>(null);
 
   const callbackURL = ExpoLinking.createURL("/");
 
@@ -64,12 +79,58 @@ const Login = () => {
     }
   };
 
+  const sendCode = async () => {
+    const parsed = userEmailSchema.safeParse(email.trim());
+    if (!parsed.success) {
+      setEmailError("settings.validation.emailInvalid");
+      return;
+    }
+    const attemptId = uuidv7();
+    const attempt = {
+      provider: "email",
+      platform: "app",
+      attempt_id: attemptId,
+    };
+    posthog.capture("login_provider_tapped", attempt);
+    setEmailError(null);
+    setLoading("email");
+    const failed = (errorCode: string) =>
+      posthog.capture("login_failed", {
+        ...attempt,
+        stage: "start",
+        error_code: errorCode,
+      });
+    try {
+      const { error } = await authClient.emailOtp
+        .sendVerificationOtp({ email: parsed.data, type: "sign-in" })
+        .catch((thrown: unknown) => {
+          failed(thrownFailureCode(thrown));
+          setEmailError("auth.code.failed");
+          throw thrown;
+        });
+      if (error) {
+        failed(startFailureCode(error));
+        setEmailError(signInCodeError(error));
+        return;
+      }
+      router.push({
+        pathname: "/auth/login/code",
+        params: { email: parsed.data, attemptId },
+      });
+    } finally {
+      setLoading("false");
+    }
+  };
+
   return (
-    <View testID="login-screen" className="bg-background flex-1 px-6 py-8">
+    <View testID="login-screen" className="bg-background flex-1">
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1 justify-center">
-        {/* Header Section */}
-        <View className="mb-12 items-center">
+      {/* Keeps the continue button above the keyboard, not just the field */}
+      <AppScrollView
+        bottomOffset={96}
+        contentContainerClassName="justify-center px-6 py-8"
+      >
+        <View className="mb-10 items-center">
           <Icon
             name="flatsby"
             className="mb-6 h-40 w-full"
@@ -84,10 +145,59 @@ const Login = () => {
           </Text>
         </View>
 
-        {/* Auth Buttons Section */}
         <View className="w-full gap-4">
+          <View className="gap-2">
+            <Input
+              testID="sign-in-email-input"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                setEmailError(null);
+              }}
+              onSubmitEditing={() => void sendCode()}
+              placeholder={t("auth.login.emailPlaceholder")}
+              accessibilityLabel={t("auth.login.email")}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              textContentType="username"
+              returnKeyType="send"
+              error={emailError !== null}
+            />
+            {emailError && (
+              <Text
+                testID="sign-in-email-error"
+                className="text-destructive text-sm"
+              >
+                {t(emailError)}
+              </Text>
+            )}
+          </View>
+          <Button
+            testID="sign-in-email-button"
+            onPress={() => sendCode()}
+            disabled={loading !== "false"}
+            className="w-full py-4"
+            title={
+              loading === "email"
+                ? t("auth.login.sendingCode")
+                : t("auth.login.continueWithEmail")
+            }
+            icon={loading === "email" ? "loader" : undefined}
+          />
+
+          <View className="flex-row items-center gap-3">
+            <View className="bg-border h-px flex-1" />
+            <Text className="text-muted-foreground text-xs">
+              {t("auth.login.or")}
+            </Text>
+            <View className="bg-border h-px flex-1" />
+          </View>
+
           <Button
             testID="sign-in-google-button"
+            variant="outline"
             onPress={() => signInWith("google")}
             disabled={loading !== "false"}
             className="w-full py-4"
@@ -101,6 +211,7 @@ const Login = () => {
 
           <Button
             testID="sign-in-apple-button"
+            variant="outline"
             onPress={() => signInWith("apple")}
             disabled={loading !== "false"}
             className="w-full py-4"
@@ -113,7 +224,6 @@ const Login = () => {
           />
         </View>
 
-        {/* Legal Links */}
         <View className="mt-6 gap-2">
           <Text className="text-muted-foreground text-center text-xs">
             {t.rich("auth.login.agreement", {
@@ -142,7 +252,7 @@ const Login = () => {
             {t("navigation.legalNotice")}
           </Text>
         </View>
-      </View>
+      </AppScrollView>
     </View>
   );
 };

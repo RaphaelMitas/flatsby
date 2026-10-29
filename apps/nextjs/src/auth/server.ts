@@ -18,6 +18,7 @@ import {
 
 import { env } from "~/env";
 import { captureFor, captureVisit, withoutCookie } from "~/utils/page-views";
+import { sendSignInCode } from "./sign-in-code-email";
 
 export const auth = initAuth({
   baseUrl: env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL,
@@ -37,6 +38,7 @@ export const auth = initAuth({
   trustedOrigins: env.VERCEL_BRANCH_URL
     ? [`https://${env.VERCEL_BRANCH_URL}`]
     : [],
+  sendSignInCode,
   onUserCreated,
   onOAuthCallback,
 });
@@ -59,7 +61,13 @@ const callbackPage = {
 async function onUserCreated(requestHeaders: Headers | undefined) {
   if (!requestHeaders) return;
   try {
-    const platform = oauthPlatform(await getOAuthState());
+    const state = await getOAuthState();
+    // Outside OAuth only the Expo client sends expo-origin
+    const platform = state
+      ? oauthPlatform(state)
+      : requestHeaders.has("expo-origin")
+        ? "app"
+        : "web";
     after(() =>
       captureVisit("signed_up", withoutCookie(requestHeaders), callbackPage, {
         platform,

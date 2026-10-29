@@ -14,7 +14,7 @@ export const legal = {
     metaTitle: "Terms of Service - Flatsby",
     metaDescription: "Terms of Service for using Flatsby",
     title: "Terms of Service",
-    lastUpdated: "January 2026",
+    lastUpdated: "October 2026",
     toc: {
       acceptance: "Acceptance of Terms",
       description: "Description of Service",
@@ -39,7 +39,7 @@ export const legal = {
     },
     accounts: {
       intro:
-        "To use the Service, you must create an account using Google or Apple Sign-In. You are responsible for:",
+        "To use the Service, you must create an account by signing in with an email code, Google or Apple. You are responsible for:",
       security: "Maintaining the security of your account credentials",
       activities: "All activities that occur under your account",
       notify: "Notifying us immediately of any unauthorized access",
@@ -102,11 +102,12 @@ export const legal = {
     controller: "The controller is:",
     account: {
       heading: "Account",
-      intro: "From your Google or Apple sign-in and your account, we store:",
+      intro:
+        "From your sign-in (email code, Google or Apple) and your account, we store:",
       name: "Your name",
       email: "Your email address",
       picture: "Your profile picture (Google only)",
-      identifier: "Your Google or Apple account ID",
+      identifier: "Your Google or Apple account ID, if you sign in with them",
       plan: "Your plan, purchases and AI credit balance",
     },
     userContent: {
@@ -139,11 +140,11 @@ export const legal = {
         "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including purchases and automatic AI categories",
       consent: "<strong>Consent (Art. 6(1)(a) GDPR):</strong> the AI assistant",
       interests:
-        "<strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> running the website securely; analytics on the website and in the app, to learn how people find and use Flatsby; error reports, to fix bugs; AI usage metrics, to control costs; login session records, to protect your account",
+        "<strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> running the website securely; analytics on the website and in the app, to learn how people find and use Flatsby; error reports, to fix bugs; AI usage metrics, to control costs; login session records, to protect your account; counting sign-in attempts per IP address and per email address (hashed), to stop abuse",
       obligations:
         "<strong>Legal obligation (Art. 6(1)(c) GDPR):</strong> keeping invoices and payment records under tax and commercial law",
       required:
-        "No law requires you to provide data. Without your name, email address and Google or Apple account ID we can't create an account. Analytics isn't needed to use Flatsby.",
+        "No law requires you to provide data. Without your email address, and your Google or Apple account ID if you sign in with them, we can't create an account. Analytics isn't needed to use Flatsby.",
     },
     groups: {
       heading: "Your Groups",
@@ -155,6 +156,8 @@ export const legal = {
       vercel:
         "<strong>Vercel (hosting):</strong> Every request passes through Vercel, with your IP address and browser details. Our API runs in Frankfurt; pages may be served from a location near you, possibly outside the EU.",
       auth: "<strong>Google and Apple (sign-in):</strong> Confirm your identity. Google profile pictures load from Google's servers, so Google sees the IP address of anyone viewing them (Art. 6(1)(b) GDPR).",
+      resend:
+        "<strong>Resend (email):</strong> Sends sign-in codes and receives your email address and the code for that. Emails are sent from Ireland; Resend stores logs and metadata in the USA.",
       billing:
         "<strong>Autumn, Stripe and RevenueCat (plans and AI credits):</strong> Autumn (web) receives your account ID, name and email address, RevenueCat (app) your account ID, both with your purchases. Autumn uses Stripe for payments.",
       expo: "<strong>Expo (app updates):</strong> The app checks Expo's servers for updates, which receive your IP address, app version and platform.",
@@ -204,7 +207,7 @@ export const legal = {
         "<strong>Not signed in:</strong> We can't recognize you, so turn on Global Privacy Control or Do Not Track in your browser. We then don't count your visits.",
     },
     international:
-      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe and Expo are US companies, so data may reach the USA. For providers certified under the EU-US Data Privacy Framework, the EU adequacy decision applies (Art. 45 GDPR). PostHog is certified and has also signed the EU Standard Contractual Clauses with us (Art. 46(2)(c) GDPR); ask us for a copy.",
+      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe, Resend and Expo are US companies, so data may reach the USA. For providers certified under the EU-US Data Privacy Framework, the EU adequacy decision applies (Art. 45 GDPR). PostHog is certified and has also signed the EU Standard Contractual Clauses with us (Art. 46(2)(c) GDPR); ask us for a copy.",
     children:
       "Flatsby is not meant for children under 16. If you think a child has given us data, contact us.",
     changes:

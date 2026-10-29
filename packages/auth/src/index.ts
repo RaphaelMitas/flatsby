@@ -2,11 +2,20 @@ import type { BetterAuthOptions } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import { oAuthProxy, testUtils } from "better-auth/plugins";
+import { emailOTP, oAuthProxy, testUtils } from "better-auth/plugins";
 
 import { db } from "@flatsby/db/client";
+import { defaultUserName } from "@flatsby/validators/user";
+
+import { allowSignInCode } from "./sign-in-code-limit";
+
+export interface SignInCode {
+  email: string;
+  code: string;
+  headers: Headers | undefined;
+}
 
 export interface OAuthCallback {
   providerId: string;
@@ -29,9 +38,13 @@ export function initAuth(options: {
   appleKeyId: string;
   appleClientSecret: string;
   trustedOrigins: string[];
+  sendSignInCode: (signInCode: SignInCode) => Promise<void>;
   onUserCreated?: (headers: Headers | undefined) => Promise<void>;
   onOAuthCallback?: (callback: OAuthCallback) => Promise<void>;
 }) {
+  // e2e runs a production build, and every test shares one IP
+  const limitRequests =
+    options.nodeEnv === "production" && !options.enableTestUtils;
   const config = {
     database: drizzleAdapter(db, { provider: "pg" }),
     baseURL: options.baseUrl,
@@ -41,9 +54,25 @@ export function initAuth(options: {
         productionURL: options.productionUrl,
       }),
       expo(),
+      emailOTP({
+        storeOTP: "encrypted",
+        sendVerificationOTP: ({ email, otp }, ctx) =>
+          options.sendSignInCode({
+            email,
+            code: otp,
+            headers: ctx?.headers ?? ctx?.request?.headers,
+          }),
+      }),
       nextCookies(),
       ...(options.enableTestUtils ? [testUtils()] : []),
     ],
+    rateLimit: {
+      enabled: limitRequests,
+      storage: "database",
+      modelName: "rateLimits",
+      // Every app open checks the session; a write per check buys nothing
+      customRules: { "/get-session": false },
+    },
     socialProviders: {
       google: {
         clientId: options.googleClientId,
@@ -63,6 +92,18 @@ export function initAuth(options: {
     },
     trustedOrigins: ["flatsby://", "expo://", ...options.trustedOrigins],
     hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (
+          !limitRequests ||
+          ctx.path !== "/email-otp/send-verification-otp" ||
+          typeof ctx.body?.email !== "string"
+        ) {
+          return;
+        }
+        if (!(await allowSignInCode(ctx.body.email))) {
+          throw new APIError("TOO_MANY_REQUESTS");
+        }
+      }),
       // Every outcome Better Auth handles leaves the callback as a redirect, so it's read from the location
       after: createAuthMiddleware(async (ctx) => {
         const providerId = ctx.params?.id;
@@ -86,6 +127,10 @@ export function initAuth(options: {
     databaseHooks: {
       user: {
         create: {
+          before: async (user) => {
+            if (user.name) return;
+            return { data: { ...user, name: defaultUserName(user.email) } };
+          },
           after: async (_user, context) => {
             await options.onUserCreated?.(
               context?.headers ?? context?.request?.headers,

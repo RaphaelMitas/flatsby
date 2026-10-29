@@ -61,8 +61,8 @@ export const settings = {
     displayName: "Anzeigename",
     created: "Konto erstellt am",
     settings: "Kontoeinstellungen",
-    managedByProvider:
-      "Deine Kontodaten werden über deinen Anmeldeanbieter verwaltet. Deine E-Mail-Adresse und andere grundlegende Kontodaten kannst du hier nicht ändern.",
+    emailFixed:
+      "Deine E-Mail-Adresse kannst du hier nicht ändern. Mit ihr kannst du dich jederzeit per Code anmelden.",
   },
   profile: {
     displayName: "Anzeigename",

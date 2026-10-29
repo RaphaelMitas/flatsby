@@ -58,8 +58,8 @@ export const settings = {
     displayName: "Display Name",
     created: "Account Created",
     settings: "Account Settings",
-    managedByProvider:
-      "Your account information is managed through your authentication provider. You can't change your email address or other core account details.",
+    emailFixed:
+      "You can't change your email address here. You can always sign in with a code sent to it.",
   },
   profile: {
     displayName: "Display Name",

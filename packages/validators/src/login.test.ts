@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { callbackOutcome, loginAttemptSchema, loginErrorCode } from "./login";
+import {
+  callbackOutcome,
+  isRetryableCodeError,
+  loginAttemptSchema,
+  loginErrorCode,
+  signInCodeError,
+} from "./login";
 
 const redirect = (query: string) =>
   new URL(`https://www.flatsby.com/api/auth/error${query}`);
@@ -59,4 +65,22 @@ describe("loginAttemptSchema", () => {
       });
     },
   );
+});
+
+describe("signInCodeError", () => {
+  it.each([
+    [{ code: "INVALID_OTP", status: 400 }, "auth.code.invalid"],
+    [{ code: "OTP_EXPIRED", status: 400 }, "auth.code.expired"],
+    [{ code: "TOO_MANY_ATTEMPTS", status: 403 }, "auth.code.tooManyAttempts"],
+    [{ status: 429 }, "auth.code.tooManyRequests"],
+    [{ code: "SOMETHING_ELSE", status: 500 }, "auth.code.failed"],
+  ])("maps %j to %s", (error, key) => {
+    expect(signInCodeError(error)).toBe(key);
+  });
+
+  it("lets only a wrong code be retried", () => {
+    expect(isRetryableCodeError({ code: "INVALID_OTP" })).toBe(true);
+    expect(isRetryableCodeError({ code: "OTP_EXPIRED" })).toBe(false);
+    expect(isRetryableCodeError({ code: "TOO_MANY_ATTEMPTS" })).toBe(false);
+  });
 });

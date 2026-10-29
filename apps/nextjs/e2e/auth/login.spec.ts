@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Login page", () => {
-  test("renders with OAuth buttons", async ({ page }) => {
+  test("renders the email field and OAuth buttons", async ({ page }) => {
     await page.goto("/auth/login");
 
     await expect(page.getByTestId("auth-login-title")).toBeVisible();
+    await expect(page.getByTestId("auth-login-email-input")).toBeVisible();
     await expect(page.getByTestId("auth-login-google-button")).toBeVisible();
     await expect(page.getByTestId("auth-login-apple-button")).toBeVisible();
   });
