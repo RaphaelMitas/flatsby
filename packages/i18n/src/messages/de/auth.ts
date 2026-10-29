@@ -20,17 +20,19 @@ export const auth = {
   code: {
     title: "Code eingeben",
     sentTo:
-      "Wir haben einen 6-stelligen Code an <b>{email}</b> geschickt. Er gilt 5 Minuten.",
+      "Wir haben einen {length}-stelligen Code an <b>{email}</b> geschickt. Er gilt {minutes} Minuten.",
     changeEmail: "Andere E-Mail-Adresse",
     notArrived: "Nichts angekommen? Schau im Spam-Ordner nach.",
     resendIn: "Neuen Code senden in {seconds} s",
     resend: "Neuen Code senden",
     resent: "Code erneut gesendet. Nimm den aus der neuesten E-Mail.",
     invalid: "Der Code stimmt nicht. Prüf ihn und versuch es noch einmal.",
-    expired: "Der Code ist abgelaufen. Codes gelten 5 Minuten.",
+    expired: "Der Code ist abgelaufen. Fordere einen neuen an.",
     tooManyAttempts: "Zu viele falsche Versuche. Fordere einen neuen Code an.",
     tooManyRequests:
       "Zu viele Versuche. Warte eine Minute und versuch es noch einmal.",
+    tooManyCodes:
+      "Zu viele Codes für diese Adresse. Versuch es in einer Stunde noch einmal.",
     failed: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
   },
   name: {
@@ -43,7 +45,7 @@ export const auth = {
     subject: "{code} ist dein Flatsby-Code",
     heading: "Dein Anmeldecode",
     intro: "Gib diesen Code in Flatsby ein, um dich anzumelden:",
-    expiry: "Der Code gilt 5 Minuten.",
+    expiry: "Der Code gilt {minutes} Minuten.",
     ignore:
       "Wenn du dich nicht anmelden wolltest, kannst du diese E-Mail ignorieren.",
   },

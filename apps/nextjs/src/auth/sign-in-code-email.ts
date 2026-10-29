@@ -6,6 +6,7 @@ import { Resend } from "resend";
 import { captureError } from "@flatsby/api/posthog";
 import { localeFromHeaders } from "@flatsby/i18n/locale";
 import { translatorFor } from "@flatsby/i18n/translator";
+import { SIGN_IN_CODE_TTL_MINUTES } from "@flatsby/validators/login";
 
 import { env } from "~/env";
 
@@ -28,7 +29,9 @@ export async function sendSignInCode({ email, code, headers }: SignInCode) {
   const t = translatorFor(locale);
   const heading = t("auth.signInCodeEmail.heading");
   const intro = t("auth.signInCodeEmail.intro");
-  const expiry = t("auth.signInCodeEmail.expiry");
+  const expiry = t("auth.signInCodeEmail.expiry", {
+    minutes: SIGN_IN_CODE_TTL_MINUTES,
+  });
   const ignore = t("auth.signInCodeEmail.ignore");
 
   const { error } = await resend.emails.send({

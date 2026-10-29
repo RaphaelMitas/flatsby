@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { sql } from "@flatsby/db";
+import { eq, sql } from "@flatsby/db";
 import { db } from "@flatsby/db/client";
 import { signInCodeRequests } from "@flatsby/db/schema";
 import { inboxOf } from "@flatsby/validators/user";
@@ -9,24 +9,27 @@ const MAX_CODES_PER_HOUR = 10;
 
 const windowExpired = sql`${signInCodeRequests.windowStart} < now() - interval '1 hour'`;
 
-// Counted per inbox, so +tags and Gmail dots can't spread one victim over many buckets.
-// One upsert counts and resets the window, so parallel requests can't slip past the limit
+const inboxHash = (email: string) =>
+  createHash("sha256").update(inboxOf(email)).digest("hex");
+
+// Expired rows go first, so one atomic upsert counts without a window reset
 export async function allowSignInCode(email: string) {
+  await db.delete(signInCodeRequests).where(windowExpired);
   const [row] = await db
     .insert(signInCodeRequests)
-    .values({
-      emailHash: createHash("sha256").update(inboxOf(email)).digest("hex"),
-      count: 1,
-      windowStart: sql`now()`,
-    })
+    .values({ emailHash: inboxHash(email), count: 1, windowStart: sql`now()` })
     .onConflictDoUpdate({
       target: signInCodeRequests.emailHash,
-      set: {
-        count: sql`case when ${windowExpired} then 1 else ${signInCodeRequests.count} + 1 end`,
-        windowStart: sql`case when ${windowExpired} then now() else ${signInCodeRequests.windowStart} end`,
-      },
+      set: { count: sql`${signInCodeRequests.count} + 1` },
     })
     .returning({ count: signInCodeRequests.count });
-  await db.delete(signInCodeRequests).where(windowExpired);
   return (row?.count ?? 0) <= MAX_CODES_PER_HOUR;
+}
+
+// A send that failed on our side mustn't use up the person's hour
+export async function refundSignInCode(email: string) {
+  await db
+    .update(signInCodeRequests)
+    .set({ count: sql`greatest(${signInCodeRequests.count} - 1, 0)` })
+    .where(eq(signInCodeRequests.emailHash, inboxHash(email)));
 }

@@ -7,6 +7,7 @@ import { useTranslations } from "use-intl";
 import {
   SIGN_IN_CODE_GROUP,
   SIGN_IN_CODE_LENGTH,
+  SIGN_IN_CODE_TTL_MINUTES,
 } from "@flatsby/validators/login";
 import { asksForName } from "@flatsby/validators/user";
 import { useSignInCode } from "@flatsby/validators/useSignInCode";
@@ -73,6 +74,8 @@ export default function CodeScreen() {
           <Text className="text-muted-foreground text-base leading-relaxed">
             {t.rich("auth.code.sentTo", {
               email,
+              length: SIGN_IN_CODE_LENGTH,
+              minutes: SIGN_IN_CODE_TTL_MINUTES,
               b: (chunks) => (
                 <Text className="text-foreground font-semibold">{chunks}</Text>
               ),

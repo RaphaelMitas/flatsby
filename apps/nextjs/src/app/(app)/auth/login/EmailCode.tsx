@@ -11,6 +11,7 @@ import {
   digitsOnly,
   SIGN_IN_CODE_GROUP,
   SIGN_IN_CODE_LENGTH,
+  SIGN_IN_CODE_TTL_MINUTES,
 } from "@flatsby/validators/login";
 import { asksForName } from "@flatsby/validators/user";
 import { useSignInCode } from "@flatsby/validators/useSignInCode";
@@ -79,6 +80,8 @@ export default function EmailCode({
         <p className="text-muted-foreground text-sm">
           {t.rich("auth.code.sentTo", {
             email,
+            length: SIGN_IN_CODE_LENGTH,
+            minutes: SIGN_IN_CODE_TTL_MINUTES,
             b: (chunks) => (
               <span className="text-foreground font-medium">{chunks}</span>
             ),

@@ -23,7 +23,7 @@ export const userImageSchema = z.string().optional().nullable();
 
 const GMAIL_DOMAINS = new Set(["gmail.com", "googlemail.com"]);
 
-// The mailbox that receives mail for an address: +tags are dropped everywhere, and Gmail ignores dots
+// Gmail ignores dots in the local part
 export function inboxOf(email: string) {
   const [local = "", domain = ""] = email.toLowerCase().split("@");
   const untagged = local.split("+")[0] ?? "";

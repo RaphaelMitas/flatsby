@@ -14,7 +14,8 @@ export type LoginMethod = z.infer<typeof loginMethodSchema>;
 export const SIGN_IN_CODE_LENGTH = 6;
 export const SIGN_IN_CODE_GROUP = SIGN_IN_CODE_LENGTH / 2;
 export const SIGN_IN_CODE_RESEND_SECONDS = 30;
-export const SIGN_IN_CODE_TTL_SECONDS = 5 * 60;
+export const SIGN_IN_CODE_TTL_MINUTES = 5;
+export const SIGN_IN_CODE_TTL_SECONDS = SIGN_IN_CODE_TTL_MINUTES * 60;
 
 export const digitsOnly = (text: string) => text.replace(/\D/g, "");
 
@@ -40,14 +41,18 @@ export interface AuthError {
 }
 
 const CODE_ERRORS = new Map([
+  ["TOO_MANY_CODES", msg("auth.code.tooManyCodes")],
   ["INVALID_OTP", msg("auth.code.invalid")],
   ["OTP_EXPIRED", msg("auth.code.expired")],
   ["TOO_MANY_ATTEMPTS", msg("auth.code.tooManyAttempts")],
 ]);
 
 export function signInCodeError(error: AuthError) {
-  if (error.status === 429) return msg("auth.code.tooManyRequests");
-  return CODE_ERRORS.get(error.code ?? "") ?? msg("auth.code.failed");
+  const known = CODE_ERRORS.get(error.code ?? "");
+  if (known) return known;
+  return error.status === 429
+    ? msg("auth.code.tooManyRequests")
+    : msg("auth.code.failed");
 }
 
 // Expired or exhausted codes need a new one; a rate limit only needs a pause

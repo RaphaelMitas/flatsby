@@ -53,7 +53,7 @@ const CodeInput = ({
       ))}
       <TextInput
         value={value}
-        // A paste always appends, so the caller's last-digits rule finds it
+        // A paste always appends, so codeFromText finds it after the typed digits
         selection={{ start: value.length, end: value.length }}
         autoCorrect={false}
         caretHidden

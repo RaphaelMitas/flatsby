@@ -10,7 +10,7 @@ import { db } from "@flatsby/db/client";
 import { SIGN_IN_CODE_TTL_SECONDS } from "@flatsby/validators/login";
 import { defaultUserName } from "@flatsby/validators/user";
 
-import { allowSignInCode } from "./sign-in-code-limit";
+import { allowSignInCode, refundSignInCode } from "./sign-in-code-limit";
 
 const SEND_CODE_PATH = "/email-otp/send-verification-otp";
 
@@ -131,12 +131,13 @@ export function initAuth(options: {
           typeof ctx.body.email === "string" &&
           !(await allowSignInCode(ctx.body.email))
         ) {
-          throw new APIError("TOO_MANY_REQUESTS");
+          throw new APIError("TOO_MANY_REQUESTS", { code: "TOO_MANY_CODES" });
         }
       }),
       after: createAuthMiddleware(async (ctx) => {
         if (ctx.path === SEND_CODE_PATH) {
           if (ctx.request && failedSends.has(ctx.request)) {
+            if (limitRequests) await refundSignInCode(ctx.body.email);
             throw new APIError("BAD_GATEWAY", { code: "SEND_FAILED" });
           }
           return;
@@ -163,9 +164,17 @@ export function initAuth(options: {
     databaseHooks: {
       user: {
         create: {
-          before: async (user) => {
-            if (user.name) return;
-            return { data: { ...user, name: defaultUserName(user.email) } };
+          before: async (user, context) => {
+            // A code sign-up's name and image come from the request body; the name step sets the real name
+            const fromCode = context?.path === "/sign-in/email-otp";
+            if (user.name && !fromCode) return;
+            return {
+              data: {
+                ...user,
+                name: defaultUserName(user.email),
+                ...(fromCode && { image: null }),
+              },
+            };
           },
           after: async (_user, context) => {
             await options.onUserCreated?.(

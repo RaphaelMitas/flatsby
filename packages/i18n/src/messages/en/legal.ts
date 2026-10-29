@@ -182,7 +182,7 @@ export const legal = {
       content:
         "List items and expenses you created may remain, anonymized, for the other group members",
       outro:
-        "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. PostHog deletes analytics events after 12 months. Your PostHog profile and customer records at Autumn and RevenueCat remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
+        "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. Sign-in codes are valid for 5 minutes; sign-in attempt counters are deleted once their window of at most an hour has passed. PostHog deletes analytics events after 12 months. Your PostHog profile and customer records at Autumn and RevenueCat remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
     },
     rights: {
       access: "<strong>Access:</strong> get a copy of your data",

@@ -74,6 +74,7 @@ describe("signInCodeError", () => {
     [{ code: "OTP_EXPIRED", status: 400 }, "auth.code.expired"],
     [{ code: "TOO_MANY_ATTEMPTS", status: 403 }, "auth.code.tooManyAttempts"],
     [{ status: 429 }, "auth.code.tooManyRequests"],
+    [{ code: "TOO_MANY_CODES", status: 429 }, "auth.code.tooManyCodes"],
     [{ code: "SOMETHING_ELSE", status: 500 }, "auth.code.failed"],
   ])("maps %j to %s", (error, key) => {
     expect(signInCodeError(error)).toBe(key);

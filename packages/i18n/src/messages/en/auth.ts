@@ -18,16 +18,17 @@ export const auth = {
   code: {
     title: "Enter your code",
     sentTo:
-      "We sent a 6-digit code to <b>{email}</b>. It expires in 5 minutes.",
+      "We sent a {length}-digit code to <b>{email}</b>. It expires in {minutes} minutes.",
     changeEmail: "Use a different email",
     notArrived: "Nothing arrived? Check your spam folder.",
     resendIn: "Send a new code in {seconds}s",
     resend: "Send a new code",
     resent: "Code sent again. Use the one in the newest email.",
     invalid: "That code isn't right. Check it and try again.",
-    expired: "This code has expired. Codes are valid for 5 minutes.",
+    expired: "This code has expired. Request a new one.",
     tooManyAttempts: "Too many wrong attempts. Request a new code.",
     tooManyRequests: "Too many tries. Wait a minute and try again.",
+    tooManyCodes: "Too many codes for this address. Try again in an hour.",
     failed: "Something went wrong. Please try again.",
   },
   name: {
@@ -40,7 +41,7 @@ export const auth = {
     subject: "{code} is your Flatsby code",
     heading: "Your sign-in code",
     intro: "Enter this code in Flatsby to sign in:",
-    expiry: "The code expires in 5 minutes.",
+    expiry: "The code expires in {minutes} minutes.",
     ignore: "If you didn't try to sign in, you can ignore this email.",
   },
   consent: {

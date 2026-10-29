@@ -190,7 +190,7 @@ export const legal = {
       content:
         "können Artikel und Ausgaben, die Sie angelegt haben, anonymisiert für die anderen Gruppenmitglieder erhalten bleiben",
       outro:
-        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
+        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
     },
     rights: {
       access: "<strong>Auskunft:</strong> eine Kopie Ihrer Daten erhalten",
