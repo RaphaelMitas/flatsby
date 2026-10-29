@@ -49,15 +49,19 @@ export function UpdateNudge() {
 
   const update = () => {
     posthog.capture("update_nudge_update", { storeVersion });
-    updatePressed.current = true;
-    sheetRef.current?.dismiss();
+    // iOS can't present the App Store sheet while ours is still presented.
+    if (Platform.OS === "ios") {
+      updatePressed.current = true;
+      sheetRef.current?.dismiss();
+    } else {
+      void ExpoInAppUpdates.startUpdate(true);
+    }
   };
 
   return (
     <SheetModal
       ref={sheetRef}
       onDismiss={() => {
-        // iOS can't present the App Store sheet while ours is still presented.
         if (updatePressed.current) {
           updatePressed.current = false;
           void ExpoInAppUpdates.startUpdate(true);
