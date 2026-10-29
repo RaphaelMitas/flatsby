@@ -68,7 +68,6 @@ export function PlaceholderMembers({
       </View>
       {isAdmin && (
         <PlaceholderNameField
-          placeholder={t("group.placeholders.namePlaceholder")}
           submitLabel={t("group.placeholders.add")}
           submitIcon="plus"
           inputTestID="placeholder-name-input"

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
+import { useTranslations } from "use-intl";
 
 import {
   MAX_PLACEHOLDER_NAME_LENGTH,
@@ -12,7 +13,6 @@ import { Input } from "~/lib/ui/input";
 
 export function PlaceholderNameField({
   defaultName = "",
-  placeholder,
   submitLabel,
   submitIcon,
   inputTestID,
@@ -21,7 +21,6 @@ export function PlaceholderNameField({
   onSubmit,
 }: {
   defaultName?: string;
-  placeholder?: string;
   submitLabel: string;
   submitIcon?: IconProps["name"];
   inputTestID: string;
@@ -29,6 +28,7 @@ export function PlaceholderNameField({
   autoFocus?: boolean;
   onSubmit: (name: string) => void;
 }) {
+  const t = useTranslations();
   const [name, setName] = useState(defaultName);
 
   const submit = () => {
@@ -43,7 +43,7 @@ export function PlaceholderNameField({
       <Input
         testID={inputTestID}
         className="flex-1"
-        placeholder={placeholder}
+        placeholder={t("group.placeholders.namePlaceholder")}
         value={name}
         onChangeText={setName}
         maxLength={MAX_PLACEHOLDER_NAME_LENGTH}

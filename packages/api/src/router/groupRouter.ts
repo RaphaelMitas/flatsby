@@ -262,7 +262,7 @@ export const groupRouter = createTRPCRouter({
             );
           }
 
-          const removed = yield* database.query(
+          const refused = yield* database.query(
             "remove group member",
             (db) =>
               db.transaction(async (trx) => {
@@ -285,7 +285,7 @@ export const groupRouter = createTRPCRouter({
                   return Errors.conflict("errors.placeholderTaken");
                 await GroupUtils.detachMemberFromItems(trx, target.id);
                 // A placeholder has no account to keep out, so the group's live link stays
-                if (target.userId === null) return { success: true };
+                if (target.userId === null) return undefined;
                 // Removal kills the live link so they can't rejoin; leaving only kills links the leaver created
                 await trx
                   .delete(groupInvites)
@@ -297,12 +297,11 @@ export const groupRouter = createTRPCRouter({
                         : undefined,
                     ),
                   );
-                return { success: true };
               }),
             { messageKey: "errors.removeMemberFailed" },
           );
-          if (!("success" in removed)) return yield* removed;
-          return removed;
+          if (refused) return yield* refused;
+          return { success: true };
         }),
       ),
     ),
