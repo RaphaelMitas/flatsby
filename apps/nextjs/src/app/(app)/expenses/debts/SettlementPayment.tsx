@@ -9,8 +9,10 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 import { paypalMeUrl } from "@flatsby/validators/payment";
 
 import { CopyButton } from "~/app/_components/CopyButton";
+import { useAnalytics } from "~/hooks/use-analytics";
 
 interface SettlementPaymentProps {
+  groupId: number;
   paypalHandle: string | null;
   receiverName: string;
   receiverIsMe: boolean;
@@ -20,6 +22,7 @@ interface SettlementPaymentProps {
 }
 
 export function SettlementPayment({
+  groupId,
   paypalHandle,
   receiverName,
   receiverIsMe,
@@ -29,6 +32,7 @@ export function SettlementPayment({
 }: SettlementPaymentProps) {
   const t = useTranslations("debts.pay");
   const locale = useLocale();
+  const { capture } = useAnalytics();
 
   if (!paypalHandle) {
     return (
@@ -80,13 +84,23 @@ export function SettlementPayment({
                 className="flex-1"
                 data-testid="settle-paypal-button"
               >
-                <a href={url} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => capture("settle_paypal_opened", { groupId })}
+                >
                   <ExternalLink className="h-4 w-4" />
                   {t("openPaypal")}
                 </a>
               </Button>
             )}
-            <CopyButton value={url} />
+            <CopyButton
+              value={url}
+              onCopy={() =>
+                capture("settle_paypal_shared", { groupId, method: "copy" })
+              }
+            />
           </div>
         </>
       )}

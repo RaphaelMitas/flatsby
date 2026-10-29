@@ -1,5 +1,6 @@
 import { Linking, Share, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
@@ -8,6 +9,7 @@ import { paypalMeUrl } from "@flatsby/validators/payment";
 import { Button } from "~/lib/ui/button";
 
 interface SettlementPaymentProps {
+  groupId: number;
   paypalHandle: string | null;
   receiverName: string;
   receiverIsMe: boolean;
@@ -17,6 +19,7 @@ interface SettlementPaymentProps {
 }
 
 export function SettlementPayment({
+  groupId,
   paypalHandle,
   receiverName,
   receiverIsMe,
@@ -27,6 +30,7 @@ export function SettlementPayment({
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
+  const posthog = usePostHog();
 
   if (!paypalHandle) {
     return (
@@ -85,7 +89,10 @@ export function SettlementPayment({
                 icon="external-link"
                 variant="outline"
                 className="flex-1"
-                onPress={() => Linking.openURL(url)}
+                onPress={() => {
+                  posthog.capture("settle_paypal_opened", { groupId });
+                  void Linking.openURL(url);
+                }}
               />
             )}
             <Button
@@ -94,11 +101,17 @@ export function SettlementPayment({
               icon="share"
               variant="outline"
               className="flex-1"
-              onPress={() =>
-                Share.share({
+              onPress={async () => {
+                const result = await Share.share({
                   message: t("debts.pay.shareMessage", { amount, url }),
-                })
-              }
+                });
+                if (result.action === Share.sharedAction) {
+                  posthog.capture("settle_paypal_shared", {
+                    groupId,
+                    method: "share_sheet",
+                  });
+                }
+              }}
             />
           </View>
         </>

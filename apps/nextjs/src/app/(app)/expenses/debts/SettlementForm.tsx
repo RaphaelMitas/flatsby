@@ -496,6 +496,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
 
             {bothMembers && (
               <SettlementPayment
+                groupId={groupId}
                 paypalHandle={receiverPaypal}
                 receiverName={toMember.name}
                 receiverIsMe={toGroupMemberId === meId}

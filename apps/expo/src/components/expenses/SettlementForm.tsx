@@ -598,6 +598,7 @@ export function SettlementForm({
             </View>
             {!isEditMode && pair && (
               <SettlementPayment
+                groupId={groupId}
                 paypalHandle={receiverPaypal}
                 receiverName={pair.receiver.name}
                 receiverIsMe={watchedToMemberId === meId}
