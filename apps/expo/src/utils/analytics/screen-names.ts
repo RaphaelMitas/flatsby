@@ -22,6 +22,8 @@ const names: Record<string, string> = {
   "settings/manage-groups": "Manage Groups",
   "settings/danger": "Danger Zone",
   "auth/login": "Login",
+  "auth/login/code": "Login Code",
+  "auth/name": "Name",
 };
 
 export function getScreenName(segments: string[]): string {

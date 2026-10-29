@@ -7,6 +7,7 @@ import { createAuthClient } from "better-auth/react";
 
 import { getBaseUrl } from "../base-url";
 import { languageTags } from "../intl-provider";
+import { finishNameStep } from "./post-login-path";
 
 export const authClient = createAuthClient({
   baseURL: getBaseUrl(),
@@ -34,8 +35,9 @@ export const signInCode: SignInCodeClient = {
   signIn: (email, code) => authClient.signIn.emailOtp({ email, otp: code }),
 };
 
-// Reminders on this phone belong to the account that scheduled them
+// Reminders on this phone belong to the account that scheduled them, and so does a pending name step
 export async function signOut() {
+  finishNameStep();
   await Promise.all([
     Notifications.cancelAllScheduledNotificationsAsync(),
     Notifications.dismissAllNotificationsAsync(),

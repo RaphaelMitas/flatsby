@@ -110,10 +110,10 @@ export default function CodeScreen() {
             testID="code-resend-button"
             variant={expired ? "primary" : "link"}
             className={expired ? "w-full py-4" : undefined}
-            disabled={busy || (!expired && waitSeconds > 0)}
+            disabled={busy || waitSeconds > 0}
             onPress={() => resend()}
             title={
-              !expired && waitSeconds > 0
+              waitSeconds > 0
                 ? t("auth.code.resendIn", { seconds: waitSeconds })
                 : t("auth.code.resend")
             }

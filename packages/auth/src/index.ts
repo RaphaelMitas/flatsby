@@ -81,7 +81,7 @@ export function initAuth(options: {
       nextCookies(),
       ...(options.enableTestUtils ? [testUtils()] : []),
     ],
-    // Codes only sign in; the plugin's other routes would let unlimited guesses and mail through
+    // Codes only sign in; the other routes count guesses without a lock and send mail past the per-address cap
     disabledPaths: [
       "/email-otp/check-verification-otp",
       "/email-otp/verify-email",
@@ -100,6 +100,8 @@ export function initAuth(options: {
         "/get-session": false,
         // Above the 3 tries a code allows, so a 4th wrong code reads as spent rather than rate limited
         "/sign-in/email-otp": { window: 60, max: 10 },
+        // Flatmates on one Wi-Fi share an IP; the per-address cap still bounds mail to any one inbox
+        [SEND_CODE_PATH]: { window: 60, max: 10 },
       },
     },
     socialProviders: {
@@ -179,7 +181,7 @@ export function initAuth(options: {
     },
     account: {
       modelName: "accounts",
-      // Untrusted on purpose: a provider that reports the address unverified mustn't link into an email-code account
+      // No trustedProviders: an unverified provider email mustn't link into an email-code account
       accountLinking: { enabled: true },
     },
     verification: { modelName: "verificationTokens" },

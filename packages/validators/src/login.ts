@@ -20,11 +20,19 @@ export const digitsOnly = (text: string) => text.replace(/\D/g, "");
 
 // A pasted email carries other digits, so a standalone six-digit run beats the last six digits
 export function codeFromText(text: string) {
-  const standalone = new RegExp(`(?<!\\d)\\d{${SIGN_IN_CODE_LENGTH}}(?!\\d)`);
+  // No lookbehind: Safari before 16.4 throws on it
+  const standalone = new RegExp(
+    `(?:^|\\D)(\\d{${SIGN_IN_CODE_LENGTH}})(?!\\d)`,
+  );
   return (
-    standalone.exec(text)?.[0] ?? digitsOnly(text).slice(-SIGN_IN_CODE_LENGTH)
+    standalone.exec(text)?.[1] ?? digitsOnly(text).slice(-SIGN_IN_CODE_LENGTH)
   );
 }
+
+export const codeSlotGroups = (length: number, groupSize: number) =>
+  Array.from({ length: length / groupSize }, (_, group) =>
+    Array.from({ length: groupSize }, (_, i) => group * groupSize + i),
+  );
 
 export interface AuthError {
   code?: string;

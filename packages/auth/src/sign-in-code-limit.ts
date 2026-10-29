@@ -3,17 +3,19 @@ import { createHash } from "node:crypto";
 import { sql } from "@flatsby/db";
 import { db } from "@flatsby/db/client";
 import { signInCodeRequests } from "@flatsby/db/schema";
+import { inboxOf } from "@flatsby/validators/user";
 
 const MAX_CODES_PER_HOUR = 10;
 
 const windowExpired = sql`${signInCodeRequests.windowStart} < now() - interval '1 hour'`;
 
+// Counted per inbox, so +tags and Gmail dots can't spread one victim over many buckets.
 // One upsert counts and resets the window, so parallel requests can't slip past the limit
 export async function allowSignInCode(email: string) {
   const [row] = await db
     .insert(signInCodeRequests)
     .values({
-      emailHash: createHash("sha256").update(email.toLowerCase()).digest("hex"),
+      emailHash: createHash("sha256").update(inboxOf(email)).digest("hex"),
       count: 1,
       windowStart: sql`now()`,
     })

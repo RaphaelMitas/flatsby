@@ -5,6 +5,7 @@ import { OTPInput, OTPInputContext } from "input-otp";
 import { MinusIcon } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
+import { codeSlotGroups } from "@flatsby/validators/login";
 
 function InputOTP({
   className,
@@ -85,10 +86,7 @@ function InputOTPGroups({
   invalid?: boolean;
   slotClassName?: string;
 }) {
-  const groups = Array.from({ length: length / groupSize }, (_, g) =>
-    Array.from({ length: groupSize }, (_, i) => g * groupSize + i),
-  );
-  return groups.map((slots, group) => (
+  return codeSlotGroups(length, groupSize).map((slots, group) => (
     <React.Fragment key={slots.join()}>
       {group > 0 && <InputOTPSeparator />}
       <InputOTPGroup>

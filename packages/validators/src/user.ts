@@ -21,6 +21,17 @@ export const userEmailSchema = z.email({
 
 export const userImageSchema = z.string().optional().nullable();
 
+const GMAIL_DOMAINS = new Set(["gmail.com", "googlemail.com"]);
+
+// The mailbox that receives mail for an address: +tags are dropped everywhere, and Gmail ignores dots
+export function inboxOf(email: string) {
+  const [local = "", domain = ""] = email.toLowerCase().split("@");
+  const untagged = local.split("+")[0] ?? "";
+  return GMAIL_DOMAINS.has(domain)
+    ? `${untagged.replaceAll(".", "")}@gmail.com`
+    : `${untagged}@${domain}`;
+}
+
 // Email codes and Apple's hidden name bring no name, so the address's local part stands in
 export const defaultUserName = (email: string) => email.split("@")[0] || email;
 

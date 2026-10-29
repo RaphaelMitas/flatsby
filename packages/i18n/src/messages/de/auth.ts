@@ -30,7 +30,7 @@ export const auth = {
     expired: "Der Code ist abgelaufen. Codes gelten 5 Minuten.",
     tooManyAttempts: "Zu viele falsche Versuche. Fordere einen neuen Code an.",
     tooManyRequests:
-      "Zu viele Codes angefordert. Versuch es später noch einmal.",
+      "Zu viele Versuche. Warte eine Minute und versuch es noch einmal.",
     failed: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
   },
   name: {

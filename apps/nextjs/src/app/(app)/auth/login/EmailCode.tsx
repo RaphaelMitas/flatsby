@@ -139,10 +139,10 @@ export default function EmailCode({
           variant={expired ? "default" : "link"}
           className={expired ? "w-full" : undefined}
           data-testid="auth-code-resend-button"
-          disabled={busy || (!expired && waitSeconds > 0)}
+          disabled={busy || waitSeconds > 0}
           onClick={() => void resend()}
         >
-          {!expired && waitSeconds > 0
+          {waitSeconds > 0
             ? t("auth.code.resendIn", { seconds: waitSeconds })
             : t("auth.code.resend")}
         </Button>

@@ -27,7 +27,7 @@ export const auth = {
     invalid: "That code isn't right. Check it and try again.",
     expired: "This code has expired. Codes are valid for 5 minutes.",
     tooManyAttempts: "Too many wrong attempts. Request a new code.",
-    tooManyRequests: "Too many codes requested. Try again later.",
+    tooManyRequests: "Too many tries. Wait a minute and try again.",
     failed: "Something went wrong. Please try again.",
   },
   name: {

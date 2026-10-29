@@ -13,7 +13,7 @@ export const clearPostLoginPath = () => {
   pending = null;
 };
 
-// Set at sign-in, before the root layout leaves the code screen; an invite waits behind it
+// A module flag, set before the root layout leaves the code screen; a pending invite path waits until the name step is done
 let namePending = false;
 
 export const askForName = () => {

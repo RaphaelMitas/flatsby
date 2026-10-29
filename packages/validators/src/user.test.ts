@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { asksForName } from "./user";
+import { asksForName, inboxOf } from "./user";
 
 const createdAt = new Date("2026-10-29T10:00:00Z");
 const user = (name: string) => ({ name, email: "mia@posteo.de", createdAt });
@@ -20,5 +20,17 @@ describe("asksForName", () => {
     expect(
       asksForName(user("mia"), createdAt.getTime() + 24 * 60 * 60 * 1000),
     ).toBe(false);
+  });
+});
+
+describe("inboxOf", () => {
+  it.each([
+    ["Mia@Posteo.de", "mia@posteo.de"],
+    ["mia+flatsby@posteo.de", "mia@posteo.de"],
+    ["m.i.a+1@gmail.com", "mia@gmail.com"],
+    ["m.ia@googlemail.com", "mia@gmail.com"],
+    ["m.ia@web.de", "m.ia@web.de"],
+  ])("files %s under %s", (email, inbox) => {
+    expect(inboxOf(email)).toBe(inbox);
   });
 });

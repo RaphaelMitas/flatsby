@@ -51,7 +51,6 @@ async function requestSignInCode(
   }
 }
 
-// The login screen's email step: validate, count the tap, send the first code
 export function useSendSignInCode({
   client,
   onTapped,
@@ -91,8 +90,6 @@ export function useSendSignInCode({
   return { email, changeEmail, error, sending, send };
 }
 
-const resendDeadline = () => Date.now() + SIGN_IN_CODE_RESEND_SECONDS * 1000;
-
 export function useSignInCode({
   email,
   client,
@@ -110,11 +107,14 @@ export function useSignInCode({
   const [resent, setResent] = useState(false);
   const [busy, setBusy] = useState(false);
   // State lags a second change event in the same tick, and iOS autofill can send two
-  const inFlight = useRef(false);
+  const locked = useRef(false);
   const [sentAt, setSentAt] = useState(() => Date.now());
-  const [resendAt, setResendAt] = useState(resendDeadline);
   const [now, setNow] = useState(() => Date.now());
-  const waitSeconds = Math.max(0, Math.ceil((resendAt - now) / 1000));
+  const resendAt = sentAt + SIGN_IN_CODE_RESEND_SECONDS * 1000;
+  // A spent code can be replaced right away
+  const waitSeconds = expired
+    ? 0
+    : Math.max(0, Math.ceil((resendAt - now) / 1000));
 
   useEffect(() => {
     if (waitSeconds === 0) return;
@@ -122,14 +122,16 @@ export function useSignInCode({
     return () => clearInterval(timer);
   }, [waitSeconds]);
 
-  const run = async (request: () => Promise<void>) => {
-    inFlight.current = true;
+  // Stays locked after a sign-in until the screen leaves, since the spent code would only fail again
+  const run = async (request: () => Promise<boolean | void>) => {
+    locked.current = true;
     setBusy(true);
     setResent(false);
+    let signedIn = false;
     try {
-      await request();
+      signedIn = (await request()) === true;
     } finally {
-      inFlight.current = false;
+      locked.current = signedIn;
       setBusy(false);
     }
   };
@@ -140,7 +142,7 @@ export function useSignInCode({
         const { data, error: signInError } = await client.signIn(email, otp);
         if (!signInError) {
           if (data) onSignedIn(data.user);
-          return;
+          return true;
         }
         onFailed("code", startFailureCode(signInError));
         setCode("");
@@ -162,7 +164,7 @@ export function useSignInCode({
     });
 
   const change = (text: string) => {
-    if (inFlight.current || expired) return;
+    if (locked.current || expired) return;
     const digits = codeFromText(text);
     setCode(digits);
     setError(null);
@@ -178,7 +180,6 @@ export function useSignInCode({
       setCode("");
       setResent(true);
       setSentAt(Date.now());
-      setResendAt(resendDeadline());
       setNow(Date.now());
     });
 

@@ -1,6 +1,8 @@
 import type { TextInputProps } from "react-native";
 import { Text, TextInput, View } from "react-native";
 
+import { codeSlotGroups } from "@flatsby/validators/login";
+
 interface CodeInputProps extends TextInputProps {
   value: string;
   length: number;
@@ -16,9 +18,7 @@ const CodeInput = ({
   error,
   ...props
 }: CodeInputProps) => {
-  const groups = Array.from({ length: length / groupSize }, (_, group) =>
-    Array.from({ length: groupSize }, (_, i) => group * groupSize + i),
-  );
+  const groups = codeSlotGroups(length, groupSize);
 
   return (
     <View className="relative flex-row items-center justify-center gap-2">
