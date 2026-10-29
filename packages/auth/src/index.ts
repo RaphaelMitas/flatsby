@@ -11,6 +11,8 @@ import { defaultUserName } from "@flatsby/validators/user";
 
 import { allowSignInCode } from "./sign-in-code-limit";
 
+const SEND_CODE_PATH = "/email-otp/send-verification-otp";
+
 export interface SignInCode {
   email: string;
   code: string;
@@ -55,7 +57,10 @@ export function initAuth(options: {
       }),
       expo(),
       emailOTP({
+        expiresIn: 300,
         storeOTP: "encrypted",
+        // A resend after a slow first email keeps that email's code valid
+        resendStrategy: "reuse",
         sendVerificationOTP: ({ email, otp }, ctx) =>
           options.sendSignInCode({
             email,
@@ -65,6 +70,16 @@ export function initAuth(options: {
       }),
       nextCookies(),
       ...(options.enableTestUtils ? [testUtils()] : []),
+    ],
+    // Codes only sign in; the plugin's other routes would let unlimited guesses and mail through
+    disabledPaths: [
+      "/email-otp/check-verification-otp",
+      "/email-otp/verify-email",
+      "/email-otp/request-password-reset",
+      "/email-otp/reset-password",
+      "/forget-password/email-otp",
+      "/email-otp/request-email-change",
+      "/email-otp/change-email",
     ],
     rateLimit: {
       enabled: limitRequests,
@@ -93,14 +108,13 @@ export function initAuth(options: {
     trustedOrigins: ["flatsby://", "expo://", ...options.trustedOrigins],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== SEND_CODE_PATH) return;
+        if (ctx.body?.type !== "sign-in") throw new APIError("BAD_REQUEST");
         if (
-          !limitRequests ||
-          ctx.path !== "/email-otp/send-verification-otp" ||
-          typeof ctx.body?.email !== "string"
+          limitRequests &&
+          typeof ctx.body.email === "string" &&
+          !(await allowSignInCode(ctx.body.email))
         ) {
-          return;
-        }
-        if (!(await allowSignInCode(ctx.body.email))) {
           throw new APIError("TOO_MANY_REQUESTS");
         }
       }),
@@ -145,7 +159,8 @@ export function initAuth(options: {
     },
     account: {
       modelName: "accounts",
-      accountLinking: { enabled: true, trustedProviders: ["google", "apple"] },
+      // Untrusted on purpose: a provider that reports the address unverified mustn't link into an email-code account
+      accountLinking: { enabled: true },
     },
     verification: { modelName: "verificationTokens" },
   } satisfies BetterAuthOptions;

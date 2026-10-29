@@ -4,7 +4,7 @@ import { sql } from "@flatsby/db";
 import { db } from "@flatsby/db/client";
 import { signInCodeRequests } from "@flatsby/db/schema";
 
-const MAX_CODES_PER_HOUR = 5;
+const MAX_CODES_PER_HOUR = 10;
 
 const windowExpired = sql`${signInCodeRequests.windowStart} < now() - interval '1 hour'`;
 

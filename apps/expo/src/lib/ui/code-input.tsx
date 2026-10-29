@@ -8,7 +8,7 @@ interface CodeInputProps extends TextInputProps {
   error?: boolean;
 }
 
-// One invisible input over the slots, so paste and the keyboard's code suggestion fill every slot at once; callers trim what lands
+// One invisible input over the slots, so paste and code autofill fill every slot at once
 const CodeInput = ({
   value,
   length,

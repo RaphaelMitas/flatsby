@@ -1,11 +1,12 @@
-import { asksForName } from "@flatsby/validators/user";
+// Module state, not a route param: the root layout leaves the code screen on its own once the session lands
+let pending = false;
 
-// Module state, so keeping the suggested name doesn't send the user back while the account is still fresh
-let finished = false;
-
-export const finishNameStep = () => {
-  finished = true;
+export const askForName = () => {
+  pending = true;
 };
 
-export const nameStepPending = (signedIn: Parameters<typeof asksForName>[0]) =>
-  !finished && asksForName(signedIn);
+export const nameStepPending = () => pending;
+
+export const finishNameStep = () => {
+  pending = false;
+};

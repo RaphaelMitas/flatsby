@@ -23,7 +23,7 @@ export const auth = {
     notArrived: "Nothing arrived? Check your spam folder.",
     resendIn: "Send a new code in {seconds}s",
     resend: "Send a new code",
-    resent: "New code sent. The previous one no longer works.",
+    resent: "Code sent again. Use the one in the newest email.",
     invalid: "That code isn't right. Check it and try again.",
     expired: "This code has expired. Codes are valid for 5 minutes.",
     tooManyAttempts: "Too many wrong attempts. Request a new code.",

@@ -12,6 +12,7 @@ export const loginMethodSchema = z.enum([
 export type LoginMethod = z.infer<typeof loginMethodSchema>;
 
 export const SIGN_IN_CODE_LENGTH = 6;
+export const SIGN_IN_CODE_GROUP = SIGN_IN_CODE_LENGTH / 2;
 export const SIGN_IN_CODE_RESEND_SECONDS = 30;
 
 const CODE_ERRORS = new Map([
@@ -25,9 +26,11 @@ export function signInCodeError(error: { code?: string; status: number }) {
   return CODE_ERRORS.get(error.code ?? "") ?? msg("auth.code.failed");
 }
 
-// Only a wrong code can be retried; the others need a new code
-export const isRetryableCodeError = (error: { code?: string }) =>
-  error.code === "INVALID_OTP";
+// Expired or exhausted codes need a new one; a rate limit only needs a pause
+export const isRetryableCodeError = (error: {
+  code?: string;
+  status: number;
+}) => error.code === "INVALID_OTP" || error.status === 429;
 
 export const loginAttemptSchema = z.object({
   attemptId: z.uuid(),

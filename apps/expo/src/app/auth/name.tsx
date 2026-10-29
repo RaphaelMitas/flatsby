@@ -1,14 +1,20 @@
-import { useState } from "react";
+import type { UpdateUserNameFormValues } from "@flatsby/validators/user";
 import { Text, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { translateIfKey } from "@flatsby/i18n/message-key";
-import { userNameSchema } from "@flatsby/validators/user";
+import { updateUserNameFormSchema } from "@flatsby/validators/user";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormMessage,
+  useForm,
+} from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
@@ -17,33 +23,35 @@ import { finishNameStep } from "~/utils/auth/name-step";
 export default function NameScreen() {
   const t = useTranslations();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const session = useSession();
-  const [name, setName] = useState(session.data?.user.name ?? "");
-  const [error, setError] = useState<string | null>(null);
+
+  const form = useForm({
+    schema: updateUserNameFormSchema,
+    defaultValues: { name: session.data?.user.name ?? "" },
+  });
 
   const updateName = useMutation(
     trpc.user.updateUserName.mutationOptions({
       onSuccess: async (result) => {
         if (!result.success) {
-          setError(translateIfKey(t, result.error.message));
+          form.setError("name", { message: result.error.message });
           return;
         }
+        void queryClient.invalidateQueries(
+          trpc.user.getCurrentUser.queryOptions(),
+        );
         finishNameStep();
         await session.refetch();
         router.replace("/");
       },
-      onError: (err) => setError(err.message),
+      onError: (err) => form.setError("name", { message: err.message }),
     }),
   );
 
-  const save = () => {
-    const parsed = userNameSchema.safeParse(name.trim());
-    if (!parsed.success) {
-      setError(translateIfKey(t, parsed.error.issues[0]?.message ?? ""));
-      return;
-    }
-    updateName.mutate({ name: parsed.data });
-  };
+  const save = form.handleSubmit((values: UpdateUserNameFormValues) =>
+    updateName.mutate({ name: values.name.trim() }),
+  );
 
   return (
     <View testID="name-screen" className="bg-background flex-1">
@@ -55,27 +63,33 @@ export default function NameScreen() {
         <Text className="text-foreground text-center text-2xl font-bold">
           {t("auth.name.title")}
         </Text>
-        <Input
-          testID="name-input"
-          value={name}
-          onChangeText={(text) => {
-            setName(text);
-            setError(null);
-          }}
-          onSubmitEditing={save}
-          placeholder={t("auth.name.placeholder")}
-          accessibilityLabel={t("auth.name.placeholder")}
-          autoFocus
-          autoComplete="name"
-          textContentType="givenName"
-          returnKeyType="done"
-          error={error !== null}
-        />
-        {error && (
-          <Text testID="name-error" className="text-destructive text-sm">
-            {error}
-          </Text>
-        )}
+        <Form {...form}>
+          <FormField
+            name="name"
+            control={form.control}
+            render={({ field }) => (
+              <View className="gap-2">
+                <FormControl>
+                  <Input
+                    testID="name-input"
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    onSubmitEditing={() => save()}
+                    placeholder={t("auth.name.placeholder")}
+                    accessibilityLabel={t("auth.name.placeholder")}
+                    autoFocus
+                    autoComplete="name"
+                    textContentType="givenName"
+                    returnKeyType="done"
+                    error={!!form.formState.errors.name}
+                  />
+                </FormControl>
+                <FormMessage />
+              </View>
+            )}
+          />
+        </Form>
         <Text className="text-muted-foreground text-center text-sm">
           {t("auth.name.hint")}
         </Text>

@@ -24,17 +24,15 @@ export const userImageSchema = z.string().optional().nullable();
 // Email codes and Apple's hidden name bring no name, so the address stands in until the user picks one
 export const defaultUserName = (email: string) => email.split("@")[0] || email;
 
-const FRESH_ACCOUNT_MS = 60 * 1000;
+// Wide enough for a phone clock that runs a few minutes off
+const JUST_CREATED_MS = 10 * 60 * 1000;
 
-export function asksForName(signedIn: {
-  session: { createdAt: Date };
-  user: { name: string; email: string; createdAt: Date };
-}) {
-  const { session, user } = signedIn;
-  const age =
-    new Date(session.createdAt).getTime() - new Date(user.createdAt).getTime();
-  return age < FRESH_ACCOUNT_MS && user.name === defaultUserName(user.email);
-}
+export const asksForName = (
+  user: { name: string; email: string; createdAt: Date },
+  now = Date.now(),
+) =>
+  now - new Date(user.createdAt).getTime() < JUST_CREATED_MS &&
+  user.name === defaultUserName(user.email);
 
 export const userSchema = z.object({
   id: z.string(),

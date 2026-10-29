@@ -1,3 +1,4 @@
+import type { SignInCodeClient } from "@flatsby/validators/useSignInCode";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
@@ -13,6 +14,12 @@ export const authClient: AuthClient = createAuthClient({
 export const signIn: AuthClient["signIn"] = authClient.signIn;
 export const signOut: AuthClient["signOut"] = authClient.signOut;
 export const useSession: AuthClient["useSession"] = authClient.useSession;
+
+export const signInCode: SignInCodeClient = {
+  send: (email) =>
+    authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" }),
+  signIn: (email, code) => authClient.signIn.emailOtp({ email, otp: code }),
+};
 
 export async function signOutAndRedirect(router: AppRouterInstance) {
   // Redirect even if the sign-out request fails, e.g. when the session was

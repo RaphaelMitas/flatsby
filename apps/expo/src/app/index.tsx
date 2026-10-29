@@ -10,7 +10,7 @@ import {
 
 export default function RootIndex() {
   const { data: session } = useSession();
-  const asksForName = session !== null && nameStepPending(session);
+  const asksForName = session !== null && nameStepPending();
   // An invite waits until the name is set
   const postLoginPath = session && !asksForName ? peekPostLoginPath() : null;
 

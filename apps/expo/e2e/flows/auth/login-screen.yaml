@@ -3,7 +3,7 @@ tags:
   - auth
 ---
 # Mirrors apps/nextjs/e2e/auth/login.spec.ts:
-# login screen renders with OAuth buttons, tagline, and legal links.
+# login screen renders the email field, OAuth buttons, tagline, and legal links.
 - launchApp:
     clearState: true
     clearKeychain: true
@@ -11,6 +11,8 @@ tags:
     visible:
       id: "login-screen"
     timeout: 60000
+- assertVisible:
+    id: "sign-in-email-input"
 - assertVisible:
     id: "sign-in-google-button"
 - assertVisible:

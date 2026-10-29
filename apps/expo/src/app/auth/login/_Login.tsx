@@ -14,18 +14,16 @@ import { uuidv7 } from "@posthog/core";
 import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
-import {
-  signInCodeError,
-  startFailureCode,
-  thrownFailureCode,
-} from "@flatsby/validators/login";
+import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
 import { userEmailSchema } from "@flatsby/validators/user";
+import { requestSignInCode } from "@flatsby/validators/useSignInCode";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Input } from "~/lib/ui/input";
-import { authClient, signIn } from "~/utils/auth/auth-client";
+import { Separator } from "~/lib/ui/separator";
+import { authClient, signIn, signInCode } from "~/utils/auth/auth-client";
 import { openLegalPage } from "~/utils/legal";
 
 const Login = () => {
@@ -80,6 +78,7 @@ const Login = () => {
   };
 
   const sendCode = async () => {
+    if (loading !== "false") return;
     const parsed = userEmailSchema.safeParse(email.trim());
     if (!parsed.success) {
       setEmailError("settings.validation.emailInvalid");
@@ -94,32 +93,25 @@ const Login = () => {
     posthog.capture("login_provider_tapped", attempt);
     setEmailError(null);
     setLoading("email");
-    const failed = (errorCode: string) =>
-      posthog.capture("login_failed", {
-        ...attempt,
-        stage: "start",
-        error_code: errorCode,
-      });
-    try {
-      const { error } = await authClient.emailOtp
-        .sendVerificationOtp({ email: parsed.data, type: "sign-in" })
-        .catch((thrown: unknown) => {
-          failed(thrownFailureCode(thrown));
-          setEmailError("auth.code.failed");
-          throw thrown;
-        });
-      if (error) {
-        failed(startFailureCode(error));
-        setEmailError(signInCodeError(error));
-        return;
-      }
-      router.push({
-        pathname: "/auth/login/code",
-        params: { email: parsed.data, attemptId },
-      });
-    } finally {
-      setLoading("false");
+    const failure = await requestSignInCode(
+      signInCode,
+      parsed.data,
+      (stage, errorCode) =>
+        posthog.capture("login_failed", {
+          ...attempt,
+          stage,
+          error_code: errorCode,
+        }),
+    );
+    setLoading("false");
+    if (failure) {
+      setEmailError(failure);
+      return;
     }
+    router.push({
+      pathname: "/auth/login/code",
+      params: { email: parsed.data, attemptId },
+    });
   };
 
   return (
@@ -188,11 +180,11 @@ const Login = () => {
           />
 
           <View className="flex-row items-center gap-3">
-            <View className="bg-border h-px flex-1" />
+            <Separator className="flex-1" />
             <Text className="text-muted-foreground text-xs">
               {t("auth.login.or")}
             </Text>
-            <View className="bg-border h-px flex-1" />
+            <Separator className="flex-1" />
           </View>
 
           <Button

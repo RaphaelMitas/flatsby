@@ -67,8 +67,8 @@ appId: ${APP_ID}
           visible:
             id: "e2e-login-done"
           timeout: 45000
-# Relaunch so the auth client and tRPC links initialize with the injected
-# session + API URL override. E2E_SIGNED_OUT stores only the API URL.
+# Relaunch so the auth client and tRPC links pick up the stored API URL and
+# session, if any.
 - runFlow:
     file: relaunch.yaml
     env:

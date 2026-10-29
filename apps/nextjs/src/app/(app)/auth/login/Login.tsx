@@ -18,15 +18,13 @@ import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import GoogleIcon from "@flatsby/ui/custom/icons/GoogleIcon";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Input } from "@flatsby/ui/input";
-import {
-  signInCodeError,
-  startFailureCode,
-  thrownFailureCode,
-} from "@flatsby/validators/login";
+import { Separator } from "@flatsby/ui/separator";
+import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
 import { userEmailSchema } from "@flatsby/validators/user";
+import { requestSignInCode } from "@flatsby/validators/useSignInCode";
 
 import type { EmailAttempt } from "./EmailCode";
-import { authClient, signIn } from "~/auth/client";
+import { signIn, signInCode } from "~/auth/client";
 import EmailCode from "./EmailCode";
 import { sendLoginEvent } from "./send-login-event";
 
@@ -88,29 +86,23 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
     sendLoginEvent({ ...attempt.event, event: "login_provider_tapped" });
     setEmailError(null);
     setLoading("email");
-    const failed = (errorCode: string) =>
-      sendLoginEvent({
-        ...attempt.event,
-        event: "login_failed",
-        error_code: errorCode,
-      });
-    try {
-      const { error } = await authClient.emailOtp
-        .sendVerificationOtp({ email: parsed.data, type: "sign-in" })
-        .catch((thrown: unknown) => {
-          failed(thrownFailureCode(thrown));
-          setEmailError("auth.code.failed");
-          throw thrown;
-        });
-      if (error) {
-        failed(startFailureCode(error));
-        setEmailError(signInCodeError(error));
-        return;
-      }
-      setCodeAttempt(attempt);
-    } finally {
-      setLoading("false");
+    const failure = await requestSignInCode(
+      signInCode,
+      parsed.data,
+      (stage, errorCode) =>
+        sendLoginEvent({
+          ...attempt.event,
+          event: "login_failed",
+          stage,
+          error_code: errorCode,
+        }),
+    );
+    setLoading("false");
+    if (failure) {
+      setEmailError(failure);
+      return;
     }
+    setCodeAttempt(attempt);
   };
 
   return (
@@ -182,9 +174,9 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                 </Button>
               </form>
               <div className="text-muted-foreground flex items-center gap-3 text-xs">
-                <div className="bg-border h-px flex-1" />
+                <Separator className="flex-1" />
                 {t("auth.login.or")}
-                <div className="bg-border h-px flex-1" />
+                <Separator className="flex-1" />
               </div>
               <div className="flex gap-3">
                 <Button

@@ -78,9 +78,16 @@ describe("signInCodeError", () => {
     expect(signInCodeError(error)).toBe(key);
   });
 
-  it("lets only a wrong code be retried", () => {
-    expect(isRetryableCodeError({ code: "INVALID_OTP" })).toBe(true);
-    expect(isRetryableCodeError({ code: "OTP_EXPIRED" })).toBe(false);
-    expect(isRetryableCodeError({ code: "TOO_MANY_ATTEMPTS" })).toBe(false);
+  it("keeps the code usable after a wrong guess or a rate limit", () => {
+    expect(isRetryableCodeError({ code: "INVALID_OTP", status: 400 })).toBe(
+      true,
+    );
+    expect(isRetryableCodeError({ status: 429 })).toBe(true);
+    expect(isRetryableCodeError({ code: "OTP_EXPIRED", status: 400 })).toBe(
+      false,
+    );
+    expect(
+      isRetryableCodeError({ code: "TOO_MANY_ATTEMPTS", status: 403 }),
+    ).toBe(false);
   });
 });

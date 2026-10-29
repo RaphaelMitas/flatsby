@@ -2,8 +2,7 @@ appId: ${APP_ID}
 tags:
   - auth
 ---
-# Mirrors apps/nextjs/e2e/auth/email-code.spec.ts: a new address signs up
-# with an email code, gets one wrong, then picks a name.
+# Mirrors apps/nextjs/e2e/auth/email-code.spec.ts
 - runFlow:
     file: ../../subflows/e2e-login.yaml
     env:

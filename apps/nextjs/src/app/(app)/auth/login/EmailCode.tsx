@@ -1,28 +1,18 @@
 "use client";
 
-import type { MessageKey } from "@flatsby/i18n/message-key";
-import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
+import { InputOTP, InputOTPGroups } from "@flatsby/ui/input-otp";
 import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from "@flatsby/ui/input-otp";
-import {
-  isRetryableCodeError,
+  SIGN_IN_CODE_GROUP,
   SIGN_IN_CODE_LENGTH,
-  SIGN_IN_CODE_RESEND_SECONDS,
-  signInCodeError,
-  startFailureCode,
-  thrownFailureCode,
 } from "@flatsby/validators/login";
 import { asksForName } from "@flatsby/validators/user";
+import { useSignInCode } from "@flatsby/validators/useSignInCode";
 
-import { authClient } from "~/auth/client";
+import { signInCode } from "~/auth/client";
 import { sendLoginEvent } from "./send-login-event";
 
 export interface EmailAttempt {
@@ -30,10 +20,7 @@ export interface EmailAttempt {
   event: { provider: "email"; attempt_id: string; url: string };
 }
 
-const GROUP = SIGN_IN_CODE_LENGTH / 2;
-const SLOT_GROUPS = [0, GROUP].map((offset) =>
-  Array.from({ length: GROUP }, (_, i) => offset + i),
-);
+const digitsOnly = (text: string) => text.replace(/\D/g, "");
 
 export default function EmailCode({
   attempt,
@@ -46,88 +33,26 @@ export default function EmailCode({
 }) {
   const t = useTranslations();
   const { email } = attempt;
-  const [code, setCode] = useState("");
-  const [error, setError] = useState<MessageKey | null>(null);
-  const [expired, setExpired] = useState(false);
-  const [resent, setResent] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [resendAt, setResendAt] = useState(
-    () => Date.now() + SIGN_IN_CODE_RESEND_SECONDS * 1000,
-  );
-  const [now, setNow] = useState(() => Date.now());
-  const waitSeconds = Math.max(0, Math.ceil((resendAt - now) / 1000));
-
-  useEffect(() => {
-    if (waitSeconds === 0) return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [waitSeconds]);
-
-  const failed = (stage: "start" | "code", errorCode: string) =>
-    sendLoginEvent({
-      ...attempt.event,
-      event: "login_failed",
-      stage,
-      error_code: errorCode,
+  const { code, change, error, expired, resent, busy, waitSeconds, resend } =
+    useSignInCode({
+      email,
+      client: signInCode,
+      onFailed: (stage, errorCode) =>
+        sendLoginEvent({
+          ...attempt.event,
+          event: "login_failed",
+          stage,
+          error_code: errorCode,
+        }),
+      onSignedIn: (user) => {
+        sendLoginEvent({ ...attempt.event, event: "login_succeeded" });
+        window.location.assign(
+          asksForName(user)
+            ? `/auth/name?next=${encodeURIComponent(callbackURL)}`
+            : callbackURL,
+        );
+      },
     });
-
-  const verify = async (otp: string) => {
-    setBusy(true);
-    setResent(false);
-    try {
-      const { error: signInError } = await authClient.signIn
-        .emailOtp({ email, otp })
-        .catch((thrown: unknown) => {
-          failed("code", thrownFailureCode(thrown));
-          setError("auth.code.failed");
-          setCode("");
-          throw thrown;
-        });
-      if (signInError) {
-        failed("code", startFailureCode(signInError));
-        setError(signInCodeError(signInError));
-        setCode("");
-        setExpired(!isRetryableCodeError(signInError));
-        return;
-      }
-      sendLoginEvent({ ...attempt.event, event: "login_succeeded" });
-      const { data } = await authClient.getSession();
-      window.location.assign(
-        data && asksForName(data)
-          ? `/auth/name?next=${encodeURIComponent(callbackURL)}`
-          : callbackURL,
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const resend = async () => {
-    setBusy(true);
-    setResent(false);
-    try {
-      const { error: sendError } = await authClient.emailOtp
-        .sendVerificationOtp({ email, type: "sign-in" })
-        .catch((thrown: unknown) => {
-          failed("start", thrownFailureCode(thrown));
-          setError("auth.code.failed");
-          throw thrown;
-        });
-      if (sendError) {
-        failed("start", startFailureCode(sendError));
-        setError(signInCodeError(sendError));
-        return;
-      }
-      setError(null);
-      setExpired(false);
-      setCode("");
-      setResent(true);
-      setResendAt(Date.now() + SIGN_IN_CODE_RESEND_SECONDS * 1000);
-      setNow(Date.now());
-    } finally {
-      setBusy(false);
-    }
-  };
 
   return (
     <div className="flex flex-col gap-4" data-testid="auth-code-step">
@@ -142,38 +67,37 @@ export default function EmailCode({
           })}
         </p>
       </div>
-      <InputOTP
-        data-testid="auth-code-input"
-        autoFocus
-        autoComplete="one-time-code"
-        inputMode="numeric"
-        pattern="^\d+$"
-        maxLength={SIGN_IN_CODE_LENGTH}
-        value={code}
-        onChange={(value) => {
-          setCode(value);
-          setError(null);
+      {/* input-otp splices a paste in at the cursor, so a whole code replaces what was typed instead */}
+      <div
+        onPasteCapture={(event) => {
+          const pasted = digitsOnly(event.clipboardData.getData("text"));
+          if (pasted.length < SIGN_IN_CODE_LENGTH) return;
+          event.preventDefault();
+          event.stopPropagation();
+          change(pasted);
         }}
-        onComplete={(value: string) => void verify(value)}
-        disabled={busy || expired}
-        containerClassName="justify-center"
       >
-        {SLOT_GROUPS.map((slots, group) => (
-          <div key={slots.join()} className="flex items-center gap-2">
-            {group > 0 && <InputOTPSeparator />}
-            <InputOTPGroup>
-              {slots.map((index) => (
-                <InputOTPSlot
-                  key={index}
-                  index={index}
-                  aria-invalid={error !== null}
-                  className="bg-background h-12 w-10 text-lg"
-                />
-              ))}
-            </InputOTPGroup>
-          </div>
-        ))}
-      </InputOTP>
+        <InputOTP
+          data-testid="auth-code-input"
+          autoFocus
+          autoComplete="one-time-code"
+          inputMode="numeric"
+          pattern="^\d+$"
+          pasteTransformer={digitsOnly}
+          maxLength={SIGN_IN_CODE_LENGTH}
+          value={code}
+          onChange={change}
+          disabled={busy || expired}
+          containerClassName="justify-center"
+        >
+          <InputOTPGroups
+            length={SIGN_IN_CODE_LENGTH}
+            groupSize={SIGN_IN_CODE_GROUP}
+            invalid={error !== null}
+            slotClassName="bg-background h-12 w-10 text-lg"
+          />
+        </InputOTP>
+      </div>
       {error && (
         <p className="text-destructive text-sm" data-testid="auth-code-error">
           {t(error)}

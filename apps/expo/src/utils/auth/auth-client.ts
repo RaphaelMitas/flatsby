@@ -1,3 +1,4 @@
+import type { SignInCodeClient } from "@flatsby/validators/useSignInCode";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
 import { expoClient } from "@better-auth/expo/client";
@@ -26,6 +27,12 @@ export const authClient = createAuthClient({
 });
 
 export const { signIn, useSession } = authClient;
+
+export const signInCode: SignInCodeClient = {
+  send: (email) =>
+    authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" }),
+  signIn: (email, code) => authClient.signIn.emailOtp({ email, otp: code }),
+};
 
 // Reminders on this phone belong to the account that scheduled them
 export async function signOut() {

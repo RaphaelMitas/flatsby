@@ -2,11 +2,9 @@ import { NextResponse } from "next/server";
 
 import { auth } from "~/auth/server";
 import { env } from "~/env";
+import { E2E_EMAIL_DOMAIN } from "../email-domain";
 
-/**
- * E2E-only route: returns the sign-in code last sent to `?email=`, since e2e
- * stacks have no mail provider.
- */
+// e2e stacks have no mail provider, so tests read the code here
 export async function GET(request: Request) {
   if (!env.E2E_TESTING) {
     return NextResponse.json(
@@ -16,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   const email = new URL(request.url).searchParams.get("email");
-  const { otp } = email
+  const { otp } = email?.endsWith(`@${E2E_EMAIL_DOMAIN}`)
     ? await auth.api.getVerificationOTP({ query: { email, type: "sign-in" } })
     : { otp: null };
   if (!otp) {

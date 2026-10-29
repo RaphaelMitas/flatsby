@@ -28,8 +28,7 @@ import { DEFAULT_CHAT_MODEL } from "@flatsby/validators/models";
 
 import { auth } from "~/auth/server";
 import { env } from "~/env";
-
-const E2E_EMAIL_DOMAIN = "flatsby.test";
+import { E2E_EMAIL_DOMAIN } from "../email-domain";
 
 /**
  * E2E-only route: creates a unique test user, group, and session per call via

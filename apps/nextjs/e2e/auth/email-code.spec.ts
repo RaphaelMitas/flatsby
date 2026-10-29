@@ -46,7 +46,20 @@ test.describe("Email code sign-in", () => {
     await page.context().clearCookies();
 
     const code = await requestCode(page, existing.email);
-    await page.getByTestId("auth-code-input").fill(code);
+    // A code pasted over half-typed digits replaces them
+    const input = page.getByTestId("auth-code-input");
+    await input.pressSequentially("12");
+    await input.evaluate((element, text) => {
+      const clipboardData = new DataTransfer();
+      clipboardData.setData("text/plain", text);
+      element.dispatchEvent(
+        new ClipboardEvent("paste", {
+          clipboardData,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    }, `Code: ${code}`);
     await expect(page).toHaveURL(/\/home/);
 
     const session = await page.request.get("/api/auth/get-session");
