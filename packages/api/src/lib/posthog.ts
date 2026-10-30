@@ -281,7 +281,7 @@ export function captureEvent({
   });
 }
 
-// Turning off usage analytics is an objection (Art. 21 GDPR), so nothing about the account is sent
+// Turning off usage analytics is an objection (Art. 21 GDPR), so the account's usage events stop
 export function captureUserEvent({
   user,
   ...event

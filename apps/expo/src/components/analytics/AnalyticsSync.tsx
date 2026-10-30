@@ -52,7 +52,8 @@ export function AnalyticsSync() {
     void (async () => {
       const legacy = await readLegacyPostHogFile();
       if (legacy.optedOut) {
-        if (!userId) return keepOnlyLegacyOptOut();
+        await keepOnlyLegacyOptOut();
+        if (!userId) return;
         const result = await setOptOut({ optOut: true }).catch(() => null);
         if (!result?.success) return;
       }

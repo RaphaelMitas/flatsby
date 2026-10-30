@@ -162,7 +162,7 @@ const legacyFileSchema = z.object({
   content: z.object({ opted_out: z.boolean().optional() }),
 });
 
-// Drops the old IDs while the objection waits for an account to be saved to
+// Drops the old IDs while the objection waits to be saved to an account
 export async function keepOnlyLegacyOptOut() {
   await new File(Paths.document, POSTHOG_FILE).write(
     JSON.stringify({ version: "v1", content: { opted_out: true } }),

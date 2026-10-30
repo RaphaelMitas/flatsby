@@ -15,6 +15,8 @@ import { UsageDisplay } from "~/components/settings/UsageDisplay";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useTheme } from "~/lib/ui/theme";
+import { useAnalyticsConsent } from "~/utils/analytics/consent";
+import { storesDeviceId } from "~/utils/analytics/posthog";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
 import { getBaseUrl } from "~/utils/base-url";
@@ -29,6 +31,7 @@ export default function SettingsIndex() {
   const locale = useLocale();
   const { storedTheme, setTheme } = useTheme();
   const { preference, setPreference } = useLocalePreference();
+  const analyticsConsent = useAnalyticsConsent();
   const { clearSelectedGroup } = useShoppingStore();
   const { version: homeVersion, switchTo: switchHome } = useHomeVersion();
 
@@ -143,7 +146,7 @@ export default function SettingsIndex() {
               testID="settings-analytics"
               title={t("settings.items.analytics")}
               subtitle={
-                user.analyticsOptOut
+                user.analyticsOptOut && !storesDeviceId(analyticsConsent)
                   ? t("settings.items.disabled")
                   : t("settings.items.enabled")
               }
