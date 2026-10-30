@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@better-auth/expo": "catalog:better-auth",
+    "@better-auth/passkey": "catalog:better-auth",
     "@expo/metro-runtime": "~58.0.14",
     "@expo/ui": "~58.0.21",
     "@flatsby/i18n": "workspace:*",
@@ -47,6 +48,7 @@
     "better-auth": "catalog:better-auth",
     "expo": "~58.0.16",
     "expo-application": "~58.1.2",
+    "expo-better-auth-passkey": "^1.6.2",
     "expo-build-properties": "~58.0.11",
     "expo-constants": "~58.0.12",
     "expo-dev-client": "~58.0.14",

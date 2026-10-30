@@ -114,6 +114,8 @@ export const legal = {
       picture: "Ihr Profilbild (nur Google)",
       identifier:
         "Ihre Konto-ID bei Google oder Apple, wenn Sie sich damit anmelden",
+      passkeys:
+        "Für jeden Passkey den öffentlichen Schlüssel, einen Namen und das Erstelldatum; der private Schlüssel bleibt auf Ihrem Gerät oder in Ihrem Passwortmanager",
       plan: "Ihren Tarif, Ihre Käufe und Ihr KI-Guthaben",
     },
     userContent: {

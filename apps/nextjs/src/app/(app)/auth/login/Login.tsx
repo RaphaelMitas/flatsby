@@ -11,14 +11,17 @@ import { Button } from "@flatsby/ui/button";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import GoogleIcon from "@flatsby/ui/custom/icons/GoogleIcon";
+import PasskeyIcon from "@flatsby/ui/custom/icons/PasskeyIcon";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
 import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
+import { usePasskey } from "@flatsby/validators/usePasskey";
 import { useSendSignInCode } from "@flatsby/validators/useSignInCode";
 
 import type { EmailAttempt } from "./EmailCode";
-import { signIn, signInCode } from "~/auth/client";
+import { authClient, signIn, signInCode } from "~/auth/client";
+import { savePasskeyDevice, usePasskeyDevice } from "~/auth/passkey-device";
 import EmailCode from "./EmailCode";
 import { sendLoginEvent } from "./send-login-event";
 
@@ -51,7 +54,46 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
       }),
     onSent: (email) => setCodeAttempt({ email, event: emailEvent.current }),
   });
-  const busy = loading !== "false" || emailStep.sending;
+  const passkeyAttempt = useRef({
+    provider: "passkey" as const,
+    attempt_id: "",
+    url: "",
+  });
+  const passkey = usePasskey({
+    run: () => authClient.signIn.passkey(),
+    onDone: () => {
+      sendLoginEvent({ ...passkeyAttempt.current, event: "login_succeeded" });
+      savePasskeyDevice("used");
+      window.location.assign(callbackURL);
+    },
+    onCancelled: () =>
+      sendLoginEvent({
+        ...passkeyAttempt.current,
+        event: "login_cancelled",
+        stage: "sheet",
+      }),
+    onFailed: (errorCode) =>
+      sendLoginEvent({
+        ...passkeyAttempt.current,
+        event: "login_failed",
+        stage: "sheet",
+        error_code: errorCode,
+      }),
+  });
+  const signInWithPasskey = () => {
+    passkeyAttempt.current = {
+      provider: "passkey",
+      attempt_id: uuidv7(),
+      url: window.location.href,
+    };
+    sendLoginEvent({
+      ...passkeyAttempt.current,
+      event: "login_provider_tapped",
+    });
+    void passkey.start();
+  };
+  const passkeyFirst = usePasskeyDevice() === "used";
+  const busy = loading !== "false" || emailStep.sending || passkey.busy;
 
   const signInWith = async (provider: LoginProvider) => {
     const attempt = {
@@ -110,6 +152,36 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
             />
           ) : (
             <>
+              {passkeyFirst && (
+                <>
+                  <Button
+                    type="button"
+                    data-testid="auth-login-passkey-button"
+                    onClick={signInWithPasskey}
+                    disabled={busy}
+                  >
+                    {passkey.busy ? (
+                      <LoadingSpinner className="mr-2" />
+                    ) : (
+                      <PasskeyIcon className="mr-2 h-5 w-5 text-current" />
+                    )}
+                    {t("auth.login.signInWithPasskey")}
+                  </Button>
+                  {passkey.error && (
+                    <p
+                      className="text-destructive text-sm"
+                      data-testid="auth-login-passkey-error"
+                    >
+                      {t(passkey.error)}
+                    </p>
+                  )}
+                  <div className="text-muted-foreground flex items-center gap-3 text-xs">
+                    <Separator className="flex-1" />
+                    {t("auth.login.or")}
+                    <Separator className="flex-1" />
+                  </div>
+                </>
+              )}
               <form
                 className="flex flex-col gap-3"
                 noValidate
@@ -142,6 +214,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                 )}
                 <Button
                   type="submit"
+                  variant={passkeyFirst ? "outline" : "default"}
                   data-testid="auth-login-email-button"
                   disabled={busy}
                 >
@@ -192,6 +265,29 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                   {t("auth.login.apple")}
                 </Button>
               </div>
+              {!passkeyFirst && (
+                <div className="flex flex-col items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="text-muted-foreground"
+                    data-testid="auth-login-passkey-link"
+                    onClick={signInWithPasskey}
+                    disabled={busy}
+                  >
+                    {passkey.busy && <LoadingSpinner className="mr-2" />}
+                    {t("auth.login.signInWithPasskey")}
+                  </Button>
+                  {passkey.error && (
+                    <p
+                      className="text-destructive text-sm"
+                      data-testid="auth-login-passkey-error"
+                    >
+                      {t(passkey.error)}
+                    </p>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>

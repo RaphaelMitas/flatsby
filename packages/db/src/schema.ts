@@ -79,6 +79,7 @@ export const users = createTable("user", {
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
+  passkeys: many(passkeys),
   groupMembers: many(groupMembers),
   conversations: many(conversations),
   lastGroupUsed: one(groups, {
@@ -128,6 +129,33 @@ export const sessions = createTable("session", {
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] }),
+}));
+
+export const passkeys = createTable(
+  "passkey",
+  {
+    id: text("id").primaryKey(),
+    name: text("name"),
+    publicKey: text("public_key").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    credentialID: text("credential_id").notNull(),
+    counter: integer("counter").notNull(),
+    deviceType: text("device_type").notNull(),
+    backedUp: boolean("backed_up").notNull(),
+    transports: text("transports"),
+    createdAt: timestamp("created_at"),
+    aaguid: text("aaguid"),
+  },
+  (table) => [
+    index("passkey_user_idx").on(table.userId),
+    index("passkey_credential_idx").on(table.credentialID),
+  ],
+);
+
+export const passkeysRelations = relations(passkeys, ({ one }) => ({
+  user: one(users, { fields: [passkeys.userId], references: [users.id] }),
 }));
 
 export const verificationTokens = createTable("verification_token", {

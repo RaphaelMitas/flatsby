@@ -8,9 +8,10 @@ export type LoginProvider = z.infer<typeof loginProviderSchema>;
 export const loginMethodSchema = z.enum([
   ...loginProviderSchema.options,
   "email",
+  "passkey",
 ]);
 
-export const loginFailureStageSchema = z.enum(["start", "code"]);
+export const loginFailureStageSchema = z.enum(["start", "code", "sheet"]);
 export type LoginFailureStage = z.infer<typeof loginFailureStageSchema>;
 
 export const SIGN_IN_CODE_LENGTH = 6;
@@ -60,6 +61,15 @@ export function signInCodeError(error: AuthError) {
 // Expired or exhausted codes need a new one; a rate limit only needs a pause
 export const isRetryableCodeError = (error: AuthError) =>
   error.code === "INVALID_OTP" || error.status === 429;
+
+// Browsers report a dismissed passkey sheet as NotAllowedError, which reaches us as the passthrough code
+const PASSKEY_CANCEL_CODES = new Set([
+  "ERROR_CEREMONY_ABORTED",
+  "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY",
+]);
+
+export const passkeyCancelled = (error: AuthError) =>
+  PASSKEY_CANCEL_CODES.has(error.code ?? "");
 
 export const loginAttemptSchema = z.object({
   attemptId: z.uuid(),

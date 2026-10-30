@@ -10,6 +10,7 @@ export const auth = {
     email: "Email address",
     emailPlaceholder: "name@example.com",
     continueWithEmail: "Continue with email",
+    signInWithPasskey: "Sign in with a passkey",
     sendingCode: "Sending code",
     or: "or",
     agreement:
@@ -30,6 +31,21 @@ export const auth = {
     tooManyRequests: "Too many tries. Wait a minute and try again.",
     tooManyCodes: "Too many codes for this address. Try again in an hour.",
     failed: "Something went wrong. Please try again.",
+  },
+  passkey: {
+    title: "Skip the code next time?",
+    bodyIos:
+      "With a passkey you sign in with Face ID or Touch ID. It lives in your iCloud Keychain and works on all your Apple devices.",
+    bodyAndroid:
+      "With a passkey you sign in with your fingerprint or screen lock. It lives in Google Password Manager and works on all your Android devices.",
+    bodyWeb:
+      "With a passkey you sign in with your fingerprint, face or device PIN instead of waiting for an email.",
+    create: "Set up a passkey",
+    later: "Not now",
+    createdTitle: "Passkey set up",
+    createdBody: "Next time, a glance or a fingerprint is enough.",
+    continue: "Let's go",
+    failed: "That didn't work. Please try again.",
   },
   name: {
     title: "What should your flatmates call you?",

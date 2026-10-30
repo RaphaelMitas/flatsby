@@ -99,6 +99,27 @@ export const settings = {
     deleteUserWarning:
       "Deleting this user will permanently remove it and all its data. Please type your email <strong>{email}</strong> below to confirm. This action cannot be undone.",
   },
+  passkeys: {
+    title: "Passkeys",
+    count: "{count, plural, one {# set up} other {# set up}}",
+    none: "Sign in faster, without a code",
+    description:
+      "Sign in with your fingerprint, face or screen lock instead of a code.",
+    emptyTitle: "No passkey yet",
+    emptyBody: "With a passkey you sign in without waiting for an email.",
+    create: "Create passkey",
+    add: "Add passkey",
+    created: "Created {date}",
+    unnamed: "Passkey",
+    actions: "Passkey options",
+    rename: "Rename",
+    save: "Save",
+    namePlaceholder: "Name",
+    remove: "Remove",
+    removeTitle: "Remove passkey?",
+    removeBody:
+      "“{name}” will stop working for Flatsby. Delete it in your password manager too, or it will keep being offered. You can always sign in with an email code.",
+  },
   page: {
     title: "User Settings",
     billingTitle: "Billing & Subscription",

@@ -6,6 +6,7 @@ import {
   isRetryableCodeError,
   loginAttemptSchema,
   loginErrorCode,
+  passkeyCancelled,
   signInCodeError,
 } from "./login";
 
@@ -103,5 +104,23 @@ describe("codeFromText", () => {
     ["12", "12"],
   ])("reads %j as %j", (text, code) => {
     expect(codeFromText(text)).toBe(code);
+  });
+});
+
+describe("passkeyCancelled", () => {
+  it("treats a dismissed sheet as cancelled on every platform", () => {
+    for (const code of [
+      "ERROR_CEREMONY_ABORTED",
+      "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY",
+    ]) {
+      expect(passkeyCancelled({ code, status: 400 })).toBe(true);
+    }
+  });
+
+  it("keeps real failures as failures", () => {
+    expect(passkeyCancelled({ code: "AUTH_CANCELLED", status: 400 })).toBe(
+      false,
+    );
+    expect(passkeyCancelled({ status: 500 })).toBe(false);
   });
 });

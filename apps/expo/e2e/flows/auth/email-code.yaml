@@ -42,6 +42,13 @@ tags:
 - hideKeyboard
 - tapOn:
     id: "name-continue-button"
+# The system passkey sheet needs the real domain, so the flow declines the offer
+- extendedWaitUntil:
+    visible:
+      id: "passkey-offer-screen"
+    timeout: 30000
+- tapOn:
+    id: "passkey-offer-later"
 # A new account has no household yet, so home offers to start or join one
 - extendedWaitUntil:
     visible:

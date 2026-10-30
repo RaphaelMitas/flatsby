@@ -1,23 +1,9 @@
 import { randomUUID } from "node:crypto";
-import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { createAuthSession } from "../fixtures/auth";
 import { waitForHydration } from "../helpers/hydration";
-
-async function requestCode(page: Page, email: string) {
-  await page.goto("/auth/login");
-  await waitForHydration(page.getByTestId("auth-login-email-button"));
-  await page.getByTestId("auth-login-email-input").fill(email);
-  await page.getByTestId("auth-login-email-button").click();
-  await expect(page.getByTestId("auth-code-step")).toBeVisible();
-  const response = await page.request.get(
-    `/api/e2e/sign-in-code?email=${encodeURIComponent(email)}`,
-  );
-  expect(response.ok()).toBe(true);
-  const { code } = (await response.json()) as { code: string };
-  return code;
-}
+import { requestCode } from "../helpers/sign-in-code";
 
 test.describe("Email code sign-in", () => {
   test("signs up a new address and asks for a name", async ({ page }) => {

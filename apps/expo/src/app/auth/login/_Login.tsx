@@ -10,6 +10,7 @@ import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
+import { usePasskey } from "@flatsby/validators/usePasskey";
 import { useSendSignInCode } from "@flatsby/validators/useSignInCode";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -18,6 +19,7 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 import { Input } from "~/lib/ui/input";
 import { Separator } from "~/lib/ui/separator";
 import { authClient, signIn, signInCode } from "~/utils/auth/auth-client";
+import { passkeyDevice, passkeysSupported } from "~/utils/auth/passkey-device";
 import { openLegalPage } from "~/utils/legal";
 
 const Login = () => {
@@ -50,7 +52,43 @@ const Login = () => {
         params: { email, attemptId: emailAttemptId.current },
       }),
   });
-  const busy = loading !== "false" || emailStep.sending;
+  const passkeyAttemptId = useRef("");
+  const passkeyAttempt = () => ({
+    provider: "passkey",
+    platform: "app",
+    attempt_id: passkeyAttemptId.current,
+  });
+  const passkey = usePasskey({
+    run: () => authClient.signIn.passkey(),
+    onDone: () => {
+      posthog.capture("login_succeeded", passkeyAttempt());
+      passkeyDevice.save("used");
+    },
+    onCancelled: () =>
+      posthog.capture("login_cancelled", {
+        ...passkeyAttempt(),
+        stage: "sheet",
+      }),
+    onFailed: (errorCode) =>
+      posthog.capture("login_failed", {
+        ...passkeyAttempt(),
+        stage: "sheet",
+        error_code: errorCode,
+      }),
+  });
+  const signInWithPasskey = () => {
+    passkeyAttemptId.current = uuidv7();
+    posthog.capture("login_provider_tapped", passkeyAttempt());
+    void passkey.start();
+  };
+  const device = passkeyDevice.useValue();
+  const passkeyFirst = passkeysSupported && device === "used";
+  const busy = loading !== "false" || emailStep.sending || passkey.busy;
+  const passkeyError = passkey.error && (
+    <Text testID="sign-in-passkey-error" className="text-destructive text-sm">
+      {t(passkey.error)}
+    </Text>
+  );
 
   const callbackURL = ExpoLinking.createURL("/");
 
@@ -118,6 +156,26 @@ const Login = () => {
         </View>
 
         <View className="w-full gap-4">
+          {passkeyFirst && (
+            <>
+              <Button
+                testID="sign-in-passkey-button"
+                onPress={signInWithPasskey}
+                disabled={busy}
+                className="w-full py-4"
+                title={t("auth.login.signInWithPasskey")}
+                icon={passkey.busy ? "loader" : "passkey"}
+              />
+              {passkeyError}
+              <View className="flex-row items-center gap-3">
+                <Separator className="flex-1" />
+                <Text className="text-muted-foreground text-xs">
+                  {t("auth.login.or")}
+                </Text>
+                <Separator className="flex-1" />
+              </View>
+            </>
+          )}
           <View className="gap-2">
             <Input
               testID="sign-in-email-input"
@@ -145,6 +203,7 @@ const Login = () => {
           </View>
           <Button
             testID="sign-in-email-button"
+            variant={passkeyFirst ? "outline" : "primary"}
             onPress={() => emailStep.send()}
             disabled={busy}
             className="w-full py-4"
@@ -191,6 +250,20 @@ const Login = () => {
             }
             icon={loading === "apple" ? "loader" : "apple"}
           />
+
+          {passkeysSupported && !passkeyFirst && (
+            <View className="items-center gap-2">
+              <Button
+                testID="sign-in-passkey-link"
+                variant="link"
+                onPress={signInWithPasskey}
+                disabled={busy}
+                title={t("auth.login.signInWithPasskey")}
+                icon={passkey.busy ? "loader" : undefined}
+              />
+              {passkeyError}
+            </View>
+          )}
         </View>
 
         <View className="mt-6 gap-2">

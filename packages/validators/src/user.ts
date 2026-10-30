@@ -123,6 +123,13 @@ export const userDataExportSchema = z.object({
       createdAt: z.date(),
     }),
   ),
+  passkeys: z.array(
+    z.object({
+      name: z.string().nullable(),
+      createdAt: z.date().nullable(),
+      backedUp: z.boolean(),
+    }),
+  ),
   sessions: z.array(
     z.object({
       createdAt: z.date(),

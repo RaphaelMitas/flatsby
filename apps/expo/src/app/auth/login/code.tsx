@@ -12,11 +12,13 @@ import {
 import { asksForName } from "@flatsby/validators/user";
 import { useSignInCode } from "@flatsby/validators/useSignInCode";
 
+import type { SignInStep } from "~/utils/auth/post-login-path";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { CodeInput } from "~/lib/ui/code-input";
 import { signInCode } from "~/utils/auth/auth-client";
-import { askForName } from "~/utils/auth/post-login-path";
+import { passkeyDevice, passkeysSupported } from "~/utils/auth/passkey-device";
+import { queueSignInSteps } from "~/utils/auth/post-login-path";
 
 export default function CodeScreen() {
   const t = useTranslations();
@@ -28,6 +30,8 @@ export default function CodeScreen() {
   }>();
   const attempt = { provider: "email", platform: "app", attempt_id: attemptId };
   const signedIn = useRef(false);
+  const device = passkeyDevice.useValue();
+  const offersPasskey = passkeysSupported && device === "unknown";
 
   const { code, change, error, expired, resent, busy, waitSeconds, resend } =
     useSignInCode({
@@ -42,7 +46,10 @@ export default function CodeScreen() {
       onSignedIn: (user) => {
         signedIn.current = true;
         posthog.capture("login_succeeded", attempt);
-        if (asksForName(user)) askForName();
+        const steps: SignInStep[] = [];
+        if (asksForName(user)) steps.push("name");
+        if (offersPasskey) steps.push("passkey");
+        queueSignInSteps(steps);
       },
     });
 

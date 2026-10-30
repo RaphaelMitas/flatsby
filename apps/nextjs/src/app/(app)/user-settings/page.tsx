@@ -17,6 +17,7 @@ import DeleteUser from "./DeleteUser";
 import ExportUserData from "./ExportUserData";
 import { LanguageSettings } from "./LanguageSettings";
 import ManageUser from "./ManageUser";
+import Passkeys from "./Passkeys";
 
 export default async function Page() {
   prefetch(trpc.user.getCurrentUser.queryOptions());
@@ -34,6 +35,7 @@ export default async function Page() {
           </h1>
         </div>
         <ManageUser />
+        <Passkeys />
         <LanguageSettings
           preference={preference && isLocale(preference) ? preference : null}
         />

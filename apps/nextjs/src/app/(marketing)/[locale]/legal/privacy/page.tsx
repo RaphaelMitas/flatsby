@@ -92,7 +92,16 @@ export default function PrivacyPage() {
             <LegalSubheading>{t("account.heading")}</LegalSubheading>
             <LegalParagraph>{t("account.intro")}</LegalParagraph>
             <LegalItems
-              keys={["name", "email", "picture", "identifier", "plan"] as const}
+              keys={
+                [
+                  "name",
+                  "email",
+                  "picture",
+                  "identifier",
+                  "passkeys",
+                  "plan",
+                ] as const
+              }
               render={(key) => t(`account.${key}`)}
             />
 

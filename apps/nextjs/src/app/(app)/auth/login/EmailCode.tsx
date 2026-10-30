@@ -17,6 +17,7 @@ import { asksForName } from "@flatsby/validators/user";
 import { useSignInCode } from "@flatsby/validators/useSignInCode";
 
 import { signInCode } from "~/auth/client";
+import { passkeysSupported, readPasskeyDevice } from "~/auth/passkey-device";
 import { sendLoginEvent } from "./send-login-event";
 
 export interface EmailAttempt {
@@ -50,10 +51,14 @@ export default function EmailCode({
       onSignedIn: (user) => {
         signedIn.current = true;
         sendLoginEvent({ ...attempt.event, event: "login_succeeded" });
+        const next =
+          passkeysSupported() && readPasskeyDevice() === "unknown"
+            ? `/auth/passkey?next=${encodeURIComponent(callbackURL)}`
+            : callbackURL;
         window.location.assign(
           asksForName(user)
-            ? `/auth/name?next=${encodeURIComponent(callbackURL)}`
-            : callbackURL,
+            ? `/auth/name?next=${encodeURIComponent(next)}`
+            : next,
         );
       },
     });

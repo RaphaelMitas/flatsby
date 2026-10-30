@@ -1,14 +1,20 @@
 import type { SignInCodeClient } from "@flatsby/validators/useSignInCode";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { passkeyClient } from "@better-auth/passkey/client";
 import { emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
 type AuthClient = ReturnType<
-  typeof createAuthClient<{ plugins: [ReturnType<typeof emailOTPClient>] }>
+  typeof createAuthClient<{
+    plugins: [
+      ReturnType<typeof emailOTPClient>,
+      ReturnType<typeof passkeyClient>,
+    ];
+  }>
 >;
 
 export const authClient: AuthClient = createAuthClient({
-  plugins: [emailOTPClient()],
+  plugins: [emailOTPClient(), passkeyClient()],
 });
 
 export const signIn: AuthClient["signIn"] = authClient.signIn;

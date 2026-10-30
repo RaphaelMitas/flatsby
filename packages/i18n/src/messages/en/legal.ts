@@ -108,6 +108,8 @@ export const legal = {
       email: "Your email address",
       picture: "Your profile picture (Google only)",
       identifier: "Your Google or Apple account ID, if you sign in with them",
+      passkeys:
+        "For each passkey, its public key, a name and the date it was created; the private key stays on your device or in your password manager",
       plan: "Your plan, purchases and AI credit balance",
     },
     userContent: {

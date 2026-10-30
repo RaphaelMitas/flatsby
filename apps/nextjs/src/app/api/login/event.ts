@@ -14,8 +14,8 @@ const attempt = {
   attempt_id: z.uuid(),
 };
 
-// OAuth outcomes are captured on the callback; only an email code ends in the page
-const emailAttempt = { ...attempt, provider: z.literal("email") };
+// OAuth outcomes are captured on the callback; email codes and passkeys end in the page
+const pageAttempt = { ...attempt, provider: z.enum(["email", "passkey"]) };
 
 export const loginEventSchema = z.discriminatedUnion("event", [
   z.object({ ...attempt, event: z.literal("login_provider_tapped") }),
@@ -26,11 +26,16 @@ export const loginEventSchema = z.discriminatedUnion("event", [
     error_code: z.string().transform(loginErrorCode),
   }),
   z.object({
-    ...emailAttempt,
+    ...pageAttempt,
     event: z.literal("login_cancelled"),
-    stage: z.literal("code"),
+    stage: z.enum(["code", "sheet"]),
   }),
-  z.object({ ...emailAttempt, event: z.literal("login_succeeded") }),
+  z.object({ ...pageAttempt, event: z.literal("login_succeeded") }),
+  z.object({
+    url: attempt.url,
+    event: z.literal("passkey_created"),
+    source: z.enum(["offer", "settings"]),
+  }),
 ]);
 
 export type LoginEvent = z.input<typeof loginEventSchema>;

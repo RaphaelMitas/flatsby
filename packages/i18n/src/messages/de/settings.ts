@@ -102,6 +102,28 @@ export const settings = {
     deleteUserWarning:
       "Dadurch werden dein Konto und alle zugehörigen Daten dauerhaft gelöscht. Gib zur Bestätigung unten deine E-Mail-Adresse <strong>{email}</strong> ein. Das lässt sich nicht rückgängig machen.",
   },
+  passkeys: {
+    title: "Passkeys",
+    count: "{count, plural, one {# eingerichtet} other {# eingerichtet}}",
+    none: "Schneller anmelden, ohne Code",
+    description:
+      "Anmelden per Fingerabdruck, Gesicht oder Displaysperre statt Code.",
+    emptyTitle: "Noch kein Passkey",
+    emptyBody:
+      "Mit einem Passkey meldest du dich an, ohne auf eine E-Mail zu warten.",
+    create: "Passkey erstellen",
+    add: "Passkey hinzufügen",
+    created: "Erstellt am {date}",
+    unnamed: "Passkey",
+    actions: "Passkey-Optionen",
+    rename: "Umbenennen",
+    save: "Speichern",
+    namePlaceholder: "Name",
+    remove: "Entfernen",
+    removeTitle: "Passkey entfernen?",
+    removeBody:
+      "„{name}“ funktioniert danach nicht mehr für Flatsby. Lösch ihn auch in deinem Passwortmanager, sonst wird er dir weiter angeboten. Per E-Mail-Code kommst du immer rein.",
+  },
   page: {
     title: "Einstellungen",
     billingTitle: "Abrechnung & Abo",

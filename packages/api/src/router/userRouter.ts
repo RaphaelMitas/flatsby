@@ -8,6 +8,7 @@ import {
   expenses,
   expenseSplits,
   groupMembers,
+  passkeys,
   sessions,
   shoppingLists,
   users,
@@ -333,6 +334,7 @@ export const userRouter = createTRPCRouter({
                     .delete(verificationTokens)
                     .where(eq(verificationTokens.identifier, user.email));
                 await trx.delete(accounts).where(eq(accounts.userId, user.id));
+                await trx.delete(passkeys).where(eq(passkeys.userId, user.id));
                 await trx.delete(sessions).where(eq(sessions.userId, user.id));
                 await trx.delete(users).where(eq(users.id, user.id));
 
@@ -470,6 +472,11 @@ export const userRouter = createTRPCRouter({
               const signInMethods = await db.query.accounts.findMany({
                 where: eq(accounts.userId, userId),
                 columns: { providerId: true, accountId: true, createdAt: true },
+              });
+
+              const userPasskeys = await db.query.passkeys.findMany({
+                where: eq(passkeys.userId, userId),
+                columns: { name: true, createdAt: true, backedUp: true },
               });
 
               const userSessions = await db.query.sessions.findMany({
@@ -614,6 +621,7 @@ export const userRouter = createTRPCRouter({
                 exportedAt: new Date(),
                 user,
                 signInMethods,
+                passkeys: userPasskeys,
                 sessions: userSessions,
                 groups: userGroups.map((g) => ({
                   id: g.group.id,

@@ -13,15 +13,21 @@ export const clearPostLoginPath = () => {
   pending = null;
 };
 
-// Not a route param: the root layout leaves the code screen on its own once the session lands
-let namePending = false;
+export type SignInStep = "name" | "passkey";
 
-export const askForName = () => {
-  namePending = true;
+// Not a route param: the root layout leaves the code screen on its own once the session lands
+let steps: SignInStep[] = [];
+
+export const queueSignInSteps = (next: SignInStep[]) => {
+  steps = next;
 };
 
-export const nameStepPending = () => namePending;
+export const nextSignInStep = () => steps[0] ?? null;
 
-export const finishNameStep = () => {
-  namePending = false;
+export const finishSignInStep = (step: SignInStep) => {
+  steps = steps.filter((pending) => pending !== step);
+};
+
+export const clearSignInSteps = () => {
+  steps = [];
 };

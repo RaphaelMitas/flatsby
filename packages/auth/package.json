@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@better-auth/expo": "catalog:better-auth",
+    "@better-auth/passkey": "catalog:better-auth",
     "@flatsby/db": "workspace:*",
     "@flatsby/validators": "workspace:*",
     "@t3-oss/env-nextjs": "catalog:",

@@ -12,6 +12,7 @@ export const auth = {
     email: "E-Mail-Adresse",
     emailPlaceholder: "name@beispiel.de",
     continueWithEmail: "Weiter mit E-Mail",
+    signInWithPasskey: "Mit Passkey anmelden",
     sendingCode: "Code wird gesendet",
     or: "oder",
     agreement:
@@ -34,6 +35,21 @@ export const auth = {
     tooManyCodes:
       "Zu viele Codes für diese Adresse. Versuch es in einer Stunde noch einmal.",
     failed: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  },
+  passkey: {
+    title: "Nächstes Mal ohne Code?",
+    bodyIos:
+      "Mit einem Passkey meldest du dich per Face ID oder Touch ID an. Er liegt in deinem iCloud-Schlüsselbund und funktioniert auf all deinen Apple-Geräten.",
+    bodyAndroid:
+      "Mit einem Passkey meldest du dich per Fingerabdruck oder Displaysperre an. Er liegt im Google Passwortmanager und funktioniert auf all deinen Android-Geräten.",
+    bodyWeb:
+      "Mit einem Passkey meldest du dich per Fingerabdruck, Gesicht oder Geräte-PIN an, statt auf eine E-Mail zu warten.",
+    create: "Passkey einrichten",
+    later: "Jetzt nicht",
+    createdTitle: "Passkey eingerichtet",
+    createdBody: "Beim nächsten Mal reicht ein Blick oder ein Fingerabdruck.",
+    continue: "Los geht's",
+    failed: "Das hat nicht geklappt. Versuch es noch einmal.",
   },
   name: {
     title: "Wie sollen dich deine Mitbewohner nennen?",

@@ -1,5 +1,6 @@
 import type { BetterAuthOptions } from "better-auth";
 import { expo } from "@better-auth/expo";
+import { getAuthenticatorName, passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
@@ -8,9 +9,14 @@ import { emailOTP, oAuthProxy, testUtils } from "better-auth/plugins";
 
 import { db } from "@flatsby/db/client";
 import { SIGN_IN_CODE_TTL_SECONDS } from "@flatsby/validators/login";
+import { ANDROID_SIGNING_CERTS } from "@flatsby/validators/store";
 import { defaultUserName } from "@flatsby/validators/user";
 
 import { allowSignInCode } from "./sign-in-code-limit";
+
+// The Android app proves itself with its signing certificate instead of a web origin
+const androidOrigin = (fingerprint: string) =>
+  `android:apk-key-hash:${Buffer.from(fingerprint.replaceAll(":", ""), "hex").toString("base64url")}`;
 
 const SEND_CODE_PATH = "/email-otp/send-verification-otp";
 
@@ -51,6 +57,7 @@ export function initAuth(options: {
   // e2e runs a production build, and every test shares one IP
   const limitRequests =
     options.nodeEnv === "production" && !options.enableTestUtils;
+  const site = new URL(options.baseUrl);
   const config = {
     database: drizzleAdapter(db, { provider: "pg" }),
     baseURL: options.baseUrl,
@@ -76,6 +83,17 @@ export function initAuth(options: {
             if (ctx?.request) failedSends.add(ctx.request);
             throw error;
           }
+        },
+      }),
+      passkey({
+        rpID: site.hostname,
+        rpName: "Flatsby",
+        origin: [site.origin, ...ANDROID_SIGNING_CERTS.map(androidOrigin)],
+        schema: { passkey: { modelName: "passkeys" } },
+        registration: {
+          afterVerification: async ({ verification }) => ({
+            name: getAuthenticatorName(verification.registrationInfo?.aaguid),
+          }),
         },
       }),
       nextCookies(),
