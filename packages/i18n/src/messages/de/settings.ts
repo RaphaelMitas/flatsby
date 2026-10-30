@@ -104,14 +104,11 @@ export const settings = {
   },
   passkeys: {
     title: "Passkeys",
-    count: "{count, plural, one {# eingerichtet} other {# eingerichtet}}",
+    count: "{count} eingerichtet",
     none: "Schneller anmelden, ohne Code",
     description:
       "Anmelden per Fingerabdruck, Gesicht oder Displaysperre statt Code.",
     emptyTitle: "Noch kein Passkey",
-    emptyBody:
-      "Mit einem Passkey meldest du dich an, ohne auf eine E-Mail zu warten.",
-    create: "Passkey erstellen",
     add: "Passkey hinzufügen",
     created: "Erstellt am {date}",
     unnamed: "Passkey",

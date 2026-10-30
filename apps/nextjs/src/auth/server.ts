@@ -10,6 +10,7 @@ import { importPKCS8, SignJWT } from "jose";
 
 import { captureError } from "@flatsby/api/posthog";
 import { initAuth } from "@flatsby/auth";
+import { safeRedirectPath } from "@flatsby/validators/invite";
 import {
   callbackOutcome,
   loginAttemptSchema,
@@ -114,6 +115,19 @@ async function onOAuthCallback({
 export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
 );
+
+// The steps after sign-in need its session and carry on to where sign-in was headed
+export async function signedInStep(
+  searchParams: Promise<{ next?: string | string[] }>,
+) {
+  const { next } = await searchParams;
+  const session = await getSession();
+  if (!session?.user) redirect("/auth/login");
+  return {
+    user: session.user,
+    next: safeRedirectPath(typeof next === "string" ? next : undefined),
+  };
+}
 
 export async function signOutAndRedirect(): Promise<never> {
   await auth.api.signOut({ headers: await headers() });

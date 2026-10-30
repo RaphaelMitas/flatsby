@@ -20,7 +20,10 @@ export default function PasskeyOffer({ next }: { next: string }) {
 
   // Without a built-in authenticator the offer would only lead to a QR code for another device
   useEffect(() => {
-    void PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+    void Promise.resolve()
+      .then(() =>
+        PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
+      )
       .catch(() => false)
       .then((available) => {
         if (available) setStep("offer");

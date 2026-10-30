@@ -101,13 +101,11 @@ export const settings = {
   },
   passkeys: {
     title: "Passkeys",
-    count: "{count, plural, one {# set up} other {# set up}}",
+    count: "{count} set up",
     none: "Sign in faster, without a code",
     description:
       "Sign in with your fingerprint, face or screen lock instead of a code.",
     emptyTitle: "No passkey yet",
-    emptyBody: "With a passkey you sign in without waiting for an email.",
-    create: "Create passkey",
     add: "Add passkey",
     created: "Created {date}",
     unnamed: "Passkey",

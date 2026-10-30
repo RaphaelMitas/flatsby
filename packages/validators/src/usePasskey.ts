@@ -106,7 +106,10 @@ export function usePasskeyRow({
 
   return {
     draft,
-    setDraft,
+    setDraft: (next: string | null) => {
+      setDraft(next);
+      setFailed(false);
+    },
     busy,
     failed,
     saveName,

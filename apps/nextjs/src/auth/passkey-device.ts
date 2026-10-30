@@ -10,10 +10,6 @@ import {
 import { sendLoginEvent } from "~/app/(app)/auth/login/send-login-event";
 import { authClient } from "./client";
 
-export const passkeysSupported = () =>
-  typeof window !== "undefined" &&
-  typeof window.PublicKeyCredential === "function";
-
 export const readPasskeyDevice = () =>
   parsePasskeyDevice(localStorage.getItem(PASSKEY_DEVICE_KEY));
 

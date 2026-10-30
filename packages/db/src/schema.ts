@@ -79,7 +79,6 @@ export const users = createTable("user", {
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
-  passkeys: many(passkeys),
   groupMembers: many(groupMembers),
   conversations: many(conversations),
   lastGroupUsed: one(groups, {
@@ -153,10 +152,6 @@ export const passkeys = createTable(
     index("passkey_credential_idx").on(table.credentialID),
   ],
 );
-
-export const passkeysRelations = relations(passkeys, ({ one }) => ({
-  user: one(users, { fields: [passkeys.userId], references: [users.id] }),
-}));
 
 export const verificationTokens = createTable("verification_token", {
   id: text("id").primaryKey(),

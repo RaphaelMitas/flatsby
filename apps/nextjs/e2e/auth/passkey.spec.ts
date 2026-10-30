@@ -5,35 +5,37 @@ import { expect, test } from "@playwright/test";
 import { waitForHydration } from "../helpers/hydration";
 import { currentUserId, requestCode } from "../helpers/sign-in-code";
 
-// Chrome's virtual authenticator stands in for Touch ID and keeps the passkey for the whole test
-async function addAuthenticator(page: Page) {
-  const cdp = await page.context().newCDPSession(page);
-  await cdp.send("WebAuthn.enable");
-  await cdp.send("WebAuthn.addVirtualAuthenticator", {
-    options: {
-      protocol: "ctap2",
-      transport: "internal",
-      hasResidentKey: true,
-      hasUserVerification: true,
-      isUserVerified: true,
-      automaticPresenceSimulation: true,
-    },
-  });
+async function signUp(page: Page, name: string) {
+  const email = `passkey-${randomUUID()}@flatsby.test`;
+  const code = await requestCode(page, email);
+  await page.getByTestId("auth-code-input").fill(code);
+  await waitForHydration(page.getByTestId("auth-name-continue"));
+  await page.getByTestId("auth-name-input").fill(name);
+  await page.getByTestId("auth-name-continue").click();
+  return email;
 }
 
 test.describe("Passkeys", () => {
+  // Chrome's virtual authenticator stands in for Touch ID and keeps the passkey for the whole test
+  test.beforeEach(async ({ page }) => {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("WebAuthn.enable");
+    await cdp.send("WebAuthn.addVirtualAuthenticator", {
+      options: {
+        protocol: "ctap2",
+        transport: "internal",
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        automaticPresenceSimulation: true,
+      },
+    });
+  });
+
   test("offered after a code sign-up, then signs back in and is managed in settings", async ({
     page,
   }) => {
-    await addAuthenticator(page);
-    const email = `passkey-${randomUUID()}@flatsby.test`;
-    const code = await requestCode(page, email);
-    await page.getByTestId("auth-code-input").fill(code);
-
-    await waitForHydration(page.getByTestId("auth-name-continue"));
-    await page.getByTestId("auth-name-input").fill("Passkey User");
-    await page.getByTestId("auth-name-continue").click();
-
+    await signUp(page, "Passkey User");
     await expect(page.getByTestId("auth-passkey-offer")).toBeVisible();
     await page.getByTestId("auth-passkey-create").click();
     await page.getByTestId("auth-passkey-continue").click();
@@ -63,14 +65,7 @@ test.describe("Passkeys", () => {
   });
 
   test("a declined offer stays declined on this browser", async ({ page }) => {
-    await addAuthenticator(page);
-    const email = `passkey-${randomUUID()}@flatsby.test`;
-    const code = await requestCode(page, email);
-    await page.getByTestId("auth-code-input").fill(code);
-    await waitForHydration(page.getByTestId("auth-name-continue"));
-    await page.getByTestId("auth-name-input").fill("Declining User");
-    await page.getByTestId("auth-name-continue").click();
-
+    const email = await signUp(page, "Declining User");
     await page.getByTestId("auth-passkey-later").click();
     await expect(page).toHaveURL(/\/group/);
 

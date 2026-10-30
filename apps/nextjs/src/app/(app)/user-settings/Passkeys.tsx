@@ -35,7 +35,7 @@ import { useAddPasskey } from "~/auth/passkey-device";
 
 export default function Passkeys() {
   const t = useTranslations();
-  const { data: passkeys } = authClient.useListPasskeys();
+  const { data: passkeys, error } = authClient.useListPasskeys();
   const add = useAddPasskey("settings");
 
   return (
@@ -48,6 +48,9 @@ export default function Passkeys() {
         {passkeys?.map((passkey) => (
           <PasskeyRow key={passkey.id} passkey={passkey} />
         ))}
+        {error && !passkeys && (
+          <p className="text-destructive text-sm">{t("auth.passkey.failed")}</p>
+        )}
         {add.error && (
           <p className="text-destructive text-sm">{t(add.error)}</p>
         )}

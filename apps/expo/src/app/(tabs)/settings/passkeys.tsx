@@ -19,79 +19,86 @@ import { useAddPasskey } from "~/utils/auth/passkey-device";
 
 export default function PasskeysScreen() {
   const t = useTranslations();
-  const { data: passkeys, isPending, error } = authClient.useListPasskeys();
+  const {
+    data: passkeys,
+    isPending,
+    error,
+    refetch,
+  } = authClient.useListPasskeys();
   const add = useAddPasskey("settings");
 
   if (isPending) return <SafeAreaView />;
 
-  if (error) {
+  // Settings keeps the list subscribed underneath, so coming back here doesn't refetch on its own
+  if (!passkeys) {
     return (
       <SafeAreaView>
-        <AppScrollView contentContainerClassName="flex-grow justify-center p-6">
-          <Text className="text-destructive text-center text-sm">
-            {t("auth.passkey.failed")}
-          </Text>
+        <AppScrollView contentContainerClassName="flex-grow justify-center gap-4 p-6">
+          {error && (
+            <Text className="text-destructive text-center text-sm">
+              {t("auth.passkey.failed")}
+            </Text>
+          )}
+          <Button
+            variant="outline"
+            title={t("home.retry")}
+            onPress={() => refetch()}
+          />
         </AppScrollView>
       </SafeAreaView>
     );
   }
 
-  const addButton = (
-    <Button
-      testID="passkeys-add-button"
-      variant={passkeys?.length ? "outline" : "primary"}
-      className="w-full py-4"
-      title={
-        passkeys?.length
-          ? t("settings.passkeys.add")
-          : t("settings.passkeys.create")
-      }
-      icon={add.busy ? "loader" : undefined}
-      disabled={add.busy}
-      onPress={() => add.start()}
-    />
-  );
-  const addError = add.error && (
-    <Text className="text-destructive text-center text-sm">{t(add.error)}</Text>
-  );
+  const empty = passkeys.length === 0;
 
-  if (!passkeys?.length) {
-    return (
-      <SafeAreaView>
-        <AppScrollView contentContainerClassName="flex-grow justify-center gap-4 p-6">
+  return (
+    <SafeAreaView>
+      <AppScrollView
+        contentContainerClassName={cn(
+          "gap-4",
+          empty ? "flex-grow justify-center p-6" : "p-4",
+        )}
+      >
+        {empty ? (
           <View testID="passkeys-empty" className="items-center gap-3">
             <Icon name="passkey" size={56} color="primary" />
             <Text className="text-foreground text-lg font-bold">
               {t("settings.passkeys.emptyTitle")}
             </Text>
             <Text className="text-muted-foreground text-center text-base">
-              {t("settings.passkeys.emptyBody")}
+              {t("settings.passkeys.description")}
             </Text>
           </View>
-          {addError}
-          {addButton}
-        </AppScrollView>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView>
-      <AppScrollView contentContainerClassName="gap-4 p-4">
-        <Text className="text-muted-foreground text-sm">
-          {t("settings.passkeys.description")}
-        </Text>
-        <Card className="px-4">
-          {passkeys.map((passkey, index) => (
-            <PasskeyRow
-              key={passkey.id}
-              passkey={passkey}
-              divider={index < passkeys.length - 1}
-            />
-          ))}
-        </Card>
-        {addError}
-        {addButton}
+        ) : (
+          <>
+            <Text className="text-muted-foreground text-sm">
+              {t("settings.passkeys.description")}
+            </Text>
+            <Card className="px-4">
+              {passkeys.map((passkey, index) => (
+                <PasskeyRow
+                  key={passkey.id}
+                  passkey={passkey}
+                  divider={index < passkeys.length - 1}
+                />
+              ))}
+            </Card>
+          </>
+        )}
+        {add.error && (
+          <Text className="text-destructive text-center text-sm">
+            {t(add.error)}
+          </Text>
+        )}
+        <Button
+          testID="passkeys-add-button"
+          variant={empty ? "primary" : "outline"}
+          className="w-full py-4"
+          title={t("settings.passkeys.add")}
+          icon={add.busy ? "loader" : undefined}
+          disabled={add.busy}
+          onPress={() => add.start()}
+        />
       </AppScrollView>
     </SafeAreaView>
   );
