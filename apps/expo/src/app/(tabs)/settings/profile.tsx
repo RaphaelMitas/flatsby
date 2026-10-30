@@ -11,8 +11,10 @@ import { useTranslations } from "use-intl";
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { updateUserNameFormSchema } from "@flatsby/validators/user";
 
+import { PaypalHandleCard } from "~/components/PaypalHandleCard";
 import { ProfileSection } from "~/components/ProfileSection";
 import { TimedAlert } from "~/components/TimedAlert";
+import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import {
   Card,
@@ -80,7 +82,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView>
-      <View className="flex flex-col gap-4 p-4">
+      <AppScrollView contentContainerClassName="gap-4 p-4">
         {/* Profile Picture Section */}
         <ProfileSection
           name={user.name}
@@ -159,7 +161,9 @@ export default function ProfileScreen() {
             )}
           </CardContent>
         </Card>
-      </View>
+
+        <PaypalHandleCard />
+      </AppScrollView>
     </SafeAreaView>
   );
 }

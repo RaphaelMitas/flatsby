@@ -18,6 +18,7 @@ import ExportUserData from "./ExportUserData";
 import { LanguageSettings } from "./LanguageSettings";
 import ManageUser from "./ManageUser";
 import Passkeys from "./Passkeys";
+import { PaypalHandleCard } from "./PaypalHandleCard";
 
 export default async function Page() {
   prefetch(trpc.user.getCurrentUser.queryOptions());
@@ -36,6 +37,7 @@ export default async function Page() {
         </div>
         <ManageUser />
         <Passkeys />
+        <PaypalHandleCard />
         <LanguageSettings
           preference={preference && isLocale(preference) ? preference : null}
         />

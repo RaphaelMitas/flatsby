@@ -203,7 +203,13 @@ export function initAuth(options: {
         },
       },
     },
-    user: { modelName: "users" },
+    user: {
+      modelName: "users",
+      additionalFields: {
+        // Set only through updatePaypalHandle, which validates it
+        paypalHandle: { type: "string", required: false, input: false },
+      },
+    },
     session: {
       modelName: "sessions",
     },

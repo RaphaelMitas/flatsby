@@ -23,6 +23,7 @@ import {
 } from "@flatsby/validators/billing";
 import { groupSchema } from "@flatsby/validators/group";
 import { chatModelSchema } from "@flatsby/validators/models";
+import { paypalHandleInputSchema } from "@flatsby/validators/payment";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
 import {
   updateAIConsentInputSchema,
@@ -208,6 +209,29 @@ export const userRouter = createTRPCRouter({
             { messageKey: "errors.updateNameFailed", table: "users" },
           );
           return { user };
+        }),
+      ),
+    ),
+
+  updatePaypalHandle: protectedProcedure
+    .input(paypalHandleInputSchema)
+    .output(getApiResultZod(z.string().nullable()))
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const paypalHandle = input.paypalHandle || null;
+          const database = yield* Database;
+          yield* database.query(
+            "update paypal handle",
+            (db) =>
+              db
+                .update(users)
+                .set({ paypalHandle })
+                .where(eq(users.id, ctx.session.user.id)),
+            { messageKey: "errors.updatePaypalHandleFailed", table: "users" },
+          );
+          return paypalHandle;
         }),
       ),
     ),
@@ -462,6 +486,7 @@ export const userRouter = createTRPCRouter({
                   privacyVersion: true,
                   aiConsentAcceptedAt: true,
                   aiConsentVersion: true,
+                  paypalHandle: true,
                 },
               });
 

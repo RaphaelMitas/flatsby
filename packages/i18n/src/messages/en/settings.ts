@@ -81,6 +81,20 @@ export const settings = {
     uploadNew: "Upload New",
     featureComingSoon: "feature coming soon!",
   },
+  payment: {
+    title: "Getting paid",
+    description: "Optional. Lets housemates pay you back with PayPal.",
+    visibleTitle: "Visible to everyone in your groups",
+    visibleBody:
+      "Every member of your groups can see your PayPal.me name when they settle up.",
+    paypal: "PayPal.me",
+    paypalPlaceholder: "yourname",
+    paypalHint: "Pasting the full link works too.",
+    paypalSignup: "No PayPal.me link yet? Create one",
+    saved: "PayPal.me name saved.",
+    removed: "PayPal.me name removed.",
+    paypalInvalid: "Enter your PayPal.me name, like paypal.me/yourname.",
+  },
   danger: {
     description:
       "Actions in this section are irreversible. Please proceed with caution.",

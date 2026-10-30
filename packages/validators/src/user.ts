@@ -115,6 +115,7 @@ export const userDataExportSchema = z.object({
     privacyVersion: z.string().nullable(),
     aiConsentAcceptedAt: z.date().nullable(),
     aiConsentVersion: z.string().nullable(),
+    paypalHandle: z.string().nullable(),
   }),
   signInMethods: z.array(
     z.object({

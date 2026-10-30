@@ -29,7 +29,7 @@ import { legalMetadata, LegalShell } from "../_components/legal-shell";
 export const dynamicParams = false;
 
 const PATH = "/legal/privacy";
-const PRIVACY_VERSION = "1.3";
+const PRIVACY_VERSION = "1.4";
 
 const SECTIONS = [
   { id: "data-controller", key: "controller" },
@@ -100,6 +100,7 @@ export default function PrivacyPage() {
                   "identifier",
                   "passkeys",
                   "plan",
+                  "payment",
                 ] as const
               }
               render={(key) => t(`account.${key}`)}

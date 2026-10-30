@@ -1,6 +1,6 @@
 {
-  "id": "0ae89f3f-3903-4b58-a50a-36762192653d",
-  "prevId": "e9dffa44-b776-4f57-8313-346c5c743212",
+  "id": "3f17b2bc-aadc-4285-b116-86d745d7bd84",
+  "prevId": "e6c92876-1705-4dfc-b99e-9ee0358615b9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1058,126 +1058,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.flat-cove_passkey": {
-      "name": "flat-cove_passkey",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "public_key": {
-          "name": "public_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "credential_id": {
-          "name": "credential_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "counter": {
-          "name": "counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "device_type": {
-          "name": "device_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "backed_up": {
-          "name": "backed_up",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "transports": {
-          "name": "transports",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "aaguid": {
-          "name": "aaguid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "passkey_user_idx": {
-          "name": "passkey_user_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "passkey_credential_idx": {
-          "name": "passkey_credential_idx",
-          "columns": [
-            {
-              "expression": "credential_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "flat-cove_passkey_user_id_flat-cove_user_id_fk": {
-          "name": "flat-cove_passkey_user_id_flat-cove_user_id_fk",
-          "tableFrom": "flat-cove_passkey",
-          "tableTo": "flat-cove_user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.flat-cove_rate_limit": {
       "name": "flat-cove_rate_limit",
       "schema": "",
@@ -1632,6 +1512,12 @@
         },
         "ai_consent_version": {
           "name": "ai_consent_version",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paypal_handle": {
+          "name": "paypal_handle",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": false

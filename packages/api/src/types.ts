@@ -47,6 +47,8 @@ export interface MemberUser {
   name: string;
   email: string | null;
   image: string | null;
+  // Only the group's member list loads it; placeholders never have one
+  paypalHandle?: string | null;
 }
 
 export type GroupMemberWithUserInfo = Pick<

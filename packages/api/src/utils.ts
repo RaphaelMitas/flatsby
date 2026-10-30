@@ -199,7 +199,9 @@ export const findGroupWithMembers = async (db: Database, groupId: number) => {
           joinedOn: true,
           isActive: true,
         },
-        with: { user: { columns: memberUserColumns } },
+        with: {
+          user: { columns: { ...memberUserColumns, paypalHandle: true } },
+        },
       },
     },
   });

@@ -24,7 +24,7 @@ export function CopyButton({
   };
 
   return (
-    <Button size="sm" variant="outline" onClick={copy}>
+    <Button type="button" size="sm" variant="outline" onClick={copy}>
       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
       {copied ? t("common.copied") : t("common.copy")}
     </Button>
