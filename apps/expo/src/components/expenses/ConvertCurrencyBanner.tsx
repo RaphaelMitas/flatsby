@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
-import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import { listCurrencies } from "@flatsby/validators/expenses/formatting";
@@ -9,6 +8,7 @@ import { listCurrencies } from "@flatsby/validators/expenses/formatting";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { getPostHog } from "~/utils/analytics/posthog";
 import { useUpdateGroup } from "~/utils/useUpdateGroup";
 
 export function ConvertCurrencyBanner({
@@ -22,7 +22,6 @@ export function ConvertCurrencyBanner({
 }) {
   const t = useTranslations();
   const router = useRouter();
-  const posthog = usePostHog();
   const updateGroup = useUpdateGroup(groupId);
 
   const hasCapturedShown = useRef(false);
@@ -30,8 +29,8 @@ export function ConvertCurrencyBanner({
   useEffect(() => {
     if (hasCapturedShown.current) return;
     hasCapturedShown.current = true;
-    posthog.capture("currency_banner_shown", { groupId, currencies });
-  }, [posthog, groupId, currencies]);
+    getPostHog().capture("currency_banner_shown", { groupId, currencies });
+  }, [groupId, currencies]);
 
   const keepSeparate = () => {
     updateGroup.mutate({

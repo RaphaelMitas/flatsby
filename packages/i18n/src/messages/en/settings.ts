@@ -56,7 +56,7 @@ export const settings = {
     consentSection: "Optional, with your consent",
     screens: "Screens and app use",
     screensBody:
-      "Screens, app opens and prompts you tap. Uses an ID on this device",
+      "Screens, app opens and prompts you see or tap. Uses an ID on this device",
     recordings: "Screen recordings",
     recordingsBody: "Text and images masked",
     footer:
@@ -64,7 +64,8 @@ export const settings = {
     sheetTitle: "Share usage with Flatsby",
     sheetBody:
       "Optional, with your consent, to find and fix problems. Linked to your account via an ID on this device. Shared only with PostHog (EU servers, US access possible under EU safeguards). Withdraw anytime in Settings. <link>Details</link>",
-    screensKept: "Screens, app opens and prompts you tap. Kept 12 months",
+    screensKept:
+      "Screens, app opens and prompts you see or tap. Kept 12 months",
     recordingsKept: "Text and images masked. Kept 30 days",
     done: "Done",
     invite: "Help us fix what bugs you",

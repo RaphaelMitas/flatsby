@@ -9,8 +9,10 @@ import {
 } from "~/utils/analytics/consent";
 import {
   applyConsent,
+  deletePostHogFiles,
   getAnalyticsConsent,
   getPostHog,
+  keepOnlyLegacyOptOut,
   readLegacyPostHogFile,
   storesDeviceId,
 } from "~/utils/analytics/posthog";
@@ -50,11 +52,12 @@ export function AnalyticsSync() {
     void (async () => {
       const legacy = await readLegacyPostHogFile();
       if (legacy.optedOut) {
-        // The file, and with it the objection, stays until it is saved to an account
-        if (!userId) return;
+        if (!userId) return keepOnlyLegacyOptOut();
         const result = await setOptOut({ optOut: true }).catch(() => null);
         if (!result?.success) return;
       }
+      // Consent given meanwhile would otherwise load the old IDs into its client
+      deletePostHogFiles();
       analyticsPrompt.save(
         legacy.optedOut ? "done" : legacy.existed ? "notice" : "invite",
       );

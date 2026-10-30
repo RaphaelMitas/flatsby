@@ -13,7 +13,7 @@ import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { getAnalyticsConsent, storesDeviceId } from "~/utils/analytics/posthog";
+import { getAnalyticsConsent } from "~/utils/analytics/posthog";
 import { authClient, signIn } from "~/utils/auth/auth-client";
 import { openLegalPage } from "~/utils/legal";
 
@@ -44,8 +44,8 @@ const Login = () => {
           additionalData: {
             login: {
               attemptId,
-              // Without consent the ID dies with the app, so it can't join the callback to an install
-              distinctId: storesDeviceId(getAnalyticsConsent())
+              // Only screen analytics may join the login callback to this install
+              distinctId: getAnalyticsConsent().screens
                 ? posthog.getDistinctId()
                 : undefined,
             } satisfies LoginAttempt,

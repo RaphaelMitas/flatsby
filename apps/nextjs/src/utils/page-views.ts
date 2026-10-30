@@ -6,7 +6,7 @@ import { captureCookieless, captureEvent, posthog } from "@flatsby/api/posthog";
 function isVisitor(headers: Headers) {
   const userAgent = headers.get("user-agent");
   if (!userAgent || isbot(userAgent)) return false;
-  // Signed-in views are already recorded with the account
+  // Signed-in visits aren't counted; the account's actions are
   if (getSessionCookie(headers)) return false;
   return headers.get("sec-gpc") !== "1" && headers.get("dnt") !== "1";
 }

@@ -132,7 +132,7 @@ export const legal = {
       mobileDevice:
         "Device type, operating system and app version; with your consent, a random device ID",
       mobileViews:
-        "Actions you take; with your consent, screens you open, prompts you tap and screen recordings",
+        "Actions you take; with your consent, screens you open, prompts you see or tap and screen recordings",
       errors: "Error reports, occasionally including content you entered",
     },
     basis: {
@@ -201,7 +201,7 @@ export const legal = {
       intro:
         "Where we rely on legitimate interests, you can object at any time on grounds relating to your particular situation (Art. 21 GDPR). For analytics you don't need to give a reason.",
       signedIn:
-        "<strong>Signed in:</strong> Turn off usage analytics under Settings > Analytics, in the app or on the web, or email support@flatsby.com. We then stop analytics for your account. Error reports and AI usage metrics (model, tokens, cost) are still sent, to fix bugs and control costs; to object to those, email us.",
+        "<strong>Signed in:</strong> Turn off usage analytics under Settings > Analytics, in the app or on the web, or email support@flatsby.com. We then stop usage analytics for your account. Screen analytics and recordings you allowed in the app stay on until you turn them off there. Error reports and AI usage metrics (model, tokens, cost) are still sent, to fix bugs and control costs; to object to those, email us.",
       visitor:
         "<strong>Not signed in:</strong> We can't recognize you, so turn on Global Privacy Control or Do Not Track in your browser. We then don't count your visits.",
     },

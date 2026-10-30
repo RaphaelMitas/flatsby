@@ -138,7 +138,7 @@ export const legal = {
       mobileDevice:
         "Gerätetyp, Betriebssystem und App-Version; mit Ihrer Einwilligung eine zufällige Geräte-ID",
       mobileViews:
-        "Ihre Aktionen; mit Ihrer Einwilligung aufgerufene Bildschirme, angetippte Hinweise und Bildschirmaufnahmen",
+        "Ihre Aktionen; mit Ihrer Einwilligung aufgerufene Bildschirme, gesehene oder angetippte Hinweise und Bildschirmaufnahmen",
       errors: "Fehlerberichte, vereinzelt mit von Ihnen eingegebenen Inhalten",
     },
     basis: {
@@ -209,7 +209,7 @@ export const legal = {
       intro:
         "Soweit wir uns auf berechtigte Interessen stützen, können Sie aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit widersprechen (Art. 21 DSGVO). Bei der Analyse brauchen Sie keinen Grund anzugeben.",
       signedIn:
-        "<strong>Angemeldet:</strong> Schalten Sie die Nutzungsanalyse unter Einstellungen > Analyse aus, in der App oder im Web, oder schreiben Sie an support@flatsby.com. Wir beenden dann die Analyse für Ihr Konto. Fehlerberichte und KI-Nutzungsdaten (Modell, Tokens, Kosten) senden wir weiter, um Fehler zu beheben und Kosten zu kontrollieren; dem können Sie per E-Mail widersprechen.",
+        "<strong>Angemeldet:</strong> Schalten Sie die Nutzungsanalyse unter Einstellungen > Analyse aus, in der App oder im Web, oder schreiben Sie an support@flatsby.com. Wir beenden dann die Nutzungsanalyse für Ihr Konto. Bildschirmanalyse und Bildschirmaufnahmen, die Sie in der App erlaubt haben, bleiben an, bis Sie sie dort ausschalten. Fehlerberichte und KI-Nutzungsdaten (Modell, Tokens, Kosten) senden wir weiter, um Fehler zu beheben und Kosten zu kontrollieren; dem können Sie per E-Mail widersprechen.",
       visitor:
         "<strong>Nicht angemeldet:</strong> Wir können Sie nicht wiedererkennen. Aktivieren Sie daher Global Privacy Control oder Do Not Track in Ihrem Browser. Dann zählen wir Ihre Besuche nicht.",
     },

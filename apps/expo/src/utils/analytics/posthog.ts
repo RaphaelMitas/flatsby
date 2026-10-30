@@ -59,10 +59,13 @@ function createClient(forConsent: AnalyticsConsent): Client {
     persistence: persistent ? "file" : "memory",
     customStorage: fileStorage(lease),
     captureAppLifecycleEvents: persistent,
-    preloadFeatureFlags: false,
+    // The app reads no flags, and a flags request carries the device ID
+    disableRemoteFeatureFlags: true,
     // Push support starts the native SDK, which keeps IDs of its own on the device
     capturePushNotificationSubscriptions: false,
     capturePushNotificationOpened: false,
+    // The native SDK sends rage taps itself, past before_send
+    rageClickConfig: { enabled: false },
     sessionReplayConfig: {
       maskAllTextInputs: true,
       maskAllImages: true,
@@ -103,7 +106,7 @@ function createClient(forConsent: AnalyticsConsent): Client {
   return { posthog, lease };
 }
 
-// What the current client was built with; the swaps below run one at a time
+// The consent apply() last acted on; the queue runs swaps one at a time
 let applied = noConsent;
 let current = createClient(applied);
 let queue = Promise.resolve();
@@ -122,14 +125,14 @@ export const usePostHogClient = () =>
 export function applyConsent(next: AnalyticsConsent) {
   consent = next;
   queue = queue.then(() => apply(consent)).catch(console.error);
-  return queue;
 }
 
 // Persistence is fixed when a client is created, so giving or withdrawing consent swaps the client
 async function apply(next: AnalyticsConsent) {
   const previous = current;
   const wasRecording = applied.recordings;
-  const swap = storesDeviceId(next) !== storesDeviceId(applied);
+  const persistent = storesDeviceId(next);
+  const swap = persistent !== storesDeviceId(applied);
   applied = next;
 
   if (wasRecording && !next.recordings)
@@ -137,16 +140,18 @@ async function apply(next: AnalyticsConsent) {
   if (swap) {
     current = createClient(next);
     for (const listener of listeners) listener();
+    // shutdown() only flushes; opting out is what stops the old client's listeners and the native SDK
     previous.lease.active = false;
-    if (!storesDeviceId(next)) previous.posthog.reset();
+    if (!persistent) previous.posthog.reset();
+    void previous.posthog.optOut();
     await previous.posthog.shutdown();
   }
-  if (!storesDeviceId(next)) deletePostHogFiles();
+  if (!persistent) deletePostHogFiles();
   if (next.recordings && (!wasRecording || swap))
     await current.posthog.startSessionRecording();
 }
 
-function deletePostHogFiles() {
+export function deletePostHogFiles() {
   for (const name of POSTHOG_FILES) {
     const file = new File(Paths.document, name);
     if (file.exists) file.delete();
@@ -156,6 +161,13 @@ function deletePostHogFiles() {
 const legacyFileSchema = z.object({
   content: z.object({ opted_out: z.boolean().optional() }),
 });
+
+// Drops the old IDs while the objection waits for an account to be saved to
+export async function keepOnlyLegacyOptOut() {
+  await new File(Paths.document, POSTHOG_FILE).write(
+    JSON.stringify({ version: "v1", content: { opted_out: true } }),
+  );
+}
 
 export async function readLegacyPostHogFile() {
   const file = new File(Paths.document, POSTHOG_FILE);

@@ -44,12 +44,9 @@ export const analyticsPrompt = storedChoice(
 );
 
 export function useSaveAnalyticsConsent() {
-  // The record proves consent, so it waits for a connection and retries instead of failing once
+  // The record proves consent, so a flaky request gets more than one try
   const log = useMutation(
-    trpc.user.logAnalyticsConsent.mutationOptions({
-      networkMode: "online",
-      retry: 3,
-    }),
+    trpc.user.logAnalyticsConsent.mutationOptions({ retry: 3 }),
   );
 
   return (next: AnalyticsConsent) => {

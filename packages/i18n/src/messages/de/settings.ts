@@ -59,7 +59,7 @@ export const settings = {
     consentSection: "Freiwillig, mit deiner Einwilligung",
     screens: "Bildschirme und App-Nutzung",
     screensBody:
-      "Bildschirme, App-Starts und angetippte Hinweise. Nutzt eine ID auf diesem Gerät",
+      "Bildschirme, App-Starts und Hinweise, die du siehst oder antippst. Nutzt eine ID auf diesem Gerät",
     recordings: "Bildschirmaufnahmen",
     recordingsBody: "Texte und Bilder abgedeckt",
     footer:
@@ -68,7 +68,7 @@ export const settings = {
     sheetBody:
       "Freiwillig, mit deiner Einwilligung, um Probleme zu finden und zu beheben. Mit deinem Konto verknüpft über eine ID auf diesem Gerät. Nur an PostHog (Server in der EU, Zugriff aus den USA unter EU-Garantien möglich). Jederzeit in den Einstellungen widerrufbar. <link>Details</link>",
     screensKept:
-      "Bildschirme, App-Starts und angetippte Hinweise. 12 Monate gespeichert",
+      "Bildschirme, App-Starts und Hinweise, die du siehst oder antippst. 12 Monate gespeichert",
     recordingsKept: "Texte und Bilder abgedeckt. 30 Tage gespeichert",
     done: "Fertig",
     invite: "Hilf uns, Störendes zu beheben",
