@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { isLocale } from "@flatsby/i18n/locale";
-
-import type { LocaleParams } from "~/app/_components/landing/i18n";
 import {
   marketingTranslator,
   routeLocale,
@@ -22,11 +19,8 @@ export function generateStaticParams() {
   return platforms.map((platform) => ({ platform }));
 }
 
-export async function generateMetadata({
-  params,
-}: LocaleParams): Promise<Metadata> {
-  const { locale } = await params;
-  if (!isLocale(locale)) return {};
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const locale = await routeLocale(props);
   const t = marketingTranslator(locale);
   return marketingMetadata({
     locale,

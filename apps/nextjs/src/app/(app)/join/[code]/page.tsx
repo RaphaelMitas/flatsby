@@ -49,12 +49,11 @@ export async function generateMetadata({
 }
 
 export default async function JoinPage({ params }: JoinPageProps) {
-  const [session, { code, preview }, requestHeaders] = await Promise.all([
+  const [session, { code, preview }, platform] = await Promise.all([
     getSession(),
     params.then((p) => loadInvite(p.code)),
-    headers(),
+    headers().then(platformFor),
   ]);
-  const platform = platformFor(requestHeaders.get("user-agent"));
 
   return (
     <main className="bg-muted flex h-dvh overflow-y-auto p-4">

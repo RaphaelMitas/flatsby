@@ -1,7 +1,7 @@
 import type { NextFetchEvent, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { defaultLocale, locales } from "@flatsby/i18n/locale";
+import { defaultLocale, localePath, locales } from "@flatsby/i18n/locale";
 import {
   INVITE_REFERRER_KEY,
   inviteCodeSchema,
@@ -62,14 +62,12 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
 
   countVisit("$pageview");
 
-  const homeLocale =
-    pathname === "/"
-      ? defaultLocale
-      : locales.find((locale) => pathname === `/${locale}`);
+  const homeLocale = locales.find(
+    (locale) => localePath(locale, "/") === pathname,
+  );
   // One prerendered variant per platform keeps the hero's store order without a server render
   if (homeLocale) {
-    const platform = platformFor(request.headers.get("user-agent"));
-    url.pathname = `/${homeLocale}/landing/${platform}`;
+    url.pathname = `/${homeLocale}/landing/${platformFor(request.headers)}`;
     return NextResponse.rewrite(url);
   }
 

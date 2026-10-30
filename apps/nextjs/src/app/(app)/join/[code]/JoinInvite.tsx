@@ -106,7 +106,7 @@ export function JoinInvite({
         </EmptyHeader>
         <EmptyContent>
           <Button variant="outline" asChild>
-            <Link href="/">{t("invite.join.goToFlatsby")}</Link>
+            <Link href="/home">{t("invite.join.goToFlatsby")}</Link>
           </Button>
         </EmptyContent>
       </Empty>
@@ -225,7 +225,7 @@ export function JoinInvite({
                 : t("invite.join.join", { group: preview.groupName })}
             </Button>
             <Button variant="ghost" asChild>
-              <Link href="/">{t("invite.join.notNow")}</Link>
+              <Link href="/home">{t("invite.join.notNow")}</Link>
             </Button>
           </>
         ) : platform === "other" ? (
