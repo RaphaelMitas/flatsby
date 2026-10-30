@@ -14,6 +14,7 @@ import { useAnalytics } from "~/hooks/use-analytics";
 interface SettlementPaymentProps {
   groupId: number;
   paypalHandle: string | null;
+  payerName: string;
   receiverName: string;
   receiverIsMe: boolean;
   payerIsMe: boolean;
@@ -24,6 +25,7 @@ interface SettlementPaymentProps {
 export function SettlementPayment({
   groupId,
   paypalHandle,
+  payerName,
   receiverName,
   receiverIsMe,
   payerIsMe,
@@ -60,6 +62,11 @@ export function SettlementPayment({
     locale,
   });
   const url = paypalMeUrl(paypalHandle, amountInCents, currency);
+  const hint = payerIsMe
+    ? t("paypalHint", { amount })
+    : receiverIsMe
+      ? t("shareHintYou", { payer: payerName, amount })
+      : t("shareHint", { payer: payerName, receiver: receiverName, amount });
 
   return (
     <div
@@ -71,13 +78,9 @@ export function SettlementPayment({
       </p>
       {url && (
         <>
-          {payerIsMe && (
-            <p className="text-muted-foreground text-sm">
-              {t("paypalHint", { amount })}
-            </p>
-          )}
+          <p className="text-muted-foreground text-sm">{hint}</p>
           <div className="flex items-center gap-2">
-            {payerIsMe && (
+            {payerIsMe ? (
               <Button
                 asChild
                 variant="outline"
@@ -94,6 +97,10 @@ export function SettlementPayment({
                   {t("openPaypal")}
                 </a>
               </Button>
+            ) : (
+              <p className="bg-muted text-muted-foreground flex h-8 min-w-0 flex-1 items-center rounded-md px-3 text-sm select-all">
+                <span className="truncate">{url.replace("https://", "")}</span>
+              </p>
             )}
             <CopyButton
               value={url}

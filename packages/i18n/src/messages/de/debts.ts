@@ -63,6 +63,8 @@ export const debts = {
     noPaypalYou: "Du hast noch keinen PayPal.me-Link hinterlegt.",
     add: "Hinzufügen",
     paypalHint: "Öffnet PayPal mit {amount}.",
+    shareHintYou: "Schick {payer} den Link, damit du {amount} bekommst.",
+    shareHint: "Schick {payer} den Link, damit {receiver} {amount} bekommt.",
     openPaypal: "PayPal öffnen",
     share: "Teilen",
     shareMessage: "{amount} per PayPal: {url}",

@@ -11,6 +11,7 @@ import { Button } from "~/lib/ui/button";
 interface SettlementPaymentProps {
   groupId: number;
   paypalHandle: string | null;
+  payerName: string;
   receiverName: string;
   receiverIsMe: boolean;
   payerIsMe: boolean;
@@ -21,6 +22,7 @@ interface SettlementPaymentProps {
 export function SettlementPayment({
   groupId,
   paypalHandle,
+  payerName,
   receiverName,
   receiverIsMe,
   payerIsMe,
@@ -63,6 +65,15 @@ export function SettlementPayment({
     locale,
   });
   const url = paypalMeUrl(paypalHandle, amountInCents, currency);
+  const hint = payerIsMe
+    ? t("debts.pay.paypalHint", { amount })
+    : receiverIsMe
+      ? t("debts.pay.shareHintYou", { payer: payerName, amount })
+      : t("debts.pay.shareHint", {
+          payer: payerName,
+          receiver: receiverName,
+          amount,
+        });
 
   return (
     <View
@@ -76,11 +87,7 @@ export function SettlementPayment({
       </Text>
       {url && (
         <>
-          {payerIsMe && (
-            <Text className="text-muted-foreground text-sm">
-              {t("debts.pay.paypalHint", { amount })}
-            </Text>
-          )}
+          <Text className="text-muted-foreground text-sm">{hint}</Text>
           <View className="flex-row gap-2">
             {payerIsMe && (
               <Button

@@ -600,6 +600,7 @@ export function SettlementForm({
               <SettlementPayment
                 groupId={groupId}
                 paypalHandle={receiverPaypal}
+                payerName={pair.payer.name}
                 receiverName={pair.receiver.name}
                 receiverIsMe={watchedToMemberId === meId}
                 payerIsMe={payerIsMe}
