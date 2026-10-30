@@ -11,7 +11,7 @@ tags:
 - tapOn:
     id: "sign-in-email-input"
 - inputText: ${output.codeEmail}
-- hideKeyboard
+# The email button stays above the keyboard, and hideKeyboard can't dismiss it on iOS here
 - tapOn:
     id: "sign-in-email-button"
 - extendedWaitUntil:
