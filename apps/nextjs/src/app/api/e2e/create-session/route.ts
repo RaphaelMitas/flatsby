@@ -530,6 +530,16 @@ async function seedDebtsScenario(groupId: number, you: number) {
   if (lena === undefined || max === undefined || sophie === undefined) {
     throw new Error("Failed to create seeded memberships");
   }
+  const [lenaUser, maxUser] = seededUsers;
+  if (!lenaUser || !maxUser) throw new Error("Failed to create seeded users");
+  await db
+    .update(users)
+    .set({ paypalHandle: "lenaschneider" })
+    .where(eq(users.id, lenaUser.userId));
+  await db
+    .update(users)
+    .set({ paypalHandle: "maxweber" })
+    .where(eq(users.id, maxUser.userId));
 
   const debts = [
     { debtor: max, creditor: you, cents: 4250, description: "Groceries" },

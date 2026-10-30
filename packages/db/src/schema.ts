@@ -37,6 +37,7 @@ import {
   MAX_PLACEHOLDER_NAME_LENGTH,
 } from "@flatsby/validators/group";
 import { INVITE_CODE_LENGTH } from "@flatsby/validators/invite";
+import { MAX_PAYPAL_HANDLE_LENGTH } from "@flatsby/validators/payment";
 import { MAX_CONSENT_VERSION_LENGTH } from "@flatsby/validators/user";
 
 /**
@@ -75,6 +76,7 @@ export const users = createTable("user", {
   aiConsentVersion: varchar("ai_consent_version", {
     length: MAX_CONSENT_VERSION_LENGTH,
   }),
+  paypalHandle: varchar("paypal_handle", { length: MAX_PAYPAL_HANDLE_LENGTH }),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({

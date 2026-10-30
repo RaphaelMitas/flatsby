@@ -5,7 +5,8 @@ import { waitForHydration } from "../helpers/hydration";
 
 // seed=debts: Max owes you €42.50, Sophie owes you €18.00, you owe Lena
 // €30.00 and Max $15.00; among the others Max owes Lena €25.00, Sophie owes
-// Max €12.00 and Lena €8.00.
+// Max €12.00 and Lena €8.00. Lena and Max added a PayPal.me name, Sophie and
+// you didn't.
 async function openSeededDebts(page: Page, baseURL: string | undefined) {
   await createAuthSession(page, baseURL, { seed: "debts" });
   await page.goto("/expenses/debts");
@@ -89,6 +90,62 @@ test.describe("Debt & Settlements", () => {
     await page.reload();
     await expect(directDebtRow(page, "Max")).toBeVisible();
     await expect(sophie).toHaveCount(0);
+  });
+
+  test("paying Lena links to her PayPal with the amount", async ({
+    page,
+    baseURL,
+  }) => {
+    await openSeededDebts(page, baseURL);
+
+    const settle = page.getByRole("button", {
+      name: "Record EUR payment with Lena",
+    });
+    await waitForHydration(settle);
+    await settle.click();
+
+    const form = page.getByTestId("settlement-form");
+    await expect(
+      form.getByTestId("settle-pay-card").getByTestId("settle-paypal-button"),
+    ).toHaveAttribute("href", "https://paypal.me/lenaschneider/30.00EUR");
+    await expect(form.getByTestId("settlement-record-button")).toHaveText(
+      "I've paid, record it",
+    );
+  });
+
+  test("Sophie paying you asks you to add your PayPal", async ({
+    page,
+    baseURL,
+  }) => {
+    await openSeededDebts(page, baseURL);
+
+    const settle = page.getByRole("button", {
+      name: "Record EUR payment with Sophie",
+    });
+    await waitForHydration(settle);
+    await settle.click();
+
+    await expect(
+      page.getByTestId("settlement-form").getByTestId("settle-pay-no-details"),
+    ).toContainText("You haven't added a PayPal.me link.");
+  });
+
+  test("recording Max paying Lena offers her link, not a PayPal button", async ({
+    page,
+    baseURL,
+  }) => {
+    await openSeededDebts(page, baseURL);
+
+    const record = page.getByTestId("debt-others-record").first();
+    await waitForHydration(record);
+    await record.click();
+
+    const card = page
+      .getByTestId("settlement-form")
+      .getByTestId("settle-pay-card");
+    await expect(card).toContainText("Lena's PayPal");
+    await expect(card.getByRole("button", { name: "Copy" })).toBeVisible();
+    await expect(card.getByTestId("settle-paypal-button")).toHaveCount(0);
   });
 
   test("shows the debts between others, actual and simplified", async ({

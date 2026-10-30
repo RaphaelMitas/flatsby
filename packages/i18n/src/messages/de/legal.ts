@@ -115,6 +115,8 @@ export const legal = {
       identifier:
         "Ihre Konto-ID bei Google oder Apple, wenn Sie sich damit anmelden",
       plan: "Ihren Tarif, Ihre Käufe und Ihr KI-Guthaben",
+      payment:
+        "Wenn Sie ihn hinterlegen: den PayPal.me-Namen, über den Sie Geld bekommen",
     },
     userContent: {
       heading: "Ihre Inhalte",
@@ -155,7 +157,7 @@ export const legal = {
     },
     groups: {
       heading: "Ihre Gruppen",
-      body: "Mitglieder Ihrer Gruppen sehen Ihren Namen, Ihre E-Mail-Adresse, Ihr Profilbild und was Sie in der Gruppe anlegen.",
+      body: "Mitglieder Ihrer Gruppen sehen Ihren Namen, Ihre E-Mail-Adresse, Ihr Profilbild und was Sie in der Gruppe anlegen. Wenn Sie einen PayPal.me-Namen hinterlegen, können sie ihn sehen, um Sie zu bezahlen.",
     },
     providers: {
       heading: "Dienstleister",

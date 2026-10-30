@@ -84,6 +84,21 @@ export const settings = {
     uploadNew: "Neues hochladen",
     featureComingSoon: "Funktion kommt bald!",
   },
+  payment: {
+    title: "Geld bekommen",
+    description:
+      "Optional. So können dir Mitbewohner per PayPal Geld zurückgeben.",
+    visibleTitle: "Für alle in deinen Gruppen sichtbar",
+    visibleBody:
+      "Alle Mitglieder deiner Gruppen sehen deinen PayPal.me-Namen beim Abrechnen.",
+    paypal: "PayPal.me",
+    paypalPlaceholder: "deinname",
+    paypalHint: "Du kannst auch den ganzen Link einfügen.",
+    paypalSignup: "Noch keinen PayPal.me-Link? Hier erstellen",
+    saved: "PayPal.me-Name gespeichert.",
+    removed: "PayPal.me-Name entfernt.",
+    paypalInvalid: "Gib deinen PayPal.me-Namen ein, z. B. paypal.me/deinname.",
+  },
   danger: {
     description:
       "Aktionen in diesem Bereich lassen sich nicht rückgängig machen. Sei bitte vorsichtig.",
