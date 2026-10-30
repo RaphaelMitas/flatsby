@@ -84,6 +84,23 @@ export const group = {
       member: "Mitglied",
     },
   },
+  placeholders: {
+    inviteStepTitle: "Noch nicht in Flatsby?",
+    inviteStepHint:
+      "Trag sie schon ein. Du kannst gleich Ausgaben mit ihnen teilen, und beim Beitreten übernehmen sie ihren Platz.",
+    sectionTitle: "Noch nicht beigetreten",
+    namePlaceholder: "Name eintragen",
+    add: "Hinzufügen",
+    nameRequired: "Bitte gib einen Namen ein",
+    nameTooLong: "Namen dürfen höchstens 64 Zeichen lang sein",
+    invite: "{name} einladen",
+    rename: "Umbenennen",
+    renameTitle: "{name} umbenennen",
+    claimedFrom: "Hat den Platz von {name} übernommen",
+    undoClaim: "Wieder „{name}“ daraus machen",
+    undoClaimHint:
+      "{user} verliert den Zugang. Die Ausgaben bleiben bei {name}.",
+  },
   validation: {
     invalidEmail: "Bitte gib eine gültige E-Mail-Adresse ein",
     nameRequired: "Gruppenname ist erforderlich",

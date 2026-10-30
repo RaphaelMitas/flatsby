@@ -87,7 +87,11 @@ export default function CreateGroup() {
           );
           setSelectedGroup(groupId, name);
           // Cancelled while pending: the group still exists and is selected, but stay put
-          if (navigation.isFocused()) router.replace("/(tabs)/home/invite");
+          if (navigation.isFocused())
+            router.replace({
+              pathname: "/(tabs)/home/invite",
+              params: { created: "1" },
+            });
         },
       }),
     ),

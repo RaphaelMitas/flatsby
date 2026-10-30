@@ -1,5 +1,5 @@
 {
-  "id": "e2a53b59-1fa1-48f5-b9f8-8ffb1ea96a24",
+  "id": "e05d2f35-cee9-47bb-9af2-96fcb7c899a5",
   "prevId": "75d6c6e4-21da-47c1-b124-d671b37be5f2",
   "version": "7",
   "dialect": "postgresql",
@@ -917,7 +917,13 @@
           "name": "userId",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "placeholder_name": {
+          "name": "placeholder_name",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
         },
         "role": {
           "name": "role",
@@ -993,7 +999,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "group_members_user_or_name": {
+          "name": "group_members_user_or_name",
+          "value": "\"flat-cove_group_members\".\"userId\" is not null or \"flat-cove_group_members\".\"placeholder_name\" is not null"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.flat-cove_groups": {
@@ -1427,12 +1438,6 @@
         },
         "ai_consent_version": {
           "name": "ai_consent_version",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "paypal_handle": {
-          "name": "paypal_handle",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": false

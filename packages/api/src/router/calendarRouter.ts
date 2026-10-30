@@ -50,6 +50,7 @@ import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
 import { ConflictError, Errors } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { memberName } from "../utils";
 
 const UPCOMING_COUNT = 5;
 const HISTORY_COUNT = 8;
@@ -108,7 +109,7 @@ const loadOverrides = async (
       },
       with: {
         completedByGroupMember: {
-          columns: {},
+          columns: { placeholderName: true },
           with: { user: { columns: { name: true, image: true } } },
         },
       },
@@ -118,7 +119,11 @@ const loadOverrides = async (
     })
   ).map(({ completedByGroupMember, ...row }) => ({
     ...row,
-    completedBy: completedByGroupMember?.user ?? null,
+    completedBy: completedByGroupMember && {
+      name: memberName(completedByGroupMember),
+      image: completedByGroupMember.user?.image ?? null,
+      placeholder: completedByGroupMember.user === null,
+    },
   }));
 
 const findItem = Effect.fn("Calendar.findItem")(function* (

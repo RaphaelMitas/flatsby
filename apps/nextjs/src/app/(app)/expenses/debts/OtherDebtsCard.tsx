@@ -35,10 +35,10 @@ export function OtherDebtsCard({
             data-testid="debt-others-row"
           >
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-sm font-medium">
-              <UserAvatar name={from.name} image={from.image} size="xs" />
+              <UserAvatar {...from} size="xs" />
               {from.name}
               <ArrowRight className="text-muted-foreground size-4" />
-              <UserAvatar name={to.name} image={to.image} size="xs" />
+              <UserAvatar {...to} size="xs" />
               {to.name}
             </div>
             <span className="font-semibold tabular-nums">

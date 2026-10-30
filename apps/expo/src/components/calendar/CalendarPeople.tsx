@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
+import { memberPerson } from "@flatsby/validators/expenses/formatting";
+
 import { cn } from "~/lib/utils";
 import { MemberAvatar } from "../expenses/MemberAvatar";
 
@@ -20,12 +22,11 @@ export function useCalendarPeople(group: GroupWithAccess): CalendarPeople {
   return {
     meId: group.thisGroupMember.id,
     person: (groupMemberId) => {
-      const user =
-        groupMemberId === null ? undefined : byId.get(groupMemberId)?.user;
-      return {
-        name: user?.name ?? t("common.unknown"),
-        image: user?.image ?? null,
-      };
+      const member =
+        groupMemberId === null ? undefined : byId.get(groupMemberId);
+      return member
+        ? memberPerson(member)
+        : { name: t("common.unknown"), image: null };
     },
   };
 }

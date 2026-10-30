@@ -1,6 +1,8 @@
 "use client";
 
 import type { RouterOutputs } from "@flatsby/api";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +10,7 @@ import { Play } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
+import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import { Card } from "@flatsby/ui/card";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
@@ -55,6 +58,8 @@ export function JoinInvite({
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [claimId, setClaimId] = useState<number | null>(null);
+  const [takenName, setTakenName] = useState<string>();
 
   const openGroup = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions({
@@ -72,12 +77,21 @@ export function JoinInvite({
 
   const join = useMutation(
     trpc.invite.join.mutationOptions({
-      onSuccess: (data) => {
+      onMutate: () => setTakenName(undefined),
+      onSuccess: (data, { placeholderId }) => {
         if (data.success) {
           openGroup.mutate({
             groupId: data.data.groupId,
             shoppingListId: null,
           });
+        } else if (
+          data.error.details.messageKey === "errors.placeholderTaken"
+        ) {
+          setTakenName(
+            preview?.placeholders.find(({ id }) => id === placeholderId)?.name,
+          );
+          setClaimId(null);
+          router.refresh();
         }
       },
     }),
@@ -125,7 +139,12 @@ export function JoinInvite({
   }
 
   const signInHref = `/auth/login?next=${invitePath(code)}`;
-  const joinError = failureOf(join, t("invite.join.joinFailed"));
+  const joinError =
+    takenName === undefined
+      ? failureOf(join, t("invite.join.joinFailed"))
+      : t("invite.join.placeholderTaken", { name: takenName });
+  const claim = preview.placeholders.find(({ id }) => id === claimId);
+  const busy = join.isPending || openGroup.isPending;
 
   return (
     <Card className="flex w-full max-w-sm flex-col items-center gap-3 p-8 text-center">
@@ -167,13 +186,43 @@ export function JoinInvite({
             {joinError && (
               <p className="text-destructive text-sm">{joinError}</p>
             )}
+            {preview.placeholders.length > 0 && (
+              <fieldset
+                className="mb-2 flex flex-col gap-2 text-left"
+                disabled={busy}
+              >
+                <legend className="mb-2 text-sm font-semibold">
+                  {t("invite.join.alreadyListed")}
+                </legend>
+                {preview.placeholders.map(({ id, name }) => (
+                  <ClaimOption
+                    key={id}
+                    testId={`join-claim-option-${id}`}
+                    checked={claimId === id}
+                    onSelect={() => setClaimId(id)}
+                  >
+                    <UserAvatar name={name} placeholder size="sm" />
+                    {t("invite.join.iAm", { name })}
+                  </ClaimOption>
+                ))}
+                <ClaimOption
+                  testId="join-claim-new"
+                  checked={claim === undefined}
+                  onSelect={() => setClaimId(null)}
+                >
+                  {t("invite.join.imNew")}
+                </ClaimOption>
+              </fieldset>
+            )}
             <Button
               data-testid="join-invite-button"
               className="h-auto whitespace-normal"
-              disabled={join.isPending || openGroup.isPending}
-              onClick={() => join.mutate({ code })}
+              disabled={busy}
+              onClick={() => join.mutate({ code, placeholderId: claim?.id })}
             >
-              {t("invite.join.join", { group: preview.groupName })}
+              {claim
+                ? t("invite.join.joinAs", { name: claim.name })
+                : t("invite.join.join", { group: preview.groupName })}
             </Button>
             <Button variant="ghost" asChild>
               <Link href="/">{t("invite.join.notNow")}</Link>
@@ -190,6 +239,37 @@ export function JoinInvite({
         )}
       </div>
     </Card>
+  );
+}
+
+function ClaimOption({
+  testId,
+  checked,
+  onSelect,
+  children,
+}: {
+  testId: string;
+  checked: boolean;
+  onSelect: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm font-medium",
+        checked && "border-primary",
+      )}
+    >
+      <input
+        type="radio"
+        name="join-claim"
+        className="accent-primary size-4"
+        data-testid={testId}
+        checked={checked}
+        onChange={onSelect}
+      />
+      {children}
+    </label>
   );
 }
 

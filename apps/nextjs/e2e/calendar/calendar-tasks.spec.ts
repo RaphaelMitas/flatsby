@@ -1,5 +1,6 @@
 import { expect, test } from "../fixtures/auth";
 import { openCalendarView, writeSettled } from "../helpers/calendar";
+import { addPlaceholder } from "../helpers/group";
 
 test.describe("Calendar", () => {
   test("creates a weekly task with an end, ticks it off and deletes it", async ({
@@ -69,5 +70,26 @@ test.describe("Calendar", () => {
     await openList();
     await expect(todaySection.getByText("Nothing planned")).toBeVisible();
     await expect(row).toHaveCount(0);
+  });
+
+  test("puts a placeholder in a task's rotation", async ({ authPage }) => {
+    await addPlaceholder(authPage, "Anna");
+    await authPage.goto("/calendar");
+    await openCalendarView(authPage, "list");
+    await authPage.getByTestId("calendar-add").click();
+
+    const form = authPage.getByTestId("calendar-form");
+    await form.getByTestId("calendar-form-title").fill("Take out the bins");
+    await form
+      .getByTestId(/^calendar-form-member-\d+$/)
+      .filter({ hasText: "Anna" })
+      .click();
+    await form.getByTestId("calendar-form-submit").click();
+
+    const row = authPage
+      .getByTestId("calendar-agenda-today")
+      .getByTestId(/^calendar-entry-\d+$/)
+      .filter({ hasText: "Take out the bins" });
+    await expect(row).toContainText("Anna's turn");
   });
 });

@@ -1,0 +1,18 @@
+appId: ${APP_ID}
+---
+# Shared subflow: on the members screen, adds a placeholder named ${NAME}
+- scrollUntilVisible:
+    element:
+      id: "placeholder-name-input"
+    direction: DOWN
+- tapOn:
+    id: "placeholder-name-input"
+- inputText: ${NAME}
+- tapOn:
+    id: "placeholder-add-button"
+# The optimistic row stays disabled until the server returns its id
+- extendedWaitUntil:
+    visible:
+      id: "placeholder-row-${NAME}"
+      enabled: true
+    timeout: 15000

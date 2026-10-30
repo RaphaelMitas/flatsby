@@ -56,10 +56,13 @@ export const addMember = Effect.fn("Groups.addMember")(function* (
   groupId: number,
   userId: string,
   refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
+  placeholderId?: number,
 ) {
   const database = yield* Database;
   const result = yield* database.query("transaction: add group member", (db) =>
-    db.transaction((tx) => addMemberTx(tx, groupId, userId, refusal)),
+    db.transaction((tx) =>
+      addMemberTx(tx, groupId, userId, refusal, placeholderId),
+    ),
   );
   if (typeof result !== "number") {
     return yield* result;
@@ -67,8 +70,9 @@ export const addMember = Effect.fn("Groups.addMember")(function* (
   return result;
 });
 
+/** Placeholders have a null userId, so they never match a session user. */
 export const requireMemberIn = <
-  M extends { userId: string; isActive: boolean },
+  M extends { userId: string | null; isActive: boolean },
 >(
   members: readonly M[],
   userId: string,

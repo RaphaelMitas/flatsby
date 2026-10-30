@@ -1,7 +1,6 @@
 "use client";
 
 import type { SearchDataOutput } from "@flatsby/validators/chat/tools";
-import Image from "next/image";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -14,7 +13,9 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@flatsby/ui/card";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import { isPlaceholder } from "@flatsby/validators/group";
 
 import { ShoppingListItemDisplay } from "~/app/_components/ShoppingListItemDisplay";
 
@@ -157,21 +158,12 @@ export function SearchDataResult({ output }: SearchDataResultProps) {
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
-                    {member.image ? (
-                      <Image
-                        src={member.image}
-                        alt={member.name}
-                        width={24}
-                        height={24}
-                        className="size-6 rounded-full"
-                      />
-                    ) : (
-                      <div className="bg-muted flex size-6 items-center justify-center rounded-full">
-                        <span className="text-xs">
-                          {member.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    <UserAvatar
+                      name={member.name}
+                      image={member.image}
+                      placeholder={isPlaceholder(member)}
+                      size="sm"
+                    />
                     <span className="font-medium">
                       {member.name}
                       {member.isCurrentUser && (

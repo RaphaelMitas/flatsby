@@ -15,7 +15,10 @@ import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { isExchangeRateFinal } from "@flatsby/validators/expenses/conversion";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
   editableSplitMethod,
@@ -27,7 +30,6 @@ import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseCon
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import {
   BottomSheetPickerProvider,
   BottomSheetPickerTrigger,
@@ -58,6 +60,7 @@ import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
 import { CurrencyPicker } from "./CurrencyPicker";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
+import { MemberAvatar } from "./MemberAvatar";
 import { SplitEditor } from "./SplitEditor";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -159,12 +162,9 @@ export function ExpenseForm({
     const inactiveMembers = expense.expenseSplits
       .filter((s) => !activeIds.has(s.groupMemberId))
       .map((s) => ({
-        id: s.groupMember.id,
-        userId: "",
-        role: "member" as const,
-        joinedOn: new Date(),
+        ...s.groupMember,
         isActive: false,
-        user: s.groupMember.user,
+        placeholderName: null,
       }));
     return [...group.groupMembers, ...inactiveMembers];
   }, [expense, group.groupMembers]);
@@ -483,12 +483,7 @@ export function ExpenseForm({
     (member) => ({
       id: member.id.toString(),
       title: member.user.name,
-      icon: (
-        <Avatar className="h-6 w-6">
-          <AvatarImage src={member.user.image ?? undefined} />
-          <AvatarFallback>{member.user.name.charAt(0)}</AvatarFallback>
-        </Avatar>
-      ),
+      icon: <MemberAvatar person={memberPerson(member)} className="h-6 w-6" />,
     }),
   );
 

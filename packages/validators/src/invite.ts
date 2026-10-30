@@ -45,6 +45,11 @@ export const inviteCodeSchema = z
 
 export const inviteCodeInputSchema = z.object({ code: inviteCodeSchema });
 
+// Without a placeholder the joiner becomes a new member, which is all released apps send
+export const joinInviteInputSchema = inviteCodeInputSchema.extend({
+  placeholderId: z.number().optional(),
+});
+
 export const inviteExpiresAt = () =>
   new Date(Date.now() + INVITE_TTL_DAYS * DAY_MS);
 

@@ -55,26 +55,36 @@ export const groupMemberEmailSchema = z.email({
   message: msg("group.validation.invalidEmail"),
 });
 
+export const MAX_PLACEHOLDER_NAME_LENGTH = 64;
+
+export const placeholderNameSchema = z
+  .string()
+  .trim()
+  .min(1, { message: msg("group.placeholders.nameRequired") })
+  .max(MAX_PLACEHOLDER_NAME_LENGTH, {
+    message: msg("group.placeholders.nameTooLong"),
+  });
+
 export const groupMemberSchema = z.object({
   id: z.number(),
   groupId: z.number(),
-  userId: z.string(),
+  userId: z.string().nullable(),
   role: groupMemberRoleSchema,
   joinedOn: z.date(),
 });
 export type GroupMember = z.infer<typeof groupMemberSchema>;
 
-export const groupMemberUserSchema = z.object({
-  email: userEmailSchema,
-  name: userNameSchema.nullable(),
-  image: userImageSchema,
-});
-export type GroupMemberUser = z.infer<typeof groupMemberUserSchema>;
+export const isPlaceholder = (member: { userId: string | null }) =>
+  member.userId === null;
 
-export const groupMemberWithUserSchema = groupMemberSchema.extend({
-  user: groupMemberUserSchema,
+export const hasJoined = (member: { userId: string | null }) =>
+  member.userId !== null;
+
+export const placeholderUser = (name: string) => ({
+  name,
+  email: null,
+  image: null,
 });
-export type GroupMemberWithUser = z.infer<typeof groupMemberWithUserSchema>;
 
 export const updateMemberRoleInputSchema = z.object({
   memberId: z.number(),
@@ -87,6 +97,18 @@ export type RemoveGroupMemberInput = z.infer<
   typeof removeGroupMemberInputSchema
 >;
 
+export const addPlaceholderInputSchema = z.object({
+  groupId: z.number(),
+  name: placeholderNameSchema,
+});
+
+export const renamePlaceholderInputSchema = z.object({
+  memberId: z.number(),
+  name: placeholderNameSchema,
+});
+
+export const undoClaimInputSchema = z.object({ memberId: z.number() });
+
 export const addGroupMemberInputSchema = z.object({
   groupId: z.number(),
   memberEmail: groupMemberEmailSchema,
@@ -95,7 +117,7 @@ export type AddGroupMemberInput = z.infer<typeof addGroupMemberInputSchema>;
 
 // Activity validators
 export const activityUserSchema = z.object({
-  email: userEmailSchema,
+  email: userEmailSchema.nullable(),
   name: userNameSchema,
   image: userImageSchema,
 });
