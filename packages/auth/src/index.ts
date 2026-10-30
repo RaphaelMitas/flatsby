@@ -96,7 +96,9 @@ export function initAuth(options: {
     },
     user: {
       modelName: "users",
+      // On the session the tRPC context already loads, so the analytics gate costs no query
       additionalFields: {
+        analyticsOptOut: { type: "boolean", defaultValue: false, input: false },
         // Set only through updatePaypalHandle, which validates it
         paypalHandle: { type: "string", required: false, input: false },
       },

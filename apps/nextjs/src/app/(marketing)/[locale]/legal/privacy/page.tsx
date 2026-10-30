@@ -179,7 +179,7 @@ export default function PrivacyPage() {
                   ),
                 })}
               </li>
-              <li>
+              <li id="analytics" className="scroll-mt-24">
                 {t.rich("providers.posthog", { strong })}
                 <ul className="mt-2 ml-4 list-disc space-y-1">
                   <li>{t.rich("providers.posthogWebsite", { strong })}</li>

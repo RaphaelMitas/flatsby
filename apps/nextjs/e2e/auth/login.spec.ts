@@ -28,6 +28,14 @@ test.describe("Login page", () => {
     );
   });
 
+  test("shows the right to object to analytics", async ({ page }) => {
+    await page.goto("/auth/login");
+
+    await expect(page.getByTestId("login-right-to-object")).toContainText(
+      "Right to object",
+    );
+  });
+
   test("shows tagline", async ({ page }) => {
     await page.goto("/auth/login");
 

@@ -75,8 +75,28 @@ export const users = createTable("user", {
   aiConsentVersion: varchar("ai_consent_version", {
     length: MAX_CONSENT_VERSION_LENGTH,
   }),
+  analyticsOptOut: boolean("analytics_opt_out").default(false).notNull(),
   paypalHandle: varchar("paypal_handle", { length: MAX_PAYPAL_HANDLE_LENGTH }),
 });
+
+/** Append-only proof of each analytics consent choice made on a device (Art. 7(1) GDPR) */
+export const analyticsConsents = createTable(
+  "analytics_consent",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    screens: boolean("screens").notNull(),
+    recordings: boolean("recordings").notNull(),
+    version: varchar("version", {
+      length: MAX_CONSENT_VERSION_LENGTH,
+    }).notNull(),
+    platform: varchar("platform", { length: 16 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("analytics_consent_user_idx").on(table.userId)],
+);
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),

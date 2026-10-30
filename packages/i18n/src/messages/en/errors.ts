@@ -64,6 +64,8 @@ export const errors = {
     "Unable to update consent at this time. Please try again.",
   updateAiConsentFailed:
     "Unable to update AI consent at this time. Please try again.",
+  updateAnalyticsFailed:
+    "Unable to update your analytics settings at this time. Please try again.",
   exportDataFailed:
     "Unable to export your data at this time. Please try again.",
   conversationNotFound: "Conversation not found",

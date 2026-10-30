@@ -13,6 +13,7 @@ export const testUser = {
   emailVerified: true,
   createdAt: now,
   updatedAt: now,
+  analyticsOptOut: false,
 };
 
 export const testContext = (

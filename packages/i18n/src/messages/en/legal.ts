@@ -131,16 +131,18 @@ export const legal = {
       mobile: "App:",
       mobileIp: "IP address and approximate location (country, city)",
       mobileDevice:
-        "Device type, operating system, app version and a random device ID",
-      mobileViews: "Screens you open and actions you take",
+        "Device type, operating system and app version; with your consent, a random device ID",
+      mobileViews:
+        "Actions you take; with your consent, screens you open, prompts you see or tap and screen recordings",
       errors: "Error reports, occasionally including content you entered",
     },
     basis: {
       contract:
         "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including purchases and automatic AI categories",
-      consent: "<strong>Consent (Art. 6(1)(a) GDPR):</strong> the AI assistant",
+      consent:
+        "<strong>Consent (Art. 6(1)(a) GDPR, § 25(1) TDDDG):</strong> the AI assistant; screen analytics and screen recordings in the app, including the device ID they use",
       interests:
-        "<strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> running the website securely; analytics on the website and in the app, to learn how people find and use Flatsby; error reports, to fix bugs; AI usage metrics, to control costs; login session records, to protect your account",
+        "<strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> running the website securely; usage analytics of your actions on the website and in the app, to learn how people find and use Flatsby; error reports, to fix bugs (in the app without storing anything on your device, § 25(2) no. 2 TDDDG); AI usage metrics, to control costs; login session records, to protect your account",
       obligations:
         "<strong>Legal obligation (Art. 6(1)(c) GDPR):</strong> keeping invoices and payment records under tax and commercial law",
       required:
@@ -167,9 +169,9 @@ export const legal = {
       posthogWebsite:
         "<strong>Website, not signed in:</strong> We count visits without cookies and without storing anything on your device. PostHog turns your IP address and browser details into a visitor ID that changes daily, then discards the IP address. It stores that ID with the pages you open, the referring website, campaign tags (utm parameters), whether you click an app store link or sign up, and your browser, operating system, device type and language. We can't recognize you on another day and don't link visits to your account.",
       posthogServer:
-        "<strong>Signed in (web and app):</strong> Our server sends each action you take with your account ID and group, but not what you entered. On the web it also sends the pages you open, your browser details and the referring page.",
+        "<strong>Signed in (web and app):</strong> Our server sends each action you take with your account ID, group, browser or device type and the referring page, but not what you entered. You can turn this off under Settings > Analytics, in the app or on the web.",
       posthogMobile:
-        "<strong>App:</strong> By default the app also sends PostHog the screens you open, device details, app version and error reports, and once you're signed in your account ID, name and email address. It stores a random ID on your device. PostHog derives your approximate location from your IP address, then discards it. On Android the app reads the install source from Google Play (campaign tags, invite link). The switch in the app settings stops this, but not the actions our server sends.",
+        "<strong>App:</strong> The app always sends error reports with device type, operating system and app version, without keeping an ID on your device. Only with your consent (Settings > Analytics) does it store a random ID on your device and send the screens you open, when you open the app, which prompts you see or tap (such as an invite or update notice), and screen recordings with text and images masked, all linked to your account ID. PostHog derives your approximate location from your IP address, then discards it. On Android the app reads the install source from Google Play only to open an invite link; it isn't sent to PostHog.",
       posthogAi:
         "We also send AI usage metrics (model, tokens, latency, cost), never prompts or responses. See <link>PostHog's privacy policy</link>.",
     },
@@ -180,7 +182,7 @@ export const legal = {
       content:
         "List items and expenses you created may remain, anonymized, for the other group members",
       outro:
-        "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. PostHog deletes analytics events after 12 months. Your PostHog profile and customer records at Autumn and RevenueCat remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
+        "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. PostHog deletes analytics events after 12 months and screen recordings after 30 days. Your PostHog profile and customer records at Autumn and RevenueCat remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
     },
     rights: {
       access: "<strong>Access:</strong> get a copy of your data",
@@ -192,7 +194,7 @@ export const legal = {
         "<strong>Portability:</strong> get your data in a machine-readable format",
       object: "<strong>Objection:</strong> see Your Right to Object",
       withdraw:
-        "<strong>Withdrawal:</strong> withdraw consent at any time by email; processing before that stays lawful",
+        "<strong>Withdrawal:</strong> withdraw consent at any time, for app analytics under Settings > Analytics, otherwise by email; processing before that stays lawful. Email us to have data collected with your consent deleted",
       exercise:
         'Use "Export My Data" or delete your account in the settings, or email support@flatsby.com. You can also complain to a supervisory authority, in particular where you live or work. Ours is the Hessian Commissioner for Data Protection and Freedom of Information (HBDI), <link>datenschutz.hessen.de</link>.',
     },
@@ -200,7 +202,7 @@ export const legal = {
       intro:
         "Where we rely on legitimate interests, you can object at any time on grounds relating to your particular situation (Art. 21 GDPR). For analytics you don't need to give a reason.",
       signedIn:
-        "<strong>Signed in:</strong> Email support@flatsby.com, from your account's address if you can. We then stop analytics for your account, on the web and in the app.",
+        "<strong>Signed in:</strong> Turn off usage analytics under Settings > Analytics, in the app or on the web, or email support@flatsby.com. We then stop usage analytics for your account. Screen analytics and recordings you allowed in the app stay on until you turn them off there. Error reports and AI usage metrics (model, tokens, cost) are still sent, to fix bugs and control costs; to object to those, email us.",
       visitor:
         "<strong>Not signed in:</strong> We can't recognize you, so turn on Global Privacy Control or Do Not Track in your browser. We then don't count your visits.",
     },

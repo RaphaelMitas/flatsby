@@ -1,15 +1,14 @@
 import { Share } from "react-native";
-import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import { inviteLink } from "@flatsby/validators/invite";
 
+import { getPostHog } from "~/utils/analytics/posthog";
 import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 export function useShareInvite() {
   const t = useTranslations();
-  const posthog = usePostHog();
   const { selectedGroupId, selectedGroupName } = useShoppingStore();
   const groupId = Number(selectedGroupId) || 0;
 
@@ -22,7 +21,7 @@ export function useShareInvite() {
     });
     // Android always reports sharedAction; iOS reports dismissing the sheet
     if (result.action === Share.sharedAction) {
-      posthog.capture("invite_shared", { groupId, method: "share_sheet" });
+      getPostHog().capture("invite_shared", { groupId, method: "share_sheet" });
     }
   };
 }

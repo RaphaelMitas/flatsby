@@ -13,6 +13,7 @@ import {
 } from "@flatsby/ui/card";
 
 import { prefetch, trpc } from "~/trpc/server";
+import { AnalyticsSettings } from "./AnalyticsSettings";
 import DeleteUser from "./DeleteUser";
 import ExportUserData from "./ExportUserData";
 import { LanguageSettings } from "./LanguageSettings";
@@ -39,6 +40,7 @@ export default async function Page() {
         <LanguageSettings
           preference={preference && isLocale(preference) ? preference : null}
         />
+        <AnalyticsSettings />
         <Card>
           <CardHeader>
             <CardTitle>{t("billingTitle")}</CardTitle>

@@ -8,7 +8,7 @@ import { router, Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useTranslations } from "use-intl";
 
-import { posthog } from "~/utils/analytics/posthog";
+import { usePostHogClient } from "~/utils/analytics/posthog";
 import { getScreenName } from "~/utils/analytics/screen-names";
 import { clearQueryCache, persistOptions, queryClient } from "~/utils/api";
 
@@ -18,8 +18,9 @@ import "~/lib/nativewind-setup";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { useIsRestoring } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { PostHogProvider } from "posthog-react-native";
+import { PostHogProvider, usePostHog } from "posthog-react-native";
 
+import { AnalyticsSync } from "~/components/analytics/AnalyticsSync";
 import { CacheRefreshPill } from "~/components/CacheRefreshPill";
 import { InstallReferrer } from "~/components/InstallReferrer";
 import { UpdateNudge } from "~/components/UpdateNudge";
@@ -36,6 +37,8 @@ import {
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 export default function RootLayout() {
+  const posthog = usePostHogClient();
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <IntlProvider>
@@ -73,13 +76,14 @@ export default function RootLayout() {
 }
 
 function ScreenTracker() {
+  const posthog = usePostHog();
   const pathname = usePathname();
   const segments = useSegments();
 
   useEffect(() => {
     const screenName = getScreenName(segments);
     void posthog.screen(screenName, { pathname });
-  }, [pathname, segments]);
+  }, [posthog, pathname, segments]);
 
   return null;
 }
@@ -131,6 +135,7 @@ const StackLayout = () => {
 
   return (
     <View className="bg-background flex-1">
+      <AnalyticsSync />
       <ScreenTracker />
       <SignInNavigator />
       <InstallReferrer />

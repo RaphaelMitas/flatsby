@@ -5,7 +5,6 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { usePostHog } from "posthog-react-native";
 import QRCode from "react-qr-code";
 import { useTranslations } from "use-intl";
 
@@ -19,6 +18,7 @@ import {
 import { PlaceholderMembers } from "~/components/members/PlaceholderMembers";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
+import { getPostHog } from "~/utils/analytics/posthog";
 import { trpc } from "~/utils/api";
 import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -35,7 +35,6 @@ export function InviteScreen({
   const { selectedGroupId, selectedGroupName } = useShoppingStore();
   const groupId = Number(selectedGroupId) || 0;
   const queryClient = useQueryClient();
-  const posthog = usePostHog();
   const shareInvite = useShareInvite();
 
   const { data: invite } = useSuspenseQuery(
@@ -48,8 +47,8 @@ export function InviteScreen({
   useEffect(() => {
     if (!invite.success || hasCapturedShown.current) return;
     hasCapturedShown.current = true;
-    posthog.capture("invite_shown", { groupId });
-  }, [invite.success, posthog, groupId]);
+    getPostHog().capture("invite_shown", { groupId });
+  }, [invite.success, groupId]);
 
   const resetMutation = useMutation(
     trpc.invite.reset.mutationOptions({

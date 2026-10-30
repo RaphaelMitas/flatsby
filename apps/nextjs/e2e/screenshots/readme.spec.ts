@@ -26,6 +26,10 @@ test("captures README screenshots", async ({ page, baseURL }) => {
     email: "alex-web@flatsby.test",
   });
 
+  // The one-time right-to-object notice isn't part of the README picture
+  await page.addInitScript(() =>
+    localStorage.setItem("analytics_notice_seen", "true"),
+  );
   await page.goto("/home");
   await expect(page.getByText("Sunset Villa").first()).toBeVisible();
   await expect(page.getByText("€142.69").first()).toBeVisible();

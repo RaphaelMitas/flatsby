@@ -13,6 +13,7 @@ import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { getAnalyticsConsent } from "~/utils/analytics/posthog";
 import { authClient, signIn } from "~/utils/auth/auth-client";
 import { openLegalPage } from "~/utils/legal";
 
@@ -43,9 +44,10 @@ const Login = () => {
           additionalData: {
             login: {
               attemptId,
-              distinctId: posthog.optedOut
-                ? undefined
-                : posthog.getDistinctId(),
+              // Only screen analytics may join the login callback to this install
+              distinctId: getAnalyticsConsent().screens
+                ? posthog.getDistinctId()
+                : undefined,
             } satisfies LoginAttempt,
           },
         })
@@ -132,6 +134,17 @@ const Login = () => {
                 >
                   {chunks}
                 </Text>
+              ),
+            })}
+          </Text>
+          {/* Art. 21(4) GDPR: the right to object, on its own line, before the first sign-in */}
+          <Text
+            testID="login-right-to-object"
+            className="text-foreground text-center text-xs"
+          >
+            {t.rich("settings.analytics.rightToObject", {
+              strong: (chunks) => (
+                <Text className="font-semibold">{chunks}</Text>
               ),
             })}
           </Text>

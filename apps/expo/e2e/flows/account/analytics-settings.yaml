@@ -1,0 +1,35 @@
+appId: ${APP_ID}
+tags:
+  - account
+---
+# Turning on a consent switch opens the consent sheet, where the choice is made.
+- runFlow: ../../subflows/e2e-login.yaml
+- tapOn: "Settings"
+- openLink: flatsby://settings/analytics
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible: "Open in .*Flatsby.*"
+          commands:
+            - tapOn: "Open"
+      - extendedWaitUntil:
+          visible:
+            id: "analytics-usage"
+          timeout: 15000
+
+- tapOn:
+    id: "analytics-screens"
+- extendedWaitUntil:
+    visible:
+      id: "analytics-sheet-done"
+    timeout: 15000
+- tapOn:
+    id: "analytics-sheet-done"
+- extendedWaitUntil:
+    notVisible:
+      id: "analytics-sheet-done"
+    timeout: 15000
+- assertVisible:
+    id: "analytics-usage"

@@ -3,19 +3,18 @@ import { useEffect, useRef, useState } from "react";
 import { AppState, Platform, Text, View } from "react-native";
 import * as ExpoInAppUpdates from "expo-in-app-updates";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SheetModal } from "~/lib/ui/sheet-modal";
+import { getPostHog } from "~/utils/analytics/posthog";
 import { isE2ETestingEnabled } from "~/utils/e2e";
 
 const DISMISSED_KEY = "update_nudge_dismissed_version";
 
 export function UpdateNudge() {
   const t = useTranslations("appUpdate");
-  const posthog = usePostHog();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [storeVersion, setStoreVersion] = useState<string | null>(null);
   const updatePressed = useRef(false);
@@ -43,12 +42,12 @@ export function UpdateNudge() {
 
   useEffect(() => {
     if (!storeVersion) return;
-    posthog.capture("update_nudge_shown", { storeVersion });
+    getPostHog().capture("update_nudge_shown", { storeVersion });
     sheetRef.current?.present();
-  }, [storeVersion, posthog]);
+  }, [storeVersion]);
 
   const update = () => {
-    posthog.capture("update_nudge_update", { storeVersion });
+    getPostHog().capture("update_nudge_update", { storeVersion });
     // iOS can't present the App Store sheet while ours is still presented.
     if (Platform.OS === "ios") {
       updatePressed.current = true;

@@ -85,6 +85,13 @@
       "when": 1793368985072,
       "tag": "0011_user_paypal_handle",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793377459477,
+      "tag": "0012_analytics_consent",
+      "breakpoints": true
     }
   ]
 }
