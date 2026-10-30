@@ -33,10 +33,7 @@ export function HeroSection({ platform }: { platform: Platform }) {
     <section className="px-4 py-16 md:py-24">
       <div className="mx-auto max-w-4xl text-center">
         <PeekingCat className="mx-auto h-14 w-28" />
-        <h1
-          className="mb-4 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl"
-          data-testid="hero-title"
-        >
+        <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
           {t("headline")}
         </h1>
         <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-lg md:text-xl">
