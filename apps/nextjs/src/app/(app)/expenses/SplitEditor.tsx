@@ -10,7 +10,6 @@ import { Divide, DollarSign, Equal, Minus, Percent, Plus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useWatch } from "react-hook-form";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Button } from "@flatsby/ui/button";
 import {
   Card,
@@ -21,8 +20,12 @@ import {
 } from "@flatsby/ui/card";
 import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import { CurrencyInput } from "~/components/CurrencyInput";
@@ -130,15 +133,7 @@ export function SplitEditor({
                   className="flex h-auto flex-col items-center gap-2 py-3"
                   data-testid={`split-member-${member.id}`}
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      alt={member.user.name}
-                      src={member.user.image ?? ""}
-                    />
-                    <AvatarFallback className="text-muted-foreground bg-muted text-xs">
-                      {member.user.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar {...memberPerson(member)} />
                   <span className="w-full truncate text-xs">
                     {member.user.name}
                   </span>
@@ -182,15 +177,12 @@ export function SplitEditor({
               return (
                 <div key={split.groupMemberId} className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage
-                        alt={memberName}
-                        src={member?.user.image ?? undefined}
-                      />
-                      <AvatarFallback className="text-xs">
-                        {memberName.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                      {...(member
+                        ? memberPerson(member)
+                        : { name: memberName })}
+                      size="sm"
+                    />
                     <span className="flex-1 text-sm font-medium">
                       {memberName}
                     </span>

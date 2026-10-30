@@ -5,7 +5,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { translateIfKey } from "@flatsby/i18n/message-key";
-import { groupFormSchema } from "@flatsby/validators/group";
+import { groupFormSchema, hasJoined } from "@flatsby/validators/group";
 
 import { ProfileSection } from "~/components/ProfileSection";
 import { TimedAlert } from "~/components/TimedAlert";
@@ -63,7 +63,7 @@ export default function GroupDetailsScreen() {
   }
 
   const isAdmin = group.data.thisGroupMember.role === "admin";
-  const memberCount = group.data.groupMembers.length;
+  const memberCount = group.data.groupMembers.filter(hasJoined).length;
 
   return (
     <AppScrollView className="p-4">

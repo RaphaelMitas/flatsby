@@ -194,3 +194,48 @@ tags:
 - assertVisible:
     text: ".*60[.,]00.*"
     rightOf: "2 of 2 shares"
+
+# --- Split with a placeholder ---
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
+      TAB_X: "10%"
+      MARKER_ID: "dashboard-group-settings"
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "dashboard-group-settings"
+      MARKER_ID: "group-settings-members"
+- tapOn:
+    id: "group-settings-members"
+- runFlow:
+    file: ../../subflows/add-placeholder.yaml
+    env:
+      NAME: "Anna"
+# Relaunch so the Expenses tab opens on its list, not the detail left open above
+- runFlow:
+    file: ../../subflows/relaunch.yaml
+    env:
+      MARKER_ID: "dashboard-group-picker"
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-expenses"
+      TAB_LABEL: "Expenses"
+      TAB_X: "39%"
+      MARKER_ID: "expense-heading"
+- runFlow:
+    file: ../../subflows/create-expense.yaml
+    env:
+      AMOUNT: "40.00"
+      DESCRIPTION: "Dinner with Anna"
+- tapOn: "Dinner with Anna"
+- extendedWaitUntil:
+    visible:
+      id: "expense-split-details"
+    timeout: 15000
+- assertVisible:
+    text: ".*20[.,]00.*"
+    rightOf: "Anna"

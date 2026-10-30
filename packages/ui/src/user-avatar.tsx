@@ -19,6 +19,7 @@ interface UserAvatarProps {
   name: string;
   image?: string | null;
   size?: AvatarSize;
+  placeholder?: boolean;
   className?: string;
 }
 
@@ -26,14 +27,23 @@ export function UserAvatar({
   name,
   image,
   size = "md",
+  placeholder,
   className,
 }: UserAvatarProps) {
   const config = sizeConfig[size];
 
   return (
-    <Avatar className={cn(config.className, className)}>
+    <Avatar
+      className={cn(
+        config.className,
+        placeholder && "border-muted-foreground border border-dashed",
+        className,
+      )}
+    >
       <AvatarImage src={image ?? undefined} alt={name} />
-      <AvatarFallback className={config.textClass}>
+      <AvatarFallback
+        className={cn(config.textClass, placeholder && "text-muted-foreground")}
+      >
         {initials(name, config.letters)}
       </AvatarFallback>
     </Avatar>

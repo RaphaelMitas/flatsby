@@ -3,16 +3,22 @@ import type { Browser, Page } from "@playwright/test";
 import { createAuthSession, expect, test } from "../fixtures/auth";
 import { createTestExpense } from "../helpers/expenses";
 import {
+  addPlaceholder,
   createAndSelectGroup,
   deleteCurrentGroup,
+  groupRefetched,
   submitCreateGroupForm,
   uniqueGroupName,
 } from "../helpers/group";
 import { waitForHydration } from "../helpers/hydration";
 
-async function newInvitee(browser: Browser, baseURL: string | undefined) {
+async function newInvitee(
+  browser: Browser,
+  baseURL: string | undefined,
+  params?: Record<string, string>,
+) {
   const page = await (await browser.newContext()).newPage();
-  const user = await createAuthSession(page, baseURL);
+  const user = await createAuthSession(page, baseURL, params);
   return { page, user };
 }
 
@@ -42,6 +48,28 @@ async function openInvite(page: Page) {
   const code = page.getByTestId("group-invite-code");
   await expect(code).toHaveText(/^[0-9A-Z]{4}-[0-9A-Z]{4}$/);
   return code.innerText();
+}
+
+async function claimPlaceholder(
+  browser: Browser,
+  baseURL: string | undefined,
+  code: string,
+  placeholder: string,
+  name: string,
+) {
+  const invitee = await newInvitee(browser, baseURL, { name });
+  const { page } = invitee;
+  await page.goto(`/join/${code}`);
+  await expect(page.getByTestId("join-claim-new")).toBeChecked();
+  const option = page.getByTestId(/^join-claim-option-\d+$/);
+  await expect(option).toHaveCount(1);
+  await waitForHydration(option);
+  await option.check();
+  await expect(page.getByTestId("join-invite-button")).toHaveText(
+    `Join as ${placeholder}`,
+  );
+  await confirmJoin(page);
+  return invitee;
 }
 
 test.describe("Group Management", () => {
@@ -137,6 +165,67 @@ test.describe("Group Management", () => {
     await inviteePage.goto(`/join/${code}`);
     await expect(inviteePage.getByTestId("join-invite-expired")).toBeVisible();
     await inviteePage.context().close();
+  });
+
+  test("a placeholder's person takes over their spot through the invite", async ({
+    authPage,
+    browser,
+    baseURL,
+  }) => {
+    await createAndSelectGroup(authPage, uniqueGroupName());
+    await addPlaceholder(authPage, "Anna");
+    const code = await openInvite(authPage);
+
+    const { page: annaPage, user: anna } = await claimPlaceholder(
+      browser,
+      baseURL,
+      code,
+      "Anna",
+      "Anna Schmitt",
+    );
+
+    await authPage.goto("/group/settings");
+    await expect(authPage.getByText("Anna Schmitt")).toBeVisible();
+    await expect(authPage.getByText(anna.email)).toBeVisible();
+    await expect(authPage.getByTestId("placeholder-row-Anna")).toHaveCount(0);
+    await annaPage.context().close();
+  });
+
+  test("an admin turns a wrong claim back into the placeholder", async ({
+    authPage,
+    browser,
+    baseURL,
+  }) => {
+    await createAndSelectGroup(authPage, uniqueGroupName());
+    await addPlaceholder(authPage, "Anna");
+    const code = await openInvite(authPage);
+
+    const { page: kevinPage, user: kevin } = await claimPlaceholder(
+      browser,
+      baseURL,
+      code,
+      "Anna",
+      "Kevin Müller",
+    );
+
+    await authPage.goto("/group/settings");
+    const memberActions = authPage
+      .locator("#manage-members")
+      .filter({ hasText: kevin.email })
+      .getByRole("button");
+    await waitForHydration(memberActions);
+    await memberActions.click();
+    await expect(authPage.getByText("Took Anna's spot")).toBeVisible();
+    await authPage.getByTestId("member-action-undo-claim").click();
+    const settled = groupRefetched(authPage);
+    await authPage.getByTestId("member-undo-claim-confirm").click();
+
+    await expect(authPage.getByTestId("placeholder-row-Anna")).toBeVisible();
+    await expect(authPage.getByText(kevin.email)).not.toBeVisible();
+    await settled;
+    await authPage.reload();
+    await expect(authPage.getByTestId("placeholder-row-Anna")).toBeVisible();
+    await kevinPage.context().close();
   });
 
   test("members who aren't admins can't invite", async ({

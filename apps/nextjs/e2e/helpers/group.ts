@@ -1,6 +1,8 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { waitForHydration } from "./hydration";
+
 export const uniqueGroupName = () => `E2E Group ${Date.now()}`;
 
 export async function submitCreateGroupForm(page: Page, name: string) {
@@ -56,4 +58,23 @@ export async function deleteCurrentGroup(page: Page) {
   const deleteButton = page.getByTestId("group-delete-confirm-button");
   await deleteButton.click();
   await page.waitForURL("/group");
+}
+
+// The member list refetches once a member change settles; navigating earlier aborts it
+export const groupRefetched = (page: Page) =>
+  page.waitForResponse(
+    (response) =>
+      response.url().includes("group.getGroup") &&
+      response.request().method() === "GET",
+  );
+
+export async function addPlaceholder(page: Page, name: string) {
+  await page.goto("/group/settings");
+  const input = page.getByTestId("placeholder-name-input");
+  await waitForHydration(input);
+  await input.fill(name);
+  const saved = groupRefetched(page);
+  await page.getByTestId("placeholder-add-button").click();
+  await expect(page.getByTestId(`placeholder-row-${name}`)).toBeVisible();
+  await saved;
 }

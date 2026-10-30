@@ -5,9 +5,10 @@ import type {
 } from "@flatsby/validators/calendar";
 import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   index,
   integer,
@@ -30,7 +31,10 @@ import {
   MAX_TIME_ZONE_LENGTH,
 } from "@flatsby/validators/calendar";
 import { MAX_EXPENSE_DESCRIPTION_LENGTH } from "@flatsby/validators/expenses/types";
-import { MAX_GROUP_NAME_LENGTH } from "@flatsby/validators/group";
+import {
+  MAX_GROUP_NAME_LENGTH,
+  MAX_PLACEHOLDER_NAME_LENGTH,
+} from "@flatsby/validators/group";
 import { INVITE_CODE_LENGTH } from "@flatsby/validators/invite";
 import { MAX_CONSENT_VERSION_LENGTH } from "@flatsby/validators/user";
 
@@ -162,7 +166,12 @@ export const groupMembers = createTable(
     groupId: integer("groupId")
       .notNull()
       .references(() => groups.id),
-    userId: text("userId").notNull(),
+    // null for a placeholder, a flatmate added by name who has no account yet
+    userId: text("userId"),
+    // kept after a claim so it can be undone
+    placeholderName: varchar("placeholder_name", {
+      length: MAX_PLACEHOLDER_NAME_LENGTH,
+    }),
     role: groupMemberRoleEnum("role").notNull(),
     joinedOn: timestamp("joinedOn").defaultNow().notNull(),
     isActive: boolean("is_active").default(true).notNull(),
@@ -170,6 +179,10 @@ export const groupMembers = createTable(
   (table) => [
     index("group_members_group_user_idx").on(table.groupId, table.userId),
     index("group_members_user_idx").on(table.userId),
+    check(
+      "group_members_user_or_name",
+      sql`${table.userId} is not null or ${table.placeholderName} is not null`,
+    ),
   ],
 );
 

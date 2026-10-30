@@ -1,5 +1,6 @@
 "use client";
 
+import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import { useCallback, useRef, useState } from "react";
 import {
   useMutation,
@@ -45,7 +46,10 @@ import {
   TableRow,
 } from "@flatsby/ui/table";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImport";
 
 import { CurrencySelect } from "~/components/CurrencySelect";
@@ -281,10 +285,7 @@ function StepMapping({
   members,
 }: {
   wizard: WizardReturn;
-  members: {
-    id: number;
-    user: { name: string | null; email: string; image?: string | null };
-  }[];
+  members: Pick<GroupMemberWithUserInfo, "id" | "userId" | "user">[];
 }) {
   const t = useTranslations("splitwiseImport");
   const tCommon = useTranslations("common");
@@ -308,12 +309,8 @@ function StepMapping({
               {members.map((m) => (
                 <SelectItem key={m.id} value={m.id.toString()}>
                   <div className="flex items-center gap-2">
-                    <UserAvatar
-                      name={m.user.name ?? m.user.email}
-                      image={m.user.image}
-                      size="xs"
-                    />
-                    {m.user.name ?? m.user.email}
+                    <UserAvatar {...memberPerson(m)} size="xs" />
+                    {m.user.name}
                   </div>
                 </SelectItem>
               ))}

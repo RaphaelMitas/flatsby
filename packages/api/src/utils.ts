@@ -2,7 +2,7 @@ import type { MessageKey } from "@flatsby/i18n/message-key";
 import type { Messages } from "@flatsby/i18n/messages";
 import { Effect } from "effect";
 
-import { and, desc, eq, inArray } from "@flatsby/db";
+import { and, eq, inArray, isNull } from "@flatsby/db";
 import {
   expenses,
   expenseSplits,
@@ -13,9 +13,16 @@ import {
   users,
 } from "@flatsby/db/schema";
 import { calculateDebts } from "@flatsby/validators/expenses/debt";
+import { placeholderUser } from "@flatsby/validators/group";
 
 import type { ApiError } from "./errors";
-import type { Database, DbTransaction, GroupMember, Role } from "./types";
+import type {
+  Database,
+  DbTransaction,
+  GroupMember,
+  MemberUser,
+  Role,
+} from "./types";
 import { Errors, fail } from "./errors";
 
 export const DbUtils = {
@@ -155,8 +162,31 @@ export const GroupUtils = {
   },
 };
 
-export const findGroupWithMembers = (db: Database, groupId: number) =>
-  db.query.groups.findFirst({
+export const memberUserColumns = {
+  email: true,
+  name: true,
+  image: true,
+} as const;
+
+export const memberName = (member: {
+  placeholderName: string | null;
+  user: { name: string } | null;
+}) => member.user?.name ?? member.placeholderName ?? "";
+
+/** Placeholders have no user, so they get one built from their name; released apps read `member.user` unguarded. */
+export const withMemberUser = <
+  M extends { placeholderName: string | null; user: MemberUser | null },
+>({
+  placeholderName,
+  user,
+  ...member
+}: M): Omit<M, "user" | "placeholderName"> & { user: MemberUser } => ({
+  ...member,
+  user: user ?? placeholderUser(placeholderName ?? ""),
+});
+
+export const findGroupWithMembers = async (db: Database, groupId: number) => {
+  const group = await db.query.groups.findFirst({
     where: (groups, { eq }) => eq(groups.id, groupId),
     with: {
       groupMembers: {
@@ -164,18 +194,25 @@ export const findGroupWithMembers = (db: Database, groupId: number) =>
         columns: {
           id: true,
           userId: true,
+          placeholderName: true,
           role: true,
           joinedOn: true,
           isActive: true,
         },
-        with: {
-          user: {
-            columns: { email: true, name: true, image: true },
-          },
-        },
+        with: { user: { columns: memberUserColumns } },
       },
     },
   });
+  return (
+    group && {
+      ...group,
+      groupMembers: group.groupMembers.map((member) => ({
+        ...withMemberUser(member),
+        placeholderName: member.placeholderName,
+      })),
+    }
+  );
+};
 
 export const findActiveMember = (
   db: Database,
@@ -199,24 +236,48 @@ export const findActiveAdmin = (
     where: GroupUtils.activeAdminWhere(groupId, userId),
   });
 
+export const activePlaceholderWhere = (memberId?: number) =>
+  and(
+    memberId === undefined ? undefined : eq(groupMembers.id, memberId),
+    isNull(groupMembers.userId),
+    eq(groupMembers.isActive, true),
+  );
+
 /** Callers check the right to add; `refusal` runs under the group lock, so it sees concurrent removals. */
 export const addMemberTx = async (
   tx: DbTransaction,
   groupId: number,
   userId: string,
   refusal?: (tx: DbTransaction) => Promise<ApiError | undefined>,
+  placeholderId?: number,
 ): Promise<number | ApiError> => {
   await GroupUtils.lockGroup(tx, groupId);
   const refused = await refusal?.(tx);
   if (refused) return refused;
-  const existing = await tx.query.groupMembers.findFirst({
+  const rows = await tx.query.groupMembers.findMany({
     where: and(
       eq(groupMembers.groupId, groupId),
       eq(groupMembers.userId, userId),
     ),
-    orderBy: desc(groupMembers.isActive),
   });
-  if (existing?.isActive) return Errors.conflict("errors.alreadyMember");
+  if (rows.some((row) => row.isActive)) {
+    return Errors.conflict("errors.alreadyMember");
+  }
+  if (placeholderId !== undefined) {
+    const [claimed] = await tx
+      .update(groupMembers)
+      .set({ userId })
+      .where(
+        and(
+          activePlaceholderWhere(placeholderId),
+          eq(groupMembers.groupId, groupId),
+        ),
+      )
+      .returning({ id: groupMembers.id });
+    return claimed?.id ?? Errors.conflict("errors.placeholderTaken");
+  }
+  // A spot they once claimed keeps its placeholder's history, so it never comes back with them
+  const existing = rows.find((row) => row.placeholderName === null);
   const [member] = existing
     ? await tx
         .update(groupMembers)
