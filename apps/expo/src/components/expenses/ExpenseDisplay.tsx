@@ -1,26 +1,25 @@
+import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
 import { Text, View } from "react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { formatExpenseDateShort } from "@flatsby/validators/expenses/formatting";
 
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Badge } from "~/lib/ui/badge";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
+import { MemberAvatar } from "./MemberAvatar";
 
 export interface ExpenseDisplayProps {
   amounts: { amount: string; paid?: string };
   isNotConverted?: boolean;
   description?: string | null;
-  paidByName: string;
-  paidByImage?: string | null;
+  paidBy: DebtPerson;
   expenseDate: Date;
   splitMethod?: string;
   splitCount?: number;
   subcategory: string;
-  fromName?: string;
-  fromImage?: string | null;
+  from?: DebtPerson;
   isSelected?: boolean;
 }
 
@@ -28,14 +27,12 @@ export function ExpenseDisplay({
   amounts,
   isNotConverted,
   description,
-  paidByName,
-  paidByImage,
+  paidBy,
   expenseDate,
   splitMethod,
   splitCount,
   subcategory,
-  fromName,
-  fromImage,
+  from,
   isSelected,
 }: ExpenseDisplayProps) {
   const t = useTranslations("expenses");
@@ -81,28 +78,26 @@ export function ExpenseDisplay({
 
         <View className="flex-col gap-2">
           <View className="flex-row items-center gap-2">
-            {isSettlement && fromName && (
+            {isSettlement && from && (
               <>
-                <Avatar className="h-5 w-5">
-                  {fromImage && <AvatarImage src={fromImage} />}
-                  <AvatarFallback textClassName="text-xs">
-                    {fromName.substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <MemberAvatar
+                  person={from}
+                  className="h-5 w-5"
+                  textClassName="text-xs"
+                />
                 <Text className="text-muted-foreground text-sm">
-                  {fromName}
+                  {from.name}
                 </Text>
                 <Icon name="arrow-right" size={16} color="muted-foreground" />
               </>
             )}
-            <Avatar className="h-5 w-5">
-              {paidByImage && <AvatarImage src={paidByImage} />}
-              <AvatarFallback textClassName="text-xs">
-                {paidByName.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <MemberAvatar
+              person={paidBy}
+              className="h-5 w-5"
+              textClassName="text-xs"
+            />
             <Text className="text-muted-foreground text-sm" numberOfLines={1}>
-              {isSettlement ? paidByName : t("paidBy", { name: paidByName })}
+              {isSettlement ? paidBy.name : t("paidBy", { name: paidBy.name })}
             </Text>
           </View>
 

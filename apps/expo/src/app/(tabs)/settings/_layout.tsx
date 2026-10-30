@@ -78,6 +78,7 @@ export default function SettingsLayout() {
           options={{
             title: t("navigation.members"),
             headerBackTitle: "",
+            ...solidHeader,
           }}
         />
         <Stack.Screen

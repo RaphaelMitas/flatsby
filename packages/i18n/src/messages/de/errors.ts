@@ -45,6 +45,11 @@ export const errors = {
   unauthorized: "Du musst angemeldet sein, um darauf zuzugreifen",
   invalidInviteCode: "Das ist kein gültiger Einladungscode",
   alreadyMember: "Diese Person ist bereits Mitglied der Gruppe",
+  placeholderTaken: "Dieser Platz ist nicht mehr frei",
+  placeholderNameTaken: "Jemand mit diesem Namen ist schon eingetragen",
+  placeholderCannotBeAdmin: "Nur beigetretene Mitglieder können Admin sein",
+  adminClaimCannotBeUndone:
+    "Ein Admin kann nicht wieder zum Platzhalter werden",
   alreadyExists: "Das gibt es bereits",
   invalidReference: "Ungültiger Verweis auf zugehörige Daten",
   fieldRequired: "{field} ist erforderlich",

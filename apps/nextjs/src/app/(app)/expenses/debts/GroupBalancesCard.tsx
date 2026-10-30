@@ -56,14 +56,19 @@ function BalanceBars({
       {showHeading && <p className="mb-1 font-semibold">{currency}</p>}
       <ul>
         {rows.map(({ memberId, isMe, cents, percent }) => {
-          const { name, image } = person(memberId);
+          const { name, image, placeholder } = person(memberId);
           return (
             <li
               key={memberId}
               className="flex items-center gap-3 py-2 text-sm"
               data-testid="balance-row"
             >
-              <UserAvatar name={name} image={image} size="sm" />
+              <UserAvatar
+                name={name}
+                image={image}
+                placeholder={placeholder}
+                size="sm"
+              />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="flex items-center justify-between gap-2">
                   <span

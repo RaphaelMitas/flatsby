@@ -6,6 +6,7 @@ import {
   openExpenseForm,
   submitEqualSplitExpense,
 } from "../helpers/expenses";
+import { addPlaceholder } from "../helpers/group";
 
 test.describe("Expense Creation", () => {
   test("creates an expense with equal split", async ({ authPage }) => {
@@ -210,6 +211,40 @@ test.describe("Expense Creation", () => {
     await expect(card.getByTestId("expense-card-paid-amount")).toHaveText(
       "CHF 84.00",
     );
+  });
+
+  test("a placeholder pays an expense split with them", async ({
+    authPage,
+  }) => {
+    await addPlaceholder(authPage, "Anna");
+    await authPage.goto("/expenses");
+    await openExpenseForm(authPage, {
+      amount: "30.00",
+      description: "Rewe run",
+      categoryId: "groceries",
+    });
+    await authPage.getByTestId("expense-form-paid-by").click();
+    await authPage.getByRole("option", { name: "Anna" }).click();
+    await authPage.getByTestId("expense-form-next").click();
+    await expect(authPage.getByTestId("split-details-card")).toContainText(
+      "Anna",
+    );
+    await authPage.getByTestId("expense-form-next").click();
+    await authPage.getByTestId("expense-form-submit").click();
+    await expect(
+      authPage.getByText("Expense created successfully"),
+    ).toBeVisible();
+
+    await openExpenseDetail(authPage, "Rewe run");
+    await expect(authPage.getByText("Paid by Anna").first()).toBeVisible();
+    await expect(authPage.getByTestId("expense-split-details")).toContainText(
+      "Anna",
+    );
+
+    await authPage.goto("/expenses/debts");
+    await expect(
+      authPage.getByTestId("direct-debt-row").filter({ hasText: "Anna" }),
+    ).toContainText("€15.00");
   });
 
   test("creates an expense with manual category selection", async ({

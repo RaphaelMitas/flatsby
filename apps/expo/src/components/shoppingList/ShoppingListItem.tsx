@@ -26,14 +26,7 @@ export interface ShoppingListItemProps {
   groupId: number;
   shoppingListId: number;
   item: ShoppingListItemType;
-  groupMembers: {
-    id: number;
-    user: {
-      name: string | null;
-      email: string;
-      image: string | null;
-    };
-  }[];
+  groupMembers: { id: number; user: { name: string } }[];
   selectedCategory: CategoryId | null;
 }
 

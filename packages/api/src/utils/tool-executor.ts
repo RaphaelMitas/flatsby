@@ -22,7 +22,7 @@ import type {
 } from "@flatsby/validators/chat/tools";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 
-import { and, asc, desc, eq } from "@flatsby/db";
+import { and, asc, desc, eq, isNotNull } from "@flatsby/db";
 import {
   expenses,
   groupMembers,
@@ -38,7 +38,7 @@ import {
 
 import type { RouterCaller } from "../root";
 import type { Database } from "../types";
-import { fetchGroupDebtSummary } from "../utils";
+import { fetchGroupDebtSummary, memberName } from "../utils";
 import { handleApiResult } from "./tool-result-transformer";
 
 /**
@@ -237,12 +237,12 @@ export async function executeSearchData(
             amountInCents: e.amountInCents,
             currency: parseCurrency(e.currency),
             paidByMemberId: e.paidByGroupMemberId,
-            paidByMemberName: e.paidByGroupMember.user.name,
+            paidByMemberName: memberName(e.paidByGroupMember),
             expenseDate: e.expenseDate,
             splitMethod: splitMethodSchema.safeParse(e.splitMethod).data,
             splits: e.expenseSplits.map((s) => ({
               memberId: s.groupMemberId,
-              memberName: s.groupMember.user.name,
+              memberName: memberName(s.groupMember),
               amountInCents: s.amountInCents,
               shares: s.shares,
             })),
@@ -258,7 +258,7 @@ export async function executeSearchData(
           eq(groupMembers.groupId, groupId),
           eq(groupMembers.isActive, true),
         ),
-        with: { user: { columns: { id: true, name: true, image: true } } },
+        with: { user: { columns: { name: true, image: true } } },
       });
 
       return {
@@ -267,10 +267,10 @@ export async function executeSearchData(
           type: "groupMembers",
           items: members.map((m) => ({
             id: m.id,
-            userId: m.user.id,
-            name: m.user.name,
-            image: m.user.image,
-            isCurrentUser: m.user.id === userId,
+            userId: m.userId,
+            name: memberName(m),
+            image: m.user?.image ?? null,
+            isCurrentUser: m.userId === userId,
             role: m.role,
           })),
         },
@@ -286,12 +286,12 @@ export async function executeSearchData(
             eq(groupMembers.groupId, groupId),
             eq(groupMembers.isActive, true),
           ),
-          columns: { id: true },
+          columns: { id: true, placeholderName: true },
           with: { user: { columns: { name: true } } },
         }),
       ]);
 
-      const memberNameMap = new Map(members.map((m) => [m.id, m.user.name]));
+      const memberNameMap = new Map(members.map((m) => [m.id, memberName(m)]));
 
       const debtItems: {
         fromMemberId: number;
@@ -334,6 +334,7 @@ export async function executeSearchData(
         where: and(
           eq(groupMembers.groupId, groupId),
           eq(groupMembers.isActive, true),
+          isNotNull(groupMembers.userId),
         ),
       });
 
@@ -546,7 +547,7 @@ async function handleExpenseCreate(
     ),
     with: { user: { columns: { name: true } } },
   });
-  const memberIdToName = new Map(members.map((m) => [m.id, m.user.name]));
+  const memberIdToName = new Map(members.map((m) => [m.id, memberName(m)]));
 
   const expenseDate = data.expenseDateIsoString
     ? new Date(data.expenseDateIsoString)
@@ -621,9 +622,9 @@ async function handleExpenseDelete(
       description: expense.description,
       amountInCents: expense.amountInCents,
       currency: parseCurrency(expense.currency),
-      paidByMemberName: expense.paidByGroupMember.user.name,
+      paidByMemberName: memberName(expense.paidByGroupMember),
       splits: expense.expenseSplits.map((s) => ({
-        memberName: s.groupMember.user.name,
+        memberName: memberName(s.groupMember),
         amountInCents: s.amountInCents,
       })),
     },
@@ -667,7 +668,7 @@ async function handleExpenseUpdate(
     ),
     with: { user: { columns: { name: true } } },
   });
-  const memberIdToName = new Map(members.map((m) => [m.id, m.user.name]));
+  const memberIdToName = new Map(members.map((m) => [m.id, memberName(m)]));
 
   const expenseDate = data.expenseDateIsoString
     ? new Date(data.expenseDateIsoString)

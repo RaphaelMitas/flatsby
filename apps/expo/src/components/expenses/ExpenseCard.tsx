@@ -10,7 +10,10 @@ import { PostHogMaskView } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
-import { formatExpenseAmounts } from "@flatsby/validators/expenses/formatting";
+import {
+  formatExpenseAmounts,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
@@ -95,7 +98,6 @@ export function ExpenseCard({
   );
 
   const splitCount = expense.expenseSplits.length;
-  const paidByName = expense.paidByGroupMember.user.name;
   const amounts = formatExpenseAmounts(expense, locale);
   const expenseDate = new Date(expense.expenseDate);
   const fromMember = expense.expenseSplits[0]?.groupMember;
@@ -158,14 +160,12 @@ export function ExpenseCard({
               amounts={amounts}
               isNotConverted={isNotConverted}
               description={expense.description}
-              paidByName={paidByName}
-              paidByImage={expense.paidByGroupMember.user.image}
+              paidBy={memberPerson(expense.paidByGroupMember)}
               expenseDate={expenseDate}
               splitMethod={expense.splitMethod}
               splitCount={splitCount}
               subcategory={expense.subcategory}
-              fromName={fromMember?.user.name}
-              fromImage={fromMember?.user.image}
+              from={fromMember && memberPerson(fromMember)}
               isSelected={isSelected}
             />
           </Pressable>
