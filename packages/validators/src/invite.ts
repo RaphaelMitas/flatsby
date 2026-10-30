@@ -65,4 +65,4 @@ export const safeRedirectPath = (path: string | undefined) =>
   !path.startsWith("//") &&
   [...path].every((c) => c > " " && c !== "\\")
     ? path
-    : "/";
+    : "/home";

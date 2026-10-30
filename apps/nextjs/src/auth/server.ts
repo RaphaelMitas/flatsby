@@ -3,7 +3,6 @@ import "server-only";
 import type { OAuthCallback } from "@flatsby/auth";
 import { cache } from "react";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { getOAuthState } from "better-auth/api";
 import { importPKCS8, SignJWT } from "jose";
@@ -106,11 +105,6 @@ async function onOAuthCallback({
 export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
 );
-
-export async function signOutAndRedirect(): Promise<never> {
-  await auth.api.signOut({ headers: await headers() });
-  redirect("/auth/login");
-}
 
 async function makeAppleClientSecret(): Promise<string> {
   try {

@@ -1,13 +1,14 @@
 import type { NextFetchEvent, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { defaultLocale, locales } from "@flatsby/i18n/locale";
+import { defaultLocale, localePath, locales } from "@flatsby/i18n/locale";
 import {
   INVITE_REFERRER_KEY,
   inviteCodeSchema,
 } from "@flatsby/validators/invite";
 
 import { storeRedirect } from "~/app/_components/landing/content";
+import { platformFor } from "~/app/_components/landing/platform";
 import { isEntryPage } from "~/utils/entry-pages";
 import { captureVisit } from "~/utils/page-views";
 
@@ -61,12 +62,21 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
 
   countVisit("$pageview");
 
+  const homeLocale = locales.find(
+    (locale) => localePath(locale, "/") === pathname,
+  );
+  // One prerendered variant per platform keeps the hero's store order without a server render
+  if (homeLocale) {
+    url.pathname = `/${homeLocale}/landing/${platformFor(request.headers)}`;
+    return NextResponse.rewrite(url);
+  }
+
   const rendersInPlace =
     isEntryPage(pathname) ||
     locales.some((locale) => startsWithSegment(pathname, `/${locale}`));
   if (rendersInPlace) return;
 
-  url.pathname = pathname === "/" ? prefix : `${prefix}${pathname}`;
+  url.pathname = `${prefix}${pathname}`;
   return NextResponse.rewrite(url);
 }
 

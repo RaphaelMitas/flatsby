@@ -20,7 +20,7 @@ describe("safeRedirectPath", () => {
     "",
     undefined,
   ])("rejects %j", (path) => {
-    expect(safeRedirectPath(path)).toBe("/");
+    expect(safeRedirectPath(path)).toBe("/home");
   });
 });
 
