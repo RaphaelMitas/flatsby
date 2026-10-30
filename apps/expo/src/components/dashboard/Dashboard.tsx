@@ -3,6 +3,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { AnalyticsPrompt } from "~/components/analytics/AnalyticsPrompt";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { trpc } from "~/utils/api";
 import { useHomeVersion } from "~/utils/home-version";
@@ -76,6 +77,7 @@ function DashboardContent() {
         />
 
         <InviteFlatmatesCard groupId={selectedGroupId} />
+        <AnalyticsPrompt />
 
         {homeVersion === "undecided" && <HomeInvite />}
 

@@ -71,6 +71,13 @@
       "when": 1792921829936,
       "tag": "0009_calendar_event_days",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793357763853,
+      "tag": "0010_analytics_consent",
+      "breakpoints": true
     }
   ]
 }

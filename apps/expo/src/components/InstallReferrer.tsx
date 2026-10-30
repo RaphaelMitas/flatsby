@@ -3,7 +3,6 @@ import { Platform } from "react-native";
 import * as Application from "expo-application";
 import { usePathname, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { usePostHog } from "posthog-react-native";
 
 import {
   INVITE_REFERRER_KEY,
@@ -17,7 +16,6 @@ const HANDLED_KEY = "install_referrer_handled";
 // The web join page passes the invite code through the Play Store install referrer
 export function InstallReferrer() {
   const router = useRouter();
-  const posthog = usePostHog();
   const pathname = usePathname();
   const pathnameRef = useRef(pathname);
 
@@ -41,13 +39,6 @@ export function InstallReferrer() {
       if (referrer === null) return;
       await AsyncStorage.setItem(HANDLED_KEY, "true");
       const params = new URLSearchParams(referrer);
-      posthog.capture("install_referrer", {
-        utm_source: params.get("utm_source"),
-        utm_medium: params.get("utm_medium"),
-        utm_campaign: params.get("utm_campaign"),
-        via_invite: params.has(INVITE_REFERRER_KEY),
-        via_ad: params.has("gclid"),
-      });
       const code = inviteCodeSchema.safeParse(
         params.get(INVITE_REFERRER_KEY) ?? "",
       );
@@ -56,7 +47,7 @@ export function InstallReferrer() {
         router.push(invitePath(code.data));
       }
     })();
-  }, [router, posthog]);
+  }, [router]);
 
   return null;
 }

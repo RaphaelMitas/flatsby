@@ -10,7 +10,6 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import { calendarRangeOptions } from "~/components/calendar/calendarRangeOptions";
 import { shoppingListItemsOptions } from "~/components/shoppingList/ShoppingListUtils";
 import { useThemeColors } from "~/lib/utils";
-import { usePostHogIdentify } from "~/utils/analytics/use-posthog-identify";
 import { prefetch, trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
 import { useEveningReminders } from "~/utils/evening-reminders";
@@ -29,7 +28,6 @@ export default function TabLayout() {
   const { getColor } = useThemeColors();
   const t = useTranslations("navigation");
 
-  usePostHogIdentify();
   useEveningReminders();
 
   useEffect(() => {

@@ -18,7 +18,7 @@ import { defaultLocale, localeFromHeaders } from "@flatsby/i18n/locale";
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { translatorFor } from "@flatsby/i18n/translator";
 
-import { captureEvent } from "./lib/posthog";
+import { captureUserEvent } from "./lib/posthog";
 
 /**
  * 1. CONTEXT
@@ -134,15 +134,11 @@ const timingMiddleware = t.middleware(
       console.log(`[TRPC] ${path} took ${durationMs}ms to execute`);
     }
 
-    if (
-      ctx.session?.user.id &&
-      type === "mutation" &&
-      !path.startsWith("analytics.")
-    ) {
+    if (ctx.session && type === "mutation") {
       // a streaming procedure returns before its body runs, so its duration and outcome are unknown here
       const isStream = result.ok && Symbol.asyncIterator in Object(result.data);
-      captureEvent({
-        distinctId: ctx.session.user.id,
+      captureUserEvent({
+        user: ctx.session.user,
         event: path,
         headers: ctx.headers,
         additionalProperties: {

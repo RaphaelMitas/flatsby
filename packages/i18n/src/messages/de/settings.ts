@@ -30,7 +30,7 @@ export const settings = {
     profileSubtitle: "Name und Profilbild bearbeiten",
     manageAccount: "Konto verwalten",
     manageAccountSubtitle: "Kontoeinstellungen im Web verwalten",
-    shareAnalytics: "Nutzungsdaten teilen",
+    analytics: "Analyse",
     enabled: "Aktiviert",
     disabled: "Deaktiviert",
     logout: "Abmelden",
@@ -47,6 +47,33 @@ export const settings = {
     eveningReminder: "Am Abend vorher",
     eveningReminderSubtitle: "19 Uhr, wenn morgen etwas für dich ansteht",
     eveningReminderBlocked: "In den Telefoneinstellungen ausgeschaltet",
+  },
+  analytics: {
+    title: "Analyse",
+    usage: "Nutzungsanalyse",
+    usageBody:
+      "Welche Funktionen du nutzt, nie was du eingibst. Ausschalten, um zu widersprechen.",
+    usageWebBody:
+      "Welche Funktionen du nutzt, nie was du eingibst, im Web und in der App. Ausschalten, um zu widersprechen.",
+    appOnly: "Bildschirme und Bildschirmaufnahmen gibt es nur in der App.",
+    consentSection: "Freiwillig, mit deiner Einwilligung",
+    screens: "Bildschirme und App-Starts",
+    screensBody: "Nutzt eine ID auf diesem Gerät",
+    recordings: "Bildschirmaufnahmen",
+    recordingsBody: "Texte und Bilder abgedeckt",
+    footer:
+      "Mit deinem Konto verknüpft. Absturzberichte werden immer gesendet. <link>Details</link>",
+    sheetTitle: "Nutzung mit Flatsby teilen",
+    sheetBody:
+      "Freiwillig, mit deiner Einwilligung, um Probleme zu finden und zu beheben. Mit deinem Konto verknüpft über eine ID auf diesem Gerät. Nur an PostHog (Server in der EU, Zugriff aus den USA unter EU-Garantien möglich). Jederzeit in den Einstellungen widerrufbar. <link>Details</link>",
+    screensKept: "12 Monate gespeichert",
+    recordingsKept: "Texte und Bilder abgedeckt. 30 Tage gespeichert",
+    done: "Fertig",
+    invite: "Hilf uns, Störendes zu beheben",
+    inviteAction: "Nutzung teilen",
+    dismiss: "Ausblenden",
+    rightToObject:
+      "<strong>Widerspruchsrecht:</strong> Wir erfassen, welche Funktionen du nutzt. Du kannst das in den Einstellungen ausschalten.",
   },
   theme: {
     light: "Hell",

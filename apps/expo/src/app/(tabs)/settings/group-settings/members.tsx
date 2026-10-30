@@ -7,6 +7,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { PostHogMaskView } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import {
@@ -209,11 +210,13 @@ export default function MembersScreen() {
   }
 
   const renderMemberItem = ({ item }: { item: GroupMemberWithUser }) => (
-    <MemberCard
-      groupMember={item}
-      currentUserGroupMember={group.data.thisGroupMember}
-      onPress={() => handleMemberPress(item.id)}
-    />
+    <PostHogMaskView>
+      <MemberCard
+        groupMember={item}
+        currentUserGroupMember={group.data.thisGroupMember}
+        onPress={() => handleMemberPress(item.id)}
+      />
+    </PostHogMaskView>
   );
 
   const isAdmin = group.data.thisGroupMember.role === "admin";

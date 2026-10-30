@@ -40,6 +40,7 @@ export const userSchema = z.object({
   privacyVersion: z.string().optional().nullable(),
   aiConsentAcceptedAt: z.date().optional().nullable(),
   aiConsentVersion: z.string().optional().nullable(),
+  analyticsOptOut: z.boolean().optional(),
 });
 export type User = z.infer<typeof userSchema>;
 
@@ -71,6 +72,22 @@ export const updateAIConsentInputSchema = z.object({
 });
 export type UpdateAIConsentInput = z.infer<typeof updateAIConsentInputSchema>;
 
+/** Bump when the consent sheet's wording changes, so the log shows which text a choice was made on */
+export const ANALYTICS_CONSENT_VERSION = "1";
+
+export const analyticsConsentSchema = z.object({
+  screens: z.boolean(),
+  recordings: z.boolean(),
+});
+export type AnalyticsConsent = z.infer<typeof analyticsConsentSchema>;
+
+export const logAnalyticsConsentInputSchema = analyticsConsentSchema.extend({
+  version: z.string().max(MAX_CONSENT_VERSION_LENGTH),
+  platform: z.enum(["ios", "android"]),
+});
+
+export const setAnalyticsOptOutInputSchema = z.object({ optOut: z.boolean() });
+
 /**
  * Schema for GDPR user data export response
  */
@@ -88,11 +105,19 @@ export const userDataExportSchema = z.object({
     privacyVersion: z.string().nullable(),
     aiConsentAcceptedAt: z.date().nullable(),
     aiConsentVersion: z.string().nullable(),
+    analyticsOptOut: z.boolean(),
   }),
   signInMethods: z.array(
     z.object({
       providerId: z.string(),
       accountId: z.string(),
+      createdAt: z.date(),
+    }),
+  ),
+  analyticsConsents: z.array(
+    analyticsConsentSchema.extend({
+      version: z.string(),
+      platform: z.string(),
       createdAt: z.date(),
     }),
   ),

@@ -41,7 +41,7 @@ import {
 import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
 import { Errors, fail, getApiResultZod } from "../errors";
-import { captureError, captureEvent } from "../lib/posthog";
+import { captureError, captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { fetchGroupDebtSummary, GroupUtils } from "../utils";
 import { classify } from "../utils/classify";
@@ -193,8 +193,8 @@ export const expenseRouter = createTRPCRouter({
             input.convertedCurrency !== undefined &&
             !isSettlement
           ) {
-            captureEvent({
-              distinctId: ctx.session.user.id,
+            captureUserEvent({
+              user: ctx.session.user,
               event: "foreign_expense_created",
               headers: ctx.headers,
               additionalProperties: {

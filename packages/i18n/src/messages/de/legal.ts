@@ -136,17 +136,18 @@ export const legal = {
       mobile: "App:",
       mobileIp: "IP-Adresse und ungefährer Standort (Land, Stadt)",
       mobileDevice:
-        "Gerätetyp, Betriebssystem, App-Version und eine zufällige Geräte-ID",
-      mobileViews: "Aufgerufene Bildschirme und Ihre Aktionen",
+        "Gerätetyp, Betriebssystem und App-Version; mit Ihrer Einwilligung eine zufällige Geräte-ID",
+      mobileViews:
+        "Ihre Aktionen; mit Ihrer Einwilligung aufgerufene Bildschirme und Bildschirmaufnahmen",
       errors: "Fehlerberichte, vereinzelt mit von Ihnen eingegebenen Inhalten",
     },
     basis: {
       contract:
         "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich Käufen und der automatischen KI-Kategorisierung",
       consent:
-        "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO):</strong> der KI-Assistent",
+        "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG):</strong> der KI-Assistent; Bildschirmanalyse und Bildschirmaufnahmen in der App, einschließlich der dafür genutzten Geräte-ID",
       interests:
-        "<strong>Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO):</strong> sicherer Betrieb der Website; Analyse auf der Website und in der App, um zu verstehen, wie Menschen Flatsby finden und nutzen; Fehlerberichte, um Fehler zu beheben; KI-Nutzungsdaten, um die Kosten zu kontrollieren; Anmeldesitzungen, um Ihr Konto zu schützen",
+        "<strong>Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO):</strong> sicherer Betrieb der Website; Nutzungsanalyse Ihrer Aktionen auf der Website und in der App, um zu verstehen, wie Menschen Flatsby finden und nutzen; Fehlerberichte, um Fehler zu beheben (in der App, ohne etwas auf Ihrem Gerät zu speichern, § 25 Abs. 2 Nr. 2 TDDDG); KI-Nutzungsdaten, um die Kosten zu kontrollieren; Anmeldesitzungen, um Ihr Konto zu schützen",
       obligations:
         "<strong>Rechtliche Verpflichtung (Art. 6 Abs. 1 lit. c DSGVO):</strong> Aufbewahrung von Rechnungen und Zahlungsbelegen nach Steuer- und Handelsrecht",
       required:
@@ -173,9 +174,9 @@ export const legal = {
       posthogWebsite:
         "<strong>Website, nicht angemeldet:</strong> Wir zählen Besuche ohne Cookies und ohne etwas auf Ihrem Gerät zu speichern. PostHog bildet aus Ihrer IP-Adresse und Ihren Browserangaben eine täglich wechselnde Besucher-ID und verwirft dann die IP-Adresse. Gespeichert werden diese ID, die aufgerufenen Seiten, die verweisende Website, Kampagnenangaben (utm-Parameter), ob Sie einen App-Store-Link anklicken oder sich registrieren, sowie Browser, Betriebssystem, Gerätetyp und Sprache. An einem anderen Tag können wir Sie nicht wiedererkennen, und wir verknüpfen Besuche nicht mit Ihrem Konto.",
       posthogServer:
-        "<strong>Angemeldet (Web und App):</strong> Unser Server sendet jede Aktion mit Ihrer Konto-ID und Gruppe, aber ohne Ihre Eingaben. Im Web sendet er außerdem die aufgerufenen Seiten, Ihre Browserangaben und die verweisende Seite.",
+        "<strong>Angemeldet (Web und App):</strong> Unser Server sendet jede Aktion mit Ihrer Konto-ID, Gruppe, Browser- oder Gerätetyp und der verweisenden Seite, aber ohne Ihre Eingaben. Sie können das unter Einstellungen > Analyse ausschalten, in der App oder im Web.",
       posthogMobile:
-        "<strong>App:</strong> Standardmäßig sendet die App zusätzlich die aufgerufenen Bildschirme, Geräteangaben, App-Version und Fehlerberichte an PostHog, nach der Anmeldung auch Ihre Konto-ID, Ihren Namen und Ihre E-Mail-Adresse. Sie speichert eine zufällige ID auf Ihrem Gerät. PostHog ermittelt aus Ihrer IP-Adresse Ihren ungefähren Standort und verwirft die IP-Adresse dann. Unter Android liest die App die Installationsquelle von Google Play aus (Kampagnenangaben, Einladungslink). Der Schalter in den App-Einstellungen beendet das, nicht aber die Aktionen, die unser Server sendet.",
+        "<strong>App:</strong> Die App sendet immer Fehlerberichte mit Gerätetyp, Betriebssystem und App-Version, ohne eine ID auf Ihrem Gerät zu speichern. Nur mit Ihrer Einwilligung (Einstellungen > Analyse) speichert sie eine zufällige ID auf Ihrem Gerät und sendet die aufgerufenen Bildschirme, wann Sie die App öffnen, und Bildschirmaufnahmen mit abgedeckten Texten und Bildern, jeweils verknüpft mit Ihrer Konto-ID. PostHog ermittelt aus Ihrer IP-Adresse Ihren ungefähren Standort und verwirft die IP-Adresse dann. Unter Android liest die App die Installationsquelle von Google Play nur aus, um einen Einladungslink zu öffnen; sie geht nicht an PostHog.",
       posthogAi:
         "Außerdem senden wir KI-Nutzungsdaten (Modell, Tokens, Antwortzeit, Kosten), nie Prompts oder Antworten. Siehe die <link>Datenschutzerklärung von PostHog</link>.",
     },
@@ -187,7 +188,7 @@ export const legal = {
       content:
         "können Artikel und Ausgaben, die Sie angelegt haben, anonymisiert für die anderen Gruppenmitglieder erhalten bleiben",
       outro:
-        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
+        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. PostHog löscht Analyseereignisse nach 12 Monaten und Bildschirmaufnahmen nach 30 Tagen. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
     },
     rights: {
       access: "<strong>Auskunft:</strong> eine Kopie Ihrer Daten erhalten",
@@ -200,7 +201,7 @@ export const legal = {
         "<strong>Datenübertragbarkeit:</strong> Ihre Daten in einem maschinenlesbaren Format erhalten",
       object: "<strong>Widerspruch:</strong> siehe Ihr Widerspruchsrecht",
       withdraw:
-        "<strong>Widerruf:</strong> eine Einwilligung jederzeit per E-Mail widerrufen; die Verarbeitung bis dahin bleibt rechtmäßig",
+        "<strong>Widerruf:</strong> eine Einwilligung jederzeit widerrufen, für die App-Analyse unter Einstellungen > Analyse, sonst per E-Mail; die Verarbeitung bis dahin bleibt rechtmäßig. Schreiben Sie uns, wenn wir die mit Ihrer Einwilligung erhobenen Daten löschen sollen",
       exercise:
         "Nutzen Sie „Meine Daten exportieren“ oder die Kontolöschung in den Einstellungen, oder schreiben Sie an support@flatsby.com. Sie können sich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren, insbesondere an Ihrem Wohn- oder Arbeitsort. Für uns zuständig ist der Hessische Beauftragte für Datenschutz und Informationsfreiheit (HBDI), <link>datenschutz.hessen.de</link>.",
     },
@@ -208,7 +209,7 @@ export const legal = {
       intro:
         "Soweit wir uns auf berechtigte Interessen stützen, können Sie aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit widersprechen (Art. 21 DSGVO). Bei der Analyse brauchen Sie keinen Grund anzugeben.",
       signedIn:
-        "<strong>Angemeldet:</strong> Schreiben Sie an support@flatsby.com, möglichst von der E-Mail-Adresse Ihres Kontos. Wir beenden dann die Analyse für Ihr Konto, im Web und in der App.",
+        "<strong>Angemeldet:</strong> Schalten Sie die Nutzungsanalyse unter Einstellungen > Analyse aus, in der App oder im Web, oder schreiben Sie an support@flatsby.com. Wir beenden dann die Analyse für Ihr Konto. Fehlerberichte senden wir weiter, um Fehler zu beheben; dem können Sie per E-Mail widersprechen.",
       visitor:
         "<strong>Nicht angemeldet:</strong> Wir können Sie nicht wiedererkennen. Aktivieren Sie daher Global Privacy Control oder Do Not Track in Ihrem Browser. Dann zählen wir Ihre Besuche nicht.",
     },

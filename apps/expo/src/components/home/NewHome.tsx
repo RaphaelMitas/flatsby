@@ -26,6 +26,7 @@ import {
 
 import type { Nudge } from "./ForYouCard";
 import type { HomeRowProps } from "./HomeRows";
+import { AnalyticsPrompt } from "~/components/analytics/AnalyticsPrompt";
 import { fromPickerTime } from "~/components/calendar/calendarDates";
 import { calendarRangeOptions } from "~/components/calendar/calendarRangeOptions";
 import { useCalendarMutations } from "~/components/calendar/useCalendarMutations";
@@ -304,6 +305,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
         />
 
         <InviteFlatmatesCard groupId={group.id} className="mt-6" />
+        <AnalyticsPrompt className="mt-6" />
 
         {rows.length > 0 && (
           <HomeRows title={t("home.new.household")}>

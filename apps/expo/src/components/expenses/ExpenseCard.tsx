@@ -6,6 +6,7 @@ import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { PostHogMaskView } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
@@ -129,45 +130,47 @@ export function ExpenseCard({
 
   return (
     <>
-      <ReanimatedSwipeable
-        ref={swipeableRef}
-        enabled={!isOptimistic}
-        friction={2}
-        leftThreshold={40}
-        rightThreshold={40}
-        {...swipeableProps}
-        onSwipeableOpen={(direction) => {
-          if (direction === SwipeDirection.RIGHT) {
-            swipeableRef.current?.close();
-            onEdit();
-          } else {
-            swipeableRef.current?.close();
-            setShowDeleteModal(true);
-          }
-        }}
-      >
-        <Pressable
-          testID={`expense-card-${expense.description}`}
-          accessible={e2eAccessibilityOverride()}
-          onPress={guardPress(onSelect)}
-          disabled={isOptimistic}
+      <PostHogMaskView>
+        <ReanimatedSwipeable
+          ref={swipeableRef}
+          enabled={!isOptimistic}
+          friction={2}
+          leftThreshold={40}
+          rightThreshold={40}
+          {...swipeableProps}
+          onSwipeableOpen={(direction) => {
+            if (direction === SwipeDirection.RIGHT) {
+              swipeableRef.current?.close();
+              onEdit();
+            } else {
+              swipeableRef.current?.close();
+              setShowDeleteModal(true);
+            }
+          }}
         >
-          <ExpenseDisplay
-            amounts={amounts}
-            isNotConverted={isNotConverted}
-            description={expense.description}
-            paidByName={paidByName}
-            paidByImage={expense.paidByGroupMember.user.image}
-            expenseDate={expenseDate}
-            splitMethod={expense.splitMethod}
-            splitCount={splitCount}
-            subcategory={expense.subcategory}
-            fromName={fromMember?.user.name}
-            fromImage={fromMember?.user.image}
-            isSelected={isSelected}
-          />
-        </Pressable>
-      </ReanimatedSwipeable>
+          <Pressable
+            testID={`expense-card-${expense.description}`}
+            accessible={e2eAccessibilityOverride()}
+            onPress={guardPress(onSelect)}
+            disabled={isOptimistic}
+          >
+            <ExpenseDisplay
+              amounts={amounts}
+              isNotConverted={isNotConverted}
+              description={expense.description}
+              paidByName={paidByName}
+              paidByImage={expense.paidByGroupMember.user.image}
+              expenseDate={expenseDate}
+              splitMethod={expense.splitMethod}
+              splitCount={splitCount}
+              subcategory={expense.subcategory}
+              fromName={fromMember?.user.name}
+              fromImage={fromMember?.user.image}
+              isSelected={isSelected}
+            />
+          </Pressable>
+        </ReanimatedSwipeable>
+      </PostHogMaskView>
 
       <DeleteConfirmationModal
         visible={showDeleteModal}

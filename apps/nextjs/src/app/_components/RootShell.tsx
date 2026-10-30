@@ -8,7 +8,6 @@ import { cn } from "@flatsby/ui";
 import { Toaster } from "@flatsby/ui/toast";
 import { APP_STORE_ID } from "@flatsby/validators/store";
 
-import { AnalyticsProvider } from "~/app/_components/analytics/AnalyticsProvider";
 import { SITE_URL } from "~/app/_components/landing/content";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -69,7 +68,7 @@ export function RootShell(props: { lang: string; children: React.ReactNode }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TRPCReactProvider>
             <AutumnProvider pathPrefix="/api/autumn" includeCredentials>
-              <AnalyticsProvider>{props.children}</AnalyticsProvider>
+              {props.children}
             </AutumnProvider>
           </TRPCReactProvider>
           <Toaster />

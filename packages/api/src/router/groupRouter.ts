@@ -33,6 +33,7 @@ import { runResult } from "../effect/runtime";
 import { CurrentRequest } from "../effect/services/CurrentRequest";
 import { Database } from "../effect/services/Database";
 import { Errors, getApiResultZod } from "../errors";
+import { captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { DbUtils, GroupUtils, ValidationUtils } from "../utils";
 
@@ -57,6 +58,18 @@ const updateGroup = protectedProcedure
         // A concurrent delete can win between the admin check and the update
         if (!updated) {
           return yield* Errors.notFound("group", id);
+        }
+        // The currency banner's answer, measured where it lands instead of on the tap
+        if (settings.convertAutomatically !== undefined) {
+          captureUserEvent({
+            user: ctx.session.user,
+            event: "currency_conversion_set",
+            headers: ctx.headers,
+            additionalProperties: {
+              groupId: id,
+              convertAutomatically: settings.convertAutomatically,
+            },
+          });
         }
         return { groupId: updated.id };
       }),

@@ -19,6 +19,26 @@ test.describe("Account Management", () => {
     ).toBeVisible();
   });
 
+  test("usage analytics switch persists", async ({ authPage }) => {
+    await authPage.goto("/user-settings");
+
+    const usage = authPage.getByTestId("usage-analytics-switch");
+    await expect(usage).toBeChecked();
+
+    const saved = authPage.waitForResponse((response) =>
+      response.url().includes("user.setAnalyticsOptOut"),
+    );
+    await usage.click();
+    await expect(usage).not.toBeChecked();
+    // A streamed tRPC response sends its headers before the write lands
+    await (await saved).finished();
+
+    await authPage.reload();
+    await expect(
+      authPage.getByTestId("usage-analytics-switch"),
+    ).not.toBeChecked();
+  });
+
   test("two-step email confirmation", async ({ authPage, testUser }) => {
     await authPage.goto("/user-settings");
 

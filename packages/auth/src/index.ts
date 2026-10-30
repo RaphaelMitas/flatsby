@@ -94,7 +94,13 @@ export function initAuth(options: {
         },
       },
     },
-    user: { modelName: "users" },
+    user: {
+      modelName: "users",
+      // On the session the tRPC context already loads, so the analytics gate costs no query
+      additionalFields: {
+        analyticsOptOut: { type: "boolean", defaultValue: false, input: false },
+      },
+    },
     session: {
       modelName: "sessions",
     },

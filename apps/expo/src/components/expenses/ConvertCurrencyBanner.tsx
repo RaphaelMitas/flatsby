@@ -34,7 +34,6 @@ export function ConvertCurrencyBanner({
   }, [posthog, groupId, currencies]);
 
   const keepSeparate = () => {
-    posthog.capture("currency_banner_keep_separate", { groupId });
     updateGroup.mutate({
       id: groupId,
       convertAutomatically: false,
@@ -42,7 +41,6 @@ export function ConvertCurrencyBanner({
   };
 
   const turnOn = () => {
-    posthog.capture("currency_banner_turn_on", { groupId });
     router.push({
       pathname: "/(tabs)/settings/group-settings/expenses",
       params: { highlight: "convert" },

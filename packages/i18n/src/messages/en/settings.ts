@@ -27,7 +27,7 @@ export const settings = {
     profileSubtitle: "Edit your name and profile picture",
     manageAccount: "Manage Account",
     manageAccountSubtitle: "Manage your account settings on the web",
-    shareAnalytics: "Share Analytics",
+    analytics: "Analytics",
     enabled: "Enabled",
     disabled: "Disabled",
     logout: "Logout",
@@ -44,6 +44,33 @@ export const settings = {
     eveningReminder: "The evening before",
     eveningReminderSubtitle: "7 pm, when tomorrow holds something for you",
     eveningReminderBlocked: "Turned off in your phone's settings",
+  },
+  analytics: {
+    title: "Analytics",
+    usage: "Usage analytics",
+    usageBody:
+      "Which features you use, never what you enter. Turn off to object.",
+    usageWebBody:
+      "Which features you use, never what you enter, on the web and in the app. Turn off to object.",
+    appOnly: "Screens and screen recordings are only available in the app.",
+    consentSection: "Optional, with your consent",
+    screens: "Screens and app opens",
+    screensBody: "Uses an ID on this device",
+    recordings: "Screen recordings",
+    recordingsBody: "Text and images masked",
+    footer:
+      "Linked to your account. Crash reports are always sent. <link>Details</link>",
+    sheetTitle: "Share usage with Flatsby",
+    sheetBody:
+      "Optional, with your consent, to find and fix problems. Linked to your account via an ID on this device. Shared only with PostHog (EU servers, US access possible under EU safeguards). Withdraw anytime in Settings. <link>Details</link>",
+    screensKept: "Kept 12 months",
+    recordingsKept: "Text and images masked. Kept 30 days",
+    done: "Done",
+    invite: "Help us fix what bugs you",
+    inviteAction: "Share usage",
+    dismiss: "Dismiss",
+    rightToObject:
+      "<strong>Right to object:</strong> we record which features you use. You can turn this off in Settings.",
   },
   theme: {
     light: "Light",

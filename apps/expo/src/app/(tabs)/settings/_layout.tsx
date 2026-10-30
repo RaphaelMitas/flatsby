@@ -35,6 +35,13 @@ export default function SettingsLayout() {
           }}
         />
         <Stack.Screen
+          name="analytics"
+          options={{
+            title: t("settings.analytics.title"),
+            headerBackTitle: "",
+          }}
+        />
+        <Stack.Screen
           name="danger"
           options={{
             title: t("navigation.dangerZone"),
