@@ -8,6 +8,7 @@ import {
 } from "@flatsby/validators/invite";
 
 import { storeRedirect } from "~/app/_components/landing/content";
+import { platformFor } from "~/app/_components/landing/platform";
 import { isEntryPage } from "~/utils/entry-pages";
 import { captureVisit } from "~/utils/page-views";
 
@@ -61,12 +62,23 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
 
   countVisit("$pageview");
 
+  const homeLocale =
+    pathname === "/"
+      ? defaultLocale
+      : locales.find((locale) => pathname === `/${locale}`);
+  // One prerendered variant per platform keeps the hero's store order without a server render
+  if (homeLocale) {
+    const platform = platformFor(request.headers.get("user-agent"));
+    url.pathname = `/${homeLocale}/landing/${platform}`;
+    return NextResponse.rewrite(url);
+  }
+
   const rendersInPlace =
     isEntryPage(pathname) ||
     locales.some((locale) => startsWithSegment(pathname, `/${locale}`));
   if (rendersInPlace) return;
 
-  url.pathname = pathname === "/" ? prefix : `${prefix}${pathname}`;
+  url.pathname = `${prefix}${pathname}`;
   return NextResponse.rewrite(url);
 }
 

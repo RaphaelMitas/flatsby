@@ -382,7 +382,7 @@ test.describe("Group Management", () => {
 
     await deleteCurrentGroup(authPage);
 
-    await authPage.goto("/", { timeout: 30000 });
+    await authPage.goto("/home", { timeout: 30000 });
     await authPage.waitForURL(/\/(home|group|auth)/, { timeout: 15000 });
   });
 });
