@@ -114,8 +114,8 @@
       "matchPackageNames": ["/^@types//"]
     },
     {
-      "description": "@types/node tracks the runtime major in .nvmrc (CI and Vercel run Node 24). Raise together with .nvmrc and engines",
-      "matchPackageNames": ["@types/node"],
+      "description": "Node stays on 24 until Vercel supports 26; .nvmrc, engines and @types/node move together. Raise this when Vercel ships Node 26",
+      "matchPackageNames": ["node", "@types/node"],
       "allowedVersions": "<25"
     },
     {
