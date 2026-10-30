@@ -71,15 +71,24 @@ function classify(error: Error) {
   }
   const trpcError: TRPCClientError<AppRouter> = error;
   const data = trpcError.data;
-  // A body without tRPC error data (a proxy's error page, a superjson mismatch) still means the server answered.
-  // The web's stream link drops the response, so there only the parse error tells.
-  const answered =
-    trpcError.meta?.response !== undefined ||
-    trpcError.cause instanceof SyntaxError;
   return {
-    code: data?.code ?? (answered ? "UNREADABLE_RESPONSE" : undefined),
+    code:
+      data?.code ??
+      (wasAnswered(trpcError) ? "UNREADABLE_RESPONSE" : undefined),
     httpStatus: data?.httpStatus,
   };
+}
+
+// A body without tRPC error data (a proxy's error page, a superjson mismatch) still means the server answered.
+// The web's stream link drops the response, so there only the parse error tells.
+function wasAnswered(error: TRPCClientError<AppRouter>) {
+  return (
+    error.meta?.response !== undefined || error.cause instanceof SyntaxError
+  );
+}
+
+export function neverAnswered(error: unknown): boolean {
+  return error instanceof TRPCClientError && !wasAnswered(error);
 }
 
 export function trpcFailureProperties(failure: TRPCFailure) {

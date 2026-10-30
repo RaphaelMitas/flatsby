@@ -1,0 +1,25 @@
+appId: ${APP_ID}
+---
+# Adds ${ITEM_NAME} under the picker's ${CATEGORY} to the open list. A manual
+# category keeps the add off AI auto-select, which has no credits in e2e.
+- tapOn:
+    id: "shopping-list-item-input"
+- inputText: ${ITEM_NAME}
+# Android reports the add form's untranslated bounds while the keyboard is up,
+# so a tap by id lands where the control used to be.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- tapOn:
+    id: "shopping-list-category-picker"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "picker-item-${CATEGORY}"
+    timeout: 20000
+- tapOn:
+    id: "picker-item-${CATEGORY}"
+- tapOn:
+    id: "shopping-list-add-item-button"

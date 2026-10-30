@@ -11,7 +11,7 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
   slug: "flatsby",
   scheme: "flatsby",
   owner: "flatsby",
-  version: "0.15.0",
+  version: "0.16.0",
   orientation: "portrait",
   icon: "./assets/ios-light.png",
   userInterfaceStyle: "automatic",
@@ -154,6 +154,14 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ["expo-font", { fonts: ["./assets/fonts/lucide.ttf"] }],
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/adaptive-icon.png",
+        // Reminders are scheduled on the device, so no APNs entitlement
+        enableRemoteNotifications: false,
+      },
+    ],
   ],
 });
 

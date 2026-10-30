@@ -1,0 +1,104 @@
+appId: ${APP_ID}
+tags:
+  - shopping-list
+# A failed run would otherwise leave the emulator offline for the rerun
+onFlowComplete:
+  - runFlow:
+      when:
+        platform: Android
+      commands:
+        - setAirplaneMode: disabled
+---
+# Android only: the iOS simulator has no airplane mode.
+# adb reverse survives airplane mode, so this tests the offline signal, not a
+# dropped connection.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - runFlow: ../../subflows/e2e-login.yaml
+      - runFlow:
+          file: ../../subflows/create-shopping-list.yaml
+          env:
+            LIST_NAME: "Offline List"
+      - runFlow:
+          file: ../../subflows/add-shopping-list-item.yaml
+          env:
+            ITEM_NAME: "Apples"
+            CATEGORY: "produce"
+      - extendedWaitUntil:
+          visible:
+            id: "shopping-list-item-checkbox-Apples"
+          timeout: 15000
+      - waitForAnimationToEnd
+
+      - setAirplaneMode: enabled
+      - extendedWaitUntil:
+          visible: "Offline"
+          timeout: 20000
+
+      - tapOn:
+          id: "shopping-list-item-checkbox-Apples"
+      - extendedWaitUntil:
+          visible:
+            id: "shopping-list-item-Apples-unsynced"
+          timeout: 10000
+
+      # Added offline, so it only has a temporary id until the queue replays
+      - runFlow:
+          file: ../../subflows/add-shopping-list-item.yaml
+          env:
+            ITEM_NAME: "Bread"
+            CATEGORY: "bakery"
+      - tapOn:
+          id: "shopping-list-item-checkbox-Bread"
+      - extendedWaitUntil:
+          visible:
+            id: "shopping-list-item-Bread-unsynced"
+          timeout: 10000
+      - extendedWaitUntil:
+          visible: "Offline · 3 changes sync later"
+          timeout: 10000
+
+      # A swipe UP from the pill's id never dismissed it on CI; these points start inside the pill
+      - swipe:
+          start: "50%, 8%"
+          end: "50%, 2%"
+      - extendedWaitUntil:
+          notVisible:
+            id: "sync-pill"
+          timeout: 10000
+
+      - runFlow:
+          file: ../../subflows/relaunch.yaml
+          env:
+            MARKER_ID: "dashboard-group-picker"
+      - runFlow:
+          file: ../../subflows/tap-tab.yaml
+          env:
+            TAB_ID: "tab-shopping-list"
+            TAB_LABEL: "Shopping"
+            TAB_X: "30%"
+            MARKER_ID: "shopping-list-item-input"
+      - extendedWaitUntil:
+          visible:
+            id: "shopping-list-item-Bread-unsynced"
+          timeout: 15000
+      - assertVisible:
+          id: "shopping-list-item-Apples-unsynced"
+
+      - setAirplaneMode: disabled
+      - extendedWaitUntil:
+          notVisible:
+            id: "shopping-list-item-Bread-unsynced"
+          timeout: 60000
+      # Only rows the server returned as done sit under Purchased Items
+      - extendedWaitUntil:
+          visible: "Purchased Items"
+          timeout: 30000
+      - assertVisible:
+          id: "shopping-list-item-checkbox-Bread"
+          checked: true
+      - assertVisible:
+          id: "shopping-list-item-checkbox-Apples"
+          checked: true

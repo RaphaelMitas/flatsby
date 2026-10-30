@@ -25,7 +25,6 @@ export function SidebarShoppingListSwitcher() {
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
 
-  // Get shopping lists for current group
   const { data: shoppingListsData, isLoading } = useQuery({
     ...trpc.shoppingList.getShoppingLists.queryOptions({
       groupId: currentGroup?.id ?? 0,
@@ -36,8 +35,6 @@ export function SidebarShoppingListSwitcher() {
   const shoppingLists =
     shoppingListsData?.success === true ? shoppingListsData.data : [];
 
-  // Check if on shopping list dashboard or detail page
-  const isShoppingListDashboard = pathname === "/shopping-list";
   const shoppingListMatch = /\/shopping-list\/(\d+)/.exec(pathname);
   const currentShoppingListId = shoppingListMatch?.[1]
     ? parseInt(shoppingListMatch[1], 10)
@@ -55,12 +52,12 @@ export function SidebarShoppingListSwitcher() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isShoppingListDashboard}
-              tooltip={t("allLists")}
+              isActive={pathname === "/shopping-list/new"}
+              tooltip={t("switcher.newList")}
             >
-              <Link href="/shopping-list">
+              <Link href="/shopping-list/new">
                 <Plus />
-                <span>{t("allLists")}</span>
+                <span>{t("switcher.newList")}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

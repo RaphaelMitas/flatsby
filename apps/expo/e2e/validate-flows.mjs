@@ -52,6 +52,12 @@ function collectTestIDs() {
     for (const m of src.matchAll(/testID=\{?["'`]([^"'`}]+)["'`]\}?/g)) {
       ids.add(m[1]);
     }
+    // testIDs passed via props (e.g. sheetTestID="list-switcher"), which the
+    // component may extend into children like list-switcher-item-1
+    for (const m of src.matchAll(/\wTestID=\{?["'`]([^"'`}]+)["'`]\}?/g)) {
+      ids.add(m[1]);
+      dynamicPrefixes.add(`${m[1]}-`);
+    }
     // object-key testIDs, e.g. tabBarButtonTestID: "tab-home" or Segmented options
     for (const m of src.matchAll(/[tT]estID:\s*["'`]([^"'`]+)["'`]/g)) {
       ids.add(m[1]);
@@ -110,6 +116,7 @@ const KNOWN_COMMANDS = new Set([
   "pressKey",
   "travel",
   "setLocation",
+  "setAirplaneMode",
 ]);
 
 function* iterateSelectors(value) {

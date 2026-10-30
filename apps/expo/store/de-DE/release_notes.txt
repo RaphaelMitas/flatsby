@@ -1,5 +1,6 @@
-• Termine können mehrere Tage dauern, etwa eine Reise oder ein Wochenende weg. Wiederholte Termine behalten ihre Länge.
-• Die Uhrzeit steht neben dem Datum, und neue Termine beginnen um 19:00 statt ganztägig.
-• Auf Android scrollen Listen weiter, auch wenn der Finger seitlich abrutscht.
-• Automatische Kategorien und der KI-Assistent laufen auch, wenn du die Credits-Seite nie geöffnet hast.
+• Lass dich am Abend vorher um 19:00 erinnern, wenn du dran bist, samt Terminen und offenen Aufgaben. Einschalten im Kalender.
+• Wechsle Gruppen und Listen über die Leiste oben auf Start und Einkaufen.
+• Neu hier? Gruppe gründen oder beitreten in zwei Tipps. Danach lädst du direkt deine Mitbewohner ein.
+• Sieh live, was Mitbewohner abhaken, während die Liste offen ist.
+• Flatsby öffnet mit deinen letzten Daten statt mit einem Ladebildschirm.
 • Kleine Fehlerbehebungen und Verbesserungen.

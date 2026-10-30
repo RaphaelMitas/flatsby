@@ -181,8 +181,8 @@ catalogs:
       specifier: 2.5.15
       version: 2.5.15
     '@effect/tsgo':
-      specifier: 0.57.0
-      version: 0.57.0
+      specifier: 0.62.0
+      version: 0.62.0
     '@effect/vitest':
       specifier: 4.0.5
       version: 4.0.5
@@ -290,7 +290,7 @@ importers:
     devDependencies:
       '@effect/tsgo':
         specifier: 'catalog:'
-        version: 0.57.0
+        version: 0.62.0
       '@flatsby/prettier-config':
         specifier: workspace:*
         version: link:tooling/prettier
@@ -417,6 +417,9 @@ importers:
       expo-network:
         specifier: ~58.0.3
         version: 58.0.3(expo@58.0.16)(react@19.3.0)
+      expo-notifications:
+        specifier: ~58.1.6
+        version: 58.1.6(expo@58.0.16)(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)
       expo-router:
         specifier: ~58.0.24
         version: 58.0.24(4c369042c333357dfdffc7b0d67bbaf3)
@@ -1837,43 +1840,43 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@effect/tsgo-darwin-arm64@0.57.0':
-    resolution: {integrity: sha512-SazXZovd34gNVUQcHJdE7vUl5NZjTx0l4s9LEwsDXdD9Yq40q94AHpair5cNTz0XuN6aSPB+Pz06RVlJ4NUykw==}
+  '@effect/tsgo-darwin-arm64@0.62.0':
+    resolution: {integrity: sha512-ca9sMLMWzKxTU2j1ckhWoJVP3rg4NfEw1juUeQ7kOf6ahOOatZWRv2NcPzAbkMb01OMTwY8BwJY1+dc60Mp00w==}
     cpu: [arm64]
     os: [darwin]
 
-  '@effect/tsgo-darwin-x64@0.57.0':
-    resolution: {integrity: sha512-/rw1xowT6UtfUsfz58Uz3zK5Z6W3gmM6lc+wc5t08Q6zbwzDWKbiwucL3bYKigv9pyPqXqEmkHCuZI5fE3+o7w==}
+  '@effect/tsgo-darwin-x64@0.62.0':
+    resolution: {integrity: sha512-vOJOBA4qkPKU/8uKEAVVRwDSgQ+LMpa02qdZPDkXgodL8DhSYAdnmji2PSRfwsHLApvvEXWXslPJK8pWgg2opg==}
     cpu: [x64]
     os: [darwin]
 
-  '@effect/tsgo-linux-arm64@0.57.0':
-    resolution: {integrity: sha512-eEw73C7Z5Xo5G8sr9L1r9U0Plyhmi1JOodwUCj+ciZEZN7RxhwHm9lCf40SAipMwQkVeKkdS8eo4z42z9oQfIg==}
+  '@effect/tsgo-linux-arm64@0.62.0':
+    resolution: {integrity: sha512-NSqUrVn7s0REZQIDvqme9RFVF9A9xhk2uQkjnz8mne8VmfQ9UKB4mWtsDYoNrv2QPMFOUKOzXVFWrpQmE7QGTw==}
     cpu: [arm64]
     os: [linux]
 
-  '@effect/tsgo-linux-arm@0.57.0':
-    resolution: {integrity: sha512-3R1CFCUlikUoeJ4Ws6O1CtyTby1M4jWAffPUJEte+2CBGe0oRYWm/8TsV2y6MOfS5L6epuJCmR98X7MO/5t6+A==}
+  '@effect/tsgo-linux-arm@0.62.0':
+    resolution: {integrity: sha512-6aHxlsBPejS0hq/4dKj02s82ZS/ytqYzEyQ6/yQzWn8WzJMSlTT0bPgvq3B97gQYlo7iua9WEagIpAPm1PVrBA==}
     cpu: [arm]
     os: [linux]
 
-  '@effect/tsgo-linux-x64@0.57.0':
-    resolution: {integrity: sha512-KQMa66r5QxVGhE77EOGoutv1oJHl4LFxRcJtk3EkAzx6/xc0nSFVRsQHhkT5loQgoSl4m+jNDzebGDkCmCMP/Q==}
+  '@effect/tsgo-linux-x64@0.62.0':
+    resolution: {integrity: sha512-vy/zVLetZvtxcL06ulUMt19YbMnfj71IUNC8aJoYgtnp8JUZCqdSHmeXq5qITTETq9eZc4gqw3Iy24PnUyJLWA==}
     cpu: [x64]
     os: [linux]
 
-  '@effect/tsgo-win32-arm64@0.57.0':
-    resolution: {integrity: sha512-EtPRWiAg+w2iu+n8rlOwayp0yGoMiLfMYbKbT/WLltupRwCGam0t9CgfehIFHzK5BsNrnn4Oos4jjJka667rUA==}
+  '@effect/tsgo-win32-arm64@0.62.0':
+    resolution: {integrity: sha512-OJmsJQx2cmsTcZJNHHdELMG454vvOIrQpEKiHXdppjZ7/AZGbTPKboNnbggb1ZukRrooRpn3Jz3yTkMkNnEKVg==}
     cpu: [arm64]
     os: [win32]
 
-  '@effect/tsgo-win32-x64@0.57.0':
-    resolution: {integrity: sha512-oWU4sdD4XhGTPKm8+Ri34nuS3++snrzsWa3EfJ43K9VZlbWVhTRy+3qR6d/n75cSP9KzAYstmTdGK1wYgvtafQ==}
+  '@effect/tsgo-win32-x64@0.62.0':
+    resolution: {integrity: sha512-oGXuTBpMv/ZuN6BvbN87VsG2+kZnY/EEvYa45J+2iQJ3wK6h0+p6c8EpcfwrcCMRkLA/2luwMa/YJSKa+Vpygw==}
     cpu: [x64]
     os: [win32]
 
-  '@effect/tsgo@0.57.0':
-    resolution: {integrity: sha512-L6ld3X5urPKLozMngSJK6XflqZhrA+o34Rd0X3qVu3vAK/girV+mt4RE3TxWZqOusfthPnOVIhLsC8Lke+pkMA==}
+  '@effect/tsgo@0.62.0':
+    resolution: {integrity: sha512-9RU41yXVSoq+HKD1MsmfYH+iQ5wYjqD6rTMLPXqweHGl37wzXRUoGL7ri0DuO1sSAVd/XofDY5VTMhTMv296Xg==}
     hasBin: true
 
   '@effect/vitest@4.0.5':
@@ -2401,6 +2404,10 @@ packages:
 
   '@expo/env@2.5.2':
     resolution: {integrity: sha512-z8kCvBVJpd2S20a+Ab1otQgz8sJLeR7CXDTsuAMcNbYFsK10Fdhfb7rx9Ys1vvlbijnY55eZhQvJACajc1IjBQ==}
+    engines: {node: '>=20.12.0'}
+
+  '@expo/env@2.5.3':
+    resolution: {integrity: sha512-dBGu8BAfvUcXvG4HvYth+EhcHEsdC+/fT6HTH/zFvvwfp50LG6uzpzT8TXObwEq/t2B/rvAMV5OolxQ46LWXHg==}
     engines: {node: '>=20.12.0'}
 
   '@expo/fingerprint@0.21.5':
@@ -4839,6 +4846,10 @@ packages:
   '@xyflow/system@0.0.83':
     resolution: {integrity: sha512-a//eDjez3WZF47aaPTfVUDD0OINOq+WVwBZCRTqG+m0a5euX8EwlJ4jMY1Wxz0Ocj4xOeekJ70V22Pq0ll8RJw==}
 
+  abort-controller@3.0.0:
+    resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
+    engines: {node: '>=6.5'}
+
   accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
     engines: {node: '>= 0.6'}
@@ -4984,6 +4995,9 @@ packages:
         optional: true
       expo-widgets:
         optional: true
+
+  badgin@1.2.3:
+    resolution: {integrity: sha512-NQGA7LcfCpSzIbGRbkgjgdWkjy7HI+Th5VLxTJfW5EeaAf3fnS+xWQaQOCYiny+q6QSvxqoSO04vCx+4u++EJw==}
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
@@ -5380,8 +5394,8 @@ packages:
   decode-named-character-reference@1.3.0:
     resolution: {integrity: sha512-GtpQYB283KrPp6nRw50q3U9/VfOutZOe103qlN7BPP6Ad27xYnOIWv4lPzo8HCAL+mMZofJ9KEy30fq6MfaK6Q==}
 
-  decode-uri-component@0.5.0:
-    resolution: {integrity: sha512-1BiQVoK8C9gUbQU6NzAtO/tkz2qOFpEObMWpcFvhx4fYnj4Oc5yzaJN/LD36ihkVUdXyh5ZekzX+yM+ty/SrPg==}
+  decode-uri-component@0.5.1:
+    resolution: {integrity: sha512-vWHQkXgg2cE3BB4rR0c+PYw9BCQzLoNIRMI7AunIkZst74tw/vpPp7VLoYtsR/cy1f55g3XDWUslfeCZjiZJyA==}
     engines: {node: '>=14.16'}
 
   deepmerge@4.3.1:
@@ -5657,6 +5671,10 @@ packages:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
 
+  event-target-shim@5.0.1:
+    resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
+    engines: {node: '>=6'}
+
   eventemitter3@5.0.4:
     resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
 
@@ -5687,6 +5705,12 @@ packages:
 
   expo-constants@58.0.12:
     resolution: {integrity: sha512-d3/dsps32nU4m6YJQbXQ1dIfn58GxfmJjTnZ0WtnhdSHTdG/oVsOakLqYRlX/FaLUKkQOSHXMf7hyCx+2a/HSQ==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
+
+  expo-constants@58.0.13:
+    resolution: {integrity: sha512-zUj1rcnYg0O2wKF9L32ToEtFujc5OkslZJ4lWeg+fEwoPMLVwldn6kdEkX8zx31KgSwF94Ey1mIFdFX8Brp73Q==}
     peerDependencies:
       expo: '*'
       react-native: '*'
@@ -5817,6 +5841,13 @@ packages:
     peerDependencies:
       expo: '*'
       react: '*'
+
+  expo-notifications@58.1.6:
+    resolution: {integrity: sha512-O3Y4u1GyiReD+akm/hlHkLB/2FoW6bOflTUoONhwRsgmXr+jZQBZckdjmhk6TE/gQ2FRdsTfSCX4sUHdWA+LsQ==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
 
   expo-router@58.0.24:
     resolution: {integrity: sha512-k6Bb673jDAyq34W8V/XUiEmOR9jMRXIYIuBYjPDchi6tsp7MOCcD8qfjj5WMtHuKp3cGe89E3X35SJBaO3yLLw==}
@@ -9054,36 +9085,36 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@effect/tsgo-darwin-arm64@0.57.0':
+  '@effect/tsgo-darwin-arm64@0.62.0':
     optional: true
 
-  '@effect/tsgo-darwin-x64@0.57.0':
+  '@effect/tsgo-darwin-x64@0.62.0':
     optional: true
 
-  '@effect/tsgo-linux-arm64@0.57.0':
+  '@effect/tsgo-linux-arm64@0.62.0':
     optional: true
 
-  '@effect/tsgo-linux-arm@0.57.0':
+  '@effect/tsgo-linux-arm@0.62.0':
     optional: true
 
-  '@effect/tsgo-linux-x64@0.57.0':
+  '@effect/tsgo-linux-x64@0.62.0':
     optional: true
 
-  '@effect/tsgo-win32-arm64@0.57.0':
+  '@effect/tsgo-win32-arm64@0.62.0':
     optional: true
 
-  '@effect/tsgo-win32-x64@0.57.0':
+  '@effect/tsgo-win32-x64@0.62.0':
     optional: true
 
-  '@effect/tsgo@0.57.0':
+  '@effect/tsgo@0.62.0':
     optionalDependencies:
-      '@effect/tsgo-darwin-arm64': 0.57.0
-      '@effect/tsgo-darwin-x64': 0.57.0
-      '@effect/tsgo-linux-arm': 0.57.0
-      '@effect/tsgo-linux-arm64': 0.57.0
-      '@effect/tsgo-linux-x64': 0.57.0
-      '@effect/tsgo-win32-arm64': 0.57.0
-      '@effect/tsgo-win32-x64': 0.57.0
+      '@effect/tsgo-darwin-arm64': 0.62.0
+      '@effect/tsgo-darwin-x64': 0.62.0
+      '@effect/tsgo-linux-arm': 0.62.0
+      '@effect/tsgo-linux-arm64': 0.62.0
+      '@effect/tsgo-linux-x64': 0.62.0
+      '@effect/tsgo-win32-arm64': 0.62.0
+      '@effect/tsgo-win32-x64': 0.62.0
 
   '@effect/vitest@4.0.5(effect@4.0.5)(vitest@5.0.5(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.1)))':
     dependencies:
@@ -9493,6 +9524,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@expo/env@2.5.3(supports-color@8.1.1)':
+    dependencies:
+      chalk: 4.1.2
+      debug: 4.4.3(supports-color@8.1.1)
+      getenv: 2.0.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@expo/fingerprint@0.21.5(supports-color@8.1.1)':
     dependencies:
       '@expo/env': 2.5.2(supports-color@8.1.1)
@@ -9562,7 +9601,7 @@ snapshots:
       '@babel/core': 7.29.7(supports-color@8.1.1)
       '@babel/generator': 7.29.7
       '@expo/config': 58.0.6(supports-color@8.1.1)(typescript@7.0.2)
-      '@expo/env': 2.5.2(supports-color@8.1.1)
+      '@expo/env': 2.5.3(supports-color@8.1.1)
       '@expo/json-file': 11.2.1
       '@expo/metro': 58.0.0(supports-color@8.1.1)
       '@expo/platforms': 58.0.1
@@ -11692,6 +11731,10 @@ snapshots:
       d3-selection: 3.0.0
       d3-zoom: 3.0.0
 
+  abort-controller@3.0.0:
+    dependencies:
+      event-target-shim: 5.0.1
+
   accepts@1.3.8:
     dependencies:
       mime-types: 2.1.35
@@ -11857,6 +11900,8 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
+
+  badgin@1.2.3: {}
 
   bail@2.0.2: {}
 
@@ -12212,7 +12257,7 @@ snapshots:
     dependencies:
       character-entities: 2.0.2
 
-  decode-uri-component@0.5.0: {}
+  decode-uri-component@0.5.1: {}
 
   deepmerge@4.3.1: {}
 
@@ -12436,6 +12481,8 @@ snapshots:
 
   etag@1.8.1: {}
 
+  event-target-shim@5.0.1: {}
+
   eventemitter3@5.0.4: {}
 
   eventsource-parser@3.1.0: {}
@@ -12467,6 +12514,16 @@ snapshots:
   expo-constants@58.0.12(expo@58.0.16)(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@7.0.2):
     dependencies:
       '@expo/env': 2.5.2(supports-color@8.1.1)
+      '@expo/require-utils': 58.0.4(supports-color@8.1.1)(typescript@7.0.2)
+      expo: 58.0.16(@babel/core@7.29.7(supports-color@8.1.1))(@expo/metro-runtime@58.0.14)(expo-router@58.0.24)(react-dom@19.3.0(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)
+      react-native: 0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  expo-constants@58.0.13(expo@58.0.16)(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@7.0.2):
+    dependencies:
+      '@expo/env': 2.5.3(supports-color@8.1.1)
       '@expo/require-utils': 58.0.4(supports-color@8.1.1)(typescript@7.0.2)
       expo: 58.0.16(@babel/core@7.29.7(supports-color@8.1.1))(@expo/metro-runtime@58.0.14)(expo-router@58.0.24)(react-dom@19.3.0(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)
       react-native: 0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
@@ -12610,6 +12667,20 @@ snapshots:
     dependencies:
       expo: 58.0.16(@babel/core@7.29.7(supports-color@8.1.1))(@expo/metro-runtime@58.0.14)(expo-router@58.0.24)(react-dom@19.3.0(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)
       react: 19.3.0
+
+  expo-notifications@58.1.6(expo@58.0.16)(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2):
+    dependencies:
+      '@expo/image-utils': 0.12.5(supports-color@8.1.1)(typescript@7.0.2)
+      abort-controller: 3.0.0
+      badgin: 1.2.3
+      expo: 58.0.16(@babel/core@7.29.7(supports-color@8.1.1))(@expo/metro-runtime@58.0.14)(expo-router@58.0.24)(react-dom@19.3.0(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@7.0.2)
+      expo-application: 58.1.2(expo@58.0.16)
+      expo-constants: 58.0.13(expo@58.0.16)(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@7.0.2)
+      react: 19.3.0
+      react-native: 0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
 
   expo-router@58.0.24(4c369042c333357dfdffc7b0d67bbaf3):
     dependencies:
@@ -14485,7 +14556,7 @@ snapshots:
 
   query-string@9.5.1:
     dependencies:
-      decode-uri-component: 0.5.0
+      decode-uri-component: 0.5.1
       filter-obj: 5.1.0
       split-on-first: 3.0.0
 

@@ -4,6 +4,7 @@ import type {
 } from "@flatsby/validators/shopping-list";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { editShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
@@ -18,9 +19,8 @@ import {
   useForm,
 } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
-import { useShoppingStore } from "~/utils/shopping-store";
+import { shoppingListMutations } from "~/utils/api";
 import { CategoryPicker } from "./ShoppingListCategory";
-import { useUpdateShoppingListItemMutation } from "./ShoppingListUtils";
 
 export function ShoppingListItemEditForm() {
   const t = useTranslations();
@@ -31,8 +31,6 @@ export function ShoppingListItemEditForm() {
     categoryId: ShoppingListItemType["categoryId"];
     completed: "true" | "false";
   }>();
-  const { selectedGroupId: groupId, selectedShoppingListId: shoppingListId } =
-    useShoppingStore();
   const form = useForm({
     schema: editShoppingListItemFormSchema,
     defaultValues: {
@@ -42,16 +40,14 @@ export function ShoppingListItemEditForm() {
     },
   });
 
-  const updateShoppingListItemMutation = useUpdateShoppingListItemMutation({
-    groupId: groupId ?? -1,
-    shoppingListId: shoppingListId ?? -1,
-    selectedCategory: null,
-  });
+  const updateShoppingListItemMutation = useMutation(
+    shoppingListMutations.update,
+  );
 
   const handleUpdateShoppingListItem = (
     data: EditShoppingListItemFormValues,
   ) => {
-    if (!groupId || !shoppingListId || !params.itemId) return;
+    if (!params.itemId) return;
 
     router.back();
     updateShoppingListItemMutation.mutate({

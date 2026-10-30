@@ -153,21 +153,11 @@ jobs:
 
       # Shares the ccache artifact pool with e2e.yml, so release builds start
       # warm.
-      - name: Restore ccache from artifact
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ART_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=ccache-macos&per_page=5" \
-            --jq '[.artifacts[] | select(.expired == false)][0].id // empty')
-          if [ -z "$ART_ID" ]; then
-            echo "No ccache artifact available; building cold"
-            exit 0
-          fi
-          gh api "repos/${{ github.repository }}/actions/artifacts/$ART_ID/zip" > /tmp/ccache.zip \
-            && unzip -q -o /tmp/ccache.zip -d /tmp/ccache-artifact \
-            && tar -xzf /tmp/ccache-artifact/ccache.tar.gz -C "$HOME" \
-            && echo "Restored ccache from artifact $ART_ID" \
-            || echo "ccache artifact $ART_ID unusable; building cold"
+      - name: Restore ccache
+        uses: ./tooling/github/restore-artifact
+        with:
+          name: ccache-macos
+          dir: "~"
 
       # E2E_TESTING=true: the screenshot flow signs in through the e2e-login
       # deep link, which the app only exposes in e2e builds.

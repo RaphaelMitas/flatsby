@@ -10,7 +10,7 @@ tags:
     env:
       LIST_NAME: "Suggest List"
 
-# Add "Milk" with the dairy category and wait for the server commit
+# Add "Milk" with the dairy category
 - tapOn:
     id: "shopping-list-item-input"
 - inputText: "Milk"
@@ -38,7 +38,6 @@ tags:
 - extendedWaitUntil:
     visible:
       id: "shopping-list-item-checkbox-Milk"
-      enabled: true
     timeout: 15000
 
 # Type a prefix -> the suggestion badge appears

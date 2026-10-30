@@ -1,15 +1,11 @@
 import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem } from "@flatsby/validators/shopping-list";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import superjson from "superjson";
 
-import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
-import { updateShoppingListItemInCache } from "@flatsby/api/shoppingListItemsCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
 import { holdWhileMutating } from "~/utils/live-query";
-import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
 type SectionKey = "today" | "last7Days" | "older";
 
@@ -111,48 +107,4 @@ export const groupShoppingList = (
     uncheckedSections: groupItemsByDate(uncheckedItems, "createdAt"),
     checkedSections: groupItemsByDate(checkedItems, "completedAt"),
   };
-};
-
-export const useUpdateShoppingListItemMutation = ({
-  groupId,
-  shoppingListId,
-  selectedCategory,
-}: {
-  groupId: number;
-  shoppingListId: number;
-  selectedCategory: CategoryId | null;
-}) => {
-  const queryClient = useQueryClient();
-  const { invalidateAll } = useInvalidateShoppingList({
-    groupId,
-    shoppingListId,
-  });
-
-  const itemsQueryKey = trpc.shoppingList.getShoppingListItems.infiniteQueryKey(
-    {
-      groupId,
-      shoppingListId,
-      limit: PAGE_SIZE.shoppingListItems,
-      categoryId: selectedCategory ?? undefined,
-    },
-  );
-
-  return useMutation(
-    trpc.shoppingList.updateShoppingListItem.mutationOptions(
-      resultMutation({
-        onMutate: async (variables) => {
-          await queryClient.cancelQueries({ queryKey: itemsQueryKey });
-          const previousItems = queryClient.getQueryData(itemsQueryKey);
-          queryClient.setQueryData(itemsQueryKey, (old) =>
-            updateShoppingListItemInCache(old, variables),
-          );
-          return [{ queryKey: itemsQueryKey, previous: previousItems }];
-        },
-        rollback: restoreSnapshot(queryClient),
-        onSettled: () => {
-          invalidateAll();
-        },
-      }),
-    ),
-  );
 };

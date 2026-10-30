@@ -24,6 +24,8 @@ export const common = {
   unknownError: "Unknown error",
   updating: "Updating...",
   upToDate: "Up to date",
+  offline:
+    "{count, plural, =0 {Offline} one {Offline · # change syncs later} other {Offline · # changes sync later}}",
   select: "Select",
   previousSlide: "Previous slide",
   nextSlide: "Next slide",

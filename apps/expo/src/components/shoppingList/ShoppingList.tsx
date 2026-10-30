@@ -12,19 +12,15 @@ import {
   useInfiniteQuery,
   useMutation,
   useQuery,
-  useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
-import { PAGE_SIZE } from "@flatsby/validators/pagination";
-
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
-import { trpc } from "~/utils/api";
-import { useLivePolling } from "~/utils/live-query";
+import { shoppingListMutations, trpc } from "~/utils/api";
+import { holdWhileMutating, useLivePolling } from "~/utils/live-query";
 import { CategoryFilterPills } from "./CategoryFilter/CategoryFilterPills";
 import { CategoryFilterSidebar } from "./CategoryFilter/CategoryFilterSidebar";
 import ShoppingListItem from "./ShoppingListItem";
@@ -33,7 +29,6 @@ import {
   groupShoppingList,
   shoppingListItemsOptions,
 } from "./ShoppingListUtils";
-import { useInvalidateShoppingList } from "./useInvalidateShoppingList";
 
 interface ShoppingListProps {
   groupId: number;
@@ -49,15 +44,10 @@ type ListItem =
 
 const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   const t = useTranslations("shoppingList");
-  const queryClient = useQueryClient();
   const listRef = useRef<FlashListRef<ListItem>>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
     null,
   );
-  const { invalidateAll } = useInvalidateShoppingList({
-    groupId,
-    shoppingListId,
-  });
 
   const { data: shoppingListData } = useSuspenseQuery(
     trpc.shoppingList.getShoppingList.queryOptions({ groupId, shoppingListId }),
@@ -75,15 +65,11 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         groupId,
         shoppingListId,
       }),
+      staleTime: holdWhileMutating(trpc.shoppingList.pathKey()),
       refetchInterval: poll(30_000),
     },
   );
 
-  const itemsOptions = shoppingListItemsOptions(
-    groupId,
-    shoppingListId,
-    selectedCategory ?? undefined,
-  );
   const {
     data: itemsData,
     fetchNextPage,
@@ -91,7 +77,11 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     isFetchingNextPage,
     refetch: refetchItems,
   } = useInfiniteQuery({
-    ...itemsOptions,
+    ...shoppingListItemsOptions(
+      groupId,
+      shoppingListId,
+      selectedCategory ?? undefined,
+    ),
     placeholderData: keepPreviousData,
     refetchInterval: poll(5_000),
   });
@@ -101,10 +91,10 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     [refetchItems, refetchCategoryCounts],
   );
 
-  const { shoppingList, currentMember } =
+  const shoppingList =
     shoppingListData.success === true
-      ? shoppingListData.data
-      : { shoppingList: null, currentMember: null };
+      ? shoppingListData.data.shoppingList
+      : null;
   const allItems =
     itemsData?.pages
       .flatMap((page) => (page.success === true ? page.data.items : []))
@@ -178,75 +168,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   ]);
 
   const createShoppingListItemMutation = useMutation(
-    trpc.shoppingList.createShoppingListItem.mutationOptions(
-      resultMutation({
-        onMutate: async ({ name, categoryId }) => {
-          await queryClient.cancelQueries({
-            queryKey: trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-              groupId,
-              shoppingListId,
-              limit: PAGE_SIZE.shoppingListItems,
-              categoryId: selectedCategory ?? undefined,
-            }),
-          });
-
-          const previousItems = queryClient.getQueryData(
-            trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-              groupId,
-              shoppingListId,
-              limit: PAGE_SIZE.shoppingListItems,
-              categoryId: selectedCategory ?? undefined,
-            }),
-          );
-
-          queryClient.setQueryData(
-            trpc.shoppingList.getShoppingListItems.infiniteQueryKey({
-              groupId,
-              shoppingListId,
-              limit: PAGE_SIZE.shoppingListItems,
-              categoryId: selectedCategory ?? undefined,
-            }),
-            (old) => {
-              if (!old) return old;
-
-              const updatedPages = old.pages.map((page, index) => {
-                if (page.success === false) return page;
-
-                const newItem = {
-                  id: Date.now(),
-                  name,
-                  categoryId,
-                  createdAt: new Date(),
-                  completed: false,
-                  createdByGroupMemberId: currentMember?.id ?? null,
-                  completedByGroupMemberId: null,
-                  completedAt: null,
-                  createdByGroupMember: currentMember,
-                  completedByGroupMember: null,
-                  isPending: true,
-                };
-
-                return {
-                  ...page,
-                  data: {
-                    ...page.data,
-                    items:
-                      index === 0
-                        ? [newItem, ...page.data.items]
-                        : page.data.items,
-                  },
-                };
-              });
-
-              return { ...old, pages: updatedPages };
-            },
-          );
-          return [{ queryKey: itemsOptions.queryKey, previous: previousItems }];
-        },
-        rollback: restoreSnapshot(queryClient),
-        onSuccess: () => invalidateAll(),
-      }),
-    ),
+    shoppingListMutations.create,
   );
 
   const handleSubmit = (values: {
@@ -330,22 +252,22 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   };
 
   return (
-    <>
-      {shoppingList && (
-        <View className="p-4">
-          <Text
-            testID="shopping-list-title"
-            className="text-foreground text-center text-xl font-semibold"
-          >
-            {shoppingList.name}
-          </Text>
+    <BottomSheetPickerProvider>
+      <View className="flex-1 flex-col md:flex-row">
+        {/* Sidebar - hidden on mobile, shown on md+ */}
+        <View className="hidden md:flex">
+          <CategoryFilterSidebar
+            counts={categoryCounts}
+            total={categoryTotal}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
         </View>
-      )}
-      <BottomSheetPickerProvider>
-        <View className="flex-1 flex-col md:flex-row">
-          {/* Sidebar - hidden on mobile, shown on md+ */}
-          <View className="hidden md:flex">
-            <CategoryFilterSidebar
+
+        <View className="flex-1">
+          {/* Pills - shown on mobile, hidden on md+ */}
+          <View className="flex md:hidden">
+            <CategoryFilterPills
               counts={categoryCounts}
               total={categoryTotal}
               selectedCategory={selectedCategory}
@@ -353,49 +275,37 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             />
           </View>
 
-          <View className="flex-1">
-            {/* Pills - shown on mobile, hidden on md+ */}
-            <View className="flex md:hidden">
-              <CategoryFilterPills
-                counts={categoryCounts}
-                total={categoryTotal}
-                selectedCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
+          <PullToRefresh onRefresh={handleRefresh}>
+            {(refreshProps) => (
+              <FlashList
+                {...refreshProps}
+                ref={(list) => {
+                  listRef.current = list;
+                  refreshProps.ref?.(list);
+                }}
+                // Keeping the old top row in place would push a freshly added item above the viewport.
+                maintainVisibleContentPosition={{ disabled: true }}
+                className="flex-1"
+                data={flashListData}
+                renderItem={renderItem}
+                getItemType={getItemType}
+                keyExtractor={(item) => item.id}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                keyboardDismissMode="on-drag"
+                keyboardShouldPersistTaps="handled"
               />
-            </View>
-
-            <PullToRefresh onRefresh={handleRefresh}>
-              {(refreshProps) => (
-                <FlashList
-                  {...refreshProps}
-                  ref={(list) => {
-                    listRef.current = list;
-                    refreshProps.ref?.(list);
-                  }}
-                  // Keeping the old top row in place would push a freshly added item above the viewport.
-                  maintainVisibleContentPosition={{ disabled: true }}
-                  className="flex-1"
-                  data={flashListData}
-                  renderItem={renderItem}
-                  getItemType={getItemType}
-                  keyExtractor={(item) => item.id}
-                  onEndReached={handleLoadMore}
-                  onEndReachedThreshold={0.5}
-                  keyboardDismissMode="on-drag"
-                  keyboardShouldPersistTaps="handled"
-                />
-              )}
-            </PullToRefresh>
-            <AppKeyboardStickyView>
-              <ShoppingListItemAddForm
-                onSubmit={handleSubmit}
-                groupId={groupId}
-              />
-            </AppKeyboardStickyView>
-          </View>
+            )}
+          </PullToRefresh>
+          <AppKeyboardStickyView>
+            <ShoppingListItemAddForm
+              onSubmit={handleSubmit}
+              groupId={groupId}
+            />
+          </AppKeyboardStickyView>
         </View>
-      </BottomSheetPickerProvider>
-    </>
+      </View>
+    </BottomSheetPickerProvider>
   );
 };
 

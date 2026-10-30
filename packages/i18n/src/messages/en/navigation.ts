@@ -29,7 +29,6 @@ export const navigation = {
   privacy: "Privacy",
   selectGroup: "Select Group",
   shopping: "Shopping",
-  shoppingList: "Shopping List",
   sidebar: "Sidebar",
   sidebarDescription: "Displays the mobile sidebar.",
   terms: "Terms",

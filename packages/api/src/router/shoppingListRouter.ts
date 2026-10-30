@@ -94,6 +94,7 @@ export const shoppingList = createTRPCRouter({
                     icon: true,
                     description: true,
                   },
+                  orderBy: (list, { asc }) => asc(list.id),
                   with: {
                     shoppingListItems: {
                       columns: {
@@ -470,11 +471,14 @@ export const shoppingList = createTRPCRouter({
           const { item, member } = yield* getShoppingListItemWithAccess(
             input.id,
           );
-          const categoryId = yield* categoryFor(
-            ctx.session.user,
-            input.categoryId,
-            name,
-          );
+          // A tick on an item still showing its add-time auto-select would classify it a second time
+          const isTick =
+            input.categoryId === "ai-auto-select" &&
+            name === item.name &&
+            input.completed !== item.completed;
+          const categoryId = isTick
+            ? item.categoryId
+            : yield* categoryFor(ctx.session.user, input.categoryId, name);
 
           const updateData: Partial<typeof shoppingListItems.$inferInsert> = {
             name,

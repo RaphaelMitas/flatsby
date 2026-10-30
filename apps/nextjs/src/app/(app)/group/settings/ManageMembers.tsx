@@ -126,10 +126,10 @@ const MemberCard = ({
         void queryClient.invalidateQueries(
           trpc.invite.get.queryFilter({ groupId: groupMember.groupId }),
         );
+        void queryClient.invalidateQueries(
+          trpc.group.getUserGroups.queryOptions(),
+        );
         if (groupMember.id === currentUserGroupMember.id) {
-          void queryClient.invalidateQueries(
-            trpc.group.getUserGroups.queryOptions(),
-          );
           router.push(`/group`);
         }
       },

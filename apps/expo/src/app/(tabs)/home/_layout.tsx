@@ -41,12 +41,6 @@ export default function HomeLayout() {
             ...solidHeader,
           }}
         />
-        <Stack.Screen
-          name="shopping-lists"
-          options={{
-            headerShown: false,
-          }}
-        />
       </Stack>
     </TabSafeArea>
   );

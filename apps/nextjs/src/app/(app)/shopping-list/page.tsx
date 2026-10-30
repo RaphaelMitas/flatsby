@@ -1,22 +1,33 @@
+import { redirect } from "next/navigation";
+
 import {
+  caller,
   getCurrentGroupId,
-  HydrateClient,
-  prefetch,
-  trpc,
+  getCurrentUserWithGroups,
 } from "~/trpc/server";
-import { ShoppingListDashboard } from "./ShoppingListDashboard";
+import { FirstList } from "./FirstList";
 
 export default async function ShoppingListPage() {
   const groupId = await getCurrentGroupId();
+  const [lists, userWithGroups] = await Promise.all([
+    caller.shoppingList.getShoppingLists({ groupId }),
+    getCurrentUserWithGroups(),
+  ]);
+  if (!lists.success) return null;
 
-  // Prefetch shopping lists for the current group
-  prefetch(trpc.shoppingList.getShoppingLists.queryOptions({ groupId }));
+  const user = userWithGroups.success ? userWithGroups.data.user : undefined;
+  const lastUsedId = user?.lastShoppingListUsed?.id;
+  const target =
+    lists.data.find(({ id }) => id === lastUsedId) ?? lists.data[0];
+  if (target) redirect(`/shopping-list/${target.id}`);
 
   return (
-    <HydrateClient>
-      <div className="mx-auto mt-4 flex w-full max-w-prose flex-col p-4">
-        <ShoppingListDashboard />
-      </div>
-    </HydrateClient>
+    <div className="mt-8 flex w-full flex-col">
+      <FirstList
+        groupId={groupId}
+        groupName={user?.lastGroupUsed?.name ?? ""}
+        isFirst
+      />
+    </div>
   );
 }

@@ -11,6 +11,7 @@ export const settings = {
     usage: "Nutzung",
     appearance: "Darstellung",
     groups: "Gruppen",
+    notifications: "Mitteilungen",
     account: "Konto",
     legal: "Rechtliches",
   },
@@ -43,6 +44,9 @@ export const settings = {
     exportDataSubtitle: "Deine persönlichen Daten herunterladen (DSGVO)",
     rateApp: "Flatsby bewerten",
     rateAppSubtitle: "Sag anderen im Store, was du denkst",
+    eveningReminder: "Am Abend vorher",
+    eveningReminderSubtitle: "19 Uhr, wenn morgen etwas für dich ansteht",
+    eveningReminderBlocked: "In den Telefoneinstellungen ausgeschaltet",
   },
   theme: {
     light: "Hell",

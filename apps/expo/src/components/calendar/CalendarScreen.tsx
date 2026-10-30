@@ -32,23 +32,17 @@ import {
 import type { CalendarPeople } from "./CalendarPeople";
 import { Button } from "~/lib/ui/button";
 import { Segmented } from "~/lib/ui/segmented";
-import { trpc } from "~/utils/api";
-import { holdWhileMutating } from "~/utils/live-query";
+import { isE2ETestingEnabled } from "~/utils/e2e";
+import { useReminderChoice } from "~/utils/evening-reminders";
 import { useNow } from "~/utils/useNow";
 import { CalendarList } from "./CalendarList";
 import { CalendarPager } from "./CalendarPager";
 import { TurnBar, useCalendarPeople } from "./CalendarPeople";
 import { setCalendarPosition, useCalendarPosition } from "./calendarPosition";
+import { calendarRangeOptions } from "./calendarRangeOptions";
 import { MonthGrid } from "./MonthGrid";
+import { ReminderAsk } from "./ReminderAsk";
 import { useCalendarMutations } from "./useCalendarMutations";
-
-export const calendarRangeOptions = (
-  groupId: number,
-  { from, to }: { from: string; to: string },
-) => ({
-  ...trpc.calendar.range.queryOptions({ groupId, from, to }),
-  staleTime: holdWhileMutating(trpc.calendar.pathKey()),
-});
 
 export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const t = useTranslations("calendar");
@@ -73,6 +67,8 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
     setCalendarPosition(stepPosition(position, delta, today));
   };
   const { mutate: setDone } = useCalendarMutations(group).setDone;
+  // Store screenshots and e2e flows never see the ask
+  const asking = useReminderChoice() === "undecided" && !isE2ETestingEnabled();
   const { view } = position;
 
   const onLinked = useEffectEvent((date: string) => {
@@ -165,6 +161,10 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
           />
         </View>
       </View>
+
+      {asking && (
+        <ReminderAsk groupId={group.id} meId={people.meId} today={today} />
+      )}
 
       <TurnBar
         group={group}

@@ -7,12 +7,13 @@ import { useTranslations } from "use-intl";
 import { listWindow, localDate } from "@flatsby/validators/calendar";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
-import { calendarRangeOptions } from "~/components/calendar/CalendarScreen";
+import { calendarRangeOptions } from "~/components/calendar/calendarRangeOptions";
 import { shoppingListItemsOptions } from "~/components/shoppingList/ShoppingListUtils";
 import { useThemeColors } from "~/lib/utils";
 import { usePostHogIdentify } from "~/utils/analytics/use-posthog-identify";
 import { prefetch, trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
+import { useEveningReminders } from "~/utils/evening-reminders";
 import { useShoppingStore } from "~/utils/shopping-store";
 
 const houseIcon = LucideIcon.getImageSourceSync("house", 20);
@@ -29,6 +30,7 @@ export default function TabLayout() {
   const t = useTranslations("navigation");
 
   usePostHogIdentify();
+  useEveningReminders();
 
   useEffect(() => {
     if (!session.data?.user) {
@@ -98,10 +100,10 @@ export default function TabLayout() {
       <NativeTabs.Trigger
         name="shoppingList"
         testID="tab-shopping-list"
-        hidden={!selectedShoppingListId}
+        hidden={!selectedGroupId}
       >
         <NativeTabs.Trigger.Label>
-          {selectedShoppingListName ?? t("shoppingList")}
+          {selectedShoppingListName ?? t("shopping")}
         </NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           src={shoppingBasketIcon}
