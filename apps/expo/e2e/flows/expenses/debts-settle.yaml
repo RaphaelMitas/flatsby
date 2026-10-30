@@ -4,6 +4,7 @@ tags:
 ---
 # Seeded group (E2E_SEED=debts): Max owes you EUR 42.50, Sophie EUR 18.00, you
 # owe Lena EUR 30.00 and Max USD 15.00. Settling Sophie in full drops her row.
+# Lena and Max added a PayPal.me name, Sophie and you didn't.
 - runFlow:
     file: ../../subflows/e2e-login.yaml
     env:
@@ -67,3 +68,27 @@ tags:
     id: "debt-hero-amount"
     text: ".*€12[.,]50"
 - assertVisible: "Record EUR payment with Max"
+
+# The settle form is a KeyboardAwareScrollView, which Maestro's swipes don't
+# reliably move on hosted simulators, so these steps stay above the fold.
+- tapOn: "Record EUR payment with Lena"
+- extendedWaitUntil:
+    visible:
+      id: "settle-paypal-button"
+    timeout: 15000
+- assertVisible:
+    id: "settle-paypal-share"
+- tapOn:
+    id: "settlement-cancel-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "debt-summary-title"
+    timeout: 15000
+- tapOn: "Record USD payment with Max"
+- extendedWaitUntil:
+    visible:
+      id: "settle-paypal-button"
+    timeout: 15000
+- tapOn:
+    id: "settlement-cancel-button"

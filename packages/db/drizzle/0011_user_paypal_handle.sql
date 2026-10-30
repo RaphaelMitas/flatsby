@@ -1,0 +1,1 @@
+ALTER TABLE "flat-cove_user" ADD COLUMN "paypal_handle" varchar(20);

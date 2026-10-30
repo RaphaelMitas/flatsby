@@ -56,4 +56,18 @@ export const debts = {
   updateSettlement: "Ausgleich aktualisieren",
   recordSuccess: "Ausgleich erfasst",
   recordFailed: "Ausgleich konnte nicht erfasst werden",
+  pay: {
+    paypalOf: "PayPal von {name}",
+    yourPaypal: "Dein PayPal",
+    noPaypal: "{name} hat keinen PayPal.me-Link hinterlegt.",
+    noPaypalYou: "Du hast noch keinen PayPal.me-Link hinterlegt.",
+    add: "Hinzufügen",
+    paypalHint: "Öffnet PayPal mit {amount}.",
+    shareHintYou: "Schick {payer} den Link, damit du {amount} bekommst.",
+    shareHint: "Schick {payer} den Link, damit {receiver} {amount} bekommt.",
+    openPaypal: "PayPal öffnen",
+    share: "Teilen",
+    shareMessage: "{amount} per PayPal: {url}",
+    paidRecord: "Bezahlt, jetzt erfassen",
+  },
 } satisfies Messages["debts"];

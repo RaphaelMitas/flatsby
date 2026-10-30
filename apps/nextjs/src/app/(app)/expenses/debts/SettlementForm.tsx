@@ -62,6 +62,7 @@ import { CurrencyInput } from "~/components/CurrencyInput";
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
 import { useExpenseInvalidation } from "../useExpenseInvalidation";
+import { SettlementPayment } from "./SettlementPayment";
 
 export interface SettlementPrefill {
   debt: DebtEntry;
@@ -310,6 +311,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const fromGroupMemberId = form.watch("fromGroupMemberId");
   const toGroupMemberId = form.watch("toGroupMemberId");
   const currency = form.watch("currency");
+  const amountInCents = form.watch("amountInCents");
 
   if (!groupData.success) {
     return null;
@@ -334,6 +336,13 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     prefill?.debt ?? debtBetween(fromGroupMemberId, toGroupMemberId, currency);
 
   const isPending = createSettlementMutation.isPending;
+  const receiver = groupMembers.find((member) => member.id === toGroupMemberId);
+  const receiverPaypal = receiver?.user.paypalHandle ?? null;
+  const bothMembers =
+    !!receiver &&
+    groupMembers.some((member) => member.id === fromGroupMemberId);
+  const payerIsMe = fromGroupMemberId === meId;
+  const payingWithPaypal = payerIsMe && amountInCents > 0 && !!receiverPaypal;
   const failure = failureOf(
     createSettlementMutation,
     t("expenses.genericError"),
@@ -482,6 +491,18 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               )}
             />
 
+            {bothMembers && (
+              <SettlementPayment
+                paypalHandle={receiverPaypal}
+                payerName={fromMember.name}
+                receiverName={toMember.name}
+                receiverIsMe={toGroupMemberId === meId}
+                payerIsMe={payerIsMe}
+                amountInCents={amountInCents}
+                currency={currency}
+              />
+            )}
+
             {/* Error Display */}
             {failure && (
               <Alert variant="destructive">
@@ -514,6 +535,8 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                     {t("debts.recording")}
                   </>
+                ) : payingWithPaypal ? (
+                  t("debts.pay.paidRecord")
                 ) : (
                   t("debts.recordSettlement")
                 )}

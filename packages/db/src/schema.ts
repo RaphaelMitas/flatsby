@@ -36,6 +36,7 @@ import {
   MAX_PLACEHOLDER_NAME_LENGTH,
 } from "@flatsby/validators/group";
 import { INVITE_CODE_LENGTH } from "@flatsby/validators/invite";
+import { MAX_PAYPAL_HANDLE_LENGTH } from "@flatsby/validators/payment";
 import { MAX_CONSENT_VERSION_LENGTH } from "@flatsby/validators/user";
 
 /**
@@ -75,6 +76,7 @@ export const users = createTable("user", {
     length: MAX_CONSENT_VERSION_LENGTH,
   }),
   analyticsOptOut: boolean("analytics_opt_out").default(false).notNull(),
+  paypalHandle: varchar("paypal_handle", { length: MAX_PAYPAL_HANDLE_LENGTH }),
 });
 
 /** Append-only proof of each analytics consent choice made on a device (Art. 7(1) GDPR) */

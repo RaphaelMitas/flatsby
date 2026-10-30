@@ -54,4 +54,18 @@ export const debts = {
   updateSettlement: "Update Settlement",
   recordSuccess: "Settlement recorded successfully",
   recordFailed: "Failed to record settlement",
+  pay: {
+    paypalOf: "{name}'s PayPal",
+    yourPaypal: "Your PayPal",
+    noPaypal: "{name} hasn't added a PayPal.me link.",
+    noPaypalYou: "You haven't added a PayPal.me link.",
+    add: "Add",
+    paypalHint: "Opens PayPal with {amount} filled in.",
+    shareHintYou: "Send {payer} this link to pay you {amount}.",
+    shareHint: "Send {payer} this link to pay {receiver} {amount}.",
+    openPaypal: "Open PayPal",
+    share: "Share",
+    shareMessage: "{amount} via PayPal: {url}",
+    paidRecord: "I've paid, record it",
+  },
 };
