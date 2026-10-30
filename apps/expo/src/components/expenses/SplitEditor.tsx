@@ -8,11 +8,13 @@ import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
 import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import {
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
 import { splitEditor } from "@flatsby/validators/expenses/split-editing";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
 import {
   Card,
@@ -24,6 +26,7 @@ import {
 import { Input } from "~/lib/ui/input";
 import { Separator } from "~/lib/ui/separator";
 import { CurrencyInput } from "./CurrencyInput";
+import { MemberAvatar } from "./MemberAvatar";
 
 const SPLIT_METHOD_OPTIONS = [
   { method: "equal", icon: "equal" },
@@ -127,12 +130,10 @@ export function SplitEditor({
                   }`}
                   activeOpacity={0.7}
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={member.user.image ?? undefined} />
-                    <AvatarFallback>
-                      {member.user.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <MemberAvatar
+                    person={memberPerson(member)}
+                    className="h-8 w-8"
+                  />
                   <Text
                     className={`w-full truncate text-center text-xs ${
                       isSelected ? "text-primary-foreground" : "text-foreground"
@@ -179,12 +180,15 @@ export function SplitEditor({
               return (
                 <View key={split.groupMemberId} className="gap-2">
                   <View className="flex-row items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={member?.user.image ?? undefined} />
-                      <AvatarFallback className="text-xs">
-                        {memberName.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <MemberAvatar
+                      person={
+                        member
+                          ? memberPerson(member)
+                          : { name: memberName, image: null }
+                      }
+                      className="h-6 w-6"
+                      textClassName="text-xs"
+                    />
                     <Text className="text-foreground flex-1 text-sm font-medium">
                       {memberName}
                     </Text>

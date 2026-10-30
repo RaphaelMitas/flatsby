@@ -438,12 +438,9 @@ export function useExpenseForm({
     const inactiveMembers = expense.expenseSplits
       .filter((s) => !activeIds.has(s.groupMemberId))
       .map((s) => ({
-        id: s.groupMember.id,
-        userId: "",
-        role: "member" as const,
-        joinedOn: new Date(),
+        ...s.groupMember,
         isActive: false,
-        user: s.groupMember.user,
+        placeholderName: null,
       }));
     return [...group.groupMembers, ...inactiveMembers];
   }, [expense, group.groupMembers]);

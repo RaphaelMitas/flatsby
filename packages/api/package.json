@@ -24,6 +24,10 @@
       "types": "./dist/resultMutation.d.ts",
       "default": "./src/resultMutation.ts"
     },
+    "./groupMembersCache": {
+      "types": "./dist/groupMembersCache.d.ts",
+      "default": "./src/groupMembersCache.ts"
+    },
     "./shoppingListsCache": {
       "types": "./dist/shoppingListsCache.d.ts",
       "default": "./src/shoppingListsCache.ts"

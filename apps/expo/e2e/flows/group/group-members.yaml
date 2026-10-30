@@ -25,6 +25,16 @@ tags:
     visible:
       id: "group-invite-button"
     timeout: 15000
+
+# The second user claims Anna's spot below
+- runFlow:
+    file: ../../subflows/add-placeholder.yaml
+    env:
+      NAME: "Anna"
+- scrollUntilVisible:
+    element:
+      id: "group-invite-button"
+    direction: UP
 - tapOn:
     id: "group-invite-button"
 - extendedWaitUntil:
@@ -64,9 +74,35 @@ tags:
     visible:
       id: "join-invite-button"
     timeout: 15000
+- assertVisible:
+    id: "join-claim-new"
+- assertNotVisible:
+    id: "join-invite-button"
+    text: "Join as .*"
+- tapOn:
+    id: "join-claim-option-.*"
+- assertVisible:
+    id: "join-invite-button"
+    text: "Join as Anna"
 - tapOn:
     id: "join-invite-button"
 - extendedWaitUntil:
     visible:
       id: "dashboard-group-picker"
     timeout: 20000
+
+# The claim takes over Anna's row, so she leaves the placeholder list
+- tapOn:
+    id: "dashboard-group-settings"
+- extendedWaitUntil:
+    visible:
+      id: "group-settings-members"
+    timeout: 15000
+- tapOn:
+    id: "group-settings-members"
+- extendedWaitUntil:
+    visible:
+      id: "group-members-count-2"
+    timeout: 15000
+- assertNotVisible:
+    id: "placeholder-row-Anna"

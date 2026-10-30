@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
+import { memberPerson } from "@flatsby/validators/expenses/formatting";
 
 export type MemberLookup = Map<number, GroupMemberWithUserInfo>;
 
@@ -31,8 +32,7 @@ export function MemberPill({
     >
       {member && (
         <UserAvatar
-          name={member.user.name}
-          image={member.user.image}
+          {...memberPerson(member)}
           size="xs"
           className="text-foreground"
         />
@@ -72,13 +72,7 @@ export function DoneBy({ completedBy }: Pick<Occurrence, "completedBy">) {
       {t("calendar.doneBy", {
         name: completedBy?.name ?? t("common.unknown"),
       })}
-      {completedBy && (
-        <UserAvatar
-          name={completedBy.name}
-          image={completedBy.image}
-          size="xs"
-        />
-      )}
+      {completedBy && <UserAvatar {...completedBy} size="xs" />}
     </span>
   );
 }
@@ -108,21 +102,20 @@ export function TurnBar({
       </Chip>
       {[...members.values()]
         .sort((a, b) => Number(b.id === meId) - Number(a.id === meId))
-        .map(({ id, user }) => (
+        .map((person) => (
           <Chip
-            key={id}
-            selected={member === id}
-            onClick={() => onChange(member === id ? null : id)}
-            testId={`calendar-filter-${id}`}
+            key={person.id}
+            selected={member === person.id}
+            onClick={() => onChange(member === person.id ? null : person.id)}
+            testId={`calendar-filter-${person.id}`}
           >
             <UserAvatar
-              name={user.name}
-              image={user.image}
+              {...memberPerson(person)}
               size="sm"
               className="text-foreground"
             />
-            {id === meId ? t("you") : user.name}
-            <span className="opacity-60">{turns.get(id) ?? 0}</span>
+            {person.id === meId ? t("you") : person.user.name}
+            <span className="opacity-60">{turns.get(person.id) ?? 0}</span>
           </Chip>
         ))}
     </div>

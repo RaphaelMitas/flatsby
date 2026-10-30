@@ -83,6 +83,22 @@ export const group = {
       member: "Member",
     },
   },
+  placeholders: {
+    inviteStepTitle: "Not on Flatsby yet?",
+    inviteStepHint:
+      "Add them now and you can share expenses with them right away. When they join, they take over their spot.",
+    sectionTitle: "Not joined yet",
+    namePlaceholder: "Add a name",
+    add: "Add",
+    nameRequired: "Please enter a name",
+    nameTooLong: "Names can't be longer than 64 characters",
+    invite: "Invite {name}",
+    rename: "Rename",
+    renameTitle: "Rename {name}",
+    claimedFrom: "Took {name}'s spot",
+    undoClaim: "Turn back into “{name}”",
+    undoClaimHint: "{user} loses access. The expenses stay with {name}.",
+  },
   validation: {
     invalidEmail: "Please enter a valid email address",
     nameRequired: "Group name is required",

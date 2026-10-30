@@ -11,7 +11,11 @@ const { fakeDb, set } = vi.hoisted(() => {
   return {
     set,
     fakeDb: {
-      query: { shoppingListItems: { findFirst: vi.fn() } },
+      query: {
+        shoppingListItems: { findFirst: vi.fn() },
+        shoppingLists: { findFirst: vi.fn() },
+        groupMembers: { findFirst: vi.fn() },
+      },
       update: () => ({ set }),
     },
   };
@@ -57,5 +61,57 @@ describe("shoppingList.updateShoppingListItem", () => {
     await update({ categoryId: "ai-auto-select", completed: false });
 
     expect(classify).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("shoppingList.getShoppingList", () => {
+  it("loads a list in a group with a placeholder member", async () => {
+    const joinedOn = new Date();
+    fakeDb.query.groupMembers.findFirst.mockResolvedValue({
+      id: 1,
+      groupId: 3,
+      userId: testUser.id,
+      placeholderName: null,
+      role: "admin",
+      joinedOn,
+      isActive: true,
+    });
+    fakeDb.query.shoppingLists.findFirst.mockResolvedValue({
+      id: 5,
+      groupId: 3,
+      name: "Rewe",
+      icon: null,
+      description: null,
+      createdAt: joinedOn,
+      group: {
+        id: 3,
+        groupMembers: [
+          {
+            id: 1,
+            placeholderName: null,
+            user: { email: testUser.email, name: testUser.name, image: null },
+          },
+          { id: 2, placeholderName: "Anna", user: null },
+        ],
+      },
+    });
+
+    await expect(
+      shoppingList
+        .createCaller(testContext(testUser))
+        .getShoppingList({ groupId: 3, shoppingListId: 5 }),
+    ).resolves.toMatchObject({
+      success: true,
+      data: {
+        shoppingList: {
+          group: {
+            groupMembers: [
+              { id: 1 },
+              { id: 2, user: { name: "Anna", email: null, image: null } },
+            ],
+          },
+        },
+      },
+    });
   });
 });

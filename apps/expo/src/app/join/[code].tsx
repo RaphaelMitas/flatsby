@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -10,6 +12,7 @@ import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
 import {
@@ -33,6 +36,7 @@ export default function JoinScreen() {
     ...trpc.invite.preview.queryOptions({ code }),
     enabled: parsed.success,
   });
+  const [picked, setPicked] = useState<{ id: number; name: string }>();
 
   const openGroup = (groupId: number, groupName: string) => {
     void queryClient.invalidateQueries(trpc.group.getUserGroups.queryFilter());
@@ -43,10 +47,22 @@ export default function JoinScreen() {
     router.dismissTo("/(tabs)/home");
   };
 
+  const invite = preview.data?.success ? preview.data.data : null;
+  const claim = invite?.placeholders.find(({ id }) => id === picked?.id);
+  // The picked spot left the preview, claimed or removed since
+  const takenName = invite && picked && !claim ? picked.name : undefined;
+
   const join = useMutation(
     trpc.invite.join.mutationOptions({
       onSuccess: (data) => {
-        if (data.success) openGroup(data.data.groupId, data.data.groupName);
+        if (data.success) {
+          openGroup(data.data.groupId, data.data.groupName);
+          return;
+        }
+        if (data.error.details.messageKey !== "errors.placeholderTaken") return;
+        void queryClient.invalidateQueries(
+          trpc.invite.preview.queryFilter({ code }),
+        );
       },
     }),
   );
@@ -57,8 +73,10 @@ export default function JoinScreen() {
     else router.replace("/");
   };
 
-  const invite = preview.data?.success ? preview.data.data : null;
-  const joinFailure = failureOf(join, t("invite.join.joinFailed"));
+  const joinFailure =
+    takenName !== undefined
+      ? t("invite.join.placeholderTaken", { name: takenName })
+      : failureOf(join, t("invite.join.joinFailed"));
   const expired =
     !parsed.success ||
     (preview.data?.success === false &&
@@ -158,13 +176,63 @@ export default function JoinScreen() {
                   onPress={() => openGroup(invite.groupId, invite.groupName)}
                 />
               ) : (
-                <Button
-                  testID="join-invite-button"
-                  title={t("invite.join.join", { group: invite.groupName })}
-                  disabled={join.isPending || preview.isFetching}
-                  icon={join.isPending ? "loader" : undefined}
-                  onPress={() => join.mutate({ code })}
-                />
+                <>
+                  {invite.placeholders.length > 0 && (
+                    <View className="gap-2">
+                      <Text className="text-foreground text-sm font-semibold">
+                        {t("invite.join.alreadyListed")}
+                      </Text>
+                      {invite.placeholders.map(({ id, name }) => (
+                        <ClaimOption
+                          key={id}
+                          testID={`join-claim-option-${id}`}
+                          selected={claim?.id === id}
+                          disabled={join.isPending}
+                          onPress={() => {
+                            join.reset();
+                            setPicked({ id, name });
+                          }}
+                        >
+                          <MemberAvatar
+                            person={{ name, image: null, placeholder: true }}
+                            className="h-6 w-6"
+                            textClassName="text-xs"
+                          />
+                          <Text className="text-foreground text-sm">
+                            {t("invite.join.iAm", { name })}
+                          </Text>
+                        </ClaimOption>
+                      ))}
+                      <ClaimOption
+                        testID="join-claim-new"
+                        selected={claim === undefined}
+                        disabled={join.isPending}
+                        onPress={() => {
+                          join.reset();
+                          setPicked(undefined);
+                        }}
+                      >
+                        <Text className="text-foreground text-sm">
+                          {t("invite.join.imNew")}
+                        </Text>
+                      </ClaimOption>
+                    </View>
+                  )}
+                  <Button
+                    testID="join-invite-button"
+                    title={
+                      claim
+                        ? t("invite.join.joinAs", { name: claim.name })
+                        : t("invite.join.join", { group: invite.groupName })
+                    }
+                    disabled={join.isPending || preview.isFetching}
+                    icon={join.isPending ? "loader" : undefined}
+                    onPress={() => {
+                      setPicked(claim);
+                      join.mutate({ code, placeholderId: claim?.id });
+                    }}
+                  />
+                </>
               )}
               <Button
                 title={t("invite.join.notNow")}
@@ -176,5 +244,43 @@ export default function JoinScreen() {
         )}
       </View>
     </SafeAreaView>
+  );
+}
+
+function ClaimOption({
+  testID,
+  selected,
+  disabled,
+  onPress,
+  children,
+}: {
+  testID: string;
+  selected: boolean;
+  disabled: boolean;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected, disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      className={cn(
+        "bg-background flex-row items-center gap-3 rounded-xl border-2 p-3",
+        selected ? "border-primary" : "border-border",
+      )}
+    >
+      <View
+        className={cn(
+          "h-5 w-5 items-center justify-center rounded-full border-2",
+          selected ? "border-primary" : "border-muted-foreground",
+        )}
+      >
+        {selected && <View className="bg-primary h-2.5 w-2.5 rounded-full" />}
+      </View>
+      {children}
+    </Pressable>
   );
 }

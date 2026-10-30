@@ -12,13 +12,14 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Badge } from "@flatsby/ui/badge";
 import { Card } from "@flatsby/ui/card";
 import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   formatExpenseAmounts,
   formatExpenseDateShort,
+  memberPerson,
 } from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseCardProps {
@@ -103,30 +104,18 @@ export function ExpenseCard({
             <div className="flex items-center gap-2">
               {settlementCounterparty && (
                 <>
-                  <Avatar className="h-5 w-5">
-                    <AvatarImage
-                      alt={settlementCounterparty.user.name}
-                      src={settlementCounterparty.user.image ?? undefined}
-                    />
-                    <AvatarFallback className="text-xs">
-                      {settlementCounterparty.user.name
-                        .substring(0, 2)
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    {...memberPerson(settlementCounterparty)}
+                    size="xs"
+                  />
                   <span>{settlementCounterparty.user.name}</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
-              <Avatar className="h-5 w-5">
-                <AvatarImage
-                  alt={paidByName}
-                  src={expense.paidByGroupMember.user.image ?? undefined}
-                />
-                <AvatarFallback className="text-xs">
-                  {paidByName.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                {...memberPerson(expense.paidByGroupMember)}
+                size="xs"
+              />
               <span className="truncate">
                 {expense.splitMethod === "settlement"
                   ? paidByName

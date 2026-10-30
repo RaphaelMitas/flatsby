@@ -5,7 +5,6 @@ import { Calendar, Edit, Handshake, Trash2, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
-import { Avatar, AvatarFallback, AvatarImage } from "@flatsby/ui/avatar";
 import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import {
@@ -17,12 +16,14 @@ import {
 } from "@flatsby/ui/card";
 import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
 import { Separator } from "@flatsby/ui/separator";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import {
   formatCurrencyFromCents,
   formatExpenseAmounts,
   formatExpenseDateLong,
   formatSplitPortion,
+  memberPerson,
 } from "@flatsby/validators/expenses/formatting";
 
 import { RateSourceInfo } from "./RateSourceInfo";
@@ -113,19 +114,10 @@ export function ExpenseDetailContent({
         <CardContent className="space-y-4">
           {expense.splitMethod === "settlement" && expense.expenseSplits[0] && (
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage
-                  alt={expense.expenseSplits[0].groupMember.user.name}
-                  src={
-                    expense.expenseSplits[0].groupMember.user.image ?? undefined
-                  }
-                />
-                <AvatarFallback>
-                  {expense.expenseSplits[0].groupMember.user.name
-                    .substring(0, 2)
-                    .toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                {...memberPerson(expense.expenseSplits[0].groupMember)}
+                size="lg"
+              />
               <div>
                 <p className="text-muted-foreground text-sm">
                   {t("expenses.from")}
@@ -138,17 +130,10 @@ export function ExpenseDetailContent({
           )}
 
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage
-                alt={expense.paidByGroupMember.user.name}
-                src={expense.paidByGroupMember.user.image ?? undefined}
-              />
-              <AvatarFallback>
-                {expense.paidByGroupMember.user.name
-                  .substring(0, 2)
-                  .toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              {...memberPerson(expense.paidByGroupMember)}
+              size="lg"
+            />
             <div>
               <p className="text-muted-foreground text-sm">
                 {expense.splitMethod === "settlement"
@@ -232,15 +217,7 @@ export function ExpenseDetailContent({
                   <div key={split.id}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage
-                            alt={member.user.name}
-                            src={member.user.image ?? undefined}
-                          />
-                          <AvatarFallback className="text-xs">
-                            {member.user.name.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <UserAvatar {...memberPerson(member)} />
                         <div>
                           <p className="font-medium">{member.user.name}</p>
                           <p className="text-muted-foreground text-xs">
@@ -274,17 +251,7 @@ export function ExpenseDetailContent({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage
-                alt={expense.createdByGroupMember.user.name}
-                src={expense.createdByGroupMember.user.image ?? undefined}
-              />
-              <AvatarFallback className="text-xs">
-                {expense.createdByGroupMember.user.name
-                  .substring(0, 2)
-                  .toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar {...memberPerson(expense.createdByGroupMember)} />
             <div>
               <p className="text-muted-foreground text-sm">
                 {t("expenses.createdBy")}

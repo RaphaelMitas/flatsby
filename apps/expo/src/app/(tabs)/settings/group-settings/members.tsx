@@ -1,7 +1,6 @@
 import { useCallback } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
-import { FlashList } from "@shopify/flash-list";
 import {
   useMutation,
   useQueryClient,
@@ -14,76 +13,17 @@ import {
   restoreSnapshot,
   resultMutation,
 } from "@flatsby/api/resultMutation";
+import { hasJoined } from "@flatsby/validators/group";
 
-import type { RouterOutputs } from "~/utils/api";
+import { MemberRow } from "~/components/members/MemberRow";
+import { PlaceholderMembers } from "~/components/members/PlaceholderMembers";
 import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { Avatar, AvatarFallback, AvatarImage } from "~/lib/ui/avatar";
 import { Button } from "~/lib/ui/button";
-import Icon from "~/lib/ui/custom/icons/Icon";
+import { Separator } from "~/lib/ui/separator";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { setMemberActionCallbacks } from "./member-actions";
-
-type GroupMemberWithUser = Extract<
-  RouterOutputs["group"]["getGroup"],
-  { success: true }
->["data"]["groupMembers"][number];
-
-const MemberCard = ({
-  groupMember,
-  currentUserGroupMember,
-  onPress,
-}: {
-  groupMember: GroupMemberWithUser;
-  currentUserGroupMember: GroupMemberWithUser;
-  onPress: () => void;
-}) => {
-  const t = useTranslations("group.members");
-  const isUserAdmin = groupMember.role === "admin";
-  const isCurrentUser = groupMember.id === currentUserGroupMember.id;
-  const isCurrentUserAdmin = currentUserGroupMember.role === "admin";
-  const canManage = isCurrentUserAdmin || isCurrentUser;
-
-  return (
-    <Pressable
-      onPress={canManage ? onPress : undefined}
-      className={`bg-background flex-row items-center justify-between px-4 py-3 ${
-        canManage ? "active:bg-muted" : ""
-      }`}
-    >
-      <View className="flex-1 flex-row items-center gap-3">
-        <Avatar>
-          <AvatarImage src={groupMember.user.image ?? undefined} />
-          <AvatarFallback>
-            {groupMember.user.name
-              ? groupMember.user.name.substring(0, 2).toUpperCase()
-              : "??"}
-          </AvatarFallback>
-        </Avatar>
-        <View className="flex-1">
-          <View className="flex-row items-center">
-            <Text
-              className="text-foreground shrink font-medium"
-              numberOfLines={1}
-            >
-              {groupMember.user.name}
-            </Text>
-            {isUserAdmin && (
-              <Text className="text-muted-foreground ml-1 text-sm font-medium">
-                {t("adminBadge")}
-              </Text>
-            )}
-          </View>
-          <Text className="text-muted-foreground text-sm" numberOfLines={1}>
-            {groupMember.user.email}
-          </Text>
-        </View>
-        {canManage && <Icon name="ellipsis-vertical" size={16} />}
-      </View>
-    </Pressable>
-  );
-};
 
 export default function MembersScreen() {
   const t = useTranslations();
@@ -94,7 +34,7 @@ export default function MembersScreen() {
     id: Number(selectedGroupId) || 0,
   });
 
-  const { data: group } = useSuspenseQuery(
+  const { data: group, refetch } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({
       id: Number(selectedGroupId) || 0,
     }),
@@ -208,18 +148,12 @@ export default function MembersScreen() {
     return null;
   }
 
-  const renderMemberItem = ({ item }: { item: GroupMemberWithUser }) => (
-    <MemberCard
-      groupMember={item}
-      currentUserGroupMember={group.data.thisGroupMember}
-      onPress={() => handleMemberPress(item.id)}
-    />
-  );
-
-  const isAdmin = group.data.thisGroupMember.role === "admin";
+  const me = group.data.thisGroupMember;
+  const isAdmin = me.role === "admin";
+  const joinedMembers = group.data.groupMembers.filter(hasJoined);
 
   return (
-    <AppScrollView>
+    <AppScrollView onRefresh={refetch}>
       {/* Header */}
       <View className="bg-background px-4 py-6">
         <Text className="text-foreground text-2xl font-bold">
@@ -244,25 +178,37 @@ export default function MembersScreen() {
       )}
 
       {/* Members List */}
-      <View className="bg-background flex-1">
+      <View className="bg-background">
         <View className="flex-row items-center justify-between px-4 py-3">
           <Text
-            testID={`group-members-count-${group.data.groupMembers.length}`}
+            testID={`group-members-count-${joinedMembers.length}`}
             className="text-foreground text-base font-medium"
           >
-            {t("group.members.listTitle", {
-              count: group.data.groupMembers.length,
-            })}
+            {t("group.members.listTitle", { count: joinedMembers.length })}
           </Text>
         </View>
-        <View className="flex-1">
-          <FlashList
-            data={group.data.groupMembers}
-            renderItem={renderMemberItem}
-            ItemSeparatorComponent={() => <View className="bg-border h-px" />}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
+        {joinedMembers.map((member, index) => (
+          <View key={member.id}>
+            {index > 0 && <Separator />}
+            <MemberRow
+              member={member}
+              className="px-4"
+              onPress={
+                isAdmin || member.id === me.id
+                  ? () => handleMemberPress(member.id)
+                  : undefined
+              }
+            />
+          </View>
+        ))}
+      </View>
+
+      <View className="px-4 py-3">
+        <PlaceholderMembers
+          groupId={group.data.id}
+          title={t("group.placeholders.sectionTitle")}
+          onPressMember={handleMemberPress}
+        />
       </View>
 
       {/* Error Alerts for Member Actions */}

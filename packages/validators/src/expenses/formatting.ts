@@ -8,6 +8,7 @@ import type { ConvertibleExpense } from "./conversion";
 import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
 import type { DebtEntry, GroupDebtSummary } from "./types";
+import { isPlaceholder } from "../group";
 import { centsToDecimal, rateBetween } from "./conversion";
 import { debtsBetweenOthers } from "./debt";
 
@@ -185,25 +186,36 @@ export function formatSplitPortion({
 export interface DebtPerson {
   name: string;
   image: string | null;
+  placeholder?: boolean;
 }
+
+interface PersonMember {
+  userId: string | null;
+  user: { name: string; image?: string | null };
+}
+
+export const memberPerson = (member: PersonMember): DebtPerson => ({
+  name: member.user.name,
+  image: member.user.image ?? null,
+  placeholder: isPlaceholder(member),
+});
 
 export type PersonLookup = (groupMemberId: number) => DebtPerson;
 
 export function personLookup(
-  members: { id: number; user: { name: string; image?: string | null } }[],
+  members: (PersonMember & { id: number })[],
   meId: number,
   t: Translate,
 ): PersonLookup {
   const byId = new Map(members.map((member) => [member.id, member]));
   return (groupMemberId) => {
-    const user = byId.get(groupMemberId)?.user;
-    return {
-      name:
-        groupMemberId === meId
-          ? t("debts.you")
-          : (user?.name ?? t("common.unknown")),
-      image: user?.image ?? null,
-    };
+    const member = byId.get(groupMemberId);
+    const person = member
+      ? memberPerson(member)
+      : { name: t("common.unknown"), image: null };
+    return groupMemberId === meId
+      ? { ...person, name: t("debts.you") }
+      : person;
   };
 }
 

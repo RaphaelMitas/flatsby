@@ -8,6 +8,7 @@ import {
   INVITE_CODE_LENGTH,
   inviteCodeInputSchema,
   inviteExpiresAt,
+  joinInviteInputSchema,
 } from "@flatsby/validators/invite";
 
 import { addMember } from "../effect/groups";
@@ -16,7 +17,7 @@ import { CurrentRequest } from "../effect/services/CurrentRequest";
 import { Database } from "../effect/services/Database";
 import { Errors } from "../errors";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { GroupUtils } from "../utils";
+import { GroupUtils, memberName } from "../utils";
 
 const generateCode = () =>
   Array.from(
@@ -85,7 +86,7 @@ const findLiveInvite = Effect.fn("Invites.findLiveInvite")(function* (
           with: {
             groupMembers: {
               where: (members, { eq }) => eq(members.isActive, true),
-              columns: { userId: true },
+              columns: { id: true, userId: true, placeholderName: true },
               with: { user: { columns: { name: true, image: true } } },
             },
           },
@@ -118,41 +119,59 @@ export const inviteRouter = createTRPCRouter({
     .query(({ ctx, input }) =>
       runPublicResult(
         ctx,
-        Effect.map(
-          findLiveInvite(input.code),
-          ({ group, createdByMember }) => ({
+        Effect.map(findLiveInvite(input.code), ({ group, createdByMember }) => {
+          const joined = group.groupMembers.flatMap(({ user }) =>
+            user ? [user] : [],
+          );
+          return {
             groupId: group.id,
             groupName: group.name,
             profilePicture: group.profilePicture,
-            invitedBy: createdByMember.user.name,
-            memberCount: group.groupMembers.length,
-            members: group.groupMembers.slice(0, 3).map(({ user }) => user),
+            invitedBy: memberName(createdByMember),
+            memberCount: joined.length,
+            members: joined.slice(0, 3),
             isMember: group.groupMembers.some(
               (member) => member.userId === ctx.session?.user.id,
             ),
-          }),
-        ),
+            // Names are only for the person about to join, not for link previews
+            placeholders: ctx.session
+              ? group.groupMembers.flatMap(({ id, userId, placeholderName }) =>
+                  userId === null && placeholderName !== null
+                    ? [{ id, name: placeholderName }]
+                    : [],
+                )
+              : [],
+          };
+        }),
       ),
     ),
 
   join: protectedProcedure
-    .input(inviteCodeInputSchema)
+    .input(joinInviteInputSchema)
     .mutation(({ ctx, input }) =>
       runResult(
         ctx,
         Effect.gen(function* () {
           const { user } = yield* CurrentRequest;
           const { group } = yield* findLiveInvite(input.code);
-          yield* addMember(group.id, user.id, async (tx) =>
-            (await tx.query.groupInvites.findFirst({
-              where: liveInviteWhere(input.code),
-              columns: { groupId: true },
-            }))
-              ? undefined
-              : Errors.notFound("invite"),
+          yield* addMember(
+            group.id,
+            user.id,
+            async (tx) =>
+              (await tx.query.groupInvites.findFirst({
+                where: liveInviteWhere(input.code),
+                columns: { groupId: true },
+              }))
+                ? undefined
+                : Errors.notFound("invite"),
+            input.placeholderId,
           ).pipe(
             // A stale preview from another tab or device still offers Join, so joining again just opens the group
-            Effect.catchTag("ConflictError", () => Effect.void),
+            Effect.catchTag("ConflictError", (error) =>
+              error.messageKey === "errors.alreadyMember"
+                ? Effect.void
+                : Effect.fail(error),
+            ),
           );
           return { groupId: group.id, groupName: group.name };
         }),
