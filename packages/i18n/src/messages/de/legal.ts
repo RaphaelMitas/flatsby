@@ -138,7 +138,7 @@ export const legal = {
       mobileDevice:
         "Gerätetyp, Betriebssystem und App-Version; mit Ihrer Einwilligung eine zufällige Geräte-ID",
       mobileViews:
-        "Ihre Aktionen; mit Ihrer Einwilligung aufgerufene Bildschirme und Bildschirmaufnahmen",
+        "Ihre Aktionen; mit Ihrer Einwilligung aufgerufene Bildschirme, angetippte Hinweise und Bildschirmaufnahmen",
       errors: "Fehlerberichte, vereinzelt mit von Ihnen eingegebenen Inhalten",
     },
     basis: {
@@ -176,7 +176,7 @@ export const legal = {
       posthogServer:
         "<strong>Angemeldet (Web und App):</strong> Unser Server sendet jede Aktion mit Ihrer Konto-ID, Gruppe, Browser- oder Gerätetyp und der verweisenden Seite, aber ohne Ihre Eingaben. Sie können das unter Einstellungen > Analyse ausschalten, in der App oder im Web.",
       posthogMobile:
-        "<strong>App:</strong> Die App sendet immer Fehlerberichte mit Gerätetyp, Betriebssystem und App-Version, ohne eine ID auf Ihrem Gerät zu speichern. Nur mit Ihrer Einwilligung (Einstellungen > Analyse) speichert sie eine zufällige ID auf Ihrem Gerät und sendet die aufgerufenen Bildschirme, wann Sie die App öffnen, und Bildschirmaufnahmen mit abgedeckten Texten und Bildern, jeweils verknüpft mit Ihrer Konto-ID. PostHog ermittelt aus Ihrer IP-Adresse Ihren ungefähren Standort und verwirft die IP-Adresse dann. Unter Android liest die App die Installationsquelle von Google Play nur aus, um einen Einladungslink zu öffnen; sie geht nicht an PostHog.",
+        "<strong>App:</strong> Die App sendet immer Fehlerberichte mit Gerätetyp, Betriebssystem und App-Version, ohne eine ID auf Ihrem Gerät zu speichern. Nur mit Ihrer Einwilligung (Einstellungen > Analyse) speichert sie eine zufällige ID auf Ihrem Gerät und sendet die aufgerufenen Bildschirme, wann Sie die App öffnen, welche Hinweise Sie sehen oder antippen (etwa eine Einladung oder einen Update-Hinweis), und Bildschirmaufnahmen mit abgedeckten Texten und Bildern, jeweils verknüpft mit Ihrer Konto-ID. PostHog ermittelt aus Ihrer IP-Adresse Ihren ungefähren Standort und verwirft die IP-Adresse dann. Unter Android liest die App die Installationsquelle von Google Play nur aus, um einen Einladungslink zu öffnen; sie geht nicht an PostHog.",
       posthogAi:
         "Außerdem senden wir KI-Nutzungsdaten (Modell, Tokens, Antwortzeit, Kosten), nie Prompts oder Antworten. Siehe die <link>Datenschutzerklärung von PostHog</link>.",
     },
@@ -209,7 +209,7 @@ export const legal = {
       intro:
         "Soweit wir uns auf berechtigte Interessen stützen, können Sie aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit widersprechen (Art. 21 DSGVO). Bei der Analyse brauchen Sie keinen Grund anzugeben.",
       signedIn:
-        "<strong>Angemeldet:</strong> Schalten Sie die Nutzungsanalyse unter Einstellungen > Analyse aus, in der App oder im Web, oder schreiben Sie an support@flatsby.com. Wir beenden dann die Analyse für Ihr Konto. Fehlerberichte senden wir weiter, um Fehler zu beheben; dem können Sie per E-Mail widersprechen.",
+        "<strong>Angemeldet:</strong> Schalten Sie die Nutzungsanalyse unter Einstellungen > Analyse aus, in der App oder im Web, oder schreiben Sie an support@flatsby.com. Wir beenden dann die Analyse für Ihr Konto. Fehlerberichte und KI-Nutzungsdaten (Modell, Tokens, Kosten) senden wir weiter, um Fehler zu beheben und Kosten zu kontrollieren; dem können Sie per E-Mail widersprechen.",
       visitor:
         "<strong>Nicht angemeldet:</strong> Wir können Sie nicht wiedererkennen. Aktivieren Sie daher Global Privacy Control oder Do Not Track in Ihrem Browser. Dann zählen wir Ihre Besuche nicht.",
     },

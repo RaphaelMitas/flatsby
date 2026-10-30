@@ -5,6 +5,9 @@
 // POSTHOG_PROJECT_ID        the EU project's numeric id
 // POSTHOG_API_KEY           the project token (phc_...), used to send the $unset events
 //
+// Builds from before this change re-send email and name on every launch, so run it again
+// once most users have updated.
+//
 // PostHog has no API to delete events by name or date, so the pre-consent $screen events
 // can only be deleted with their whole person; otherwise they expire with the 12-month retention.
 

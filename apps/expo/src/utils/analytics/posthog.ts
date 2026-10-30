@@ -1,4 +1,5 @@
 import type { AnalyticsConsent } from "@flatsby/validators/user";
+import type { PostHogCustomStorage } from "posthog-react-native";
 import { useSyncExternalStore } from "react";
 import { File, Paths } from "expo-file-system";
 import { PostHog } from "posthog-react-native";
@@ -17,26 +18,51 @@ if (!posthogApiKey && !posthogDisabled)
 const POSTHOG_FILE = ".posthog-rn.json";
 const POSTHOG_FILES = [POSTHOG_FILE, ".posthog-rn-logs.json"];
 
-let consent: AnalyticsConsent = { screens: false, recordings: false };
+const noConsent: AnalyticsConsent = { screens: false, recordings: false };
+
+// The latest choice, so before_send stops at once even while a client swap is still queued
+let consent = noConsent;
 
 export const storesDeviceId = ({ screens, recordings }: AnalyticsConsent) =>
   screens || recordings;
 
-// Without consent only crash reports leave the phone; recordings alone still carry the account link
+// Recordings alone still send $identify, or the replay has no account
 function isAllowed(event: string) {
   if (consent.screens || event === "$exception") return true;
   return consent.recordings && (event === "$snapshot" || event === "$identify");
 }
 
-function createClient() {
-  const persistent = storesDeviceId(consent);
-  return new PostHog(posthogApiKey || "phc-disabled", {
+interface Client {
+  posthog: PostHog;
+  lease: { active: boolean };
+}
+
+// The SDK's own file storage, except a retired client can't write: it never drops its AppState listener
+function fileStorage(lease: Client["lease"]): PostHogCustomStorage {
+  return {
+    getItem: (key) => {
+      const file = new File(Paths.document, key);
+      return file.exists ? file.text() : null;
+    },
+    setItem: async (key, value) => {
+      if (lease.active) await new File(Paths.document, key).write(value);
+    },
+  };
+}
+
+function createClient(forConsent: AnalyticsConsent): Client {
+  const persistent = storesDeviceId(forConsent);
+  const lease = { active: persistent };
+  const posthog = new PostHog(posthogApiKey || "phc-disabled", {
     disabled: posthogDisabled,
     host: "https://eu.i.posthog.com",
-    // Memory keeps the ID off the device, and keeps the native plugin from starting before consent
     persistence: persistent ? "file" : "memory",
+    customStorage: fileStorage(lease),
     captureAppLifecycleEvents: persistent,
     preloadFeatureFlags: false,
+    // Push support starts the native SDK, which keeps IDs of its own on the device
+    capturePushNotificationSubscriptions: false,
+    capturePushNotificationOpened: false,
     sessionReplayConfig: {
       maskAllTextInputs: true,
       maskAllImages: true,
@@ -74,9 +100,13 @@ function createClient() {
       },
     },
   });
+  return { posthog, lease };
 }
 
-let client = createClient();
+// What the current client was built with; the swaps below run one at a time
+let applied = noConsent;
+let current = createClient(applied);
+let queue = Promise.resolve();
 const listeners = new Set<() => void>();
 
 const subscribe = (listener: () => void) => {
@@ -84,30 +114,39 @@ const subscribe = (listener: () => void) => {
   return () => listeners.delete(listener);
 };
 
-export const getPostHog = () => client;
-export const getAnalyticsConsent = () => consent;
+export const getPostHog = () => current.posthog;
+export const getAnalyticsConsent = () => applied;
 export const usePostHogClient = () =>
   useSyncExternalStore(subscribe, getPostHog);
 
-// Persistence is fixed when a client is created, so giving or withdrawing consent swaps the client
-export async function applyConsent(next: AnalyticsConsent) {
-  const previous = client;
-  const wasRecording = consent.recordings;
-  const swap = storesDeviceId(next) !== storesDeviceId(consent);
+export function applyConsent(next: AnalyticsConsent) {
   consent = next;
-
-  if (wasRecording && !next.recordings) await previous.stopSessionRecording();
-  if (swap) {
-    client = createClient();
-    for (const listener of listeners) listener();
-    await previous.shutdown();
-    if (!storesDeviceId(next)) deletePostHogFiles();
-  }
-  if (next.recordings && (!wasRecording || swap))
-    await client.startSessionRecording();
+  queue = queue.then(() => apply(consent)).catch(console.error);
+  return queue;
 }
 
-export function deletePostHogFiles() {
+// Persistence is fixed when a client is created, so giving or withdrawing consent swaps the client
+async function apply(next: AnalyticsConsent) {
+  const previous = current;
+  const wasRecording = applied.recordings;
+  const swap = storesDeviceId(next) !== storesDeviceId(applied);
+  applied = next;
+
+  if (wasRecording && !next.recordings)
+    await previous.posthog.stopSessionRecording();
+  if (swap) {
+    current = createClient(next);
+    for (const listener of listeners) listener();
+    previous.lease.active = false;
+    if (!storesDeviceId(next)) previous.posthog.reset();
+    await previous.posthog.shutdown();
+  }
+  if (!storesDeviceId(next)) deletePostHogFiles();
+  if (next.recordings && (!wasRecording || swap))
+    await current.posthog.startSessionRecording();
+}
+
+function deletePostHogFiles() {
   for (const name of POSTHOG_FILES) {
     const file = new File(Paths.document, name);
     if (file.exists) file.delete();
@@ -118,7 +157,6 @@ const legacyFileSchema = z.object({
   content: z.object({ opted_out: z.boolean().optional() }),
 });
 
-/** What builds from before consent left in the SDK's file, read before it gets deleted */
 export async function readLegacyPostHogFile() {
   const file = new File(Paths.document, POSTHOG_FILE);
   if (!file.exists) return { existed: false, optedOut: false };

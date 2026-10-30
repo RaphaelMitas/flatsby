@@ -57,8 +57,9 @@ export const settings = {
       "Welche Funktionen du nutzt, nie was du eingibst, im Web und in der App. Ausschalten, um zu widersprechen.",
     appOnly: "Bildschirme und Bildschirmaufnahmen gibt es nur in der App.",
     consentSection: "Freiwillig, mit deiner Einwilligung",
-    screens: "Bildschirme und App-Starts",
-    screensBody: "Nutzt eine ID auf diesem Gerät",
+    screens: "Bildschirme und App-Nutzung",
+    screensBody:
+      "Bildschirme, App-Starts und angetippte Hinweise. Nutzt eine ID auf diesem Gerät",
     recordings: "Bildschirmaufnahmen",
     recordingsBody: "Texte und Bilder abgedeckt",
     footer:
@@ -66,7 +67,8 @@ export const settings = {
     sheetTitle: "Nutzung mit Flatsby teilen",
     sheetBody:
       "Freiwillig, mit deiner Einwilligung, um Probleme zu finden und zu beheben. Mit deinem Konto verknüpft über eine ID auf diesem Gerät. Nur an PostHog (Server in der EU, Zugriff aus den USA unter EU-Garantien möglich). Jederzeit in den Einstellungen widerrufbar. <link>Details</link>",
-    screensKept: "12 Monate gespeichert",
+    screensKept:
+      "Bildschirme, App-Starts und angetippte Hinweise. 12 Monate gespeichert",
     recordingsKept: "Texte und Bilder abgedeckt. 30 Tage gespeichert",
     done: "Fertig",
     invite: "Hilf uns, Störendes zu beheben",

@@ -13,8 +13,7 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Switch } from "~/lib/ui/switch";
 import {
-  consentChoice,
-  consentOf,
+  useAnalyticsConsent,
   useSaveAnalyticsConsent,
 } from "~/utils/analytics/consent";
 import { trpc } from "~/utils/api";
@@ -26,7 +25,7 @@ export default function AnalyticsSettings() {
   const queryClient = useQueryClient();
   const userQuery = trpc.user.getCurrentUser;
   const { data: user } = useSuspenseQuery(userQuery.queryOptions());
-  const consent = consentOf(consentChoice.useValue() ?? "none");
+  const consent = useAnalyticsConsent();
   const save = useSaveAnalyticsConsent();
   const { open, sheet } = useAnalyticsConsentSheet();
 

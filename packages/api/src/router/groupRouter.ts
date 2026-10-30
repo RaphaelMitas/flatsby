@@ -59,7 +59,7 @@ const updateGroup = protectedProcedure
         if (!updated) {
           return yield* Errors.notFound("group", id);
         }
-        // The currency banner's answer, measured where it lands instead of on the tap
+        // Captured on save so a failed update isn't counted
         if (settings.convertAutomatically !== undefined) {
           captureUserEvent({
             user: ctx.session.user,

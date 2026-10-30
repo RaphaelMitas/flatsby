@@ -132,7 +132,7 @@ export const legal = {
       mobileDevice:
         "Device type, operating system and app version; with your consent, a random device ID",
       mobileViews:
-        "Actions you take; with your consent, screens you open and screen recordings",
+        "Actions you take; with your consent, screens you open, prompts you tap and screen recordings",
       errors: "Error reports, occasionally including content you entered",
     },
     basis: {
@@ -170,7 +170,7 @@ export const legal = {
       posthogServer:
         "<strong>Signed in (web and app):</strong> Our server sends each action you take with your account ID, group, browser or device type and the referring page, but not what you entered. You can turn this off under Settings > Analytics, in the app or on the web.",
       posthogMobile:
-        "<strong>App:</strong> The app always sends error reports with device type, operating system and app version, without keeping an ID on your device. Only with your consent (Settings > Analytics) does it store a random ID on your device and send the screens you open, when you open the app, and screen recordings with text and images masked, all linked to your account ID. PostHog derives your approximate location from your IP address, then discards it. On Android the app reads the install source from Google Play only to open an invite link; it isn't sent to PostHog.",
+        "<strong>App:</strong> The app always sends error reports with device type, operating system and app version, without keeping an ID on your device. Only with your consent (Settings > Analytics) does it store a random ID on your device and send the screens you open, when you open the app, which prompts you see or tap (such as an invite or update notice), and screen recordings with text and images masked, all linked to your account ID. PostHog derives your approximate location from your IP address, then discards it. On Android the app reads the install source from Google Play only to open an invite link; it isn't sent to PostHog.",
       posthogAi:
         "We also send AI usage metrics (model, tokens, latency, cost), never prompts or responses. See <link>PostHog's privacy policy</link>.",
     },
@@ -201,7 +201,7 @@ export const legal = {
       intro:
         "Where we rely on legitimate interests, you can object at any time on grounds relating to your particular situation (Art. 21 GDPR). For analytics you don't need to give a reason.",
       signedIn:
-        "<strong>Signed in:</strong> Turn off usage analytics under Settings > Analytics, in the app or on the web, or email support@flatsby.com. We then stop analytics for your account. Error reports are still sent so we can fix bugs; to object to those, email us.",
+        "<strong>Signed in:</strong> Turn off usage analytics under Settings > Analytics, in the app or on the web, or email support@flatsby.com. We then stop analytics for your account. Error reports and AI usage metrics (model, tokens, cost) are still sent, to fix bugs and control costs; to object to those, email us.",
       visitor:
         "<strong>Not signed in:</strong> We can't recognize you, so turn on Global Privacy Control or Do Not Track in your browser. We then don't count your visits.",
     },

@@ -38,7 +38,6 @@ export function AnalyticsPrompt({ className }: { className?: string }) {
     className,
   );
 
-  // An account that objected is told nothing about recording it
   if (prompt === "notice" && user && !user.analyticsOptOut) {
     return (
       <View testID="analytics-notice" className={rowClass}>

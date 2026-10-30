@@ -435,7 +435,7 @@ export const userRouter = createTRPCRouter({
 
   setAnalyticsOptOut: protectedProcedure
     .input(setAnalyticsOptOutInputSchema)
-    .output(getApiResultZod(z.object({ optOut: z.boolean() })))
+    .output(getApiResultZod(z.object({ success: z.boolean() })))
     .mutation(async ({ ctx, input }) =>
       runResult(
         ctx,
@@ -448,7 +448,7 @@ export const userRouter = createTRPCRouter({
                 .update(users)
                 .set({ analyticsOptOut: input.optOut })
                 .where(eq(users.id, ctx.session.user.id));
-              return { optOut: input.optOut };
+              return { success: true };
             },
             { messageKey: "errors.updateAnalyticsFailed", table: "users" },
           );

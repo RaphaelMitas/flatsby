@@ -8,18 +8,16 @@ import { Button } from "~/lib/ui/button";
 import { SheetModal } from "~/lib/ui/sheet-modal";
 import { Switch } from "~/lib/ui/switch";
 import {
-  consentChoice,
-  consentOf,
+  useAnalyticsConsent,
   useSaveAnalyticsConsent,
 } from "~/utils/analytics/consent";
 import { openLegalPage } from "~/utils/legal";
 
-/** The only place consent is given: Home's invitation and Settings' switches both open it */
 export function useAnalyticsConsentSheet() {
   const t = useTranslations("settings.analytics");
   const locale = useLocale();
   const sheetRef = useRef<BottomSheetModal>(null);
-  const current = consentOf(consentChoice.useValue() ?? "none");
+  const current = useAnalyticsConsent();
   const save = useSaveAnalyticsConsent();
   const [draft, setDraft] = useState(current);
 

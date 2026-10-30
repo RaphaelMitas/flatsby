@@ -17,6 +17,9 @@ export const consentChoice = storedChoice(
     CHOICES.find((choice) => choice === saved) ?? "none",
 );
 
+export const useAnalyticsConsent = () =>
+  consentOf(consentChoice.useValue() ?? "none");
+
 export const consentOf = (choice: ConsentChoice): AnalyticsConsent => ({
   screens: choice === "screens" || choice === "both",
   recordings: choice === "recordings" || choice === "both",
@@ -41,7 +44,13 @@ export const analyticsPrompt = storedChoice(
 );
 
 export function useSaveAnalyticsConsent() {
-  const log = useMutation(trpc.user.logAnalyticsConsent.mutationOptions());
+  // The record proves consent, so it waits for a connection and retries instead of failing once
+  const log = useMutation(
+    trpc.user.logAnalyticsConsent.mutationOptions({
+      networkMode: "online",
+      retry: 3,
+    }),
+  );
 
   return (next: AnalyticsConsent) => {
     consentChoice.save(choiceOf(next));

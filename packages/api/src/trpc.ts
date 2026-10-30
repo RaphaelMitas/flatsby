@@ -134,7 +134,12 @@ const timingMiddleware = t.middleware(
       console.log(`[TRPC] ${path} took ${durationMs}ms to execute`);
     }
 
-    if (ctx.session && type === "mutation") {
+    // Capturing the objection itself would send the account to PostHog one more time
+    if (
+      ctx.session &&
+      type === "mutation" &&
+      path !== "user.setAnalyticsOptOut"
+    ) {
       // a streaming procedure returns before its body runs, so its duration and outcome are unknown here
       const isStream = result.ok && Symbol.asyncIterator in Object(result.data);
       captureUserEvent({

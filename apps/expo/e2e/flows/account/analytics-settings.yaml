@@ -2,7 +2,6 @@ appId: ${APP_ID}
 tags:
   - account
 ---
-# Mirrors the usage analytics switch in apps/nextjs/e2e/account/account-management.spec.ts.
 # Turning on a consent switch opens the consent sheet, where the choice is made.
 - runFlow: ../../subflows/e2e-login.yaml
 - tapOn: "Settings"

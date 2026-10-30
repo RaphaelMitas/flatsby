@@ -28,6 +28,8 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       AppStoreID: "6747908544",
+      // Without it the PostHog plugin hooks notification taps at launch, before consent is known
+      "com.posthog.posthog.CAPTURE_PUSH_NOTIFICATION_OPENED": false,
       // The e2e suite talks to a plain-HTTP server on the runner, which App
       // Transport Security blocks in a Release build.
       ...(isE2E && {
