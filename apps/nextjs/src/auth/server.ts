@@ -116,7 +116,6 @@ export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
 );
 
-// The steps after sign-in need its session and carry on to where sign-in was headed
 export async function signedInStep(
   searchParams: Promise<{ next?: string | string[] }>,
 ) {

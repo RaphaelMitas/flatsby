@@ -16,7 +16,7 @@ export const PASSKEY_DEVICE_KEY = "passkey-device";
 
 export const PASSKEY_NAME_MAX_LENGTH = 64;
 
-// Better Auth only registers passkeys on a session younger than a day, so a stolen session can't add one
+// Better Auth only registers passkeys on a session younger than a day
 const passkeyError = (error: AuthError) =>
   error.code === "SESSION_NOT_FRESH"
     ? msg("auth.passkey.signInAgain")
