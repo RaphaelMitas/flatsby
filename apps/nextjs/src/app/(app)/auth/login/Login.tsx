@@ -25,6 +25,17 @@ import { savePasskeyDevice, usePasskeyDevice } from "~/auth/passkey-device";
 import EmailCode from "./EmailCode";
 import { sendLoginEvent } from "./send-login-event";
 
+function OrDivider() {
+  const t = useTranslations();
+  return (
+    <div className="text-muted-foreground flex items-center gap-3 text-xs">
+      <Separator className="flex-1" />
+      {t("auth.login.or")}
+      <Separator className="flex-1" />
+    </div>
+  );
+}
+
 const Login = ({ callbackURL }: { callbackURL: string }) => {
   const t = useTranslations();
   const locale = useLocale();
@@ -94,6 +105,14 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
   };
   const passkeyFirst = usePasskeyDevice() === "used";
   const busy = loading !== "false" || emailStep.sending || passkey.busy;
+  const passkeyError = passkey.error && (
+    <p
+      className="text-destructive text-sm"
+      data-testid="auth-login-passkey-error"
+    >
+      {t(passkey.error)}
+    </p>
+  );
 
   const signInWith = async (provider: LoginProvider) => {
     const attempt = {
@@ -167,19 +186,8 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                     )}
                     {t("auth.login.signInWithPasskey")}
                   </Button>
-                  {passkey.error && (
-                    <p
-                      className="text-destructive text-sm"
-                      data-testid="auth-login-passkey-error"
-                    >
-                      {t(passkey.error)}
-                    </p>
-                  )}
-                  <div className="text-muted-foreground flex items-center gap-3 text-xs">
-                    <Separator className="flex-1" />
-                    {t("auth.login.or")}
-                    <Separator className="flex-1" />
-                  </div>
+                  {passkeyError}
+                  <OrDivider />
                 </>
               )}
               <form
@@ -228,11 +236,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                   )}
                 </Button>
               </form>
-              <div className="text-muted-foreground flex items-center gap-3 text-xs">
-                <Separator className="flex-1" />
-                {t("auth.login.or")}
-                <Separator className="flex-1" />
-              </div>
+              <OrDivider />
               <div className="flex gap-3">
                 <Button
                   type="button"
@@ -278,14 +282,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                     {passkey.busy && <LoadingSpinner className="mr-2" />}
                     {t("auth.login.signInWithPasskey")}
                   </Button>
-                  {passkey.error && (
-                    <p
-                      className="text-destructive text-sm"
-                      data-testid="auth-login-passkey-error"
-                    >
-                      {t(passkey.error)}
-                    </p>
-                  )}
+                  {passkeyError}
                 </div>
               )}
             </>

@@ -16,6 +16,7 @@ import {
   expenseSplits,
   groupMembers,
   groups,
+  passkeys,
   sessions,
   shoppingListItems,
   shoppingLists,
@@ -778,6 +779,7 @@ export async function DELETE() {
   if (userIds.length > 0) {
     await db.delete(sessions).where(inArray(sessions.userId, userIds));
     await db.delete(accounts).where(inArray(accounts.userId, userIds));
+    await db.delete(passkeys).where(inArray(passkeys.userId, userIds));
     await db.delete(users).where(inArray(users.id, userIds));
   }
 

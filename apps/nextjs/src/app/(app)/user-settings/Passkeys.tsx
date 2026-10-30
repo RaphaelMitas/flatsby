@@ -1,11 +1,11 @@
 "use client";
 
 import type { Passkey } from "@better-auth/passkey/client";
-import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import {
   AlertDialog,
+  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@flatsby/ui/alert-dialog";
-import { Button } from "@flatsby/ui/button";
+import { Button, buttonVariants } from "@flatsby/ui/button";
 import {
   Card,
   CardContent,
@@ -25,26 +25,18 @@ import {
 import PasskeyIcon from "@flatsby/ui/custom/icons/PasskeyIcon";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Input } from "@flatsby/ui/input";
-import { usePasskey } from "@flatsby/validators/usePasskey";
+import {
+  PASSKEY_NAME_MAX_LENGTH,
+  usePasskeyRow,
+} from "@flatsby/validators/usePasskey";
 
 import { authClient } from "~/auth/client";
-import { savePasskeyDevice } from "~/auth/passkey-device";
-import { sendLoginEvent } from "../auth/login/send-login-event";
+import { useAddPasskey } from "~/auth/passkey-device";
 
 export default function Passkeys() {
   const t = useTranslations();
   const { data: passkeys } = authClient.useListPasskeys();
-  const add = usePasskey({
-    run: () => authClient.passkey.addPasskey(),
-    onDone: () => {
-      savePasskeyDevice("used");
-      sendLoginEvent({
-        event: "passkey_created",
-        source: "settings",
-        url: window.location.href,
-      });
-    },
-  });
+  const add = useAddPasskey("settings");
 
   return (
     <Card data-testid="settings-passkeys">
@@ -78,80 +70,36 @@ function PasskeyRow({ passkey }: { passkey: Passkey }) {
   const t = useTranslations();
   const format = useFormatter();
   const name = passkey.name ?? t("settings.passkeys.unnamed");
-  const [draft, setDraft] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  const change = async (
-    request: () => Promise<{ error: unknown }>,
-    onSuccess?: () => void,
-  ) => {
-    setBusy(true);
-    setFailed(false);
-    const { error } = await request().catch((thrown: unknown) => ({
-      error: thrown,
-    }));
-    setBusy(false);
-    if (error) setFailed(true);
-    else onSuccess?.();
-  };
-
-  const rename = () => {
-    const next = draft?.trim();
-    if (!next) return;
-    void change(
-      () => authClient.passkey.updatePasskey({ id: passkey.id, name: next }),
-      () => setDraft(null),
-    );
-  };
+  const row = usePasskeyRow({
+    rename: (next) =>
+      authClient.passkey.updatePasskey({ id: passkey.id, name: next }),
+    remove: () => authClient.passkey.deletePasskey({ id: passkey.id }),
+  });
 
   return (
     <div className="flex flex-col gap-2" data-testid="settings-passkey">
       <div className="flex items-center gap-3">
         <PasskeyIcon className="text-muted-foreground h-5 w-5 shrink-0" />
-        {draft === null ? (
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate font-medium">{name}</span>
-            {passkey.createdAt && (
-              <span className="text-muted-foreground text-sm">
-                {t("settings.passkeys.created", {
-                  date: format.dateTime(new Date(passkey.createdAt), {
-                    dateStyle: "medium",
-                  }),
-                })}
-              </span>
-            )}
-          </div>
-        ) : (
-          <form
-            className="flex flex-1 gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              rename();
-            }}
-          >
-            <Input
-              autoFocus
-              value={draft}
-              maxLength={64}
-              aria-label={t("settings.passkeys.namePlaceholder")}
-              placeholder={t("settings.passkeys.namePlaceholder")}
-              data-testid="settings-passkey-name-input"
-              onChange={(event) => setDraft(event.target.value)}
-            />
-            <Button type="submit" disabled={busy || !draft.trim()}>
-              {t("settings.passkeys.save")}
-            </Button>
-          </form>
-        )}
-        {draft === null && (
+        {row.draft === null ? (
           <>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate font-medium">{name}</span>
+              {passkey.createdAt && (
+                <span className="text-muted-foreground text-sm">
+                  {t("settings.passkeys.created", {
+                    date: format.dateTime(new Date(passkey.createdAt), {
+                      dateStyle: "medium",
+                    }),
+                  })}
+                </span>
+              )}
+            </div>
             <Button
               variant="ghost"
               size="sm"
-              disabled={busy}
+              disabled={row.busy}
               data-testid="settings-passkey-rename"
-              onClick={() => setDraft(passkey.name ?? "")}
+              onClick={() => row.setDraft(passkey.name ?? "")}
             >
               {t("settings.passkeys.rename")}
             </Button>
@@ -161,10 +109,10 @@ function PasskeyRow({ passkey }: { passkey: Passkey }) {
                   variant="ghost"
                   size="sm"
                   className="text-destructive"
-                  disabled={busy}
+                  disabled={row.busy}
                   data-testid="settings-passkey-remove"
                 >
-                  {t("settings.passkeys.remove")}
+                  {t("common.remove")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -178,24 +126,48 @@ function PasskeyRow({ passkey }: { passkey: Passkey }) {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                  <Button
-                    variant="destructive"
+                  <AlertDialogAction
+                    className={buttonVariants({ variant: "destructive" })}
                     data-testid="settings-passkey-remove-confirm"
-                    onClick={() =>
-                      void change(() =>
-                        authClient.passkey.deletePasskey({ id: passkey.id }),
-                      )
-                    }
+                    onClick={row.remove}
                   >
-                    {t("settings.passkeys.remove")}
-                  </Button>
+                    {t("common.remove")}
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </>
+        ) : (
+          <form
+            className="flex flex-1 gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              row.saveName();
+            }}
+          >
+            <Input
+              autoFocus
+              value={row.draft}
+              maxLength={PASSKEY_NAME_MAX_LENGTH}
+              aria-label={t("settings.passkeys.namePlaceholder")}
+              placeholder={t("settings.passkeys.namePlaceholder")}
+              data-testid="settings-passkey-name-input"
+              onChange={(event) => row.setDraft(event.target.value)}
+            />
+            <Button type="submit" disabled={row.busy || !row.draft.trim()}>
+              {t("common.save")}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => row.setDraft(null)}
+            >
+              {t("common.cancel")}
+            </Button>
+          </form>
         )}
       </div>
-      {failed && (
+      {row.failed && (
         <p className="text-destructive text-sm">{t("auth.passkey.failed")}</p>
       )}
     </div>

@@ -17,6 +17,11 @@ tags:
     id: "sign-in-google-button"
 - assertVisible:
     id: "sign-in-apple-button"
+# A device that never used a passkey only gets the small link
+- assertVisible:
+    id: "sign-in-passkey-link"
+- assertNotVisible:
+    id: "sign-in-passkey-button"
 - assertVisible: "Manage your daily life with your flatmates."
 # The Terms/Privacy links are nested Text nodes, exposed as one combined string
 - assertVisible: ".*Terms.*Privacy Policy.*"

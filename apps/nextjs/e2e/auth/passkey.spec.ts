@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { waitForHydration } from "../helpers/hydration";
-import { requestCode } from "../helpers/sign-in-code";
+import { currentUserId, requestCode } from "../helpers/sign-in-code";
 
 // Chrome's virtual authenticator stands in for Touch ID and keeps the passkey for the whole test
 async function addAuthenticator(page: Page) {
@@ -19,12 +19,6 @@ async function addAuthenticator(page: Page) {
       automaticPresenceSimulation: true,
     },
   });
-}
-
-async function currentUserId(page: Page) {
-  const response = await page.request.get("/api/auth/get-session");
-  const body = (await response.json()) as { user: { id: string } } | null;
-  return body?.user.id;
 }
 
 test.describe("Passkeys", () => {

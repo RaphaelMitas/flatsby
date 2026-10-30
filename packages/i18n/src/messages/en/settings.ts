@@ -113,9 +113,7 @@ export const settings = {
     unnamed: "Passkey",
     actions: "Passkey options",
     rename: "Rename",
-    save: "Save",
     namePlaceholder: "Name",
-    remove: "Remove",
     removeTitle: "Remove passkey?",
     removeBody:
       "“{name}” will stop working for Flatsby. Delete it in your password manager too, or it will keep being offered. You can always sign in with an email code.",

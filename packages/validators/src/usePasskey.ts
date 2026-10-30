@@ -14,6 +14,14 @@ export const parsePasskeyDevice = (saved: string | null): PasskeyDevice =>
 
 export const PASSKEY_DEVICE_KEY = "passkey-device";
 
+export const PASSKEY_NAME_MAX_LENGTH = 64;
+
+// Better Auth only registers passkeys on a session younger than a day, so a stolen session can't add one
+const passkeyError = (error: AuthError) =>
+  error.code === "SESSION_NOT_FRESH"
+    ? msg("auth.passkey.signInAgain")
+    : msg("auth.passkey.failed");
+
 export function usePasskey({
   run,
   onDone,
@@ -50,7 +58,7 @@ export function usePasskey({
         return;
       }
       onFailed?.(startFailureCode(failure));
-      setError(msg("auth.passkey.failed"));
+      setError(passkeyError(failure));
     } catch (thrown) {
       onFailed?.(thrownFailureCode(thrown));
       setError(msg("auth.passkey.failed"));
@@ -61,4 +69,47 @@ export function usePasskey({
   };
 
   return { start, busy, error };
+}
+
+type PasskeyChange = () => Promise<{ error: unknown }>;
+
+export function usePasskeyRow({
+  rename,
+  remove,
+}: {
+  rename: (name: string) => ReturnType<PasskeyChange>;
+  remove: PasskeyChange;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  const change = async (request: PasskeyChange, onSuccess?: () => void) => {
+    setBusy(true);
+    setFailed(false);
+    const { error } = await request().catch((thrown: unknown) => ({
+      error: thrown,
+    }));
+    setBusy(false);
+    if (error) setFailed(true);
+    else onSuccess?.();
+  };
+
+  const saveName = () => {
+    const name = draft?.trim();
+    if (!name) return;
+    void change(
+      () => rename(name),
+      () => setDraft(null),
+    );
+  };
+
+  return {
+    draft,
+    setDraft,
+    busy,
+    failed,
+    saveName,
+    remove: () => void change(remove),
+  };
 }

@@ -50,6 +50,8 @@ export const auth = {
     createdBody: "Beim nächsten Mal reicht ein Blick oder ein Fingerabdruck.",
     continue: "Los geht's",
     failed: "Das hat nicht geklappt. Versuch es noch einmal.",
+    signInAgain:
+      "Melde dich zur Sicherheit einmal ab und wieder an, dann kannst du einen Passkey hinzufügen.",
   },
   name: {
     title: "Wie sollen dich deine Mitbewohner nennen?",

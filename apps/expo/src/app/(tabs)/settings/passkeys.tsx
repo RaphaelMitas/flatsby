@@ -1,10 +1,11 @@
 import type { Passkey } from "@better-auth/passkey/client";
-import { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
-import { usePostHog } from "posthog-react-native";
 import { useFormatter, useTranslations } from "use-intl";
 
-import { usePasskey } from "@flatsby/validators/usePasskey";
+import {
+  PASSKEY_NAME_MAX_LENGTH,
+  usePasskeyRow,
+} from "@flatsby/validators/usePasskey";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
@@ -14,21 +15,26 @@ import { Input } from "~/lib/ui/input";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { cn } from "~/lib/utils";
 import { authClient } from "~/utils/auth/auth-client";
-import { passkeyDevice } from "~/utils/auth/passkey-device";
+import { useAddPasskey } from "~/utils/auth/passkey-device";
 
 export default function PasskeysScreen() {
   const t = useTranslations();
-  const posthog = usePostHog();
-  const { data: passkeys, isPending } = authClient.useListPasskeys();
-  const add = usePasskey({
-    run: () => authClient.passkey.addPasskey(),
-    onDone: () => {
-      passkeyDevice.save("used");
-      posthog.capture("passkey_created", { source: "settings" });
-    },
-  });
+  const { data: passkeys, isPending, error } = authClient.useListPasskeys();
+  const add = useAddPasskey("settings");
 
   if (isPending) return <SafeAreaView />;
+
+  if (error) {
+    return (
+      <SafeAreaView>
+        <AppScrollView contentContainerClassName="flex-grow justify-center p-6">
+          <Text className="text-destructive text-center text-sm">
+            {t("auth.passkey.failed")}
+          </Text>
+        </AppScrollView>
+      </SafeAreaView>
+    );
+  }
 
   const addButton = (
     <Button
@@ -101,30 +107,11 @@ function PasskeyRow({
   const t = useTranslations();
   const format = useFormatter();
   const name = passkey.name ?? t("settings.passkeys.unnamed");
-  const [draft, setDraft] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  const change = async (
-    request: () => Promise<{ error: unknown }>,
-    onSuccess?: () => void,
-  ) => {
-    setBusy(true);
-    const { error } = await request().catch((thrown: unknown) => ({
-      error: thrown,
-    }));
-    setBusy(false);
-    if (error) Alert.alert(t("common.error"), t("auth.passkey.failed"));
-    else onSuccess?.();
-  };
-
-  const rename = () => {
-    const next = draft?.trim();
-    if (!next) return;
-    void change(
-      () => authClient.passkey.updatePasskey({ id: passkey.id, name: next }),
-      () => setDraft(null),
-    );
-  };
+  const row = usePasskeyRow({
+    rename: (next) =>
+      authClient.passkey.updatePasskey({ id: passkey.id, name: next }),
+    remove: () => authClient.passkey.deletePasskey({ id: passkey.id }),
+  });
 
   const confirmRemove = () =>
     Alert.alert(
@@ -133,12 +120,9 @@ function PasskeyRow({
       [
         { text: t("common.cancel"), style: "cancel" },
         {
-          text: t("settings.passkeys.remove"),
+          text: t("common.remove"),
           style: "destructive",
-          onPress: () =>
-            void change(() =>
-              authClient.passkey.deletePasskey({ id: passkey.id }),
-            ),
+          onPress: row.remove,
         },
       ],
     );
@@ -147,81 +131,86 @@ function PasskeyRow({
     Alert.alert(name, undefined, [
       {
         text: t("settings.passkeys.rename"),
-        onPress: () => setDraft(passkey.name ?? ""),
+        onPress: () => row.setDraft(passkey.name ?? ""),
       },
       {
-        text: t("settings.passkeys.remove"),
+        text: t("common.remove"),
         style: "destructive",
         onPress: confirmRemove,
       },
       { text: t("common.cancel"), style: "cancel" },
     ]);
 
-  if (draft !== null) {
-    return (
-      <View
-        className={cn(
-          "flex-row items-center gap-3 py-3",
-          divider && "border-border border-b",
-        )}
-      >
-        <Input
-          testID="passkey-name-input"
-          className="flex-1"
-          autoFocus
-          value={draft}
-          maxLength={64}
-          placeholder={t("settings.passkeys.namePlaceholder")}
-          accessibilityLabel={t("settings.passkeys.namePlaceholder")}
-          onChangeText={setDraft}
-          returnKeyType="done"
-          onSubmitEditing={rename}
-        />
-        <Button
-          testID="passkey-name-save"
-          title={t("settings.passkeys.save")}
-          disabled={busy || !draft.trim()}
-          onPress={rename}
-        />
-      </View>
-    );
-  }
-
   return (
     <View
+      className={cn("gap-2 py-3", divider && "border-border border-b")}
       testID="passkey-row"
-      className={cn(
-        "flex-row items-center gap-3 py-3",
-        divider && "border-border border-b",
-      )}
     >
-      <Icon name="passkey" size={20} color="muted-foreground" />
-      <View className="flex-1">
-        <Text className="text-foreground text-base font-medium">{name}</Text>
-        {passkey.createdAt && (
-          <Text className="text-muted-foreground text-sm">
-            {t("settings.passkeys.created", {
-              date: format.dateTime(new Date(passkey.createdAt), {
-                dateStyle: "medium",
-              }),
-            })}
-          </Text>
-        )}
-      </View>
-      <Pressable
-        testID="passkey-actions"
-        accessibilityRole="button"
-        accessibilityLabel={t("settings.passkeys.actions")}
-        disabled={busy}
-        hitSlop={12}
-        onPress={showActions}
-      >
-        <Icon
-          name={busy ? "loader" : "ellipsis"}
-          size={20}
-          color="muted-foreground"
-        />
-      </Pressable>
+      {row.draft === null ? (
+        <View className="flex-row items-center gap-3">
+          <Icon name="passkey" size={20} color="muted-foreground" />
+          <View className="flex-1">
+            <Text className="text-foreground text-base font-medium">
+              {name}
+            </Text>
+            {passkey.createdAt && (
+              <Text className="text-muted-foreground text-sm">
+                {t("settings.passkeys.created", {
+                  date: format.dateTime(new Date(passkey.createdAt), {
+                    dateStyle: "medium",
+                  }),
+                })}
+              </Text>
+            )}
+          </View>
+          <Pressable
+            testID="passkey-actions"
+            accessibilityRole="button"
+            accessibilityLabel={t("settings.passkeys.actions")}
+            disabled={row.busy}
+            hitSlop={12}
+            onPress={showActions}
+          >
+            <Icon
+              name={row.busy ? "loader" : "ellipsis"}
+              size={20}
+              color="muted-foreground"
+            />
+          </Pressable>
+        </View>
+      ) : (
+        <View className="gap-2">
+          <Input
+            testID="passkey-name-input"
+            autoFocus
+            value={row.draft}
+            maxLength={PASSKEY_NAME_MAX_LENGTH}
+            placeholder={t("settings.passkeys.namePlaceholder")}
+            accessibilityLabel={t("settings.passkeys.namePlaceholder")}
+            onChangeText={row.setDraft}
+            returnKeyType="done"
+            onSubmitEditing={row.saveName}
+          />
+          <View className="flex-row justify-end gap-2">
+            <Button
+              variant="ghost"
+              title={t("common.cancel")}
+              onPress={() => row.setDraft(null)}
+            />
+            <Button
+              testID="passkey-name-save"
+              title={t("common.save")}
+              disabled={row.busy || !row.draft.trim()}
+              onPress={row.saveName}
+            />
+          </View>
+        </View>
+      )}
+      {row.failed && (
+        <Text className="text-destructive text-sm">
+          {t("auth.passkey.failed")}
+        </Text>
+      )}
     </View>
   );
 }

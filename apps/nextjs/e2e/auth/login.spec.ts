@@ -8,6 +8,9 @@ test.describe("Login page", () => {
     await expect(page.getByTestId("auth-login-email-input")).toBeVisible();
     await expect(page.getByTestId("auth-login-google-button")).toBeVisible();
     await expect(page.getByTestId("auth-login-apple-button")).toBeVisible();
+    // A browser that never used a passkey only gets the small link
+    await expect(page.getByTestId("auth-login-passkey-link")).toBeVisible();
+    await expect(page.getByTestId("auth-login-passkey-button")).toHaveCount(0);
   });
 
   test("has links to legal pages", async ({ page }) => {

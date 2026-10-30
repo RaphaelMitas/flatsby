@@ -27,7 +27,3 @@ export const nextSignInStep = () => steps[0] ?? null;
 export const finishSignInStep = (step: SignInStep) => {
   steps = steps.filter((pending) => pending !== step);
 };
-
-export const clearSignInSteps = () => {
-  steps = [];
-};

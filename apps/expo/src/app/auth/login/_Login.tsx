@@ -22,6 +22,19 @@ import { authClient, signIn, signInCode } from "~/utils/auth/auth-client";
 import { passkeyDevice, passkeysSupported } from "~/utils/auth/passkey-device";
 import { openLegalPage } from "~/utils/legal";
 
+function OrDivider() {
+  const t = useTranslations();
+  return (
+    <View className="flex-row items-center gap-3">
+      <Separator className="flex-1" />
+      <Text className="text-muted-foreground text-xs">
+        {t("auth.login.or")}
+      </Text>
+      <Separator className="flex-1" />
+    </View>
+  );
+}
+
 const Login = () => {
   const t = useTranslations();
   const locale = useLocale();
@@ -167,13 +180,7 @@ const Login = () => {
                 icon={passkey.busy ? "loader" : "passkey"}
               />
               {passkeyError}
-              <View className="flex-row items-center gap-3">
-                <Separator className="flex-1" />
-                <Text className="text-muted-foreground text-xs">
-                  {t("auth.login.or")}
-                </Text>
-                <Separator className="flex-1" />
-              </View>
+              <OrDivider />
             </>
           )}
           <View className="gap-2">
@@ -215,13 +222,7 @@ const Login = () => {
             icon={emailStep.sending ? "loader" : undefined}
           />
 
-          <View className="flex-row items-center gap-3">
-            <Separator className="flex-1" />
-            <Text className="text-muted-foreground text-xs">
-              {t("auth.login.or")}
-            </Text>
-            <Separator className="flex-1" />
-          </View>
+          <OrDivider />
 
           <Button
             testID="sign-in-google-button"

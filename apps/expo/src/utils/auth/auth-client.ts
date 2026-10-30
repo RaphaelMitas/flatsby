@@ -9,7 +9,7 @@ import { createAuthClient } from "better-auth/react";
 
 import { getBaseUrl } from "../base-url";
 import { languageTags } from "../intl-provider";
-import { clearSignInSteps } from "./post-login-path";
+import { queueSignInSteps } from "./post-login-path";
 
 export const authClient = createAuthClient({
   baseURL: getBaseUrl(),
@@ -40,7 +40,7 @@ export const signInCode: SignInCodeClient = {
 
 // Reminders on this phone belong to the account that scheduled them, and so do pending sign-in steps
 export async function signOut() {
-  clearSignInSteps();
+  queueSignInSteps([]);
   await Promise.all([
     Notifications.cancelAllScheduledNotificationsAsync(),
     Notifications.dismissAllNotificationsAsync(),

@@ -1,22 +1,17 @@
 import { useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
-
-import { usePasskey } from "@flatsby/validators/usePasskey";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { authClient } from "~/utils/auth/auth-client";
-import { passkeyDevice } from "~/utils/auth/passkey-device";
+import { passkeyDevice, useAddPasskey } from "~/utils/auth/passkey-device";
 import { finishSignInStep } from "~/utils/auth/post-login-path";
 
 export default function PasskeyOfferScreen() {
-  const t = useTranslations("auth.passkey");
+  const t = useTranslations();
   const router = useRouter();
-  const posthog = usePostHog();
   const [created, setCreated] = useState(false);
 
   const leave = () => {
@@ -24,14 +19,7 @@ export default function PasskeyOfferScreen() {
     router.replace("/");
   };
 
-  const passkey = usePasskey({
-    run: () => authClient.passkey.addPasskey(),
-    onDone: () => {
-      passkeyDevice.save("used");
-      posthog.capture("passkey_created", { source: "offer" });
-      setCreated(true);
-    },
-  });
+  const passkey = useAddPasskey("offer", () => setCreated(true));
 
   const later = () => {
     passkeyDevice.save("dismissed");
@@ -49,14 +37,14 @@ export default function PasskeyOfferScreen() {
             color="primary"
           />
           <Text className="text-foreground text-center text-2xl font-bold">
-            {created ? t("createdTitle") : t("title")}
+            {created ? t("auth.passkey.createdTitle") : t("auth.passkey.title")}
           </Text>
           <Text className="text-muted-foreground text-center text-base leading-relaxed">
             {created
-              ? t("createdBody")
+              ? t("auth.passkey.createdBody")
               : Platform.OS === "ios"
-                ? t("bodyIos")
-                : t("bodyAndroid")}
+                ? t("auth.passkey.bodyIos")
+                : t("auth.passkey.bodyAndroid")}
           </Text>
         </View>
         {passkey.error && (
@@ -64,14 +52,14 @@ export default function PasskeyOfferScreen() {
             testID="passkey-offer-error"
             className="text-destructive text-center text-sm"
           >
-            {t("failed")}
+            {t(passkey.error)}
           </Text>
         )}
         {created ? (
           <Button
             testID="passkey-offer-continue"
             className="w-full py-4"
-            title={t("continue")}
+            title={t("auth.passkey.continue")}
             onPress={leave}
           />
         ) : (
@@ -79,7 +67,7 @@ export default function PasskeyOfferScreen() {
             <Button
               testID="passkey-offer-create"
               className="w-full py-4"
-              title={t("create")}
+              title={t("auth.passkey.create")}
               icon={passkey.busy ? "loader" : undefined}
               disabled={passkey.busy}
               onPress={() => passkey.start()}
@@ -88,7 +76,7 @@ export default function PasskeyOfferScreen() {
               testID="passkey-offer-later"
               variant="ghost"
               className="w-full py-4"
-              title={t("later")}
+              title={t("auth.passkey.later")}
               disabled={passkey.busy}
               onPress={later}
             />

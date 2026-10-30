@@ -16,3 +16,9 @@ export async function requestCode(page: Page, email: string) {
   const { code } = (await response.json()) as { code: string };
   return code;
 }
+
+export async function currentUserId(page: Page) {
+  const response = await page.request.get("/api/auth/get-session");
+  const body = (await response.json()) as { user: { id: string } } | null;
+  return body?.user.id;
+}

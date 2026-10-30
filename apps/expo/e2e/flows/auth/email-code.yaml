@@ -54,3 +54,8 @@ tags:
     visible:
       id: "onboarding-title"
     timeout: 30000
+- openLink: flatsby://settings/passkeys
+- extendedWaitUntil:
+    visible:
+      id: "passkeys-empty"
+    timeout: 30000

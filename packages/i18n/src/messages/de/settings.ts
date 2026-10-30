@@ -117,9 +117,7 @@ export const settings = {
     unnamed: "Passkey",
     actions: "Passkey-Optionen",
     rename: "Umbenennen",
-    save: "Speichern",
     namePlaceholder: "Name",
-    remove: "Entfernen",
     removeTitle: "Passkey entfernen?",
     removeBody:
       "„{name}“ funktioniert danach nicht mehr für Flatsby. Lösch ihn auch in deinem Passwortmanager, sonst wird er dir weiter angeboten. Per E-Mail-Code kommst du immer rein.",

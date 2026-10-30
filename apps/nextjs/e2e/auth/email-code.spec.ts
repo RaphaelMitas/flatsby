@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 
 import { createAuthSession } from "../fixtures/auth";
 import { waitForHydration } from "../helpers/hydration";
-import { requestCode } from "../helpers/sign-in-code";
+import { currentUserId, requestCode } from "../helpers/sign-in-code";
 
 test.describe("Email code sign-in", () => {
   test("signs up a new address and asks for a name", async ({ page }) => {
@@ -51,8 +51,6 @@ test.describe("Email code sign-in", () => {
     }, `Code: ${code}`);
     await expect(page).toHaveURL(/\/home/);
 
-    const session = await page.request.get("/api/auth/get-session");
-    const body = (await session.json()) as { user: { id: string } };
-    expect(body.user.id).toBe(existing.userId);
+    expect(await currentUserId(page)).toBe(existing.userId);
   });
 });

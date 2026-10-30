@@ -4,7 +4,11 @@ import { useSyncExternalStore } from "react";
 import {
   parsePasskeyDevice,
   PASSKEY_DEVICE_KEY,
+  usePasskey,
 } from "@flatsby/validators/usePasskey";
+
+import { sendLoginEvent } from "~/app/(app)/auth/login/send-login-event";
+import { authClient } from "./client";
 
 export const passkeysSupported = () =>
   typeof window !== "undefined" &&
@@ -25,3 +29,21 @@ export const usePasskeyDevice = () =>
     readPasskeyDevice,
     (): PasskeyDevice => "unknown",
   );
+
+export function useAddPasskey(
+  source: "offer" | "settings",
+  onAdded?: () => void,
+) {
+  return usePasskey({
+    run: () => authClient.passkey.addPasskey(),
+    onDone: () => {
+      savePasskeyDevice("used");
+      sendLoginEvent({
+        event: "passkey_created",
+        source,
+        url: window.location.href,
+      });
+      onAdded?.();
+    },
+  });
+}

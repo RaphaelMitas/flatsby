@@ -46,6 +46,8 @@ export const auth = {
     createdBody: "Next time, a glance or a fingerprint is enough.",
     continue: "Let's go",
     failed: "That didn't work. Please try again.",
+    signInAgain:
+      "For your security, sign out and back in once, then you can add a passkey.",
   },
   name: {
     title: "What should your flatmates call you?",

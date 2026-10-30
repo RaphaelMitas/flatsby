@@ -8,14 +8,11 @@ import { useTranslations } from "next-intl";
 import { Button } from "@flatsby/ui/button";
 import PasskeyIcon from "@flatsby/ui/custom/icons/PasskeyIcon";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
-import { usePasskey } from "@flatsby/validators/usePasskey";
 
-import { authClient } from "~/auth/client";
-import { savePasskeyDevice } from "~/auth/passkey-device";
-import { sendLoginEvent } from "../login/send-login-event";
+import { savePasskeyDevice, useAddPasskey } from "~/auth/passkey-device";
 
 export default function PasskeyOffer({ next }: { next: string }) {
-  const t = useTranslations("auth.passkey");
+  const t = useTranslations();
   const router = useRouter();
   const [step, setStep] = useState<"checking" | "offer" | "created">(
     "checking",
@@ -31,18 +28,7 @@ export default function PasskeyOffer({ next }: { next: string }) {
       });
   }, [router, next]);
 
-  const passkey = usePasskey({
-    run: () => authClient.passkey.addPasskey(),
-    onDone: () => {
-      savePasskeyDevice("used");
-      sendLoginEvent({
-        event: "passkey_created",
-        source: "offer",
-        url: window.location.href,
-      });
-      setStep("created");
-    },
-  });
+  const passkey = useAddPasskey("offer", () => setStep("created"));
 
   const later = () => {
     savePasskeyDevice("dismissed");
@@ -60,27 +46,33 @@ export default function PasskeyOffer({ next }: { next: string }) {
         {step === "created" ? (
           <>
             <CircleCheckBig className="text-primary h-12 w-12" />
-            <h1 className="text-xl font-semibold">{t("createdTitle")}</h1>
-            <p className="text-muted-foreground text-sm">{t("createdBody")}</p>
+            <h1 className="text-xl font-semibold">
+              {t("auth.passkey.createdTitle")}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {t("auth.passkey.createdBody")}
+            </p>
             <Button
               className="w-full"
               data-testid="auth-passkey-continue"
               onClick={() => router.replace(next)}
             >
-              {t("continue")}
+              {t("auth.passkey.continue")}
             </Button>
           </>
         ) : (
           <>
             <PasskeyIcon className="h-12 w-12" />
-            <h1 className="text-xl font-semibold">{t("title")}</h1>
-            <p className="text-muted-foreground text-sm">{t("bodyWeb")}</p>
+            <h1 className="text-xl font-semibold">{t("auth.passkey.title")}</h1>
+            <p className="text-muted-foreground text-sm">
+              {t("auth.passkey.bodyWeb")}
+            </p>
             {passkey.error && (
               <p
                 className="text-destructive text-sm"
                 data-testid="auth-passkey-error"
               >
-                {t("failed")}
+                {t(passkey.error)}
               </p>
             )}
             <Button
@@ -90,7 +82,7 @@ export default function PasskeyOffer({ next }: { next: string }) {
               onClick={() => void passkey.start()}
             >
               {passkey.busy && <LoadingSpinner className="mr-2" />}
-              {t("create")}
+              {t("auth.passkey.create")}
             </Button>
             <Button
               variant="ghost"
@@ -99,7 +91,7 @@ export default function PasskeyOffer({ next }: { next: string }) {
               disabled={passkey.busy}
               onClick={later}
             >
-              {t("later")}
+              {t("auth.passkey.later")}
             </Button>
           </>
         )}
