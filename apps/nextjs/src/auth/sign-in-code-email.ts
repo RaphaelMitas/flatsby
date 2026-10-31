@@ -9,6 +9,7 @@ import { translatorFor } from "@flatsby/i18n/translator";
 import { SIGN_IN_CODE_TTL_MINUTES } from "@flatsby/validators/login";
 
 import { env } from "~/env";
+import { SignInCodeEmail } from "./SignInCodeEmail";
 
 // i18n-ignore: sender address, not copy
 const FROM = "Flatsby <login@mail.flatsby.com>";
@@ -39,18 +40,7 @@ export async function sendSignInCode({ email, code, headers }: SignInCode) {
     to: email,
     subject: t("auth.signInCodeEmail.subject", { code }),
     text: [heading, intro, code, expiry, ignore].join("\n\n"),
-    html: `<!doctype html>
-<html lang="${locale}">
-<body style="margin:0;padding:24px;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#09090b">
-<div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;padding:32px">
-<h1 style="font-size:20px;margin:0 0 16px">${heading}</h1>
-<p style="font-size:15px;line-height:1.5;margin:0 0 16px">${intro}</p>
-<p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:0 0 16px;font-family:ui-monospace,Menlo,monospace">${code}</p>
-<p style="font-size:15px;line-height:1.5;margin:0 0 16px">${expiry}</p>
-<p style="font-size:13px;line-height:1.5;margin:0;color:#71717a">${ignore}</p>
-</div>
-</body>
-</html>`,
+    react: SignInCodeEmail({ locale, code, heading, intro, expiry, ignore }),
   });
   if (error) {
     const failure = new Error(`Resend ${error.name}: ${error.message}`);
