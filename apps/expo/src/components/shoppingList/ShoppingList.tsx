@@ -17,7 +17,7 @@ import {
 import { useTranslations } from "use-intl";
 
 import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
-import { PullToRefresh } from "~/lib/components/pull-to-refresh";
+import { useRefreshControl } from "~/lib/components/pull-to-refresh";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { shoppingListMutations, trpc } from "~/utils/api";
 import { holdWhileMutating, useLivePolling } from "~/utils/live-query";
@@ -90,6 +90,7 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     () => Promise.all([refetchItems(), refetchCategoryCounts()]),
     [refetchItems, refetchCategoryCounts],
   );
+  const refreshControl = useRefreshControl(handleRefresh);
 
   const shoppingList =
     shoppingListData.success === true
@@ -275,28 +276,21 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
             />
           </View>
 
-          <PullToRefresh onRefresh={handleRefresh}>
-            {(refreshProps) => (
-              <FlashList
-                {...refreshProps}
-                ref={(list) => {
-                  listRef.current = list;
-                  refreshProps.ref?.(list);
-                }}
-                // Keeping the old top row in place would push a freshly added item above the viewport.
-                maintainVisibleContentPosition={{ disabled: true }}
-                className="flex-1"
-                data={flashListData}
-                renderItem={renderItem}
-                getItemType={getItemType}
-                keyExtractor={(item) => item.id}
-                onEndReached={handleLoadMore}
-                onEndReachedThreshold={0.5}
-                keyboardDismissMode="on-drag"
-                keyboardShouldPersistTaps="handled"
-              />
-            )}
-          </PullToRefresh>
+          <FlashList
+            ref={listRef}
+            refreshControl={refreshControl}
+            // Keeping the old top row in place would push a freshly added item above the viewport.
+            maintainVisibleContentPosition={{ disabled: true }}
+            className="flex-1"
+            data={flashListData}
+            renderItem={renderItem}
+            getItemType={getItemType}
+            keyExtractor={(item) => item.id}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+          />
           <AppKeyboardStickyView>
             <ShoppingListItemAddForm
               onSubmit={handleSubmit}
