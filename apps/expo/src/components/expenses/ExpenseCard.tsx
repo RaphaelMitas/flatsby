@@ -178,7 +178,7 @@ export function ExpenseCard({
               row={row}
               subcategory={expense.subcategory}
               isSelected={isSelected}
-              first={first}
+              className={corners}
               last={last}
             />
           </Pressable>

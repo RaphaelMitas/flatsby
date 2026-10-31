@@ -11,7 +11,7 @@ export interface ExpenseDisplayProps {
   row: ReturnType<typeof describeExpenseRow>;
   subcategory: string;
   isSelected?: boolean;
-  first: boolean;
+  className: string;
   last: boolean;
 }
 
@@ -19,7 +19,7 @@ export function ExpenseDisplay({
   row,
   subcategory,
   isSelected,
-  first,
+  className,
   last,
 }: ExpenseDisplayProps) {
   const category = getExpenseCategoryData({ subcategoryId: subcategory });
@@ -28,8 +28,8 @@ export function ExpenseDisplay({
     <View
       className={cn(
         "bg-card border-border min-h-14 flex-row items-center gap-3 border-t border-r border-l px-3 py-2.5",
-        first && "rounded-t-lg",
-        last && "rounded-b-lg border-b",
+        className,
+        last && "border-b",
         isSelected && "bg-muted",
       )}
     >

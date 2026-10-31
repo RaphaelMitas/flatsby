@@ -225,7 +225,7 @@ export function ExpenseDetailView({
                       <Text className="text-muted-foreground text-sm">
                         {t("expenses.to")}
                       </Text>
-                      <Text className="font-semibold">
+                      <Text className="text-foreground font-semibold">
                         {expense.expenseSplits[0].groupMember.user.name}
                       </Text>
                     </View>
