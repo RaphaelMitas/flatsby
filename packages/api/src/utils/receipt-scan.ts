@@ -1,10 +1,7 @@
 import type { ReceiptScan } from "@flatsby/validators/expenses/receipt-scan";
 import { Effect } from "effect";
 
-import {
-  isEmptyReceiptScan,
-  receiptScanFrom,
-} from "@flatsby/validators/expenses/receipt-scan";
+import { receiptScanFrom } from "@flatsby/validators/expenses/receipt-scan";
 
 import type { ApiError } from "../errors";
 import type { CreditUser } from "./autumn";
@@ -43,23 +40,19 @@ export const scanReceipt: ReceiptScanner = (user, imageBase64) =>
       catch: (cause) =>
         Errors.externalService("gateway", "scan receipt", cause),
     });
-    const scan = receiptScanFrom(reading);
-
-    if (!isEmptyReceiptScan(scan)) {
-      yield* Effect.promise(() =>
-        trackAIUsage({
-          customerId: user.id,
-          cost: extractGatewayMetadata(providerMetadata)?.cost,
-        }).catch((error: unknown) =>
-          captureError({
-            error,
-            operation: "track-scan-receipt-usage",
-            distinctId: user.id,
-          }),
-        ),
-      );
-    }
-    return scan;
+    yield* Effect.promise(() =>
+      trackAIUsage({
+        customerId: user.id,
+        cost: extractGatewayMetadata(providerMetadata)?.cost,
+      }).catch((error: unknown) =>
+        captureError({
+          error,
+          operation: "track-scan-receipt-usage",
+          distinctId: user.id,
+        }),
+      ),
+    );
+    return receiptScanFrom(reading);
   });
 
 // CI has no gateway or Autumn keys, so e2e reads this receipt instead of calling a model

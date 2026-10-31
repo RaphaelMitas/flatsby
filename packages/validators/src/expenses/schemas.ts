@@ -94,7 +94,12 @@ export type ExpenseValues = z.infer<typeof expenseSchemaWithValidateSplits>;
 
 export const createExpenseSchema = expenseSchemaWithValidateSplits.safeExtend({
   groupId: z.number(),
-  receipt: z.object({ edited: z.array(receiptFieldSchema) }).optional(),
+  receipt: z
+    .object({
+      filled: z.array(receiptFieldSchema),
+      edited: z.array(receiptFieldSchema),
+    })
+    .optional(),
 });
 
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;

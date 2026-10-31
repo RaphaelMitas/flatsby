@@ -138,7 +138,7 @@ export const legal = {
     },
     basis: {
       contract:
-        "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including purchases and automatic AI categories",
+        "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including purchases, automatic AI categories and receipt scanning",
       consent:
         "<strong>Consent (Art. 6(1)(a) GDPR, § 25(1) TDDDG):</strong> the AI assistant; screen analytics and screen recordings in the app, including the device ID they use",
       interests:

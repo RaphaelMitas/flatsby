@@ -1,6 +1,5 @@
 "use client";
 
-import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -13,7 +12,7 @@ import {
   LoaderCircle,
   Lock,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
@@ -28,13 +27,13 @@ import {
   RECEIPT_IMAGE_MAX_EDGE,
   RECEIPT_IMAGE_QUALITY,
 } from "@flatsby/validators/expenses/receipt-scan";
-import { receiptPreview } from "@flatsby/validators/expenses/useReceiptScan";
 
 import { useTRPC } from "~/trpc/react";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
 
 async function receiptBase64(file: File) {
+  // Browsers that can't decode a format (HEIC outside Safari) reject here
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(
     1,
@@ -49,21 +48,14 @@ async function receiptBase64(file: File) {
   return dataUrl.slice(dataUrl.indexOf(",") + 1);
 }
 
-export function ReceiptScanCard({
-  receiptScan,
-  currency,
-}: {
-  receiptScan: ReceiptScan;
-  currency: CurrencyCode;
-}) {
+export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const t = useTranslations("expenses.receiptScan");
-  const locale = useLocale();
   const trpc = useTRPC();
   const fileInput = useRef<HTMLInputElement>(null);
   const [photoUrl, setPhotoUrl] = useState<string>();
   const [isDragging, setIsDragging] = useState(false);
   const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
-  const { state } = receiptScan;
+  const { state, preview } = receiptScan;
 
   useEffect(
     () => () => {
@@ -72,18 +64,22 @@ export function ReceiptScanCard({
     [photoUrl],
   );
 
-  const read = async (file: File | undefined) => {
+  // A file dropped beside the card would otherwise open in the tab and lose the form
+  useEffect(() => {
+    const keep = (event: DragEvent) => event.preventDefault();
+    window.addEventListener("dragover", keep);
+    window.addEventListener("drop", keep);
+    return () => {
+      window.removeEventListener("dragover", keep);
+      window.removeEventListener("drop", keep);
+    };
+  }, []);
+
+  const read = (file: File | undefined) => {
     if (!file) return;
     setPhotoUrl(URL.createObjectURL(file));
-    // Browsers that can't decode a format (HEIC outside Safari) reject here
-    const base64 = await receiptBase64(file).catch(() => undefined);
-    if (base64) void receiptScan.scan(base64);
-    else receiptScan.fail(t("unsupportedFormat"));
+    void receiptScan.scan(() => receiptBase64(file));
   };
-
-  const preview = receiptScan.lastScan
-    ? receiptPreview(receiptScan.lastScan, currency, locale)
-    : null;
 
   return (
     <>
@@ -94,7 +90,7 @@ export function ReceiptScanCard({
         className="hidden"
         data-testid="receipt-scan-input"
         onChange={(event) => {
-          void read(event.target.files?.[0]);
+          read(event.target.files?.[0]);
           event.target.value = "";
         }}
       />
@@ -168,7 +164,7 @@ export function ReceiptScanCard({
             onDrop={(event) => {
               event.preventDefault();
               setIsDragging(false);
-              void read(event.dataTransfer.files[0]);
+              read(event.dataTransfer.files[0]);
             }}
             className={`hover:bg-muted/50 flex w-full items-center gap-3 rounded-lg border border-dashed p-4 text-left ${
               isDragging ? "border-primary bg-muted" : "border-muted-foreground"

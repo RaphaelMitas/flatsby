@@ -107,8 +107,7 @@ tags:
 - assertVisible: "€9[.,]00"
 - assertVisible: "CHF.10[.,]00"
 
-# Receipt scan: the entry and its source sheet. Picking a photo runs in the system
-# picker, which the web suite stands in for (same hook, fixed e2e receipt).
+# The photo picker is system UI; the web e2e covers the scan itself (same hook)
 - tapOn:
     id: "expense-add-button"
 - extendedWaitUntil:

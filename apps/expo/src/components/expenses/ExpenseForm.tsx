@@ -160,16 +160,22 @@ export function ExpenseForm({
   });
   const scanReceiptMutation = useMutation(
     trpcClient.receipt.scan.mutationOptions({
-      onSettled: () =>
-        queryClient.invalidateQueries({
+      onSettled: () => {
+        void queryClient.invalidateQueries({
           queryKey: trpcClient.user.getUsage.queryKey(),
-        }),
+        });
+      },
     }),
   );
   const receiptScan = useReceiptScan({
     read: (imageBase64) => scanReceiptMutation.mutateAsync({ imageBase64 }),
     setValue: form.setValue,
-    errorMessage: t("errors.unexpected"),
+    currency,
+    locale,
+    messages: {
+      error: t("errors.unexpected"),
+      unsupportedImage: t("expenses.receiptScan.unsupportedFormat"),
+    },
   });
   const isReadingReceipt = receiptScan.state.status === "reading";
 
@@ -531,12 +537,7 @@ export function ExpenseForm({
           <AppScrollView className="flex-1" contentContainerClassName="p-4">
             {currentStep === 1 && (
               <View className="gap-4">
-                {!isEditMode && (
-                  <ReceiptScanCard
-                    receiptScan={receiptScan}
-                    currency={currency}
-                  />
-                )}
+                {!isEditMode && <ReceiptScanCard receiptScan={receiptScan} />}
                 <Card>
                   <CardHeader>
                     <CardTitle>{t("expenses.amountAndDetails")}</CardTitle>
@@ -554,7 +555,10 @@ export function ExpenseForm({
                             <FormControl>
                               <Input
                                 testID="expense-form-description"
-                                autoFocus={autoFocus}
+                                autoFocus={
+                                  autoFocus &&
+                                  receiptScan.state.status === "idle"
+                                }
                                 placeholder={t(
                                   "expenses.descriptionPlaceholder",
                                 )}

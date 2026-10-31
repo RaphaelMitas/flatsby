@@ -145,7 +145,7 @@ export const legal = {
     },
     basis: {
       contract:
-        "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich Käufen und der automatischen KI-Kategorisierung",
+        "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich Käufen, der automatischen KI-Kategorisierung und dem Scannen von Belegen",
       consent:
         "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG):</strong> der KI-Assistent; Bildschirmanalyse und Bildschirmaufnahmen in der App, einschließlich der dafür genutzten Geräte-ID",
       interests:

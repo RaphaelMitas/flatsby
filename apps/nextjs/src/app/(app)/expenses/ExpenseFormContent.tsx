@@ -129,9 +129,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
 
         {currentStep === 1 && (
           <div className="space-y-4">
-            {!isEditMode && (
-              <ReceiptScanCard receiptScan={receiptScan} currency={currency} />
-            )}
+            {!isEditMode && <ReceiptScanCard receiptScan={receiptScan} />}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">

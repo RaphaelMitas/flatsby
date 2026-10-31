@@ -147,7 +147,7 @@ export const expenses = {
     discard: "Verwerfen",
     unreadableTitle: "Beleg nicht lesbar",
     unreadableBody:
-      "Versuch ein schärferes Foto bei gutem Licht, oder füll die Felder selbst aus. Es wurden keine Credits abgezogen.",
+      "Versuch ein schärferes Foto bei gutem Licht, oder füll die Felder selbst aus.",
     failedTitle: "Scannen fehlgeschlagen",
     newPhoto: "Neues Foto",
     unsupportedFormat:

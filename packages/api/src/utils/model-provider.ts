@@ -118,8 +118,43 @@ export function captureGeneration({
           },
         }
       : {}),
-    ...(error !== undefined ? { error } : {}),
+    ...(error !== undefined ? { error: errorSummary(error) } : {}),
   });
+}
+
+// A provider error carries the request body, which holds the person's messages or photo
+const errorSummary = (error: unknown) =>
+  error instanceof Error ? `${error.name}: ${error.message}` : "Unknown error";
+
+async function traced<T extends { usage: LanguageModelUsage }>(
+  capture: {
+    tracing: TracingOptions | undefined;
+    model: string;
+    input: unknown;
+  },
+  generate: () => Promise<T>,
+  outputOf: (result: T) => unknown,
+): Promise<T> {
+  const startTime = Date.now();
+  const latencySeconds = () => (Date.now() - startTime) / 1000;
+  try {
+    const result = await generate();
+    captureGeneration({
+      ...capture,
+      output: outputOf(result),
+      usage: result.usage,
+      latencySeconds: latencySeconds(),
+    });
+    return result;
+  } catch (error) {
+    captureGeneration({
+      ...capture,
+      output: null,
+      error,
+      latencySeconds: latencySeconds(),
+    });
+    throw error;
+  }
 }
 
 export function streamChatCompletion(
@@ -219,41 +254,22 @@ export async function generateConversationTitle(
   userMessage: string,
   tracing?: TracingOptions,
 ): Promise<string> {
-  const startTime = Date.now();
   const systemPrompt =
     "Generate a short, concise title (max 6 words) for a conversation that starts with the following message. Return only the title, no quotes or punctuation at the end.";
 
-  try {
-    const result = await generateText({
-      model: gateway(TITLE_GENERATION_MODEL),
-      providerOptions: providerOptionsFor(TITLE_GENERATION_MODEL),
-      system: systemPrompt,
-      prompt: userMessage,
-    });
-
-    captureGeneration({
-      tracing,
-      model: TITLE_GENERATION_MODEL,
-      input: userMessage,
-      output: result.text,
-      usage: result.usage,
-      latencySeconds: (Date.now() - startTime) / 1000,
-    });
-
-    // Clean up and truncate the title
-    const title = result.text.trim().slice(0, 100);
-    return title || "New Chat";
-  } catch (error) {
-    captureGeneration({
-      tracing,
-      model: TITLE_GENERATION_MODEL,
-      input: userMessage,
-      output: null,
-      error,
-      latencySeconds: (Date.now() - startTime) / 1000,
-    });
-    throw error;
-  }
+  const result = await traced(
+    { tracing, model: TITLE_GENERATION_MODEL, input: userMessage },
+    () =>
+      generateText({
+        model: gateway(TITLE_GENERATION_MODEL),
+        providerOptions: providerOptionsFor(TITLE_GENERATION_MODEL),
+        system: systemPrompt,
+        prompt: userMessage,
+      }),
+    (generated) => generated.text,
+  );
+  const title = result.text.trim().slice(0, 100);
+  return title || "New Chat";
 }
 
 const RECEIPT_PROMPT =
@@ -263,45 +279,27 @@ export async function readReceipt(
   imageBase64: string,
   tracing: TracingOptions,
 ) {
-  const startTime = Date.now();
-  try {
-    const result = await generateText({
-      model: gateway(RECEIPT_MODEL),
-      providerOptions: providerOptionsFor(RECEIPT_MODEL),
-      output: Output.object({ schema: receiptReadingSchema }),
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: RECEIPT_PROMPT },
-            { type: "image", image: imageBase64, mediaType: "image/jpeg" },
-          ],
-        },
-      ],
-    });
-
-    captureGeneration({
-      tracing,
-      model: RECEIPT_MODEL,
-      input: RECEIPT_PROMPT,
-      output: result.output,
-      usage: result.usage,
-      latencySeconds: (Date.now() - startTime) / 1000,
-    });
-
-    return {
-      reading: result.output,
-      providerMetadata: result.finalStep.providerMetadata,
-    };
-  } catch (error) {
-    captureGeneration({
-      tracing,
-      model: RECEIPT_MODEL,
-      input: RECEIPT_PROMPT,
-      output: null,
-      error,
-      latencySeconds: (Date.now() - startTime) / 1000,
-    });
-    throw error;
-  }
+  const result = await traced(
+    { tracing, model: RECEIPT_MODEL, input: RECEIPT_PROMPT },
+    () =>
+      generateText({
+        model: gateway(RECEIPT_MODEL),
+        providerOptions: providerOptionsFor(RECEIPT_MODEL),
+        output: Output.object({ schema: receiptReadingSchema }),
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: RECEIPT_PROMPT },
+              { type: "image", image: imageBase64, mediaType: "image/jpeg" },
+            ],
+          },
+        ],
+      }),
+    (generated) => generated.output,
+  );
+  return {
+    reading: result.output,
+    providerMetadata: result.finalStep.providerMetadata,
+  };
 }

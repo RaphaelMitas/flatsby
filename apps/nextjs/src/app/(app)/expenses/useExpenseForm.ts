@@ -132,16 +132,22 @@ export function useExpenseForm({
   });
   const scanReceiptMutation = useMutation(
     trpc.receipt.scan.mutationOptions({
-      onSettled: () =>
-        queryClient.invalidateQueries({
+      onSettled: () => {
+        void queryClient.invalidateQueries({
           queryKey: trpc.user.getUsage.queryKey(),
-        }),
+        });
+      },
     }),
   );
   const receiptScan = useReceiptScan({
     read: (imageBase64) => scanReceiptMutation.mutateAsync({ imageBase64 }),
     setValue: form.setValue,
-    errorMessage: t("errors.unexpected"),
+    currency,
+    locale,
+    messages: {
+      error: t("errors.unexpected"),
+      unsupportedImage: t("expenses.receiptScan.unsupportedFormat"),
+    },
   });
 
   const createExpenseMutation = useMutation(

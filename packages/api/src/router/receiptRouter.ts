@@ -1,6 +1,12 @@
-import { scanReceiptInputSchema } from "@flatsby/validators/expenses/receipt-scan";
+import {
+  isEmptyReceiptScan,
+  receiptScanSchema,
+  scanReceiptInputSchema,
+} from "@flatsby/validators/expenses/receipt-scan";
 
 import { runResult } from "../effect/runtime";
+import { getApiResultZod } from "../errors";
+import { captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { scanReceipt } from "../utils/receipt-scan";
 
@@ -8,10 +14,25 @@ import { scanReceipt } from "../utils/receipt-scan";
 export const receiptRouter = createTRPCRouter({
   scan: protectedProcedure
     .input(scanReceiptInputSchema)
-    .mutation(({ ctx, input }) =>
-      runResult(
+    .output(getApiResultZod(receiptScanSchema))
+    .mutation(async ({ ctx, input }) => {
+      const result = await runResult(
         ctx,
         (ctx.scanReceipt ?? scanReceipt)(ctx.session.user, input.imageBase64),
-      ),
-    ),
+      );
+      if (result.success) {
+        captureUserEvent({
+          user: ctx.session.user,
+          event: "receipt_scanned",
+          headers: ctx.headers,
+          additionalProperties: {
+            readable: !isEmptyReceiptScan(result.data),
+            found: Object.entries(result.data)
+              .filter(([, value]) => value !== null)
+              .map(([field]) => field),
+          },
+        });
+      }
+      return result;
+    }),
 });

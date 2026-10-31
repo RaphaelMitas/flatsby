@@ -140,7 +140,7 @@ export const expenses = {
     discard: "Discard",
     unreadableTitle: "Couldn't read the receipt",
     unreadableBody:
-      "Try a sharper photo in good light, or fill in the fields yourself. No credits were used.",
+      "Try a sharper photo in good light, or fill in the fields yourself.",
     failedTitle: "Scan failed",
     newPhoto: "New photo",
     unsupportedFormat:

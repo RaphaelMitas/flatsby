@@ -33,21 +33,6 @@ describe("scanReceipt", () => {
     expect(readReceipt).not.toHaveBeenCalled();
   });
 
-  it("charges nothing for a receipt it couldn't read", async () => {
-    vi.mocked(readReceipt).mockResolvedValue({
-      reading: {
-        isReceipt: false,
-        total: null,
-        currency: null,
-        date: null,
-        merchant: null,
-      },
-      providerMetadata: undefined,
-    });
-    await scan();
-    expect(trackAIUsage).not.toHaveBeenCalled();
-  });
-
   it("charges for a receipt it read", async () => {
     vi.mocked(readReceipt).mockResolvedValue({
       reading: {

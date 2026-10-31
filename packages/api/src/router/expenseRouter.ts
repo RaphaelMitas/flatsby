@@ -256,6 +256,7 @@ export const expenseRouter = createTRPCRouter({
               headers: ctx.headers,
               additionalProperties: {
                 groupId: input.groupId,
+                filled: input.receipt.filled,
                 edited: input.receipt.edited,
                 editedCount: input.receipt.edited.length,
               },

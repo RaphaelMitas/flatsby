@@ -1,6 +1,12 @@
 import { z } from "zod/v4";
 
-import { addDays, calendarDateSchema } from "../calendar";
+import type { CurrencyCode } from "./types";
+import {
+  addDays,
+  calendarDateSchema,
+  localDate,
+  pickerDate,
+} from "../calendar";
 import { decimalToCents } from "./conversion";
 import { CURRENCY_CODES, isCurrencyCode } from "./types";
 
@@ -29,7 +35,7 @@ export const receiptReadingSchema = z.object({
     .string()
     .nullable()
     .describe(
-      "ISO 4217 code, only when the receipt prints a code or an unambiguous symbol (€, £, CHF). Null for a bare $ or when absent.",
+      "ISO 4217 code of the currency the total is in, from the printed code, symbol, country or address (a $ in Canada is CAD). Null only if nothing on the receipt indicates a currency.",
     ),
   date: z
     .string()
@@ -56,11 +62,9 @@ export const receiptScanSchema = z.object({
 
 export type ReceiptScan = z.infer<typeof receiptScanSchema>;
 
-const utcToday = () => new Date().toISOString().slice(0, 10);
-
 export function receiptScanFrom(
   reading: ReceiptReading,
-  today = utcToday(),
+  today = localDate(),
 ): ReceiptScan {
   if (!reading.isReceipt) {
     return {
@@ -72,20 +76,25 @@ export function receiptScanFrom(
   }
   const amountInCents =
     reading.total === null ? 0 : decimalToCents(reading.total);
-  const currency = reading.currency?.trim().toUpperCase() ?? "";
+  const currency = reading.currency?.trim().toUpperCase() ?? null;
+  // An amount in a currency the app can't book must not land in the form's currency
+  const bookable = currency === null || isCurrencyCode(currency);
   const day = calendarDateSchema.safeParse(reading.date);
   const description = reading.merchant?.trim().slice(0, MAX_MERCHANT_LENGTH);
   return {
-    amountInCents: amountInCents > 0 ? amountInCents : null,
-    currency: isCurrencyCode(currency) ? currency : null,
+    amountInCents: bookable && amountInCents > 0 ? amountInCents : null,
+    currency: currency !== null && isCurrencyCode(currency) ? currency : null,
     // The server's UTC day can be one behind the person's own
     expenseDay: day.success && day.data <= addDays(today, 1) ? day.data : null,
     description: description || null,
   };
 }
 
+// A currency alone fills nothing the person would check
 export const isEmptyReceiptScan = (scan: ReceiptScan) =>
-  Object.values(scan).every((value) => value === null);
+  scan.amountInCents === null &&
+  scan.expenseDay === null &&
+  scan.description === null;
 
 export const receiptFieldSchema = z.enum([
   "amountInCents",
@@ -95,3 +104,34 @@ export const receiptFieldSchema = z.enum([
 ]);
 
 export type ReceiptField = z.infer<typeof receiptFieldSchema>;
+
+export interface ReceiptFormValues {
+  amountInCents: number;
+  currency: CurrencyCode;
+  expenseDate: Date;
+  description: string;
+}
+
+export type Filled = Partial<ReceiptFormValues>;
+
+export const filledBy = (scan: ReceiptScan): Filled => ({
+  ...(scan.amountInCents !== null && { amountInCents: scan.amountInCents }),
+  ...(scan.currency !== null && { currency: scan.currency }),
+  ...(scan.expenseDay !== null && { expenseDate: pickerDate(scan.expenseDay) }),
+  ...(scan.description !== null && { description: scan.description }),
+});
+
+const sameValue = (a: unknown, b: unknown) =>
+  a instanceof Date && b instanceof Date
+    ? localDate(a) === localDate(b)
+    : a === b;
+
+export function receiptReport(filled: Filled, values: ReceiptFormValues) {
+  const scanned = receiptFieldSchema.options.filter(
+    (field) => filled[field] !== undefined,
+  );
+  return {
+    filled: scanned,
+    edited: scanned.filter((field) => !sameValue(filled[field], values[field])),
+  };
+}

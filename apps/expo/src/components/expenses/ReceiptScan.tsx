@@ -1,5 +1,4 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
-import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import type { ImagePickerOptions } from "expo-image-picker";
 import { useEffect, useRef, useState } from "react";
@@ -8,19 +7,19 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 
 import {
   RECEIPT_IMAGE_MAX_EDGE,
   RECEIPT_IMAGE_QUALITY,
 } from "@flatsby/validators/expenses/receipt-scan";
-import { receiptPreview } from "@flatsby/validators/expenses/useReceiptScan";
 
+import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SheetModal } from "~/lib/ui/sheet-modal";
-import { useThemeColors } from "~/lib/utils";
+import { cn, useThemeColors } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
@@ -39,18 +38,12 @@ async function receiptBase64(uri: string) {
     compress: RECEIPT_IMAGE_QUALITY,
     format: SaveFormat.JPEG,
   });
+  if (!base64) throw new Error("No image data");
   return base64;
 }
 
-export function ReceiptScanCard({
-  receiptScan,
-  currency,
-}: {
-  receiptScan: ReceiptScan;
-  currency: CurrencyCode;
-}) {
+export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const t = useTranslations("expenses.receiptScan");
-  const locale = useLocale();
   const router = useRouter();
   const { getColor } = useThemeColors();
   const sourceSheet = useRef<BottomSheetModal>(null);
@@ -58,7 +51,7 @@ export function ReceiptScanCard({
   const chosenSource = useRef<Source | null>(null);
   const [photoUri, setPhotoUri] = useState<string>();
   const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
-  const { state } = receiptScan;
+  const { state, preview } = receiptScan;
 
   useEffect(() => {
     if (state.status === "found") previewSheet.current?.present();
@@ -79,9 +72,7 @@ export function ReceiptScanCard({
     const asset = result.assets?.[0];
     if (result.canceled || !asset) return;
     setPhotoUri(asset.uri);
-    const base64 = await receiptBase64(asset.uri).catch(() => undefined);
-    if (base64) void receiptScan.scan(base64);
-    else receiptScan.fail(t("unsupportedFormat"));
+    void receiptScan.scan(() => receiptBase64(asset.uri));
   };
 
   const choose = (source: Source) => {
@@ -89,10 +80,6 @@ export function ReceiptScanCard({
     chosenSource.current = source;
     sourceSheet.current?.dismiss();
   };
-
-  const preview = receiptScan.lastScan
-    ? receiptPreview(receiptScan.lastScan, currency, locale)
-    : null;
 
   return (
     <>
@@ -133,41 +120,34 @@ export function ReceiptScanCard({
             onPress={() => sourceSheet.current?.present()}
           />
         </Alert>
+      ) : state.status === "found" ? (
+        // The preview can't present over another open sheet, so this brings it back
+        <OptionRow
+          testID="receipt-scan-review"
+          icon="receipt"
+          title={t("previewTitle")}
+          trailing
+          onPress={() => previewSheet.current?.present()}
+        />
       ) : usage?.credits?.balance === 0 ? (
-        <Pressable
+        <OptionRow
           testID="receipt-scan-out-of-credits"
-          accessibilityRole="button"
+          icon="lock"
+          title={t("title")}
+          hint={t("outOfCredits")}
+          trailing
+          className="bg-muted"
           onPress={() => router.push("/settings/credits")}
-          className="border-border bg-muted flex-row items-center gap-3 rounded-lg border p-4"
-        >
-          <View className="bg-background size-10 items-center justify-center rounded-lg">
-            <Icon name="lock" size={20} color="muted-foreground" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-foreground font-semibold">{t("title")}</Text>
-            <Text className="text-muted-foreground text-sm">
-              {t("outOfCredits")}
-            </Text>
-          </View>
-          <Icon name="chevron-right" size={16} color="muted-foreground" />
-        </Pressable>
+        />
       ) : (
-        <Pressable
+        <OptionRow
           testID="receipt-scan"
-          accessibilityRole="button"
+          icon="camera"
+          title={t("title")}
+          hint={t("subtitle")}
+          className="border-muted-foreground border-dashed"
           onPress={() => sourceSheet.current?.present()}
-          className="border-muted-foreground active:bg-muted flex-row items-center gap-3 rounded-lg border border-dashed p-4"
-        >
-          <View className="bg-muted size-10 items-center justify-center rounded-lg">
-            <Icon name="camera" size={20} color="foreground" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-foreground font-semibold">{t("title")}</Text>
-            <Text className="text-muted-foreground text-sm">
-              {t("subtitle")}
-            </Text>
-          </View>
-        </Pressable>
+        />
       )}
 
       <SheetModal
@@ -182,14 +162,14 @@ export function ReceiptScanCard({
           <Text className="text-foreground text-lg font-semibold">
             {t("title")}
           </Text>
-          <SourceOption
+          <OptionRow
             testID="receipt-scan-camera"
             icon="camera"
             title={t("takePhoto")}
             hint={t("takePhotoHint")}
             onPress={() => choose("camera")}
           />
-          <SourceOption
+          <OptionRow
             testID="receipt-scan-library"
             icon="image"
             title={t("choosePhoto")}
@@ -243,17 +223,21 @@ export function ReceiptScanCard({
   );
 }
 
-function SourceOption({
+function OptionRow({
   testID,
   icon,
   title,
   hint,
+  trailing,
+  className,
   onPress,
 }: {
   testID: string;
-  icon: "camera" | "image";
+  icon: IconProps["name"];
   title: string;
-  hint: string;
+  hint?: string;
+  trailing?: boolean;
+  className?: string;
   onPress: () => void;
 }) {
   return (
@@ -261,15 +245,21 @@ function SourceOption({
       testID={testID}
       accessibilityRole="button"
       onPress={onPress}
-      className="border-border active:bg-muted flex-row items-center gap-3 rounded-lg border p-3"
+      className={cn(
+        "border-border active:bg-muted flex-row items-center gap-3 rounded-lg border p-3",
+        className,
+      )}
     >
-      <View className="bg-muted size-9 items-center justify-center rounded-lg">
-        <Icon name={icon} size={18} color="foreground" />
+      <View className="bg-muted size-10 items-center justify-center rounded-lg">
+        <Icon name={icon} size={20} color="foreground" />
       </View>
       <View className="flex-1">
         <Text className="text-foreground font-semibold">{title}</Text>
-        <Text className="text-muted-foreground text-sm">{hint}</Text>
+        {hint && <Text className="text-muted-foreground text-sm">{hint}</Text>}
       </View>
+      {trailing && (
+        <Icon name="chevron-right" size={16} color="muted-foreground" />
+      )}
     </Pressable>
   );
 }
