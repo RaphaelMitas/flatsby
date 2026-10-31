@@ -8,7 +8,6 @@ import ReanimatedSwipeable, {
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { PostHogMaskView } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { cn } from "~/lib/utils";
@@ -119,39 +118,37 @@ const ShoppingListItem = ({
 
   return (
     <>
-      <PostHogMaskView>
-        <ReanimatedSwipeable
-          ref={swipeableRef}
-          friction={2}
-          leftThreshold={40}
-          rightThreshold={40}
-          {...swipeableProps}
-          onSwipeableOpen={(direction) => {
-            if (direction === SwipeDirection.RIGHT) {
-              swipeableRef.current?.close();
-              handleEdit();
-            } else {
-              swipeableRef.current?.close();
-              setShowDeleteModal(true);
-            }
-          }}
+      <ReanimatedSwipeable
+        ref={swipeableRef}
+        friction={2}
+        leftThreshold={40}
+        rightThreshold={40}
+        {...swipeableProps}
+        onSwipeableOpen={(direction) => {
+          if (direction === SwipeDirection.RIGHT) {
+            swipeableRef.current?.close();
+            handleEdit();
+          } else {
+            swipeableRef.current?.close();
+            setShowDeleteModal(true);
+          }
+        }}
+      >
+        <Pressable
+          accessible={e2eAccessibilityOverride()}
+          onPress={guardPress(() => setShowDetails(true))}
         >
-          <Pressable
-            accessible={e2eAccessibilityOverride()}
-            onPress={guardPress(() => setShowDetails(true))}
-          >
-            <ShoppingItemDisplay
-              name={item.name}
-              completed={item.completed}
-              categoryId={item.categoryId}
-              onCheckedChange={guardPress(handleCheckboxToggle)}
-              unsynced={item.isPending && !online}
-              checkboxTestID={`shopping-list-item-checkbox-${item.name}`}
-              testID={`shopping-list-item-${item.name}`}
-            />
-          </Pressable>
-        </ReanimatedSwipeable>
-      </PostHogMaskView>
+          <ShoppingItemDisplay
+            name={item.name}
+            completed={item.completed}
+            categoryId={item.categoryId}
+            onCheckedChange={guardPress(handleCheckboxToggle)}
+            unsynced={item.isPending && !online}
+            checkboxTestID={`shopping-list-item-checkbox-${item.name}`}
+            testID={`shopping-list-item-${item.name}`}
+          />
+        </Pressable>
+      </ReanimatedSwipeable>
 
       <Modal
         visible={showDetails}
