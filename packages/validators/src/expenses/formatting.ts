@@ -9,8 +9,9 @@ import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
 import type { DebtEntry, GroupDebtSummary } from "./types";
 import { isPlaceholder } from "../group";
+import { expenseCategoryLabelKeys } from "./categories";
 import { centsToDecimal, rateBetween } from "./conversion";
-import { debtsBetweenOthers } from "./debt";
+import { debtsBetweenOthers, expenseBalanceFor } from "./debt";
 
 /**
  * Format currency amount with currency symbol
@@ -110,6 +111,9 @@ export function formatRate(
   return `1 ${from} = ${formatted} ${to}`;
 }
 
+const omitCurrentYear = (date: Date) =>
+  date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined;
+
 /**
  * Format an expense date for list and card views
  * The year is omitted for expenses in the current year to keep rows compact.
@@ -124,8 +128,52 @@ export function formatExpenseDateShort(
   return date.toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
-    year:
-      date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+    year: omitCurrentYear(date),
+  });
+}
+
+export function formatExpenseMonth(
+  date: Date,
+  locale: Intl.LocalesArgument,
+): string {
+  return date.toLocaleDateString(locale, {
+    month: "long",
+    year: omitCurrentYear(date),
+  });
+}
+
+export type ExpenseListItem<T> =
+  | { type: "month"; key: string; label: string }
+  | { type: "expense"; key: string; expense: T; first: boolean; last: boolean };
+
+export function withMonthHeaders<T extends { id: number; expenseDate: Date }>(
+  expenses: T[],
+  locale: Intl.LocalesArgument,
+): ExpenseListItem<T>[] {
+  const monthOf = (expense: T | undefined) => {
+    if (!expense) return undefined;
+    const date = new Date(expense.expenseDate);
+    return `${date.getFullYear()}-${date.getMonth()}`;
+  };
+  return expenses.flatMap((expense, index) => {
+    const month = monthOf(expense);
+    const first = month !== monthOf(expenses[index - 1]);
+    const row = {
+      type: "expense" as const,
+      key: String(expense.id),
+      expense,
+      first,
+      last: month !== monthOf(expenses[index + 1]),
+    };
+    if (!first) return [row];
+    return [
+      {
+        type: "month" as const,
+        key: `month-${month}-${expense.id}`,
+        label: formatExpenseMonth(new Date(expense.expenseDate), locale),
+      },
+      row,
+    ];
   });
 }
 
@@ -298,6 +346,48 @@ export function allSquareMessage(
     ),
   ].map((id) => person(id).name);
   return t("debts.othersStillOwe", { names: joinNames(names, t) });
+}
+
+interface RowMember {
+  id: number;
+  user: { name: string };
+}
+
+export function describeExpenseRow(
+  expense: ConvertibleExpense & {
+    description: string;
+    subcategory: string;
+    splitMethod: string;
+    expenseDate: Date;
+    paidByGroupMemberId: number;
+    paidByGroupMember: RowMember;
+    expenseSplits: { groupMember: RowMember }[];
+  },
+  meId: number,
+  t: Translate,
+  locale: Intl.LocalesArgument,
+) {
+  const isSettlement = expense.splitMethod === "settlement";
+  const name = (member: RowMember) =>
+    member.id === meId ? t("debts.you") : member.user.name;
+  const payer = name(expense.paidByGroupMember);
+  const recipient = expense.expenseSplits[0]?.groupMember;
+  const balance = isSettlement ? null : expenseBalanceFor(expense, meId);
+  return {
+    isSettlement,
+    title:
+      isSettlement && recipient
+        ? t("expenses.settlementTitle", { from: payer, to: name(recipient) })
+        : expense.description ||
+          t(expenseCategoryLabelKeys(expense.subcategory).name),
+    payer: isSettlement ? t("expenses.settlement") : payer,
+    date: formatExpenseDateShort(new Date(expense.expenseDate), locale),
+    ...formatExpenseAmounts(expense, locale),
+    balance: balance && {
+      cents: balance.cents,
+      text: formatSignedCents(balance.cents, balance.currency, locale),
+    },
+  };
 }
 
 export function describePairActivity(

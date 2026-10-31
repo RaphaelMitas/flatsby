@@ -10,21 +10,22 @@ import { PostHogMaskView } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
-import {
-  formatExpenseAmounts,
-  memberPerson,
-} from "@flatsby/validators/expenses/formatting";
+import { describeExpenseRow } from "@flatsby/validators/expenses/formatting";
 
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
+import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 import { ExpenseDisplay } from "./ExpenseDisplay";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
   groupId: number;
+  meId: number;
+  first: boolean;
+  last: boolean;
   onEdit: () => void;
   onDelete?: () => void;
   isSelected?: boolean;
@@ -35,6 +36,9 @@ interface ExpenseCardProps {
 export function ExpenseCard({
   expense,
   groupId,
+  meId,
+  first,
+  last,
   onEdit,
   onDelete,
   isSelected,
@@ -97,10 +101,19 @@ export function ExpenseCard({
     ),
   );
 
-  const splitCount = expense.expenseSplits.length;
-  const amounts = formatExpenseAmounts(expense, locale);
-  const expenseDate = new Date(expense.expenseDate);
-  const fromMember = expense.expenseSplits[0]?.groupMember;
+  const row = describeExpenseRow(expense, meId, t, locale);
+  const accessibilityLabel = [
+    row.title,
+    !row.isSettlement &&
+      t(getExpenseCategoryData({ subcategoryId: expense.subcategory }).name),
+    row.payer,
+    row.paid,
+    row.date,
+    row.amount,
+    !row.isSettlement && (row.balance?.text ?? t("expenses.notInvolved")),
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   const { swipeableProps, guardPress } = useSwipeActions({
     leftAction: {
@@ -153,20 +166,17 @@ export function ExpenseCard({
           <Pressable
             testID={`expense-card-${expense.description}`}
             accessible={e2eAccessibilityOverride()}
+            accessibilityLabel={accessibilityLabel}
             onPress={guardPress(onSelect)}
             disabled={isOptimistic}
           >
             <ExpenseDisplay
-              amounts={amounts}
-              isNotConverted={isNotConverted}
-              description={expense.description}
-              paidBy={memberPerson(expense.paidByGroupMember)}
-              expenseDate={expenseDate}
-              splitMethod={expense.splitMethod}
-              splitCount={splitCount}
+              row={row}
               subcategory={expense.subcategory}
-              from={fromMember && memberPerson(fromMember)}
+              isNotConverted={isNotConverted}
               isSelected={isSelected}
+              first={first}
+              last={last}
             />
           </Pressable>
         </ReanimatedSwipeable>
@@ -176,7 +186,7 @@ export function ExpenseCard({
         visible={showDeleteModal}
         onClose={handleCloseModal}
         onConfirm={handleDelete}
-        itemName={expense.description || amounts.amount}
+        itemName={row.title || row.amount}
         title={t("expenses.deleteExpense")}
         description={
           expense.splitMethod === "settlement"

@@ -1,6 +1,7 @@
 export const expenses = {
   settlement: "Settlement",
-  paidBy: "Paid by {name}",
+  settlementTitle: "{from} → {to}",
+  notInvolved: "not involved",
   splitBetween:
     "Split between {count, plural, one {# person} other {# people}}",
   add: "Add",

@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { HandCoins, Plus, Wallet } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { InView } from "react-intersection-observer";
 
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { ScrollArea } from "@flatsby/ui/scroll-area";
 import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
+import { withMonthHeaders } from "@flatsby/validators/expenses/formatting";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -29,6 +30,7 @@ export function ExpenseListPanel({
 }: ExpenseListPanelProps) {
   const trpc = useTRPC();
   const t = useTranslations();
+  const locale = useLocale();
   const { currentGroup } = useGroupContext();
 
   const groupId = currentGroup?.id ?? 0;
@@ -101,7 +103,7 @@ export function ExpenseListPanel({
 
       {/* Expense List */}
       <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-3 p-4">
+        <div className="flex flex-col px-4 pb-4">
           {!hasExpenses ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
               <Wallet className="text-muted-foreground h-12 w-12" />
@@ -123,15 +125,30 @@ export function ExpenseListPanel({
             </div>
           ) : (
             <>
-              {allExpenses.map((expense) => (
-                <ExpenseCard
-                  key={expense.id}
-                  expense={expense}
-                  isNotConverted={isLeftUnconverted(expense, groupData.data)}
-                  isSelected={expense.id === selectedExpenseId}
-                  onSelect={() => onSelectExpense(expense.id)}
-                />
-              ))}
+              {withMonthHeaders(allExpenses, locale).map((item) =>
+                item.type === "month" ? (
+                  <h3
+                    key={item.key}
+                    className="text-muted-foreground px-1 pt-4 pb-2 text-sm font-semibold"
+                  >
+                    {item.label}
+                  </h3>
+                ) : (
+                  <ExpenseCard
+                    key={item.key}
+                    expense={item.expense}
+                    meId={groupData.data.thisGroupMember.id}
+                    first={item.first}
+                    last={item.last}
+                    isNotConverted={isLeftUnconverted(
+                      item.expense,
+                      groupData.data,
+                    )}
+                    isSelected={item.expense.id === selectedExpenseId}
+                    onSelect={() => onSelectExpense(item.expense.id)}
+                  />
+                ),
+              )}
 
               {hasNextPage && (
                 <InView

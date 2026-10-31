@@ -94,11 +94,14 @@ export function ExpenseDemo() {
   ];
 
   return (
-    <div className="flex flex-col gap-3">
-      {demoExpenses.map((expense) => (
+    <div className="flex flex-col">
+      {demoExpenses.map((expense, index) => (
         <ExpenseCard
           key={expense.id}
           expense={expense}
+          meId={alex.id}
+          first={index === 0}
+          last={index === demoExpenses.length - 1}
           onSelect={() => undefined}
         />
       ))}
