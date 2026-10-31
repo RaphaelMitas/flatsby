@@ -109,7 +109,7 @@ async function apply(persistent: boolean) {
     applied = persistent;
     current = createClient(persistent);
     for (const listener of listeners) listener();
-    // shutdown() only flushes; opting out is what stops the old client's listeners and the native SDK
+    // shutdown() only flushes; opting out is what stops the old client's listeners
     previous.lease.active = false;
     if (!persistent) previous.posthog.reset();
     void previous.posthog.optOut();
