@@ -1,4 +1,5 @@
 import {
+  filledBy,
   isEmptyReceiptScan,
   receiptScanSchema,
   scanReceiptInputSchema,
@@ -27,9 +28,7 @@ export const receiptRouter = createTRPCRouter({
           headers: ctx.headers,
           additionalProperties: {
             readable: !isEmptyReceiptScan(result.data),
-            found: Object.entries(result.data)
-              .filter(([, value]) => value !== null)
-              .map(([field]) => field),
+            found: Object.keys(filledBy(result.data)),
           },
         });
       }

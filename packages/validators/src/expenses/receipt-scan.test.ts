@@ -34,6 +34,9 @@ describe("receiptScanFrom", () => {
       receiptScanFrom(reading({ currency: null }), "2026-10-31").amountInCents,
     ).toBe(2347);
     expect(
+      receiptScanFrom(reading({ currency: "€" }), "2026-10-31").currency,
+    ).toBe("EUR");
+    expect(
       receiptScanFrom(reading({ currency: "chf" }), "2026-10-31").currency,
     ).toBe("CHF");
   });

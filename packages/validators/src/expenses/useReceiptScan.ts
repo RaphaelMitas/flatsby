@@ -10,7 +10,7 @@ type ScanResult =
   | { success: true; data: ReceiptScan }
   | { success: false; error: { message: string } };
 
-export type ReceiptScanState =
+type ReceiptScanState =
   | { status: "idle" }
   | { status: "reading" }
   | { status: "found" }

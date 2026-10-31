@@ -116,6 +116,21 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
           </div>
           <LoaderCircle className="text-muted-foreground h-5 w-5 animate-spin" />
         </div>
+      ) : usage?.credits?.balance === 0 ? (
+        <Link
+          href="/billing"
+          data-testid="receipt-scan-out-of-credits"
+          className="bg-muted hover:bg-muted/70 flex items-center gap-3 rounded-lg border p-4"
+        >
+          <div className="bg-background flex h-10 w-10 items-center justify-center rounded-lg">
+            <Lock className="text-muted-foreground h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold">{t("title")}</p>
+            <p className="text-muted-foreground text-sm">{t("outOfCredits")}</p>
+          </div>
+          <ChevronRight className="text-muted-foreground h-4 w-4" />
+        </Link>
       ) : state.status === "failed" ? (
         <Alert variant="destructive" data-testid="receipt-scan-failed">
           <AlertCircle className="h-4 w-4" />
@@ -135,21 +150,6 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
             </Button>
           </AlertDescription>
         </Alert>
-      ) : usage?.credits?.balance === 0 ? (
-        <Link
-          href="/billing"
-          data-testid="receipt-scan-out-of-credits"
-          className="bg-muted hover:bg-muted/70 flex items-center gap-3 rounded-lg border p-4"
-        >
-          <div className="bg-background flex h-10 w-10 items-center justify-center rounded-lg">
-            <Lock className="text-muted-foreground h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold">{t("title")}</p>
-            <p className="text-muted-foreground text-sm">{t("outOfCredits")}</p>
-          </div>
-          <ChevronRight className="text-muted-foreground h-4 w-4" />
-        </Link>
       ) : (
         <div className="space-y-2">
           <button

@@ -96,8 +96,8 @@ export const createExpenseSchema = expenseSchemaWithValidateSplits.safeExtend({
   groupId: z.number(),
   receipt: z
     .object({
-      filled: z.array(receiptFieldSchema),
-      edited: z.array(receiptFieldSchema),
+      filled: z.array(receiptFieldSchema).max(4),
+      edited: z.array(receiptFieldSchema).max(4),
     })
     .optional(),
 });

@@ -62,6 +62,9 @@ export const receiptScanSchema = z.object({
 
 export type ReceiptScan = z.infer<typeof receiptScanSchema>;
 
+// Models sometimes answer with the symbol despite being asked for the code
+const CURRENCY_SYMBOLS: Record<string, string> = { "€": "EUR", "£": "GBP" };
+
 export function receiptScanFrom(
   reading: ReceiptReading,
   today = localDate(),
@@ -76,14 +79,19 @@ export function receiptScanFrom(
   }
   const amountInCents =
     reading.total === null ? 0 : decimalToCents(reading.total);
-  const currency = reading.currency?.trim().toUpperCase() ?? null;
+  const printed = reading.currency?.trim().toUpperCase() ?? null;
+  const code = printed === null ? null : (CURRENCY_SYMBOLS[printed] ?? printed);
+  const currency = code !== null && isCurrencyCode(code) ? code : null;
   // An amount in a currency the app can't book must not land in the form's currency
-  const bookable = currency === null || isCurrencyCode(currency);
+  const bookable = code === null || currency !== null;
   const day = calendarDateSchema.safeParse(reading.date);
   const description = reading.merchant?.trim().slice(0, MAX_MERCHANT_LENGTH);
   return {
-    amountInCents: bookable && amountInCents > 0 ? amountInCents : null,
-    currency: currency !== null && isCurrencyCode(currency) ? currency : null,
+    amountInCents:
+      bookable && amountInCents > 0 && Number.isSafeInteger(amountInCents)
+        ? amountInCents
+        : null,
+    currency,
     // The server's UTC day can be one behind the person's own
     expenseDay: day.success && day.data <= addDays(today, 1) ? day.data : null,
     description: description || null,
@@ -102,8 +110,6 @@ export const receiptFieldSchema = z.enum([
   "expenseDate",
   "description",
 ]);
-
-export type ReceiptField = z.infer<typeof receiptFieldSchema>;
 
 export interface ReceiptFormValues {
   amountInCents: number;

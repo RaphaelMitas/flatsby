@@ -50,12 +50,14 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const previewSheet = useRef<BottomSheetModal>(null);
   const chosenSource = useRef<Source | null>(null);
   const [photoUri, setPhotoUri] = useState<string>();
+  const [previewKey, setPreviewKey] = useState(0);
   const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
   const { state, preview } = receiptScan;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new key remounts the sheet, which has to present again
   useEffect(() => {
     if (state.status === "found") previewSheet.current?.present();
-  }, [state.status]);
+  }, [state.status, previewKey]);
 
   const takeFrom = async (source: Source) => {
     if (source === "camera") {
@@ -101,6 +103,25 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
           </View>
           <ActivityIndicator color={getColor("muted-foreground")} />
         </View>
+      ) : state.status === "found" ? (
+        // iOS swallows the preview if another sheet is open; a fresh one presents again
+        <OptionRow
+          testID="receipt-scan-review"
+          icon="receipt"
+          title={t("previewTitle")}
+          trailing
+          onPress={() => setPreviewKey((key) => key + 1)}
+        />
+      ) : usage?.credits?.balance === 0 ? (
+        <OptionRow
+          testID="receipt-scan-out-of-credits"
+          icon="lock"
+          title={t("title")}
+          hint={t("outOfCredits")}
+          trailing
+          className="bg-muted"
+          onPress={() => router.push("/settings/credits")}
+        />
       ) : state.status === "failed" ? (
         <Alert variant="destructive" className="gap-3">
           <View>
@@ -120,25 +141,6 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
             onPress={() => sourceSheet.current?.present()}
           />
         </Alert>
-      ) : state.status === "found" ? (
-        // The preview can't present over another open sheet, so this brings it back
-        <OptionRow
-          testID="receipt-scan-review"
-          icon="receipt"
-          title={t("previewTitle")}
-          trailing
-          onPress={() => previewSheet.current?.present()}
-        />
-      ) : usage?.credits?.balance === 0 ? (
-        <OptionRow
-          testID="receipt-scan-out-of-credits"
-          icon="lock"
-          title={t("title")}
-          hint={t("outOfCredits")}
-          trailing
-          className="bg-muted"
-          onPress={() => router.push("/settings/credits")}
-        />
       ) : (
         <OptionRow
           testID="receipt-scan"
@@ -183,6 +185,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
       </SheetModal>
 
       <SheetModal
+        key={previewKey}
         ref={previewSheet}
         onDismiss={() => {
           if (receiptScan.state.status === "found") receiptScan.reset();

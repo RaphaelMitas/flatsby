@@ -5,10 +5,9 @@ import { receiptScanFrom } from "@flatsby/validators/expenses/receipt-scan";
 
 import type { ApiError } from "../errors";
 import type { CreditUser } from "./autumn";
-import { Errors, ExternalServiceError } from "../errors";
-import { captureError } from "../lib/posthog";
-import { checkCredits, extractGatewayMetadata, trackAIUsage } from "./autumn";
-import { readReceipt } from "./model-provider";
+import { Errors, ExternalServiceError, fail } from "../errors";
+import { chargeAIUsage, checkCredits } from "./autumn";
+import { errorSummary, readReceipt } from "./model-provider";
 
 export type ReceiptScanner = (
   user: CreditUser,
@@ -27,8 +26,7 @@ export const scanReceipt: ReceiptScanner = (user, imageBase64) =>
           cause,
         }),
     });
-    if (!allowed)
-      return yield* Effect.fail(Errors.forbidden("errors.outOfCredits"));
+    if (!allowed) return yield* fail.forbidden("errors.outOfCredits");
 
     const { reading, providerMetadata } = yield* Effect.tryPromise({
       try: () =>
@@ -37,20 +35,16 @@ export const scanReceipt: ReceiptScanner = (user, imageBase64) =>
           traceId: crypto.randomUUID(),
           feature: "scan-receipt",
         }),
+      // The error chain can quote the model's reading of the receipt
       catch: (cause) =>
-        Errors.externalService("gateway", "scan receipt", cause),
+        Errors.externalService(
+          "gateway",
+          "scan receipt",
+          new Error(errorSummary(cause)),
+        ),
     });
     yield* Effect.promise(() =>
-      trackAIUsage({
-        customerId: user.id,
-        cost: extractGatewayMetadata(providerMetadata)?.cost,
-      }).catch((error: unknown) =>
-        captureError({
-          error,
-          operation: "track-scan-receipt-usage",
-          distinctId: user.id,
-        }),
-      ),
+      chargeAIUsage({ user, feature: "scan-receipt", providerMetadata }),
     );
     return receiptScanFrom(reading);
   });

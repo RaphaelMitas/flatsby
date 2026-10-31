@@ -108,7 +108,7 @@ export const marketing = {
     price: {
       label: "Preis",
       value:
-        "Kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Kategorien wählst du kostenlos selbst. Bezahlt wird nur für zusätzliche KI-Credits, mit denen der KI-Assistent und die automatischen Kategorien arbeiten. Ein monatliches Kontingent ist kostenlos.",
+        "Kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Kategorien wählst du kostenlos selbst. Bezahlt wird nur für zusätzliche KI-Credits, mit denen der KI-Assistent, die automatischen Kategorien und das Scannen von Belegen arbeiten. Ein monatliches Kontingent ist kostenlos.",
     },
     signIn: { label: "Anmeldung", value: "Google- oder Apple-Konto." },
     splitting: {
@@ -128,7 +128,7 @@ export const marketing = {
     data: {
       label: "Deine Daten",
       value:
-        "Datenbank und Server in Frankfurt, bei Cloud-Anbietern mit EU-Region, Nutzungsstatistik ohne Werbe-Tracking. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto, gespeichert wird er nicht. Export und Kontolöschung jederzeit in den Einstellungen, Details in der Datenschutzerklärung.",
+        "Datenbank und Server in Frankfurt, bei Cloud-Anbietern mit EU-Region, Nutzungsstatistik ohne Werbe-Tracking. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto, Flatsby speichert ihn nicht. Export und Kontolöschung jederzeit in den Einstellungen, Details in der Datenschutzerklärung.",
     },
     source: {
       label: "Quellcode",
@@ -141,7 +141,7 @@ export const marketing = {
     free: {
       question: "Ist Flatsby wirklich kostenlos und werbefrei?",
       answer:
-        "Ja. Putzplan, Einkaufslisten, Ausgaben, Ausgleichszahlungen und Gruppen sind kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Geld verdient Flatsby nur mit optionalen KI-Credits. Der KI-Assistent und die automatischen Kategorien nutzen Credits: {freeCredits, number} im Monat kostenlos, {starterCredits, number} mit Starter ({starterPrice, number, ::currency/USD} im Monat) und {proCredits, number} mit Pro ({proPrice, number, ::currency/USD} im Monat im Web). Auf dem iPhone kostet Pro {proAppStorePrice, number, ::currency/USD} im Monat im US-App-Store.",
+        "Ja. Putzplan, Einkaufslisten, Ausgaben, Ausgleichszahlungen und Gruppen sind kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Geld verdient Flatsby nur mit optionalen KI-Credits. Der KI-Assistent, die automatischen Kategorien und das Scannen von Belegen nutzen Credits: {freeCredits, number} im Monat kostenlos, {starterCredits, number} mit Starter ({starterPrice, number, ::currency/USD} im Monat) und {proCredits, number} mit Pro ({proPrice, number, ::currency/USD} im Monat im Web). Auf dem iPhone kostet Pro {proAppStorePrice, number, ::currency/USD} im Monat im US-App-Store.",
     },
     android: {
       question: "Funktioniert Flatsby auf Android?",
@@ -330,7 +330,7 @@ export const marketing = {
       },
       credits: {
         heading: "Credits",
-        body: "Der Assistent und die automatischen Kategorien nutzen Credits: {freeCredits, number} im Monat im kostenlosen Tarif, mehr mit Starter und Pro. Wenn die Credits aufgebraucht sind, bekommen neue Artikel bis zum nächsten Monat die Kategorie Sonstiges. Listen, Ausgaben und Ausgleichen brauchen nie Credits.",
+        body: "Der Assistent, die automatischen Kategorien und das Scannen von Belegen nutzen Credits: {freeCredits, number} im Monat im kostenlosen Tarif, mehr mit Starter und Pro. Wenn die Credits aufgebraucht sind, bekommen neue Artikel bis zum nächsten Monat die Kategorie Sonstiges. Listen, Ausgaben und Ausgleichen brauchen nie Credits.",
       },
     },
     splitwise: {
@@ -355,6 +355,7 @@ export const marketing = {
         currency: "Währungsumrechnung",
         currencyFlatsby: "Nein, Kontostände pro Währung",
         receipts: "Belege scannen",
+        receiptsFlatsby: "Summe, Datum und Geschäft (verbraucht Credits)",
         charts: "Ausgabendiagramme",
         chartsFlatsby: "Über den KI-Assistenten (verbraucht Credits)",
         outside: "Ausgaben außerhalb einer Gruppe",
@@ -364,7 +365,7 @@ export const marketing = {
       },
       better: {
         heading: "Wo Splitwise besser ist",
-        body: "Splitwise Pro rechnet Währungen um, scannt Belege und schlüsselt sie auf und importiert in den USA Kartentransaktionen. Splitwise kann außerdem einmalige Ausgaben mit einer Person außerhalb einer Gruppe. Es gibt Splitwise schon seit Jahren, und die meisten haben dort bereits ein Konto. Wenn dir das wichtiger ist als eine gemeinsame Einkaufsliste, bleib bei Splitwise.",
+        body: "Splitwise Pro rechnet Währungen um, schlüsselt Belege auf und importiert in den USA Kartentransaktionen. Splitwise kann außerdem einmalige Ausgaben mit einer Person außerhalb einer Gruppe. Es gibt Splitwise schon seit Jahren, und die meisten haben dort bereits ein Konto. Wenn dir das wichtiger ist als eine gemeinsame Einkaufsliste, bleib bei Splitwise.",
       },
       moving: {
         heading: "Von Splitwise zu Flatsby wechseln",
@@ -462,7 +463,7 @@ export const marketing = {
       },
       free: {
         heading: "Was bei Flatsby kostenlos ist",
-        body: "Kostenlos sind: beliebig viele Einkaufslisten, der Putzplan mit Verlauf, der Kalender, Ausgaben und Ausgleichszahlungen und der Datenexport. Ohne Werbung und ohne Mitgliederbegrenzung. Bezahlpläne gibt es nur für zusätzliche KI-Credits, also für den KI-Assistenten und die automatische Sortierung in Kategorien.",
+        body: "Kostenlos sind: beliebig viele Einkaufslisten, der Putzplan mit Verlauf, der Kalender, Ausgaben und Ausgleichszahlungen und der Datenexport. Ohne Werbung und ohne Mitgliederbegrenzung. Bezahlpläne gibt es nur für zusätzliche KI-Credits, also für den KI-Assistenten, die automatische Sortierung in Kategorien und das Scannen von Belegen.",
       },
       rent: {
         heading: "Für Mieten, die nicht gleich verteilt sind",
@@ -474,7 +475,7 @@ export const marketing = {
       },
       data: {
         heading: "Deine Daten",
-        body: "Datenbank und Server stehen in Frankfurt, bei Cloud-Anbietern mit EU-Region, die Nutzungsstatistik kommt ohne Werbe-Tracking aus. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto, gespeichert wird er nicht. Du kannst alles exportieren oder dein Konto in den Einstellungen löschen, Details stehen in der Datenschutzerklärung. Der Code ist Open Source, und Flatsby wird von Raphael Mitas gebaut, einem unabhängigen Entwickler aus Darmstadt.",
+        body: "Datenbank und Server stehen in Frankfurt, bei Cloud-Anbietern mit EU-Region, die Nutzungsstatistik kommt ohne Werbe-Tracking aus. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto, Flatsby speichert ihn nicht. Du kannst alles exportieren oder dein Konto in den Einstellungen löschen, Details stehen in der Datenschutzerklärung. Der Code ist Open Source, und Flatsby wird von Raphael Mitas gebaut, einem unabhängigen Entwickler aus Darmstadt.",
       },
       moving: {
         heading: "Von Flatastic zu Flatsby wechseln",
@@ -504,7 +505,7 @@ export const marketing = {
       },
       credits: {
         heading: "Wofür Credits da sind",
-        body: "Der KI-Assistent und die automatischen Kategorien nutzen Credits. Wenn sie aufgebraucht sind, pausiert der Assistent, und neue Artikel bekommen bis zum nächsten Monat die Kategorie Sonstiges. Sonst verbraucht nichts in Flatsby Credits.",
+        body: "Der KI-Assistent, die automatischen Kategorien und das Scannen von Belegen nutzen Credits. Wenn sie aufgebraucht sind, pausieren der Assistent und das Scannen, und neue Artikel bekommen bis zum nächsten Monat die Kategorie Sonstiges. Sonst verbraucht nichts in Flatsby Credits.",
       },
       buy: {
         heading: "Wo du kaufen kannst",

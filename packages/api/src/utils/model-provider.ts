@@ -123,7 +123,7 @@ export function captureGeneration({
 }
 
 // A provider error carries the request body, which holds the person's messages or photo
-const errorSummary = (error: unknown) =>
+export const errorSummary = (error: unknown) =>
   error instanceof Error ? `${error.name}: ${error.message}` : "Unknown error";
 
 async function traced<T extends { usage: LanguageModelUsage }>(

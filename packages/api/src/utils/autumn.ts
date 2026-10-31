@@ -6,6 +6,8 @@ import { z } from "zod";
 import { env } from "@flatsby/auth/env";
 import { AUTUMN_FEATURES, costToCredits } from "@flatsby/validators/billing";
 
+import { captureError } from "../lib/posthog";
+
 const gatewayMetadataSchema = z
   .object({
     cost: z.string().optional(),
@@ -67,6 +69,30 @@ export async function trackAIUsage({
       customerId,
       featureId: AUTUMN_FEATURES.CREDITS,
       value: credits,
+    });
+  }
+}
+
+// A failed charge is reported, never shown: the person already has their answer
+export async function chargeAIUsage({
+  user,
+  feature,
+  providerMetadata,
+}: {
+  user: CreditUser;
+  feature: string;
+  providerMetadata: Record<string, unknown> | undefined;
+}): Promise<void> {
+  try {
+    await trackAIUsage({
+      customerId: user.id,
+      cost: extractGatewayMetadata(providerMetadata)?.cost,
+    });
+  } catch (error) {
+    captureError({
+      error,
+      operation: `track-${feature}-usage`,
+      distinctId: user.id,
     });
   }
 }

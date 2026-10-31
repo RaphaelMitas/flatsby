@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { trackAIUsage } from "./autumn";
+import { chargeAIUsage } from "./autumn";
 import { readReceipt } from "./model-provider";
 import { scanReceipt } from "./receipt-scan";
 
@@ -9,11 +9,12 @@ const credits = vi.hoisted(() => ({ allowed: true }));
 
 vi.mock("./autumn", () => ({
   checkCredits: () => Promise.resolve(credits),
-  trackAIUsage: vi.fn().mockResolvedValue(undefined),
-  extractGatewayMetadata: () => ({ cost: "0.0004" }),
+  chargeAIUsage: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock("./model-provider", () => ({ readReceipt: vi.fn() }));
-vi.mock("../lib/posthog", () => ({ captureError: vi.fn() }));
+vi.mock("./model-provider", () => ({
+  readReceipt: vi.fn(),
+  errorSummary: String,
+}));
 
 const user = { id: "user-1", name: "Test", email: "test@example.com" };
 
@@ -46,9 +47,8 @@ describe("scanReceipt", () => {
     });
     const result = await scan();
     expect(result._tag).toBe("Success");
-    expect(trackAIUsage).toHaveBeenCalledWith({
-      customerId: "user-1",
-      cost: "0.0004",
-    });
+    expect(chargeAIUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ feature: "scan-receipt" }),
+    );
   });
 });
