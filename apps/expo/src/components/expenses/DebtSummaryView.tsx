@@ -29,6 +29,7 @@ import { ConvertCurrencyBanner } from "./ConvertCurrencyBanner";
 import { DirectDebts } from "./DirectDebts";
 import { GroupBalances } from "./GroupBalances";
 import { OtherDebts } from "./OtherDebts";
+import { PaypalNudgeCard } from "./PaypalNudgeCard";
 import { settleHref } from "./settleHref";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -65,6 +66,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   return (
     <AppScrollView className="flex-1" onRefresh={invalidateDebtSummary}>
       <View testID="debt-summary-title" className="w-full gap-2 p-4">
+        <PaypalNudgeCard />
         {bannerCurrencies && (
           <ConvertCurrencyBanner
             groupId={groupId}
