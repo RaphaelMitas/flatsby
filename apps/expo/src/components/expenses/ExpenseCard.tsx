@@ -178,8 +178,7 @@ export function ExpenseCard({
               row={row}
               subcategory={expense.subcategory}
               isSelected={isSelected}
-              className={corners}
-              last={last}
+              className={cn(corners, last && "border-b")}
             />
           </Pressable>
         </ReanimatedSwipeable>
