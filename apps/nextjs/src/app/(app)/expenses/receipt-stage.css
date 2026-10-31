@@ -28,6 +28,10 @@
   transition: opacity 0.3s;
   animation: rs-walk var(--walk) ease-in-out infinite;
 }
+/* A browser that can't decode the photo has nothing to magnify */
+.rs-photo[data-broken] .rs-lens {
+  display: none;
+}
 .rs-lens::after {
   content: "";
   position: absolute;

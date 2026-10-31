@@ -56,7 +56,9 @@ export function ReceiptReadingStage({
               ? [values.store, values.amount, values.date]
                   .filter(Boolean)
                   .join(", ")
-              : caption}
+              : failing && receiptScan.state.status === "failed"
+                ? `${caption}. ${receiptScan.state.message ?? t("unreadableBody")}`
+                : caption}
           </p>
           <div className="mt-2 flex min-h-7 flex-wrap justify-center gap-1.5 px-6">
             {!failing &&
@@ -78,6 +80,12 @@ export function ReceiptReadingStage({
                 src={photoUrl}
                 alt=""
                 className="max-h-82 max-w-65 rounded-md shadow-xl"
+                onError={(event) =>
+                  event.currentTarget.parentElement?.setAttribute(
+                    "data-broken",
+                    "",
+                  )
+                }
                 onLoad={(event) => {
                   // The lens keyframes size and place the magnified copy from these
                   const { width, height } = event.currentTarget;

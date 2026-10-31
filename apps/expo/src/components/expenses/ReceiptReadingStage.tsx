@@ -186,12 +186,18 @@ export function ReceiptReadingStage({
   const failing = phase === "failing";
   const caption = t(receiptScan.stage.caption);
   const values = receiptScan.preview;
+  const reason =
+    receiptScan.state.status === "failed"
+      ? (receiptScan.state.message ?? t("unreadableBody"))
+      : "";
   const spoken =
     phase === "preview" && values
       ? [values.store, values.amount, values.date].filter(Boolean).join(", ")
       : phase === "closed"
         ? ""
-        : caption;
+        : failing
+          ? `${caption}. ${reason}`
+          : caption;
 
   useEffect(() => {
     if (spoken) AccessibilityInfo.announceForAccessibility(spoken);
