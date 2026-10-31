@@ -130,8 +130,9 @@ export const expenses = {
     chooseFile: "or choose a file",
     disclosure:
       "The photo goes through the Vercel AI Gateway to OpenAI so the receipt can be read. Flatsby doesn't store it.",
-    reading: "Reading receipt…",
-    readingHint: "This takes a few seconds",
+    stageCaption: "The cat is reading your receipt",
+    stageBlurry: "Hm, too blurry",
+    stageFailed: "Hm, that didn't work",
     previewTitle: "Here's what we read",
     store: "Store",
     amount: "Amount",
@@ -148,5 +149,9 @@ export const expenses = {
       "This image format can't be opened here. Use a JPG or PNG.",
     cameraDenied: "Allow camera access in Settings to photograph receipts.",
     outOfCredits: "No credits left. Upgrade to scan receipts.",
+    outOfCreditsTitle: "You're out of credits",
+    outOfCreditsBody:
+      "Receipt scanning, the AI assistant and automatic categories use credits. Starter and Pro get new ones every month.",
+    fillManually: "Fill in myself",
   },
 };

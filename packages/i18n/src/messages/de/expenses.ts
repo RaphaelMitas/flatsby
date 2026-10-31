@@ -137,8 +137,9 @@ export const expenses = {
     chooseFile: "oder Datei wählen",
     disclosure:
       "Das Foto geht über das Vercel AI Gateway an OpenAI, damit der Beleg gelesen werden kann. Flatsby speichert es nicht.",
-    reading: "Beleg wird gelesen …",
-    readingHint: "Dauert ein paar Sekunden",
+    stageCaption: "Die Katze liest deinen Beleg",
+    stageBlurry: "Hm, zu verschwommen",
+    stageFailed: "Hm, das hat nicht geklappt",
     previewTitle: "Das haben wir gelesen",
     store: "Geschäft",
     amount: "Betrag",
@@ -156,5 +157,9 @@ export const expenses = {
     cameraDenied:
       "Erlaube den Kamerazugriff in den Einstellungen, um Belege zu fotografieren.",
     outOfCredits: "Keine Credits mehr. Mach ein Upgrade, um Belege zu scannen.",
+    outOfCreditsTitle: "Deine Credits sind aufgebraucht",
+    outOfCreditsBody:
+      "Beleg scannen, KI-Assistent und automatische Kategorien brauchen Credits. Mit Starter oder Pro gibt es jeden Monat neue.",
+    fillManually: "Selbst ausfüllen",
   },
 } satisfies Messages["expenses"];

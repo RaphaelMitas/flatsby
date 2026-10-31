@@ -2,33 +2,23 @@
 
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  Camera,
-  ChevronRight,
-  LoaderCircle,
-  Lock,
-} from "lucide-react";
+import { Camera, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { cn } from "@flatsby/ui";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@flatsby/ui/dialog";
+import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
+import { Dialog, DialogContent, DialogTitle } from "@flatsby/ui/dialog";
 import {
   RECEIPT_IMAGE_MAX_EDGE,
   RECEIPT_IMAGE_QUALITY,
 } from "@flatsby/validators/expenses/receipt-scan";
 
 import { useTRPC } from "~/trpc/react";
+import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
 
@@ -55,12 +45,15 @@ async function receiptBase64(file: File) {
 
 export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const t = useTranslations("expenses.receiptScan");
+  const tBilling = useTranslations("billing.pricing");
   const trpc = useTRPC();
   const fileInput = useRef<HTMLInputElement>(null);
   const [photoUrl, setPhotoUrl] = useState<string>();
   const [isDragging, setIsDragging] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
-  const { state, preview } = receiptScan;
+  const { state } = receiptScan;
+  const outOfCredits = usage?.credits?.balance === 0;
 
   useEffect(
     () => () => {
@@ -86,10 +79,6 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
     void receiptScan.scan(() => receiptBase64(file));
   };
 
-  const canPick =
-    usage?.credits?.balance !== 0 &&
-    (state.status === "idle" || state.status === "failed");
-
   return (
     <div className="space-y-2">
       <input
@@ -104,50 +93,37 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         }}
       />
 
-      {state.status === "reading" ? (
-        <div
-          data-testid="receipt-scan-reading"
-          className="bg-muted flex items-center gap-3 rounded-lg border p-3"
-        >
-          {photoUrl && (
-            <Image
-              src={photoUrl}
-              alt=""
-              width={36}
-              height={48}
-              unoptimized
-              className="h-12 w-9 rounded object-cover"
-            />
-          )}
-          <div className="flex-1">
-            <p className="font-semibold">{t("reading")}</p>
-            <p className="text-muted-foreground text-sm">{t("readingHint")}</p>
-          </div>
-          <LoaderCircle className="text-muted-foreground h-5 w-5 animate-spin" />
-        </div>
-      ) : usage?.credits?.balance === 0 ? (
-        <Link
-          href="/billing"
+      {outOfCredits ? (
+        <button
+          type="button"
           data-testid="receipt-scan-out-of-credits"
-          className="bg-muted hover:bg-muted/70 flex items-center gap-3 rounded-lg border p-4"
+          onClick={() => setUpgradeOpen(true)}
+          className="bg-muted hover:bg-muted/70 flex w-full items-center gap-3 rounded-lg border p-4 text-left"
         >
-          <div className="bg-background flex h-10 w-10 items-center justify-center rounded-lg">
-            <Lock className="text-muted-foreground h-5 w-5" />
-          </div>
+          <SleepingCat className="h-9" />
           <div className="flex-1">
             <p className="font-semibold">{t("title")}</p>
             <p className="text-muted-foreground text-sm">{t("outOfCredits")}</p>
           </div>
           <ChevronRight className="text-muted-foreground h-4 w-4" />
-        </Link>
+        </button>
       ) : state.status === "failed" ? (
-        <Alert variant="destructive" data-testid="receipt-scan-failed">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>
-            {state.message ? t("failedTitle") : t("unreadableTitle")}
-          </AlertTitle>
-          <AlertDescription className="space-y-3">
-            <p>{state.message ?? t("unreadableBody")}</p>
+        <Alert
+          variant="destructive"
+          data-testid="receipt-scan-failed"
+          className="flex gap-3"
+        >
+          <FlatsbyCat
+            animate={false}
+            className="fc-squint h-9 w-auto shrink-0 -rotate-9"
+          />
+          <div className="space-y-3">
+            <AlertTitle>
+              {state.message ? t("failedTitle") : t("unreadableTitle")}
+            </AlertTitle>
+            <AlertDescription>
+              {state.message ?? t("unreadableBody")}
+            </AlertDescription>
             <Button
               type="button"
               variant="outline"
@@ -157,7 +133,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
               <Camera className="mr-2 h-4 w-4" />
               {t("newPhoto")}
             </Button>
-          </AlertDescription>
+          </div>
         </Alert>
       ) : (
         <button
@@ -174,9 +150,10 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
             setIsDragging(false);
             read(event.dataTransfer.files[0]);
           }}
-          className={`hover:bg-muted/50 flex w-full items-center gap-3 rounded-lg border border-dashed p-4 text-left ${
-            isDragging ? "border-primary bg-muted" : "border-muted-foreground"
-          }`}
+          className={cn(
+            "hover:bg-muted/50 flex w-full items-center gap-3 rounded-lg border border-dashed p-4 text-left",
+            isDragging ? "border-primary bg-muted" : "border-muted-foreground",
+          )}
         >
           <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
             <Camera className="h-5 w-5" />
@@ -191,58 +168,53 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
           </div>
         </button>
       )}
-      {canPick && (
+      {!outOfCredits && (
         <p className="text-muted-foreground text-xs">{t("disclosure")}</p>
       )}
 
-      <Dialog
-        open={state.status === "found"}
-        onOpenChange={(open) => {
-          if (!open) receiptScan.reset();
-        }}
-      >
-        <DialogContent data-testid="receipt-scan-preview">
-          <DialogHeader>
-            <DialogTitle>{t("previewTitle")}</DialogTitle>
-          </DialogHeader>
-          {preview && (
-            <div className="space-y-2 text-sm">
-              <PreviewRow label={t("store")} value={preview.store} />
-              <PreviewRow label={t("amount")} value={preview.amount} />
-              <PreviewRow label={t("date")} value={preview.date} />
-            </div>
-          )}
-          <DialogFooter>
+      <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
+        <DialogContent
+          data-testid="receipt-scan-upgrade"
+          aria-describedby={undefined}
+          className="text-center sm:max-w-sm"
+        >
+          <SleepingCat className="mx-auto h-28" />
+          <DialogTitle className="text-center">
+            {t("outOfCreditsTitle")}
+          </DialogTitle>
+          <p className="text-muted-foreground text-sm">
+            {t("outOfCreditsBody")}
+          </p>
+          <div className="flex gap-2">
             <Button
               type="button"
               variant="outline"
-              data-testid="receipt-scan-discard"
-              onClick={receiptScan.reset}
+              className="flex-1"
+              onClick={() => setUpgradeOpen(false)}
             >
-              {t("discard")}
+              {t("fillManually")}
             </Button>
-            <Button
-              type="button"
-              data-testid="receipt-scan-apply"
-              onClick={receiptScan.apply}
-            >
-              {t("apply")}
+            <Button asChild className="flex-1">
+              <Link href="/billing">{tBilling("upgrade")}</Link>
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
+
+      <ReceiptReadingStage receiptScan={receiptScan} photoUrl={photoUrl} />
     </div>
   );
 }
 
-function PreviewRow({ label, value }: { label: string; value: string | null }) {
-  const t = useTranslations("expenses.receiptScan");
+function SleepingCat({ className }: { className: string }) {
   return (
-    <div className="flex justify-between gap-4">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={value ? "font-semibold" : "text-warning"}>
-        {value ?? t("notFound")}
+    <span className={cn("relative inline-block shrink-0", className)}>
+      <FlatsbyCat animate={false} className="fc-asleep h-full w-auto" />
+      <span className="absolute -top-1 -right-2 text-xs">
+        <span className="rs-zee" />
+        <span className="rs-zee" />
+        <span className="rs-zee" />
       </span>
-    </div>
+    </span>
   );
 }

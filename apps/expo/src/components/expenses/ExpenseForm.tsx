@@ -6,6 +6,7 @@ import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useMemo, useState } from "react";
 import { Alert, Text, View } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
@@ -54,7 +55,7 @@ import {
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
-import { Skeleton } from "~/lib/ui/skeleton";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useCloseScreen } from "~/utils/useCloseScreen";
 import { useReviewNudge } from "~/utils/useReviewNudge";
@@ -167,17 +168,19 @@ export function ExpenseForm({
       },
     }),
   );
+  const reducedMotion = useReducedMotion();
   const receiptScan = useReceiptScan({
     read: (imageBase64) => scanReceiptMutation.mutateAsync({ imageBase64 }),
     setValue: form.setValue,
     currency,
     locale,
+    reducedMotion,
     messages: {
       error: t("errors.unexpected"),
       unsupportedImage: t("expenses.receiptScan.unsupportedFormat"),
     },
   });
-  const isReadingReceipt = receiptScan.state.status === "reading";
+  const scanned = receiptScan.justApplied ? "border-primary" : undefined;
 
   const allMembers = useMemo(() => {
     if (!expense) return group.groupMembers;
@@ -549,26 +552,18 @@ export function ExpenseForm({
                       render={({ field }) => (
                         <View className="gap-2">
                           <Label>{t("expenses.description")}</Label>
-                          {isReadingReceipt ? (
-                            <Skeleton size="3xl" />
-                          ) : (
-                            <FormControl>
-                              <Input
-                                testID="expense-form-description"
-                                autoFocus={
-                                  autoFocus &&
-                                  receiptScan.state.status === "idle"
-                                }
-                                placeholder={t(
-                                  "expenses.descriptionPlaceholder",
-                                )}
-                                value={field.value}
-                                onChangeText={field.onChange}
-                                onBlur={field.onBlur}
-                                maxLength={512}
-                              />
-                            </FormControl>
-                          )}
+                          <FormControl>
+                            <Input
+                              testID="expense-form-description"
+                              autoFocus={autoFocus}
+                              placeholder={t("expenses.descriptionPlaceholder")}
+                              value={field.value}
+                              onChangeText={field.onChange}
+                              onBlur={field.onBlur}
+                              maxLength={512}
+                              className={scanned}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </View>
                       )}
@@ -580,31 +575,27 @@ export function ExpenseForm({
                       render={({ field }) => (
                         <View className="gap-2">
                           <Label>{t("expenses.amount")}</Label>
-                          {isReadingReceipt ? (
-                            <Skeleton size="3xl" />
-                          ) : (
-                            <View className="flex-row items-center gap-2">
-                              <FormField
-                                control={form.control}
-                                name="currency"
-                                render={({ field: currencyField }) => (
-                                  <CurrencyPicker
-                                    testID="expense-form-currency"
-                                    value={currencyField.value}
-                                    onChange={currencyField.onChange}
-                                  />
-                                )}
-                              />
-                              <CurrencyInput
-                                testID="expense-form-amount"
-                                value={field.value}
-                                onChange={field.onChange}
-                                placeholder="0.00"
-                                min={1}
-                                className="flex-1"
-                              />
-                            </View>
-                          )}
+                          <View className="flex-row items-center gap-2">
+                            <FormField
+                              control={form.control}
+                              name="currency"
+                              render={({ field: currencyField }) => (
+                                <CurrencyPicker
+                                  testID="expense-form-currency"
+                                  value={currencyField.value}
+                                  onChange={currencyField.onChange}
+                                />
+                              )}
+                            />
+                            <CurrencyInput
+                              testID="expense-form-amount"
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="0.00"
+                              min={1}
+                              className={cn("flex-1", scanned)}
+                            />
+                          </View>
                           <FormMessage />
                         </View>
                       )}
@@ -657,20 +648,13 @@ export function ExpenseForm({
                     <FormField
                       control={form.control}
                       name="expenseDate"
-                      render={({ field }) =>
-                        isReadingReceipt ? (
-                          <View className="gap-2">
-                            <Label>{t("common.date")}</Label>
-                            <Skeleton size="3xl" />
-                          </View>
-                        ) : (
-                          <DatePickerField
-                            label={t("common.date")}
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        )
-                      }
+                      render={({ field }) => (
+                        <DatePickerField
+                          label={t("common.date")}
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                   </CardContent>
                 </Card>
@@ -785,15 +769,6 @@ export function ExpenseForm({
             )}
           </AppScrollView>
           <View className="border-border flex-row gap-2 border-t p-4">
-            {isReadingReceipt && (
-              <Button
-                testID="receipt-scan-cancel"
-                title={t("common.cancel")}
-                variant="outline"
-                onPress={receiptScan.reset}
-                className="flex-1"
-              />
-            )}
             {currentStep > 1 && (
               <Button
                 testID="expense-form-back"
@@ -812,7 +787,6 @@ export function ExpenseForm({
                 onPress={handleNext}
                 disabled={
                   isPending ||
-                  isReadingReceipt ||
                   amountInCents <= 0 ||
                   conversion.isMissingConverted
                 }

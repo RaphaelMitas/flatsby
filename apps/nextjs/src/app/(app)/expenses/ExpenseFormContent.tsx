@@ -12,6 +12,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
+import { cn } from "@flatsby/ui";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import { Calendar } from "@flatsby/ui/calendar";
@@ -39,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
-import { Skeleton } from "@flatsby/ui/skeleton";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
   editableSplitMethod,
@@ -83,7 +83,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     conversion,
     receiptScan,
   } = formState;
-  const isReadingReceipt = receiptScan.state.status === "reading";
+  const scanned = receiptScan.justApplied
+    ? "ring-primary/40 ring-2"
+    : undefined;
   const { convertedAmountInCents } = conversion.fields;
   const participantCount = finalizeSplits(
     splitMethod,
@@ -143,18 +145,15 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("expenses.description")}</FormLabel>
-                      {isReadingReceipt ? (
-                        <Skeleton className="h-9 w-full" />
-                      ) : (
-                        <FormControl>
-                          <Input
-                            placeholder={t("expenses.descriptionPlaceholder")}
-                            {...field}
-                            data-testid="expense-form-description"
-                            maxLength={512}
-                          />
-                        </FormControl>
-                      )}
+                      <FormControl>
+                        <Input
+                          placeholder={t("expenses.descriptionPlaceholder")}
+                          {...field}
+                          data-testid="expense-form-description"
+                          maxLength={512}
+                          className={scanned}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -166,34 +165,30 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("expenses.amount")}</FormLabel>
-                      {isReadingReceipt ? (
-                        <Skeleton className="h-9 w-full" />
-                      ) : (
-                        <FormControl>
-                          <div className="flex items-center gap-2">
-                            <FormField
-                              control={form.control}
-                              name="currency"
-                              render={({ field: currencyField }) => (
-                                <CurrencySelect
-                                  className="w-24"
-                                  data-testid="expense-form-currency"
-                                  value={currencyField.value}
-                                  onChange={currencyField.onChange}
-                                />
-                              )}
-                            />
-                            <CurrencyInput
-                              value={field.value}
-                              onChange={field.onChange}
-                              placeholder="0.00"
-                              min={1}
-                              className="flex-1"
-                              data-testid="expense-form-amount"
-                            />
-                          </div>
-                        </FormControl>
-                      )}
+                      <FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormField
+                            control={form.control}
+                            name="currency"
+                            render={({ field: currencyField }) => (
+                              <CurrencySelect
+                                className="w-24"
+                                data-testid="expense-form-currency"
+                                value={currencyField.value}
+                                onChange={currencyField.onChange}
+                              />
+                            )}
+                          />
+                          <CurrencyInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="0.00"
+                            min={1}
+                            className={cn("flex-1", scanned)}
+                            data-testid="expense-form-amount"
+                          />
+                        </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -259,33 +254,29 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>{t("common.date")}</FormLabel>
-                      {isReadingReceipt ? (
-                        <Skeleton className="h-9 w-full" />
-                      ) : (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start text-left font-normal"
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {format(field.value, "PPP", {
-                                  locale: locale === "de" ? de : undefined,
-                                })}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={(date) => date && field.onChange(date)}
-                              autoFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      )}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {format(field.value, "PPP", {
+                                locale: locale === "de" ? de : undefined,
+                              })}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={(date) => date && field.onChange(date)}
+                            autoFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -414,17 +405,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
         )}
 
         <div className="flex gap-2 border-t pt-4">
-          {isReadingReceipt && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={receiptScan.reset}
-              className="flex-1"
-              data-testid="receipt-scan-cancel"
-            >
-              {t("common.cancel")}
-            </Button>
-          )}
           {currentStep > 1 && (
             <Button
               type="button"
@@ -447,10 +427,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 void handleNext();
               }}
               disabled={
-                isPending ||
-                isReadingReceipt ||
-                amountInCents <= 0 ||
-                conversion.isMissingConverted
+                isPending || amountInCents <= 0 || conversion.isMissingConverted
               }
               className="flex-1"
               data-testid="expense-form-next"

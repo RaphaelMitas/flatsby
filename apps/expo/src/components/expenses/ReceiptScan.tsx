@@ -1,8 +1,17 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import type { ImagePickerOptions } from "expo-image-picker";
+import type { ComponentRef, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -14,18 +23,22 @@ import {
   RECEIPT_IMAGE_QUALITY,
 } from "@flatsby/validators/expenses/receipt-scan";
 
+import type { StageOrigin, StagePhoto } from "./ReceiptReadingStage";
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Button } from "~/lib/ui/button";
+import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SheetModal } from "~/lib/ui/sheet-modal";
 import { cn, useThemeColors } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
 type Source = "camera" | "library";
 
 const PICKER_OPTIONS: ImagePickerOptions = { mediaTypes: ["images"] };
+const SNORE = "z"; // i18n-ignore: drawn snoring, not a word
 
 async function receiptBase64(uri: string) {
   // Decoding downsampled also turns HEIC into the JPEG the model reads
@@ -43,27 +56,24 @@ async function receiptBase64(uri: string) {
 }
 
 export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
-  const t = useTranslations("expenses.receiptScan");
+  const t = useTranslations();
   const router = useRouter();
   const { getColor } = useThemeColors();
   const sourceSheet = useRef<BottomSheetModal>(null);
-  const previewSheet = useRef<BottomSheetModal>(null);
+  const upgradeSheet = useRef<BottomSheetModal>(null);
   const chosenSource = useRef<Source | null>(null);
-  const [photoUri, setPhotoUri] = useState<string>();
-  const [previewKey, setPreviewKey] = useState(0);
+  const goUpgrade = useRef(false);
+  const card = useRef<ComponentRef<typeof View>>(null);
+  const [photo, setPhoto] = useState<StagePhoto>();
+  const [origin, setOrigin] = useState<StageOrigin>();
   const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
-  const { state, preview } = receiptScan;
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: a new key remounts the sheet, which has to present again
-  useEffect(() => {
-    if (state.status === "found") previewSheet.current?.present();
-  }, [state.status, previewKey]);
+  const { state } = receiptScan;
 
   const takeFrom = async (source: Source) => {
     if (source === "camera") {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        receiptScan.fail(t("cameraDenied"));
+        receiptScan.fail(t("expenses.receiptScan.cameraDenied"));
         return;
       }
     }
@@ -73,7 +83,10 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         : await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
     const asset = result.assets?.[0];
     if (result.canceled || !asset) return;
-    setPhotoUri(asset.uri);
+    setPhoto({ uri: asset.uri, width: asset.width, height: asset.height });
+    card.current?.measureInWindow((x, y, width, height) =>
+      setOrigin({ x, y, width, height }),
+    );
     void receiptScan.scan(() => receiptBase64(asset.uri));
   };
 
@@ -84,57 +97,37 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   };
 
   return (
-    <>
-      {state.status === "reading" ? (
-        <View
-          testID="receipt-scan-reading"
-          className="border-border bg-muted flex-row items-center gap-3 rounded-lg border p-3"
-        >
-          {photoUri && (
-            <Image source={{ uri: photoUri }} className="h-12 w-9 rounded" />
-          )}
-          <View className="flex-1">
-            <Text className="text-foreground font-semibold">
-              {t("reading")}
-            </Text>
-            <Text className="text-muted-foreground text-sm">
-              {t("readingHint")}
-            </Text>
-          </View>
-          <ActivityIndicator color={getColor("muted-foreground")} />
-        </View>
-      ) : state.status === "found" ? (
-        // iOS swallows the preview if another sheet is open; a fresh one presents again
-        <OptionRow
-          testID="receipt-scan-review"
-          icon="receipt"
-          title={t("previewTitle")}
-          trailing
-          onPress={() => setPreviewKey((key) => key + 1)}
-        />
-      ) : usage?.credits?.balance === 0 ? (
+    <View ref={card} collapsable={false}>
+      {usage?.credits?.balance === 0 ? (
         <OptionRow
           testID="receipt-scan-out-of-credits"
-          icon="lock"
-          title={t("title")}
-          hint={t("outOfCredits")}
+          art={<SleepingCat size={34} />}
+          title={t("expenses.receiptScan.title")}
+          hint={t("expenses.receiptScan.outOfCredits")}
           trailing
           className="bg-muted"
-          onPress={() => router.push("/settings/credits")}
+          onPress={() => upgradeSheet.current?.present()}
         />
       ) : state.status === "failed" ? (
         <Alert variant="destructive" className="gap-3">
-          <View>
-            <AlertTitle>
-              {state.message ? t("failedTitle") : t("unreadableTitle")}
-            </AlertTitle>
-            <AlertDescription>
-              {state.message ?? t("unreadableBody")}
-            </AlertDescription>
+          <View className="flex-row items-center gap-3">
+            <View style={{ transform: [{ rotate: "-9deg" }] }}>
+              <FlatsbyCat size={36} color={getColor("primary")} squint />
+            </View>
+            <View className="flex-1">
+              <AlertTitle>
+                {state.message
+                  ? t("expenses.receiptScan.failedTitle")
+                  : t("expenses.receiptScan.unreadableTitle")}
+              </AlertTitle>
+              <AlertDescription>
+                {state.message ?? t("expenses.receiptScan.unreadableBody")}
+              </AlertDescription>
+            </View>
           </View>
           <Button
             testID="receipt-scan-retry"
-            title={t("newPhoto")}
+            title={t("expenses.receiptScan.newPhoto")}
             variant="outline"
             size="sm"
             icon="camera"
@@ -145,8 +138,8 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         <OptionRow
           testID="receipt-scan"
           icon="camera"
-          title={t("title")}
-          hint={t("subtitle")}
+          title={t("expenses.receiptScan.title")}
+          hint={t("expenses.receiptScan.subtitle")}
           className="border-muted-foreground border-dashed"
           onPress={() => sourceSheet.current?.present()}
         />
@@ -162,73 +155,128 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
       >
         <View className="gap-3 px-4 pb-10">
           <Text className="text-foreground text-lg font-semibold">
-            {t("title")}
+            {t("expenses.receiptScan.title")}
           </Text>
           <OptionRow
             testID="receipt-scan-camera"
             icon="camera"
-            title={t("takePhoto")}
-            hint={t("takePhotoHint")}
+            title={t("expenses.receiptScan.takePhoto")}
+            hint={t("expenses.receiptScan.takePhotoHint")}
             onPress={() => choose("camera")}
           />
           <OptionRow
             testID="receipt-scan-library"
             icon="image"
-            title={t("choosePhoto")}
-            hint={t("choosePhotoHint")}
+            title={t("expenses.receiptScan.choosePhoto")}
+            hint={t("expenses.receiptScan.choosePhotoHint")}
             onPress={() => choose("library")}
           />
           <Text className="text-muted-foreground text-xs">
-            {t("disclosure")}
+            {t("expenses.receiptScan.disclosure")}
           </Text>
         </View>
       </SheetModal>
 
       <SheetModal
-        key={previewKey}
-        ref={previewSheet}
+        ref={upgradeSheet}
         onDismiss={() => {
-          if (receiptScan.state.status === "found") receiptScan.reset();
+          // iOS can't push a screen while the sheet is still presented
+          if (goUpgrade.current) router.push("/settings/credits");
+          goUpgrade.current = false;
         }}
       >
-        <View testID="receipt-scan-preview" className="gap-4 px-4 pb-10">
-          <Text className="text-foreground text-lg font-semibold">
-            {t("previewTitle")}
+        <View
+          testID="receipt-scan-upgrade"
+          className="items-center gap-2 px-6 pb-10"
+        >
+          <SleepingCat size={112} />
+          <Text className="text-foreground mt-2 text-center text-lg font-semibold">
+            {t("expenses.receiptScan.outOfCreditsTitle")}
           </Text>
-          {preview && (
-            <View className="gap-2">
-              <PreviewRow label={t("store")} value={preview.store} />
-              <PreviewRow label={t("amount")} value={preview.amount} />
-              <PreviewRow label={t("date")} value={preview.date} />
-            </View>
-          )}
-          <View className="flex-row gap-2">
+          <Text className="text-muted-foreground mb-4 text-center text-sm">
+            {t("expenses.receiptScan.outOfCreditsBody")}
+          </Text>
+          <View className="w-full flex-row gap-2">
             <Button
-              testID="receipt-scan-discard"
-              title={t("discard")}
+              title={t("expenses.receiptScan.fillManually")}
               variant="outline"
               className="flex-1"
-              onPress={() => previewSheet.current?.dismiss()}
+              onPress={() => upgradeSheet.current?.dismiss()}
             />
             <Button
-              testID="receipt-scan-apply"
-              title={t("apply")}
+              testID="receipt-scan-upgrade-button"
+              title={t("billing.pricing.upgrade")}
               className="flex-1"
               onPress={() => {
-                receiptScan.apply();
-                previewSheet.current?.dismiss();
+                goUpgrade.current = true;
+                upgradeSheet.current?.dismiss();
               }}
             />
           </View>
         </View>
       </SheetModal>
-    </>
+
+      <ReceiptReadingStage
+        receiptScan={receiptScan}
+        photo={photo}
+        origin={origin}
+      />
+    </View>
+  );
+}
+
+function SleepingCat({ size }: { size: number }) {
+  const { getColor } = useThemeColors();
+  const reduced = useReducedMotion();
+  return (
+    <View style={{ width: size, height: size }}>
+      <FlatsbyCat size={size} color={getColor("primary")} asleep />
+      {!reduced && [0, 1, 2].map((i) => <Zee key={i} index={i} size={size} />)}
+    </View>
+  );
+}
+
+function Zee({ index, size }: { index: number; size: number }) {
+  const { getColor } = useThemeColors();
+  const rise = useSharedValue(0);
+
+  useEffect(() => {
+    rise.set(
+      withDelay(index * 800, withRepeat(withTiming(1, { duration: 2400 }), -1)),
+    );
+  }, [index, rise]);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: rise.get() < 0.2 ? rise.get() * 5 : 1 - rise.get(),
+    transform: [
+      { translateX: rise.get() * size * 0.18 },
+      { translateY: -rise.get() * size * 0.3 },
+    ],
+  }));
+
+  return (
+    <Animated.Text
+      style={[
+        {
+          position: "absolute",
+          left: size * 0.78,
+          top: size * 0.05,
+          fontSize: Math.max(9, size * 0.16 - index * 2),
+          fontWeight: "700",
+          color: getColor("muted-foreground"),
+        },
+        style,
+      ]}
+    >
+      {SNORE}
+    </Animated.Text>
   );
 }
 
 function OptionRow({
   testID,
   icon,
+  art,
   title,
   hint,
   trailing,
@@ -236,7 +284,8 @@ function OptionRow({
   onPress,
 }: {
   testID: string;
-  icon: IconProps["name"];
+  icon?: IconProps["name"];
+  art?: ReactNode;
   title: string;
   hint?: string;
   trailing?: boolean;
@@ -254,7 +303,7 @@ function OptionRow({
       )}
     >
       <View className="bg-muted size-10 items-center justify-center rounded-lg">
-        <Icon name={icon} size={20} color="foreground" />
+        {art ?? (icon && <Icon name={icon} size={20} color="foreground" />)}
       </View>
       <View className="flex-1">
         <Text className="text-foreground font-semibold">{title}</Text>
@@ -264,23 +313,5 @@ function OptionRow({
         <Icon name="chevron-right" size={16} color="muted-foreground" />
       )}
     </Pressable>
-  );
-}
-
-function PreviewRow({ label, value }: { label: string; value: string | null }) {
-  const t = useTranslations("expenses.receiptScan");
-  return (
-    <View className="flex-row justify-between gap-4">
-      <Text className="text-muted-foreground">{label}</Text>
-      <Text
-        className={
-          value
-            ? "text-foreground flex-1 text-right font-semibold"
-            : "text-warning flex-1 text-right"
-        }
-      >
-        {value ?? t("notFound")}
-      </Text>
-    </View>
   );
 }

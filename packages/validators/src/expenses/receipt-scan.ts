@@ -143,3 +143,49 @@ export function receiptReport(filled: Filled, values: ReceiptFormValues) {
     edited: scanned.filter((field) => !sameValue(filled[field], values[field])),
   };
 }
+
+export type StagePhase =
+  "closed" | "reading" | "revealing" | "preview" | "failing";
+export type StageTag = "store" | "amount" | "date";
+export interface StageEvent {
+  at: number;
+  phase?: StagePhase;
+  reveal?: StageTag;
+}
+
+// A fast answer still gets one look over the receipt, so the stage never flashes
+export const MIN_READING_MS = 1200;
+const REVEAL_GAP_MS = 400;
+const PREVIEW_AFTER_MS = 600;
+const FAILING_MS = 1800;
+
+export function stageTimeline({
+  scan,
+  readingFor,
+  reduced,
+}: {
+  scan: ReceiptScan | null;
+  readingFor: number;
+  reduced: boolean;
+}): StageEvent[] {
+  const start = reduced ? 0 : Math.max(0, MIN_READING_MS - readingFor);
+  if (!scan) {
+    return [
+      { at: start, phase: "failing" },
+      { at: start + (reduced ? 300 : FAILING_MS), phase: "closed" },
+    ];
+  }
+  const tags: StageTag[] = [];
+  if (scan.description !== null) tags.push("store");
+  if (scan.amountInCents !== null) tags.push("amount");
+  if (scan.expenseDay !== null) tags.push("date");
+  const gap = reduced ? 0 : REVEAL_GAP_MS;
+  return [
+    { at: start, phase: "revealing" },
+    ...tags.map((reveal, i) => ({ at: start + gap * (i + 1), reveal })),
+    {
+      at: start + gap * tags.length + (reduced ? 150 : PREVIEW_AFTER_MS),
+      phase: "preview",
+    },
+  ];
+}

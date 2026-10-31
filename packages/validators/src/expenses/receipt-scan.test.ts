@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ReceiptReading } from "./receipt-scan";
 import {
   isEmptyReceiptScan,
+  MIN_READING_MS,
   receiptReport,
   receiptScanFrom,
+  stageTimeline,
 } from "./receipt-scan";
 
 const reading = (overrides: Partial<ReceiptReading>): ReceiptReading => ({
@@ -111,5 +113,38 @@ describe("receiptReport", () => {
       filled: ["amountInCents", "expenseDate", "description"],
       edited: ["description"],
     });
+  });
+});
+
+describe("stageTimeline", () => {
+  const scan = {
+    amountInCents: 2347,
+    currency: "EUR" as const,
+    expenseDay: null,
+    description: "REWE",
+  };
+
+  it("holds a fast answer until the cat has had one look", () => {
+    const [first] = stageTimeline({ scan, readingFor: 200, reduced: false });
+    expect(first).toEqual({ at: MIN_READING_MS - 200, phase: "revealing" });
+  });
+
+  it("reveals only what the receipt had, then shows the preview", () => {
+    const events = stageTimeline({ scan, readingFor: 5000, reduced: false });
+    expect(events.flatMap((e) => (e.reveal ? [e.reveal] : []))).toEqual([
+      "store",
+      "amount",
+    ]);
+    expect(events.at(-1)?.phase).toBe("preview");
+  });
+
+  it("ends a failed read with the stage closed", () => {
+    const events = stageTimeline({ scan: null, readingFor: 0, reduced: false });
+    expect(events.map((e) => e.phase)).toEqual(["failing", "closed"]);
+  });
+
+  it("skips the waiting when motion is reduced", () => {
+    const events = stageTimeline({ scan, readingFor: 0, reduced: true });
+    expect(events.every((e) => e.at <= 150)).toBe(true);
   });
 });

@@ -273,6 +273,8 @@ test.describe("Expense Creation", () => {
   });
 
   test("fills an expense from a scanned receipt", async ({ authPage }) => {
+    // Skips the cat's minimum reading time; the stage's phases stay the same
+    await authPage.emulateMedia({ reducedMotion: "reduce" });
     await authPage.goto("/expenses");
     const addButton = authPage
       .getByTestId("expense-add-button")
@@ -287,10 +289,13 @@ test.describe("Expense Creation", () => {
       buffer: Buffer.from(ONE_PIXEL_PNG, "base64"),
     });
 
-    const preview = authPage.getByTestId("receipt-scan-preview");
+    const stage = authPage.getByTestId("receipt-scan-stage");
+    await expect(stage.locator('[data-phase="preview"]')).toBeVisible();
+    const preview = stage.getByTestId("receipt-scan-preview");
     await expect(preview.getByText("REWE")).toBeVisible();
     await expect(preview.getByText("€23.47")).toBeVisible();
     await authPage.getByTestId("receipt-scan-apply").click();
+    await expect(stage).toBeHidden();
 
     await expect(authPage.getByTestId("expense-form-description")).toHaveValue(
       "REWE",

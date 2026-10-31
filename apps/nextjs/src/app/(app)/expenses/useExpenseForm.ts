@@ -144,6 +144,9 @@ export function useExpenseForm({
     setValue: form.setValue,
     currency,
     locale,
+    reducedMotion:
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     messages: {
       error: t("errors.unexpected"),
       unsupportedImage: t("expenses.receiptScan.unsupportedFormat"),
