@@ -57,13 +57,14 @@ export function ExpenseDisplay({
           {row.title}
         </Text>
         <Text className="text-muted-foreground text-sm" numberOfLines={1}>
-          {[row.payer, row.paid].filter(Boolean).join(" · ")}
-          {isNotConverted && (
-            <Text className="text-warning">
-              {` · ${t("conversion.notConverted")}`}
-            </Text>
-          )}
-          {` · ${row.date}`}
+          {[
+            row.payer,
+            row.paid,
+            isNotConverted && t("conversion.notConverted"),
+            row.date,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         </Text>
       </View>
       <View className="items-end">

@@ -73,11 +73,7 @@ export function ExpenseCard({
               <span data-testid="expense-card-paid-amount">{row.paid}</span>
             </>
           )}
-          {isNotConverted && (
-            <span className="text-warning">
-              {` · ${t("expenses.conversion.notConverted")}`}
-            </span>
-          )}
+          {isNotConverted && ` · ${t("expenses.conversion.notConverted")}`}
           {` · ${row.date}`}
         </p>
       </div>

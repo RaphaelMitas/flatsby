@@ -347,29 +347,32 @@ export function allSquareMessage(
   return t("debts.othersStillOwe", { names: joinNames(names, t) });
 }
 
-interface RowMember {
-  id: number;
-  user: { name: string };
-}
-
 export function describeExpenseRow(
-  expense: ConvertibleExpense & {
+  expense: Omit<ConvertibleExpense, "expenseSplits"> & {
     description: string;
     subcategory: string;
     splitMethod: string;
     expenseDate: Date;
     paidByGroupMemberId: number;
-    paidByGroupMember: RowMember;
-    expenseSplits: { groupMember: RowMember }[];
+    paidByGroupMember: PersonMember & { id: number };
+    expenseSplits: (ConvertibleExpense["expenseSplits"][number] & {
+      groupMember: PersonMember & { id: number };
+    })[];
   },
   meId: number,
   t: Translate,
   locale: Intl.LocalesArgument,
 ) {
   const isSettlement = expense.splitMethod === "settlement";
-  const name = (member: RowMember) =>
-    member.id === meId ? t("debts.you") : member.user.name;
-  const payer = name(expense.paidByGroupMember);
+  const person = personLookup(
+    [
+      expense.paidByGroupMember,
+      ...expense.expenseSplits.map((split) => split.groupMember),
+    ],
+    meId,
+    t,
+  );
+  const payer = person(expense.paidByGroupMember.id).name;
   const recipient = expense.expenseSplits[0]?.groupMember;
   const category = t(expenseCategoryLabelKeys(expense.subcategory).name);
   const { amount, paid } = formatExpenseAmounts(expense, locale);
@@ -378,9 +381,12 @@ export function describeExpenseRow(
     isSettlement,
     title:
       isSettlement && recipient
-        ? t("expenses.settlementTitle", { from: payer, to: name(recipient) })
+        ? t("expenses.settlementTitle", {
+            from: payer,
+            to: person(recipient.id).name,
+          })
         : expense.description || category,
-    category: isSettlement ? null : category,
+    category: isSettlement || !expense.description ? null : category,
     payer: isSettlement ? t("expenses.settlement") : payer,
     date: formatExpenseDateShort(new Date(expense.expenseDate), locale),
     amount,
