@@ -4,7 +4,7 @@ import { experimental_evaluate as evaluate, gateway } from "ai";
 import type { CreditUser } from "./autumn";
 import type { TracingFeature } from "./model-provider";
 import { captureError } from "../lib/posthog";
-import { checkCredits, extractGatewayMetadata, trackAIUsage } from "./autumn";
+import { chargeAIUsage, checkCredits } from "./autumn";
 import { captureGeneration } from "./model-provider";
 
 const CLASSIFICATION_MODEL = "typesafe-ai/jev";
@@ -65,18 +65,11 @@ export async function classify<K extends string>({
       latencySeconds: (Date.now() - startTime) / 1000,
     });
 
-    try {
-      await trackAIUsage({
-        customerId: user.id,
-        cost: extractGatewayMetadata(result.providerMetadata)?.cost,
-      });
-    } catch (trackingError) {
-      captureError({
-        error: trackingError,
-        operation: `track-${feature}-usage`,
-        distinctId: user.id,
-      });
-    }
+    await chargeAIUsage({
+      user,
+      feature,
+      providerMetadata: result.providerMetadata,
+    });
 
     if (isOption(answer.choice)) return answer.choice;
   } catch (error) {

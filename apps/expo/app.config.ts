@@ -16,6 +16,7 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./assets/ios-light.png",
   userInterfaceStyle: "automatic",
   assetBundlePatterns: ["**/*"],
+  locales: { de: "./locales/de.json" },
   ios: {
     bundleIdentifier: "com.flatcove.app.v2",
     supportsTablet: true,
@@ -156,6 +157,16 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ["expo-font", { fonts: ["./assets/fonts/lucide.ttf"] }],
+    [
+      "expo-image-picker",
+      {
+        cameraPermission:
+          "Flatsby uses the camera to photograph receipts so it can fill in the expense for you.",
+        // The system photo picker needs no access to the whole library
+        photosPermission: false,
+        microphonePermission: false,
+      },
+    ],
     [
       "expo-notifications",
       {

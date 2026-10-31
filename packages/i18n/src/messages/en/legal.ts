@@ -141,7 +141,7 @@ export const legal = {
     },
     basis: {
       contract:
-        "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including purchases and automatic AI categories",
+        "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including purchases, automatic AI categories and receipt scanning",
       consent:
         "<strong>Consent (Art. 6(1)(a) GDPR, § 25(1) TDDDG):</strong> the AI assistant; screen analytics in the app, including the device ID it uses",
       interests:
@@ -168,7 +168,7 @@ export const legal = {
       expo: "<strong>Expo (app updates):</strong> The app checks Expo's servers for updates, which receive your IP address, app version and platform.",
       stores:
         "<strong>Apple App Store and Google Play:</strong> Distribute the app and handle in-app purchases as separate controllers under their own privacy policies.",
-      ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories and, if you use the AI assistant, your messages and the list, expense and member data it needs. See <dpa>Vercel's privacy policy</dpa>.",
+      ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories, the photo when you scan a receipt (which can show anything printed on it, such as the last digits of a card; we do not store the photo), and, if you use the AI assistant, your messages and the list, expense and member data it needs. See <dpa>Vercel's privacy policy</dpa>.",
       posthog:
         "<strong>PostHog (analytics, error reports):</strong> Stores data in Frankfurt and receives:",
       posthogWebsite:

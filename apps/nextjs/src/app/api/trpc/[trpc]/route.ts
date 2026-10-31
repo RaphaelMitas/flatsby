@@ -2,9 +2,15 @@ import type { NextRequest } from "next/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { getHTTPStatusCodeFromError } from "@trpc/server/http";
 
-import { appRouter, captureError, createTRPCContext } from "@flatsby/api";
+import {
+  appRouter,
+  captureError,
+  createTRPCContext,
+  e2eReceiptScanner,
+} from "@flatsby/api";
 
 import { auth } from "~/auth/server";
+import { env } from "~/env";
 
 /**
  * Configure basic CORS headers
@@ -35,6 +41,7 @@ const handler = async (req: NextRequest) => {
         auth: auth,
         headers: req.headers,
         signal: req.signal,
+        scanReceipt: env.E2E_TESTING ? e2eReceiptScanner : undefined,
       }),
     onError({ error, path, ctx }) {
       if (getHTTPStatusCodeFromError(error) < 500) return;
