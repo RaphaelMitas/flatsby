@@ -23,8 +23,8 @@
     "use-intl": "catalog:"
   },
   "devDependencies": {
-    "@babel/parser": "^8.0.7",
-    "@babel/types": "^8.0.6",
+    "@babel/parser": "^8.0.8",
+    "@babel/types": "^8.0.8",
     "@biomejs/biome": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
