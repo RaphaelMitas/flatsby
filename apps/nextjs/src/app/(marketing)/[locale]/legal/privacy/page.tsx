@@ -29,7 +29,7 @@ import { legalMetadata, LegalShell } from "../_components/legal-shell";
 export const dynamicParams = false;
 
 const PATH = "/legal/privacy";
-const PRIVACY_VERSION = "1.4";
+const PRIVACY_VERSION = "1.5";
 
 const SECTIONS = [
   { id: "data-controller", key: "controller" },

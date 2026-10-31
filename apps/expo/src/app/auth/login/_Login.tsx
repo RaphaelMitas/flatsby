@@ -125,8 +125,7 @@ const Login = () => {
           additionalData: {
             login: {
               attemptId,
-              // Only screen analytics may join the login callback to this install
-              distinctId: getAnalyticsConsent().screens
+              distinctId: getAnalyticsConsent()
                 ? posthog.getDistinctId()
                 : undefined,
             } satisfies LoginAttempt,
