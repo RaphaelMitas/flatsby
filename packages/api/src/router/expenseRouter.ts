@@ -48,6 +48,7 @@ import { Errors, fail, getApiResultZod } from "../errors";
 import { captureError, captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
+  escapeLike,
   fetchGroupDebtSummary,
   GroupUtils,
   memberUserColumns,
@@ -127,8 +128,6 @@ const before = (cursor: { date: Date; id: number }) =>
     lt(expenses.expenseDate, cursor.date),
     and(eq(expenses.expenseDate, cursor.date), lt(expenses.id, cursor.id)),
   );
-
-const escapeLike = (text: string) => text.replace(/[\\%_]/g, "\\$&");
 
 function listFilterConditions(
   db: DbClient,

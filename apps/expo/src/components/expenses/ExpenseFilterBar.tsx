@@ -26,6 +26,7 @@ import {
 
 import type { DayRangeDraft } from "./DayRangeGrid";
 import { Button } from "~/lib/ui/button";
+import { Chip } from "~/lib/ui/chip";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Segmented } from "~/lib/ui/segmented";
 import { SheetModal } from "~/lib/ui/sheet-modal";
@@ -92,12 +93,10 @@ export function ExpenseFilterBar({
   };
 
   // iOS animates the sheet out for a while; let the new check paint first
-  const closeThen = (run: () => void) => {
+  const chooseAndClose = (run: () => void) => {
     run();
     requestAnimationFrame(() => sheetRef.current?.dismiss());
   };
-
-  const customRange = choice.range?.preset ? undefined : choice.range;
 
   const memberOption = (member: FilterMember) => (
     <Option
@@ -105,7 +104,9 @@ export function ExpenseFilterBar({
       testID={`expense-filter-person-${member.id}`}
       selected={choice.memberId === member.id}
       icon={<MemberAvatar person={memberPerson(member)} className="size-8" />}
-      onPress={() => closeThen(() => filters.choose({ memberId: member.id }))}
+      onPress={() =>
+        chooseAndClose(() => filters.choose({ memberId: member.id }))
+      }
     >
       {member.user.name}
       {member.id === meId && (
@@ -165,23 +166,21 @@ export function ExpenseFilterBar({
         keyboardShouldPersistTaps="handled"
         contentContainerClassName="gap-2 py-3"
       >
-        <Chip
+        <FilterChip
           testID="expense-filter-person"
           label={labels.member ?? t("expenses.filter.person")}
           active={labels.member !== undefined}
           onPress={() => open("member")}
-          onClear={() =>
-            filters.choose({ memberId: undefined, memberRole: "any" })
-          }
+          onClear={() => filters.clearMember()}
         />
-        <Chip
+        <FilterChip
           testID="expense-filter-category"
           label={labels.category ?? t("expenses.filter.category")}
           active={choice.category !== undefined}
           onPress={() => open("category")}
           onClear={() => filters.choose({ category: undefined })}
         />
-        <Chip
+        <FilterChip
           testID="expense-filter-range"
           label={labels.range ?? t("expenses.filter.range")}
           active={choice.range !== undefined}
@@ -248,7 +247,9 @@ export function ExpenseFilterBar({
                 disabled={!draft}
                 onPress={() =>
                   draft &&
-                  closeThen(() => filters.choose({ range: draftRange(draft) }))
+                  chooseAndClose(() =>
+                    filters.choose({ range: draftRange(draft) }),
+                  )
                 }
               />
             </View>
@@ -275,14 +276,7 @@ export function ExpenseFilterBar({
                 <Option
                   testID="expense-filter-person-all"
                   selected={choice.memberId === undefined}
-                  onPress={() =>
-                    closeThen(() =>
-                      filters.choose({
-                        memberId: undefined,
-                        memberRole: "any",
-                      }),
-                    )
-                  }
+                  onPress={() => chooseAndClose(() => filters.clearMember())}
                 >
                   {t("expenses.filter.all")}
                 </Option>
@@ -303,7 +297,9 @@ export function ExpenseFilterBar({
                   testID="expense-filter-category-all"
                   selected={choice.category === undefined}
                   onPress={() =>
-                    closeThen(() => filters.choose({ category: undefined }))
+                    chooseAndClose(() =>
+                      filters.choose({ category: undefined }),
+                    )
                   }
                 >
                   {t("expenses.filter.all")}
@@ -314,7 +310,7 @@ export function ExpenseFilterBar({
                     group={group}
                     selected={choice.category === group}
                     onPress={() =>
-                      closeThen(() => filters.choose({ category: group }))
+                      chooseAndClose(() => filters.choose({ category: group }))
                     }
                   />
                 ))}
@@ -328,7 +324,7 @@ export function ExpenseFilterBar({
                   testID="expense-filter-range-all"
                   selected={choice.range === undefined}
                   onPress={() =>
-                    closeThen(() => filters.choose({ range: undefined }))
+                    chooseAndClose(() => filters.choose({ range: undefined }))
                   }
                 >
                   {t("expenses.filter.allTime")}
@@ -341,7 +337,9 @@ export function ExpenseFilterBar({
                       testID={`expense-filter-range-${preset}`}
                       selected={choice.range?.preset === preset}
                       detail={describeDayRange(range, today, locale, t)}
-                      onPress={() => closeThen(() => filters.choose({ range }))}
+                      onPress={() =>
+                        chooseAndClose(() => filters.choose({ range }))
+                      }
                     >
                       {dayRangeLabel(range, today, locale, t)}
                     </Option>
@@ -350,15 +348,17 @@ export function ExpenseFilterBar({
                 <SectionLabel>{t("expenses.filter.customRange")}</SectionLabel>
                 <Option
                   testID="expense-filter-range-custom"
-                  selected={customRange !== undefined}
+                  selected={filters.customRange !== undefined}
                   chevron
                   onPress={() => {
-                    setDraft(customRange);
+                    setDraft(filters.customRange);
                     setView("grid");
                     sheetRef.current?.expand();
                   }}
                 >
-                  {customRange ? labels.range : t("expenses.filter.pickRange")}
+                  {filters.customRange
+                    ? labels.range
+                    : t("expenses.filter.pickRange")}
                 </Option>
               </>
             )}
@@ -369,7 +369,7 @@ export function ExpenseFilterBar({
   );
 }
 
-function Chip({
+function FilterChip({
   testID,
   label,
   active,
@@ -383,30 +383,21 @@ function Chip({
   onClear: () => void;
 }) {
   return (
-    <Pressable
+    <Chip
       testID={testID}
+      label={label}
+      active={active}
       onPress={onPress}
-      className={cn(
-        "flex-row items-center gap-1.5 rounded-full border px-3 py-1.5",
-        active ? "bg-primary border-primary" : "bg-background border-border",
-      )}
-    >
-      <Text
-        className={cn(
-          "text-sm",
-          active ? "text-primary-foreground font-medium" : "text-foreground",
-        )}
-      >
-        {label}
-      </Text>
-      {active ? (
-        <Pressable testID={`${testID}-clear`} hitSlop={10} onPress={onClear}>
-          <Icon name="x" size={14} color="primary-foreground" />
-        </Pressable>
-      ) : (
-        <Icon name="chevron-down" size={14} color="muted-foreground" />
-      )}
-    </Pressable>
+      trailing={
+        active ? (
+          <Pressable testID={`${testID}-clear`} hitSlop={10} onPress={onClear}>
+            <Icon name="x" size={14} color="primary-foreground" />
+          </Pressable>
+        ) : (
+          <Icon name="chevron-down" size={14} color="muted-foreground" />
+        )
+      }
+    />
   );
 }
 

@@ -3,6 +3,7 @@ import type {
   QueryClient,
   QueryKey,
 } from "@tanstack/react-query";
+import { hashKey } from "@tanstack/react-query";
 
 import type { RouterOutputs } from ".";
 import type { QuerySnapshot } from "./resultMutation";
@@ -28,6 +29,13 @@ export function patchExpenseLists(
   listKey: QueryKey,
   patch: (old: ExpenseListData) => ExpenseListData,
 ): QuerySnapshot {
+  const unfiltered = hashKey(listKey);
+  // A cached filter nobody watches would show a pending row twice once reused; refetching it is cheaper
+  queryClient.removeQueries({
+    queryKey: listKey,
+    type: "inactive",
+    predicate: (query) => query.queryHash !== unfiltered,
+  });
   const snapshot = queryClient
     .getQueriesData<ExpenseListData>({ queryKey: listKey })
     .map(([queryKey, previous]) => ({ queryKey, previous }));

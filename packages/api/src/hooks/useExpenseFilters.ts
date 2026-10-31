@@ -52,7 +52,15 @@ export function useExpenseFilters(groupId: number) {
     setSearch: (search: string) => setState({ ...current, search }),
     choose: (patch: Partial<ExpenseFilterChoice>) =>
       setState({ ...current, choice: { ...current.choice, ...patch } }),
+    clearMember: () =>
+      setState({
+        ...current,
+        choice: { ...current.choice, memberId: undefined, memberRole: "any" },
+      }),
     clearChoice: () => setState({ ...current, choice: noChoice }),
+    customRange: current.choice.range?.preset
+      ? undefined
+      : current.choice.range,
     reset: () => setState(fresh),
     live,
     query,
@@ -79,7 +87,12 @@ export function expenseSearchView(
   filters: ExpenseFilters,
 ) {
   const byId = new Map<number, ListItem>();
-  const sources = filters.isQueryActive ? [base, filtered] : [base];
+  // A fetched filtered row is fresher than the cached copy the unfiltered list may hold
+  const sources = !filters.isQueryActive
+    ? [base]
+    : filtered.isPlaceholderData
+      ? [base, filtered]
+      : [filtered, base];
   for (const item of sources.flatMap(itemsOf)) {
     if (!byId.has(item.id)) byId.set(item.id, item);
   }
@@ -94,12 +107,12 @@ export function expenseSearchView(
         )
     : all;
 
-  const offline =
-    filters.isQueryActive &&
-    (filtered.fetchStatus === "paused" || filtered.isError);
+  const offline = filters.isQueryActive && filtered.fetchStatus === "paused";
+  const failed = filters.isQueryActive && filtered.isError;
   const searching =
     filters.isActive &&
     !offline &&
+    !failed &&
     (filters.isDebouncing || filtered.isPending || filtered.isPlaceholderData);
   const source = filters.isActive ? filtered : base;
   const canLoadMore =
@@ -109,6 +122,7 @@ export function expenseSearchView(
     rows,
     searching,
     offline,
+    failed,
     hasMore: canLoadMore && source.hasNextPage,
     isFetchingMore: source.isFetchingNextPage,
     loadMore: () => {

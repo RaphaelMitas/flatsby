@@ -112,9 +112,13 @@ export function ExpenseListPanel({
           meId={groupData.data.thisGroupMember.id}
         />
       )}
-      {search.offline && (
+      {(search.offline || search.failed) && (
         <p className="text-muted-foreground bg-muted mx-4 mt-3 rounded-md px-3 py-2 text-sm">
-          {t("expenses.filter.offline")}
+          {t(
+            search.offline
+              ? "expenses.filter.offline"
+              : "expenses.filter.loadFailed",
+          )}
         </p>
       )}
 
@@ -182,7 +186,7 @@ export function ExpenseListPanel({
               {search.hasMore && (
                 <InView
                   as="div"
-                  // Re-observing after each page fires again when the sentinel never left view
+                  // Re-observe after each page so a sentinel still in view loads the next one
                   skip={search.isFetchingMore}
                   onChange={(inView) => {
                     if (inView) search.loadMore();

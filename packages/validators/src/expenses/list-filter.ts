@@ -85,7 +85,7 @@ export const datePresets = [
 ] as const;
 export type DatePreset = (typeof datePresets)[number];
 
-/** Inclusive calendar days on the device, like the date pickers use. */
+/** Inclusive, device-local days. */
 export interface DayRange {
   from: string;
   to: string;
@@ -95,9 +95,11 @@ export interface DayRange {
 export function presetRange(preset: DatePreset, today: string): DayRange {
   const month = monthOf(today);
   const year = Number(today.slice(0, 4));
+  // Through the end of the period: rent is often entered before its date
+  const monthEnd = addDays(`${shiftMonth(month, 1)}-01`, -1);
   switch (preset) {
     case "this-month":
-      return { from: `${month}-01`, to: today, preset };
+      return { from: `${month}-01`, to: monthEnd, preset };
     case "last-month":
       return {
         from: `${shiftMonth(month, -1)}-01`,
@@ -105,9 +107,9 @@ export function presetRange(preset: DatePreset, today: string): DayRange {
         preset,
       };
     case "last-3-months":
-      return { from: `${shiftMonth(month, -2)}-01`, to: today, preset };
+      return { from: `${shiftMonth(month, -2)}-01`, to: monthEnd, preset };
     case "this-year":
-      return { from: `${year}-01-01`, to: today, preset };
+      return { from: `${year}-01-01`, to: `${year}-12-31`, preset };
     case "last-year":
       return { from: `${year - 1}-01-01`, to: `${year - 1}-12-31`, preset };
   }

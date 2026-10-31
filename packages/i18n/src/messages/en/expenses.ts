@@ -154,6 +154,7 @@ export const expenses = {
     noResultsHint: "Try another search or remove a filter.",
     searchingOlder: "Searching older expenses…",
     loadingOlder: "Older matches…",
+    loadFailed: "Couldn't load older matches.",
     offline: "Offline. Older matches may be missing.",
   },
 };

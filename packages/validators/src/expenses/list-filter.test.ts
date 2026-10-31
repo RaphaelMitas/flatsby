@@ -65,7 +65,7 @@ describe("presetRange", () => {
   it("crosses the year for the last three months", () => {
     expect(presetRange("last-3-months", "2026-01-10")).toMatchObject({
       from: "2025-11-01",
-      to: "2026-01-10",
+      to: "2026-01-31",
     });
   });
 });

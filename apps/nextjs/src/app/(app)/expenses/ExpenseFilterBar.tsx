@@ -108,8 +108,7 @@ export function ExpenseFilterBar({
     open: menu === name,
     onOpenChange: (open: boolean) => {
       if (open && name === "range") {
-        const custom =
-          choice.range && !choice.range.preset ? choice.range : undefined;
+        const custom = filters.customRange;
         setDraft(
           custom && {
             from: pickerDate(custom.from),
@@ -185,9 +184,7 @@ export function ExpenseFilterBar({
             testId="expense-filter-person"
             label={labels.member ?? t("expenses.filter.person")}
             active={labels.member !== undefined}
-            onClear={() =>
-              filters.choose({ memberId: undefined, memberRole: "any" })
-            }
+            onClear={() => filters.clearMember()}
           />
           <PopoverContent align="start" className="w-64 p-1">
             <Tabs

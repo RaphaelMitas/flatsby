@@ -1,12 +1,12 @@
 import type { GroupWithAccess } from "@flatsby/api";
 import type { Occurrence } from "@flatsby/validators/calendar";
 import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
-import type { ReactNode } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
 import { memberPerson } from "@flatsby/validators/expenses/formatting";
 
+import { Chip } from "~/lib/ui/chip";
 import { cn } from "~/lib/utils";
 import { MemberAvatar } from "../expenses/MemberAvatar";
 
@@ -147,43 +147,5 @@ export function TurnBar({
           );
         })}
     </ScrollView>
-  );
-}
-
-export function Chip({
-  label,
-  active,
-  onPress,
-  testID,
-  children,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  testID?: string;
-  children?: ReactNode;
-}) {
-  return (
-    <Pressable
-      testID={testID}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      onPress={onPress}
-      className={cn(
-        "flex-row items-center gap-2 rounded-full border px-3 py-1.5",
-        // Opaque even when inactive: Android drops the radius when a background appears from none (react-native#52415)
-        active ? "border-primary bg-primary" : "border-border bg-background",
-      )}
-    >
-      {children}
-      <Text
-        className={cn(
-          "text-sm font-medium",
-          active ? "text-primary-foreground" : "text-foreground",
-        )}
-      >
-        {label}
-      </Text>
-    </Pressable>
   );
 }

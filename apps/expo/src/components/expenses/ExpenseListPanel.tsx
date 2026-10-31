@@ -88,7 +88,7 @@ function ExpenseList() {
     ...listOptions(filters.query),
     enabled: filters.isQueryActive,
     placeholderData: keepPreviousData,
-    // Every search term would otherwise sit in the persisted cache for a week
+    // Keeps every search term out of the week-long persisted cache
     gcTime: FILTERED_GC_TIME,
   });
   const search = expenseSearchView(base, filtered, filters);
@@ -153,10 +153,14 @@ function ExpenseList() {
           onFocusChange={setSearchFocused}
         />
       )}
-      {search.offline && (
+      {(search.offline || search.failed) && (
         <View className="bg-muted mb-2 rounded-lg px-3 py-2">
           <Text className="text-muted-foreground text-sm">
-            {t("expenses.filter.offline")}
+            {t(
+              search.offline
+                ? "expenses.filter.offline"
+                : "expenses.filter.loadFailed",
+            )}
           </Text>
         </View>
       )}

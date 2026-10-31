@@ -162,6 +162,7 @@ export const expenses = {
       "Probier einen anderen Suchbegriff oder lösche einen Filter.",
     searchingOlder: "Suche in älteren Ausgaben …",
     loadingOlder: "Ältere Treffer …",
+    loadFailed: "Ältere Treffer konnten nicht geladen werden.",
     offline: "Offline. Ältere Treffer fehlen vielleicht.",
   },
 } satisfies Messages["expenses"];
