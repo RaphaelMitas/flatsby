@@ -66,11 +66,11 @@
 .rs-nod {
   animation: rs-nod 0.45s ease-out;
 }
-.rs-stage .fc-follow .fc-pupil {
+.rs-cat .fc-pupil {
   animation: rs-look var(--walk) ease-in-out infinite;
 }
 .rs-stage:not([data-phase="reading"]):not([data-phase="revealing"])
-  .fc-follow
+  .rs-cat
   .fc-pupil {
   animation: none;
 }
@@ -100,10 +100,6 @@
   color: var(--muted-foreground);
   opacity: 0;
   animation: rs-zee 2.4s ease-in infinite;
-}
-/* Drawn snoring, not a word, so it stays out of the i18n catalog */
-.rs-zee::before {
-  content: "z";
 }
 .rs-zee:nth-of-type(2) {
   animation-delay: 0.8s;
@@ -224,6 +220,12 @@
   }
 }
 
+@keyframes rs-fade {
+  from {
+    opacity: 0;
+  }
+}
+
 @keyframes rs-nod {
   40% {
     transform: translateY(7px) rotate(-2deg);
@@ -257,10 +259,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .rs-tag {
+    animation: rs-fade 0.2s;
+  }
   .rs-photo,
-  .rs-tag,
   .rs-nod,
-  .rs-stage .fc-follow .fc-pupil,
+  .rs-cat .fc-pupil,
   .rs-stage[data-phase="failing"] .rs-cat > *,
   .rs-zee {
     animation: none;

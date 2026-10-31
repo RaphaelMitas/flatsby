@@ -207,13 +207,14 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
 }
 
 function SleepingCat({ className }: { className: string }) {
+  const t = useTranslations("home.new.cat");
   return (
     <span className={cn("relative inline-block shrink-0", className)}>
       <FlatsbyCat animate={false} className="fc-asleep h-full w-auto" />
-      <span className="absolute -top-1 -right-2 text-xs">
-        <span className="rs-zee" />
-        <span className="rs-zee" />
-        <span className="rs-zee" />
+      <span aria-hidden className="absolute -top-1 -right-2 text-xs">
+        <span className="rs-zee">{t("snore")}</span>
+        <span className="rs-zee">{t("snore")}</span>
+        <span className="rs-zee">{t("snore")}</span>
       </span>
     </span>
   );

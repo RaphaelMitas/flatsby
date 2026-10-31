@@ -1,4 +1,3 @@
-import type { StageTag } from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import { useEffect, useState } from "react";
 import {
@@ -13,6 +12,7 @@ import {
 import Animated, {
   cancelAnimation,
   Easing,
+  FadeIn,
   interpolate,
   useAnimatedStyle,
   useDerivedValue,
@@ -86,7 +86,7 @@ export function ReceiptReadingStage({
   const lensOn = useSharedValue(0);
   const fog = useSharedValue(0);
   const walk = useSharedValue(0);
-  const panelY = useSharedValue(420);
+  const panelY = useSharedValue(HIDDEN);
   const peekY = useSharedValue(PEEK);
 
   const scale = photo
@@ -114,7 +114,7 @@ export function ReceiptReadingStage({
       catY.set(withSpring(0, { damping: 13 }));
       catTurn.set(0);
       fog.set(0);
-      panelY.set(420);
+      panelY.set(HIDDEN);
       peekY.set(PEEK);
       lensOn.set(withTiming(1, { duration: 300 }));
       walk.set(0);
@@ -161,6 +161,7 @@ export function ReceiptReadingStage({
       );
     }
     if (phase === "closed") {
+      cancelAnimation(walk);
       fade.set(
         withTiming(0, { duration: 220 }, (finished) => {
           if (finished) scheduleOnRN(setMounted, false);
@@ -183,11 +184,7 @@ export function ReceiptReadingStage({
   ]);
 
   const failing = phase === "failing";
-  const caption = failing
-    ? receiptScan.state.status === "failed" && receiptScan.state.message
-      ? t("stageFailed")
-      : t("stageBlurry")
-    : t("stageCaption");
+  const caption = t(receiptScan.stage.caption);
   const values = receiptScan.preview;
   const spoken =
     phase === "preview" && values
@@ -272,13 +269,6 @@ export function ReceiptReadingStage({
     setTimeout(action, 140);
   };
 
-  const tagValue = (tag: StageTag) =>
-    tag === "store"
-      ? values?.store
-      : tag === "amount"
-        ? values?.amount
-        : values?.date;
-
   if (!mounted || !photo) return null;
 
   return (
@@ -335,14 +325,14 @@ export function ReceiptReadingStage({
             revealed.map((tag) => (
               <Animated.View
                 key={tag}
-                entering={reduced ? undefined : ZoomIn.springify().damping(12)}
+                entering={reduced ? FadeIn : ZoomIn.springify().damping(12)}
                 className="bg-primary flex-row gap-1 rounded-full px-3 py-1"
               >
                 <Text className="text-primary-foreground/60 text-xs">
                   {t(tag)}
                 </Text>
                 <Text className="text-primary-foreground text-xs font-semibold">
-                  {tagValue(tag)}
+                  {values?.[tag]}
                 </Text>
               </Animated.View>
             ))}
@@ -418,6 +408,10 @@ export function ReceiptReadingStage({
 
         <Animated.View
           testID="receipt-scan-preview"
+          accessibilityElementsHidden={phase !== "preview"}
+          importantForAccessibility={
+            phase === "preview" ? "auto" : "no-hide-descendants"
+          }
           style={[
             {
               position: "absolute",
@@ -455,15 +449,9 @@ export function ReceiptReadingStage({
               <Text className="text-foreground text-lg font-semibold">
                 {t("previewTitle")}
               </Text>
-              <PreviewRow
-                label={t("store")}
-                value={receiptScan.preview?.store}
-              />
-              <PreviewRow
-                label={t("amount")}
-                value={receiptScan.preview?.amount}
-              />
-              <PreviewRow label={t("date")} value={receiptScan.preview?.date} />
+              <PreviewRow label={t("store")} value={values?.store} />
+              <PreviewRow label={t("amount")} value={values?.amount} />
+              <PreviewRow label={t("date")} value={values?.date} />
               <View className="mt-2 flex-row gap-2">
                 <Button
                   testID="receipt-scan-discard"

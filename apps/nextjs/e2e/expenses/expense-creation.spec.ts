@@ -273,7 +273,7 @@ test.describe("Expense Creation", () => {
   });
 
   test("fills an expense from a scanned receipt", async ({ authPage }) => {
-    // Skips the cat's minimum reading time; the stage's phases stay the same
+    // Skips the cat's minimum reading time
     await authPage.emulateMedia({ reducedMotion: "reduce" });
     await authPage.goto("/expenses");
     const addButton = authPage

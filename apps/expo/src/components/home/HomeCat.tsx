@@ -2,11 +2,8 @@ import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
   FadeOut,
-  interpolate,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
-  withRepeat,
   withSequence,
   withSpring,
   withTiming,
@@ -18,6 +15,7 @@ import { useTranslations } from "use-intl";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import { useThemeColors } from "~/lib/utils";
 import { CAT_SIZE, CatTapReaction, useCatTap } from "../dashboard/useCatTap";
+import { Snores } from "./Snores";
 
 export type CatPose = "sitting" | "peeking" | "asleep";
 
@@ -112,53 +110,11 @@ export function CatOverlay({
           <View className="bg-primary border-card h-2.5 w-3.5 rounded-full border" />
         </Animated.View>
       )}
-      {pose === "asleep" && <Snores />}
+      {pose === "asleep" && (
+        <Snores style={{ top: CAT_SIZE - 20 }} className="absolute right-20" />
+      )}
       {speech && <CatBubble key={speech} text={speech} />}
     </>
-  );
-}
-
-function Snores() {
-  return (
-    <View
-      pointerEvents="none"
-      style={{ top: CAT_SIZE - 20 }}
-      className="absolute right-20"
-    >
-      {[0, 1, 2].map((index) => (
-        <Snore key={index} index={index} />
-      ))}
-    </View>
-  );
-}
-
-const SNORE_SIZES = ["text-xs", "text-sm", "text-base"];
-
-function Snore({ index }: { index: number }) {
-  const t = useTranslations("home.new.cat");
-  const progress = useSharedValue(0);
-
-  useEffect(() => {
-    progress.value = withDelay(
-      index * 1200,
-      withRepeat(withTiming(1, { duration: 3600 }), -1),
-    );
-  }, [index, progress]);
-
-  const style = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.2, 1], [0, 1, 0]),
-    transform: [
-      { translateX: -16 * progress.value },
-      { translateY: -30 * progress.value },
-    ],
-  }));
-
-  return (
-    <Animated.View style={style} className="absolute">
-      <Text className={`text-foreground font-extrabold ${SNORE_SIZES[index]}`}>
-        {t("snore")}
-      </Text>
-    </Animated.View>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
-import type { StageTag } from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
@@ -25,17 +25,13 @@ export function ReceiptReadingStage({
   const values = receiptScan.preview;
   const failing = phase === "failing";
   const lensOut = phase === "reading" || phase === "revealing" || failing;
-  const caption = failing
-    ? receiptScan.state.status === "failed" && receiptScan.state.message
-      ? t("stageFailed")
-      : t("stageBlurry")
-    : t("stageCaption");
-  const tagValue = (tag: StageTag) =>
-    tag === "store"
-      ? values?.store
-      : tag === "amount"
-        ? values?.amount
-        : values?.date;
+  const caption = t(receiptScan.stage.caption);
+  const previewing = phase === "preview";
+  const apply = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (previewing) apply.current?.focus();
+  }, [previewing]);
 
   return (
     <Dialog
@@ -54,11 +50,13 @@ export function ReceiptReadingStage({
           className="rs-stage relative flex h-full flex-col items-center"
           data-phase={phase}
         >
-          <p
-            aria-live="polite"
-            className="mt-16 text-center text-base font-semibold"
-          >
-            {caption}
+          <p className="mt-16 text-center text-base font-semibold">{caption}</p>
+          <p aria-live="polite" className="sr-only">
+            {previewing && values
+              ? [values.store, values.amount, values.date]
+                  .filter(Boolean)
+                  .join(", ")
+              : caption}
           </p>
           <div className="mt-2 flex min-h-7 flex-wrap justify-center gap-1.5 px-6">
             {!failing &&
@@ -68,7 +66,7 @@ export function ReceiptReadingStage({
                   className="rs-tag bg-primary text-primary-foreground rounded-full px-3 py-1 text-xs"
                 >
                   <span className="opacity-60">{t(tag)} </span>
-                  <span className="font-semibold">{tagValue(tag)}</span>
+                  <span className="font-semibold">{values?.[tag]}</span>
                 </span>
               ))}
           </div>
@@ -99,7 +97,7 @@ export function ReceiptReadingStage({
             <div key={revealed.length} className="rs-nod">
               <FlatsbyCat
                 className={cn(
-                  "fc-follow h-36 w-auto",
+                  "h-36 w-auto",
                   failing && "fc-squint",
                   lensOut && "fc-no-monocle",
                 )}
@@ -110,6 +108,8 @@ export function ReceiptReadingStage({
           <div
             data-testid="receipt-scan-preview"
             className="rs-panel absolute inset-x-2 bottom-2"
+            inert={!previewing}
+            aria-hidden={!previewing}
           >
             <div className="pointer-events-none absolute -top-14 left-1/2 h-14 -translate-x-1/2 overflow-hidden">
               <div className="rs-peek">
@@ -132,6 +132,7 @@ export function ReceiptReadingStage({
                   {t("discard")}
                 </Button>
                 <Button
+                  ref={apply}
                   type="button"
                   className="flex-1"
                   data-testid="receipt-scan-apply"

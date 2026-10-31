@@ -70,6 +70,7 @@ export function useReceiptScan({
   }>({ phase: "closed", revealed: [] });
   const [justApplied, setJustApplied] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const highlight = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const clearTimers = () => {
     for (const timer of timers.current) clearTimeout(timer);
@@ -78,6 +79,7 @@ export function useReceiptScan({
   useEffect(
     () => () => {
       for (const timer of timers.current) clearTimeout(timer);
+      clearTimeout(highlight.current);
     },
     [],
   );
@@ -124,7 +126,7 @@ export function useReceiptScan({
     else if (!result) setState({ status: "failed", message: messages.error });
     else if (!result.success)
       setState({ status: "failed", message: result.error.message });
-    else if (isEmptyReceiptScan(result.data)) setState({ status: "failed" });
+    else if (!found) setState({ status: "failed" });
     else {
       setLastScan(result.data);
       setState({ status: "found" });
@@ -160,8 +162,10 @@ export function useReceiptScan({
     clearTimers();
     setStage({ phase: "closed", revealed: [] });
     setJustApplied(true);
-    timers.current.push(
-      setTimeout(() => setJustApplied(false), APPLIED_HIGHLIGHT_MS),
+    clearTimeout(highlight.current);
+    highlight.current = setTimeout(
+      () => setJustApplied(false),
+      APPLIED_HIGHLIGHT_MS,
     );
   };
 
@@ -180,9 +184,16 @@ export function useReceiptScan({
       : null,
   };
 
+  const caption: "stageCaption" | "stageFailed" | "stageBlurry" =
+    stage.phase !== "failing"
+      ? "stageCaption"
+      : state.status === "failed" && state.message
+        ? "stageFailed"
+        : "stageBlurry";
+
   return {
     state,
-    stage,
+    stage: { ...stage, caption },
     justApplied,
     preview,
     scan,

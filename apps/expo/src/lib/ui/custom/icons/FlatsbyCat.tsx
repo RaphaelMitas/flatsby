@@ -106,7 +106,6 @@ export default function FlatsbyCat({
   asleep?: boolean;
   squint?: boolean;
   monocle?: boolean;
-  /** Steers the pupils from outside; the cat stops looking around on its own */
   look?: SharedValue<number>;
 }) {
   const { getColor } = useThemeColors();

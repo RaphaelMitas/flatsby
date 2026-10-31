@@ -2,16 +2,9 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import type { ImagePickerOptions } from "expo-image-picker";
 import type { ComponentRef, ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
+import { useReducedMotion } from "react-native-reanimated";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -32,13 +25,13 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 import { SheetModal } from "~/lib/ui/sheet-modal";
 import { cn, useThemeColors } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { Snores } from "../home/Snores";
 import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
 type Source = "camera" | "library";
 
 const PICKER_OPTIONS: ImagePickerOptions = { mediaTypes: ["images"] };
-const SNORE = "z"; // i18n-ignore: drawn snoring, not a word
 
 async function receiptBase64(uri: string) {
   // Decoding downsampled also turns HEIC into the JPEG the model reads
@@ -231,45 +224,14 @@ function SleepingCat({ size }: { size: number }) {
   return (
     <View style={{ width: size, height: size }}>
       <FlatsbyCat size={size} color={getColor("primary")} asleep />
-      {!reduced && [0, 1, 2].map((i) => <Zee key={i} index={i} size={size} />)}
+      {!reduced && (
+        <Snores
+          drift={1}
+          className="absolute"
+          style={{ left: size * 0.8, top: size * 0.15 }}
+        />
+      )}
     </View>
-  );
-}
-
-function Zee({ index, size }: { index: number; size: number }) {
-  const { getColor } = useThemeColors();
-  const rise = useSharedValue(0);
-
-  useEffect(() => {
-    rise.set(
-      withDelay(index * 800, withRepeat(withTiming(1, { duration: 2400 }), -1)),
-    );
-  }, [index, rise]);
-
-  const style = useAnimatedStyle(() => ({
-    opacity: rise.get() < 0.2 ? rise.get() * 5 : 1 - rise.get(),
-    transform: [
-      { translateX: rise.get() * size * 0.18 },
-      { translateY: -rise.get() * size * 0.3 },
-    ],
-  }));
-
-  return (
-    <Animated.Text
-      style={[
-        {
-          position: "absolute",
-          left: size * 0.78,
-          top: size * 0.05,
-          fontSize: Math.max(9, size * 0.16 - index * 2),
-          fontWeight: "700",
-          color: getColor("muted-foreground"),
-        },
-        style,
-      ]}
-    >
-      {SNORE}
-    </Animated.Text>
   );
 }
 
