@@ -61,11 +61,10 @@ export const auth = {
   },
   signInCodeEmail: {
     subject: "{code} ist dein Flatsby-Code",
-    heading: "Dein Anmeldecode",
-    intro: "Gib diesen Code in Flatsby ein, um dich anzumelden:",
-    expiry: "Der Code gilt {minutes} Minuten.",
-    ignore:
-      "Wenn du dich nicht anmelden wolltest, kannst du diese E-Mail ignorieren.",
+    preview: "Hallo! Hier ist dein Code. Er gilt {minutes} Minuten.",
+    heading: "Hallo!",
+    intro: "Hier ist dein Code für Flatsby:",
+    footnote: "Gilt {minutes} Minuten · nicht angefordert? Einfach ignorieren.",
   },
   consent: {
     title: "Willkommen bei Flatsby",

@@ -28,19 +28,18 @@ export async function sendSignInCode({ email, code, headers }: SignInCode) {
 
   const locale = localeFromHeaders(headers ?? new Headers());
   const t = translatorFor(locale);
+  const minutes = SIGN_IN_CODE_TTL_MINUTES;
+  const preview = t("auth.signInCodeEmail.preview", { minutes });
   const heading = t("auth.signInCodeEmail.heading");
   const intro = t("auth.signInCodeEmail.intro");
-  const expiry = t("auth.signInCodeEmail.expiry", {
-    minutes: SIGN_IN_CODE_TTL_MINUTES,
-  });
-  const ignore = t("auth.signInCodeEmail.ignore");
+  const footnote = t("auth.signInCodeEmail.footnote", { minutes });
 
   const { error } = await resend.emails.send({
     from: FROM,
     to: email,
     subject: t("auth.signInCodeEmail.subject", { code }),
-    text: [heading, intro, code, expiry, ignore].join("\n\n"),
-    react: SignInCodeEmail({ locale, code, heading, intro, expiry, ignore }),
+    text: [heading, intro, code, footnote].join("\n\n"),
+    react: SignInCodeEmail({ locale, code, preview, heading, intro, footnote }),
   });
   if (error) {
     const failure = new Error(`Resend ${error.name}: ${error.message}`);

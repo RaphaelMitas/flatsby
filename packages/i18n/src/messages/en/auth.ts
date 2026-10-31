@@ -57,10 +57,11 @@ export const auth = {
   },
   signInCodeEmail: {
     subject: "{code} is your Flatsby code",
-    heading: "Your sign-in code",
-    intro: "Enter this code in Flatsby to sign in:",
-    expiry: "The code expires in {minutes} minutes.",
-    ignore: "If you didn't try to sign in, you can ignore this email.",
+    preview: "Hi! Here's your code. It expires in {minutes} minutes.",
+    heading: "Hi!",
+    intro: "Here's your Flatsby code:",
+    footnote:
+      "Expires in {minutes} minutes · didn't ask for it? Just ignore this email.",
   },
   consent: {
     title: "Welcome to Flatsby",
