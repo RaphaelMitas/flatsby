@@ -11,9 +11,5 @@ const subscribe = () => () => undefined;
 
 // The server's clock can sit across midnight from the browser's, so hydrate without the extras
 export function useIsChristmas() {
-  return useSyncExternalStore(
-    subscribe,
-    () => isChristmas(),
-    () => false,
-  );
+  return useSyncExternalStore(subscribe, isChristmas, () => false);
 }
