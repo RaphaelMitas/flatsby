@@ -3,8 +3,6 @@ import { Platform, Text, TextInput, View } from "react-native";
 
 import { codeSlotGroups } from "@flatsby/validators/login";
 
-import { cn } from "~/lib/utils";
-
 interface CodeInputProps extends TextInputProps {
   value: string;
   length: number;
@@ -60,11 +58,10 @@ const CodeInput = ({
         autoCorrect={false}
         caretHidden
         selectionColor="transparent"
-        // iOS drops touches on opacity-0, and Android draws transparent text in the default color
-        className={cn(
-          "absolute inset-0",
-          Platform.OS === "ios" ? "text-transparent" : "opacity-0",
-        )}
+        // iOS drops touches on opacity-0, so tap and long-press paste need transparent text
+        className="absolute inset-0 text-transparent"
+        // Android draws fully transparent text in the default color
+        style={Platform.OS === "android" ? { color: "#00000001" } : undefined}
         {...props}
       />
     </View>
