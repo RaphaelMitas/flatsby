@@ -34,7 +34,7 @@ export default function ConsentForm() {
     trpc.user.updateConsent.mutationOptions({
       onSuccess: (data) => {
         if (data.success) {
-          router.push("/");
+          router.push("/home");
         }
       },
     }),

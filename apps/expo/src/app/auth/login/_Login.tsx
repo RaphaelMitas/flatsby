@@ -18,6 +18,7 @@ import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Input } from "~/lib/ui/input";
 import { Separator } from "~/lib/ui/separator";
+import { getAnalyticsConsent } from "~/utils/analytics/posthog";
 import { authClient, signIn, signInCode } from "~/utils/auth/auth-client";
 import { passkeyDevice, passkeysSupported } from "~/utils/auth/passkey-device";
 import { openLegalPage } from "~/utils/legal";
@@ -124,9 +125,10 @@ const Login = () => {
           additionalData: {
             login: {
               attemptId,
-              distinctId: posthog.optedOut
-                ? undefined
-                : posthog.getDistinctId(),
+              // Only screen analytics may join the login callback to this install
+              distinctId: getAnalyticsConsent().screens
+                ? posthog.getDistinctId()
+                : undefined,
             } satisfies LoginAttempt,
           },
         })
@@ -285,6 +287,17 @@ const Login = () => {
                 >
                   {chunks}
                 </Text>
+              ),
+            })}
+          </Text>
+          {/* Art. 21(4) GDPR: the right to object, on its own line, before the first sign-in */}
+          <Text
+            testID="login-right-to-object"
+            className="text-foreground text-center text-xs"
+          >
+            {t.rich("settings.analytics.rightToObject", {
+              strong: (chunks) => (
+                <Text className="font-semibold">{chunks}</Text>
               ),
             })}
           </Text>

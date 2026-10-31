@@ -8,9 +8,11 @@ import { getBaseUrl } from "./base-url";
 export function openLegalPage(
   locale: Locale,
   page: "terms" | "privacy" | "legal-notice",
+  section?: string,
 ) {
+  const hash = section ? `#${section}` : "";
   // Rejects in Apple's review sandbox and on rapid repeat taps; nothing to tell the user.
   WebBrowser.openBrowserAsync(
-    `${getBaseUrl()}${localePath(locale, `/legal/${page}`)}`,
+    `${getBaseUrl()}${localePath(locale, `/legal/${page}`)}${hash}`,
   ).catch(() => undefined);
 }

@@ -1,12 +1,12 @@
 import { Linking, Share, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import { paypalMeUrl } from "@flatsby/validators/payment";
 
 import { Button } from "~/lib/ui/button";
+import { getPostHog } from "~/utils/analytics/posthog";
 
 interface SettlementPaymentProps {
   groupId: number;
@@ -32,7 +32,6 @@ export function SettlementPayment({
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
-  const posthog = usePostHog();
 
   if (!paypalHandle) {
     return (
@@ -97,7 +96,7 @@ export function SettlementPayment({
                 variant="outline"
                 className="flex-1"
                 onPress={() => {
-                  posthog.capture("settle_paypal_opened", { groupId });
+                  getPostHog().capture("settle_paypal_opened", { groupId });
                   void Linking.openURL(url);
                 }}
               />
@@ -113,7 +112,7 @@ export function SettlementPayment({
                   message: t("debts.pay.shareMessage", { amount, url }),
                 });
                 if (result.action === Share.sharedAction) {
-                  posthog.capture("settle_paypal_shared", {
+                  getPostHog().capture("settle_paypal_shared", {
                     groupId,
                     method: "share_sheet",
                   });

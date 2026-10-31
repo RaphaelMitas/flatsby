@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 import { and, eq, inArray, isNotNull, isNull, ne, or } from "@flatsby/db";
 import {
   accounts,
+  analyticsConsents,
   conversations,
   expenses,
   expenseSplits,
@@ -26,6 +27,8 @@ import { chatModelSchema } from "@flatsby/validators/models";
 import { paypalHandleInputSchema } from "@flatsby/validators/payment";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
 import {
+  logAnalyticsConsentInputSchema,
+  setAnalyticsOptOutInputSchema,
   updateAIConsentInputSchema,
   updateConsentInputSchema,
   updateUserNameFormSchema,
@@ -460,6 +463,54 @@ export const userRouter = createTRPCRouter({
       ),
     ),
 
+  setAnalyticsOptOut: protectedProcedure
+    .input(setAnalyticsOptOutInputSchema)
+    .output(getApiResultZod(z.object({ success: z.boolean() })))
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const database = yield* Database;
+          return yield* database.query(
+            "set analytics opt-out",
+            async (db) => {
+              await db
+                .update(users)
+                .set({ analyticsOptOut: input.optOut })
+                .where(eq(users.id, ctx.session.user.id));
+              return { success: true };
+            },
+            { messageKey: "errors.updateAnalyticsFailed", table: "users" },
+          );
+        }),
+      ),
+    ),
+
+  logAnalyticsConsent: protectedProcedure
+    .input(logAnalyticsConsentInputSchema)
+    .output(getApiResultZod(z.object({ success: z.boolean() })))
+    .mutation(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          const database = yield* Database;
+          return yield* database.query(
+            "log analytics consent",
+            async (db) => {
+              await db
+                .insert(analyticsConsents)
+                .values({ ...input, userId: ctx.session.user.id });
+              return { success: true };
+            },
+            {
+              messageKey: "errors.updateAnalyticsFailed",
+              table: "analytics_consent",
+            },
+          );
+        }),
+      ),
+    ),
+
   exportUserData: protectedProcedure
     .output(getApiResultZod(userDataExportSchema))
     .query(async ({ ctx }) =>
@@ -486,6 +537,7 @@ export const userRouter = createTRPCRouter({
                   privacyVersion: true,
                   aiConsentAcceptedAt: true,
                   aiConsentVersion: true,
+                  analyticsOptOut: true,
                   paypalHandle: true,
                 },
               });
@@ -503,6 +555,18 @@ export const userRouter = createTRPCRouter({
                 where: eq(passkeys.userId, userId),
                 columns: { name: true, createdAt: true, backedUp: true },
               });
+
+              const analyticsConsentLog =
+                await db.query.analyticsConsents.findMany({
+                  where: eq(analyticsConsents.userId, userId),
+                  columns: {
+                    screens: true,
+                    recordings: true,
+                    version: true,
+                    platform: true,
+                    createdAt: true,
+                  },
+                });
 
               const userSessions = await db.query.sessions.findMany({
                 where: eq(sessions.userId, userId),
@@ -647,6 +711,7 @@ export const userRouter = createTRPCRouter({
                 user,
                 signInMethods,
                 passkeys: userPasskeys,
+                analyticsConsents: analyticsConsentLog,
                 sessions: userSessions,
                 groups: userGroups.map((g) => ({
                   id: g.group.id,

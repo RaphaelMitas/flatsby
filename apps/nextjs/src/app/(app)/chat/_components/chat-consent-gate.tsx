@@ -28,7 +28,7 @@ export function ChatConsentGate({ children }: ChatConsentGateProps) {
     return (
       <AIConsentScreen
         onConsent={() => void refetch()}
-        onDecline={() => router.push("/")}
+        onDecline={() => router.push("/home")}
       />
     );
   }

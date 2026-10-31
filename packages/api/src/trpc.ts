@@ -18,7 +18,7 @@ import { defaultLocale, localeFromHeaders } from "@flatsby/i18n/locale";
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { translatorFor } from "@flatsby/i18n/translator";
 
-import { captureEvent } from "./lib/posthog";
+import { captureUserEvent } from "./lib/posthog";
 
 /**
  * 1. CONTEXT
@@ -134,15 +134,16 @@ const timingMiddleware = t.middleware(
       console.log(`[TRPC] ${path} took ${durationMs}ms to execute`);
     }
 
+    // Capturing the objection itself would send the account to PostHog one more time
     if (
-      ctx.session?.user.id &&
+      ctx.session &&
       type === "mutation" &&
-      !path.startsWith("analytics.")
+      path !== "user.setAnalyticsOptOut"
     ) {
       // a streaming procedure returns before its body runs, so its duration and outcome are unknown here
       const isStream = result.ok && Symbol.asyncIterator in Object(result.data);
-      captureEvent({
-        distinctId: ctx.session.user.id,
+      captureUserEvent({
+        user: ctx.session.user,
         event: path,
         headers: ctx.headers,
         additionalProperties: {

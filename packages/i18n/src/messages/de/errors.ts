@@ -69,6 +69,8 @@ export const errors = {
     "Deine Einwilligung konnte gerade nicht gespeichert werden. Bitte versuch es noch einmal.",
   updateAiConsentFailed:
     "Deine KI-Einwilligung konnte gerade nicht gespeichert werden. Bitte versuch es noch einmal.",
+  updateAnalyticsFailed:
+    "Deine Analyse-Einstellungen konnten gerade nicht gespeichert werden. Bitte versuch es noch einmal.",
   exportDataFailed:
     "Deine Daten konnten gerade nicht exportiert werden. Bitte versuch es noch einmal.",
   conversationNotFound: "Unterhaltung nicht gefunden",

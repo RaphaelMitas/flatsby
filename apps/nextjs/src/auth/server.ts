@@ -128,11 +128,6 @@ export async function signedInStep(
   };
 }
 
-export async function signOutAndRedirect(): Promise<never> {
-  await auth.api.signOut({ headers: await headers() });
-  redirect("/auth/login");
-}
-
 async function makeAppleClientSecret(): Promise<string> {
   try {
     const privateKeyPem = env.APPLE_PRIVATE_KEY;

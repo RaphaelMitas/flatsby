@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Linking, Platform } from "react-native";
 import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { localeNames, locales } from "@flatsby/i18n/locale";
@@ -15,9 +13,10 @@ import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { UsageDisplay } from "~/components/settings/UsageDisplay";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { Checkbox } from "~/lib/ui/checkbox";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useTheme } from "~/lib/ui/theme";
+import { useAnalyticsConsent } from "~/utils/analytics/consent";
+import { storesDeviceId } from "~/utils/analytics/posthog";
 import { trpc } from "~/utils/api";
 import { authClient, signOut } from "~/utils/auth/auth-client";
 import { passkeysSupported } from "~/utils/auth/passkey-device";
@@ -33,10 +32,7 @@ export default function SettingsIndex() {
   const locale = useLocale();
   const { storedTheme, setTheme } = useTheme();
   const { preference, setPreference } = useLocalePreference();
-  const posthog = usePostHog();
-  const [isAnalyticsEnabled, setIsAnalyticsEnabled] = useState(
-    () => !posthog.optedOut,
-  );
+  const analyticsConsent = useAnalyticsConsent();
   const { clearSelectedGroup } = useShoppingStore();
   const { version: homeVersion, switchTo: switchHome } = useHomeVersion();
 
@@ -48,15 +44,6 @@ export default function SettingsIndex() {
   const handleLogout = async () => {
     clearSelectedGroup();
     await signOut();
-  };
-
-  const handleAnalyticsToggle = (enabled: boolean) => {
-    setIsAnalyticsEnabled(enabled);
-    if (enabled) {
-      void posthog.optIn();
-    } else {
-      void posthog.optOut();
-    }
   };
 
   const themeLabels = {
@@ -170,22 +157,18 @@ export default function SettingsIndex() {
             iconName="settings"
             onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
           />
-          <SettingsItem
-            title={t("settings.items.shareAnalytics")}
-            subtitle={
-              isAnalyticsEnabled
-                ? t("settings.items.enabled")
-                : t("settings.items.disabled")
-            }
-            iconName="activity"
-            onPress={() => handleAnalyticsToggle(!isAnalyticsEnabled)}
-            rightContent={
-              <Checkbox
-                checked={!posthog.optedOut}
-                onCheckedChange={handleAnalyticsToggle}
-              />
-            }
-          />
+          <Link href="/settings/analytics" asChild>
+            <SettingsItem
+              testID="settings-analytics"
+              title={t("settings.items.analytics")}
+              subtitle={
+                user.analyticsOptOut && !storesDeviceId(analyticsConsent)
+                  ? t("settings.items.disabled")
+                  : t("settings.items.enabled")
+              }
+              iconName="activity"
+            />
+          </Link>
           <SettingsItem
             title={t("settings.items.rateApp")}
             subtitle={t("settings.items.rateAppSubtitle")}

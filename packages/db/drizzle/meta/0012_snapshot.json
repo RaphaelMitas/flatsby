@@ -1,5 +1,5 @@
 {
-  "id": "3f17b2bc-aadc-4285-b116-86d745d7bd84",
+  "id": "e17ba356-555d-4d9b-9f75-522ec072eb38",
   "prevId": "e6c92876-1705-4dfc-b99e-9ee0358615b9",
   "version": "7",
   "dialect": "postgresql",
@@ -96,6 +96,88 @@
           "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.flat-cove_analytics_consent": {
+      "name": "flat-cove_analytics_consent",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "screens": {
+          "name": "screens",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recordings": {
+          "name": "recordings",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "platform": {
+          "name": "platform",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "analytics_consent_user_idx": {
+          "name": "analytics_consent_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "flat-cove_analytics_consent_user_id_flat-cove_user_id_fk": {
+          "name": "flat-cove_analytics_consent_user_id_flat-cove_user_id_fk",
+          "tableFrom": "flat-cove_analytics_consent",
+          "tableTo": "flat-cove_user",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1058,49 +1140,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.flat-cove_rate_limit": {
-      "name": "flat-cove_rate_limit",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "key": {
-          "name": "key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "count": {
-          "name": "count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "last_request": {
-          "name": "last_request",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "flat-cove_rate_limit_key_unique": {
-          "name": "flat-cove_rate_limit_key_unique",
-          "nullsNotDistinct": false,
-          "columns": ["key"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.flat-cove_session": {
       "name": "flat-cove_session",
       "schema": "",
@@ -1379,37 +1418,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.flat-cove_sign_in_code_request": {
-      "name": "flat-cove_sign_in_code_request",
-      "schema": "",
-      "columns": {
-        "email_hash": {
-          "name": "email_hash",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "count": {
-          "name": "count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "window_start": {
-          "name": "window_start",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.flat-cove_user": {
       "name": "flat-cove_user",
       "schema": "",
@@ -1515,6 +1523,13 @@
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": false
+        },
+        "analytics_opt_out": {
+          "name": "analytics_opt_out",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "paypal_handle": {
           "name": "paypal_handle",

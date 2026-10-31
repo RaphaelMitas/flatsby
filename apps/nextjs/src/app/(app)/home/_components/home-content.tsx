@@ -1,5 +1,6 @@
 "use client";
 
+import { AnalyticsNotice } from "./analytics-notice";
 import { GroupHeader } from "./group-header";
 import { HomeStats } from "./home-stats";
 import { InviteFlatmatesCard } from "./invite-flatmates-card";
@@ -12,6 +13,8 @@ export function HomeContent() {
       <GroupHeader />
 
       <InviteFlatmatesCard />
+
+      <AnalyticsNotice />
 
       <HomeStats />
 

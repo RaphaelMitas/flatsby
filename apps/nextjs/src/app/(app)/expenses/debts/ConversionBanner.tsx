@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Info, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -9,7 +8,6 @@ import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import { listCurrencies } from "@flatsby/validators/expenses/formatting";
 
-import { useAnalytics } from "~/hooks/use-analytics";
 import { useUpdateGroup } from "~/hooks/use-update-group";
 
 export function ConversionBanner({
@@ -22,19 +20,9 @@ export function ConversionBanner({
   currencies: string[];
 }) {
   const t = useTranslations();
-  const { capture } = useAnalytics();
-  const hasCapturedShown = useRef(false);
-
-  useEffect(() => {
-    if (hasCapturedShown.current) return;
-    hasCapturedShown.current = true;
-    capture("currency_banner_shown", { groupId, currencies });
-  }, [capture, groupId, currencies]);
-
   const keepSeparateMutation = useUpdateGroup(groupId);
 
   const keepSeparate = () => {
-    capture("currency_banner_keep_separate", { groupId });
     keepSeparateMutation.mutate({
       id: groupId,
       convertAutomatically: false,
@@ -72,10 +60,7 @@ export function ConversionBanner({
             {t("expenses.conversion.keepSeparate")}
           </Button>
           <Button size="sm" asChild data-testid="currency-banner-turn-on">
-            <Link
-              href="/group/settings?highlight=convert"
-              onClick={() => capture("currency_banner_turn_on", { groupId })}
-            >
+            <Link href="/group/settings?highlight=convert">
               {t("expenses.conversion.turnOn")}
             </Link>
           </Button>

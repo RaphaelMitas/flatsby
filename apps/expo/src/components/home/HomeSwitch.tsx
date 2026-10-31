@@ -1,22 +1,21 @@
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
-import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import { useBottomSheetPicker } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { getPostHog } from "~/utils/analytics/posthog";
 import { useHomeVersion } from "~/utils/home-version";
 
 export function HomeInvite() {
   const t = useTranslations("home.new.invite");
-  const posthog = usePostHog();
   const { switchTo } = useHomeVersion();
 
   useEffect(() => {
-    posthog.capture("home_invite_shown");
-  }, [posthog]);
+    getPostHog().capture("home_invite_shown");
+  }, []);
 
   return (
     <Card testID="home-invite">

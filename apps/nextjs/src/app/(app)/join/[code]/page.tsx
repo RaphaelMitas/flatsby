@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
 import { invitePath } from "@flatsby/validators/invite";
 import { APP_STORE_ID } from "@flatsby/validators/store";
 
-import { getPlatform } from "~/app/_components/landing/platform";
+import { platformFor } from "~/app/_components/landing/platform";
 import { getSession } from "~/auth/server";
 import { JoinInvite } from "./JoinInvite";
 import { loadInvite } from "./loadInvite";
@@ -51,7 +52,7 @@ export default async function JoinPage({ params }: JoinPageProps) {
   const [session, { code, preview }, platform] = await Promise.all([
     getSession(),
     params.then((p) => loadInvite(p.code)),
-    getPlatform(),
+    headers().then(platformFor),
   ]);
 
   return (

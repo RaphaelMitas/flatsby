@@ -281,6 +281,17 @@ export function captureEvent({
   });
 }
 
+// Turning off usage analytics is an objection (Art. 21 GDPR), so the account's usage events stop
+export function captureUserEvent({
+  user,
+  ...event
+}: Omit<Parameters<typeof captureEvent>[0], "distinctId"> & {
+  user: { id: string; analyticsOptOut: boolean };
+}) {
+  if (user.analyticsOptOut) return;
+  captureEvent({ distinctId: user.id, ...event });
+}
+
 function clientIp(headers: Headers) {
   return (
     headers.get("x-real-ip") ??

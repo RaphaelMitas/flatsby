@@ -311,6 +311,14 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
               ),
             })}
           </p>
+          <p
+            className="text-foreground mt-2"
+            data-testid="login-right-to-object"
+          >
+            {t.rich("settings.analytics.rightToObject", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </p>
           <p className="mt-2">
             <Link
               href={localePath(locale, "/legal/legal-notice")}

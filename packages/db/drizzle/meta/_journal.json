@@ -89,15 +89,15 @@
     {
       "idx": 12,
       "version": "7",
-      "when": 1793377452728,
-      "tag": "0012_auth_rate_limits",
+      "when": 1793377459477,
+      "tag": "0012_analytics_consent",
       "breakpoints": true
     },
     {
       "idx": 13,
       "version": "7",
-      "when": 1793377494768,
-      "tag": "0013_passkeys",
+      "when": 1793409203798,
+      "tag": "0013_auth_rate_limits_and_passkeys",
       "breakpoints": true
     }
   ]
