@@ -44,7 +44,12 @@ import {
 } from "../effect/shoppingLists";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { memberUserColumns, ValidationUtils, withMemberUser } from "../utils";
+import {
+  escapeLike,
+  memberUserColumns,
+  ValidationUtils,
+  withMemberUser,
+} from "../utils";
 import { classify } from "../utils/classify";
 
 export const shoppingList = createTRPCRouter({
@@ -540,7 +545,7 @@ export const shoppingList = createTRPCRouter({
     .input(suggestItemsSchema)
     .output(getApiResultZod(z.array(suggestItemsOutputSchema)))
     .query(({ ctx, input }) => {
-      const escaped = input.query.replace(/%/g, "\\%").replace(/_/g, "\\_");
+      const escaped = escapeLike(input.query);
       return runResult(
         ctx,
         Effect.gen(function* () {

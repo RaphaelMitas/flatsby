@@ -49,6 +49,7 @@ import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colo
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
+import { Chip } from "~/lib/ui/chip";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { DatePickerField } from "~/lib/ui/date-picker-field";
 import { Input } from "~/lib/ui/input";
@@ -59,7 +60,7 @@ import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { MemberAvatar } from "../expenses/MemberAvatar";
 import { fromPickerTime, pickerTime } from "./calendarDates";
-import { Chip, useCalendarPeople } from "./CalendarPeople";
+import { useCalendarPeople } from "./CalendarPeople";
 import { calendarPosition } from "./calendarPosition";
 import { calendarRangeOptions } from "./calendarRangeOptions";
 import { useCalendarMutations } from "./useCalendarMutations";
