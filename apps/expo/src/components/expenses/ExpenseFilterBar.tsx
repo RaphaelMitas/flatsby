@@ -382,6 +382,7 @@ function FilterChip({
   onPress: () => void;
   onClear: () => void;
 }) {
+  const t = useTranslations();
   return (
     <Chip
       testID={testID}
@@ -390,7 +391,13 @@ function FilterChip({
       onPress={onPress}
       trailing={
         active ? (
-          <Pressable testID={`${testID}-clear`} hitSlop={10} onPress={onClear}>
+          <Pressable
+            testID={`${testID}-clear`}
+            accessibilityRole="button"
+            accessibilityLabel={t("expenses.filter.remove", { name: label })}
+            hitSlop={10}
+            onPress={onClear}
+          >
             <Icon name="x" size={14} color="primary-foreground" />
           </Pressable>
         ) : (

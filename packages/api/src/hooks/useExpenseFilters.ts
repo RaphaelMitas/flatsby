@@ -93,8 +93,14 @@ export function expenseSearchView(
     : filtered.isPlaceholderData
       ? [base, filtered]
       : [filtered, base];
+  const settled = sources
+    .filter((source) => !source.isPlaceholderData)
+    .map((source) => new Set(itemsOf(source).map((item) => item.id)));
   for (const item of sources.flatMap(itemsOf)) {
-    if (!byId.has(item.id)) byId.set(item.id, item);
+    // Once one list refetched without it, the saved expense has taken the pending row's place
+    const replaced =
+      "isPending" in item && settled.some((ids) => !ids.has(item.id));
+    if (!replaced && !byId.has(item.id)) byId.set(item.id, item);
   }
   const all = [...byId.values()];
   const rows = filters.isActive

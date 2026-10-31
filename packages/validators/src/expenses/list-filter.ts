@@ -135,7 +135,7 @@ export function describeDayRange(
   const thisYear = today.slice(0, 4);
   const toYear = range.to.slice(0, 4);
   if (range.from === range.to) return format(range.from, toYear !== thisYear);
-  if (range.to === today) {
+  if (range.to === today && !range.preset) {
     return t("expenses.filter.rangeSince", {
       date: format(range.from, range.from.slice(0, 4) !== thisYear),
     });

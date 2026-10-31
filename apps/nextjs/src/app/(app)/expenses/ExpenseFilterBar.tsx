@@ -15,6 +15,7 @@ import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import { Calendar } from "@flatsby/ui/calendar";
 import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
+import { useMediaQuery } from "@flatsby/ui/hooks/use-media-query";
 import {
   InputGroup,
   InputGroupAddon,
@@ -75,6 +76,7 @@ export function ExpenseFilterBar({
   const [menu, setMenu] = useState<FilterMenu | null>(null);
   const [draft, setDraft] = useState<DateRange>();
   const today = localDate();
+  const twoMonths = useMediaQuery("md");
   const { choice } = filters;
 
   useEffect(() => {
@@ -210,9 +212,10 @@ export function ExpenseFilterBar({
             <Option
               testId="expense-filter-person-all"
               selected={choice.memberId === undefined}
-              onSelect={() =>
-                choose({ memberId: undefined, memberRole: "any" })
-              }
+              onSelect={() => {
+                filters.clearMember();
+                setMenu(null);
+              }}
             >
               {t("expenses.filter.all")}
             </Option>
@@ -260,8 +263,11 @@ export function ExpenseFilterBar({
             active={choice.range !== undefined}
             onClear={() => filters.choose({ range: undefined })}
           />
-          <PopoverContent align="start" className="flex w-auto p-0">
-            <div className="flex w-44 flex-col border-r p-1">
+          <PopoverContent
+            align="start"
+            className="flex w-auto flex-col p-0 sm:flex-row"
+          >
+            <div className="flex flex-col border-b p-1 sm:w-44 sm:border-r sm:border-b-0">
               <Option
                 testId="expense-filter-range-all"
                 selected={choice.range === undefined}
@@ -286,7 +292,7 @@ export function ExpenseFilterBar({
             <div className="flex flex-col">
               <Calendar
                 mode="range"
-                numberOfMonths={2}
+                numberOfMonths={twoMonths ? 2 : 1}
                 weekStartsOn={1}
                 selected={draft}
                 onSelect={setDraft}
@@ -347,6 +353,7 @@ function Chip({
   active: boolean;
   onClear: () => void;
 }) {
+  const t = useTranslations();
   return (
     <div className="flex items-center">
       <PopoverTrigger asChild>
@@ -363,7 +370,7 @@ function Chip({
       {active && (
         <Button
           size="sm"
-          aria-label={label}
+          aria-label={t("expenses.filter.remove", { name: label })}
           data-testid={`${testId}-clear`}
           className="rounded-l-none rounded-r-full pl-1"
           onClick={onClear}

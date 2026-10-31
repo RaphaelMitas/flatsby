@@ -133,6 +133,7 @@ export const expenses = {
     all: "Alle",
     clearAll: "Alle löschen",
     clearSearch: "Suche löschen",
+    remove: "{name} entfernen",
     reset: "Filter zurücksetzen",
     roles: {
       any: "Beteiligt",

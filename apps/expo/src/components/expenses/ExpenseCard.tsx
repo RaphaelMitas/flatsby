@@ -55,7 +55,6 @@ export function ExpenseCard({
     trpcClient.expense.deleteExpense.mutationOptions(
       resultMutation({
         onMutate: async (input) => {
-          // Cancel any outgoing queries
           await cancelLists();
 
           // Optimistically remove the expense from the list

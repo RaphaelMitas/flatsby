@@ -173,7 +173,6 @@ export function ExpenseForm({
     trpcClient.expense.createExpense.mutationOptions(
       resultMutation({
         onMutate: async (input) => {
-          // Cancel any outgoing queries
           await cancelLists();
 
           // Get the paidBy and createdBy members for the optimistic expense

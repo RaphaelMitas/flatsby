@@ -162,7 +162,7 @@ export const GroupUtils = {
   },
 };
 
-/** Escapes LIKE wildcards; Postgres's default escape character is the backslash. */
+// Postgres's default LIKE escape character is the backslash
 export const escapeLike = (text: string) => text.replace(/[\\%_]/g, "\\$&");
 
 export const memberUserColumns = {

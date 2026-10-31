@@ -75,7 +75,6 @@ export function useExpenseInvalidation(groupId: number) {
   );
 
   return {
-    expenseListQueryKey,
     debtSummaryQueryKey,
     cancelLists,
     patchLists,
