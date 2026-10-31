@@ -1,6 +1,8 @@
+import type { ExpenseListData } from "@flatsby/api/expenseListCache";
 import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { patchExpenseLists } from "@flatsby/api/expenseListCache";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
@@ -19,6 +21,12 @@ export function useInvalidateExpenses(groupId: number) {
         limit: PAGE_SIZE.expenses,
       }),
     [groupId],
+  );
+
+  const patchLists = useCallback(
+    (patch: (old: ExpenseListData) => ExpenseListData) =>
+      patchExpenseLists(queryClient, expenseListQueryKey, patch),
+    [queryClient, expenseListQueryKey],
   );
 
   const invalidateList = useCallback(() => {
@@ -60,6 +68,7 @@ export function useInvalidateExpenses(groupId: number) {
   return {
     expenseListQueryKey,
     debtSummaryQueryKey,
+    patchLists,
     invalidateList,
     invalidateDebtSummary,
     invalidateExpense,

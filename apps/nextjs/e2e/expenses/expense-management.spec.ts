@@ -76,4 +76,30 @@ test.describe("Expense Management", () => {
       authPage.getByTestId(/^expense-card-\d+$/).filter({ hasText: desc }),
     ).not.toBeVisible();
   });
+
+  test("Search and filter: text and a category narrow the list, a miss shows the empty state", async ({
+    authPage,
+  }) => {
+    const { description } = await createTestExpense(authPage);
+    const card = authPage
+      .getByTestId(/^expense-card-\d+$/)
+      .filter({ hasText: description });
+    const search = authPage.getByTestId("expense-search-input");
+
+    await search.fill(description.toUpperCase());
+    await expect(card).toBeVisible();
+
+    await authPage.getByTestId("expense-filter-category").click();
+    await authPage.getByTestId("expense-filter-category-food-drinks").click();
+    await expect(card).toBeVisible();
+
+    await authPage.getByTestId("expense-filter-category").click();
+    await authPage.getByTestId("expense-filter-category-housing").click();
+    await expect(authPage.getByTestId("expense-search-empty")).toBeVisible();
+    await expect(card).not.toBeVisible();
+
+    await authPage.getByTestId("expense-search-reset").click();
+    await expect(search).toHaveValue("");
+    await expect(card).toBeVisible();
+  });
 });

@@ -115,6 +115,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
 
   const {
     expenseListQueryKey,
+    patchLists,
     debtSummaryQueryKey,
     invalidateList,
     invalidateDebtSummary,
@@ -137,7 +138,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
             queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
           ]);
 
-          const previousData = queryClient.getQueryData(expenseListQueryKey);
           const previousDebtSummary =
             queryClient.getQueryData(debtSummaryQueryKey);
 
@@ -163,9 +163,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
           );
 
           // Optimistically add the new settlement
-          queryClient.setQueryData(expenseListQueryKey, (old) => {
-            if (!old) return old;
-
+          const listSnapshot = patchLists((old) => {
             const optimisticSettlement: ExpenseWithSplitsAndMembers & {
               isPending: true;
             } = {
@@ -267,7 +265,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
           });
 
           return [
-            { queryKey: expenseListQueryKey, previous: previousData },
+            ...listSnapshot,
             { queryKey: debtSummaryQueryKey, previous: previousDebtSummary },
           ];
         },

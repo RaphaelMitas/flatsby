@@ -48,7 +48,8 @@ export function ExpenseCard({
   const swipeableRef = useRef<SwipeableMethods>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const { expenseListQueryKey, invalidateAll } = useInvalidateExpenses(groupId);
+  const { expenseListQueryKey, patchLists, invalidateAll } =
+    useInvalidateExpenses(groupId);
 
   const deleteExpenseMutation = useMutation(
     trpcClient.expense.deleteExpense.mutationOptions(
@@ -57,13 +58,8 @@ export function ExpenseCard({
           // Cancel any outgoing queries
           await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
-          // Snapshot the previous value
-          const previousData = queryClient.getQueryData(expenseListQueryKey);
-
           // Optimistically remove the expense from the list
-          queryClient.setQueryData(expenseListQueryKey, (old) => {
-            if (!old) return old;
-
+          const listSnapshot = patchLists((old) => {
             const updatedPages = old.pages.map((page) => {
               if (page.success === false) return page;
 
@@ -81,7 +77,7 @@ export function ExpenseCard({
             return { ...old, pages: updatedPages };
           });
 
-          return [{ queryKey: expenseListQueryKey, previous: previousData }];
+          return listSnapshot;
         },
         rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>

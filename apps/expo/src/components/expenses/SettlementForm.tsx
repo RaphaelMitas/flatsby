@@ -149,6 +149,7 @@ export function SettlementForm({
 
   const {
     expenseListQueryKey,
+    patchLists,
     debtSummaryQueryKey,
     invalidateList,
     invalidateDebtSummary,
@@ -176,7 +177,6 @@ export function SettlementForm({
             queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
           ]);
 
-          const previousData = queryClient.getQueryData(expenseListQueryKey);
           const previousDebtSummary =
             queryClient.getQueryData(debtSummaryQueryKey);
 
@@ -205,9 +205,7 @@ export function SettlementForm({
           );
 
           // Optimistically add the new settlement
-          queryClient.setQueryData(expenseListQueryKey, (old) => {
-            if (!old) return old;
-
+          const listSnapshot = patchLists((old) => {
             const optimisticSettlement: ExpenseWithSplitsAndMembers = {
               id: Date.now(),
               groupId,
@@ -306,7 +304,7 @@ export function SettlementForm({
           });
 
           return [
-            { queryKey: expenseListQueryKey, previous: previousData },
+            ...listSnapshot,
             { queryKey: debtSummaryQueryKey, previous: previousDebtSummary },
           ];
         },

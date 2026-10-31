@@ -1,19 +1,22 @@
 import type { ExpenseSubcategoryId } from "@flatsby/validators/expenses/categories";
+import type { ExpenseListFilter } from "@flatsby/validators/expenses/list-filter";
 import type { CreateExpenseInput } from "@flatsby/validators/expenses/schemas";
 import type { SplitMethod } from "@flatsby/validators/expenses/types";
 import { Array as Arr, Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, desc, eq, inArray, lt, or } from "@flatsby/db";
-import { expenses, expenseSplits } from "@flatsby/db/schema";
+import { and, desc, eq, gte, ilike, inArray, lt, ne, or } from "@flatsby/db";
+import { expenses, expenseSplits, groupMembers } from "@flatsby/db/schema";
 import { messages } from "@flatsby/i18n/messages";
 import {
   expenseSubcategories,
   getSubcategoryGroup,
   isExpenseSubcategoryId,
+  subcategoriesOf,
 } from "@flatsby/validators/expenses/categories";
 import { inLedgerCurrency } from "@flatsby/validators/expenses/conversion";
 import { splitsForStorage } from "@flatsby/validators/expenses/distribution";
+import { expenseListFilterSchema } from "@flatsby/validators/expenses/list-filter";
 import {
   createExpenseSchema,
   currencyCodeSchema,
@@ -118,6 +121,56 @@ const expenseMembersWith = {
   createdByGroupMember: expenseMemberWith,
   expenseSplits: { with: { groupMember: expenseMemberWith } },
 } as const;
+
+const before = (cursor: { date: Date; id: number }) =>
+  or(
+    lt(expenses.expenseDate, cursor.date),
+    and(eq(expenses.expenseDate, cursor.date), lt(expenses.id, cursor.id)),
+  );
+
+const escapeLike = (text: string) => text.replace(/[\\%_]/g, "\\$&");
+
+function listFilterConditions(
+  db: DbClient,
+  {
+    search,
+    memberId,
+    memberRole = "any",
+    category,
+    from,
+    to,
+  }: ExpenseListFilter,
+) {
+  const paid =
+    memberId === undefined
+      ? undefined
+      : eq(expenses.paidByGroupMemberId, memberId);
+  const inSplit =
+    memberId === undefined
+      ? undefined
+      : inArray(
+          expenses.id,
+          db
+            .select({ id: expenseSplits.expenseId })
+            .from(expenseSplits)
+            .where(eq(expenseSplits.groupMemberId, memberId)),
+        );
+  return [
+    search ? ilike(expenses.description, `%${escapeLike(search)}%`) : undefined,
+    memberRole === "paid"
+      ? paid
+      : memberRole === "split"
+        ? inSplit
+        : or(paid, inSplit),
+    category &&
+      and(
+        inArray(expenses.subcategory, subcategoriesOf(category)),
+        ne(expenses.splitMethod, "settlement"),
+      ),
+    from && gte(expenses.expenseDate, from),
+    to && lt(expenses.expenseDate, to),
+  ];
+}
 
 const findExpense = (db: DbClient, expenseId: number) =>
   db.query.expenses.findFirst({
@@ -458,7 +511,7 @@ export const expenseRouter = createTRPCRouter({
 
   getGroupExpenses: protectedProcedure
     .input(
-      z.object({
+      expenseListFilterSchema.extend({
         groupId: z.number(),
         cursor: z.object({ date: z.date(), id: z.number() }).optional(),
         limit: z.number().int().min(1).max(100).default(50),
@@ -472,18 +525,11 @@ export const expenseRouter = createTRPCRouter({
           const database = yield* Database;
           return yield* database.query("fetch group expenses", async (db) => {
             const expensesList = await db.query.expenses.findMany({
-              where: input.cursor
-                ? and(
-                    eq(expenses.groupId, input.groupId),
-                    or(
-                      lt(expenses.expenseDate, input.cursor.date),
-                      and(
-                        eq(expenses.expenseDate, input.cursor.date),
-                        lt(expenses.id, input.cursor.id),
-                      ),
-                    ),
-                  )
-                : eq(expenses.groupId, input.groupId),
+              where: and(
+                eq(expenses.groupId, input.groupId),
+                input.cursor && before(input.cursor),
+                ...listFilterConditions(db, input),
+              ),
               limit: input.limit + 1,
               orderBy: (expenses, { desc }) => [
                 desc(expenses.expenseDate),
@@ -511,6 +557,48 @@ export const expenseRouter = createTRPCRouter({
               ),
               nextCursor,
             };
+          });
+        }),
+      ),
+    ),
+
+  getFormerMembers: protectedProcedure
+    .input(z.object({ groupId: z.number() }))
+    .query(async ({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* getGroupWithAccess(input.groupId);
+          const database = yield* Database;
+          return yield* database.query("fetch former members", async (db) => {
+            const groupExpenseIds = db
+              .select({ id: expenses.id })
+              .from(expenses)
+              .where(eq(expenses.groupId, input.groupId));
+            const members = await db.query.groupMembers.findMany({
+              where: and(
+                eq(groupMembers.groupId, input.groupId),
+                eq(groupMembers.isActive, false),
+                or(
+                  inArray(
+                    groupMembers.id,
+                    db
+                      .select({ id: expenses.paidByGroupMemberId })
+                      .from(expenses)
+                      .where(eq(expenses.groupId, input.groupId)),
+                  ),
+                  inArray(
+                    groupMembers.id,
+                    db
+                      .select({ id: expenseSplits.groupMemberId })
+                      .from(expenseSplits)
+                      .where(inArray(expenseSplits.expenseId, groupExpenseIds)),
+                  ),
+                ),
+              ),
+              ...expenseMemberWith,
+            });
+            return members.map(withMemberUser);
           });
         }),
       ),
@@ -586,14 +674,7 @@ export const expenseRouter = createTRPCRouter({
                       eq(expenseSplits.groupMemberId, a),
                     ),
                   ),
-                  input.cursor &&
-                    or(
-                      lt(expenses.expenseDate, input.cursor.date),
-                      and(
-                        eq(expenses.expenseDate, input.cursor.date),
-                        lt(expenses.id, input.cursor.id),
-                      ),
-                    ),
+                  input.cursor && before(input.cursor),
                 ),
               )
               .orderBy(desc(expenses.expenseDate), desc(expenses.id))

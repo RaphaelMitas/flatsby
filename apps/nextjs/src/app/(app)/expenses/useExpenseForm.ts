@@ -69,9 +69,8 @@ export function useExpenseForm({
   const isEditMode = !!expense;
   const totalSteps = 3;
 
-  const { expenseListQueryKey, invalidateAll } = useExpenseInvalidation(
-    group.id,
-  );
+  const { expenseListQueryKey, patchLists, invalidateAll } =
+    useExpenseInvalidation(group.id);
 
   const expenseQueryKey = expense
     ? trpc.expense.getExpense.queryKey({
@@ -136,16 +135,12 @@ export function useExpenseForm({
         onMutate: async (input) => {
           await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
 
-          const previousData = queryClient.getQueryData(expenseListQueryKey);
-
           const paidByMember = group.groupMembers.find(
             (m) => m.id === input.paidByGroupMemberId,
           );
           const currentMember = group.thisGroupMember;
 
-          queryClient.setQueryData(expenseListQueryKey, (old) => {
-            if (!old) return old;
-
+          const listSnapshot = patchLists((old) => {
             const optimisticExpense = {
               id: Date.now(),
               groupId: group.id,
@@ -241,7 +236,7 @@ export function useExpenseForm({
             return { ...old, pages: updatedPages };
           });
 
-          return [{ queryKey: expenseListQueryKey, previous: previousData }];
+          return listSnapshot;
         },
         rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>

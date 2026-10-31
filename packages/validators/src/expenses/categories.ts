@@ -290,6 +290,16 @@ export function getSubcategoryGroup(
   return subcategoryRecord[subcategoryId ?? "other"]?.group ?? "other";
 }
 
+export const subcategoriesOf = (group: ExpenseCategoryGroup) =>
+  expenseSubcategories
+    .filter((subcategory) => subcategory.group === group)
+    .map((subcategory) => subcategory.id);
+
+/** A group has no icon of its own, so it borrows its first subcategory's. */
+export const groupIconSubcategory = (
+  group: ExpenseCategoryGroup,
+): ExpenseSubcategoryId => subcategoriesOf(group)[0] ?? "other";
+
 export function isExpenseSubcategoryId(
   value: string,
 ): value is ExpenseSubcategoryId {
