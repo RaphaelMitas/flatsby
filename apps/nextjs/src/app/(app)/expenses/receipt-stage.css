@@ -1,6 +1,6 @@
 /* The lens path matches the waypoints in the Expo ReceiptReadingStage */
 .rs-stage {
-  --walk: 5.2s;
+  --walk: 8s;
 }
 
 .rs-photo {

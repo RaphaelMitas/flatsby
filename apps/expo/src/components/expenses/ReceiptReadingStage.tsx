@@ -133,7 +133,7 @@ export function ReceiptReadingStage({
         walk.set(
           withRepeat(
             withTiming(STEPS.length - 1, {
-              duration: (STEPS.length - 1) * 650,
+              duration: (STEPS.length - 1) * 1000,
               easing: Easing.inOut(Easing.quad),
             }),
             -1,
