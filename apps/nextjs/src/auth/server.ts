@@ -3,12 +3,14 @@ import "server-only";
 import type { OAuthCallback } from "@flatsby/auth";
 import { cache } from "react";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { getOAuthState } from "better-auth/api";
 import { importPKCS8, SignJWT } from "jose";
 
 import { captureError } from "@flatsby/api/posthog";
 import { initAuth } from "@flatsby/auth";
+import { safeRedirectPath } from "@flatsby/validators/invite";
 import {
   callbackOutcome,
   loginAttemptSchema,
@@ -17,6 +19,7 @@ import {
 
 import { env } from "~/env";
 import { captureFor, captureVisit, withoutCookie } from "~/utils/page-views";
+import { sendSignInCode } from "./sign-in-code-email";
 
 export const auth = initAuth({
   baseUrl: env.NEXT_PUBLIC_BETTER_AUTH_BASE_URL,
@@ -36,6 +39,7 @@ export const auth = initAuth({
   trustedOrigins: env.VERCEL_BRANCH_URL
     ? [`https://${env.VERCEL_BRANCH_URL}`]
     : [],
+  sendSignInCode,
   onUserCreated,
   onOAuthCallback,
 });
@@ -58,7 +62,13 @@ const callbackPage = {
 async function onUserCreated(requestHeaders: Headers | undefined) {
   if (!requestHeaders) return;
   try {
-    const platform = oauthPlatform(await getOAuthState());
+    const state = await getOAuthState();
+    // Outside OAuth only the Expo client sends expo-origin
+    const platform = state
+      ? oauthPlatform(state)
+      : requestHeaders.has("expo-origin")
+        ? "app"
+        : "web";
     after(() =>
       captureVisit("signed_up", withoutCookie(requestHeaders), callbackPage, {
         platform,
@@ -105,6 +115,18 @@ async function onOAuthCallback({
 export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
 );
+
+export async function signedInStep(
+  searchParams: Promise<{ next?: string | string[] }>,
+) {
+  const { next } = await searchParams;
+  const session = await getSession();
+  if (!session?.user) redirect("/auth/login");
+  return {
+    user: session.user,
+    next: safeRedirectPath(typeof next === "string" ? next : undefined),
+  };
+}
 
 async function makeAppleClientSecret(): Promise<string> {
   try {

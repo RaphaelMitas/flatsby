@@ -35,6 +35,14 @@ export default function SettingsLayout() {
           }}
         />
         <Stack.Screen
+          name="passkeys"
+          options={{
+            title: t("settings.passkeys.title"),
+            headerBackTitle: "",
+            ...solidHeader,
+          }}
+        />
+        <Stack.Screen
           name="analytics"
           options={{
             title: t("settings.analytics.title"),

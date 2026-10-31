@@ -87,8 +87,8 @@ export const settings = {
     displayName: "Display Name",
     created: "Account Created",
     settings: "Account Settings",
-    managedByProvider:
-      "Your account information is managed through your authentication provider. You can't change your email address or other core account details.",
+    emailFixed:
+      "You can't change your email address here. You can always sign in with a code sent to it.",
   },
   profile: {
     displayName: "Display Name",
@@ -141,6 +141,23 @@ export const settings = {
     cannotBeUndone: "This action cannot be undone.",
     deleteUserWarning:
       "Deleting this user will permanently remove it and all its data. Please type your email <strong>{email}</strong> below to confirm. This action cannot be undone.",
+  },
+  passkeys: {
+    title: "Passkeys",
+    count: "{count} set up",
+    none: "Sign in faster, without a code",
+    description:
+      "Sign in with your fingerprint, face or screen lock instead of a code.",
+    emptyTitle: "No passkey yet",
+    add: "Add passkey",
+    created: "Created {date}",
+    unnamed: "Passkey",
+    actions: "Passkey options",
+    rename: "Rename",
+    namePlaceholder: "Name",
+    removeTitle: "Remove passkey?",
+    removeBody:
+      "“{name}” will stop working for Flatsby. Delete it in your password manager too, or it will keep being offered. You can always sign in with an email code.",
   },
   page: {
     title: "User Settings",

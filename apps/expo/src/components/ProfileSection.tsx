@@ -33,7 +33,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   return (
     <Card>
       <CardHeader>
-        <View className="items-center">
+        <View className="items-center gap-2">
           <Avatar>
             <AvatarImage alt={t("avatarAlt", { name })} />
             <AvatarFallback className="text-muted-foreground text-xl">

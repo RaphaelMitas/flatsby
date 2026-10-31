@@ -52,6 +52,20 @@ export function calculateDebts(
   return { currencies, memberBalances };
 }
 
+export function expenseBalanceFor(
+  expense: ConvertibleExpense & { paidByGroupMemberId: number },
+  memberId: number,
+): { cents: number; currency: string } | null {
+  const { amountInCents, currency, expenseSplits } = inLedgerCurrency(expense);
+  const paid = expense.paidByGroupMemberId === memberId;
+  const share = expenseSplits.find((split) => split.groupMemberId === memberId);
+  if (!paid && !share) return null;
+  return {
+    cents: (paid ? amountInCents : 0) - (share?.amountInCents ?? 0),
+    currency,
+  };
+}
+
 export function applySettlement(
   summary: GroupDebtSummary,
   settlement: DebtEntry,

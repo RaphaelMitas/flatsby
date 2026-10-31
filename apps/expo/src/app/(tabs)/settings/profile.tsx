@@ -26,7 +26,6 @@ import {
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
-import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 
 export default function ProfileScreen() {
@@ -81,89 +80,87 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView>
-      <AppScrollView contentContainerClassName="gap-4 p-4">
-        {/* Profile Picture Section */}
-        <ProfileSection
-          name={user.name}
-          subtitle={user.email}
-          fallbackText={user.name.substring(0, 2).toUpperCase()}
-          showChangePhoto={true}
-          disabled={true}
-        />
+    <AppScrollView contentContainerClassName="gap-4 p-4">
+      {/* Profile Picture Section */}
+      <ProfileSection
+        name={user.name}
+        subtitle={user.email}
+        fallbackText={user.name.substring(0, 2).toUpperCase()}
+        showChangePhoto={true}
+        disabled={true}
+      />
 
-        {/* Name Edit Section */}
-        <Card className="gap-4">
-          <CardHeader>
-            <CardTitle>{t("settings.profile.displayName")}</CardTitle>
-            <CardDescription>
-              {t("settings.profile.displayNameDescription")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <View className="gap-4">
-                <View>
-                  <Label htmlFor="name" className="mb-2">
-                    {t("settings.profile.userName")}
-                  </Label>
-                  <FormField
-                    name="name"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormControl>
-                        <Input
-                          value={field.value}
-                          onChangeText={field.onChange}
-                          onBlur={field.onBlur}
-                          placeholder={t("settings.profile.namePlaceholder")}
-                          className="w-full"
-                          error={!!form.formState.errors.name}
-                        />
-                      </FormControl>
-                    )}
-                  />
-                </View>
-
-                <Button
-                  icon={form.formState.isSubmitting ? "loader" : "save"}
-                  disabled={form.formState.isSubmitting}
-                  title={
-                    form.formState.isSubmitting
-                      ? t("common.saving")
-                      : t("settings.profile.saveChanges")
-                  }
-                  onPress={form.handleSubmit(handleSubmit)}
-                  className="w-full"
+      {/* Name Edit Section */}
+      <Card className="gap-4">
+        <CardHeader>
+          <CardTitle>{t("settings.profile.displayName")}</CardTitle>
+          <CardDescription>
+            {t("settings.profile.displayNameDescription")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <View className="gap-4">
+              <View>
+                <Label htmlFor="name" className="mb-2">
+                  {t("settings.profile.userName")}
+                </Label>
+                <FormField
+                  name="name"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormControl>
+                      <Input
+                        value={field.value}
+                        onChangeText={field.onChange}
+                        onBlur={field.onBlur}
+                        placeholder={t("settings.profile.namePlaceholder")}
+                        className="w-full"
+                        error={!!form.formState.errors.name}
+                      />
+                    </FormControl>
+                  )}
                 />
               </View>
-            </Form>
 
-            {/* Error Alert */}
-            {form.formState.errors.name && (
-              <TimedAlert
-                variant="destructive"
-                title={t("common.error")}
-                description={translateIfKey(
-                  t,
-                  form.formState.errors.name.message ?? "",
-                )}
+              <Button
+                icon={form.formState.isSubmitting ? "loader" : "save"}
+                disabled={form.formState.isSubmitting}
+                title={
+                  form.formState.isSubmitting
+                    ? t("common.saving")
+                    : t("settings.profile.saveChanges")
+                }
+                onPress={form.handleSubmit(handleSubmit)}
+                className="w-full"
               />
-            )}
+            </View>
+          </Form>
 
-            {/* Success Alert */}
-            {showSuccessMessage && (
-              <TimedAlert
-                variant="success"
-                title={t("settings.profile.success")}
-                description={t("settings.profile.nameUpdated")}
-              />
-            )}
-          </CardContent>
-        </Card>
+          {/* Error Alert */}
+          {form.formState.errors.name && (
+            <TimedAlert
+              variant="destructive"
+              title={t("common.error")}
+              description={translateIfKey(
+                t,
+                form.formState.errors.name.message ?? "",
+              )}
+            />
+          )}
 
-        <PaypalHandleCard />
-      </AppScrollView>
-    </SafeAreaView>
+          {/* Success Alert */}
+          {showSuccessMessage && (
+            <TimedAlert
+              variant="success"
+              title={t("settings.profile.success")}
+              description={t("settings.profile.nameUpdated")}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      <PaypalHandleCard />
+    </AppScrollView>
   );
 }

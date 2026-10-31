@@ -32,6 +32,7 @@ import { DebtHero } from "./DebtHero";
 import { DirectDebtsCard } from "./DirectDebtsCard";
 import { GroupBalancesCard } from "./GroupBalancesCard";
 import { OtherDebtsCard } from "./OtherDebtsCard";
+import { PaypalNudgeCard } from "./PaypalNudgeCard";
 import { SettlementForm } from "./SettlementForm";
 
 export function DebtSummaryView() {
@@ -72,6 +73,8 @@ export function DebtSummaryView() {
       >
         {t("navigation.debts")}
       </h2>
+
+      <PaypalNudgeCard />
 
       {bannerCurrencies && (
         <ConversionBanner

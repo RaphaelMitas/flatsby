@@ -44,4 +44,5 @@ export const paypalMeUrl = (
     ? `https://paypal.me/${handle}/${centsToDecimal(amountInCents).toFixed(2)}${currency}`
     : null;
 
-export const PAYPAL_ME_SIGNUP_URL = "https://www.paypal.com/paypalme/";
+export const PAYPAL_ME_SIGNUP_URL =
+  "https://www.paypal.com/digital-wallet/send-receive-money/paypal-me/";

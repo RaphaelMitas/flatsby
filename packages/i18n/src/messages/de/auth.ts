@@ -7,8 +7,64 @@ export const auth = {
     signingInWithGoogle: "Anmeldung mit Google",
     signInWithApple: "Mit Apple anmelden",
     signingInWithApple: "Anmeldung mit Apple",
+    google: "Google",
+    apple: "Apple",
+    email: "E-Mail-Adresse",
+    emailPlaceholder: "name@beispiel.de",
+    continueWithEmail: "Weiter mit E-Mail",
+    signInWithPasskey: "Mit Passkey anmelden",
+    sendingCode: "Code wird gesendet",
+    or: "oder",
     agreement:
       "Mit der Anmeldung stimmst du unseren <terms>Nutzungsbedingungen</terms> zu. Wie wir deine Daten verarbeiten, erklärt die <privacy>Datenschutzerklärung</privacy>.",
+  },
+  code: {
+    title: "Code eingeben",
+    sentTo:
+      "Wir haben einen {length}-stelligen Code an <b>{email}</b> geschickt. Er gilt {minutes} Minuten.",
+    changeEmail: "Andere E-Mail-Adresse",
+    notArrived: "Nichts angekommen? Schau im Spam-Ordner nach.",
+    resendIn: "Neuen Code senden in {seconds} s",
+    resend: "Neuen Code senden",
+    resent: "Code erneut gesendet. Nimm den aus der neuesten E-Mail.",
+    invalid: "Der Code stimmt nicht. Prüf ihn und versuch es noch einmal.",
+    expired: "Der Code ist abgelaufen. Fordere einen neuen an.",
+    tooManyAttempts: "Zu viele falsche Versuche. Fordere einen neuen Code an.",
+    tooManyRequests:
+      "Zu viele Versuche. Warte eine Minute und versuch es noch einmal.",
+    tooManyCodes:
+      "Zu viele Codes für diese Adresse. Versuch es in einer Stunde noch einmal.",
+    failed: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  },
+  passkey: {
+    title: "Nächstes Mal ohne Code?",
+    bodyIos:
+      "Mit einem Passkey meldest du dich per Face ID oder Touch ID an. Er liegt in deinem iCloud-Schlüsselbund und funktioniert auf all deinen Apple-Geräten.",
+    bodyAndroid:
+      "Mit einem Passkey meldest du dich per Fingerabdruck oder Displaysperre an. Er liegt im Google Passwortmanager und funktioniert auf all deinen Android-Geräten.",
+    bodyWeb:
+      "Mit einem Passkey meldest du dich per Fingerabdruck, Gesicht oder Geräte-PIN an, statt auf eine E-Mail zu warten.",
+    create: "Passkey einrichten",
+    later: "Jetzt nicht",
+    createdTitle: "Passkey eingerichtet",
+    createdBody: "Beim nächsten Mal reicht ein Blick oder ein Fingerabdruck.",
+    continue: "Los geht's",
+    failed: "Das hat nicht geklappt. Versuch es noch einmal.",
+    signInAgain:
+      "Melde dich zur Sicherheit einmal ab und wieder an, dann kannst du einen Passkey hinzufügen.",
+  },
+  name: {
+    title: "Wie sollen dich deine Mitbewohner nennen?",
+    placeholder: "Dein Name",
+    hint: "Du kannst ihn später in den Einstellungen ändern.",
+    continue: "Weiter",
+  },
+  signInCodeEmail: {
+    subject: "{code} ist dein Flatsby-Code",
+    preview: "Hallo! Hier ist dein Code. Er gilt {minutes} Minuten.",
+    heading: "Hallo!",
+    intro: "Hier ist dein Code für Flatsby:",
+    footnote: "Gilt {minutes} Minuten · nicht angefordert? Einfach ignorieren.",
   },
   consent: {
     title: "Willkommen bei Flatsby",

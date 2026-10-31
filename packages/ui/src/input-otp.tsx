@@ -5,6 +5,7 @@ import { OTPInput, OTPInputContext } from "input-otp";
 import { MinusIcon } from "lucide-react";
 
 import { cn } from "@flatsby/ui";
+import { codeSlotGroups } from "@flatsby/validators/login";
 
 function InputOTP({
   className,
@@ -74,4 +75,38 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator };
+function InputOTPGroups({
+  length,
+  groupSize,
+  invalid,
+  slotClassName,
+}: {
+  length: number;
+  groupSize: number;
+  invalid?: boolean;
+  slotClassName?: string;
+}) {
+  return codeSlotGroups(length, groupSize).map((slots, group) => (
+    <React.Fragment key={slots.join()}>
+      {group > 0 && <InputOTPSeparator />}
+      <InputOTPGroup>
+        {slots.map((index) => (
+          <InputOTPSlot
+            key={index}
+            index={index}
+            aria-invalid={invalid}
+            className={slotClassName}
+          />
+        ))}
+      </InputOTPGroup>
+    </React.Fragment>
+  ));
+}
+
+export {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPGroups,
+  InputOTPSlot,
+  InputOTPSeparator,
+};

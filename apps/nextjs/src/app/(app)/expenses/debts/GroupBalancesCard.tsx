@@ -7,9 +7,10 @@ import { useLocale } from "next-intl";
 import { cn } from "@flatsby/ui";
 import { Card } from "@flatsby/ui/card";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { formatSignedCents } from "@flatsby/validators/expenses/formatting";
-
-import { amountTone } from "./debtDisplay";
+import {
+  amountTone,
+  formatSignedCents,
+} from "@flatsby/validators/expenses/formatting";
 
 interface GroupBalancesCardProps {
   currencies: ReturnType<typeof groupBalances>;

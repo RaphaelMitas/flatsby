@@ -20,6 +20,7 @@
   "dependencies": {
     "@ai-sdk/react": "catalog:",
     "@better-auth/expo": "catalog:better-auth",
+    "@better-auth/passkey": "catalog:better-auth",
     "@flatsby/api": "workspace:*",
     "@flatsby/auth": "workspace:*",
     "@flatsby/chat": "workspace:*",
@@ -28,6 +29,7 @@
     "@flatsby/ui": "workspace:*",
     "@flatsby/validators": "workspace:*",
     "@posthog/core": "^1.59.1",
+    "@react-email/render": "2.2.0",
     "@t3-oss/env-nextjs": "catalog:",
     "@tanstack/react-pacer": "^0.24.1",
     "@tanstack/react-query": "catalog:",
@@ -45,9 +47,11 @@
     "prop-types": "^15.8.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "react-email": "6.11.6",
     "react-intersection-observer": "^11.0.1",
     "react-qr-code": "catalog:",
     "react-swipeable-list": "^1.10.0",
+    "resend": "^6.35.0",
     "superjson": "catalog:",
     "zod": "catalog:"
   },

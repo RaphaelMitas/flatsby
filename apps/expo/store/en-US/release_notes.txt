@@ -1,6 +1,6 @@
-• Get a reminder at 19:00 the evening before your turn, with tomorrow's events and chores still open. Turn it on in the calendar.
-• Switch groups and lists from the bar at the top of Home and Shopping.
-• New here? Start or join a group in two taps. A new group takes you straight to inviting flatmates.
-• See flatmates tick off items live while a list is open.
-• Flatsby opens on your latest data instead of a loading screen.
+• Shopping lists work without signal and sync once you're back online.
+• Add flatmates before they join. When they accept the invite, they take over their spot with its expenses.
+• Settle up in one tap: add your PayPal.me name, and flatmates open PayPal with the amount filled in.
+• Sign in with a code sent by email, and next time with a passkey.
+• In Settings > Analytics, you decide whether Flatsby records screens.
 • Small fixes and improvements.

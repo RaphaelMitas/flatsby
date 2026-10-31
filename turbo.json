@@ -74,6 +74,7 @@
     "MODEL_PROVIDER",
     "AI_GATEWAY_API_KEY",
     "AUTUMN_SECRET_KEY",
+    "RESEND_API_KEY",
     "PORT",
     "POSTHOG_API_KEY"
   ],
