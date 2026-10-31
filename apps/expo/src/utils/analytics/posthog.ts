@@ -48,11 +48,6 @@ function createClient(persistent: boolean): Client {
     captureAppLifecycleEvents: persistent,
     // The app reads no flags, and a flags request carries the device ID
     disableRemoteFeatureFlags: true,
-    // Push support starts the native SDK, which keeps IDs of its own on the device
-    capturePushNotificationSubscriptions: false,
-    capturePushNotificationOpened: false,
-    // The native SDK sends rage taps itself, past before_send
-    rageClickConfig: { enabled: false },
     before_send: [
       (event) => (consent || event.event === "$exception" ? event : null),
       // The query and mutation caches report tRPC errors, so error boundaries and rejected mutateAsync calls would report them twice
