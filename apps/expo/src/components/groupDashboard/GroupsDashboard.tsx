@@ -4,7 +4,7 @@ import { FlashList } from "@shopify/flash-list";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { PullToRefresh } from "~/lib/components/pull-to-refresh";
+import { useRefreshControl } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import { trpc } from "~/utils/api";
 import GroupsDashboardElement from "./GroupsDashboardElement";
@@ -17,6 +17,7 @@ export function GroupsDashboard() {
   const { data: groups, refetch } = useSuspenseQuery(
     trpc.group.getUserGroups.queryOptions(),
   );
+  const refreshControl = useRefreshControl(refetch);
 
   if (!groups.success) {
     return null;
@@ -46,25 +47,21 @@ export function GroupsDashboard() {
         />
       </View>
 
-      <PullToRefresh onRefresh={refetch} parentPaddingX={16}>
-        {(refreshProps) => (
-          <FlashList
-            {...refreshProps}
-            data={groups.data}
-            ItemSeparatorComponent={() => <View className="h-4" />}
-            renderItem={(item) => <GroupsDashboardElement group={item.item} />}
-            ListFooterComponent={
-              <Button
-                testID="group-join-with-code-button"
-                title={t("invite.join.withCode")}
-                variant="outline"
-                className="mt-4"
-                onPress={() => router.push("/join")}
-              />
-            }
+      <FlashList
+        refreshControl={refreshControl}
+        data={groups.data}
+        ItemSeparatorComponent={() => <View className="h-4" />}
+        renderItem={(item) => <GroupsDashboardElement group={item.item} />}
+        ListFooterComponent={
+          <Button
+            testID="group-join-with-code-button"
+            title={t("invite.join.withCode")}
+            variant="outline"
+            className="mt-4"
+            onPress={() => router.push("/join")}
           />
-        )}
-      </PullToRefresh>
+        }
+      />
     </View>
   );
 }

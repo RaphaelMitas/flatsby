@@ -11,6 +11,7 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { PeekingCat } from "~/app/_components/peeking-cat";
+import { season } from "~/app/_components/seasonal/season";
 import { useTRPC } from "~/trpc/react";
 
 function useCountUp(target: number, duration = 500) {
@@ -73,7 +74,10 @@ function StatsHeader() {
   return (
     <div className="flex items-end justify-between pr-4">
       <p className="text-muted-foreground mb-2 text-sm">{t("last30Days")}</p>
-      <PeekingCat variant="home" className="h-8 w-16" />
+      {/* In season the cat sits in the band under the group header instead */}
+      {!season.HomeBackdrop && (
+        <PeekingCat variant="home" className="h-8 w-16" />
+      )}
     </div>
   );
 }

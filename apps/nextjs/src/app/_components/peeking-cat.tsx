@@ -16,10 +16,9 @@ export function PeekingCat({
 }) {
   const [excited, setExcited] = useState(false);
   const [hops, setHops] = useState(0);
-  const [taps, setTaps] = useState(0);
   const lastHop = useRef(0);
   const isHome = variant === "home";
-  const TapReaction = isHome ? season.TapReaction : undefined;
+  const Hat = isHome ? season.CatHat : undefined;
 
   const playHop = useCallback(() => {
     const now = Date.now();
@@ -30,21 +29,19 @@ export function PeekingCat({
 
   return (
     <div className={cn("relative", className)}>
+      {/* Clips the cat below the edge, with headroom above for a hat */}
       <div
-        className="absolute inset-0 cursor-pointer overflow-hidden select-none"
+        className="absolute inset-x-0 -top-2 bottom-0 cursor-pointer overflow-hidden select-none"
         onPointerEnter={() => {
           setExcited(true);
           playHop();
         }}
         onPointerLeave={() => setExcited(false)}
-        onClick={() => {
-          playHop();
-          setTaps((n) => n + 1);
-        }}
+        onClick={playHop}
       >
         <div
           className={cn(
-            "absolute inset-0",
+            "absolute inset-x-0 top-2 bottom-0",
             isHome &&
               "motion-safe:animate-in motion-safe:slide-in-from-bottom-full duration-700",
           )}
@@ -56,14 +53,11 @@ export function PeekingCat({
               excited && "fc-excited",
               hops > 0 && "fc-hopping",
             )}
-          />
+          >
+            {Hat && <Hat />}
+          </FlatsbyCat>
         </div>
       </div>
-      {TapReaction && taps > 0 && (
-        <div className="pointer-events-none absolute top-1/2 left-1/2">
-          <TapReaction key={taps} />
-        </div>
-      )}
     </div>
   );
 }
