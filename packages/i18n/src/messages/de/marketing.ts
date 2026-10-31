@@ -128,7 +128,7 @@ export const marketing = {
     data: {
       label: "Deine Daten",
       value:
-        "Datenbank und Server in Frankfurt, bei Cloud-Anbietern mit EU-Region, Nutzungsstatistik ohne Werbe-Tracking. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Export und Kontolöschung jederzeit in den Einstellungen, Details in der Datenschutzerklärung.",
+        "Datenbank und Server in Frankfurt, bei Cloud-Anbietern mit EU-Region, Nutzungsstatistik ohne Werbe-Tracking. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto, gespeichert wird er nicht. Export und Kontolöschung jederzeit in den Einstellungen, Details in der Datenschutzerklärung.",
     },
     source: {
       label: "Quellcode",
@@ -186,7 +186,7 @@ export const marketing = {
     privacy: {
       question: "Wer kann die Daten meines Haushalts sehen?",
       answer:
-        "Innerhalb von Flatsby nur die Mitglieder deiner Gruppe. Die in der Datenschutzerklärung genannten Hosting-, Analyse- und KI-Anbieter verarbeiten sie, um die App zu betreiben. Zwei Funktionen senden Daten über das Vercel AI Gateway. Der KI-Assistent fragt vorher nach deiner Einwilligung, nutzt Modelle von OpenAI oder Google, und seine Daten werden nicht zum Training dieser Modelle verwendet. Die automatischen Kategorien senden die Namen von Einkaufsartikeln und Ausgaben an ein Klassifizierungsmodell. Du kannst alle deine Daten exportieren oder dein Konto in deinen Einstellungen löschen.",
+        "Innerhalb von Flatsby nur die Mitglieder deiner Gruppe. Die in der Datenschutzerklärung genannten Hosting-, Analyse- und KI-Anbieter verarbeiten sie, um die App zu betreiben. Drei Funktionen senden Daten über das Vercel AI Gateway. Der KI-Assistent fragt vorher nach deiner Einwilligung, nutzt Modelle von OpenAI oder Google, und seine Daten werden nicht zum Training dieser Modelle verwendet. Die automatischen Kategorien senden die Namen von Einkaufsartikeln und Ausgaben an ein Klassifizierungsmodell. Beim Scannen eines Belegs geht sein Foto an ein Modell von OpenAI, das Betrag, Datum und Geschäft liest; Flatsby behält das Foto nicht. Du kannst alle deine Daten exportieren oder dein Konto in deinen Einstellungen löschen.",
     },
     chores: {
       question: "Kann Flatsby einen Putzplan führen?",
@@ -324,7 +324,7 @@ export const marketing = {
         consent:
           "Der Assistent fragt nach deiner Einwilligung, bevor er etwas sendet. Deine Nachrichten sowie die Listenartikel, Ausgaben und Mitgliedernamen, die eine Frage braucht, gehen über das Vercel AI Gateway an OpenAI oder Google, um die Antwort zu erzeugen.",
         categories:
-          "Die automatischen Kategorien sind vom Assistenten getrennt: Wenn du einen Einkaufsartikel oder eine Ausgabe hinzufügst, geht ihr Name über dasselbe Gateway an ein Klassifizierungsmodell, damit Flatsby eine Kategorie vorschlagen kann.",
+          "Die automatischen Kategorien sind vom Assistenten getrennt: Wenn du einen Einkaufsartikel oder eine Ausgabe hinzufügst, geht ihr Name über dasselbe Gateway an ein Klassifizierungsmodell, damit Flatsby eine Kategorie vorschlagen kann. Beim Scannen eines Belegs geht das Foto über dasselbe Gateway an OpenAI, damit es gelesen werden kann; Flatsby speichert es nicht.",
         training:
           "Deine E-Mail-Adresse und deine Anmeldedaten werden nicht an die KI-Anbieter gesendet. Daten, die für den Assistenten gesendet werden, dienen dazu, die Antwort zu erzeugen, nicht zum Training von Modellen. KI-Nutzungszahlen wie das Modell und die Anzahl der Tokens gehen ohne deine Nachrichten zur Analyse an PostHog.",
       },
@@ -474,7 +474,7 @@ export const marketing = {
       },
       data: {
         heading: "Deine Daten",
-        body: "Datenbank und Server stehen in Frankfurt, bei Cloud-Anbietern mit EU-Region, die Nutzungsstatistik kommt ohne Werbe-Tracking aus. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Du kannst alles exportieren oder dein Konto in den Einstellungen löschen, Details stehen in der Datenschutzerklärung. Der Code ist Open Source, und Flatsby wird von Raphael Mitas gebaut, einem unabhängigen Entwickler aus Darmstadt.",
+        body: "Datenbank und Server stehen in Frankfurt, bei Cloud-Anbietern mit EU-Region, die Nutzungsstatistik kommt ohne Werbe-Tracking aus. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto, gespeichert wird er nicht. Du kannst alles exportieren oder dein Konto in den Einstellungen löschen, Details stehen in der Datenschutzerklärung. Der Code ist Open Source, und Flatsby wird von Raphael Mitas gebaut, einem unabhängigen Entwickler aus Darmstadt.",
       },
       moving: {
         heading: "Von Flatastic zu Flatsby wechseln",

@@ -249,6 +249,18 @@ export const expenseRouter = createTRPCRouter({
               },
             });
           }
+          if (input.receipt) {
+            captureUserEvent({
+              user: ctx.session.user,
+              event: "receipt_expense_created",
+              headers: ctx.headers,
+              additionalProperties: {
+                groupId: input.groupId,
+                edited: input.receipt.edited,
+                editedCount: input.receipt.edited.length,
+              },
+            });
+          }
           return created;
         }),
       );

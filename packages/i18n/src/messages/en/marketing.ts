@@ -122,7 +122,7 @@ export const marketing = {
     data: {
       label: "Your data",
       value:
-        "Database and servers in Frankfurt, with cloud providers in their EU region, and usage analytics without ad tracking. The AI assistant only sends data to OpenAI or Google after you consent. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. Export everything or delete your account in settings at any time, details in the privacy policy.",
+        "Database and servers in Frankfurt, with cloud providers in their EU region, and usage analytics without ad tracking. The AI assistant only sends data to OpenAI or Google after you consent. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. A receipt you scan goes to OpenAI as a photo and isn't stored. Export everything or delete your account in settings at any time, details in the privacy policy.",
     },
     source: {
       label: "Source code",
@@ -180,7 +180,7 @@ export const marketing = {
     privacy: {
       question: "Who can see my household's data?",
       answer:
-        "Inside Flatsby, only members of your group. The hosting, analytics and AI providers listed in the privacy policy process it to run the app. Two features send data through the Vercel AI Gateway. The AI assistant asks for consent first, uses OpenAI or Google models, and its data is not used to train them. Automatic categories send the names of shopping items and expenses to a classification model. You can export all of your data or delete your account from your settings.",
+        "Inside Flatsby, only members of your group. The hosting, analytics and AI providers listed in the privacy policy process it to run the app. Three features send data through the Vercel AI Gateway. The AI assistant asks for consent first, uses OpenAI or Google models, and its data is not used to train them. Automatic categories send the names of shopping items and expenses to a classification model. Scanning a receipt sends its photo to an OpenAI model to read the amount, date and store, and Flatsby doesn't keep the photo. You can export all of your data or delete your account from your settings.",
     },
     chores: {
       question: "Can Flatsby run a chore rota?",
@@ -311,7 +311,7 @@ export const marketing = {
         consent:
           "The assistant asks for your consent before it sends anything. Your messages, and the list items, expenses and member names a question needs, go to OpenAI or Google through the Vercel AI Gateway to generate the answer.",
         categories:
-          "Automatic categories are separate from the assistant: when you add a shopping item or an expense, its name goes through the same gateway to a classification model so Flatsby can suggest a category.",
+          "Automatic categories are separate from the assistant: when you add a shopping item or an expense, its name goes through the same gateway to a classification model so Flatsby can suggest a category. Scanning a receipt sends the photo through the same gateway to OpenAI to read it; Flatsby doesn't store it.",
         training:
           "Your email address and sign-in details are not sent to the AI providers. Data sent for the assistant is used to generate the answer, not to train models. AI usage numbers such as the model and token counts, without your messages, go to PostHog for analytics.",
       },
@@ -461,7 +461,7 @@ export const marketing = {
       },
       data: {
         heading: "Your data",
-        body: "Database and servers are in Frankfurt, with cloud providers in their EU region, and usage analytics work without ad tracking. The AI assistant only sends data to OpenAI or Google after you consent. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. You can export everything or delete your account in settings, with details in the privacy policy. The code is open source, and Flatsby is built by Raphael Mitas, an independent developer in Darmstadt.",
+        body: "Database and servers are in Frankfurt, with cloud providers in their EU region, and usage analytics work without ad tracking. The AI assistant only sends data to OpenAI or Google after you consent. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. A receipt you scan goes to OpenAI as a photo and isn't stored. You can export everything or delete your account in settings, with details in the privacy policy. The code is open source, and Flatsby is built by Raphael Mitas, an independent developer in Darmstadt.",
       },
       moving: {
         heading: "Switching from Flatastic to Flatsby",

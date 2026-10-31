@@ -1,12 +1,14 @@
 import { expect, test } from "../fixtures/auth";
 import {
   createEqualSplitExpense,
+  ensurePaidBySelected,
   fillExpenseAmount,
   openExpenseDetail,
   openExpenseForm,
   submitEqualSplitExpense,
 } from "../helpers/expenses";
 import { addPlaceholder } from "../helpers/group";
+import { waitForHydration } from "../helpers/hydration";
 
 test.describe("Expense Creation", () => {
   test("creates an expense with equal split", async ({ authPage }) => {
@@ -264,4 +266,40 @@ test.describe("Expense Creation", () => {
       authPage.getByText("Coffee with friends").first(),
     ).toBeVisible();
   });
+
+  test("fills an expense from a scanned receipt", async ({ authPage }) => {
+    await authPage.goto("/expenses");
+    const addButton = authPage
+      .getByTestId("expense-add-button")
+      .filter({ visible: true });
+    await waitForHydration(addButton);
+    await addButton.click();
+
+    // E2E servers answer every scan with a fixed REWE receipt, so any image will do
+    await authPage.getByTestId("receipt-scan-input").setInputFiles({
+      name: "receipt.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(ONE_PIXEL_PNG, "base64"),
+    });
+
+    const preview = authPage.getByTestId("receipt-scan-preview");
+    await expect(preview.getByText("REWE")).toBeVisible();
+    await expect(preview.getByText("€23.47")).toBeVisible();
+    await authPage.getByTestId("receipt-scan-apply").click();
+
+    await expect(authPage.getByTestId("expense-form-description")).toHaveValue(
+      "REWE",
+    );
+    await expect(authPage.getByTestId("expense-form-amount")).toHaveValue(
+      "23.47",
+    );
+    await ensurePaidBySelected(authPage);
+    await submitEqualSplitExpense(authPage);
+
+    await expect(authPage.getByText("REWE").first()).toBeVisible();
+    await expect(authPage.getByText("€23.47").first()).toBeVisible();
+  });
 });
+
+const ONE_PIXEL_PNG =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";

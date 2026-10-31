@@ -106,3 +106,20 @@ tags:
     timeout: 20000
 - assertVisible: "€9[.,]00"
 - assertVisible: "CHF.10[.,]00"
+
+# Receipt scan: the entry and its source sheet. Picking a photo runs in the system
+# picker, which the web suite stands in for (same hook, fixed e2e receipt).
+- tapOn:
+    id: "expense-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "receipt-scan"
+    timeout: 15000
+- tapOn:
+    id: "receipt-scan"
+- extendedWaitUntil:
+    visible:
+      id: "receipt-scan-library"
+    timeout: 10000
+- assertVisible:
+    id: "receipt-scan-camera"

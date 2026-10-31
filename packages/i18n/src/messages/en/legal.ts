@@ -163,7 +163,7 @@ export const legal = {
       expo: "<strong>Expo (app updates):</strong> The app checks Expo's servers for updates, which receive your IP address, app version and platform.",
       stores:
         "<strong>Apple App Store and Google Play:</strong> Distribute the app and handle in-app purchases as separate controllers under their own privacy policies.",
-      ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories and, if you use the AI assistant, your messages and the list, expense and member data it needs. See <dpa>Vercel's privacy policy</dpa>.",
+      ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories, the photo when you scan a receipt (which can show anything printed on it, such as the last digits of a card; we do not store the photo), and, if you use the AI assistant, your messages and the list, expense and member data it needs. See <dpa>Vercel's privacy policy</dpa>.",
       posthog:
         "<strong>PostHog (analytics, error reports):</strong> Stores data in Frankfurt and receives:",
       posthogWebsite:

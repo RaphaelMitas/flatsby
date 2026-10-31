@@ -39,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
+import { Skeleton } from "@flatsby/ui/skeleton";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
   editableSplitMethod,
@@ -50,6 +51,7 @@ import { CurrencyInput } from "~/components/CurrencyInput";
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { ConversionField } from "./ConversionField";
 import { ExpenseCategorySelector } from "./ExpenseCategorySelector";
+import { ReceiptScanCard } from "./ReceiptScan";
 import { SplitEditor } from "./SplitEditor";
 
 interface ExpenseFormContentProps {
@@ -79,7 +81,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     group,
     allMembers,
     conversion,
+    receiptScan,
   } = formState;
+  const isReadingReceipt = receiptScan.state.status === "reading";
   const { convertedAmountInCents } = conversion.fields;
   const participantCount = finalizeSplits(
     splitMethod,
@@ -125,6 +129,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
 
         {currentStep === 1 && (
           <div className="space-y-4">
+            {!isEditMode && (
+              <ReceiptScanCard receiptScan={receiptScan} currency={currency} />
+            )}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">
@@ -138,14 +145,18 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("expenses.description")}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t("expenses.descriptionPlaceholder")}
-                          {...field}
-                          data-testid="expense-form-description"
-                          maxLength={512}
-                        />
-                      </FormControl>
+                      {isReadingReceipt ? (
+                        <Skeleton className="h-9 w-full" />
+                      ) : (
+                        <FormControl>
+                          <Input
+                            placeholder={t("expenses.descriptionPlaceholder")}
+                            {...field}
+                            data-testid="expense-form-description"
+                            maxLength={512}
+                          />
+                        </FormControl>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -157,30 +168,34 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("expenses.amount")}</FormLabel>
-                      <FormControl>
-                        <div className="flex items-center gap-2">
-                          <FormField
-                            control={form.control}
-                            name="currency"
-                            render={({ field: currencyField }) => (
-                              <CurrencySelect
-                                className="w-24"
-                                data-testid="expense-form-currency"
-                                value={currencyField.value}
-                                onChange={currencyField.onChange}
-                              />
-                            )}
-                          />
-                          <CurrencyInput
-                            value={field.value}
-                            onChange={field.onChange}
-                            placeholder="0.00"
-                            min={1}
-                            className="flex-1"
-                            data-testid="expense-form-amount"
-                          />
-                        </div>
-                      </FormControl>
+                      {isReadingReceipt ? (
+                        <Skeleton className="h-9 w-full" />
+                      ) : (
+                        <FormControl>
+                          <div className="flex items-center gap-2">
+                            <FormField
+                              control={form.control}
+                              name="currency"
+                              render={({ field: currencyField }) => (
+                                <CurrencySelect
+                                  className="w-24"
+                                  data-testid="expense-form-currency"
+                                  value={currencyField.value}
+                                  onChange={currencyField.onChange}
+                                />
+                              )}
+                            />
+                            <CurrencyInput
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="0.00"
+                              min={1}
+                              className="flex-1"
+                              data-testid="expense-form-amount"
+                            />
+                          </div>
+                        </FormControl>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -246,29 +261,33 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>{t("common.date")}</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start text-left font-normal"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {format(field.value, "PPP", {
-                                locale: locale === "de" ? de : undefined,
-                              })}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={(date) => date && field.onChange(date)}
-                            autoFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      {isReadingReceipt ? (
+                        <Skeleton className="h-9 w-full" />
+                      ) : (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start text-left font-normal"
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {format(field.value, "PPP", {
+                                  locale: locale === "de" ? de : undefined,
+                                })}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={(date) => date && field.onChange(date)}
+                              autoFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -397,6 +416,17 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
         )}
 
         <div className="flex gap-2 border-t pt-4">
+          {isReadingReceipt && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={receiptScan.reset}
+              className="flex-1"
+              data-testid="receipt-scan-cancel"
+            >
+              {t("common.cancel")}
+            </Button>
+          )}
           {currentStep > 1 && (
             <Button
               type="button"
@@ -419,7 +449,10 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 void handleNext();
               }}
               disabled={
-                isPending || amountInCents <= 0 || conversion.isMissingConverted
+                isPending ||
+                isReadingReceipt ||
+                amountInCents <= 0 ||
+                conversion.isMissingConverted
               }
               className="flex-1"
               data-testid="expense-form-next"

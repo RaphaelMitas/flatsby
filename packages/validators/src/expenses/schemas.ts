@@ -7,6 +7,7 @@ import { z } from "zod/v4";
 import { msg } from "@flatsby/i18n/message-key";
 
 import { expenseSubcategoryIdSchema } from "./categories";
+import { receiptFieldSchema } from "./receipt-scan";
 import {
   CURRENCY_CODES,
   MAX_EXPENSE_DESCRIPTION_LENGTH,
@@ -93,6 +94,7 @@ export type ExpenseValues = z.infer<typeof expenseSchemaWithValidateSplits>;
 
 export const createExpenseSchema = expenseSchemaWithValidateSplits.safeExtend({
   groupId: z.number(),
+  receipt: z.object({ edited: z.array(receiptFieldSchema) }).optional(),
 });
 
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
