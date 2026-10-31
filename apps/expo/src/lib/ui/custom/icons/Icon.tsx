@@ -7,6 +7,7 @@ import { cn, useThemeColors } from "~/lib/utils";
 import AppleIcon from "./AppleIcon";
 import FlatsbyCat from "./FlatsbyCat";
 import GoogleIcon from "./GoogleIcon";
+import PasskeyIcon from "./PasskeyIcon";
 
 export interface IconProps {
   name:
@@ -14,6 +15,7 @@ export interface IconProps {
     | "google"
     | "apple"
     | "flatsby"
+    | "passkey"
     | "loader";
   color?: ColorName;
   size: number;
@@ -29,6 +31,9 @@ const Icon = ({ name, color, size, className }: IconProps) => {
   }
   if (name === "apple") {
     return <AppleIcon size={size} color={colorValue} className={className} />;
+  }
+  if (name === "passkey") {
+    return <PasskeyIcon size={size} color={colorValue} className={className} />;
   }
   if (name === "flatsby") {
     return <FlatsbyCat size={size} color={colorValue} className={className} />;

@@ -17,7 +17,7 @@ export const legal = {
     metaTitle: "Nutzungsbedingungen - Flatsby",
     metaDescription: "Nutzungsbedingungen für Flatsby",
     title: "Nutzungsbedingungen",
-    lastUpdated: "Januar 2026",
+    lastUpdated: "Oktober 2026",
     toc: {
       acceptance: "Annahme der Bedingungen",
       description: "Beschreibung des Dienstes",
@@ -42,7 +42,7 @@ export const legal = {
     },
     accounts: {
       intro:
-        "Um den Dienst zu nutzen, müssen Sie ein Konto über die Anmeldung mit Google oder Apple erstellen. Sie sind verantwortlich für:",
+        "Um den Dienst zu nutzen, müssen Sie ein Konto erstellen, indem Sie sich per E-Mail-Code, mit Google oder mit Apple anmelden. Sie sind verantwortlich für:",
       security: "die Sicherheit Ihrer Zugangsdaten",
       activities: "alle Aktivitäten, die über Ihr Konto erfolgen",
       notify:
@@ -108,11 +108,14 @@ export const legal = {
     account: {
       heading: "Konto",
       intro:
-        "Aus der Anmeldung mit Google oder Apple und aus Ihrem Konto speichern wir:",
+        "Aus der Anmeldung (per E-Mail-Code, Google oder Apple) und aus Ihrem Konto speichern wir:",
       name: "Ihren Namen",
       email: "Ihre E-Mail-Adresse",
       picture: "Ihr Profilbild (nur Google)",
-      identifier: "Ihre Konto-ID bei Google oder Apple",
+      identifier:
+        "Ihre Konto-ID bei Google oder Apple, wenn Sie sich damit anmelden",
+      passkeys:
+        "Für jeden Passkey den öffentlichen Schlüssel, einen Namen und das Erstelldatum; der private Schlüssel bleibt auf Ihrem Gerät oder in Ihrem Passwortmanager",
       plan: "Ihren Tarif, Ihre Käufe und Ihr KI-Guthaben",
       payment:
         "Wenn Sie ihn hinterlegen: den PayPal.me-Namen, über den Sie Geld bekommen",
@@ -149,11 +152,11 @@ export const legal = {
       consent:
         "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG):</strong> der KI-Assistent; Bildschirmanalyse und Bildschirmaufnahmen in der App, einschließlich der dafür genutzten Geräte-ID",
       interests:
-        "<strong>Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO):</strong> sicherer Betrieb der Website; Nutzungsanalyse Ihrer Aktionen auf der Website und in der App, um zu verstehen, wie Menschen Flatsby finden und nutzen; Fehlerberichte, um Fehler zu beheben (in der App, ohne etwas auf Ihrem Gerät zu speichern, § 25 Abs. 2 Nr. 2 TDDDG); KI-Nutzungsdaten, um die Kosten zu kontrollieren; Anmeldesitzungen, um Ihr Konto zu schützen",
+        "<strong>Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO):</strong> sicherer Betrieb der Website; Nutzungsanalyse Ihrer Aktionen auf der Website und in der App, um zu verstehen, wie Menschen Flatsby finden und nutzen; Fehlerberichte, um Fehler zu beheben (in der App, ohne etwas auf Ihrem Gerät zu speichern, § 25 Abs. 2 Nr. 2 TDDDG); KI-Nutzungsdaten, um die Kosten zu kontrollieren; Anmeldesitzungen, um Ihr Konto zu schützen; Anmeldeversuche pro IP-Adresse und pro E-Mail-Adresse (gehasht) zählen, um Missbrauch zu verhindern",
       obligations:
         "<strong>Rechtliche Verpflichtung (Art. 6 Abs. 1 lit. c DSGVO):</strong> Aufbewahrung von Rechnungen und Zahlungsbelegen nach Steuer- und Handelsrecht",
       required:
-        "Gesetzlich sind Sie nicht verpflichtet, uns Daten bereitzustellen. Ohne Ihren Namen, Ihre E-Mail-Adresse und Ihre Konto-ID bei Google oder Apple können wir kein Konto anlegen. Für die Nutzung von Flatsby ist die Analyse nicht erforderlich.",
+        "Gesetzlich sind Sie nicht verpflichtet, uns Daten bereitzustellen. Ohne Ihre E-Mail-Adresse und, wenn Sie sich mit Google oder Apple anmelden, Ihre Konto-ID dort können wir kein Konto anlegen. Für die Nutzung von Flatsby ist die Analyse nicht erforderlich.",
     },
     groups: {
       heading: "Ihre Gruppen",
@@ -165,6 +168,8 @@ export const legal = {
       vercel:
         "<strong>Vercel (Hosting):</strong> Jede Anfrage läuft über Vercel, mit Ihrer IP-Adresse und Ihren Browserangaben. Unsere API läuft in Frankfurt; Seiten können von einem Standort in Ihrer Nähe ausgeliefert werden, auch außerhalb der EU.",
       auth: "<strong>Google und Apple (Anmeldung):</strong> Bestätigen Ihre Identität. Google-Profilbilder werden von Googles Servern geladen, daher sieht Google die IP-Adresse aller, die sie ansehen (Art. 6 Abs. 1 lit. b DSGVO).",
+      resend:
+        "<strong>Resend (E-Mail):</strong> Verschickt Anmeldecodes und erhält dafür Ihre E-Mail-Adresse und den Code. Die E-Mails gehen von Irland aus; Protokolle und Metadaten speichert Resend in den USA.",
       billing:
         "<strong>Autumn, Stripe und RevenueCat (Tarife und KI-Guthaben):</strong> Autumn (Web) erhält Ihre Konto-ID, Ihren Namen und Ihre E-Mail-Adresse, RevenueCat (App) Ihre Konto-ID, beide mit Ihren Käufen. Autumn nutzt Stripe für Zahlungen.",
       expo: "<strong>Expo (App-Updates):</strong> Die App fragt bei den Servern von Expo nach Updates; diese erhalten Ihre IP-Adresse, App-Version und Plattform.",
@@ -190,7 +195,7 @@ export const legal = {
       content:
         "können Artikel und Ausgaben, die Sie angelegt haben, anonymisiert für die anderen Gruppenmitglieder erhalten bleiben",
       outro:
-        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. PostHog löscht Analyseereignisse nach 12 Monaten und Bildschirmaufnahmen nach 30 Tagen. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
+        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten und Bildschirmaufnahmen nach 30 Tagen. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
     },
     rights: {
       access: "<strong>Auskunft:</strong> eine Kopie Ihrer Daten erhalten",
@@ -216,7 +221,7 @@ export const legal = {
         "<strong>Nicht angemeldet:</strong> Wir können Sie nicht wiedererkennen. Aktivieren Sie daher Global Privacy Control oder Do Not Track in Ihrem Browser. Dann zählen wir Ihre Besuche nicht.",
     },
     international:
-      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe und Expo sind US-Unternehmen; Daten können daher in die USA gelangen. Für Anbieter, die nach dem EU-US Data Privacy Framework zertifiziert sind, gilt der Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO). PostHog ist zertifiziert und hat mit uns zusätzlich die EU-Standardvertragsklauseln vereinbart (Art. 46 Abs. 2 lit. c DSGVO); eine Kopie erhalten Sie auf Anfrage.",
+      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe, Resend und Expo sind US-Unternehmen; Daten können daher in die USA gelangen. Für Anbieter, die nach dem EU-US Data Privacy Framework zertifiziert sind, gilt der Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO). PostHog ist zertifiziert und hat mit uns zusätzlich die EU-Standardvertragsklauseln vereinbart (Art. 46 Abs. 2 lit. c DSGVO); eine Kopie erhalten Sie auf Anfrage.",
     children:
       "Flatsby richtet sich nicht an Kinder unter 16 Jahren. Wenn Sie glauben, dass ein Kind uns Daten gegeben hat, kontaktieren Sie uns.",
     changes:

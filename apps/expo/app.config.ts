@@ -19,7 +19,7 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: "com.flatcove.app.v2",
     supportsTablet: true,
-    associatedDomains: [`applinks:${WEB_HOST}`],
+    associatedDomains: [`applinks:${WEB_HOST}`, `webcredentials:${WEB_HOST}`],
     icon: {
       light: "./assets/ios-light.png",
       dark: "./assets/ios-dark.png",

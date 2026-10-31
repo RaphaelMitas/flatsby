@@ -13,6 +13,5 @@ export const POST = (request: NextRequest) =>
     captureVisit(event, withoutCookie(request.headers), pageWithoutQuery(url), {
       ...properties,
       platform: "web",
-      ...(event === "login_failed" && { stage: "start" }),
     }),
   );
