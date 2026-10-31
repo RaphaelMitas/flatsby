@@ -10,11 +10,10 @@ import { localDate } from "@flatsby/validators/calendar";
 import {
   dayRangeFilter,
   isExpenseFilterActive,
-  matchesExpenseFilter,
   presetRange,
+  visibleExpenses,
 } from "@flatsby/validators/expenses/list-filter";
 
-import type { ExpenseWithSplitsAndMembers } from "..";
 import type { ExpenseListData } from "../expenseListCache";
 
 const noChoice: ExpenseFilterChoice = { memberRole: "any" };
@@ -74,7 +73,6 @@ export function useExpenseFilters(groupId: number) {
 type ExpenseFilters = ReturnType<typeof useExpenseFilters>;
 
 type ListQuery = UseInfiniteQueryResult<ExpenseListData, unknown>;
-type ListItem = ExpenseWithSplitsAndMembers;
 
 const itemsOf = (query: ListQuery) =>
   query.data?.pages.flatMap((page) => (page.success ? page.data.items : [])) ??
@@ -86,32 +84,16 @@ export function expenseSearchView(
   filtered: ListQuery,
   filters: ExpenseFilters,
 ) {
-  const byId = new Map<number, ListItem>();
   // A fetched filtered row is fresher than the cached copy the unfiltered list may hold
   const sources = !filters.isQueryActive
     ? [base]
     : filtered.isPlaceholderData
       ? [base, filtered]
       : [filtered, base];
-  const settled = sources
-    .filter((source) => !source.isPlaceholderData)
-    .map((source) => new Set(itemsOf(source).map((item) => item.id)));
-  for (const item of sources.flatMap(itemsOf)) {
-    // Once one list refetched without it, the saved expense has taken the pending row's place
-    const replaced =
-      "isPending" in item && settled.some((ids) => !ids.has(item.id));
-    if (!replaced && !byId.has(item.id)) byId.set(item.id, item);
-  }
-  const all = [...byId.values()];
-  const rows = filters.isActive
-    ? all
-        .filter((expense) => matchesExpenseFilter(expense, filters.live))
-        .sort(
-          (a, b) =>
-            new Date(b.expenseDate).getTime() -
-              new Date(a.expenseDate).getTime() || b.id - a.id,
-        )
-    : all;
+  const rows = visibleExpenses(
+    sources.map(itemsOf),
+    filters.isActive ? filters.live : undefined,
+  );
 
   const offline = filters.isQueryActive && filtered.fetchStatus === "paused";
   const failed = filters.isQueryActive && filtered.isError;

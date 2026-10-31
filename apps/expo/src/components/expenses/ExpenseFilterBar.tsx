@@ -1,8 +1,10 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { useExpenseFilters } from "@flatsby/api/hooks/useExpenseFilters";
 import type { ExpenseCategoryGroup } from "@flatsby/validators/expenses/categories";
-import type { PersonMember } from "@flatsby/validators/expenses/formatting";
-import type { MemberRole } from "@flatsby/validators/expenses/list-filter";
+import type {
+  FilterMember,
+  MemberRole,
+} from "@flatsby/validators/expenses/list-filter";
 import type { ComponentRef, ReactNode } from "react";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -40,8 +42,6 @@ import { MemberAvatar } from "./MemberAvatar";
 const SNAP_POINTS = ["60%", "90%"];
 
 type SheetView = "member" | "category" | "range" | "grid";
-
-type FilterMember = PersonMember & { id: number };
 
 interface ExpenseFilterBarProps {
   groupId: number;

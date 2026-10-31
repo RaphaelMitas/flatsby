@@ -29,7 +29,7 @@ import { useMediaQuery } from "../splitview/useMediaQuery";
 import { ExpenseCard } from "./ExpenseCard";
 import { ExpenseFilterBar } from "./ExpenseFilterBar";
 
-const FILTERED_GC_TIME = 5 * 60 * 1000;
+const UNPERSISTED_GC_TIME = 5 * 60 * 1000;
 
 export function ExpenseListPanel() {
   const t = useTranslations();
@@ -88,8 +88,7 @@ function ExpenseList() {
     ...listOptions(filters.query),
     enabled: filters.isQueryActive,
     placeholderData: keepPreviousData,
-    // Keeps every search term out of the week-long persisted cache
-    gcTime: FILTERED_GC_TIME,
+    gcTime: UNPERSISTED_GC_TIME,
   });
   const search = expenseSearchView(base, filtered, filters);
 

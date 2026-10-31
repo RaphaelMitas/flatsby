@@ -2,8 +2,10 @@
 
 import type { useExpenseFilters } from "@flatsby/api/hooks/useExpenseFilters";
 import type { ExpenseCategoryGroup } from "@flatsby/validators/expenses/categories";
-import type { PersonMember } from "@flatsby/validators/expenses/formatting";
-import type { DayRange } from "@flatsby/validators/expenses/list-filter";
+import type {
+  DayRange,
+  FilterMember,
+} from "@flatsby/validators/expenses/list-filter";
 import type { ReactNode } from "react";
 import type { DateRange } from "react-day-picker";
 import { useEffect, useRef, useState } from "react";
@@ -48,8 +50,6 @@ import {
 import { useTRPC } from "~/trpc/react";
 
 type FilterMenu = "member" | "category" | "range";
-
-type FilterMember = PersonMember & { id: number };
 
 interface ExpenseFilterBarProps {
   groupId: number;
@@ -297,7 +297,7 @@ export function ExpenseFilterBar({
                 selected={draft}
                 onSelect={setDraft}
                 defaultMonth={pickerDate(
-                  `${shiftMonth(monthOf(today), -1)}-01`,
+                  `${shiftMonth(monthOf(today), twoMonths ? -1 : 0)}-01`,
                 )}
                 endMonth={pickerDate(today)}
                 disabled={{ after: pickerDate(today) }}

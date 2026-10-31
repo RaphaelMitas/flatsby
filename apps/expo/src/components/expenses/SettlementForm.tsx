@@ -207,7 +207,9 @@ export function SettlementForm({
           // Optimistically add the new settlement
           const pendingId = Date.now();
           const listSnapshot = patchLists((old) => {
-            const optimisticSettlement: ExpenseWithSplitsAndMembers = {
+            const optimisticSettlement: ExpenseWithSplitsAndMembers & {
+              isPending: true;
+            } = {
               id: pendingId,
               groupId,
               paidByGroupMemberId: input.paidByGroupMemberId,
@@ -286,6 +288,7 @@ export function SettlementForm({
                       },
                     },
               })),
+              isPending: true,
             };
 
             const updatedPages = old.pages.map((page, pageIndex) => {

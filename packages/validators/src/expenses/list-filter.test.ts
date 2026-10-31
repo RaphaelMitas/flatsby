@@ -5,6 +5,7 @@ import {
   dayRangeFilter,
   matchesExpenseFilter,
   presetRange,
+  visibleExpenses,
 } from "./list-filter";
 
 const groceries: FilterableExpense = {
@@ -67,5 +68,31 @@ describe("presetRange", () => {
       from: "2025-11-01",
       to: "2026-01-31",
     });
+  });
+});
+
+describe("visibleExpenses", () => {
+  const saved = { ...groceries, id: 7, amountInCents: 4783 };
+  const pending = { ...saved, id: 1793438858827, isPending: true };
+
+  it("drops a pending row once another list holds the saved expense", () => {
+    expect(
+      visibleExpenses([[saved], [pending]], { search: "rewe" }).map(
+        (expense) => expense.id,
+      ),
+    ).toEqual([7]);
+  });
+
+  it("keeps the pending row while nothing has the saved one yet", () => {
+    expect(visibleExpenses([[], [pending]], { search: "rewe" })).toHaveLength(
+      1,
+    );
+  });
+
+  it("filters by the fresher copy of an expense", () => {
+    const renamed = { ...saved, description: "Miete Oktober" };
+    expect(visibleExpenses([[renamed], [saved]], { search: "rewe" })).toEqual(
+      [],
+    );
   });
 });

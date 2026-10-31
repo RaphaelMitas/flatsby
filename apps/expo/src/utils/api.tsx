@@ -83,8 +83,8 @@ export const persistOptions = {
   },
   maxAge: CACHE_MAX_AGE,
   dehydrateOptions: {
-    // By age, not success: a failed refetch keeps its data, and maxAge only dates the whole save.
-    // A shorter gcTime marks a throwaway query, like a search, which stays off disk.
+    // By age, not success: a failed refetch keeps its data, and maxAge only dates the whole save
+    // A shorter gcTime marks a throwaway query, like a search, which stays off disk
     shouldDehydrateQuery: (query) =>
       query.gcTime >= CACHE_MAX_AGE &&
       query.state.dataUpdatedAt > Date.now() - CACHE_MAX_AGE,

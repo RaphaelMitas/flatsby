@@ -2,7 +2,7 @@ import type { Translate } from "@flatsby/i18n/message-key";
 import { z } from "zod/v4";
 
 import type { ExpenseCategoryGroup } from "./categories";
-import type { SplitMethod } from "./types";
+import type { PersonMember } from "./formatting";
 import {
   addDays,
   formatCalendarDate,
@@ -33,7 +33,7 @@ export interface FilterableExpense {
   paidByGroupMemberId: number;
   expenseSplits: { groupMemberId: number }[];
   category: ExpenseCategoryGroup;
-  splitMethod: SplitMethod | string;
+  splitMethod: string;
   expenseDate: Date;
 }
 
@@ -67,6 +67,37 @@ export function matchesExpenseFilter(
   if (filter.from && date < filter.from) return false;
   if (filter.to && date >= filter.to) return false;
   return true;
+}
+
+type ListedExpense = FilterableExpense & { id: number; amountInCents: number };
+
+const sameExpense = (expense: ListedExpense) =>
+  `${expense.paidByGroupMemberId}:${expense.amountInCents}:${expense.description}`;
+
+// Lists come freshest first; without a filter the cached order stays
+export function visibleExpenses<T extends ListedExpense>(
+  lists: T[][],
+  filter: ExpenseListFilter | undefined,
+): T[] {
+  const items = lists.flat();
+  // The lists refetch separately after a create, so one can hold the saved expense while another still holds its pending row
+  const saved = new Set(
+    items.filter((item) => !("isPending" in item)).map(sameExpense),
+  );
+  const byId = new Map<number, T>();
+  for (const item of items) {
+    const replaced = "isPending" in item && saved.has(sameExpense(item));
+    if (!replaced && !byId.has(item.id)) byId.set(item.id, item);
+  }
+  const all = [...byId.values()];
+  if (!filter) return all;
+  return all
+    .filter((expense) => matchesExpenseFilter(expense, filter))
+    .sort(
+      (a, b) =>
+        new Date(b.expenseDate).getTime() - new Date(a.expenseDate).getTime() ||
+        b.id - a.id,
+    );
 }
 
 export const isExpenseFilterActive = (filter: ExpenseListFilter) =>
@@ -152,10 +183,13 @@ export function dayRangeLabel(
   locale: Intl.LocalesArgument,
   t: Translate,
 ) {
-  if (range.preset === "last-year") return range.from.slice(0, 4);
+  if (range.preset === "last-year")
+    return String(Number(today.slice(0, 4)) - 1);
   if (range.preset) return t(`expenses.filter.presets.${range.preset}`);
   return describeDayRange(range, today, locale, t);
 }
+
+export type FilterMember = PersonMember & { id: number };
 
 export interface ExpenseFilterChoice {
   memberId?: number;
@@ -166,7 +200,7 @@ export interface ExpenseFilterChoice {
 
 export function filterChipLabels(
   choice: ExpenseFilterChoice,
-  people: { id: number; user: { name: string } }[],
+  people: FilterMember[],
   today: string,
   locale: Intl.LocalesArgument,
   t: Translate,
