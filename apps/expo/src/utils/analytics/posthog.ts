@@ -109,11 +109,9 @@ export function applyConsent(next: boolean) {
 
 // Persistence is fixed when a client is created, so giving or withdrawing consent swaps the client
 async function apply(persistent: boolean) {
-  const previous = current;
-  const swap = persistent !== applied;
-  applied = persistent;
-
-  if (swap) {
+  if (persistent !== applied) {
+    const previous = current;
+    applied = persistent;
     current = createClient(persistent);
     for (const listener of listeners) listener();
     // shutdown() only flushes; opting out is what stops the old client's listeners and the native SDK
