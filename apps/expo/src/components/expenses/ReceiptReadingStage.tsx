@@ -308,7 +308,6 @@ export function ReceiptReadingStage({
             right: 0,
           }}
           className="text-foreground text-center text-base font-semibold"
-          accessibilityLiveRegion="polite"
         >
           {caption}
         </Text>

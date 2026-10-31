@@ -30,7 +30,7 @@ export function ReceiptReadingStage({
   const apply = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (previewing) apply.current?.focus();
+    if (previewing) apply.current?.focus({ preventScroll: true });
   }, [previewing]);
 
   return (
@@ -73,7 +73,7 @@ export function ReceiptReadingStage({
 
           <div className="rs-photo relative mt-4">
             {photoUrl && (
-              // biome-ignore lint/performance/noImgElement: a local object URL, sized from its natural dimensions
+              // biome-ignore lint/performance/noImgElement: a local object URL; the lens reads its rendered box
               <img
                 src={photoUrl}
                 alt=""
