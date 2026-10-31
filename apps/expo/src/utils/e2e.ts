@@ -81,6 +81,12 @@ function parseE2ESession(value: unknown): E2ESession {
   };
 }
 
+export function storeE2EApiUrl(apiUrl: string) {
+  const url = apiUrl.replace(/\/+$/, "");
+  SecureStore.setItem(API_URL_KEY, url);
+  return url;
+}
+
 /**
  * Calls the web app's e2e create-session endpoint and stores the returned
  * session cookies in the exact format the @better-auth/expo client reads,
@@ -93,8 +99,7 @@ export async function setupE2ESession(options: {
   seed?: string;
   locale?: string;
 }): Promise<E2ESession> {
-  const apiUrl = options.apiUrl.replace(/\/+$/, "");
-  SecureStore.setItem(API_URL_KEY, apiUrl);
+  const apiUrl = storeE2EApiUrl(options.apiUrl);
 
   const query = new URLSearchParams();
   if (options.name) query.set("name", options.name);

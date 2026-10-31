@@ -4,17 +4,22 @@ import { Redirect } from "expo-router";
 import { useSession } from "~/utils/auth/auth-client";
 import {
   clearPostLoginPath,
+  nextSignInStep,
   peekPostLoginPath,
 } from "~/utils/auth/post-login-path";
 
 export default function RootIndex() {
   const { data: session } = useSession();
-  const postLoginPath = session ? peekPostLoginPath() : null;
+  const step = session ? nextSignInStep() : null;
+  const postLoginPath = session && !step ? peekPostLoginPath() : null;
 
   useEffect(() => {
     if (postLoginPath) clearPostLoginPath();
   }, [postLoginPath]);
 
+  if (step) {
+    return <Redirect href={`/auth/${step}`} />;
+  }
   if (session) {
     return <Redirect href={postLoginPath ?? "/(tabs)/home"} />;
   }

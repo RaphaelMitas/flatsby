@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -12,12 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@flatsby/ui/dialog";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from "@flatsby/ui/input-otp";
+import { InputOTP, InputOTPGroups } from "@flatsby/ui/input-otp";
 import {
   INVITE_CODE_GROUP,
   INVITE_CODE_LENGTH,
@@ -62,20 +57,11 @@ export function JoinWithCodeDialog({
             inputMode="text"
             autoCapitalize="characters"
           >
-            {[0, INVITE_CODE_GROUP].map((offset) => (
-              <Fragment key={offset}>
-                {offset > 0 && <InputOTPSeparator />}
-                <InputOTPGroup>
-                  {Array.from({ length: INVITE_CODE_GROUP }, (_, i) => (
-                    <InputOTPSlot
-                      key={i}
-                      index={offset + i}
-                      className="w-8 font-mono"
-                    />
-                  ))}
-                </InputOTPGroup>
-              </Fragment>
-            ))}
+            <InputOTPGroups
+              length={INVITE_CODE_LENGTH}
+              groupSize={INVITE_CODE_GROUP}
+              slotClassName="w-8 font-mono"
+            />
           </InputOTP>
           <p className="text-muted-foreground text-xs">
             {t("invite.join.lookAlikes")}

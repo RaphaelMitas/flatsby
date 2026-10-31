@@ -31,8 +31,9 @@ auditConfig:
     - GHSA-gcqx-w48m-w2h4
     # glob <=14.0.1 and minimatch <11.0.1 - patched only in the new majors. Every
     # Expo 58 package (canary included) depends on glob ^13, @expo/fingerprint also
-    # on minimatch ^10. Build tooling globbing our own project, no abort signals or
-    # untrusted input. Clears when Expo moves to glob 14 and minimatch 11.
+    # on minimatch ^10. react-email 6 also depends on glob ^13 for its preview CLI.
+    # Build tooling globbing our own project, no abort signals or untrusted input.
+    # Clears when Expo and react-email move to glob 14 and Expo to minimatch 11.
     - GHSA-3g3m-2fjr-6pw4
     - GHSA-g3hv-75wg-m249
 
@@ -77,6 +78,7 @@ catalogs:
     # BetterAuthClientPlugin and authClient.getCookie loses its type.
     # https://github.com/better-auth/better-auth/issues/10767
     "@better-auth/expo": 1.7.11
+    "@better-auth/passkey": 1.7.11
     better-auth: 1.7.11
   react19:
     "@types/react": ~19.3.0

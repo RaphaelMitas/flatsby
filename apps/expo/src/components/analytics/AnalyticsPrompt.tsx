@@ -65,7 +65,7 @@ export function AnalyticsPrompt({ className }: { className?: string }) {
             className="flex-1 flex-row items-center justify-between gap-3"
             onPress={() => {
               analyticsPrompt.save("done");
-              open({ screens: false, recordings: false });
+              open();
             }}
           >
             <Text className="text-foreground flex-1 text-sm">

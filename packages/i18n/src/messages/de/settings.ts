@@ -90,8 +90,8 @@ export const settings = {
     displayName: "Anzeigename",
     created: "Konto erstellt am",
     settings: "Kontoeinstellungen",
-    managedByProvider:
-      "Deine Kontodaten werden über deinen Anmeldeanbieter verwaltet. Deine E-Mail-Adresse und andere grundlegende Kontodaten kannst du hier nicht ändern.",
+    emailFixed:
+      "Deine E-Mail-Adresse kannst du hier nicht ändern. Mit ihr kannst du dich jederzeit per Code anmelden.",
   },
   profile: {
     displayName: "Anzeigename",
@@ -145,6 +145,23 @@ export const settings = {
     cannotBeUndone: "Das lässt sich nicht rückgängig machen.",
     deleteUserWarning:
       "Dadurch werden dein Konto und alle zugehörigen Daten dauerhaft gelöscht. Gib zur Bestätigung unten deine E-Mail-Adresse <strong>{email}</strong> ein. Das lässt sich nicht rückgängig machen.",
+  },
+  passkeys: {
+    title: "Passkeys",
+    count: "{count} eingerichtet",
+    none: "Schneller anmelden, ohne Code",
+    description:
+      "Anmelden per Fingerabdruck, Gesicht oder Displaysperre statt Code.",
+    emptyTitle: "Noch kein Passkey",
+    add: "Passkey hinzufügen",
+    created: "Erstellt am {date}",
+    unnamed: "Passkey",
+    actions: "Passkey-Optionen",
+    rename: "Umbenennen",
+    namePlaceholder: "Name",
+    removeTitle: "Passkey entfernen?",
+    removeBody:
+      "„{name}“ funktioniert danach nicht mehr für Flatsby. Lösch ihn auch in deinem Passwortmanager, sonst wird er dir weiter angeboten. Per E-Mail-Code kommst du immer rein.",
   },
   page: {
     title: "Einstellungen",

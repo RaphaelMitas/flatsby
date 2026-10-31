@@ -18,7 +18,8 @@ import { useTheme } from "~/lib/ui/theme";
 import { useAnalyticsConsent } from "~/utils/analytics/consent";
 import { storesDeviceId } from "~/utils/analytics/posthog";
 import { trpc } from "~/utils/api";
-import { signOut } from "~/utils/auth/auth-client";
+import { authClient, signOut } from "~/utils/auth/auth-client";
+import { passkeysSupported } from "~/utils/auth/passkey-device";
 import { getBaseUrl } from "~/utils/base-url";
 import { useHomeVersion } from "~/utils/home-version";
 import { useLocalePreference } from "~/utils/intl-provider";
@@ -38,6 +39,7 @@ export default function SettingsIndex() {
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
   );
+  const passkeyCount = authClient.useListPasskeys().data?.length ?? 0;
 
   const handleLogout = async () => {
     clearSelectedGroup();
@@ -135,6 +137,20 @@ export default function SettingsIndex() {
               iconName="user"
             />
           </Link>
+          {passkeysSupported && (
+            <Link href="/settings/passkeys" asChild>
+              <SettingsItem
+                testID="settings-passkeys"
+                title={t("settings.passkeys.title")}
+                subtitle={
+                  passkeyCount > 0
+                    ? t("settings.passkeys.count", { count: passkeyCount })
+                    : t("settings.passkeys.none")
+                }
+                iconName="passkey"
+              />
+            </Link>
+          )}
           <SettingsItem
             title={t("settings.items.manageAccount")}
             subtitle={t("settings.items.manageAccountSubtitle")}

@@ -2,7 +2,7 @@ appId: ${APP_ID}
 tags:
   - account
 ---
-# Turning on a consent switch opens the consent sheet, where the choice is made.
+# A consent switch in settings opens the consent sheet, where each switch saves on tap.
 - runFlow: ../../subflows/e2e-login.yaml
 - tapOn: "Settings"
 - openLink: flatsby://settings/analytics

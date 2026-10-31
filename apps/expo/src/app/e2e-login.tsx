@@ -4,7 +4,11 @@ import { Redirect, Stack, useLocalSearchParams } from "expo-router";
 
 import { isLocale } from "@flatsby/i18n/locale";
 
-import { isE2ETestingEnabled, setupE2ESession } from "~/utils/e2e";
+import {
+  isE2ETestingEnabled,
+  setupE2ESession,
+  storeE2EApiUrl,
+} from "~/utils/e2e";
 import { useLocalePreference } from "~/utils/intl-provider";
 
 type E2ELoginState =
@@ -15,7 +19,8 @@ type E2ELoginState =
 /**
  * Test-only deep link target (`flatsby://e2e-login?apiUrl=...`).
  * Creates an isolated test user + session via the web app's e2e endpoint and
- * stores it for the next app launch. Inert outside e2e builds.
+ * stores it for the next app launch. With `signedOut`, only the API URL is
+ * stored, for flows that sign in through the UI. Inert outside e2e builds.
  */
 export default function E2ELoginScreen() {
   const params = useLocalSearchParams<{
@@ -24,6 +29,7 @@ export default function E2ELoginScreen() {
     email?: string;
     seed?: string;
     locale?: string;
+    signedOut?: string;
   }>();
   const { setPreference } = useLocalePreference();
   const [state, setState] = useState<E2ELoginState>({ status: "pending" });
@@ -36,9 +42,15 @@ export default function E2ELoginScreen() {
     typeof params.locale === "string" && isLocale(params.locale)
       ? params.locale
       : undefined;
+  const signedOut = params.signedOut !== undefined;
 
   useEffect(() => {
     if (!isE2ETestingEnabled() || !apiUrl) return;
+    if (signedOut) {
+      storeE2EApiUrl(apiUrl);
+      setState({ status: "done", email: "" });
+      return;
+    }
     setupE2ESession({ apiUrl, name, email, seed, locale })
       .then((session) => {
         if (locale) setPreference(locale);
@@ -50,7 +62,7 @@ export default function E2ELoginScreen() {
           message: error instanceof Error ? error.message : String(error),
         });
       });
-  }, [apiUrl, name, email, seed, locale, setPreference]);
+  }, [apiUrl, name, email, seed, locale, signedOut, setPreference]);
 
   if (!isE2ETestingEnabled()) {
     return <Redirect href="/" />;

@@ -1,6 +1,6 @@
-• Lass dich am Abend vorher um 19:00 erinnern, wenn du dran bist, samt Terminen und offenen Aufgaben. Einschalten im Kalender.
-• Wechsle Gruppen und Listen über die Leiste oben auf Start und Einkaufen.
-• Neu hier? Gruppe gründen oder beitreten in zwei Tipps. Danach lädst du direkt deine Mitbewohner ein.
-• Sieh live, was Mitbewohner abhaken, während die Liste offen ist.
-• Flatsby öffnet mit deinen letzten Daten statt mit einem Ladebildschirm.
+• Einkaufslisten gehen auch ohne Netz und synchronisieren sich, wenn du wieder online bist.
+• Trag Mitbewohner schon vor dem Beitritt ein. Mit der Einladung übernehmen sie ihren Platz samt Ausgaben.
+• Begleichen mit einem Tipp: Hinterleg deinen PayPal.me-Namen, und Mitbewohner öffnen PayPal mit dem Betrag.
+• Melde dich per Code aus der E-Mail an, danach per Passkey.
+• Unter Einstellungen > Analyse entscheidest du, ob Flatsby Bildschirme aufzeichnet.
 • Kleine Fehlerbehebungen und Verbesserungen.

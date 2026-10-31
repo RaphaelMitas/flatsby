@@ -5,8 +5,63 @@ export const auth = {
     signingInWithGoogle: "Signing in with Google",
     signInWithApple: "Sign in with Apple",
     signingInWithApple: "Signing in with Apple",
+    google: "Google",
+    apple: "Apple",
+    email: "Email address",
+    emailPlaceholder: "name@example.com",
+    continueWithEmail: "Continue with email",
+    signInWithPasskey: "Sign in with a passkey",
+    sendingCode: "Sending code",
+    or: "or",
     agreement:
       "By signing in, you agree to our <terms>Terms</terms>. Our <privacy>Privacy Policy</privacy> explains how we handle your data.",
+  },
+  code: {
+    title: "Enter your code",
+    sentTo:
+      "We sent a {length}-digit code to <b>{email}</b>. It expires in {minutes} minutes.",
+    changeEmail: "Use a different email",
+    notArrived: "Nothing arrived? Check your spam folder.",
+    resendIn: "Send a new code in {seconds}s",
+    resend: "Send a new code",
+    resent: "Code sent again. Use the one in the newest email.",
+    invalid: "That code isn't right. Check it and try again.",
+    expired: "This code has expired. Request a new one.",
+    tooManyAttempts: "Too many wrong attempts. Request a new code.",
+    tooManyRequests: "Too many tries. Wait a minute and try again.",
+    tooManyCodes: "Too many codes for this address. Try again in an hour.",
+    failed: "Something went wrong. Please try again.",
+  },
+  passkey: {
+    title: "Skip the code next time?",
+    bodyIos:
+      "With a passkey you sign in with Face ID or Touch ID. It lives in your iCloud Keychain and works on all your Apple devices.",
+    bodyAndroid:
+      "With a passkey you sign in with your fingerprint or screen lock. It lives in Google Password Manager and works on all your Android devices.",
+    bodyWeb:
+      "With a passkey you sign in with your fingerprint, face or device PIN instead of waiting for an email.",
+    create: "Set up a passkey",
+    later: "Not now",
+    createdTitle: "Passkey set up",
+    createdBody: "Next time, a glance or a fingerprint is enough.",
+    continue: "Let's go",
+    failed: "That didn't work. Please try again.",
+    signInAgain:
+      "For your security, sign out and back in once, then you can add a passkey.",
+  },
+  name: {
+    title: "What should your flatmates call you?",
+    placeholder: "Your name",
+    hint: "You can change it later in the settings.",
+    continue: "Continue",
+  },
+  signInCodeEmail: {
+    subject: "{code} is your Flatsby code",
+    preview: "Hi! Here's your code. It expires in {minutes} minutes.",
+    heading: "Hi!",
+    intro: "Here's your Flatsby code:",
+    footnote:
+      "Expires in {minutes} minutes · didn't ask for it? Just ignore this email.",
   },
   consent: {
     title: "Welcome to Flatsby",

@@ -16,6 +16,7 @@ import {
   expenseSplits,
   groupMembers,
   groups,
+  passkeys,
   sessions,
   shoppingListItems,
   shoppingLists,
@@ -28,8 +29,7 @@ import { DEFAULT_CHAT_MODEL } from "@flatsby/validators/models";
 
 import { auth } from "~/auth/server";
 import { env } from "~/env";
-
-const E2E_EMAIL_DOMAIN = "flatsby.test";
+import { E2E_EMAIL_DOMAIN } from "../email-domain";
 
 /**
  * E2E-only route: creates a unique test user, group, and session per call via
@@ -789,6 +789,7 @@ export async function DELETE() {
   if (userIds.length > 0) {
     await db.delete(sessions).where(inArray(sessions.userId, userIds));
     await db.delete(accounts).where(inArray(accounts.userId, userIds));
+    await db.delete(passkeys).where(inArray(passkeys.userId, userIds));
     await db.delete(users).where(inArray(users.id, userIds));
   }
 

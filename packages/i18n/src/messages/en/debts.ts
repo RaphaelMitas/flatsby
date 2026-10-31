@@ -67,5 +67,10 @@ export const debts = {
     share: "Share",
     shareMessage: "{amount} via PayPal: {url}",
     paidRecord: "I've paid, record it",
+    faster: "Want to get paid even faster?",
+    fasterBody:
+      "Add your PayPal.me name, and housemates open PayPal with the amount filled in.",
+    fasterAction: "Add PayPal.me",
+    fasterDismiss: "Dismiss",
   },
 };
