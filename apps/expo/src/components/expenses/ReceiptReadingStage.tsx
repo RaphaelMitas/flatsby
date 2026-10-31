@@ -111,7 +111,9 @@ export function ReceiptReadingStage({
       enter.set(reduced ? 1 : withSpring(1, { damping: 18, stiffness: 140 }));
       settle.set(0);
       catY.set(HIDDEN);
-      catY.set(withSpring(0, { damping: 13 }));
+      catY.set(
+        withTiming(0, { duration: 450, easing: Easing.out(Easing.cubic) }),
+      );
       catTurn.set(0);
       fog.set(0);
       panelY.set(HIDDEN);
@@ -138,7 +140,9 @@ export function ReceiptReadingStage({
       );
       catY.set(withTiming(HIDDEN, { duration: 260 }));
       panelY.set(withSpring(0, { damping: 17, stiffness: 150 }));
-      peekY.set(withSpring(0, { damping: 12 }));
+      peekY.set(
+        withTiming(0, { duration: 320, easing: Easing.out(Easing.cubic) }),
+      );
     }
     if (phase === "failing") {
       cancelAnimation(walk);
@@ -207,8 +211,8 @@ export function ReceiptReadingStage({
     if (revealed.length === 0 || reduced) return;
     catDip.set(
       withSequence(
-        withTiming(7, { duration: 120 }),
-        withSpring(0, { damping: 8 }),
+        withTiming(4, { duration: 120 }),
+        withTiming(0, { duration: 200 }),
       ),
     );
   }, [revealed.length, reduced, catDip]);
