@@ -1,3 +1,4 @@
+import type { ReceiptTextLine } from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import { useEffect, useState } from "react";
 import {
@@ -29,6 +30,8 @@ import { scheduleOnRN } from "react-native-worklets";
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslations } from "use-intl";
+
+import { receiptMarks } from "@flatsby/validators/expenses/receipt-scan";
 
 import { Button } from "~/lib/ui/button";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
@@ -62,10 +65,12 @@ export function ReceiptReadingStage({
   receiptScan,
   photo,
   origin,
+  lines,
 }: {
   receiptScan: ReceiptScan;
   photo?: StagePhoto;
   origin?: StageOrigin;
+  lines: ReceiptTextLine[];
 }) {
   const t = useTranslations("expenses.receiptScan");
   const tCommon = useTranslations("common");
@@ -86,6 +91,9 @@ export function ReceiptReadingStage({
   const lensOn = useSharedValue(0);
   const fog = useSharedValue(0);
   const walk = useSharedValue(0);
+  const focus = useSharedValue(0);
+  const targetX = useSharedValue(0);
+  const targetY = useSharedValue(0);
   const panelY = useSharedValue(HIDDEN);
   const peekY = useSharedValue(PEEK);
 
@@ -120,6 +128,7 @@ export function ReceiptReadingStage({
       peekY.set(PEEK);
       lensOn.set(withTiming(1, { duration: 300 }));
       walk.set(0);
+      focus.set(0);
       if (!reduced) {
         walk.set(
           withRepeat(
@@ -185,6 +194,7 @@ export function ReceiptReadingStage({
     peekY,
     lensOn,
     walk,
+    focus,
   ]);
 
   const failing = phase === "failing";
@@ -207,21 +217,58 @@ export function ReceiptReadingStage({
     if (spoken) AccessibilityInfo.announceForAccessibility(spoken);
   }, [spoken]);
 
+  const marks =
+    receiptScan.scanned && lines.length > 0
+      ? receiptMarks(lines, receiptScan.scanned)
+      : {};
+  const latest = revealed.at(-1);
+  const latestMark = latest && marks[latest];
+
   useEffect(() => {
-    if (revealed.length === 0 || reduced) return;
+    if (!latest || reduced) return;
     catDip.set(
       withSequence(
         withTiming(4, { duration: 120 }),
         withTiming(0, { duration: 200 }),
       ),
     );
-  }, [revealed.length, reduced, catDip]);
+    if (!latestMark) return;
+    const x = (latestMark.x + latestMark.width / 2) * boxW;
+    const y = (latestMark.y + latestMark.height / 2) * boxH;
+    const glide = { duration: 300, easing: Easing.inOut(Easing.quad) };
+    if (focus.get() < 1) {
+      targetX.set(x);
+      targetY.set(y);
+      focus.set(withTiming(1, glide));
+    } else {
+      targetX.set(withTiming(x, glide));
+      targetY.set(withTiming(y, glide));
+    }
+  }, [
+    latest,
+    latestMark,
+    reduced,
+    boxW,
+    boxH,
+    catDip,
+    focus,
+    targetX,
+    targetY,
+  ]);
 
-  const lensX = useDerivedValue(
-    () => interpolate(walk.get(), STEPS, PATH_X) * boxW,
+  const lensX = useDerivedValue(() =>
+    interpolate(
+      focus.get(),
+      [0, 1],
+      [interpolate(walk.get(), STEPS, PATH_X) * boxW, targetX.get()],
+    ),
   );
-  const lensY = useDerivedValue(
-    () => interpolate(walk.get(), STEPS, PATH_Y) * boxH,
+  const lensY = useDerivedValue(() =>
+    interpolate(
+      focus.get(),
+      [0, 1],
+      [interpolate(walk.get(), STEPS, PATH_Y) * boxH, targetY.get()],
+    ),
   );
   const look = useDerivedValue(
     () =>
@@ -363,6 +410,27 @@ export function ReceiptReadingStage({
             source={{ uri: photo.uri }}
             style={{ width: boxW, height: boxH, borderRadius: 6 }}
           />
+          {revealed.map((tag) => {
+            const mark = marks[tag];
+            return (
+              mark && (
+                <Animated.View
+                  key={tag}
+                  pointerEvents="none"
+                  entering={FadeIn.delay(reduced ? 0 : 260)}
+                  style={{
+                    position: "absolute",
+                    left: mark.x * boxW - 3,
+                    top: mark.y * boxH - 2,
+                    width: mark.width * boxW + 6,
+                    height: mark.height * boxH + 4,
+                    borderRadius: 3,
+                    backgroundColor: "rgba(250, 204, 21, 0.45)",
+                  }}
+                />
+              )
+            );
+          })}
           <Animated.View
             pointerEvents="none"
             style={[

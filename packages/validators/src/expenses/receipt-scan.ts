@@ -155,7 +155,7 @@ export interface StageEvent {
 
 // A fast answer still gets one look over the receipt, so the stage never flashes
 export const MIN_READING_MS = 1200;
-const REVEAL_GAP_MS = 400;
+const REVEAL_GAP_MS = 550;
 const PREVIEW_AFTER_MS = 600;
 const FAILING_MS = 1800;
 
@@ -188,4 +188,67 @@ export function stageTimeline({
       phase: "preview",
     },
   ];
+}
+
+export const receiptTextLineSchema = z.object({
+  text: z.string(),
+  x: z.number(),
+  y: z.number(),
+  width: z.number(),
+  height: z.number(),
+});
+export type ReceiptTextLine = z.infer<typeof receiptTextLineSchema>;
+export type ReceiptBox = Omit<ReceiptTextLine, "text">;
+
+const TOTAL_WORDS = /summe|total|gesamt|zu zahlen|betrag|amount|due/i;
+const squash = (text: string) =>
+  text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+
+// Finds where on the photo each value the model read is printed
+export function receiptMarks(
+  lines: ReceiptTextLine[],
+  scan: ReceiptScan,
+): Partial<Record<StageTag, ReceiptBox>> {
+  const ordered = [...lines].sort((a, b) => a.y - b.y);
+  const onRowWith = (line: ReceiptTextLine, words: RegExp) =>
+    ordered.some(
+      (other) =>
+        words.test(other.text) &&
+        Math.abs(other.y + other.height / 2 - (line.y + line.height / 2)) <
+          line.height,
+    );
+  const box = (line?: ReceiptTextLine) =>
+    line && {
+      x: line.x,
+      y: line.y,
+      width: line.width,
+      height: line.height,
+    };
+
+  const store = scan.description && squash(scan.description);
+  const marks: Partial<Record<StageTag, ReceiptBox>> = {};
+  if (store && store.length > 1) {
+    marks.store = box(
+      ordered.find((line) => squash(line.text).includes(store)),
+    );
+  }
+  if (scan.amountInCents !== null) {
+    const whole = Math.floor(scan.amountInCents / 100);
+    const cents = String(scan.amountInCents % 100).padStart(2, "0");
+    const amount = new RegExp(`(^|\\D)${whole}[.,]${cents}(\\D|$)`);
+    const hits = ordered.filter((line) => amount.test(line.text));
+    marks.amount = box(
+      hits.find((line) => onRowWith(line, TOTAL_WORDS)) ?? hits[0],
+    );
+  }
+  if (scan.expenseDay !== null) {
+    const [year = "", month = "", day = ""] = scan.expenseDay.split("-");
+    const d = String(Number(day));
+    const m = String(Number(month));
+    const date = new RegExp(
+      `(^|\\D)0?${d}[./-]0?${m}[./-](${year}|${year.slice(2)})(\\D|$)|${scan.expenseDay}`,
+    );
+    marks.date = box(ordered.find((line) => date.test(line.text)));
+  }
+  return marks;
 }

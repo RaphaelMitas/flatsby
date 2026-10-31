@@ -4,6 +4,7 @@ import type { ReceiptReading } from "./receipt-scan";
 import {
   isEmptyReceiptScan,
   MIN_READING_MS,
+  receiptMarks,
   receiptReport,
   receiptScanFrom,
   stageTimeline,
@@ -146,5 +147,47 @@ describe("stageTimeline", () => {
   it("skips the waiting when motion is reduced", () => {
     const events = stageTimeline({ scan, readingFor: 0, reduced: true });
     expect(events.every((e) => e.at <= 150)).toBe(true);
+  });
+});
+
+describe("receiptMarks", () => {
+  const line = (text: string, y: number, x = 0.1) => ({
+    text,
+    x,
+    y,
+    width: 0.3,
+    height: 0.02,
+  });
+  const scan = {
+    amountInCents: 2347,
+    currency: "EUR" as const,
+    expenseDay: "2026-10-29",
+    description: "REWE",
+  };
+
+  it("finds the total on the row that says it is the total", () => {
+    const marks = receiptMarks(
+      [
+        line("Geg. EC-Karte 23,47", 0.7),
+        line("SUMME EUR", 0.6),
+        line("23,47", 0.6, 0.7),
+        line("PARMIGIANO 123,47", 0.4),
+        line("R E W E", 0.05),
+        line("29.10.26 18:42 Bon 4417", 0.8),
+      ],
+      scan,
+    );
+    expect(marks.amount?.y).toBe(0.6);
+    expect(marks.amount?.x).toBe(0.7);
+    expect(marks.store?.y).toBe(0.05);
+    expect(marks.date?.y).toBe(0.8);
+  });
+
+  it("leaves out what isn't printed", () => {
+    expect(receiptMarks([line("Danke", 0.5)], scan)).toEqual({
+      store: undefined,
+      amount: undefined,
+      date: undefined,
+    });
   });
 });

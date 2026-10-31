@@ -201,6 +201,7 @@ export function useReceiptScan({
   return {
     state,
     stage: { ...stage, caption },
+    scanned: lastScan,
     justApplied,
     preview,
     scan,

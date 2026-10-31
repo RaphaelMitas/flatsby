@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import type { ReceiptTextLine } from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import type { ImagePickerOptions } from "expo-image-picker";
 import type { ComponentRef, ReactNode } from "react";
@@ -25,6 +26,7 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 import { SheetModal } from "~/lib/ui/sheet-modal";
 import { cn, useThemeColors } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { recognizeLines } from "../../../modules/receipt-text";
 import { Snores } from "../home/Snores";
 import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
@@ -59,6 +61,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const card = useRef<ComponentRef<typeof View>>(null);
   const [photo, setPhoto] = useState<StagePhoto>();
   const [origin, setOrigin] = useState<StageOrigin>();
+  const [lines, setLines] = useState<ReceiptTextLine[]>([]);
   const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
   const { state } = receiptScan;
 
@@ -80,6 +83,8 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
     card.current?.measureInWindow((x, y, width, height) =>
       setOrigin({ x, y, width, height }),
     );
+    setLines([]);
+    void recognizeLines(asset.uri).then(setLines);
     void receiptScan.scan(() => receiptBase64(asset.uri));
   };
 
@@ -213,6 +218,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         receiptScan={receiptScan}
         photo={photo}
         origin={origin}
+        lines={lines}
       />
     </View>
   );
