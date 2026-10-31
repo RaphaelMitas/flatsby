@@ -13,26 +13,25 @@ import { useTranslations } from "use-intl";
 
 const SNORE_SIZES = ["text-xs", "text-sm", "text-base"];
 
-/** drift is -1 when the z's should float to the left of the cat */
 export function Snores({
   className,
   style,
-  drift = -1,
+  drift = "left",
 }: {
   className?: string;
   style?: ViewStyle;
-  drift?: 1 | -1;
+  drift?: "left" | "right";
 }) {
   return (
     <View pointerEvents="none" style={style} className={className}>
       {[0, 1, 2].map((index) => (
-        <Snore key={index} index={index} drift={drift} />
+        <Snore key={index} index={index} sign={drift === "left" ? -1 : 1} />
       ))}
     </View>
   );
 }
 
-function Snore({ index, drift }: { index: number; drift: 1 | -1 }) {
+function Snore({ index, sign }: { index: number; sign: number }) {
   const t = useTranslations("home.new.cat");
   const progress = useSharedValue(0);
 
@@ -48,7 +47,7 @@ function Snore({ index, drift }: { index: number; drift: 1 | -1 }) {
   const style = useAnimatedStyle(() => ({
     opacity: interpolate(progress.get(), [0, 0.2, 1], [0, 1, 0]),
     transform: [
-      { translateX: drift * 16 * progress.get() },
+      { translateX: sign * 16 * progress.get() },
       { translateY: -30 * progress.get() },
     ],
   }));

@@ -226,7 +226,7 @@ function SleepingCat({ size }: { size: number }) {
       <FlatsbyCat size={size} color={getColor("primary")} asleep />
       {!reduced && (
         <Snores
-          drift={1}
+          drift="right"
           className="absolute"
           style={{ left: size * 0.8, top: size * 0.15 }}
         />

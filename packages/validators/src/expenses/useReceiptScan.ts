@@ -145,6 +145,13 @@ export function useReceiptScan({
     setState({ status: "idle" });
   };
 
+  // Closing a failed read keeps the error for the card to explain
+  const dismiss = () => {
+    if (stage.phase !== "failing") return reset();
+    clearTimers();
+    setStage({ phase: "closed", revealed: [] });
+  };
+
   const apply = () => {
     if (state.status !== "found" || !lastScan) return;
     const filled = filledBy(lastScan);
@@ -199,6 +206,7 @@ export function useReceiptScan({
     scan,
     fail,
     reset,
+    dismiss,
     apply,
     // Tells us how often people correct what the scan filled in
     report: (values: ReceiptFormValues) =>

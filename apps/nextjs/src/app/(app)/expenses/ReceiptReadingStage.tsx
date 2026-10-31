@@ -37,7 +37,7 @@ export function ReceiptReadingStage({
     <Dialog
       open={phase !== "closed" && !!photoUrl}
       onOpenChange={(open) => {
-        if (!open) receiptScan.reset();
+        if (!open) receiptScan.dismiss();
       }}
     >
       <DialogContent

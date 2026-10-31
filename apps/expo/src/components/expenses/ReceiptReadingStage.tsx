@@ -277,7 +277,7 @@ export function ReceiptReadingStage({
       transparent
       animationType="none"
       statusBarTranslucent
-      onRequestClose={receiptScan.reset}
+      onRequestClose={receiptScan.dismiss}
     >
       <Animated.View
         testID="receipt-scan-stage"
@@ -292,7 +292,7 @@ export function ReceiptReadingStage({
           testID="receipt-scan-close"
           accessibilityRole="button"
           accessibilityLabel={tCommon("close")}
-          onPress={receiptScan.reset}
+          onPress={receiptScan.dismiss}
           hitSlop={8}
           style={{ position: "absolute", top: insets.top + 8, left: 16 }}
           className="bg-muted size-10 items-center justify-center rounded-full"
