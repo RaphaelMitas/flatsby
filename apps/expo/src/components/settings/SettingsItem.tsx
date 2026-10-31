@@ -28,11 +28,11 @@ export const SettingsItem = ({
     <Pressable
       testID={testID}
       onPress={onPress}
-      className={`border-border bg-card active:bg-muted flex-row items-center justify-between border-b px-4 py-3 ${
+      className={`border-border bg-card active:bg-muted flex-row items-center justify-between gap-3 border-b px-4 py-3 ${
         isDestructive ? "bg-destructive/10" : ""
       }`}
     >
-      <View className="flex-row items-center gap-3">
+      <View className="flex-1 flex-row items-center gap-3">
         <View
           className={`h-8 w-8 items-center justify-center rounded-full ${
             isDestructive ? "bg-destructive/20" : "bg-primary/10"
@@ -44,7 +44,7 @@ export const SettingsItem = ({
             color={isDestructive ? "destructive" : "primary"}
           />
         </View>
-        <View>
+        <View className="flex-1">
           <Text
             className={`text-base font-medium ${
               isDestructive ? "text-destructive" : "text-foreground"

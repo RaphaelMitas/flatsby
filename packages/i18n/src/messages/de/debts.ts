@@ -69,5 +69,10 @@ export const debts = {
     share: "Teilen",
     shareMessage: "{amount} per PayPal: {url}",
     paidRecord: "Bezahlt, jetzt erfassen",
+    faster: "Willst du noch schneller bezahlt werden?",
+    fasterBody:
+      "Hinterleg deinen PayPal.me-Namen, dann öffnen Mitbewohner PayPal mit dem Betrag.",
+    fasterAction: "PayPal.me hinterlegen",
+    fasterDismiss: "Ausblenden",
   },
 } satisfies Messages["debts"];

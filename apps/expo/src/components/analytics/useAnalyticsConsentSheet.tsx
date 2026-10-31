@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { AnalyticsConsent } from "@flatsby/validators/user";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -17,37 +17,26 @@ export function useAnalyticsConsentSheet() {
   const t = useTranslations("settings.analytics");
   const locale = useLocale();
   const sheetRef = useRef<BottomSheetModal>(null);
-  const current = useAnalyticsConsent();
+  const consent = useAnalyticsConsent();
   const save = useSaveAnalyticsConsent();
-  const [draft, setDraft] = useState(current);
 
-  const open = (preset: AnalyticsConsent) => {
-    setDraft(preset);
-    sheetRef.current?.present();
-  };
-
-  const done = () => {
-    if (
-      draft.screens !== current.screens ||
-      draft.recordings !== current.recordings
-    )
-      save(draft);
-    sheetRef.current?.dismiss();
-  };
+  const open = () => sheetRef.current?.present();
+  const set = (key: keyof AnalyticsConsent, on: boolean) =>
+    save({ ...consent, [key]: on });
 
   const row = (key: keyof AnalyticsConsent, title: string, body: string) => (
     <Pressable
       testID={`analytics-sheet-${key}`}
       className="flex-row items-center justify-between gap-3 py-2"
-      onPress={() => setDraft({ ...draft, [key]: !draft[key] })}
+      onPress={() => set(key, !consent[key])}
     >
       <View className="flex-1">
         <Text className="text-foreground text-base font-medium">{title}</Text>
         <Text className="text-muted-foreground text-sm">{body}</Text>
       </View>
       <Switch
-        checked={draft[key]}
-        onCheckedChange={(checked) => setDraft({ ...draft, [key]: checked })}
+        checked={consent[key]}
+        onCheckedChange={(checked) => set(key, checked)}
       />
     </Pressable>
   );
@@ -76,7 +65,7 @@ export function useAnalyticsConsentSheet() {
           testID="analytics-sheet-done"
           title={t("done")}
           variant="outline"
-          onPress={done}
+          onPress={() => sheetRef.current?.dismiss()}
         />
       </View>
     </SheetModal>
