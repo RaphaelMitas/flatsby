@@ -1,8 +1,7 @@
 import type { debtHero } from "@flatsby/validators/expenses/formatting";
 
 import { cn } from "@flatsby/ui";
-
-import { amountTone } from "./debtDisplay";
+import { amountTone } from "@flatsby/validators/expenses/formatting";
 
 export function DebtHero({ hero }: { hero: ReturnType<typeof debtHero> }) {
   const { label, amounts } = hero;

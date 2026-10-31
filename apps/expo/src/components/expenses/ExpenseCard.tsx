@@ -10,11 +10,9 @@ import { PostHogMaskView } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
-import {
-  formatExpenseAmounts,
-  memberPerson,
-} from "@flatsby/validators/expenses/formatting";
+import { describeExpenseRow } from "@flatsby/validators/expenses/formatting";
 
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
@@ -25,6 +23,9 @@ import { useInvalidateExpenses } from "./useInvalidateExpenses";
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
   groupId: number;
+  meId: number;
+  first: boolean;
+  last: boolean;
   onEdit: () => void;
   onDelete?: () => void;
   isSelected?: boolean;
@@ -35,6 +36,9 @@ interface ExpenseCardProps {
 export function ExpenseCard({
   expense,
   groupId,
+  meId,
+  first,
+  last,
   onEdit,
   onDelete,
   isSelected,
@@ -92,20 +96,33 @@ export function ExpenseCard({
     ),
   );
 
-  const splitCount = expense.expenseSplits.length;
-  const amounts = formatExpenseAmounts(expense, locale);
-  const expenseDate = new Date(expense.expenseDate);
-  const fromMember = expense.expenseSplits[0]?.groupMember;
+  const row = describeExpenseRow(expense, { meId, isNotConverted }, t, locale);
+  const accessibilityLabel = [
+    row.title,
+    row.category,
+    row.payer,
+    row.paid,
+    row.date,
+    row.amount,
+    row.balance?.text,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
+  const corners = cn(
+    "rounded-none",
+    first && "rounded-t-lg",
+    last && "rounded-b-lg",
+  );
   const { swipeableProps, guardPress } = useSwipeActions({
     leftAction: {
       text: t("common.edit"),
-      className: "bg-info",
+      className: cn("bg-info", corners),
       textClassName: "text-info-foreground",
     },
     rightAction: {
       text: t("common.delete"),
-      className: "bg-destructive",
+      className: cn("bg-destructive", corners),
       textClassName: "text-destructive-foreground",
     },
   });
@@ -148,20 +165,15 @@ export function ExpenseCard({
           <Pressable
             testID={`expense-card-${expense.description}`}
             accessible={e2eAccessibilityOverride()}
+            accessibilityLabel={accessibilityLabel}
             onPress={guardPress(onSelect)}
             disabled={isOptimistic}
           >
             <ExpenseDisplay
-              amounts={amounts}
-              isNotConverted={isNotConverted}
-              description={expense.description}
-              paidBy={memberPerson(expense.paidByGroupMember)}
-              expenseDate={expenseDate}
-              splitMethod={expense.splitMethod}
-              splitCount={splitCount}
+              row={row}
               subcategory={expense.subcategory}
-              from={fromMember && memberPerson(fromMember)}
               isSelected={isSelected}
+              className={cn(corners, last && "border-b")}
             />
           </Pressable>
         </ReanimatedSwipeable>
@@ -171,10 +183,10 @@ export function ExpenseCard({
         visible={showDeleteModal}
         onClose={handleCloseModal}
         onConfirm={handleDelete}
-        itemName={expense.description || amounts.amount}
+        itemName={row.title}
         title={t("expenses.deleteExpense")}
         description={
-          expense.splitMethod === "settlement"
+          row.isSettlement
             ? t("expenses.deleteSettlementConfirm")
             : t("expenses.deleteExpenseConfirm")
         }

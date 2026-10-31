@@ -11,7 +11,7 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
   slug: "flatsby",
   scheme: "flatsby",
   owner: "flatsby",
-  version: "0.16.0",
+  version: "0.17.0",
   orientation: "portrait",
   icon: "./assets/ios-light.png",
   userInterfaceStyle: "automatic",
@@ -19,7 +19,7 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: "com.flatcove.app.v2",
     supportsTablet: true,
-    associatedDomains: [`applinks:${WEB_HOST}`],
+    associatedDomains: [`applinks:${WEB_HOST}`, `webcredentials:${WEB_HOST}`],
     icon: {
       light: "./assets/ios-light.png",
       dark: "./assets/ios-dark.png",

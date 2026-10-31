@@ -2,7 +2,8 @@ import type { Messages } from "../../messages";
 
 export const expenses = {
   settlement: "Ausgleich",
-  paidBy: "Bezahlt von {name}",
+  settlementTitle: "{from} → {to}",
+  notInvolved: "nicht beteiligt",
   splitBetween:
     "Aufgeteilt auf {count, plural, one {# Person} other {# Personen}}",
   add: "Hinzufügen",

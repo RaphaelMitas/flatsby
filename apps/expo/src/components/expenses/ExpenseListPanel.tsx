@@ -10,13 +10,14 @@ import {
   useInfiniteQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 
 import {
   expenseSearchView,
   useExpenseFilters,
 } from "@flatsby/api/hooks/useExpenseFilters";
 import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
+import { withMonthHeaders } from "@flatsby/validators/expenses/formatting";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { PullToRefresh } from "~/lib/components/pull-to-refresh";
@@ -55,6 +56,7 @@ export function ExpenseListPanel() {
 function ExpenseList() {
   const router = useRouter();
   const t = useTranslations();
+  const locale = useLocale();
   const { selectedGroupId } = useShoppingStore();
   const isLargeScreen = useMediaQuery("md");
   const { expenseId } = useGlobalSearchParams<{ expenseId?: string }>();
@@ -213,24 +215,43 @@ function ExpenseList() {
           {(refreshProps) => (
             <FlashList
               {...refreshProps}
-              data={search.rows}
+              data={withMonthHeaders(search.rows, locale)}
               keyboardDismissMode="on-drag"
               keyboardShouldPersistTaps="handled"
-              ItemSeparatorComponent={() => <View className="h-3" />}
-              renderItem={({ item }) => (
-                <ExpenseCard
-                  expense={item}
-                  groupId={selectedGroupId ?? -1}
-                  isSelected={isLargeScreen && item.id.toString() === expenseId}
-                  onSelect={() =>
-                    item.id.toString() === expenseId
-                      ? router.dismissTo(`/(tabs)/expenses/${item.id}`)
-                      : open(`/(tabs)/expenses/${item.id}`)
-                  }
-                  onEdit={() => handleEdit(item)}
-                  isNotConverted={isLeftUnconverted(item, groupData.data)}
-                />
-              )}
+              getItemType={(item) => item.type}
+              renderItem={({ item }) =>
+                item.type === "month" ? (
+                  <Text
+                    accessibilityRole="header"
+                    className="text-muted-foreground px-1 pt-4 pb-2 text-sm font-semibold"
+                  >
+                    {item.label}
+                  </Text>
+                ) : (
+                  <ExpenseCard
+                    expense={item.expense}
+                    groupId={selectedGroupId ?? -1}
+                    meId={groupData.data.thisGroupMember.id}
+                    first={item.first}
+                    last={item.last}
+                    isSelected={
+                      isLargeScreen && item.expense.id.toString() === expenseId
+                    }
+                    onSelect={() =>
+                      item.expense.id.toString() === expenseId
+                        ? router.dismissTo(
+                            `/(tabs)/expenses/${item.expense.id}`,
+                          )
+                        : open(`/(tabs)/expenses/${item.expense.id}`)
+                    }
+                    onEdit={() => handleEdit(item.expense)}
+                    isNotConverted={isLeftUnconverted(
+                      item.expense,
+                      groupData.data,
+                    )}
+                  />
+                )
+              }
               onEndReached={search.loadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={

@@ -67,7 +67,7 @@ export default function AccountScreen() {
             {t("settings")}
           </Text>
           <Text className="text-muted-foreground text-sm leading-6">
-            {t("managedByProvider")}
+            {t("emailFixed")}
           </Text>
         </Card>
       </AppScrollView>

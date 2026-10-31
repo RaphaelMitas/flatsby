@@ -19,13 +19,13 @@ import { Card } from "@flatsby/ui/card";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
+  amountTone,
   describePairActivity,
   formatCurrencyFromCents,
   formatSignedCents,
 } from "@flatsby/validators/expenses/formatting";
 
 import { useTRPC } from "~/trpc/react";
-import { amountTone } from "./debtDisplay";
 
 interface DirectDebtsCardProps {
   groupId: number;

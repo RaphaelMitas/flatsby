@@ -1,4 +1,3 @@
-import type { AnalyticsConsent } from "@flatsby/validators/user";
 import { Text } from "react-native";
 import {
   useMutation,
@@ -12,10 +11,7 @@ import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Switch } from "~/lib/ui/switch";
-import {
-  useAnalyticsConsent,
-  useSaveAnalyticsConsent,
-} from "~/utils/analytics/consent";
+import { useAnalyticsConsent } from "~/utils/analytics/consent";
 import { trpc } from "~/utils/api";
 import { openLegalPage } from "~/utils/legal";
 
@@ -26,7 +22,6 @@ export default function AnalyticsSettings() {
   const userQuery = trpc.user.getCurrentUser;
   const { data: user } = useSuspenseQuery(userQuery.queryOptions());
   const consent = useAnalyticsConsent();
-  const save = useSaveAnalyticsConsent();
   const { open, sheet } = useAnalyticsConsentSheet();
 
   const setOptOut = useMutation(
@@ -40,13 +35,6 @@ export default function AnalyticsSettings() {
       onSettled: () => queryClient.invalidateQueries(userQuery.queryFilter()),
     }),
   );
-
-  // Turning one on goes through the sheet, so consent is always given with the full information
-  const toggle = (key: keyof AnalyticsConsent, on: boolean) => {
-    const next = { ...consent, [key]: on };
-    if (on) open(next);
-    else save(next);
-  };
 
   const usageOn = !user.analyticsOptOut;
 
@@ -73,12 +61,9 @@ export default function AnalyticsSettings() {
           title={t("screens")}
           subtitle={t("screensBody")}
           iconName="smartphone"
-          onPress={() => toggle("screens", !consent.screens)}
+          onPress={open}
           rightContent={
-            <Switch
-              checked={consent.screens}
-              onCheckedChange={(on) => toggle("screens", on)}
-            />
+            <Switch checked={consent.screens} onCheckedChange={open} />
           }
         />
         <SettingsItem
@@ -86,12 +71,9 @@ export default function AnalyticsSettings() {
           title={t("recordings")}
           subtitle={t("recordingsBody")}
           iconName="video"
-          onPress={() => toggle("recordings", !consent.recordings)}
+          onPress={open}
           rightContent={
-            <Switch
-              checked={consent.recordings}
-              onCheckedChange={(on) => toggle("recordings", on)}
-            />
+            <Switch checked={consent.recordings} onCheckedChange={open} />
           }
         />
       </SettingsSection>

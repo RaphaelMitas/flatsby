@@ -1,0 +1,61 @@
+appId: ${APP_ID}
+tags:
+  - auth
+---
+# Mirrors the sign-up test in apps/nextjs/e2e/auth/email-code.spec.ts
+- runFlow:
+    file: ../../subflows/e2e-login.yaml
+    env:
+      E2E_SIGNED_OUT: "1"
+- evalScript: "${output.codeEmail = 'code-' + Date.now() + '-' + Math.floor(Math.random() * 1e6) + '@flatsby.test'}"
+- tapOn:
+    id: "sign-in-email-input"
+- inputText: ${output.codeEmail}
+# The email button stays above the keyboard, and hideKeyboard can't dismiss it on iOS here
+- tapOn:
+    id: "sign-in-email-button"
+- extendedWaitUntil:
+    visible:
+      id: "code-screen"
+    timeout: 30000
+- runScript:
+    file: sign-in-code.js
+    env:
+      EMAIL: ${output.codeEmail}
+- evalScript: "${output.wrongCode = output.signInCode === '000000' ? '111111' : '000000'}"
+- tapOn:
+    id: "code-input"
+- inputText: ${output.wrongCode}
+- extendedWaitUntil:
+    visible:
+      id: "code-error"
+    timeout: 15000
+- inputText: ${output.signInCode}
+- extendedWaitUntil:
+    visible:
+      id: "name-screen"
+    timeout: 30000
+- tapOn:
+    id: "name-input"
+- eraseText: 64
+- inputText: "Code User"
+- hideKeyboard
+- tapOn:
+    id: "name-continue-button"
+# The system passkey sheet needs the real domain, so the flow declines the offer
+- extendedWaitUntil:
+    visible:
+      id: "passkey-offer-screen"
+    timeout: 30000
+- tapOn:
+    id: "passkey-offer-later"
+# A new account has no household yet, so home offers to start or join one
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-title"
+    timeout: 30000
+- openLink: flatsby://settings/passkeys
+- extendedWaitUntil:
+    visible:
+      id: "passkeys-empty"
+    timeout: 30000

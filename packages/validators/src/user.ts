@@ -21,6 +21,33 @@ export const userEmailSchema = z.email({
 
 export const userImageSchema = z.string().optional().nullable();
 
+const GMAIL_DOMAINS = new Set(["gmail.com", "googlemail.com"]);
+
+// Gmail ignores dots in the local part
+export function inboxOf(email: string) {
+  const [local = "", domain = ""] = email.toLowerCase().split("@");
+  const untagged = local.split("+")[0] ?? "";
+  return GMAIL_DOMAINS.has(domain)
+    ? `${untagged.replaceAll(".", "")}@gmail.com`
+    : `${untagged}@${domain}`;
+}
+
+// Email codes and Apple's hidden name bring no name, so the address's local part stands in
+export const defaultUserName = (email: string) => email.split("@")[0] || email;
+
+// Wide enough for a phone clock that runs a few minutes off
+const JUST_CREATED_MS = 10 * 60 * 1000;
+
+export interface SignedInUser {
+  name: string;
+  email: string;
+  createdAt: Date;
+}
+
+export const asksForName = (user: SignedInUser, now = Date.now()) =>
+  now - new Date(user.createdAt).getTime() < JUST_CREATED_MS &&
+  user.name === defaultUserName(user.email);
+
 export const userSchema = z.object({
   id: z.string(),
   name: userNameSchema,
@@ -113,6 +140,13 @@ export const userDataExportSchema = z.object({
       providerId: z.string(),
       accountId: z.string(),
       createdAt: z.date(),
+    }),
+  ),
+  passkeys: z.array(
+    z.object({
+      name: z.string().nullable(),
+      createdAt: z.date().nullable(),
+      backedUp: z.boolean(),
     }),
   ),
   analyticsConsents: z.array(

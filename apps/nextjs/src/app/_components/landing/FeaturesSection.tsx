@@ -24,13 +24,20 @@ export function FeaturesSection({
 }) {
   const t = useTranslations("marketing.features");
   const locale = useLocale();
-  const { expenses, expenseCategories, shoppingCategories, chat, marketing } =
-    useMessages();
+  const {
+    expenses,
+    expenseCategories,
+    shoppingCategories,
+    chat,
+    debts,
+    marketing,
+  } = useMessages();
   // The demos reuse app components, which translate in the browser.
   const demoMessages = {
     expenses,
     expenseCategories,
     shoppingCategories,
+    debts: { you: debts.you },
     chat: { toolResults: chat.toolResults },
     marketing: { demo: marketing.demo },
   };

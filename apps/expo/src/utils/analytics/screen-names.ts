@@ -19,9 +19,13 @@ const names: Record<string, string> = {
   settings: "Settings",
   "settings/account": "Account Settings",
   "settings/profile": "Profile",
+  "settings/passkeys": "Passkeys",
   "settings/manage-groups": "Manage Groups",
   "settings/danger": "Danger Zone",
   "auth/login": "Login",
+  "auth/login/code": "Login Code",
+  "auth/name": "Name",
+  "auth/passkey": "Passkey Offer",
 };
 
 export function getScreenName(segments: string[]): string {

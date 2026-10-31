@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { callbackOutcome, loginAttemptSchema, loginErrorCode } from "./login";
+import {
+  callbackOutcome,
+  codeFromText,
+  isRetryableCodeError,
+  loginAttemptSchema,
+  loginErrorCode,
+  passkeyCancelled,
+  signInCodeError,
+} from "./login";
 
 const redirect = (query: string) =>
   new URL(`https://www.flatsby.com/api/auth/error${query}`);
@@ -59,4 +67,60 @@ describe("loginAttemptSchema", () => {
       });
     },
   );
+});
+
+describe("signInCodeError", () => {
+  it.each([
+    [{ code: "INVALID_OTP", status: 400 }, "auth.code.invalid"],
+    [{ code: "OTP_EXPIRED", status: 400 }, "auth.code.expired"],
+    [{ code: "TOO_MANY_ATTEMPTS", status: 403 }, "auth.code.tooManyAttempts"],
+    [{ status: 429 }, "auth.code.tooManyRequests"],
+    [{ code: "TOO_MANY_CODES", status: 429 }, "auth.code.tooManyCodes"],
+    [{ code: "SOMETHING_ELSE", status: 500 }, "auth.code.failed"],
+  ])("maps %j to %s", (error, key) => {
+    expect(signInCodeError(error)).toBe(key);
+  });
+
+  it("keeps the code usable after a wrong guess or a rate limit", () => {
+    expect(isRetryableCodeError({ code: "INVALID_OTP", status: 400 })).toBe(
+      true,
+    );
+    expect(isRetryableCodeError({ status: 429 })).toBe(true);
+    expect(isRetryableCodeError({ code: "OTP_EXPIRED", status: 400 })).toBe(
+      false,
+    );
+    expect(
+      isRetryableCodeError({ code: "TOO_MANY_ATTEMPTS", status: 403 }),
+    ).toBe(false);
+  });
+});
+
+describe("codeFromText", () => {
+  it.each([
+    ["123456", "123456"],
+    ["Code: 123456", "123456"],
+    ["Sign in:\n\n123456\n\nThe code expires in 5 minutes.", "123456"],
+    ["12884568", "884568"],
+    ["12", "12"],
+  ])("reads %j as %j", (text, code) => {
+    expect(codeFromText(text)).toBe(code);
+  });
+});
+
+describe("passkeyCancelled", () => {
+  it("treats a dismissed sheet as cancelled on every platform", () => {
+    for (const code of [
+      "ERROR_CEREMONY_ABORTED",
+      "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY",
+    ]) {
+      expect(passkeyCancelled({ code, status: 400 })).toBe(true);
+    }
+  });
+
+  it("keeps real failures as failures", () => {
+    expect(passkeyCancelled({ code: "AUTH_CANCELLED", status: 400 })).toBe(
+      false,
+    );
+    expect(passkeyCancelled({ status: 500 })).toBe(false);
+  });
 });
