@@ -1,10 +1,10 @@
-import { isChristmas } from "./christmas";
+import { useIsChristmas } from "./christmas";
 
 const FUR = "#f8fafc";
 const FUR_EDGE = "#cbd5e1";
 
 export function SantaHat() {
-  if (!isChristmas()) return null;
+  if (!useIsChristmas()) return null;
 
   return (
     <g transform="translate(158 36) rotate(14)">

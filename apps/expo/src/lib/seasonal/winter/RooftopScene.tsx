@@ -1,6 +1,6 @@
 import type { SharedValue } from "react-native-reanimated";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -24,13 +24,10 @@ const LOOP_MS = 12000;
 // Enough sky above the scene that an iOS overscroll never runs out of it
 const OVERSCROLL = 1000;
 
-// The skyline is drawn as 340-wide tiles, anchored right so the gap behind the cat lines up
-const TILE = 340;
-const TILES = [0, 1, 2];
-// Squashed from the 96-high drawing so the roofs stay clear of the greeting
-const NEAR_SCALE = 80 / 96;
-const NEAR_VIEW = { top: -20, height: 116 };
-const FAR_HEIGHT = 67;
+// Anchored right so the gap behind the cat lines up
+const TILE_WIDTH = 340;
+// Squashed from the drawing so the roofs stay clear of the greeting
+const SQUASH = 80 / 96;
 
 const HOUSE = "#0b1628";
 const LIT = "#fbbf24";
@@ -46,7 +43,7 @@ const LIT_WINDOWS = [
   [221, 70, 12, 12],
   [326, 66, 11, 13],
 ] as const;
-const FLICKER_WINDOW = [190, 56, 12, 14] as const;
+const FLICKER_WINDOW = { x: 190, y: 56, width: 12, height: 14, rx: 1 };
 const MULLIONS =
   "M17.5 66v13M12 72.5h11M39.5 66v13M34 72.5h11M156 56v14M150 63h12M196 56v14M190 63h12M227 70v12M221 76h12M331.5 66v13M326 72.5h11";
 const ROOF_SNOW =
@@ -70,10 +67,17 @@ const FAR =
   "M0 80V48h18v-8h16v12h18V36l10-8 10 8v14h20v-6h18v12h18V30h6v-8l3-16 3 16v8h6v24h22V42l14-10 14 10v16h18V46h22v-8h16v12h18V40l14-10 14 10v12h20v-8h22v36Z";
 const FAR_SNOW =
   "M0 48h18M18 40h16M34 52h18M52 36l10-8 10 8M72 50h20M92 44h18M110 56h18M128 30h6M146 30h6M168 42l14-10 14 10M196 58h18M214 46h22M236 38h16M252 50h18M270 40l14-10 14 10M298 52h20M318 44h22";
-const FAR_WINDOWS = [8, 40, 60, 98, 180, 222, 242, 284, 326].map((x, i) => ({
-  x,
-  y: [56, 60, 44, 52, 48, 54, 46, 46, 52][i] ?? 50,
-}));
+const FAR_WINDOWS = [
+  [8, 56],
+  [40, 60],
+  [60, 44],
+  [98, 52],
+  [180, 48],
+  [222, 54],
+  [242, 46],
+  [284, 46],
+  [326, 52],
+] as const;
 
 const STARS = [
   { left: "8%", top: 14 },
@@ -209,17 +213,22 @@ function Flake({
 
 function Skyline({ clock }: { clock: Clock }) {
   const { getColor } = useThemeColors();
+  const { width } = useWindowDimensions();
   const christmas = isChristmas();
+  const tiles = Array.from(
+    { length: Math.ceil(width / TILE_WIDTH) },
+    (_, tile) => tile,
+  );
 
   return (
     <>
       <View className="absolute right-0 bottom-0 flex-row-reverse">
-        {TILES.map((tile) => (
+        {tiles.map((tile) => (
           <Svg
             key={tile}
             viewBox="0 0 340 80"
-            width={TILE}
-            height={FAR_HEIGHT}
+            width={TILE_WIDTH}
+            height={80 * SQUASH}
             preserveAspectRatio="none"
             style={tile % 2 ? { transform: [{ scaleX: -1 }] } : undefined}
           >
@@ -231,7 +240,7 @@ function Skyline({ clock }: { clock: Clock }) {
               strokeLinecap="round"
               fill="none"
             />
-            {FAR_WINDOWS.map(({ x, y }) => (
+            {FAR_WINDOWS.map(([x, y]) => (
               <Rect
                 key={x}
                 x={x}
@@ -246,12 +255,12 @@ function Skyline({ clock }: { clock: Clock }) {
         ))}
       </View>
       <View className="absolute right-0 bottom-0 flex-row-reverse">
-        {TILES.map((tile) => (
+        {tiles.map((tile) => (
           <Svg
             key={tile}
-            viewBox={`0 ${NEAR_VIEW.top} 340 ${NEAR_VIEW.height}`}
-            width={TILE}
-            height={NEAR_VIEW.height * NEAR_SCALE}
+            viewBox="0 -20 340 116"
+            width={TILE_WIDTH}
+            height={116 * SQUASH}
             preserveAspectRatio="none"
             style={tile % 2 ? { transform: [{ scaleX: -1 }] } : undefined}
           >
@@ -273,7 +282,7 @@ function Skyline({ clock }: { clock: Clock }) {
             {tile === 0 ? (
               <FlickerWindow clock={clock} />
             ) : (
-              <WindowRect fill={LIT} />
+              <Rect {...FLICKER_WINDOW} fill={LIT} />
             )}
             <Path d={MULLIONS} fill="none" stroke={HOUSE} strokeWidth={1.2} />
             <G
@@ -332,13 +341,7 @@ function Skyline({ clock }: { clock: Clock }) {
   );
 }
 
-function WindowRect({ fill }: { fill: string }) {
-  const [x, y, width, height] = FLICKER_WINDOW;
-  return <Rect x={x} y={y} width={width} height={height} rx={1} fill={fill} />;
-}
-
 function FlickerWindow({ clock }: { clock: Clock }) {
-  const [x, y, width, height] = FLICKER_WINDOW;
   const animatedProps = useAnimatedProps(() => {
     const t = clock.value % 1;
     return { opacity: t > 0.62 && t < 0.8 ? 0 : 1 };
@@ -346,13 +349,9 @@ function FlickerWindow({ clock }: { clock: Clock }) {
 
   return (
     <>
-      <WindowRect fill={DARK} />
+      <Rect {...FLICKER_WINDOW} fill={DARK} />
       <AnimatedRect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        rx={1}
+        {...FLICKER_WINDOW}
         fill={LIT}
         animatedProps={animatedProps}
       />

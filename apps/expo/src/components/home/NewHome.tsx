@@ -75,13 +75,12 @@ export function NewHome() {
 
 const home = season.home;
 
-const GREETING_SHADOW = {
-  textShadowColor: "#08142b88",
+const greetingShadow = home && {
+  textShadowColor: `${home.sky}88`,
   textShadowOffset: { width: 0, height: 1 },
   textShadowRadius: 12,
 };
 
-// The scroll view starts below the status bar, so the sky above it is painted separately
 function StatusBarSky({ color }: { color: string }) {
   const isFocused = useIsFocused();
 
@@ -323,7 +322,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
                 "text-4xl font-extrabold tracking-tight",
                 home ? "text-white" : "text-foreground",
               )}
-              style={home && GREETING_SHADOW}
+              style={greetingShadow}
             >
               {t(`home.new.greeting.${greetingFor(now.getHours())}`, {
                 name: firstName,

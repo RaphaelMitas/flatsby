@@ -82,4 +82,8 @@
   .flicker {
     animation: none;
   }
+
+  .smoke {
+    opacity: 0;
+  }
 }

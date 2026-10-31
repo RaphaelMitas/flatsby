@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 
 import { cn } from "@flatsby/ui";
 
-import { isChristmas } from "./christmas";
+import { useIsChristmas } from "./christmas";
 import styles from "./rooftop-scene.module.css";
 
 // The skyline is drawn as 340-wide tiles, anchored right so the gap behind the cat lines up
@@ -79,7 +79,7 @@ const FLAKES = Array.from({ length: 22 }, (_, i) => ({
 }));
 
 export function RooftopScene() {
-  const christmas = isChristmas();
+  const christmas = useIsChristmas();
 
   return (
     <div

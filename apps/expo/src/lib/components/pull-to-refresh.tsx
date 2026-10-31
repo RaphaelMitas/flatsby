@@ -15,5 +15,12 @@ export function useRefreshControl(onRefresh?: () => Promise<unknown>) {
     void onRefresh().finally(() => setPulled(false));
   };
 
-  return <RefreshControl refreshing={pulled} onRefresh={refresh} />;
+  return (
+    <RefreshControl
+      refreshing={pulled}
+      onRefresh={refresh}
+      // iOS draws the spinner behind the list content, which a seasonal backdrop can paint over
+      style={{ zIndex: 1 }}
+    />
+  );
 }
