@@ -133,7 +133,7 @@ export function ExpenseFilterBar({
             placeholderTextColor={getColor("muted-foreground")}
             returnKeyType="search"
             autoCorrect={false}
-            className="text-foreground flex-1 py-0 text-base"
+            className="text-foreground flex-1 py-0"
           />
           {filters.search !== "" && (
             <Pressable
