@@ -83,6 +83,15 @@ describe("visibleExpenses", () => {
     ).toEqual([7]);
   });
 
+  it("keeps a pending repeat of an older identical expense", () => {
+    const lastMonth = { ...saved, expenseDate: new Date(2026, 7, 30) };
+    expect(
+      visibleExpenses([[lastMonth, pending]], undefined).map(
+        (expense) => expense.id,
+      ),
+    ).toEqual([7, pending.id]);
+  });
+
   it("keeps the pending row while nothing has the saved one yet", () => {
     expect(visibleExpenses([[], [pending]], { search: "rewe" })).toHaveLength(
       1,

@@ -71,8 +71,9 @@ export function matchesExpenseFilter(
 
 type ListedExpense = FilterableExpense & { id: number; amountInCents: number };
 
+// The date keeps last month's identical rent from standing in for this month's
 const sameExpense = (expense: ListedExpense) =>
-  `${expense.paidByGroupMemberId}:${expense.amountInCents}:${expense.description}`;
+  `${expense.paidByGroupMemberId}:${expense.amountInCents}:${new Date(expense.expenseDate).getTime()}:${expense.description}`;
 
 // Lists come freshest first; without a filter the cached order stays
 export function visibleExpenses<T extends ListedExpense>(
