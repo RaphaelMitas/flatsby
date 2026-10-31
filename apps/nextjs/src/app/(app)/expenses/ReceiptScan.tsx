@@ -42,7 +42,12 @@ async function receiptBase64(file: File) {
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("No canvas");
+  // JPEG has no alpha, so a transparent e-receipt would otherwise turn black
+  context.fillStyle = "#fff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
   const dataUrl = canvas.toDataURL("image/jpeg", RECEIPT_IMAGE_QUALITY);
   return dataUrl.slice(dataUrl.indexOf(",") + 1);
