@@ -11,7 +11,7 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
   slug: "flatsby",
   scheme: "flatsby",
   owner: "flatsby",
-  version: "0.16.0",
+  version: "0.17.0",
   orientation: "portrait",
   icon: "./assets/ios-light.png",
   userInterfaceStyle: "automatic",
