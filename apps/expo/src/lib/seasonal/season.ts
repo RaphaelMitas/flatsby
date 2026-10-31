@@ -1,15 +1,15 @@
 import type { ComponentType } from "react";
 
-import { halloween } from "./halloween/halloween";
-
-export interface RefreshSceneProps {
-  refreshing: boolean;
-}
+import { winter } from "./winter/winter";
 
 export interface Season {
-  RefreshScene?: ComponentType<RefreshSceneProps>;
-  TapReaction?: ComponentType;
+  home?: {
+    Backdrop: ComponentType;
+    // Paints the status bar area, which the scrolling Backdrop can't reach
+    sky: string;
+  };
+  CatHat?: ComponentType<{ size: number }>;
 }
 
 // Set to {} and drop the import to ship the plain app.
-export const season: Season = halloween;
+export const season: Season = winter;
