@@ -81,8 +81,12 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
     void receiptScan.scan(() => receiptBase64(file));
   };
 
+  const canPick =
+    usage?.credits?.balance !== 0 &&
+    (state.status === "idle" || state.status === "failed");
+
   return (
-    <>
+    <div className="space-y-2">
       <input
         ref={fileInput}
         type="file"
@@ -151,39 +155,39 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
           </AlertDescription>
         </Alert>
       ) : (
-        <div className="space-y-2">
-          <button
-            type="button"
-            data-testid="receipt-scan"
-            onClick={() => fileInput.current?.click()}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={(event) => {
-              event.preventDefault();
-              setIsDragging(false);
-              read(event.dataTransfer.files[0]);
-            }}
-            className={`hover:bg-muted/50 flex w-full items-center gap-3 rounded-lg border border-dashed p-4 text-left ${
-              isDragging ? "border-primary bg-muted" : "border-muted-foreground"
-            }`}
-          >
-            <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
-              <Camera className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold">
-                {isDragging ? t("dropHere") : t("title")}
-              </p>
-              <p className="text-muted-foreground text-sm">
-                {t("subtitle")} · {t("chooseFile")}
-              </p>
-            </div>
-          </button>
-          <p className="text-muted-foreground text-xs">{t("disclosure")}</p>
-        </div>
+        <button
+          type="button"
+          data-testid="receipt-scan"
+          onClick={() => fileInput.current?.click()}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(event) => {
+            event.preventDefault();
+            setIsDragging(false);
+            read(event.dataTransfer.files[0]);
+          }}
+          className={`hover:bg-muted/50 flex w-full items-center gap-3 rounded-lg border border-dashed p-4 text-left ${
+            isDragging ? "border-primary bg-muted" : "border-muted-foreground"
+          }`}
+        >
+          <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
+            <Camera className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold">
+              {isDragging ? t("dropHere") : t("title")}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {t("subtitle")} · {t("chooseFile")}
+            </p>
+          </div>
+        </button>
+      )}
+      {canPick && (
+        <p className="text-muted-foreground text-xs">{t("disclosure")}</p>
       )}
 
       <Dialog
@@ -222,7 +226,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
 

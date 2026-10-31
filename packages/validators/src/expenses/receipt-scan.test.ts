@@ -62,6 +62,13 @@ describe("receiptScanFrom", () => {
     ).toBeNull();
   });
 
+  it("keeps a currency only together with its amount", () => {
+    expect(
+      receiptScanFrom(reading({ total: null, currency: "CHF" }), "2026-10-31")
+        .currency,
+    ).toBeNull();
+  });
+
   it("treats a scan that only found a currency as unreadable", () => {
     expect(
       isEmptyReceiptScan(

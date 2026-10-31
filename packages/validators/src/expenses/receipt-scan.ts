@@ -15,7 +15,7 @@ export const RECEIPT_IMAGE_QUALITY = 0.7;
 const MAX_MERCHANT_LENGTH = 80;
 
 export const scanReceiptInputSchema = z.object({
-  // A JPEG at RECEIPT_IMAGE_MAX_EDGE stays far below this, and Vercel rejects bodies over 4.5 MB
+  // Vercel rejects bodies over 4.5 MB
   imageBase64: z.base64().max(3_000_000),
 });
 
@@ -86,12 +86,14 @@ export function receiptScanFrom(
   const bookable = code === null || currency !== null;
   const day = calendarDateSchema.safeParse(reading.date);
   const description = reading.merchant?.trim().slice(0, MAX_MERCHANT_LENGTH);
+  const amount =
+    bookable && amountInCents > 0 && Number.isSafeInteger(amountInCents)
+      ? amountInCents
+      : null;
   return {
-    amountInCents:
-      bookable && amountInCents > 0 && Number.isSafeInteger(amountInCents)
-        ? amountInCents
-        : null,
-    currency,
+    amountInCents: amount,
+    // Alone it would switch the currency of whatever amount the person typed
+    currency: amount === null ? null : currency,
     // The server's UTC day can be one behind the person's own
     expenseDay: day.success && day.data <= addDays(today, 1) ? day.data : null,
     description: description || null,

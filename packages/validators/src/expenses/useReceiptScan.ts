@@ -22,7 +22,7 @@ interface SetOptions {
   shouldValidate: boolean;
 }
 
-// Matches react-hook-form's setValue for the four fields a receipt fills
+// validators has no react-hook-form dependency; form.setValue satisfies this
 interface SetReceiptValue {
   (name: "amountInCents", value: number, options: SetOptions): void;
   (name: "currency", value: CurrencyCode, options: SetOptions): void;
