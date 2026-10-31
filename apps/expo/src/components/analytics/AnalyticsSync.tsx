@@ -14,7 +14,6 @@ import {
   getPostHog,
   keepOnlyLegacyOptOut,
   readLegacyPostHogFile,
-  storesDeviceId,
 } from "~/utils/analytics/posthog";
 import { trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
@@ -42,8 +41,7 @@ export function AnalyticsSync() {
   useEffect(() => {
     // The render right after a swap still holds the retired client
     if (posthog !== getPostHog()) return;
-    if (userId && storesDeviceId(getAnalyticsConsent()))
-      posthog.identify(userId);
+    if (userId && getAnalyticsConsent().screens) posthog.identify(userId);
   }, [posthog, userId]);
 
   // Once per install: earlier builds stored an ID, and maybe the old opt-out, without asking

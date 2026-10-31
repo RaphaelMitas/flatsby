@@ -52,13 +52,11 @@ export const settings = {
       "Which features you use, never what you enter. Turn off to object.",
     usageWebBody:
       "Which features you use, never what you enter, on the web and in the app. Turn off to object.",
-    appOnly: "Screens and screen recordings are only available in the app.",
+    appOnly: "Screen and app use analytics is only available in the app.",
     consentSection: "Optional, with your consent",
     screens: "Screens and app use",
     screensBody:
       "Screens, app opens and prompts you see or tap. Uses an ID on this device",
-    recordings: "Screen recordings",
-    recordingsBody: "Text and images masked",
     footer:
       "Linked to your account. Crash reports are always sent. <link>Details</link>",
     sheetTitle: "Share usage with Flatsby",
@@ -66,7 +64,6 @@ export const settings = {
       "Optional, with your consent, to find and fix problems. Linked to your account via an ID on this device. Shared only with PostHog (EU servers, US access possible under EU safeguards). Withdraw anytime in Settings. <link>Details</link>",
     screensKept:
       "Screens, app opens and prompts you see or tap. Kept 12 months",
-    recordingsKept: "Text and images masked. Kept 30 days",
     done: "Done",
     invite: "Help us fix what bugs you",
     inviteAction: "Share usage",

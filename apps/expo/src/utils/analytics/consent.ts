@@ -7,32 +7,25 @@ import { ANALYTICS_CONSENT_VERSION } from "@flatsby/validators/user";
 import { trpc } from "~/utils/api";
 import { storedChoice } from "~/utils/stored-choice";
 
-const CHOICES = ["none", "screens", "recordings", "both"] as const;
-type ConsentChoice = (typeof CHOICES)[number];
+type ConsentChoice = "none" | "screens";
 
 /** § 25 TDDDG attaches consent to the device, so it lives here and not on the account */
 export const consentChoice = storedChoice(
   "analytics_consent",
+  // Builds with screen recordings also saved "both" and "recordings"; recordings alone never covered screens
   (saved): ConsentChoice =>
-    CHOICES.find((choice) => choice === saved) ?? "none",
+    saved === "screens" || saved === "both" ? "screens" : "none",
 );
 
 export const useAnalyticsConsent = () =>
   consentOf(consentChoice.useValue() ?? "none");
 
 export const consentOf = (choice: ConsentChoice): AnalyticsConsent => ({
-  screens: choice === "screens" || choice === "both",
-  recordings: choice === "recordings" || choice === "both",
+  screens: choice === "screens",
 });
 
-const choiceOf = ({ screens, recordings }: AnalyticsConsent): ConsentChoice =>
-  screens
-    ? recordings
-      ? "both"
-      : "screens"
-    : recordings
-      ? "recordings"
-      : "none";
+const choiceOf = ({ screens }: AnalyticsConsent): ConsentChoice =>
+  screens ? "screens" : "none";
 
 const PROMPTS = ["unknown", "notice", "invite", "done"] as const;
 

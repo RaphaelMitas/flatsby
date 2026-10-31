@@ -16,7 +16,6 @@ import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useTheme } from "~/lib/ui/theme";
 import { useAnalyticsConsent } from "~/utils/analytics/consent";
-import { storesDeviceId } from "~/utils/analytics/posthog";
 import { trpc } from "~/utils/api";
 import { authClient, signOut } from "~/utils/auth/auth-client";
 import { passkeysSupported } from "~/utils/auth/passkey-device";
@@ -162,7 +161,7 @@ export default function SettingsIndex() {
               testID="settings-analytics"
               title={t("settings.items.analytics")}
               subtitle={
-                user.analyticsOptOut && !storesDeviceId(analyticsConsent)
+                user.analyticsOptOut && !analyticsConsent.screens
                   ? t("settings.items.disabled")
                   : t("settings.items.enabled")
               }

@@ -66,16 +66,6 @@ export default function AnalyticsSettings() {
             <Switch checked={consent.screens} onCheckedChange={open} />
           }
         />
-        <SettingsItem
-          testID="analytics-recordings"
-          title={t("recordings")}
-          subtitle={t("recordingsBody")}
-          iconName="video"
-          onPress={open}
-          rightContent={
-            <Switch checked={consent.recordings} onCheckedChange={open} />
-          }
-        />
       </SettingsSection>
       <Text className="text-muted-foreground px-4 py-3 text-sm">
         {t.rich("footer", {

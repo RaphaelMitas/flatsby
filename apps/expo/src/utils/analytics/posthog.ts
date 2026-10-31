@@ -18,19 +18,10 @@ if (!posthogApiKey && !posthogDisabled)
 const POSTHOG_FILE = ".posthog-rn.json";
 const POSTHOG_FILES = [POSTHOG_FILE, ".posthog-rn-logs.json"];
 
-const noConsent: AnalyticsConsent = { screens: false, recordings: false };
+const noConsent: AnalyticsConsent = { screens: false };
 
 // The latest choice, so before_send stops at once even while a client swap is still queued
 let consent = noConsent;
-
-export const storesDeviceId = ({ screens, recordings }: AnalyticsConsent) =>
-  screens || recordings;
-
-// Recordings alone still send $identify, or the replay has no account
-function isAllowed(event: string) {
-  if (consent.screens || event === "$exception") return true;
-  return consent.recordings && (event === "$snapshot" || event === "$identify");
-}
 
 interface Client {
   posthog: PostHog;
@@ -51,7 +42,7 @@ function fileStorage(lease: Client["lease"]): PostHogCustomStorage {
 }
 
 function createClient(forConsent: AnalyticsConsent): Client {
-  const persistent = storesDeviceId(forConsent);
+  const persistent = forConsent.screens;
   const lease = { active: persistent };
   const posthog = new PostHog(posthogApiKey || "phc-disabled", {
     disabled: posthogDisabled,
@@ -66,15 +57,9 @@ function createClient(forConsent: AnalyticsConsent): Client {
     capturePushNotificationOpened: false,
     // The native SDK sends rage taps itself, past before_send
     rageClickConfig: { enabled: false },
-    sessionReplayConfig: {
-      maskAllTextInputs: true,
-      maskAllImages: true,
-      // Logs can hold what users typed, and request URLs carry tRPC inputs
-      captureLog: false,
-      captureNetworkTelemetry: false,
-    },
     before_send: [
-      (event) => (isAllowed(event.event) ? event : null),
+      (event) =>
+        consent.screens || event.event === "$exception" ? event : null,
       // The query and mutation caches report tRPC errors, so error boundaries and rejected mutateAsync calls would report them twice
       (event) =>
         event.event === "$exception" &&
@@ -130,13 +115,10 @@ export function applyConsent(next: AnalyticsConsent) {
 // Persistence is fixed when a client is created, so giving or withdrawing consent swaps the client
 async function apply(next: AnalyticsConsent) {
   const previous = current;
-  const wasRecording = applied.recordings;
-  const persistent = storesDeviceId(next);
-  const swap = persistent !== storesDeviceId(applied);
+  const persistent = next.screens;
+  const swap = persistent !== applied.screens;
   applied = next;
 
-  if (wasRecording && !next.recordings)
-    await previous.posthog.stopSessionRecording();
   if (swap) {
     current = createClient(next);
     for (const listener of listeners) listener();
@@ -147,8 +129,6 @@ async function apply(next: AnalyticsConsent) {
     await previous.posthog.shutdown();
   }
   if (!persistent) deletePostHogFiles();
-  if (next.recordings && (!wasRecording || swap))
-    await current.posthog.startSessionRecording();
 }
 
 export function deletePostHogFiles() {
