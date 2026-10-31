@@ -8,6 +8,7 @@ import {
   calculateDebts,
   debtsBetweenOthers,
   debtsFor,
+  expenseBalanceFor,
   myDebts,
   pairDebt,
 } from "./debt";
@@ -783,5 +784,36 @@ describe("myDebts", () => {
       owes(LENA, MAX, 900),
     ]);
     expect(myDebts(summary, YOU, "EUR").owe).toEqual([debt(YOU, LENA, 900)]);
+  });
+});
+
+describe("expenseBalanceFor", () => {
+  it("credits the payer with everyone else's shares", () => {
+    const rewe = shared(YOU, { [YOU]: 2186, [LENA]: 2186, [MAX]: 2186 });
+    expect(expenseBalanceFor(rewe, YOU)).toEqual({
+      cents: 4372,
+      currency: "EUR",
+    });
+    expect(expenseBalanceFor(rewe, LENA)).toEqual({
+      cents: -2186,
+      currency: "EUR",
+    });
+  });
+
+  it("is null for a member outside the expense", () => {
+    expect(expenseBalanceFor(shared(LENA, { [MAX]: 500 }), SOPHIE)).toBeNull();
+  });
+
+  it("counts a converted expense in the converted currency, like the debts do", () => {
+    const skipass = {
+      ...shared(LENA, { [YOU]: 6000, [LENA]: 6000, [SOPHIE]: 6000 }, "CHF"),
+      convertedAmountInCents: 19240,
+      convertedCurrency: "EUR",
+    };
+    const balance = expenseBalanceFor(skipass, YOU);
+    expect(balance?.currency).toBe("EUR");
+    expect(calculateDebts([skipass]).memberBalances[YOU]).toEqual({
+      EUR: balance?.cents,
+    });
   });
 });

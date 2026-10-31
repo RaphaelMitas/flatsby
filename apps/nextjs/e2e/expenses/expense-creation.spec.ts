@@ -235,8 +235,13 @@ test.describe("Expense Creation", () => {
       authPage.getByText("Expense created successfully"),
     ).toBeVisible();
 
+    await expect(
+      authPage
+        .getByTestId(/^expense-card-\d+$/)
+        .filter({ hasText: "Rewe run" })
+        .first(),
+    ).toContainText("Anna");
     await openExpenseDetail(authPage, "Rewe run");
-    await expect(authPage.getByText("Paid by Anna").first()).toBeVisible();
     await expect(authPage.getByTestId("expense-split-details")).toContainText(
       "Anna",
     );

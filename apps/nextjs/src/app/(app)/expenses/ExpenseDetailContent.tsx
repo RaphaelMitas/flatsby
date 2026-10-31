@@ -112,23 +112,6 @@ export function ExpenseDetailContent({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {expense.splitMethod === "settlement" && expense.expenseSplits[0] && (
-            <div className="flex items-center gap-3">
-              <UserAvatar
-                {...memberPerson(expense.expenseSplits[0].groupMember)}
-                size="lg"
-              />
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {t("expenses.from")}
-                </p>
-                <p className="font-semibold">
-                  {expense.expenseSplits[0].groupMember.user.name}
-                </p>
-              </div>
-            </div>
-          )}
-
           <div className="flex items-center gap-3">
             <UserAvatar
               {...memberPerson(expense.paidByGroupMember)}
@@ -137,7 +120,7 @@ export function ExpenseDetailContent({
             <div>
               <p className="text-muted-foreground text-sm">
                 {expense.splitMethod === "settlement"
-                  ? t("expenses.to")
+                  ? t("expenses.from")
                   : t("expenses.paidByLabel")}
               </p>
               <p className="font-semibold">
@@ -145,6 +128,23 @@ export function ExpenseDetailContent({
               </p>
             </div>
           </div>
+
+          {expense.splitMethod === "settlement" && expense.expenseSplits[0] && (
+            <div className="flex items-center gap-3">
+              <UserAvatar
+                {...memberPerson(expense.expenseSplits[0].groupMember)}
+                size="lg"
+              />
+              <div>
+                <p className="text-muted-foreground text-sm">
+                  {t("expenses.to")}
+                </p>
+                <p className="font-semibold">
+                  {expense.expenseSplits[0].groupMember.user.name}
+                </p>
+              </div>
+            </div>
+          )}
 
           <Separator />
 

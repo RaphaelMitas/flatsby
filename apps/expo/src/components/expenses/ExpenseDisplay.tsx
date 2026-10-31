@@ -1,123 +1,73 @@
-import type { DebtPerson } from "@flatsby/validators/expenses/formatting";
+import type { describeExpenseRow } from "@flatsby/validators/expenses/formatting";
 import { Text, View } from "react-native";
-import { useLocale, useTranslations } from "use-intl";
 
-import { formatExpenseDateShort } from "@flatsby/validators/expenses/formatting";
+import { amountTone } from "@flatsby/validators/expenses/formatting";
 
-import { Badge } from "~/lib/ui/badge";
-import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
-import { MemberAvatar } from "./MemberAvatar";
+import { cn } from "~/lib/utils";
+import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 
 export interface ExpenseDisplayProps {
-  amounts: { amount: string; paid?: string };
-  isNotConverted?: boolean;
-  description?: string | null;
-  paidBy: DebtPerson;
-  expenseDate: Date;
-  splitMethod?: string;
-  splitCount?: number;
+  row: ReturnType<typeof describeExpenseRow>;
   subcategory: string;
-  from?: DebtPerson;
   isSelected?: boolean;
+  className: string;
 }
 
 export function ExpenseDisplay({
-  amounts,
-  isNotConverted,
-  description,
-  paidBy,
-  expenseDate,
-  splitMethod,
-  splitCount,
+  row,
   subcategory,
-  from,
   isSelected,
+  className,
 }: ExpenseDisplayProps) {
-  const t = useTranslations("expenses");
-  const locale = useLocale();
-  const subline =
-    amounts.paid ?? (isNotConverted ? t("conversion.notConverted") : null);
-  const formattedDate = formatExpenseDateShort(expenseDate, locale);
-
-  const isSettlement = splitMethod === "settlement";
+  const category = getExpenseCategoryData({ subcategoryId: subcategory });
 
   return (
-    <Card className={isSelected ? "border-primary border-2" : undefined}>
-      <CardContent className="gap-3 p-4">
-        <View className="flex-row flex-wrap items-center gap-2">
-          <View>
-            <Text className="text-foreground text-2xl font-bold">
-              {amounts.amount}
-            </Text>
-            {subline && (
-              <Text className="text-muted-foreground text-sm">{subline}</Text>
-            )}
-          </View>
-          {isSettlement ? (
-            <Badge variant="secondary">
-              <Icon name="handshake" size={12} color="secondary-foreground" />
-              <Text className="text-secondary-foreground text-xs font-medium">
-                {t("settlement")}
-              </Text>
-            </Badge>
-          ) : (
-            <ExpenseCategoryBadge subcategoryId={subcategory} />
+    <View
+      className={cn(
+        "bg-card border-border min-h-14 flex-row items-center gap-3 border-t border-r border-l px-3 py-2.5",
+        className,
+        isSelected && "bg-muted",
+      )}
+    >
+      <View
+        className={cn(
+          "h-9 w-9 items-center justify-center rounded-full",
+          row.isSettlement ? "bg-muted" : category.bgColor,
+        )}
+      >
+        {row.isSettlement ? (
+          <Icon name="arrow-left-right" size={14} color="muted-foreground" />
+        ) : (
+          category.icon
+        )}
+      </View>
+      <View className="flex-1">
+        <Text
+          className="text-foreground text-base font-medium"
+          numberOfLines={1}
+        >
+          {row.title}
+        </Text>
+        <Text className="text-muted-foreground text-sm" numberOfLines={1}>
+          {[row.payer, row.paid, row.date].filter(Boolean).join(" · ")}
+        </Text>
+      </View>
+      <View className="items-end">
+        <Text
+          className={cn(
+            "text-base font-semibold",
+            row.isSettlement ? "text-muted-foreground" : "text-foreground",
           )}
-        </View>
-
-        {description && (
-          <Text
-            className="text-foreground text-lg font-medium"
-            numberOfLines={2}
-          >
-            {description}
+        >
+          {row.amount}
+        </Text>
+        {row.balance && (
+          <Text className={cn("text-xs", amountTone(row.balance.cents))}>
+            {row.balance.text}
           </Text>
         )}
-
-        <View className="flex-col gap-2">
-          <View className="flex-row items-center gap-2">
-            {isSettlement && from && (
-              <>
-                <MemberAvatar
-                  person={from}
-                  className="h-5 w-5"
-                  textClassName="text-xs"
-                />
-                <Text className="text-muted-foreground text-sm">
-                  {from.name}
-                </Text>
-                <Icon name="arrow-right" size={16} color="muted-foreground" />
-              </>
-            )}
-            <MemberAvatar
-              person={paidBy}
-              className="h-5 w-5"
-              textClassName="text-xs"
-            />
-            <Text className="text-muted-foreground text-sm" numberOfLines={1}>
-              {isSettlement ? paidBy.name : t("paidBy", { name: paidBy.name })}
-            </Text>
-          </View>
-
-          <View className="flex-row items-center gap-2">
-            {!isSettlement && splitCount != null && (
-              <>
-                <Icon name="users" size={16} color="muted-foreground" />
-                <Text className="text-muted-foreground text-sm">
-                  {t("splitBetween", { count: splitCount })}
-                </Text>
-                <Text className="text-muted-foreground text-sm">·</Text>
-              </>
-            )}
-            <Icon name="calendar" size={16} color="muted-foreground" />
-            <Text className="text-muted-foreground text-sm">
-              {formattedDate}
-            </Text>
-          </View>
-        </View>
-      </CardContent>
-    </Card>
+      </View>
+    </View>
   );
 }
