@@ -134,8 +134,6 @@ export function ExpenseFilterBar({
             returnKeyType="search"
             autoCorrect={false}
             className="text-foreground flex-1 py-0"
-            // Android adds font padding that sits the text above the icon
-            style={{ includeFontPadding: false }}
           />
           {filters.search !== "" && (
             <Pressable
