@@ -111,9 +111,14 @@ export function RooftopScene() {
 
   useEffect(() => {
     if (!isFocused || reduceMotion) return;
-    clock.value = withRepeat(
-      withTiming(clock.value + 1, { duration: LOOP_MS, easing: Easing.linear }),
-      -1,
+    clock.set(
+      withRepeat(
+        withTiming(clock.get() + 1, {
+          duration: LOOP_MS,
+          easing: Easing.linear,
+        }),
+        -1,
+      ),
     );
     return () => cancelAnimation(clock);
   }, [isFocused, reduceMotion, clock]);

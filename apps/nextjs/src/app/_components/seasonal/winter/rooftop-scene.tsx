@@ -10,6 +10,7 @@ const TILES = [0, 1, 2];
 const HOUSE = "#0b1628";
 const LIT = "#fbbf24";
 const DARK = "#1b2a44";
+const FLICKER_WINDOW = { x: 190, y: 56, width: 12, height: 14, rx: 1 };
 
 const HOUSES =
   "M-4 96V58l33-28 33 28v38ZM58 96V50l84-10v56ZM128 18h12v28h-12ZM138 96V46l38-34 38 34v50ZM206 96V64l21-14 21 14v32ZM314 96V56l26-22v62Z";
@@ -143,16 +144,8 @@ export function RooftopScene() {
               />
             ))}
             <rect x="108" y="58" width="10" height="12" rx="1" fill={DARK} />
-            <rect x="190" y="56" width="12" height="14" rx="1" fill={DARK} />
-            <rect
-              x="190"
-              y="56"
-              width="12"
-              height="14"
-              rx="1"
-              fill={LIT}
-              className={styles.flicker}
-            />
+            <rect {...FLICKER_WINDOW} fill={DARK} />
+            <rect {...FLICKER_WINDOW} fill={LIT} className={styles.flicker} />
             <circle cx="176" cy="34" r="5" fill={LIT} />
             <path d={MULLIONS} fill="none" stroke={HOUSE} strokeWidth="1.2" />
             <g
