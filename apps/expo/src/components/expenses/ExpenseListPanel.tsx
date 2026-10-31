@@ -160,7 +160,10 @@ function ExpenseList() {
               getItemType={(item) => item.type}
               renderItem={({ item }) =>
                 item.type === "month" ? (
-                  <Text className="text-muted-foreground px-1 pt-4 pb-2 text-sm font-semibold">
+                  <Text
+                    accessibilityRole="header"
+                    className="text-muted-foreground px-1 pt-4 pb-2 text-sm font-semibold"
+                  >
                     {item.label}
                   </Text>
                 ) : (

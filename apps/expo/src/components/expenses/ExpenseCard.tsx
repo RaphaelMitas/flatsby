@@ -12,6 +12,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
 import { describeExpenseRow } from "@flatsby/validators/expenses/formatting";
 
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
@@ -100,13 +101,12 @@ export function ExpenseCard({
     ),
   );
 
-  const row = describeExpenseRow(expense, meId, t, locale);
+  const row = describeExpenseRow(expense, { meId, isNotConverted }, t, locale);
   const accessibilityLabel = [
     row.title,
     row.category,
     row.payer,
     row.paid,
-    isNotConverted && t("expenses.conversion.notConverted"),
     row.date,
     row.amount,
     row.balance?.text,
@@ -114,15 +114,20 @@ export function ExpenseCard({
     .filter(Boolean)
     .join(", ");
 
+  const corners = cn(
+    "rounded-none",
+    first && "rounded-t-lg",
+    last && "rounded-b-lg",
+  );
   const { swipeableProps, guardPress } = useSwipeActions({
     leftAction: {
       text: t("common.edit"),
-      className: "bg-info",
+      className: cn("bg-info", corners),
       textClassName: "text-info-foreground",
     },
     rightAction: {
       text: t("common.delete"),
-      className: "bg-destructive",
+      className: cn("bg-destructive", corners),
       textClassName: "text-destructive-foreground",
     },
   });
@@ -172,7 +177,6 @@ export function ExpenseCard({
             <ExpenseDisplay
               row={row}
               subcategory={expense.subcategory}
-              isNotConverted={isNotConverted}
               isSelected={isSelected}
               first={first}
               last={last}

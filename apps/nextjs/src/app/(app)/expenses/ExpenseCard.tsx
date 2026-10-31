@@ -32,7 +32,7 @@ export function ExpenseCard({
 }: ExpenseCardProps) {
   const t = useTranslations();
   const locale = useLocale();
-  const row = describeExpenseRow(expense, meId, t, locale);
+  const row = describeExpenseRow(expense, { meId, isNotConverted }, t, locale);
   const category = getExpenseCategoryData(expense.subcategory);
 
   return (
@@ -73,7 +73,6 @@ export function ExpenseCard({
               <span data-testid="expense-card-paid-amount">{row.paid}</span>
             </>
           )}
-          {isNotConverted && ` · ${t("expenses.conversion.notConverted")}`}
           {` · ${row.date}`}
         </p>
       </div>

@@ -359,7 +359,7 @@ export function describeExpenseRow(
       groupMember: PersonMember & { id: number };
     })[];
   },
-  meId: number,
+  { meId, isNotConverted }: { meId: number; isNotConverted?: boolean },
   t: Translate,
   locale: Intl.LocalesArgument,
 ) {
@@ -390,7 +390,9 @@ export function describeExpenseRow(
     payer: isSettlement ? t("expenses.settlement") : payer,
     date: formatExpenseDateShort(new Date(expense.expenseDate), locale),
     amount,
-    paid,
+    paid:
+      paid ??
+      (isNotConverted ? t("expenses.conversion.notConverted") : undefined),
     balance: isSettlement
       ? null
       : {

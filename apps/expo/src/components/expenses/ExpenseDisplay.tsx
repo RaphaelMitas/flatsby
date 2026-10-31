@@ -1,6 +1,5 @@
 import type { describeExpenseRow } from "@flatsby/validators/expenses/formatting";
 import { Text, View } from "react-native";
-import { useTranslations } from "use-intl";
 
 import { amountTone } from "@flatsby/validators/expenses/formatting";
 
@@ -11,7 +10,6 @@ import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 export interface ExpenseDisplayProps {
   row: ReturnType<typeof describeExpenseRow>;
   subcategory: string;
-  isNotConverted?: boolean;
   isSelected?: boolean;
   first: boolean;
   last: boolean;
@@ -20,12 +18,10 @@ export interface ExpenseDisplayProps {
 export function ExpenseDisplay({
   row,
   subcategory,
-  isNotConverted,
   isSelected,
   first,
   last,
 }: ExpenseDisplayProps) {
-  const t = useTranslations("expenses");
   const category = getExpenseCategoryData({ subcategoryId: subcategory });
 
   return (
@@ -57,14 +53,7 @@ export function ExpenseDisplay({
           {row.title}
         </Text>
         <Text className="text-muted-foreground text-sm" numberOfLines={1}>
-          {[
-            row.payer,
-            row.paid,
-            isNotConverted && t("conversion.notConverted"),
-            row.date,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
+          {[row.payer, row.paid, row.date].filter(Boolean).join(" · ")}
         </Text>
       </View>
       <View className="items-end">
