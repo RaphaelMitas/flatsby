@@ -62,9 +62,7 @@ export default function AnalyticsSettings() {
           subtitle={t("screensBody")}
           iconName="smartphone"
           onPress={open}
-          rightContent={
-            <Switch checked={consent.screens} onCheckedChange={open} />
-          }
+          rightContent={<Switch checked={consent} onCheckedChange={open} />}
         />
       </SettingsSection>
       <Text className="text-muted-foreground px-4 py-3 text-sm">

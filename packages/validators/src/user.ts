@@ -103,7 +103,6 @@ export type UpdateAIConsentInput = z.infer<typeof updateAIConsentInputSchema>;
 export const ANALYTICS_CONSENT_VERSION = "2";
 
 export const analyticsConsentSchema = z.object({ screens: z.boolean() });
-export type AnalyticsConsent = z.infer<typeof analyticsConsentSchema>;
 
 export const logAnalyticsConsentInputSchema = analyticsConsentSchema.extend({
   // Version 1 also asked for screen recordings, and builds that never got the update still send it

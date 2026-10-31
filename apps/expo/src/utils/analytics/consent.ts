@@ -1,4 +1,3 @@
-import type { AnalyticsConsent } from "@flatsby/validators/user";
 import { Platform } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 
@@ -7,25 +6,14 @@ import { ANALYTICS_CONSENT_VERSION } from "@flatsby/validators/user";
 import { trpc } from "~/utils/api";
 import { storedChoice } from "~/utils/stored-choice";
 
-type ConsentChoice = "none" | "screens";
-
 /** § 25 TDDDG attaches consent to the device, so it lives here and not on the account */
 export const consentChoice = storedChoice(
   "analytics_consent",
   // Builds with screen recordings also saved "both" and "recordings"; recordings alone never covered screens
-  (saved): ConsentChoice =>
-    saved === "screens" || saved === "both" ? "screens" : "none",
+  (saved) => (saved === "screens" || saved === "both" ? "screens" : "none"),
 );
 
-export const useAnalyticsConsent = () =>
-  consentOf(consentChoice.useValue() ?? "none");
-
-export const consentOf = (choice: ConsentChoice): AnalyticsConsent => ({
-  screens: choice === "screens",
-});
-
-const choiceOf = ({ screens }: AnalyticsConsent): ConsentChoice =>
-  screens ? "screens" : "none";
+export const useAnalyticsConsent = () => consentChoice.useValue() === "screens";
 
 const PROMPTS = ["unknown", "notice", "invite", "done"] as const;
 
@@ -42,10 +30,10 @@ export function useSaveAnalyticsConsent() {
     trpc.user.logAnalyticsConsent.mutationOptions({ retry: 3 }),
   );
 
-  return (next: AnalyticsConsent) => {
-    consentChoice.save(choiceOf(next));
+  return (screens: boolean) => {
+    consentChoice.save(screens ? "screens" : "none");
     log.mutate({
-      ...next,
+      screens,
       version: ANALYTICS_CONSENT_VERSION,
       platform: Platform.OS === "ios" ? "ios" : "android",
     });

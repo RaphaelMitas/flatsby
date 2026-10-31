@@ -161,7 +161,7 @@ export default function SettingsIndex() {
               testID="settings-analytics"
               title={t("settings.items.analytics")}
               subtitle={
-                user.analyticsOptOut && !analyticsConsent.screens
+                user.analyticsOptOut && !analyticsConsent
                   ? t("settings.items.disabled")
                   : t("settings.items.enabled")
               }

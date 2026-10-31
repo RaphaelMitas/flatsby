@@ -2,11 +2,7 @@ import { useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "posthog-react-native";
 
-import {
-  analyticsPrompt,
-  consentChoice,
-  consentOf,
-} from "~/utils/analytics/consent";
+import { analyticsPrompt, consentChoice } from "~/utils/analytics/consent";
 import {
   applyConsent,
   deletePostHogFiles,
@@ -35,13 +31,13 @@ export function AnalyticsSync() {
   // Applying consent deletes the old SDK file, so it waits for the migration below to read it
   useEffect(() => {
     if (choice !== null && prompt !== null && prompt !== "unknown")
-      void applyConsent(consentOf(choice));
+      void applyConsent(choice === "screens");
   }, [choice, prompt]);
 
   useEffect(() => {
     // The render right after a swap still holds the retired client
     if (posthog !== getPostHog()) return;
-    if (userId && getAnalyticsConsent().screens) posthog.identify(userId);
+    if (userId && getAnalyticsConsent()) posthog.identify(userId);
   }, [posthog, userId]);
 
   // Once per install: earlier builds stored an ID, and maybe the old opt-out, without asking

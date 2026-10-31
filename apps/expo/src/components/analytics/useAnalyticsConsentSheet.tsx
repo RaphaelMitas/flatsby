@@ -20,7 +20,6 @@ export function useAnalyticsConsentSheet() {
   const save = useSaveAnalyticsConsent();
 
   const open = () => sheetRef.current?.present();
-  const setScreens = (screens: boolean) => save({ screens });
 
   const sheet = (
     <SheetModal ref={sheetRef}>
@@ -43,7 +42,7 @@ export function useAnalyticsConsentSheet() {
         <Pressable
           testID="analytics-sheet-screens"
           className="flex-row items-center justify-between gap-3 py-2"
-          onPress={() => setScreens(!consent.screens)}
+          onPress={() => save(!consent)}
         >
           <View className="flex-1">
             <Text className="text-foreground text-base font-medium">
@@ -53,7 +52,7 @@ export function useAnalyticsConsentSheet() {
               {t("screensKept")}
             </Text>
           </View>
-          <Switch checked={consent.screens} onCheckedChange={setScreens} />
+          <Switch checked={consent} onCheckedChange={save} />
         </Pressable>
         <Button
           testID="analytics-sheet-done"
