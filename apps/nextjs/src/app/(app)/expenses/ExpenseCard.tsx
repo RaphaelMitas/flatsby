@@ -6,7 +6,10 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { getExpenseCategoryData } from "@flatsby/ui/categories/expense-categories";
-import { describeExpenseRow } from "@flatsby/validators/expenses/formatting";
+import {
+  amountTone,
+  describeExpenseRow,
+} from "@flatsby/validators/expenses/formatting";
 
 interface ExpenseCardProps {
   expense: ExpenseWithSplitsAndMembers;
@@ -62,9 +65,7 @@ export function ExpenseCard({
       <div className="min-w-0 flex-1">
         <p className="line-clamp-1 font-medium">{row.title}</p>
         <p className="text-muted-foreground line-clamp-1 text-sm">
-          {!row.isSettlement && (
-            <span className="sr-only">{t(category.name)}, </span>
-          )}
+          {row.category && <span className="sr-only">{row.category}, </span>}
           {row.payer}
           {row.paid && (
             <>
@@ -89,18 +90,9 @@ export function ExpenseCard({
         >
           {row.amount}
         </p>
-        {!row.isSettlement && (
-          <p
-            className={cn(
-              "text-xs",
-              !row.balance || row.balance.cents === 0
-                ? "text-muted-foreground"
-                : row.balance.cents > 0
-                  ? "text-success"
-                  : "text-destructive",
-            )}
-          >
-            {row.balance?.text ?? t("expenses.notInvolved")}
+        {row.balance && (
+          <p className={cn("text-xs", amountTone(row.balance.cents))}>
+            {row.balance.text}
           </p>
         )}
       </div>

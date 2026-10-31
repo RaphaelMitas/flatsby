@@ -105,4 +105,4 @@ tags:
     visible: "Zurich dinner"
     timeout: 20000
 - assertVisible: "€9[.,]00"
-- assertVisible: "CHF.10[.,]00"
+- assertVisible: ".*CHF.10[.,]00.*"

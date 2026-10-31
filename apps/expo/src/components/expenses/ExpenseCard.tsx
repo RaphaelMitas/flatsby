@@ -16,7 +16,6 @@ import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import { useSwipeActions } from "../SwipeActions";
-import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 import { ExpenseDisplay } from "./ExpenseDisplay";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -104,13 +103,12 @@ export function ExpenseCard({
   const row = describeExpenseRow(expense, meId, t, locale);
   const accessibilityLabel = [
     row.title,
-    !row.isSettlement &&
-      t(getExpenseCategoryData({ subcategoryId: expense.subcategory }).name),
+    row.category,
     row.payer,
     row.paid,
     row.date,
     row.amount,
-    !row.isSettlement && (row.balance?.text ?? t("expenses.notInvolved")),
+    row.balance?.text,
   ]
     .filter(Boolean)
     .join(", ");
@@ -186,10 +184,10 @@ export function ExpenseCard({
         visible={showDeleteModal}
         onClose={handleCloseModal}
         onConfirm={handleDelete}
-        itemName={row.title || row.amount}
+        itemName={row.title}
         title={t("expenses.deleteExpense")}
         description={
-          expense.splitMethod === "settlement"
+          row.isSettlement
             ? t("expenses.deleteSettlementConfirm")
             : t("expenses.deleteExpenseConfirm")
         }

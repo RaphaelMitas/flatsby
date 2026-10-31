@@ -195,6 +195,23 @@ export function ExpenseDetailView({
               </View>
             </CardHeader>
             <CardContent className="gap-4">
+              <View className="flex-row items-center gap-3">
+                <MemberAvatar
+                  person={memberPerson(expense.paidByGroupMember)}
+                  className="h-10 w-10"
+                />
+                <View>
+                  <Text className="text-muted-foreground text-sm">
+                    {expense.splitMethod === "settlement"
+                      ? t("expenses.from")
+                      : t("expenses.paidByLabel")}
+                  </Text>
+                  <Text className="text-foreground font-semibold">
+                    {expense.paidByGroupMember.user.name}
+                  </Text>
+                </View>
+              </View>
+
               {expense.splitMethod === "settlement" &&
                 expense.expenseSplits[0] && (
                   <View className="flex-row items-center gap-3">
@@ -206,7 +223,7 @@ export function ExpenseDetailView({
                     />
                     <View>
                       <Text className="text-muted-foreground text-sm">
-                        {t("expenses.from")}
+                        {t("expenses.to")}
                       </Text>
                       <Text className="font-semibold">
                         {expense.expenseSplits[0].groupMember.user.name}
@@ -214,23 +231,6 @@ export function ExpenseDetailView({
                     </View>
                   </View>
                 )}
-
-              <View className="flex-row items-center gap-3">
-                <MemberAvatar
-                  person={memberPerson(expense.paidByGroupMember)}
-                  className="h-10 w-10"
-                />
-                <View>
-                  <Text className="text-muted-foreground text-sm">
-                    {expense.splitMethod === "settlement"
-                      ? t("expenses.to")
-                      : t("expenses.paidByLabel")}
-                  </Text>
-                  <Text className="text-foreground font-semibold">
-                    {expense.paidByGroupMember.user.name}
-                  </Text>
-                </View>
-              </View>
 
               <Separator />
 

@@ -2,6 +2,8 @@ import type { describeExpenseRow } from "@flatsby/validators/expenses/formatting
 import { Text, View } from "react-native";
 import { useTranslations } from "use-intl";
 
+import { amountTone } from "@flatsby/validators/expenses/formatting";
+
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { cn } from "~/lib/utils";
 import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
@@ -72,18 +74,9 @@ export function ExpenseDisplay({
         >
           {row.amount}
         </Text>
-        {!row.isSettlement && (
-          <Text
-            className={cn(
-              "text-xs",
-              !row.balance || row.balance.cents === 0
-                ? "text-muted-foreground"
-                : row.balance.cents > 0
-                  ? "text-success"
-                  : "text-destructive",
-            )}
-          >
-            {row.balance?.text ?? t("notInvolved")}
+        {row.balance && (
+          <Text className={cn("text-xs", amountTone(row.balance.cents))}>
+            {row.balance.text}
           </Text>
         )}
       </View>

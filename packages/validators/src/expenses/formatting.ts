@@ -132,17 +132,7 @@ export function formatExpenseDateShort(
   });
 }
 
-export function formatExpenseMonth(
-  date: Date,
-  locale: Intl.LocalesArgument,
-): string {
-  return date.toLocaleDateString(locale, {
-    month: "long",
-    year: omitCurrentYear(date),
-  });
-}
-
-export type ExpenseListItem<T> =
+type ExpenseListItem<T> =
   | { type: "month"; key: string; label: string }
   | { type: "expense"; key: string; expense: T; first: boolean; last: boolean };
 
@@ -150,27 +140,30 @@ export function withMonthHeaders<T extends { id: number; expenseDate: Date }>(
   expenses: T[],
   locale: Intl.LocalesArgument,
 ): ExpenseListItem<T>[] {
-  const monthOf = (expense: T | undefined) => {
-    if (!expense) return undefined;
-    const date = new Date(expense.expenseDate);
-    return `${date.getFullYear()}-${date.getMonth()}`;
-  };
+  const dates = expenses.map((expense) => new Date(expense.expenseDate));
+  const months = dates.map(
+    (date) => `${date.getFullYear()}-${date.getMonth()}`,
+  );
   return expenses.flatMap((expense, index) => {
-    const month = monthOf(expense);
-    const first = month !== monthOf(expenses[index - 1]);
+    const month = months[index];
+    const first = month !== months[index - 1];
     const row = {
       type: "expense" as const,
       key: String(expense.id),
       expense,
       first,
-      last: month !== monthOf(expenses[index + 1]),
+      last: month !== months[index + 1],
     };
-    if (!first) return [row];
+    const date = dates[index];
+    if (!first || !date) return [row];
     return [
       {
         type: "month" as const,
         key: `month-${month}-${expense.id}`,
-        label: formatExpenseMonth(new Date(expense.expenseDate), locale),
+        label: date.toLocaleDateString(locale, {
+          month: "long",
+          year: omitCurrentYear(date),
+        }),
       },
       row,
     ];
@@ -265,6 +258,12 @@ export function personLookup(
       ? { ...person, name: t("debts.you") }
       : person;
   };
+}
+
+export function amountTone(cents: number): string {
+  if (cents > 0) return "text-success";
+  if (cents < 0) return "text-destructive";
+  return "text-muted-foreground";
 }
 
 export function formatSignedCents(
@@ -372,21 +371,26 @@ export function describeExpenseRow(
     member.id === meId ? t("debts.you") : member.user.name;
   const payer = name(expense.paidByGroupMember);
   const recipient = expense.expenseSplits[0]?.groupMember;
-  const balance = isSettlement ? null : expenseBalanceFor(expense, meId);
+  const category = t(expenseCategoryLabelKeys(expense.subcategory).name);
+  const balance = expenseBalanceFor(expense, meId);
   return {
     isSettlement,
     title:
       isSettlement && recipient
         ? t("expenses.settlementTitle", { from: payer, to: name(recipient) })
-        : expense.description ||
-          t(expenseCategoryLabelKeys(expense.subcategory).name),
+        : expense.description || category,
+    category: isSettlement ? null : category,
     payer: isSettlement ? t("expenses.settlement") : payer,
     date: formatExpenseDateShort(new Date(expense.expenseDate), locale),
     ...formatExpenseAmounts(expense, locale),
-    balance: balance && {
-      cents: balance.cents,
-      text: formatSignedCents(balance.cents, balance.currency, locale),
-    },
+    balance: isSettlement
+      ? null
+      : {
+          cents: balance?.cents ?? 0,
+          text: balance
+            ? formatSignedCents(balance.cents, balance.currency, locale)
+            : t("expenses.notInvolved"),
+        },
   };
 }
 

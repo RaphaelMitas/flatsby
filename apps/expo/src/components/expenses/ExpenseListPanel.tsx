@@ -157,7 +157,6 @@ function ExpenseList() {
             <FlashList
               {...refreshProps}
               data={withMonthHeaders(allExpenses, locale)}
-              keyExtractor={(item) => item.key}
               getItemType={(item) => item.type}
               renderItem={({ item }) =>
                 item.type === "month" ? (
