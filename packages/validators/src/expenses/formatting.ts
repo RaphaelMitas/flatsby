@@ -140,10 +140,10 @@ export function withMonthHeaders<T extends { id: number; expenseDate: Date }>(
   expenses: T[],
   locale: Intl.LocalesArgument,
 ): ExpenseListItem<T>[] {
-  const dates = expenses.map((expense) => new Date(expense.expenseDate));
-  const months = dates.map(
-    (date) => `${date.getFullYear()}-${date.getMonth()}`,
-  );
+  const months = expenses.map((expense) => {
+    const date = new Date(expense.expenseDate);
+    return `${date.getFullYear()}-${date.getMonth()}`;
+  });
   return expenses.flatMap((expense, index) => {
     const month = months[index];
     const first = month !== months[index - 1];
@@ -154,8 +154,8 @@ export function withMonthHeaders<T extends { id: number; expenseDate: Date }>(
       first,
       last: month !== months[index + 1],
     };
-    const date = dates[index];
-    if (!first || !date) return [row];
+    if (!first) return [row];
+    const date = new Date(expense.expenseDate);
     return [
       {
         type: "month" as const,
@@ -372,6 +372,7 @@ export function describeExpenseRow(
   const payer = name(expense.paidByGroupMember);
   const recipient = expense.expenseSplits[0]?.groupMember;
   const category = t(expenseCategoryLabelKeys(expense.subcategory).name);
+  const { amount, paid } = formatExpenseAmounts(expense, locale);
   const balance = expenseBalanceFor(expense, meId);
   return {
     isSettlement,
@@ -382,7 +383,8 @@ export function describeExpenseRow(
     category: isSettlement ? null : category,
     payer: isSettlement ? t("expenses.settlement") : payer,
     date: formatExpenseDateShort(new Date(expense.expenseDate), locale),
-    ...formatExpenseAmounts(expense, locale),
+    amount,
+    paid,
     balance: isSettlement
       ? null
       : {

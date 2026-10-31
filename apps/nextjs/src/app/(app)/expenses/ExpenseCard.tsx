@@ -42,16 +42,16 @@ export function ExpenseCard({
       onClick={onSelect}
       disabled={"isPending" in expense && expense.isPending === true}
       className={cn(
-        "bg-muted md:hover:bg-muted/80 flex min-h-14 w-full cursor-pointer items-center gap-3 border-t border-r border-l px-3 py-2.5 text-left transition-colors",
+        "bg-card md:hover:bg-muted/50 flex min-h-14 w-full cursor-pointer items-center gap-3 border-t border-r border-l px-3 py-2.5 text-left transition-colors",
         first && "rounded-t-xl",
         last && "rounded-b-xl border-b",
-        isSelected && "bg-accent md:hover:bg-accent",
+        isSelected && "bg-muted md:hover:bg-muted",
       )}
     >
       <div
         className={cn(
           "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-          row.isSettlement ? "bg-background" : category.colorClasses.bg,
+          row.isSettlement ? "bg-muted" : category.colorClasses.bg,
         )}
       >
         {row.isSettlement ? (
@@ -73,12 +73,12 @@ export function ExpenseCard({
               <span data-testid="expense-card-paid-amount">{row.paid}</span>
             </>
           )}
-          {` · ${row.date}`}
           {isNotConverted && (
             <span className="text-warning">
               {` · ${t("expenses.conversion.notConverted")}`}
             </span>
           )}
+          {` · ${row.date}`}
         </p>
       </div>
       <div className="shrink-0 text-right">

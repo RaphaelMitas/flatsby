@@ -106,6 +106,7 @@ export function ExpenseCard({
     row.category,
     row.payer,
     row.paid,
+    isNotConverted && t("expenses.conversion.notConverted"),
     row.date,
     row.amount,
     row.balance?.text,
