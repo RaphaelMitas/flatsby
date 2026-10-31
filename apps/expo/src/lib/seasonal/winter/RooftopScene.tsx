@@ -24,7 +24,6 @@ const LOOP_MS = 12000;
 // Enough sky above the scene that an iOS overscroll never runs out of it
 const OVERSCROLL = 1000;
 
-// Anchored right so the gap behind the cat lines up
 const TILE_WIDTH = 340;
 // Squashed from the drawing so the roofs stay clear of the greeting
 const SQUASH = 80 / 96;
@@ -96,6 +95,8 @@ const FLAKES = Array.from({ length: 18 }, (_, i) => ({
   phase: (i * 0.37) % 1,
   sway: 4 + (i % 4) * 2,
 }));
+const FAR_FLAKES = FLAKES.filter((flake) => !flake.near);
+const NEAR_FLAKES = FLAKES.filter((flake) => flake.near);
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
@@ -135,11 +136,11 @@ export function RooftopScene() {
           <Star key={star.left} clock={clock} index={index} {...star} />
         ))}
         <Moon />
-        {FLAKES.filter((flake) => !flake.near).map((flake) => (
+        {FAR_FLAKES.map((flake) => (
           <Flake key={flake.left} clock={clock} height={height} {...flake} />
         ))}
         <Skyline clock={clock} />
-        {FLAKES.filter((flake) => flake.near).map((flake) => (
+        {NEAR_FLAKES.map((flake) => (
           <Flake key={flake.left} clock={clock} height={height} {...flake} />
         ))}
       </View>
@@ -221,17 +222,18 @@ function Skyline({ clock }: { clock: Clock }) {
   );
 
   return (
-    <>
-      <View className="absolute right-0 bottom-0 flex-row-reverse">
-        {tiles.map((tile) => (
-          <Svg
-            key={tile}
-            viewBox="0 0 340 80"
-            width={TILE_WIDTH}
-            height={80 * SQUASH}
-            preserveAspectRatio="none"
-            style={tile % 2 ? { transform: [{ scaleX: -1 }] } : undefined}
-          >
+    // Anchored right so the gap behind the cat lines up
+    <View className="absolute right-0 bottom-0 flex-row-reverse">
+      {tiles.map((tile) => (
+        <Svg
+          key={tile}
+          viewBox="0 -20 340 116"
+          width={TILE_WIDTH}
+          height={116 * SQUASH}
+          preserveAspectRatio="none"
+          style={tile % 2 ? { transform: [{ scaleX: -1 }] } : undefined}
+        >
+          <G transform="translate(0 16)">
             <Path d={FAR} fill="#36598c" />
             <Path
               d={FAR_SNOW}
@@ -251,93 +253,80 @@ function Skyline({ clock }: { clock: Clock }) {
                 opacity={0.75}
               />
             ))}
-          </Svg>
-        ))}
-      </View>
-      <View className="absolute right-0 bottom-0 flex-row-reverse">
-        {tiles.map((tile) => (
-          <Svg
-            key={tile}
-            viewBox="0 -20 340 116"
-            width={TILE_WIDTH}
-            height={116 * SQUASH}
-            preserveAspectRatio="none"
-            style={tile % 2 ? { transform: [{ scaleX: -1 }] } : undefined}
-          >
-            <Path d={HOUSES} fill={HOUSE} />
-            {LIT_WINDOWS.map(([x, y, width, height]) => (
-              <Rect
-                key={x}
-                x={x}
-                y={y}
-                width={width}
-                height={height}
-                rx={1}
-                fill={LIT}
-              />
-            ))}
-            <Rect x={108} y={58} width={10} height={12} rx={1} fill={DARK} />
-            <Circle cx={176} cy={34} r={5} fill={LIT} />
-            {/* Only the tile always on screen animates, the rest stay still to spare the UI thread */}
-            {tile === 0 ? (
-              <FlickerWindow clock={clock} />
-            ) : (
-              <Rect {...FLICKER_WINDOW} fill={LIT} />
-            )}
-            <Path d={MULLIONS} fill="none" stroke={HOUSE} strokeWidth={1.2} />
-            <G
-              fill="none"
-              strokeWidth={7}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <Path d={ROOF_SNOW} stroke="#9db6d6" transform="translate(0 2)" />
-              <Path d={ROOF_SNOW} stroke="#f4f8fd" />
-            </G>
-            <Path d={ICICLES} fill="#e6eef8" />
-            <Rect x={168} y={62} width={16} height={22} rx={2} fill="#13233d" />
-            {christmas && (
-              <>
-                <Circle
-                  cx={176}
-                  cy={71}
-                  r={4.2}
-                  fill="none"
-                  stroke="#16a34a"
-                  strokeWidth={2.4}
-                />
-                <Circle cx={176} cy={75} r={1.3} fill="#ef4444" />
-                <Path d={WIRE} fill="none" stroke="#050b16" strokeWidth={1} />
-                {BULBS.map((bulb, index) =>
-                  tile === 0 ? (
-                    <Bulb key={bulb.cx} clock={clock} index={index} {...bulb} />
-                  ) : (
-                    <Circle
-                      key={bulb.cx}
-                      cx={bulb.cx}
-                      cy={bulb.cy}
-                      r={2.2}
-                      fill={bulb.color}
-                    />
-                  ),
-                )}
-              </>
-            )}
-            {tile === 0 &&
-              [0, 1, 2].map((puff) => (
-                <Smoke key={puff} clock={clock} phase={puff / 3} />
-              ))}
-            <Path d={`${GROUND}V96H-2Z`} fill={getColor("background")} />
-            <Path
-              d={GROUND}
-              fill="none"
-              stroke={getColor("border")}
-              strokeWidth={1.5}
+          </G>
+          <Path d={HOUSES} fill={HOUSE} />
+          {LIT_WINDOWS.map(([x, y, width, height]) => (
+            <Rect
+              key={x}
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              rx={1}
+              fill={LIT}
             />
-          </Svg>
-        ))}
-      </View>
-    </>
+          ))}
+          <Rect x={108} y={58} width={10} height={12} rx={1} fill={DARK} />
+          <Circle cx={176} cy={34} r={5} fill={LIT} />
+          {/* Only the tile always on screen animates, the rest stay still to spare the UI thread */}
+          {tile === 0 ? (
+            <FlickerWindow clock={clock} />
+          ) : (
+            <Rect {...FLICKER_WINDOW} fill={LIT} />
+          )}
+          <Path d={MULLIONS} fill="none" stroke={HOUSE} strokeWidth={1.2} />
+          <G
+            fill="none"
+            strokeWidth={7}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <Path d={ROOF_SNOW} stroke="#9db6d6" transform="translate(0 2)" />
+            <Path d={ROOF_SNOW} stroke="#f4f8fd" />
+          </G>
+          <Path d={ICICLES} fill="#e6eef8" />
+          <Rect x={168} y={62} width={16} height={22} rx={2} fill="#13233d" />
+          {christmas && (
+            <>
+              <Circle
+                cx={176}
+                cy={71}
+                r={4.2}
+                fill="none"
+                stroke="#16a34a"
+                strokeWidth={2.4}
+              />
+              <Circle cx={176} cy={75} r={1.3} fill="#ef4444" />
+              <Path d={WIRE} fill="none" stroke="#050b16" strokeWidth={1} />
+              {BULBS.map((bulb, index) =>
+                tile === 0 ? (
+                  <Bulb key={bulb.cx} clock={clock} index={index} {...bulb} />
+                ) : (
+                  <Circle
+                    key={bulb.cx}
+                    cx={bulb.cx}
+                    cy={bulb.cy}
+                    r={2.2}
+                    fill={bulb.color}
+                  />
+                ),
+              )}
+            </>
+          )}
+          {tile === 0 &&
+            [0, 1, 2].map((puff) => (
+              <Smoke key={puff} clock={clock} phase={puff / 3} />
+            ))}
+          <Path d={`${GROUND}V96H-2Z`} fill={getColor("background")} />
+          <Path
+            d={GROUND}
+            fill="none"
+            stroke={getColor("border")}
+            strokeWidth={1.5}
+          />
+        </Svg>
+      ))}
+    </View>
   );
 }
 

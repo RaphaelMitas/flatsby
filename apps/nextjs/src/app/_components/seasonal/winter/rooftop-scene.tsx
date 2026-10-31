@@ -5,7 +5,6 @@ import { cn } from "@flatsby/ui";
 import { useIsChristmas } from "./christmas";
 import styles from "./rooftop-scene.module.css";
 
-// The skyline is drawn as 340-wide tiles, anchored right so the gap behind the cat lines up
 const TILES = [0, 1, 2];
 
 const HOUSE = "#0b1628";
@@ -101,36 +100,7 @@ export function RooftopScene() {
         <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" fill="#f2f6ff" />
       </svg>
       <Flakes near={false} />
-      <div className="absolute right-0 bottom-0 flex flex-row-reverse">
-        {TILES.map((tile) => (
-          <svg
-            key={tile}
-            aria-hidden="true"
-            viewBox="0 0 340 80"
-            className={cn("h-20 w-85 shrink-0", tile % 2 && "-scale-x-100")}
-          >
-            <path d={FAR} fill="#36598c" />
-            <path
-              d={FAR_SNOW}
-              stroke="#d3e1f2"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              fill="none"
-            />
-            {FAR_WINDOWS.map(([x, y]) => (
-              <rect
-                key={x}
-                x={x}
-                y={y}
-                width="2"
-                height="3"
-                fill="#fde68a"
-                opacity="0.75"
-              />
-            ))}
-          </svg>
-        ))}
-      </div>
+      {/* Anchored right so the gap behind the cat lines up */}
       <div className="absolute right-0 bottom-0 flex flex-row-reverse">
         {TILES.map((tile) => (
           <svg
@@ -139,6 +109,27 @@ export function RooftopScene() {
             viewBox="0 -20 340 116"
             className={cn("h-29 w-85 shrink-0", tile % 2 && "-scale-x-100")}
           >
+            <g transform="translate(0 16)">
+              <path d={FAR} fill="#36598c" />
+              <path
+                d={FAR_SNOW}
+                stroke="#d3e1f2"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                fill="none"
+              />
+              {FAR_WINDOWS.map(([x, y]) => (
+                <rect
+                  key={x}
+                  x={x}
+                  y={y}
+                  width="2"
+                  height="3"
+                  fill="#fde68a"
+                  opacity="0.75"
+                />
+              ))}
+            </g>
             <path d={HOUSES} fill={HOUSE} />
             {LIT_WINDOWS.map(([x, y, width, height]) => (
               <rect
