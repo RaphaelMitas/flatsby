@@ -12,7 +12,17 @@ export type ExpenseListData = InfiniteData<
   unknown
 >;
 
-/** The unfiltered list's key prefixes every filtered one, so this patches them all. */
+// One still on its first fetch has nothing to protect, and cancelling it would strand it pending
+export const cancelExpenseLists = (
+  queryClient: QueryClient,
+  listKey: QueryKey,
+) =>
+  queryClient.cancelQueries({
+    queryKey: listKey,
+    predicate: (query) => query.state.data !== undefined,
+  });
+
+// The unfiltered list's key partially matches every filtered one, so this patches them all
 export function patchExpenseLists(
   queryClient: QueryClient,
   listKey: QueryKey,

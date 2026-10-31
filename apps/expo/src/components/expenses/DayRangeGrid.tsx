@@ -21,7 +21,6 @@ export interface DayRangeDraft {
   to?: string;
 }
 
-/** First tap picks the start, the second the end; tapping before the start starts over. */
 export const nextDraft = (draft: DayRangeDraft | undefined, day: string) =>
   !draft || draft.to !== undefined || day < draft.from
     ? { from: day }
@@ -32,7 +31,7 @@ export const draftRange = (draft: DayRangeDraft): DayRange => ({
   to: draft.to ?? draft.from,
 });
 
-/** Where the range's band crosses a week row, in columns; it starts and ends mid-cell under the picked days. */
+// The band starts and ends mid-cell, under the picked days' circles
 function bandColumns(week: string[], month: string, draft?: DayRangeDraft) {
   if (draft?.to === undefined || draft.from === draft.to) return undefined;
   const { from, to } = draft;

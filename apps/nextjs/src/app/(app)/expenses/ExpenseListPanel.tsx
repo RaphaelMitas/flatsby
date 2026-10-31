@@ -182,6 +182,8 @@ export function ExpenseListPanel({
               {search.hasMore && (
                 <InView
                   as="div"
+                  // Re-observing after each page fires again when the sentinel never left view
+                  skip={search.isFetchingMore}
                   onChange={(inView) => {
                     if (inView) search.loadMore();
                   }}

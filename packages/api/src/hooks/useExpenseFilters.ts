@@ -1,16 +1,21 @@
 import type {
   ExpenseFilterChoice,
   ExpenseListFilter,
-  FilterableExpense,
 } from "@flatsby/validators/expenses/list-filter";
+import type { UseInfiniteQueryResult } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDebouncedValue } from "@tanstack/react-pacer";
 
+import { localDate } from "@flatsby/validators/calendar";
 import {
   dayRangeFilter,
   isExpenseFilterActive,
   matchesExpenseFilter,
+  presetRange,
 } from "@flatsby/validators/expenses/list-filter";
+
+import type { ExpenseWithSplitsAndMembers } from "..";
+import type { ExpenseListData } from "../expenseListCache";
 
 const noChoice: ExpenseFilterChoice = { memberRole: "any" };
 
@@ -21,16 +26,19 @@ const toFilter = (
   ...(search && { search }),
   ...(memberId !== undefined && { memberId, memberRole }),
   ...(category && { category }),
-  ...(range && dayRangeFilter(range)),
+  // A preset means "this month" whenever it runs, not the month it was picked in
+  ...(range &&
+    dayRangeFilter(
+      range.preset ? presetRange(range.preset, localDate()) : range,
+    )),
 });
 
-/** Filters reset when the group changes, since its members and history differ. */
 export function useExpenseFilters(groupId: number) {
-  const [state, setState] = useState({ groupId, search: "", choice: noChoice });
-  const current =
-    state.groupId === groupId
-      ? state
-      : { groupId, search: "", choice: noChoice };
+  const fresh = { groupId, search: "", choice: noChoice };
+  const [state, setState] = useState(fresh);
+  // Another group's members and history make its filters meaningless here
+  if (state.groupId !== groupId) setState(fresh);
+  const current = state.groupId === groupId ? state : fresh;
   const typed = current.search.trim();
   const [debounced] = useDebouncedValue(typed, { wait: 200 });
   // Clearing the field goes back to the cached list without waiting
@@ -45,10 +53,11 @@ export function useExpenseFilters(groupId: number) {
     choose: (patch: Partial<ExpenseFilterChoice>) =>
       setState({ ...current, choice: { ...current.choice, ...patch } }),
     clearChoice: () => setState({ ...current, choice: noChoice }),
-    reset: () => setState({ groupId, search: "", choice: noChoice }),
+    reset: () => setState(fresh),
     live,
     query,
     isActive: isExpenseFilterActive(live),
+    hasChoice: isExpenseFilterActive(toFilter("", current.choice)),
     isQueryActive: isExpenseFilterActive(query),
     isDebouncing: typed !== sent,
   };
@@ -56,34 +65,20 @@ export function useExpenseFilters(groupId: number) {
 
 type ExpenseFilters = ReturnType<typeof useExpenseFilters>;
 
-interface ListQuery<T> {
-  data?: {
-    pages: ({ success: true; data: { items: T[] } } | { success: false })[];
-  };
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
-  isPending: boolean;
-  isPlaceholderData: boolean;
-  isError: boolean;
-  fetchStatus: "fetching" | "paused" | "idle";
-  fetchNextPage: () => Promise<unknown>;
-  refetch: () => Promise<unknown>;
-}
+type ListQuery = UseInfiniteQueryResult<ExpenseListData, unknown>;
+type ListItem = ExpenseWithSplitsAndMembers;
 
-const itemsOf = <T>(query: ListQuery<T>) =>
+const itemsOf = (query: ListQuery) =>
   query.data?.pages.flatMap((page) => (page.success ? page.data.items : [])) ??
   [];
 
-/**
- * Shows every cached expense that matches what is on screen right now, and
- * lets the filtered query add older matches underneath as they arrive.
- */
-export function expenseSearchView<T extends FilterableExpense & { id: number }>(
-  base: ListQuery<T>,
-  filtered: ListQuery<T>,
+// Cached matches show instantly; the filtered query appends older ones as they arrive
+export function expenseSearchView(
+  base: ListQuery,
+  filtered: ListQuery,
   filters: ExpenseFilters,
 ) {
-  const byId = new Map<number, T>();
+  const byId = new Map<number, ListItem>();
   const sources = filters.isQueryActive ? [base, filtered] : [base];
   for (const item of sources.flatMap(itemsOf)) {
     if (!byId.has(item.id)) byId.set(item.id, item);

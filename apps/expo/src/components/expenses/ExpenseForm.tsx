@@ -102,8 +102,9 @@ export function ExpenseForm({
   const isEditMode = !!expense;
   const totalSteps = 3;
 
-  const { expenseListQueryKey, patchLists, invalidateAll } =
-    useInvalidateExpenses(group.id);
+  const { cancelLists, patchLists, invalidateAll } = useInvalidateExpenses(
+    group.id,
+  );
 
   const expenseQueryKey = expense
     ? trpcClient.expense.getExpense.queryKey({
@@ -173,7 +174,7 @@ export function ExpenseForm({
       resultMutation({
         onMutate: async (input) => {
           // Cancel any outgoing queries
-          await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
+          await cancelLists();
 
           // Get the paidBy and createdBy members for the optimistic expense
           const paidByMember = group.groupMembers.find(
@@ -182,9 +183,10 @@ export function ExpenseForm({
           const currentMember = group.thisGroupMember;
 
           // Optimistically add the new expense
+          const pendingId = Date.now();
           const listSnapshot = patchLists((old) => {
             const optimisticExpense = {
-              id: Date.now(),
+              id: pendingId,
               groupId: group.id,
               paidByGroupMemberId: input.paidByGroupMemberId,
               amountInCents: input.amountInCents,

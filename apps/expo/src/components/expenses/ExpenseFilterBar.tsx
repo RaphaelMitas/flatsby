@@ -1,6 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { useExpenseFilters } from "@flatsby/api/hooks/useExpenseFilters";
 import type { ExpenseCategoryGroup } from "@flatsby/validators/expenses/categories";
+import type { PersonMember } from "@flatsby/validators/expenses/formatting";
 import type { MemberRole } from "@flatsby/validators/expenses/list-filter";
 import type { ComponentRef, ReactNode } from "react";
 import { useRef, useState } from "react";
@@ -39,11 +40,7 @@ const SNAP_POINTS = ["60%", "90%"];
 
 type SheetView = "member" | "category" | "range" | "grid";
 
-interface FilterMember {
-  id: number;
-  userId: string | null;
-  user: { name: string; image?: string | null };
-}
+type FilterMember = PersonMember & { id: number };
 
 interface ExpenseFilterBarProps {
   groupId: number;
@@ -95,16 +92,29 @@ export function ExpenseFilterBar({
   };
 
   // iOS animates the sheet out for a while; let the new check paint first
-  const closeThen = (run: () => void) =>
-    requestAnimationFrame(() => {
-      sheetRef.current?.dismiss();
-      run();
-    });
+  const closeThen = (run: () => void) => {
+    run();
+    requestAnimationFrame(() => sheetRef.current?.dismiss());
+  };
 
-  const hasChoice =
-    labels.member !== undefined ||
-    labels.category !== undefined ||
-    labels.range !== undefined;
+  const customRange = choice.range?.preset ? undefined : choice.range;
+
+  const memberOption = (member: FilterMember) => (
+    <Option
+      key={member.id}
+      testID={`expense-filter-person-${member.id}`}
+      selected={choice.memberId === member.id}
+      icon={<MemberAvatar person={memberPerson(member)} className="size-8" />}
+      onPress={() => closeThen(() => filters.choose({ memberId: member.id }))}
+    >
+      {member.user.name}
+      {member.id === meId && (
+        <Text className="text-muted-foreground text-sm">
+          {` ${t("expenses.filter.you")}`}
+        </Text>
+      )}
+    </Option>
+  );
 
   return (
     <View>
@@ -178,7 +188,7 @@ export function ExpenseFilterBar({
           onPress={() => open("range")}
           onClear={() => filters.choose({ range: undefined })}
         />
-        {hasChoice && (
+        {filters.hasChoice && (
           <Pressable
             testID="expense-filter-clear"
             onPress={filters.clearChoice}
@@ -276,52 +286,13 @@ export function ExpenseFilterBar({
                 >
                   {t("expenses.filter.all")}
                 </Option>
-                {members.map((member) => (
-                  <Option
-                    key={member.id}
-                    testID={`expense-filter-person-${member.id}`}
-                    selected={choice.memberId === member.id}
-                    icon={
-                      <MemberAvatar
-                        person={memberPerson(member)}
-                        className="size-8"
-                      />
-                    }
-                    onPress={() =>
-                      closeThen(() => filters.choose({ memberId: member.id }))
-                    }
-                  >
-                    {member.user.name}
-                    {member.id === meId && (
-                      <Text className="text-muted-foreground text-sm">
-                        {` ${t("expenses.filter.you")}`}
-                      </Text>
-                    )}
-                  </Option>
-                ))}
+                {members.map(memberOption)}
                 {formerMembers.length > 0 && (
                   <SectionLabel>
                     {t("expenses.filter.formerMembers")}
                   </SectionLabel>
                 )}
-                {formerMembers.map((member) => (
-                  <Option
-                    key={member.id}
-                    testID={`expense-filter-person-${member.id}`}
-                    selected={choice.memberId === member.id}
-                    icon={
-                      <MemberAvatar
-                        person={memberPerson(member)}
-                        className="size-8"
-                      />
-                    }
-                    onPress={() =>
-                      closeThen(() => filters.choose({ memberId: member.id }))
-                    }
-                  >
-                    {member.user.name}
-                  </Option>
-                ))}
+                {formerMembers.map(memberOption)}
               </>
             )}
 
@@ -379,21 +350,15 @@ export function ExpenseFilterBar({
                 <SectionLabel>{t("expenses.filter.customRange")}</SectionLabel>
                 <Option
                   testID="expense-filter-range-custom"
-                  selected={false}
+                  selected={customRange !== undefined}
                   chevron
                   onPress={() => {
-                    const custom =
-                      choice.range && !choice.range.preset
-                        ? choice.range
-                        : undefined;
-                    setDraft(custom);
+                    setDraft(customRange);
                     setView("grid");
                     sheetRef.current?.expand();
                   }}
                 >
-                  {choice.range && !choice.range.preset
-                    ? labels.range
-                    : t("expenses.filter.pickRange")}
+                  {customRange ? labels.range : t("expenses.filter.pickRange")}
                 </Option>
               </>
             )}
@@ -493,7 +458,7 @@ function Option({
       {detail !== undefined && !selected && (
         <Text className="text-muted-foreground text-sm">{detail}</Text>
       )}
-      {chevron && (
+      {chevron && !selected && (
         <Icon name="chevron-right" size={18} color="muted-foreground" />
       )}
       {selected && <Icon name="check" size={18} color="foreground" />}

@@ -48,7 +48,7 @@ export function ExpenseCard({
   const swipeableRef = useRef<SwipeableMethods>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const { expenseListQueryKey, patchLists, invalidateAll } =
+  const { cancelLists, patchLists, invalidateAll } =
     useInvalidateExpenses(groupId);
 
   const deleteExpenseMutation = useMutation(
@@ -56,7 +56,7 @@ export function ExpenseCard({
       resultMutation({
         onMutate: async (input) => {
           // Cancel any outgoing queries
-          await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
+          await cancelLists();
 
           // Optimistically remove the expense from the list
           const listSnapshot = patchLists((old) => {

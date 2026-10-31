@@ -62,7 +62,7 @@ export function ExpenseDetailView({
     trpcClient.expense.getExpense.queryOptions({ expenseId }),
   );
 
-  const { expenseListQueryKey, patchLists, invalidateAll } =
+  const { cancelLists, patchLists, invalidateAll } =
     useInvalidateExpenses(groupId);
 
   const deleteExpenseMutation = useMutation(
@@ -70,7 +70,7 @@ export function ExpenseDetailView({
       resultMutation({
         onMutate: async (input) => {
           // Cancel any outgoing queries
-          await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
+          await cancelLists();
 
           // Optimistically remove the expense from the list
           const listSnapshot = patchLists((old) => {

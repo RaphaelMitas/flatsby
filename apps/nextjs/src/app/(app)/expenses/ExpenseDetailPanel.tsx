@@ -60,14 +60,14 @@ export function ExpenseDetailPanel({
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  const { expenseListQueryKey, patchLists, invalidateAll } =
+  const { cancelLists, patchLists, invalidateAll } =
     useExpenseInvalidation(groupId);
 
   const deleteExpenseMutation = useMutation(
     trpc.expense.deleteExpense.mutationOptions(
       resultMutation({
         onMutate: async (input) => {
-          await queryClient.cancelQueries({ queryKey: expenseListQueryKey });
+          await cancelLists();
 
           const listSnapshot = patchLists((old) => {
             const updatedPages = old.pages.map((page) => {

@@ -114,7 +114,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   });
 
   const {
-    expenseListQueryKey,
+    cancelLists,
     patchLists,
     debtSummaryQueryKey,
     invalidateList,
@@ -134,7 +134,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
       resultMutation({
         onMutate: async (input) => {
           await Promise.all([
-            queryClient.cancelQueries({ queryKey: expenseListQueryKey }),
+            cancelLists(),
             queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
           ]);
 
@@ -163,11 +163,12 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
           );
 
           // Optimistically add the new settlement
+          const pendingId = Date.now();
           const listSnapshot = patchLists((old) => {
             const optimisticSettlement: ExpenseWithSplitsAndMembers & {
               isPending: true;
             } = {
-              id: Date.now(),
+              id: pendingId,
               groupId,
               paidByGroupMemberId: input.paidByGroupMemberId,
               amountInCents: input.amountInCents,

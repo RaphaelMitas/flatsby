@@ -102,4 +102,20 @@ test.describe("Expense Management", () => {
     await expect(search).toHaveValue("");
     await expect(card).toBeVisible();
   });
+
+  test("Search survives opening a result on a narrow screen", async ({
+    authPage,
+  }) => {
+    await authPage.setViewportSize({ width: 390, height: 844 });
+    const { description } = await createTestExpense(authPage);
+    const search = authPage.getByTestId("expense-search-input");
+    await search.fill(description);
+    await openExpenseDetail(authPage, description);
+    await expect(authPage.getByTestId("expense-split-details")).toBeVisible({
+      timeout: 15000,
+    });
+
+    await authPage.goBack();
+    await expect(search).toHaveValue(description);
+  });
 });

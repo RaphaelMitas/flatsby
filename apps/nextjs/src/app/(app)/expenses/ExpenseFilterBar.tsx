@@ -2,6 +2,7 @@
 
 import type { useExpenseFilters } from "@flatsby/api/hooks/useExpenseFilters";
 import type { ExpenseCategoryGroup } from "@flatsby/validators/expenses/categories";
+import type { PersonMember } from "@flatsby/validators/expenses/formatting";
 import type { DayRange } from "@flatsby/validators/expenses/list-filter";
 import type { ReactNode } from "react";
 import type { DateRange } from "react-day-picker";
@@ -21,6 +22,7 @@ import {
   InputGroupInput,
 } from "@flatsby/ui/input-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@flatsby/ui/popover";
+import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   localDate,
@@ -46,11 +48,7 @@ import { useTRPC } from "~/trpc/react";
 
 type FilterMenu = "member" | "category" | "range";
 
-interface FilterMember {
-  id: number;
-  userId: string | null;
-  user: { name: string; image?: string | null };
-}
+type FilterMember = PersonMember & { id: number };
 
 interface ExpenseFilterBarProps {
   groupId: number;
@@ -123,10 +121,22 @@ export function ExpenseFilterBar({
     },
   });
 
-  const hasChoice =
-    labels.member !== undefined ||
-    labels.category !== undefined ||
-    labels.range !== undefined;
+  const memberOption = (member: FilterMember) => (
+    <Option
+      key={member.id}
+      testId={`expense-filter-person-${member.id}`}
+      selected={choice.memberId === member.id}
+      icon={<UserAvatar {...memberPerson(member)} size="sm" />}
+      onSelect={() => choose({ memberId: member.id })}
+    >
+      {member.user.name}
+      {member.id === meId && (
+        <span className="text-muted-foreground">
+          {` ${t("expenses.filter.you")}`}
+        </span>
+      )}
+    </Option>
+  );
   const draftRange =
     draft?.from &&
     ({
@@ -180,24 +190,26 @@ export function ExpenseFilterBar({
             }
           />
           <PopoverContent align="start" className="w-64 p-1">
-            <div className="bg-muted mb-1 flex rounded-md p-0.5">
-              {memberRoles.map((role) => (
-                <button
-                  key={role}
-                  type="button"
-                  data-testid={`expense-filter-role-${role}`}
-                  onClick={() => filters.choose({ memberRole: role })}
-                  className={cn(
-                    "flex-1 rounded px-2 py-1 text-xs",
-                    choice.memberRole === role
-                      ? "bg-background font-semibold shadow-sm"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  {t(`expenses.filter.roles.${role}`)}
-                </button>
-              ))}
-            </div>
+            <Tabs
+              value={choice.memberRole}
+              onValueChange={(value) => {
+                const memberRole = memberRoles.find((role) => role === value);
+                if (memberRole) filters.choose({ memberRole });
+              }}
+              className="mb-1"
+            >
+              <TabsList className="w-full">
+                {memberRoles.map((role) => (
+                  <TabsTrigger
+                    key={role}
+                    value={role}
+                    data-testid={`expense-filter-role-${role}`}
+                  >
+                    {t(`expenses.filter.roles.${role}`)}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
             <Option
               testId="expense-filter-person-all"
               selected={choice.memberId === undefined}
@@ -207,36 +219,11 @@ export function ExpenseFilterBar({
             >
               {t("expenses.filter.all")}
             </Option>
-            {members.map((member) => (
-              <Option
-                key={member.id}
-                testId={`expense-filter-person-${member.id}`}
-                selected={choice.memberId === member.id}
-                icon={<UserAvatar {...memberPerson(member)} size="sm" />}
-                onSelect={() => choose({ memberId: member.id })}
-              >
-                {member.user.name}
-                {member.id === meId && (
-                  <span className="text-muted-foreground">
-                    {` ${t("expenses.filter.you")}`}
-                  </span>
-                )}
-              </Option>
-            ))}
+            {members.map(memberOption)}
             {formerMembers.length > 0 && (
               <SectionLabel>{t("expenses.filter.formerMembers")}</SectionLabel>
             )}
-            {formerMembers.map((member) => (
-              <Option
-                key={member.id}
-                testId={`expense-filter-person-${member.id}`}
-                selected={choice.memberId === member.id}
-                icon={<UserAvatar {...memberPerson(member)} size="sm" />}
-                onSelect={() => choose({ memberId: member.id })}
-              >
-                {member.user.name}
-              </Option>
-            ))}
+            {formerMembers.map(memberOption)}
           </PopoverContent>
         </Popover>
 
@@ -336,7 +323,7 @@ export function ExpenseFilterBar({
           </PopoverContent>
         </Popover>
 
-        {hasChoice && (
+        {filters.hasChoice && (
           <Button
             variant="link"
             size="sm"

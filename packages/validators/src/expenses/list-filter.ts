@@ -113,7 +113,6 @@ export function presetRange(preset: DatePreset, today: string): DayRange {
   }
 }
 
-/** Device-local midnights, so a day means the same thing as the expense date picker. */
 export const dayRangeFilter = (range: DayRange) => ({
   from: pickerDate(range.from),
   to: pickerDate(addDays(range.to, 1)),
@@ -163,7 +162,6 @@ export interface ExpenseFilterChoice {
   range?: DayRange;
 }
 
-/** What the person, category and range chips say; undefined when that filter is off. */
 export function filterChipLabels(
   choice: ExpenseFilterChoice,
   people: { id: number; user: { name: string } }[],

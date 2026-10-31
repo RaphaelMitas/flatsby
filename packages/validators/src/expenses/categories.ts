@@ -295,7 +295,6 @@ export const subcategoriesOf = (group: ExpenseCategoryGroup) =>
     .filter((subcategory) => subcategory.group === group)
     .map((subcategory) => subcategory.id);
 
-/** A group has no icon of its own, so it borrows its first subcategory's. */
 export const groupIconSubcategory = (
   group: ExpenseCategoryGroup,
 ): ExpenseSubcategoryId => subcategoriesOf(group)[0] ?? "other";
