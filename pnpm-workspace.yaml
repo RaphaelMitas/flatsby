@@ -29,6 +29,13 @@ auditConfig:
     # unchanged since 2023. Reached via @expo/config@58.0.8 (latest) merging app
     # config at build time, never untrusted input.
     - GHSA-gcqx-w48m-w2h4
+    # glob <=14.0.1 and minimatch <11.0.1 - patched only in the new majors. Every
+    # Expo 58 package (cli, config, config-plugins, fingerprint, metro-config,
+    # expo-updates, canary included) depends on glob ^13. Build tooling globbing
+    # our own project with Expo's patterns, no abort signals or untrusted input.
+    # Clears when Expo moves to glob 14.
+    - GHSA-3g3m-2fjr-6pw4
+    - GHSA-g3hv-75wg-m249
 
 catalog:
   "@ai-sdk/provider": ^4.0.29
