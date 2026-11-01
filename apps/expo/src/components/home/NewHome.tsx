@@ -1,7 +1,8 @@
 import type { GroupWithAccess, ShoppingListSummary } from "@flatsby/api";
 import { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -36,10 +37,13 @@ import { GroupGate } from "~/components/GroupGate";
 import { shoppingListItemsOptions } from "~/components/shoppingList/ShoppingListUtils";
 import { GroupSwitcher } from "~/components/switcher/GroupSwitcher";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
+import { season } from "~/lib/seasonal/season";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useNow } from "~/utils/useNow";
+import { CAT_SIZE } from "../dashboard/useCatTap";
 import { ForYouCard } from "./ForYouCard";
 import {
   CountLead,
@@ -66,6 +70,29 @@ export function NewHome() {
         {(group) => <HomeScreen key={group.id} group={group} />}
       </GroupGate>
     </BottomSheetPickerProvider>
+  );
+}
+
+const home = season.home;
+
+const greetingShadow = home && {
+  textShadowColor: `${home.sky}88`,
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 12,
+};
+
+function StatusBarSky({ color }: { color: string }) {
+  const isFocused = useIsFocused();
+
+  return (
+    <>
+      <View
+        pointerEvents="none"
+        className="absolute inset-x-0"
+        style={{ bottom: "100%", height: 200, backgroundColor: color }}
+      />
+      {isFocused && <StatusBar style="light" />}
+    </>
   );
 }
 
@@ -270,22 +297,38 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
 
   return (
     <View className="flex-1">
+      {home && <StatusBarSky color={home.sky} />}
       <AppScrollView contentContainerClassName="px-5 pb-32" onRefresh={refresh}>
-        <GroupSwitcher
-          testID="home-group-picker"
-          settingsTestID="home-group-settings"
-          className="mt-2 mb-4"
-        />
+        <View>
+          {home && (
+            // Runs down behind the cat to just past the top of the For You card
+            <View
+              className="absolute -inset-x-5 top-0"
+              style={{ bottom: -CAT_SIZE - 6 }}
+            >
+              <home.Backdrop />
+            </View>
+          )}
+          <GroupSwitcher
+            testID="home-group-picker"
+            settingsTestID="home-group-settings"
+            className="mt-2 mb-4"
+          />
 
-        <View className="pr-20">
-          <Text
-            testID="home-greeting"
-            className="text-foreground text-4xl font-extrabold tracking-tight"
-          >
-            {t(`home.new.greeting.${greetingFor(now.getHours())}`, {
-              name: firstName,
-            })}
-          </Text>
+          <View className="pr-20">
+            <Text
+              testID="home-greeting"
+              className={cn(
+                "text-4xl font-extrabold tracking-tight",
+                home ? "text-white" : "text-foreground",
+              )}
+              style={greetingShadow}
+            >
+              {t(`home.new.greeting.${greetingFor(now.getHours())}`, {
+                name: firstName,
+              })}
+            </Text>
+          </View>
         </View>
 
         <ForYouCard

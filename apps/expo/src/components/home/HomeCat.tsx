@@ -12,9 +12,10 @@ import Animated, {
 import { useIsFocused } from "expo-router";
 import { useTranslations } from "use-intl";
 
+import { season } from "~/lib/seasonal/season";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import { useThemeColors } from "~/lib/utils";
-import { CAT_SIZE, CatTapReaction, useCatTap } from "../dashboard/useCatTap";
+import { CAT_SIZE, useCatTap } from "../dashboard/useCatTap";
 import { Snores } from "./Snores";
 
 export type CatPose = "sitting" | "peeking" | "asleep";
@@ -38,7 +39,7 @@ export function HomeCat({
   const { getColor } = useThemeColors();
   const isFocused = useIsFocused();
   const sink = useSharedValue(CAT_SIZE);
-  const { hop, taps, tap } = useCatTap();
+  const { hop, tap } = useCatTap();
   const stretch = useSharedValue(0);
 
   useEffect(() => {
@@ -83,8 +84,8 @@ export function HomeCat({
           animated={isFocused}
           asleep={pose === "asleep"}
         />
+        {season.CatHat && <season.CatHat size={CAT_SIZE} />}
       </Animated.View>
-      <CatTapReaction taps={taps} />
     </Pressable>
   );
 }
@@ -111,7 +112,12 @@ export function CatOverlay({
         </Animated.View>
       )}
       {pose === "asleep" && (
-        <Snores style={{ top: CAT_SIZE - 20 }} className="absolute right-20" />
+        <Snores
+          style={{ top: CAT_SIZE - 20 }}
+          className="absolute right-20"
+          // In season they float over the dark sky
+          textClassName={season.home ? "text-white" : undefined}
+        />
       )}
       {speech && <CatBubble key={speech} text={speech} />}
     </>

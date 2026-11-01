@@ -1,0 +1,89 @@
+.scene {
+  background: linear-gradient(#08142b, #12284d 38%, #2b4f84 72%, #5b82b8);
+}
+
+.star {
+  animation: twinkle 2.4s ease-in-out infinite alternate;
+}
+
+.moon {
+  filter: drop-shadow(0 0 10px #cfe0ffaa);
+}
+
+.flake {
+  position: absolute;
+  top: -8px;
+  border-radius: 9999px;
+  background: white;
+  animation: fall linear infinite;
+}
+
+.smoke {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: smoke 4s ease-out infinite;
+}
+
+.bulb {
+  animation: twinkle 1.8s ease-in-out infinite alternate;
+}
+
+.flicker {
+  animation: flicker 12s steps(1) infinite;
+}
+
+@keyframes twinkle {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fall {
+  50% {
+    transform: translate(var(--sway), 85px);
+  }
+  to {
+    transform: translate(0, 170px);
+  }
+}
+
+@keyframes smoke {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5);
+  }
+  15% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -26px) scale(1.8);
+  }
+}
+
+@keyframes flicker {
+  62%,
+  80% {
+    opacity: 0;
+  }
+  81% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star,
+  .flake,
+  .smoke,
+  .bulb,
+  .flicker {
+    animation: none;
+  }
+
+  .smoke {
+    opacity: 0;
+  }
+}

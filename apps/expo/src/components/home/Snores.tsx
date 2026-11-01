@@ -11,27 +11,44 @@ import Animated, {
 } from "react-native-reanimated";
 import { useTranslations } from "use-intl";
 
+import { cn } from "~/lib/utils";
+
 const SNORE_SIZES = ["text-xs", "text-sm", "text-base"];
 
 export function Snores({
   className,
   style,
   drift = "left",
+  textClassName = "text-foreground",
 }: {
   className?: string;
   style?: ViewStyle;
   drift?: "left" | "right";
+  textClassName?: string;
 }) {
   return (
     <View pointerEvents="none" style={style} className={className}>
       {[0, 1, 2].map((index) => (
-        <Snore key={index} index={index} sign={drift === "left" ? -1 : 1} />
+        <Snore
+          key={index}
+          index={index}
+          sign={drift === "left" ? -1 : 1}
+          textClassName={textClassName}
+        />
       ))}
     </View>
   );
 }
 
-function Snore({ index, sign }: { index: number; sign: number }) {
+function Snore({
+  index,
+  sign,
+  textClassName,
+}: {
+  index: number;
+  sign: number;
+  textClassName: string;
+}) {
   const t = useTranslations("home.new.cat");
   const progress = useSharedValue(0);
 
@@ -54,7 +71,7 @@ function Snore({ index, sign }: { index: number; sign: number }) {
 
   return (
     <Animated.View style={style} className="absolute">
-      <Text className={`text-foreground font-extrabold ${SNORE_SIZES[index]}`}>
+      <Text className={cn("font-extrabold", SNORE_SIZES[index], textClassName)}>
         {t("snore")}
       </Text>
     </Animated.View>

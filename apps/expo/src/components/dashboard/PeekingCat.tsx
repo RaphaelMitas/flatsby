@@ -9,9 +9,10 @@ import Animated, {
 import { useFocusEffect, useIsFocused } from "expo-router";
 import { useTranslations } from "use-intl";
 
+import { season } from "~/lib/seasonal/season";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import { useThemeColors } from "~/lib/utils";
-import { CAT_SIZE, CatTapReaction, HOP, useCatTap } from "./useCatTap";
+import { CAT_SIZE, HOP, useCatTap } from "./useCatTap";
 
 const PEEK = 30;
 
@@ -20,7 +21,7 @@ export function PeekingCat() {
   const { getColor } = useThemeColors();
   const isFocused = useIsFocused();
   const rise = useSharedValue(PEEK);
-  const { hop, taps, tap } = useCatTap();
+  const { hop, tap } = useCatTap();
 
   useFocusEffect(
     useCallback(() => {
@@ -36,19 +37,17 @@ export function PeekingCat() {
   }));
 
   return (
-    <View>
-      <View style={{ height: PEEK + HOP }} className="overflow-hidden">
-        <Pressable onPress={tap} accessibilityLabel={t("catLabel")}>
-          <Animated.View style={[{ marginTop: HOP }, catStyle]}>
-            <FlatsbyCat
-              size={CAT_SIZE}
-              color={getColor("primary")}
-              animated={isFocused}
-            />
-          </Animated.View>
-        </Pressable>
-      </View>
-      <CatTapReaction taps={taps} />
+    <View style={{ height: PEEK + HOP }} className="overflow-hidden">
+      <Pressable onPress={tap} accessibilityLabel={t("catLabel")}>
+        <Animated.View style={[{ marginTop: HOP }, catStyle]}>
+          <FlatsbyCat
+            size={CAT_SIZE}
+            color={getColor("primary")}
+            animated={isFocused}
+          />
+          {season.CatHat && <season.CatHat size={CAT_SIZE} />}
+        </Animated.View>
+      </Pressable>
     </View>
   );
 }
