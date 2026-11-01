@@ -74,9 +74,6 @@ catalog:
 
 catalogs:
   better-auth:
-    # 1.6.24+ breaks the Expo client plugin types: expoClient no longer satisfies
-    # BetterAuthClientPlugin and authClient.getCookie loses its type.
-    # https://github.com/better-auth/better-auth/issues/10767
     "@better-auth/expo": 1.7.14
     "@better-auth/passkey": 1.7.14
     better-auth: 1.7.14
