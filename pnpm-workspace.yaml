@@ -38,34 +38,34 @@ auditConfig:
     - GHSA-g3hv-75wg-m249
 
 catalog:
-  "@ai-sdk/provider": ^4.0.29
-  "@ai-sdk/react": ^4.0.147
-  "@biomejs/biome": 2.5.15
+  "@ai-sdk/provider": ^4.0.34
+  "@ai-sdk/react": ^4.0.161
+  "@biomejs/biome": 2.6.4
   "@effect/tsgo": 0.63.0
-  "@effect/vitest": 4.0.5
-  "@hookform/resolvers": ^6.0.0
+  "@effect/vitest": 4.1.0
+  "@hookform/resolvers": ^6.0.2
   "@playwright/test": ^1.64.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.3.3
-  "@tanstack/query-async-storage-persister": ^5.104.5
-  "@tanstack/react-query": ^5.104.5
-  "@tanstack/react-query-persist-client": ^5.104.5
-  "@trpc/client": ^11.19.0
-  "@trpc/server": ^11.19.0
-  "@trpc/tanstack-react-query": ^11.19.0
-  "@turbo/gen": ^2.11.9
+  "@tanstack/query-async-storage-persister": ^5.105.0
+  "@tanstack/react-query": ^5.105.0
+  "@tanstack/react-query-persist-client": ^5.105.0
+  "@trpc/client": ^11.22.1
+  "@trpc/server": ^11.22.1
+  "@trpc/tanstack-react-query": ^11.22.1
+  "@turbo/gen": ^2.11.10
   "@types/node": ^24.19.2
-  ai: ^7.0.143
-  autumn-js: ^1.5.9
+  ai: ^7.0.157
+  autumn-js: ^1.5.32
   babel-plugin-react-compiler: ^1.0.0
-  next: ^16.4.2
+  next: ^16.4.3
   next-intl: ^4.14.9
   prettier: ^3.9.10
-  react-hook-form: ^7.90.0
+  react-hook-form: ^7.91.0
   react-qr-code: ^2.2.0
   superjson: ^2.2.6
   tailwindcss: ^4.3.3
-  turbo: ^2.11.9
+  turbo: ^2.11.10
   # exact: each @effect/tsgo release supports specific TypeScript versions
   typescript: 7.0.2
   use-intl: ^4.14.9
@@ -77,9 +77,9 @@ catalogs:
     # 1.6.24+ breaks the Expo client plugin types: expoClient no longer satisfies
     # BetterAuthClientPlugin and authClient.getCookie loses its type.
     # https://github.com/better-auth/better-auth/issues/10767
-    "@better-auth/expo": 1.7.11
-    "@better-auth/passkey": 1.7.11
-    better-auth: 1.7.11
+    "@better-auth/expo": 1.7.14
+    "@better-auth/passkey": 1.7.14
+    better-auth: 1.7.14
   react19:
     "@types/react": ~19.3.0
     "@types/react-dom": ~19.3.0
