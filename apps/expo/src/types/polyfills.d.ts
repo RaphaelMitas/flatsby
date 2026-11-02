@@ -1,3 +1,4 @@
+// biome-ignore lint/suspicious/noReactNativeDeepImports: polyfillGlobal has no public export
 declare module "react-native/Libraries/Utilities/PolyfillFunctions" {
   export function polyfillGlobal(name: string, getValue: () => unknown): void;
 }

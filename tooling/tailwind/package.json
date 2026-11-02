@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "catalog:",
-    "postcss": "^8.5.31",
+    "postcss": "^8.5.32",
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
