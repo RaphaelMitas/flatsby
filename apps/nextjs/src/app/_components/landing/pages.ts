@@ -259,7 +259,11 @@ export function contentPages(t: MarketingTranslator): ContentPageData[] {
             t("pages.splitwise.table.currencyFlatsby"),
             pro,
           ],
-          [t("pages.splitwise.table.receipts"), no, pro],
+          [
+            t("pages.splitwise.table.receipts"),
+            t("pages.splitwise.table.receiptsFlatsby"),
+            pro,
+          ],
           [
             t("pages.splitwise.table.charts"),
             t("pages.splitwise.table.chartsFlatsby"),

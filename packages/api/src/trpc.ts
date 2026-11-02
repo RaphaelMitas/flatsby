@@ -18,6 +18,7 @@ import { defaultLocale, localeFromHeaders } from "@flatsby/i18n/locale";
 import { translateIfKey } from "@flatsby/i18n/message-key";
 import { translatorFor } from "@flatsby/i18n/translator";
 
+import type { ReceiptScanner } from "./utils/receipt-scan";
 import { captureUserEvent } from "./lib/posthog";
 
 /**
@@ -37,6 +38,7 @@ export const createTRPCContext = async (opts: {
   headers: Headers;
   auth: Auth;
   signal?: AbortSignal;
+  scanReceipt?: ReceiptScanner;
 }): Promise<{
   authApi: Auth["api"];
   headers: Headers;
@@ -46,6 +48,7 @@ export const createTRPCContext = async (opts: {
   locale: Locale;
   requestId: string;
   signal?: AbortSignal;
+  scanReceipt?: ReceiptScanner;
 }> => {
   const authApi = opts.auth.api;
   const authStart = Date.now();
@@ -61,6 +64,7 @@ export const createTRPCContext = async (opts: {
     locale: localeFromHeaders(opts.headers),
     requestId: crypto.randomUUID(),
     signal: opts.signal,
+    scanReceipt: opts.scanReceipt,
   };
 };
 /**

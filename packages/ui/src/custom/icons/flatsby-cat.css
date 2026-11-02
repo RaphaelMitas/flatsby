@@ -138,6 +138,18 @@
   .fc-excited .fc-eye-open {
     transform: scale(1.08);
   }
+  .fc-squint .fc-eye-open {
+    transform: scaleY(0.42);
+  }
+  .fc-asleep .fc-eye-open {
+    transform: scaleY(0.06);
+  }
+  .flatsby-cat .fc-monocle {
+    transition: opacity 0.2s;
+  }
+  .fc-no-monocle .fc-monocle {
+    opacity: 0;
+  }
   .fc-excited .fc-whiskers-up {
     transform: rotate(-5deg);
   }

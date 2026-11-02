@@ -106,3 +106,19 @@ tags:
     timeout: 20000
 - assertVisible: "€9[.,]00"
 - assertVisible: ".*CHF.10[.,]00.*"
+
+# The photo picker is system UI; the web e2e covers the scan itself (same hook)
+- tapOn:
+    id: "expense-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "receipt-scan"
+    timeout: 15000
+- tapOn:
+    id: "receipt-scan"
+- extendedWaitUntil:
+    visible:
+      id: "receipt-scan-library"
+    timeout: 10000
+- assertVisible:
+    id: "receipt-scan-camera"

@@ -1,0 +1,285 @@
+/* The lens path matches the waypoints in the Expo ReceiptReadingStage */
+.rs-stage {
+  --walk: 8s;
+}
+
+.rs-photo {
+  transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.25, 1);
+  animation: rs-pop 0.55s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+.rs-stage[data-phase="preview"] .rs-photo {
+  transform: translateY(-22%) scale(0.62);
+}
+
+.rs-lens {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 92px;
+  height: 92px;
+  border: 4px solid var(--foreground);
+  border-radius: 50%;
+  background-color: var(--background);
+  background-repeat: no-repeat;
+  background-size: calc(var(--w) * 1.9) calc(var(--h) * 1.9);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.28);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  animation: rs-walk var(--walk) ease-in-out infinite;
+}
+/* A browser that can't decode the photo has nothing to magnify */
+.rs-photo[data-broken] .rs-lens {
+  display: none;
+}
+.rs-lens::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.rs-stage:is([data-phase="reading"], [data-phase="revealing"]) .rs-lens {
+  opacity: 1;
+}
+.rs-stage[data-phase="failing"] .rs-lens {
+  opacity: 1;
+  animation-play-state: paused;
+}
+.rs-stage[data-phase="failing"] .rs-lens::after {
+  opacity: 0.75;
+}
+
+.rs-cat {
+  transform: translateY(130%);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.rs-stage:is(
+    [data-phase="reading"],
+    [data-phase="revealing"],
+    [data-phase="failing"]
+  )
+  .rs-cat {
+  transform: none;
+}
+.rs-stage[data-phase="failing"] .rs-cat > * {
+  animation: rs-puzzled 1.8s ease-in-out forwards;
+}
+.rs-nod {
+  animation: rs-nod 0.45s ease-out;
+}
+.rs-cat .fc-pupil {
+  animation: rs-look var(--walk) ease-in-out infinite;
+}
+.rs-stage:not([data-phase="reading"]):not([data-phase="revealing"])
+  .rs-cat
+  .fc-pupil {
+  animation: none;
+}
+
+.rs-tag {
+  animation: rs-pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.rs-panel {
+  transform: translateY(115%);
+  transition: transform 0.55s cubic-bezier(0.22, 1.1, 0.36, 1);
+}
+.rs-stage[data-phase="preview"] .rs-panel {
+  transform: none;
+}
+.rs-peek {
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+}
+.rs-stage[data-phase="preview"] .rs-peek {
+  transform: none;
+}
+
+.rs-zee {
+  position: absolute;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  opacity: 0;
+  animation: rs-zee 2.4s ease-in infinite;
+}
+.rs-zee:nth-of-type(2) {
+  animation-delay: 0.8s;
+}
+.rs-zee:nth-of-type(3) {
+  animation-delay: 1.6s;
+}
+
+@keyframes rs-walk {
+  0.0% {
+    transform: translate(
+      calc(var(--w) * 0.5 - 46px),
+      calc(var(--h) * 0.1 - 46px)
+    );
+    background-position: calc(42px - var(--w) * 0.95)
+      calc(42px - var(--h) * 0.19);
+  }
+  12.5% {
+    transform: translate(
+      calc(var(--w) * 0.28 - 46px),
+      calc(var(--h) * 0.24 - 46px)
+    );
+    background-position: calc(42px - var(--w) * 0.532)
+      calc(42px - var(--h) * 0.456);
+  }
+  25.0% {
+    transform: translate(
+      calc(var(--w) * 0.7 - 46px),
+      calc(var(--h) * 0.3 - 46px)
+    );
+    background-position: calc(42px - var(--w) * 1.33)
+      calc(42px - var(--h) * 0.57);
+  }
+  37.5% {
+    transform: translate(
+      calc(var(--w) * 0.3 - 46px),
+      calc(var(--h) * 0.45 - 46px)
+    );
+    background-position: calc(42px - var(--w) * 0.57)
+      calc(42px - var(--h) * 0.855);
+  }
+  50.0% {
+    transform: translate(
+      calc(var(--w) * 0.72 - 46px),
+      calc(var(--h) * 0.52 - 46px)
+    );
+    background-position: calc(42px - var(--w) * 1.368)
+      calc(42px - var(--h) * 0.988);
+  }
+  62.5% {
+    transform: translate(
+      calc(var(--w) * 0.35 - 46px),
+      calc(var(--h) * 0.66 - 46px)
+    );
+    background-position: calc(42px - var(--w) * 0.665)
+      calc(42px - var(--h) * 1.254);
+  }
+  75.0% {
+    transform: translate(
+      calc(var(--w) * 0.68 - 46px),
+      calc(var(--h) * 0.74 - 46px)
+    );
+    background-position: calc(42px - var(--w) * 1.292)
+      calc(42px - var(--h) * 1.406);
+  }
+  87.5% {
+    transform: translate(
+      calc(var(--w) * 0.45 - 46px),
+      calc(var(--h) * 0.88 - 46px)
+    );
+    background-position: calc(42px - var(--w) * 0.855)
+      calc(42px - var(--h) * 1.672);
+  }
+  100.0% {
+    transform: translate(
+      calc(var(--w) * 0.5 - 46px),
+      calc(var(--h) * 0.1 - 46px)
+    );
+    background-position: calc(42px - var(--w) * 0.95)
+      calc(42px - var(--h) * 0.19);
+  }
+}
+
+@keyframes rs-look {
+  0.0% {
+    transform: translateX(0px);
+  }
+  12.5% {
+    transform: translateX(-2.2px);
+  }
+  25.0% {
+    transform: translateX(2px);
+  }
+  37.5% {
+    transform: translateX(-2px);
+  }
+  50.0% {
+    transform: translateX(2.2px);
+  }
+  62.5% {
+    transform: translateX(-1.5px);
+  }
+  75.0% {
+    transform: translateX(1.8px);
+  }
+  87.5% {
+    transform: translateX(-0.5px);
+  }
+  100.0% {
+    transform: translateX(0px);
+  }
+}
+
+@keyframes rs-pop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes rs-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rs-nod {
+  40% {
+    transform: translateY(4px) rotate(-1deg);
+  }
+}
+
+@keyframes rs-puzzled {
+  15%,
+  55% {
+    transform: rotate(-9deg);
+  }
+  65% {
+    transform: rotate(8deg);
+  }
+  75% {
+    transform: rotate(-6deg);
+  }
+  85% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes rs-zee {
+  20% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(0.6em, -1.6em);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-tag {
+    animation: rs-fade 0.2s;
+  }
+  .rs-photo,
+  .rs-nod,
+  .rs-cat .fc-pupil,
+  .rs-stage[data-phase="failing"] .rs-cat > *,
+  .rs-zee {
+    animation: none;
+  }
+  .rs-lens {
+    display: none;
+  }
+  .rs-cat,
+  .rs-panel,
+  .rs-peek,
+  .rs-photo {
+    transition: none;
+  }
+}

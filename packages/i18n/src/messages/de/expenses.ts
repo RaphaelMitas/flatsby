@@ -126,4 +126,40 @@ export const expenses = {
     keepSeparate: "Getrennt lassen",
     turnOn: "Einschalten",
   },
+  receiptScan: {
+    title: "Beleg scannen",
+    subtitle: "Betrag, Datum und Geschäft aus einem Foto",
+    takePhoto: "Foto aufnehmen",
+    takePhotoHint: "Beleg flach hinlegen, ganz im Bild",
+    choosePhoto: "Aus Fotos wählen",
+    choosePhotoHint: "Auch Screenshots von E-Belegen",
+    dropHere: "Beleg hier ablegen",
+    chooseFile: "oder Datei wählen",
+    disclosure:
+      "Das Foto geht über das Vercel AI Gateway an OpenAI, damit der Beleg gelesen werden kann. Flatsby speichert es nicht.",
+    stageCaption: "Die Katze liest deinen Beleg",
+    stageBlurry: "Hm, zu verschwommen",
+    stageFailed: "Hm, das hat nicht geklappt",
+    previewTitle: "Das haben wir gelesen",
+    store: "Geschäft",
+    amount: "Betrag",
+    date: "Datum",
+    notFound: "Nicht gefunden",
+    apply: "Übernehmen",
+    discard: "Verwerfen",
+    unreadableTitle: "Beleg nicht lesbar",
+    unreadableBody:
+      "Versuch ein schärferes Foto bei gutem Licht, oder füll die Felder selbst aus.",
+    failedTitle: "Scannen fehlgeschlagen",
+    newPhoto: "Neues Foto",
+    unsupportedFormat:
+      "Dieses Bildformat lässt sich hier nicht öffnen. Nimm ein JPG oder PNG.",
+    cameraDenied:
+      "Erlaube den Kamerazugriff in den Einstellungen, um Belege zu fotografieren.",
+    outOfCredits: "Keine Credits mehr. Mach ein Upgrade, um Belege zu scannen.",
+    outOfCreditsTitle: "Deine Credits sind aufgebraucht",
+    outOfCreditsBody:
+      "Beleg scannen, KI-Assistent und automatische Kategorien brauchen Credits. Mit Starter oder Pro gibt es jeden Monat neue.",
+    fillManually: "Selbst ausfüllen",
+  },
 } satisfies Messages["expenses"];

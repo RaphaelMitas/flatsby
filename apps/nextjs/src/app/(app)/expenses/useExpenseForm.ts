@@ -25,6 +25,7 @@ import {
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
+import { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 
 import { useTRPC } from "~/trpc/react";
 import { useExpenseInvalidation } from "./useExpenseInvalidation";
@@ -128,6 +129,28 @@ export function useExpenseForm({
     expenseDate,
     useExchangeRate,
     locale,
+  });
+  const scanReceiptMutation = useMutation(
+    trpc.receipt.scan.mutationOptions({
+      onSettled: () => {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.user.getUsage.queryKey(),
+        });
+      },
+    }),
+  );
+  const receiptScan = useReceiptScan({
+    read: (imageBase64) => scanReceiptMutation.mutateAsync({ imageBase64 }),
+    setValue: form.setValue,
+    currency,
+    locale,
+    reducedMotion:
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    messages: {
+      error: t("errors.unexpected"),
+      unsupportedImage: t("expenses.receiptScan.unsupportedFormat"),
+    },
   });
 
   const createExpenseMutation = useMutation(
@@ -382,6 +405,7 @@ export function useExpenseForm({
         splits,
         splitMethod: values.splitMethod,
         ...conversion.fields,
+        receipt: receiptScan.report(values),
       });
       if (closeOnSubmit) onClose();
     }
@@ -465,6 +489,7 @@ export function useExpenseForm({
     group,
     allMembers,
     conversion,
+    receiptScan,
   };
 }
 

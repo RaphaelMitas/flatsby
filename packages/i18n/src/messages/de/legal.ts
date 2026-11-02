@@ -148,7 +148,7 @@ export const legal = {
     },
     basis: {
       contract:
-        "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich Käufen und der automatischen KI-Kategorisierung",
+        "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich Käufen, der automatischen KI-Kategorisierung und dem Scannen von Belegen",
       consent:
         "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG):</strong> der KI-Assistent; Bildschirmanalyse in der App, einschließlich der dafür genutzten Geräte-ID",
       interests:
@@ -175,7 +175,7 @@ export const legal = {
       expo: "<strong>Expo (App-Updates):</strong> Die App fragt bei den Servern von Expo nach Updates; diese erhalten Ihre IP-Adresse, App-Version und Plattform.",
       stores:
         "<strong>Apple App Store und Google Play:</strong> Vertreiben die App und wickeln In-App-Käufe als eigene Verantwortliche nach ihren eigenen Datenschutzbestimmungen ab.",
-      ai: "<strong>OpenAI und Google (KI):</strong> Über das <gateway>Vercel AI Gateway</gateway> erhalten sie Artikelnamen und Ausgabenbeschreibungen für die automatische Kategorisierung und, wenn Sie den KI-Assistenten nutzen, Ihre Nachrichten sowie die dafür nötigen Listen-, Ausgaben- und Mitgliederdaten. Siehe die <dpa>Datenschutzerklärung von Vercel</dpa>.",
+      ai: "<strong>OpenAI und Google (KI):</strong> Über das <gateway>Vercel AI Gateway</gateway> erhalten sie Artikelnamen und Ausgabenbeschreibungen für die automatische Kategorisierung, das Foto, wenn Sie einen Beleg scannen (es kann alles zeigen, was auf dem Beleg steht, etwa die letzten Ziffern einer Karte; wir speichern das Foto nicht), und, wenn Sie den KI-Assistenten nutzen, Ihre Nachrichten sowie die dafür nötigen Listen-, Ausgaben- und Mitgliederdaten. Siehe die <dpa>Datenschutzerklärung von Vercel</dpa>.",
       posthog:
         "<strong>PostHog (Analyse, Fehlerberichte):</strong> Speichert Daten in Frankfurt und erhält:",
       posthogWebsite:

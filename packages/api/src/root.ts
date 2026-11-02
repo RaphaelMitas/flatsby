@@ -5,6 +5,7 @@ import { chatRouter } from "./router/chatRouter";
 import { expenseRouter } from "./router/expenseRouter";
 import { groupRouter } from "./router/groupRouter";
 import { inviteRouter } from "./router/inviteRouter";
+import { receiptRouter } from "./router/receiptRouter";
 import { shoppingList } from "./router/shoppingListRouter";
 import { statsRouter } from "./router/statsRouter";
 import { userRouter } from "./router/userRouter";
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
   chat: chatRouter,
   group: groupRouter,
   invite: inviteRouter,
+  receipt: receiptRouter,
   shoppingList: shoppingList,
   expense: expenseRouter,
   stats: statsRouter,
