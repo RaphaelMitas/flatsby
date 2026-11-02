@@ -2,5 +2,4 @@
 • About ten expenses now fit on screen, grouped by month, with your share on each one.
 • Settings fit on one screen, with your current choices shown on the right.
 • Winter is here: a snowy town at the top of Home, and a Santa hat on the cat until Christmas.
-• Screen recordings are gone. Analytics now has a single switch.
 • Small fixes and improvements.
