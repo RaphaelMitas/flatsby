@@ -230,7 +230,7 @@ export interface DebtPerson {
   placeholder?: boolean;
 }
 
-interface PersonMember {
+export interface PersonMember {
   userId: string | null;
   user: { name: string; image?: string | null };
 }

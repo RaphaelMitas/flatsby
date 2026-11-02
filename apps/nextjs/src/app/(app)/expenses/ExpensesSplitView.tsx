@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { useMediaQuery } from "@flatsby/ui/hooks/use-media-query";
@@ -36,23 +37,28 @@ export function ExpensesSplitView() {
   if (!isLargeScreen) {
     return (
       <div className="flex h-full min-h-0 flex-1">
-        {!hasSelection ? (
-          <div className="flex h-full w-full flex-col">
-            <Suspense
-              fallback={
-                <div className="flex h-full items-center justify-center">
-                  <LoadingSpinner />
-                </div>
-              }
-            >
-              <ExpenseListPanel
-                selectedExpenseId={selectedExpenseId}
-                onSelectExpense={selectExpense}
-                onCreateExpense={createExpense}
-              />
-            </Suspense>
-          </div>
-        ) : (
+        {/* Hidden, not unmounted, so search and filters survive opening an expense */}
+        <div
+          className={cn(
+            "flex h-full w-full flex-col",
+            hasSelection && "hidden",
+          )}
+        >
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center">
+                <LoadingSpinner />
+              </div>
+            }
+          >
+            <ExpenseListPanel
+              selectedExpenseId={selectedExpenseId}
+              onSelectExpense={selectExpense}
+              onCreateExpense={createExpense}
+            />
+          </Suspense>
+        </div>
+        {hasSelection && (
           <div className="flex h-full w-full flex-col">
             <Suspense
               fallback={

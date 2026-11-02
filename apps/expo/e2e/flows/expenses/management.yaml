@@ -3,7 +3,7 @@ tags:
   - expenses
 ---
 # Mirrors apps/nextjs/e2e/expenses/expense-management.spec.ts:
-# view details, edit the amount, delete the expense.
+# search, view details, edit the amount, delete the expense.
 - runFlow: ../../subflows/e2e-login.yaml
 - runFlow: ../../subflows/open-expenses.yaml
 - runFlow:
@@ -11,6 +11,24 @@ tags:
     env:
       AMOUNT: "25.00"
       DESCRIPTION: "Manage Me"
+
+# Search: a match keeps the expense, a miss shows the empty state
+- tapOn:
+    id: "expense-search-input"
+- inputText: "Manage"
+- extendedWaitUntil:
+    visible: "Manage Me"
+    timeout: 15000
+- inputText: " zzz"
+- extendedWaitUntil:
+    visible:
+      id: "expense-search-empty"
+    timeout: 15000
+- tapOn:
+    id: "expense-search-cancel"
+- extendedWaitUntil:
+    visible: "Manage Me"
+    timeout: 15000
 
 # View details
 - tapOn: "Manage Me"

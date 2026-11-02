@@ -1,11 +1,20 @@
 "use client";
 
+import type { ExpenseListFilter } from "@flatsby/validators/expenses/list-filter";
 import Link from "next/link";
-import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { HandCoins, Plus, Wallet } from "lucide-react";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import { HandCoins, Plus, Search, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { InView } from "react-intersection-observer";
 
+import {
+  expenseSearchView,
+  useExpenseFilters,
+} from "@flatsby/api/hooks/useExpenseFilters";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { ScrollArea } from "@flatsby/ui/scroll-area";
@@ -16,6 +25,7 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { ExpenseCard } from "./ExpenseCard";
+import { ExpenseFilterBar } from "./ExpenseFilterBar";
 
 interface ExpenseListPanelProps {
   selectedExpenseId: number | null;
@@ -34,39 +44,34 @@ export function ExpenseListPanel({
   const { currentGroup } = useGroupContext();
 
   const groupId = currentGroup?.id ?? 0;
+  const filters = useExpenseFilters(groupId);
 
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  const {
-    data: expensesData,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery(
+  const listOptions = (filter: ExpenseListFilter) =>
     trpc.expense.getGroupExpenses.infiniteQueryOptions(
-      { groupId, limit: PAGE_SIZE.expenses },
+      { groupId, limit: PAGE_SIZE.expenses, ...filter },
       {
         getNextPageParam: (lastPage) =>
           lastPage.success === true ? lastPage.data.nextCursor : null,
       },
-    ),
-  );
+    );
+  const base = useInfiniteQuery(listOptions({}));
+  const filtered = useInfiniteQuery({
+    ...listOptions(filters.query),
+    enabled: filters.isQueryActive,
+    placeholderData: keepPreviousData,
+  });
+  const search = expenseSearchView(base, filtered, filters);
 
   if (!groupData.success) {
     return null;
   }
 
-  const allExpenses =
-    expensesData?.pages
-      .flatMap((page) => (page.success === true ? page.data.items : []))
-      .filter(
-        (expense, index, self) =>
-          index === self.findIndex((e) => e.id === expense.id),
-      ) ?? [];
-
-  const hasExpenses = allExpenses.length > 0;
+  const hasExpenses = search.rows.length > 0;
+  const showFilters = hasExpenses || filters.isActive;
 
   return (
     <div className="flex h-full flex-col">
@@ -101,10 +106,55 @@ export function ExpenseListPanel({
         </div>
       </div>
 
+      {showFilters && (
+        <ExpenseFilterBar
+          groupId={groupId}
+          filters={filters}
+          members={groupData.data.groupMembers}
+          meId={groupData.data.thisGroupMember.id}
+        />
+      )}
+      {(search.offline || search.failed) && (
+        <p className="text-muted-foreground bg-muted mx-4 mt-3 rounded-md px-3 py-2 text-sm">
+          {t(
+            search.offline
+              ? "expenses.filter.offline"
+              : "expenses.filter.loadFailed",
+          )}
+        </p>
+      )}
+
       {/* Expense List */}
       <ScrollArea className="flex-1">
         <div className="flex flex-col px-4 pb-4">
-          {!hasExpenses ? (
+          {!hasExpenses && search.searching ? (
+            <div className="text-muted-foreground flex flex-col items-center gap-3 py-12 text-sm">
+              <LoadingSpinner />
+              {t("expenses.filter.searchingOlder")}
+            </div>
+          ) : !hasExpenses && filters.isActive ? (
+            <div
+              data-testid="expense-search-empty"
+              className="flex flex-col items-center justify-center gap-4 py-12 text-center"
+            >
+              <Search className="text-muted-foreground h-12 w-12" />
+              <div>
+                <p className="text-lg font-semibold">
+                  {t("expenses.filter.noResultsTitle")}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {t("expenses.filter.noResultsHint")}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={filters.reset}
+                data-testid="expense-search-reset"
+              >
+                {t("expenses.filter.reset")}
+              </Button>
+            </div>
+          ) : !hasExpenses ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
               <Wallet className="text-muted-foreground h-12 w-12" />
               <div>
@@ -125,7 +175,7 @@ export function ExpenseListPanel({
             </div>
           ) : (
             <>
-              {withMonthHeaders(allExpenses, locale).map((item) =>
+              {withMonthHeaders(search.rows, locale).map((item) =>
                 item.type === "month" ? (
                   <h3
                     key={item.key}
@@ -150,19 +200,25 @@ export function ExpenseListPanel({
                 ),
               )}
 
-              {hasNextPage && (
+              {search.hasMore && (
                 <InView
                   as="div"
+                  // Re-observe after each page so a sentinel still in view loads the next one
+                  skip={search.isFetchingMore}
                   onChange={(inView) => {
-                    if (inView && !isFetchingNextPage) {
-                      void fetchNextPage();
-                    }
+                    if (inView) search.loadMore();
                   }}
                 >
                   <div className="flex justify-center py-4">
                     <LoadingSpinner />
                   </div>
                 </InView>
+              )}
+              {search.searching && (
+                <div className="text-muted-foreground flex items-center justify-center gap-2 py-4 text-sm">
+                  <LoadingSpinner />
+                  {t("expenses.filter.loadingOlder")}
+                </div>
               )}
             </>
           )}
