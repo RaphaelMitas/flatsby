@@ -50,12 +50,21 @@ export function locate(capture, crop) {
   const h = crop.naturalHeight;
   const big = pixels(capture);
   const small = pixels(crop);
-  const samples = [];
-  for (const fy of [0.15, 0.35, 0.5, 0.65, 0.85]) {
-    for (let i = 0; i < 48; i++) {
-      samples.push([Math.floor(((i + 0.5) / 48) * w), Math.floor(fy * h)]);
+  // Flat background samples also match lookalike tiles, so sample the crop's edges.
+  const step = Math.max(1, Math.floor(Math.min(w, h) / 64));
+  const contrast = (x, y) => {
+    const a = (y * w + x) * 4;
+    let sum = 0;
+    for (const b of [a + step * 4, a + step * w * 4]) {
+      for (let c = 0; c < 3; c++) sum += Math.abs(small[a + c] - small[b + c]);
     }
+    return sum;
+  };
+  const grid = [];
+  for (let y = 0; y < h - step; y += step) {
+    for (let x = 0; x < w - step; x += step) grid.push([x, y, contrast(x, y)]);
   }
+  const samples = grid.sort((a, b) => b[2] - a[2]).slice(0, 240);
   let best = { error: Infinity, x: 0, y: 0 };
   for (let y = 0; y <= capture.naturalHeight - h; y++) {
     for (let x = 0; x <= W - w; x++) {

@@ -38,13 +38,6 @@
     },
     "cards": [
       {
-        "capture": "06-shopping-lists",
-        "segments": {
-          "ios": [[0.125, 0.3326]],
-          "android": [[0.122, 0.3413]]
-        }
-      },
-      {
         "capture": "02-shopping-list",
         "segments": {
           "ios": [
@@ -61,7 +54,7 @@
     "zooms": [
       {
         "capture": "02-shopping-list",
-        "card": 1,
+        "card": 0,
         "width": 98,
         "crop": "crop-item-oat-milk"
       }
@@ -80,8 +73,8 @@
       {
         "capture": "03-expenses",
         "segments": {
-          "ios": [[0.052, 0.615]],
-          "android": [[0.045, 0.6345]]
+          "ios": [[0.052, 0.41]],
+          "android": [[0.045, 0.42]]
         }
       }
     ],
