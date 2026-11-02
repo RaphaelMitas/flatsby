@@ -1,6 +1,6 @@
 import { Linking } from "react-native";
 import { Link, Stack } from "expo-router";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import { localeNames, locales } from "@flatsby/i18n/locale";
@@ -21,6 +21,7 @@ import { useHomeVersion } from "~/utils/home-version";
 import { useLocalePreference } from "~/utils/intl-provider";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { writeReviewUrl } from "~/utils/useReviewNudge";
+import { useSelectedGroup } from "~/utils/useSelectedGroup";
 
 export default function SettingsIndex() {
   const t = useTranslations();
@@ -28,18 +29,14 @@ export default function SettingsIndex() {
   const { storedTheme, setTheme } = useTheme();
   const { preference, setPreference } = useLocalePreference();
   const analyticsConsent = useAnalyticsConsent();
-  const { selectedGroupId, selectedGroupName, clearSelectedGroup } =
-    useShoppingStore();
+  const { clearSelectedGroup } = useShoppingStore();
+  const { group: currentGroup, name: groupName } = useSelectedGroup();
   const { version: homeVersion, switchTo: switchHome } = useHomeVersion();
   const home = homeVersion === "new" ? "new" : "classic";
 
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
   );
-  const { data: groups } = useQuery(trpc.group.getUserGroups.queryOptions());
-  const currentGroup = groups?.success
-    ? groups.data.find(({ id }) => id === selectedGroupId)
-    : undefined;
 
   const handleLogout = async () => {
     clearSelectedGroup();
@@ -73,11 +70,7 @@ export default function SettingsIndex() {
         <SettingsSection title={t("settings.sections.group")}>
           <Link href="/settings/group-settings" asChild>
             <SettingsItem
-              title={
-                currentGroup?.name ??
-                selectedGroupName ??
-                t("navigation.groupSettings")
-              }
+              title={groupName ?? t("navigation.groupSettings")}
               value={
                 currentGroup &&
                 t("group.memberCount", { count: currentGroup.memberCount })
@@ -143,10 +136,8 @@ export default function SettingsIndex() {
             />
           </Link>
         </SettingsSection>
+        <UsageDisplay />
         <SettingsSection>
-          <UsageDisplay />
-        </SettingsSection>
-        <SettingsSection className="pb-4">
           <SettingsItem
             title={t("settings.items.rateApp")}
             iconName="star"
@@ -158,10 +149,13 @@ export default function SettingsIndex() {
               iconName="file-text"
             />
           </Link>
+        </SettingsSection>
+        <SettingsSection className="pb-4">
           <SettingsItem
             title={t("settings.items.logout")}
             iconName="log-out"
             onPress={handleLogout}
+            variant="destructive"
           />
         </SettingsSection>
       </AppScrollView>
