@@ -1,4 +1,5 @@
-import { Linking, Pressable, Text, View } from "react-native";
+import { Linking, Platform, Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -11,6 +12,7 @@ import { getBaseUrl } from "~/utils/base-url";
 export function UsageDisplay() {
   const t = useTranslations("billing.usage");
   const locale = useLocale();
+  const router = useRouter();
   const { data } = useSuspenseQuery(trpc.user.getUsage.queryOptions());
 
   const credits = data.credits;
@@ -24,7 +26,8 @@ export function UsageDisplay() {
   const remainingPercent = total === 0 ? 100 : (balance / total) * 100;
 
   const handlePress = () => {
-    void Linking.openURL(`${getBaseUrl()}/user-settings`);
+    if (Platform.OS === "ios") router.push("/settings/credits");
+    else void Linking.openURL(`${getBaseUrl()}/user-settings`);
   };
 
   return (

@@ -1,75 +1,63 @@
-import { Text, View } from "react-native";
+import { Linking } from "react-native";
+import { Link } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 
+import { SettingsHeader } from "~/components/settings/SettingsHeader";
+import { SettingsItem } from "~/components/settings/SettingsItem";
+import { SettingsSection } from "~/components/settings/SettingsSection";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
-import { Card } from "~/lib/ui/card";
-import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
-
-const InfoRow = ({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon: "mail" | "calendar" | "user";
-}) => (
-  <Card className="flex-row items-center gap-3 p-4">
-    <View className="bg-primary/10 h-8 w-8 items-center justify-center rounded-full">
-      <Icon name={icon} size={16} className="text-primary" />
-    </View>
-    <View className="flex-1">
-      <Text className="text-muted-foreground text-sm">{label}</Text>
-      <Text className="text-foreground text-base font-medium">{value}</Text>
-    </View>
-  </Card>
-);
+import { authClient } from "~/utils/auth/auth-client";
+import { passkeysSupported } from "~/utils/auth/passkey-device";
+import { getBaseUrl } from "~/utils/base-url";
 
 export default function AccountScreen() {
-  const t = useTranslations("settings.account");
-  const locale = useLocale();
+  const t = useTranslations();
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
   );
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat(locale, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
-  };
+  const passkeyCount = authClient.useListPasskeys().data?.length ?? 0;
 
   return (
     <SafeAreaView>
-      <AppScrollView className="p-4">
-        <Text className="text-foreground mb-6 text-2xl font-bold">
-          {t("information")}
-        </Text>
-
-        <View className="gap-4">
-          <InfoRow label={t("email")} value={user.email} icon="mail" />
-
-          <InfoRow label={t("displayName")} value={user.name} icon="user" />
-
-          <InfoRow
-            label={t("created")}
-            value={formatDate(user.createdAt)}
-            icon="calendar"
+      <AppScrollView>
+        <SettingsHeader title={user.name} />
+        <SettingsSection>
+          <Link href="/settings/profile" asChild>
+            <SettingsItem
+              title={t("navigation.profile")}
+              subtitle={t("settings.items.profileSubtitle")}
+              iconName="user"
+            />
+          </Link>
+          {passkeysSupported && (
+            <Link href="/settings/passkeys" asChild>
+              <SettingsItem
+                testID="settings-passkeys"
+                title={t("settings.passkeys.title")}
+                value={String(passkeyCount)}
+                iconName="passkey"
+              />
+            </Link>
+          )}
+        </SettingsSection>
+        <SettingsSection className="pb-4">
+          <SettingsItem
+            title={t("settings.items.exportData")}
+            iconName="download"
+            onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
           />
-        </View>
-
-        <Card className="mt-8 rounded-lg p-4">
-          <Text className="text-foreground mb-3 text-lg font-semibold">
-            {t("settings")}
-          </Text>
-          <Text className="text-muted-foreground text-sm leading-6">
-            {t("emailFixed")}
-          </Text>
-        </Card>
+          <Link href="/settings/danger" asChild>
+            <SettingsItem
+              testID="settings-delete-account"
+              title={t("settings.items.deleteAccount")}
+              iconName="trash-2"
+              variant="destructive"
+            />
+          </Link>
+        </SettingsSection>
       </AppScrollView>
     </SafeAreaView>
   );

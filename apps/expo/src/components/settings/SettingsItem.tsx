@@ -6,6 +6,7 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 interface SettingsItemProps {
   title: string;
   subtitle?: string;
+  value?: string;
   iconName: IconProps["name"];
   onPress?: () => void;
   variant?: "default" | "destructive";
@@ -16,6 +17,7 @@ interface SettingsItemProps {
 export const SettingsItem = ({
   title,
   subtitle,
+  value,
   iconName,
   onPress,
   variant = "default",
@@ -57,6 +59,9 @@ export const SettingsItem = ({
           )}
         </View>
       </View>
+      {value && (
+        <Text className="text-muted-foreground text-base">{value}</Text>
+      )}
       {!rightContent ? (
         <Icon
           name="chevron-right"
