@@ -1,6 +1,6 @@
-• Einkaufslisten gehen auch ohne Netz und synchronisieren sich, wenn du wieder online bist.
-• Trag Mitbewohner schon vor dem Beitritt ein. Mit der Einladung übernehmen sie ihren Platz samt Ausgaben.
-• Begleichen mit einem Tipp: Hinterleg deinen PayPal.me-Namen, und Mitbewohner öffnen PayPal mit dem Betrag.
-• Melde dich per Code aus der E-Mail an, danach per Passkey.
-• Unter Einstellungen > Analyse entscheidest du, ob Flatsby Bildschirme aufzeichnet.
+• Fotografier einen Kassenbon, und die Flatsby-Katze trägt Betrag, Datum und Geschäft ein. Jeder Scan kostet Credits.
+• Etwa zehn Ausgaben passen auf den Bildschirm, nach Monat gruppiert und mit deinem Anteil.
+• Die Einstellungen passen auf einen Bildschirm, deine Auswahl steht rechts.
+• Winter: eine verschneite Stadt oben auf Start und bis Weihnachten eine Mütze für die Katze.
+• Bildschirmaufzeichnungen sind weg, Analyse hat nur noch einen Schalter.
 • Kleine Fehlerbehebungen und Verbesserungen.
