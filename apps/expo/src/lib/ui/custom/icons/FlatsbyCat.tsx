@@ -96,47 +96,62 @@ export default function FlatsbyCat({
   size,
   animated = false,
   asleep = false,
+  squint = false,
+  monocle = true,
+  look: lookOverride,
 }: Omit<IconProps, "name" | "color"> & {
   color?: string;
   detail?: string;
   animated?: boolean;
   asleep?: boolean;
+  squint?: boolean;
+  monocle?: boolean;
+  look?: SharedValue<number>;
 }) {
   const { getColor } = useThemeColors();
   const detail = detailOverride ?? getColor("cat-detail");
   const reduceMotion = useReducedMotion();
   const blink = useSharedValue(1);
-  const look = useSharedValue(0);
+  const ownLook = useSharedValue(0);
+  const look = lookOverride ?? ownLook;
 
   // Same rhythm as the web cat's fc-blink and fc-look keyframes.
   useEffect(() => {
-    if (asleep) {
-      blink.value = withTiming(0.06, { duration: 400 });
-      look.value = 0;
+    if (asleep || squint) {
+      blink.value = withTiming(asleep ? 0.06 : 0.42, { duration: 400 });
+      if (!lookOverride) look.value = 0;
       return;
     }
-    blink.value = 1;
-    if (!animated || reduceMotion) return;
-    blink.value = withRepeat(
-      withSequence(
-        withDelay(4100, withTiming(0.06, { duration: 110 })),
-        withTiming(1, { duration: 110 }),
+    const open = withTiming(1, { duration: 150 });
+    if (!animated || reduceMotion) {
+      blink.value = open;
+      return;
+    }
+    blink.value = withSequence(
+      open,
+      withRepeat(
+        withSequence(
+          withDelay(4100, withTiming(0.06, { duration: 110 })),
+          withTiming(1, { duration: 110 }),
+        ),
+        -1,
       ),
-      -1,
     );
-    look.value = withRepeat(
-      withSequence(
-        withDelay(1500, withTiming(4, { duration: 500 })),
-        withDelay(750, withTiming(-3.5, { duration: 750 })),
-        withDelay(750, withTiming(0, { duration: 750 })),
-      ),
-      -1,
-    );
+    if (!lookOverride) {
+      look.value = withRepeat(
+        withSequence(
+          withDelay(1500, withTiming(4, { duration: 500 })),
+          withDelay(750, withTiming(-3.5, { duration: 750 })),
+          withDelay(750, withTiming(0, { duration: 750 })),
+        ),
+        -1,
+      );
+    }
     return () => {
       cancelAnimation(blink);
       cancelAnimation(look);
     };
-  }, [animated, asleep, reduceMotion, blink, look]);
+  }, [animated, asleep, squint, reduceMotion, blink, look, lookOverride]);
 
   return (
     <Svg
@@ -169,23 +184,25 @@ export default function FlatsbyCat({
         />
       ))}
       <Path d={NOSE} fill={detail} />
-      <Circle
-        cx={144}
-        cy={93.4965041}
-        r={20}
-        fill="none"
-        stroke={detail}
-        strokeWidth={4}
-      />
-      <Path d={MONOCLE_ARM} fill={detail} />
-      <Circle
-        cx={170}
-        cy={92.4965041}
-        r={3.5}
-        fill="none"
-        stroke={detail}
-        strokeWidth={1}
-      />
+      <G opacity={monocle ? 1 : 0}>
+        <Circle
+          cx={144}
+          cy={93.4965041}
+          r={20}
+          fill="none"
+          stroke={detail}
+          strokeWidth={4}
+        />
+        <Path d={MONOCLE_ARM} fill={detail} />
+        <Circle
+          cx={170}
+          cy={92.4965041}
+          r={3.5}
+          fill="none"
+          stroke={detail}
+          strokeWidth={1}
+        />
+      </G>
     </Svg>
   );
 }

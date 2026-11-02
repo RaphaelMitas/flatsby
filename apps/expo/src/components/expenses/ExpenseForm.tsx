@@ -6,6 +6,7 @@ import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useMemo, useState } from "react";
 import { Alert, Text, View } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
@@ -27,6 +28,7 @@ import {
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
+import { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -53,6 +55,7 @@ import {
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useCloseScreen } from "~/utils/useCloseScreen";
 import { useReviewNudge } from "~/utils/useReviewNudge";
@@ -61,6 +64,7 @@ import { CurrencyInput } from "./CurrencyInput";
 import { CurrencyPicker } from "./CurrencyPicker";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
 import { MemberAvatar } from "./MemberAvatar";
+import { ReceiptScanCard } from "./ReceiptScan";
 import { SplitEditor } from "./SplitEditor";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -155,6 +159,28 @@ export function ExpenseForm({
     useExchangeRate,
     locale,
   });
+  const scanReceiptMutation = useMutation(
+    trpcClient.receipt.scan.mutationOptions({
+      onSettled: () => {
+        void queryClient.invalidateQueries({
+          queryKey: trpcClient.user.getUsage.queryKey(),
+        });
+      },
+    }),
+  );
+  const reducedMotion = useReducedMotion();
+  const receiptScan = useReceiptScan({
+    read: (imageBase64) => scanReceiptMutation.mutateAsync({ imageBase64 }),
+    setValue: form.setValue,
+    currency,
+    locale,
+    reducedMotion,
+    messages: {
+      error: t("errors.unexpected"),
+      unsupportedImage: t("expenses.receiptScan.unsupportedFormat"),
+    },
+  });
+  const scanned = receiptScan.justApplied ? "border-primary" : undefined;
 
   const allMembers = useMemo(() => {
     if (!expense) return group.groupMembers;
@@ -418,6 +444,7 @@ export function ExpenseForm({
         expenseDate: values.expenseDate,
         splits,
         splitMethod: values.splitMethod,
+        receipt: receiptScan.report(values),
       });
       router.back();
     }
@@ -513,6 +540,7 @@ export function ExpenseForm({
           <AppScrollView className="flex-1" contentContainerClassName="p-4">
             {currentStep === 1 && (
               <View className="gap-4">
+                {!isEditMode && <ReceiptScanCard receiptScan={receiptScan} />}
                 <Card>
                   <CardHeader>
                     <CardTitle>{t("expenses.amountAndDetails")}</CardTitle>
@@ -533,6 +561,7 @@ export function ExpenseForm({
                               onChangeText={field.onChange}
                               onBlur={field.onBlur}
                               maxLength={512}
+                              className={scanned}
                             />
                           </FormControl>
                           <FormMessage />
@@ -564,7 +593,7 @@ export function ExpenseForm({
                               onChange={field.onChange}
                               placeholder="0.00"
                               min={1}
-                              className="flex-1"
+                              className={cn("flex-1", scanned)}
                             />
                           </View>
                           <FormMessage />
