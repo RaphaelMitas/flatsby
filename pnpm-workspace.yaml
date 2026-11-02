@@ -74,9 +74,9 @@ catalog:
 
 catalogs:
   better-auth:
-    "@better-auth/expo": 1.7.14
-    "@better-auth/passkey": 1.7.14
-    better-auth: 1.7.14
+    "@better-auth/expo": 1.7.15
+    "@better-auth/passkey": 1.7.15
+    better-auth: 1.7.15
   react19:
     "@types/react": ~19.3.0
     "@types/react-dom": ~19.3.0
