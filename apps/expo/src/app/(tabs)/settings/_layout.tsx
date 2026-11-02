@@ -27,6 +27,13 @@ export default function SettingsLayout() {
           }}
         />
         <Stack.Screen
+          name="legal"
+          options={{
+            title: t("settings.sections.legal"),
+            headerBackTitle: "",
+          }}
+        />
+        <Stack.Screen
           name="profile"
           options={{
             title: t("navigation.profile"),
