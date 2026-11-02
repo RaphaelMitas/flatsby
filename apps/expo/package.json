@@ -29,7 +29,7 @@
     "@expo/ui": "~58.0.21",
     "@flatsby/i18n": "workspace:*",
     "@flatsby/validators": "workspace:*",
-    "@formatjs/intl-pluralrules": "^6.4.0",
+    "@formatjs/intl-pluralrules": "^7.0.0",
     "@hookform/resolvers": "catalog:",
     "@posthog/core": "^1.62.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -91,7 +91,7 @@
     "react-native-worklets": "0.13.0",
     "react-qr-code": "catalog:",
     "superjson": "catalog:",
-    "tailwind-variants": "^3.3.1",
+    "tailwind-variants": "^4.0.1",
     "use-intl": "catalog:",
     "web-streams-polyfill": "^4.3.0"
   },
