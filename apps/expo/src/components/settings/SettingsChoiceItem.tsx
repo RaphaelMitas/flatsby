@@ -15,7 +15,7 @@ interface Choice<T extends string> {
 
 export function SettingsChoiceItem<T extends string>(props: {
   title: string;
-  subtitle: string;
+  value: string;
   iconName: IconProps["name"];
   choices: Choice<T>[];
   selected: T | null;
@@ -49,7 +49,7 @@ export function SettingsChoiceItem<T extends string>(props: {
     >
       <SettingsItem
         title={props.title}
-        subtitle={props.subtitle}
+        value={props.value}
         iconName={props.iconName}
         onPress={() => swipeableRef.current?.openRight()}
       />

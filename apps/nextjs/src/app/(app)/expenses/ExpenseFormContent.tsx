@@ -12,6 +12,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
+import { cn } from "@flatsby/ui";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import { Calendar } from "@flatsby/ui/calendar";
@@ -50,6 +51,7 @@ import { CurrencyInput } from "~/components/CurrencyInput";
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { ConversionField } from "./ConversionField";
 import { ExpenseCategorySelector } from "./ExpenseCategorySelector";
+import { ReceiptScanCard } from "./ReceiptScan";
 import { SplitEditor } from "./SplitEditor";
 
 interface ExpenseFormContentProps {
@@ -79,7 +81,11 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     group,
     allMembers,
     conversion,
+    receiptScan,
   } = formState;
+  const scanned = receiptScan.justApplied
+    ? "ring-primary/40 ring-2"
+    : undefined;
   const { convertedAmountInCents } = conversion.fields;
   const participantCount = finalizeSplits(
     splitMethod,
@@ -125,6 +131,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
 
         {currentStep === 1 && (
           <div className="space-y-4">
+            {!isEditMode && <ReceiptScanCard receiptScan={receiptScan} />}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">
@@ -144,6 +151,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                           {...field}
                           data-testid="expense-form-description"
                           maxLength={512}
+                          className={scanned}
                         />
                       </FormControl>
                       <FormMessage />
@@ -176,7 +184,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                             onChange={field.onChange}
                             placeholder="0.00"
                             min={1}
-                            className="flex-1"
+                            className={cn("flex-1", scanned)}
                             data-testid="expense-form-amount"
                           />
                         </div>

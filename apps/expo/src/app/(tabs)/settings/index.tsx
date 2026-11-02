@@ -1,4 +1,4 @@
-import { Linking, Platform } from "react-native";
+import { Linking } from "react-native";
 import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
@@ -8,7 +8,6 @@ import { localeNames, locales } from "@flatsby/i18n/locale";
 import type { Theme } from "~/lib/ui/theme";
 import { EveningReminderItem } from "~/components/settings/EveningReminderItem";
 import { SettingsChoiceItem } from "~/components/settings/SettingsChoiceItem";
-import { SettingsHeader } from "~/components/settings/SettingsHeader";
 import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { UsageDisplay } from "~/components/settings/UsageDisplay";
@@ -17,14 +16,12 @@ import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useTheme } from "~/lib/ui/theme";
 import { useAnalyticsConsent } from "~/utils/analytics/consent";
 import { trpc } from "~/utils/api";
-import { authClient, signOut } from "~/utils/auth/auth-client";
-import { passkeysSupported } from "~/utils/auth/passkey-device";
-import { getBaseUrl } from "~/utils/base-url";
+import { signOut } from "~/utils/auth/auth-client";
 import { useHomeVersion } from "~/utils/home-version";
 import { useLocalePreference } from "~/utils/intl-provider";
-import { openLegalPage } from "~/utils/legal";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { writeReviewUrl } from "~/utils/useReviewNudge";
+import { useSelectedGroup } from "~/utils/useSelectedGroup";
 
 export default function SettingsIndex() {
   const t = useTranslations();
@@ -33,12 +30,13 @@ export default function SettingsIndex() {
   const { preference, setPreference } = useLocalePreference();
   const analyticsConsent = useAnalyticsConsent();
   const { clearSelectedGroup } = useShoppingStore();
+  const { group: currentGroup, name: groupName } = useSelectedGroup();
   const { version: homeVersion, switchTo: switchHome } = useHomeVersion();
+  const home = homeVersion === "new" ? "new" : "classic";
 
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
   );
-  const passkeyCount = authClient.useListPasskeys().data?.length ?? 0;
 
   const handleLogout = async () => {
     clearSelectedGroup();
@@ -50,31 +48,47 @@ export default function SettingsIndex() {
     light: t("settings.theme.light"),
     dark: t("settings.theme.dark"),
   } satisfies Record<Theme, string>;
+  const homeLabels = {
+    classic: t("settings.items.homeClassic"),
+    new: t("settings.items.homeNew"),
+  };
 
   return (
     <SafeAreaView>
       <Stack.Screen options={{ title: t("navigation.settings") }} />
       <AppScrollView>
-        <SettingsHeader title={user.name} />
-
-        <SettingsSection title={t("settings.sections.usage")}>
-          <UsageDisplay />
-          {Platform.OS === "ios" && (
-            <Link href="/settings/credits" asChild>
-              <SettingsItem
-                title={t("settings.items.buyCredits")}
-                subtitle={t("settings.items.buyCreditsSubtitle")}
-                iconName="credit-card"
-              />
-            </Link>
-          )}
+        <SettingsSection>
+          <Link href="/settings/account" asChild>
+            <SettingsItem
+              testID="settings-account"
+              title={user.name}
+              subtitle={user.email}
+              iconName="user"
+            />
+          </Link>
         </SettingsSection>
-        <SettingsSection title={t("settings.sections.appearance")}>
+        <SettingsSection title={t("settings.sections.group")}>
+          <Link href="/settings/group-settings" asChild>
+            <SettingsItem
+              title={groupName ?? t("navigation.groupSettings")}
+              value={
+                currentGroup &&
+                t("group.memberCount", { count: currentGroup.memberCount })
+              }
+              iconName="users"
+            />
+          </Link>
+          <Link href="/settings/manage-groups" asChild>
+            <SettingsItem
+              title={t("settings.items.changeGroup")}
+              iconName="arrow-left-right"
+            />
+          </Link>
+        </SettingsSection>
+        <SettingsSection title={t("settings.sections.app")}>
           <SettingsChoiceItem
             title={t("settings.items.theme")}
-            subtitle={t("settings.items.themeSubtitle", {
-              theme: themeLabels[storedTheme ?? "system"],
-            })}
+            value={themeLabels[storedTheme ?? "system"]}
             iconName="palette"
             selected={storedTheme}
             onSelect={setTheme}
@@ -86,7 +100,7 @@ export default function SettingsIndex() {
           />
           <SettingsChoiceItem
             title={t("settings.language.title")}
-            subtitle={localeNames[locale]}
+            value={localeNames[locale]}
             iconName="languages"
             selected={preference ?? "system"}
             onSelect={(value) =>
@@ -99,68 +113,21 @@ export default function SettingsIndex() {
           />
           <SettingsChoiceItem
             title={t("settings.items.home")}
-            subtitle={t("settings.items.homeSubtitle")}
+            value={homeLabels[home]}
             iconName="house"
-            selected={homeVersion === "new" ? "new" : "classic"}
+            selected={home}
             onSelect={(value) => switchHome(value, "settings")}
             choices={[
-              { value: "classic", label: t("settings.items.homeClassic") },
-              { value: "new", label: t("settings.items.homeNew") },
+              { value: "classic", label: homeLabels.classic },
+              { value: "new", label: homeLabels.new },
             ]}
           />
-        </SettingsSection>
-        <SettingsSection title={t("settings.sections.notifications")}>
           <EveningReminderItem />
-        </SettingsSection>
-        <SettingsSection title={t("settings.sections.groups")}>
-          <Link href="/settings/manage-groups" asChild>
-            <SettingsItem
-              title={t("settings.items.changeGroup")}
-              subtitle={t("settings.items.changeGroupSubtitle")}
-              iconName="arrow-left-right"
-            />
-          </Link>
-          <Link href="/settings/group-settings" asChild>
-            <SettingsItem
-              title={t("navigation.groupSettings")}
-              subtitle={t("settings.items.groupSettingsSubtitle")}
-              iconName="users"
-            />
-          </Link>
-        </SettingsSection>
-        <SettingsSection title={t("settings.sections.account")}>
-          <Link href="/settings/profile" asChild>
-            <SettingsItem
-              title={t("navigation.profile")}
-              subtitle={t("settings.items.profileSubtitle")}
-              iconName="user"
-            />
-          </Link>
-          {passkeysSupported && (
-            <Link href="/settings/passkeys" asChild>
-              <SettingsItem
-                testID="settings-passkeys"
-                title={t("settings.passkeys.title")}
-                subtitle={
-                  passkeyCount > 0
-                    ? t("settings.passkeys.count", { count: passkeyCount })
-                    : t("settings.passkeys.none")
-                }
-                iconName="passkey"
-              />
-            </Link>
-          )}
-          <SettingsItem
-            title={t("settings.items.manageAccount")}
-            subtitle={t("settings.items.manageAccountSubtitle")}
-            iconName="settings"
-            onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
-          />
           <Link href="/settings/analytics" asChild>
             <SettingsItem
               testID="settings-analytics"
               title={t("settings.items.analytics")}
-              subtitle={
+              value={
                 user.analyticsOptOut && !analyticsConsent
                   ? t("settings.items.disabled")
                   : t("settings.items.enabled")
@@ -168,54 +135,27 @@ export default function SettingsIndex() {
               iconName="activity"
             />
           </Link>
+        </SettingsSection>
+        <UsageDisplay />
+        <SettingsSection>
           <SettingsItem
             title={t("settings.items.rateApp")}
-            subtitle={t("settings.items.rateAppSubtitle")}
             iconName="star"
             onPress={() => Linking.openURL(writeReviewUrl)}
           />
-          <SettingsItem
-            title={t("settings.items.logout")}
-            subtitle={t("settings.items.logoutSubtitle")}
-            iconName="log-out"
-            onPress={handleLogout}
-          />
-        </SettingsSection>
-        <SettingsSection title={t("navigation.dangerZone")}>
-          <Link href="/settings/danger" asChild>
+          <Link href="/settings/legal" asChild>
             <SettingsItem
-              testID="settings-delete-account"
-              title={t("settings.items.deleteAccount")}
-              subtitle={t("settings.items.deleteAccountSubtitle")}
-              iconName="trash-2"
-              variant="destructive"
+              title={t("settings.sections.legal")}
+              iconName="file-text"
             />
           </Link>
         </SettingsSection>
-        <SettingsSection title={t("settings.sections.legal")} className="pb-4">
+        <SettingsSection className="pb-4">
           <SettingsItem
-            title={t("navigation.termsOfService")}
-            subtitle={t("settings.items.termsSubtitle")}
-            iconName="file-text"
-            onPress={() => openLegalPage(locale, "terms")}
-          />
-          <SettingsItem
-            title={t("navigation.privacyPolicy")}
-            subtitle={t("settings.items.privacySubtitle")}
-            iconName="shield"
-            onPress={() => openLegalPage(locale, "privacy")}
-          />
-          <SettingsItem
-            title={t("navigation.legalNotice")}
-            subtitle={t("settings.items.legalNoticeSubtitle")}
-            iconName="info"
-            onPress={() => openLegalPage(locale, "legal-notice")}
-          />
-          <SettingsItem
-            title={t("settings.items.exportData")}
-            subtitle={t("settings.items.exportDataSubtitle")}
-            iconName="download"
-            onPress={() => Linking.openURL(`${getBaseUrl()}/user-settings`)}
+            title={t("settings.items.logout")}
+            iconName="log-out"
+            onPress={handleLogout}
+            variant="destructive"
           />
         </SettingsSection>
       </AppScrollView>

@@ -1,11 +1,8 @@
 import { useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { PENDING_ID } from "@flatsby/api/resultMutation";
-
-import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
+import { useSelectedGroup } from "~/utils/useSelectedGroup";
 import { Switcher } from "./Switcher";
 
 export function GroupSwitcher({
@@ -19,15 +16,9 @@ export function GroupSwitcher({
 }) {
   const t = useTranslations();
   const router = useRouter();
-  const { selectedGroupId, selectedGroupName, setSelectedGroup } =
-    useShoppingStore();
-  const { data } = useQuery(trpc.group.getUserGroups.queryOptions());
-  // A group still being created has a placeholder id and can't be selected yet
-  const groups = (data?.success ? data.data : []).filter(
-    ({ id }) => id !== PENDING_ID,
-  );
+  const { selectedGroupId, setSelectedGroup } = useShoppingStore();
+  const { groups, group: current, name } = useSelectedGroup();
   const memberCount = (count: number) => t("group.memberCount", { count });
-  const current = groups.find(({ id }) => id === selectedGroupId);
   const settings = {
     label: t("navigation.groupSettings"),
     onPress: () =>
@@ -39,7 +30,7 @@ export function GroupSwitcher({
       barTestID={testID}
       sheetTestID="group-switcher"
       icon="house"
-      title={current?.name ?? selectedGroupName ?? ""}
+      title={name ?? ""}
       subtitle={current ? memberCount(current.memberCount) : ""}
       sheetTitle={t("group.switcher.title")}
       items={groups.map((group) => ({

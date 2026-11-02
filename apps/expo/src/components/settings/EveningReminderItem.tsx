@@ -45,9 +45,7 @@ export function EveningReminderItem() {
     <SettingsItem
       testID="settings-evening-reminder"
       title={t("eveningReminder")}
-      subtitle={
-        blocked ? t("eveningReminderBlocked") : t("eveningReminderSubtitle")
-      }
+      subtitle={blocked ? t("eveningReminderBlocked") : undefined}
       iconName={blocked ? "bell-off" : "bell"}
       onPress={toggle}
       rightContent={<Checkbox checked={checked} onCheckedChange={toggle} />}

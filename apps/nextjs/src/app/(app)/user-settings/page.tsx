@@ -37,8 +37,8 @@ export default async function Page() {
           </h1>
         </div>
         <ManageUser />
-        <Passkeys />
         <PaypalHandleCard />
+        <Passkeys />
         <LanguageSettings
           preference={preference && isLocale(preference) ? preference : null}
         />

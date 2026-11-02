@@ -27,6 +27,8 @@ export { captureError } from "./lib/posthog";
 
 export type { ApiResult, ApiErrorResult } from "./errors";
 
+export { e2eReceiptScanner } from "./utils/receipt-scan";
+
 export type {
   ExpenseWithSplitsAndMembers,
   GroupMemberWithUserInfo,
