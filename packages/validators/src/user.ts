@@ -100,15 +100,13 @@ export const updateAIConsentInputSchema = z.object({
 export type UpdateAIConsentInput = z.infer<typeof updateAIConsentInputSchema>;
 
 /** Bump when the consent sheet's wording changes, so the log shows which text a choice was made on */
-export const ANALYTICS_CONSENT_VERSION = "1";
+export const ANALYTICS_CONSENT_VERSION = "2";
 
-export const analyticsConsentSchema = z.object({
-  screens: z.boolean(),
-  recordings: z.boolean(),
-});
-export type AnalyticsConsent = z.infer<typeof analyticsConsentSchema>;
+export const analyticsConsentSchema = z.object({ screens: z.boolean() });
 
 export const logAnalyticsConsentInputSchema = analyticsConsentSchema.extend({
+  // Version 1 also asked for screen recordings, and builds that never got the update still send it
+  recordings: z.boolean().default(false),
   version: z.string().max(MAX_CONSENT_VERSION_LENGTH),
   platform: z.enum(["ios", "android"]),
 });
@@ -151,6 +149,7 @@ export const userDataExportSchema = z.object({
   ),
   analyticsConsents: z.array(
     analyticsConsentSchema.extend({
+      recordings: z.boolean(),
       version: z.string(),
       platform: z.string(),
       createdAt: z.date(),

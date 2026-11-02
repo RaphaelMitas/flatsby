@@ -1,10 +1,12 @@
 import type { ComponentType } from "react";
 
-import { halloween } from "./halloween/halloween";
+import { winter } from "./winter/winter";
 
 export interface Season {
-  TapReaction?: ComponentType;
+  HomeBackdrop?: ComponentType;
+  // An SVG group in the cat's 229x255 coordinates
+  CatHat?: ComponentType;
 }
 
 // Set to {} and drop the import to ship the plain app.
-export const season: Season = halloween;
+export const season: Season = winter;

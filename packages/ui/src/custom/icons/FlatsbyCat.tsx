@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "../..";
 
@@ -31,9 +31,12 @@ const MONOCLE_ARM =
 export default function FlatsbyCat({
   animate = true,
   className,
+  children,
 }: {
   animate?: boolean;
   className?: ComponentProps<"div">["className"];
+  // Drawn in the cat's own coordinates, so it hops with the cat
+  children?: ReactNode;
 }) {
   return (
     <svg
@@ -43,6 +46,7 @@ export default function FlatsbyCat({
       className={cn(
         "flatsby-cat text-primary h-6 w-auto",
         animate && "fc-animated",
+        children && "overflow-visible",
         className,
       )}
     >
@@ -126,6 +130,7 @@ export default function FlatsbyCat({
             strokeWidth="1"
           />
         </g>
+        {children}
       </g>
     </svg>
   );

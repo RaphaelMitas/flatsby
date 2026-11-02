@@ -7,6 +7,8 @@ import { House, KeyRound, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
+import { PeekingCat } from "~/app/_components/peeking-cat";
+import { season } from "~/app/_components/seasonal/season";
 import { Switcher } from "~/app/_components/switcher/Switcher";
 import { SwitcherSettingsButton } from "~/app/_components/switcher/SwitcherSettingsButton";
 import { JoinWithCodeDialog } from "~/app/(app)/group/JoinWithCodeDialog";
@@ -28,8 +30,9 @@ export function GroupHeader() {
   const groups = data?.success ? data.data : [];
   const memberCount = (count: number) => t("group.memberCount", { count });
   const current = groups.find(({ id }) => id === currentGroup.id);
+  const Backdrop = season.HomeBackdrop;
 
-  return (
+  const header = (
     <div className="flex items-stretch gap-3">
       <Switcher
         testId="home-group-switcher"
@@ -80,6 +83,20 @@ export function GroupHeader() {
         href="/group/settings"
       />
       <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
+    </div>
+  );
+
+  if (!Backdrop) return header;
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl">
+      <Backdrop />
+      <div className="relative p-4 pb-28">{header}</div>
+      {/* Lines up with the gap the skyline leaves next to its right edge */}
+      <PeekingCat
+        variant="home"
+        className="absolute right-8 bottom-4 h-8 w-16"
+      />
     </div>
   );
 }

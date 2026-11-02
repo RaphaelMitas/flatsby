@@ -15,9 +15,10 @@ import Animated, {
 import { useIsFocused } from "expo-router";
 import { useTranslations } from "use-intl";
 
+import { season } from "~/lib/seasonal/season";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
-import { useThemeColors } from "~/lib/utils";
-import { CAT_SIZE, CatTapReaction, useCatTap } from "../dashboard/useCatTap";
+import { cn, useThemeColors } from "~/lib/utils";
+import { CAT_SIZE, useCatTap } from "../dashboard/useCatTap";
 
 export type CatPose = "sitting" | "peeking" | "asleep";
 
@@ -40,7 +41,7 @@ export function HomeCat({
   const { getColor } = useThemeColors();
   const isFocused = useIsFocused();
   const sink = useSharedValue(CAT_SIZE);
-  const { hop, taps, tap } = useCatTap();
+  const { hop, tap } = useCatTap();
   const stretch = useSharedValue(0);
 
   useEffect(() => {
@@ -85,8 +86,8 @@ export function HomeCat({
           animated={isFocused}
           asleep={pose === "asleep"}
         />
+        {season.CatHat && <season.CatHat size={CAT_SIZE} />}
       </Animated.View>
-      <CatTapReaction taps={taps} />
     </Pressable>
   );
 }
@@ -155,7 +156,14 @@ function Snore({ index }: { index: number }) {
 
   return (
     <Animated.View style={style} className="absolute">
-      <Text className={`text-foreground font-extrabold ${SNORE_SIZES[index]}`}>
+      <Text
+        className={cn(
+          "font-extrabold",
+          SNORE_SIZES[index],
+          // In season they float over the dark sky
+          season.home ? "text-white" : "text-foreground",
+        )}
+      >
         {t("snore")}
       </Text>
     </Animated.View>

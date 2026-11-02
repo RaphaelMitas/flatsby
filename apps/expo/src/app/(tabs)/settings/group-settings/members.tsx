@@ -6,7 +6,6 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { PostHogMaskView } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import {
@@ -196,17 +195,15 @@ export default function MembersScreen() {
         {joinedMembers.map((member, index) => (
           <View key={member.id}>
             {index > 0 && <Separator />}
-            <PostHogMaskView>
-              <MemberRow
-                member={member}
-                className="px-4"
-                onPress={
-                  isAdmin || member.id === me.id
-                    ? () => handleMemberPress(member.id)
-                    : undefined
-                }
-              />
-            </PostHogMaskView>
+            <MemberRow
+              member={member}
+              className="px-4"
+              onPress={
+                isAdmin || member.id === me.id
+                  ? () => handleMemberPress(member.id)
+                  : undefined
+              }
+            />
           </View>
         ))}
       </View>

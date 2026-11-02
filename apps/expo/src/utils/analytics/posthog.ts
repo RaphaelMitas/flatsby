@@ -1,4 +1,3 @@
-import type { AnalyticsConsent } from "@flatsby/validators/user";
 import type { PostHogCustomStorage } from "posthog-react-native";
 import { useSyncExternalStore } from "react";
 import { File, Paths } from "expo-file-system";
@@ -18,19 +17,8 @@ if (!posthogApiKey && !posthogDisabled)
 const POSTHOG_FILE = ".posthog-rn.json";
 const POSTHOG_FILES = [POSTHOG_FILE, ".posthog-rn-logs.json"];
 
-const noConsent: AnalyticsConsent = { screens: false, recordings: false };
-
 // The latest choice, so before_send stops at once even while a client swap is still queued
-let consent = noConsent;
-
-export const storesDeviceId = ({ screens, recordings }: AnalyticsConsent) =>
-  screens || recordings;
-
-// Recordings alone still send $identify, or the replay has no account
-function isAllowed(event: string) {
-  if (consent.screens || event === "$exception") return true;
-  return consent.recordings && (event === "$snapshot" || event === "$identify");
-}
+let consent = false;
 
 interface Client {
   posthog: PostHog;
@@ -50,8 +38,7 @@ function fileStorage(lease: Client["lease"]): PostHogCustomStorage {
   };
 }
 
-function createClient(forConsent: AnalyticsConsent): Client {
-  const persistent = storesDeviceId(forConsent);
+function createClient(persistent: boolean): Client {
   const lease = { active: persistent };
   const posthog = new PostHog(posthogApiKey || "phc-disabled", {
     disabled: posthogDisabled,
@@ -61,20 +48,8 @@ function createClient(forConsent: AnalyticsConsent): Client {
     captureAppLifecycleEvents: persistent,
     // The app reads no flags, and a flags request carries the device ID
     disableRemoteFeatureFlags: true,
-    // Push support starts the native SDK, which keeps IDs of its own on the device
-    capturePushNotificationSubscriptions: false,
-    capturePushNotificationOpened: false,
-    // The native SDK sends rage taps itself, past before_send
-    rageClickConfig: { enabled: false },
-    sessionReplayConfig: {
-      maskAllTextInputs: true,
-      maskAllImages: true,
-      // Logs can hold what users typed, and request URLs carry tRPC inputs
-      captureLog: false,
-      captureNetworkTelemetry: false,
-    },
     before_send: [
-      (event) => (isAllowed(event.event) ? event : null),
+      (event) => (consent || event.event === "$exception" ? event : null),
       // The query and mutation caches report tRPC errors, so error boundaries and rejected mutateAsync calls would report them twice
       (event) =>
         event.event === "$exception" &&
@@ -107,7 +82,7 @@ function createClient(forConsent: AnalyticsConsent): Client {
 }
 
 // The consent apply() last acted on; the queue runs swaps one at a time
-let applied = noConsent;
+let applied = false;
 let current = createClient(applied);
 let queue = Promise.resolve();
 const listeners = new Set<() => void>();
@@ -122,33 +97,25 @@ export const getAnalyticsConsent = () => applied;
 export const usePostHogClient = () =>
   useSyncExternalStore(subscribe, getPostHog);
 
-export function applyConsent(next: AnalyticsConsent) {
+export function applyConsent(next: boolean) {
   consent = next;
   queue = queue.then(() => apply(consent)).catch(console.error);
 }
 
 // Persistence is fixed when a client is created, so giving or withdrawing consent swaps the client
-async function apply(next: AnalyticsConsent) {
-  const previous = current;
-  const wasRecording = applied.recordings;
-  const persistent = storesDeviceId(next);
-  const swap = persistent !== storesDeviceId(applied);
-  applied = next;
-
-  if (wasRecording && !next.recordings)
-    await previous.posthog.stopSessionRecording();
-  if (swap) {
-    current = createClient(next);
+async function apply(persistent: boolean) {
+  if (persistent !== applied) {
+    const previous = current;
+    applied = persistent;
+    current = createClient(persistent);
     for (const listener of listeners) listener();
-    // shutdown() only flushes; opting out is what stops the old client's listeners and the native SDK
+    // shutdown() only flushes; opting out is what stops the old client's listeners
     previous.lease.active = false;
     if (!persistent) previous.posthog.reset();
     void previous.posthog.optOut();
     await previous.posthog.shutdown();
   }
   if (!persistent) deletePostHogFiles();
-  if (next.recordings && (!wasRecording || swap))
-    await current.posthog.startSessionRecording();
 }
 
 export function deletePostHogFiles() {

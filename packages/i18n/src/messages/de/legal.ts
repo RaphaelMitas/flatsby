@@ -143,14 +143,14 @@ export const legal = {
       mobileDevice:
         "Gerätetyp, Betriebssystem und App-Version; mit Ihrer Einwilligung eine zufällige Geräte-ID",
       mobileViews:
-        "Ihre Aktionen; mit Ihrer Einwilligung aufgerufene Bildschirme, gesehene oder angetippte Hinweise und Bildschirmaufnahmen",
+        "Ihre Aktionen; mit Ihrer Einwilligung aufgerufene Bildschirme und gesehene oder angetippte Hinweise",
       errors: "Fehlerberichte, vereinzelt mit von Ihnen eingegebenen Inhalten",
     },
     basis: {
       contract:
         "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich Käufen und der automatischen KI-Kategorisierung",
       consent:
-        "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG):</strong> der KI-Assistent; Bildschirmanalyse und Bildschirmaufnahmen in der App, einschließlich der dafür genutzten Geräte-ID",
+        "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG):</strong> der KI-Assistent; Bildschirmanalyse in der App, einschließlich der dafür genutzten Geräte-ID",
       interests:
         "<strong>Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO):</strong> sicherer Betrieb der Website; Nutzungsanalyse Ihrer Aktionen auf der Website und in der App, um zu verstehen, wie Menschen Flatsby finden und nutzen; Fehlerberichte, um Fehler zu beheben (in der App, ohne etwas auf Ihrem Gerät zu speichern, § 25 Abs. 2 Nr. 2 TDDDG); KI-Nutzungsdaten, um die Kosten zu kontrollieren; Anmeldesitzungen, um Ihr Konto zu schützen; Anmeldeversuche pro IP-Adresse und pro E-Mail-Adresse (gehasht) zählen, um Missbrauch zu verhindern",
       obligations:
@@ -183,7 +183,7 @@ export const legal = {
       posthogServer:
         "<strong>Angemeldet (Web und App):</strong> Unser Server sendet jede Aktion mit Ihrer Konto-ID, Gruppe, Browser- oder Gerätetyp und der verweisenden Seite, aber ohne Ihre Eingaben. Sie können das unter Einstellungen > Analyse ausschalten, in der App oder im Web.",
       posthogMobile:
-        "<strong>App:</strong> Die App sendet immer Fehlerberichte mit Gerätetyp, Betriebssystem und App-Version, ohne eine ID auf Ihrem Gerät zu speichern. Nur mit Ihrer Einwilligung (Einstellungen > Analyse) speichert sie eine zufällige ID auf Ihrem Gerät und sendet die aufgerufenen Bildschirme, wann Sie die App öffnen, welche Hinweise Sie sehen oder antippen (etwa eine Einladung oder einen Update-Hinweis), und Bildschirmaufnahmen mit abgedeckten Texten und Bildern, jeweils verknüpft mit Ihrer Konto-ID. PostHog ermittelt aus Ihrer IP-Adresse Ihren ungefähren Standort und verwirft die IP-Adresse dann. Unter Android liest die App die Installationsquelle von Google Play nur aus, um einen Einladungslink zu öffnen; sie geht nicht an PostHog.",
+        "<strong>App:</strong> Die App sendet immer Fehlerberichte mit Gerätetyp, Betriebssystem und App-Version, ohne eine ID auf Ihrem Gerät zu speichern. Nur mit Ihrer Einwilligung (Einstellungen > Analyse) speichert sie eine zufällige ID auf Ihrem Gerät und sendet die aufgerufenen Bildschirme, wann Sie die App öffnen und welche Hinweise Sie sehen oder antippen (etwa eine Einladung oder einen Update-Hinweis), jeweils verknüpft mit Ihrer Konto-ID. PostHog ermittelt aus Ihrer IP-Adresse Ihren ungefähren Standort und verwirft die IP-Adresse dann. Unter Android liest die App die Installationsquelle von Google Play nur aus, um einen Einladungslink zu öffnen; sie geht nicht an PostHog.",
       posthogAi:
         "Außerdem senden wir KI-Nutzungsdaten (Modell, Tokens, Antwortzeit, Kosten), nie Prompts oder Antworten. Siehe die <link>Datenschutzerklärung von PostHog</link>.",
     },
@@ -195,7 +195,7 @@ export const legal = {
       content:
         "können Artikel und Ausgaben, die Sie angelegt haben, anonymisiert für die anderen Gruppenmitglieder erhalten bleiben",
       outro:
-        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten und Bildschirmaufnahmen nach 30 Tagen. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
+        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
     },
     rights: {
       access: "<strong>Auskunft:</strong> eine Kopie Ihrer Daten erhalten",
@@ -216,7 +216,7 @@ export const legal = {
       intro:
         "Soweit wir uns auf berechtigte Interessen stützen, können Sie aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit widersprechen (Art. 21 DSGVO). Bei der Analyse brauchen Sie keinen Grund anzugeben.",
       signedIn:
-        "<strong>Angemeldet:</strong> Schalten Sie die Nutzungsanalyse unter Einstellungen > Analyse aus, in der App oder im Web, oder schreiben Sie an support@flatsby.com. Wir beenden dann die Nutzungsanalyse für Ihr Konto. Bildschirmanalyse und Bildschirmaufnahmen, die Sie in der App erlaubt haben, bleiben an, bis Sie sie dort ausschalten. Fehlerberichte und KI-Nutzungsdaten (Modell, Tokens, Kosten) senden wir weiter, um Fehler zu beheben und Kosten zu kontrollieren; dem können Sie per E-Mail widersprechen.",
+        "<strong>Angemeldet:</strong> Schalten Sie die Nutzungsanalyse unter Einstellungen > Analyse aus, in der App oder im Web, oder schreiben Sie an support@flatsby.com. Wir beenden dann die Nutzungsanalyse für Ihr Konto. Die Bildschirmanalyse, die Sie in der App erlaubt haben, bleibt an, bis Sie sie dort ausschalten. Fehlerberichte und KI-Nutzungsdaten (Modell, Tokens, Kosten) senden wir weiter, um Fehler zu beheben und Kosten zu kontrollieren; dem können Sie per E-Mail widersprechen.",
       visitor:
         "<strong>Nicht angemeldet:</strong> Wir können Sie nicht wiedererkennen. Aktivieren Sie daher Global Privacy Control oder Do Not Track in Ihrem Browser. Dann zählen wir Ihre Besuche nicht.",
     },

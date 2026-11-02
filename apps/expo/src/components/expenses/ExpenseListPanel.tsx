@@ -20,7 +20,7 @@ import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { withMonthHeaders } from "@flatsby/validators/expenses/formatting";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
-import { PullToRefresh } from "~/lib/components/pull-to-refresh";
+import { useRefreshControl } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
@@ -93,6 +93,7 @@ function ExpenseList() {
     gcTime: UNPERSISTED_GC_TIME,
   });
   const search = expenseSearchView(base, filtered, filters);
+  const refreshControl = useRefreshControl(search.refetch);
 
   if (!groupData.success) {
     return null;
@@ -211,66 +212,57 @@ function ExpenseList() {
           />
         </View>
       ) : (
-        <PullToRefresh onRefresh={search.refetch} parentPaddingX={16}>
-          {(refreshProps) => (
-            <FlashList
-              {...refreshProps}
-              data={withMonthHeaders(search.rows, locale)}
-              keyboardDismissMode="on-drag"
-              keyboardShouldPersistTaps="handled"
-              getItemType={(item) => item.type}
-              renderItem={({ item }) =>
-                item.type === "month" ? (
-                  <Text
-                    accessibilityRole="header"
-                    className="text-muted-foreground px-1 pt-4 pb-2 text-sm font-semibold"
-                  >
-                    {item.label}
-                  </Text>
-                ) : (
-                  <ExpenseCard
-                    expense={item.expense}
-                    groupId={selectedGroupId ?? -1}
-                    meId={groupData.data.thisGroupMember.id}
-                    first={item.first}
-                    last={item.last}
-                    isSelected={
-                      isLargeScreen && item.expense.id.toString() === expenseId
-                    }
-                    onSelect={() =>
-                      item.expense.id.toString() === expenseId
-                        ? router.dismissTo(
-                            `/(tabs)/expenses/${item.expense.id}`,
-                          )
-                        : open(`/(tabs)/expenses/${item.expense.id}`)
-                    }
-                    onEdit={() => handleEdit(item.expense)}
-                    isNotConverted={isLeftUnconverted(
-                      item.expense,
-                      groupData.data,
-                    )}
-                  />
-                )
-              }
-              onEndReached={search.loadMore}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={
-                search.isFetchingMore ? (
-                  <View className="py-4">
-                    <ActivityIndicator size="small" />
-                  </View>
-                ) : search.searching ? (
-                  <View className="flex-row items-center justify-center gap-2 py-4">
-                    <ActivityIndicator size="small" />
-                    <Text className="text-muted-foreground text-sm">
-                      {t("expenses.filter.loadingOlder")}
-                    </Text>
-                  </View>
-                ) : null
-              }
-            />
-          )}
-        </PullToRefresh>
+        <FlashList
+          refreshControl={refreshControl}
+          data={withMonthHeaders(search.rows, locale)}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          getItemType={(item) => item.type}
+          renderItem={({ item }) =>
+            item.type === "month" ? (
+              <Text
+                accessibilityRole="header"
+                className="text-muted-foreground px-1 pt-4 pb-2 text-sm font-semibold"
+              >
+                {item.label}
+              </Text>
+            ) : (
+              <ExpenseCard
+                expense={item.expense}
+                groupId={selectedGroupId ?? -1}
+                meId={groupData.data.thisGroupMember.id}
+                first={item.first}
+                last={item.last}
+                isSelected={
+                  isLargeScreen && item.expense.id.toString() === expenseId
+                }
+                onSelect={() =>
+                  item.expense.id.toString() === expenseId
+                    ? router.dismissTo(`/(tabs)/expenses/${item.expense.id}`)
+                    : open(`/(tabs)/expenses/${item.expense.id}`)
+                }
+                onEdit={() => handleEdit(item.expense)}
+                isNotConverted={isLeftUnconverted(item.expense, groupData.data)}
+              />
+            )
+          }
+          onEndReached={search.loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            search.isFetchingMore ? (
+              <View className="py-4">
+                <ActivityIndicator size="small" />
+              </View>
+            ) : search.searching ? (
+              <View className="flex-row items-center justify-center gap-2 py-4">
+                <ActivityIndicator size="small" />
+                <Text className="text-muted-foreground text-sm">
+                  {t("expenses.filter.loadingOlder")}
+                </Text>
+              </View>
+            ) : null
+          }
+        />
       )}
       {hasExpenses && !isLargeScreen && !searchFocused && (
         <View className="absolute right-4 bottom-4">

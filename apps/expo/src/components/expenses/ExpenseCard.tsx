@@ -6,7 +6,6 @@ import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { PostHogMaskView } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
@@ -144,40 +143,38 @@ export function ExpenseCard({
 
   return (
     <>
-      <PostHogMaskView>
-        <ReanimatedSwipeable
-          ref={swipeableRef}
-          enabled={!isOptimistic}
-          friction={2}
-          leftThreshold={40}
-          rightThreshold={40}
-          {...swipeableProps}
-          onSwipeableOpen={(direction) => {
-            if (direction === SwipeDirection.RIGHT) {
-              swipeableRef.current?.close();
-              onEdit();
-            } else {
-              swipeableRef.current?.close();
-              setShowDeleteModal(true);
-            }
-          }}
+      <ReanimatedSwipeable
+        ref={swipeableRef}
+        enabled={!isOptimistic}
+        friction={2}
+        leftThreshold={40}
+        rightThreshold={40}
+        {...swipeableProps}
+        onSwipeableOpen={(direction) => {
+          if (direction === SwipeDirection.RIGHT) {
+            swipeableRef.current?.close();
+            onEdit();
+          } else {
+            swipeableRef.current?.close();
+            setShowDeleteModal(true);
+          }
+        }}
+      >
+        <Pressable
+          testID={`expense-card-${expense.description}`}
+          accessible={e2eAccessibilityOverride()}
+          accessibilityLabel={accessibilityLabel}
+          onPress={guardPress(onSelect)}
+          disabled={isOptimistic}
         >
-          <Pressable
-            testID={`expense-card-${expense.description}`}
-            accessible={e2eAccessibilityOverride()}
-            accessibilityLabel={accessibilityLabel}
-            onPress={guardPress(onSelect)}
-            disabled={isOptimistic}
-          >
-            <ExpenseDisplay
-              row={row}
-              subcategory={expense.subcategory}
-              isSelected={isSelected}
-              className={cn(corners, last && "border-b")}
-            />
-          </Pressable>
-        </ReanimatedSwipeable>
-      </PostHogMaskView>
+          <ExpenseDisplay
+            row={row}
+            subcategory={expense.subcategory}
+            isSelected={isSelected}
+            className={cn(corners, last && "border-b")}
+          />
+        </Pressable>
+      </ReanimatedSwipeable>
 
       <DeleteConfirmationModal
         visible={showDeleteModal}

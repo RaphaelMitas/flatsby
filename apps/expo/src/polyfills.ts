@@ -8,6 +8,7 @@ import { ReadableStream } from "web-streams-polyfill";
 if (Platform.OS !== "web") {
   const setupPolyfills = async () => {
     const { polyfillGlobal } =
+      // biome-ignore lint/suspicious/noReactNativeDeepImports: polyfillGlobal has no public export
       await import("react-native/Libraries/Utilities/PolyfillFunctions");
     const { TextEncoderStream, TextDecoderStream } =
       await import("@stardazed/streams-text-encoding");
