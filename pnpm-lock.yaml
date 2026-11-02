@@ -513,6 +513,9 @@ importers:
       superjson:
         specifier: 'catalog:'
         version: 2.2.6
+      tailwind-merge:
+        specifier: ^3.7.0
+        version: 3.7.0
       tailwind-variants:
         specifier: ^4.0.1
         version: 4.0.1
