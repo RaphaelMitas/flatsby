@@ -8,7 +8,6 @@ export const settings = {
     system: "System",
   },
   sections: {
-    usage: "Credits",
     group: "Gruppe",
     app: "App",
     legal: "Rechtliches",

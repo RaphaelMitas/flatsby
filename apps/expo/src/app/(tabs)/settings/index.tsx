@@ -28,7 +28,8 @@ export default function SettingsIndex() {
   const { storedTheme, setTheme } = useTheme();
   const { preference, setPreference } = useLocalePreference();
   const analyticsConsent = useAnalyticsConsent();
-  const { selectedGroupId, clearSelectedGroup } = useShoppingStore();
+  const { selectedGroupId, selectedGroupName, clearSelectedGroup } =
+    useShoppingStore();
   const { version: homeVersion, switchTo: switchHome } = useHomeVersion();
   const home = homeVersion === "new" ? "new" : "classic";
 
@@ -72,7 +73,11 @@ export default function SettingsIndex() {
         <SettingsSection title={t("settings.sections.group")}>
           <Link href="/settings/group-settings" asChild>
             <SettingsItem
-              title={currentGroup?.name ?? t("navigation.groupSettings")}
+              title={
+                currentGroup?.name ??
+                selectedGroupName ??
+                t("navigation.groupSettings")
+              }
               value={
                 currentGroup &&
                 t("group.memberCount", { count: currentGroup.memberCount })
@@ -138,7 +143,7 @@ export default function SettingsIndex() {
             />
           </Link>
         </SettingsSection>
-        <SettingsSection title={t("settings.sections.usage")}>
+        <SettingsSection>
           <UsageDisplay />
         </SettingsSection>
         <SettingsSection className="pb-4">

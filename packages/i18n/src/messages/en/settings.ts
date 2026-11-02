@@ -5,7 +5,6 @@ export const settings = {
     system: "System",
   },
   sections: {
-    usage: "Credits",
     group: "Group",
     app: "App",
     legal: "Legal",

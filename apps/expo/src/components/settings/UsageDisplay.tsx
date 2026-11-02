@@ -8,27 +8,36 @@ import { formatCredits } from "@flatsby/validators/billing";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
 import { getBaseUrl } from "~/utils/base-url";
+import { SettingsItem } from "./SettingsItem";
+
+const canBuyInApp = Platform.OS === "ios";
 
 export function UsageDisplay() {
-  const t = useTranslations("billing.usage");
+  const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
   const { data } = useSuspenseQuery(trpc.user.getUsage.queryOptions());
 
   const credits = data.credits;
 
+  const handlePress = () => {
+    if (canBuyInApp) router.push("/settings/credits");
+    else void Linking.openURL(`${getBaseUrl()}/user-settings`);
+  };
+
   if (!credits) {
-    return null;
+    return canBuyInApp ? (
+      <SettingsItem
+        title={t("settings.items.buyCredits")}
+        iconName="zap"
+        onPress={handlePress}
+      />
+    ) : null;
   }
 
   const { balance, usage } = credits;
   const total = usage + balance;
   const remainingPercent = total === 0 ? 100 : (balance / total) * 100;
-
-  const handlePress = () => {
-    if (Platform.OS === "ios") router.push("/settings/credits");
-    else void Linking.openURL(`${getBaseUrl()}/user-settings`);
-  };
 
   return (
     <Pressable
@@ -41,10 +50,12 @@ export function UsageDisplay() {
         </View>
         <View className="flex-1">
           <Text className="text-foreground text-base font-medium">
-            {t("credits")}
+            {canBuyInApp
+              ? t("settings.items.buyCredits")
+              : t("billing.usage.credits")}
           </Text>
           <Text className="text-muted-foreground text-sm">
-            {t("remaining", { credits: formatCredits(balance, locale) })}
+            {t("billing.usage.remaining", { credits: formatCredits(balance, locale) })}
           </Text>
           <View className="bg-secondary mt-2 h-2 w-full overflow-hidden rounded-full">
             <View
@@ -54,7 +65,7 @@ export function UsageDisplay() {
           </View>
           {balance === 0 && (
             <Text className="text-destructive mt-1 text-xs">
-              {t("outOfCredits")}
+              {t("billing.usage.outOfCredits")}
             </Text>
           )}
         </View>

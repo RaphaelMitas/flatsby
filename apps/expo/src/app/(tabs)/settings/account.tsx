@@ -37,7 +37,11 @@ export default function AccountScreen() {
               <SettingsItem
                 testID="settings-passkeys"
                 title={t("settings.passkeys.title")}
-                value={String(passkeyCount)}
+                subtitle={
+                  passkeyCount > 0
+                    ? t("settings.passkeys.count", { count: passkeyCount })
+                    : t("settings.passkeys.none")
+                }
                 iconName="passkey"
               />
             </Link>
