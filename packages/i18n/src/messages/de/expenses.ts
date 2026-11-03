@@ -155,7 +155,7 @@ export const expenses = {
     failedTitle: "Scannen fehlgeschlagen",
     newPhoto: "Neues Foto",
     unsupportedFormat:
-      "Dieses Bildformat lässt sich hier nicht öffnen. Nimm ein JPG oder PNG.",
+      "Diese Datei lässt sich hier nicht öffnen. Nimm ein JPG, PNG oder PDF.",
     fileTooLarge: "Dieses PDF ist zu groß. Nimm eins unter 2 MB.",
     cameraDenied:
       "Erlaube den Kamerazugriff in den Einstellungen, um Belege zu fotografieren.",

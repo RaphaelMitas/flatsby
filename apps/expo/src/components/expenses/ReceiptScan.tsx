@@ -14,9 +14,11 @@ import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { receiptDocument } from "@flatsby/validators/expenses/receipt-document";
 import {
   RECEIPT_IMAGE_MAX_EDGE,
   RECEIPT_IMAGE_QUALITY,
+  receiptMarks,
 } from "@flatsby/validators/expenses/receipt-scan";
 
 import type { StageOrigin, StagePhoto } from "./ReceiptReadingStage";
@@ -93,8 +95,10 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
       const asset = result.assets?.[0];
       if (result.canceled || !asset) return;
       open("document");
-      void receiptScan.scan("application/pdf", () =>
-        new File(asset.uri).base64(),
+      void receiptScan.scan(
+        "application/pdf",
+        () => new File(asset.uri).base64(),
+        asset.size,
       );
       return;
     }
@@ -257,7 +261,13 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         receiptScan={receiptScan}
         photo={photo}
         origin={origin}
-        lines={lines}
+        marks={
+          photo === "document"
+            ? receiptDocument.marks
+            : receiptScan.scanned && lines.length > 0
+              ? receiptMarks(lines, receiptScan.scanned)
+              : {}
+        }
       />
     </View>
   );

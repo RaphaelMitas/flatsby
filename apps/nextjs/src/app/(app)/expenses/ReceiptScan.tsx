@@ -13,12 +13,12 @@ import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import { Dialog, DialogContent, DialogTitle } from "@flatsby/ui/dialog";
+import { receiptDocument } from "@flatsby/validators/expenses/receipt-document";
 import {
   RECEIPT_IMAGE_MAX_EDGE,
   RECEIPT_IMAGE_QUALITY,
 } from "@flatsby/validators/expenses/receipt-scan";
 
-import type { StagePhoto } from "./ReceiptReadingStage";
 import { useTRPC } from "~/trpc/react";
 import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
@@ -56,13 +56,15 @@ async function pdfBase64(file: File) {
 
 const base64Of = (dataUrl: string) => dataUrl.slice(dataUrl.indexOf(",") + 1);
 
+const DOCUMENT_URL = `data:image/svg+xml,${encodeURIComponent(receiptDocument.svg)}`;
+
 export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const t = useTranslations("expenses.receiptScan");
   const tBilling = useTranslations("billing.pricing");
   const tCommon = useTranslations("common");
   const trpc = useTRPC();
   const fileInput = useRef<HTMLInputElement>(null);
-  const [photo, setPhoto] = useState<StagePhoto>();
+  const [photoUrl, setPhotoUrl] = useState<string>();
   const [isDragging, setIsDragging] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
@@ -71,9 +73,9 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
 
   useEffect(
     () => () => {
-      if (photo && photo !== "document") URL.revokeObjectURL(photo.url);
+      if (photoUrl) URL.revokeObjectURL(photoUrl);
     },
-    [photo],
+    [photoUrl],
   );
 
   // A file dropped beside the card would otherwise open in the tab and lose the form
@@ -90,11 +92,15 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const read = (file: File | undefined) => {
     if (!file) return;
     if (file.type === "application/pdf") {
-      setPhoto("document");
-      void receiptScan.scan("application/pdf", () => pdfBase64(file));
+      setPhotoUrl(DOCUMENT_URL);
+      void receiptScan.scan(
+        "application/pdf",
+        () => pdfBase64(file),
+        file.size,
+      );
       return;
     }
-    setPhoto({ url: URL.createObjectURL(file) });
+    setPhotoUrl(URL.createObjectURL(file));
     void receiptScan.scan("image/jpeg", () => receiptBase64(file));
   };
 
@@ -178,13 +184,13 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
             <Camera className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <p className="flex items-center gap-2 font-semibold">
+            <div className="flex items-center gap-2 font-semibold">
               {isDragging ? t("dropHere") : t("title")}
               <Badge variant="beta">
                 <FlaskConical className="size-3" />
                 {tCommon("beta")}
               </Badge>
-            </p>
+            </div>
             <p className="text-muted-foreground text-sm">
               {t("subtitle")} · {t("chooseFile")}
             </p>
@@ -224,7 +230,11 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         </DialogContent>
       </Dialog>
 
-      <ReceiptReadingStage receiptScan={receiptScan} photo={photo} />
+      <ReceiptReadingStage
+        receiptScan={receiptScan}
+        photoUrl={photoUrl}
+        marks={photoUrl === DOCUMENT_URL ? receiptDocument.marks : undefined}
+      />
     </div>
   );
 }

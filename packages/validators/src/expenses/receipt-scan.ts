@@ -27,7 +27,7 @@ export const scanReceiptInputSchema = z.object({
 });
 export type ReceiptFile = z.infer<typeof scanReceiptInputSchema>;
 
-// Failures that never reach the server; failed requests are reported by the tRPC client
+// Scans that fail before the request is sent; the scan procedure reports its own failures
 export const receiptScanFailureSchema = z.object({
   reason: z.enum(["too_large", "unreadable_file"]),
   mediaType: receiptMediaTypeSchema,

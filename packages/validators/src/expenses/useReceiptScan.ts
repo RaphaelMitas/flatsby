@@ -108,27 +108,27 @@ export function useReceiptScan({
     }
   };
 
+  // Photos are shrunk to fit; a PDF is sent as it is, so its size is checked before it's read
   const scan = async (
     mediaType: ReceiptMediaType,
     encode: () => Promise<string>,
+    bytes = 0,
   ) => {
     const current = ++attempt.current;
     const startedAt = Date.now();
     clearTimers();
     setState({ status: "reading" });
     setStage({ phase: "reading", revealed: [] });
-    const imageBase64 = await encode().catch(() => null);
-    // Photos are shrunk to fit, a PDF is sent as it is
-    const tooLarge =
-      imageBase64 !== null && imageBase64.length > RECEIPT_FILE_MAX_BASE64;
-    if (imageBase64 === null || tooLarge) {
+    const tooLarge = Math.ceil(bytes / 3) * 4 > RECEIPT_FILE_MAX_BASE64;
+    const imageBase64 = tooLarge ? null : await encode().catch(() => null);
+    if (imageBase64 === null) {
       reportFailure({
         reason: tooLarge ? "too_large" : "unreadable_file",
         mediaType,
       });
     }
     const result =
-      imageBase64 === null || tooLarge
+      imageBase64 === null
         ? null
         : await read({ imageBase64, mediaType }).catch(() => null);
     if (current !== attempt.current) return;
@@ -141,10 +141,9 @@ export function useReceiptScan({
         reduced: reducedMotion,
       }),
     );
-    if (imageBase64 === null)
+    if (tooLarge) setState({ status: "failed", message: messages.tooLarge });
+    else if (imageBase64 === null)
       setState({ status: "failed", message: messages.unsupportedImage });
-    else if (tooLarge)
-      setState({ status: "failed", message: messages.tooLarge });
     else if (!result) setState({ status: "failed", message: messages.error });
     else if (!result.success)
       setState({ status: "failed", message: result.error.message });

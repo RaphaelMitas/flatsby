@@ -1,4 +1,7 @@
-import type { ReceiptTextLine } from "@flatsby/validators/expenses/receipt-scan";
+import type {
+  ReceiptBox,
+  StageTag,
+} from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import { useEffect, useState } from "react";
 import {
@@ -33,7 +36,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTranslations } from "use-intl";
 
 import { receiptDocument } from "@flatsby/validators/expenses/receipt-document";
-import { receiptMarks } from "@flatsby/validators/expenses/receipt-scan";
 
 import { Button } from "~/lib/ui/button";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
@@ -58,7 +60,7 @@ const MAG = 1.9;
 const CAT = 150;
 const PEEK = 56;
 const HIDDEN = 420;
-// Reading order over the photo, as fractions of its width and height
+// Reading order over the receipt, as fractions of its width and height
 const PATH_X = [0.5, 0.28, 0.7, 0.3, 0.72, 0.35, 0.68, 0.45, 0.5];
 const PATH_Y = [0.1, 0.24, 0.3, 0.45, 0.52, 0.66, 0.74, 0.88, 0.1];
 const STEPS = PATH_X.map((_, i) => i);
@@ -67,12 +69,12 @@ export function ReceiptReadingStage({
   receiptScan,
   photo,
   origin,
-  lines,
+  marks,
 }: {
   receiptScan: ReceiptScan;
   photo?: StagePhoto | "document";
   origin?: StageOrigin;
-  lines: ReceiptTextLine[];
+  marks: Partial<Record<StageTag, ReceiptBox>>;
 }) {
   const t = useTranslations("expenses.receiptScan");
   const tCommon = useTranslations("common");
@@ -220,12 +222,6 @@ export function ReceiptReadingStage({
     if (spoken) AccessibilityInfo.announceForAccessibility(spoken);
   }, [spoken]);
 
-  const marks =
-    photo === "document"
-      ? receiptDocument.marks
-      : receiptScan.scanned && lines.length > 0
-        ? receiptMarks(lines, receiptScan.scanned)
-        : {};
   const latest = revealed.at(-1);
   const latestMark = latest && marks[latest];
 

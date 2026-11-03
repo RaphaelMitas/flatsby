@@ -1,6 +1,5 @@
 import type { ReceiptBox, StageTag } from "./receipt-scan";
 
-// A PDF has no photo to show, so the reading stage shows this drawn invoice instead
 const WIDTH = 300;
 const HEIGHT = 420;
 const INK = "#374151";
@@ -48,6 +47,7 @@ const box = ([x, y, width, height]: Bar): ReceiptBox => ({
   height: height / HEIGHT,
 });
 
+// A PDF has no photo to show, so the reading stage shows this drawn invoice instead
 export const receiptDocument = {
   width: WIDTH,
   height: HEIGHT,

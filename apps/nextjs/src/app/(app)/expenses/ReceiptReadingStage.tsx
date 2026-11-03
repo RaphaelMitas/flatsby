@@ -1,5 +1,9 @@
 "use client";
 
+import type {
+  ReceiptBox,
+  StageTag,
+} from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
@@ -8,21 +12,19 @@ import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import { Dialog, DialogContent, DialogTitle } from "@flatsby/ui/dialog";
-import { receiptDocument } from "@flatsby/validators/expenses/receipt-document";
 
 import "./receipt-stage.css";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
-export type StagePhoto = { url: string } | "document";
-
-const DOCUMENT_URL = `data:image/svg+xml,${encodeURIComponent(receiptDocument.svg)}`;
 
 export function ReceiptReadingStage({
   receiptScan,
-  photo,
+  photoUrl,
+  marks,
 }: {
   receiptScan: ReceiptScan;
-  photo?: StagePhoto;
+  photoUrl?: string;
+  marks?: Partial<Record<StageTag, ReceiptBox>>;
 }) {
   const t = useTranslations("expenses.receiptScan");
   const { phase, revealed } = receiptScan.stage;
@@ -32,7 +34,6 @@ export function ReceiptReadingStage({
   const caption = t(receiptScan.stage.caption);
   const previewing = phase === "preview";
   const apply = useRef<HTMLButtonElement>(null);
-  const photoUrl = photo === "document" ? DOCUMENT_URL : photo?.url;
 
   useEffect(() => {
     if (previewing) apply.current?.focus({ preventScroll: true });
@@ -80,7 +81,7 @@ export function ReceiptReadingStage({
 
           <div className="rs-photo relative mt-4">
             {photoUrl && (
-              // biome-ignore lint/performance/noImgElement: a local object URL; the lens reads its rendered box
+              // biome-ignore lint/performance/noImgElement: a local object or data URL; the lens reads its rendered box
               <img
                 src={photoUrl}
                 alt=""
@@ -100,20 +101,22 @@ export function ReceiptReadingStage({
                 }}
               />
             )}
-            {photo === "document" &&
+            {marks &&
               revealed.map((tag) => {
-                const mark = receiptDocument.marks[tag];
+                const mark = marks[tag];
                 return (
-                  <span
-                    key={tag}
-                    className="rs-mark"
-                    style={{
-                      left: `${mark.x * 100}%`,
-                      top: `${mark.y * 100}%`,
-                      width: `${mark.width * 100}%`,
-                      height: `${mark.height * 100}%`,
-                    }}
-                  />
+                  mark && (
+                    <span
+                      key={tag}
+                      className="rs-mark"
+                      style={{
+                        left: `${mark.x * 100}%`,
+                        top: `${mark.y * 100}%`,
+                        width: `${mark.width * 100}%`,
+                        height: `${mark.height * 100}%`,
+                      }}
+                    />
+                  )
                 );
               })}
             <div

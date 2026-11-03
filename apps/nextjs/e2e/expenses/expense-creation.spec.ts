@@ -318,11 +318,15 @@ test.describe("Expense Creation", () => {
     await waitForHydration(addButton);
     await addButton.click();
 
+    const scan = authPage.waitForRequest((request) =>
+      request.url().includes("receipt.scan"),
+    );
     await authPage.getByTestId("receipt-scan-input").setInputFiles({
       name: "invoice.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("%PDF-1.4\n%%EOF\n"),
     });
+    expect((await scan).postData()).toContain('"mediaType":"application/pdf"');
 
     const stage = authPage.getByTestId("receipt-scan-stage");
     await expect(stage.locator('[data-phase="preview"]')).toBeVisible();

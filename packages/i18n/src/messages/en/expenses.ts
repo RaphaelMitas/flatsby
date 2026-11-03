@@ -147,8 +147,7 @@ export const expenses = {
       "Try a sharper photo in good light, or fill in the fields yourself.",
     failedTitle: "Scan failed",
     newPhoto: "New photo",
-    unsupportedFormat:
-      "This image format can't be opened here. Use a JPG or PNG.",
+    unsupportedFormat: "This file can't be opened here. Use a JPG, PNG or PDF.",
     fileTooLarge: "This PDF is too large. Use one under 2 MB.",
     cameraDenied: "Allow camera access in Settings to photograph receipts.",
     outOfCredits: "No credits left. Upgrade to scan receipts.",
