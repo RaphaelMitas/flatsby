@@ -43,7 +43,7 @@ catalog:
   "@biomejs/biome": 2.6.4
   "@effect/tsgo": 0.63.0
   "@effect/vitest": 4.1.1
-  "@hookform/resolvers": ^6.0.2
+  "@hookform/resolvers": ^7.0.0
   "@playwright/test": ^1.64.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.3.3
@@ -74,9 +74,9 @@ catalog:
 
 catalogs:
   better-auth:
-    "@better-auth/expo": 1.7.14
-    "@better-auth/passkey": 1.7.14
-    better-auth: 1.7.14
+    "@better-auth/expo": 1.7.15
+    "@better-auth/passkey": 1.7.15
+    better-auth: 1.7.15
   react19:
     "@types/react": ~19.3.0
     "@types/react-dom": ~19.3.0
