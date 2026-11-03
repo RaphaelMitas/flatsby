@@ -1,4 +1,7 @@
-import type { ReceiptScan } from "@flatsby/validators/expenses/receipt-scan";
+import type {
+  ReceiptFile,
+  ReceiptScan,
+} from "@flatsby/validators/expenses/receipt-scan";
 import { Effect } from "effect";
 
 import { receiptScanFrom } from "@flatsby/validators/expenses/receipt-scan";
@@ -11,10 +14,10 @@ import { errorSummary, readReceipt } from "./model-provider";
 
 export type ReceiptScanner = (
   user: CreditUser,
-  imageBase64: string,
+  file: ReceiptFile,
 ) => Effect.Effect<ReceiptScan, ApiError>;
 
-export const scanReceipt: ReceiptScanner = (user, imageBase64) =>
+export const scanReceipt: ReceiptScanner = (user, file) =>
   Effect.gen(function* () {
     const { allowed } = yield* Effect.tryPromise({
       try: () => checkCredits(user),
@@ -30,7 +33,7 @@ export const scanReceipt: ReceiptScanner = (user, imageBase64) =>
 
     const { reading, providerMetadata } = yield* Effect.tryPromise({
       try: () =>
-        readReceipt(imageBase64, {
+        readReceipt(file, {
           distinctId: user.id,
           traceId: crypto.randomUUID(),
           feature: "scan-receipt",

@@ -11,6 +11,15 @@
   transform: translateY(-22%) scale(0.62);
 }
 
+.rs-mark {
+  position: absolute;
+  border-radius: 3px;
+  background: rgb(250 204 21 / 0.45);
+  box-shadow: 0 0 0 3px rgb(250 204 21 / 0.45);
+  pointer-events: none;
+  animation: rs-fade 0.3s 0.26s both;
+}
+
 .rs-lens {
   position: absolute;
   left: 0;
@@ -267,6 +276,7 @@
     animation: rs-fade 0.2s;
   }
   .rs-photo,
+  .rs-mark,
   .rs-nod,
   .rs-cat .fc-pupil,
   .rs-stage[data-phase="failing"] .rs-cat > *,

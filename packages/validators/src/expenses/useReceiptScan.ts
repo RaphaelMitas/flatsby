@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from "react";
 
 import type {
   Filled,
+  ReceiptFile,
   ReceiptFormValues,
+  ReceiptMediaType,
   ReceiptScan,
+  ReceiptScanFailure,
   StageEvent,
   StagePhase,
   StageTag,
@@ -14,6 +17,7 @@ import { formatCurrencyFromCents, formatExpenseDateShort } from "./formatting";
 import {
   filledBy,
   isEmptyReceiptScan,
+  RECEIPT_FILE_MAX_BASE64,
   receiptReport,
   stageTimeline,
 } from "./receipt-scan";
@@ -46,18 +50,20 @@ const APPLIED_HIGHLIGHT_MS = 1500;
 
 export function useReceiptScan({
   read,
+  reportFailure,
   setValue,
   currency,
   locale,
   reducedMotion,
   messages,
 }: {
-  read: (imageBase64: string) => Promise<ScanResult>;
+  read: (file: ReceiptFile) => Promise<ScanResult>;
+  reportFailure: (failure: ReceiptScanFailure) => void;
   setValue: SetReceiptValue;
   currency: CurrencyCode;
   locale: Intl.LocalesArgument;
   reducedMotion: boolean;
-  messages: { error: string; unsupportedImage: string };
+  messages: { error: string; unsupportedImage: string; tooLarge: string };
 }) {
   const [state, setState] = useState<ReceiptScanState>({ status: "idle" });
   const [applied, setApplied] = useState<Filled>();
@@ -102,15 +108,33 @@ export function useReceiptScan({
     }
   };
 
-  const scan = async (encode: () => Promise<string>) => {
+  // A PDF is sent as it is, so its size rejects it before it's read into memory
+  const scan = async (
+    mediaType: ReceiptMediaType,
+    encode: () => Promise<string>,
+    bytes = 0,
+  ) => {
     const current = ++attempt.current;
     const startedAt = Date.now();
     clearTimers();
     setState({ status: "reading" });
     setStage({ phase: "reading", revealed: [] });
-    const imageBase64 = await encode().catch(() => null);
+    const announced = Math.ceil(bytes / 3) * 4;
+    const imageBase64 =
+      announced > RECEIPT_FILE_MAX_BASE64
+        ? null
+        : await encode().catch(() => null);
+    const failure =
+      Math.max(announced, imageBase64?.length ?? 0) > RECEIPT_FILE_MAX_BASE64
+        ? "too_large"
+        : imageBase64 === null
+          ? "unreadable_file"
+          : undefined;
+    if (failure) reportFailure({ reason: failure, mediaType });
     const result =
-      imageBase64 === null ? null : await read(imageBase64).catch(() => null);
+      imageBase64 === null || failure
+        ? null
+        : await read({ imageBase64, mediaType }).catch(() => null);
     if (current !== attempt.current) return;
     const found =
       result?.success && !isEmptyReceiptScan(result.data) ? result.data : null;
@@ -121,8 +145,14 @@ export function useReceiptScan({
         reduced: reducedMotion,
       }),
     );
-    if (imageBase64 === null)
-      setState({ status: "failed", message: messages.unsupportedImage });
+    if (failure)
+      setState({
+        status: "failed",
+        message:
+          failure === "too_large"
+            ? messages.tooLarge
+            : messages.unsupportedImage,
+      });
     else if (!result) setState({ status: "failed", message: messages.error });
     else if (!result.success)
       setState({ status: "failed", message: result.error.message });

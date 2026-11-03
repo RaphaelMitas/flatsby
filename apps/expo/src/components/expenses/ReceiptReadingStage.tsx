@@ -1,4 +1,7 @@
-import type { ReceiptTextLine } from "@flatsby/validators/expenses/receipt-scan";
+import type {
+  ReceiptBox,
+  StageTag,
+} from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import { useEffect, useState } from "react";
 import {
@@ -26,12 +29,13 @@ import Animated, {
   ZoomIn,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SvgXml } from "react-native-svg";
 import { scheduleOnRN } from "react-native-worklets";
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslations } from "use-intl";
 
-import { receiptMarks } from "@flatsby/validators/expenses/receipt-scan";
+import { receiptDocument } from "@flatsby/validators/expenses/receipt-document";
 
 import { Button } from "~/lib/ui/button";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
@@ -56,7 +60,7 @@ const MAG = 1.9;
 const CAT = 150;
 const PEEK = 56;
 const HIDDEN = 420;
-// Reading order over the photo, as fractions of its width and height
+// Reading order over the receipt, as fractions of its width and height
 const PATH_X = [0.5, 0.28, 0.7, 0.3, 0.72, 0.35, 0.68, 0.45, 0.5];
 const PATH_Y = [0.1, 0.24, 0.3, 0.45, 0.52, 0.66, 0.74, 0.88, 0.1];
 const STEPS = PATH_X.map((_, i) => i);
@@ -65,12 +69,12 @@ export function ReceiptReadingStage({
   receiptScan,
   photo,
   origin,
-  lines,
+  marks,
 }: {
   receiptScan: ReceiptScan;
-  photo?: StagePhoto;
+  photo?: StagePhoto | "document";
   origin?: StageOrigin;
-  lines: ReceiptTextLine[];
+  marks: Partial<Record<StageTag, ReceiptBox>>;
 }) {
   const t = useTranslations("expenses.receiptScan");
   const tCommon = useTranslations("common");
@@ -97,14 +101,15 @@ export function ReceiptReadingStage({
   const panelY = useSharedValue(HIDDEN);
   const peekY = useSharedValue(PEEK);
 
-  const scale = photo
+  const paper = photo === "document" ? receiptDocument : photo;
+  const scale = paper
     ? Math.min(
-        Math.min(screen.width - 80, 300) / photo.width,
-        (screen.height * 0.46) / photo.height,
+        Math.min(screen.width - 80, 300) / paper.width,
+        (screen.height * 0.46) / paper.height,
       )
     : 1;
-  const boxW = photo ? photo.width * scale : 0;
-  const boxH = photo ? photo.height * scale : 0;
+  const boxW = paper ? paper.width * scale : 0;
+  const boxH = paper ? paper.height * scale : 0;
   const boxX = (screen.width - boxW) / 2;
   const boxY = insets.top + 132;
 
@@ -217,10 +222,6 @@ export function ReceiptReadingStage({
     if (spoken) AccessibilityInfo.announceForAccessibility(spoken);
   }, [spoken]);
 
-  const marks =
-    receiptScan.scanned && lines.length > 0
-      ? receiptMarks(lines, receiptScan.scanned)
-      : {};
   const latest = revealed.at(-1);
   const latestMark = latest && marks[latest];
 
@@ -406,10 +407,7 @@ export function ReceiptReadingStage({
             photoStyle,
           ]}
         >
-          <Image
-            source={{ uri: photo.uri }}
-            style={{ width: boxW, height: boxH, borderRadius: 6 }}
-          />
+          <Paper photo={photo} width={boxW} height={boxH} />
           {revealed.map((tag) => {
             const mark = marks[tag];
             return (
@@ -449,10 +447,9 @@ export function ReceiptReadingStage({
               lensStyle,
             ]}
           >
-            <Animated.Image
-              source={{ uri: photo.uri }}
-              style={[{ width: boxW * MAG, height: boxH * MAG }, zoomStyle]}
-            />
+            <Animated.View style={zoomStyle}>
+              <Paper photo={photo} width={boxW * MAG} height={boxH * MAG} />
+            </Animated.View>
             <Animated.View
               style={[
                 { position: "absolute", inset: 0, backgroundColor: "#fff" },
@@ -549,6 +546,30 @@ export function ReceiptReadingStage({
         </Animated.View>
       </Animated.View>
     </Modal>
+  );
+}
+
+function Paper({
+  photo,
+  width,
+  height,
+}: {
+  photo: StagePhoto | "document";
+  width: number;
+  height: number;
+}) {
+  if (photo !== "document") {
+    return (
+      <Image
+        source={{ uri: photo.uri }}
+        style={{ width, height, borderRadius: 6 }}
+      />
+    );
+  }
+  return (
+    <View style={{ width, height, borderRadius: 6, overflow: "hidden" }}>
+      <SvgXml xml={receiptDocument.svg} width={width} height={height} />
+    </View>
   );
 }
 

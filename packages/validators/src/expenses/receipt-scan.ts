@@ -14,22 +14,37 @@ export const RECEIPT_IMAGE_MAX_EDGE = 2048;
 export const RECEIPT_IMAGE_QUALITY = 0.7;
 const MAX_MERCHANT_LENGTH = 80;
 
+// Vercel rejects bodies over 4.5 MB
+export const RECEIPT_FILE_MAX_BASE64 = 3_000_000;
+
+export const receiptMediaTypeSchema = z.enum(["image/jpeg", "application/pdf"]);
+export type ReceiptMediaType = z.infer<typeof receiptMediaTypeSchema>;
+
 export const scanReceiptInputSchema = z.object({
-  // Vercel rejects bodies over 4.5 MB
-  imageBase64: z.base64().max(3_000_000),
+  imageBase64: z.base64().max(RECEIPT_FILE_MAX_BASE64),
+  // v0.18.0 apps send photos only and leave this out
+  mediaType: receiptMediaTypeSchema.default("image/jpeg"),
 });
+export type ReceiptFile = z.infer<typeof scanReceiptInputSchema>;
+
+// Scans that fail before the request is sent; the scan procedure reports its own failures
+export const receiptScanFailureSchema = z.object({
+  reason: z.enum(["too_large", "unreadable_file"]),
+  mediaType: receiptMediaTypeSchema,
+});
+export type ReceiptScanFailure = z.infer<typeof receiptScanFailureSchema>;
 
 export const receiptReadingSchema = z.object({
   isReceipt: z
     .boolean()
     .describe(
-      "False if the image is not a receipt, or too blurry to read the total",
+      "False if this is not a receipt or invoice, or too blurry to read the total",
     ),
   total: z
     .number()
     .nullable()
     .describe(
-      "Final amount paid as printed (Summe, Gesamt, Total, Zu zahlen). Not a subtotal, tax line, tip suggestion, cash given (Gegeben, Bar) or change (Rückgeld). Null if not printed; never add up line items.",
+      "Final amount paid or due as printed (Summe, Gesamt, Total, Zu zahlen, Rechnungsbetrag). Not a subtotal, tax line, tip suggestion, cash given (Gegeben, Bar) or change (Rückgeld). If several amounts could be it, take the one that makes most sense to split; null if none does. Never add up line items.",
     ),
   currency: z
     .string()
@@ -41,13 +56,13 @@ export const receiptReadingSchema = z.object({
     .string()
     .nullable()
     .describe(
-      "Purchase date as YYYY-MM-DD. European receipts print the day before the month. Null if absent.",
+      "Purchase or invoice date as YYYY-MM-DD. European receipts print the day before the month. Null if absent.",
     ),
   merchant: z
     .string()
     .nullable()
     .describe(
-      "Store or restaurant name as a short display name, e.g. REWE, without legal form or address. Null if absent.",
+      "Store, restaurant or company name as a short display name, e.g. REWE, without legal form or address. Null if absent.",
     ),
 });
 

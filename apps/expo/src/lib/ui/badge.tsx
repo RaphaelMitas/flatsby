@@ -37,6 +37,12 @@ const badgeVariants = tv({
         countBase: "bg-muted",
         countText: "text-muted-foreground",
       },
+      beta: {
+        base: "bg-primary gap-1",
+        text: "text-primary-foreground font-bold tracking-wider uppercase",
+        countBase: "bg-primary-foreground/20",
+        countText: "text-primary-foreground",
+      },
       ghost: {
         base: "bg-transparent",
         text: "text-foreground",
