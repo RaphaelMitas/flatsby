@@ -7,6 +7,7 @@ import {
   receiptMarks,
   receiptReport,
   receiptScanFrom,
+  scanReceiptInputSchema,
   stageTimeline,
 } from "./receipt-scan";
 
@@ -17,6 +18,15 @@ const reading = (overrides: Partial<ReceiptReading>): ReceiptReading => ({
   date: "2026-10-29",
   merchant: "REWE",
   ...overrides,
+});
+
+describe("scanReceiptInputSchema", () => {
+  it("reads a v0.18.0 app's scan as a photo", () => {
+    expect(scanReceiptInputSchema.parse({ imageBase64: "aGVsbG8=" })).toEqual({
+      imageBase64: "aGVsbG8=",
+      mediaType: "image/jpeg",
+    });
+  });
 });
 
 describe("receiptScanFrom", () => {

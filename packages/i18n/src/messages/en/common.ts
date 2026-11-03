@@ -1,5 +1,6 @@
 export const common = {
   back: "Back",
+  beta: "Beta",
   cancel: "Cancel",
   category: "Category",
   copy: "Copy",

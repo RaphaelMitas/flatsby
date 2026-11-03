@@ -6,6 +6,8 @@ import type { ComponentRef, ReactNode } from "react";
 import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
+import * as DocumentPicker from "expo-document-picker";
+import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -20,6 +22,7 @@ import {
 import type { StageOrigin, StagePhoto } from "./ReceiptReadingStage";
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
+import { Badge } from "~/lib/ui/badge";
 import { Button } from "~/lib/ui/button";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -31,7 +34,7 @@ import { Snores } from "../home/Snores";
 import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
-type Source = "camera" | "library";
+type Source = "camera" | "library" | "pdf";
 
 const PICKER_OPTIONS: ImagePickerOptions = { mediaTypes: ["images"] };
 
@@ -59,13 +62,42 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const chosenSource = useRef<Source | null>(null);
   const goUpgrade = useRef(false);
   const card = useRef<ComponentRef<typeof View>>(null);
-  const [photo, setPhoto] = useState<StagePhoto>();
+  const [photo, setPhoto] = useState<StagePhoto | "document">();
   const [origin, setOrigin] = useState<StageOrigin>();
   const [lines, setLines] = useState<ReceiptTextLine[]>([]);
   const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
   const { state } = receiptScan;
+  const beta = (
+    <Badge
+      variant="beta"
+      size="sm"
+      icon={<Icon name="flask-conical" size={11} color="primary-foreground" />}
+      label={t("common.beta")}
+    />
+  );
+
+  const open = (paper: StagePhoto | "document") => {
+    setPhoto(paper);
+    card.current?.measureInWindow((x, y, width, height) =>
+      setOrigin({ x, y, width, height }),
+    );
+    setLines([]);
+  };
 
   const takeFrom = async (source: Source) => {
+    if (source === "pdf") {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        copyToCacheDirectory: true,
+      });
+      const asset = result.assets?.[0];
+      if (result.canceled || !asset) return;
+      open("document");
+      void receiptScan.scan("application/pdf", () =>
+        new File(asset.uri).base64(),
+      );
+      return;
+    }
     if (source === "camera") {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
@@ -79,13 +111,9 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         : await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
     const asset = result.assets?.[0];
     if (result.canceled || !asset) return;
-    setPhoto({ uri: asset.uri, width: asset.width, height: asset.height });
-    card.current?.measureInWindow((x, y, width, height) =>
-      setOrigin({ x, y, width, height }),
-    );
-    setLines([]);
+    open({ uri: asset.uri, width: asset.width, height: asset.height });
     void recognizeLines(asset.uri).then(setLines);
-    void receiptScan.scan(() => receiptBase64(asset.uri));
+    void receiptScan.scan("image/jpeg", () => receiptBase64(asset.uri));
   };
 
   const choose = (source: Source) => {
@@ -137,6 +165,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
           testID="receipt-scan"
           icon="camera"
           title={t("expenses.receiptScan.title")}
+          badge={beta}
           hint={t("expenses.receiptScan.subtitle")}
           className="border-muted-foreground border-dashed"
           onPress={() => sourceSheet.current?.present()}
@@ -152,9 +181,12 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         }}
       >
         <View className="gap-3 px-4 pb-10">
-          <Text className="text-foreground text-lg font-semibold">
-            {t("expenses.receiptScan.title")}
-          </Text>
+          <View className="flex-row items-center gap-2">
+            <Text className="text-foreground text-lg font-semibold">
+              {t("expenses.receiptScan.title")}
+            </Text>
+            {beta}
+          </View>
           <OptionRow
             testID="receipt-scan-camera"
             icon="camera"
@@ -168,6 +200,13 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
             title={t("expenses.receiptScan.choosePhoto")}
             hint={t("expenses.receiptScan.choosePhotoHint")}
             onPress={() => choose("library")}
+          />
+          <OptionRow
+            testID="receipt-scan-pdf"
+            icon="file-text"
+            title={t("expenses.receiptScan.choosePdf")}
+            hint={t("expenses.receiptScan.choosePdfHint")}
+            onPress={() => choose("pdf")}
           />
           <Text className="text-muted-foreground text-xs">
             {t("expenses.receiptScan.disclosure")}
@@ -246,6 +285,7 @@ function OptionRow({
   icon,
   art,
   title,
+  badge,
   hint,
   trailing,
   className,
@@ -255,6 +295,7 @@ function OptionRow({
   icon?: IconProps["name"];
   art?: ReactNode;
   title: string;
+  badge?: ReactNode;
   hint?: string;
   trailing?: boolean;
   className?: string;
@@ -274,7 +315,10 @@ function OptionRow({
         {art ?? (icon && <Icon name={icon} size={20} color="foreground" />)}
       </View>
       <View className="flex-1">
-        <Text className="text-foreground font-semibold">{title}</Text>
+        <View className="flex-row items-center gap-2">
+          <Text className="text-foreground font-semibold">{title}</Text>
+          {badge}
+        </View>
         {hint && <Text className="text-muted-foreground text-sm">{hint}</Text>}
       </View>
       {trailing && (

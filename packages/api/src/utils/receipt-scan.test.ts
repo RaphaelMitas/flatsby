@@ -19,7 +19,11 @@ vi.mock("./model-provider", () => ({
 const user = { id: "user-1", name: "Test", email: "test@example.com" };
 
 const scan = () =>
-  Effect.runPromise(Effect.result(scanReceipt(user, "aGVsbG8=")));
+  Effect.runPromise(
+    Effect.result(
+      scanReceipt(user, { imageBase64: "aGVsbG8=", mediaType: "image/jpeg" }),
+    ),
+  );
 
 describe("scanReceipt", () => {
   beforeEach(() => {

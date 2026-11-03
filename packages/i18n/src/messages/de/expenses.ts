@@ -128,15 +128,17 @@ export const expenses = {
   },
   receiptScan: {
     title: "Beleg scannen",
-    subtitle: "Betrag, Datum und Geschäft aus einem Foto",
+    subtitle: "Betrag, Datum und Geschäft aus einem Foto oder PDF",
     takePhoto: "Foto aufnehmen",
     takePhotoHint: "Beleg flach hinlegen, ganz im Bild",
     choosePhoto: "Aus Fotos wählen",
     choosePhotoHint: "Auch Screenshots von E-Belegen",
+    choosePdf: "PDF wählen",
+    choosePdfHint: "Rechnungen und E-Belege aus Dateien",
     dropHere: "Beleg hier ablegen",
     chooseFile: "oder Datei wählen",
     disclosure:
-      "Das Foto geht über das Vercel AI Gateway an OpenAI, damit der Beleg gelesen werden kann. Flatsby speichert es nicht.",
+      "Das Foto oder PDF geht über das Vercel AI Gateway an OpenAI, damit der Beleg gelesen werden kann. Flatsby speichert es nicht.",
     stageCaption: "Die Katze liest deinen Beleg",
     stageBlurry: "Hm, zu verschwommen",
     stageFailed: "Hm, das hat nicht geklappt",
@@ -154,6 +156,7 @@ export const expenses = {
     newPhoto: "Neues Foto",
     unsupportedFormat:
       "Dieses Bildformat lässt sich hier nicht öffnen. Nimm ein JPG oder PNG.",
+    fileTooLarge: "Dieses PDF ist zu groß. Nimm eins unter 2 MB.",
     cameraDenied:
       "Erlaube den Kamerazugriff in den Einstellungen, um Belege zu fotografieren.",
     outOfCredits: "Keine Credits mehr. Mach ein Upgrade, um Belege zu scannen.",

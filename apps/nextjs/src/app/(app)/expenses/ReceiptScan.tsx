@@ -4,11 +4,12 @@ import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Camera, ChevronRight } from "lucide-react";
+import { Camera, ChevronRight, FlaskConical } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
+import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import { Dialog, DialogContent, DialogTitle } from "@flatsby/ui/dialog";
@@ -17,6 +18,7 @@ import {
   RECEIPT_IMAGE_QUALITY,
 } from "@flatsby/validators/expenses/receipt-scan";
 
+import type { StagePhoto } from "./ReceiptReadingStage";
 import { useTRPC } from "~/trpc/react";
 import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
@@ -39,16 +41,28 @@ async function receiptBase64(file: File) {
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  const dataUrl = canvas.toDataURL("image/jpeg", RECEIPT_IMAGE_QUALITY);
-  return dataUrl.slice(dataUrl.indexOf(",") + 1);
+  return base64Of(canvas.toDataURL("image/jpeg", RECEIPT_IMAGE_QUALITY));
 }
+
+async function pdfBase64(file: File) {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+  return base64Of(dataUrl);
+}
+
+const base64Of = (dataUrl: string) => dataUrl.slice(dataUrl.indexOf(",") + 1);
 
 export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const t = useTranslations("expenses.receiptScan");
   const tBilling = useTranslations("billing.pricing");
+  const tCommon = useTranslations("common");
   const trpc = useTRPC();
   const fileInput = useRef<HTMLInputElement>(null);
-  const [photoUrl, setPhotoUrl] = useState<string>();
+  const [photo, setPhoto] = useState<StagePhoto>();
   const [isDragging, setIsDragging] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
@@ -57,9 +71,9 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
 
   useEffect(
     () => () => {
-      if (photoUrl) URL.revokeObjectURL(photoUrl);
+      if (photo && photo !== "document") URL.revokeObjectURL(photo.url);
     },
-    [photoUrl],
+    [photo],
   );
 
   // A file dropped beside the card would otherwise open in the tab and lose the form
@@ -75,8 +89,13 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
 
   const read = (file: File | undefined) => {
     if (!file) return;
-    setPhotoUrl(URL.createObjectURL(file));
-    void receiptScan.scan(() => receiptBase64(file));
+    if (file.type === "application/pdf") {
+      setPhoto("document");
+      void receiptScan.scan("application/pdf", () => pdfBase64(file));
+      return;
+    }
+    setPhoto({ url: URL.createObjectURL(file) });
+    void receiptScan.scan("image/jpeg", () => receiptBase64(file));
   };
 
   return (
@@ -84,7 +103,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
       <input
         ref={fileInput}
         type="file"
-        accept="image/*"
+        accept="image/*,application/pdf"
         className="hidden"
         data-testid="receipt-scan-input"
         onChange={(event) => {
@@ -159,8 +178,12 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
             <Camera className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <p className="font-semibold">
+            <p className="flex items-center gap-2 font-semibold">
               {isDragging ? t("dropHere") : t("title")}
+              <Badge variant="beta">
+                <FlaskConical className="size-3" />
+                {tCommon("beta")}
+              </Badge>
             </p>
             <p className="text-muted-foreground text-sm">
               {t("subtitle")} · {t("chooseFile")}
@@ -201,7 +224,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         </DialogContent>
       </Dialog>
 
-      <ReceiptReadingStage receiptScan={receiptScan} photoUrl={photoUrl} />
+      <ReceiptReadingStage receiptScan={receiptScan} photo={photo} />
     </div>
   );
 }

@@ -121,15 +121,17 @@ export const expenses = {
   },
   receiptScan: {
     title: "Scan receipt",
-    subtitle: "Amount, date and store from a photo",
+    subtitle: "Amount, date and store from a photo or PDF",
     takePhoto: "Take photo",
     takePhotoHint: "Lay the receipt flat, fully in frame",
     choosePhoto: "Choose from photos",
     choosePhotoHint: "Screenshots of e-receipts work too",
+    choosePdf: "Choose PDF",
+    choosePdfHint: "Invoices and e-receipts from Files",
     dropHere: "Drop a receipt here",
     chooseFile: "or choose a file",
     disclosure:
-      "The photo goes through the Vercel AI Gateway to OpenAI so the receipt can be read. Flatsby doesn't store it.",
+      "The photo or PDF goes through the Vercel AI Gateway to OpenAI so the receipt can be read. Flatsby doesn't store it.",
     stageCaption: "The cat is reading your receipt",
     stageBlurry: "Hm, too blurry",
     stageFailed: "Hm, that didn't work",
@@ -147,6 +149,7 @@ export const expenses = {
     newPhoto: "New photo",
     unsupportedFormat:
       "This image format can't be opened here. Use a JPG or PNG.",
+    fileTooLarge: "This PDF is too large. Use one under 2 MB.",
     cameraDenied: "Allow camera access in Settings to photograph receipts.",
     outOfCredits: "No credits left. Upgrade to scan receipts.",
     outOfCreditsTitle: "You're out of credits",

@@ -8,17 +8,21 @@ import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import { Dialog, DialogContent, DialogTitle } from "@flatsby/ui/dialog";
+import { receiptDocument } from "@flatsby/validators/expenses/receipt-document";
 
 import "./receipt-stage.css";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
+export type StagePhoto = { url: string } | "document";
+
+const DOCUMENT_URL = `data:image/svg+xml,${encodeURIComponent(receiptDocument.svg)}`;
 
 export function ReceiptReadingStage({
   receiptScan,
-  photoUrl,
+  photo,
 }: {
   receiptScan: ReceiptScan;
-  photoUrl?: string;
+  photo?: StagePhoto;
 }) {
   const t = useTranslations("expenses.receiptScan");
   const { phase, revealed } = receiptScan.stage;
@@ -28,6 +32,7 @@ export function ReceiptReadingStage({
   const caption = t(receiptScan.stage.caption);
   const previewing = phase === "preview";
   const apply = useRef<HTMLButtonElement>(null);
+  const photoUrl = photo === "document" ? DOCUMENT_URL : photo?.url;
 
   useEffect(() => {
     if (previewing) apply.current?.focus({ preventScroll: true });
@@ -95,9 +100,25 @@ export function ReceiptReadingStage({
                 }}
               />
             )}
+            {photo === "document" &&
+              revealed.map((tag) => {
+                const mark = receiptDocument.marks[tag];
+                return (
+                  <span
+                    key={tag}
+                    className="rs-mark"
+                    style={{
+                      left: `${mark.x * 100}%`,
+                      top: `${mark.y * 100}%`,
+                      width: `${mark.width * 100}%`,
+                      height: `${mark.height * 100}%`,
+                    }}
+                  />
+                );
+              })}
             <div
               className="rs-lens"
-              style={{ backgroundImage: `url(${photoUrl})` }}
+              style={{ backgroundImage: `url("${photoUrl}")` }}
             />
           </div>
 
