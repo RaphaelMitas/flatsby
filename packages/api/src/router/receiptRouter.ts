@@ -12,7 +12,7 @@ import { captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { scanReceipt } from "../utils/receipt-scan";
 
-// Reads no group data: the file is the person's own, and credits gate every call
+// Reads no group data: the file is the person's own, and credits gate every scan
 export const receiptRouter = createTRPCRouter({
   scan: protectedProcedure
     .input(scanReceiptInputSchema)
@@ -24,23 +24,17 @@ export const receiptRouter = createTRPCRouter({
       );
       captureUserEvent({
         user: ctx.session.user,
+        event: result.success ? "receipt_scanned" : "receipt_scan_failed",
         headers: ctx.headers,
-        ...(result.success
-          ? {
-              event: "receipt_scanned",
-              additionalProperties: {
-                mediaType: input.mediaType,
+        additionalProperties: {
+          mediaType: input.mediaType,
+          ...(result.success
+            ? {
                 readable: !isEmptyReceiptScan(result.data),
                 found: Object.keys(filledBy(result.data)),
-              },
-            }
-          : {
-              event: "receipt_scan_failed",
-              additionalProperties: {
-                mediaType: input.mediaType,
-                reason: result.error.details.messageKey,
-              },
-            }),
+              }
+            : { reason: result.error.details.messageKey }),
+        },
       });
       return result;
     }),

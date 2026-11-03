@@ -133,7 +133,7 @@ export const expenses = {
     disclosure:
       "The photo or PDF goes through the Vercel AI Gateway to OpenAI so the receipt can be read. Flatsby doesn't store it.",
     stageCaption: "The cat is reading your receipt",
-    stageBlurry: "Hm, too blurry",
+    stageBlurry: "Hm, can't make it out",
     stageFailed: "Hm, that didn't work",
     previewTitle: "Here's what we read",
     store: "Store",
@@ -144,7 +144,7 @@ export const expenses = {
     discard: "Discard",
     unreadableTitle: "Couldn't read the receipt",
     unreadableBody:
-      "Try a sharper photo in good light, or fill in the fields yourself.",
+      "Try a sharper photo or another file, or fill in the fields yourself.",
     failedTitle: "Scan failed",
     newPhoto: "New photo",
     unsupportedFormat: "This file can't be opened here. Use a JPG, PNG or PDF.",

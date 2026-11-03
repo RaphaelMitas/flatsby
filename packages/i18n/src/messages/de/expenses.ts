@@ -140,7 +140,7 @@ export const expenses = {
     disclosure:
       "Das Foto oder PDF geht über das Vercel AI Gateway an OpenAI, damit der Beleg gelesen werden kann. Flatsby speichert es nicht.",
     stageCaption: "Die Katze liest deinen Beleg",
-    stageBlurry: "Hm, zu verschwommen",
+    stageBlurry: "Hm, nicht zu entziffern",
     stageFailed: "Hm, das hat nicht geklappt",
     previewTitle: "Das haben wir gelesen",
     store: "Geschäft",
@@ -151,7 +151,7 @@ export const expenses = {
     discard: "Verwerfen",
     unreadableTitle: "Beleg nicht lesbar",
     unreadableBody:
-      "Versuch ein schärferes Foto bei gutem Licht, oder füll die Felder selbst aus.",
+      "Versuch ein schärferes Foto oder eine andere Datei, oder füll die Felder selbst aus.",
     failedTitle: "Scannen fehlgeschlagen",
     newPhoto: "Neues Foto",
     unsupportedFormat:

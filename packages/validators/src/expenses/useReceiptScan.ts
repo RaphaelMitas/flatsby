@@ -108,7 +108,7 @@ export function useReceiptScan({
     }
   };
 
-  // Photos are shrunk to fit; a PDF is sent as it is, so its size is checked before it's read
+  // Photos are shrunk to fit; a PDF is sent as it is, so its size is checked before reading when the picker reports it
   const scan = async (
     mediaType: ReceiptMediaType,
     encode: () => Promise<string>,
@@ -119,16 +119,20 @@ export function useReceiptScan({
     clearTimers();
     setState({ status: "reading" });
     setStage({ phase: "reading", revealed: [] });
-    const tooLarge = Math.ceil(bytes / 3) * 4 > RECEIPT_FILE_MAX_BASE64;
-    const imageBase64 = tooLarge ? null : await encode().catch(() => null);
-    if (imageBase64 === null) {
-      reportFailure({
-        reason: tooLarge ? "too_large" : "unreadable_file",
-        mediaType,
-      });
-    }
+    const announced = Math.ceil(bytes / 3) * 4;
+    const imageBase64 =
+      announced > RECEIPT_FILE_MAX_BASE64
+        ? null
+        : await encode().catch(() => null);
+    const failure =
+      Math.max(announced, imageBase64?.length ?? 0) > RECEIPT_FILE_MAX_BASE64
+        ? "too_large"
+        : imageBase64 === null
+          ? "unreadable_file"
+          : undefined;
+    if (failure) reportFailure({ reason: failure, mediaType });
     const result =
-      imageBase64 === null
+      imageBase64 === null || failure
         ? null
         : await read({ imageBase64, mediaType }).catch(() => null);
     if (current !== attempt.current) return;
@@ -141,9 +145,14 @@ export function useReceiptScan({
         reduced: reducedMotion,
       }),
     );
-    if (tooLarge) setState({ status: "failed", message: messages.tooLarge });
-    else if (imageBase64 === null)
-      setState({ status: "failed", message: messages.unsupportedImage });
+    if (failure)
+      setState({
+        status: "failed",
+        message:
+          failure === "too_large"
+            ? messages.tooLarge
+            : messages.unsupportedImage,
+      });
     else if (!result) setState({ status: "failed", message: messages.error });
     else if (!result.success)
       setState({ status: "failed", message: result.error.message });
