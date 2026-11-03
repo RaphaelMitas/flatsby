@@ -148,7 +148,7 @@ export const expenses = {
     failedTitle: "Scan failed",
     newPhoto: "New photo",
     unsupportedFormat: "This file can't be opened here. Use a JPG, PNG or PDF.",
-    fileTooLarge: "This PDF is too large. Use one under 2 MB.",
+    fileTooLarge: "This file is too large. Use one under 2 MB.",
     cameraDenied: "Allow camera access in Settings to photograph receipts.",
     outOfCredits: "No credits left. Upgrade to scan receipts.",
     outOfCreditsTitle: "You're out of credits",

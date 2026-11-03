@@ -108,7 +108,7 @@ export function useReceiptScan({
     }
   };
 
-  // Photos are shrunk to fit; a PDF is sent as it is, so its size is checked before reading when the picker reports it
+  // A PDF is sent as it is, so its size rejects it before it's read into memory
   const scan = async (
     mediaType: ReceiptMediaType,
     encode: () => Promise<string>,

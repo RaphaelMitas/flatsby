@@ -156,7 +156,7 @@ export const expenses = {
     newPhoto: "Neues Foto",
     unsupportedFormat:
       "Diese Datei lässt sich hier nicht öffnen. Nimm ein JPG, PNG oder PDF.",
-    fileTooLarge: "Dieses PDF ist zu groß. Nimm eins unter 2 MB.",
+    fileTooLarge: "Diese Datei ist zu groß. Nimm eine unter 2 MB.",
     cameraDenied:
       "Erlaube den Kamerazugriff in den Einstellungen, um Belege zu fotografieren.",
     outOfCredits: "Keine Credits mehr. Mach ein Upgrade, um Belege zu scannen.",

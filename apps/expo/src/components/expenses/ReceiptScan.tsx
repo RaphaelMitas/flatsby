@@ -94,12 +94,10 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
       });
       const asset = result.assets?.[0];
       if (result.canceled || !asset) return;
+      // The picker leaves a PDF's size out for some providers; the cached copy always has one
+      const file = new File(asset.uri);
       open("document");
-      void receiptScan.scan(
-        "application/pdf",
-        () => new File(asset.uri).base64(),
-        asset.size,
-      );
+      void receiptScan.scan("application/pdf", () => file.base64(), file.size);
       return;
     }
     if (source === "camera") {
