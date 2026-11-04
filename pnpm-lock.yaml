@@ -202,13 +202,13 @@ catalogs:
       specifier: ^4.3.3
       version: 4.3.3
     '@tanstack/query-async-storage-persister':
-      specifier: ^5.105.1
+      specifier: ^5.105.2
       version: 5.105.3
     '@tanstack/react-query':
-      specifier: ^5.105.1
+      specifier: ^5.105.2
       version: 5.105.3
     '@tanstack/react-query-persist-client':
-      specifier: ^5.105.1
+      specifier: ^5.105.2
       version: 5.105.3
     '@trpc/client':
       specifier: ^11.22.1
@@ -738,8 +738,8 @@ importers:
         specifier: workspace:*
         version: link:../validators
       '@posthog/ai':
-        specifier: 8.18.0
-        version: 8.18.0(@ai-sdk/provider@4.0.35)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.61.2(@opentelemetry/api@1.9.1))
+        specifier: 8.18.1
+        version: 8.18.1(@ai-sdk/provider@4.0.35)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.61.2(@opentelemetry/api@1.9.1))
       '@posthog/core':
         specifier: ^1.62.0
         version: 1.62.0
@@ -3253,8 +3253,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  '@posthog/ai@8.18.0':
-    resolution: {integrity: sha512-GLlCApB6sh9Td0u9Up3ix44myC/R8j6kr4PnVriNPX+guU/+8LYXoHGVy6LQuOz82zjV5A8H7SDFsApcAv7w8Q==}
+  '@posthog/ai@8.18.1':
+    resolution: {integrity: sha512-nGzB0wEwO6vRNS+2uL+4uO4KkxQjtw1WxGcfQF7jCWRqC62WSyjzVSGfe18PnS4x9ySer3A4igEZJY5t58TBfw==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       '@ai-sdk/provider': ^2.0.0 || ^3.0.0 || ^4.0.0
@@ -10722,7 +10722,7 @@ snapshots:
     dependencies:
       playwright: 1.64.1
 
-  '@posthog/ai@8.18.0(@ai-sdk/provider@4.0.35)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.61.2(@opentelemetry/api@1.9.1))':
+  '@posthog/ai@8.18.1(@ai-sdk/provider@4.0.35)(@google/genai@1.52.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(posthog-node@5.61.2(@opentelemetry/api@1.9.1))':
     dependencies:
       '@posthog/core': 1.62.0
       posthog-node: 5.61.2(@opentelemetry/api@1.9.1)
