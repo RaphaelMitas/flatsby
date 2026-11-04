@@ -30,6 +30,20 @@ test.describe("Debt & Settlements", () => {
     await expect(authPage.getByText("All settled up")).toBeVisible();
   });
 
+  test("the expense list shows your net and opens the debts", async ({
+    page,
+    baseURL,
+  }) => {
+    await createAuthSession(page, baseURL, { seed: "debts" });
+    await page.goto("/expenses");
+
+    await expect(page.getByTestId("expense-debt-hero")).toContainText(
+      "+€30.50",
+    );
+    await page.getByTestId("expense-debt-card").click();
+    await expect(page.getByTestId("debt-summary-title")).toBeVisible();
+  });
+
   test("shows your net and direct debts per person and currency", async ({
     page,
     baseURL,
