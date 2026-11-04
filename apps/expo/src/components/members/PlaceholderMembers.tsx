@@ -51,7 +51,9 @@ export function PlaceholderMembers({
   return (
     <View className="gap-2">
       <Text className="text-foreground text-base font-medium">{title}</Text>
-      {hint && <Text className="text-muted-foreground text-sm">{hint}</Text>}
+      {isAdmin && hint && (
+        <Text className="text-muted-foreground text-sm">{hint}</Text>
+      )}
       <View>
         {placeholders.map((member) => (
           <MemberRow

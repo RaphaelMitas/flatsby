@@ -1,0 +1,52 @@
+import type { Href } from "expo-router";
+import { Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useTranslations } from "use-intl";
+
+import type { IconProps } from "~/lib/ui/custom/icons/Icon";
+import { Card, CardContent } from "~/lib/ui/card";
+import Icon from "~/lib/ui/custom/icons/Icon";
+
+interface NavLinkItemProps {
+  href: Href;
+  iconName: IconProps["name"];
+  label: string;
+  testID?: string;
+}
+
+function NavLinkItem({ href, iconName, label, testID }: NavLinkItemProps) {
+  const router = useRouter();
+
+  return (
+    <Pressable testID={testID} onPress={() => router.push(href)}>
+      <Card>
+        <CardContent className="flex-row items-center justify-between p-4">
+          <View className="flex-row items-center gap-3">
+            <Icon name={iconName} size={20} color="muted-foreground" />
+            <Text className="text-foreground font-medium">{label}</Text>
+          </View>
+          <Icon name="chevron-right" size={20} color="muted-foreground" />
+        </CardContent>
+      </Card>
+    </Pressable>
+  );
+}
+
+export function NavLinks() {
+  const t = useTranslations();
+  return (
+    <View className="gap-4">
+      <NavLinkItem
+        testID="dashboard-shopping-lists-link"
+        href="/(tabs)/shoppingList"
+        iconName="shopping-cart"
+        label={t("home.shoppingLists")}
+      />
+      <NavLinkItem
+        href="/(tabs)/expenses"
+        iconName="wallet"
+        label={t("navigation.expenses")}
+      />
+    </View>
+  );
+}

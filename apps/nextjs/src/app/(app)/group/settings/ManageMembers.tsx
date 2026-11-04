@@ -45,9 +45,6 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
-          {isAdmin && (
-            <InviteDialog groupId={groupId} groupName={group.data.name} />
-          )}
           <div className="grid gap-4">
             {group.data.groupMembers.filter(hasJoined).map((groupMember) => (
               <MemberCard
@@ -59,9 +56,13 @@ const ManageMembers = ({ groupId }: ManageMembersProps) => {
               />
             ))}
           </div>
+          {isAdmin && (
+            <InviteDialog groupId={groupId} groupName={group.data.name} />
+          )}
           <PlaceholderMembers
             groupId={groupId}
-            title={t("group.placeholders.sectionTitle")}
+            title={t("group.placeholders.inviteStepTitle")}
+            hint={t("group.placeholders.inviteStepHint")}
           />
         </div>
       </CardContent>

@@ -155,19 +155,6 @@ export default function MembersScreen() {
 
   return (
     <AppScrollView onRefresh={refetch}>
-      {isAdmin && (
-        <View className="px-4 pt-4 pb-2">
-          <Button
-            testID="group-invite-button"
-            title={t("invite.open")}
-            icon="plus"
-            onPress={() =>
-              router.push("/(tabs)/settings/group-settings/invite")
-            }
-          />
-        </View>
-      )}
-
       {/* Members List */}
       <View className="bg-background">
         <View className="flex-row items-center justify-between px-4 py-3">
@@ -194,10 +181,21 @@ export default function MembersScreen() {
         ))}
       </View>
 
-      <View className="px-4 py-3">
+      <View className="gap-6 px-4 py-3">
+        {isAdmin && (
+          <Button
+            testID="group-invite-button"
+            title={t("invite.open")}
+            icon="plus"
+            onPress={() =>
+              router.push("/(tabs)/settings/group-settings/invite")
+            }
+          />
+        )}
         <PlaceholderMembers
           groupId={group.data.id}
-          title={t("group.placeholders.sectionTitle")}
+          title={t("group.placeholders.inviteStepTitle")}
+          hint={t("group.placeholders.inviteStepHint")}
           onPressMember={handleMemberPress}
         />
       </View>

@@ -87,7 +87,6 @@ export const group = {
     inviteStepTitle: "Not on Flatsby yet?",
     inviteStepHint:
       "Add them now and you can share expenses with them right away. When they join, they take over their spot.",
-    sectionTitle: "Not joined yet",
     namePlaceholder: "Add a name",
     add: "Add",
     nameRequired: "Please enter a name",

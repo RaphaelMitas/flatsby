@@ -14,6 +14,7 @@ import { HomeInvite } from "../home/HomeSwitch";
 import { InviteFlatmatesCard } from "../home/InviteFlatmatesCard";
 import { GroupSwitcher } from "../switcher/GroupSwitcher";
 import { HomeStats } from "./HomeStats";
+import { NavLinks } from "./NavLinks";
 import { QuickActions } from "./QuickActions";
 
 export function Dashboard() {
@@ -84,6 +85,8 @@ function DashboardContent() {
         <HomeStats groupId={selectedGroupId} />
 
         <QuickActions />
+
+        <NavLinks />
       </View>
     </AppScrollView>
   );
