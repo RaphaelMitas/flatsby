@@ -48,7 +48,7 @@ export function PaypalNudgeCard() {
             <X className="size-4" />
           </Button>
         </div>
-        <Button asChild data-testid="paypal-nudge-open">
+        <Button asChild variant="outline" data-testid="paypal-nudge-open">
           <Link href="/user-settings">{t("fasterAction")}</Link>
         </Button>
       </CardContent>

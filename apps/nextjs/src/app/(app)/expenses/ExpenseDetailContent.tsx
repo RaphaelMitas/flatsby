@@ -220,9 +220,11 @@ export function ExpenseDetailContent({
                         <UserAvatar {...memberPerson(member)} />
                         <div>
                           <p className="font-medium">{member.user.name}</p>
-                          <p className="text-muted-foreground text-xs">
-                            {portion}
-                          </p>
+                          {portion && (
+                            <p className="text-muted-foreground text-xs">
+                              {portion}
+                            </p>
+                          )}
                         </div>
                       </div>
                       {paid === undefined ? (
@@ -247,22 +249,23 @@ export function ExpenseDetailContent({
         </Card>
       )}
 
-      {/* Created by card */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
-            <UserAvatar {...memberPerson(expense.createdByGroupMember)} />
-            <div>
-              <p className="text-muted-foreground text-sm">
-                {t("expenses.createdBy")}
-              </p>
-              <p className="text-sm font-medium">
-                {expense.createdByGroupMember.user.name}
-              </p>
+      {expense.createdByGroupMember.id !== expense.paidByGroupMember.id && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <UserAvatar {...memberPerson(expense.createdByGroupMember)} />
+              <div>
+                <p className="text-muted-foreground text-sm">
+                  {t("expenses.createdBy")}
+                </p>
+                <p className="text-sm font-medium">
+                  {expense.createdByGroupMember.user.name}
+                </p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

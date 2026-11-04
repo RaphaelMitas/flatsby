@@ -324,11 +324,6 @@ const ShoppingListInner = ({
                 <LoadingSpinner />
               </div>
             )}
-            {!hasNextPage && allItems.length > 0 && (
-              <div className="text-muted-foreground py-4 text-center text-sm">
-                {t("noMoreItems")}
-              </div>
-            )}
           </div>
         </div>
 

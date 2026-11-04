@@ -20,6 +20,7 @@ import { PlaceholderMembers } from "~/components/members/PlaceholderMembers";
 import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { Separator } from "~/lib/ui/separator";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -145,7 +146,7 @@ export default function MembersScreen() {
   );
 
   if (!group.success) {
-    return null;
+    return <ErrorMessage message={group.error.message} />;
   }
 
   const me = group.data.thisGroupMember;
@@ -154,18 +155,8 @@ export default function MembersScreen() {
 
   return (
     <AppScrollView onRefresh={refetch}>
-      {/* Header */}
-      <View className="bg-background px-4 py-6">
-        <Text className="text-foreground text-2xl font-bold">
-          {t("group.members.title")}
-        </Text>
-        <Text className="text-muted-foreground text-sm">
-          {t("group.members.description")}
-        </Text>
-      </View>
-
       {isAdmin && (
-        <View className="px-4 pb-4">
+        <View className="px-4 pt-4 pb-2">
           <Button
             testID="group-invite-button"
             title={t("invite.open")}

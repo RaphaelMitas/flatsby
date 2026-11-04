@@ -3,7 +3,6 @@ export const home = {
   createGroup: "Create group",
   loadingDashboard: "Loading dashboard...",
   retry: "Retry",
-  shoppingLists: "Shopping lists",
   somethingWentWrong: "Something went wrong",
   new: {
     greeting: {
@@ -60,7 +59,7 @@ export const home = {
   },
   stats: {
     balanced: "balanced",
-    items: "items",
+    bought: "bought",
     last30Days: "Last 30 days",
     messages: "messages",
     owedToYou: "owed to you",

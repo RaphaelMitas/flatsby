@@ -5,7 +5,6 @@ export const home = {
   createGroup: "Gruppe erstellen",
   loadingDashboard: "Übersicht wird geladen...",
   retry: "Erneut versuchen",
-  shoppingLists: "Einkaufslisten",
   somethingWentWrong: "Etwas ist schiefgelaufen",
   new: {
     greeting: {
@@ -62,7 +61,7 @@ export const home = {
   },
   stats: {
     balanced: "ausgeglichen",
-    items: "Artikel",
+    bought: "gekauft",
     last30Days: "Letzte 30 Tage",
     messages: "Nachrichten",
     owedToYou: "bekommst du",

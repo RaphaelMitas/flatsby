@@ -158,7 +158,7 @@ function HomeStatsInner() {
         <StatCard
           icon={<CheckCircle2 className="h-5 w-5" />}
           value={itemsCompleted}
-          label={t("items")}
+          label={t("bought")}
           colorClass="text-green-500"
         />
         <StatCard

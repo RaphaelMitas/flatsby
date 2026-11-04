@@ -1,9 +1,10 @@
 import type LucideIcon from "@react-native-vector-icons/lucide";
 import type { ComponentProps } from "react";
+import { ActivityIndicator, View } from "react-native";
 
 import type { ColorName } from "~/lib/utils";
 import { StyledIcon } from "~/lib/nativewind-setup";
-import { cn, useThemeColors } from "~/lib/utils";
+import { useThemeColors } from "~/lib/utils";
 import AppleIcon from "./AppleIcon";
 import FlatsbyCat from "./FlatsbyCat";
 import GoogleIcon from "./GoogleIcon";
@@ -35,15 +36,29 @@ const Icon = ({ name, color, size, className }: IconProps) => {
   if (name === "passkey") {
     return <PasskeyIcon size={size} color={colorValue} className={className} />;
   }
+  if (name === "loader") {
+    // CSS keyframes don't run on native, so a spinning icon would stand still
+    return (
+      <View
+        style={{ width: size, height: size }}
+        className="items-center justify-center"
+      >
+        <ActivityIndicator
+          size="small"
+          color={getColor(color ?? "foreground")}
+        />
+      </View>
+    );
+  }
   if (name === "flatsby") {
     return <FlatsbyCat size={size} color={colorValue} className={className} />;
   }
   return (
     <StyledIcon
-      name={name === "loader" ? "loader-circle" : name}
+      name={name}
       size={size}
       color={colorValue}
-      className={cn(className, name === "loader" ? "animate-spin" : undefined)}
+      className={className}
     />
   );
 };

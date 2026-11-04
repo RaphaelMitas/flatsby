@@ -17,13 +17,12 @@ export default function CalendarLayout() {
         />
         <Stack.Screen
           name="[itemId]"
-          options={{ title: "", headerBackTitle: "", presentation: "modal" }}
+          options={{ title: "", presentation: "modal" }}
         />
         <Stack.Screen
           name="form"
           options={{
             title: t("calendar.form.newTitle"),
-            headerBackTitle: "",
             presentation: "modal",
           }}
         />

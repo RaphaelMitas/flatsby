@@ -167,7 +167,7 @@ export function HomeStats({ groupId }: HomeStatsProps) {
         <StatCard
           iconName="circle-check"
           value={itemsCompleted}
-          label={t("items")}
+          label={t("bought")}
           iconColor="success"
           loading={isLoading}
         />

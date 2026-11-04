@@ -5,6 +5,7 @@ import { useTranslations } from "use-intl";
 
 import { AnalyticsPrompt } from "~/components/analytics/AnalyticsPrompt";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { trpc } from "~/utils/api";
 import { useHomeVersion } from "~/utils/home-version";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -13,7 +14,6 @@ import { HomeInvite } from "../home/HomeSwitch";
 import { InviteFlatmatesCard } from "../home/InviteFlatmatesCard";
 import { GroupSwitcher } from "../switcher/GroupSwitcher";
 import { HomeStats } from "./HomeStats";
-import { NavLinks } from "./NavLinks";
 import { QuickActions } from "./QuickActions";
 
 export function Dashboard() {
@@ -65,7 +65,7 @@ function DashboardContent() {
   }
 
   if (!userWithGroups.success) {
-    return null;
+    return <ErrorMessage message={userWithGroups.error.message} />;
   }
 
   return (
@@ -84,8 +84,6 @@ function DashboardContent() {
         <HomeStats groupId={selectedGroupId} />
 
         <QuickActions />
-
-        <NavLinks />
       </View>
     </AppScrollView>
   );

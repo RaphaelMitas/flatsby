@@ -39,6 +39,7 @@ import {
 } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { Form, FormControl, FormField, FormMessage } from "~/lib/ui/form";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
@@ -405,7 +406,7 @@ export function SettlementForm({
   };
 
   if (!groupData.success) {
-    return null;
+    return <ErrorMessage message={groupData.error.message} />;
   }
 
   const groupMembers = groupData.data.groupMembers;

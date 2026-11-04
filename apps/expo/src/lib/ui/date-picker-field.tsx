@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
+import { getLocales } from "expo-localization";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocale } from "use-intl";
 
@@ -28,16 +29,19 @@ export function DatePickerField({
   accessibilityLabel,
 }: DatePickerFieldProps) {
   const locale = useLocale();
+  // Month names follow the app language, date order the device region
+  const region = getLocales()[0]?.regionCode;
+  const pickerLocale = region ? `${locale}-${region}` : locale;
   const [showPicker, setShowPicker] = useState(false);
   const { colorScheme } = useThemeColors();
   const formatted =
     mode === "date"
-      ? value.toLocaleDateString(locale, {
+      ? value.toLocaleDateString(pickerLocale, {
           year: "numeric",
           month: "long",
           day: "numeric",
         })
-      : value.toLocaleTimeString(locale, {
+      : value.toLocaleTimeString(pickerLocale, {
           hour: "2-digit",
           minute: "2-digit",
         });
@@ -55,7 +59,8 @@ export function DatePickerField({
           maximumDate={maximumDate}
           display="default"
           themeVariant={colorScheme}
-          className="border-input bg-background h-12 rounded-lg border px-3"
+          // A passed locale drops the user's 24-hour override, so times keep the system's
+          locale={mode === "date" ? pickerLocale : undefined}
           onValueChange={(_, selectedDate) => onChange(selectedDate)}
         />
       </View>

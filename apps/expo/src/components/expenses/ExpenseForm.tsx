@@ -32,6 +32,7 @@ import { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
+import { AppKeyboardStickyView } from "~/lib/components/keyboard-sticky-view";
 import {
   BottomSheetPickerProvider,
   BottomSheetPickerTrigger,
@@ -542,7 +543,12 @@ export function ExpenseForm({
         </View>
 
         <Form {...form}>
-          <AppScrollView className="flex-1" contentContainerClassName="p-4">
+          <AppScrollView
+            className="flex-1"
+            contentContainerClassName="p-4"
+            // The footer rides on the keyboard, so a focused field has to clear it too
+            bottomOffset={96}
+          >
             {currentStep === 1 && (
               <View className="gap-4">
                 {!isEditMode && <ReceiptScanCard receiptScan={receiptScan} />}
@@ -773,7 +779,7 @@ export function ExpenseForm({
               </View>
             )}
           </AppScrollView>
-          <View className="border-border flex-row gap-2 border-t p-4">
+          <AppKeyboardStickyView className="border-border bg-background flex-row gap-2 border-t p-4">
             {currentStep > 1 && (
               <Button
                 testID="expense-form-back"
@@ -816,7 +822,7 @@ export function ExpenseForm({
                 className="flex-1"
               />
             )}
-          </View>
+          </AppKeyboardStickyView>
         </Form>
       </BottomSheetPickerProvider>
     </SafeAreaView>

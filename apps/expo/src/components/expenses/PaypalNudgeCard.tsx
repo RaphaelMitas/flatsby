@@ -32,7 +32,7 @@ export function PaypalNudgeCard() {
   };
 
   return (
-    <Card testID="paypal-nudge-card">
+    <Card testID="paypal-nudge-card" className="mt-4">
       <CardContent className="gap-3 p-4">
         <View className="flex-row items-start gap-2">
           <View className="flex-1 gap-1">
@@ -55,6 +55,7 @@ export function PaypalNudgeCard() {
         <Button
           testID="paypal-nudge-open"
           title={t("fasterAction")}
+          variant="outline"
           onPress={() =>
             router.navigate("/(tabs)/settings/profile", { withAnchor: true })
           }

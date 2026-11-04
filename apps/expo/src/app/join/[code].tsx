@@ -85,7 +85,13 @@ export default function JoinScreen() {
   return (
     <SafeAreaView>
       <View className="bg-background flex-1 px-6 pb-6">
-        <Pressable onPress={close} className="self-start py-3">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("common.close")}
+          hitSlop={12}
+          onPress={close}
+          className="self-start py-3"
+        >
           <Icon name="x" size={24} color="muted-foreground" />
         </Pressable>
 

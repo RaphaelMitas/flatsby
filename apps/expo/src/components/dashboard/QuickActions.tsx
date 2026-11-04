@@ -16,7 +16,7 @@ export function QuickActions() {
       <View className="flex-row gap-2">
         <Button
           variant="outline"
-          icon="shopping-cart"
+          icon="shopping-basket"
           title={selectedShoppingListName ?? t("shop")}
           className="min-w-0 flex-1"
           numberOfLines={1}

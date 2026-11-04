@@ -4,7 +4,6 @@ import { AnalyticsNotice } from "./analytics-notice";
 import { GroupHeader } from "./group-header";
 import { HomeStats } from "./home-stats";
 import { InviteFlatmatesCard } from "./invite-flatmates-card";
-import { NavLinks } from "./nav-links";
 import { QuickActions } from "./quick-actions";
 
 export function HomeContent() {
@@ -19,8 +18,6 @@ export function HomeContent() {
       <HomeStats />
 
       <QuickActions />
-
-      <NavLinks />
     </div>
   );
 }

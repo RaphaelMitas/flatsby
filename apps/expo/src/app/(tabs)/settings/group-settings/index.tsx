@@ -8,6 +8,7 @@ import { SettingsHeader } from "~/components/settings/SettingsHeader";
 import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -45,7 +46,7 @@ export default function GroupSettingsIndex() {
   };
 
   if (!group.success) {
-    return null;
+    return <ErrorMessage message={group.error.message} />;
   }
 
   return (
@@ -53,7 +54,7 @@ export default function GroupSettingsIndex() {
       <AppScrollView>
         <SettingsHeader title={group.data.name} />
 
-        <SettingsSection title={group.data.name}>
+        <SettingsSection>
           <Link href="/(tabs)/settings/group-settings/group-details" asChild>
             <SettingsItem
               testID="group-settings-details"

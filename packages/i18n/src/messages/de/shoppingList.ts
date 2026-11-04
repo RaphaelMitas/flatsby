@@ -11,7 +11,6 @@ export const shoppingList = {
   loadingMoreItems: "Weitere Artikel werden geladen...",
   namePlaceholder: "Namen der Einkaufsliste eingeben",
   noListsYet: "Noch keine Einkaufslisten",
-  noMoreItems: "Keine weiteren Artikel",
   purchasedItems: "Gekaufte Artikel",
   renameFailed: "Einkaufsliste konnte nicht umbenannt werden",
   renamePlaceholder: "Neuen Namen eingeben",

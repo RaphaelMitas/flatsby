@@ -18,6 +18,7 @@ import {
 import { PlaceholderMembers } from "~/components/members/PlaceholderMembers";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { getPostHog } from "~/utils/analytics/posthog";
 import { trpc } from "~/utils/api";
 import { getBaseUrl } from "~/utils/base-url";
@@ -62,7 +63,7 @@ export function InviteScreen({
   );
 
   if (!invite.success) {
-    return null;
+    return <ErrorMessage message={invite.error.message} />;
   }
 
   const link = inviteLink(getBaseUrl(), invite.data.code);

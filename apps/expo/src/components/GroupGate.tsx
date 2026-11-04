@@ -5,6 +5,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
@@ -48,13 +49,7 @@ function GroupLoader({
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
   if (!data.success) {
-    return (
-      <View className="flex-1 items-center justify-center p-4">
-        <Text className="text-destructive text-center">
-          {data.error.message}
-        </Text>
-      </View>
-    );
+    return <ErrorMessage message={data.error.message} />;
   }
   return children(data.data);
 }

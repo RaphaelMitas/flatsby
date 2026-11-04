@@ -22,7 +22,6 @@ export default function ShoppingListsLayout() {
           name="create"
           options={{
             title: t("createShoppingList"),
-            headerBackTitle: "",
             presentation: "modal",
             ...solidHeader,
           }}
@@ -31,7 +30,6 @@ export default function ShoppingListsLayout() {
           name="edit-list"
           options={{
             title: t("switcher.editTitle"),
-            headerBackTitle: "",
             presentation: "modal",
             ...solidHeader,
           }}
@@ -40,7 +38,6 @@ export default function ShoppingListsLayout() {
           name="edit-item"
           options={{
             title: t("editItem"),
-            headerBackTitle: "",
             presentation: "modal",
             ...solidHeader,
           }}

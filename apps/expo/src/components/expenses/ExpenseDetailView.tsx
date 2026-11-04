@@ -29,6 +29,7 @@ import {
   CardTitle,
 } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 import { Separator } from "~/lib/ui/separator";
 import { trpc } from "~/utils/api";
@@ -116,7 +117,12 @@ export function ExpenseDetailView({
     setShowDeleteDialog(false);
   };
 
-  if (!expenseData.success || !groupData.success) return null;
+  if (!expenseData.success) {
+    return <ErrorMessage message={expenseData.error.message} />;
+  }
+  if (!groupData.success) {
+    return <ErrorMessage message={groupData.error.message} />;
+  }
 
   const expense = expenseData.data;
 
@@ -127,59 +133,46 @@ export function ExpenseDetailView({
 
   return (
     <>
-      <View className="h-full gap-4 p-4">
-        <View className="flex-row gap-2">
-          <Button
-            testID="expense-edit-button"
-            title={t("common.edit")}
-            variant="outline"
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/expenses/[expenseId]/edit",
-                params: { expenseId: expenseId.toString() },
-              })
-            }
-            className="flex-1"
-            disabled={deleteExpenseMutation.isPending}
-            icon="pencil"
-          />
-          <Button
-            testID="expense-delete-button"
-            title={t("common.delete")}
-            variant="destructive"
-            onPress={() => setShowDeleteDialog(true)}
-            disabled={deleteExpenseMutation.isPending}
-            icon="trash-2"
-            className="flex-1"
-          />
-        </View>
-
-        <AppScrollView className="flex-1" contentContainerClassName=" gap-4">
-          {/* Expense Details Card */}
-          <Card>
-            <CardHeader>
-              <View className="flex-row items-start justify-between gap-4">
-                <View className="flex-1">
-                  <CardTitle className="text-2xl">{amounts.amount}</CardTitle>
-                  {amounts.rate && (
-                    <View className="mt-1 gap-1">
-                      <Text className="text-muted-foreground text-sm">
-                        {amounts.paid} · {amounts.rate}
+      <AppScrollView contentContainerClassName="gap-4 p-4">
+        <Card>
+          <CardHeader>
+            <View className="flex-row items-start justify-between gap-4">
+              <View className="flex-1">
+                <CardTitle className="text-3xl">{amounts.amount}</CardTitle>
+                {amounts.rate && (
+                  <View className="mt-1 gap-1">
+                    <Text className="text-muted-foreground text-sm">
+                      {amounts.paid} · {amounts.rate}
+                    </Text>
+                    <View className="flex-row items-center gap-1">
+                      <Text className="text-muted-foreground text-xs">
+                        {t("expenses.conversion.convertedWhenAdded")}
                       </Text>
-                      <View className="flex-row items-center gap-1">
-                        <Text className="text-muted-foreground text-xs">
-                          {t("expenses.conversion.convertedWhenAdded")}
-                        </Text>
-                        <RateInfoButton targetCurrency={ledger.currency} />
-                      </View>
+                      <RateInfoButton targetCurrency={ledger.currency} />
                     </View>
-                  )}
-                  {expense.description && (
-                    <CardDescription className="mt-2 text-base">
-                      {expense.description}
-                    </CardDescription>
-                  )}
-                </View>
+                  </View>
+                )}
+                {expense.description && (
+                  <CardDescription className="mt-2 text-base">
+                    {expense.description}
+                  </CardDescription>
+                )}
+              </View>
+              <View className="items-end gap-2">
+                <Button
+                  testID="expense-edit-button"
+                  title={t("common.edit")}
+                  variant="outline"
+                  size="sm"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/expenses/[expenseId]/edit",
+                      params: { expenseId: expenseId.toString() },
+                    })
+                  }
+                  disabled={deleteExpenseMutation.isPending}
+                  icon="pencil"
+                />
                 {expense.splitMethod === "settlement" && (
                   <Badge variant="secondary">
                     <Icon
@@ -193,171 +186,183 @@ export function ExpenseDetailView({
                   </Badge>
                 )}
               </View>
-            </CardHeader>
-            <CardContent className="gap-4">
-              <View className="flex-row items-center gap-3">
-                <MemberAvatar
-                  person={memberPerson(expense.paidByGroupMember)}
-                  className="h-10 w-10"
-                />
-                <View>
-                  <Text className="text-muted-foreground text-sm">
-                    {expense.splitMethod === "settlement"
-                      ? t("expenses.from")
-                      : t("expenses.paidByLabel")}
-                  </Text>
-                  <Text className="text-foreground font-semibold">
-                    {expense.paidByGroupMember.user.name}
-                  </Text>
-                </View>
-              </View>
-
-              {expense.splitMethod === "settlement" &&
-                expense.expenseSplits[0] && (
-                  <View className="flex-row items-center gap-3">
-                    <MemberAvatar
-                      person={memberPerson(
-                        expense.expenseSplits[0].groupMember,
-                      )}
-                      className="h-10 w-10"
-                    />
-                    <View>
-                      <Text className="text-muted-foreground text-sm">
-                        {t("expenses.to")}
-                      </Text>
-                      <Text className="text-foreground font-semibold">
-                        {expense.expenseSplits[0].groupMember.user.name}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-
-              <Separator />
-
-              <View className="flex-row items-center gap-3">
-                <Icon name="calendar" size={20} color="muted-foreground" />
-                <View>
-                  <Text className="text-muted-foreground text-sm">
-                    {t("common.date")}
-                  </Text>
-                  <Text className="text-foreground font-semibold">
-                    {formattedDate}
-                  </Text>
-                </View>
-              </View>
-
-              <Separator />
+            </View>
+          </CardHeader>
+          <CardContent className="gap-4">
+            <View className="flex-row items-center gap-3">
+              <MemberAvatar
+                person={memberPerson(expense.paidByGroupMember)}
+                className="h-10 w-10"
+              />
               <View>
-                <Text className="text-muted-foreground mb-1.5 text-sm">
-                  {t("common.category")}
+                <Text className="text-muted-foreground text-sm">
+                  {expense.splitMethod === "settlement"
+                    ? t("expenses.from")
+                    : t("expenses.paidByLabel")}
                 </Text>
-                <ExpenseCategoryBadge
-                  subcategoryId={expense.subcategory}
-                  className="self-start"
-                />
+                <Text className="text-foreground font-semibold">
+                  {expense.paidByGroupMember.user.name}
+                </Text>
               </View>
-            </CardContent>
-          </Card>
+            </View>
 
-          {/* Split Details Card */}
-          {expense.splitMethod !== "settlement" && (
-            <Card testID="expense-split-details">
-              <CardHeader>
-                <View className="flex-row items-center gap-2">
-                  <Icon name="users" size={20} color="foreground" />
-                  <CardTitle>{t("expenses.splitDetails")}</CardTitle>
+            {expense.splitMethod === "settlement" &&
+              expense.expenseSplits[0] && (
+                <View className="flex-row items-center gap-3">
+                  <MemberAvatar
+                    person={memberPerson(expense.expenseSplits[0].groupMember)}
+                    className="h-10 w-10"
+                  />
+                  <View>
+                    <Text className="text-muted-foreground text-sm">
+                      {t("expenses.to")}
+                    </Text>
+                    <Text className="text-foreground font-semibold">
+                      {expense.expenseSplits[0].groupMember.user.name}
+                    </Text>
+                  </View>
                 </View>
-                <CardDescription>
-                  {t("expenses.splitBetween", {
-                    count: expense.expenseSplits.length,
-                  })}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <View className="gap-3">
-                  {expense.expenseSplits.map((split, index) => {
-                    const member = split.groupMember;
-                    const splitAmount = formatCurrencyFromCents({
-                      cents: ledger.expenseSplits[index]?.amountInCents ?? 0,
-                      currency: ledger.currency,
-                      locale,
-                    });
-                    const paidSplitAmount =
-                      amounts.paid &&
-                      formatCurrencyFromCents({
-                        cents: split.amountInCents,
-                        currency: expense.currency,
-                        locale,
-                      });
-                    const portion = formatSplitPortion({
-                      split,
-                      expense,
-                      t,
-                      locale,
-                    });
+              )}
 
-                    return (
-                      <View key={split.id}>
-                        <View className="flex-row items-center justify-between">
-                          <View className="flex-row items-center gap-3">
-                            <MemberAvatar
-                              person={memberPerson(member)}
-                              className="h-8 w-8"
-                            />
-                            <View>
-                              <Text className="text-foreground font-medium">
-                                {member.user.name}
-                              </Text>
+            <Separator />
+
+            <View className="flex-row items-center gap-3">
+              <Icon name="calendar" size={20} color="muted-foreground" />
+              <View>
+                <Text className="text-muted-foreground text-sm">
+                  {t("common.date")}
+                </Text>
+                <Text className="text-foreground font-semibold">
+                  {formattedDate}
+                </Text>
+              </View>
+            </View>
+
+            <Separator />
+            <View>
+              <Text className="text-muted-foreground mb-1.5 text-sm">
+                {t("common.category")}
+              </Text>
+              <ExpenseCategoryBadge
+                subcategoryId={expense.subcategory}
+                className="self-start"
+              />
+            </View>
+
+            {expense.createdByGroupMember.id !==
+              expense.paidByGroupMember.id && (
+              <>
+                <Separator />
+                <View className="flex-row items-center gap-3">
+                  <MemberAvatar
+                    person={memberPerson(expense.createdByGroupMember)}
+                    className="h-8 w-8"
+                  />
+                  <View>
+                    <Text className="text-muted-foreground text-sm">
+                      {t("expenses.createdBy")}
+                    </Text>
+                    <Text className="text-foreground font-semibold">
+                      {expense.createdByGroupMember.user.name}
+                    </Text>
+                  </View>
+                </View>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {expense.splitMethod !== "settlement" && (
+          <Card testID="expense-split-details">
+            <CardHeader>
+              <View className="flex-row items-center gap-2">
+                <Icon name="users" size={20} color="foreground" />
+                <CardTitle>{t("expenses.splitDetails")}</CardTitle>
+              </View>
+              <CardDescription>
+                {t("expenses.splitBetween", {
+                  count: expense.expenseSplits.length,
+                })}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <View className="gap-3">
+                {expense.expenseSplits.map((split, index) => {
+                  const member = split.groupMember;
+                  const splitAmount = formatCurrencyFromCents({
+                    cents: ledger.expenseSplits[index]?.amountInCents ?? 0,
+                    currency: ledger.currency,
+                    locale,
+                  });
+                  const paidSplitAmount =
+                    amounts.paid &&
+                    formatCurrencyFromCents({
+                      cents: split.amountInCents,
+                      currency: expense.currency,
+                      locale,
+                    });
+                  const portion = formatSplitPortion({
+                    split,
+                    expense,
+                    t,
+                    locale,
+                  });
+
+                  return (
+                    <View key={split.id}>
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center gap-3">
+                          <MemberAvatar
+                            person={memberPerson(member)}
+                            className="h-8 w-8"
+                          />
+                          <View>
+                            <Text className="text-foreground font-medium">
+                              {member.user.name}
+                            </Text>
+                            {portion && (
                               <Text className="text-muted-foreground text-xs">
                                 {portion}
-                              </Text>
-                            </View>
-                          </View>
-                          <View className="items-end">
-                            <Text className="text-foreground font-semibold">
-                              {splitAmount}
-                            </Text>
-                            {paidSplitAmount && (
-                              <Text className="text-muted-foreground text-xs">
-                                {paidSplitAmount}
                               </Text>
                             )}
                           </View>
                         </View>
-                        {index < expense.expenseSplits.length - 1 && (
-                          <Separator className="mt-3" />
-                        )}
+                        <View className="items-end">
+                          <Text className="text-foreground font-semibold">
+                            {splitAmount}
+                          </Text>
+                          {paidSplitAmount && (
+                            <Text className="text-muted-foreground text-xs">
+                              {paidSplitAmount}
+                            </Text>
+                          )}
+                        </View>
                       </View>
-                    );
-                  })}
-                </View>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Created By Card */}
-          <Card>
-            <CardContent className="pt-6">
-              <View className="flex-row items-center gap-3">
-                <MemberAvatar
-                  person={memberPerson(expense.createdByGroupMember)}
-                  className="h-8 w-8"
-                />
-                <View>
-                  <Text className="text-muted-foreground text-sm">
-                    {t("expenses.createdBy")}
-                  </Text>
-                  <Text className="text-foreground text-sm font-medium">
-                    {expense.createdByGroupMember.user.name}
-                  </Text>
-                </View>
+                      {index < expense.expenseSplits.length - 1 && (
+                        <Separator className="mt-3" />
+                      )}
+                    </View>
+                  );
+                })}
               </View>
             </CardContent>
           </Card>
-        </AppScrollView>
-      </View>
+        )}
 
-      {/* Delete Confirmation Modal */}
+        <Button
+          testID="expense-delete-button"
+          title={t("common.delete")}
+          variant="ghost"
+          textClassName={
+            deleteExpenseMutation.isPending ? undefined : "text-destructive"
+          }
+          iconColor="destructive"
+          onPress={() => setShowDeleteDialog(true)}
+          disabled={deleteExpenseMutation.isPending}
+          icon="trash-2"
+        />
+      </AppScrollView>
+
       <DeleteConfirmationModal
         visible={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
