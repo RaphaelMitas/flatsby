@@ -21,7 +21,10 @@ test.describe("Debt & Settlements", () => {
   test("shows the all settled up state in a fresh group", async ({
     authPage,
   }) => {
-    await authPage.goto("/expenses/debts");
+    await authPage.goto("/expenses");
+    const card = authPage.getByTestId("expense-debt-card");
+    await expect(card).toHaveText("You're all square");
+    await card.click();
 
     await expect(authPage.getByTestId("debt-summary-title")).toHaveText(
       "Debts",

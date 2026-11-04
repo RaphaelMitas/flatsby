@@ -34,11 +34,17 @@ export function ExpenseDebtCard({ groupId }: { groupId: number }) {
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId, t);
   const counterparts = debtsFor(summary, meId, "direct", t);
+  const hero = debtHero(summary, meId, t, locale);
+  const label =
+    counterparts.length === 0
+      ? t("debts.allSquare")
+      : [hero.label, ...hero.amounts.map(({ text }) => text)].join(", ");
 
   return (
     <Link
       href="/expenses/debts"
       data-testid="expense-debt-card"
+      aria-label={label}
       className="mt-4 block rounded-xl"
     >
       <Card className="hover:bg-muted/50 flex flex-row items-center gap-3 p-4 transition-colors">
@@ -52,7 +58,7 @@ export function ExpenseDebtCard({ groupId }: { groupId: number }) {
         ) : (
           <>
             <DebtHero
-              hero={debtHero(summary, meId, t, locale)}
+              hero={hero}
               testId="expense-debt-hero"
               className="flex-1"
             />

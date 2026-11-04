@@ -1,6 +1,8 @@
 import type { debtHero } from "@flatsby/validators/expenses/formatting";
 import { Text, View } from "react-native";
 
+import { amountTone } from "@flatsby/validators/expenses/formatting";
+
 import { cn } from "~/lib/utils";
 
 interface DebtHeroProps {
@@ -24,13 +26,9 @@ export function DebtHero({
           key={currency}
           testID={`${testID}-amount`}
           className={cn(
-            "font-bold tracking-tight",
+            "text-foreground font-bold tracking-tight",
             amounts.length > 1 ? "text-3xl" : "text-4xl",
-            cents > 0
-              ? "text-success"
-              : cents < 0
-                ? "text-destructive"
-                : "text-foreground",
+            cents !== 0 && amountTone(cents),
           )}
         >
           {text}

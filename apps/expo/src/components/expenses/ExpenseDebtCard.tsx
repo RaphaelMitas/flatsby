@@ -37,11 +37,17 @@ export function ExpenseDebtCard({ groupId, onPress }: ExpenseDebtCardProps) {
   const meId = groupData.data.thisGroupMember.id;
   const person = personLookup(groupData.data.groupMembers, meId, t);
   const counterparts = debtsFor(summary, meId, "direct", t);
+  const hero = debtHero(summary, meId, t, locale);
+  const label =
+    counterparts.length === 0
+      ? t("debts.allSquare")
+      : [hero.label, ...hero.amounts.map(({ text }) => text)].join(", ");
 
   return (
     <Pressable
       testID="expense-debt-card"
       accessibilityRole="button"
+      accessibilityLabel={label}
       onPress={onPress}
       className="mb-2"
     >
@@ -58,7 +64,7 @@ export function ExpenseDebtCard({ groupId, onPress }: ExpenseDebtCardProps) {
         ) : (
           <>
             <DebtHero
-              hero={debtHero(summary, meId, t, locale)}
+              hero={hero}
               testID="expense-debt-hero"
               className="flex-1"
             />

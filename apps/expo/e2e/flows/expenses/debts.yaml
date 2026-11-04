@@ -7,7 +7,9 @@ tags:
 - runFlow: ../../subflows/e2e-login.yaml
 - runFlow: ../../subflows/open-expenses.yaml
 
-- assertVisible: "You're all square"
+- assertVisible:
+    id: "expense-debt-card"
+    text: "You're all square"
 - tapOn:
     id: "expense-debt-card"
 - extendedWaitUntil:

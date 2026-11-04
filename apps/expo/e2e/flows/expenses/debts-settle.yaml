@@ -13,8 +13,8 @@ tags:
 
 - extendedWaitUntil:
     visible:
-      id: "expense-debt-hero-amount"
-      text: ".*€30[.,]50"
+      id: "expense-debt-card"
+      text: ".*€30[.,]50.*"
     timeout: 15000
 - tapOn:
     id: "expense-debt-card"
