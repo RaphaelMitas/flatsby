@@ -65,7 +65,7 @@
     "@posthog/core": "^1.62.0",
     "@trpc/server": "catalog:",
     "ai": "catalog:",
-    "effect": "^4.1.1",
+    "effect": "^4.1.2",
     "posthog-node": "^5.61.1",
     "superjson": "catalog:",
     "use-intl": "catalog:",

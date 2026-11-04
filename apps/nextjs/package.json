@@ -41,7 +41,7 @@
     "better-auth": "catalog:better-auth",
     "geist": "^1.9.0",
     "isbot": "^5.2.2",
-    "jose": "^6.2.14",
+    "jose": "^6.2.15",
     "next": "catalog:",
     "next-intl": "catalog:",
     "prop-types": "^15.8.1",
