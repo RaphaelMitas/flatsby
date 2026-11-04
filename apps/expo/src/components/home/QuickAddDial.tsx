@@ -15,6 +15,7 @@ import { useTranslations } from "use-intl";
 
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { Fab } from "~/lib/ui/fab";
 
 export function QuickAddDial({
   last,
@@ -204,17 +205,16 @@ export function QuickAddDial({
         )}
       </Animated.View>
 
-      <Pressable
+      <Fab
         testID="home-dial"
         accessibilityLabel={t("add")}
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen((isOpen) => !isOpen)}
-        className="bg-primary absolute right-4 bottom-4 h-14 w-14 items-center justify-center rounded-2xl shadow-lg active:opacity-90"
       >
         <Animated.View style={plusStyle}>
           <Icon name="plus" size={26} color="primary-foreground" />
         </Animated.View>
-      </Pressable>
+      </Fab>
     </>
   );
 }

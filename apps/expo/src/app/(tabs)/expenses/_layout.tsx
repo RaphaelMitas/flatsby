@@ -46,7 +46,6 @@ export default function ExpensesLayout() {
               options={{
                 headerShown,
                 headerTitle: t("expenses.addExpense"),
-                headerBackTitle: t("expenses.backToExpenses"),
                 ...solidHeader,
               }}
             />
@@ -55,7 +54,6 @@ export default function ExpensesLayout() {
               options={{
                 headerShown,
                 headerTitle: t("navigation.debts"),
-                headerBackTitle: t("navigation.expenses"),
                 ...solidHeader,
               }}
             />
@@ -64,7 +62,6 @@ export default function ExpensesLayout() {
               options={{
                 headerShown,
                 headerTitle: t("debts.settleUp"),
-                headerBackTitle: t("common.back"),
               }}
             />
             <Stack.Screen
@@ -72,7 +69,6 @@ export default function ExpensesLayout() {
               options={{
                 headerShown,
                 headerTitle: t("expenses.expenseDetails"),
-                headerBackTitle: t("common.back"),
                 ...solidHeader,
               }}
             />

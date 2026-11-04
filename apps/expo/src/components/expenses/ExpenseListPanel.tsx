@@ -14,6 +14,8 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import { useRefreshControl } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ErrorMessage } from "~/lib/ui/error-message";
+import { Fab } from "~/lib/ui/fab";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -79,7 +81,7 @@ function ExpenseList() {
   const refreshControl = useRefreshControl(refetch);
 
   if (!groupData.success) {
-    return null;
+    return <ErrorMessage message={groupData.error.message} />;
   }
 
   const allExpenses =
@@ -155,6 +157,7 @@ function ExpenseList() {
       ) : (
         <FlashList
           refreshControl={refreshControl}
+          contentContainerClassName="pb-28"
           data={withMonthHeaders(allExpenses, locale)}
           getItemType={(item) => item.type}
           renderItem={({ item }) =>
@@ -201,14 +204,11 @@ function ExpenseList() {
         />
       )}
       {hasExpenses && !isLargeScreen && (
-        <View className="absolute right-4 bottom-4">
-          <Button
-            testID="expense-add-button"
-            size="icon"
-            icon="plus"
-            onPress={createExpense}
-          />
-        </View>
+        <Fab
+          testID="expense-add-button"
+          accessibilityLabel={t("expenses.addExpense")}
+          onPress={createExpense}
+        />
       )}
     </View>
   );

@@ -14,6 +14,7 @@ import { FlashList } from "@shopify/flash-list";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
 
+import Icon from "./custom/icons/Icon";
 import { SheetModal } from "./sheet-modal";
 
 const SNAP_POINTS = ["50%", "80%"];
@@ -40,7 +41,7 @@ const itemDescriptionVariants = tv({
 });
 
 const triggerVariants = tv({
-  base: "flex-row gap-2 items-center rounded-lg border border-input h-12 justify-center px-4 py-2",
+  base: "flex-row gap-2 items-center rounded-lg border border-input h-12 px-4 py-2",
   variants: {
     iconButton: {
       true: "justify-center h-12 w-12 p-0",
@@ -52,7 +53,7 @@ const triggerVariants = tv({
 });
 
 const triggerTextVariants = tv({
-  base: "text-foreground",
+  base: "text-foreground shrink",
 });
 
 const bottomSheetContentVariants = tv({
@@ -212,6 +213,8 @@ export const BottomSheetPickerTrigger: React.FC<
     return (
       <Pressable
         testID={testID}
+        accessibilityRole="button"
+        accessibilityLabel={selectedItem?.title}
         onPress={handleOpen}
         className={triggerVariants({
           iconButton,
@@ -230,9 +233,12 @@ export const BottomSheetPickerTrigger: React.FC<
       className={triggerVariants({ disabled })}
     >
       {selectedItem?.icon}
-      <Text className={triggerTextVariants()}>
+      <Text numberOfLines={1} className={triggerTextVariants()}>
         {triggerTitle ?? selectedItem?.title ?? t("select")}
       </Text>
+      <View className="ml-auto">
+        <Icon name="chevrons-up-down" size={16} color="muted-foreground" />
+      </View>
     </Pressable>
   );
 };

@@ -45,7 +45,7 @@ export function ShoppingItemDisplay({
         <View className="flex-1">
           <Text
             className={cn(
-              "text-sm font-medium",
+              "text-base font-medium",
               completed
                 ? "text-muted-foreground line-through"
                 : "text-foreground",

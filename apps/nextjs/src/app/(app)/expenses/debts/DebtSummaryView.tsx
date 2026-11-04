@@ -74,8 +74,6 @@ export function DebtSummaryView() {
         {t("navigation.debts")}
       </h2>
 
-      <PaypalNudgeCard />
-
       {bannerCurrencies && (
         <ConversionBanner
           groupId={groupId}
@@ -130,6 +128,8 @@ export function DebtSummaryView() {
           </div>
         </Card>
       )}
+
+      <PaypalNudgeCard />
 
       <Button
         variant="ghost"

@@ -23,21 +23,18 @@ export default function SettingsLayout() {
           name="account"
           options={{
             title: t("navigation.account"),
-            headerBackTitle: "",
           }}
         />
         <Stack.Screen
           name="legal"
           options={{
             title: t("settings.sections.legal"),
-            headerBackTitle: "",
           }}
         />
         <Stack.Screen
           name="profile"
           options={{
             title: t("navigation.profile"),
-            headerBackTitle: "",
             ...solidHeader,
           }}
         />
@@ -45,7 +42,6 @@ export default function SettingsLayout() {
           name="passkeys"
           options={{
             title: t("settings.passkeys.title"),
-            headerBackTitle: "",
             ...solidHeader,
           }}
         />
@@ -53,14 +49,12 @@ export default function SettingsLayout() {
           name="analytics"
           options={{
             title: t("settings.analytics.title"),
-            headerBackTitle: "",
           }}
         />
         <Stack.Screen
           name="danger"
           options={{
             title: t("navigation.dangerZone"),
-            headerBackTitle: "",
             headerTintColor: getColor("destructive"),
           }}
         />
@@ -68,7 +62,6 @@ export default function SettingsLayout() {
           name="credits"
           options={{
             title: t("settings.items.buyCredits"),
-            headerBackTitle: "",
             presentation: "modal",
             ...solidHeader,
           }}
@@ -77,7 +70,6 @@ export default function SettingsLayout() {
           name="manage-groups"
           options={{
             title: t("navigation.manageGroups"),
-            headerBackTitle: t("navigation.settings"),
             ...solidHeader,
           }}
         />
@@ -85,14 +77,12 @@ export default function SettingsLayout() {
           name="group-settings/index"
           options={{
             title: t("navigation.groupSettings"),
-            headerBackTitle: "",
           }}
         />
         <Stack.Screen
           name="group-settings/members"
           options={{
             title: t("navigation.members"),
-            headerBackTitle: "",
             ...solidHeader,
           }}
         />
@@ -100,14 +90,12 @@ export default function SettingsLayout() {
           name="group-settings/group-details"
           options={{
             title: t("navigation.groupDetails"),
-            headerBackTitle: "",
           }}
         />
         <Stack.Screen
           name="group-settings/expenses"
           options={{
             title: t("group.expenseSettings.title"),
-            headerBackTitle: "",
           }}
         />
         <Stack.Screen
@@ -131,7 +119,6 @@ export default function SettingsLayout() {
           name="group-settings/import-expenses"
           options={{
             title: t("splitwiseImport.importExpenses"),
-            headerBackTitle: "",
             ...solidHeader,
           }}
         />

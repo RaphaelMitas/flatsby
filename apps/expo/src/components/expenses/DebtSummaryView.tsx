@@ -22,6 +22,7 @@ import {
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { Segmented } from "~/lib/ui/segmented";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
@@ -51,7 +52,12 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  if (!debtData.success || !groupData.success) return null;
+  if (!debtData.success) {
+    return <ErrorMessage message={debtData.error.message} />;
+  }
+  if (!groupData.success) {
+    return <ErrorMessage message={groupData.error.message} />;
+  }
 
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
@@ -66,7 +72,6 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   return (
     <AppScrollView className="flex-1" onRefresh={invalidateDebtSummary}>
       <View testID="debt-summary-title" className="w-full gap-2 p-4">
-        <PaypalNudgeCard />
         {bannerCurrencies && (
           <ConvertCurrencyBanner
             groupId={groupId}
@@ -135,6 +140,8 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
             </Text>
           </Card>
         )}
+
+        <PaypalNudgeCard />
 
         <Pressable
           testID="debt-record-payment"

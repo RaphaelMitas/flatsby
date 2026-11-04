@@ -4,7 +4,7 @@ import { AppState } from "react-native";
 import * as Notifications from "expo-notifications";
 import { useTranslations } from "use-intl";
 
-import { Checkbox } from "~/lib/ui/checkbox";
+import { Switch } from "~/lib/ui/switch";
 import {
   useReminderChoice,
   useReminderSwitch,
@@ -48,7 +48,7 @@ export function EveningReminderItem() {
       subtitle={blocked ? t("eveningReminderBlocked") : undefined}
       iconName={blocked ? "bell-off" : "bell"}
       onPress={toggle}
-      rightContent={<Checkbox checked={checked} onCheckedChange={toggle} />}
+      rightContent={<Switch checked={checked} onCheckedChange={toggle} />}
     />
   );
 }

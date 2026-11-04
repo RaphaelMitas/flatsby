@@ -11,6 +11,7 @@ import { ProfileSection } from "~/components/ProfileSection";
 import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
@@ -59,7 +60,7 @@ export default function GroupDetailsScreen() {
   };
 
   if (!group.success) {
-    return null;
+    return <ErrorMessage message={group.error.message} />;
   }
 
   const isAdmin = group.data.thisGroupMember.role === "admin";

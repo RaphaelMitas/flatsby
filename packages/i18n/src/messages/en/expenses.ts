@@ -14,7 +14,6 @@ export const expenses = {
     "Are you sure you want to delete this expense? This action cannot be undone.",
   deleteSettlementConfirm:
     "Are you sure you want to delete this settlement? This action cannot be undone.",
-  backToExpenses: "Back to Expenses",
   expenseDetails: "Expense Details",
   debtOverview: "Debt Overview",
   emptyTitle: "No expenses yet",

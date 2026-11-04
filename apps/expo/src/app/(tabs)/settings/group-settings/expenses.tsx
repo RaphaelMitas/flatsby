@@ -10,6 +10,7 @@ import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { Label } from "~/lib/ui/label";
 import { Switch } from "~/lib/ui/switch";
 import { cn } from "~/lib/utils";
@@ -27,7 +28,7 @@ export default function ExpenseSettingsScreen() {
   );
 
   if (!group.success) {
-    return null;
+    return <ErrorMessage message={group.error.message} />;
   }
 
   return <ExpenseSettingsForm key={group.data.id} group={group.data} />;

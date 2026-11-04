@@ -88,7 +88,6 @@ export const group = {
     inviteStepTitle: "Noch nicht in Flatsby?",
     inviteStepHint:
       "Trag sie schon ein. Du kannst gleich Ausgaben mit ihnen teilen, und beim Beitreten übernehmen sie ihren Platz.",
-    sectionTitle: "Noch nicht beigetreten",
     namePlaceholder: "Name eintragen",
     add: "Hinzufügen",
     nameRequired: "Bitte gib einen Namen ein",

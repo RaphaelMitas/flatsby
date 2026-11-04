@@ -16,7 +16,6 @@ export const expenses = {
     "Willst du diese Ausgabe wirklich löschen? Das kann nicht rückgängig gemacht werden.",
   deleteSettlementConfirm:
     "Willst du diesen Ausgleich wirklich löschen? Das kann nicht rückgängig gemacht werden.",
-  backToExpenses: "Zurück zu Ausgaben",
   expenseDetails: "Ausgabendetails",
   debtOverview: "Schuldenübersicht",
   emptyTitle: "Noch keine Ausgaben",

@@ -53,7 +53,9 @@ export function MemberRow({
           </Text>
         )}
       </View>
-      {onPress && <Icon name="ellipsis-vertical" size={16} />}
+      {onPress && (
+        <Icon name="ellipsis-vertical" size={16} color="muted-foreground" />
+      )}
     </Pressable>
   );
 }
