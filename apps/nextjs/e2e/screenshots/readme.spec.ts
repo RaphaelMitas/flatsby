@@ -46,6 +46,7 @@ test("captures README screenshots", async ({ page, baseURL }) => {
   await page.goto("/expenses");
   await expect(page.getByText("Weekly shopping").first()).toBeVisible();
   await expect(page.getByText("Cleaning supplies").first()).toBeVisible();
+  await expect(page.getByTestId("expense-debt-card")).toBeVisible();
   await settle(page);
   await page.screenshot({ path: `${OUT}/web-expenses.png` });
 

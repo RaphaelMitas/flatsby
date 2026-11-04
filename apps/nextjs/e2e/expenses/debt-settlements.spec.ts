@@ -40,10 +40,9 @@ test.describe("Debt & Settlements", () => {
     await createAuthSession(page, baseURL, { seed: "debts" });
     await page.goto("/expenses");
 
-    await expect(page.getByTestId("expense-debt-hero")).toContainText(
-      "+€30.50",
-    );
-    await page.getByTestId("expense-debt-card").click();
+    const card = page.getByTestId("expense-debt-card");
+    await expect(card).toContainText("+€30.50");
+    await card.click();
     await expect(page.getByTestId("debt-summary-title")).toBeVisible();
   });
 

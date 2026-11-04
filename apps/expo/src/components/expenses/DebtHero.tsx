@@ -7,24 +7,19 @@ import { cn } from "~/lib/utils";
 
 interface DebtHeroProps {
   hero: ReturnType<typeof debtHero>;
-  testID?: string;
   className?: string;
 }
 
-export function DebtHero({
-  hero,
-  testID = "debt-hero",
-  className,
-}: DebtHeroProps) {
+export function DebtHero({ hero, className }: DebtHeroProps) {
   const { label, amounts } = hero;
 
   return (
-    <View testID={testID} className={className}>
+    <View testID="debt-hero" className={className}>
       <Text className="text-muted-foreground text-sm">{label}</Text>
       {amounts.map(({ currency, cents, text }) => (
         <Text
           key={currency}
-          testID={`${testID}-amount`}
+          testID="debt-hero-amount"
           className={cn(
             "text-foreground font-bold tracking-tight",
             amounts.length > 1 ? "text-3xl" : "text-4xl",

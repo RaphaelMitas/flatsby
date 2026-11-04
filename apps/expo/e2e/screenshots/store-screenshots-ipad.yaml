@@ -81,6 +81,10 @@ appId: ${APP_ID}
     visible:
       id: "expense-card-${output.store.cleaningSupplies}"
     timeout: 45000
+- extendedWaitUntil:
+    visible:
+      id: "expense-debt-card"
+    timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/ipad-03-expenses
 

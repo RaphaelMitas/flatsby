@@ -57,11 +57,7 @@ export function ExpenseDebtCard({ groupId }: { groupId: number }) {
           </>
         ) : (
           <>
-            <DebtHero
-              hero={hero}
-              testId="expense-debt-hero"
-              className="flex-1"
-            />
+            <DebtHero hero={hero} className="flex-1" />
             <div className="flex -space-x-2">
               {counterparts.slice(0, 3).map(({ groupMemberId }) => (
                 <UserAvatar
