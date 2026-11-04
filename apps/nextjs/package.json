@@ -28,7 +28,7 @@
     "@flatsby/i18n": "workspace:*",
     "@flatsby/ui": "workspace:*",
     "@flatsby/validators": "workspace:*",
-    "@posthog/core": "^1.62.0",
+    "@posthog/core": "^1.62.1",
     "@react-email/render": "2.2.0",
     "@t3-oss/env-nextjs": "catalog:",
     "@tanstack/react-pacer": "^0.24.1",
