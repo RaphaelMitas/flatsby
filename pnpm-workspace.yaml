@@ -56,9 +56,9 @@ catalog:
   "@turbo/gen": ^2.11.10
   "@types/node": ^24.19.2
   ai: ^7.0.159
-  autumn-js: ^1.5.36
+  autumn-js: ^1.5.38
   babel-plugin-react-compiler: ^1.0.0
-  next: ^16.4.3
+  next: ^16.4.4
   next-intl: ^4.14.9
   prettier: ^3.9.10
   react-hook-form: ^7.91.0
