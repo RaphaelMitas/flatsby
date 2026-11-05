@@ -54,7 +54,7 @@ catalog:
   "@trpc/server": ^11.23.0
   "@trpc/tanstack-react-query": ^11.23.0
   "@turbo/gen": ^2.11.10
-  "@types/node": ^24.19.2
+  "@types/node": ^26.6.6
   ai: ^7.0.162
   autumn-js: ^1.5.43
   babel-plugin-react-compiler: ^1.0.0

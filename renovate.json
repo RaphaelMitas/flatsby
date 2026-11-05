@@ -114,9 +114,9 @@
       "matchPackageNames": ["/^@types//"]
     },
     {
-      "description": "Node stays on 24 until Vercel supports 26; .nvmrc, engines and @types/node move together. Raise this when Vercel ships Node 26",
+      "description": "Node stays on 26 until Vercel supports the next major; .nvmrc, engines, eas.json and @types/node move together. Raise this when Vercel ships it",
       "matchPackageNames": ["node", "@types/node"],
-      "allowedVersions": "<25"
+      "allowedVersions": "<27"
     },
     {
       "description": "Group React Native Vector Icons",
