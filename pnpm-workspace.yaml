@@ -58,7 +58,7 @@ catalog:
   ai: ^7.0.162
   autumn-js: ^1.5.45
   babel-plugin-react-compiler: ^1.0.0
-  next: ^16.4.4
+  next: ^16.4.5
   next-intl: ^4.14.9
   prettier: ^3.9.10
   react-hook-form: ^7.91.0
