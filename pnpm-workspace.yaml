@@ -41,7 +41,7 @@ catalog:
   "@ai-sdk/provider": ^4.0.35
   "@ai-sdk/react": ^4.0.165
   "@biomejs/biome": 2.6.4
-  "@effect/tsgo": 0.63.0
+  "@effect/tsgo": 0.64.1
   "@effect/vitest": 4.1.2
   "@hookform/resolvers": ^7.0.1
   "@playwright/test": ^1.64.1
