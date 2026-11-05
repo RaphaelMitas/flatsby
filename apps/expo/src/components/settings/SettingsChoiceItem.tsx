@@ -36,6 +36,7 @@ export function SettingsChoiceItem<T extends string>(props: {
               key={choice.value}
               title={choice.label}
               icon={choice.icon}
+              numberOfLines={1}
               className="flex-1 py-0"
               // Spans the container's p-2 (7pt) so the target fills the row
               hitSlop={{ top: 7, bottom: 7 }}
