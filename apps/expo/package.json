@@ -31,7 +31,7 @@
     "@flatsby/validators": "workspace:*",
     "@formatjs/intl-pluralrules": "^7.0.2",
     "@hookform/resolvers": "catalog:",
-    "@posthog/core": "^1.62.0",
+    "@posthog/core": "^1.62.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^9.2.1",
     "@react-native-vector-icons/get-image": "^14.0.0",
@@ -94,7 +94,7 @@
     "tailwind-merge": "^3.7.0",
     "tailwind-variants": "^4.0.1",
     "use-intl": "catalog:",
-    "web-streams-polyfill": "^4.4.0"
+    "web-streams-polyfill": "^4.5.0"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
