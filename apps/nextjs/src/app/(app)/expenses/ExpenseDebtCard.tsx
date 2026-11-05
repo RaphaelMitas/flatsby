@@ -6,12 +6,8 @@ import { Check, ChevronRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Card } from "@flatsby/ui/card";
-import { UserAvatar } from "@flatsby/ui/user-avatar";
 import { debtsFor } from "@flatsby/validators/expenses/debt";
-import {
-  debtHero,
-  personLookup,
-} from "@flatsby/validators/expenses/formatting";
+import { debtHero } from "@flatsby/validators/expenses/formatting";
 
 import { useTRPC } from "~/trpc/react";
 import { DebtHero } from "./debts/DebtHero";
@@ -32,23 +28,17 @@ export function ExpenseDebtCard({ groupId }: { groupId: number }) {
 
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
-  const person = personLookup(groupData.data.groupMembers, meId, t);
-  const counterparts = debtsFor(summary, meId, "direct", t);
+  const allSquare = debtsFor(summary, meId, "direct", t).length === 0;
   const hero = debtHero(summary, meId, t, locale);
-  const label =
-    counterparts.length === 0
-      ? t("debts.allSquare")
-      : [hero.label, ...hero.amounts.map(({ text }) => text)].join(", ");
 
   return (
     <Link
       href="/expenses/debts"
       data-testid="expense-debt-card"
-      aria-label={label}
       className="mt-4 block rounded-xl"
     >
       <Card className="hover:bg-muted/50 flex flex-row items-center gap-3 p-4 transition-colors">
-        {counterparts.length === 0 ? (
+        {allSquare ? (
           <>
             <span className="bg-success/15 text-success flex size-9 shrink-0 items-center justify-center rounded-full">
               <Check className="size-5" />
@@ -58,16 +48,9 @@ export function ExpenseDebtCard({ groupId }: { groupId: number }) {
         ) : (
           <>
             <DebtHero hero={hero} className="flex-1" />
-            <div className="flex -space-x-2">
-              {counterparts.slice(0, 3).map(({ groupMemberId }) => (
-                <UserAvatar
-                  key={groupMemberId}
-                  {...person(groupMemberId)}
-                  size="sm"
-                  className="ring-card ring-2"
-                />
-              ))}
-            </div>
+            <span className="text-right font-medium">
+              {t("navigation.debts")}
+            </span>
           </>
         )}
         <ChevronRight className="text-muted-foreground size-4 shrink-0" />
