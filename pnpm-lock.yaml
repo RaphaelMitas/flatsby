@@ -463,8 +463,8 @@ importers:
         specifier: 5.0.0-rc.1
         version: 5.0.0-rc.1(react-native-css@3.1.0-rc.0(patch_hash=bdbbb9ab1f6c4926df8cb16fcd42d6dfc82f28a635d62396925d227bb43ecb0c)(@expo/metro-config@58.0.15(expo@58.0.16)(supports-color@8.1.1)(typescript@7.0.2))(lightningcss@1.33.0)(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1))(tailwindcss@4.3.4)
       posthog-react-native:
-        specifier: ^4.85.1
-        version: 4.85.1(9a7ae6fcc9147b6491bb60932a4d31eb)
+        specifier: ^4.85.2
+        version: 4.85.3(9a7ae6fcc9147b6491bb60932a4d31eb)
       react:
         specifier: catalog:react19
         version: 19.3.0
@@ -3304,6 +3304,9 @@ packages:
 
   '@posthog/core@1.63.0':
     resolution: {integrity: sha512-sy1yhK/MKNhs+vo50jZx2FCMhrT2jqphmLDpUPj6CvYWaT5tqO6XTXOUr2ODv5MzOQb7lMDHgTYCgO3PQpiWyQ==}
+
+  '@posthog/core@1.63.1':
+    resolution: {integrity: sha512-LcUSRUM8zoTdwQFH1kWDQDMOFwiFjJ2lVxOOtpOwp6ezcHdr94KjO84YcoEeYtMuIFVMjasDFWyrOuuMAAg52g==}
 
   '@posthog/types@1.419.0':
     resolution: {integrity: sha512-XX7zRYt/vK8AzaD6V+oDquAzacZf5exJv971dja9En8Qf6g84Qvc3rpT0w6hDYYLWrjaSSkdjFfvvoXI0ouJDg==}
@@ -7536,8 +7539,8 @@ packages:
       rxjs:
         optional: true
 
-  posthog-react-native@4.85.1:
-    resolution: {integrity: sha512-JGHuMcgKMskw6WSJ2O/o3h8QCBu/6VGv4Y/ixMdujnxcfdkrK+Q4KjA5u1u4gfh2l7Kw5ydRU6AY0olm5XqAfg==}
+  posthog-react-native@4.85.3:
+    resolution: {integrity: sha512-VB72KZY/bB54dSk5nZa3iSpJ+f9JiH5JolPRsxKPjBkrzemb09S56bp9r1PWBC2Qymw4fOEJ3jCQ50b8a8fPBg==}
     hasBin: true
     peerDependencies:
       '@posthog/react-native-plugin': '>= 2.12.7'
@@ -10669,6 +10672,10 @@ snapshots:
       '@opentelemetry/api': 1.9.1
 
   '@posthog/core@1.63.0':
+    dependencies:
+      '@posthog/types': 1.419.0
+
+  '@posthog/core@1.63.1':
     dependencies:
       '@posthog/types': 1.419.0
 
@@ -15176,9 +15183,9 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
 
-  posthog-react-native@4.85.1(9a7ae6fcc9147b6491bb60932a4d31eb):
+  posthog-react-native@4.85.3(9a7ae6fcc9147b6491bb60932a4d31eb):
     dependencies:
-      '@posthog/core': 1.63.0
+      '@posthog/core': 1.63.1
       '@posthog/types': 1.419.0
     optionalDependencies:
       '@react-native-async-storage/async-storage': 2.2.0(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))
