@@ -31,7 +31,7 @@
     "@flatsby/validators": "workspace:*",
     "@formatjs/intl-pluralrules": "^7.0.2",
     "@hookform/resolvers": "catalog:",
-    "@posthog/core": "^1.62.1",
+    "@posthog/core": "^1.63.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^9.2.1",
     "@react-native-vector-icons/get-image": "^14.0.0",
