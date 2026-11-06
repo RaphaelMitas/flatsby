@@ -15,7 +15,6 @@ export const expenses = {
   deleteSettlementConfirm:
     "Are you sure you want to delete this settlement? This action cannot be undone.",
   expenseDetails: "Expense Details",
-  debtOverview: "Debt Overview",
   emptyTitle: "No expenses yet",
   emptyHint: "Start tracking expenses by adding your first one",
   selectExpense: "Select an expense",

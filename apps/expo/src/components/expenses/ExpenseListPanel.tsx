@@ -17,10 +17,13 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 import { ErrorMessage } from "~/lib/ui/error-message";
 import { Fab } from "~/lib/ui/fab";
 import { SafeAreaView } from "~/lib/ui/safe-area";
+import { Skeleton } from "~/lib/ui/skeleton";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useMediaQuery } from "../splitview/useMediaQuery";
 import { ExpenseCard } from "./ExpenseCard";
+import { ExpenseDebtCard } from "./ExpenseDebtCard";
+import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 export function ExpenseListPanel() {
   const t = useTranslations();
@@ -48,6 +51,7 @@ function ExpenseList() {
   const t = useTranslations();
   const locale = useLocale();
   const { selectedGroupId } = useShoppingStore();
+  const groupId = selectedGroupId ?? -1;
   const isLargeScreen = useMediaQuery("md");
   const { expenseId } = useGlobalSearchParams<{ expenseId?: string }>();
   const pathname = usePathname();
@@ -60,7 +64,7 @@ function ExpenseList() {
   const createExpense = () => openScreen("/(tabs)/expenses/create");
 
   const { data: groupData } = useSuspenseQuery(
-    trpc.group.getGroup.queryOptions({ id: selectedGroupId ?? -1 }),
+    trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
   const {
@@ -71,14 +75,17 @@ function ExpenseList() {
     refetch,
   } = useInfiniteQuery(
     trpc.expense.getGroupExpenses.infiniteQueryOptions(
-      { groupId: selectedGroupId ?? -1, limit: PAGE_SIZE.expenses },
+      { groupId, limit: PAGE_SIZE.expenses },
       {
         getNextPageParam: (lastPage) =>
           lastPage.success === true ? lastPage.data.nextCursor : null,
       },
     ),
   );
-  const refreshControl = useRefreshControl(refetch);
+  const { invalidateDebtSummary } = useInvalidateExpenses(groupId);
+  const refreshControl = useRefreshControl(() =>
+    Promise.all([refetch(), invalidateDebtSummary()]),
+  );
 
   if (!groupData.success) {
     return <ErrorMessage message={groupData.error.message} />;
@@ -107,6 +114,15 @@ function ExpenseList() {
     });
   };
 
+  const debtCard = (
+    <Suspense fallback={<Skeleton className="mb-2 h-24 rounded-lg" />}>
+      <ExpenseDebtCard
+        groupId={groupId}
+        onPress={() => openScreen("/(tabs)/expenses/debts")}
+      />
+    </Suspense>
+  );
+
   return (
     <View className="flex-1 px-4">
       <View className="mb-6 flex-row flex-wrap items-center justify-between gap-2">
@@ -116,43 +132,37 @@ function ExpenseList() {
         >
           {t("navigation.expenses")}
         </Text>
-        <View className="flex-row items-center gap-2">
-          <Button
-            testID="expense-debt-overview-button"
-            title={t("expenses.debtOverview")}
-            size="md"
-            icon="arrow-right"
-            onPress={() => openScreen("/(tabs)/expenses/debts")}
-          />
-          {isLargeScreen && (
-            <Button
-              testID="expense-add-button"
-              title={t("expenses.add")}
-              size="md"
-              icon="plus"
-              onPress={createExpense}
-            />
-          )}
-        </View>
-      </View>
-
-      {!hasExpenses ? (
-        <View className="flex flex-1 flex-col items-center justify-center gap-4">
-          <Icon name="wallet" size={64} color="muted-foreground" />
-          <Text className="text-foreground text-lg font-semibold">
-            {t("expenses.emptyTitle")}
-          </Text>
-          <Text className="text-muted-foreground text-center text-sm">
-            {t("expenses.emptyHint")}
-          </Text>
+        {isLargeScreen && (
           <Button
             testID="expense-add-button"
-            title={t("expenses.addExpense")}
-            variant="primary"
-            size="lg"
+            title={t("expenses.add")}
+            size="md"
             icon="plus"
             onPress={createExpense}
           />
+        )}
+      </View>
+
+      {!hasExpenses ? (
+        <View className="flex-1">
+          {debtCard}
+          <View className="flex flex-1 flex-col items-center justify-center gap-4">
+            <Icon name="wallet" size={64} color="muted-foreground" />
+            <Text className="text-foreground text-lg font-semibold">
+              {t("expenses.emptyTitle")}
+            </Text>
+            <Text className="text-muted-foreground text-center text-sm">
+              {t("expenses.emptyHint")}
+            </Text>
+            <Button
+              testID="expense-add-button"
+              title={t("expenses.addExpense")}
+              variant="primary"
+              size="lg"
+              icon="plus"
+              onPress={createExpense}
+            />
+          </View>
         </View>
       ) : (
         <FlashList
@@ -160,6 +170,7 @@ function ExpenseList() {
           contentContainerClassName="pb-28"
           data={withMonthHeaders(allExpenses, locale)}
           getItemType={(item) => item.type}
+          ListHeaderComponent={debtCard}
           renderItem={({ item }) =>
             item.type === "month" ? (
               <Text
@@ -171,7 +182,7 @@ function ExpenseList() {
             ) : (
               <ExpenseCard
                 expense={item.expense}
-                groupId={selectedGroupId ?? -1}
+                groupId={groupId}
                 meId={groupData.data.thisGroupMember.id}
                 first={item.first}
                 last={item.last}

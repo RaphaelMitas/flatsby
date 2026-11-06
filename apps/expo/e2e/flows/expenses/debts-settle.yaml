@@ -11,8 +11,13 @@ tags:
       E2E_SEED: "debts"
 - runFlow: ../../subflows/open-expenses.yaml
 
+- extendedWaitUntil:
+    visible:
+      id: "expense-debt-card"
+      text: ".*€30[.,]50.*"
+    timeout: 15000
 - tapOn:
-    id: "expense-debt-overview-button"
+    id: "expense-debt-card"
 - extendedWaitUntil:
     visible:
       id: "debt-summary-title"

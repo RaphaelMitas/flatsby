@@ -73,19 +73,17 @@
       {
         "capture": "03-expenses",
         "segments": {
-          "ios": [[0.052, 0.41]],
-          "android": [[0.045, 0.42]]
+          "ios": [[0.052, 0.45]],
+          "android": [[0.045, 0.46]]
         }
       }
     ],
     "zooms": [
       {
-        "capture": "01-home",
-        "stack": true,
-        "overlap": 3,
-        "width": 76,
-        "crop": "crop-balance",
-        "trim": 0.24
+        "capture": "03-expenses",
+        "card": 0,
+        "width": 98,
+        "crop": "crop-expense-internet"
       }
     ]
   },
