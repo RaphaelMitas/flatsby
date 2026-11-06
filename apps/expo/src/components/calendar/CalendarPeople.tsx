@@ -55,7 +55,7 @@ export function PersonPill({
       <Text
         numberOfLines={1}
         className={cn(
-          "text-xs font-semibold",
+          "shrink text-xs font-semibold",
           highlighted ? "text-primary-foreground" : "text-muted-foreground",
         )}
       >

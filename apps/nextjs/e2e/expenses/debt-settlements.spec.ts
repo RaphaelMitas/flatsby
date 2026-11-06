@@ -21,13 +21,29 @@ test.describe("Debt & Settlements", () => {
   test("shows the all settled up state in a fresh group", async ({
     authPage,
   }) => {
-    await authPage.goto("/expenses/debts");
+    await authPage.goto("/expenses");
+    const card = authPage.getByTestId("expense-debt-card");
+    await expect(card).toHaveText("You're all square");
+    await card.click();
 
     await expect(authPage.getByTestId("debt-summary-title")).toHaveText(
       "Debts",
     );
     await expect(authPage.getByTestId("debt-summary-empty")).toBeVisible();
     await expect(authPage.getByText("All settled up")).toBeVisible();
+  });
+
+  test("the expense list shows your net and opens the debts", async ({
+    page,
+    baseURL,
+  }) => {
+    await createAuthSession(page, baseURL, { seed: "debts" });
+    await page.goto("/expenses");
+
+    const card = page.getByTestId("expense-debt-card");
+    await expect(card).toContainText("+€30.50");
+    await card.click();
+    await expect(page.getByTestId("debt-summary-title")).toBeVisible();
   });
 
   test("shows your net and direct debts per person and currency", async ({

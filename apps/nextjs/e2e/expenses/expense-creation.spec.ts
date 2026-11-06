@@ -309,6 +309,33 @@ test.describe("Expense Creation", () => {
     await expect(authPage.getByText("REWE").first()).toBeVisible();
     await expect(authPage.getByText("€23.47").first()).toBeVisible();
   });
+  test("reads a PDF invoice", async ({ authPage }) => {
+    await authPage.emulateMedia({ reducedMotion: "reduce" });
+    await authPage.goto("/expenses");
+    const addButton = authPage
+      .getByTestId("expense-add-button")
+      .filter({ visible: true });
+    await waitForHydration(addButton);
+    await addButton.click();
+
+    const scan = authPage.waitForRequest((request) =>
+      request.url().includes("receipt.scan"),
+    );
+    await authPage.getByTestId("receipt-scan-input").setInputFiles({
+      name: "invoice.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.4\n%%EOF\n"),
+    });
+    expect((await scan).postData()).toContain('"mediaType":"application/pdf"');
+
+    const stage = authPage.getByTestId("receipt-scan-stage");
+    await expect(stage.locator('[data-phase="preview"]')).toBeVisible();
+    await expect(stage.locator(".rs-mark")).toHaveCount(3);
+    await authPage.getByTestId("receipt-scan-apply").click();
+    await expect(authPage.getByTestId("expense-form-amount")).toHaveValue(
+      "23.47",
+    );
+  });
 });
 
 const ONE_PIXEL_PNG =

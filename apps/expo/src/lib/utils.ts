@@ -24,13 +24,13 @@ const lightColors = {
   "muted-foreground": "hsl(240, 3.8%, 46.1%)",
   accent: "hsl(240, 4.8%, 95.9%)",
   "accent-foreground": "hsl(240, 5.9%, 10%)",
-  destructive: "hsl(0, 84.2%, 60.2%)",
+  destructive: "hsl(0, 72.2%, 50.6%)",
   "destructive-foreground": "hsl(0, 0%, 98%)",
   success: "hsl(120, 100%, 25.1%)",
   "success-foreground": "hsl(0, 0%, 98%)",
   warning: "hsl(45.4, 93.4%, 47.5%)",
   "warning-foreground": "hsl(0, 0%, 98%)",
-  error: "hsl(0, 84.2%, 60.2%)",
+  error: "hsl(0, 72.2%, 50.6%)",
   "error-foreground": "hsl(0, 0%, 98%)",
   info: "hsl(224.3, 76.3%, 48%)",
   "info-foreground": "hsl(0, 0%, 98%)",
@@ -121,6 +121,7 @@ export const useThemedScreenOptions = () => {
       // The system Liquid Glass bar only shows when no background is set.
       ...(isLiquidGlassAvailable() ? {} : solidHeader),
       headerTintColor: getColor("foreground"),
+      headerBackButtonDisplayMode: "minimal" as const,
       // Not transparent: NativeTabs screens sit on a native container that keeps
       // the system appearance, so anything see-through leaks light in dark mode.
       contentStyle: {

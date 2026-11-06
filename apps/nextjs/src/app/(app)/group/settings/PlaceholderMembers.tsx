@@ -53,7 +53,9 @@ export function PlaceholderMembers({
     <div className="grid gap-4">
       <div className="grid gap-1">
         <p className="text-muted-foreground text-sm font-semibold">{title}</p>
-        {hint && <p className="text-muted-foreground text-sm">{hint}</p>}
+        {isAdmin && hint && (
+          <p className="text-muted-foreground text-sm">{hint}</p>
+        )}
       </div>
       {placeholders.map((member) => (
         <MemberCard

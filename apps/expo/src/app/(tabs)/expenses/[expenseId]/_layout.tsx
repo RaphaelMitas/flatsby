@@ -20,7 +20,6 @@ export default function ExpenseDetailLayout() {
         options={{
           headerShown,
           headerTitle: t("expenses.editExpense"),
-          headerBackTitle: t("common.back"),
           ...solidHeader,
         }}
         name="edit"

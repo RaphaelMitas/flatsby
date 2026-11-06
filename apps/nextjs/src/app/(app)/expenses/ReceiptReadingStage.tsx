@@ -1,5 +1,9 @@
 "use client";
 
+import type {
+  ReceiptBox,
+  StageTag,
+} from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
@@ -16,9 +20,11 @@ type ReceiptScan = ReturnType<typeof useReceiptScan>;
 export function ReceiptReadingStage({
   receiptScan,
   photoUrl,
+  marks,
 }: {
   receiptScan: ReceiptScan;
   photoUrl?: string;
+  marks?: Partial<Record<StageTag, ReceiptBox>>;
 }) {
   const t = useTranslations("expenses.receiptScan");
   const { phase, revealed } = receiptScan.stage;
@@ -75,7 +81,7 @@ export function ReceiptReadingStage({
 
           <div className="rs-photo relative mt-4">
             {photoUrl && (
-              // biome-ignore lint/performance/noImgElement: a local object URL; the lens reads its rendered box
+              // biome-ignore lint/performance/noImgElement: a local object or data URL; the lens reads its rendered box
               <img
                 src={photoUrl}
                 alt=""
@@ -95,9 +101,27 @@ export function ReceiptReadingStage({
                 }}
               />
             )}
+            {marks &&
+              revealed.map((tag) => {
+                const mark = marks[tag];
+                return (
+                  mark && (
+                    <span
+                      key={tag}
+                      className="rs-mark"
+                      style={{
+                        left: `${mark.x * 100}%`,
+                        top: `${mark.y * 100}%`,
+                        width: `${mark.width * 100}%`,
+                        height: `${mark.height * 100}%`,
+                      }}
+                    />
+                  )
+                );
+              })}
             <div
               className="rs-lens"
-              style={{ backgroundImage: `url(${photoUrl})` }}
+              style={{ backgroundImage: `url("${photoUrl}")` }}
             />
           </div>
 

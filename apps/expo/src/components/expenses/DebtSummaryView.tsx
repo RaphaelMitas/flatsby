@@ -22,10 +22,11 @@ import {
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Card } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { Segmented } from "~/lib/ui/segmented";
-import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { ConvertCurrencyBanner } from "./ConvertCurrencyBanner";
+import { DebtHero } from "./DebtHero";
 import { DirectDebts } from "./DirectDebts";
 import { GroupBalances } from "./GroupBalances";
 import { OtherDebts } from "./OtherDebts";
@@ -51,7 +52,12 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  if (!debtData.success || !groupData.success) return null;
+  if (!debtData.success) {
+    return <ErrorMessage message={debtData.error.message} />;
+  }
+  if (!groupData.success) {
+    return <ErrorMessage message={groupData.error.message} />;
+  }
 
   const summary = debtData.data;
   const meId = groupData.data.thisGroupMember.id;
@@ -66,7 +72,6 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
   return (
     <AppScrollView className="flex-1" onRefresh={invalidateDebtSummary}>
       <View testID="debt-summary-title" className="w-full gap-2 p-4">
-        <PaypalNudgeCard />
         {bannerCurrencies && (
           <ConvertCurrencyBanner
             groupId={groupId}
@@ -76,7 +81,10 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         )}
         {hasDebts(summary) ? (
           <>
-            <DebtHero hero={debtHero(summary, meId, t, locale)} />
+            <DebtHero
+              hero={debtHero(summary, meId, t, locale)}
+              className="pt-4 pb-2"
+            />
             <View className="mt-2">
               <Segmented
                 value={kind}
@@ -136,6 +144,8 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
           </Card>
         )}
 
+        <PaypalNudgeCard />
+
         <Pressable
           testID="debt-record-payment"
           accessibilityRole="button"
@@ -157,32 +167,5 @@ function SectionLabel({ children }: { children: string }) {
     <Text className="text-muted-foreground mx-1 mt-4 text-sm font-semibold">
       {children}
     </Text>
-  );
-}
-
-function DebtHero({ hero }: { hero: ReturnType<typeof debtHero> }) {
-  const { label, amounts } = hero;
-
-  return (
-    <View testID="debt-hero" className="pt-4 pb-2">
-      <Text className="text-muted-foreground text-sm">{label}</Text>
-      {amounts.map(({ currency, cents, text }) => (
-        <Text
-          key={currency}
-          testID="debt-hero-amount"
-          className={cn(
-            "font-bold tracking-tight",
-            amounts.length > 1 ? "text-3xl" : "text-4xl",
-            cents > 0
-              ? "text-success"
-              : cents < 0
-                ? "text-destructive"
-                : "text-foreground",
-          )}
-        >
-          {text}
-        </Text>
-      ))}
-    </View>
   );
 }

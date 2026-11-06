@@ -23,6 +23,7 @@ import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import { useShareInvite } from "~/components/invite/useShareInvite";
 import { PlaceholderNameField } from "~/components/members/PlaceholderNameField";
 import { Button } from "~/lib/ui/button";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
@@ -91,7 +92,7 @@ export default function MemberActionsScreen() {
   );
 
   if (!group.success) {
-    return null;
+    return <ErrorMessage message={group.error.message} />;
   }
 
   const groupMember = group.data.groupMembers.find(

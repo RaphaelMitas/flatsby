@@ -122,3 +122,5 @@ tags:
     timeout: 10000
 - assertVisible:
     id: "receipt-scan-camera"
+- assertVisible:
+    id: "receipt-scan-pdf"

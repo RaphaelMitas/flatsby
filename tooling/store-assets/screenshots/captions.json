@@ -38,13 +38,6 @@
     },
     "cards": [
       {
-        "capture": "06-shopping-lists",
-        "segments": {
-          "ios": [[0.125, 0.3326]],
-          "android": [[0.122, 0.3413]]
-        }
-      },
-      {
         "capture": "02-shopping-list",
         "segments": {
           "ios": [
@@ -61,7 +54,7 @@
     "zooms": [
       {
         "capture": "02-shopping-list",
-        "card": 1,
+        "card": 0,
         "width": 98,
         "crop": "crop-item-oat-milk"
       }
@@ -80,19 +73,17 @@
       {
         "capture": "03-expenses",
         "segments": {
-          "ios": [[0.052, 0.615]],
-          "android": [[0.045, 0.6345]]
+          "ios": [[0.052, 0.45]],
+          "android": [[0.045, 0.46]]
         }
       }
     ],
     "zooms": [
       {
-        "capture": "01-home",
-        "stack": true,
-        "overlap": 3,
-        "width": 76,
-        "crop": "crop-balance",
-        "trim": 0.24
+        "capture": "03-expenses",
+        "card": 0,
+        "width": 98,
+        "crop": "crop-expense-internet"
       }
     ]
   },
@@ -140,15 +131,15 @@
       {
         "capture": "05-add-member",
         "segments": {
-          "ios": [[0.052, 0.503]],
-          "android": [[0.065, 0.522]]
+          "ios": [[0.052, 0.418]],
+          "android": [[0.065, 0.432]]
         },
         "rows": {
           "ios": {
             "x": 0.125,
             "w": 0.6,
-            "area": [0.3305, 0.369],
-            "keep": [0.3315, 0.347],
+            "area": [0.176, 0.2145],
+            "keep": [0.177, 0.1925],
             "shift": 0.0095,
             "step": 0.0598,
             "count": 3
@@ -156,8 +147,8 @@
           "android": {
             "x": 0.13,
             "w": 0.6,
-            "area": [0.338, 0.379],
-            "keep": [0.339, 0.3555],
+            "area": [0.1767, 0.2177],
+            "keep": [0.1777, 0.1942],
             "shift": 0.0105,
             "step": 0.0646,
             "count": 3

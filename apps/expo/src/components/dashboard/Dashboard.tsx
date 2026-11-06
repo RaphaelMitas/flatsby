@@ -5,6 +5,7 @@ import { useTranslations } from "use-intl";
 
 import { AnalyticsPrompt } from "~/components/analytics/AnalyticsPrompt";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { trpc } from "~/utils/api";
 import { useHomeVersion } from "~/utils/home-version";
 import { useShoppingStore } from "~/utils/shopping-store";
@@ -65,7 +66,7 @@ function DashboardContent() {
   }
 
   if (!userWithGroups.success) {
-    return null;
+    return <ErrorMessage message={userWithGroups.error.message} />;
   }
 
   return (

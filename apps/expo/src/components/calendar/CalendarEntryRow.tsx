@@ -107,7 +107,9 @@ export function CalendarEntryRow({
             </Text>
           </View>
         </View>
-        <OccurrenceStatus occurrence={occurrence} people={people} />
+        <View className="max-w-1/2">
+          <OccurrenceStatus occurrence={occurrence} people={people} />
+        </View>
       </Pressable>
     </View>
   );

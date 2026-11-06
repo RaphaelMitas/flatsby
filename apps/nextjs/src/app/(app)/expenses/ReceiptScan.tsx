@@ -4,14 +4,16 @@ import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Camera, ChevronRight } from "lucide-react";
+import { Camera, ChevronRight, FlaskConical } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
+import { Badge } from "@flatsby/ui/badge";
 import { Button } from "@flatsby/ui/button";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import { Dialog, DialogContent, DialogTitle } from "@flatsby/ui/dialog";
+import { receiptDocument } from "@flatsby/validators/expenses/receipt-document";
 import {
   RECEIPT_IMAGE_MAX_EDGE,
   RECEIPT_IMAGE_QUALITY,
@@ -39,13 +41,27 @@ async function receiptBase64(file: File) {
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  const dataUrl = canvas.toDataURL("image/jpeg", RECEIPT_IMAGE_QUALITY);
-  return dataUrl.slice(dataUrl.indexOf(",") + 1);
+  return base64Of(canvas.toDataURL("image/jpeg", RECEIPT_IMAGE_QUALITY));
 }
+
+async function pdfBase64(file: File) {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+  return base64Of(dataUrl);
+}
+
+const base64Of = (dataUrl: string) => dataUrl.slice(dataUrl.indexOf(",") + 1);
+
+const DOCUMENT_URL = `data:image/svg+xml,${encodeURIComponent(receiptDocument.svg)}`;
 
 export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const t = useTranslations("expenses.receiptScan");
   const tBilling = useTranslations("billing.pricing");
+  const tCommon = useTranslations("common");
   const trpc = useTRPC();
   const fileInput = useRef<HTMLInputElement>(null);
   const [photoUrl, setPhotoUrl] = useState<string>();
@@ -75,8 +91,17 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
 
   const read = (file: File | undefined) => {
     if (!file) return;
+    if (file.type === "application/pdf") {
+      setPhotoUrl(DOCUMENT_URL);
+      void receiptScan.scan(
+        "application/pdf",
+        () => pdfBase64(file),
+        file.size,
+      );
+      return;
+    }
     setPhotoUrl(URL.createObjectURL(file));
-    void receiptScan.scan(() => receiptBase64(file));
+    void receiptScan.scan("image/jpeg", () => receiptBase64(file));
   };
 
   return (
@@ -84,7 +109,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
       <input
         ref={fileInput}
         type="file"
-        accept="image/*"
+        accept="image/*,application/pdf"
         className="hidden"
         data-testid="receipt-scan-input"
         onChange={(event) => {
@@ -159,9 +184,13 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
             <Camera className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <p className="font-semibold">
+            <div className="flex items-center gap-2 font-semibold">
               {isDragging ? t("dropHere") : t("title")}
-            </p>
+              <Badge variant="beta">
+                <FlaskConical className="size-3" />
+                {tCommon("beta")}
+              </Badge>
+            </div>
             <p className="text-muted-foreground text-sm">
               {t("subtitle")} · {t("chooseFile")}
             </p>
@@ -201,7 +230,11 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         </DialogContent>
       </Dialog>
 
-      <ReceiptReadingStage receiptScan={receiptScan} photoUrl={photoUrl} />
+      <ReceiptReadingStage
+        receiptScan={receiptScan}
+        photoUrl={photoUrl}
+        marks={photoUrl === DOCUMENT_URL ? receiptDocument.marks : undefined}
+      />
     </div>
   );
 }

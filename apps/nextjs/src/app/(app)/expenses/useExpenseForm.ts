@@ -130,6 +130,9 @@ export function useExpenseForm({
     useExchangeRate,
     locale,
   });
+  const reportScanFailureMutation = useMutation(
+    trpc.receipt.reportFailure.mutationOptions(),
+  );
   const scanReceiptMutation = useMutation(
     trpc.receipt.scan.mutationOptions({
       onSettled: () => {
@@ -140,7 +143,8 @@ export function useExpenseForm({
     }),
   );
   const receiptScan = useReceiptScan({
-    read: (imageBase64) => scanReceiptMutation.mutateAsync({ imageBase64 }),
+    read: (file) => scanReceiptMutation.mutateAsync(file),
+    reportFailure: (failure) => reportScanFailureMutation.mutate(failure),
     setValue: form.setValue,
     currency,
     locale,
@@ -150,6 +154,7 @@ export function useExpenseForm({
     messages: {
       error: t("errors.unexpected"),
       unsupportedImage: t("expenses.receiptScan.unsupportedFormat"),
+      tooLarge: t("expenses.receiptScan.fileTooLarge"),
     },
   });
 

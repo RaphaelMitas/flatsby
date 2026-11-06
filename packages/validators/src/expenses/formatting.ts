@@ -202,7 +202,9 @@ export function formatSplitPortion({
   };
   t: Translate;
   locale: Intl.LocalesArgument;
-}): string {
+}): string | null {
+  // An equal split's portion only repeats the "split between n people" line
+  if (expense.splitMethod === "equal") return null;
   if (expense.splitMethod === "shares") {
     const totalShares = expense.expenseSplits.reduce(
       (sum, s) => sum + (s.shares ?? 0),

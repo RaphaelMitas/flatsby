@@ -8,7 +8,6 @@ export const shoppingList = {
   loadingMoreItems: "Loading more items...",
   namePlaceholder: "Enter shopping list name",
   noListsYet: "No shopping lists yet",
-  noMoreItems: "No more items to load",
   purchasedItems: "Purchased Items",
   renameFailed: "Error renaming shopping list",
   renamePlaceholder: "Enter new name",

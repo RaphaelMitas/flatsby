@@ -1,13 +1,13 @@
 "use client";
 
 import type { ExpenseListFilter } from "@flatsby/validators/expenses/list-filter";
-import Link from "next/link";
+import { Suspense } from "react";
 import {
   keepPreviousData,
   useInfiniteQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { HandCoins, Plus, Search, Wallet } from "lucide-react";
+import { Plus, Search, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { InView } from "react-intersection-observer";
 
@@ -18,6 +18,7 @@ import {
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { ScrollArea } from "@flatsby/ui/scroll-area";
+import { Skeleton } from "@flatsby/ui/skeleton";
 import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { withMonthHeaders } from "@flatsby/validators/expenses/formatting";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
@@ -25,6 +26,7 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
 import { ExpenseCard } from "./ExpenseCard";
+import { ExpenseDebtCard } from "./ExpenseDebtCard";
 import { ExpenseFilterBar } from "./ExpenseFilterBar";
 
 interface ExpenseListPanelProps {
@@ -83,27 +85,14 @@ export function ExpenseListPanel({
         >
           {t("navigation.expenses")}
         </h2>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            asChild
-            size="sm"
-            data-testid="expense-debts-link"
-          >
-            <Link href="/expenses/debts">
-              <HandCoins className="mr-2 h-4 w-4" />
-              {t("navigation.debts")}
-            </Link>
-          </Button>
-          <Button
-            size="sm"
-            onClick={onCreateExpense}
-            data-testid="expense-add-button"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {t("expenses.add")}
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          onClick={onCreateExpense}
+          data-testid="expense-add-button"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          {t("expenses.add")}
+        </Button>
       </div>
 
       {showFilters && (
@@ -127,6 +116,11 @@ export function ExpenseListPanel({
       {/* Expense List */}
       <ScrollArea className="flex-1">
         <div className="flex flex-col px-4 pb-4">
+          {!filters.isActive && (
+            <Suspense fallback={<Skeleton className="mt-4 h-28 rounded-xl" />}>
+              <ExpenseDebtCard groupId={groupId} />
+            </Suspense>
+          )}
           {!hasExpenses && search.searching ? (
             <div className="text-muted-foreground flex flex-col items-center gap-3 py-12 text-sm">
               <LoadingSpinner />

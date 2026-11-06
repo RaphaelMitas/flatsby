@@ -9,6 +9,7 @@ import ShoppingList from "~/components/shoppingList/ShoppingList";
 import { ListSwitcher } from "~/components/switcher/ListSwitcher";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { SkeletonList, SkeletonText } from "~/lib/ui/skeleton";
 import { trpc } from "~/utils/api";
@@ -57,7 +58,7 @@ function ListTab({ groupId }: { groupId: number }) {
     clearSelectedShoppingList,
   ]);
 
-  if (!data.success) return null;
+  if (!data.success) return <ErrorMessage message={data.error.message} />;
   if (!current) return <FirstList groupId={groupId} />;
 
   return (

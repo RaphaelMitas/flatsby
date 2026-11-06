@@ -3,11 +3,16 @@ import type { debtHero } from "@flatsby/validators/expenses/formatting";
 import { cn } from "@flatsby/ui";
 import { amountTone } from "@flatsby/validators/expenses/formatting";
 
-export function DebtHero({ hero }: { hero: ReturnType<typeof debtHero> }) {
+interface DebtHeroProps {
+  hero: ReturnType<typeof debtHero>;
+  className?: string;
+}
+
+export function DebtHero({ hero, className }: DebtHeroProps) {
   const { label, amounts } = hero;
 
   return (
-    <div data-testid="debt-hero">
+    <div data-testid="debt-hero" className={className}>
       <p className="text-muted-foreground text-sm">{label}</p>
       {amounts.map(({ currency, cents, text }) => (
         <p

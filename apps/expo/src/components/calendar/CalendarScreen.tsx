@@ -31,6 +31,8 @@ import {
 
 import type { CalendarPeople } from "./CalendarPeople";
 import { Button } from "~/lib/ui/button";
+import { ErrorMessage } from "~/lib/ui/error-message";
+import { Fab } from "~/lib/ui/fab";
 import { Segmented } from "~/lib/ui/segmented";
 import { isE2ETestingEnabled } from "~/utils/e2e";
 import { useReminderChoice } from "~/utils/evening-reminders";
@@ -215,15 +217,11 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
         }}
       />
 
-      <View className="absolute right-4 bottom-4">
-        <Button
-          testID="calendar-add-button"
-          size="icon"
-          icon="plus"
-          accessibilityLabel={t("add")}
-          onPress={openForm}
-        />
-      </View>
+      <Fab
+        testID="calendar-add-button"
+        accessibilityLabel={t("add")}
+        onPress={openForm}
+      />
     </View>
   );
 }
@@ -256,11 +254,7 @@ function CalendarPage({
     : undefined;
 
   if (data?.success === false)
-    return (
-      <Text className="text-destructive p-4 text-center">
-        {data.error.message}
-      </Text>
-    );
+    return <ErrorMessage message={data.error.message} />;
   return position.view === "list" ? (
     <CalendarList
       agenda={agenda}

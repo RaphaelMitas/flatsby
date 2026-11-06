@@ -18,6 +18,7 @@ import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Badge } from "~/lib/ui/badge";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import {
@@ -100,13 +101,7 @@ export function CalendarItemDetail({
     );
   }
   if (!data.success) {
-    return (
-      <View className="flex-1 items-center justify-center p-4">
-        <Text className="text-destructive text-center">
-          {data.error.message}
-        </Text>
-      </View>
-    );
+    return <ErrorMessage message={data.error.message} />;
   }
 
   const { item, upcoming, history } = data.data;

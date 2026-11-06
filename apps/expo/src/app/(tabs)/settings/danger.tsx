@@ -140,7 +140,7 @@ export default function DangerScreen() {
           {/* Error Display */}
           {deleteFailure !== undefined && (
             <Alert variant="destructive" className="mt-4">
-              <Icon name="circle-alert" size={16} />
+              <Icon name="circle-alert" size={16} color="destructive" />
               <AlertTitle>{t("settings.danger.deletionFailed")}</AlertTitle>
               <AlertDescription>{deleteFailure}</AlertDescription>
             </Alert>

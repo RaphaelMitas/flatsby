@@ -23,12 +23,17 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 import { useRefreshControl } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { ErrorMessage } from "~/lib/ui/error-message";
+import { Fab } from "~/lib/ui/fab";
 import { SafeAreaView } from "~/lib/ui/safe-area";
+import { Skeleton } from "~/lib/ui/skeleton";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useMediaQuery } from "../splitview/useMediaQuery";
 import { ExpenseCard } from "./ExpenseCard";
+import { ExpenseDebtCard } from "./ExpenseDebtCard";
 import { ExpenseFilterBar } from "./ExpenseFilterBar";
+import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
 const UNPERSISTED_GC_TIME = 5 * 60 * 1000;
 
@@ -58,6 +63,7 @@ function ExpenseList() {
   const t = useTranslations();
   const locale = useLocale();
   const { selectedGroupId } = useShoppingStore();
+  const groupId = selectedGroupId ?? -1;
   const isLargeScreen = useMediaQuery("md");
   const { expenseId } = useGlobalSearchParams<{ expenseId?: string }>();
   const pathname = usePathname();
@@ -69,7 +75,6 @@ function ExpenseList() {
     inPane ? router.dismissTo(href) : router.push(href);
   const createExpense = () => openScreen("/(tabs)/expenses/create");
 
-  const groupId = selectedGroupId ?? -1;
   const [searchFocused, setSearchFocused] = useState(false);
   const filters = useExpenseFilters(groupId);
 
@@ -93,10 +98,13 @@ function ExpenseList() {
     gcTime: UNPERSISTED_GC_TIME,
   });
   const search = expenseSearchView(base, filtered, filters);
-  const refreshControl = useRefreshControl(search.refetch);
+  const { invalidateDebtSummary } = useInvalidateExpenses(groupId);
+  const refreshControl = useRefreshControl(() =>
+    Promise.all([search.refetch(), invalidateDebtSummary()]),
+  );
 
   if (!groupData.success) {
-    return null;
+    return <ErrorMessage message={groupData.error.message} />;
   }
 
   const hasExpenses = search.rows.length > 0;
@@ -115,34 +123,34 @@ function ExpenseList() {
     });
   };
 
+  const debtCard = (
+    <Suspense fallback={<Skeleton className="mb-2 h-24 rounded-lg" />}>
+      <ExpenseDebtCard
+        groupId={groupId}
+        onPress={() => openScreen("/(tabs)/expenses/debts")}
+      />
+    </Suspense>
+  );
+
   return (
     <View className="flex-1 px-4">
       {!searchFocused && (
-        <View className="mb-4 flex-row flex-wrap items-center justify-between gap-2">
+        <View className="mb-6 flex-row flex-wrap items-center justify-between gap-2">
           <Text
             testID="expense-heading"
             className="text-foreground text-3xl font-bold"
           >
             {t("navigation.expenses")}
           </Text>
-          <View className="flex-row items-center gap-2">
+          {isLargeScreen && (
             <Button
-              testID="expense-debt-overview-button"
-              title={t("expenses.debtOverview")}
+              testID="expense-add-button"
+              title={t("expenses.add")}
               size="md"
-              icon="arrow-right"
-              onPress={() => openScreen("/(tabs)/expenses/debts")}
+              icon="plus"
+              onPress={createExpense}
             />
-            {isLargeScreen && (
-              <Button
-                testID="expense-add-button"
-                title={t("expenses.add")}
-                size="md"
-                icon="plus"
-                onPress={createExpense}
-              />
-            )}
-          </View>
+          )}
         </View>
       )}
 
@@ -194,30 +202,35 @@ function ExpenseList() {
           />
         </View>
       ) : !hasExpenses ? (
-        <View className="flex flex-1 flex-col items-center justify-center gap-4">
-          <Icon name="wallet" size={64} color="muted-foreground" />
-          <Text className="text-foreground text-lg font-semibold">
-            {t("expenses.emptyTitle")}
-          </Text>
-          <Text className="text-muted-foreground text-center text-sm">
-            {t("expenses.emptyHint")}
-          </Text>
-          <Button
-            testID="expense-add-button"
-            title={t("expenses.addExpense")}
-            variant="primary"
-            size="lg"
-            icon="plus"
-            onPress={createExpense}
-          />
+        <View className="flex-1">
+          {debtCard}
+          <View className="flex flex-1 flex-col items-center justify-center gap-4">
+            <Icon name="wallet" size={64} color="muted-foreground" />
+            <Text className="text-foreground text-lg font-semibold">
+              {t("expenses.emptyTitle")}
+            </Text>
+            <Text className="text-muted-foreground text-center text-sm">
+              {t("expenses.emptyHint")}
+            </Text>
+            <Button
+              testID="expense-add-button"
+              title={t("expenses.addExpense")}
+              variant="primary"
+              size="lg"
+              icon="plus"
+              onPress={createExpense}
+            />
+          </View>
         </View>
       ) : (
         <FlashList
           refreshControl={refreshControl}
+          contentContainerClassName="pb-28"
           data={withMonthHeaders(search.rows, locale)}
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           getItemType={(item) => item.type}
+          ListHeaderComponent={filters.isActive ? null : debtCard}
           renderItem={({ item }) =>
             item.type === "month" ? (
               <Text
@@ -229,7 +242,7 @@ function ExpenseList() {
             ) : (
               <ExpenseCard
                 expense={item.expense}
-                groupId={selectedGroupId ?? -1}
+                groupId={groupId}
                 meId={groupData.data.thisGroupMember.id}
                 first={item.first}
                 last={item.last}
@@ -265,14 +278,11 @@ function ExpenseList() {
         />
       )}
       {hasExpenses && !isLargeScreen && !searchFocused && (
-        <View className="absolute right-4 bottom-4">
-          <Button
-            testID="expense-add-button"
-            size="icon"
-            icon="plus"
-            onPress={createExpense}
-          />
-        </View>
+        <Fab
+          testID="expense-add-button"
+          accessibilityLabel={t("expenses.addExpense")}
+          onPress={createExpense}
+        />
       )}
     </View>
   );

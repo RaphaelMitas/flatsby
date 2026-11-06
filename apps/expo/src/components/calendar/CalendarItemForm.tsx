@@ -52,6 +52,7 @@ import { Button } from "~/lib/ui/button";
 import { Chip } from "~/lib/ui/chip";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { DatePickerField } from "~/lib/ui/date-picker-field";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { Segmented } from "~/lib/ui/segmented";
@@ -99,13 +100,7 @@ export function CalendarItemForm({
     );
   }
   if (!data.success) {
-    return (
-      <View className="flex-1 items-center justify-center p-4">
-        <Text className="text-destructive text-center">
-          {data.error.message}
-        </Text>
-      </View>
-    );
+    return <ErrorMessage message={data.error.message} />;
   }
   return (
     <ItemFields

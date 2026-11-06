@@ -39,8 +39,7 @@ type ListItem =
   | { type: "header"; title: string; id: string }
   | { type: "item"; item: ShoppingListItemType; id: string }
   | { type: "loading"; id: string }
-  | { type: "empty"; id: string }
-  | { type: "end"; id: string };
+  | { type: "empty"; id: string };
 
 const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   const t = useTranslations("shoppingList");
@@ -154,8 +153,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
 
     if (allItems.length === 0) {
       data.push({ type: "empty", id: "empty-state" });
-    } else if (!hasNextPage) {
-      data.push({ type: "end", id: "end-of-list" });
     }
 
     return data;
@@ -164,7 +161,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     uncheckedSections,
     checkedSections,
     isFetchingNextPage,
-    hasNextPage,
     allItems.length,
   ]);
 
@@ -195,8 +191,8 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     switch (item.type) {
       case "header":
         return (
-          <View className="mt-6 mb-3 px-4">
-            <Text className="text-muted-foreground text-center text-sm">
+          <View className="mt-6 mb-2 px-5">
+            <Text className="text-muted-foreground text-sm font-medium">
               {item.title}
             </Text>
           </View>
@@ -230,15 +226,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
           <View className="px-4 py-8">
             <Text className="text-muted-foreground text-center">
               {t("emptyList")}
-            </Text>
-          </View>
-        );
-
-      case "end":
-        return (
-          <View className="py-4">
-            <Text className="text-muted-foreground text-center text-sm">
-              {t("noMoreItems")}
             </Text>
           </View>
         );

@@ -2,6 +2,7 @@ import type { Messages } from "../../messages";
 
 export const common = {
   back: "Zurück",
+  beta: "Beta",
   cancel: "Abbrechen",
   category: "Kategorie",
   copy: "Kopieren",

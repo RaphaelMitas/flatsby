@@ -27,6 +27,7 @@ import {
   BottomSheetPickerTrigger,
 } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
@@ -99,7 +100,7 @@ export default function ImportExpensesScreen() {
   );
 
   if (!group.success) {
-    return null;
+    return <ErrorMessage message={group.error.message} />;
   }
 
   if (bulkCreateMutation.data?.success) {

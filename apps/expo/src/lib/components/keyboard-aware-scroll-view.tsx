@@ -22,6 +22,7 @@ export function AppScrollView({
   return (
     <KeyboardAwareScrollView
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
       contentInsetAdjustmentBehavior="automatic"
       className={cn("flex-1", className)}
       bottomOffset={safeAreaInsets.bottom}

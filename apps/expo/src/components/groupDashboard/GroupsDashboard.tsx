@@ -6,6 +6,7 @@ import { useTranslations } from "use-intl";
 
 import { useRefreshControl } from "~/lib/components/pull-to-refresh";
 import { Button } from "~/lib/ui/button";
+import { ErrorMessage } from "~/lib/ui/error-message";
 import { trpc } from "~/utils/api";
 import GroupsDashboardElement from "./GroupsDashboardElement";
 import { StartOrJoin } from "./StartOrJoin";
@@ -20,7 +21,7 @@ export function GroupsDashboard() {
   const refreshControl = useRefreshControl(refetch);
 
   if (!groups.success) {
-    return null;
+    return <ErrorMessage message={groups.error.message} />;
   }
 
   if (groups.data.length === 0) {
