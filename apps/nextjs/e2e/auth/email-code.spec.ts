@@ -6,7 +6,9 @@ import { waitForHydration } from "../helpers/hydration";
 import { currentUserId, requestCode } from "../helpers/sign-in-code";
 
 test.describe("Email code sign-in", () => {
-  test("signs up a new address and asks for a name", async ({ page }) => {
+  test("signs up a new address and creates the flat in one step", async ({
+    page,
+  }) => {
     const email = `code-${randomUUID()}@flatsby.test`;
     const code = await requestCode(page, email);
 
@@ -15,16 +17,28 @@ test.describe("Email code sign-in", () => {
     await expect(page.getByTestId("auth-code-error")).toBeVisible();
 
     await page.getByTestId("auth-code-input").fill(code);
-    await expect(page).toHaveURL(/\/auth\/name/);
-    await expect(page.getByTestId("auth-name-input")).toHaveValue(
-      email.split("@")[0] ?? "",
+    // A creator names themselves here, not on a separate name step
+    await expect(page).toHaveURL(/\/welcome/);
+    const nameInput = page.getByTestId("onboarding-name-input");
+    await expect(nameInput).toHaveValue("");
+    await waitForHydration(page.getByTestId("onboarding-create"));
+    await nameInput.fill("Code User");
+    await expect(page.getByTestId("onboarding-group-input")).toHaveValue(
+      "Code's flat",
     );
+    await page.getByTestId("onboarding-flatmates-input").fill("Lena und Tim");
+    await page.getByTestId("onboarding-create").click();
 
-    await waitForHydration(page.getByTestId("auth-name-continue"));
-    await page.getByTestId("auth-name-input").fill("Code User");
-    await page.getByTestId("auth-name-continue").click();
-    // A new account has no household yet, so the app offers to create or join one
-    await expect(page).toHaveURL(/\/group/);
+    await expect(page).toHaveURL(/\/home/);
+    const card = page.getByTestId("invite-flatmates-card");
+    await expect(card).toContainText("Code's flat is set up");
+    await expect(card.getByTestId(/^invite-card-send-\d+$/)).toHaveCount(2);
+    await expect(card.getByTestId("invite-card-preview")).toContainText(
+      "Lena, I've already added you",
+    );
+    await expect(card.getByTestId("invite-card-code")).toHaveText(
+      /^[0-9A-Z]{4}-[0-9A-Z]{4}$/,
+    );
   });
 
   test("signs an existing user into the same account", async ({

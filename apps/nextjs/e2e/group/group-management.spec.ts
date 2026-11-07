@@ -11,6 +11,10 @@ import {
   uniqueGroupName,
 } from "../helpers/group";
 import { waitForHydration } from "../helpers/hydration";
+import {
+  addShoppingListItem,
+  createShoppingList,
+} from "../helpers/shopping-list";
 
 async function newInvitee(
   browser: Browser,
@@ -136,6 +140,73 @@ test.describe("Group Management", () => {
     await authPage.goto("/group/settings");
     await expect(authPage.getByText(invitee.email)).toBeVisible();
     await inviteePage.context().close();
+  });
+
+  test("the home card's personal link picks the spot after sign-in", async ({
+    authPage,
+    browser,
+    baseURL,
+  }) => {
+    await createAndSelectGroup(authPage, uniqueGroupName());
+    await addPlaceholder(authPage, "Anna");
+    await authPage
+      .context()
+      .grantPermissions(["clipboard-read", "clipboard-write"]);
+    await authPage.goto("/home");
+    const send = authPage.getByTestId(/^invite-card-send-\d+$/);
+    await waitForHydration(send);
+    // Send waits for the invite code
+    await expect(authPage.getByTestId("invite-card-code")).toBeVisible();
+    // Desktop copies instead of opening the OS share dialog
+    await send.click();
+    await expect(authPage.getByText("Copied for Anna")).toBeVisible();
+    const message = await authPage.evaluate(() =>
+      navigator.clipboard.readText(),
+    );
+    expect(message).toMatch(/^Anna, I've already added you/);
+    const link = new URL(message.match(/https?:\/\/\S+$/)?.[0] ?? "");
+    const code = link.pathname.split("/").pop() ?? "";
+
+    const visitor = await (await browser.newContext()).newPage();
+    await visitor.goto(`${link.pathname}${link.search}`);
+    await expect(
+      visitor.getByRole("link", { name: /^Sign in to join/ }),
+    ).toHaveAttribute("href", /next=%2Fjoin%2F\w+%3Fp%3D\d+$/);
+    await visitor.context().close();
+
+    const invitee = await newInvitee(browser, baseURL, { name: "Anna S" });
+    await invitee.page.goto(`/join/${code}?p=999999`);
+    await expect(invitee.page.getByTestId("join-claim-new")).toBeChecked();
+    await invitee.page.goto(`${link.pathname}${link.search}`);
+    await expect(invitee.page.getByTestId("join-invite-button")).toHaveText(
+      "Join as Anna",
+    );
+    await confirmJoin(invitee.page);
+    await invitee.page.context().close();
+  });
+
+  test("a joiner lands on the list with open items", async ({
+    authPage,
+    browser,
+    baseURL,
+  }) => {
+    await createAndSelectGroup(authPage, uniqueGroupName());
+    const listId = await createShoppingList(authPage);
+    await addShoppingListItem(authPage, "Toilet paper");
+    // A real id means the item reached the server
+    await expect(
+      authPage.getByTestId(/^shopping-list-item-\d+$/),
+    ).toBeVisible();
+    const code = await openInvite(authPage);
+
+    const { page } = await newInvitee(browser, baseURL);
+    await page.goto(`/join/${code}`);
+    const joinButton = page.getByTestId("join-invite-button");
+    await waitForHydration(joinButton);
+    await joinButton.click();
+    await page.waitForURL(`/shopping-list/${listId}`);
+    await expect(page.getByText("Toilet paper", { exact: true })).toBeVisible();
+    await page.context().close();
   });
 
   test("removed member can't rejoin with the old code", async ({

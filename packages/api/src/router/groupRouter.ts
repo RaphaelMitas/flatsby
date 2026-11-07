@@ -329,7 +329,7 @@ export const groupRouter = createTRPCRouter({
           const name = yield* ValidationUtils.notEmpty(input.name, "groupName");
           const database = yield* Database;
           const groupId = yield* database.query(
-            "transaction: create group and add admin member",
+            "transaction: create group with its admin and placeholders",
             (db) =>
               db.transaction(async (trx) => {
                 const [group] = await trx
@@ -341,11 +341,14 @@ export const groupRouter = createTRPCRouter({
                   throw new Error("Failed to create group");
                 }
 
-                await trx.insert(groupMembers).values({
-                  groupId: group.id,
-                  userId: user.id,
-                  role: "admin",
-                });
+                await trx.insert(groupMembers).values([
+                  { groupId: group.id, userId: user.id, role: "admin" },
+                  ...(input.placeholders ?? []).map((placeholderName) => ({
+                    groupId: group.id,
+                    placeholderName,
+                    role: "member" as const,
+                  })),
+                ]);
 
                 await trx
                   .update(users)

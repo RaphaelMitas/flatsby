@@ -19,12 +19,19 @@ export const group = {
     title: "Your groups",
   },
   onboarding: {
-    greeting: "Hi {name}.",
-    question: "Starting a group or joining one?",
-    start: "Start a new group",
-    startHint: "You'll invite your flatmates next",
-    join: "I have an invite",
-    joinHint: "Enter the code from your invite",
+    title: "Almost done.",
+    question: "What's your name, and what's your flat called?",
+    nameLabel: "Your name",
+    groupLabel: "Your flat",
+    defaultGroupName: "{name}'s flat",
+    flatmatesLabel: "Who else lives there? (optional)",
+    flatmatesPlaceholder: "Names, e.g. Lena, Tim",
+    flatmatesHint:
+      "Everyone gets their own link. After signing in, their spot is already picked.",
+    currency:
+      "Currency: {currency}. You can change it later in the group settings.",
+    create: "Create flat",
+    creating: "Creating your flat…",
   },
   settings: {
     changeGroup: "Change Group",

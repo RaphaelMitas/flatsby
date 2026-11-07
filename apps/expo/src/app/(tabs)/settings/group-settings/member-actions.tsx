@@ -137,7 +137,11 @@ export default function MemberActionsScreen() {
     const invite = await queryClient
       .fetchQuery(trpc.invite.get.queryOptions({ groupId: group.data.id }))
       .catch(() => undefined);
-    if (invite?.success) await shareInvite(invite.data.code);
+    if (invite?.success)
+      await shareInvite(invite.data.code, {
+        id: groupMember.id,
+        name: groupMember.user.name,
+      });
     else alertFailure(invite?.error.message);
   };
 

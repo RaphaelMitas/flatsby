@@ -3,7 +3,6 @@
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -18,7 +17,7 @@ import { useGroupContext } from "~/app/_components/context/group-context";
 import { InviteContent } from "~/app/(app)/group/settings/InviteDialog";
 import { PlaceholderMembers } from "~/app/(app)/group/settings/PlaceholderMembers";
 import { CurrencySelect } from "~/components/CurrencySelect";
-import { useTRPC } from "~/trpc/react";
+import { useCreateGroup } from "./useCreateGroup";
 
 export function CreateGroup() {
   const t = useTranslations();
@@ -26,29 +25,13 @@ export function CreateGroup() {
   const [currency, setCurrency] = useState<CurrencyCode>("EUR");
   const [created, setCreated] = useState<{ id: number; name: string }>();
   const router = useRouter();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const { switchGroup } = useGroupContext();
 
-  const groupMutation = useMutation(
-    trpc.group.createGroup.mutationOptions({
-      onSuccess: async (data, { name }) => {
-        if (!data.success) {
-          return;
-        }
-
-        void queryClient.invalidateQueries(
-          trpc.group.getUserGroups.queryOptions(),
-        );
-        void queryClient.invalidateQueries(
-          trpc.user.getCurrentUserWithGroups.queryOptions(),
-        );
-        // The group exists either way; failing here would invite a duplicate create
-        await switchGroup(data.data.groupId).catch(() => undefined);
-        setCreated({ id: data.data.groupId, name });
-      },
-    }),
-  );
+  const groupMutation = useCreateGroup(async (id, name) => {
+    // The group exists either way; failing here would invite a duplicate create
+    await switchGroup(id).catch(() => undefined);
+    setCreated({ id, name });
+  });
   const createFailure = failureOf(groupMutation, t("errors.unexpected"));
 
   if (created) {

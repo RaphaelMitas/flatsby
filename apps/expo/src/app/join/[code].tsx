@@ -6,7 +6,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
-import { inviteCodeSchema, invitePath } from "@flatsby/validators/invite";
+import {
+  inviteCodeSchema,
+  invitePath,
+  parsePlaceholderId,
+} from "@flatsby/validators/invite";
 
 import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import { Button } from "~/lib/ui/button";
@@ -27,36 +31,47 @@ export default function JoinScreen() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const { setSelectedGroup } = useShoppingStore();
-  const parsed = inviteCodeSchema.safeParse(
-    useLocalSearchParams<{ code: string }>().code,
-  );
+  const params = useLocalSearchParams<{ code: string; p?: string }>();
+  const parsed = inviteCodeSchema.safeParse(params.code);
   const code = parsed.data ?? "";
+  const personalId = parsePlaceholderId(params.p);
 
   const preview = useQuery({
     ...trpc.invite.preview.queryOptions({ code }),
     enabled: parsed.success,
   });
-  const [picked, setPicked] = useState<{ id: number; name: string }>();
+  // undefined until the joiner picks, so a personal link's spot stays the default
+  const [picked, setPicked] = useState<{ id: number; name: string } | null>();
 
-  const openGroup = (groupId: number, groupName: string) => {
+  const openGroup = (
+    groupId: number,
+    groupName: string,
+    openList?: { id: number; name: string } | null,
+  ) => {
     void queryClient.invalidateQueries(trpc.group.getUserGroups.queryFilter());
     void queryClient.invalidateQueries(
       trpc.user.getCurrentUserWithGroups.queryFilter(),
     );
-    setSelectedGroup(groupId, groupName);
-    router.dismissTo("/(tabs)/home");
+    setSelectedGroup(groupId, groupName, openList ?? undefined);
+    // The onboarding screen may sit below, and must not stay one swipe back from the group
+    if (router.canDismiss()) router.dismissAll();
+    router.replace(openList ? "/(tabs)/shoppingList" : "/(tabs)/home");
   };
 
   const invite = preview.data?.success ? preview.data.data : null;
-  const claim = invite?.placeholders.find(({ id }) => id === picked?.id);
+  const choice =
+    picked === undefined
+      ? invite?.placeholders.find(({ id }) => id === personalId)
+      : picked;
+  const claim = invite?.placeholders.find(({ id }) => id === choice?.id);
   // The picked spot left the preview, claimed or removed since
-  const takenName = invite && picked && !claim ? picked.name : undefined;
+  const takenName = invite && choice && !claim ? choice.name : undefined;
 
   const join = useMutation(
     trpc.invite.join.mutationOptions({
       onSuccess: (data) => {
         if (data.success) {
-          openGroup(data.data.groupId, data.data.groupName);
+          openGroup(data.data.groupId, data.data.groupName, data.data.openList);
           return;
         }
         if (data.error.details.messageKey !== "errors.placeholderTaken") return;
@@ -172,7 +187,7 @@ export default function JoinScreen() {
                     group: invite.groupName,
                   })}
                   onPress={() => {
-                    rememberPostLoginPath(invitePath(code));
+                    rememberPostLoginPath(invitePath(code, personalId));
                     router.push("/auth/login");
                   }}
                 />
@@ -215,7 +230,7 @@ export default function JoinScreen() {
                         disabled={join.isPending}
                         onPress={() => {
                           join.reset();
-                          setPicked(undefined);
+                          setPicked(null);
                         }}
                       >
                         <Text className="text-foreground text-sm">
@@ -234,7 +249,7 @@ export default function JoinScreen() {
                     disabled={join.isPending || preview.isFetching}
                     icon={join.isPending ? "loader" : undefined}
                     onPress={() => {
-                      setPicked(claim);
+                      setPicked(claim ?? null);
                       join.mutate({ code, placeholderId: claim?.id });
                     }}
                   />

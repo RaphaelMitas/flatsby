@@ -5,14 +5,27 @@ export const invite = {
   scanWithCamera: "Scan with the phone camera",
   orEnterCode: "or enter this code in Flatsby",
   shareLink: "Share link",
-  shareMessage: "Join {group} on Flatsby: {link}",
+  shareGroup:
+    "Could you quickly join our flat on Flatsby? Then the shopping list stops getting lost in the chat: {link}",
+  sharePersonal:
+    "{name}, I've already added you to our flat on Flatsby. Could you quickly join? Then the shopping list stops getting lost in the chat: {link}",
   resetLink: "Reset link",
   resetFailed: "Couldn't reset the link. Try again.",
   loadFailed: "Couldn't load the invite. Try again.",
   done: "Done",
-  solo: {
-    title: "It's just you so far",
-    body: "Flatsby is made for the whole flat. Share the invite with your flatmates.",
+  card: {
+    title: "{group} is set up. Now your flatmates are missing.",
+    body: "Send them the link. Whoever joins shows up here.",
+    namedBody:
+      "Send everyone their own link. After signing in, their spot is already picked.",
+    preview: "What you'll send:",
+    send: "Send",
+    sendTo: "Send the link to {name}",
+    groupChat: "Link for the group chat",
+    code: "Code to type in",
+    copied: "Copied",
+    copiedFor: "Copied for {name}",
+    copyFailed: "Couldn't copy. Try again.",
     dismiss: "Dismiss",
   },
   expiresIn:

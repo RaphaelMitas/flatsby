@@ -1,3 +1,4 @@
+import type { Translate } from "@flatsby/i18n/message-key";
 import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
@@ -7,6 +8,8 @@ export const INVITE_CODE_GROUP = INVITE_CODE_LENGTH / 2;
 const INVITE_TTL_DAYS = 7;
 export const INVITE_PATH = "/join";
 export const INVITE_REFERRER_KEY = "invite_code";
+export const INVITE_PLACEHOLDER_REFERRER_KEY = "invite_placeholder";
+export const INVITE_PLACEHOLDER_PARAM = "p";
 const DAY_MS = 86_400_000;
 
 // Crockford base32: no I, L, O or U, so no look-alikes or accidental words
@@ -24,11 +27,35 @@ export const normalizeInviteCode = (raw: string) =>
 export const formatInviteCode = (code: string) =>
   `${code.slice(0, INVITE_CODE_GROUP)}-${code.slice(INVITE_CODE_GROUP)}`;
 
-export const invitePath = (code: string): `${typeof INVITE_PATH}/${string}` =>
-  `${INVITE_PATH}/${code}`;
+/** A placeholder id makes it a personal link, which preselects that spot after sign-in. */
+export const invitePath = (
+  code: string,
+  placeholderId?: number,
+): `${typeof INVITE_PATH}/${string}` =>
+  placeholderId === undefined
+    ? `${INVITE_PATH}/${code}`
+    : `${INVITE_PATH}/${code}?${INVITE_PLACEHOLDER_PARAM}=${placeholderId}`;
 
-export const inviteLink = (baseUrl: string, code: string) =>
-  `${baseUrl}${invitePath(code)}`;
+export const inviteLink = (
+  baseUrl: string,
+  code: string,
+  placeholderId?: number,
+) => `${baseUrl}${invitePath(code, placeholderId)}`;
+
+/** The card's preview and the share both use this, so the creator sees exactly what goes out. */
+export const inviteMessage = (
+  t: Translate,
+  link: string,
+  placeholderName?: string,
+) =>
+  placeholderName === undefined
+    ? t("invite.shareGroup", { link })
+    : t("invite.sharePersonal", { name: placeholderName, link });
+
+const placeholderIdSchema = z.coerce.number().int().positive();
+
+export const parsePlaceholderId = (value: unknown) =>
+  placeholderIdSchema.safeParse(value).data;
 
 // A live code is enough to join, so analytics only ever sees the route
 export const redactInvitePath = (url: string) =>
@@ -48,6 +75,11 @@ export const inviteCodeInputSchema = z.object({ code: inviteCodeSchema });
 // Without a placeholder the joiner becomes a new member, which is all released apps send
 export const joinInviteInputSchema = inviteCodeInputSchema.extend({
   placeholderId: z.number().optional(),
+});
+
+export const inviteSharePressedInputSchema = z.object({
+  groupId: z.number(),
+  personal: z.boolean(),
 });
 
 export const inviteExpiresAt = () =>

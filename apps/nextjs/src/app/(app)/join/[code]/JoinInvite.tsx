@@ -24,6 +24,7 @@ import {
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   formatInviteCode,
+  INVITE_PLACEHOLDER_REFERRER_KEY,
   INVITE_REFERRER_KEY,
   invitePath,
 } from "@flatsby/validators/invite";
@@ -48,29 +49,34 @@ export function JoinInvite({
   preview,
   signedIn,
   platform,
+  personalId,
 }: {
   code: string;
   preview: InvitePreview | null;
   signedIn: boolean;
   platform: Platform;
+  personalId: number | undefined;
 }) {
   const t = useTranslations();
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [claimId, setClaimId] = useState<number | null>(null);
+  // A personal link's spot is picked until the joiner picks another; an unknown id matches nothing
+  const [claimId, setClaimId] = useState<number | null>(personalId ?? null);
   const [takenName, setTakenName] = useState<string>();
 
   const openGroup = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions({
-      onSettled: () => {
+      onSettled: (_data, _error, { shoppingListId }) => {
         void queryClient.invalidateQueries(
           trpc.group.getUserGroups.queryFilter(),
         );
         void queryClient.invalidateQueries(
           trpc.user.getCurrentUserWithGroups.queryFilter(),
         );
-        router.push("/home");
+        router.push(
+          shoppingListId ? `/shopping-list/${shoppingListId}` : "/home",
+        );
       },
     }),
   );
@@ -82,7 +88,7 @@ export function JoinInvite({
         if (data.success) {
           openGroup.mutate({
             groupId: data.data.groupId,
-            shoppingListId: null,
+            shoppingListId: data.data.openList?.id ?? null,
           });
         } else if (
           data.error.details.messageKey === "errors.placeholderTaken"
@@ -138,7 +144,7 @@ export function JoinInvite({
     );
   }
 
-  const signInHref = `/auth/login?next=${invitePath(code)}`;
+  const signInHref = `/auth/login?next=${encodeURIComponent(invitePath(code, personalId))}`;
   const joinError =
     takenName === undefined
       ? failureOf(join, t("invite.join.joinFailed"))
@@ -235,7 +241,12 @@ export function JoinInvite({
             </Link>
           </Button>
         ) : (
-          <InstallApp platform={platform} code={code} signInHref={signInHref} />
+          <InstallApp
+            platform={platform}
+            code={code}
+            personalId={personalId}
+            signInHref={signInHref}
+          />
         )}
       </div>
     </Card>
@@ -276,14 +287,20 @@ function ClaimOption({
 function InstallApp({
   platform,
   code,
+  personalId,
   signInHref,
 }: {
   platform: Exclude<Platform, "other">;
   code: string;
+  personalId: number | undefined;
   signInHref: string;
 }) {
   const t = useTranslations();
-  const invite = `?${new URLSearchParams({ [INVITE_REFERRER_KEY]: code })}`;
+  const referrer = new URLSearchParams({ [INVITE_REFERRER_KEY]: code });
+  if (personalId !== undefined) {
+    referrer.set(INVITE_PLACEHOLDER_REFERRER_KEY, String(personalId));
+  }
+  const invite = `?${referrer}`;
   // Chrome only follows an absolute fallback URL out of an intent link
   const playStoreFallback = `${SITE_URL}${PLAY_STORE_LINK}${invite}`;
 
@@ -300,7 +317,7 @@ function InstallApp({
         <>
           <Button asChild>
             <a
-              href={`intent:/${invitePath(code)}#Intent;scheme=flatsby;package=${PLAY_STORE_ID};S.browser_fallback_url=${encodeURIComponent(playStoreFallback)};end`}
+              href={`intent:/${invitePath(code, personalId)}#Intent;scheme=flatsby;package=${PLAY_STORE_ID};S.browser_fallback_url=${encodeURIComponent(playStoreFallback)};end`}
             >
               {t("invite.join.openInApp")}
             </a>

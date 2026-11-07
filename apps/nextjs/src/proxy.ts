@@ -3,8 +3,10 @@ import { NextResponse } from "next/server";
 
 import { defaultLocale, localePath, locales } from "@flatsby/i18n/locale";
 import {
+  INVITE_PLACEHOLDER_REFERRER_KEY,
   INVITE_REFERRER_KEY,
   inviteCodeSchema,
+  parsePlaceholderId,
 } from "@flatsby/validators/invite";
 
 import { storeRedirect } from "~/app/_components/landing/content";
@@ -45,12 +47,21 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   const invite = inviteCodeSchema.safeParse(
     url.searchParams.get(INVITE_REFERRER_KEY),
   );
-  const inviteCode = invite.success ? invite.data : null;
-  const store = storeRedirect(pathname, inviteCode);
+  const store = storeRedirect(
+    pathname,
+    invite.success
+      ? {
+          code: invite.data,
+          placeholderId: parsePlaceholderId(
+            url.searchParams.get(INVITE_PLACEHOLDER_REFERRER_KEY),
+          ),
+        }
+      : null,
+  );
   if (store) {
     countVisit("store_click", {
       store: store.store,
-      via_invite: inviteCode !== null,
+      via_invite: invite.success,
     });
     return NextResponse.redirect(store.url, 302);
   }

@@ -1,101 +1,37 @@
-import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import type { GroupFormValues } from "@flatsby/validators/group";
 import { useState } from "react";
 import { Text, View } from "react-native";
-import { getLocales } from "expo-localization";
 import { router, useNavigation } from "expo-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import {
-  failureOf,
-  PENDING_ID,
-  restoreSnapshot,
-  resultMutation,
-} from "@flatsby/api/resultMutation";
+import { failureOf } from "@flatsby/api/resultMutation";
 import { translateIfKey } from "@flatsby/i18n/message-key";
-import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 import { groupFormSchema } from "@flatsby/validators/group";
 
 import { CurrencyPicker } from "~/components/expenses/CurrencyPicker";
+import {
+  deviceCurrency,
+  useCreateGroup,
+} from "~/components/groupDashboard/useCreateGroup";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
-import { trpc } from "~/utils/api";
-import { useShoppingStore } from "~/utils/shopping-store";
-
-const deviceCurrency = (): CurrencyCode => {
-  const code = getLocales()[0]?.currencyCode;
-  return code && isCurrencyCode(code) ? code : "EUR";
-};
 
 export default function CreateGroup() {
   const t = useTranslations();
-  const queryClient = useQueryClient();
   const navigation = useNavigation();
-  const { setSelectedGroup } = useShoppingStore();
   const [currency, setCurrency] = useState(deviceCurrency);
 
-  const createGroupMutation = useMutation(
-    trpc.group.createGroup.mutationOptions(
-      resultMutation({
-        onMutate: ({ name }) => {
-          void queryClient.cancelQueries(
-            trpc.group.getUserGroups.queryOptions(),
-          );
-
-          const previousGroups = queryClient.getQueryData(
-            trpc.group.getUserGroups.queryKey(),
-          );
-
-          const newGroup = {
-            id: PENDING_ID,
-            name: name,
-            createdAt: new Date(),
-            profilePicture: null,
-            memberCount: 1,
-          };
-
-          queryClient.setQueryData(
-            trpc.group.getUserGroups.queryKey(),
-            (old) => {
-              if (!old?.success) return old;
-              return {
-                success: true as const,
-                data: [...old.data, newGroup],
-              };
-            },
-          );
-
-          return [
-            {
-              queryKey: trpc.group.getUserGroups.queryKey(),
-              previous: previousGroups,
-            },
-          ];
-        },
-        rollback: restoreSnapshot(queryClient),
-        // The invite step needs the real group id, so navigation waits for it
-        onSuccess: ({ groupId }, { name }) => {
-          void queryClient.invalidateQueries(
-            trpc.group.getUserGroups.queryOptions(),
-          );
-          void queryClient.invalidateQueries(
-            trpc.user.getCurrentUserWithGroups.queryOptions(),
-          );
-          setSelectedGroup(groupId, name);
-          // Cancelled while pending: the group still exists and is selected, but stay put
-          if (navigation.isFocused())
-            router.replace({
-              pathname: "/(tabs)/home/invite",
-              params: { created: "1" },
-            });
-        },
-      }),
-    ),
-  );
+  const createGroupMutation = useCreateGroup(() => {
+    // Cancelled while pending: the group still exists and is selected, but stay put
+    if (navigation.isFocused())
+      router.replace({
+        pathname: "/(tabs)/home/invite",
+        params: { created: "1" },
+      });
+  });
 
   const form = useForm({
     schema: groupFormSchema,

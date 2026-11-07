@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -9,7 +9,6 @@ import { Button } from "~/lib/ui/button";
 import { ErrorMessage } from "~/lib/ui/error-message";
 import { trpc } from "~/utils/api";
 import GroupsDashboardElement from "./GroupsDashboardElement";
-import { StartOrJoin } from "./StartOrJoin";
 
 export function GroupsDashboard() {
   const t = useTranslations();
@@ -25,7 +24,7 @@ export function GroupsDashboard() {
   }
 
   if (groups.data.length === 0) {
-    return <StartOrJoin />;
+    return <Redirect href="/welcome" />;
   }
 
   return (

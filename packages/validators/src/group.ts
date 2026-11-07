@@ -32,10 +32,6 @@ export const groupSchema = z.object({
 export const groupFormSchema = groupSchema.pick({ name: true });
 export type GroupFormValues = z.infer<typeof groupFormSchema>;
 
-export const createGroupSchema = groupSchema
-  .pick({ name: true, currency: true })
-  .partial({ currency: true });
-
 export const updateGroupSchema = groupSchema.pick({ name: true, id: true });
 
 export const updateGroupSettingsSchema = groupSchema
@@ -65,6 +61,42 @@ export const placeholderNameSchema = z
     message: msg("group.placeholders.nameTooLong"),
   });
 
+export const MAX_NEW_GROUP_PLACEHOLDERS = 20;
+
+const uniqueNames = (names: string[]) =>
+  names.filter(
+    (name, i) =>
+      names.findIndex((other) => other.toLowerCase() === name.toLowerCase()) ===
+      i,
+  );
+
+// Released apps send no placeholders, which keeps the group to its creator
+export const createGroupSchema = groupSchema
+  .pick({ name: true, currency: true })
+  .partial({ currency: true })
+  .extend({
+    placeholders: z
+      .array(placeholderNameSchema)
+      .max(MAX_NEW_GROUP_PLACEHOLDERS)
+      .transform(uniqueNames)
+      .optional(),
+  });
+
+/** "Lena, Tim" and "Lena und Tim" are two flatmates, not one. */
+export const splitFlatmateNames = (raw: string) =>
+  uniqueNames(
+    raw
+      .split(/,|;|\n|\s+(?:und|and|&)\s+/i)
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0),
+  );
+
+export const newGroupFormSchema = z.object({
+  name: userNameSchema,
+  groupName: groupNameSchema,
+  placeholders: createGroupSchema.shape.placeholders,
+});
+
 export const groupMemberSchema = z.object({
   id: z.number(),
   groupId: z.number(),
@@ -79,6 +111,13 @@ export const isPlaceholder = (member: { userId: string | null }) =>
 
 export const hasJoined = (member: { userId: string | null }) =>
   member.userId !== null;
+
+export const openPlaceholders = (
+  members: { id: number; userId: string | null; user: { name: string } }[],
+) =>
+  members
+    .filter(isPlaceholder)
+    .map(({ id, user }) => ({ id, name: user.name }));
 
 export const placeholderUser = (name: string) => ({
   name,

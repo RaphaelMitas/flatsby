@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   inviteCodeSchema,
+  invitePath,
   outlivesAnyInvite,
+  parsePlaceholderId,
   safeRedirectPath,
 } from "./invite";
 
@@ -45,4 +47,23 @@ describe("outlivesAnyInvite", () => {
     expect(outlivesAnyInvite(new Date(Date.now() - 3 * day))).toBe(false);
     expect(outlivesAnyInvite(new Date(Date.now() - 30 * day))).toBe(true);
   });
+});
+
+describe("invitePath", () => {
+  it("carries a placeholder id that reads back after the round trip", () => {
+    const path = invitePath("K7Q4M2XP", 41);
+    expect(path).toBe("/join/K7Q4M2XP?p=41");
+    expect(safeRedirectPath(path)).toBe(path);
+    expect(
+      parsePlaceholderId(new URL(path, "https://x.test").searchParams.get("p")),
+    ).toBe(41);
+    expect(inviteCodeSchema.parse(`https://x.test${path}`)).toBe("K7Q4M2XP");
+  });
+
+  it.each([null, undefined, "", "abc", "-3", "1.5"])(
+    "ignores the junk id %j",
+    (value) => {
+      expect(parsePlaceholderId(value)).toBeUndefined();
+    },
+  );
 });

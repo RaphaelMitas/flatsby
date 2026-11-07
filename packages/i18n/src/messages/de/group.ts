@@ -21,12 +21,19 @@ export const group = {
     title: "Deine Gruppen",
   },
   onboarding: {
-    greeting: "Hi {name}.",
-    question: "Gründest du eine Gruppe oder trittst du einer bei?",
-    start: "Neue Gruppe gründen",
-    startHint: "Danach lädst du deine Mitbewohner ein",
-    join: "Ich habe eine Einladung",
-    joinHint: "Gib den Code aus deiner Einladung ein",
+    title: "Fast geschafft.",
+    question: "Wie heißt du, und wie heißt eure WG?",
+    nameLabel: "Dein Name",
+    groupLabel: "Eure WG",
+    defaultGroupName: "WG von {name}",
+    flatmatesLabel: "Wer wohnt noch da? (optional)",
+    flatmatesPlaceholder: "Namen, z. B. Lena, Tim",
+    flatmatesHint:
+      "Jeder bekommt seinen eigenen Link. Nach der Anmeldung ist sein Platz schon ausgewählt.",
+    currency:
+      "Währung: {currency}. Änderst du später in den Gruppeneinstellungen.",
+    create: "WG anlegen",
+    creating: "WG wird angelegt …",
   },
   settings: {
     changeGroup: "Gruppe wechseln",

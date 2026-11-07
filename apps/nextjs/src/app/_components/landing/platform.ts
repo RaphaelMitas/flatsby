@@ -7,7 +7,10 @@ export function isPlatform(value: string): value is Platform {
 }
 
 export function platformFor(headers: Headers): Platform {
-  const ua = headers.get("user-agent") ?? "";
+  return platformForUserAgent(headers.get("user-agent") ?? "");
+}
+
+export function platformForUserAgent(ua: string): Platform {
   if (/iPhone|iPad|iPod/.test(ua)) return "ios";
   if (/Android/.test(ua)) return "android";
   return "other";
