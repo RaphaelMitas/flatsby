@@ -44,10 +44,10 @@ export async function getCreditUsage(
   return { balance: Math.max(0, PLANS.freeCredits - usage), usage };
 }
 
-// CI stacks have no AI keys; denying here keeps e2e from ever reaching a model
 export async function checkCredits(
   user: CreditUser,
 ): Promise<{ allowed: boolean }> {
+  // CI stacks have no AI keys; denying here keeps e2e from ever reaching a model
   if (env.E2E_TESTING) return { allowed: false };
   const { balance } = await getCreditUsage(user.id);
   return { allowed: balance > 0 };
@@ -61,7 +61,7 @@ export async function trackAIUsage({
   cost: string | undefined;
 }): Promise<void> {
   const credits = costToCredits(cost);
-  if (credits <= 0) return;
+  if (Number.isNaN(credits) || credits <= 0) return;
   await db
     .insert(creditBalances)
     .values({ userId, monthStart: currentMonth, used: credits })

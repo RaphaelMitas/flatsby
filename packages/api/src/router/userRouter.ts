@@ -44,7 +44,7 @@ import { getCreditUsage } from "../utils/credits";
 
 const freePlan = {
   planId: PLAN_IDS.FREE,
-  // i18n-ignore: plan names are product names like "Pro", not copy
+  // i18n-ignore: plan names are product names, not copy
   planName: "Free",
 };
 

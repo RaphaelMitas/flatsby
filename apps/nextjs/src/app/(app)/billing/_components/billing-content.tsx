@@ -23,8 +23,8 @@ export function BillingContent() {
 
   if (isLoading) return <Skeleton className="h-40 w-full rounded-xl" />;
 
-  const remaining = data?.credits?.balance ?? 0;
-  const usage = data?.credits?.usage ?? 0;
+  const remaining = data?.credits.balance ?? 0;
+  const usage = data?.credits.usage ?? 0;
   const totalAllowance = usage + remaining;
   const usagePercentage =
     totalAllowance === 0 ? 0 : (usage / totalAllowance) * 100;

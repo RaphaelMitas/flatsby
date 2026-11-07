@@ -57,11 +57,8 @@ export const creditFeatureSchema = z.object({
 
 export type CreditFeature = z.infer<typeof creditFeatureSchema>;
 
-/**
- * Schema for usage data response
- */
 export const usageDataSchema = z.object({
-  credits: creditFeatureSchema.nullable(),
+  credits: creditFeatureSchema,
 });
 
 export type UsageData = z.infer<typeof usageDataSchema>;

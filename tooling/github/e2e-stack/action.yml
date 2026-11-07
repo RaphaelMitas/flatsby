@@ -12,8 +12,7 @@ runs:
     # the file (E2E_TESTING and the auth base URL both change the build).
     # The OAuth credentials are never exercised — no flow signs in through a
     # provider — but better-auth rejects an undefined clientId at init. No AI
-    # key by design, and E2E_TESTING denies every credit check, which every AI
-    # procedure runs first, so the suite never calls a model.
+    # key by design; E2E_TESTING denies every credit check.
     - name: Write the stack's configuration
       shell: bash
       run: |

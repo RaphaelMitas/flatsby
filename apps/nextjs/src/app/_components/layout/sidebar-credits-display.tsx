@@ -25,7 +25,7 @@ export function SidebarCreditsDisplay() {
 
   // A failed load would otherwise render "0 credits remaining", which reads
   // as a spent account rather than a missing one.
-  if (!data?.credits) {
+  if (!data) {
     return null;
   }
 
