@@ -51,7 +51,7 @@ test.describe("Email code sign-in", () => {
       /^[0-9A-Z]{4}-[0-9A-Z]{4}$/,
     );
 
-    // Back to onboarding would offer a second WG
+    // Back to onboarding would offer a second group
     await page.goto("/welcome");
     await expect(page).toHaveURL(/\/home/);
   });

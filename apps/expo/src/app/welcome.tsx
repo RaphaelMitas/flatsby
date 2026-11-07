@@ -88,7 +88,7 @@ function WelcomeForm({
     openJoin: () => router.push("/join"),
   });
 
-  // Success stays busy too: the WG exists and Home is still loading
+  // Success stays busy too: the group exists and Home is still loading
   const busy =
     updateName.isPending ||
     createGroup.isPending ||

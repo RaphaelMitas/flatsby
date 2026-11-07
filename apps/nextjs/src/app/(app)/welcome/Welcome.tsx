@@ -76,12 +76,12 @@ export function Welcome({
     openJoin: () => setJoinOpen(true),
   });
 
-  // Success stays busy too: the WG exists and Home is still loading
+  // Success stays busy too: the group exists and Home is still loading
   const busy =
     updateName.isPending ||
     createGroup.isPending ||
     createGroup.data?.success === true;
-  // The server page covers a fresh load; this covers a WG whose create response got lost
+  // The server page covers a fresh load; this covers a group whose create response got lost
   if (!busy && groups?.success && groups.data.length > 0) redirect("/home");
 
   const failure =

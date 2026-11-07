@@ -8,9 +8,9 @@ export const invite = {
   orEnterCode: "oder diesen Code in Flatsby eingeben",
   shareLink: "Link teilen",
   shareGroup:
-    "Kannst du kurz unserer WG auf Flatsby beitreten? Dann geht die Einkaufsliste nicht mehr im Chat unter: {link}",
+    "Kannst du kurz unserer Gruppe auf Flatsby beitreten? Dann geht die Einkaufsliste nicht mehr im Chat unter: {link}",
   sharePersonal:
-    "{name}, ich hab dich schon in unserer WG auf Flatsby eingetragen. Kannst du kurz beitreten? Dann geht die Einkaufsliste nicht mehr im Chat unter: {link}",
+    "{name}, ich hab dich schon in unserer Gruppe auf Flatsby eingetragen. Kannst du kurz beitreten? Dann geht die Einkaufsliste nicht mehr im Chat unter: {link}",
   resetLink: "Link zurücksetzen",
   resetFailed:
     "Der Link konnte nicht zurückgesetzt werden. Bitte versuch es noch einmal.",
@@ -25,7 +25,7 @@ export const invite = {
     preview: "Das schickst du:",
     send: "Schicken",
     sendTo: "Link an {name} schicken",
-    groupChat: "Link für den WG-Chat",
+    groupChat: "Link für den Gruppenchat",
     code: "Code zum Abtippen",
     copiedFor: "Für {name} kopiert",
     copyFailed: "Kopieren hat nicht geklappt. Bitte versuch es noch einmal.",

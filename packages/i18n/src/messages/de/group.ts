@@ -22,18 +22,18 @@ export const group = {
   },
   onboarding: {
     title: "Fast geschafft.",
-    question: "Wie heißt du, und wie heißt eure WG?",
+    question: "Wie heißt du, und wie heißt eure Gruppe?",
     nameLabel: "Dein Name",
-    groupLabel: "Eure WG",
-    defaultGroupName: "WG von {name}",
+    groupLabel: "Eure Gruppe",
+    defaultGroupName: "Gruppe von {name}",
     flatmatesLabel: "Wer wohnt noch da? (optional)",
     removeFlatmate: "{name} entfernen",
     flatmatesHint:
       "Jeder bekommt seinen eigenen Link. Nach der Anmeldung ist sein Platz schon ausgewählt.",
     currency:
       "Währung: {currency}. Änderst du später in den Gruppeneinstellungen.",
-    create: "WG anlegen",
-    creating: "WG wird angelegt …",
+    create: "Gruppe anlegen",
+    creating: "Gruppe wird angelegt …",
   },
   settings: {
     changeGroup: "Gruppe wechseln",
