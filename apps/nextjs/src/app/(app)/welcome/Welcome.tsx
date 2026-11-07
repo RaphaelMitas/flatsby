@@ -16,6 +16,7 @@ import { useNewGroupForm } from "@flatsby/validators/useNewGroupForm";
 
 import { useCreateGroup } from "~/app/(app)/group/create/useCreateGroup";
 import { JoinWithCodeDialog } from "~/app/(app)/group/JoinWithCodeDialog";
+import { signOutAndRedirect } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
 
 const CURRENCY = "EUR";
@@ -204,6 +205,15 @@ export function Welcome({
             onClick={() => void form.joinWithCode()}
           >
             {t("invite.join.withCode")}
+          </Button>
+          <Button
+            type="button"
+            variant="link"
+            data-testid="onboarding-sign-out"
+            disabled={busy}
+            onClick={() => void signOutAndRedirect(router)}
+          >
+            {t("navigation.logout")}
           </Button>
         </div>
       </form>

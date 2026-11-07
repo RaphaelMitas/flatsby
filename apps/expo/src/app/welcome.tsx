@@ -20,7 +20,7 @@ import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
-import { useSession } from "~/utils/auth/auth-client";
+import { signOut, useSession } from "~/utils/auth/auth-client";
 
 export default function WelcomeScreen() {
   const session = useSession();
@@ -222,6 +222,14 @@ function WelcomeForm({
             title={t("invite.join.withCode")}
             disabled={busy}
             onPress={form.joinWithCode}
+          />
+          {/* Without a group there are no tabs, so this is the only way to a different account */}
+          <Button
+            testID="onboarding-sign-out"
+            variant="link"
+            title={t("navigation.logout")}
+            disabled={busy}
+            onPress={() => void signOut()}
           />
         </View>
       </AppScrollView>

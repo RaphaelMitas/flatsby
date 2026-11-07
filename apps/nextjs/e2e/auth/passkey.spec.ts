@@ -65,6 +65,10 @@ test.describe("Passkeys", () => {
     const email = await signUp(page);
     await page.getByTestId("auth-passkey-later").click();
     await expect(page).toHaveURL(/\/welcome/);
+    // Without a group there is no settings page, so onboarding offers the way out
+    await waitForHydration(page.getByTestId("onboarding-sign-out"));
+    await page.getByTestId("onboarding-sign-out").click();
+    await expect(page).toHaveURL(/\/auth\/login/);
 
     await page.context().clearCookies();
     const again = await requestCode(page, email);
