@@ -52,7 +52,7 @@ tags:
 - pressKey: Enter
 - tapOn:
     id: "onboarding-create"
-# Home waits for the invite, so the card opens complete with one row per name
+# The create button stays busy until the invite is cached, so the card opens complete
 - extendedWaitUntil:
     visible:
       id: "invite-flatmates-card"

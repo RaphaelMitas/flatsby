@@ -13,15 +13,16 @@ export function useCreateGroup(
       onSuccess: async (data, { name }) => {
         if (data.success) await onCreated(data.data.groupId, name);
       },
-      // Also after an error: a lost response can hide a WG that was created
-      onSettled: () => {
-        void queryClient.invalidateQueries(
-          trpc.group.getUserGroups.queryOptions(),
-        );
-        void queryClient.invalidateQueries(
-          trpc.user.getCurrentUserWithGroups.queryOptions(),
-        );
-      },
+      // Also after an error, and awaited: a lost response can hide a WG that was created, and the form must not unlock before the list shows it
+      onSettled: () =>
+        Promise.all([
+          queryClient.invalidateQueries(
+            trpc.group.getUserGroups.queryOptions(),
+          ),
+          queryClient.invalidateQueries(
+            trpc.user.getCurrentUserWithGroups.queryOptions(),
+          ),
+        ]),
     }),
   );
 }
