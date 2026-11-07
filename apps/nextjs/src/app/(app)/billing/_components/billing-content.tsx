@@ -22,9 +22,9 @@ export function BillingContent() {
   const { data, isLoading } = useQuery(trpc.user.getUsage.queryOptions());
 
   if (isLoading) return <Skeleton className="h-40 w-full rounded-xl" />;
+  if (!data) return null;
 
-  const remaining = data?.credits.balance ?? 0;
-  const usage = data?.credits.usage ?? 0;
+  const { balance: remaining, usage } = data.credits;
   const totalAllowance = usage + remaining;
   const usagePercentage =
     totalAllowance === 0 ? 0 : (usage / totalAllowance) * 100;

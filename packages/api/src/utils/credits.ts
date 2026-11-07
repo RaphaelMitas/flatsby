@@ -61,7 +61,7 @@ export async function trackAIUsage({
   cost: string | undefined;
 }): Promise<void> {
   const credits = costToCredits(cost);
-  if (Number.isNaN(credits) || credits <= 0) return;
+  if (credits <= 0) return;
   await db
     .insert(creditBalances)
     .values({ userId, monthStart: currentMonth, used: credits })

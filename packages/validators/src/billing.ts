@@ -29,7 +29,9 @@ export const CREDITS_PER_DOLLAR = 10_000;
 export function costToCredits(cost: string | number | undefined): number {
   if (cost == null) return 0;
   const numCost = typeof cost === "string" ? parseFloat(cost) : cost;
-  return Math.round(numCost * CREDITS_PER_DOLLAR);
+  return Number.isFinite(numCost)
+    ? Math.round(numCost * CREDITS_PER_DOLLAR)
+    : 0;
 }
 
 /**
