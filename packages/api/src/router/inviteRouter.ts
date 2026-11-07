@@ -205,7 +205,10 @@ export const inviteRouter = createTRPCRouter({
           return {
             groupId: group.id,
             groupName: group.name,
-            openList: yield* listWithNewestOpenItem(group.id),
+            // The join already committed; without the list the joiner lands on Home as before
+            openList: yield* listWithNewestOpenItem(group.id).pipe(
+              Effect.orElseSucceed(() => null),
+            ),
           };
         }),
       ),

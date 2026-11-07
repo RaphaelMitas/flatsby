@@ -86,10 +86,18 @@ tags:
     text: "Join as Anna"
 - tapOn:
     id: "join-invite-button"
+# The fixture group's list has open items, so the joiner lands on it
 - extendedWaitUntil:
     visible:
-      id: "dashboard-group-picker"
+      id: "shopping-list-item-checkbox-Apples"
     timeout: 20000
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
+      TAB_X: "12%"
+      MARKER_ID: "dashboard-group-settings"
 
 # The claim takes over Anna's row, so she leaves the placeholder list
 - tapOn:
