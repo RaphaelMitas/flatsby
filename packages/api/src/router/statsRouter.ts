@@ -2,13 +2,7 @@ import { Effect } from "effect";
 import { z } from "zod/v4";
 
 import { and, eq, gte, sql } from "@flatsby/db";
-import {
-  chatMessages,
-  conversations,
-  expenses,
-  shoppingListItems,
-  shoppingLists,
-} from "@flatsby/db/schema";
+import { expenses, shoppingListItems, shoppingLists } from "@flatsby/db/schema";
 
 import { getGroupWithAccess } from "../effect/groups";
 import { runResult } from "../effect/runtime";
@@ -41,56 +35,38 @@ export const statsRouter = createTRPCRouter({
           return yield* database.query("fetch home stats", async (db) => {
             const cutoffDate = thirtyDaysAgo();
 
-            const [spendingResult, itemsCompletedResult, chatMessagesResult] =
-              await Promise.all([
-                db
-                  .select({
-                    total: sql<string>`coalesce(sum(${ledgerAmount}), 0)`,
-                    currency: ledgerCurrency,
-                  })
-                  .from(expenses)
-                  .where(
-                    and(
-                      eq(expenses.groupId, input.groupId),
-                      gte(expenses.expenseDate, cutoffDate),
-                    ),
-                  )
-                  .groupBy(ledgerCurrency),
-
-                db
-                  .select({
-                    count: sql<string>`count(*)`,
-                  })
-                  .from(shoppingListItems)
-                  .innerJoin(
-                    shoppingLists,
-                    eq(shoppingListItems.shoppingListId, shoppingLists.id),
-                  )
-                  .where(
-                    and(
-                      eq(shoppingLists.groupId, input.groupId),
-                      eq(shoppingListItems.completed, true),
-                      gte(shoppingListItems.completedAt, cutoffDate),
-                    ),
+            const [spendingResult, itemsCompletedResult] = await Promise.all([
+              db
+                .select({
+                  total: sql<string>`coalesce(sum(${ledgerAmount}), 0)`,
+                  currency: ledgerCurrency,
+                })
+                .from(expenses)
+                .where(
+                  and(
+                    eq(expenses.groupId, input.groupId),
+                    gte(expenses.expenseDate, cutoffDate),
                   ),
+                )
+                .groupBy(ledgerCurrency),
 
-                db
-                  .select({
-                    count: sql<string>`count(*)`,
-                  })
-                  .from(chatMessages)
-                  .innerJoin(
-                    conversations,
-                    eq(chatMessages.conversationId, conversations.id),
-                  )
-                  .where(
-                    and(
-                      eq(conversations.userId, ctx.session.user.id),
-                      eq(chatMessages.role, "user"),
-                      gte(chatMessages.createdAt, cutoffDate),
-                    ),
+              db
+                .select({
+                  count: sql<string>`count(*)`,
+                })
+                .from(shoppingListItems)
+                .innerJoin(
+                  shoppingLists,
+                  eq(shoppingListItems.shoppingListId, shoppingLists.id),
+                )
+                .where(
+                  and(
+                    eq(shoppingLists.groupId, input.groupId),
+                    eq(shoppingListItems.completed, true),
+                    gte(shoppingListItems.completedAt, cutoffDate),
                   ),
-              ]);
+                ),
+            ]);
 
             const spending = spendingResult.map((row) => ({
               totalInCents: parseInt(row.total, 10),
@@ -102,15 +78,9 @@ export const statsRouter = createTRPCRouter({
               10,
             );
 
-            const messagesCount = parseInt(
-              chatMessagesResult[0]?.count ?? "0",
-              10,
-            );
-
             return {
               spending,
               itemsCompleted,
-              chatMessages: messagesCount,
             };
           });
         }),

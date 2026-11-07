@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import type { Locale } from "@flatsby/i18n/locale";
-import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import { NextResponse } from "next/server";
 import { and, eq, inArray, like, lt, or } from "drizzle-orm";
 
@@ -10,8 +9,6 @@ import {
   calendarItemMembers,
   calendarItems,
   calendarOccurrences,
-  chatMessages,
-  conversations,
   expenses,
   expenseSplits,
   groupMembers,
@@ -23,9 +20,7 @@ import {
   users,
 } from "@flatsby/db/schema";
 import { isLocale } from "@flatsby/i18n/locale";
-import { CURRENT_AI_CONSENT_VERSION } from "@flatsby/validators/ai-consent";
 import { addDays, localDate, weekdayOf } from "@flatsby/validators/calendar";
-import { DEFAULT_CHAT_MODEL } from "@flatsby/validators/models";
 
 import { auth } from "~/auth/server";
 import { env } from "~/env";
@@ -132,20 +127,6 @@ const STORE_COPY = {
       movies: "Movie night",
       rent: "Rent due",
     },
-    chat: {
-      title: "Spending overview",
-      chartTitle: "Spending by category",
-      categories: {
-        food: "Food & Drinks",
-        utilities: "Utilities",
-        shopping: "Shopping",
-      },
-      question: "How is our spending looking this month?",
-      answer:
-        "Sunset Villa spent **€142.69** this month across three expenses. " +
-        "Food & drinks was the biggest chunk at €84.20, followed by " +
-        "utilities at €39.99 and shopping at €18.50. Here's the breakdown:",
-    },
   },
   de: {
     group: "WG Sonnenblick",
@@ -168,21 +149,6 @@ const STORE_COPY = {
       dinner: "WG-Abendessen",
       movies: "Filmabend",
       rent: "Miete fällig",
-    },
-    chat: {
-      title: "Ausgabenübersicht",
-      chartTitle: "Ausgaben nach Kategorie",
-      categories: {
-        food: "Essen & Trinken",
-        utilities: "Nebenkosten",
-        shopping: "Shopping",
-      },
-      question: "Wie sehen unsere Ausgaben diesen Monat aus?",
-      answer:
-        "Die WG Sonnenblick hat diesen Monat **142,69 €** für drei Ausgaben " +
-        "ausgegeben. Essen & Trinken war mit 84,20 € der größte Posten, " +
-        "danach Nebenkosten mit 39,99 € und Shopping mit 18,50 €. " +
-        "Hier die Aufteilung:",
     },
   },
 } satisfies Record<Locale, unknown>;
@@ -345,75 +311,7 @@ async function seedStoreScenario(
     copy.calendar,
   );
 
-  // A canned conversation so screenshots show the AI answering with a chart
-  // without any model call. Consent must be current or the gate covers the
-  // screen.
-  await db
-    .update(users)
-    .set({
-      aiConsentAcceptedAt: new Date(),
-      aiConsentVersion: CURRENT_AI_CONSENT_VERSION,
-    })
-    .where(eq(users.id, adminUserId));
-
-  // Reruns reuse the user (retries, the local sweep window), and each seed
-  // would stack another copy of the conversation into the sidebar and the
-  // dashboard's message count; messages cascade with the conversation.
-  await db.delete(conversations).where(eq(conversations.userId, adminUserId));
-
-  const [conversation] = await db
-    .insert(conversations)
-    .values({
-      userId: adminUserId,
-      title: copy.chat.title,
-      model: DEFAULT_CHAT_MODEL,
-    })
-    .returning({ id: conversations.id });
-  if (!conversation) throw new Error("Failed to create seeded conversation");
-
-  const chartToolCall: PersistedToolCall = {
-    id: `${conversation.id}-chart`,
-    name: "showUI",
-    input: {
-      component: "chart",
-      config: {
-        title: copy.chat.chartTitle,
-        chartType: "pie",
-        data: [
-          { label: copy.chat.categories.food, value: 84.2 },
-          { label: copy.chat.categories.utilities, value: 39.99 },
-          { label: copy.chat.categories.shopping, value: 18.5 },
-        ],
-      },
-    },
-    output: { rendered: true },
-  };
-  // Both rows would otherwise share one transaction timestamp, and the
-  // conversation is ordered by createdAt with no tiebreaker, so the answer
-  // could render above the question.
-  const askedAt = new Date();
-  await db.insert(chatMessages).values([
-    {
-      id: `${conversation.id}-user`,
-      conversationId: conversation.id,
-      role: "user",
-      content: copy.chat.question,
-      status: "complete",
-      createdAt: askedAt,
-    },
-    {
-      id: `${conversation.id}-assistant`,
-      conversationId: conversation.id,
-      role: "assistant",
-      createdAt: new Date(askedAt.getTime() + 1000),
-      content: copy.chat.answer,
-      status: "complete",
-      model: DEFAULT_CHAT_MODEL,
-      toolCalls: [chartToolCall],
-    },
-  ]);
-
-  return { group, conversationId: conversation.id };
+  return { group };
 }
 
 // Relative to today, so the flows' "1 of 3 done" holds on any capture day
@@ -611,11 +509,9 @@ export async function POST(request: Request) {
   const { userId, email } = await upsertE2EUser(name, customEmail);
 
   let group: { id: number };
-  let conversationId: string | undefined;
   if (seed === "store") {
     const seeded = await seedStoreScenario(userId, email, locale);
     group = seeded.group;
-    conversationId = seeded.conversationId;
   } else {
     const [fixtureGroup] = await db
       .insert(groups)
@@ -683,7 +579,6 @@ export async function POST(request: Request) {
     userId,
     email,
     groupId: group.id,
-    ...(conversationId ? { conversationId } : {}),
     cookies: result.cookies,
     ok: true,
   });

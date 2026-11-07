@@ -16,7 +16,6 @@ export const settings = {
     home: "Startseite",
     homeClassic: "Klassisch",
     homeNew: "Neu",
-    buyCredits: "Credits kaufen",
     theme: "Design",
     changeGroup: "Gruppe wechseln",
     profileSubtitle: "Dein Name und PayPal.me",
@@ -136,9 +135,6 @@ export const settings = {
   },
   page: {
     title: "Einstellungen",
-    billingTitle: "Abrechnung & Abo",
-    billingDescription: "Verwalte dein Abo und deine Zahlungsmethoden",
-    manageBilling: "Abrechnung verwalten",
     dataTitle: "Deine Daten",
     dataDescription:
       "Lade eine Kopie deiner persönlichen Daten herunter (Art. 20 DSGVO)",

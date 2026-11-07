@@ -1,4 +1,4 @@
-import { PLANS } from "@flatsby/validators/billing";
+import { SUPPORT_EMAIL } from "@flatsby/validators/billing";
 
 import type { FaqItem } from "./content";
 import type { MarketingTranslator } from "./i18n";
@@ -18,7 +18,6 @@ const SHOTS = {
   webHome: { file: "web/web-home.png", portrait: false },
   webLists: { file: "web/web-shopping-list.png", portrait: false },
   webExpenses: { file: "web/web-expenses.png", portrait: false },
-  webChat: { file: "web/web-chat.png", portrait: false },
   iosList: { file: "ios/02-shopping-list.png", portrait: true },
   iosSplit: { file: "ios/04-expense-split.png", portrait: true },
   iosCalendar: { file: "ios/01a-calendar.png", portrait: true },
@@ -64,7 +63,6 @@ export const CONTENT_SLUGS = [
   "features/calendar",
   "features/shopping-lists",
   "features/expenses",
-  "features/ai-assistant",
   "splitwise-alternative",
   "flatastic-alternative",
   "pricing",
@@ -76,7 +74,6 @@ export function contentPages(t: MarketingTranslator): ContentPageData[] {
   const no = t("table.no");
   const none = t("table.none");
   const pro = t("table.pro");
-  const noLimit = t("table.noLimit");
   const platforms = t("table.platforms");
 
   return [
@@ -198,38 +195,6 @@ export function contentPages(t: MarketingTranslator): ContentPageData[] {
       faq: faqItems(t, ["split", "rent", "splitwise"]),
     },
     {
-      slug: "features/ai-assistant",
-      title: t("pages.aiAssistant.title"),
-      description: t("pages.aiAssistant.description"),
-      headline: t("pages.aiAssistant.headline"),
-      intro: t("pages.aiAssistant.intro"),
-      sections: [
-        {
-          heading: t("pages.aiAssistant.questions.heading"),
-          bullets: [
-            t("pages.aiAssistant.questions.groceries"),
-            t("pages.aiAssistant.questions.paidMost"),
-            t("pages.aiAssistant.questions.addItems"),
-            t("pages.aiAssistant.questions.logExpense"),
-          ],
-          image: screenshot(t, "webChat"),
-        },
-        {
-          heading: t("pages.aiAssistant.data.heading"),
-          paragraphs: [
-            t("pages.aiAssistant.data.consent"),
-            t("pages.aiAssistant.data.categories"),
-            t("pages.aiAssistant.data.training"),
-          ],
-        },
-        {
-          heading: t("pages.aiAssistant.credits.heading"),
-          paragraphs: [t("pages.aiAssistant.credits.body", PLANS)],
-        },
-      ],
-      faq: faqItems(t, ["assistant", "free"]),
-    },
-    {
       slug: "splitwise-alternative",
       title: t("pages.splitwise.title"),
       description: t("pages.splitwise.description"),
@@ -266,11 +231,7 @@ export function contentPages(t: MarketingTranslator): ContentPageData[] {
             t("pages.splitwise.table.receiptsFlatsby"),
             pro,
           ],
-          [
-            t("pages.splitwise.table.charts"),
-            t("pages.splitwise.table.chartsFlatsby"),
-            pro,
-          ],
+          [t("pages.splitwise.table.charts"), no, pro],
           [t("pages.splitwise.table.outside"), no, yes],
           [t("pages.splitwise.table.platforms"), platforms, platforms],
           [
@@ -378,41 +339,38 @@ export function contentPages(t: MarketingTranslator): ContentPageData[] {
     {
       slug: "pricing",
       title: t("pages.pricing.title"),
-      description: t("pages.pricing.description", PLANS),
+      description: t("pages.pricing.description"),
       headline: t("pages.pricing.headline"),
       intro: t("pages.pricing.intro"),
-      table: {
-        caption: t("pages.pricing.table.caption"),
-        head: ["", t("plans.free"), t("plans.starter"), t("plans.pro")],
-        rows: [
-          [t("pages.pricing.table.core"), yes, yes, yes],
-          [t("pages.pricing.table.members"), noLimit, noLimit, noLimit],
-          [t("pages.pricing.table.ads"), none, none, none],
-          [
-            t("pages.pricing.table.credits"),
-            t("plans.credits", { credits: PLANS.freeCredits }),
-            t("plans.credits", { credits: PLANS.starterCredits }),
-            t("plans.credits", { credits: PLANS.proCredits }),
-          ],
-          [
-            t("pages.pricing.table.price"),
-            t("plans.free"),
-            t("plans.perMonth", { price: PLANS.starterPrice }),
-            t("plans.perMonth", { price: PLANS.proPrice }),
-          ],
-        ],
-      },
       sections: [
         {
-          heading: t("pages.pricing.credits.heading"),
-          paragraphs: [t("pages.pricing.credits.body")],
+          heading: t("pages.pricing.free.heading"),
+          bullets: [
+            t("pages.pricing.free.lists"),
+            t("pages.pricing.free.expenses"),
+            t("pages.pricing.free.chores"),
+            t("pages.pricing.free.receipts"),
+            t("pages.pricing.free.categories"),
+            t("pages.pricing.free.transfer"),
+          ],
+          paragraphs: [t("pages.pricing.free.body")],
         },
         {
-          heading: t("pages.pricing.buy.heading"),
-          paragraphs: [t("pages.pricing.buy.body", PLANS)],
+          heading: t("pages.pricing.fairUse.heading"),
+          paragraphs: [t("pages.pricing.fairUse.body")],
+        },
+        {
+          heading: t("pages.pricing.shutdown.heading"),
+          paragraphs: [t("pages.pricing.shutdown.body")],
+        },
+        {
+          heading: t("pages.pricing.funding.heading"),
+          paragraphs: [
+            t("pages.pricing.funding.body", { email: SUPPORT_EMAIL }),
+          ],
         },
       ],
-      faq: faqItems(t, ["free", "assistant"]),
+      faq: faqItems(t, ["free", "privacy"]),
     },
     {
       slug: "faq",

@@ -5,13 +5,10 @@ import type { ImagePickerOptions } from "expo-image-picker";
 import type { ComponentRef, ReactNode } from "react";
 import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useReducedMotion } from "react-native-reanimated";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { receiptDocument } from "@flatsby/validators/expenses/receipt-document";
@@ -30,9 +27,7 @@ import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SheetModal } from "~/lib/ui/sheet-modal";
 import { cn, useThemeColors } from "~/lib/utils";
-import { trpc } from "~/utils/api";
 import { recognizeLines } from "../../../modules/receipt-text";
-import { Snores } from "../home/Snores";
 import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
@@ -57,17 +52,13 @@ async function receiptBase64(uri: string) {
 
 export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const t = useTranslations();
-  const router = useRouter();
   const { getColor } = useThemeColors();
   const sourceSheet = useRef<BottomSheetModal>(null);
-  const upgradeSheet = useRef<BottomSheetModal>(null);
   const chosenSource = useRef<Source | null>(null);
-  const goUpgrade = useRef(false);
   const card = useRef<ComponentRef<typeof View>>(null);
   const [photo, setPhoto] = useState<StagePhoto | "document">();
   const [origin, setOrigin] = useState<StageOrigin>();
   const [lines, setLines] = useState<ReceiptTextLine[]>([]);
-  const { data: usage } = useQuery(trpc.user.getUsage.queryOptions());
   const { state } = receiptScan;
   const beta = (
     <Badge
@@ -126,17 +117,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
 
   return (
     <View ref={card} collapsable={false}>
-      {usage?.credits?.balance === 0 ? (
-        <OptionRow
-          testID="receipt-scan-out-of-credits"
-          art={<SleepingCat size={34} />}
-          title={t("expenses.receiptScan.title")}
-          hint={t("expenses.receiptScan.outOfCredits")}
-          trailing
-          className="bg-muted"
-          onPress={() => upgradeSheet.current?.present()}
-        />
-      ) : state.status === "failed" ? (
+      {state.status === "failed" ? (
         <Alert variant="destructive" className="gap-3">
           <View className="flex-row items-center gap-3">
             <View style={{ transform: [{ rotate: "-9deg" }] }}>
@@ -216,45 +197,6 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
         </View>
       </SheetModal>
 
-      <SheetModal
-        ref={upgradeSheet}
-        onDismiss={() => {
-          // iOS can't push a screen while the sheet is still presented
-          if (goUpgrade.current) router.push("/settings/credits");
-          goUpgrade.current = false;
-        }}
-      >
-        <View
-          testID="receipt-scan-upgrade"
-          className="items-center gap-2 px-6 pb-10"
-        >
-          <SleepingCat size={112} />
-          <Text className="text-foreground mt-2 text-center text-lg font-semibold">
-            {t("expenses.receiptScan.outOfCreditsTitle")}
-          </Text>
-          <Text className="text-muted-foreground mb-4 text-center text-sm">
-            {t("expenses.receiptScan.outOfCreditsBody")}
-          </Text>
-          <View className="w-full flex-row gap-2">
-            <Button
-              title={t("expenses.receiptScan.fillManually")}
-              variant="outline"
-              className="flex-1"
-              onPress={() => upgradeSheet.current?.dismiss()}
-            />
-            <Button
-              testID="receipt-scan-upgrade-button"
-              title={t("billing.pricing.upgrade")}
-              className="flex-1"
-              onPress={() => {
-                goUpgrade.current = true;
-                upgradeSheet.current?.dismiss();
-              }}
-            />
-          </View>
-        </View>
-      </SheetModal>
-
       <ReceiptReadingStage
         receiptScan={receiptScan}
         photo={photo}
@@ -271,41 +213,20 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   );
 }
 
-function SleepingCat({ size }: { size: number }) {
-  const { getColor } = useThemeColors();
-  const reduced = useReducedMotion();
-  return (
-    <View style={{ width: size, height: size }}>
-      <FlatsbyCat size={size} color={getColor("primary")} asleep />
-      {!reduced && (
-        <Snores
-          drift="right"
-          className="absolute"
-          style={{ left: size * 0.8, top: size * 0.15 }}
-        />
-      )}
-    </View>
-  );
-}
-
 function OptionRow({
   testID,
   icon,
-  art,
   title,
   badge,
   hint,
-  trailing,
   className,
   onPress,
 }: {
   testID: string;
-  icon?: IconProps["name"];
-  art?: ReactNode;
+  icon: IconProps["name"];
   title: string;
   badge?: ReactNode;
   hint?: string;
-  trailing?: boolean;
   className?: string;
   onPress: () => void;
 }) {
@@ -320,7 +241,7 @@ function OptionRow({
       )}
     >
       <View className="bg-muted size-10 items-center justify-center rounded-lg">
-        {art ?? (icon && <Icon name={icon} size={20} color="foreground" />)}
+        <Icon name={icon} size={20} color="foreground" />
       </View>
       <View className="flex-1">
         <View className="flex-row items-center gap-2">
@@ -329,9 +250,6 @@ function OptionRow({
         </View>
         {hint && <Text className="text-muted-foreground text-sm">{hint}</Text>}
       </View>
-      {trailing && (
-        <Icon name="chevron-right" size={16} color="muted-foreground" />
-      )}
     </Pressable>
   );
 }

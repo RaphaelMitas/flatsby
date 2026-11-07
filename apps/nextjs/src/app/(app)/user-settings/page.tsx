@@ -1,9 +1,7 @@
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { isLocale, localeCookie } from "@flatsby/i18n/locale";
-import { Button } from "@flatsby/ui/button";
 import {
   Card,
   CardContent,
@@ -12,6 +10,7 @@ import {
   CardTitle,
 } from "@flatsby/ui/card";
 
+import { SupportFlatsby } from "~/app/_components/SupportFlatsby";
 import { prefetch, trpc } from "~/trpc/server";
 import { AnalyticsSettings } from "./AnalyticsSettings";
 import DeleteUser from "./DeleteUser";
@@ -43,17 +42,7 @@ export default async function Page() {
           preference={preference && isLocale(preference) ? preference : null}
         />
         <AnalyticsSettings />
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("billingTitle")}</CardTitle>
-            <CardDescription>{t("billingDescription")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/billing">
-              <Button>{t("manageBilling")}</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <SupportFlatsby />
         <Card>
           <CardHeader>
             <CardTitle>{t("dataTitle")}</CardTitle>

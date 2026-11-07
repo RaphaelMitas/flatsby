@@ -99,7 +99,7 @@ export default function PrivacyPage() {
                   "picture",
                   "identifier",
                   "passkeys",
-                  "plan",
+                  "aiUsage",
                   "payment",
                 ] as const
               }
@@ -109,9 +109,7 @@ export default function PrivacyPage() {
             <LegalSubheading>{t("userContent.heading")}</LegalSubheading>
             <LegalParagraph>{t("userContent.intro")}</LegalParagraph>
             <LegalItems
-              keys={
-                ["lists", "expenses", "calendar", "groups", "chat"] as const
-              }
+              keys={["lists", "expenses", "calendar", "groups"] as const}
               render={(key) => t(`userContent.${key}`)}
             />
 

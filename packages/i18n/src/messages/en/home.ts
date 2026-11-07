@@ -62,7 +62,6 @@ export const home = {
     balanced: "balanced",
     items: "items",
     last30Days: "Last 30 days",
-    messages: "messages",
     owedToYou: "owed to you",
     spent: "spent",
     youOwe: "you owe",

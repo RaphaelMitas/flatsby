@@ -2,7 +2,6 @@
 
 import type { InviteReferrer } from "@flatsby/validators/invite";
 
-import { PLANS } from "@flatsby/validators/billing";
 import { inviteReferrer } from "@flatsby/validators/invite";
 import { APP_STORE_ID, PLAY_STORE_URL } from "@flatsby/validators/store";
 
@@ -10,7 +9,7 @@ import type { MarketingTranslator } from "./i18n";
 
 export const SITE_URL = "https://www.flatsby.com";
 export const GITHUB_URL = "https://github.com/RaphaelMitas/flatsby";
-export const UPDATED = "2026-10-23";
+export const UPDATED = "2026-11-08";
 
 export const APP_STORE_LINK = "/get/ios";
 export const PLAY_STORE_LINK = "/get/android";
@@ -45,13 +44,7 @@ export const LEGAL_PAGES = [
   { path: "/legal/legal-notice", id: "legalNotice" },
 ] as const;
 
-export const FEATURES = [
-  "calendar",
-  "lists",
-  "expenses",
-  "assistant",
-  "groups",
-] as const;
+export const FEATURES = ["calendar", "lists", "expenses", "groups"] as const;
 
 export const STEPS = ["signIn", "createGroup", "addFlatmates"] as const;
 
@@ -79,7 +72,6 @@ export const FAQ = [
   "members",
   "web",
   "realtime",
-  "assistant",
   "privacy",
   "chores",
   "flatastic",
@@ -99,7 +91,7 @@ export function faqItems(
 ): FaqItem[] {
   return FAQ.filter((key) => keys.includes(key)).map((key) => ({
     question: t(`faq.${key}.question`),
-    answer: t(`faq.${key}.answer`, PLANS),
+    answer: t(`faq.${key}.answer`),
   }));
 }
 

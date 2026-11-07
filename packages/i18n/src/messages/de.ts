@@ -2,7 +2,6 @@ import { appUpdate } from "./de/appUpdate";
 import { auth } from "./de/auth";
 import { billing } from "./de/billing";
 import { calendar } from "./de/calendar";
-import { chat } from "./de/chat";
 import { common } from "./de/common";
 import { debts } from "./de/debts";
 import { errors } from "./de/errors";
@@ -36,7 +35,6 @@ export const de = {
   debts,
   splitwiseImport,
   calendar,
-  chat,
   errors,
   marketing,
   legal,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { MessageSquare, Plus, ShoppingCart } from "lucide-react";
+import { Plus, ShoppingCart } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
@@ -49,12 +49,6 @@ export function QuickActions() {
         {t("home.quickActions.title")}
       </p>
       <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" asChild>
-          <Link href="/chat">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            {t("navigation.chat")}
-          </Link>
-        </Button>
         <Button variant="outline" className="min-w-0 flex-1" asChild>
           <Link
             href={

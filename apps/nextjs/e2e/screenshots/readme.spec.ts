@@ -20,7 +20,7 @@ async function settle(page: import("@playwright/test").Page) {
 }
 
 test("captures README screenshots", async ({ page, baseURL }) => {
-  const session = await createAuthSession(page, baseURL, {
+  await createAuthSession(page, baseURL, {
     seed: "store",
     name: "Alex Rivera",
     email: "alex-web@flatsby.test",
@@ -56,20 +56,4 @@ test("captures README screenshots", async ({ page, baseURL }) => {
   ).toBeVisible();
   await settle(page);
   await page.screenshot({ path: `${OUT}/web-calendar.png` });
-
-  if (!session.conversationId) {
-    throw new Error("seed=store did not return a conversationId");
-  }
-  await page.goto(`/chat/${session.conversationId}`);
-  const question = page.getByText("How is our spending looking this month?");
-  const chart = page.getByText("Spending by category");
-  await expect(question).toBeVisible();
-  await expect(chart).toBeVisible();
-  const questionBox = await question.boundingBox();
-  const chartBox = await chart.boundingBox();
-  expect(questionBox?.y ?? 0).toBeLessThan(chartBox?.y ?? 0);
-  // Recharts animates the pie in; capture the settled state.
-  await page.waitForTimeout(1800);
-  await settle(page);
-  await page.screenshot({ path: `${OUT}/web-chat.png` });
 });

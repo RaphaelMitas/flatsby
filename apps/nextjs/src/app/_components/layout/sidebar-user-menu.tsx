@@ -20,7 +20,6 @@ import {
   useSidebar,
 } from "@flatsby/ui/sidebar";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { PLAN_IDS } from "@flatsby/validators/billing";
 
 import { signOutAndRedirect } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
@@ -30,15 +29,6 @@ export function SidebarUserMenu() {
   const t = useTranslations();
   const router = useRouter();
   const trpc = useTRPC();
-  const { data: subscription } = useQuery(
-    trpc.user.getSubscription.queryOptions(),
-  );
-
-  const planName =
-    !subscription || subscription.planId === PLAN_IDS.FREE
-      ? t("billing.free")
-      : subscription.planName;
-
   const { data: userWithGroups } = useQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
@@ -65,12 +55,7 @@ export function SidebarUserMenu() {
                 className="rounded-lg"
               />
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <div className="flex items-center gap-2">
-                  <span className="truncate font-semibold">{user?.name}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {planName}
-                  </span>
-                </div>
+                <span className="truncate font-semibold">{user?.name}</span>
                 <span className="text-muted-foreground truncate text-xs">
                   {user?.email}
                 </span>

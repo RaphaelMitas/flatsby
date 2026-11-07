@@ -43,7 +43,6 @@ export function SiteShell({
         { href: local("/features/calendar"), label: t("calendar") },
         { href: local("/features/shopping-lists"), label: t("shoppingLists") },
         { href: local("/features/expenses"), label: t("expenseSplitting") },
-        { href: local("/features/ai-assistant"), label: t("aiAssistant") },
         {
           href: local("/splitwise-alternative"),
           label: t("splitwiseAlternative"),

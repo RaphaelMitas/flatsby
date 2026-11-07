@@ -43,7 +43,6 @@
     "@types/node": "catalog:",
     "@types/papaparse": "^5.5.2",
     "@types/react": "catalog:react19",
-    "ai": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:react19",
     "typescript": "catalog:",

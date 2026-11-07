@@ -2,41 +2,14 @@ import type { Messages } from "../../messages";
 
 export const billing = {
   title: "Abrechnung",
-  free: "Kostenlos",
-  freePlan: "Kostenloser Tarif",
-  manageSubscription: "Abo verwalten",
-  creditsRemaining: "Verbleibende Credits",
-  usedThisPeriod: "{used} von {total} in diesem Zeitraum verbraucht",
-  outOfCredits:
-    "Deine Credits sind aufgebraucht. Mach ein Upgrade, um weiterzumachen.",
-  sidebar: {
-    remaining:
-      "{count, plural, one {{credits} Credit übrig} other {{credits} Credits übrig}}",
-    tooltip:
-      "Abrechnung - {count, plural, one {{credits} Credit übrig} other {{credits} Credits übrig}}",
-  },
-  pricing: {
-    upgrade: "Upgraden",
-  },
-  usage: {
-    credits: "Credits",
-    remaining: "{credits} übrig",
-    outOfCredits: "Keine Credits mehr. Tippe für ein Upgrade.",
-  },
-  mobile: {
-    notAvailable: "Nicht verfügbar",
-    iosOnly:
-      "In-App-Käufe gibt es nur unter iOS. Verwalte dein Abo auf unserer Website.",
-    openWebsite: "Website öffnen",
-    planActive: "{plan} aktiv",
-    creditsRemaining:
-      "{count, plural, one {Du hast noch {credits} Credit.} other {Du hast noch {credits} Credits.}}",
-    manageOnWebHint: "Verwalte dein Abo im Web.",
-    manageOnWeb: "Im Web verwalten",
-    manageOnDeviceHint: "Verwalte dein Abo in den Einstellungen deines Geräts.",
-    creditsAvailable: "Credits verfügbar",
-    creditsAvailableDescription:
-      "{count, plural, one {Du hast {credits} Credit. Verwalte dein Abo im Web.} other {Du hast {credits} Credits. Verwalte dein Abo im Web.}}",
-    goBack: "Zurück",
+  nothingToManage: "Hier gibt es nichts zu verwalten, Flatsby ist kostenlos.",
+  support: {
+    title: "Flatsby unterstützen",
+    free: "Alles, was in Flatsby heute kostenlos ist, bleibt kostenlos: Listen, Ausgaben, Putzplan, Ausgleichen, Belegscan (Beta), automatische Kategorien, Export und Import. Keine Werbung, keine Mitgliedergrenze. KI-Funktionen haben ein monatliches Fair-Use-Limit weit über normaler Nutzung. Was je etwas kostet, käme nur neu dazu.",
+    shutdown:
+      "Falls Flatsby je eingestellt wird, erfährst du es 90 Tage vorher per E-Mail und in der App, und jedes Mitglied kann die Ausgaben und Salden der Gruppe herunterladen.",
+    cost: "Flatsby wird von einer Person in Darmstadt gebaut, und der Betrieb kostet etwa 10 Euro im Monat.",
+    chipIn:
+      "Es gibt nichts zu kaufen. Wenn du irgendwann etwas beitragen möchtest, schreib mir:",
   },
 } satisfies Messages["billing"];

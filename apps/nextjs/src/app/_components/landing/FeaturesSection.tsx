@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { Bot, CalendarCheck, ShoppingCart, Users, Wallet } from "lucide-react";
+import { CalendarCheck, ShoppingCart, Users, Wallet } from "lucide-react";
 import {
   NextIntlClientProvider,
   useLocale,
@@ -12,7 +12,6 @@ import { localePath } from "@flatsby/i18n/locale";
 import { Avatar, AvatarFallback } from "@flatsby/ui/avatar";
 
 import type { Screenshot } from "./pages";
-import { ChatDemo } from "./ChatDemo";
 import { ExpenseDemo } from "./ExpenseDemo";
 import { ScreenshotImage } from "./ScreenshotImage";
 import { ShoppingListDemo } from "./ShoppingListDemo";
@@ -24,21 +23,14 @@ export function FeaturesSection({
 }) {
   const t = useTranslations("marketing.features");
   const locale = useLocale();
-  const {
-    expenses,
-    expenseCategories,
-    shoppingCategories,
-    chat,
-    debts,
-    marketing,
-  } = useMessages();
+  const { expenses, expenseCategories, shoppingCategories, debts, marketing } =
+    useMessages();
   // The demos reuse app components, which translate in the browser.
   const demoMessages = {
     expenses,
     expenseCategories,
     shoppingCategories,
     debts: { you: debts.you },
-    chat: { toolResults: chat.toolResults },
     marketing: { demo: marketing.demo },
   };
 
@@ -93,17 +85,6 @@ export function FeaturesSection({
                 title={t("expenses.title")}
                 body={t("expenses.body")}
               />
-            </div>
-            <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
-              <FeatureText
-                className="order-2 md:order-1"
-                icon={Bot}
-                title={t("assistant.title")}
-                body={t("assistant.body")}
-              />
-              <div className="order-1 md:order-2">
-                <ChatDemo />
-              </div>
             </div>
             <div className="mx-auto max-w-2xl text-center">
               <div className="text-primary bg-primary/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg">

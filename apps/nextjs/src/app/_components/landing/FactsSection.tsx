@@ -1,7 +1,5 @@
 import { useTranslations } from "next-intl";
 
-import { PLANS } from "@flatsby/validators/billing";
-
 import { FACTS, SECTIONS } from "./content";
 
 export function FactsSection() {
@@ -28,7 +26,7 @@ export function FactsSection() {
               <div key={fact} className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
                 <dt className="font-medium">{t(`facts.${fact}.label`)}</dt>
                 <dd className="text-muted-foreground sm:col-span-2">
-                  {t(`facts.${fact}.value`, PLANS)}
+                  {t(`facts.${fact}.value`)}
                 </dd>
               </div>
             ))}

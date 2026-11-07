@@ -198,10 +198,5 @@ export const expenses = {
     fileTooLarge: "Diese Datei ist zu groß. Nimm eine unter 2 MB.",
     cameraDenied:
       "Erlaube den Kamerazugriff in den Einstellungen, um Belege zu fotografieren.",
-    outOfCredits: "Keine Credits mehr. Mach ein Upgrade, um Belege zu scannen.",
-    outOfCreditsTitle: "Deine Credits sind aufgebraucht",
-    outOfCreditsBody:
-      "Beleg scannen, KI-Assistent und automatische Kategorien brauchen Credits. Mit Starter oder Pro gibt es jeden Monat neue.",
-    fillManually: "Selbst ausfüllen",
   },
 } satisfies Messages["expenses"];

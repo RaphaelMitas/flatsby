@@ -1,4 +1,3 @@
-import { PLANS } from "@flatsby/validators/billing";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@flatsby/validators/store";
 
 import type { FaqItem } from "./content";
@@ -24,7 +23,7 @@ const t = marketingTranslator("en");
 export const englishContentPages = contentPages(t);
 
 const facts = FACTS.map(
-  (fact) => `- ${t(`facts.${fact}.label`)}: ${t(`facts.${fact}.value`, PLANS)}`,
+  (fact) => `- ${t(`facts.${fact}.label`)}: ${t(`facts.${fact}.value`)}`,
 ).join("\n");
 
 const legalLinks = LEGAL_PAGES.map(

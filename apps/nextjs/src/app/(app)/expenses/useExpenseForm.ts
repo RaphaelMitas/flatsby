@@ -133,15 +133,7 @@ export function useExpenseForm({
   const reportScanFailureMutation = useMutation(
     trpc.receipt.reportFailure.mutationOptions(),
   );
-  const scanReceiptMutation = useMutation(
-    trpc.receipt.scan.mutationOptions({
-      onSettled: () => {
-        void queryClient.invalidateQueries({
-          queryKey: trpc.user.getUsage.queryKey(),
-        });
-      },
-    }),
-  );
+  const scanReceiptMutation = useMutation(trpc.receipt.scan.mutationOptions());
   const receiptScan = useReceiptScan({
     read: (file) => scanReceiptMutation.mutateAsync(file),
     reportFailure: (failure) => reportScanFailureMutation.mutate(failure),

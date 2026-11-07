@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PLANS } from "@flatsby/validators/billing";
+import { FREE_MONTHLY_CREDITS } from "@flatsby/validators/billing";
 
-import { checkCredits, getCreditUsage, trackAIUsage } from "./credits";
+import { chargeAIUsage, checkCredits, getCreditUsage } from "./credits";
 
 const env = vi.hoisted(() => ({ E2E_TESTING: false }));
 const findFirst = vi.hoisted(() => vi.fn());
@@ -25,17 +25,17 @@ describe("credits", () => {
   it("gives a new month the whole free allowance", async () => {
     findFirst.mockResolvedValue(undefined);
     await expect(getCreditUsage(user.id)).resolves.toEqual({
-      balance: PLANS.freeCredits,
+      balance: FREE_MONTHLY_CREDITS,
       usage: 0,
     });
     await expect(checkCredits(user)).resolves.toEqual({ allowed: true });
   });
 
   it("denies once the allowance is spent and never shows a negative balance", async () => {
-    findFirst.mockResolvedValue({ used: PLANS.freeCredits + 120 });
+    findFirst.mockResolvedValue({ used: FREE_MONTHLY_CREDITS + 120 });
     await expect(getCreditUsage(user.id)).resolves.toEqual({
       balance: 0,
-      usage: PLANS.freeCredits + 120,
+      usage: FREE_MONTHLY_CREDITS + 120,
     });
     await expect(checkCredits(user)).resolves.toEqual({ allowed: false });
   });
@@ -48,7 +48,11 @@ describe("credits", () => {
 
   it("charges nothing for a missing, zero or unreadable cost", async () => {
     for (const cost of [undefined, "0", "n/a"]) {
-      await trackAIUsage({ userId: user.id, cost });
+      await chargeAIUsage({
+        user,
+        feature: "test",
+        providerMetadata: { gateway: { cost } },
+      });
     }
     expect(insert).not.toHaveBeenCalled();
   });
