@@ -117,7 +117,7 @@ export const legal = {
       passkeys:
         "Für jeden Passkey den öffentlichen Schlüssel, einen Namen und das Erstelldatum; der private Schlüssel bleibt auf Ihrem Gerät oder in Ihrem Passwortmanager",
       aiUsage:
-        "Wie viel KI Sie in diesem Monat genutzt haben, für das Fair-Use-Limit",
+        "Wie viel KI Sie pro Monat genutzt haben, für das Fair-Use-Limit",
       payment:
         "Wenn Sie ihn hinterlegen: den PayPal.me-Namen, über den Sie Geld bekommen",
     },

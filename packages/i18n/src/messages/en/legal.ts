@@ -110,7 +110,7 @@ export const legal = {
       identifier: "Your Google or Apple account ID, if you sign in with them",
       passkeys:
         "For each passkey, its public key, a name and the date it was created; the private key stays on your device or in your password manager",
-      aiUsage: "How much AI you used this month, for the fair-use limit",
+      aiUsage: "How much AI you used each month, for the fair-use limit",
       payment: "If you add it: the PayPal.me name you get paid with",
     },
     userContent: {

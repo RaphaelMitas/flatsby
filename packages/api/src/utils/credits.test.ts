@@ -49,6 +49,20 @@ describe("credits", () => {
     expect(findFirst).not.toHaveBeenCalled();
   });
 
+  it("counts even the cheapest category call", async () => {
+    const onConflictDoUpdate = vi.fn().mockResolvedValue(undefined);
+    const values = vi.fn(() => ({ onConflictDoUpdate }));
+    insert.mockReturnValue({ values });
+    await chargeAIUsage({
+      user,
+      feature: "test",
+      providerMetadata: { gateway: { cost: "0.00003" } },
+    });
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: user.id, used: 30 }),
+    );
+  });
+
   it("charges nothing for a missing, zero or unreadable cost", async () => {
     for (const cost of [undefined, "0", "n/a"]) {
       await chargeAIUsage({

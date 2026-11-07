@@ -1,5 +1,5 @@
 import type { Session } from "@flatsby/auth";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { env } from "@flatsby/auth/env";
 import { and, eq, sql } from "@flatsby/db";
@@ -14,10 +14,11 @@ function gatewayCost(providerMetadata: Record<string, unknown> | undefined) {
   return gatewayCostSchema.safeParse(providerMetadata?.gateway).data?.cost;
 }
 
-// A fair-use cap far above normal use
-export const FREE_MONTHLY_CREDITS = 5000;
+// A fair-use cap far above normal use: $0.50 of AI a month
+export const FREE_MONTHLY_CREDITS = 500_000;
 
-const CREDITS_PER_DOLLAR = 10_000;
+// Fine enough that a category call (~$0.00003) still counts instead of rounding to 0
+const CREDITS_PER_DOLLAR = 1_000_000;
 
 function costToCredits(cost: string | undefined): number {
   const numCost = parseFloat(cost ?? "");
