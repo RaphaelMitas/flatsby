@@ -70,11 +70,11 @@ const uniqueNames = (names: string[]) =>
       i,
   );
 
-// Released apps send no placeholders, which keeps the group to its creator
 export const createGroupSchema = groupSchema
   .pick({ name: true, currency: true })
   .partial({ currency: true })
   .extend({
+    // Released apps send no placeholders, which keeps the group to its creator
     placeholders: z
       .array(placeholderNameSchema)
       .max(MAX_NEW_GROUP_PLACEHOLDERS, {
