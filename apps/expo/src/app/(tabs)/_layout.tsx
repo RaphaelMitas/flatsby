@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
-import { useQuery } from "@tanstack/react-query";
+import { useIsMutating, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { listWindow, localDate } from "@flatsby/validators/calendar";
@@ -34,6 +34,8 @@ export default function TabLayout() {
     ...trpc.group.getUserGroups.queryOptions(),
     enabled: !!session.data?.user,
   });
+  const deletingGroup =
+    useIsMutating({ mutationKey: trpc.group.deleteGroup.mutationKey() }) > 0;
 
   useEffect(() => {
     if (!session.data?.user) {
@@ -86,11 +88,12 @@ export default function TabLayout() {
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;
   }
-  // Same reason as above; and only a fresh empty list, not one restored from the persisted cache
+  // Same reason as above; only a fetched empty list counts, not the persisted cache or a delete's optimistic one
   if (
     groups.data?.success &&
     groups.data.data.length === 0 &&
-    !groups.isFetching
+    !groups.isFetching &&
+    !deletingGroup
   ) {
     return <Redirect href="/welcome" />;
   }

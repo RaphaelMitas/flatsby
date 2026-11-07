@@ -149,7 +149,7 @@ export function Welcome({
             className="bg-background"
             value={form.flatmates}
             onChange={(event) => form.setFlatmates(event.target.value)}
-            // Enter ends a name, as on the phone; submitting here would create the WG with half the names
+            // Enter ends a name; submitting here would create the WG with half the names
             onKeyDown={(event) => {
               if (event.key !== "Enter" || event.nativeEvent.isComposing)
                 return;
