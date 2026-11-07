@@ -5,10 +5,6 @@ import { env } from "@flatsby/auth/env";
 import { and, eq, sql } from "@flatsby/db";
 import { db } from "@flatsby/db/client";
 import { creditBalances } from "@flatsby/db/schema";
-import {
-  costToCredits,
-  FREE_MONTHLY_CREDITS,
-} from "@flatsby/validators/billing";
 
 import { captureError } from "../lib/posthog";
 
@@ -16,6 +12,18 @@ const gatewayCostSchema = z.object({ cost: z.string().optional() }).optional();
 
 function gatewayCost(providerMetadata: Record<string, unknown> | undefined) {
   return gatewayCostSchema.safeParse(providerMetadata?.gateway).data?.cost;
+}
+
+// A fair-use cap far above normal use
+export const FREE_MONTHLY_CREDITS = 5000;
+
+const CREDITS_PER_DOLLAR = 10_000;
+
+function costToCredits(cost: string | undefined): number {
+  const numCost = parseFloat(cost ?? "");
+  return Number.isFinite(numCost)
+    ? Math.round(numCost * CREDITS_PER_DOLLAR)
+    : 0;
 }
 
 // The database clock decides the month, so check and charge never disagree on it

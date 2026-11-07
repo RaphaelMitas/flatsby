@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { FREE_MONTHLY_CREDITS } from "@flatsby/validators/billing";
-
-import { chargeAIUsage, checkCredits, getCreditUsage } from "./credits";
+import {
+  chargeAIUsage,
+  checkCredits,
+  FREE_MONTHLY_CREDITS,
+  getCreditUsage,
+} from "./credits";
 
 const env = vi.hoisted(() => ({ E2E_TESTING: false }));
 const findFirst = vi.hoisted(() => vi.fn());
