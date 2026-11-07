@@ -4,17 +4,11 @@ export const billing = {
   title: "Abrechnung",
   free: "Kostenlos",
   freePlan: "Kostenloser Tarif",
-  activeUntil: "Aktiv bis {date}",
-  subscribedViaAppStore: "Abonniert über den App Store",
-  upgradeHint: "Upgrade für mehr Credits und Funktionen",
-  manageInAppStore: "Im App Store verwalten",
   manageSubscription: "Abo verwalten",
   creditsRemaining: "Verbleibende Credits",
   usedThisPeriod: "{used} von {total} in diesem Zeitraum verbraucht",
   outOfCredits:
     "Deine Credits sind aufgebraucht. Mach ein Upgrade, um weiterzumachen.",
-  plans: "Tarife",
-  plansDescription: "Wähle den Tarif, der am besten zu dir passt",
   sidebar: {
     remaining:
       "{count, plural, one {{credits} Credit übrig} other {{credits} Credits übrig}}",
@@ -22,21 +16,7 @@ export const billing = {
       "Abrechnung - {count, plural, one {{credits} Credit übrig} other {{credits} Credits übrig}}",
   },
   pricing: {
-    error: "Etwas ist schiefgelaufen...",
-    appleCancelHint: "Zum Kündigen öffne deine Abos im App Store",
-    updateFailed:
-      "Tarif konnte nicht geändert werden. Bitte versuche es erneut.",
-    recommended: "Empfohlen",
-    monthly: "Monatlich",
-    annual: "Jährlich",
-    startFreeTrial: "Kostenlos testen",
-    planScheduled: "Tarif geplant",
-    currentPlan: "Aktueller Tarif",
-    purchase: "Kaufen",
-    getStartedLower: "Loslegen",
     upgrade: "Upgraden",
-    downgrade: "Downgraden",
-    getStarted: "Loslegen",
   },
   usage: {
     credits: "Credits",

@@ -31,7 +31,7 @@ import {
   updateShoppingListSchema,
 } from "@flatsby/validators/shopping-list";
 
-import type { CreditUser } from "../utils/autumn";
+import type { CreditUser } from "../utils/credits";
 import { requireMember } from "../effect/groups";
 import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";

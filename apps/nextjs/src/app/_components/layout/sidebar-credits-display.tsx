@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCustomer } from "autumn-js/react";
+import { useQuery } from "@tanstack/react-query";
 import { CreditCardIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -13,23 +13,23 @@ import {
 } from "@flatsby/ui/sidebar";
 import { formatCredits } from "@flatsby/validators/billing";
 
+import { useTRPC } from "~/trpc/react";
+
 export function SidebarCreditsDisplay() {
-  const { data: customer, isLoading } = useCustomer();
+  const trpc = useTRPC();
+  const { data } = useQuery(trpc.user.getUsage.queryOptions());
   const { state } = useSidebar();
   const t = useTranslations("billing");
   const locale = useLocale();
   const isCollapsed = state === "collapsed";
 
-  const creditsBalance = customer?.balances.credits;
-
   // A failed load would otherwise render "0 credits remaining", which reads
   // as a spent account rather than a missing one.
-  if (isLoading || !creditsBalance) {
+  if (!data?.credits) {
     return null;
   }
 
-  const balance = creditsBalance.remaining ?? 0;
-  const usage = creditsBalance.usage ?? 0;
+  const { balance, usage } = data.credits;
 
   const credits = { count: balance, credits: formatCredits(balance, locale) };
   const totalAllowance = usage + balance;

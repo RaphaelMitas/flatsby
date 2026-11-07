@@ -2,6 +2,7 @@
 
 import type { InviteReferrer } from "@flatsby/validators/invite";
 
+import { PLANS } from "@flatsby/validators/billing";
 import { inviteReferrer } from "@flatsby/validators/invite";
 import { APP_STORE_ID, PLAY_STORE_URL } from "@flatsby/validators/store";
 
@@ -37,15 +38,6 @@ export function storeRedirect(pathname: string, invite: InviteReferrer | null) {
   }
   return undefined;
 }
-
-export const PLANS = {
-  freeCredits: 5000,
-  starterPrice: 4.99,
-  starterCredits: 40000,
-  proPrice: 9.99,
-  proCredits: 100000,
-  proAppStorePrice: 7.99,
-};
 
 export const LEGAL_PAGES = [
   { path: "/legal/terms", id: "terms" },

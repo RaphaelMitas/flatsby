@@ -1,10 +1,10 @@
 import crypto from "node:crypto";
 import { experimental_evaluate as evaluate, gateway } from "ai";
 
-import type { CreditUser } from "./autumn";
+import type { CreditUser } from "./credits";
 import type { TracingFeature } from "./model-provider";
 import { captureError } from "../lib/posthog";
-import { chargeAIUsage, checkCredits } from "./autumn";
+import { chargeAIUsage, checkCredits } from "./credits";
 import { captureGeneration } from "./model-provider";
 
 const CLASSIFICATION_MODEL = "typesafe-ai/jev";

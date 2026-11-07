@@ -17,7 +17,6 @@ import {
 } from "@flatsby/db/schema";
 import { requiresAIConsent } from "@flatsby/validators/ai-consent";
 import {
-  getCurrentSubscription,
   PLAN_IDS,
   subscriptionDataSchema,
   usageDataSchema,
@@ -36,29 +35,18 @@ import {
   userSchema,
 } from "@flatsby/validators/user";
 
-import { run, runResult } from "../effect/runtime";
+import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
-import { report } from "../effect/toApiResult";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { GroupUtils, memberName } from "../utils";
-import { autumn, checkCredits } from "../utils/autumn";
+import { getCreditUsage } from "../utils/credits";
 
 const freePlan = {
   planId: PLAN_IDS.FREE,
-  // i18n-ignore: plan names are Autumn product names like "Pro", not copy
+  // i18n-ignore: plan names are product names like "Pro", not copy
   planName: "Free",
 };
-
-const autumnOr = <A, B>(
-  operation: string,
-  request: () => Promise<A>,
-  fallback: B,
-) =>
-  Effect.tryPromise({
-    try: request,
-    catch: (cause) => Errors.externalService("autumn", operation, cause),
-  }).pipe(Effect.catch((error) => Effect.as(report(error), fallback)));
 
 export const userRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
@@ -66,49 +54,15 @@ export const userRouter = createTRPCRouter({
     return user;
   }),
 
-  getUsage: protectedProcedure.output(usageDataSchema).query(async ({ ctx }) =>
-    run(
-      ctx,
-      autumnOr(
-        "check credits",
-        async () => {
-          const result = await checkCredits(ctx.session.user);
-          return {
-            credits: {
-              balance: result.balance?.remaining ?? 0,
-              usage: result.balance?.usage ?? 0,
-            },
-          };
-        },
-        { credits: null },
-      ),
-    ),
-  ),
+  getUsage: protectedProcedure
+    .output(usageDataSchema)
+    .query(async ({ ctx }) => ({
+      credits: await getCreditUsage(ctx.session.user.id),
+    })),
 
   getSubscription: protectedProcedure
     .output(subscriptionDataSchema)
-    .query(async ({ ctx }) =>
-      run(
-        ctx,
-        autumnOr(
-          "get customer",
-          async () => {
-            const customer = await autumn.customers.getOrCreate({
-              customerId: ctx.session.user.id,
-              name: ctx.session.user.name,
-              email: ctx.session.user.email,
-              expand: ["subscriptions.plan"],
-            });
-            const activeSub = getCurrentSubscription(customer.subscriptions);
-            return {
-              planId: activeSub?.planId ?? freePlan.planId,
-              planName: activeSub?.plan?.name ?? freePlan.planName,
-            };
-          },
-          freePlan,
-        ),
-      ),
-    ),
+    .query(() => freePlan),
 
   getCurrentUserWithGroups: protectedProcedure
     .output(

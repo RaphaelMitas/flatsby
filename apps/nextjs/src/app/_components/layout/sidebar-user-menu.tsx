@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useCustomer } from "autumn-js/react";
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -21,7 +20,7 @@ import {
   useSidebar,
 } from "@flatsby/ui/sidebar";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { getCurrentSubscription } from "@flatsby/validators/billing";
+import { PLAN_IDS } from "@flatsby/validators/billing";
 
 import { signOutAndRedirect } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
@@ -31,13 +30,14 @@ export function SidebarUserMenu() {
   const t = useTranslations();
   const router = useRouter();
   const trpc = useTRPC();
-  const { data: customer } = useCustomer({
-    expand: ["subscriptions.plan"],
-  });
+  const { data: subscription } = useQuery(
+    trpc.user.getSubscription.queryOptions(),
+  );
 
   const planName =
-    getCurrentSubscription(customer?.subscriptions ?? [])?.plan?.name ??
-    t("billing.free");
+    !subscription || subscription.planId === PLAN_IDS.FREE
+      ? t("billing.free")
+      : subscription.planName;
 
   const { data: userWithGroups } = useQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),

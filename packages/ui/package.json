@@ -11,8 +11,7 @@
     "./lib/*": "./src/lib/*.ts",
     "./hooks/*": "./hooks/*.ts",
     "./ai-elements": "./src/components/ai-elements/index.ts",
-    "./ai-elements/*": "./src/components/ai-elements/*.tsx",
-    "./autumn/*": "./src/components/autumn/*.tsx"
+    "./ai-elements/*": "./src/components/ai-elements/*.tsx"
   },
   "license": "MIT",
   "scripts": {
@@ -47,7 +46,6 @@
     "@radix-ui/react-use-controllable-state": "^1.3.0",
     "@xyflow/react": "^12.12.1",
     "ai": "catalog:",
-    "autumn-js": "catalog:",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.4.0",

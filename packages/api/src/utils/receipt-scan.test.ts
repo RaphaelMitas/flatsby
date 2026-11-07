@@ -1,13 +1,13 @@
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { chargeAIUsage } from "./autumn";
+import { chargeAIUsage } from "./credits";
 import { readReceipt } from "./model-provider";
 import { scanReceipt } from "./receipt-scan";
 
 const credits = vi.hoisted(() => ({ allowed: true }));
 
-vi.mock("./autumn", () => ({
+vi.mock("./credits", () => ({
   checkCredits: () => Promise.resolve(credits),
   chargeAIUsage: vi.fn().mockResolvedValue(undefined),
 }));

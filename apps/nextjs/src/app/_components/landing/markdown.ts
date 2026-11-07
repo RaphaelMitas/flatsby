@@ -1,3 +1,4 @@
+import { PLANS } from "@flatsby/validators/billing";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@flatsby/validators/store";
 
 import type { FaqItem } from "./content";
@@ -9,7 +10,6 @@ import {
   GITHUB_URL,
   HOME_FAQ,
   LEGAL_PAGES,
-  PLANS,
   SECTIONS,
   SITE_URL,
   STEPS,

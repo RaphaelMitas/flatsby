@@ -35,7 +35,7 @@ import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/valida
 
 import type { ApiError } from "../errors";
 import type { Database as DbClient } from "../types";
-import type { CreditUser } from "../utils/autumn";
+import type { CreditUser } from "../utils/credits";
 import { getExpenseWithAccess } from "../effect/expenses";
 import {
   getGroupWithAccess,

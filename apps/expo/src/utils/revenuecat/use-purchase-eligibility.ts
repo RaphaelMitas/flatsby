@@ -41,11 +41,10 @@ export function usePurchaseEligibility() {
   const hasRCEntitlement =
     Object.keys(rcCustomerInfo?.entitlements.active ?? {}).length > 0;
 
-  const autumnPlanId = subscriptionData?.planId ?? PLAN_IDS.FREE;
-  const hasWebPlan =
-    autumnPlanId === PLAN_IDS.STARTER || autumnPlanId === PLAN_IDS.PRO;
-  const hasApplePlan = autumnPlanId === PLAN_IDS.PRO_APPLE || hasRCEntitlement;
-  const hasPaidPlan = autumnPlanId !== PLAN_IDS.FREE;
+  const planId = subscriptionData?.planId ?? PLAN_IDS.FREE;
+  const hasWebPlan = planId === PLAN_IDS.STARTER || planId === PLAN_IDS.PRO;
+  const hasApplePlan = planId === PLAN_IDS.PRO_APPLE || hasRCEntitlement;
+  const hasPaidPlan = planId !== PLAN_IDS.FREE;
 
   const hasCredits = (usageData?.credits?.balance ?? 0) > 0;
   const canPurchaseMobile = !hasPaidPlan;
@@ -56,7 +55,7 @@ export function usePurchaseEligibility() {
     hasApplePlan,
     hasPaidPlan,
     hasCredits,
-    planId: autumnPlanId,
+    planId,
     planName: subscriptionData?.planName ?? t("free"),
     managementURL: rcCustomerInfo?.managementURL,
     isLoading: usageLoading || subscriptionLoading || rcLoading,

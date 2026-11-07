@@ -1,9 +1,5 @@
 import { z } from "zod/v4";
 
-/**
- * Autumn plan IDs
- * These should match what's configured in the Autumn dashboard
- */
 export const PLAN_IDS = {
   FREE: "free",
   STARTER: "starter",
@@ -13,16 +9,14 @@ export const PLAN_IDS = {
 
 export type PlanId = (typeof PLAN_IDS)[keyof typeof PLAN_IDS];
 
-/**
- * Autumn billing feature IDs
- * These should match what's configured in the Autumn dashboard
- */
-export const AUTUMN_FEATURES = {
-  CREDITS: "credits",
-} as const;
-
-export type AutumnFeature =
-  (typeof AUTUMN_FEATURES)[keyof typeof AUTUMN_FEATURES];
+export const PLANS = {
+  freeCredits: 5000,
+  starterPrice: 4.99,
+  starterCredits: 40000,
+  proPrice: 9.99,
+  proCredits: 100000,
+  proAppStorePrice: 7.99,
+};
 
 /**
  * Credits conversion rate: 1 credit = $0.00001
@@ -56,9 +50,6 @@ export function formatCredits(credits: number, locale: string): string {
   return credits.toLocaleString(locale);
 }
 
-/**
- * Schema for credit feature data returned from Autumn
- */
 export const creditFeatureSchema = z.object({
   balance: z.number(),
   usage: z.number(),
@@ -75,24 +66,9 @@ export const usageDataSchema = z.object({
 
 export type UsageData = z.infer<typeof usageDataSchema>;
 
-/**
- * Schema for subscription data from Autumn
- */
 export const subscriptionDataSchema = z.object({
   planId: z.string(),
   planName: z.string(),
 });
 
 export type SubscriptionData = z.infer<typeof subscriptionDataSchema>;
-
-export function getCurrentSubscription<
-  T extends { canceledAt: number | null; planId: string },
->(subscriptions: T[]): T | undefined {
-  return (
-    subscriptions.find(
-      (s) => s.canceledAt !== null && s.planId !== PLAN_IDS.FREE,
-    ) ??
-    subscriptions.find((s) => s.planId !== PLAN_IDS.FREE) ??
-    subscriptions[0]
-  );
-}

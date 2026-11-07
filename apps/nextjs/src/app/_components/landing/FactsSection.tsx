@@ -1,6 +1,8 @@
 import { useTranslations } from "next-intl";
 
-import { FACTS, PLANS, SECTIONS } from "./content";
+import { PLANS } from "@flatsby/validators/billing";
+
+import { FACTS, SECTIONS } from "./content";
 
 export function FactsSection() {
   const t = useTranslations("marketing");

@@ -1,6 +1,8 @@
+import { PLANS } from "@flatsby/validators/billing";
+
 import type { FaqItem } from "./content";
 import type { MarketingTranslator } from "./i18n";
-import { FAQ, faqItems, PLANS } from "./content";
+import { FAQ, faqItems } from "./content";
 
 const SCREENSHOT_BASE =
   "https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets";

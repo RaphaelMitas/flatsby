@@ -24,7 +24,6 @@
     "@flatsby/validators": "workspace:*",
     "@t3-oss/env-nextjs": "catalog:",
     "ai": "catalog:",
-    "autumn-js": "catalog:",
     "better-auth": "catalog:better-auth",
     "next": "catalog:",
     "react": "catalog:react19",

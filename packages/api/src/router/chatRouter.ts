@@ -34,13 +34,13 @@ import type { Database } from "../types";
 import type { TracingOptions } from "../utils/model-provider";
 import { captureError } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { buildToolsSystemPrompt, createChatTools } from "../utils/chat-tools";
+import { buildContextMessages } from "../utils/context-builder";
 import {
   checkCredits,
   extractGatewayMetadata,
   trackAIUsage,
-} from "../utils/autumn";
-import { buildToolsSystemPrompt, createChatTools } from "../utils/chat-tools";
-import { buildContextMessages } from "../utils/context-builder";
+} from "../utils/credits";
 import {
   generateConversationTitle,
   getDefaultModel,
@@ -596,7 +596,7 @@ export const chatRouter = createTRPCRouter({
         };
 
         await trackAIUsage({
-          customerId: ctx.session.user.id,
+          userId: ctx.session.user.id,
           cost: cost?.toString(),
         });
       } else {
@@ -647,7 +647,7 @@ export const chatRouter = createTRPCRouter({
         };
 
         await trackAIUsage({
-          customerId: ctx.session.user.id,
+          userId: ctx.session.user.id,
           cost: cost?.toString(),
         });
       }

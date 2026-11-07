@@ -99,6 +99,18 @@ export const analyticsConsents = createTable(
   (table) => [index("analytics_consent_user_idx").on(table.userId)],
 );
 
+export const creditBalances = createTable(
+  "credit_balance",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    monthStart: date("month_start").notNull(),
+    used: integer("used").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.monthStart] })],
+);
+
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
   groupMembers: many(groupMembers),

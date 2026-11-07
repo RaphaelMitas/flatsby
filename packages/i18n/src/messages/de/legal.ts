@@ -171,7 +171,7 @@ export const legal = {
       resend:
         "<strong>Resend (E-Mail):</strong> Verschickt Anmeldecodes und erhält dafür Ihre E-Mail-Adresse und den Code. Die E-Mails gehen von Irland aus; Protokolle und Metadaten speichert Resend in den USA.",
       billing:
-        "<strong>Autumn, Stripe und RevenueCat (Tarife und KI-Guthaben):</strong> Autumn (Web) erhält Ihre Konto-ID, Ihren Namen und Ihre E-Mail-Adresse, RevenueCat (App) Ihre Konto-ID, beide mit Ihren Käufen. Autumn nutzt Stripe für Zahlungen.",
+        "<strong>RevenueCat (In-App-Käufe):</strong> RevenueCat erhält Ihre Konto-ID mit Ihren Käufen in der App. Ihr KI-Guthaben zählen wir selbst.",
       expo: "<strong>Expo (App-Updates):</strong> Die App fragt bei den Servern von Expo nach Updates; diese erhalten Ihre IP-Adresse, App-Version und Plattform.",
       stores:
         "<strong>Apple App Store und Google Play:</strong> Vertreiben die App und wickeln In-App-Käufe als eigene Verantwortliche nach ihren eigenen Datenschutzbestimmungen ab.",
@@ -195,7 +195,7 @@ export const legal = {
       content:
         "können Artikel und Ausgaben, die Sie angelegt haben, anonymisiert für die anderen Gruppenmitglieder erhalten bleiben",
       outro:
-        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
+        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
     },
     rights: {
       access: "<strong>Auskunft:</strong> eine Kopie Ihrer Daten erhalten",
@@ -221,7 +221,7 @@ export const legal = {
         "<strong>Nicht angemeldet:</strong> Wir können Sie nicht wiedererkennen. Aktivieren Sie daher Global Privacy Control oder Do Not Track in Ihrem Browser. Dann zählen wir Ihre Besuche nicht.",
     },
     international:
-      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe, Resend und Expo sind US-Unternehmen; Daten können daher in die USA gelangen. Für Anbieter, die nach dem EU-US Data Privacy Framework zertifiziert sind, gilt der Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO). PostHog ist zertifiziert und hat mit uns zusätzlich die EU-Standardvertragsklauseln vereinbart (Art. 46 Abs. 2 lit. c DSGVO); eine Kopie erhalten Sie auf Anfrage.",
+      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Resend und Expo sind US-Unternehmen; Daten können daher in die USA gelangen. Für Anbieter, die nach dem EU-US Data Privacy Framework zertifiziert sind, gilt der Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO). PostHog ist zertifiziert und hat mit uns zusätzlich die EU-Standardvertragsklauseln vereinbart (Art. 46 Abs. 2 lit. c DSGVO); eine Kopie erhalten Sie auf Anfrage.",
     children:
       "Flatsby richtet sich nicht an Kinder unter 16 Jahren. Wenn Sie glauben, dass ein Kind uns Daten gegeben hat, kontaktieren Sie uns.",
     changes:
