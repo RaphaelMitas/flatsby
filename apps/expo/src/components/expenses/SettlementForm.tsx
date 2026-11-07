@@ -149,7 +149,8 @@ export function SettlementForm({
   };
 
   const {
-    expenseListQueryKey,
+    cancelLists,
+    patchLists,
     debtSummaryQueryKey,
     invalidateList,
     invalidateDebtSummary,
@@ -173,11 +174,10 @@ export function SettlementForm({
       resultMutation({
         onMutate: async (input) => {
           await Promise.all([
-            queryClient.cancelQueries({ queryKey: expenseListQueryKey }),
+            cancelLists(),
             queryClient.cancelQueries({ queryKey: debtSummaryQueryKey }),
           ]);
 
-          const previousData = queryClient.getQueryData(expenseListQueryKey);
           const previousDebtSummary =
             queryClient.getQueryData(debtSummaryQueryKey);
 
@@ -206,11 +206,12 @@ export function SettlementForm({
           );
 
           // Optimistically add the new settlement
-          queryClient.setQueryData(expenseListQueryKey, (old) => {
-            if (!old) return old;
-
-            const optimisticSettlement: ExpenseWithSplitsAndMembers = {
-              id: Date.now(),
+          const pendingId = Date.now();
+          const listSnapshot = patchLists((old) => {
+            const optimisticSettlement: ExpenseWithSplitsAndMembers & {
+              isPending: true;
+            } = {
+              id: pendingId,
               groupId,
               paidByGroupMemberId: input.paidByGroupMemberId,
               amountInCents: input.amountInCents,
@@ -288,6 +289,7 @@ export function SettlementForm({
                       },
                     },
               })),
+              isPending: true,
             };
 
             const updatedPages = old.pages.map((page, pageIndex) => {
@@ -307,7 +309,7 @@ export function SettlementForm({
           });
 
           return [
-            { queryKey: expenseListQueryKey, previous: previousData },
+            ...listSnapshot,
             { queryKey: debtSummaryQueryKey, previous: previousDebtSummary },
           ];
         },
