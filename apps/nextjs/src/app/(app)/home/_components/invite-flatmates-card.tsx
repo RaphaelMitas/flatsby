@@ -96,16 +96,17 @@ export function InviteFlatmatesCard() {
 
   const share = async (placeholder?: InvitePlaceholder) => {
     if (!code || sharing.current) return;
+    sharing.current = true;
     markInviteShared(groupId);
     sharePressed.mutate({ groupId, personal: placeholder !== undefined });
     const text = messageFor(code.code, placeholder);
-    // Desktop browsers have navigator.share too, but there the message belongs in the clipboard
-    if (platformForUserAgent(navigator.userAgent) === "other") {
-      return copy(text, placeholder?.name);
-    }
-    sharing.current = true;
     try {
-      await navigator.share({ text });
+      // Desktop browsers have navigator.share too, but there the message belongs in the clipboard
+      if (platformForUserAgent(navigator.userAgent) === "other") {
+        await copy(text, placeholder?.name);
+      } else {
+        await navigator.share({ text });
+      }
     } catch (error) {
       if (!isAbort(error)) await copy(text, placeholder?.name);
     } finally {

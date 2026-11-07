@@ -65,7 +65,7 @@ export function useCreateGroup(onCreated: (groupId: number) => void) {
           setSelectedGroup(groupId, name);
           onCreated(groupId);
         },
-        // Also after an error, and awaited: a lost response can hide a WG that was created, and the form must not unlock before the list shows it
+        // Awaited: a lost response can hide a created WG, so the form stays locked until the list shows it
         onSettled: () =>
           Promise.all([
             queryClient.invalidateQueries(
