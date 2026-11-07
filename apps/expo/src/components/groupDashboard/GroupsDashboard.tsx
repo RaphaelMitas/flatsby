@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { Redirect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -23,9 +23,8 @@ export function GroupsDashboard() {
     return <ErrorMessage message={groups.error.message} />;
   }
 
-  if (groups.data.length === 0) {
-    return <Redirect href="/welcome" />;
-  }
+  // TabLayout sends someone without a group to onboarding
+  if (groups.data.length === 0) return null;
 
   return (
     <View className="flex-1 flex-col gap-6 p-4">

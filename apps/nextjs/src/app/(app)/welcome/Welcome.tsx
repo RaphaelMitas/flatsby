@@ -151,7 +151,8 @@ export function Welcome({
             onChange={(event) => form.setFlatmates(event.target.value)}
             // Enter ends a name, as on the phone; submitting here would create the WG with half the names
             onKeyDown={(event) => {
-              if (event.key !== "Enter") return;
+              if (event.key !== "Enter" || event.nativeEvent.isComposing)
+                return;
               event.preventDefault();
               if (form.flatmates.trim() && !/,\s*$/.test(form.flatmates)) {
                 form.setFlatmates(`${form.flatmates.trimEnd()}, `);

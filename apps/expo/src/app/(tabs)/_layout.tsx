@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { listWindow, localDate } from "@flatsby/validators/calendar";
@@ -29,6 +30,10 @@ export default function TabLayout() {
   const t = useTranslations("navigation");
 
   useEveningReminders();
+  const groups = useQuery({
+    ...trpc.group.getUserGroups.queryOptions(),
+    enabled: !!session.data?.user,
+  });
 
   useEffect(() => {
     if (!session.data?.user) {
@@ -72,8 +77,6 @@ export default function TabLayout() {
         ),
       );
     }
-
-    void prefetch(trpc.group.getUserGroups.queryOptions());
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
 
   // Guarding per screen segfaults in UIKit: signing out from Settings
@@ -82,6 +85,14 @@ export default function TabLayout() {
   // No isPending guard: StackLayout blanks the first load, and refetches keep data
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;
+  }
+  // Same reason as above; and only a fresh empty list, not one restored from the persisted cache
+  if (
+    groups.data?.success &&
+    groups.data.data.length === 0 &&
+    !groups.isFetching
+  ) {
+    return <Redirect href="/welcome" />;
   }
 
   return (
