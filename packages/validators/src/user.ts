@@ -44,7 +44,6 @@ export interface SignedInUser {
   createdAt: Date;
 }
 
-/** Empty while the name is still the one taken from the email address. */
 export const typedName = (user: { name: string; email: string }) =>
   user.name === defaultUserName(user.email) ? "" : user.name;
 

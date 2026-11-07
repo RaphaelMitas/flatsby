@@ -61,7 +61,7 @@ export const placeholderNameSchema = z
     message: msg("group.placeholders.nameTooLong"),
   });
 
-export const MAX_NEW_GROUP_PLACEHOLDERS = 20;
+const MAX_NEW_GROUP_PLACEHOLDERS = 20;
 
 const uniqueNames = (names: string[]) =>
   names.filter(

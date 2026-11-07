@@ -48,7 +48,6 @@ function WelcomeForm({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [currency] = useState(deviceCurrency);
-  const [opening, setOpening] = useState(false);
   const { data: groups } = useQuery(trpc.group.getUserGroups.queryOptions());
 
   const updateName = useMutation(
@@ -66,9 +65,8 @@ function WelcomeForm({
     }),
   );
 
-  // Home should open with the invite card complete, so the button stays busy until both are cached
+  // Home should open with the invite card complete, so stay busy until the group and its invite are cached
   const createGroup = useCreateGroup((groupId) => {
-    setOpening(true);
     void Promise.allSettled([
       queryClient.ensureQueryData(
         trpc.group.getGroup.queryOptions({ id: groupId }),
@@ -81,16 +79,17 @@ function WelcomeForm({
     t,
     initialName,
     savedName,
-    saveName: (name) =>
-      updateName.mutateAsync({ name }).then(
-        (result) => result.success,
-        () => false,
-      ),
-    create: (group) => createGroup.mutate({ ...group, currency }),
+    saveName: (name) => updateName.mutateAsync({ name }),
+    create: (group) =>
+      createGroup.mutateAsync({ ...group, currency }).catch(() => undefined),
     openJoin: () => router.push("/join"),
   });
 
-  const busy = updateName.isPending || createGroup.isPending || opening;
+  // Success stays busy too: the WG exists and Home is still loading
+  const busy =
+    updateName.isPending ||
+    createGroup.isPending ||
+    createGroup.data?.success === true;
   // A stale cached empty list or a deep link can land someone who already has a group here
   if (!busy && groups?.success && groups.data.length > 0) {
     return <Redirect href="/(tabs)/home" />;

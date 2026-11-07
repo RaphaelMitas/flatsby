@@ -9,7 +9,7 @@ export const INVITE_CODE_LENGTH = 8;
 export const INVITE_CODE_GROUP = INVITE_CODE_LENGTH / 2;
 const INVITE_TTL_DAYS = 7;
 export const INVITE_PATH = "/join";
-export const INVITE_REFERRER_KEY = "invite_code";
+const INVITE_REFERRER_KEY = "invite_code";
 const INVITE_PLACEHOLDER_REFERRER_KEY = "invite_placeholder";
 const INVITE_PLACEHOLDER_PARAM = "p";
 const DAY_MS = 86_400_000;
@@ -64,12 +64,11 @@ const placeholderIdSchema = z.coerce.number().int().positive();
 export const parsePlaceholderId = (value: unknown) =>
   placeholderIdSchema.safeParse(value).data;
 
-interface InviteReferrer {
+export interface InviteReferrer {
   code: string;
   placeholderId: number | undefined;
 }
 
-/** What the Play Store install referrer carries from the web join page into the app. */
 export const inviteReferrer = ({ code, placeholderId }: InviteReferrer) => {
   const params = new URLSearchParams({ [INVITE_REFERRER_KEY]: code });
   if (placeholderId !== undefined) {

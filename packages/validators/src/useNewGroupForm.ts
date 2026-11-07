@@ -1,14 +1,14 @@
 import type { KeyTranslator } from "@flatsby/i18n/message-key";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { translateIfKey } from "@flatsby/i18n/message-key";
 
 import { newGroupFormSchema, splitFlatmateNames } from "./group";
-import { userNameSchema } from "./user";
 
 type Field = "name" | "groupName" | "placeholders";
 
-/** The onboarding screen's fields and rules; each client brings its own mutations and markup. */
+const nameSchema = newGroupFormSchema.pick({ name: true });
+
 export function useNewGroupForm({
   t,
   initialName,
@@ -20,8 +20,8 @@ export function useNewGroupForm({
   t: KeyTranslator;
   initialName: string;
   savedName: string;
-  saveName: (name: string) => Promise<boolean>;
-  create: (group: { name: string; placeholders: string[] }) => void;
+  saveName: (name: string) => Promise<{ success: boolean }>;
+  create: (group: { name: string; placeholders: string[] }) => Promise<unknown>;
   openJoin: () => void;
 }) {
   const [name, setName] = useState(initialName);
@@ -30,6 +30,8 @@ export function useNewGroupForm({
   const [issues, setIssues] = useState<
     { path: PropertyKey[]; message: string }[]
   >([]);
+  // Two taps can land before the pending state renders, and each would create a WG
+  const inFlight = useRef(false);
 
   const firstName = name.trim().split(/\s+/)[0] ?? "";
   const groupName =
@@ -40,9 +42,23 @@ export function useNewGroupForm({
   const names = splitFlatmateNames(flatmates);
 
   const keepName = async (trimmed: string) =>
-    trimmed === savedName || (await saveName(trimmed));
+    trimmed === savedName ||
+    (await saveName(trimmed).then(
+      ({ success }) => success,
+      () => false,
+    ));
 
-  const submit = async () => {
+  const once = (run: () => Promise<void>) => async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    try {
+      await run();
+    } finally {
+      inFlight.current = false;
+    }
+  };
+
+  const submit = once(async () => {
     const parsed = newGroupFormSchema.safeParse({
       name: name.trim(),
       groupName: groupName.trim(),
@@ -50,20 +66,18 @@ export function useNewGroupForm({
     });
     setIssues(parsed.error?.issues ?? []);
     if (!parsed.success || !(await keepName(parsed.data.name))) return;
-    create({
+    await create({
       name: parsed.data.groupName,
       placeholders: parsed.data.placeholders ?? [],
     });
-  };
+  });
 
   // Someone who lost their invite link joins from here, so this is their name step too
-  const joinWithCode = async () => {
-    const parsed = userNameSchema.safeParse(name.trim());
-    setIssues(
-      parsed.error?.issues.map((issue) => ({ ...issue, path: ["name"] })) ?? [],
-    );
-    if (parsed.success && (await keepName(parsed.data))) openJoin();
-  };
+  const joinWithCode = once(async () => {
+    const parsed = nameSchema.safeParse({ name: name.trim() });
+    setIssues(parsed.error?.issues ?? []);
+    if (parsed.success && (await keepName(parsed.data.name))) openJoin();
+  });
 
   const issueFor = (field: Field) => {
     const message = issues.find(({ path }) => path[0] === field)?.message;

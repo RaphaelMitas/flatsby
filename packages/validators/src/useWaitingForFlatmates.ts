@@ -19,7 +19,6 @@ const subscribe = (listener: () => void) => {
   };
 };
 
-/** The invite card shows while the creator is the only joined member, or after a share this session. */
 export const useWaitingForFlatmates = (
   groupId: number,
   members: { userId: string | null }[] | undefined,

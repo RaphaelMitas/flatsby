@@ -59,13 +59,10 @@ export default function JoinScreen() {
   };
 
   const invite = preview.data?.success ? preview.data.data : null;
-  const choice =
-    picked === undefined
-      ? invite?.placeholders.find(({ id }) => id === personalId)
-      : picked;
-  const claim = invite?.placeholders.find(({ id }) => id === choice?.id);
+  const choiceId = picked === undefined ? personalId : picked?.id;
+  const claim = invite?.placeholders.find(({ id }) => id === choiceId);
   // The picked spot left the preview, claimed or removed since
-  const takenName = invite && choice && !claim ? choice.name : undefined;
+  const takenName = invite && picked && !claim ? picked.name : undefined;
 
   const join = useMutation(
     trpc.invite.join.mutationOptions({

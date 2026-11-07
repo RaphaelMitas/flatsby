@@ -50,7 +50,7 @@ export function Welcome({
     trpc.shoppingList.updateLastUsed.mutationOptions(),
   );
 
-  // Home should open with the invite card complete, so the button stays busy until both are cached
+  // Home should open with the invite card complete, so stay busy until the group and its invite are cached
   const createGroup = useCreateGroup(async (groupId) => {
     await Promise.allSettled([
       updateLastUsed.mutateAsync({ groupId, shoppingListId: null }),
@@ -66,18 +66,19 @@ export function Welcome({
     t,
     initialName,
     savedName,
-    saveName: (name) =>
-      updateName.mutateAsync({ name }).then(
-        (result) => result.success,
-        () => false,
-      ),
-    create: (group) => createGroup.mutate({ ...group, currency: CURRENCY }),
+    saveName: (name) => updateName.mutateAsync({ name }),
+    create: (group) =>
+      createGroup
+        .mutateAsync({ ...group, currency: CURRENCY })
+        .catch(() => undefined),
     openJoin: () => setJoinOpen(true),
   });
 
   // Success stays busy too: the WG exists and Home is still loading
   const busy =
-    updateName.isPending || createGroup.isPending || createGroup.isSuccess;
+    updateName.isPending ||
+    createGroup.isPending ||
+    createGroup.data?.success === true;
   const failure =
     failureOf(updateName, t("errors.unexpected")) ??
     failureOf(createGroup, t("errors.unexpected"));
