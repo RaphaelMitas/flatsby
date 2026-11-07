@@ -77,7 +77,9 @@ export const createGroupSchema = groupSchema
   .extend({
     placeholders: z
       .array(placeholderNameSchema)
-      .max(MAX_NEW_GROUP_PLACEHOLDERS)
+      .max(MAX_NEW_GROUP_PLACEHOLDERS, {
+        message: msg("group.placeholders.tooMany"),
+      })
       .transform(uniqueNames)
       .optional(),
   });
@@ -112,9 +114,14 @@ export const isPlaceholder = (member: { userId: string | null }) =>
 export const hasJoined = (member: { userId: string | null }) =>
   member.userId !== null;
 
+export interface InvitePlaceholder {
+  id: number;
+  name: string;
+}
+
 export const openPlaceholders = (
   members: { id: number; userId: string | null; user: { name: string } }[],
-) =>
+): InvitePlaceholder[] =>
   members
     .filter(isPlaceholder)
     .map(({ id, user }) => ({ id, name: user.name }));

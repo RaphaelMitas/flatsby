@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   inviteCodeSchema,
   invitePath,
+  inviteReferrer,
   outlivesAnyInvite,
   parsePlaceholderId,
+  readInviteReferrer,
   safeRedirectPath,
 } from "./invite";
 
@@ -58,6 +60,8 @@ describe("invitePath", () => {
       parsePlaceholderId(new URL(path, "https://x.test").searchParams.get("p")),
     ).toBe(41);
     expect(inviteCodeSchema.parse(`https://x.test${path}`)).toBe("K7Q4M2XP");
+    const referrer = { code: "K7Q4M2XP", placeholderId: 41 };
+    expect(readInviteReferrer(inviteReferrer(referrer))).toEqual(referrer);
   });
 
   it.each([null, undefined, "", "abc", "-3", "1.5"])(

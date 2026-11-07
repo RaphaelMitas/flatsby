@@ -1,25 +1,17 @@
+import type { InvitePlaceholder } from "@flatsby/validators/group";
 import { Share } from "react-native";
 import { useTranslations } from "use-intl";
 
-import { inviteLink, inviteMessage } from "@flatsby/validators/invite";
+import { inviteMessage } from "@flatsby/validators/invite";
 
 import { getPostHog } from "~/utils/analytics/posthog";
 import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
 
-export interface InvitePlaceholder {
-  id: number;
-  name: string;
-}
-
 export function useInviteMessage() {
   const t = useTranslations();
   return (code: string, placeholder?: InvitePlaceholder) =>
-    inviteMessage(
-      t,
-      inviteLink(getBaseUrl(), code, placeholder?.id),
-      placeholder?.name,
-    );
+    inviteMessage(t, getBaseUrl(), code, placeholder);
 }
 
 export function useShareInvite() {

@@ -1,5 +1,6 @@
 "use client";
 
+import type { InvitePlaceholder } from "@flatsby/validators/group";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Share, X } from "lucide-react";
@@ -10,17 +11,17 @@ import { Button } from "@flatsby/ui/button";
 import { Card, CardContent } from "@flatsby/ui/card";
 import { toast } from "@flatsby/ui/toast";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { hasJoined, openPlaceholders } from "@flatsby/validators/group";
+import { openPlaceholders } from "@flatsby/validators/group";
 import {
   formatInviteCode,
   inviteDaysLeft,
-  inviteLink,
   inviteMessage,
+  spokenInviteCode,
 } from "@flatsby/validators/invite";
 import {
   markInviteShared,
-  useInviteSharedThisSession,
-} from "@flatsby/validators/useInviteShared";
+  useWaitingForFlatmates,
+} from "@flatsby/validators/useWaitingForFlatmates";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { platformForUserAgent } from "~/app/_components/landing/platform";
@@ -42,15 +43,14 @@ export function InviteFlatmatesCard() {
   const sharing = useRef(false);
   const groupId = currentGroup?.id ?? 0;
   const hasGroup = currentGroup != null;
-  const sharedThisSession = useInviteSharedThisSession(groupId);
   const { data: group } = useQuery({
     ...trpc.group.getGroup.queryOptions({ id: groupId }),
     enabled: hasGroup,
   });
-  const members = group?.success ? group.data.groupMembers : undefined;
-  const waiting =
-    members !== undefined &&
-    (sharedThisSession || members.filter(hasJoined).length === 1);
+  const waiting = useWaitingForFlatmates(
+    groupId,
+    group?.success ? group.data.groupMembers : undefined,
+  );
   const visible =
     waiting && dismissal?.groupId === groupId && !dismissal.dismissed;
 
@@ -78,15 +78,8 @@ export function InviteFlatmatesCard() {
   const placeholders = openPlaceholders(group.data.groupMembers);
   const code = invite.data?.success ? invite.data.data : undefined;
   const loadFailure = failureOf(invite, t("invite.loadFailed"));
-  const messageFor = (
-    inviteCode: string,
-    placeholder?: { id: number; name: string },
-  ) =>
-    inviteMessage(
-      t,
-      inviteLink(window.location.origin, inviteCode, placeholder?.id),
-      placeholder?.name,
-    );
+  const messageFor = (inviteCode: string, placeholder?: InvitePlaceholder) =>
+    inviteMessage(t, window.location.origin, inviteCode, placeholder);
 
   const copy = async (text: string, name?: string) => {
     try {
@@ -101,12 +94,12 @@ export function InviteFlatmatesCard() {
     }
   };
 
-  // Desktop browsers have navigator.share too, but there the message belongs in the clipboard
-  const share = async (placeholder?: { id: number; name: string }) => {
+  const share = async (placeholder?: InvitePlaceholder) => {
     if (!code || sharing.current) return;
     markInviteShared(groupId);
     sharePressed.mutate({ groupId, personal: placeholder !== undefined });
     const text = messageFor(code.code, placeholder);
+    // Desktop browsers have navigator.share too, but there the message belongs in the clipboard
     if (platformForUserAgent(navigator.userAgent) === "other") {
       return copy(text, placeholder?.name);
     }
@@ -234,9 +227,7 @@ export function InviteFlatmatesCard() {
                   >
                     {formatInviteCode(code.code)}
                   </span>
-                  <span className="sr-only">
-                    {code.code.split("").join(" ")}
-                  </span>
+                  <span className="sr-only">{spokenInviteCode(code.code)}</span>
                 </span>
               )}
             </div>

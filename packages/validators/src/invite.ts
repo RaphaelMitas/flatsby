@@ -3,13 +3,15 @@ import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
 
+import type { InvitePlaceholder } from "./group";
+
 export const INVITE_CODE_LENGTH = 8;
 export const INVITE_CODE_GROUP = INVITE_CODE_LENGTH / 2;
 const INVITE_TTL_DAYS = 7;
 export const INVITE_PATH = "/join";
 export const INVITE_REFERRER_KEY = "invite_code";
-export const INVITE_PLACEHOLDER_REFERRER_KEY = "invite_placeholder";
-export const INVITE_PLACEHOLDER_PARAM = "p";
+const INVITE_PLACEHOLDER_REFERRER_KEY = "invite_placeholder";
+const INVITE_PLACEHOLDER_PARAM = "p";
 const DAY_MS = 86_400_000;
 
 // Crockford base32: no I, L, O or U, so no look-alikes or accidental words
@@ -27,7 +29,9 @@ export const normalizeInviteCode = (raw: string) =>
 export const formatInviteCode = (code: string) =>
   `${code.slice(0, INVITE_CODE_GROUP)}-${code.slice(INVITE_CODE_GROUP)}`;
 
-/** A placeholder id makes it a personal link, which preselects that spot after sign-in. */
+// Read out one character at a time, not as "K7PQ minus 2M9X"
+export const spokenInviteCode = (code: string) => code.split("").join(" ");
+
 export const invitePath = (
   code: string,
   placeholderId?: number,
@@ -45,17 +49,48 @@ export const inviteLink = (
 /** The card's preview and the share both use this, so the creator sees exactly what goes out. */
 export const inviteMessage = (
   t: Translate,
-  link: string,
-  placeholderName?: string,
-) =>
-  placeholderName === undefined
+  baseUrl: string,
+  code: string,
+  placeholder?: InvitePlaceholder,
+) => {
+  const link = inviteLink(baseUrl, code, placeholder?.id);
+  return placeholder === undefined
     ? t("invite.shareGroup", { link })
-    : t("invite.sharePersonal", { name: placeholderName, link });
+    : t("invite.sharePersonal", { name: placeholder.name, link });
+};
 
 const placeholderIdSchema = z.coerce.number().int().positive();
 
 export const parsePlaceholderId = (value: unknown) =>
   placeholderIdSchema.safeParse(value).data;
+
+interface InviteReferrer {
+  code: string;
+  placeholderId: number | undefined;
+}
+
+/** What the Play Store install referrer carries from the web join page into the app. */
+export const inviteReferrer = ({ code, placeholderId }: InviteReferrer) => {
+  const params = new URLSearchParams({ [INVITE_REFERRER_KEY]: code });
+  if (placeholderId !== undefined) {
+    params.set(INVITE_PLACEHOLDER_REFERRER_KEY, String(placeholderId));
+  }
+  return params;
+};
+
+export const readInviteReferrer = (
+  params: URLSearchParams,
+): InviteReferrer | null => {
+  const code = inviteCodeSchema.safeParse(params.get(INVITE_REFERRER_KEY));
+  return code.success
+    ? {
+        code: code.data,
+        placeholderId: parsePlaceholderId(
+          params.get(INVITE_PLACEHOLDER_REFERRER_KEY),
+        ),
+      }
+    : null;
+};
 
 // A live code is enough to join, so analytics only ever sees the route
 export const redactInvitePath = (url: string) =>

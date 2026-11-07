@@ -2,16 +2,12 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { Redirect, useRouter } from "expo-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
-import { translateIfKey } from "@flatsby/i18n/message-key";
-import {
-  newGroupFormSchema,
-  splitFlatmateNames,
-} from "@flatsby/validators/group";
-import { defaultUserName } from "@flatsby/validators/user";
+import { useNewGroupForm } from "@flatsby/validators/useNewGroupForm";
+import { typedName } from "@flatsby/validators/user";
 
 import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import {
@@ -32,7 +28,7 @@ export default function WelcomeScreen() {
   if (!user) return <Redirect href="/auth/login" />;
   return (
     <WelcomeForm
-      initialName={user.name === defaultUserName(user.email) ? "" : user.name}
+      initialName={typedName(user)}
       savedName={user.name}
       onNameSaved={() => void session.refetch()}
     />
@@ -51,22 +47,9 @@ function WelcomeForm({
   const t = useTranslations();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [name, setName] = useState(initialName);
-  const [editedGroupName, setEditedGroupName] = useState<string>();
-  const [flatmates, setFlatmates] = useState("");
   const [currency] = useState(deviceCurrency);
-  const [issues, setIssues] = useState<
-    { path: PropertyKey[]; message: string }[]
-  >([]);
   const [opening, setOpening] = useState(false);
-
-  const firstName = name.trim().split(/\s+/)[0] ?? "";
-  const groupName =
-    editedGroupName ??
-    (firstName
-      ? t("group.onboarding.defaultGroupName", { name: firstName })
-      : "");
-  const names = splitFlatmateNames(flatmates);
+  const { data: groups } = useQuery(trpc.group.getUserGroups.queryOptions());
 
   const updateName = useMutation(
     trpc.user.updateUserName.mutationOptions({
@@ -94,39 +77,25 @@ function WelcomeForm({
     ]).then(() => router.replace("/(tabs)/home"));
   });
 
-  const saveName = async (trimmed: string) =>
-    trimmed === savedName ||
-    (await updateName.mutateAsync({ name: trimmed }).catch(() => undefined))
-      ?.success === true;
-
-  const submit = async () => {
-    const parsed = newGroupFormSchema.safeParse({
-      name: name.trim(),
-      groupName: groupName.trim(),
-      placeholders: names,
-    });
-    setIssues(parsed.error?.issues ?? []);
-    if (!parsed.success) return;
-    if (!(await saveName(parsed.data.name))) return;
-    createGroup.mutate({
-      name: parsed.data.groupName,
-      currency,
-      placeholders: parsed.data.placeholders,
-    });
-  };
-
-  // Someone who lost their invite link joins from here, so this is their name step too
-  const joinWithCode = () => {
-    const trimmed = name.trim();
-    if (trimmed && trimmed !== savedName) void saveName(trimmed);
-    router.push("/join");
-  };
+  const form = useNewGroupForm({
+    t,
+    initialName,
+    savedName,
+    saveName: (name) =>
+      updateName.mutateAsync({ name }).then(
+        (result) => result.success,
+        () => false,
+      ),
+    create: (group) => createGroup.mutate({ ...group, currency }),
+    openJoin: () => router.push("/join"),
+  });
 
   const busy = updateName.isPending || createGroup.isPending || opening;
-  const issueFor = (field: string) => {
-    const message = issues.find(({ path }) => path[0] === field)?.message;
-    return message && translateIfKey(t, message);
-  };
+  // A stale cached empty list or a deep link can land someone who already has a group here
+  if (!busy && groups?.success && groups.data.length > 0) {
+    return <Redirect href="/(tabs)/home" />;
+  }
+
   const failure =
     failureOf(updateName, t("errors.unexpected")) ??
     failureOf(createGroup, t("errors.unexpected"));
@@ -149,11 +118,14 @@ function WelcomeForm({
           </Text>
         </View>
 
-        <Field label={t("group.onboarding.nameLabel")} error={issueFor("name")}>
+        <Field
+          label={t("group.onboarding.nameLabel")}
+          error={form.issueFor("name")}
+        >
           <Input
             testID="onboarding-name-input"
-            value={name}
-            onChangeText={setName}
+            value={form.name}
+            onChangeText={form.setName}
             placeholder={t("auth.name.placeholder")}
             accessibilityLabel={t("group.onboarding.nameLabel")}
             autoFocus={initialName === ""}
@@ -161,45 +133,45 @@ function WelcomeForm({
             textContentType="givenName"
             returnKeyType="done"
             editable={!busy}
-            error={issueFor("name") !== undefined}
+            error={form.issueFor("name") !== undefined}
           />
         </Field>
 
         <Field
           label={t("group.onboarding.groupLabel")}
-          error={issueFor("groupName")}
+          error={form.issueFor("groupName")}
         >
           <Input
             testID="onboarding-group-input"
-            value={groupName}
-            onChangeText={setEditedGroupName}
+            value={form.groupName}
+            onChangeText={form.setGroupName}
             placeholder={t("group.create.namePlaceholder")}
             accessibilityLabel={t("group.onboarding.groupLabel")}
             returnKeyType="done"
             editable={!busy}
-            error={issueFor("groupName") !== undefined}
+            error={form.issueFor("groupName") !== undefined}
           />
         </Field>
 
         <Field
           label={t("group.onboarding.flatmatesLabel")}
-          error={issueFor("placeholders")}
+          error={form.issueFor("placeholders")}
         >
           <Input
             testID="onboarding-flatmates-input"
-            value={flatmates}
-            onChangeText={setFlatmates}
+            value={form.flatmates}
+            onChangeText={form.setFlatmates}
             placeholder={t("group.onboarding.flatmatesPlaceholder")}
             accessibilityLabel={t("group.onboarding.flatmatesLabel")}
             autoCapitalize="words"
             returnKeyType="done"
             editable={!busy}
-            error={issueFor("placeholders") !== undefined}
+            error={form.issueFor("placeholders") !== undefined}
           />
-          {names.length > 0 && (
+          {form.names.length > 0 && (
             <>
               <View className="flex-row flex-wrap gap-2">
-                {names.map((flatmate) => (
+                {form.names.map((flatmate) => (
                   <View
                     key={flatmate}
                     className="bg-muted flex-row items-center gap-2 rounded-full py-1 pr-3 pl-1"
@@ -243,7 +215,7 @@ function WelcomeForm({
             }
             icon={busy ? "loader" : undefined}
             disabled={busy}
-            onPress={submit}
+            onPress={form.submit}
           />
           <Button
             testID="onboarding-join"
@@ -251,7 +223,7 @@ function WelcomeForm({
             className="w-full py-4"
             title={t("invite.join.withCode")}
             disabled={busy}
-            onPress={joinWithCode}
+            onPress={form.joinWithCode}
           />
         </View>
       </AppScrollView>

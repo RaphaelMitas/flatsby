@@ -78,29 +78,28 @@ const issueInvite = Effect.fn("Invites.issueInvite")(function* (
   );
 });
 
-// The list a joiner lands on: the one whose newest open item is newest
-const listWithOpenItems = Effect.fn("Invites.listWithOpenItems")(function* (
-  groupId: number,
-) {
-  const database = yield* Database;
-  const [list] = yield* database.query("find list with open items", (db) =>
-    db
-      .select({ id: shoppingLists.id, name: shoppingLists.name })
-      .from(shoppingLists)
-      .innerJoin(
-        shoppingListItems,
-        and(
-          eq(shoppingListItems.shoppingListId, shoppingLists.id),
-          eq(shoppingListItems.completed, false),
-        ),
-      )
-      .where(eq(shoppingLists.groupId, groupId))
-      .groupBy(shoppingLists.id)
-      .orderBy(desc(max(shoppingListItems.createdAt)))
-      .limit(1),
-  );
-  return list ?? null;
-});
+const listWithNewestOpenItem = Effect.fn("Invites.listWithNewestOpenItem")(
+  function* (groupId: number) {
+    const database = yield* Database;
+    const [list] = yield* database.query("find list with open items", (db) =>
+      db
+        .select({ id: shoppingLists.id, name: shoppingLists.name })
+        .from(shoppingLists)
+        .innerJoin(
+          shoppingListItems,
+          and(
+            eq(shoppingListItems.shoppingListId, shoppingLists.id),
+            eq(shoppingListItems.completed, false),
+          ),
+        )
+        .where(eq(shoppingLists.groupId, groupId))
+        .groupBy(shoppingLists.id)
+        .orderBy(desc(max(shoppingListItems.createdAt)))
+        .limit(1),
+    );
+    return list ?? null;
+  },
+);
 
 // Expired, reset and made-up codes all fail the same way, so a code reveals nothing.
 const findLiveInvite = Effect.fn("Invites.findLiveInvite")(function* (
@@ -206,7 +205,7 @@ export const inviteRouter = createTRPCRouter({
           return {
             groupId: group.id,
             groupName: group.name,
-            openList: yield* listWithOpenItems(group.id),
+            openList: yield* listWithNewestOpenItem(group.id),
           };
         }),
       ),

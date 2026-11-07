@@ -5,12 +5,9 @@ import { usePathname, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
-  INVITE_PLACEHOLDER_REFERRER_KEY,
-  INVITE_REFERRER_KEY,
-  inviteCodeSchema,
   invitePath,
   outlivesAnyInvite,
-  parsePlaceholderId,
+  readInviteReferrer,
 } from "@flatsby/validators/invite";
 
 const HANDLED_KEY = "install_referrer_handled";
@@ -40,18 +37,10 @@ export function InstallReferrer() {
       );
       if (referrer === null) return;
       await AsyncStorage.setItem(HANDLED_KEY, "true");
-      const params = new URLSearchParams(referrer);
-      const code = inviteCodeSchema.safeParse(
-        params.get(INVITE_REFERRER_KEY) ?? "",
-      );
+      const invite = readInviteReferrer(new URLSearchParams(referrer));
       // A link to the same invite may have opened the app already; the pathname carries no query
-      if (code.success && pathnameRef.current !== invitePath(code.data)) {
-        router.push(
-          invitePath(
-            code.data,
-            parsePlaceholderId(params.get(INVITE_PLACEHOLDER_REFERRER_KEY)),
-          ),
-        );
+      if (invite && pathnameRef.current !== invitePath(invite.code)) {
+        router.push(invitePath(invite.code, invite.placeholderId));
       }
     })();
   }, [router]);

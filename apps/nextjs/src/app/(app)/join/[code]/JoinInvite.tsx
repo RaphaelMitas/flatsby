@@ -24,9 +24,8 @@ import {
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
   formatInviteCode,
-  INVITE_PLACEHOLDER_REFERRER_KEY,
-  INVITE_REFERRER_KEY,
   invitePath,
+  inviteReferrer,
 } from "@flatsby/validators/invite";
 import { PLAY_STORE_ID } from "@flatsby/validators/store";
 
@@ -61,7 +60,7 @@ export function JoinInvite({
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
-  // A personal link's spot is picked until the joiner picks another; an unknown id matches nothing
+  // An unknown personalId matches no placeholder, so nothing is preselected
   const [claimId, setClaimId] = useState<number | null>(personalId ?? null);
   const [takenName, setTakenName] = useState<string>();
 
@@ -296,11 +295,7 @@ function InstallApp({
   signInHref: string;
 }) {
   const t = useTranslations();
-  const referrer = new URLSearchParams({ [INVITE_REFERRER_KEY]: code });
-  if (personalId !== undefined) {
-    referrer.set(INVITE_PLACEHOLDER_REFERRER_KEY, String(personalId));
-  }
-  const invite = `?${referrer}`;
+  const invite = `?${inviteReferrer({ code, placeholderId: personalId })}`;
   // Chrome only follows an absolute fallback URL out of an intent link
   const playStoreFallback = `${SITE_URL}${PLAY_STORE_LINK}${invite}`;
 

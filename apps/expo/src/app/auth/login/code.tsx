@@ -50,7 +50,7 @@ export default function CodeScreen() {
         signedIn.current = true;
         posthog.capture("login_succeeded", attempt);
         const steps: SignInStep[] = [];
-        // Creators name themselves on the onboarding screen; joiners go straight to the invite
+        // Only joiners get the name step; creators name themselves on the onboarding screen
         if (asksForName(user) && peekPostLoginPath()) steps.push("name");
         if (offersPasskey) steps.push("passkey");
         queueSignInSteps(steps);

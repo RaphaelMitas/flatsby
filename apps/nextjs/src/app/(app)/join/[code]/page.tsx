@@ -59,6 +59,7 @@ export default async function JoinPage({
     headers().then(platformFor),
     searchParams,
   ]);
+  const personalId = parsePlaceholderId(p);
 
   return (
     <main className="bg-muted flex h-dvh overflow-y-auto p-4">
@@ -66,7 +67,7 @@ export default async function JoinPage({
       {code && (
         <meta
           name="apple-itunes-app"
-          content={`app-id=${APP_STORE_ID}, app-argument=flatsby:/${invitePath(code)}`}
+          content={`app-id=${APP_STORE_ID}, app-argument=flatsby:/${invitePath(code, personalId)}`}
         />
       )}
       <div className="m-auto flex w-full justify-center">
@@ -75,7 +76,7 @@ export default async function JoinPage({
           preview={preview}
           signedIn={!!session?.user}
           platform={platform}
-          personalId={parsePlaceholderId(p)}
+          personalId={personalId}
         />
       </div>
     </main>

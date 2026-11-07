@@ -1,18 +1,21 @@
 import { redirect } from "next/navigation";
 
-import { defaultUserName } from "@flatsby/validators/user";
+import { typedName } from "@flatsby/validators/user";
 
 import { getSession } from "~/auth/server";
+import { getCurrentUserWithGroups } from "~/trpc/server";
 import { Welcome } from "./Welcome";
 
 export default async function WelcomePage() {
   const session = await getSession();
   if (!session?.user) redirect("/auth/login");
-  const { name, email } = session.user;
+  // Back from Home, or a stale group list, must not offer a second WG
+  const current = await getCurrentUserWithGroups();
+  if (current.success && current.data.groups.length > 0) redirect("/home");
   return (
     <Welcome
-      initialName={name === defaultUserName(email) ? "" : name}
-      savedName={name}
+      initialName={typedName(session.user)}
+      savedName={session.user.name}
     />
   );
 }

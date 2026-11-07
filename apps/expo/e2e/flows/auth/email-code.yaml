@@ -31,7 +31,6 @@ tags:
       id: "code-error"
     timeout: 15000
 - inputText: ${output.signInCode}
-# A creator names themselves on the onboarding screen, so the name step is skipped
 # The system passkey sheet needs the real domain, so the flow declines the offer
 - extendedWaitUntil:
     visible:

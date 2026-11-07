@@ -1,18 +1,22 @@
-import { useEffect, useState } from "react";
+import type { InvitePlaceholder } from "@flatsby/validators/group";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
-import { hasJoined, openPlaceholders } from "@flatsby/validators/group";
-import { formatInviteCode, inviteDaysLeft } from "@flatsby/validators/invite";
+import { openPlaceholders } from "@flatsby/validators/group";
+import {
+  formatInviteCode,
+  inviteDaysLeft,
+  spokenInviteCode,
+} from "@flatsby/validators/invite";
 import {
   markInviteShared,
-  useInviteSharedThisSession,
-} from "@flatsby/validators/useInviteShared";
+  useWaitingForFlatmates,
+} from "@flatsby/validators/useWaitingForFlatmates";
 
-import type { InvitePlaceholder } from "~/components/invite/useShareInvite";
 import { MemberAvatar } from "~/components/expenses/MemberAvatar";
 import {
   useInviteMessage,
@@ -37,14 +41,14 @@ export function InviteFlatmatesCard({
     groupId: number;
     dismissed: boolean;
   }>();
-  const sharedThisSession = useInviteSharedThisSession(groupId);
+  const sharing = useRef(false);
   const { data: group } = useQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
-  const members = group?.success ? group.data.groupMembers : undefined;
-  const waiting =
-    members !== undefined &&
-    (sharedThisSession || members.filter(hasJoined).length === 1);
+  const waiting = useWaitingForFlatmates(
+    groupId,
+    group?.success ? group.data.groupMembers : undefined,
+  );
   const visible =
     waiting && dismissal?.groupId === groupId && !dismissal.dismissed;
 
@@ -74,10 +78,13 @@ export function InviteFlatmatesCard({
   const loadFailure = failureOf(invite, t("invite.loadFailed"));
 
   const share = (placeholder?: InvitePlaceholder) => {
-    if (!code) return;
+    if (!code || sharing.current) return;
+    sharing.current = true;
     markInviteShared(groupId);
     sharePressed.mutate({ groupId, personal: placeholder !== undefined });
-    void shareInvite(code.code, placeholder);
+    void shareInvite(code.code, placeholder).finally(() => {
+      sharing.current = false;
+    });
   };
 
   return (
@@ -188,7 +195,7 @@ export function InviteFlatmatesCard({
               {code && (
                 <Text
                   testID="invite-card-code"
-                  accessibilityLabel={code.code.split("").join(" ")}
+                  accessibilityLabel={spokenInviteCode(code.code)}
                   className="text-foreground font-mono text-base font-bold tracking-widest"
                 >
                   {formatInviteCode(code.code)}

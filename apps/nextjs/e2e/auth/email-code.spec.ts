@@ -17,7 +17,6 @@ test.describe("Email code sign-in", () => {
     await expect(page.getByTestId("auth-code-error")).toBeVisible();
 
     await page.getByTestId("auth-code-input").fill(code);
-    // A creator names themselves here, not on a separate name step
     await expect(page).toHaveURL(/\/welcome/);
     const nameInput = page.getByTestId("onboarding-name-input");
     await expect(nameInput).toHaveValue("");
@@ -39,6 +38,10 @@ test.describe("Email code sign-in", () => {
     await expect(card.getByTestId("invite-card-code")).toHaveText(
       /^[0-9A-Z]{4}-[0-9A-Z]{4}$/,
     );
+
+    // Back to onboarding would offer a second WG
+    await page.goto("/welcome");
+    await expect(page).toHaveURL(/\/home/);
   });
 
   test("signs an existing user into the same account", async ({

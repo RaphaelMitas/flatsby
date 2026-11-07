@@ -98,6 +98,8 @@ export const group = {
     add: "Add",
     nameRequired: "Please enter a name",
     nameTooLong: "Names can't be longer than 64 characters",
+    tooMany:
+      "That's more than 20 names. Add the rest later in the group settings.",
     invite: "Invite {name}",
     rename: "Rename",
     renameTitle: "Rename {name}",

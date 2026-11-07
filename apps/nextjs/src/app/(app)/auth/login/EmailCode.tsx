@@ -56,7 +56,7 @@ export default function EmailCode({
           readPasskeyDevice() === "unknown"
             ? `/auth/passkey?next=${encodeURIComponent(callbackURL)}`
             : callbackURL;
-        // Creators name themselves on the onboarding screen; joiners go straight to the invite
+        // Only joiners get the name step; creators name themselves on the onboarding screen
         const joining = callbackURL.startsWith(`${INVITE_PATH}/`);
         window.location.assign(
           asksForName(user) && joining

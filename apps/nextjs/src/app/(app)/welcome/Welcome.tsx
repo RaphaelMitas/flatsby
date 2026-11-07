@@ -7,16 +7,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
-import { translateIfKey } from "@flatsby/i18n/message-key";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Input } from "@flatsby/ui/input";
 import { Label } from "@flatsby/ui/label";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import {
-  newGroupFormSchema,
-  splitFlatmateNames,
-} from "@flatsby/validators/group";
+import { useNewGroupForm } from "@flatsby/validators/useNewGroupForm";
 
 import { useCreateGroup } from "~/app/(app)/group/create/useCreateGroup";
 import { JoinWithCodeDialog } from "~/app/(app)/group/JoinWithCodeDialog";
@@ -35,21 +31,7 @@ export function Welcome({
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [name, setName] = useState(initialName);
-  const [editedGroupName, setEditedGroupName] = useState<string>();
-  const [flatmates, setFlatmates] = useState("");
-  const [issues, setIssues] = useState<
-    { path: PropertyKey[]; message: string }[]
-  >([]);
   const [joinOpen, setJoinOpen] = useState(false);
-
-  const firstName = name.trim().split(/\s+/)[0] ?? "";
-  const groupName =
-    editedGroupName ??
-    (firstName
-      ? t("group.onboarding.defaultGroupName", { name: firstName })
-      : "");
-  const names = splitFlatmateNames(flatmates);
 
   const updateName = useMutation(
     trpc.user.updateUserName.mutationOptions({
@@ -77,42 +59,25 @@ export function Welcome({
       ),
       queryClient.ensureQueryData(trpc.invite.get.queryOptions({ groupId })),
     ]);
-    router.push("/home");
+    router.replace("/home");
   });
 
-  const saveName = async (trimmed: string) =>
-    trimmed === savedName ||
-    (await updateName.mutateAsync({ name: trimmed }).catch(() => undefined))
-      ?.success === true;
+  const form = useNewGroupForm({
+    t,
+    initialName,
+    savedName,
+    saveName: (name) =>
+      updateName.mutateAsync({ name }).then(
+        (result) => result.success,
+        () => false,
+      ),
+    create: (group) => createGroup.mutate({ ...group, currency: CURRENCY }),
+    openJoin: () => setJoinOpen(true),
+  });
 
-  const submit = async () => {
-    const parsed = newGroupFormSchema.safeParse({
-      name: name.trim(),
-      groupName: groupName.trim(),
-      placeholders: names,
-    });
-    setIssues(parsed.error?.issues ?? []);
-    if (!parsed.success) return;
-    if (!(await saveName(parsed.data.name))) return;
-    createGroup.mutate({
-      name: parsed.data.groupName,
-      currency: CURRENCY,
-      placeholders: parsed.data.placeholders,
-    });
-  };
-
-  // Someone who lost their invite link joins from here, so this is their name step too
-  const joinWithCode = () => {
-    const trimmed = name.trim();
-    if (trimmed && trimmed !== savedName) void saveName(trimmed);
-    setJoinOpen(true);
-  };
-
-  const busy = updateName.isPending || createGroup.isPending;
-  const issueFor = (field: string) => {
-    const message = issues.find(({ path }) => path[0] === field)?.message;
-    return message && translateIfKey(t, message);
-  };
+  // Success stays busy too: the WG exists and Home is still loading
+  const busy =
+    updateName.isPending || createGroup.isPending || createGroup.isSuccess;
   const failure =
     failureOf(updateName, t("errors.unexpected")) ??
     failureOf(createGroup, t("errors.unexpected"));
@@ -123,7 +88,7 @@ export function Welcome({
         className="bg-muted flex w-full max-w-md flex-col gap-5 rounded-lg p-8"
         onSubmit={(event) => {
           event.preventDefault();
-          void submit();
+          void form.submit();
         }}
       >
         <div className="flex flex-col gap-1">
@@ -141,59 +106,59 @@ export function Welcome({
         <Field
           id="onboarding-name"
           label={t("group.onboarding.nameLabel")}
-          error={issueFor("name")}
+          error={form.issueFor("name")}
         >
           <Input
             id="onboarding-name"
             data-testid="onboarding-name-input"
             className="bg-background"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+            value={form.name}
+            onChange={(event) => form.setName(event.target.value)}
             placeholder={t("auth.name.placeholder")}
             autoFocus={initialName === ""}
             autoComplete="name"
             disabled={busy}
-            aria-invalid={issueFor("name") !== undefined}
+            aria-invalid={form.issueFor("name") !== undefined}
           />
         </Field>
 
         <Field
           id="onboarding-group"
           label={t("group.onboarding.groupLabel")}
-          error={issueFor("groupName")}
+          error={form.issueFor("groupName")}
         >
           <Input
             id="onboarding-group"
             data-testid="onboarding-group-input"
             className="bg-background"
-            value={groupName}
-            onChange={(event) => setEditedGroupName(event.target.value)}
+            value={form.groupName}
+            onChange={(event) => form.setGroupName(event.target.value)}
             placeholder={t("group.create.namePlaceholder")}
             disabled={busy}
-            aria-invalid={issueFor("groupName") !== undefined}
+            aria-invalid={form.issueFor("groupName") !== undefined}
           />
         </Field>
 
         <Field
           id="onboarding-flatmates"
           label={t("group.onboarding.flatmatesLabel")}
-          error={issueFor("placeholders")}
+          error={form.issueFor("placeholders")}
         >
           <Input
             id="onboarding-flatmates"
             data-testid="onboarding-flatmates-input"
             className="bg-background"
-            value={flatmates}
-            onChange={(event) => setFlatmates(event.target.value)}
+            value={form.flatmates}
+            onChange={(event) => form.setFlatmates(event.target.value)}
             placeholder={t("group.onboarding.flatmatesPlaceholder")}
             autoCapitalize="words"
             disabled={busy}
-            aria-invalid={issueFor("placeholders") !== undefined}
+            aria-invalid={form.issueFor("placeholders") !== undefined}
           />
-          {names.length > 0 && (
+          {form.names.length > 0 && (
             <>
               <ul className="flex flex-wrap gap-2">
-                {names.map((flatmate) => (
+                {form.names.map((flatmate) => (
                   <li
                     key={flatmate}
                     className="bg-background flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm"
@@ -228,7 +193,7 @@ export function Welcome({
             variant="ghost"
             data-testid="onboarding-join"
             disabled={busy}
-            onClick={joinWithCode}
+            onClick={() => void form.joinWithCode()}
           >
             {t("invite.join.withCode")}
           </Button>
