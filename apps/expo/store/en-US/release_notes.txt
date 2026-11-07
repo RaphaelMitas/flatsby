@@ -1,5 +1,6 @@
-• Snap or pick a photo of a receipt, and the Flatsby cat fills in the amount, date and store. Each scan uses credits.
-• About ten expenses now fit on screen, grouped by month, with your share on each one.
-• Settings fit on one screen, with your current choices shown on the right.
-• Winter is here: a snowy town at the top of Home, and a Santa hat on the cat until Christmas.
+• Search your expenses and filter by person, category or time range, even years back.
+• The top of the expense list shows what you owe or are owed.
+• Receipt scanning reads PDF invoices too, and is marked as beta.
+• Starting a group is quicker: create it first, then send each person their own invite link from Home.
+• Calmer screens, and the Next button no longer hides under the number pad.
 • Small fixes and improvements.
