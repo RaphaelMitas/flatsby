@@ -20,18 +20,18 @@ export const group = {
   },
   onboarding: {
     title: "Almost done.",
-    question: "What's your name, and what's your flat called?",
+    question: "What's your name, and what's your group called?",
     nameLabel: "Your name",
-    groupLabel: "Your flat",
-    defaultGroupName: "{name}'s flat",
+    groupLabel: "Your group",
+    defaultGroupName: "{name}'s group",
     flatmatesLabel: "Who else lives there? (optional)",
     removeFlatmate: "Remove {name}",
     flatmatesHint:
       "Everyone gets their own link. After signing in, their spot is already picked.",
     currency:
       "Currency: {currency}. You can change it later in the group settings.",
-    create: "Create flat",
-    creating: "Creating your flat…",
+    create: "Create group",
+    creating: "Creating your group…",
   },
   settings: {
     changeGroup: "Change Group",
@@ -99,7 +99,7 @@ export const group = {
     nameRequired: "Please enter a name",
     nameTooLong: "Names can't be longer than 64 characters",
     tooMany:
-      "At most 20 names. Add the rest in the group settings once the flat exists.",
+      "At most 20 names. Add the rest in the group settings once the group exists.",
     invite: "Invite {name}",
     rename: "Rename",
     renameTitle: "Rename {name}",

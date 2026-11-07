@@ -6,7 +6,7 @@ import { waitForHydration } from "../helpers/hydration";
 import { currentUserId, requestCode } from "../helpers/sign-in-code";
 
 test.describe("Email code sign-in", () => {
-  test("signs up a new address and creates the flat in one step", async ({
+  test("signs up a new address and creates the group in one step", async ({
     page,
   }) => {
     const email = `code-${randomUUID()}@flatsby.test`;
@@ -23,7 +23,7 @@ test.describe("Email code sign-in", () => {
     await waitForHydration(page.getByTestId("onboarding-create"));
     await nameInput.fill("Code User");
     await expect(page.getByTestId("onboarding-group-input")).toHaveValue(
-      "Code's flat",
+      "Code's group",
     );
     const flatmates = page.getByTestId("onboarding-flatmates-input");
     const add = page.getByTestId("onboarding-flatmate-add");
@@ -42,7 +42,7 @@ test.describe("Email code sign-in", () => {
 
     await expect(page).toHaveURL(/\/home/);
     const card = page.getByTestId("invite-flatmates-card");
-    await expect(card).toContainText("Code's flat is set up");
+    await expect(card).toContainText("Code's group is set up");
     await expect(card.getByTestId(/^invite-card-send-\d+$/)).toHaveCount(2);
     await expect(card.getByTestId("invite-card-preview")).toContainText(
       "Lena, I've already added you",

@@ -6,9 +6,9 @@ export const invite = {
   orEnterCode: "or enter this code in Flatsby",
   shareLink: "Share link",
   shareGroup:
-    "Could you quickly join our flat on Flatsby? Then the shopping list stops getting lost in the chat: {link}",
+    "Could you quickly join our group on Flatsby? Then the shopping list stops getting lost in the chat: {link}",
   sharePersonal:
-    "{name}, I've already added you to our flat on Flatsby. Could you quickly join? Then the shopping list stops getting lost in the chat: {link}",
+    "{name}, I've already added you to our group on Flatsby. Could you quickly join? Then the shopping list stops getting lost in the chat: {link}",
   resetLink: "Reset link",
   resetFailed: "Couldn't reset the link. Try again.",
   loadFailed: "Couldn't load the invite. Try again.",
