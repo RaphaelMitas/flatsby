@@ -46,7 +46,7 @@ export function withoutCookie(headers: Headers) {
   return signedOut;
 }
 
-// The query and hash can carry free text, like a search
+// The query and hash can carry free text
 export function pageWithoutQuery(url: string) {
   const { origin, pathname } = new URL(url);
   return { url: origin + pathname, referrer: null };

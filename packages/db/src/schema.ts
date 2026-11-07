@@ -465,7 +465,6 @@ export const expenseSplitsRelations = relations(expenseSplits, ({ one }) => ({
   }),
 }));
 
-// Chat tables
 export const calendarItems = createTable(
   "calendar_item",
   {

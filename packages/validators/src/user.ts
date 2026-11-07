@@ -118,6 +118,7 @@ export const userDataExportSchema = z.object({
     analyticsOptOut: z.boolean(),
     paypalHandle: z.string().nullable(),
   }),
+  aiUsage: z.array(z.object({ monthStart: z.string(), used: z.number() })),
   signInMethods: z.array(
     z.object({
       providerId: z.string(),

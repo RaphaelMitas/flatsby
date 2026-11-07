@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-// A fair-use cap far above normal use, not something anyone buys more of
+// A fair-use cap far above normal use
 export const FREE_MONTHLY_CREDITS = 5000;
 
 // 1 credit = $0.0001 of AI cost
@@ -14,7 +14,7 @@ export function costToCredits(cost: string | number | undefined): number {
     : 0;
 }
 
-// Only released app builds call getUsage and getSubscription; they decide what to show from these shapes
+// Only released app builds call getUsage and getSubscription
 export const usageDataSchema = z.object({
   credits: z.object({ balance: z.number(), usage: z.number() }),
 });

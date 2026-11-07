@@ -71,7 +71,8 @@ export const errors = {
     "Deine Daten konnten gerade nicht exportiert werden. Bitte versuch es noch einmal.",
   outOfCredits:
     "Du hast die Belegscans für diesen Monat aufgebraucht. Am 1. sind sie wieder da.",
-  creditCheckFailed: "Deine Credits konnten nicht geprüft werden",
+  creditCheckFailed:
+    "Belegscan ist gerade nicht verfügbar. Bitte versuch es noch einmal.",
   groupAccessDenied: "Gruppe nicht gefunden oder kein Zugriff",
   groupNotFound: "Gruppe nicht gefunden",
   shoppingListNotFound: "Einkaufsliste nicht gefunden",

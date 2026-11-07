@@ -284,7 +284,7 @@ export const expenseRouter = createTRPCRouter({
                 return { ...expense, splits };
               }),
           );
-          // Chat and app builds before conversion never send the field, so they'd all count as kept
+          // App builds before conversion never send the field, so they'd all count as kept
           if (
             input.currency !== group.currency &&
             input.convertedCurrency !== undefined &&

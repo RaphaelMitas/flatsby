@@ -5,6 +5,7 @@ import { and, eq, inArray, isNotNull, ne, or } from "@flatsby/db";
 import {
   accounts,
   analyticsConsents,
+  creditBalances,
   expenses,
   expenseSplits,
   groupMembers,
@@ -460,6 +461,11 @@ export const userRouter = createTRPCRouter({
                   },
                 });
 
+              const aiUsage = await db.query.creditBalances.findMany({
+                where: eq(creditBalances.userId, userId),
+                columns: { monthStart: true, used: true },
+              });
+
               const userSessions = await db.query.sessions.findMany({
                 where: eq(sessions.userId, userId),
                 columns: {
@@ -581,6 +587,7 @@ export const userRouter = createTRPCRouter({
                 signInMethods,
                 passkeys: userPasskeys,
                 analyticsConsents: analyticsConsentLog,
+                aiUsage,
                 sessions: userSessions,
                 groups: userGroups.map((g) => ({
                   id: g.group.id,

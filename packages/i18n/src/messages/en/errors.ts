@@ -66,7 +66,8 @@ export const errors = {
     "Unable to export your data at this time. Please try again.",
   outOfCredits:
     "You've used this month's receipt scans. They're back on the 1st.",
-  creditCheckFailed: "Error checking credits",
+  creditCheckFailed:
+    "Receipt scan isn't available right now. Please try again.",
   groupAccessDenied: "Group not found or access denied",
   groupNotFound: "Group not found",
   shoppingListNotFound: "Shopping list not found",

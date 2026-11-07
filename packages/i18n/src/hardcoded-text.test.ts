@@ -21,8 +21,7 @@ const ignoredFiles = [
   /\/e2e\//,
   /apps\/expo\/src\/app\/e2e-login\.tsx$/,
   /apps\/nextjs\/src\/app\/api\/e2e\//,
-  /packages\/api\/src\/utils\/(classify|context-builder|chat-tools|model-provider)\.ts$/,
-  /packages\/validators\/src\/chat\/tools\.ts$/,
+  /packages\/api\/src\/utils\/(classify|model-provider)\.ts$/,
   /apps\/expo\/src\/utils\/analytics\/screen-names\.ts$/,
 ];
 

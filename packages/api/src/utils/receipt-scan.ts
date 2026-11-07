@@ -52,7 +52,7 @@ export const scanReceipt: ReceiptScanner = (user, file) =>
     return receiptScanFrom(reading);
   });
 
-// CI has no gateway key and is denied credits, so e2e reads this receipt instead of calling a model
+// CI never reaches a model, so e2e reads this receipt
 export const e2eReceiptScanner: ReceiptScanner = () =>
   Effect.succeed({
     amountInCents: 2347,
