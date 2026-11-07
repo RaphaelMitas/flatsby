@@ -88,7 +88,7 @@ export default function TabLayout() {
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;
   }
-  // Same reason as above; only a fetched empty list counts, not the persisted cache or a delete's optimistic one
+  // Only a fetched empty list counts, not the persisted cache or a delete's optimistic one
   if (
     groups.data?.success &&
     groups.data.data.length === 0 &&

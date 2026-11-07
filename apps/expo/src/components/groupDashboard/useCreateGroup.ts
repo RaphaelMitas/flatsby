@@ -62,14 +62,17 @@ export function useCreateGroup(onCreated: (groupId: number) => void) {
         rollback: restoreSnapshot(queryClient),
         // What comes next needs the real group id, so navigation waits for it
         onSuccess: ({ groupId }, { name }) => {
+          setSelectedGroup(groupId, name);
+          onCreated(groupId);
+        },
+        // Also after an error: a lost response can hide a WG that was created
+        onSettled: () => {
           void queryClient.invalidateQueries(
             trpc.group.getUserGroups.queryOptions(),
           );
           void queryClient.invalidateQueries(
             trpc.user.getCurrentUserWithGroups.queryOptions(),
           );
-          setSelectedGroup(groupId, name);
-          onCreated(groupId);
         },
       }),
     ),

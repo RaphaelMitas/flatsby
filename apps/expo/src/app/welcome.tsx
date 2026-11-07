@@ -21,6 +21,7 @@ import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { trpc } from "~/utils/api";
 import { signOut, useSession } from "~/utils/auth/auth-client";
+import { useShoppingStore } from "~/utils/shopping-store";
 
 export default function WelcomeScreen() {
   const session = useSession();
@@ -48,6 +49,7 @@ function WelcomeForm({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [currency] = useState(deviceCurrency);
+  const { clearSelectedGroup } = useShoppingStore();
   const { data: groups } = useQuery(trpc.group.getUserGroups.queryOptions());
 
   const updateName = useMutation(
@@ -229,7 +231,10 @@ function WelcomeForm({
             variant="link"
             title={t("navigation.logout")}
             disabled={busy}
-            onPress={() => void signOut()}
+            onPress={() => {
+              clearSelectedGroup();
+              void signOut();
+            }}
           />
         </View>
       </AppScrollView>

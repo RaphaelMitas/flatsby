@@ -37,11 +37,11 @@ async function joinAsNewUser(
   return invitee;
 }
 
-async function confirmJoin(page: Page) {
+async function confirmJoin(page: Page, landing = "/home") {
   const joinButton = page.getByTestId("join-invite-button");
   await waitForHydration(joinButton);
   await joinButton.click();
-  await page.waitForURL("/home");
+  await page.waitForURL(landing);
 }
 
 async function openInvite(page: Page) {
@@ -201,10 +201,7 @@ test.describe("Group Management", () => {
 
     const { page } = await newInvitee(browser, baseURL);
     await page.goto(`/join/${code}`);
-    const joinButton = page.getByTestId("join-invite-button");
-    await waitForHydration(joinButton);
-    await joinButton.click();
-    await page.waitForURL(`/shopping-list/${listId}`);
+    await confirmJoin(page, `/shopping-list/${listId}`);
     await expect(page.getByText("Toilet paper", { exact: true })).toBeVisible();
     await page.context().close();
   });

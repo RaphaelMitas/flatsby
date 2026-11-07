@@ -2,8 +2,8 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { redirect, useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
@@ -33,6 +33,7 @@ export function Welcome({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [joinOpen, setJoinOpen] = useState(false);
+  const { data: groups } = useQuery(trpc.group.getUserGroups.queryOptions());
 
   const updateName = useMutation(
     trpc.user.updateUserName.mutationOptions({
@@ -78,6 +79,9 @@ export function Welcome({
     updateName.isPending ||
     createGroup.isPending ||
     createGroup.data?.success === true;
+  // The server page covers a fresh load; this covers a WG whose create response got lost
+  if (!busy && groups?.success && groups.data.length > 0) redirect("/home");
+
   const failure =
     failureOf(updateName, t("errors.unexpected")) ??
     failureOf(createGroup, t("errors.unexpected"));
