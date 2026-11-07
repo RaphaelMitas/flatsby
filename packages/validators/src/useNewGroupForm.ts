@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { translateIfKey } from "@flatsby/i18n/message-key";
 
-import { newGroupFormSchema, splitFlatmateNames } from "./group";
+import { newGroupFormSchema, uniqueNames } from "./group";
 import { useOnce } from "./useOnce";
 
 type Field = "name" | "groupName" | "placeholders";
@@ -27,7 +27,8 @@ export function useNewGroupForm({
 }) {
   const [name, setName] = useState(initialName);
   const [editedGroupName, setGroupName] = useState<string>();
-  const [flatmates, setFlatmates] = useState("");
+  const [names, setNames] = useState<string[]>([]);
+  const [draft, setDraft] = useState("");
   const [issues, setIssues] = useState<
     { path: PropertyKey[]; message: string }[]
   >([]);
@@ -39,7 +40,6 @@ export function useNewGroupForm({
     (firstName
       ? t("group.onboarding.defaultGroupName", { name: firstName })
       : "");
-  const names = splitFlatmateNames(flatmates);
 
   const keepName = async (trimmed: string) =>
     trimmed === savedName ||
@@ -52,7 +52,8 @@ export function useNewGroupForm({
     const parsed = newGroupFormSchema.safeParse({
       name: name.trim(),
       groupName: groupName.trim(),
-      placeholders: names,
+      // A name typed but not added yet still counts
+      placeholders: uniqueNames([...names, draft.trim()].filter(Boolean)),
     });
     setIssues(parsed.error?.issues ?? []);
     if (!parsed.success || !(await keepName(parsed.data.name))) return;
@@ -80,9 +81,11 @@ export function useNewGroupForm({
     setName,
     groupName,
     setGroupName,
-    flatmates,
-    setFlatmates,
     names,
+    addName: (added: string) => setNames((all) => uniqueNames([...all, added])),
+    removeName: (removed: string) =>
+      setNames((all) => all.filter((name) => name !== removed)),
+    setDraft,
     issueFor,
     submit,
     joinWithCode,

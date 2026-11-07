@@ -10,7 +10,12 @@ import { useTranslations } from "use-intl";
 
 import { usePostHogClient } from "~/utils/analytics/posthog";
 import { getScreenName } from "~/utils/analytics/screen-names";
-import { clearQueryCache, persistOptions, queryClient } from "~/utils/api";
+import {
+  clearQueryCache,
+  persistOptions,
+  queryClient,
+  trpc,
+} from "~/utils/api";
 
 import "../styles.css";
 import "~/lib/nativewind-setup";
@@ -99,6 +104,8 @@ function SignInNavigator() {
     const arrived = userId !== undefined && userId !== previousUserId.current;
     previousUserId.current = userId;
     if (!arrived) return;
+    // The tabs wait for this before choosing Home or onboarding
+    void queryClient.prefetchQuery(trpc.group.getUserGroups.queryOptions());
     if (router.canDismiss()) router.dismissAll();
     router.replace("/");
   }, [userId]);

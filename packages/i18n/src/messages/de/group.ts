@@ -27,7 +27,7 @@ export const group = {
     groupLabel: "Eure WG",
     defaultGroupName: "WG von {name}",
     flatmatesLabel: "Wer wohnt noch da? (optional)",
-    flatmatesPlaceholder: "Namen, z. B. Lena, Tim",
+    removeFlatmate: "{name} entfernen",
     flatmatesHint:
       "Jeder bekommt seinen eigenen Link. Nach der Anmeldung ist sein Platz schon ausgewählt.",
     currency:

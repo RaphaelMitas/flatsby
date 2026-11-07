@@ -25,7 +25,7 @@ export const group = {
     groupLabel: "Your flat",
     defaultGroupName: "{name}'s flat",
     flatmatesLabel: "Who else lives there? (optional)",
-    flatmatesPlaceholder: "Names, e.g. Lena, Tim",
+    removeFlatmate: "Remove {name}",
     flatmatesHint:
       "Everyone gets their own link. After signing in, their spot is already picked.",
     currency:

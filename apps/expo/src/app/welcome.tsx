@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Redirect, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -14,8 +14,10 @@ import {
   deviceCurrency,
   useCreateGroup,
 } from "~/components/groupDashboard/useCreateGroup";
+import { PlaceholderNameField } from "~/components/members/PlaceholderNameField";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
+import Icon from "~/lib/ui/custom/icons/Icon";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
@@ -157,24 +159,29 @@ function WelcomeForm({
           label={t("group.onboarding.flatmatesLabel")}
           error={form.issueFor("placeholders")}
         >
-          <Input
-            testID="onboarding-flatmates-input"
-            value={form.flatmates}
-            onChangeText={form.setFlatmates}
-            placeholder={t("group.onboarding.flatmatesPlaceholder")}
-            accessibilityLabel={t("group.onboarding.flatmatesLabel")}
-            autoCapitalize="words"
-            returnKeyType="done"
-            editable={!busy}
-            error={form.issueFor("placeholders") !== undefined}
+          <PlaceholderNameField
+            submitLabel={t("group.placeholders.add")}
+            submitIcon="plus"
+            inputTestID="onboarding-flatmates-input"
+            buttonTestID="onboarding-flatmate-add"
+            hideSubmitWhenEmpty
+            onChangeText={form.setDraft}
+            onSubmit={form.addName}
           />
           {form.names.length > 0 && (
             <>
               <View className="flex-row flex-wrap gap-2">
                 {form.names.map((flatmate) => (
-                  <View
+                  <Pressable
                     key={flatmate}
-                    className="bg-muted flex-row items-center gap-2 rounded-full py-1 pr-3 pl-1"
+                    testID={`onboarding-flatmate-${flatmate}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("group.onboarding.removeFlatmate", {
+                      name: flatmate,
+                    })}
+                    disabled={busy}
+                    onPress={() => form.removeName(flatmate)}
+                    className="bg-muted flex-row items-center gap-2 rounded-full py-1 pr-2 pl-1"
                   >
                     <MemberAvatar
                       person={{
@@ -186,7 +193,8 @@ function WelcomeForm({
                       textClassName="text-xs"
                     />
                     <Text className="text-foreground text-sm">{flatmate}</Text>
-                  </View>
+                    <Icon name="x" size={14} color="muted-foreground" />
+                  </Pressable>
                 ))}
               </View>
               <Text className="text-muted-foreground text-sm">

@@ -26,10 +26,17 @@ test.describe("Email code sign-in", () => {
       "Code's flat",
     );
     const flatmates = page.getByTestId("onboarding-flatmates-input");
-    // Enter ends a name instead of creating the WG
+    const add = page.getByTestId("onboarding-flatmate-add");
+    await expect(add).toHaveCount(0);
     await flatmates.fill("Lena");
+    await add.click();
+    await flatmates.fill("Max");
     await flatmates.press("Enter");
-    await flatmates.pressSequentially("und Tim");
+    await page.getByTestId("onboarding-flatmate-Max").click();
+    await expect(page.getByTestId("onboarding-flatmate-Max")).toHaveCount(0);
+    await expect(page.getByTestId("onboarding-flatmate-Lena")).toBeVisible();
+    // Typed but not added still counts
+    await flatmates.fill("Tim");
     await expect(page).toHaveURL(/\/welcome/);
     await page.getByTestId("onboarding-create").click();
 

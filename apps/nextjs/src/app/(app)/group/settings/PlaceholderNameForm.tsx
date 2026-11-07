@@ -23,17 +23,23 @@ const formSchema = z.object({ name: placeholderNameSchema });
 
 export function PlaceholderNameForm({
   defaultName = "",
+  inputId,
   submitLabel,
   inputTestId,
   buttonTestId,
   autoFocus,
+  hideSubmitWhenEmpty,
+  onTextChange,
   onSubmit,
 }: {
   defaultName?: string;
+  inputId?: string;
   submitLabel: string;
   inputTestId: string;
   buttonTestId: string;
   autoFocus?: boolean;
+  hideSubmitWhenEmpty?: boolean;
+  onTextChange?: (name: string) => void;
   onSubmit: (name: string) => void;
 }) {
   const t = useTranslations("group.placeholders");
@@ -41,6 +47,7 @@ export function PlaceholderNameForm({
     resolver: zodResolver(formSchema),
     defaultValues: { name: defaultName },
   });
+  const empty = form.watch("name").trim() === "";
 
   return (
     <Form {...form}>
@@ -49,6 +56,7 @@ export function PlaceholderNameForm({
         onSubmit={form.handleSubmit(({ name }) => {
           onSubmit(name);
           form.reset();
+          onTextChange?.("");
         })}
       >
         <FormField
@@ -59,6 +67,11 @@ export function PlaceholderNameForm({
               <FormControl>
                 <Input
                   {...field}
+                  onChange={(event) => {
+                    field.onChange(event);
+                    onTextChange?.(event.target.value);
+                  }}
+                  id={inputId}
                   data-testid={inputTestId}
                   autoFocus={autoFocus}
                   placeholder={t("namePlaceholder")}
@@ -69,9 +82,11 @@ export function PlaceholderNameForm({
             </FormItem>
           )}
         />
-        <Button type="submit" variant="secondary" data-testid={buttonTestId}>
-          {submitLabel}
-        </Button>
+        {!(hideSubmitWhenEmpty && empty) && (
+          <Button type="submit" variant="secondary" data-testid={buttonTestId}>
+            {submitLabel}
+          </Button>
+        )}
       </form>
     </Form>
   );

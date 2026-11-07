@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { redirect, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
@@ -16,6 +17,7 @@ import { useNewGroupForm } from "@flatsby/validators/useNewGroupForm";
 
 import { useCreateGroup } from "~/app/(app)/group/create/useCreateGroup";
 import { JoinWithCodeDialog } from "~/app/(app)/group/JoinWithCodeDialog";
+import { PlaceholderNameForm } from "~/app/(app)/group/settings/PlaceholderNameForm";
 import { signOutAndRedirect } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
 
@@ -88,13 +90,7 @@ export function Welcome({
 
   return (
     <main className="bg-background flex min-h-dvh w-full items-center justify-center p-4">
-      <form
-        className="bg-muted flex w-full max-w-md flex-col gap-5 rounded-lg p-8"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void form.submit();
-        }}
-      >
+      <div className="bg-muted flex w-full max-w-md flex-col gap-5 rounded-lg p-8">
         <div className="flex flex-col gap-1">
           <h1
             className="text-3xl font-extrabold tracking-tight"
@@ -148,36 +144,34 @@ export function Welcome({
           label={t("group.onboarding.flatmatesLabel")}
           error={form.issueFor("placeholders")}
         >
-          <Input
-            id="onboarding-flatmates"
-            data-testid="onboarding-flatmates-input"
-            className="bg-background"
-            value={form.flatmates}
-            onChange={(event) => form.setFlatmates(event.target.value)}
-            // Enter ends a name; submitting here would create the WG with half the names
-            onKeyDown={(event) => {
-              if (event.key !== "Enter" || event.nativeEvent.isComposing)
-                return;
-              event.preventDefault();
-              if (form.flatmates.trim() && !/,\s*$/.test(form.flatmates)) {
-                form.setFlatmates(`${form.flatmates.trimEnd()}, `);
-              }
-            }}
-            placeholder={t("group.onboarding.flatmatesPlaceholder")}
-            autoCapitalize="words"
-            disabled={busy}
-            aria-invalid={form.issueFor("placeholders") !== undefined}
+          <PlaceholderNameForm
+            inputId="onboarding-flatmates"
+            submitLabel={t("group.placeholders.add")}
+            inputTestId="onboarding-flatmates-input"
+            buttonTestId="onboarding-flatmate-add"
+            hideSubmitWhenEmpty
+            onTextChange={form.setDraft}
+            onSubmit={form.addName}
           />
           {form.names.length > 0 && (
             <>
               <ul className="flex flex-wrap gap-2">
                 {form.names.map((flatmate) => (
-                  <li
-                    key={flatmate}
-                    className="bg-background flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm"
-                  >
-                    <UserAvatar name={flatmate} placeholder size="sm" />
-                    {flatmate}
+                  <li key={flatmate}>
+                    <button
+                      type="button"
+                      data-testid={`onboarding-flatmate-${flatmate}`}
+                      aria-label={t("group.onboarding.removeFlatmate", {
+                        name: flatmate,
+                      })}
+                      disabled={busy}
+                      onClick={() => form.removeName(flatmate)}
+                      className="bg-background hover:bg-accent flex items-center gap-2 rounded-full py-1 pr-2 pl-1 text-sm"
+                    >
+                      <UserAvatar name={flatmate} placeholder size="sm" />
+                      {flatmate}
+                      <X className="text-muted-foreground size-3.5" />
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -195,7 +189,12 @@ export function Welcome({
         {failure && <p className="text-destructive text-sm">{failure}</p>}
 
         <div className="flex flex-col gap-2">
-          <Button type="submit" data-testid="onboarding-create" disabled={busy}>
+          <Button
+            type="button"
+            data-testid="onboarding-create"
+            disabled={busy}
+            onClick={() => void form.submit()}
+          >
             {busy && <LoadingSpinner className="mr-2" />}
             {busy
               ? t("group.onboarding.creating")
@@ -220,7 +219,7 @@ export function Welcome({
             {t("navigation.logout")}
           </Button>
         </div>
-      </form>
+      </div>
       <JoinWithCodeDialog open={joinOpen} onOpenChange={setJoinOpen} />
     </main>
   );

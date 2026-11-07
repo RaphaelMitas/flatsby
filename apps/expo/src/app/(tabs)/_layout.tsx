@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
@@ -88,13 +89,14 @@ export default function TabLayout() {
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;
   }
-  // Only a fetched empty list counts, not the persisted cache or a delete's optimistic one
-  if (
-    groups.data?.success &&
-    groups.data.data.length === 0 &&
-    !groups.isFetching &&
-    !deletingGroup
-  ) {
+  // A delete empties the list optimistically, and that must not count
+  const noGroups =
+    groups.data?.success && groups.data.data.length === 0 && !deletingGroup;
+  // Until a fetch settles it, blank: a new user goes straight to onboarding without Home showing first
+  if (groups.isPending || (noGroups && groups.isFetching)) {
+    return <View className="bg-background flex-1" />;
+  }
+  if (noGroups) {
     return <Redirect href="/welcome" />;
   }
 

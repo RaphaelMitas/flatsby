@@ -63,7 +63,7 @@ export const placeholderNameSchema = z
 
 const MAX_NEW_GROUP_PLACEHOLDERS = 20;
 
-const uniqueNames = (names: string[]) =>
+export const uniqueNames = (names: string[]) =>
   names.filter(
     (name, i) =>
       names.findIndex((other) => other.toLowerCase() === name.toLowerCase()) ===
@@ -83,15 +83,6 @@ export const createGroupSchema = groupSchema
       .transform(uniqueNames)
       .optional(),
   });
-
-/** "Lena, Tim" and "Lena und Tim" are two flatmates, not one. */
-export const splitFlatmateNames = (raw: string) =>
-  uniqueNames(
-    raw
-      .split(/,|;|\n|\s+(?:und|and|&)\s+/i)
-      .map((name) => name.trim())
-      .filter((name) => name.length > 0),
-  );
 
 export const newGroupFormSchema = z.object({
   name: userNameSchema,

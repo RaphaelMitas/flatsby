@@ -61,11 +61,15 @@ export const getCurrentUserWithGroups = () =>
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
 
+export const noGroups = (
+  result: Awaited<ReturnType<typeof getCurrentUserWithGroups>>,
+) => result.success && result.data.groups.length === 0;
+
 export async function getCurrentGroupId() {
   const result = await getCurrentUserWithGroups();
   const groupId = result.success
     ? result.data.user?.lastGroupUsed?.id
     : undefined;
-  if (!groupId) redirect("/group");
+  if (!groupId) redirect(noGroups(result) ? "/welcome" : "/group");
   return groupId;
 }

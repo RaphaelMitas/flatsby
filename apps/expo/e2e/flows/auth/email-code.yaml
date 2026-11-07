@@ -47,8 +47,12 @@ tags:
 - inputText: "Code User"
 - tapOn:
     id: "onboarding-flatmates-input"
-- inputText: "Lena und Tim"
-# Done dismisses the keyboard that covers the button
+- inputText: "Lena"
+- tapOn:
+    id: "onboarding-flatmate-add"
+- inputText: "Tim"
+# Return adds Tim and keeps the keyboard; on the empty field it closes it, uncovering the button
+- pressKey: Enter
 - pressKey: Enter
 - tapOn:
     id: "onboarding-create"
