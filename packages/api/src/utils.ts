@@ -162,6 +162,9 @@ export const GroupUtils = {
   },
 };
 
+// Postgres's default LIKE escape character is the backslash
+export const escapeLike = (text: string) => text.replace(/[\\%_]/g, "\\$&");
+
 export const memberUserColumns = {
   email: true,
   name: true,

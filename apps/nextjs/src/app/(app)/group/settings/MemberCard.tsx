@@ -108,6 +108,9 @@ export const MemberCard = ({
           trpc.invite.get.queryFilter({ groupId }),
         );
         void queryClient.invalidateQueries(
+          trpc.expense.getFormerMembers.queryFilter({ groupId }),
+        );
+        void queryClient.invalidateQueries(
           trpc.group.getUserGroups.queryOptions(),
         );
         if (isCurrentUser) {
