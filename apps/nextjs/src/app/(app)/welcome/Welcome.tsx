@@ -150,6 +150,7 @@ export function Welcome({
             inputTestId="onboarding-flatmates-input"
             buttonTestId="onboarding-flatmate-add"
             hideSubmitWhenEmpty
+            disabled={busy}
             onTextChange={form.setDraft}
             onSubmit={form.addName}
           />

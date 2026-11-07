@@ -92,8 +92,12 @@ export default function TabLayout() {
   // A delete empties the list optimistically, and that must not count
   const noGroups =
     groups.data?.success && groups.data.data.length === 0 && !deletingGroup;
-  // Until a fetch settles it, blank: a new user goes straight to onboarding without Home showing first
-  if (groups.isPending || (noGroups && groups.isFetching)) {
+  // Until the first fetch settles it, blank: a new user goes straight to onboarding without Home showing first.
+  // isLoading, not isPending: a paused offline fetch would otherwise blank the app for good
+  if (
+    groups.isLoading ||
+    (noGroups && groups.isFetching && !groups.isFetchedAfterMount)
+  ) {
     return <View className="bg-background flex-1" />;
   }
   if (noGroups) {

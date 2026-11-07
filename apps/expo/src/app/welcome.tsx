@@ -165,6 +165,7 @@ function WelcomeForm({
             inputTestID="onboarding-flatmates-input"
             buttonTestID="onboarding-flatmate-add"
             hideSubmitWhenEmpty
+            disabled={busy}
             onChangeText={form.setDraft}
             onSubmit={form.addName}
           />

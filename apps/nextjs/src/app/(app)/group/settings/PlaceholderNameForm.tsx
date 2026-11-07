@@ -29,6 +29,7 @@ export function PlaceholderNameForm({
   buttonTestId,
   autoFocus,
   hideSubmitWhenEmpty,
+  disabled,
   onTextChange,
   onSubmit,
 }: {
@@ -39,6 +40,7 @@ export function PlaceholderNameForm({
   buttonTestId: string;
   autoFocus?: boolean;
   hideSubmitWhenEmpty?: boolean;
+  disabled?: boolean;
   onTextChange?: (name: string) => void;
   onSubmit: (name: string) => void;
 }) {
@@ -71,9 +73,10 @@ export function PlaceholderNameForm({
                     field.onChange(event);
                     onTextChange?.(event.target.value);
                   }}
-                  id={inputId}
+                  {...(inputId && { id: inputId })}
                   data-testid={inputTestId}
                   autoFocus={autoFocus}
+                  disabled={disabled}
                   placeholder={t("namePlaceholder")}
                   maxLength={MAX_PLACEHOLDER_NAME_LENGTH}
                 />
@@ -83,7 +86,12 @@ export function PlaceholderNameForm({
           )}
         />
         {!(hideSubmitWhenEmpty && empty) && (
-          <Button type="submit" variant="secondary" data-testid={buttonTestId}>
+          <Button
+            type="submit"
+            variant="secondary"
+            data-testid={buttonTestId}
+            disabled={disabled}
+          >
             {submitLabel}
           </Button>
         )}

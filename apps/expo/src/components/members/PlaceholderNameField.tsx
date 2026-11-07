@@ -19,6 +19,7 @@ export function PlaceholderNameField({
   buttonTestID,
   autoFocus,
   hideSubmitWhenEmpty,
+  disabled,
   onChangeText,
   onSubmit,
 }: {
@@ -29,6 +30,7 @@ export function PlaceholderNameField({
   buttonTestID: string;
   autoFocus?: boolean;
   hideSubmitWhenEmpty?: boolean;
+  disabled?: boolean;
   onChangeText?: (name: string) => void;
   onSubmit: (name: string) => void;
 }) {
@@ -58,17 +60,20 @@ export function PlaceholderNameField({
         onChangeText={change}
         maxLength={MAX_PLACEHOLDER_NAME_LENGTH}
         autoFocus={autoFocus}
+        editable={!disabled}
         returnKeyType="done"
         onSubmitEditing={submit}
-        // Return adds the next name, and on an empty field closes the keyboard
-        submitBehavior={empty ? "blurAndSubmit" : "submit"}
+        // With the Add button hidden, Return on an empty field is how the keyboard closes
+        submitBehavior={
+          hideSubmitWhenEmpty && empty ? "blurAndSubmit" : "submit"
+        }
       />
       {!(hideSubmitWhenEmpty && empty) && (
         <Button
           testID={buttonTestID}
           title={submitLabel}
           icon={submitIcon}
-          disabled={empty}
+          disabled={empty || disabled}
           onPress={submit}
         />
       )}
