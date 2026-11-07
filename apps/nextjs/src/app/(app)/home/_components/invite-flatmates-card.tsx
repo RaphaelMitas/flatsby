@@ -86,7 +86,7 @@ export function InviteFlatmatesCard() {
       await navigator.clipboard.writeText(text);
       toast.success(
         name === undefined
-          ? t("invite.card.copied")
+          ? t("common.copied")
           : t("invite.card.copiedFor", { name }),
       );
     } catch {

@@ -27,7 +27,6 @@ export const invite = {
     sendTo: "Link an {name} schicken",
     groupChat: "Link für den WG-Chat",
     code: "Code zum Abtippen",
-    copied: "Kopiert",
     copiedFor: "Für {name} kopiert",
     copyFailed: "Kopieren hat nicht geklappt. Bitte versuch es noch einmal.",
     dismiss: "Ausblenden",

@@ -66,10 +66,11 @@ export function useNewGroupForm({
     });
     setIssues(parsed.error?.issues ?? []);
     if (!parsed.success || !(await keepName(parsed.data.name))) return;
+    // The mutation shows its own failure
     await create({
       name: parsed.data.groupName,
       placeholders: parsed.data.placeholders ?? [],
-    });
+    }).catch(() => undefined);
   });
 
   // Someone who lost their invite link joins from here, so this is their name step too

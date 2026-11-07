@@ -68,9 +68,7 @@ export function Welcome({
     savedName,
     saveName: (name) => updateName.mutateAsync({ name }),
     create: (group) =>
-      createGroup
-        .mutateAsync({ ...group, currency: CURRENCY })
-        .catch(() => undefined),
+      createGroup.mutateAsync({ ...group, currency: CURRENCY }),
     openJoin: () => setJoinOpen(true),
   });
 

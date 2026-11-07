@@ -100,7 +100,7 @@ export const group = {
     nameRequired: "Bitte gib einen Namen ein",
     nameTooLong: "Namen dürfen höchstens 64 Zeichen lang sein",
     tooMany:
-      "Das sind mehr als 20 Namen. Den Rest trägst du später in den Gruppeneinstellungen ein.",
+      "Höchstens 20 Namen. Den Rest trägst du nach dem Anlegen in den Gruppeneinstellungen ein.",
     invite: "{name} einladen",
     rename: "Umbenennen",
     renameTitle: "{name} umbenennen",

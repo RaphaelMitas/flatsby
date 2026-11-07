@@ -23,7 +23,6 @@ export const invite = {
     sendTo: "Send the link to {name}",
     groupChat: "Link for the group chat",
     code: "Code to type in",
-    copied: "Copied",
     copiedFor: "Copied for {name}",
     copyFailed: "Couldn't copy. Try again.",
     dismiss: "Dismiss",

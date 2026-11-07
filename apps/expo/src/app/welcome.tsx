@@ -80,8 +80,7 @@ function WelcomeForm({
     initialName,
     savedName,
     saveName: (name) => updateName.mutateAsync({ name }),
-    create: (group) =>
-      createGroup.mutateAsync({ ...group, currency }).catch(() => undefined),
+    create: (group) => createGroup.mutateAsync({ ...group, currency }),
     openJoin: () => router.push("/join"),
   });
 

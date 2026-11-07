@@ -82,9 +82,11 @@ export function InviteFlatmatesCard({
     sharing.current = true;
     markInviteShared(groupId);
     sharePressed.mutate({ groupId, personal: placeholder !== undefined });
-    void shareInvite(code.code, placeholder).finally(() => {
-      sharing.current = false;
-    });
+    void shareInvite(code.code, placeholder)
+      .catch(() => undefined)
+      .finally(() => {
+        sharing.current = false;
+      });
   };
 
   return (
