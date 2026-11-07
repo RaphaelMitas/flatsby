@@ -1,9 +1,10 @@
 import type { KeyTranslator } from "@flatsby/i18n/message-key";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { translateIfKey } from "@flatsby/i18n/message-key";
 
 import { newGroupFormSchema, splitFlatmateNames } from "./group";
+import { useOnce } from "./useOnce";
 
 type Field = "name" | "groupName" | "placeholders";
 
@@ -30,8 +31,7 @@ export function useNewGroupForm({
   const [issues, setIssues] = useState<
     { path: PropertyKey[]; message: string }[]
   >([]);
-  // Two taps can land before the pending state renders, and each would create a WG
-  const inFlight = useRef(false);
+  const once = useOnce();
 
   const firstName = name.trim().split(/\s+/)[0] ?? "";
   const groupName =
@@ -47,16 +47,6 @@ export function useNewGroupForm({
       ({ success }) => success,
       () => false,
     ));
-
-  const once = (run: () => Promise<void>) => async () => {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    try {
-      await run();
-    } finally {
-      inFlight.current = false;
-    }
-  };
 
   const submit = once(async () => {
     const parsed = newGroupFormSchema.safeParse({

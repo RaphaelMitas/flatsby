@@ -1,7 +1,7 @@
 "use client";
 
 import type { InvitePlaceholder } from "@flatsby/validators/group";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Share, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -18,6 +18,7 @@ import {
   inviteMessage,
   spokenInviteCode,
 } from "@flatsby/validators/invite";
+import { useOnce } from "@flatsby/validators/useOnce";
 import {
   markInviteShared,
   useWaitingForFlatmates,
@@ -40,7 +41,7 @@ export function InviteFlatmatesCard() {
     groupId: number;
     dismissed: boolean;
   }>();
-  const sharing = useRef(false);
+  const once = useOnce();
   const groupId = currentGroup?.id ?? 0;
   const hasGroup = currentGroup != null;
   const { data: group } = useQuery({
@@ -94,9 +95,8 @@ export function InviteFlatmatesCard() {
     }
   };
 
-  const share = async (placeholder?: InvitePlaceholder) => {
-    if (!code || sharing.current) return;
-    sharing.current = true;
+  const share = once(async (placeholder?: InvitePlaceholder) => {
+    if (!code) return;
     markInviteShared(groupId);
     sharePressed.mutate({ groupId, personal: placeholder !== undefined });
     const text = messageFor(code.code, placeholder);
@@ -109,10 +109,8 @@ export function InviteFlatmatesCard() {
       }
     } catch (error) {
       if (!isAbort(error)) await copy(text, placeholder?.name);
-    } finally {
-      sharing.current = false;
     }
-  };
+  });
 
   return (
     <Card data-testid="invite-flatmates-card">

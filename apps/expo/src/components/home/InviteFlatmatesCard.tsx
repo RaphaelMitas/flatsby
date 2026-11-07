@@ -1,5 +1,5 @@
 import type { InvitePlaceholder } from "@flatsby/validators/group";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import {
   inviteDaysLeft,
   spokenInviteCode,
 } from "@flatsby/validators/invite";
+import { useOnce } from "@flatsby/validators/useOnce";
 import {
   markInviteShared,
   useWaitingForFlatmates,
@@ -41,7 +42,7 @@ export function InviteFlatmatesCard({
     groupId: number;
     dismissed: boolean;
   }>();
-  const sharing = useRef(false);
+  const once = useOnce();
   const { data: group } = useQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
@@ -77,17 +78,12 @@ export function InviteFlatmatesCard({
   const code = invite.data?.success ? invite.data.data : undefined;
   const loadFailure = failureOf(invite, t("invite.loadFailed"));
 
-  const share = (placeholder?: InvitePlaceholder) => {
-    if (!code || sharing.current) return;
-    sharing.current = true;
+  const share = once(async (placeholder?: InvitePlaceholder) => {
+    if (!code) return;
     markInviteShared(groupId);
     sharePressed.mutate({ groupId, personal: placeholder !== undefined });
-    void shareInvite(code.code, placeholder)
-      .catch(() => undefined)
-      .finally(() => {
-        sharing.current = false;
-      });
-  };
+    await shareInvite(code.code, placeholder).catch(() => undefined);
+  });
 
   return (
     <Card testID="invite-flatmates-card" className={className}>
