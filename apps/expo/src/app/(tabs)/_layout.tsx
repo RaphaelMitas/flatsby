@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
@@ -37,6 +37,8 @@ export default function TabLayout() {
   });
   const deletingGroup =
     useIsMutating({ mutationKey: trpc.group.deleteGroup.mutationKey() }) > 0;
+  // Once the tabs show, a later fetch (say, one resuming after reconnecting) must not tear them down
+  const [tabsShown, setTabsShown] = useState(false);
 
   useEffect(() => {
     if (!session.data?.user) {
@@ -92,17 +94,18 @@ export default function TabLayout() {
   // A delete empties the list optimistically, and that must not count
   const noGroups =
     groups.data?.success && groups.data.data.length === 0 && !deletingGroup;
-  // Until the first fetch settles it, blank: a new user goes straight to onboarding without Home showing first.
-  // isLoading, not isPending: a paused offline fetch would otherwise blank the app for good
+  // Blank so a new user skips Home; isLoading, not isPending, so a paused offline fetch can't blank the app for good
   if (
-    groups.isLoading ||
-    (noGroups && groups.isFetching && !groups.isFetchedAfterMount)
+    !tabsShown &&
+    (groups.isLoading ||
+      (noGroups && groups.isFetching && !groups.isFetchedAfterMount))
   ) {
     return <View className="bg-background flex-1" />;
   }
   if (noGroups) {
     return <Redirect href="/welcome" />;
   }
+  if (!tabsShown) setTabsShown(true);
 
   return (
     <NativeTabs

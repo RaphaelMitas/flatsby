@@ -55,11 +55,15 @@ export function PlaceholderNameForm({
     <Form {...form}>
       <form
         className="flex items-start gap-2"
-        onSubmit={form.handleSubmit(({ name }) => {
-          onSubmit(name);
-          form.reset();
-          onTextChange?.("");
-        })}
+        onSubmit={(event) => {
+          // An optional field with no button: an empty Enter is not a mistake
+          if (hideSubmitWhenEmpty && empty) return event.preventDefault();
+          void form.handleSubmit(({ name }) => {
+            onSubmit(name);
+            form.reset();
+            onTextChange?.("");
+          })(event);
+        }}
       >
         <FormField
           control={form.control}

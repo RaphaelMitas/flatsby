@@ -66,15 +66,18 @@ export function JoinInvite({
 
   const openGroup = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions({
-      onSettled: (_data, _error, { shoppingListId }) => {
+      onSettled: (data, _error, { shoppingListId }) => {
         void queryClient.invalidateQueries(
           trpc.group.getUserGroups.queryFilter(),
         );
         void queryClient.invalidateQueries(
           trpc.user.getCurrentUserWithGroups.queryFilter(),
         );
+        // The list page reads the last-used group, so it only works once that was saved
         router.push(
-          shoppingListId ? `/shopping-list/${shoppingListId}` : "/home",
+          shoppingListId && data?.success
+            ? `/shopping-list/${shoppingListId}`
+            : "/home",
         );
       },
     }),
