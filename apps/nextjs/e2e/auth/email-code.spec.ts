@@ -25,7 +25,12 @@ test.describe("Email code sign-in", () => {
     await expect(page.getByTestId("onboarding-group-input")).toHaveValue(
       "Code's flat",
     );
-    await page.getByTestId("onboarding-flatmates-input").fill("Lena und Tim");
+    const flatmates = page.getByTestId("onboarding-flatmates-input");
+    // Enter ends a name instead of creating the WG
+    await flatmates.fill("Lena");
+    await flatmates.press("Enter");
+    await flatmates.pressSequentially("und Tim");
+    await expect(page).toHaveURL(/\/welcome/);
     await page.getByTestId("onboarding-create").click();
 
     await expect(page).toHaveURL(/\/home/);

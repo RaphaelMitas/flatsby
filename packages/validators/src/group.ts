@@ -123,7 +123,8 @@ export const openPlaceholders = (
   members: { id: number; userId: string | null; user: { name: string } }[],
 ): InvitePlaceholder[] =>
   members
-    .filter(isPlaceholder)
+    // A placeholder still saving has a temporary negative id, and a link with it preselects nothing
+    .filter((member) => isPlaceholder(member) && member.id > 0)
     .map(({ id, user }) => ({ id, name: user.name }));
 
 export const placeholderUser = (name: string) => ({
