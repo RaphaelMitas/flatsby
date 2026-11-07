@@ -5,13 +5,10 @@ import { expect, test } from "@playwright/test";
 import { waitForHydration } from "../helpers/hydration";
 import { currentUserId, requestCode } from "../helpers/sign-in-code";
 
-async function signUp(page: Page, name: string) {
+async function signUp(page: Page) {
   const email = `passkey-${randomUUID()}@flatsby.test`;
   const code = await requestCode(page, email);
   await page.getByTestId("auth-code-input").fill(code);
-  await waitForHydration(page.getByTestId("auth-name-continue"));
-  await page.getByTestId("auth-name-input").fill(name);
-  await page.getByTestId("auth-name-continue").click();
   return email;
 }
 
@@ -35,11 +32,11 @@ test.describe("Passkeys", () => {
   test("offered after a code sign-up, then signs back in and is managed in settings", async ({
     page,
   }) => {
-    await signUp(page, "Passkey User");
+    await signUp(page);
     await expect(page.getByTestId("auth-passkey-offer")).toBeVisible();
     await page.getByTestId("auth-passkey-create").click();
     await page.getByTestId("auth-passkey-continue").click();
-    await expect(page).toHaveURL(/\/group/);
+    await expect(page).toHaveURL(/\/welcome/);
     const userId = await currentUserId(page);
 
     // This browser has used a passkey, so the login leads with it
@@ -47,7 +44,7 @@ test.describe("Passkeys", () => {
     await page.goto("/auth/login");
     await waitForHydration(page.getByTestId("auth-login-passkey-button"));
     await page.getByTestId("auth-login-passkey-button").click();
-    await expect(page).toHaveURL(/\/group/);
+    await expect(page).toHaveURL(/\/welcome/);
     expect(await currentUserId(page)).toBe(userId);
 
     await page.goto("/user-settings");
@@ -65,13 +62,17 @@ test.describe("Passkeys", () => {
   });
 
   test("a declined offer stays declined on this browser", async ({ page }) => {
-    const email = await signUp(page, "Declining User");
+    const email = await signUp(page);
     await page.getByTestId("auth-passkey-later").click();
-    await expect(page).toHaveURL(/\/group/);
+    await expect(page).toHaveURL(/\/welcome/);
+    // Without a group there is no settings page, so onboarding offers the way out
+    await waitForHydration(page.getByTestId("onboarding-sign-out"));
+    await page.getByTestId("onboarding-sign-out").click();
+    await expect(page).toHaveURL(/\/auth\/login/);
 
     await page.context().clearCookies();
     const again = await requestCode(page, email);
     await page.getByTestId("auth-code-input").fill(again);
-    await expect(page).toHaveURL(/\/group/);
+    await expect(page).toHaveURL(/\/welcome/);
   });
 });

@@ -1,6 +1,8 @@
 // One source for every fact on the site, so the pages, JSON-LD and .md twins can't disagree.
 
-import { INVITE_REFERRER_KEY } from "@flatsby/validators/invite";
+import type { InviteReferrer } from "@flatsby/validators/invite";
+
+import { inviteReferrer } from "@flatsby/validators/invite";
 import { APP_STORE_ID, PLAY_STORE_URL } from "@flatsby/validators/store";
 
 import type { MarketingTranslator } from "./i18n";
@@ -18,7 +20,7 @@ export const storeLinkProps = (href: string) =>
     : {};
 
 // Campaign tags make the website show up as an install source in App Store Connect and Play Console
-export function storeRedirect(pathname: string, inviteCode: string | null) {
+export function storeRedirect(pathname: string, invite: InviteReferrer | null) {
   if (pathname === APP_STORE_LINK) {
     return {
       store: "ios",
@@ -26,8 +28,8 @@ export function storeRedirect(pathname: string, inviteCode: string | null) {
     };
   }
   if (pathname === PLAY_STORE_LINK) {
-    const referrer = new URLSearchParams({ utm_source: "flatsby.com" });
-    if (inviteCode) referrer.set(INVITE_REFERRER_KEY, inviteCode);
+    const referrer = invite ? inviteReferrer(invite) : new URLSearchParams();
+    referrer.set("utm_source", "flatsby.com");
     return {
       store: "android",
       url: `${PLAY_STORE_URL}&referrer=${encodeURIComponent(referrer.toString())}`,

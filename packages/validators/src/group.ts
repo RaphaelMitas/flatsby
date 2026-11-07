@@ -32,10 +32,6 @@ export const groupSchema = z.object({
 export const groupFormSchema = groupSchema.pick({ name: true });
 export type GroupFormValues = z.infer<typeof groupFormSchema>;
 
-export const createGroupSchema = groupSchema
-  .pick({ name: true, currency: true })
-  .partial({ currency: true });
-
 export const updateGroupSchema = groupSchema.pick({ name: true, id: true });
 
 export const updateGroupSettingsSchema = groupSchema
@@ -65,6 +61,35 @@ export const placeholderNameSchema = z
     message: msg("group.placeholders.nameTooLong"),
   });
 
+const MAX_NEW_GROUP_PLACEHOLDERS = 20;
+
+export const uniqueNames = (names: string[]) =>
+  names.filter(
+    (name, i) =>
+      names.findIndex((other) => other.toLowerCase() === name.toLowerCase()) ===
+      i,
+  );
+
+export const createGroupSchema = groupSchema
+  .pick({ name: true, currency: true })
+  .partial({ currency: true })
+  .extend({
+    // Released apps send no placeholders, which keeps the group to its creator
+    placeholders: z
+      .array(placeholderNameSchema)
+      .max(MAX_NEW_GROUP_PLACEHOLDERS, {
+        message: msg("group.placeholders.tooMany"),
+      })
+      .transform(uniqueNames)
+      .optional(),
+  });
+
+export const newGroupFormSchema = z.object({
+  name: userNameSchema,
+  groupName: groupNameSchema,
+  placeholders: createGroupSchema.shape.placeholders,
+});
+
 export const groupMemberSchema = z.object({
   id: z.number(),
   groupId: z.number(),
@@ -79,6 +104,19 @@ export const isPlaceholder = (member: { userId: string | null }) =>
 
 export const hasJoined = (member: { userId: string | null }) =>
   member.userId !== null;
+
+export interface InvitePlaceholder {
+  id: number;
+  name: string;
+}
+
+export const openPlaceholders = (
+  members: { id: number; userId: string | null; user: { name: string } }[],
+): InvitePlaceholder[] =>
+  members
+    // A placeholder still saving has a temporary negative id, and a link with it preselects nothing
+    .filter((member) => isPlaceholder(member) && member.id > 0)
+    .map(({ id, user }) => ({ id, name: user.name }));
 
 export const placeholderUser = (name: string) => ({
   name,

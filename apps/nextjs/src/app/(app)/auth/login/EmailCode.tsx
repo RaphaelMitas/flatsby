@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@flatsby/ui/button";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { InputOTP, InputOTPGroups } from "@flatsby/ui/input-otp";
+import { INVITE_PATH } from "@flatsby/validators/invite";
 import {
   codeFromText,
   digitsOnly,
@@ -55,8 +56,10 @@ export default function EmailCode({
           readPasskeyDevice() === "unknown"
             ? `/auth/passkey?next=${encodeURIComponent(callbackURL)}`
             : callbackURL;
+        // Only joiners get the name step; creators name themselves on the onboarding screen
+        const joining = callbackURL.startsWith(`${INVITE_PATH}/`);
         window.location.assign(
-          asksForName(user)
+          asksForName(user) && joining
             ? `/auth/name?next=${encodeURIComponent(next)}`
             : next,
         );

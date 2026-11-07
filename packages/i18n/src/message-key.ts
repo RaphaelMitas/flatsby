@@ -11,7 +11,7 @@ export function msg<Key extends MessageKey>(key: Key): Key {
   return key;
 }
 
-type KeyTranslator = Translate & { has(key: string): boolean };
+export type KeyTranslator = Translate & { has(key: string): boolean };
 
 // Importing the catalog here would bundle every locale into the client.
 function isMessageKey(t: KeyTranslator, text: string): text is MessageKey {

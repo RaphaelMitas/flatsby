@@ -19,12 +19,19 @@ export const group = {
     title: "Your groups",
   },
   onboarding: {
-    greeting: "Hi {name}.",
-    question: "Starting a group or joining one?",
-    start: "Start a new group",
-    startHint: "You'll invite your flatmates next",
-    join: "I have an invite",
-    joinHint: "Enter the code from your invite",
+    title: "Almost done.",
+    question: "What's your name, and what's your group called?",
+    nameLabel: "Your name",
+    groupLabel: "Your group",
+    defaultGroupName: "{name}'s group",
+    flatmatesLabel: "Who else lives there? (optional)",
+    removeFlatmate: "Remove {name}",
+    flatmatesHint:
+      "Everyone gets their own link. After signing in, their spot is already picked.",
+    currency:
+      "Currency: {currency}. You can change it later in the group settings.",
+    create: "Create group",
+    creating: "Creating your group…",
   },
   settings: {
     changeGroup: "Change Group",
@@ -91,6 +98,8 @@ export const group = {
     add: "Add",
     nameRequired: "Please enter a name",
     nameTooLong: "Names can't be longer than 64 characters",
+    tooMany:
+      "At most 20 names. Add the rest in the group settings once the group exists.",
     invite: "Invite {name}",
     rename: "Rename",
     renameTitle: "Rename {name}",

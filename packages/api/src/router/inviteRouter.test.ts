@@ -25,6 +25,17 @@ const { fakeDb, fakeTx, claimed, inserted } = vi.hoisted(() => {
     fakeTx,
     fakeDb: {
       query: { groupInvites: { findFirst: vi.fn() } },
+      select: () => ({
+        from: () => ({
+          innerJoin: () => ({
+            where: () => ({
+              groupBy: () => ({
+                orderBy: () => ({ limit: () => Promise.resolve([]) }),
+              }),
+            }),
+          }),
+        }),
+      }),
       transaction: (run: (tx: typeof fakeTx) => Promise<unknown>) =>
         run(fakeTx),
     },
@@ -106,7 +117,7 @@ describe("invite.join", () => {
   it("opens the group when the user is already a member", async () => {
     await expect(join()).resolves.toEqual({
       success: true,
-      data: { groupId: 3, groupName: "Flat" },
+      data: { groupId: 3, groupName: "Flat", openList: null },
     });
   });
 
@@ -153,7 +164,7 @@ describe("invite.join with a placeholder", () => {
 
     await expect(claim()).resolves.toEqual({
       success: true,
-      data: { groupId: 3, groupName: "Flat" },
+      data: { groupId: 3, groupName: "Flat", openList: null },
     });
   });
 

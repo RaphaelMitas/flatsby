@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
-import { invitePath } from "@flatsby/validators/invite";
+import { invitePath, parsePlaceholderId } from "@flatsby/validators/invite";
 import { APP_STORE_ID } from "@flatsby/validators/store";
 
 import { platformFor } from "~/app/_components/landing/platform";
@@ -12,6 +12,7 @@ import { loadInvite } from "./loadInvite";
 
 interface JoinPageProps {
   params: Promise<{ code: string }>;
+  searchParams: Promise<{ p?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -48,12 +49,17 @@ export async function generateMetadata({
   };
 }
 
-export default async function JoinPage({ params }: JoinPageProps) {
-  const [session, { code, preview }, platform] = await Promise.all([
+export default async function JoinPage({
+  params,
+  searchParams,
+}: JoinPageProps) {
+  const [session, { code, preview }, platform, { p }] = await Promise.all([
     getSession(),
     params.then((p) => loadInvite(p.code)),
     headers().then(platformFor),
+    searchParams,
   ]);
+  const personalId = parsePlaceholderId(p);
 
   return (
     <main className="bg-muted flex h-dvh overflow-y-auto p-4">
@@ -61,7 +67,7 @@ export default async function JoinPage({ params }: JoinPageProps) {
       {code && (
         <meta
           name="apple-itunes-app"
-          content={`app-id=${APP_STORE_ID}, app-argument=flatsby:/${invitePath(code)}`}
+          content={`app-id=${APP_STORE_ID}, app-argument=flatsby:/${invitePath(code, personalId)}`}
         />
       )}
       <div className="m-auto flex w-full justify-center">
@@ -70,6 +76,7 @@ export default async function JoinPage({ params }: JoinPageProps) {
           preview={preview}
           signedIn={!!session?.user}
           platform={platform}
+          personalId={personalId}
         />
       </div>
     </main>

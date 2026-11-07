@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import LucideIcon from "@react-native-vector-icons/lucide";
+import { useIsMutating, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { listWindow, localDate } from "@flatsby/validators/calendar";
@@ -29,6 +31,14 @@ export default function TabLayout() {
   const t = useTranslations("navigation");
 
   useEveningReminders();
+  const groups = useQuery({
+    ...trpc.group.getUserGroups.queryOptions(),
+    enabled: !!session.data?.user,
+  });
+  const deletingGroup =
+    useIsMutating({ mutationKey: trpc.group.deleteGroup.mutationKey() }) > 0;
+  // Once the tabs show, a later fetch (say, one resuming after reconnecting) must not tear them down
+  const [tabsShown, setTabsShown] = useState(false);
 
   useEffect(() => {
     if (!session.data?.user) {
@@ -72,8 +82,6 @@ export default function TabLayout() {
         ),
       );
     }
-
-    void prefetch(trpc.group.getUserGroups.queryOptions());
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
 
   // Guarding per screen segfaults in UIKit: signing out from Settings
@@ -83,6 +91,21 @@ export default function TabLayout() {
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;
   }
+  // A delete empties the list optimistically, and that must not count
+  const noGroups =
+    groups.data?.success && groups.data.data.length === 0 && !deletingGroup;
+  // Blank so a new user skips Home; isLoading, not isPending, so a paused offline fetch can't blank the app for good
+  if (
+    !tabsShown &&
+    (groups.isLoading ||
+      (noGroups && groups.isFetching && !groups.isFetchedAfterMount))
+  ) {
+    return <View className="bg-background flex-1" />;
+  }
+  if (noGroups) {
+    return <Redirect href="/welcome" />;
+  }
+  if (!tabsShown) setTabsShown(true);
 
   return (
     <NativeTabs

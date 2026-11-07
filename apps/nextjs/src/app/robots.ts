@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
         "/md",
         "/shopping-list",
         "/user-settings",
+        "/welcome",
       ],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,

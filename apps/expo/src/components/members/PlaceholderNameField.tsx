@@ -18,6 +18,9 @@ export function PlaceholderNameField({
   inputTestID,
   buttonTestID,
   autoFocus,
+  hideSubmitWhenEmpty,
+  disabled,
+  onChangeText,
   onSubmit,
 }: {
   defaultName?: string;
@@ -26,16 +29,25 @@ export function PlaceholderNameField({
   inputTestID: string;
   buttonTestID: string;
   autoFocus?: boolean;
+  hideSubmitWhenEmpty?: boolean;
+  disabled?: boolean;
+  onChangeText?: (name: string) => void;
   onSubmit: (name: string) => void;
 }) {
   const t = useTranslations();
   const [name, setName] = useState(defaultName);
+  const empty = name.trim() === "";
+
+  const change = (text: string) => {
+    setName(text);
+    onChangeText?.(text);
+  };
 
   const submit = () => {
     const parsed = placeholderNameSchema.safeParse(name);
     if (!parsed.success) return;
     onSubmit(parsed.data);
-    setName("");
+    change("");
   };
 
   return (
@@ -45,20 +57,26 @@ export function PlaceholderNameField({
         className="flex-1"
         placeholder={t("group.placeholders.namePlaceholder")}
         value={name}
-        onChangeText={setName}
+        onChangeText={change}
         maxLength={MAX_PLACEHOLDER_NAME_LENGTH}
         autoFocus={autoFocus}
+        editable={!disabled}
         returnKeyType="done"
         onSubmitEditing={submit}
-        submitBehavior="submit"
+        // With the Add button hidden, Return on an empty field is how the keyboard closes
+        submitBehavior={
+          hideSubmitWhenEmpty && empty ? "blurAndSubmit" : "submit"
+        }
       />
-      <Button
-        testID={buttonTestID}
-        title={submitLabel}
-        icon={submitIcon}
-        disabled={name.trim() === ""}
-        onPress={submit}
-      />
+      {!(hideSubmitWhenEmpty && empty) && (
+        <Button
+          testID={buttonTestID}
+          title={submitLabel}
+          icon={submitIcon}
+          disabled={empty || disabled}
+          onPress={submit}
+        />
+      )}
     </View>
   );
 }

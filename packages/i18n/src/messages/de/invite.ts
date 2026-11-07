@@ -7,16 +7,28 @@ export const invite = {
   scanWithCamera: "Mit der Handykamera scannen",
   orEnterCode: "oder diesen Code in Flatsby eingeben",
   shareLink: "Link teilen",
-  shareMessage: "Tritt {group} auf Flatsby bei: {link}",
+  shareGroup:
+    "Kannst du kurz unserer Gruppe auf Flatsby beitreten? Dann geht die Einkaufsliste nicht mehr im Chat unter: {link}",
+  sharePersonal:
+    "{name}, ich hab dich schon in unserer Gruppe auf Flatsby eingetragen. Kannst du kurz beitreten? Dann geht die Einkaufsliste nicht mehr im Chat unter: {link}",
   resetLink: "Link zurücksetzen",
   resetFailed:
     "Der Link konnte nicht zurückgesetzt werden. Bitte versuch es noch einmal.",
   loadFailed:
     "Die Einladung konnte nicht geladen werden. Bitte versuch es noch einmal.",
   done: "Fertig",
-  solo: {
-    title: "Bisher nur du",
-    body: "Flatsby ist für die ganze WG gemacht. Teil die Einladung mit deinen Mitbewohnern.",
+  card: {
+    title: "{group} steht. Jetzt fehlen deine Mitbewohner.",
+    body: "Schick ihnen den Link. Wer beitritt, taucht hier auf.",
+    namedBody:
+      "Schick jedem seinen Link. Nach der Anmeldung ist sein Platz schon ausgewählt.",
+    preview: "Das schickst du:",
+    send: "Schicken",
+    sendTo: "Link an {name} schicken",
+    groupChat: "Link für den Gruppenchat",
+    code: "Code zum Abtippen",
+    copiedFor: "Für {name} kopiert",
+    copyFailed: "Kopieren hat nicht geklappt. Bitte versuch es noch einmal.",
     dismiss: "Ausblenden",
   },
   expiresIn:

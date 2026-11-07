@@ -31,17 +31,6 @@ tags:
       id: "code-error"
     timeout: 15000
 - inputText: ${output.signInCode}
-- extendedWaitUntil:
-    visible:
-      id: "name-screen"
-    timeout: 30000
-- tapOn:
-    id: "name-input"
-- eraseText: 64
-- inputText: "Code User"
-- hideKeyboard
-- tapOn:
-    id: "name-continue-button"
 # The system passkey sheet needs the real domain, so the flow declines the offer
 - extendedWaitUntil:
     visible:
@@ -49,11 +38,33 @@ tags:
     timeout: 30000
 - tapOn:
     id: "passkey-offer-later"
-# A new account has no household yet, so home offers to start or join one
 - extendedWaitUntil:
     visible:
       id: "onboarding-title"
     timeout: 30000
+- tapOn:
+    id: "onboarding-name-input"
+- inputText: "Code User"
+- tapOn:
+    id: "onboarding-flatmates-input"
+- inputText: "Lena"
+- tapOn:
+    id: "onboarding-flatmate-add"
+- inputText: "Tim"
+# Return adds Tim and keeps the keyboard; on the empty field it closes it, uncovering the button
+- pressKey: Enter
+- pressKey: Enter
+- tapOn:
+    id: "onboarding-create"
+# The create button stays busy until the invite is cached, so the card opens complete
+- extendedWaitUntil:
+    visible:
+      id: "invite-flatmates-card"
+    timeout: 30000
+- assertVisible:
+    id: "invite-card-code"
+- assertVisible: "Lena"
+- assertVisible: "Tim"
 - openLink: flatsby://settings/passkeys
 - extendedWaitUntil:
     visible:

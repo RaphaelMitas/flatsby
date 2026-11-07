@@ -44,6 +44,9 @@ export interface SignedInUser {
   createdAt: Date;
 }
 
+export const typedName = (user: { name: string; email: string }) =>
+  user.name === defaultUserName(user.email) ? "" : user.name;
+
 export const asksForName = (user: SignedInUser, now = Date.now()) =>
   now - new Date(user.createdAt).getTime() < JUST_CREATED_MS &&
   user.name === defaultUserName(user.email);

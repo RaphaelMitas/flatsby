@@ -6,7 +6,9 @@ import { waitForHydration } from "../helpers/hydration";
 import { currentUserId, requestCode } from "../helpers/sign-in-code";
 
 test.describe("Email code sign-in", () => {
-  test("signs up a new address and asks for a name", async ({ page }) => {
+  test("signs up a new address and creates the group in one step", async ({
+    page,
+  }) => {
     const email = `code-${randomUUID()}@flatsby.test`;
     const code = await requestCode(page, email);
 
@@ -15,16 +17,43 @@ test.describe("Email code sign-in", () => {
     await expect(page.getByTestId("auth-code-error")).toBeVisible();
 
     await page.getByTestId("auth-code-input").fill(code);
-    await expect(page).toHaveURL(/\/auth\/name/);
-    await expect(page.getByTestId("auth-name-input")).toHaveValue(
-      email.split("@")[0] ?? "",
+    await expect(page).toHaveURL(/\/welcome/);
+    const nameInput = page.getByTestId("onboarding-name-input");
+    await expect(nameInput).toHaveValue("");
+    await waitForHydration(page.getByTestId("onboarding-create"));
+    await nameInput.fill("Code User");
+    await expect(page.getByTestId("onboarding-group-input")).toHaveValue(
+      "Code's group",
+    );
+    const flatmates = page.getByTestId("onboarding-flatmates-input");
+    const add = page.getByTestId("onboarding-flatmate-add");
+    await expect(add).toHaveCount(0);
+    await flatmates.fill("Lena");
+    await add.click();
+    await flatmates.fill("Max");
+    await flatmates.press("Enter");
+    await page.getByTestId("onboarding-flatmate-Max").click();
+    await expect(page.getByTestId("onboarding-flatmate-Max")).toHaveCount(0);
+    await expect(page.getByTestId("onboarding-flatmate-Lena")).toBeVisible();
+    // Typed but not added still counts
+    await flatmates.fill("Tim");
+    await expect(page).toHaveURL(/\/welcome/);
+    await page.getByTestId("onboarding-create").click();
+
+    await expect(page).toHaveURL(/\/home/);
+    const card = page.getByTestId("invite-flatmates-card");
+    await expect(card).toContainText("Code's group is set up");
+    await expect(card.getByTestId(/^invite-card-send-\d+$/)).toHaveCount(2);
+    await expect(card.getByTestId("invite-card-preview")).toContainText(
+      "Lena, I've already added you",
+    );
+    await expect(card.getByTestId("invite-card-code")).toHaveText(
+      /^[0-9A-Z]{4}-[0-9A-Z]{4}$/,
     );
 
-    await waitForHydration(page.getByTestId("auth-name-continue"));
-    await page.getByTestId("auth-name-input").fill("Code User");
-    await page.getByTestId("auth-name-continue").click();
-    // A new account has no household yet, so the app offers to create or join one
-    await expect(page).toHaveURL(/\/group/);
+    // Back to onboarding would offer a second group
+    await page.goto("/welcome");
+    await expect(page).toHaveURL(/\/home/);
   });
 
   test("signs an existing user into the same account", async ({

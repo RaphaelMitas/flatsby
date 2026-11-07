@@ -18,7 +18,10 @@ import { Button } from "~/lib/ui/button";
 import { CodeInput } from "~/lib/ui/code-input";
 import { signInCode } from "~/utils/auth/auth-client";
 import { passkeyDevice, passkeysSupported } from "~/utils/auth/passkey-device";
-import { queueSignInSteps } from "~/utils/auth/post-login-path";
+import {
+  peekPostLoginPath,
+  queueSignInSteps,
+} from "~/utils/auth/post-login-path";
 
 export default function CodeScreen() {
   const t = useTranslations();
@@ -47,7 +50,8 @@ export default function CodeScreen() {
         signedIn.current = true;
         posthog.capture("login_succeeded", attempt);
         const steps: SignInStep[] = [];
-        if (asksForName(user)) steps.push("name");
+        // Only joiners get the name step; creators name themselves on the onboarding screen
+        if (asksForName(user) && peekPostLoginPath()) steps.push("name");
         if (offersPasskey) steps.push("passkey");
         queueSignInSteps(steps);
       },

@@ -23,17 +23,25 @@ const formSchema = z.object({ name: placeholderNameSchema });
 
 export function PlaceholderNameForm({
   defaultName = "",
+  inputId,
   submitLabel,
   inputTestId,
   buttonTestId,
   autoFocus,
+  hideSubmitWhenEmpty,
+  disabled,
+  onTextChange,
   onSubmit,
 }: {
   defaultName?: string;
+  inputId?: string;
   submitLabel: string;
   inputTestId: string;
   buttonTestId: string;
   autoFocus?: boolean;
+  hideSubmitWhenEmpty?: boolean;
+  disabled?: boolean;
+  onTextChange?: (name: string) => void;
   onSubmit: (name: string) => void;
 }) {
   const t = useTranslations("group.placeholders");
@@ -41,15 +49,21 @@ export function PlaceholderNameForm({
     resolver: zodResolver(formSchema),
     defaultValues: { name: defaultName },
   });
+  const empty = form.watch("name").trim() === "";
 
   return (
     <Form {...form}>
       <form
         className="flex items-start gap-2"
-        onSubmit={form.handleSubmit(({ name }) => {
-          onSubmit(name);
-          form.reset();
-        })}
+        onSubmit={(event) => {
+          // An optional field with no button: an empty Enter is not a mistake
+          if (hideSubmitWhenEmpty && empty) return event.preventDefault();
+          void form.handleSubmit(({ name }) => {
+            onSubmit(name);
+            form.reset();
+            onTextChange?.("");
+          })(event);
+        }}
       >
         <FormField
           control={form.control}
@@ -59,8 +73,14 @@ export function PlaceholderNameForm({
               <FormControl>
                 <Input
                   {...field}
+                  onChange={(event) => {
+                    field.onChange(event);
+                    onTextChange?.(event.target.value);
+                  }}
+                  {...(inputId && { id: inputId })}
                   data-testid={inputTestId}
                   autoFocus={autoFocus}
+                  disabled={disabled}
                   placeholder={t("namePlaceholder")}
                   maxLength={MAX_PLACEHOLDER_NAME_LENGTH}
                 />
@@ -69,9 +89,16 @@ export function PlaceholderNameForm({
             </FormItem>
           )}
         />
-        <Button type="submit" variant="secondary" data-testid={buttonTestId}>
-          {submitLabel}
-        </Button>
+        {!(hideSubmitWhenEmpty && empty) && (
+          <Button
+            type="submit"
+            variant="secondary"
+            data-testid={buttonTestId}
+            disabled={disabled}
+          >
+            {submitLabel}
+          </Button>
+        )}
       </form>
     </Form>
   );

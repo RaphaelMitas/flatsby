@@ -1,21 +1,27 @@
 import { Effect } from "effect";
 
-import { and, eq, gt, lte } from "@flatsby/db";
-import { groupInvites } from "@flatsby/db/schema";
+import { and, desc, eq, gt, lte, max } from "@flatsby/db";
+import {
+  groupInvites,
+  shoppingListItems,
+  shoppingLists,
+} from "@flatsby/db/schema";
 import { groupIdInputSchema } from "@flatsby/validators/group";
 import {
   INVITE_CODE_ALPHABET,
   INVITE_CODE_LENGTH,
   inviteCodeInputSchema,
   inviteExpiresAt,
+  inviteSharePressedInputSchema,
   joinInviteInputSchema,
 } from "@flatsby/validators/invite";
 
-import { addMember } from "../effect/groups";
+import { addMember, requireMember } from "../effect/groups";
 import { runPublicResult, runResult } from "../effect/runtime";
 import { CurrentRequest } from "../effect/services/CurrentRequest";
 import { Database } from "../effect/services/Database";
 import { Errors } from "../errors";
+import { captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { GroupUtils, memberName } from "../utils";
 
@@ -71,6 +77,29 @@ const issueInvite = Effect.fn("Invites.issueInvite")(function* (
     }),
   );
 });
+
+const listWithNewestOpenItem = Effect.fn("Invites.listWithNewestOpenItem")(
+  function* (groupId: number) {
+    const database = yield* Database;
+    const [list] = yield* database.query("find list with open items", (db) =>
+      db
+        .select({ id: shoppingLists.id, name: shoppingLists.name })
+        .from(shoppingLists)
+        .innerJoin(
+          shoppingListItems,
+          and(
+            eq(shoppingListItems.shoppingListId, shoppingLists.id),
+            eq(shoppingListItems.completed, false),
+          ),
+        )
+        .where(eq(shoppingLists.groupId, groupId))
+        .groupBy(shoppingLists.id)
+        .orderBy(desc(max(shoppingListItems.createdAt)))
+        .limit(1),
+    );
+    return list ?? null;
+  },
+);
 
 // Expired, reset and made-up codes all fail the same way, so a code reveals nothing.
 const findLiveInvite = Effect.fn("Invites.findLiveInvite")(function* (
@@ -173,7 +202,32 @@ export const inviteRouter = createTRPCRouter({
                 : Effect.fail(error),
             ),
           );
-          return { groupId: group.id, groupName: group.name };
+          return {
+            groupId: group.id,
+            groupName: group.name,
+            // The join already committed; without the list the joiner lands on Home as before
+            openList: yield* listWithNewestOpenItem(group.id).pipe(
+              Effect.orElseSucceed(() => null),
+            ),
+          };
+        }),
+      ),
+    ),
+
+  // invite_shared only sees the share sheet's result, and Android reports every share as sent
+  sharePressed: protectedProcedure
+    .input(inviteSharePressedInputSchema)
+    .mutation(({ ctx, input }) =>
+      runResult(
+        ctx,
+        Effect.gen(function* () {
+          yield* requireMember(input.groupId);
+          captureUserEvent({
+            user: ctx.session.user,
+            event: "invite_share_pressed",
+            headers: ctx.headers,
+            additionalProperties: input,
+          });
         }),
       ),
     ),

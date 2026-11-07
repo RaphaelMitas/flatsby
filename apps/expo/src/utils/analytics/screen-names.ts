@@ -27,6 +27,7 @@ const names: Record<string, string> = {
   "auth/login/code": "Login Code",
   "auth/name": "Name",
   "auth/passkey": "Passkey Offer",
+  welcome: "Onboarding",
 };
 
 export function getScreenName(segments: string[]): string {

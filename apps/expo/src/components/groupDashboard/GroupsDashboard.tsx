@@ -9,7 +9,6 @@ import { Button } from "~/lib/ui/button";
 import { ErrorMessage } from "~/lib/ui/error-message";
 import { trpc } from "~/utils/api";
 import GroupsDashboardElement from "./GroupsDashboardElement";
-import { StartOrJoin } from "./StartOrJoin";
 
 export function GroupsDashboard() {
   const t = useTranslations();
@@ -24,9 +23,8 @@ export function GroupsDashboard() {
     return <ErrorMessage message={groups.error.message} />;
   }
 
-  if (groups.data.length === 0) {
-    return <StartOrJoin />;
-  }
+  // TabLayout sends someone without a group to onboarding
+  if (groups.data.length === 0) return null;
 
   return (
     <View className="flex-1 flex-col gap-6 p-4">

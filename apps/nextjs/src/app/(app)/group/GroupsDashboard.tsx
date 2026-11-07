@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -11,7 +11,6 @@ import { Button } from "@flatsby/ui/button";
 import { useTRPC } from "~/trpc/react";
 import { GroupsDashboardElement } from "./GroupsDashboardElement";
 import { JoinWithCodeDialog } from "./JoinWithCodeDialog";
-import { StartOrJoin } from "./StartOrJoin";
 
 export function GroupsDashboard() {
   const t = useTranslations();
@@ -36,7 +35,7 @@ export function GroupsDashboard() {
   }
 
   if (groups.data.length === 0) {
-    return <StartOrJoin />;
+    redirect("/welcome");
   }
 
   const handleSelectGroup = (groupId: number) => {

@@ -14,7 +14,12 @@ tags:
 - runFlow:
     file: ../../subflows/relaunch.yaml
     env:
-      MARKER_ID: "home-invite"
+      MARKER_ID: "dashboard-group-picker"
+# The invite card sits above it while the fixture group has one member
+- scrollUntilVisible:
+    element:
+      id: "home-invite-try"
+    direction: DOWN
 - tapOn:
     id: "home-invite-try"
 - extendedWaitUntil:

@@ -22,7 +22,11 @@ interface PersistedState {
 
 interface ShoppingStoreState extends PersistedState {
   hydrated: boolean;
-  setSelectedGroup: (groupId: number, groupName: string) => void;
+  setSelectedGroup: (
+    groupId: number,
+    groupName: string,
+    list?: { id: number; name: string },
+  ) => void;
   setSelectedShoppingList: (
     shoppingListId: number,
     shoppingListName: string,
@@ -111,26 +115,32 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
   }, [selectedGroupId, selectedGroupName, persist]);
 
   const setSelectedGroup = useCallback(
-    (groupId: number, groupName: string) => {
-      const hasChanged = selectedGroupId !== groupId;
+    (
+      groupId: number,
+      groupName: string,
+      list?: { id: number; name: string },
+    ) => {
+      const hasChanged =
+        selectedGroupId !== groupId ||
+        (list !== undefined && selectedShoppingListId !== list.id);
       setSelectedGroupId(groupId);
       setSelectedGroupName(groupName);
-      setSelectedShoppingListId(null);
-      setSelectedShoppingListName(null);
+      setSelectedShoppingListId(list?.id ?? null);
+      setSelectedShoppingListName(list?.name ?? null);
       persist({
         selectedGroupId: groupId,
         selectedGroupName: groupName,
-        selectedShoppingListId: null,
-        selectedShoppingListName: null,
+        selectedShoppingListId: list?.id ?? null,
+        selectedShoppingListName: list?.name ?? null,
       });
       if (hasChanged) {
         updateLastUsed.mutate({
           groupId,
-          shoppingListId: null,
+          shoppingListId: list?.id ?? null,
         });
       }
     },
-    [selectedGroupId, updateLastUsed, persist],
+    [selectedGroupId, selectedShoppingListId, updateLastUsed, persist],
   );
 
   const clearSelectedGroup = useCallback(() => {
