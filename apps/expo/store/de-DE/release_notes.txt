@@ -1,5 +1,6 @@
-• Fotografier einen Kassenbon, und die Flatsby-Katze trägt Betrag, Datum und Geschäft ein. Jeder Scan kostet Credits.
-• Etwa zehn Ausgaben passen auf den Bildschirm, nach Monat gruppiert und mit deinem Anteil.
-• Die Einstellungen passen auf einen Bildschirm, deine Auswahl steht rechts.
-• Winter: eine verschneite Stadt oben auf Start und bis Weihnachten eine Mütze für die Katze.
+• Durchsuche deine Ausgaben und filtere nach Person, Kategorie oder Zeitraum, auch Jahre zurück.
+• Oben in der Ausgabenliste siehst du, was du schuldest oder bekommst.
+• Der Belegscan liest jetzt auch PDF-Rechnungen und ist als Beta markiert.
+• Neue Gruppe schneller startklar: erst anlegen, dann jeder Person auf Start ihren eigenen Link schicken.
+• Ruhigere Bildschirme, und „Weiter“ verschwindet nicht mehr unter dem Ziffernblock.
 • Kleine Fehlerbehebungen und Verbesserungen.
