@@ -29,9 +29,9 @@ function OrDivider() {
   const t = useTranslations();
   return (
     <div className="text-muted-foreground flex items-center gap-3 text-xs">
-      <Separator className="flex-1" />
+      <Separator className="dark:bg-background flex-1" />
       {t("auth.login.or")}
-      <Separator className="flex-1" />
+      <Separator className="dark:bg-background flex-1" />
     </div>
   );
 }
@@ -205,7 +205,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                   aria-label={t("auth.login.email")}
                   aria-invalid={emailStep.error !== null}
                   placeholder={t("auth.login.emailPlaceholder")}
-                  className="bg-background"
+                  className="bg-background dark:bg-background"
                   data-testid="auth-login-email-input"
                   value={emailStep.email}
                   onChange={(event) =>
@@ -223,6 +223,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                 <Button
                   type="submit"
                   variant={passkeyFirst ? "outline" : "default"}
+                  className={passkeyFirst ? "dark:bg-background" : undefined}
                   data-testid="auth-login-email-button"
                   disabled={busy}
                 >
@@ -241,7 +242,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex-1"
+                  className="dark:bg-background flex-1"
                   data-testid="auth-login-google-button"
                   onClick={() => signInWith("google")}
                   disabled={busy}
@@ -256,7 +257,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex-1"
+                  className="dark:bg-background flex-1"
                   data-testid="auth-login-apple-button"
                   onClick={() => signInWith("apple")}
                   disabled={busy}
